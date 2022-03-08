@@ -14,6 +14,15 @@
 import("//build/ohos.gni")
 import("//build/lite/config/component/lite_component.gni")
 
+## Build download_dataability.hap
+ohos_hap("download_dataability") {
+  hap_profile = "./config.json"
+  shared_libraries = [ ":downloaddataability" ]
+  certificate_profile = "./signature/profile.p7b"
+  hap_name = "download_dataability"
+  part_name = "request"
+  subsystem_name = "miscservices"
+}
 
 ## Build downloaddataability.so {{{
 config("downloaddataability_public_config") {

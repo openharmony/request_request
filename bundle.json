@@ -42,6 +42,7 @@
       "sub_component": [
         "//base/miscservices/request:request_packages",
         "//base/miscservices/request/download/ability:downloaddataability",
+        "//base/miscservices/request/download/ability:download_dataability",
         "//base/miscservices/request/upload/frameworks/libs:upload_lib",
         "//base/miscservices/request/upload/interfaces/kits/napi:requestability"
       ],

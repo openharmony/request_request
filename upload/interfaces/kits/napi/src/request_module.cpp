@@ -26,7 +26,7 @@ using namespace OHOS::Request::Download;
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
-        DECLARE_NAPI_METHOD("downloadFile", DownloadTaskNapi::JsMain),
+        DECLARE_NAPI_METHOD("download", DownloadTaskNapi::JsMain),
         DECLARE_NAPI_METHOD("upload", UploadTaskNapi::JsUpload),
     };
 
