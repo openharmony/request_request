@@ -175,12 +175,11 @@ std::vector<FileData>& UploadTask::GetFileArray()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "GetFileArray. In.");
     unsigned int fileSize = 0;
-    unsigned int error = 0;
     FileData data;
     FILE *file;
     totalSize_ = 0;
     for (auto f : uploadConfig_->files) {
-        error = obtainFile_->GetFile(&file, f.uri, fileSize, context_);
+        unsigned int error = obtainFile_->GetFile(&file, f.uri, fileSize, context_);
         if (error != UPLOAD_ERRORCODE_NO_ERROR) {
             OnFail(error);
             ClearFileArray();

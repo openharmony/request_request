@@ -284,7 +284,7 @@ napi_status UploadTaskNapi::OffFail(napi_env env, size_t argc, napi_value *argv,
     } else {
         proxy->napiUploadTask_->Off(TYPE_FAIL_CALLBACK, (void *)(callback.get()));
         proxy->onFail_ = nullptr;
-        proxy->onFail_ = std::move(callback);
+        proxy->offFail_ = std::move(callback);
     }
     return napi_ok;
 }

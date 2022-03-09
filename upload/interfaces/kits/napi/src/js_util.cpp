@@ -26,7 +26,7 @@ std::string JSUtil::Convert2String(napi_env env, napi_value jsString)
         GET_AND_THROW_LAST_ERROR((env));
         maxLen = JSUtil::MAX_LEN;
     }
-    if (maxLen <= 0) {
+    if (maxLen == 0) {
         return std::string();
     }
     char *buf = new char[maxLen + 1];
