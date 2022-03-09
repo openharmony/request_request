@@ -469,11 +469,11 @@ internal://cache/path/to/file.txt</p>
 
 ```
 // 导入模块
-import screenLock from '@ohos.app.requestability';
+import request from '@ohos.requestability';
 
 // 1、下载服务接口使用说明
 let downloadConfig = {
-  url: 'https://mirror.bjtu.edu.cn/kernel/linux/libs/libc5/libc5.cvs.tar.gz',
+  url: 'http://mirror.bjtu.edu.cn/kernel/linux/libs/libc5/libc5.cvs.tar.gz',
   header: {},
   enableMetered: true,
   enableRoaming: true,
