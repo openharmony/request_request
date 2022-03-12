@@ -1,17 +1,13 @@
-# miscservices_download
+# Request组件
 
-#### 介绍
+##  简介
 
 Request组件向三方应用提供系统下载/上传服务能力，以支撑应用开发者方便、高效的使用以及管理下载/上传业务的功能，包含新建、移除、暂停、恢复以及查询下载/上传任务。
 
 **图 1** 下载子系统架构图  
 ![](figures/download_architecture.png "子系统架构图")
 
-#### 仓路径
-
-/base/miscservices/request
-
-#### 框架代码介绍
+## 目录
 
 ```
 /base/miscservices/request
@@ -30,11 +26,12 @@ Request组件向三方应用提供系统下载/上传服务能力，以支撑应
 └── upload/unitest           # 上传模块的单元测试
 ```
 
-#### js 接口及使用说明
+##  说明
 
-1.  js 接口
+###  js接口说明
 
 **表 1**  Request组件的主要功能
+
 <table><thead align="left"><tr id="row143351854201012"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="p103351154121010"><a name="p103351154121010"></a><a name="p103351154121010"></a>接口名</p>
 </th>
 <th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="p1033585416105"><a name="p1033585416105"></a><a name="p1033585416105"></a>描述</p>
@@ -465,7 +462,7 @@ internal://cache/path/to/file.txt</p>
 </tbody>
 </table>
 
-2.  js 接口使用说明
+###  js接口使用说明
 
 ```
 // 导入模块
@@ -729,49 +726,8 @@ uploadTask.remove((err, result) => {
 });
 ```
 
-#### 本框架编译调试方法 (以rk3568平台为例)
+##  相关仓
 
-1.  配置编译参数
-```
-1. 仓库代码下载下来，修改工程名为request，放在源码base/miscservices 目录下
-```
-```
-2. OpenHarmony/productdefine/common/products/rk3568.json中在文件末尾添加  "miscservices:request":{}
-```
+1. **Misc软件服务子系统**
 
-![](figures/build_target.png "step 1")
-
-```
-3. 在foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include 的system_ability_definition.h中添加自己服务的id:3706。 
-信息：DOWNLOAD_SERVICE_ID = 3706,
-```
-
-![](figures/service_id.png "step 2")
-
-2.  编译命令
-
-```
-./build.sh --product-name rk3568 --build-target request
-```
-
-3.  推送 so 文件
-
-```
-将工程目录下out/rk3568/miscservices/request下的libdownload_server.z.so推送到system/lib;
-将libdownloadsingle.z.so、librequestability.z.so和libupload_lib.z.so推送到system/lib/module下，并确保四个so至少为可读状态。
-```
-
-4.  安装download dataability HAP包
-
-```
-将工程目录下out/rk3568/obj/base/miscservices/request/download/ability/下的download_dataability.hap安装到rk3568开发板。
-```
-
-5.  重启设备
-
-#### 参与贡献
-
-1.  Fork 本仓库
-2.  提交代码
-3.  新建 Pull Request
-4.  commit 完成即可
+   [miscservices_download](https://gitee.com/openharmony/miscservices_download/tree/master/)
