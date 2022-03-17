@@ -7,6 +7,9 @@ Request组件向三方应用提供系统下载/上传服务能力，以支撑应
 **图 1** 下载子系统架构图  
 ![](figures/download_architecture.png "子系统架构图")
 
+**图 2** 上传子系统架构图  
+![](figures/subsystem_architecture_zh.png "子系统架构图")
+
 ## 目录
 
 ```

@@ -27,6 +27,8 @@ UploadTask::UploadTask(std::shared_ptr<UploadConfig>& uploadConfig)
     curlAdp_ = nullptr;
     state_ = STATE_INIT;
     error_ = 0;
+    uploadedSize_ = 0;
+    totalSize_ = 0;
     progressCallback_ = nullptr;
     headerReceiveCallback_ = nullptr;
     failCallback_ = nullptr;

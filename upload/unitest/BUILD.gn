@@ -23,15 +23,16 @@ ohos_unittest("upload_obtain_file_UT_test") {
   sources = [
     "src/obtain_file_test.cpp",
     "src/mock_obtain_file.cpp",
+    "//base/miscservices/request/upload/frameworks/libs/src/obtain_file.cpp",
   ]
 
   include_dirs = [
     "include",
+    "//third_party/curl/include",
     "//base/miscservices/request/upload/frameworks/libs/include",
   ]
 
   deps = [
-    "//base/miscservices/request/upload/frameworks/libs/:upload_lib",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//foundation/aafwk/standard/interfaces/innerkits/want:want",
     "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base:appexecfwk_base",
@@ -48,6 +49,7 @@ ohos_unittest("upload_UT_test") {
 
   sources = [
     "src/upload_test.cpp",
+    "//base/miscservices/request/upload/frameworks/libs/src/curl_adp.cpp",
   ]
 
   include_dirs = [
@@ -67,10 +69,6 @@ ohos_unittest("upload_UT_test") {
     "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_core/include/bundlemgr",
     "//foundation/aafwk/standard/interfaces/innerkits/ability_manager/include",
     "//third_party/curl/include",
-    #"//foundation/aafwk/standard/frameworks/kits/appkit/native/ability_runtime/context",
-    #"//foundation/aafwk/standard/frameworks/kits/appkit/native/ability_runtime/include",
-    #"./",
-    #"//base/miscservices/request/upload/frameworks/libs/include",
   ]
 
   deps = [
@@ -80,7 +78,6 @@ ohos_unittest("upload_UT_test") {
     "//foundation/aafwk/standard/frameworks/kits/appkit:app_context",
     "//foundation/distributedschedule/dmsfwk/interfaces/innerkits/uri:zuri",
     "//foundation/aafwk/standard/interfaces/innerkits/want:want",
-    "//base/miscservices/request/upload/frameworks/libs/:upload_lib",
   ]
 
   external_deps = [
