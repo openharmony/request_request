@@ -22,6 +22,7 @@ config("upload_lib_config") {
   ]
   ldflags = [ "-Wl,--exclude-libs,libcrypto_static.a" ]
   ldflags += [ "-Wl,--exclude-libs,libcurl.a" ]
+
   # cflags_cc = [ "-fvisibility=hidden" ]
   cflags = [ "-DOPENSSL_ARM64_PLATFORM" ]
 }
@@ -39,11 +40,11 @@ config("upload_lib_public_config") {
 ohos_shared_library("upload_lib") {
   sources = [
     "src/curl_adp.cpp",
-    "src/upload_task.cpp",
-    "src/obtain_file.cpp",
     "src/module_init.cpp",
+    "src/obtain_file.cpp",
+    "src/upload_task.cpp",
   ]
-    include_dirs = [
+  include_dirs = [
     "//third_party/curl/include",
     "//third_party/openssl/include",
   ]
@@ -51,15 +52,15 @@ ohos_shared_library("upload_lib") {
   configs = [ ":upload_lib_config" ]
 
   deps = [
-    "//third_party/curl/:curl",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//foundation/aafwk/standard/interfaces/innerkits/want:want",
     "//foundation/distributedschedule/dmsfwk/interfaces/innerkits/uri:zuri",
+    "//third_party/curl/:curl",
   ]
 
   external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
     "ability_runtime:ability_manager",
+    "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
   ]
 

@@ -14,16 +14,15 @@
 #import("//base/miscservices/request/upload/upload.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
-
 module_output_path = "request/upload_service"
 
 ohos_unittest("upload_obtain_file_UT_test") {
   module_out_path = module_output_path
 
   sources = [
-    "src/obtain_file_test.cpp",
-    "src/mock_obtain_file.cpp",
     "//base/miscservices/request/upload/frameworks/libs/src/obtain_file.cpp",
+    "src/mock_obtain_file.cpp",
+    "src/obtain_file_test.cpp",
   ]
 
   include_dirs = [
@@ -39,17 +38,15 @@ ohos_unittest("upload_obtain_file_UT_test") {
     "//foundation/distributedschedule/dmsfwk/interfaces/innerkits/uri:zuri",
   ]
 
-  external_deps = [
-    "ability_runtime:ability_manager",
-  ]
+  external_deps = [ "ability_runtime:ability_manager" ]
 }
 
 ohos_unittest("upload_UT_test") {
   module_out_path = module_output_path
 
   sources = [
-    "src/upload_test.cpp",
     "//base/miscservices/request/upload/frameworks/libs/src/curl_adp.cpp",
+    "src/upload_test.cpp",
   ]
 
   include_dirs = [
@@ -72,23 +69,23 @@ ohos_unittest("upload_UT_test") {
   ]
 
   deps = [
-    "//third_party/curl/:curl",
-    "//utils/native/base:utils",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//foundation/aafwk/standard/frameworks/kits/appkit:app_context",
-    "//foundation/distributedschedule/dmsfwk/interfaces/innerkits/uri:zuri",
     "//foundation/aafwk/standard/interfaces/innerkits/want:want",
+    "//foundation/distributedschedule/dmsfwk/interfaces/innerkits/uri:zuri",
+    "//third_party/curl/:curl",
+    "//utils/native/base:utils",
   ]
 
   external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
-    "ability_runtime:runtime",
+    "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
+    "ability_runtime:napi_base_context",
+    "ability_runtime:runtime",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
     "native_appdatamgr:native_appdatafwk",
     "native_appdatamgr:native_dataability",
-    "ipc:ipc_core",
-    "ability_runtime:ability_context_native",
-    "ability_runtime:napi_base_context",
     "native_appdatamgr:native_rdb",
   ]
 }
