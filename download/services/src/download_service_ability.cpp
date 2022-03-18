@@ -22,6 +22,7 @@
 
 #include "core_service_client.h"
 #include "ipc_skeleton.h"
+#include "accesstoken_kit.h"
 #include "iservice_registry.h"
 #include "system_ability.h"
 #include "system_ability_definition.h"
@@ -33,6 +34,11 @@
 namespace OHOS::Request::Download {
 using namespace std;
 using namespace OHOS::HiviewDFX;
+using namespace Security::AccessToken;
+
+static const std::string DOWNLOAD_PERMISSION_NAME_INTERNET = "ohos.permission.INTERNET";
+static const std::string DOWNLOAD_PERMISSION_NAME_SESSION = "ohos.permission.DOWNLOAD_SESSION_MANAGER";
+
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DownloadServiceAbility, DOWNLOAD_SERVICE_ID, true);
 const std::int64_t INIT_INTERVAL = 5000L;
@@ -217,6 +223,21 @@ bool DownloadServiceAbility::Off(uint32_t taskId, const std::string &type)
         return true;
     }
     return false;
+}
+
+bool DownloadServiceAbility::CheckPermission()
+{
+    AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int result = PERMISSION_DENIED;
+    if (AccessTokenKit::GetTokenTypeFlag(callerToken) == TOKEN_NATIVE) {
+        result = AccessTokenKit::VerifyNativeToken(callerToken, DOWNLOAD_PERMISSION_NAME_INTERNET);
+    } else if (AccessTokenKit::GetTokenTypeFlag(callerToken) == TOKEN_HAP) {
+        result = AccessTokenKit::VerifyAccessToken(callerToken, DOWNLOAD_PERMISSION_NAME_INTERNET);
+    } else {
+        DOWNLOAD_HILOGE("invalid token id %{public}d", callerToken);
+    }
+    DOWNLOAD_HILOGI("Current token permission is %{public}d", result);
+    return result == PERMISSION_GRANTED;
 }
 
 void DownloadServiceAbility::NotifyHandler(const std::string& type, uint32_t taskId, uint32_t argv1, uint32_t argv2)

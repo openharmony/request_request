@@ -34,7 +34,7 @@ DownloadProgressNotify::~DownloadProgressNotify()
 
 void DownloadProgressNotify::OnCallBack(MessageParcel &data)
 {
-    DOWNLOAD_HILOGD("Pause callback in");
+    DOWNLOAD_HILOGD("Progress callback in");
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
     if (loop == nullptr) {

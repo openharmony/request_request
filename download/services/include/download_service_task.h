@@ -88,6 +88,7 @@ private:
     bool isPartialMode_;
 
     bool forceStop_;
+    bool isRemoved_;
     uint32_t retryTime_;
 
     DownloadTaskCallback eventCb_;

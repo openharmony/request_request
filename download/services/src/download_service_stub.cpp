@@ -52,6 +52,9 @@ int32_t DownloadServiceStub::OnRemoteRequest(
         case CMD_OFF:
             return OnEventOff(data, reply);
             break;
+        case CMD_CHECKPERMISSION:
+            return OnCheckPermission(data, reply);
+            break;
         default:
             DOWNLOAD_HILOGE("Default value received, check needed.");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -195,6 +198,18 @@ bool DownloadServiceStub::OnEventOff(MessageParcel &data, MessageParcel &reply)
         return false;
     }
     DOWNLOAD_HILOGD("DownloadServiceStub::OnEventOff out");
+    return true;
+}
+
+bool DownloadServiceStub::OnCheckPermission(MessageParcel &data, MessageParcel &reply)
+{
+    DOWNLOAD_HILOGD("DownloadServiceStub::OnCheckPermission in");
+
+    bool result = CheckPermission();
+    if (!reply.WriteBool(result)) {
+        return false;
+    }
+    DOWNLOAD_HILOGD("DownloadServiceStub::OnCheckPermission out");
     return true;
 }
 } // namespace OHOS::Request::Download
