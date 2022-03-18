@@ -223,4 +223,24 @@ bool DownloadServiceProxy::Off(uint32_t taskId, const std::string &type)
     DOWNLOAD_HILOGD("DownloadServiceProxy::Off out [ret: %{public}d]", ret);
     return ret;
 }
+
+bool DownloadServiceProxy::CheckPermission()
+{
+    DOWNLOAD_HILOGD("DownloadServiceProxy::CheckPermission in");
+    MessageParcel data, reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        DOWNLOAD_HILOGE(" Failed to write parcelable ");
+        return false;
+    }
+    
+    int32_t result = Remote()->SendRequest(CMD_CHECKPERMISSION, data, reply, option);
+    if (result != ERR_NONE) {
+        DOWNLOAD_HILOGE(" DownloadServiceProxy::CheckPermission fail, ret = %{public}d ", result);
+        return false;
+    }
+    bool ret = reply.ReadBool();
+    DOWNLOAD_HILOGD("DownloadServiceProxy::CheckPermission out [ret: %{public}d]", ret);
+    return ret;
+}
 } // namespace OHOS::Request::Download

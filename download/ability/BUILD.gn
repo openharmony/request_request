@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
 import("//build/lite/config/component/lite_component.gni")
+import("//build/ohos.gni")
 
 ## Build download_dataability.hap
 ohos_hap("download_dataability") {
@@ -26,26 +26,26 @@ ohos_hap("download_dataability") {
 
 ## Build downloaddataability.so {{{
 config("downloaddataability_public_config") {
- visibility = [ ":*" ]
-  include_dirs = [ 
+  visibility = [ ":*" ]
+  include_dirs = [
     "//third_party/node/src",
     "include",
   ]
-  cflags = [ ]
+  cflags = []
 }
- 
+
 ohos_shared_library("downloaddataability") {
   sources = [
+    "src/common_event.cpp",
+    "src/db_path.cpp",
     "src/download_data_ability.cpp",
     "src/download_database.cpp",
-    "src/uri_utils.cpp",
     "src/file_utils.cpp",
     "src/predicates_convert.cpp",
-    "src/common_event.cpp",
     "src/sql_analyzer.cpp",
-    "src/db_path.cpp",
- ]
-include_dirs=[
+    "src/uri_utils.cpp",
+  ]
+  include_dirs = [
     "//utils/native/base/include",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits/include",
     "//third_party/jsoncpp",
@@ -60,37 +60,38 @@ include_dirs=[
     "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler/include",
     "//foundation/aafwk/standard/services/abilitymgr/include",
     "//foundation/appexecfwk/standard/common/log/include",
-    "//foundation/distributedschedule/dmsfwk/services/dtbschedmgr/include",
     "//foundation/aafwk/standard/frameworks/kits/ability/native/include",
     "//base/notification/ces_standard/interfaces/innerkits/native/include/",
-    "//base/miscservices/request/download/utils/include"
-   ]
+    "//base/miscservices/request/download/utils/include",
+    "//foundation/aafwk/standard/interfaces/innerkits/uri/include",
+  ]
 
-deps = [
-    "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
-    "//utils/native/base:utils",
-    "//foundation/ace/napi:ace_napi",
-    "//third_party/jsoncpp:jsoncpp",
+  deps = [
     "//base/notification/ces_standard/frameworks/core:cesfwk_core",
     "//base/notification/ces_standard/frameworks/native:cesfwk_innerkits",
     "//base/notification/ces_standard/services:cesfwk_services",
-    "//foundation/aafwk/standard/interfaces/innerkits/want/:want",
-    "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:dummy_classes",
+    "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
+    "//foundation/aafwk/standard/interfaces/innerkits/want/:want",
+    "//foundation/ace/napi:ace_napi",
     "//foundation/appexecfwk/standard/common:libappexecfwk_common",
     "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base:appexecfwk_base",
     "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_core:appexecfwk_core",
-    "//foundation/distributedschedule/dmsfwk/interfaces/innerkits/uri:zuri",
+    "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//third_party/jsoncpp:jsoncpp",
+    "//utils/native/base:utils",
     "//utils/native/base:utilsbase",
   ]
 
   public_configs = [ ":downloaddataability_public_config" ]
   external_deps = [
-    "ability_runtime:ability_manager",
     "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ces_standard:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "ipc:ipc_core",
-    "ces_standard:cesfwk_innerkits",
     "native_appdatamgr:native_appdatafwk",
     "native_appdatamgr:native_dataability",
     "native_appdatamgr:native_preferences",

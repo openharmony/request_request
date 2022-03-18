@@ -51,6 +51,10 @@ __thread napi_ref DownloadTaskNapi::globalCtor = nullptr;
 napi_value DownloadTaskNapi::JsMain(napi_env env, napi_callback_info info)
 {
     DOWNLOAD_HILOGD("Enter download JsMain.");
+    if (!DownloadManager::GetInstance()->CheckPermission()) {
+        DOWNLOAD_HILOGD("no permission to access download service");
+        return nullptr;
+    }
     struct ContextInfo {
         napi_ref ref = nullptr;
     };
@@ -188,8 +192,11 @@ std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> DownloadTaskNapi::GetDataAb
     }
     std::shared_ptr<OHOS::Uri> uriPtr = std::make_shared<OHOS::Uri>("dataability:///com.ohos.download");
     if (dataAbilityHelper_ == nullptr) {
-        DOWNLOAD_HILOGE("dataAbilityHelper_ is not nullptr!");
+        DOWNLOAD_HILOGE("Try to get dataAbilityHelper_!");
         dataAbilityHelper_ = OHOS::AppExecFwk::DataAbilityHelper::Creator(ability->GetContext(), uriPtr);
+    }
+    if (dataAbilityHelper_ != nullptr) {
+        DOWNLOAD_HILOGE("dataAbilityHelper_ is not nullptr!");
     }
     return dataAbilityHelper_;
 }

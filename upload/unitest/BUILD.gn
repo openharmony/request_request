@@ -33,12 +33,15 @@ ohos_unittest("upload_obtain_file_UT_test") {
 
   deps = [
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
+    "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
     "//foundation/aafwk/standard/interfaces/innerkits/want:want",
     "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base:appexecfwk_base",
-    "//foundation/distributedschedule/dmsfwk/interfaces/innerkits/uri:zuri",
   ]
 
-  external_deps = [ "ability_runtime:ability_manager" ]
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+  ]
 }
 
 ohos_unittest("upload_UT_test") {
@@ -71,13 +74,14 @@ ohos_unittest("upload_UT_test") {
   deps = [
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//foundation/aafwk/standard/frameworks/kits/appkit:app_context",
+    "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
     "//foundation/aafwk/standard/interfaces/innerkits/want:want",
-    "//foundation/distributedschedule/dmsfwk/interfaces/innerkits/uri:zuri",
     "//third_party/curl/:curl",
     "//utils/native/base:utils",
   ]
 
   external_deps = [
+    "ability_base:zuri",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
     "ability_runtime:napi_base_context",

@@ -36,6 +36,7 @@ public:
 
     bool On(uint32_t taskId, const std::string &type, const sptr<DownloadNotifyInterface> &listener) override;
     bool Off(uint32_t taskId, const std::string &type) override;
+    bool CheckPermission() override;
 
 private:
     static inline BrokerDelegator<DownloadServiceProxy> delegator_;

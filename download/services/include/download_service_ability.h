@@ -50,6 +50,8 @@ public:
     bool On(uint32_t taskId, const std::string &type, const sptr<DownloadNotifyInterface> &listener) override;
     bool Off(uint32_t taskId, const std::string &type) override;
 
+    bool CheckPermission() override;
+
     static void NotifyHandler(const std::string& type, uint32_t taskId, uint32_t argv1, uint32_t argv2);
 
 protected:

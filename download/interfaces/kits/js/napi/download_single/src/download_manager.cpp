@@ -64,34 +64,6 @@ DownloadTask* DownloadManager::EnqueueTask(const DownloadConfig &config)
 {
     DOWNLOAD_HILOGD("DownloadManager EnqueueTask start.");
 
-    OHOS::Uri uriDownload("dataability:///com.ohos.download/download/downloadInfo");
-    OHOS::NativeRdb::ValuesBucket rawContactValues;
-    rawContactValues.PutString("title", "test1");
-    int rowId = dataAbilityHelper_->Insert(uriDownload, rawContactValues);
-    DOWNLOAD_HILOGI("DownloadManager EnqueueTask rowId = %{public}d", rowId);
-    
-    std::vector<std::string> columns;
-    columns.push_back("taskid");
-    columns.push_back("title");
-
-    OHOS::NativeRdb::DataAbilityPredicates predicates;
-    predicates.GreaterThan("taskid", "0");
-    std::shared_ptr<OHOS::NativeRdb::AbsSharedResultSet> resultSet;
-    resultSet = dataAbilityHelper_->Query(uriDownload, columns, predicates);
-    int rowCount = 0;
-    resultSet->GetRowCount(rowCount);
-    DOWNLOAD_HILOGI("DownloadManager ResultSet rowCount = %{public}d", rowCount);
-    int resultSetNum = resultSet->GoToFirstRow();
-    while (resultSetNum == 0) {
-        int id = 0;
-        std::string contactIdKey = "taskid";
-        int contactIndex = 0;
-        resultSet->GetColumnIndex(contactIdKey, contactIndex);
-        resultSet->GetInt(contactIndex, id);
-        DOWNLOAD_HILOGI("DownloadManager query result id  = %{public}d", id);
-        resultSetNum = resultSet->GoToNextRow();
-    }
-    resultSet->Close();
     if (downloadServiceProxy_ == nullptr) {
         DOWNLOAD_HILOGW("Redo GetDownloadServiceProxy");
         downloadServiceProxy_ = GetDownloadServiceProxy();
@@ -100,8 +72,23 @@ DownloadTask* DownloadManager::EnqueueTask(const DownloadConfig &config)
         DOWNLOAD_HILOGE("Pause quit because redoing GetDownloadServiceProxy failed.");
         return nullptr;
     }
-    DOWNLOAD_HILOGD("DownloadManager Pause succeeded.");
     uint32_t taskId = downloadServiceProxy_->Request(config);
+    DOWNLOAD_HILOGD("DownloadManager EnqueueTask succeeded.");
+    
+    DOWNLOAD_HILOGD("DownloadManager EnqueueTask Save Data.");
+    OHOS::Uri uriDownload("dataability:///com.ohos.download/download/downloadInfo");
+    OHOS::NativeRdb::ValuesBucket rawContactValues;
+    rawContactValues.PutInt("taskId", taskId);
+    rawContactValues.PutString("url", config.GetUrl().c_str());
+    rawContactValues.PutString("description", config.GetDescription().c_str());
+    rawContactValues.PutString("title", config.GetTitle().c_str());
+    rawContactValues.PutString("filePath", config.GetFilePath().c_str());
+    rawContactValues.PutBool("metered", config.GetMetered());
+    rawContactValues.PutBool("roaming", config.GetRoaming());
+    rawContactValues.PutInt("network", config.GetNetworkType());
+    
+    int rowId = dataAbilityHelper_->Insert(uriDownload, rawContactValues);
+    DOWNLOAD_HILOGI("DownloadManager EnqueueTask rowId = %{public}d", rowId);
     return new DownloadTask(taskId);
 }
 
@@ -185,7 +172,7 @@ bool DownloadManager::On(uint32_t taskId, const std::string &type, const sptr<Do
         DOWNLOAD_HILOGE("Resume quit because redoing GetDownloadServiceProxy failed.");
         return false;
     }
-    DOWNLOAD_HILOGD("DownloadManager Resume succeeded.");
+    DOWNLOAD_HILOGD("DownloadManager On succeeded.");
     return downloadServiceProxy_->On(taskId, type, listener);
 }
 
@@ -199,8 +186,23 @@ bool DownloadManager::Off(uint32_t taskId, const std::string &type)
         DOWNLOAD_HILOGE("Resume quit because redoing GetDownloadServiceProxy failed.");
         return false;
     }
-    DOWNLOAD_HILOGD("DownloadManager Resume succeeded.");
+    DOWNLOAD_HILOGD("DownloadManager Off succeeded.");
     return downloadServiceProxy_->Off(taskId, type);
+}
+
+bool DownloadManager::CheckPermission()
+{
+    if (downloadServiceProxy_ == nullptr) {
+        DOWNLOAD_HILOGW("Redo GetDownloadServiceProxy");
+        downloadServiceProxy_ = GetDownloadServiceProxy();
+    }
+    if (downloadServiceProxy_ == nullptr) {
+        DOWNLOAD_HILOGE("Resume quit because redoing GetDownloadServiceProxy failed.");
+        return false;
+    }
+    DOWNLOAD_HILOGD("DownloadManager CheckPermission succeeded.");
+    DOWNLOAD_HILOGD("Check Permission enable");
+    return downloadServiceProxy_->CheckPermission();
 }
 
 sptr<DownloadServiceInterface> DownloadManager::GetDownloadServiceProxy()

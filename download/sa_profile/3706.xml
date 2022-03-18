@@ -15,7 +15,7 @@
 <info>
     <process>download_server</process>
     <systemability>
-        <name>3705</name>
+        <name>3706</name>
         <libpath>libdownload_server.z.so</libpath>
         <run-on-create>true</run-on-create>
         <distributed>false</distributed>

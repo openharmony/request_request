@@ -22,13 +22,19 @@ namespace OHOS::Request::Download {
 napi_value DownloadPause::Exec(napi_env env, napi_callback_info info)
 {
     DOWNLOAD_HILOGD("Enter ---->");
+    if (!DownloadManager::GetInstance()->CheckPermission()) {
+        DOWNLOAD_HILOGD("no permission to access download service");
+        return nullptr;
+    }
     auto context = std::make_shared<PauseContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         NAPI_ASSERT_BASE(env, argc == 0, " should 0 parameter!", napi_invalid_arg);
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        return napi_ok;
+        napi_status status = napi_get_boolean(env, context->result, result);
+        DOWNLOAD_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
+        return status;
     };
     auto exec = [context](AsyncCall::Context *ctx) {
         context->result = DownloadManager::GetInstance()->Pause(context->task_->GetId());

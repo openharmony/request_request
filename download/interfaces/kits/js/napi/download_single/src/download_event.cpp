@@ -27,6 +27,10 @@ namespace OHOS::Request::Download {
 napi_value DownloadEvent::On(napi_env env, napi_callback_info info)
 {
     DOWNLOAD_HILOGD("Enter ---->");
+    if (!DownloadManager::GetInstance()->CheckPermission()) {
+        DOWNLOAD_HILOGD("no permission to access download service");
+        return nullptr;
+    }
     napi_value result = nullptr;
     size_t argc = NapiUtils::MAX_ARGC;
     napi_value argv[NapiUtils::MAX_ARGC] = {nullptr};
@@ -73,6 +77,10 @@ napi_value DownloadEvent::On(napi_env env, napi_callback_info info)
 napi_value DownloadEvent::Off(napi_env env, napi_callback_info info)
 {
     DOWNLOAD_HILOGD("Enter ---->");
+    if (!DownloadManager::GetInstance()->CheckPermission()) {
+        DOWNLOAD_HILOGD("no permission to access download service");
+        return nullptr;
+    }
     auto context = std::make_shared<EventOffContext>();
     napi_value result = nullptr;
     size_t argc = NapiUtils::MAX_ARGC;
