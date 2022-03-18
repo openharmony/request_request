@@ -23,7 +23,7 @@ namespace OHOS::Request::Download {
 DownloadServiceTask::DownloadServiceTask(uint32_t taskId, const DownloadConfig &config)
     : taskId_(taskId), config_(config), status_(SESSION_UNKNOWN), code_(ERROR_UNKNOWN), reason_(PAUSED_UNKNOWN),
       mimeType_(""), file_(nullptr), totalSize_(0), downloadSize_(0), isPartialMode_(false), forceStop_(false),
-      retryTime_(10), eventCb_(nullptr) {
+      isRemoved_(false), retryTime_(10), eventCb_(nullptr) {
 }
 
 DownloadServiceTask::~DownloadServiceTask(void)
@@ -96,6 +96,7 @@ bool DownloadServiceTask::Resume()
 bool DownloadServiceTask::Remove()
 {
     DOWNLOAD_HILOGD("Remove Task[%{public}d], current status is %{public}d\n", taskId_, status_);
+    isRemoved_ = true;
     ForceStopRunning();
     if (eventCb_ != nullptr) {
         eventCb_("remove", taskId_, 0, 0);
@@ -380,7 +381,10 @@ int DownloadServiceTask::ProgressCallback(void *pParam, double dltotal, double d
 {
     DownloadServiceTask *this_ = static_cast<DownloadServiceTask *>(pParam);
     if (this_ != nullptr) {
-        if (this_->eventCb_ != nullptr) {
+        if (this_->isRemoved_) {
+            DOWNLOAD_HILOGD("download task has been removed\n");
+        }
+        if (this_->eventCb_ != nullptr && !this_->isRemoved_) {
             this_->eventCb_("progress",  this_->taskId_, this_->downloadSize_, this_->totalSize_);
         }
         if (this_->forceStop_) {
@@ -440,6 +444,7 @@ bool DownloadServiceTask::ExecHttp()
     }
 
     CURLcode code = curl_easy_perform(handle.get());
+
     if (file_ != nullptr) {
         fflush(file_);
         fclose(file_);
@@ -551,6 +556,9 @@ bool DownloadServiceTask::GetFileSize(uint32_t &result)
     if (res == CURLE_OK) {
         result = static_cast<long long>(size);
     }
+    if (result == -1) {
+        result = 0;
+    }
     DOWNLOAD_HILOGD("fetch file size %{public}d", result);
     return true;
 }
@@ -562,6 +570,10 @@ std::string DownloadServiceTask::GetTmpPath()
 
 void DownloadServiceTask::HandleResponseCode(CURLcode code, int32_t httpCode)
 {
+    if (isRemoved_) {
+        DOWNLOAD_HILOGD("download task has been removed");
+        return;
+    }
     switch (code) {
         case CURLE_OK:
             if (httpCode == HTTP_OK || (isPartialMode_ && httpCode == HTTP_PARIAL_FILE)) {

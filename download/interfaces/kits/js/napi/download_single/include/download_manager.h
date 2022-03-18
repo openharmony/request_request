@@ -51,6 +51,8 @@ public:
 
     bool On(uint32_t taskId, const std::string &type, const sptr<DownloadNotifyInterface> &listener);
     bool Off(uint32_t taskId, const std::string &type);
+
+    bool CheckPermission();
     
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
     void SetDataAbilityHelper(std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> dataAbilityHelper);

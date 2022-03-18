@@ -13,9 +13,7 @@
 import("//build/ohos.gni")
 config("download_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
-  include_dirs = [
-    "include",
-  ]
+  include_dirs = [ "include" ]
 
   cflags_cc = [ "-fexceptions" ]
 }
@@ -42,51 +40,49 @@ ohos_shared_library("downloadsingle") {
     "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler/include",
     "//foundation/appexecfwk/standard/kits/appkit/native/app",
     "//foundation/appexecfwk/standard/common/log/include",
+    "//foundation/aafwk/standard/interfaces/innerkits/uri/include",
   ]
-  public_configs = [
-    ":download_interfaces_kits_napi_config",
-  ]
+  public_configs = [ ":download_interfaces_kits_napi_config" ]
 
   sources = [
-    "src/napi_utils.cpp",
+    "src/async_call.cpp",
+    "src/download_base_notify.cpp",
     "src/download_config.cpp",
+    "src/download_event.cpp",
+    "src/download_fail_notify.cpp",
     "src/download_info.cpp",
+    "src/download_manager.cpp",
+    "src/download_notify_stub.cpp",
     "src/download_pause.cpp",
+    "src/download_progress_notify.cpp",
     "src/download_query.cpp",
     "src/download_query_mimetype.cpp",
     "src/download_remove.cpp",
     "src/download_resume.cpp",
     "src/download_service_proxy.cpp",
-    "src/download_manager.cpp",
-    "src/download_task_napi.cpp",
-    "src/async_call.cpp",
     "src/download_task.cpp",
-    "src/download_event.cpp",
-    "src/download_notify_stub.cpp",
-    "src/download_base_notify.cpp",
-    "src/download_fail_notify.cpp",
-    "src/download_progress_notify.cpp",
+    "src/download_task_napi.cpp",
+    "src/napi_utils.cpp",
   ]
   deps = [
+    "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
+    "//foundation/aafwk/standard/frameworks/kits/ability/native:dummy_classes",
+    "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
     "//foundation/ace/napi:ace_napi",
+    "//foundation/appexecfwk/standard/common:libappexecfwk_common",
+    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base:appexecfwk_base",
+    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_core:appexecfwk_core",
     "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler:libeventhandler",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//utils/native/base:utils",
-
-    "//foundation/aafwk/standard/frameworks/kits/ability/native:dummy_classes",
-    "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
-    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base:appexecfwk_base",
-    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_core:appexecfwk_core",
-    "//foundation/appexecfwk/standard/common:libappexecfwk_common",
-    "//foundation/distributedschedule/dmsfwk/interfaces/innerkits/uri:zuri",
   ]
   external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-
-    "ability_runtime:ability_manager",
-    "ability_base:want",
-    "eventhandler:libeventhandler",
     "native_appdatamgr:native_appdatafwk",
     "native_appdatamgr:native_dataability",
     "native_appdatamgr:native_preferences",

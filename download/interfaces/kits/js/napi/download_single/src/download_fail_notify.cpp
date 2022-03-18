@@ -31,7 +31,7 @@ DownloadFailNotify::~DownloadFailNotify()
 
 void DownloadFailNotify::OnCallBack(MessageParcel &data)
 {
-    DOWNLOAD_HILOGD("Pause callback in");
+    DOWNLOAD_HILOGD("Failed callback in");
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
     if (loop == nullptr) {
@@ -51,11 +51,12 @@ void DownloadFailNotify::OnCallBack(MessageParcel &data)
     notifyData->task = task_;
     notifyData->firstArgv = data.ReadUint32();
     DOWNLOAD_HILOGD("recv error code is %{public}d", notifyData->firstArgv);
-    work->data = this;
-
+    work->data = notifyData;
+    
     uv_queue_work(
         loop, work, [](uv_work_t *work) {},
         [](uv_work_t *work, int statusInt) {
+            DOWNLOAD_HILOGD("this is new fail callback");
             NotifyData *notifyData = static_cast<NotifyData*>(work->data);
             napi_value undefined = 0;
             napi_get_undefined(notifyData->env, &undefined);

@@ -26,9 +26,6 @@
 		},
 		"abilities": [
 			{
-				"permissions": [
-					"com.ohos.download.DataAbilityShellProvider.PROVIDER"
-				],
 				"name": "DownloadDataAbility",
 				"icon": "$media:icon",
 				"description": "dataability_description",
