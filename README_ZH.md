@@ -1,8 +1,12 @@
-# Request组件
+# 杂散子系统/Request服务
 
 ##  简介
 
+### 内容介绍
+
 Request组件向三方应用提供系统下载/上传服务能力，以支撑应用开发者方便、高效的使用以及管理下载/上传业务的功能，包含新建、移除、暂停、恢复以及查询下载/上传任务。
+
+### 架构图介绍
 
 **图 1** 下载子系统架构图  
 ![](figures/download_architecture.png "子系统架构图")
@@ -10,11 +14,15 @@ Request组件向三方应用提供系统下载/上传服务能力，以支撑应
 **图 2** 上传子系统架构图  
 ![](figures/subsystem_architecture_zh.png "子系统架构图")
 
+#### 仓库路径
+
+/base/miscservices/request
+
 ## 目录
 
 ```
 /base/miscservices/request
-├── figures                  # 构架图
+├── figures                  # 架构图
 ├── download/ability         # 下载服务数据库管理模块
 ├── download/etc             # 下载服务包含的进程配置文件
 ├── interfaces/kits/js/napi  # 本组件对外提供的下载服务接口代码
@@ -31,7 +39,7 @@ Request组件向三方应用提供系统下载/上传服务能力，以支撑应
 
 ##  说明
 
-###  js接口说明
+###  接口说明
 
 **表 1**  Request组件的主要功能
 
@@ -465,11 +473,11 @@ internal://cache/path/to/file.txt</p>
 </tbody>
 </table>
 
-###  js接口使用说明
+###  使用说明
 
 ```
 // 导入模块
-import request from '@ohos.requestability';
+import request from '@ohos.request';
 
 // 1、下载服务接口使用说明
 let downloadConfig = {
@@ -731,6 +739,4 @@ uploadTask.remove((err, result) => {
 
 ##  相关仓
 
-1. **Misc软件服务子系统**
-
-   [miscservices_download](https://gitee.com/openharmony/miscservices_download/tree/master/)
+[miscservices_request](https://gitee.com/openharmony/miscservices_request/tree/master/)
