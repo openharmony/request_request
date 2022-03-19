@@ -40,7 +40,7 @@ void FailCallback::Fail(const unsigned int error)
         [](uv_work_t *work, int status) {
             FailWorker *failWorkerInner = reinterpret_cast<FailWorker *>(work->data);
             napi_value jsError = nullptr;
-            napi_create_int32(failWorkerInner->callback->env_, failWorkerInner->error, &jsError);
+            napi_create_uint32(failWorkerInner->callback->env_, failWorkerInner->error, &jsError);
             napi_value callback = nullptr;
             napi_value args[1] = { jsError };
             napi_get_reference_value(failWorkerInner->callback->env_,

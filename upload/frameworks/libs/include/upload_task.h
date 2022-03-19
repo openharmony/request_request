@@ -49,6 +49,7 @@ enum UploadErrorCode {
     UPLOAD_ERRORCODE_GET_FILE_ERROR,
     UPLOAD_ERRORCODE_CONFIG_ERROR,
     UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR,
+    UPLOAD_ERRORCODE_UPLOAD_FAIL,
 };
 
 class UploadTask : public IUploadTask {
@@ -82,8 +83,8 @@ private:
     std::shared_ptr<CUrlAdp> curlAdp_;
     std::shared_ptr<ObtainFile> obtainFile_;
     std::shared_ptr<OHOS::AppExecFwk::Context> context_;
-    unsigned int uploadedSize_;
-    unsigned int totalSize_;
+    int64_t uploadedSize_;
+    int64_t totalSize_;
     unsigned int error_;
     std::string header_;
     std::vector<FileData> fileArray_;

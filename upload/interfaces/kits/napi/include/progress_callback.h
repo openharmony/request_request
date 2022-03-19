@@ -28,18 +28,20 @@ class ProgressCallback : public IProgressCallback {
 public:
     ProgressCallback(napi_env env, napi_value callback);
     virtual ~ProgressCallback();
-    void Progress(const unsigned int uploadedSize, const unsigned int totalSize) override;
+    void Progress(const int64_t uploadedSize, const int64_t totalSize) override;
 private:
     struct ProgressWorker {
         const ProgressCallback *callback = nullptr;
-        const unsigned int uploadedSize;
-        const unsigned int totalSize;
-        ProgressWorker(const ProgressCallback * const & callbackIn, const unsigned int &uploadedSizeIn,
-            const unsigned int &totalSizeIn)
+        const int64_t uploadedSize;
+        const int64_t totalSize;
+        ProgressWorker(const ProgressCallback * const & callbackIn, const int64_t &uploadedSizeIn,
+            const int64_t &totalSizeIn)
             : callback(callbackIn),
               uploadedSize(uploadedSizeIn),
               totalSize(totalSizeIn) {}
     };
+    void CheckQueueWorkRet(int ret, ProgressWorker *progressWorker, uv_work_t *work);
+    napi_status status_ = napi_ok;
     napi_ref callback_ = nullptr;
     napi_env env_;
     uv_loop_s *loop_ = nullptr;

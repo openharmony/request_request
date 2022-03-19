@@ -119,6 +119,7 @@ void CUrlAdp::UploadFile()
 
     ret = MultiAddHandle(curlMulti_, curlArray_);
     if (ret == false) {
+        FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
         return;
     }
     curl_multi_perform(curlMulti_, &isRuning);
@@ -161,6 +162,7 @@ void CUrlAdp::SetCurlOpt(CURL *curl)
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, this);
     curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, ProgressCallback);
     curl_easy_setopt(curl, CURLOPT_XFERINFODATA, this);
+    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 30L);
     curl_easy_setopt(curl, CURLOPT_UPLOAD_BUFFERSIZE, 8192L);
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
@@ -178,6 +180,7 @@ void CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
             eh = msg->easy_handle;
             int returnCode = msg->data.result;
             if (returnCode != CURLE_OK) {
+                FailNotify(UPLOAD_ERRORCODE_UPLOAD_FAIL);
                 UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Curl error code = %{public}d", msg->data.result);
                 continue;
             }

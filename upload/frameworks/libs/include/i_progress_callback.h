@@ -21,7 +21,7 @@ public:
     IProgressCallback() = default;
     virtual ~IProgressCallback()
     {}
-    virtual void Progress(const unsigned int uploadedSize, const unsigned int totalSize) = 0;
+    virtual void Progress(const int64_t uploadedSize, const int64_t totalSize) = 0;
 };
 } // end of OHOS::Request::Upload
 #endif
