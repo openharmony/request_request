@@ -21,9 +21,9 @@ ohos_unittest("upload_obtain_file_UT_test") {
   module_out_path = module_output_path
 
   sources = [
-    "src/obtain_file_test.cpp",
-    "src/mock_obtain_file.cpp",
     "//base/miscservices/request/upload/frameworks/libs/src/obtain_file.cpp",
+    "src/mock_obtain_file.cpp",
+    "src/obtain_file_test.cpp",
   ]
 
   include_dirs = [
@@ -34,10 +34,11 @@ ohos_unittest("upload_obtain_file_UT_test") {
   ]
 
   deps = [
+    "//base/miscservices/request/upload/frameworks/libs/:upload_lib",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
+    "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
     "//foundation/aafwk/standard/interfaces/innerkits/want:want",
     "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base:appexecfwk_base",
-    "//foundation/distributedschedule/dmsfwk/interfaces/innerkits/uri:zuri",
   ]
 
   external_deps = [
@@ -51,8 +52,8 @@ ohos_unittest("upload_UT_test") {
   module_out_path = module_output_path
 
   sources = [
-    "src/upload_test.cpp",
     "//base/miscservices/request/upload/frameworks/libs/src/curl_adp.cpp",
+    "src/upload_test.cpp",
   ]
 
   include_dirs = [
@@ -76,12 +77,13 @@ ohos_unittest("upload_UT_test") {
   ]
 
   deps = [
-    "//third_party/curl/:curl",
-    "//utils/native/base:utils",
+    "//base/miscservices/request/upload/frameworks/libs/:upload_lib",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//foundation/aafwk/standard/frameworks/kits/appkit:app_context",
-    "//foundation/distributedschedule/dmsfwk/interfaces/innerkits/uri:zuri",
+    "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
     "//foundation/aafwk/standard/interfaces/innerkits/want:want",
+    "//third_party/curl/:curl",
+    "//utils/native/base:utils",
   ]
 
   external_deps = [
