@@ -76,7 +76,7 @@ ohos_unittest("upload_UT_test") {
   ]
 
   deps = [
-    "//base/miscservices/request/upload/frameworks/libs/:upload_lib",  
+    "//base/miscservices/request/upload/frameworks/libs/:upload_lib",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//foundation/aafwk/standard/frameworks/kits/appkit:app_context",
     "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
