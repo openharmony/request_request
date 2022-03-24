@@ -284,7 +284,7 @@ size_t CUrlAdp::ReadCallback(char *buffer, size_t size, size_t nitems, void *arg
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "size is %{public}u, nitems is %{public}u.", size, nitems);
     FileData *read = (FileData *) arg;
     CUrlAdp *adp = (CUrlAdp *) read->adp;
-	if (adp == nullptr) {
+    if (adp == nullptr) {
         UPLOAD_HILOGI(UPLOAD_MODULE_FRAMEWORK, "adp is null");
         return CURL_READFUNC_ABORT;
     }
