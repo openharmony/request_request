@@ -348,24 +348,22 @@ void DownloadServiceManager::ResumeTaskByNetwork()
 {
     int taskCount = 0;
     std::lock_guard<std::recursive_mutex> autoLock(mutex_);
-    if (pausedQueue_.size() > 0) {
-        size_t size = pausedQueue_.size();
-        while (size-- > 0) {
-            uint32_t taskId = pausedQueue_.front();
-            if (taskMap_.find(taskId) != taskMap_.end()) {
-                pausedQueue_.pop();
-                auto task = taskMap_[taskId];
-                DownloadStatus status;
-                ErrorCode code;
-                PausedReason reason;
-                task->GetRunResult(status, code, reason);
-                if (reason != PAUSED_BY_USER) {
-                    task->Resume();
-                    PushQueue(pendingQueue_, taskId);
-                    taskCount++;
-                } else {
-                    pausedQueue_.push(taskId);
-                }
+    size_t size = pausedQueue_.size();
+    while (size-- > 0) {
+        uint32_t taskId = pausedQueue_.front();
+        if (taskMap_.find(taskId) != taskMap_.end()) {
+            pausedQueue_.pop();
+            auto task = taskMap_[taskId];
+            DownloadStatus status;
+            ErrorCode code;
+            PausedReason reason;
+            task->GetRunResult(status, code, reason);
+            if (reason != PAUSED_BY_USER) {
+                task->Resume();
+                PushQueue(pendingQueue_, taskId);
+                taskCount++;
+            } else {
+                pausedQueue_.push(taskId);
             }
         }
     }

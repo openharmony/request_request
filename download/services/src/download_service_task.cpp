@@ -757,7 +757,7 @@ void DownloadServiceTask::HandleCleanup(DownloadStatus status)
 
 bool DownloadServiceTask::HandleFileError()
 {
-    ErrorCode code = ERROR_UNKNOWN;   
+    ErrorCode code = ERROR_UNKNOWN;
     if (config_.GetFD() < 0) {
         switch (config_.GetFDError()) {
             case 0:
