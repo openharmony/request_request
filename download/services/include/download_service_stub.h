@@ -26,9 +26,9 @@ public:
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
-    bool OnRequest(Parcel &data, Parcel &reply);
-    bool OnPause(Parcel &data, Parcel &reply);
-    bool OnQuery(Parcel &data, Parcel &reply);
+    bool OnRequest(MessageParcel &data, MessageParcel &reply);
+    bool OnPause(MessageParcel &data, MessageParcel &reply);
+    bool OnQuery(MessageParcel &data, MessageParcel &reply);
     bool OnQueryMimeType(MessageParcel &data, MessageParcel &reply);
     bool OnRemove(MessageParcel &data, MessageParcel &reply);
     bool OnResume(MessageParcel &data, MessageParcel &reply);

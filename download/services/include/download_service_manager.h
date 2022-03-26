@@ -56,7 +56,6 @@ private:
         NONE_QUEUE,
         PENDING_QUEUE,
         PAUSED_QUEUE,
-        COMPLETED_QUEUE,
     };
 
     uint32_t GetCurrentTaskId();
@@ -65,12 +64,15 @@ private:
     void PushQueue(std::queue<uint32_t> &queue, uint32_t taskId);
     void RemoveFromQueue(std::queue<uint32_t> &queue, uint32_t taskId);
 
+	bool GetNetworkStatus();
+	void ResumeTaskByNetwork();
+	static void MonitorNetwork(DownloadServiceManager *thisVal);
+
 private:
     bool initialized_;
     std::recursive_mutex mutex_;
     std::map<uint32_t, std::shared_ptr<DownloadServiceTask>> taskMap_;
     std::queue<uint32_t> pendingQueue_;
-    std::queue<uint32_t> completedQueue_;
     std::queue<uint32_t> pausedQueue_;
     std::vector<std::shared_ptr<DownloadThread>> threadList_;
 
@@ -78,6 +80,8 @@ private:
     uint32_t interval_;
     uint32_t threadNum_;
     uint32_t timeoutRetry_;
+
+	std::shared_ptr<std::thread> networkThread_;
 
     static uint32_t taskId;
     static std::recursive_mutex instanceLock_;

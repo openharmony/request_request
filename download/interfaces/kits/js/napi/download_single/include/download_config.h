@@ -40,6 +40,10 @@ public:
 
     void SetTitle(const std::string &title);
 
+	void SetFD(int32_t fd);
+
+	void SetFDError(int32_t fdError);
+
     [[nodiscard]] const std::string &GetUrl() const;
 
     [[nodiscard]] const std::map<std::string, std::string> &GetHeader() const;
@@ -55,6 +59,10 @@ public:
     [[nodiscard]] const std::string &GetFilePath() const;
 
     [[nodiscard]] const std::string &GetTitle() const;
+
+	int32_t GetFD() const;
+
+	int32_t GetFDError() const;
 
     void Dump(bool isFull = true) const;
 
@@ -74,6 +82,10 @@ private:
     std::string filePath_;
 
     std::string title_;
+
+	int32_t fd_;
+
+	int32_t fdError_;
 };
 } // namespace OHOS::Request::Download
 

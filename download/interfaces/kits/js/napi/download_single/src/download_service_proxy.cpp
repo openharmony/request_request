@@ -13,9 +13,12 @@
  * limitations under the License.
  */
 #include "download_service_proxy.h"
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "iremote_broker.h"
-
 #include "log.h"
 #include "download_common.h"
 
@@ -32,6 +35,26 @@ uint32_t DownloadServiceProxy::Request(const DownloadConfig &config)
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
+
+    int32_t fd = -1;
+    int32_t err = 0;    
+    fd = open(config.GetFilePath().c_str(), O_RDWR);
+    if (fd > 0) {
+        DOWNLOAD_HILOGD("File [%{public}s] already exists", config.GetFilePath().c_str());
+        fd = -1;
+    } else {
+        fd = open(config.GetFilePath().c_str(), O_CREAT | O_RDWR, 0644);
+        if (fd < 0) {
+            DOWNLOAD_HILOGD("Failed to open file [%{public}s], errno [%{public}s]",
+                config.GetFilePath().c_str(), strerror(errno));
+            err = errno;
+        }
+    }
+    
+    DOWNLOAD_HILOGI("Succeed to open file [%{public}s, fd [%{public}d]]", config.GetFilePath().c_str(), fd);
+    data.WriteFileDescriptor(fd);
+    data.WriteInt32(err);
+    close(fd); 
     data.WriteString(config.GetUrl());
     data.WriteBool(config.GetMetered());
     data.WriteBool(config.GetRoaming());

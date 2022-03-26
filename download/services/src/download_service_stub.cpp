@@ -15,7 +15,7 @@
 
 #include "download_service_stub.h"
 #include "ipc_skeleton.h"
-#include "parcel.h"
+#include "message_parcel.h"
 #include "download_common.h"
 #include "download_service_interface.h"
 #include "log.h"
@@ -62,10 +62,14 @@ int32_t DownloadServiceStub::OnRemoteRequest(
     return E_DOWNLOAD_OK;
 }
 
-bool DownloadServiceStub::OnRequest(Parcel &data, Parcel &reply)
+bool DownloadServiceStub::OnRequest(MessageParcel &data, MessageParcel &reply)
 {
     DOWNLOAD_HILOGD("Receive request");
     DownloadConfig config;
+    int32_t fd  = data.ReadFileDescriptor();
+    DOWNLOAD_HILOGI("Get FD from client, fd [%{public}d]", fd);
+    config.SetFD(fd);
+    config.SetFDError(data.ReadInt32());
     config.SetUrl(data.ReadString());
     config.SetMetered(data.ReadBool());
     config.SetRoaming(data.ReadBool());
@@ -88,7 +92,7 @@ bool DownloadServiceStub::OnRequest(Parcel &data, Parcel &reply)
     return true;
 }
 
-bool DownloadServiceStub::OnPause(Parcel &data, Parcel &reply)
+bool DownloadServiceStub::OnPause(MessageParcel &data, MessageParcel &reply)
 {
     bool result = Pause(data.ReadUint32());
     if (!reply.WriteBool(result)) {
@@ -98,7 +102,7 @@ bool DownloadServiceStub::OnPause(Parcel &data, Parcel &reply)
     return true;
 }
 
-bool DownloadServiceStub::OnQuery(Parcel &data, Parcel &reply)
+bool DownloadServiceStub::OnQuery(MessageParcel &data, MessageParcel &reply)
 {
     DownloadInfo info;
     bool result = Query(data.ReadUint32(), info);
