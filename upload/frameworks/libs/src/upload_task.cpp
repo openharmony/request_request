@@ -92,8 +92,13 @@ void UploadTask::SetCallback(Type type, void *callback)
         }
     } else if (type == TYPE_HEADER_RECEIVE_CALLBACK) {
         headerReceiveCallback_ = (IHeaderReceiveCallback*)callback;
-        if (headerReceiveCallback_ && header_.length() > 0) {
-            headerReceiveCallback_->HeaderReceive(header_);
+        if (headerReceiveCallback_ && headerArray_.empty() == false) {
+            for (auto header : headerArray_) {
+                if (header.length() > 0) {
+                    headerReceiveCallback_->HeaderReceive(header);
+                }
+            }
+            headerArray_.clear();
         }
     } else if (type == TYPE_FAIL_CALLBACK) {
         failCallback_ = (IFailCallback*)callback;
@@ -121,6 +126,8 @@ void UploadTask::OnRun()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnRun. In.");
     state_ = STATE_RUNNING;
+    obtainFile_ =  std::make_shared<ObtainFile>();
+
     GetFileArray();
     if (fileArray_.empty()) {
         return;
@@ -134,7 +141,7 @@ void UploadTask::OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ult
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnProgress. In.");
     std::lock_guard<std::mutex> guard(mutex_);
-    uploadedSize_ += ulnow;
+    uploadedSize_ = ulnow;
     if (uploadedSize_ == totalSize_) {
         state_ = STATE_SUCCESS;
     }
@@ -151,6 +158,8 @@ void UploadTask::OnHeaderReceive(char *buffer, size_t size, size_t nitems)
     header_ = header;
     if (headerReceiveCallback_) {
         headerReceiveCallback_->HeaderReceive(header_);
+    } else {
+        headerArray_.push_back(header);
     }
 }
 
@@ -228,4 +237,4 @@ std::vector<std::string> UploadTask::StringSplit(const std::string& str, char de
     }
     return elems;
 }
-} // end of OHOS::Request::Upload
+} // namespace OHOS::Request::Upload

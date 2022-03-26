@@ -23,6 +23,7 @@
 #include "upload_common.h"
 #include "upload_config.h"
 #include "i_upload_task.h"
+#include "upload_timer_info.h"
 
 namespace OHOS::Request::Upload {
 class CUrlAdp {
@@ -51,13 +52,21 @@ private:
     void CheckUploadStatus(CURLM *curlMulti);
     void CurlGlobalInit();
     void CurlGlobalCleanup();
+    void InitTimerInfo();
+    void StartTimer();
+    void StopTimer();
 
 private:
+    uint64_t timerId_;
+    std::shared_ptr<UploadTimerInfo> timerInfo_;
     IUploadTask *uploadTask_;
     std::vector<FileData> fileArray_;
+    FileData  mfileData_;
     std::shared_ptr<UploadConfig> config_;
     std::mutex mutex_;
     std::mutex curlMutex_;
+    std::mutex setAbortMutex_;
+    std::mutex readMutex_;
     bool isCurlGlobalInit_;
     bool isReadAbort_;
     CURLM *curlMulti_;

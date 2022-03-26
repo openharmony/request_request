@@ -50,6 +50,7 @@ enum UploadErrorCode {
     UPLOAD_ERRORCODE_CONFIG_ERROR,
     UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR,
     UPLOAD_ERRORCODE_UPLOAD_FAIL,
+    UPLOAD_ERRORCODE_UPLOAD_OUTTIME,
 };
 
 class UploadTask : public IUploadTask {
@@ -86,6 +87,7 @@ private:
     int64_t uploadedSize_;
     int64_t totalSize_;
     unsigned int error_;
+    std::vector<std::string> headerArray_;
     std::string header_;
     std::vector<FileData> fileArray_;
     UploadTaskState state_;

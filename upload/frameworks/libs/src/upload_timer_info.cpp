@@ -13,40 +13,36 @@
  * limitations under the License.
  */
 
-#ifndef UPLOAD_CONFIG
-#define UPLOAD_CONFIG
-
-#include <string>
-#include <vector>
+#include "upload_timer_info.h"
 
 namespace OHOS::Request::Upload {
-struct File {
-    std::string filename;
-    std::string name;
-    std::string uri;
-    std::string type;
-};
+void UploadTimerInfo::OnTrigger()
+{
+    if (callBack_ != nullptr) {
+        callBack_();
+    }
+}
 
-struct RequestData {
-    std::string name;
-    std::string value;
-};
+void UploadTimerInfo::SetCallbackInfo(TimerOutFunc &&callBack)
+{
+    callBack_ = callBack;
+}
 
-struct UploadConfig {
-    std::string url;
-    std::string header;
-    std::string method;
-    std::vector<File> files;
-    std::vector<RequestData> data;
-};
+void UploadTimerInfo::SetType(const int &_type)
+{
+    type = _type;
+}
 
-struct FileData {
-    FILE *fp;
-    std::string name;
-    void *adp;
-    int64_t upsize;
-    int64_t totalsize;
-    int32_t fileIndex;
-};
-} // end of OHOS::Request::Upload
-#endif
+void UploadTimerInfo::SetRepeat(bool _repeat)
+{
+    repeat = _repeat;
+}
+void UploadTimerInfo::SetInterval(const uint64_t &_interval)
+{
+    interval = _interval;
+}
+void UploadTimerInfo::SetWantAgent(std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> _wantAgent)
+{
+    wantAgent = _wantAgent;
+}
+} // namespace OHOS::Request::Upload

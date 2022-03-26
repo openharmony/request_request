@@ -29,9 +29,11 @@ ohos_unittest("upload_obtain_file_UT_test") {
     "include",
     "//third_party/curl/include",
     "//base/miscservices/request/upload/frameworks/libs/include",
+    "//base/miscservices/time/interfaces/innerkits/include",
   ]
 
   deps = [
+    "//base/miscservices/request/upload/frameworks/libs/:upload_lib",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
     "//foundation/aafwk/standard/interfaces/innerkits/want:want",
@@ -41,6 +43,7 @@ ohos_unittest("upload_obtain_file_UT_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:ability_manager",
+    "time_native:time_service",
   ]
 }
 
@@ -55,6 +58,7 @@ ohos_unittest("upload_UT_test") {
   include_dirs = [
     "include",
     "//base/miscservices/request/upload/frameworks/libs/include",
+    "//base/miscservices/time/interfaces/innerkits/include",
     "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
     "//foundation/ace/napi/interfaces/kits",
@@ -72,6 +76,7 @@ ohos_unittest("upload_UT_test") {
   ]
 
   deps = [
+    "//base/miscservices/request/upload/frameworks/libs/:upload_lib",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//foundation/aafwk/standard/frameworks/kits/appkit:app_context",
     "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
@@ -91,5 +96,6 @@ ohos_unittest("upload_UT_test") {
     "native_appdatamgr:native_appdatafwk",
     "native_appdatamgr:native_dataability",
     "native_appdatamgr:native_rdb",
+    "time_native:time_service",
   ]
 }
