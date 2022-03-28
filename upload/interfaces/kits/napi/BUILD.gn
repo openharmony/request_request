@@ -29,6 +29,7 @@ config("upload_native_public_config") {
     "//third_party/libuv/include",
     "./",
     "//base/miscservices/request/download/interfaces/kits/js/napi/download_single/include",
+    "//base/miscservices/request/download/utils/include",
   ]
 }
 
