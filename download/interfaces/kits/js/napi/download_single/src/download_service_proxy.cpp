@@ -13,11 +13,16 @@
  * limitations under the License.
  */
 #include "download_service_proxy.h"
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "iremote_broker.h"
-
 #include "log.h"
 #include "download_common.h"
+
+static constexpr uint32_t FILE_PERMISSION = 0644;
 
 namespace OHOS::Request::Download {
 using namespace OHOS::HiviewDFX;
@@ -32,6 +37,25 @@ uint32_t DownloadServiceProxy::Request(const DownloadConfig &config)
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
+
+    int32_t fd = -1;
+    int32_t err = 0;
+    fd = open(config.GetFilePath().c_str(), O_RDWR);
+    if (fd > 0) {
+        DOWNLOAD_HILOGD("Download File already exists");
+        fd = -1;
+    } else {
+        fd = open(config.GetFilePath().c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
+        if (fd < 0) {
+            DOWNLOAD_HILOGE("Failed to open file errno [%{public}s]", strerror(errno));
+            err = errno;
+        }
+    }
+    
+    DOWNLOAD_HILOGI("Succeed to open download file, fd [%{public}d]]", fd);
+    data.WriteFileDescriptor(fd);
+    data.WriteInt32(err);
+    close(fd);
     data.WriteString(config.GetUrl());
     data.WriteBool(config.GetMetered());
     data.WriteBool(config.GetRoaming());

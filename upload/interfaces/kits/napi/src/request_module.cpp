@@ -40,6 +40,7 @@ static napi_value paused_queue_wifi = nullptr;
 static napi_value paused_for_network = nullptr;
 static napi_value paused_to_retry = nullptr;
 static napi_value paused_by_user = nullptr;
+static napi_value paused_unknown = nullptr;
 static napi_value session_success = nullptr;
 static napi_value session_running = nullptr;
 static napi_value session_pending = nullptr;
@@ -68,6 +69,7 @@ static napi_value Init(napi_env env, napi_value exports)
     napi_create_int32(env, static_cast<int32_t>(PAUSED_WAITING_FOR_NETWORK), &paused_for_network);
     napi_create_int32(env, static_cast<int32_t>(PAUSED_WAITING_TO_RETRY), &paused_to_retry);
     napi_create_int32(env, static_cast<int32_t>(PAUSED_BY_USER), &paused_by_user);
+    napi_create_int32(env, static_cast<int32_t>(PAUSED_UNKNOWN), &paused_unknown);
 
     /* Create session status Const */
     napi_create_int32(env, static_cast<int32_t>(SESSION_SUCCESS), &session_success);
@@ -94,8 +96,9 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("PAUSED_WAITING_FOR_NETWORK", paused_for_network),
         DECLARE_NAPI_STATIC_PROPERTY("PAUSED_WAITING_TO_RETRY", paused_to_retry),
         DECLARE_NAPI_STATIC_PROPERTY("PAUSED_BY_USER", paused_by_user),
+        DECLARE_NAPI_STATIC_PROPERTY("PAUSED_UNKNOWN", paused_unknown),
 
-        DECLARE_NAPI_STATIC_PROPERTY("SESSION_SUCCESS", session_success),
+        DECLARE_NAPI_STATIC_PROPERTY("SESSION_SUCCESSFUL", session_success),
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_RUNNING", session_running),
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_PENDING", session_pending),
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_PAUSED", session_paused),

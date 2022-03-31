@@ -156,7 +156,8 @@ bool DownloadTaskNapi::ParseConfig(napi_env env, napi_value configValue, Downloa
 bool DownloadTaskNapi::ParseHeader(napi_env env, napi_value configValue, DownloadConfig &config)
 {
     if (!NapiUtils::HasNamedProperty(env, configValue, PARAM_KEY_HEADER)) {
-        return false;
+        DOWNLOAD_HILOGD("No header present, ignore it");
+        return true;
     }
     napi_value header = NapiUtils::GetNamedProperty(env, configValue, PARAM_KEY_HEADER);
     if (NapiUtils::GetValueType(env, header) != napi_object) {
@@ -164,6 +165,7 @@ bool DownloadTaskNapi::ParseHeader(napi_env env, napi_value configValue, Downloa
     }
     auto names = NapiUtils::GetPropertyNames(env, header);
     std::vector<std::string>::iterator iter;
+    DOWNLOAD_HILOGD("current name list size = %{public}d", names.size());
     for (iter = names.begin(); iter != names.end(); ++iter)
     {
         auto value = NapiUtils::GetStringPropertyUtf8(env, header, *iter);

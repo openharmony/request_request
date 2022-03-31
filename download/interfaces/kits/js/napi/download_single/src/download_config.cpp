@@ -20,7 +20,7 @@
 namespace OHOS::Request::Download {
 DownloadConfig::DownloadConfig()
     : url_(""), enableMetered_(false), enableRoaming_(false), description_(""), networkType_(0),
-      filePath_(""), title_("") {
+      filePath_(""), title_(""), fd_(-1), fdError_(0) {
 }
 
 void DownloadConfig::SetUrl(const std::string &url)
@@ -63,6 +63,16 @@ void DownloadConfig::SetTitle(const std::string &title)
     title_ = title;
 }
 
+void DownloadConfig::SetFD(int32_t fd)
+{
+    fd_ = fd;
+}
+
+void DownloadConfig::SetFDError(int32_t fdError)
+{
+    fdError_ = fdError;
+}
+
 const std::string &DownloadConfig::GetUrl() const
 {
     return url_;
@@ -103,8 +113,20 @@ const std::string &DownloadConfig::GetTitle() const
     return title_;
 }
 
+int32_t DownloadConfig::GetFD() const
+{
+    return fd_;
+}
+
+int32_t DownloadConfig::GetFDError() const
+{
+    return fdError_;
+}
+
 void DownloadConfig::Dump(bool isFull) const
 {
+    DOWNLOAD_HILOGD("fd: %{public}d", fd_);
+    DOWNLOAD_HILOGD("fd errno: %{public}s", strerror(fdError_));
     DOWNLOAD_HILOGD("URL: %{public}s", url_.c_str());
     DOWNLOAD_HILOGD("enableMetered: %{public}s", enableMetered_ ? "true" : "false");
     DOWNLOAD_HILOGD("enableRoaming: %{public}s", enableRoaming_ ? "true" : "false");
