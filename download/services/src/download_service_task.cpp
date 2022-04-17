@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -402,7 +402,7 @@ size_t DownloadServiceTask::WriteCallback(void *buffer, size_t size, size_t num,
     if (this_ != nullptr && this_->config_.GetFD() > 0) {
         result = write(this_->config_.GetFD(), buffer, size * num);
         if (result < size * num) {
-            DOWNLOAD_HILOGE("origin size = %{pulic}d, write size = %{pulic}d", size * num, result);
+            DOWNLOAD_HILOGE("origin size = %{pulic}zu, write size = %{pulic}zu", size * num, result);
         }
         this_->downloadSize_ += static_cast<uint32_t>(result);
     }
