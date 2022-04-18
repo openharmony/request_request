@@ -165,7 +165,7 @@ bool DownloadTaskNapi::ParseHeader(napi_env env, napi_value configValue, Downloa
     }
     auto names = NapiUtils::GetPropertyNames(env, header);
     std::vector<std::string>::iterator iter;
-    DOWNLOAD_HILOGD("current name list size = %{public}d", names.size());
+    DOWNLOAD_HILOGD("current name list size = %{public}zu", names.size());
     for (iter = names.begin(); iter != names.end(); ++iter)
     {
         auto value = NapiUtils::GetStringPropertyUtf8(env, header, *iter);
