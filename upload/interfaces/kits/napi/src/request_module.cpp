@@ -15,6 +15,7 @@
 
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "legacy/download_manager.h"
 #include "upload_task_napi.h"
 #include "js_util.h"
 #include "download_task_napi.h"
@@ -103,9 +104,10 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_PENDING", session_pending),
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_PAUSED", session_paused),
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_FAILED", session_failed),
-        
+
         DECLARE_NAPI_METHOD("download", DownloadTaskNapi::JsMain),
         DECLARE_NAPI_METHOD("upload", UploadTaskNapi::JsUpload),
+        DECLARE_NAPI_METHOD("onDownloadComplete", Legacy::DownloadManager::OnDownloadComplete),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);

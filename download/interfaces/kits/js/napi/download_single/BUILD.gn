@@ -24,6 +24,7 @@ ohos_shared_library("downloadsingle") {
     "//foundation/ace/napi/interfaces/kits",
     "//foundation/ace/napi/interfaces/innerkits",
     "//third_party/node/src",
+    "//third_party/curl/include",
     "//foundation/aafwk/standard/services/common/include",
     "//utils/system/safwk/native/include",
     "//base/miscservices/request/download/interfaces/kits/napi/download_single/include",
@@ -62,6 +63,8 @@ ohos_shared_library("downloadsingle") {
     "src/download_service_proxy.cpp",
     "src/download_task.cpp",
     "src/download_task_napi.cpp",
+    "src/legacy/download_manager.cpp",
+    "src/legacy/download_task.cpp",
     "src/napi_utils.cpp",
   ]
   deps = [
@@ -74,12 +77,14 @@ ohos_shared_library("downloadsingle") {
     "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_core:appexecfwk_core",
     "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler:libeventhandler",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "//third_party/curl:curl",
     "//utils/native/base:utils",
   ]
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:ability_manager",
+    "ability_runtime:napi_base_context",
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
