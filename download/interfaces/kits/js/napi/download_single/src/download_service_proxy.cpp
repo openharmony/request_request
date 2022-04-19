@@ -66,7 +66,7 @@ uint32_t DownloadServiceProxy::Request(const DownloadConfig &config)
     data.WriteUint32(config.GetHeader().size());
 
     std::map<std::string, std::string>::const_iterator iter;
-    for (iter = config.GetHeader().begin(); iter != config.GetHeader().end(); ++iter){
+    for (iter = config.GetHeader().begin(); iter != config.GetHeader().end(); ++iter) {
         data.WriteString(iter->first);
         data.WriteString(iter->second);
     }
