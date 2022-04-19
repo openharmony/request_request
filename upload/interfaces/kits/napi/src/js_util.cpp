@@ -44,6 +44,82 @@ std::string JSUtil::Convert2String(napi_env env, napi_value jsString)
     return value;
 }
 
+std::vector<std::string> JSUtil::Convert2StrVector(napi_env env, napi_value value)
+{
+    uint32_t arrLen = 0;
+    napi_get_array_length(env, value, &arrLen);
+    if (arrLen == 0) {
+        return {};
+    }
+    std::vector<std::string> result;
+    for (size_t i = 0; i < arrLen; ++i) {
+        napi_value element;
+        napi_get_element(env, value, i, &element);
+        result.push_back(Convert2String(env, element));
+    }
+    return result;
+}
+
+std::vector<std::string> JSUtil::Convert2Header(napi_env env, napi_value value)
+{
+    std::vector<std::string> result;
+    napi_value jsvalue = nullptr;
+    napi_get_named_property(env, value, "Authorization", &jsvalue);
+    if (jsvalue != nullptr) {
+        result.push_back("Authorization: " + Convert2String(env, jsvalue));
+    }
+    jsvalue = nullptr;
+    napi_get_named_property(env, value, "Content-Type", &jsvalue);
+    if (jsvalue != nullptr) {
+        result.push_back("Content-Type: " + Convert2String(env, jsvalue));
+    }
+    return result;
+}
+
+napi_value JSUtil::Convert2JSStringVector(napi_env env, const std::vector<std::string> &cStrings)
+{
+    napi_value jsStrings = nullptr;
+    napi_create_array_with_length(env, cStrings.size(), &jsStrings);
+    int index = 0;
+    for (const auto &cString : cStrings) {
+        napi_value jsString = Convert2JSString(env, cString);
+        napi_set_element(env, jsStrings, index++, jsString);
+    }
+    return jsStrings;
+}
+
+napi_value JSUtil::Convert2JSUploadResponse(napi_env env, const Upload::UploadResponse &response)
+{
+    napi_value jsResponse = nullptr;
+    napi_create_object(env, &jsResponse);
+    napi_set_named_property(env, jsResponse, "code", Convert2JSValue(env, response.code));
+    napi_set_named_property(env, jsResponse, "data", Convert2JSString(env, response.data));
+    napi_set_named_property(env, jsResponse, "headers", Convert2JSString(env, response.headers));
+    return jsResponse;
+}
+
+napi_value JSUtil::Convert2JSValue(napi_env env, int32_t value)
+{
+    napi_value jsValue;
+    napi_status status = napi_create_int32(env, value, &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    return jsValue;
+}
+
+void JSUtil::ParseFunction(napi_env env, napi_value &object, const char *name, bool &hasFunction, napi_ref &output)
+{
+    napi_value value = nullptr;
+    if (napi_get_named_property(env, object, name, &value) == napi_ok) {
+        napi_valuetype valueType = napi_null;
+        NAPI_CALL_RETURN_VOID(env, napi_typeof(env, value, &valueType));
+        NAPI_ASSERT_RETURN_VOID(env, valueType == napi_function, "Wrong argument, function expected.");
+        NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, value, 1, &output));
+        hasFunction = true;
+    }
+}
+
 napi_value JSUtil::Convert2JSString(napi_env env, const std::string &cString)
 {
     napi_value jsValue = nullptr;
@@ -62,7 +138,7 @@ std::shared_ptr<Upload::UploadConfig> JSUtil::Convert2UploadConfig(napi_env env,
     value = nullptr;
     napi_get_named_property(env, jsConfig, "header", &value);
     if (value != nullptr) {
-        config.header = Convert2String(env, value);
+        config.header = Convert2Header(env, value);
     }
     value = nullptr;
     napi_get_named_property(env, jsConfig, "method", &value);
@@ -89,7 +165,7 @@ napi_value JSUtil::Convert2JSUploadConfig(napi_env env, const Upload::UploadConf
     napi_value jsConfig = nullptr;
     napi_create_object(env, &jsConfig);
     napi_set_named_property(env, jsConfig, "url", Convert2JSString(env, config.url));
-    napi_set_named_property(env, jsConfig, "header", Convert2JSString(env, config.header));
+    napi_set_named_property(env, jsConfig, "header", Convert2JSStringVector(env, config.header));
     napi_set_named_property(env, jsConfig, "method", Convert2JSString(env, config.method));
     napi_set_named_property(env, jsConfig, "files", Convert2JSFileVector(env, config.files));
     napi_set_named_property(env, jsConfig, "data", Convert2JSRequestDataVector(env, config.data));

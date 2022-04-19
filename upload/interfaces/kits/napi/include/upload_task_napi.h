@@ -39,6 +39,13 @@ public:
 
     UploadTaskNapi &operator=(std::unique_ptr<Upload::UploadTask> &&uploadTask);
     bool operator==(const std::unique_ptr<Upload::UploadTask> &uploadTask);
+    static void OnSystemSuccess(napi_env env, napi_ref ref, Upload::UploadResponse &response);
+    static void OnSystemFail(napi_env env, napi_ref ref, std::string &response, int32_t &code);
+    static void OnSystemComplete(napi_env env, napi_ref ref);
+    napi_ref success_;
+    napi_ref fail_;
+    napi_ref complete_;
+    napi_env env_;
 private:
     static napi_value GetCtor(napi_env env);
     static napi_value Initialize(napi_env env, napi_callback_info info);

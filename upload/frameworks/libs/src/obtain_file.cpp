@@ -24,7 +24,7 @@ ObtainFile::~ObtainFile()
 }
 
 uint32_t ObtainFile::GetFile(FILE **file, std::string &fileUri,
-    unsigned int& fileSize, std::shared_ptr<OHOS::AppExecFwk::Context> &context)
+    unsigned int& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     uint32_t ret = UPLOAD_ERRORCODE_NO_ERROR;
     std::string dataAbilityHead("dataability");
@@ -50,14 +50,14 @@ uint32_t ObtainFile::GetFile(FILE **file, std::string &fileUri,
 }
 
 uint32_t ObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri,
-    uint32_t& fileSize, std::shared_ptr<OHOS::AppExecFwk::Context> &context)
+    uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     uint32_t ret = UPLOAD_ERRORCODE_NO_ERROR;
     FILE *filePtr = nullptr;
     int32_t fileLength = 0;
 
-    std::shared_ptr<DataAbilityHelper> dataAbilityHelper = DataAbilityHelper::Creator(context);
     std::shared_ptr<Uri> uri = std::make_shared<Uri>(fileUri);
+    std::shared_ptr<DataAbilityHelper> dataAbilityHelper = DataAbilityHelper::Creator(context, uri);
 
     do {
         int32_t fd = dataAbilityHelper->OpenFile(*uri, "r");
@@ -85,7 +85,7 @@ uint32_t ObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri,
 }
 
 uint32_t ObtainFile::GetInternalFile(FILE **file, std::string &fileUri,
-    uint32_t& fileSize, std::shared_ptr<OHOS::AppExecFwk::Context> &context)
+    uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     uint32_t ret = UPLOAD_ERRORCODE_NO_ERROR;
     std::string filePath;
@@ -110,6 +110,8 @@ uint32_t ObtainFile::GetInternalFile(FILE **file, std::string &fileUri,
             break;
         }
         filePath = context->GetCacheDir();
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, cache dir = [%{public}s].",
+            filePath.c_str());
         if (filePath.size() == 0) {
             UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, internal to cache error");
             ret = UPLOAD_ERRORCODE_GET_FILE_ERROR;
@@ -118,9 +120,14 @@ uint32_t ObtainFile::GetInternalFile(FILE **file, std::string &fileUri,
         for (size_t i = SPLIT_THREE; i < uriSplit.size(); ++i) {
             filePath = filePath + "/" + uriSplit[i];
         }
+
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, internal file path = [%{public}s].",
+            filePath.c_str());
         filePtr = fopen(filePath.c_str(), "r");
         if (filePtr == nullptr) {
             UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, open file error");
+            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, error info : %{public}s.",
+                strerror(errno));
             ret = UPLOAD_ERRORCODE_GET_FILE_ERROR;
             break;
         }

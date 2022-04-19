@@ -65,7 +65,7 @@ public:
     virtual void OnRun();
 
     UPLOAD_API virtual void SetCallback(Type type, void *callback);
-    UPLOAD_API virtual void SetContext(std::shared_ptr<OHOS::AppExecFwk::Context> context);
+    UPLOAD_API virtual void SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> context);
     virtual void OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
     virtual void OnHeaderReceive(char *buffer, size_t size, size_t nitems);
     virtual void OnFail(unsigned int error);
@@ -83,7 +83,7 @@ private:
     IFailCallback* failCallback_;
     std::shared_ptr<CUrlAdp> curlAdp_;
     std::shared_ptr<ObtainFile> obtainFile_;
-    std::shared_ptr<OHOS::AppExecFwk::Context> context_;
+    std::shared_ptr<OHOS::AbilityRuntime::Context> context_;
     int64_t uploadedSize_;
     int64_t totalSize_;
     unsigned int error_;

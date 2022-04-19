@@ -19,20 +19,20 @@
 using namespace OHOS::AppExecFwk;
 namespace OHOS::Request::Upload {
 uint32_t MockObtainFile::GetFile(FILE **file, std::string &fileUri,
-    unsigned int& fileSize, std::shared_ptr<OHOS::AppExecFwk::Context> &context)
+    unsigned int& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     return GetDataAbilityFile(file, fileUri, fileSize, context);
 }
 
 uint32_t MockObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri,
-    uint32_t& fileSize, std::shared_ptr<OHOS::AppExecFwk::Context> &context)
+    uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     uint32_t ret = UPLOAD_ERRORCODE_NO_ERROR;
     FILE *filePtr = nullptr;
     int32_t fileLength = 0;
 
-    std::shared_ptr<DataAbilityHelper> dataAbilityHelper = DataAbilityHelper::Creator(context);
     std::shared_ptr<Uri> uri = std::make_shared<Uri>(fileUri);
+    std::shared_ptr<DataAbilityHelper> dataAbilityHelper = DataAbilityHelper::Creator(context, uri);
 
     do {
         // dataAbilityHelper->OpenFile unavailble, dummyStart
