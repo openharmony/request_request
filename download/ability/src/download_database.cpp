@@ -103,7 +103,7 @@ int64_t DownloadDataBase::Insert(OHOS::NativeRdb::ValuesBucket insertValues)
     }
 
     int ret = store_->Insert(outRowId, TABLE_NAME, insertValues);
-    DOWNLOAD_HILOGI("DownloadDataBase Insert id = %{public}lld ", outRowId);
+    DOWNLOAD_HILOGI("DownloadDataBase Insert id = %{public}lld ", (long long)outRowId);
     if (ret != OHOS::NativeRdb::E_OK) {
         DOWNLOAD_HILOGE("DownloadDataBase Insert ret :%{public}d", ret);
         return RDB_EXECUTE_FAIL;

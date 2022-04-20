@@ -114,7 +114,7 @@ bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray)
         FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
         return false;
     }
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "fileInfo.st_size %{public}lld", fileInfo.st_size);
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "fileInfo.st_size %{public}lld", (long long)fileInfo.st_size);
     CURL *curl = curl_easy_init();
     if (curl == nullptr) {
         FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
@@ -251,7 +251,7 @@ int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlno
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>ProgressCallback thread id is %{public}lu", pthread_self());
     FileData *fData = (FileData *) clientp;
     CUrlAdp *url = (CUrlAdp *) fData->adp;
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>ProgressCallback ulnow is %{public}lld", ulnow);
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>ProgressCallback ulnow is %{public}lld", (long long)ulnow);
     fData->upsize = ulnow;
     int64_t totalulnow = 0;
     if (url && url->uploadTask_) {
@@ -261,9 +261,11 @@ int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlno
                 vmem.upsize = fData->upsize;
             }
             totalulnow += vmem.upsize;
-            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>ProgressCallback vmem.upsize is %{public}lld", vmem.upsize);
+            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>ProgressCallback vmem.upsize is %{public}lld", (
+			              long long)vmem.upsize);
         }
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>ProgressCallback totalulnow is %{public}lld", totalulnow);
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>ProgressCallback totalulnow is %{public}lld", (
+		              long long)totalulnow);
         url->uploadTask_->OnProgress(dltotal, dlnow, ultotal, totalulnow);
     }
     return 0;
@@ -271,7 +273,7 @@ int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlno
 
 size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *userdata)
 {
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "size is %{public}u, nitems is %{public}u", size, nitems);
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "size is %{public}zu, nitems is %{public}zu", size, nitems);
     CUrlAdp* url = (CUrlAdp*) userdata;
     if (url && url->uploadTask_) {
         url->uploadTask_->OnHeaderReceive(buffer, size, nitems);
@@ -281,7 +283,7 @@ size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *u
 
 size_t CUrlAdp::ReadCallback(char *buffer, size_t size, size_t nitems, void *arg)
 {
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "size is %{public}u, nitems is %{public}u.", size, nitems);
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "size is %{public}zu, nitems is %{public}zu.", size, nitems);
     FileData *read = (FileData *) arg;
     CUrlAdp *adp = (CUrlAdp *) read->adp;
     if (adp == nullptr) {

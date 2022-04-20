@@ -49,7 +49,7 @@ void ProgressCallback::CheckQueueWorkRet(int ret, ProgressWorker *progressWorker
 void ProgressCallback::Progress(const int64_t uploadedSize, const int64_t totalSize)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
-        "Progress. uploadedSize : %lld, totalSize : %lld", uploadedSize, totalSize);
+        "Progress. uploadedSize : %lld, totalSize : %lld", (long long)uploadedSize, (long long)totalSize);
     ProgressWorker *progressWorker = new ProgressWorker(this, uploadedSize, totalSize);
     uv_work_t *work = new uv_work_t;
     work->data = progressWorker;
