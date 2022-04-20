@@ -25,9 +25,9 @@ public:
     virtual ~MockObtainFile() = default;
 
     virtual uint32_t GetFile(FILE **file, std::string &fileUri,
-    unsigned int& fileSize, std::shared_ptr<OHOS::AppExecFwk::Context> &context);
+    unsigned int& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
     virtual uint32_t GetDataAbilityFile(FILE **file, std::string &fileUri,
-    unsigned int& fileSize, std::shared_ptr<OHOS::AppExecFwk::Context> &context);
+    unsigned int& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
 };
 }
 #endif  // MOCK_OBTAIN_FILE_TEST_H

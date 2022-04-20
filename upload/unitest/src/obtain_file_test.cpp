@@ -69,7 +69,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest001, TestSize.Level0)
 
     std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
     MockObtainFile obtainFile;
-    std::shared_ptr<Context> context = std::make_shared<AbilityContext>();
+    std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
     result = obtainFile.GetFile(&file, uri, fileSize, context);
     EXPECT_EQ(result, UPLOAD_ERRORCODE_NO_ERROR) << "GetFile fun ret failed.";
@@ -112,7 +112,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest002, TestSize.Level0)
     info->cacheDir = dir;
     deal->SetApplicationInfo(info);
     abilityContext->AttachBaseContext(deal);
-    std::shared_ptr<Context> context = abilityContext;
+    std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
     result = obtainFile.GetFile(&file, uri, fileSize, context);
     EXPECT_EQ(result, UPLOAD_ERRORCODE_NO_ERROR) << "GetFile fun ret failed.";
@@ -138,7 +138,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest003, TestSize.Level0)
 
     std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
     ObtainFile obtainFile;
-    std::shared_ptr<Context> context = std::make_shared<AbilityContext>();
+    std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
     result = obtainFile.GetFile(&file, uri, fileSize, context);
     EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR) << "GetFile fun ret failed.";
@@ -159,7 +159,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest004, TestSize.Level0)
 
     std::string uri = "internal://cache/path/to/file.txt";
     ObtainFile obtainFile;
-    std::shared_ptr<Context> context = std::make_shared<AbilityContext>();
+    std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
     result = obtainFile.GetFile(&file, uri, fileSize, context);
     EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR) << "GetFile fun ret failed.";
@@ -180,8 +180,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest005, TestSize.Level0)
 
     std::string uri = "/data/upload_obtain_file_UT_test";
     ObtainFile obtainFile;
-    std::shared_ptr<Context> context = std::make_shared<AbilityContext>();
-
+    std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
     result = obtainFile.GetFile(&file, uri, fileSize, context);
     EXPECT_EQ(result, UPLOAD_ERRORCODE_UNSUPPORT_URI) << "GetFile fun ret failed.";
     EXPECT_EQ(file, nullptr) << "GetFile filePtr is NULL";

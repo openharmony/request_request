@@ -65,14 +65,14 @@ HWTEST_F(UploadTest, UploadTest_001, TestSize.Level1)
     std::shared_ptr<UploadConfig> uploadConfig = std::make_shared<UploadConfig>();
 
     fd1 = fopen("upload_UT_test_1.xml", "rb");
-    fd2 = fopen("upload_UT_test_1.xml", "rb");
+    fd2 = fopen("upload_UT_test_2.xml", "rb");
     fileInfo1.fp = fd1;
     fileInfo1.name = "upload_UT_test_1.xml";
     fileInfo2.fp = fd2;
     fileInfo2.name = "upload_UT_test_2.xml";
     if (fd1 && fd2) {
         // url needs to be configured according to the server URL
-        uploadConfig->url = "https://192.168.2.211/files/";
+        uploadConfig->url = "http://192.168.1.180/uploadservice/";
         fileArray.push_back(fileInfo1);
         fileArray.push_back(fileInfo2);
         auto curl = std::make_shared<CUrlAdp>(fileArray, uploadConfig);
