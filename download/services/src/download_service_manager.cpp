@@ -24,13 +24,12 @@ static constexpr uint32_t MAX_RETRY_TIMES = 3;
 static constexpr uint32_t MAX_NETWORK_TIMES = 100;
 
 namespace OHOS::Request::Download {
-uint32_t DownloadServiceManager::taskId = 1000;
 std::recursive_mutex DownloadServiceManager::instanceLock_;
 std::shared_ptr<DownloadServiceManager> DownloadServiceManager::instance_ = nullptr;
 
 DownloadServiceManager::DownloadServiceManager()
     : initialized_(false), interval_(TASK_SLEEP_INTERVAL), threadNum_(THREAD_POOL_NUM), timeoutRetry_(MAX_RETRY_TIMES),
-    networkThread_(nullptr)
+    networkThread_(nullptr), taskId_(0)
 {
 }
 
@@ -226,10 +225,21 @@ bool DownloadServiceManager::QueryMimeType(uint32_t taskId, std::string &mimeTyp
     return it->second->QueryMimeType(mimeType);
 }
 
+void DownloadServiceManager::SetStartId(uint32_t startId)
+{
+    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
+    taskId_ = startId;
+}
+
+uint32_t DownloadServiceManager::GetStartId() const
+{
+    return taskId_;
+}
+
 uint32_t DownloadServiceManager::GetCurrentTaskId()
 {
     std::lock_guard<std::recursive_mutex> autoLock(mutex_);
-    return taskId++;
+    return taskId_++;
 }
 
 DownloadServiceManager::QueueType DownloadServiceManager::DecideQueueType(DownloadStatus status)
@@ -338,7 +348,6 @@ bool DownloadServiceManager::GetNetworkStatus()
     curl_easy_setopt(handle.get(), CURLOPT_URL, example.c_str());
     CURLcode code = curl_easy_perform(handle.get());
     if (code == CURLE_OK) {
-        DOWNLOAD_HILOGD("Network status is online");
         isOnline = true;
     }
     return isOnline;

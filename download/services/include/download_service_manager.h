@@ -48,6 +48,9 @@ public:
     bool Query(uint32_t taskId, DownloadInfo &info);
     bool QueryMimeType(uint32_t taskId, std::string &mimeType);
 
+    void SetStartId(uint32_t startId);
+    uint32_t GetStartId() const;
+
     void SetInterval(uint32_t interval);
     uint32_t GetInterval() const;
 
@@ -83,7 +86,7 @@ private:
 
     std::shared_ptr<std::thread> networkThread_;
 
-    static uint32_t taskId;
+    uint32_t taskId_;
     static std::recursive_mutex instanceLock_;
     static std::shared_ptr<DownloadServiceManager> instance_;
 };

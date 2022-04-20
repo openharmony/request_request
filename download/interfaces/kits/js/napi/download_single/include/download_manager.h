@@ -58,12 +58,15 @@ public:
     void SetDataAbilityHelper(std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> dataAbilityHelper);
 
 private:
-    static sptr<DownloadServiceInterface> GetDownloadServiceProxy();
+    sptr<DownloadServiceInterface> GetDownloadServiceProxy();
+
+private:
     static std::mutex instanceLock_;
     static sptr<DownloadManager> instance_;
-    static sptr<DownloadServiceInterface> downloadServiceProxy_;
-    static sptr<DownloadSaDeathRecipient> deathRecipient_;
-    static std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> dataAbilityHelper_;
+	
+    sptr<DownloadServiceInterface> downloadServiceProxy_;
+    sptr<DownloadSaDeathRecipient> deathRecipient_;
+    std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> dataAbilityHelper_;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_MANAGER_H

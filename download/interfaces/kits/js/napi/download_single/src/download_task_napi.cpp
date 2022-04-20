@@ -15,6 +15,7 @@
 
 #include "download_task_napi.h"
 
+#include <mutex>
 #include <uv.h>
 
 #include "ability.h"
@@ -48,6 +49,7 @@ static constexpr const char *PARAM_KEY_TITLE = "title";
 
 namespace OHOS::Request::Download {
 __thread napi_ref DownloadTaskNapi::globalCtor = nullptr;
+std::mutex mutex_;
 napi_value DownloadTaskNapi::JsMain(napi_env env, napi_callback_info info)
 {
     DOWNLOAD_HILOGD("Enter download JsMain.");
@@ -65,6 +67,7 @@ napi_value DownloadTaskNapi::JsMain(napi_env env, napi_callback_info info)
         napi_value proxy = nullptr;
         napi_status status = napi_new_instance(env, GetCtor(env), argc, argv, &proxy);
         if ((proxy == nullptr) || (status != napi_ok)) {
+            DOWNLOAD_HILOGE("Failed to create download task");
             return napi_generic_failure;
         }
         napi_create_reference(env, proxy, 1, &(ctxInfo->ref));
@@ -80,15 +83,9 @@ napi_value DownloadTaskNapi::JsMain(napi_env env, napi_callback_info info)
     return asyncCall.Call(env);
 }
 
-napi_status DownloadTaskNapi::OnHeaderReceive(
-    napi_env env, size_t argc, napi_value *argv, napi_value self, napi_value *result)
-{
-    DOWNLOAD_HILOGD("Enter OnHeaderReceive.");
-    return napi_ok;
-}
-
 napi_value DownloadTaskNapi::GetCtor(napi_env env)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     napi_value cons;
     if (globalCtor != nullptr) {
         NAPI_CALL(env, napi_get_reference_value(env, globalCtor, &cons));
@@ -135,6 +132,7 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
         finalize(env, task, nullptr);
         return nullptr;
     }
+    DOWNLOAD_HILOGD("Succeed to allocate download task");
     return self;
 }
 
@@ -165,7 +163,7 @@ bool DownloadTaskNapi::ParseHeader(napi_env env, napi_value configValue, Downloa
     }
     auto names = NapiUtils::GetPropertyNames(env, header);
     std::vector<std::string>::iterator iter;
-    DOWNLOAD_HILOGD("current name list size = %{public}zu", names.size());
+    DOWNLOAD_HILOGD("current name list size = %{public}d", names.size());
     for (iter = names.begin(); iter != names.end(); ++iter) {
         auto value = NapiUtils::GetStringPropertyUtf8(env, header, *iter);
         if (!value.empty()) {
@@ -179,26 +177,31 @@ std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> dataAbilityHelper_ = nullpt
 
 std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> DownloadTaskNapi::GetDataAbilityHelper(napi_env env)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (dataAbilityHelper_ != nullptr) {
+        return dataAbilityHelper_;
+    }
+
     napi_value global = nullptr;
     NAPI_CALL(env, napi_get_global(env, &global));
     napi_value abilityObj = nullptr;
     NAPI_CALL(env, napi_get_named_property(env, global, "ability", &abilityObj));
     if (abilityObj == nullptr) {
-        DOWNLOAD_HILOGE("abilityObj is nullptr!");
+        DOWNLOAD_HILOGE("Failed to get ability field from env context!");
+        return nullptr;
     }
     OHOS::AppExecFwk::Ability *ability = nullptr;
     NAPI_CALL(env, napi_get_value_external(env, abilityObj, (void **)&ability));
     if (ability == nullptr) {
-        DOWNLOAD_HILOGE("ability is nullptr!");
+        DOWNLOAD_HILOGE("Failed to get ability object from env contex!");
+        return nullptr;
     }
     std::shared_ptr<OHOS::Uri> uriPtr = std::make_shared<OHOS::Uri>("dataability:///com.ohos.download");
+    dataAbilityHelper_ = OHOS::AppExecFwk::DataAbilityHelper::Creator(ability->GetContext(), uriPtr);
     if (dataAbilityHelper_ == nullptr) {
-        DOWNLOAD_HILOGE("Try to get dataAbilityHelper_!");
-        dataAbilityHelper_ = OHOS::AppExecFwk::DataAbilityHelper::Creator(ability->GetContext(), uriPtr);
+        DOWNLOAD_HILOGE("Failed to create data ability helper");
     }
-    if (dataAbilityHelper_ != nullptr) {
-        DOWNLOAD_HILOGE("dataAbilityHelper_ is not nullptr!");
-    }
+    DOWNLOAD_HILOGD("Succeed to create data ability helper");
     return dataAbilityHelper_;
 }
 } // namespace OHOS::Request::Download

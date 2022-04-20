@@ -240,6 +240,13 @@ bool DownloadServiceAbility::CheckPermission()
     return result == PERMISSION_GRANTED;
 }
 
+bool DownloadServiceAbility::SetStartId(uint32_t startId)
+{
+    DownloadServiceManager::Get()->SetStartId(startId);
+    DOWNLOAD_HILOGI("Set Start Task id is %{public}d", startId);
+    return true;
+}
+
 void DownloadServiceAbility::NotifyHandler(const std::string& type, uint32_t taskId, uint32_t argv1, uint32_t argv2)
 {
     std::string combineType = type + "-" + std::to_string(taskId);

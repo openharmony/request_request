@@ -52,6 +52,8 @@ public:
 
     bool CheckPermission() override;
 
+    bool SetStartId(uint32_t startId) override;
+
     static void NotifyHandler(const std::string& type, uint32_t taskId, uint32_t argv1, uint32_t argv2);
 
 protected:

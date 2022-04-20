@@ -22,6 +22,7 @@ ohos_hap("download_dataability") {
   hap_name = "download_dataability"
   part_name = "request"
   subsystem_name = "miscservices"
+  module_install_dir = "app/com.ohos.download"
 }
 
 ## Build downloaddataability.so {{{
