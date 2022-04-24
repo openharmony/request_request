@@ -16,6 +16,7 @@
 #include "legacy/download_manager.h"
 #include <climits>
 #include <cstdlib>
+#include <cerrno>
 #include "legacy/download_task.h"
 #include "ability.h"
 #include "napi_base_context.h"
@@ -178,11 +179,12 @@ DownloadTask::DownloadOption DownloadManager::ParseOption(napi_env env, napi_val
 bool DownloadManager::IsPathValid(const std::string &dir, const std::string &filename)
 {
     auto filepath = dir + '/' + filename;
-    char path[PATH_MAX] = {0};
-    if (realpath(filepath.c_str(), path) && !strncmp(path, dir.c_str(), dir.length())) {
+    auto fileDirectory = filepath.substr(0, filepath.rfind('/'));
+    char resolvedPath[PATH_MAX] = {0};
+    if (realpath(fileDirectory.c_str(), resolvedPath) && !strncmp(resolvedPath, dir.c_str(), dir.length())) {
         return true;
     }
-    DOWNLOAD_HILOGE("file path is invalid");
+    DOWNLOAD_HILOGE("file path is invalid, errno=%{public}d", errno);
     return false;
 }
 
