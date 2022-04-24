@@ -28,6 +28,7 @@
 #include "download_resume.h"
 #include "log.h"
 #include "napi_utils.h"
+#include "legacy/download_manager.h"
 
 static constexpr const char *FUNCTION_ON = "on";
 static constexpr const char *FUNCTION_OFF = "off";
@@ -51,6 +52,11 @@ __thread napi_ref DownloadTaskNapi::globalCtor = nullptr;
 napi_value DownloadTaskNapi::JsMain(napi_env env, napi_callback_info info)
 {
     DOWNLOAD_HILOGD("Enter download JsMain.");
+    if (Legacy::DownloadManager::IsLegacy(env, info)) {
+        DOWNLOAD_HILOGD("Enter download legacy.");
+        return Legacy::DownloadManager::Download(env, info);
+    }
+
     if (!DownloadManager::GetInstance()->CheckPermission()) {
         DOWNLOAD_HILOGD("no permission to access download service");
         return nullptr;
