@@ -49,7 +49,6 @@ ohos_shared_library("download_server") {
   deps = [
     "//base/telephony/core_service/interfaces/innerkits:tel_core_service_api",
     "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
-    "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler:libeventhandler",
     "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/curl:curl",
@@ -62,6 +61,7 @@ ohos_shared_library("download_server") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
+    "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "multimedia_image_standard:image_native",

@@ -30,7 +30,6 @@ ohos_shared_library("downloadsingle") {
     "//base/miscservices/request/download/interfaces/kits/napi/download_single/include",
     "//base/miscservices/request/download/interfaces/innerkits/include",
     "//base/miscservices/request/download/utils/include",
-
     "//foundation/aafwk/standard/frameworks/kits/appkit/native/app/include/",
     "//foundation/aafwk/standard/frameworks/kits/ability/native/include",
     "//foundation/aafwk/standard/interfaces/innerkits/base/include/ohos/aafwk/base",
@@ -38,9 +37,6 @@ ohos_shared_library("downloadsingle") {
     "//foundation/aafwk/standard/interfaces/innerkits/want/include/ohos/aafwk/content",
     "//foundation/aafwk/standard/interfaces/innerkits/ability_manager/include",
     "//foundation/aafwk/standard/interfaces/innerkits/want/include",
-    "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler/include",
-    "//foundation/appexecfwk/standard/kits/appkit/native/app",
-    "//foundation/appexecfwk/standard/common/log/include",
     "//foundation/aafwk/standard/interfaces/innerkits/uri/include",
   ]
   public_configs = [ ":download_interfaces_kits_napi_config" ]
@@ -72,10 +68,6 @@ ohos_shared_library("downloadsingle") {
     "//foundation/aafwk/standard/frameworks/kits/ability/native:dummy_classes",
     "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
     "//foundation/ace/napi:ace_napi",
-    "//foundation/appexecfwk/standard/common:libappexecfwk_common",
-    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base:appexecfwk_base",
-    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_core:appexecfwk_core",
-    "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler:libeventhandler",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/curl:curl",
     "//utils/native/base:utils",

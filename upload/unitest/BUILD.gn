@@ -37,12 +37,12 @@ ohos_unittest("upload_obtain_file_UT_test") {
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
     "//foundation/aafwk/standard/interfaces/innerkits/want:want",
-    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base:appexecfwk_base",
   ]
 
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:ability_manager",
+    "bundle_framework:appexecfwk_base",
     "time_native:time_service",
   ]
 }
@@ -59,7 +59,6 @@ ohos_unittest("upload_UT_test") {
     "include",
     "//base/miscservices/request/upload/frameworks/libs/include",
     "//base/miscservices/time/interfaces/innerkits/include",
-    "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
     "//foundation/ace/napi/interfaces/kits",
     "//third_party/json/single_include",
@@ -69,8 +68,6 @@ ohos_unittest("upload_UT_test") {
     "//foundation/communication/dsoftbus/interfaces/kits/common",
     "//foundation/communication/dsoftbus/interfaces/kits/bus_center",
     "//third_party/json/include",
-    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base/include",
-    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_core/include/bundlemgr",
     "//foundation/aafwk/standard/interfaces/innerkits/ability_manager/include",
     "//third_party/curl/include",
   ]
