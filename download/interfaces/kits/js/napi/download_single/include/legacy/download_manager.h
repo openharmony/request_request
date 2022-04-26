@@ -61,9 +61,15 @@ private:
 
     static bool IsPathValid(const std::string& dir, const std::string& filename);
 
+    static bool HasSameFilename(const std::string& filename);
+
     static std::vector<std::string> ParseHeader(napi_env env, napi_value option);
 
     static DownloadTask::DownloadOption ParseOption(napi_env env, napi_value option);
+
+    static void CallFailCallback(napi_env env, napi_value object, const std::string& msg);
+
+    static void CallSuccessCallback(napi_env env, napi_value object, const std::string& token);
 
     static void CallFunctionAsync(napi_env env, napi_ref func, const ArgsGenerator &generator);
 

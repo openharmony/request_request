@@ -47,6 +47,16 @@ FILE *DownloadTask::OpenDownloadFile() const
 
 void DownloadTask::NotifyDone(bool successful, const std::string &errMsg)
 {
+    if (filp_ != nullptr) {
+        fclose(filp_);
+        filp_ = nullptr;
+
+        if (!successful) {
+            DOWNLOAD_HILOGE("remove download file");
+            remove((option_.fileDir_ + '/' + option_.filename_).c_str());
+        }
+    }
+
     if (callback_) {
         callback_(token_, successful, errMsg);
     }

@@ -164,13 +164,20 @@ DownloadTask::DownloadOption DownloadManager::ParseOption(napi_env env, napi_val
 {
     DownloadTask::DownloadOption downloadOption;
     downloadOption.url_ = NapiUtils::GetStringPropertyUtf8(env, option, "url");
+    downloadOption.fileDir_ = GetCacheDir(env);
 
     downloadOption.filename_ = NapiUtils::GetStringPropertyUtf8(env, option, "filename");
     if (downloadOption.filename_.empty()) {
         downloadOption.filename_ = GetFilenameFromUrl(downloadOption.url_);
+        int i = 0;
+        auto filename = downloadOption.filename_;
+        while (access((downloadOption.fileDir_ + '/' + filename).c_str(), F_OK) == 0) {
+            i++;
+            filename = downloadOption.filename_ + std::to_string(i);
+        }
+        downloadOption.filename_ = filename;
     }
 
-    downloadOption.fileDir_ = GetCacheDir(env);
     downloadOption.header_ = ParseHeader(env, option);
 
     return downloadOption;
@@ -188,6 +195,40 @@ bool DownloadManager::IsPathValid(const std::string &dir, const std::string &fil
     return false;
 }
 
+bool DownloadManager::HasSameFilename(const std::string &filename)
+{
+    std::lock_guard<std::mutex> lockGuard(lock_);
+    for (const auto& element : downloadDescriptors_) {
+        if (element.second.filename_ == filename) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void DownloadManager::CallFailCallback(napi_env env, napi_value object, const std::string& msg)
+{
+    auto callback = NapiUtils::GetNamedProperty(env, object, "fail");
+    if (callback != nullptr) {
+        DOWNLOAD_HILOGI("call fail of download");
+        napi_value result[FAIL_CB_ARGC] {};
+        result[0] = NapiUtils::CreateStringUtf8(env, msg);
+        result[1] = NapiUtils::CreateInt32(env, FAIL_CB_DOWNLOAD_ERROR);
+        NapiUtils::CallFunction(env, object, callback, FAIL_CB_ARGC, result);
+    }
+}
+
+void DownloadManager::CallSuccessCallback(napi_env env, napi_value object, const std::string& token)
+{
+    auto successCb = NapiUtils::GetNamedProperty(env, object, "success");
+    if (successCb != nullptr) {
+        DOWNLOAD_HILOGI("call success of download");
+        auto responseObject =  NapiUtils::CreateObject(env);
+        NapiUtils::SetStringPropertyUtf8(env, responseObject, "token", token);
+        NapiUtils::CallFunction(env, object, successCb, 1, &responseObject);
+    }
+}
+
 napi_value DownloadManager::Download(napi_env env, napi_callback_info info)
 {
     size_t argc = DOWNLOAD_ARGC;
@@ -197,14 +238,11 @@ napi_value DownloadManager::Download(napi_env env, napi_callback_info info)
 
     auto option = ParseOption(env, argv[0]);
     if (!IsPathValid(option.fileDir_, option.filename_)) {
-        auto callback = NapiUtils::GetNamedProperty(env, argv[0], "fail");
-        if (callback != nullptr) {
-            DOWNLOAD_HILOGI("call fail of download");
-            napi_value result[FAIL_CB_ARGC] {};
-            result[0] = NapiUtils::CreateStringUtf8(env, "invalid file name");
-            result[1] = NapiUtils::CreateInt32(env, FAIL_CB_DOWNLOAD_ERROR);
-            NapiUtils::CallFunction(env, argv[0], callback, FAIL_CB_ARGC, result);
-        }
+        CallFailCallback(env, argv[0], "invalid file name");
+        return res;
+    }
+    if (HasSameFilename(option.filename_)) {
+        CallFailCallback(env, argv[0], "filename conflict");
         return res;
     }
 
@@ -218,13 +256,7 @@ napi_value DownloadManager::Download(napi_env env, napi_callback_info info)
         std::lock_guard<std::mutex> lockGuard(lock_);
         downloadDescriptors_[token] = descriptor;
     }
-    auto successCb = NapiUtils::GetNamedProperty(env, argv[0], "success");
-    if (successCb != nullptr) {
-        DOWNLOAD_HILOGI("call success of download");
-        auto responseObject =  NapiUtils::CreateObject(env);
-        NapiUtils::SetStringPropertyUtf8(env, responseObject, "token", token);
-        NapiUtils::CallFunction(env, argv[0], successCb, 1, &responseObject);
-    }
+    CallSuccessCallback(env, argv[0], token);
     task->Start();
     return res;
 }
