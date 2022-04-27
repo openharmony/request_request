@@ -16,5 +16,3 @@ ohos_sa_profile("download_sa_profiles") {
   sources = [ "3706.xml" ]
   part_name = "request"
 }
-
-

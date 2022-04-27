@@ -22,7 +22,7 @@ config("upload_native_public_config") {
   visibility = []
   include_dirs = [
     "include",
-    "//foundation/ace/napi/interfaces/kits",
+    "//foundation/arkui/napi/interfaces/kits",
     "//foundation/aafwk/standard/interfaces/kits/napi/aafwk/featureAbility",
     "//foundation/aafwk/standard/interfaces/kits/napi/aafwk/inner/napi_common",
     "//third_party/libuv/include",
@@ -49,7 +49,7 @@ ohos_shared_library("request") {
     "//base/miscservices/request/download/interfaces/kits/js/napi/download_single:downloadsingle",
     "//base/miscservices/request/upload/frameworks/libs:upload_lib",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
-    "//foundation/ace/napi/:ace_napi",
+    "//foundation/arkui/napi/:ace_napi",
     "//third_party/libuv:uv_static",
     "//utils/native/base:utils",
   ]

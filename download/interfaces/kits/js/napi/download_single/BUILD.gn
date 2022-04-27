@@ -19,10 +19,10 @@ config("download_interfaces_kits_napi_config") {
 }
 ohos_shared_library("downloadsingle") {
   include_dirs = [
-    "//foundation/ace/ace_engine/frameworks/base/utils",
-    "//foundation/ace/napi",
-    "//foundation/ace/napi/interfaces/kits",
-    "//foundation/ace/napi/interfaces/innerkits",
+    "//foundation/arkui/ace_engine/frameworks/base/utils",
+    "//foundation/arkui/napi",
+    "//foundation/arkui/napi/interfaces/kits",
+    "//foundation/arkui/napi/interfaces/inner_api",
     "//third_party/node/src",
     "//third_party/curl/include",
     "//foundation/aafwk/standard/services/common/include",
@@ -67,7 +67,7 @@ ohos_shared_library("downloadsingle") {
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:dummy_classes",
     "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
-    "//foundation/ace/napi:ace_napi",
+    "//foundation/arkui/napi:ace_napi",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/curl:curl",
     "//utils/native/base:utils",

@@ -72,7 +72,7 @@ ohos_shared_library("downloaddataability") {
     "//foundation/aafwk/standard/frameworks/kits/ability/native:dummy_classes",
     "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
     "//foundation/aafwk/standard/interfaces/innerkits/want/:want",
-    "//foundation/ace/napi:ace_napi",
+    "//foundation/arkui/napi:ace_napi",
     "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//third_party/jsoncpp:jsoncpp",
     "//utils/native/base:utils",
