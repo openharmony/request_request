@@ -13,7 +13,7 @@
     "name": "request",
     "subsystem": "miscservices",
     "syscap": [
-        "SystemCapability.MiscServices.download",
+        "SystemCapability.MiscServices.Download",
         "SystemCapability.MiscServices.Upload"
     ],
     "features": [
