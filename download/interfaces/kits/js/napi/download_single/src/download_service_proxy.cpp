@@ -41,9 +41,9 @@ uint32_t DownloadServiceProxy::Request(const DownloadConfig &config)
     int32_t fd = -1;
     int32_t err = 0;
 
-    const char *input_Path = config.GetFilePath().c_str();
+    const char *inputPath = config.GetFilePath().c_str();
     char path[PATH_MAX + 1] = { 0x00 };
-    if (strlen(input_Path) > PATH_MAX || realpath(input_Path, path) == nullptr) {
+    if (strlen(inputPath) > PATH_MAX || realpath(inputPath, path) == nullptr) {
         return -1;
     }
     fd = open(path, O_RDWR);
