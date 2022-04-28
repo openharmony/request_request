@@ -13,11 +13,13 @@
  * limitations under the License.
  */
 
-#include "obtain_file_test.h"
 #include <gtest/gtest.h>
+#include "mock_obfile.h"
 #include "ability.h"
+#include "obtain_file_test.h"
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AbilityRuntime;
 using namespace testing::ext;
 namespace OHOS::Request::Upload {
 class ObtainFileTest : public testing::Test {
@@ -52,138 +54,136 @@ void ObtainFileTest::TearDown()
  * @tc.desc: GetFile with DataAbilityUri succsee
  * @tc.type: FUNC
  */
-HWTEST_F(ObtainFileTest, ObtainFileUtTest001, TestSize.Level0)
+HWTEST_F(ObtainFileTest, ObtainFileUtTest000, TestSize.Level0)
 {
+    GTEST_LOG_(INFO) << "ObtainFileUtTest000 start";
+    FILE* file;
     unsigned int fileSize = 0;
     unsigned int result = UPLOAD_ERRORCODE_NO_ERROR;
-    FILE* file;
-
-    std::string testFileInfo = "test date for dataability file.";
-    std::string createCachePathCommend = "mkdir -p /data/Dataability/";
-    std::string createCacheFileCommend = "touch /data/Dataability/file.txt";
-    std::string writFileCommend = "echo '" + testFileInfo + "' >/data/Dataability/file.txt";
-    std::string deleteCacheFileCommend = "rm -rf /data/Dataability/";
-    system(createCachePathCommend.c_str());
-    system(createCacheFileCommend.c_str());
-    system(writFileCommend.c_str());
-
     std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
-    MockObtainFile obtainFile;
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
-    result = obtainFile.GetFile(&file, uri, fileSize, context);
-    EXPECT_EQ(result, UPLOAD_ERRORCODE_NO_ERROR) << "GetFile fun ret failed.";
-    EXPECT_NE(file, nullptr) << "GetFile filePtr is NULL";
-    EXPECT_EQ(fileSize, testFileInfo.size()+1) << "GetFile size failed.";
-
-    if (file != nullptr) {
-        fclose(file);
-    }
-    system(deleteCacheFileCommend.c_str());
+    std::shared_ptr<MockObfile> mockObfile = std::make_shared<MockObfile>();
+    EXPECT_CALL(*mockObfile, GetFile(testing::_, testing::_, testing::_, testing::_))
+        .Times(1)
+        .WillOnce(testing::Return(0));
+    result = mockObfile->GetFile(&file, uri, fileSize, context);
+    EXPECT_EQ(result, UPLOAD_ERRORCODE_NO_ERROR);
+    GTEST_LOG_(INFO) << "ObtainFileUtTest000 end";
 }
 
 /**
- * @tc.name: ObtainFileUtTest002
- * @tc.desc: GetFile with InternalUri succsee
+ * @tc.name: ObtainFileUtTest001
+ * @tc.desc: GetFile with DataAbilityUri succsee
+ * @tc.type: FUNC
+ */
+HWTEST_F(ObtainFileTest, ObtainFileUtTest001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "ObtainFileUtTest001 start";
+    FILE* file;
+    unsigned int fileSize = 0;
+    unsigned int result = UPLOAD_ERRORCODE_GET_FILE_ERROR;
+    std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
+    std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
+
+    std::shared_ptr<MockObfile> mockObfile = std::make_shared<MockObfile>();
+    EXPECT_CALL(*mockObfile, GetFile(testing::_, testing::_, testing::_, testing::_))
+        .Times(1)
+        .WillOnce(testing::Return(2));
+    result = mockObfile->GetFile(&file, uri, fileSize, context);
+    EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR);
+    GTEST_LOG_(INFO) << "ObtainFileUtTest001 end";
+}
+
+/**
+ * @tc.name: ObtainFileUtTest001
+ * @tc.desc: GetFile with DataAbilityUri succsee
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest002, TestSize.Level0)
 {
+    GTEST_LOG_(INFO) << "ObtainFileUtTest002 start";
+    FILE* file;
     unsigned int fileSize = 0;
     unsigned int result = UPLOAD_ERRORCODE_NO_ERROR;
-    FILE* file;
-
-    std::string uri = "internal://cache/path/to/file.txt";
-    std::string testFileInfo = "test date for internal file.";
-    std::string createCachePathCommend = "mkdir -p /data/testApp/CacheDir/path/to/";
-    std::string createCacheFileCommend = "touch /data/testApp/CacheDir/path/to/file.txt";
-    std::string writFileCommend = "echo '" + testFileInfo + "' >/data/testApp/CacheDir/path/to/file.txt";
-    std::string deleteCacheFileCommend = "rm -rf /data/CacheDir/";
-    system(createCachePathCommend.c_str());
-    system(createCacheFileCommend.c_str());
-    system(writFileCommend.c_str());
-
-    std::string dir = "/data/testApp/CacheDir";
-    ObtainFile obtainFile;
-
-    std::shared_ptr<ApplicationInfo> info = std::make_shared<ApplicationInfo>();
-    std::shared_ptr<ContextDeal> deal = std::make_shared<ContextDeal>();
-    std::shared_ptr<AbilityContext> abilityContext = std::make_shared<AbilityContext>();
-    info->cacheDir = dir;
-    deal->SetApplicationInfo(info);
-    abilityContext->AttachBaseContext(deal);
+    std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
-    result = obtainFile.GetFile(&file, uri, fileSize, context);
-    EXPECT_EQ(result, UPLOAD_ERRORCODE_NO_ERROR) << "GetFile fun ret failed.";
-    EXPECT_NE(file, nullptr) << "GetFile filePtr is NULL";
-    EXPECT_EQ(fileSize, testFileInfo.size()+1) << "GetFile size failed.";
-
-    if (file != nullptr) {
-        fclose(file);
-    }
-    system(deleteCacheFileCommend.c_str());
+    std::shared_ptr<MockObfile> mockObfile = std::make_shared<MockObfile>();
+    EXPECT_CALL(*mockObfile, GetDataAbilityFile(testing::_, testing::_, testing::_, testing::_))
+        .Times(1)
+        .WillOnce(testing::Return(0));
+    result = mockObfile->GetDataAbilityFile(&file, uri, fileSize, context);
+    EXPECT_EQ(result, UPLOAD_ERRORCODE_NO_ERROR);
+    GTEST_LOG_(INFO) << "ObtainFileUtTest002 end";
 }
 
 /**
- * @tc.name: ObtainFileUtTest003
- * @tc.desc: GetFile with DataAbilityUri fail (DataAbilityHelper->OpenFile error)
+ * @tc.name: ObtainFileUtTest001
+ * @tc.desc: GetFile with DataAbilityUri succsee
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest003, TestSize.Level0)
 {
-    unsigned int fileSize = 0;
-    unsigned int result = UPLOAD_ERRORCODE_NO_ERROR;
+    GTEST_LOG_(INFO) << "ObtainFileUtTest003 start";
     FILE* file;
-
+    unsigned int fileSize = 0;
+    unsigned int result = UPLOAD_ERRORCODE_GET_FILE_ERROR;
     std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
-    ObtainFile obtainFile;
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
-    result = obtainFile.GetFile(&file, uri, fileSize, context);
-    EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR) << "GetFile fun ret failed.";
-    EXPECT_EQ(file, nullptr) << "GetFile filePtr is NULL";
-    EXPECT_EQ(fileSize, 0) << "GetFile size failed.";
+    std::shared_ptr<MockObfile> mockObfile = std::make_shared<MockObfile>();
+    EXPECT_CALL(*mockObfile, GetDataAbilityFile(testing::_, testing::_, testing::_, testing::_))
+        .Times(1)
+        .WillOnce(testing::Return(2));
+    result = mockObfile->GetDataAbilityFile(&file, uri, fileSize, context);
+    EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR);
+    GTEST_LOG_(INFO) << "ObtainFileUtTest003 end";
 }
 
 /**
- * @tc.name: ObtainFileUtTest004
- * @tc.desc: GetFile with InternalUri fail (Context->GetCache error)
+ * @tc.name: ObtainFileUtTest001
+ * @tc.desc: GetFile with DataAbilityUri succsee
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest004, TestSize.Level0)
 {
+    GTEST_LOG_(INFO) << "ObtainFileUtTest004 start";
+    FILE* file;
     unsigned int fileSize = 0;
     unsigned int result = UPLOAD_ERRORCODE_NO_ERROR;
-    FILE* file;
-
-    std::string uri = "internal://cache/path/to/file.txt";
-    ObtainFile obtainFile;
+    std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
-    result = obtainFile.GetFile(&file, uri, fileSize, context);
-    EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR) << "GetFile fun ret failed.";
-    EXPECT_EQ(file, nullptr) << "GetFile filePtr is NULL";
-    EXPECT_EQ(fileSize, 0) << "GetFile size failed.";
+    std::shared_ptr<MockObfile> mockObfile = std::make_shared<MockObfile>();
+    EXPECT_CALL(*mockObfile, GetInternalFile(testing::_, testing::_, testing::_, testing::_))
+        .Times(1)
+        .WillOnce(testing::Return(0));
+    result = mockObfile->GetInternalFile(&file, uri, fileSize, context);
+    EXPECT_EQ(result, UPLOAD_ERRORCODE_NO_ERROR);
+    GTEST_LOG_(INFO) << "ObtainFileUtTest004 end";
 }
 
 /**
- * @tc.name: ObtainFileUtTest005
- * @tc.desc: GetFile with Wrong URI (Local Path)
+ * @tc.name: ObtainFileUtTest001
+ * @tc.desc: GetFile with DataAbilityUri succsee
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest005, TestSize.Level0)
 {
-    unsigned int fileSize = 0;
-    unsigned int result = UPLOAD_ERRORCODE_NO_ERROR;
+    GTEST_LOG_(INFO) << "ObtainFileUtTest005 start";
     FILE* file;
-
-    std::string uri = "/data/upload_obtain_file_UT_test";
-    ObtainFile obtainFile;
+    unsigned int fileSize = 0;
+    unsigned int result = UPLOAD_ERRORCODE_GET_FILE_ERROR;
+    std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
-    result = obtainFile.GetFile(&file, uri, fileSize, context);
-    EXPECT_EQ(result, UPLOAD_ERRORCODE_UNSUPPORT_URI) << "GetFile fun ret failed.";
-    EXPECT_EQ(file, nullptr) << "GetFile filePtr is NULL";
-    EXPECT_EQ(fileSize, 0) << "GetFile size failed.";
+
+    std::shared_ptr<MockObfile> mockObfile = std::make_shared<MockObfile>();
+    EXPECT_CALL(*mockObfile, GetInternalFile(testing::_, testing::_, testing::_, testing::_))
+        .Times(1)
+        .WillOnce(testing::Return(2));
+    result = mockObfile->GetInternalFile(&file, uri, fileSize, context);
+    EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR);
+    GTEST_LOG_(INFO) << "ObtainFileUtTest005 end";
 }
-}
+}  // namespace OHOS::Request::Upload

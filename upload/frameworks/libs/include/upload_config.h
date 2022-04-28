@@ -53,7 +53,9 @@ struct UploadConfig {
 
 struct FileData {
     FILE *fp;
+    std::string filename;
     std::string name;
+    std::string type;
     void *adp;
     int64_t upsize;
     int64_t totalsize;

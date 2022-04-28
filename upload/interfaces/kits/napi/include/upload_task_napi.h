@@ -49,7 +49,8 @@ public:
 private:
     static napi_value GetCtor(napi_env env);
     static napi_value Initialize(napi_env env, napi_callback_info info);
-    static napi_status GetAndSetContext(napi_env env, napi_value *argv, UploadTaskNapi *proxy);
+    static napi_status GetContext(napi_env env, napi_value *argv, int& parametersPosition,
+        std::shared_ptr<OHOS::AbilityRuntime::Context>& context);
 
     std::unique_ptr<Upload::UploadTask> napiUploadTask_ = nullptr;
     std::shared_ptr<Upload::UploadConfig> napiUploadConfig_ = nullptr;
@@ -77,6 +78,25 @@ private:
             return Context::operator()(env, result);
         }
     };
+
+    struct SystemFailCallback {
+        std::string data;
+        int32_t code;
+        napi_env env;
+        napi_ref ref;
+    };
+
+    struct SystemSuccessCallback {
+        Upload::UploadResponse response;
+        napi_env env;
+        napi_ref ref;
+    };
+
+    struct SystemCompleteCallback {
+        napi_env env;
+        napi_ref ref;
+    };
+
     using Exec = std::function<napi_status(napi_env, size_t, napi_value *, napi_value, napi_value *)>;
     static std::map<std::string, Exec> onTypeHandlers_;
     static std::map<std::string, Exec> offTypeHandlers_;

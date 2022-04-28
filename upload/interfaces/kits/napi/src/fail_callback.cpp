@@ -27,6 +27,21 @@ FailCallback::FailCallback(napi_env env, napi_value callback)
 FailCallback::~FailCallback()
 {
     napi_delete_reference(env_, callback_);
+    status_ = napi_generic_failure;
+}
+
+void FailCallback::CheckQueueWorkRet(int ret, FailWorker *failWorker, uv_work_t *work)
+{
+    if (ret != 0) {
+        if (failWorker != nullptr) {
+            delete failWorker;
+            failWorker = nullptr;
+        }
+        if (work != nullptr) {
+            delete work;
+            work = nullptr;
+        }
+    }
 }
 
 void FailCallback::Fail(const unsigned int error)
@@ -40,34 +55,36 @@ void FailCallback::Fail(const unsigned int error)
         [](uv_work_t *work, int status) {
             FailWorker *failWorkerInner = reinterpret_cast<FailWorker *>(work->data);
             napi_value jsError = nullptr;
-            napi_create_uint32(failWorkerInner->callback->env_, failWorkerInner->error, &jsError);
             napi_value callback = nullptr;
-            napi_value args[1] = { jsError };
-            napi_get_reference_value(failWorkerInner->callback->env_,
-                failWorkerInner->callback->callback_, &callback);
+            napi_value args[1];
             napi_value global = nullptr;
-            napi_get_global(failWorkerInner->callback->env_, &global);
             napi_value result;
-            napi_status callStatus = napi_call_function(failWorkerInner->callback->env_, global, callback,
-                1, args, &result);
+            napi_status callStatus = napi_generic_failure;
+            napi_env tmpEnv = failWorkerInner->callback->env_;
+            if (failWorkerInner->callback->env_ == tmpEnv && failWorkerInner->callback->status_ == napi_ok) {
+                napi_create_uint32(failWorkerInner->callback->env_, failWorkerInner->error, &jsError);
+                args[0] = { jsError };
+            } else {
+                goto EXIT_CODE;
+            }
+            if (failWorkerInner->callback->env_ == tmpEnv && failWorkerInner->callback->callback_ != nullptr &&
+                failWorkerInner->callback->status_ == napi_ok) {
+            napi_get_reference_value(failWorkerInner->callback->env_, failWorkerInner->callback->callback_, &callback);
+            napi_get_global(failWorkerInner->callback->env_, &global);
+            callStatus = napi_call_function(failWorkerInner->callback->env_, global, callback, 1, args, &result);
+            } else {
+                goto EXIT_CODE;
+            }
             if (callStatus != napi_ok) {
                 UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
                     "Fail callback failed callStatus:%{public}d callback:%{public}p", callStatus, callback);
             }
+EXIT_CODE :
             delete failWorkerInner;
             failWorkerInner = nullptr;
             delete work;
             work = nullptr;
         });
-    if (ret != 0) {
-        if (failWorker != nullptr) {
-            delete failWorker;
-            failWorker = nullptr;
-        }
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
-    }
+    CheckQueueWorkRet(ret, failWorker, work);
 }
 } // end of OHOS::Request::Upload

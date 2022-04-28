@@ -13,21 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef MOCK_OBTAIN_FILE_TEST_H
-#define MOCK_OBTAIN_FILE_TEST_H
+#ifndef MOCK_OBFILE_TEST_H
+#define MOCK_OBFILE_TEST_H
 
+#include "gtest/gtest.h"
 #include "upload_task.h"
+#include "gmock/gmock.h"
 
 namespace OHOS::Request::Upload {
-class MockObtainFile : public ObtainFile {
+class MockObfile : public ObtainFile {
 public:
-    MockObtainFile() = default;
-    virtual ~MockObtainFile() = default;
+    MockObfile() = default;
+    virtual ~MockObfile() = default;
 
-    virtual uint32_t GetFile(FILE **file, std::string &fileUri,
-    unsigned int& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
-    virtual uint32_t GetDataAbilityFile(FILE **file, std::string &fileUri,
-    unsigned int& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
+    MOCK_METHOD4(GetFile, uint32_t(FILE **, std::string&, uint32_t&,
+        std::shared_ptr<OHOS::AbilityRuntime::Context> &));
+    MOCK_METHOD4(GetDataAbilityFile, uint32_t(FILE **, std::string&, uint32_t&,
+        std::shared_ptr<OHOS::AbilityRuntime::Context> &));
+    MOCK_METHOD4(GetInternalFile, uint32_t(FILE **, std::string&, uint32_t&,
+        std::shared_ptr<OHOS::AbilityRuntime::Context> &));
 };
 }  // namespace OHOS::Request::Upload
-#endif  // MOCK_OBTAIN_FILE_TEST_H
+#endif  // MOCK_OBFILE_TEST_H

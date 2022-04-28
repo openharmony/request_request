@@ -37,6 +37,8 @@ private:
             : callback(callbackIn),
               header(headerIn) {}
     };
+    void CheckQueueWorkRet(int ret, HeaderReceiveWorker *headerReceiveWorker, uv_work_t *work);
+    napi_status status_ = napi_ok;
     napi_ref callback_ = nullptr;
     napi_env env_;
     uv_loop_s *loop_ = nullptr;

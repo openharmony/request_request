@@ -63,15 +63,36 @@ std::vector<std::string> JSUtil::Convert2StrVector(napi_env env, napi_value valu
 std::vector<std::string> JSUtil::Convert2Header(napi_env env, napi_value value)
 {
     std::vector<std::string> result;
-    napi_value jsvalue = nullptr;
-    napi_get_named_property(env, value, "Authorization", &jsvalue);
-    if (jsvalue != nullptr) {
-        result.push_back("Authorization: " + Convert2String(env, jsvalue));
+    napi_value keyArr = nullptr;
+    napi_status status = napi_get_property_names(env, value, &keyArr);
+    if (status != napi_ok) {
+        return result;
     }
-    jsvalue = nullptr;
-    napi_get_named_property(env, value, "Content-Type", &jsvalue);
-    if (jsvalue != nullptr) {
-        result.push_back("Content-Type: " + Convert2String(env, jsvalue));
+
+    uint32_t len = 0;
+    status = napi_get_array_length(env, keyArr, &len);
+    if (status != napi_ok) {
+        return result;
+    }
+    for (uint32_t i = 0; i < len; i++) {
+        napi_value keyNapiValue = nullptr;
+        napi_get_element(env, keyArr, i, &keyNapiValue);
+
+        napi_valuetype valueType;
+        napi_typeof(env, keyNapiValue, &valueType);
+        if (valueType != napi_valuetype::napi_string) {
+            continue;
+        }
+
+        char key[JSUtil::MAX_LEN] = { 0 };
+        size_t cValueLength = 0;
+        napi_get_value_string_utf8(env, keyNapiValue, key, JSUtil::MAX_LEN - 1, &cValueLength);
+
+        napi_value jsvalue = nullptr;
+        napi_get_named_property(env, value, key, &jsvalue);
+        if (jsvalue != nullptr) {
+            result.push_back(Convert2String(env, jsvalue));
+        }
     }
     return result;
 }

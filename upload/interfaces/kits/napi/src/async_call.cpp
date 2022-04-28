@@ -17,7 +17,7 @@
 
 using namespace OHOS::Request::Upload;
 namespace OHOS::Request::UploadNapi {
-AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context, size_t pos)
+AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context)
     : env_(env)
 {
     context_ = new AsyncContext();
@@ -25,15 +25,11 @@ AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Cont
     napi_value self = nullptr;
     napi_value argv[JSUtil::MAX_ARGC] = {nullptr};
     NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
-    NAPI_ASSERT_BASE(env, pos <= argc, " Invalid Args!", NAPI_RETVAL_NOTHING);
-    pos = ((pos == ASYNC_DEFAULT_POS) ? (argc - 1) : pos);
-    if (pos >= 0 && pos < argc) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, argv[pos], &valueType);
-        if (valueType == napi_function) {
-            napi_create_reference(env, argv[pos], 1, &context_->callback);
-            argc = pos;
-        }
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, argv[argc - 1], &valueType);
+    if (valueType == napi_function) {
+        napi_create_reference(env, argv[argc - 1], 1, &context_->callback);
+        argc = argc - 1;
     }
     NAPI_CALL_RETURN_VOID(env, (*context)(env, argc, argv, self));
     context_->ctx = std::move(context);

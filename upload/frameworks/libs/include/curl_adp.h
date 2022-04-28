@@ -50,6 +50,7 @@ protected:
 private:
     bool MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray);
     void UploadFile();
+    void SetHeadData(CURL *curl);
     void SetCurlOpt(CURL *curl);
     void CheckUploadStatus(CURLM *curlMulti);
     void CurlGlobalInit();
