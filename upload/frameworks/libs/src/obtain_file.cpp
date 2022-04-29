@@ -126,8 +126,7 @@ uint32_t ObtainFile::GetInternalFile(FILE **file, std::string &fileUri,
         filePtr = fopen(filePath.c_str(), "r");
         if (filePtr == nullptr) {
             UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, open file error");
-            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, error info : %{public}s.",
-                strerror(errno));
+            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, error info : %{public}d.", errno);
             ret = UPLOAD_ERRORCODE_GET_FILE_ERROR;
             break;
         }

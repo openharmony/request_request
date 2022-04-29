@@ -87,14 +87,14 @@ void CUrlAdp::DoUpload(IUploadTask *task)
     }
 
     InitTimerInfo();
-    int index = 0;
+    uint32_t index = 0;
     for (auto &vmem : fileArray_) {
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>vmem : fileArray_ isReadAbort is %{public}d", IsReadAbort());
         if (IsReadAbort()) {
             return;
         }
         index++;
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>fileArray index %{public}d", index);
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>fileArray index %{public}u", index);
         mfileData_ = vmem;
         mfileData_.fileIndex = index;
         mfileData_.responseHead.clear();
@@ -360,8 +360,16 @@ size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *u
             stoatalHead += smem;
         }
         char sbuff[stoatalHead.length()];
-        (void)memset_s(sbuff, stoatalHead.length(), 0, stoatalHead.length());
-        (void)memcpy_s(sbuff, stoatalHead.length(), stoatalHead.c_str(), stoatalHead.length());
+        int nRet = memset_s(sbuff, stoatalHead.length(), 0, stoatalHead.length());
+        if (nRet != 0) {
+            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback memset_s Ret is %{public}d", nRet);
+        }
+
+        nRet = memcpy_s(sbuff, stoatalHead.length(), stoatalHead.c_str(), stoatalHead.length());
+        if (nRet != 0) {
+            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback memcpy_s Ret is %{public}d", nRet);
+        }
+
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback stoatalHead is %{public}s", stoatalHead.c_str());
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback stoatalHead.length() is %{public}zu",
             stoatalHead.length());

@@ -40,18 +40,24 @@ uint32_t DownloadServiceProxy::Request(const DownloadConfig &config)
 
     int32_t fd = -1;
     int32_t err = 0;
-    fd = open(config.GetFilePath().c_str(), O_RDWR);
+
+    const char *inputPath = config.GetFilePath().c_str();
+    char path[PATH_MAX + 1] = { 0x00 };
+    if (strlen(inputPath) > PATH_MAX || realpath(inputPath, path) == nullptr) {
+        return -1;
+    }
+    fd = open(path, O_RDWR);
     if (fd > 0) {
         DOWNLOAD_HILOGD("Download File already exists");
         fd = -1;
     } else {
         fd = open(config.GetFilePath().c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
         if (fd < 0) {
-            DOWNLOAD_HILOGE("Failed to open file errno [%{public}s]", strerror(errno));
+            DOWNLOAD_HILOGE("Failed to open file errno [%{public}d]", errno);
             err = errno;
         }
     }
-    
+
     DOWNLOAD_HILOGI("Succeed to open download file, fd [%{public}d]]", fd);
     data.WriteFileDescriptor(fd);
     data.WriteInt32(err);

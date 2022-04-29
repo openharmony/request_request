@@ -400,7 +400,7 @@ size_t DownloadServiceTask::WriteCallback(void *buffer, size_t size, size_t num,
     size_t result = 0;
     DownloadServiceTask *this_ = static_cast<DownloadServiceTask *>(param);
     if (this_ != nullptr && this_->config_.GetFD() > 0) {
-        result = write(this_->config_.GetFD(), buffer, size * num);
+        result = static_cast<size_t>(write(this_->config_.GetFD(), buffer, size * num));
         if (result < size * num) {
             DOWNLOAD_HILOGE("origin size = %{public}zu, write size = %{public}zu", size * num, result);
         }

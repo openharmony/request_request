@@ -48,7 +48,7 @@ private:
 
     void NotifyDone(bool successful, const std::string& errMsg = "");
 
-    std::string token_;
+    std::string taskId_;
     DownloadOption option_;
     DoneFunc callback_;
     std::thread *thread_ {};

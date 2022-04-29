@@ -20,7 +20,7 @@ namespace OHOS::Request::Download::Legacy {
 bool DownloadTask::isCurlGlobalInited_ = false;
 
 DownloadTask::DownloadTask(const std::string &token, const DownloadOption &option, const DoneFunc &callback)
-    : token_(token), option_(option), callback_(callback)
+    : taskId_(token), option_(option), callback_(callback)
 {
     DOWNLOAD_HILOGI("constructor");
 }
@@ -38,7 +38,13 @@ DownloadTask::~DownloadTask()
 FILE *DownloadTask::OpenDownloadFile() const
 {
     auto downloadFile = option_.fileDir_ + '/' + option_.filename_;
-    FILE *filp = fopen(downloadFile.c_str(), "w+");
+    const char *filePath = downloadFile.c_str();
+    char path[PATH_MAX + 1] = { 0x00 };
+
+    if (strlen(filePath) > PATH_MAX || realpath(filePath, path) == nullptr) {
+        return nullptr;
+    }
+    FILE *filp = fopen(path, "w+");
     if (filp == nullptr) {
         DOWNLOAD_HILOGE("open download file failed");
     }
@@ -58,7 +64,7 @@ void DownloadTask::NotifyDone(bool successful, const std::string &errMsg)
     }
 
     if (callback_) {
-        callback_(token_, successful, errMsg);
+        callback_(taskId_, successful, errMsg);
     }
 }
 
@@ -116,8 +122,8 @@ void DownloadTask::DoDownload()
 
 void DownloadTask::Start()
 {
-    DOWNLOAD_HILOGD("token=%{public}s url=%{public}s file=%{public}s dir=%{public}s",
-                    token_.c_str(), option_.url_.c_str(), option_.filename_.c_str(), option_.fileDir_.c_str());
+    DOWNLOAD_HILOGD("taskId=%{public}s url=%{public}s file=%{public}s dir=%{public}s",
+                    taskId_.c_str(), option_.url_.c_str(), option_.filename_.c_str(), option_.fileDir_.c_str());
     if (!isCurlGlobalInited_) {
         curl_global_init(CURL_GLOBAL_ALL);
         isCurlGlobalInited_ = true;

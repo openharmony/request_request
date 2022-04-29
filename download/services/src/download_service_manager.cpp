@@ -383,14 +383,15 @@ void DownloadServiceManager::MonitorNetwork(DownloadServiceManager *thisVal)
 {
     bool isOnline = true;
     bool currentStatus = true;
-   
+    if (thisVal == nullptr) {
+        DOWNLOAD_HILOGD("DownloadServiceManager::MonitorNetwork thisVal is nullptr");
+        return;
+    }
     while (thisVal->initialized_) {
         currentStatus = thisVal->GetNetworkStatus();
         if (!isOnline && currentStatus) {
             // offline --> online
-            if (thisVal) {
-                thisVal->ResumeTaskByNetwork();
-            }
+            thisVal->ResumeTaskByNetwork();
         }
         isOnline = currentStatus;
         std::this_thread::sleep_for(std::chrono::milliseconds(MAX_NETWORK_TIMES));

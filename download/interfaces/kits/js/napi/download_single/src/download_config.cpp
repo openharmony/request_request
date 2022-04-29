@@ -126,7 +126,7 @@ int32_t DownloadConfig::GetFDError() const
 void DownloadConfig::Dump(bool isFull) const
 {
     DOWNLOAD_HILOGD("fd: %{public}d", fd_);
-    DOWNLOAD_HILOGD("fd errno: %{public}s", strerror(fdError_));
+    DOWNLOAD_HILOGD("fd errno: %{public}d", fdError_);
     DOWNLOAD_HILOGD("URL: %{public}s", url_.c_str());
     DOWNLOAD_HILOGD("enableMetered: %{public}s", enableMetered_ ? "true" : "false");
     DOWNLOAD_HILOGD("enableRoaming: %{public}s", enableRoaming_ ? "true" : "false");
