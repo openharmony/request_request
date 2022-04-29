@@ -197,7 +197,6 @@ napi_status UploadTaskNapi::OnFail(napi_env env, size_t argc, napi_value *argv, 
     if (proxy->onFail_ != nullptr) {
         proxy->napiUploadTask_->Off(TYPE_FAIL_CALLBACK, (void *)((proxy->onFail_).get()));
     }
-    proxy->offFail_ = std::move(proxy->onFail_);
     proxy->napiUploadTask_->On(TYPE_FAIL_CALLBACK, (void *)(callback.get()));
     proxy->onFail_ = std::move(callback);
     return napi_ok;
@@ -424,7 +423,7 @@ void UploadTaskNapi::OnSystemSuccess(napi_env env, napi_ref ref, Upload::UploadR
     uv_loop_s *loop_ = nullptr;
     napi_get_uv_event_loop(env, &loop_);
     if (loop_ == nullptr) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to get uv event loop");
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to get uv event loop");
         return;
     }
     uv_work_t *work = new (std::nothrow) uv_work_t;
@@ -433,6 +432,10 @@ void UploadTaskNapi::OnSystemSuccess(napi_env env, napi_ref ref, Upload::UploadR
         return;
     }
     SystemSuccessCallback *successCallback = new (std::nothrow)SystemSuccessCallback;
+    if (successCallback == nullptr) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create successCallback");
+        return;
+    }
     successCallback->env = env;
     successCallback->ref = ref;
     successCallback->response = response;
@@ -455,14 +458,9 @@ void UploadTaskNapi::OnSystemSuccess(napi_env env, napi_ref ref, Upload::UploadR
             work = nullptr;
         });
     if (ret != 0) {
-        if (successCallback != nullptr) {
-            delete successCallback;
-            successCallback = nullptr;
-        }
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "OnSystemSuccess. uv_queue_work Failed");
+        delete successCallback;
+        delete work;
     }
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OnSystemSuccess end");
 }

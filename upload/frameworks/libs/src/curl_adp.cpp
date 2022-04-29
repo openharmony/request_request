@@ -146,7 +146,7 @@ bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray)
         curl_mime_name(part, "file");
     }
     curl_mime_type(part, mfileData_.type.c_str());
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===> MultiAddHandle mfileData_.type.c_str() %{public}s",
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===> MultiAddHandle mfileData_.type=%{public}s",
         mfileData_.type.c_str());
     curl_mime_filename(part, mfileData_.filename.c_str());
     mfileData_.adp = this;
@@ -160,10 +160,8 @@ bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray)
 
 void CUrlAdp::SetHeadData(CURL *curl)
 {
-    if (config_->header.size()) {
-        for (auto &headerData : config_->header) {
-            mfileData_.list = curl_slist_append(mfileData_.list, headerData.c_str());
-        }
+    for (auto &headerData : config_->header) {
+        mfileData_.list = curl_slist_append(mfileData_.list, headerData.c_str());
     }
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, mfileData_.list);
 }
@@ -356,10 +354,10 @@ size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *u
         fData->headSendFlag = COLLECT_END_FLAG;
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback collect end  is %{public}s", stmp.c_str());
     }
-    if (COLLECT_DO_FLAG == fData->headSendFlag || COLLECT_END_FLAG == fData->headSendFlag) {
+    if ( fData->headSendFlag == COLLECT_DO_FLAG || fData->headSendFlag == COLLECT_END_FLAG) {
         fData->responseHead.push_back(stmp);
     }
-    if (url && url->uploadTask_ && COLLECT_END_FLAG == fData->headSendFlag) {
+    if (url && url->uploadTask_ && fData->headSendFlag == COLLECT_END_FLAG) {
         std::string stoatalHead = "";
         for (auto &smem : fData->responseHead) {
             UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback smem is %{public}s", smem.c_str());

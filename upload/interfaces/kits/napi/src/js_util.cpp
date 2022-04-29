@@ -72,6 +72,7 @@ std::vector<std::string> JSUtil::Convert2Header(napi_env env, napi_value value)
     uint32_t len = 0;
     status = napi_get_array_length(env, keyArr, &len);
     if (status != napi_ok) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Convert2Header. napi_get_array_length statue Error");
         return result;
     }
     for (uint32_t i = 0; i < len; i++) {
