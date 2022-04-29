@@ -48,7 +48,8 @@ void HeaderReceiveCallback::HeaderReceive(const std::string &header)
     int ret = uv_queue_work(loop_, work,
         [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
-            std::shared_ptr<HeaderReceiveWorker> headerReceiveWorkerInner(reinterpret_cast<HeaderReceiveWorker *>(work->data));
+            std::shared_ptr<HeaderReceiveWorker> headerReceiveWorkerInner(
+                reinterpret_cast<HeaderReceiveWorker *>(work->data));
             std::shared_ptr<uv_work_t> work_p(work);
             napi_value jsHeader = nullptr;
             napi_value callback = nullptr;
@@ -72,14 +73,15 @@ void HeaderReceiveCallback::HeaderReceive(const std::string &header)
                     napi_get_reference_value(headerReceiveWorkerInner->callback->env_,
                         headerReceiveWorkerInner->callback->callback_, &callback);
                     napi_get_global(headerReceiveWorkerInner->callback->env_, &global);
-                    callStatus =
-                        napi_call_function(headerReceiveWorkerInner->callback->env_, global, callback, 1, args, &result);
+                    callStatus = napi_call_function(
+                        headerReceiveWorkerInner->callback->env_, global, callback, 1, args, &result);
                 } else {
                     break;
                 }
                 if (callStatus != napi_ok) {
                     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
-                        "HeaderReceive callback failed callStatus:%{public}d callback:%{public}p", callStatus, callback);
+                        "HeaderReceive callback failed callStatus:%{public}d callback:%{public}p",
+                        callStatus, callback);
                 }
             } while (false);
         });

@@ -354,7 +354,7 @@ size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *u
         fData->headSendFlag = COLLECT_END_FLAG;
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback collect end  is %{public}s", stmp.c_str());
     }
-    if ( fData->headSendFlag == COLLECT_DO_FLAG || fData->headSendFlag == COLLECT_END_FLAG) {
+    if (fData->headSendFlag == COLLECT_DO_FLAG || fData->headSendFlag == COLLECT_END_FLAG) {
         fData->responseHead.push_back(stmp);
     }
     if (url && url->uploadTask_ && fData->headSendFlag == COLLECT_END_FLAG) {

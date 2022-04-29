@@ -62,20 +62,24 @@ void ProgressCallback::Progress(const int64_t uploadedSize, const int64_t totalS
             napi_status calStatus = napi_generic_failure;
             napi_env tmpEnv = progressWorkerInner->callback->env_;
             do {
-                if (progressWorkerInner->callback->env_ == tmpEnv && progressWorkerInner->callback->status_ == napi_ok) {
+                if (progressWorkerInner->callback->env_ == tmpEnv &&
+                    progressWorkerInner->callback->status_ == napi_ok) {
                     napi_create_int64(progressWorkerInner->callback->env_, progressWorkerInner->uploadedSize, &jsUploaded);
                     args[0] = jsUploaded;
-                    napi_create_int64(progressWorkerInner->callback->env_, progressWorkerInner->totalSize, &jsTotal);
+                    napi_create_int64(progressWorkerInner->callback->env_,
+                        progressWorkerInner->totalSize, &jsTotal);
                     args[1] = jsTotal;
                 } else {
                     break;
                 }
-                if (progressWorkerInner->callback->env_ == tmpEnv && progressWorkerInner->callback->callback_ != nullptr &&
+                if (progressWorkerInner->callback->env_ == tmpEnv &&
+                    progressWorkerInner->callback->callback_ != nullptr &&
                     progressWorkerInner->callback->status_ == napi_ok) {
                     napi_get_reference_value(progressWorkerInner->callback->env_,
                         progressWorkerInner->callback->callback_, &callback);
                     napi_get_global(progressWorkerInner->callback->env_, &global);
-                    calStatus = napi_call_function(progressWorkerInner->callback->env_, global, callback, 2, args, &result);
+                    calStatus = napi_call_function(progressWorkerInner->callback->env_,
+                        global, callback, 2, args, &result);
                 } else {
                     break;
                 }

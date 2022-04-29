@@ -67,7 +67,8 @@ void FailCallback::Fail(const unsigned int error)
                     failWorkerInner->callback->status_ != napi_ok) {
                     break;
                 }
-                napi_get_reference_value(failWorkerInner->callback->env_, failWorkerInner->callback->callback_, &callback);
+                napi_get_reference_value(failWorkerInner->callback->env_,
+                    failWorkerInner->callback->callback_, &callback);
                 napi_get_global(failWorkerInner->callback->env_, &global);
                 callStatus = napi_call_function(failWorkerInner->callback->env_, global, callback, 1, args, &result);
                 if (callStatus != napi_ok) {
