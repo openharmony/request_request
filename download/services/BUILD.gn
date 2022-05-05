@@ -65,7 +65,7 @@ ohos_shared_library("download_server") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "multimedia_image_standard:image_native",
-    "os_account_standard:os_account_innerkits",
+    "os_account:os_account_innerkits",
     "ril_adapter:hril_innerkits",
   ]
   subsystem_name = "miscservices"
