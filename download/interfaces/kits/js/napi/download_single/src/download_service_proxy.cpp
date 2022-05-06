@@ -51,7 +51,7 @@ uint32_t DownloadServiceProxy::Request(const DownloadConfig &config)
         DOWNLOAD_HILOGD("Download File already exists");
         fd = -1;
     } else {
-        fd = open(config.GetFilePath().c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
+        fd = open(path, O_CREAT | O_RDWR, FILE_PERMISSION);
         if (fd < 0) {
             DOWNLOAD_HILOGE("Failed to open file errno [%{public}d]", errno);
             err = errno;
