@@ -92,7 +92,10 @@ std::vector<std::string> JSUtil::Convert2Header(napi_env env, napi_value value)
         napi_value jsvalue = nullptr;
         napi_get_named_property(env, value, key, &jsvalue);
         if (jsvalue != nullptr) {
-            result.push_back(Convert2String(env, jsvalue));
+            std::string item(key);
+            item.append(": ");
+            item.append(Convert2String(env, jsvalue));
+            result.push_back(item);
         }
     }
     return result;
