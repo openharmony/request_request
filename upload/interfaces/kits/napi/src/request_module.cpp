@@ -103,7 +103,7 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_PENDING", session_pending),
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_PAUSED", session_paused),
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_FAILED", session_failed),
-        
+
         DECLARE_NAPI_METHOD("download", DownloadTaskNapi::JsMain),
         DECLARE_NAPI_METHOD("upload", UploadTaskNapi::JsUpload),
     };
