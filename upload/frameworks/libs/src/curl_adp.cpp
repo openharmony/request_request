@@ -377,8 +377,7 @@ size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *u
         }
 
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback stoatalHead is %{public}s", stoatalHead.c_str());
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback stoatalHead.length() is %{public}zu",
-            stoatalHead.length());
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "stoatalHead.length() is %{public}zu", stoatalHead.length());
         nitems = stoatalHead.length();
         size = isize;
         if (codeOk == fData->httpCode) {
