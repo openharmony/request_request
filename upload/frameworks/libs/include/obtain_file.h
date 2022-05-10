@@ -31,12 +31,12 @@ class ObtainFile {
 public:
     ~ObtainFile();
     uint32_t GetFile(FILE **file, std::string& fileUri,
-        uint32_t& fileSize, std::shared_ptr<OHOS::AppExecFwk::Context> &context);
+        uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
 protected:
     uint32_t GetDataAbilityFile(FILE **file, std::string& fileUri,
-        uint32_t& fileSize, std::shared_ptr<OHOS::AppExecFwk::Context> &context);
+        uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
     uint32_t GetInternalFile(FILE **file, std::string& fileUri,
-        uint32_t& fileSize, std::shared_ptr<OHOS::AppExecFwk::Context> &context);
+        uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
 };
 } // end of OHOS::Request::Upload
 #endif

@@ -20,6 +20,7 @@
 #include "upload_task.h"
 
 namespace OHOS::Request::Upload {
+const int USLEEPRUN = 50 * 1000;
 UploadTask::UploadTask(std::shared_ptr<UploadConfig>& uploadConfig)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "UploadTask. In.");
@@ -32,6 +33,7 @@ UploadTask::UploadTask(std::shared_ptr<UploadConfig>& uploadConfig)
     progressCallback_ = nullptr;
     headerReceiveCallback_ = nullptr;
     failCallback_ = nullptr;
+    context_ = nullptr;
 }
 
 UploadTask::~UploadTask()
@@ -50,7 +52,6 @@ bool UploadTask::Remove()
         return curlAdp_->Remove();
     }
     ClearFileArray();
-    context_ = nullptr;
     return true;
 }
 
@@ -110,7 +111,7 @@ void UploadTask::SetCallback(Type type, void *callback)
     }
 }
 
-void UploadTask::SetContext(std::shared_ptr<OHOS::AppExecFwk::Context> context)
+void UploadTask::SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> context)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "SetContext. In.");
     context_ = context;
@@ -119,7 +120,14 @@ void UploadTask::SetContext(std::shared_ptr<OHOS::AppExecFwk::Context> context)
 void UploadTask::Run(void *arg)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Run. In.");
+    usleep(USLEEPRUN);
     ((UploadTask*)arg)->OnRun();
+    if (((UploadTask*)arg)->uploadConfig_->protocolVersion == "L5") {
+        if (((UploadTask*)arg)->uploadConfig_->fcomplete) {
+            ((UploadTask*)arg)->uploadConfig_->fcomplete();
+            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Complete.");
+        }
+    }
 }
 
 void UploadTask::OnRun()
@@ -127,7 +135,6 @@ void UploadTask::OnRun()
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnRun. In.");
     state_ = STATE_RUNNING;
     obtainFile_ =  std::make_shared<ObtainFile>();
-
     GetFileArray();
     if (fileArray_.empty()) {
         return;
@@ -198,10 +205,13 @@ std::vector<FileData>& UploadTask::GetFileArray()
             return fileArray_;
         }
         data.fp = file;
-        auto str = StringSplit(f.uri, '\\');
-        if (str.size() > 0) {
-            data.name = str[str.size()-1];
+        std::size_t position = f.uri.find_last_of("/");
+        if (position != std::string::npos) {
+            data.filename = std::string(f.uri, position + 1);
+            data.filename.erase(data.filename.find_last_not_of(" ") + 1);
         }
+        data.name = f.name;
+        data.type = f.type;
         fileArray_.push_back(data);
         totalSize_ += fileSize;
     }

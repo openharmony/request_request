@@ -27,6 +27,16 @@ HeaderReceiveCallback::HeaderReceiveCallback(napi_env env, napi_value callback)
 HeaderReceiveCallback::~HeaderReceiveCallback()
 {
     napi_delete_reference(env_, callback_);
+    status_ = napi_generic_failure;
+}
+
+void HeaderReceiveCallback::CheckQueueWorkRet(int ret, HeaderReceiveWorker *headerReceiveWorker, uv_work_t *work)
+{
+    if (ret != 0) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "HeaderReceive. uv_queue_work Failed");
+        delete headerReceiveWorker;
+        delete work;
+    }
 }
 
 void HeaderReceiveCallback::HeaderReceive(const std::string &header)
@@ -38,36 +48,43 @@ void HeaderReceiveCallback::HeaderReceive(const std::string &header)
     int ret = uv_queue_work(loop_, work,
         [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
-            HeaderReceiveWorker *headerReceiveWorkerInner = reinterpret_cast<HeaderReceiveWorker *>(work->data);
-            napi_value jsHeader = UploadNapi::JSUtil::Convert2JSString(headerReceiveWorkerInner->callback->env_,
-                headerReceiveWorkerInner->header);
+            std::shared_ptr<HeaderReceiveWorker> headerReceiveWorkerInner(
+                reinterpret_cast<HeaderReceiveWorker *>(work->data));
+            std::shared_ptr<uv_work_t> work_p(work);
+            napi_value jsHeader = nullptr;
             napi_value callback = nullptr;
-            napi_value args[1] = { jsHeader };
-            napi_get_reference_value(headerReceiveWorkerInner->callback->env_,
-                headerReceiveWorkerInner->callback->callback_, &callback);
+            napi_value args[1];
             napi_value global = nullptr;
-            napi_get_global(headerReceiveWorkerInner->callback->env_, &global);
             napi_value result;
-            napi_status callStatus = napi_call_function(headerReceiveWorkerInner->callback->env_, global, callback,
-                1, args, &result);
-            if (callStatus != napi_ok) {
-                UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
-                    "HeaderReceive callback failed callStatus:%{public}d callback:%{public}p", callStatus, callback);
-            }
-            delete headerReceiveWorkerInner;
-            headerReceiveWorkerInner = nullptr;
-            delete work;
-            work = nullptr;
+            napi_status callStatus = napi_generic_failure;
+            napi_env tmpEnv = headerReceiveWorkerInner->callback->env_;
+            do {
+                if (headerReceiveWorkerInner->callback->env_ == tmpEnv &&
+                    headerReceiveWorkerInner->callback->status_ == napi_ok) {
+                    jsHeader = UploadNapi::JSUtil::Convert2JSString(headerReceiveWorkerInner->callback->env_,
+                        headerReceiveWorkerInner->header);
+                    args[0] = { jsHeader };
+                } else {
+                    break;
+                }
+                if (headerReceiveWorkerInner->callback->env_ == tmpEnv &&
+                    headerReceiveWorkerInner->callback->callback_ != nullptr &&
+                    headerReceiveWorkerInner->callback->status_ == napi_ok) {
+                    napi_get_reference_value(headerReceiveWorkerInner->callback->env_,
+                        headerReceiveWorkerInner->callback->callback_, &callback);
+                    napi_get_global(headerReceiveWorkerInner->callback->env_, &global);
+                    callStatus = napi_call_function(
+                        headerReceiveWorkerInner->callback->env_, global, callback, 1, args, &result);
+                } else {
+                    break;
+                }
+                if (callStatus != napi_ok) {
+                    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
+                        "HeaderReceive callback failed callStatus:%{public}d callback:%{public}p",
+                        callStatus, callback);
+                }
+            } while (false);
         });
-    if (ret != 0) {
-        if (headerReceiveWorker != nullptr) {
-            delete headerReceiveWorker;
-            headerReceiveWorker = nullptr;
-        }
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
-    }
+    CheckQueueWorkRet(ret, headerReceiveWorker, work);
 }
 } // end of OHOS::Request::Upload

@@ -43,11 +43,14 @@ protected:
     static int ProgressCallback(void *clientp,
         curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
     static size_t HeaderCallback(char *buffer, size_t size, size_t nitems, void *userdata);
+    static size_t HeaderCallbackL5(char *buffer, size_t size, size_t nitems, void *userdata);
     static size_t ReadCallback(char *buffer, size_t size, size_t nitems, void *arg);
+    static int OnDebug(CURL *curl, curl_infotype itype, char *pData, size_t size, void *lpvoid);
 
 private:
     bool MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray);
     void UploadFile();
+    void SetHeadData(CURL *curl);
     void SetCurlOpt(CURL *curl);
     void CheckUploadStatus(CURLM *curlMulti);
     void CurlGlobalInit();

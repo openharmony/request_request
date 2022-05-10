@@ -1,22 +1,41 @@
+
+
 # 杂散子系统/Request服务
 
 ##  简介
 
 ### 内容介绍
 
-Request组件向三方应用提供系统下载/上传服务能力，以支撑应用开发者方便、高效的使用以及管理下载/上传业务的功能，包含新建、移除、暂停、恢复以及查询下载/上传任务。
+Request服务向三方应用提供系统下载/上传服务能力，以支撑应用开发者方便、高效地使用以及管理下载/上传业务的功能，包含新建、移除、暂停、恢复以及查询下载/上传任务。
 
 ### 架构图介绍
 
 **图 1** 下载子系统架构图  
 ![](figures/download_architecture.png "子系统架构图")
 
+系统应用：依赖的系统应用如浏览器等。
+
+三方应用：依赖的第三方应用如淘宝等。
+
+Download API：提供下载功能的接口。
+
+IDL：提供NAPI之间的相互通信。
+
+下载服务：负责下载的具体过程，客户端发起一个下载请求，下载内部创建下载任务，处理下载请求并完成下载任务。
+
+DataAbility能力：用来保存每一次下载的记录。
+
 **图 2** 上传子系统架构图  
 ![](figures/subsystem_architecture_zh.png "子系统架构图")
 
-#### 仓库路径
-
-/base/miscservices/request
+扩展/三方 应用：上传功能的客户端，是上传的发起方。
+JS接口：对外提供上传功能JS接口。
+本地接口：对外提供上传功能本地接口。
+上传任务：客户端每发起一个上传请求，上传内部都会创建一个上传任务，用于处理上传请求，转发服务器的上传应答。
+Curl适配：对三方库libcurl的一个封装。
+获取文件：根据客户端发起上传请求时传入的文件路径获取要上传的文件。
+libcurl: 三方库。
+DataAbility能力：DataAbility的使用方，用户获取DataAbility文件协议路径下的文件。
 
 ## 目录
 
@@ -41,7 +60,7 @@ Request组件向三方应用提供系统下载/上传服务能力，以支撑应
 
 ###  接口说明
 
-**表 1**  Request组件的主要功能
+**表 1**  Request服务的主要接口
 
 <table><thead align="left"><tr id="row143351854201012"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="p103351154121010"><a name="p103351154121010"></a><a name="p103351154121010"></a>接口名</p>
 </th>
@@ -72,8 +91,8 @@ Request组件向三方应用提供系统下载/上传服务能力，以支撑应
 </tr>
 </tbody>
 </table>
+**表 2** DownloadTask的主要接口
 
-**表 2** DownloadTask的主要功能
 <table><thead align="left"><tr id="row143351854201012"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="p103351154121010"><a name="p103351154121010"></a><a name="p103351154121010"></a>接口名</p>
 </th>
 <th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="p1033585416105"><a name="p1033585416105"></a><a name="p1033585416105"></a>描述</p>
@@ -315,8 +334,8 @@ Request组件向三方应用提供系统下载/上传服务能力，以支撑应
 </tr>
 </tbody>
 </table>
+**表 5** UploadTask的主要接口
 
-**表 5** UploadTask的主要功能
 <table><thead align="left"><tr id="row143351854201012"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="p103351154121010"><a name="p103351154121010"></a><a name="p103351154121010"></a>接口名</p>
 </th>
 <th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="p1033585416105"><a name="p1033585416105"></a><a name="p1033585416105"></a>描述</p>
@@ -475,11 +494,12 @@ internal://cache/path/to/file.txt</p>
 
 ###  使用说明
 
-```
+```js
 // 导入模块
 import request from '@ohos.request';
-
-// 1、下载服务接口使用说明
+```
+```js
+// 下载服务接口使用说明
 let downloadConfig = {
   url: 'http://mirror.bjtu.edu.cn/kernel/linux/libs/libc5/libc5.cvs.tar.gz',
   header: {},
@@ -492,6 +512,10 @@ let downloadConfig = {
 }
 let downloadTask;
 
+```
+1.获取DownloadTask实例
+
+```js
 // 使用callback形式回调返回DownloadTask实例。
 request.download(downloadConfig, (err, data) => {
     if (err) {
@@ -509,57 +533,90 @@ request.download(downloadConfig).then((data) => {
 }).catch((err) => {
     console.error('Failed to request the download. Cause: ' + JSON.stringify(err));
 })
+```
+2.创建监听下载进度
 
+```js
 // 开启下载进度监听，使用callback形式返回下载进度结果。
 downloadTask.on('progress', (receivedSize, totalSize) => {
     console.info("download receivedSize :" + receivedSize + " totalSize :" + totalSize);
 });
+```
+3.创建监听complete事件
 
+```
 // 开启下载任务complete监听，使用callback形式返回。
 downloadTask.on('complete', () => {
     console.info("download task has been completed");
 });
+```
+4.创建监听pause事件
 
+```js
 // 开启下载任务pause监听，使用callback形式返回。
 downloadTask.on('pause', () => {
     console.info("download task has been paused");
 });
+```
+5.创建监听remove事件
 
+```js
 // 开启下载任务remove监听，使用callback形式返回。
 downloadTask.on('remove', () => {
     console.info("download task has been removed");
 });
+```
+6.创建监听fail事件
 
+```js
 // 开启下载任务fail监听，使用callback形式返回错误码。
 downloadTask.on('fail', (error) => {
     console.info("download fail error:" + error);
 });
+```
+7.关闭监听下载进度
 
+```js
 // 关闭下载任务进度监听，使用callback形式返回下载进度结果。
 downloadTask.off('progress', (receivedSize, totalSize) => {
     console.info("download receivedSize :" + receivedSize + " totalSize :" + totalSize);
 });
+```
+8.关闭监听complete事件
 
+```js
 // 关闭下载任务complete监听，使用callback形式返回。
 downloadTask.off('complete', () => {
     console.info("delete complete notification");
 });
+```
+9.关闭监听pause事件
 
+```js
 // 关闭下载任务pause监听，使用callback形式返回。
 downloadTask.off('pause', () => {
     console.info("delete pause notification");
 });
+```
+10.关闭监听pause事件
 
+```js
 // 关闭下载任务remove监听，使用callback形式返回。
 downloadTask.off('remove', () => {
     console.info("delete remove notification");
 });
+```
+11.关闭监听fail事件
 
+```js
 // 关闭下载任务fail监听，使用callback形式返回错误码。
 downloadTask.off('fail', (error) => {
     console.info("remove fail notification error:" + error);
 });
+```
+12.删除下载任务
 
+```js
 // 移除下载的任务，使用promise形式返回结果。
 downloadTask.remove().then((result) => {
     if (result) {
@@ -583,7 +640,10 @@ downloadTask.remove((err, result) => {
         console.error('Failed to remove the download task.(callback) ');
     }
 });
+```
+13.暂停下载
 
+```js
 // 暂停下载的任务，使用promise形式返回结果。
 downloadTask.pause().then(() => {
 	console.info('Success to pause the download task.(promise) ');
@@ -599,7 +659,10 @@ downloadTask.pause((err) => {
     }
 	console.info('Success to pause the download task.(callback) ');
 });
+```
+14.恢复下载
 
+```js
 // 恢复下载的任务，使用promise形式返回结果。
 downloadTask.resume().then(() => {
 	console.info('Success to resume the download task.(promise) ');
@@ -615,7 +678,10 @@ downloadTask.resume((err) => {
     }
 	console.info('Success to resume the download task.(callback) ');
 });
+```
+15.查询下载
 
+```js
 // 查询下载的任务，使用promise形式返回结果。
 downloadTask.query().then((downloadInfo) => {
 	console.info('Success to query the download task.(promise) ');
@@ -631,7 +697,10 @@ downloadTask.query((err, downloadInfo) => {
     }
 	console.info('Success to query the download task.(callback) ');
 });
+```
+16.查询下载的mime type
 
+```js
 // 查询下载任务的mime type，使用promise形式返回结果。
 downloadTask.queryMimeType().then((mime) => {
 	console.info('Success to queryMimeType the download task.(promise) MimeType ' + JSON.stringify(mime));
@@ -647,8 +716,13 @@ downloadTask.queryMimeType((err, mime) => {
     }
 	console.info('Success to queryMimeType the download task.(promise) MimeType ' + JSON.stringify(mime));
 });
+```
+```js
+// 上传服务接口使用说明
+```
+1.上传文件创建
 
-// 2、上传服务接口使用说明
+```js
 // 上传一组文件，以及添加移除progress、headerReceive、fail监听，移除上传任务。
 let url = 'http://192.168.2.211/files/';
 let file1 = { filename: "test", name: "test", uri: "internal://cache/test.jpg", type: "jpg" };
@@ -663,7 +737,10 @@ let dataabilityFile = { filename: "test", name: "test",
 let files = [file1, file2, file3, file4, file5, file6, largeFile, dataabilityFile];
 let data = [{ name: "name123", value: "123" }];
 let uploadTask;
+```
+2.获取上传的UploadTask实例
 
+```js
 // 使用callback形式回调返回UploadTask实例。
 request.upload({ url, header, "POST", files, data }, (err, data) => {
     if (err) {
@@ -681,37 +758,58 @@ request.upload({ url, header, "POST", files, data }).then((data) => {
 }).catch((err) => {
     console.error('Failed to request the upload. Cause: ' + JSON.stringify(err));
 })
+```
+3.创建上传任务进度的监听
 
+```js
 // 开启上传任务监听，使用callback形式返回上传进度结果。
 uploadTask.on('progress', (uploadedSize, totalSize) => {
     console.info("on progress upload uploadedSize :" + uploadedSize + " totalSize :" + totalSize);
 });
+```
+4.创建上传的HTTP header response监听事件
 
+```js
 // 开启上传任务监听，使用callback形式返回HTTP header response结果。
 uploadTask.on('headerReceive', (headers) => {
     console.info("on headerReceive headers:" + JSON.stringify(headers));
 });
+```
+5.创建上传的错误码监听事件
 
+```js
 // 开启上传任务监听，使用callback形式返回错误码。
 uploadTask.on('fail', (error) => {
     console.info("on fail error:" + error);
 });
+```
+6.关闭上传任务进度任务监听
 
+```js
 // 关闭上传任务监听，使用callback形式返回上传进度结果。
 uploadTask.off('progress', (uploadedSize, totalSize) => {
     console.info("on progress upload uploadedSize :" + uploadedSize + " totalSize :" + totalSize);
 });
+```
+7.关闭上传的HTTP header response监听事件
 
+```js
 // 关闭上传任务监听，使用callback形式返回HTTP header response结果。
 uploadTask.off('headerReceive', (headers) => {
     console.info("on headerReceive headers:" + JSON.stringify(headers));
 });
+```
+8.关闭上传的错误码监听事件
 
+```js
 // 关闭上传任务监听，使用callback形式返回错误码。
 uploadTask.off('fail', (error) => {
     console.info("on fail error:" + error);
 });
+```
+9.删除上传的任务
 
+```js
 // 移除上传的任务，使用promise形式返回结果。
 uploadTask.remove().then((result) => {
     if (result) {

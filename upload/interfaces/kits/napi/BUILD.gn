@@ -22,10 +22,9 @@ config("upload_native_public_config") {
   visibility = []
   include_dirs = [
     "include",
-    "//foundation/ace/napi/interfaces/kits",
+    "//foundation/arkui/napi/interfaces/kits",
     "//foundation/aafwk/standard/interfaces/kits/napi/aafwk/featureAbility",
     "//foundation/aafwk/standard/interfaces/kits/napi/aafwk/inner/napi_common",
-    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base/include",
     "//third_party/libuv/include",
     "./",
     "//base/miscservices/request/download/interfaces/kits/js/napi/download_single/include",

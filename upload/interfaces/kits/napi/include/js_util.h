@@ -34,6 +34,12 @@ public:
 
     static std::string Convert2String(napi_env env, napi_value jsString);
     static napi_value Convert2JSString(napi_env env, const std::string &cString);
+    static napi_value Convert2JSValue(napi_env env, int32_t value);
+    static std::vector<std::string> Convert2StrVector(napi_env env, napi_value value);
+    static napi_value Convert2JSStringVector(napi_env env, const std::vector<std::string> &cStrings);
+    static napi_value Convert2JSUploadResponse(napi_env env, const Upload::UploadResponse &response);
+    static void ParseFunction(napi_env env, napi_value &object, const char *name, bool &hasFunction, napi_ref &output);
+    static std::vector<std::string> Convert2Header(napi_env env, napi_value value);
 
     static std::shared_ptr<Upload::UploadConfig> Convert2UploadConfig(napi_env env, napi_value jsConfig);
     static napi_value Convert2JSUploadConfig(napi_env env, const Upload::UploadConfig &config);

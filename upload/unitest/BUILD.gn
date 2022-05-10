@@ -14,7 +14,6 @@
 #import("//base/miscservices/request/upload/upload.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
-
 module_output_path = "request/upload_service"
 
 ohos_unittest("upload_obtain_file_UT_test") {
@@ -31,6 +30,7 @@ ohos_unittest("upload_obtain_file_UT_test") {
     "//third_party/curl/include",
     "//base/miscservices/request/upload/frameworks/libs/include",
     "//base/miscservices/time/interfaces/innerkits/include",
+    "//third_party/googletest/googlemock/include",
   ]
 
   deps = [
@@ -39,6 +39,7 @@ ohos_unittest("upload_obtain_file_UT_test") {
     "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
     "//foundation/aafwk/standard/interfaces/innerkits/want:want",
     "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base:appexecfwk_base",
+    "//third_party/googletest:gmock_main",
   ]
 
   external_deps = [
@@ -53,6 +54,7 @@ ohos_unittest("upload_UT_test") {
 
   sources = [
     "//base/miscservices/request/upload/frameworks/libs/src/curl_adp.cpp",
+    "//base/miscservices/request/upload/frameworks/libs/src/upload_timer_info.cpp",
     "src/upload_test.cpp",
   ]
 
@@ -62,7 +64,7 @@ ohos_unittest("upload_UT_test") {
     "//base/miscservices/time/interfaces/innerkits/include",
     "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
-    "//foundation/ace/napi/interfaces/kits",
+    "//foundation/arkui/napi/interfaces/kits",
     "//third_party/json/single_include",
     "//third_party/node/src",
     "//utils/system/safwk/native/include",

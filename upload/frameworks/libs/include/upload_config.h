@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include "curl/curl.h"
 
 namespace OHOS::Request::Upload {
 struct File {
@@ -32,21 +33,38 @@ struct RequestData {
     std::string value;
 };
 
+struct UploadResponse {
+    int32_t code;
+    std::string data;
+    std::string headers;
+};
+
 struct UploadConfig {
     std::string url;
-    std::string header;
+    std::vector<std::string> header;
     std::string method;
     std::vector<File> files;
     std::vector<RequestData> data;
+    std::function<void(UploadResponse &data)> fsuccess;
+    std::function<void(std::string &data, int32_t &code)> ffail;
+    std::function<void()> fcomplete;
+    std::string protocolVersion;
 };
 
 struct FileData {
     FILE *fp;
+    std::string filename;
     std::string name;
+    std::string type;
     void *adp;
     int64_t upsize;
     int64_t totalsize;
-    int32_t fileIndex;
+    uint32_t fileIndex;
+    CURL *mcurl;
+    struct curl_slist *list;
+    std::vector<std::string> responseHead;
+    int32_t headSendFlag;
+    int32_t httpCode;
 };
 } // end of OHOS::Request::Upload
 #endif
