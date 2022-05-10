@@ -64,8 +64,6 @@ ohos_shared_library("downloadsingle") {
     "src/napi_utils.cpp",
   ]
   deps = [
-    "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
-    "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/curl:curl",
@@ -75,6 +73,7 @@ ohos_shared_library("downloadsingle") {
     "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
     "ability_runtime:napi_base_context",
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",

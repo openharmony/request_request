@@ -38,13 +38,7 @@ DownloadTask::~DownloadTask()
 FILE *DownloadTask::OpenDownloadFile() const
 {
     auto downloadFile = option_.fileDir_ + '/' + option_.filename_;
-    const char *filePath = downloadFile.c_str();
-    char path[PATH_MAX + 1] = { 0x00 };
-
-    if (strlen(filePath) > PATH_MAX || realpath(filePath, path) == nullptr) {
-        return nullptr;
-    }
-    FILE *filp = fopen(path, "w+");
+    FILE *filp = fopen(downloadFile.c_str(), "w+");
     if (filp == nullptr) {
         DOWNLOAD_HILOGE("open download file failed");
     }
