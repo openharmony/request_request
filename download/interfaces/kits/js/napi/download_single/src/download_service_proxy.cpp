@@ -32,6 +32,18 @@ DownloadServiceProxy::DownloadServiceProxy(const sptr<IRemoteObject> &object)
 {
 }
 
+bool DownloadServiceProxy::IsPathValid(const std::string &filePath)
+{
+    auto path = filePath.substr(0, filePath.rfind('/'));
+    char resolvedPath[PATH_MAX + 1] = { 0 };
+    if (path.length() > PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr
+        || strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
+        DOWNLOAD_HILOGE("invalid file path!");
+        return false;
+    }
+    return true;
+}
+
 uint32_t DownloadServiceProxy::Request(const DownloadConfig &config)
 {
     MessageParcel data, reply;
@@ -41,17 +53,15 @@ uint32_t DownloadServiceProxy::Request(const DownloadConfig &config)
     int32_t fd = -1;
     int32_t err = 0;
 
-    const char *inputPath = config.GetFilePath().c_str();
-    char path[PATH_MAX + 1] = { 0x00 };
-    if (strlen(inputPath) > PATH_MAX || realpath(inputPath, path) == nullptr) {
+    if (!IsPathValid(config.GetFilePath())) {
         return -1;
     }
-    fd = open(path, O_RDWR);
+    fd = open(config.GetFilePath().c_str(), O_RDWR);
     if (fd > 0) {
         DOWNLOAD_HILOGD("Download File already exists");
         fd = -1;
     } else {
-        fd = open(path, O_CREAT | O_RDWR, FILE_PERMISSION);
+        fd = open(config.GetFilePath().c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
         if (fd < 0) {
             DOWNLOAD_HILOGE("Failed to open file errno [%{public}d]", errno);
             err = errno;

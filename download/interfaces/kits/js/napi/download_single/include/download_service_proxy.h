@@ -40,6 +40,7 @@ public:
     bool SetStartId(uint32_t startId) override;
 
 private:
+    static bool IsPathValid(const std::string &filePath);
     static inline BrokerDelegator<DownloadServiceProxy> delegator_;
 };
 } // namespace OHOS::Request::Download
