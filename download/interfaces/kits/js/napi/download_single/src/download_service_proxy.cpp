@@ -35,7 +35,7 @@ DownloadServiceProxy::DownloadServiceProxy(const sptr<IRemoteObject> &object)
 bool DownloadServiceProxy::IsPathValid(const std::string &filePath)
 {
     auto path = filePath.substr(0, filePath.rfind('/'));
-    char resolvedPath[PATH_MAX + 1] = { 0x00 };
+    char resolvedPath[PATH_MAX + 1] = { 0 };
     if (path.length() > PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr
         || strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
         DOWNLOAD_HILOGE("invalid file path!");
