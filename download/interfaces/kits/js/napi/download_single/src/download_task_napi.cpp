@@ -30,6 +30,7 @@
 #include "log.h"
 #include "napi_utils.h"
 #include "legacy/download_manager.h"
+#include "napi_base_context.h"
 
 static constexpr const char *FUNCTION_ON = "on";
 static constexpr const char *FUNCTION_OFF = "off";
@@ -87,6 +88,44 @@ napi_value DownloadTaskNapi::JsMain(napi_env env, napi_callback_info info)
     auto context = std::make_shared<AsyncCall::Context>(input, output);
     AsyncCall asyncCall(env, info, context, 1);
     return asyncCall.Call(env);
+}
+
+napi_status DownloadTaskNapi::GetContext(napi_env env, napi_value *argv, int& parametersPosition,
+    std::shared_ptr<OHOS::AbilityRuntime::Context>& context)
+{
+	bool stageMode = false;
+    napi_status status = OHOS::AbilityRuntime::IsStageContext(env, argv[0], stageMode);
+    if (status != napi_ok) {
+        DOWNLOAD_HILOGE("GetContext. L7");
+        auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
+        if (ability == nullptr) {
+            DOWNLOAD_HILOGE("GetContext. L7. GetCurrentAbility ability == nullptr.");
+            return napi_generic_failure;
+        }
+        context = ability->GetAbilityContext();
+    } else {
+        DOWNLOAD_HILOGE("GetContext. L8");
+        parametersPosition = 1;
+        if (stageMode) {
+            context = OHOS::AbilityRuntime::GetStageModeContext(env, argv[0]);
+            if (context == nullptr) {
+                DOWNLOAD_HILOGE("GetContext. L8. GetStageModeContext contextRtm == nullptr.");
+                return napi_generic_failure;
+            }
+        } else {
+            auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
+            if (ability == nullptr) {
+                DOWNLOAD_HILOGE("GetContext. L8. GetCurrentAbility ability == nullptr.");
+                return napi_generic_failure;
+            }
+            context = ability->GetAbilityContext();
+        }
+    }
+    if (context == nullptr) {
+        DOWNLOAD_HILOGE("GetContext failed. context is nullptr.");
+        return napi_generic_failure;
+    }
+    return napi_ok;
 }
 
 napi_value DownloadTaskNapi::GetCtor(napi_env env)
