@@ -54,19 +54,14 @@ ohos_shared_library("downloaddataability") {
     "//base/account/os_account/interfaces/innerkits/ohosaccount/native/include/",
     "//base/account/os_account/interfaces/kits/napi/distributedaccount/include/",
     "//base/account/os_account/interfaces/innerkits/include",
-    "//foundation/aafwk/standard/interfaces/innerkits/want/include",
-    "//foundation/aafwk/standard/interfaces/innerkits/want/include/ohos/aafwk/content",
     "//foundation/aafwk/standard/interfaces/innerkits/ability_manager/include",
     "//foundation/aafwk/standard/services/abilitymgr/include",
     "//foundation/aafwk/standard/frameworks/kits/ability/native/include",
     "//base/miscservices/request/download/utils/include",
-    "//foundation/aafwk/standard/interfaces/innerkits/uri/include",
   ]
 
   deps = [
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
-    "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
-    "//foundation/aafwk/standard/interfaces/innerkits/want/:want",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//third_party/jsoncpp:jsoncpp",

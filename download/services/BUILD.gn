@@ -44,11 +44,9 @@ ohos_shared_library("download_server") {
     "//third_party/json/include",
     "//base/miscservices/request/download/interfaces/kits/js/napi/download_single/include",
     "//third_party/curl/include",
-    "//foundation/aafwk/standard/interfaces/innerkits/uri/include",
   ]
   deps = [
     "//base/telephony/core_service/interfaces/innerkits:tel_core_service_api",
-    "//foundation/aafwk/standard/interfaces/innerkits/uri:zuri",
     "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/curl:curl",

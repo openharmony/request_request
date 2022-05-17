@@ -32,12 +32,8 @@ ohos_shared_library("downloadsingle") {
     "//base/miscservices/request/download/utils/include",
     "//foundation/aafwk/standard/frameworks/kits/appkit/native/app/include/",
     "//foundation/aafwk/standard/frameworks/kits/ability/native/include",
-    "//foundation/aafwk/standard/interfaces/innerkits/base/include/ohos/aafwk/base",
     "//foundation/aafwk/standard/services/abilitymgr/include",
-    "//foundation/aafwk/standard/interfaces/innerkits/want/include/ohos/aafwk/content",
     "//foundation/aafwk/standard/interfaces/innerkits/ability_manager/include",
-    "//foundation/aafwk/standard/interfaces/innerkits/want/include",
-    "//foundation/aafwk/standard/interfaces/innerkits/uri/include",
   ]
   public_configs = [ ":download_interfaces_kits_napi_config" ]
 
