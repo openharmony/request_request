@@ -93,7 +93,7 @@ napi_value DownloadTaskNapi::JsMain(napi_env env, napi_callback_info info)
 napi_status DownloadTaskNapi::GetContext(napi_env env, napi_value *argv, int& parametersPosition,
     std::shared_ptr<OHOS::AbilityRuntime::Context>& context)
 {
-	bool stageMode = false;
+    bool stageMode = false;
     napi_status status = OHOS::AbilityRuntime::IsStageContext(env, argv[0], stageMode);
     if (status != napi_ok) {
         DOWNLOAD_HILOGE("GetContext. L7");
