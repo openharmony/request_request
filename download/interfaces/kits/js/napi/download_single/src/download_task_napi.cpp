@@ -90,6 +90,67 @@ napi_value DownloadTaskNapi::JsMain(napi_env env, napi_callback_info info)
     return asyncCall.Call(env);
 }
 
+napi_value DownloadTaskNapi::GetCtor(napi_env env)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    napi_value cons;
+    if (globalCtor != nullptr) {
+        NAPI_CALL(env, napi_get_reference_value(env, globalCtor, &cons));
+        return cons;
+    }
+
+    napi_property_descriptor clzDes[] = {
+        {FUNCTION_ON, 0, DownloadEvent::On, 0, 0, 0, napi_default, 0},
+        {FUNCTION_OFF, 0, DownloadEvent::Off, 0, 0, 0, napi_default, 0},
+        {FUNCTION_PAUSE, 0, DownloadPause::Exec, 0, 0, 0, napi_default, 0},
+        {FUNCTION_QUERY, 0, DownloadQuery::Exec, 0, 0, 0, napi_default, 0},
+        {FUNCTION_QUERYMIMETYPE, 0, DownloadQueryMimeType::Exec, 0, 0, 0, napi_default, 0},
+        {FUNCTION_REMOVE, 0, DownloadRemove::Exec, 0, 0, 0, napi_default, 0},
+        {FUNCTION_RESUME, 0, DownloadResume::Exec, 0, 0, 0, napi_default, 0},
+    };
+    NAPI_CALL(env, napi_define_class(env, "DownloadTaskNapi", NAPI_AUTO_LENGTH, Initialize, nullptr,
+                       sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
+    NAPI_CALL(env, napi_create_reference(env, cons, 1, &globalCtor));
+    return cons;
+}
+
+napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
+{
+    DOWNLOAD_HILOGD("constructor download task!");
+    napi_value self = nullptr;
+	int parametersPosition = 0;
+    size_t argc = NapiUtils::MAX_ARGC;
+    napi_value argv[NapiUtils::MAX_ARGC] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
+
+	std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
+    napi_status getStatus = GetContext(env, &argv[0], parametersPosition, context);
+    if (getStatus != napi_ok) {
+        DOWNLOAD_HILOGE("Initialize. GetContext fail.");
+        return nullptr;
+    }
+
+    DownloadConfig config;
+    if (!ParseConfig(env, argv[0], config)) {
+        DOWNLOAD_HILOGE("download config has wrong type");
+        return nullptr;
+    }
+    DownloadManager::GetInstance()->SetDataAbilityHelper(GetDataAbilityHelper(env));
+    auto *task = DownloadManager::GetInstance()->EnqueueTask(config);
+
+    auto finalize = [](napi_env env, void *data, void *hint) {
+        DOWNLOAD_HILOGD("destructed download task");
+        DownloadTask *task = reinterpret_cast<DownloadTask *>(data);
+        delete task;
+    };
+    if (napi_wrap(env, self, task, finalize, nullptr, nullptr) != napi_ok) {
+        finalize(env, task, nullptr);
+        return nullptr;
+    }
+    DOWNLOAD_HILOGD("Succeed to allocate download task");
+    return self;
+}
+
 napi_status DownloadTaskNapi::GetContext(napi_env env, napi_value *argv, int& parametersPosition,
     std::shared_ptr<OHOS::AbilityRuntime::Context>& context)
 {
@@ -126,59 +187,6 @@ napi_status DownloadTaskNapi::GetContext(napi_env env, napi_value *argv, int& pa
         return napi_generic_failure;
     }
     return napi_ok;
-}
-
-napi_value DownloadTaskNapi::GetCtor(napi_env env)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    napi_value cons;
-    if (globalCtor != nullptr) {
-        NAPI_CALL(env, napi_get_reference_value(env, globalCtor, &cons));
-        return cons;
-    }
-
-    napi_property_descriptor clzDes[] = {
-        {FUNCTION_ON, 0, DownloadEvent::On, 0, 0, 0, napi_default, 0},
-        {FUNCTION_OFF, 0, DownloadEvent::Off, 0, 0, 0, napi_default, 0},
-        {FUNCTION_PAUSE, 0, DownloadPause::Exec, 0, 0, 0, napi_default, 0},
-        {FUNCTION_QUERY, 0, DownloadQuery::Exec, 0, 0, 0, napi_default, 0},
-        {FUNCTION_QUERYMIMETYPE, 0, DownloadQueryMimeType::Exec, 0, 0, 0, napi_default, 0},
-        {FUNCTION_REMOVE, 0, DownloadRemove::Exec, 0, 0, 0, napi_default, 0},
-        {FUNCTION_RESUME, 0, DownloadResume::Exec, 0, 0, 0, napi_default, 0},
-    };
-    NAPI_CALL(env, napi_define_class(env, "DownloadTaskNapi", NAPI_AUTO_LENGTH, Initialize, nullptr,
-                       sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
-    NAPI_CALL(env, napi_create_reference(env, cons, 1, &globalCtor));
-    return cons;
-}
-
-napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
-{
-    DOWNLOAD_HILOGD("constructor download task!");
-    napi_value self = nullptr;
-    size_t argc = NapiUtils::MAX_ARGC;
-    napi_value argv[NapiUtils::MAX_ARGC] = {nullptr};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
-
-    DownloadConfig config;
-    if (!ParseConfig(env, argv[0], config)) {
-        DOWNLOAD_HILOGE("download config has wrong type");
-        return nullptr;
-    }
-    DownloadManager::GetInstance()->SetDataAbilityHelper(GetDataAbilityHelper(env));
-    auto *task = DownloadManager::GetInstance()->EnqueueTask(config);
-
-    auto finalize = [](napi_env env, void *data, void *hint) {
-        DOWNLOAD_HILOGD("destructed download task");
-        DownloadTask *task = reinterpret_cast<DownloadTask *>(data);
-        delete task;
-    };
-    if (napi_wrap(env, self, task, finalize, nullptr, nullptr) != napi_ok) {
-        finalize(env, task, nullptr);
-        return nullptr;
-    }
-    DOWNLOAD_HILOGD("Succeed to allocate download task");
-    return self;
 }
 
 bool DownloadTaskNapi::ParseConfig(napi_env env, napi_value configValue, DownloadConfig &config)
