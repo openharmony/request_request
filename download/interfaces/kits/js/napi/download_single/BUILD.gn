@@ -71,13 +71,13 @@ ohos_shared_library("downloadsingle") {
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
     "ability_runtime:napi_base_context",
+    "dataability:native_dataability",
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "native_appdatamgr:native_appdatafwk",
-    "native_appdatamgr:native_dataability",
-    "native_appdatamgr:native_preferences",
-    "native_appdatamgr:native_rdb",
+    "preferences:native_preferences",
+    "relational_store:native_appdatafwk",
+    "relational_store:native_rdb",
   ]
   relative_install_dir = "module"
   subsystem_name = "miscservices"
