@@ -131,7 +131,7 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     }
 
     DownloadConfig config;
-    if (!ParseConfig(env, argv[0], config)) {
+    if (!ParseConfig(env, argv[parametersPosition], config)) {
         DOWNLOAD_HILOGE("download config has wrong type");
         return nullptr;
     }
