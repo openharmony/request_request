@@ -53,7 +53,8 @@ public:
 
     void SetInterval(uint32_t interval);
     uint32_t GetInterval() const;
-
+    
+    void ResumeTaskByNetwork();
 private:
     enum class QueueType {
         NONE_QUEUE,
@@ -66,10 +67,7 @@ private:
     void MoveTaskToQueue(uint32_t taskId, std::shared_ptr<DownloadServiceTask> task);
     void PushQueue(std::queue<uint32_t> &queue, uint32_t taskId);
     void RemoveFromQueue(std::queue<uint32_t> &queue, uint32_t taskId);
-
-    bool GetNetworkStatus();
-    void ResumeTaskByNetwork();
-    static void MonitorNetwork(DownloadServiceManager *thisVal);
+    int32_t MonitorNetwork();
 
 private:
     bool initialized_;
@@ -83,8 +81,6 @@ private:
     uint32_t interval_;
     uint32_t threadNum_;
     uint32_t timeoutRetry_;
-
-    std::shared_ptr<std::thread> networkThread_;
 
     uint32_t taskId_;
     static std::recursive_mutex instanceLock_;
