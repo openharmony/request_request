@@ -378,7 +378,6 @@ int32_t DownloadServiceManager::MonitorNetwork()
     NetSpecifier netSpecifier;
     NetAllCapabilities netAllCapabilities;
     netAllCapabilities.netCaps_.insert(NetCap::NET_CAPABILITY_INTERNET);
-    netSpecifier.ident_ = "wifi";
     netSpecifier.netCapabilities_ = netAllCapabilities;
     sptr<NetSpecifier> specifier = new NetSpecifier(netSpecifier);
     sptr<NetConnCallbackObserver> observer = new NetConnCallbackObserver;
