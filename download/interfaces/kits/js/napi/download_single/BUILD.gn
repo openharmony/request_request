@@ -10,7 +10,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import("//base/miscservices/request/request_aafwk.gni")
 import("//build/ohos.gni")
+
 config("download_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
@@ -25,15 +27,15 @@ ohos_shared_library("downloadsingle") {
     "//foundation/arkui/napi/interfaces/inner_api",
     "//third_party/node/src",
     "//third_party/curl/include",
-    "//foundation/aafwk/standard/services/common/include",
+    "${aafwk_services_path}/common/include",
     "//utils/system/safwk/native/include",
     "//base/miscservices/request/download/interfaces/kits/napi/download_single/include",
     "//base/miscservices/request/download/interfaces/innerkits/include",
     "//base/miscservices/request/download/utils/include",
-    "//foundation/aafwk/standard/frameworks/kits/appkit/native/app/include/",
-    "//foundation/aafwk/standard/frameworks/kits/ability/native/include",
-    "//foundation/aafwk/standard/services/abilitymgr/include",
-    "//foundation/aafwk/standard/interfaces/innerkits/ability_manager/include",
+    "${aafwk_kits_path}/appkit/native/app/include/",
+    "${aafwk_kits_path}/ability/native/include",
+    "${aafwk_services_path}/abilitymgr/include",
+    "${aafwk_inner_api_path}/ability_manager/include",
   ]
   public_configs = [ ":download_interfaces_kits_napi_config" ]
 

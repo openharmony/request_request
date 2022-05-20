@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//base/miscservices/request/request_aafwk.gni")
 import("//build/ohos.gni")
 
 config("upload_lib_config") {
@@ -54,7 +55,7 @@ ohos_shared_library("upload_lib") {
   configs = [ ":upload_lib_config" ]
 
   deps = [
-    "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
+    "${aafwk_kits_path}/ability/native:abilitykit_native",
     "//third_party/curl/:curl",
   ]
 

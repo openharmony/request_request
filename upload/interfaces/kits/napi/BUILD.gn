@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//base/miscservices/request/request_aafwk.gni")
 import("//build/ohos.gni")
 
 config("upload_native_config") {
@@ -46,9 +47,9 @@ ohos_shared_library("request") {
   configs = [ ":upload_native_config" ]
 
   deps = [
+    "${aafwk_kits_path}/ability/native:abilitykit_native",
     "//base/miscservices/request/download/interfaces/kits/js/napi/download_single:downloadsingle",
     "//base/miscservices/request/upload/frameworks/libs:upload_lib",
-    "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//foundation/arkui/napi/:ace_napi",
     "//third_party/libuv:uv_static",
     "//utils/native/base:utils",
