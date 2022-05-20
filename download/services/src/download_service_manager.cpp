@@ -380,7 +380,7 @@ int32_t DownloadServiceManager::MonitorNetwork()
     netAllCapabilities.netCaps_.insert(NetCap::NET_CAPABILITY_INTERNET);
     netSpecifier.netCapabilities_ = netAllCapabilities;
     sptr<NetSpecifier> specifier = new NetSpecifier(netSpecifier);
-    sptr<NetConnCallbackObserver> observer = new NetConnCallbackObserver;
+    sptr<NetConnCallbackObserver> observer = new NetConnCallbackObserver();
     int nRet = DelayedSingleton<NetConnClient>::GetInstance()->RegisterNetConnCallback(specifier, observer, 0);
     DOWNLOAD_HILOGD("RegisterNetConnCallback retcode= %{public}d", nRet);
     return nRet;
