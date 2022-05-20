@@ -168,7 +168,7 @@ napi_status DownloadTaskNapi::GetContext(napi_env env, napi_value *argv, int& pa
         context = ability->GetAbilityContext();
     } else {
         DOWNLOAD_HILOGE("GetContext. L8");
-        parametersPosition = CONFIG_PARAM_AT_SECOND; 
+        parametersPosition = CONFIG_PARAM_AT_SECOND;
         context = OHOS::AbilityRuntime::GetStageModeContext(env, argv[0]);
         if (context == nullptr) {
             DOWNLOAD_HILOGE("GetContext. L8. GetStageModeContext contextRtm == nullptr.");
