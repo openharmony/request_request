@@ -379,8 +379,16 @@ int32_t DownloadServiceManager::MonitorNetwork()
     NetAllCapabilities netAllCapabilities;
     netAllCapabilities.netCaps_.insert(NetCap::NET_CAPABILITY_INTERNET);
     netSpecifier.netCapabilities_ = netAllCapabilities;
-    sptr<NetSpecifier> specifier = new NetSpecifier(netSpecifier);
-    sptr<NetConnCallbackObserver> observer = new NetConnCallbackObserver();
+    sptr<NetSpecifier> specifier = new(std::nothrow) NetSpecifier(netSpecifier);
+    if (specifier == nullptr) {
+        DOWNLOAD_HILOGE("new operator error.specifier is nullptr");
+        return NET_CONN_ERR_INPUT_NULL_PTR;
+    }
+    sptr<NetConnCallbackObserver> observer = new(std::nothrow) NetConnCallbackObserver();
+    if (observer == nullptr) {
+        DOWNLOAD_HILOGE("new operator error.observer is nullptr");
+        return NET_CONN_ERR_INPUT_NULL_PTR;
+    }
     int nRet = DelayedSingleton<NetConnClient>::GetInstance()->RegisterNetConnCallback(specifier, observer, 0);
     DOWNLOAD_HILOGD("RegisterNetConnCallback retcode= %{public}d", nRet);
     return nRet;
