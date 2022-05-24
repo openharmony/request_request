@@ -480,6 +480,10 @@ void UploadTaskNapi::OnSystemFail(napi_env env, napi_ref ref, std::string &data,
         return;
     }
     SystemFailCallback *failCallback = new (std::nothrow) SystemFailCallback;
+    if (failCallback == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "failCallback is nullpter");
+        return;
+    }
     failCallback->data = data;
     failCallback->code = code;
     failCallback->env = env;
@@ -505,10 +509,8 @@ void UploadTaskNapi::OnSystemFail(napi_env env, napi_ref ref, std::string &data,
             work = nullptr;
         });
     if (ret != 0) {
-        if (failCallback != nullptr) {
-            delete failCallback;
-            failCallback = nullptr;
-        }
+        delete failCallback;
+        failCallback = nullptr;
         if (work != nullptr) {
             delete work;
             work = nullptr;
@@ -531,6 +533,10 @@ void UploadTaskNapi::OnSystemComplete(napi_env env, napi_ref ref)
         return;
     }
     SystemCompleteCallback *completeCallback = new (std::nothrow)SystemCompleteCallback;
+    if (completeCallback == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "completeCallback is nullpter");
+        return;
+    }
     completeCallback->env = env;
     completeCallback->ref = ref;
     work->data = (void *)completeCallback;
@@ -551,10 +557,8 @@ void UploadTaskNapi::OnSystemComplete(napi_env env, napi_ref ref)
             work = nullptr;
         });
     if (ret != 0) {
-        if (completeCallback != nullptr) {
-            delete completeCallback;
-            completeCallback = nullptr;
-        }
+        delete completeCallback;
+        completeCallback = nullptr;
         if (work != nullptr) {
             delete work;
             work = nullptr;
