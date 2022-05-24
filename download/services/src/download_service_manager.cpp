@@ -16,20 +16,26 @@
 #include "download_service_manager.h"
 
 #include "log.h"
+#include "net_conn_callback_observer.h"
+#include "net_specifier.h"
+#include "net_conn_client.h"
+#include "net_conn_constants.h"
+#include "unistd.h"
 
 
 static constexpr uint32_t THREAD_POOL_NUM = 4;
 static constexpr uint32_t TASK_SLEEP_INTERVAL = 1;
 static constexpr uint32_t MAX_RETRY_TIMES = 3;
-static constexpr uint32_t MAX_NETWORK_TIMES = 100;
 
+using namespace OHOS::NetManagerStandard;
+using namespace OHOS::MiscServices;
 namespace OHOS::Request::Download {
 std::recursive_mutex DownloadServiceManager::instanceLock_;
 std::shared_ptr<DownloadServiceManager> DownloadServiceManager::instance_ = nullptr;
 
 DownloadServiceManager::DownloadServiceManager()
     : initialized_(false), interval_(TASK_SLEEP_INTERVAL), threadNum_(THREAD_POOL_NUM), timeoutRetry_(MAX_RETRY_TIMES),
-    networkThread_(nullptr), taskId_(0)
+    taskId_(0)
 {
 }
 
@@ -62,13 +68,21 @@ bool DownloadServiceManager::Create(uint32_t threadNum)
         threadList_[i]->Start();
     }
 
-    DOWNLOAD_HILOGD("call curl_global_init");
-    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
-        DOWNLOAD_HILOGD("Failed to initialize 'curl'");
-        return false;
-    }
-    networkThread_ = std::make_shared<std::thread>(MonitorNetwork, this);
-    
+    std::thread th = std::thread([this]() {
+        constexpr int RETRY_MAX_TIMES = 100;
+        int retryCount = 0;
+        constexpr int RETRY_TIME_INTERVAL_MILLISECOND = 1 * 1000 * 1000; // retry after 1 second
+        do {
+            if (this->MonitorNetwork() == NET_CONN_SUCCESS) {
+                break;
+            }
+            retryCount++;
+            usleep(RETRY_TIME_INTERVAL_MILLISECOND);
+        } while (retryCount < RETRY_MAX_TIMES);
+        DOWNLOAD_HILOGD("RegisterNetConnCallback retryCount= %{public}d", retryCount);
+    });
+    th.detach();
+
     initialized_ = true;
     return initialized_;
 }
@@ -78,7 +92,6 @@ void DownloadServiceManager::Destroy()
     std::for_each(threadList_.begin(), threadList_.end(), [](auto t) { t->Stop(); });
     threadList_.clear();
     initialized_ = false;
-    networkThread_->join();
 }
 
 uint32_t DownloadServiceManager::AddTask(const DownloadConfig& config)
@@ -334,25 +347,6 @@ uint32_t DownloadServiceManager::GetInterval() const
     return interval_;
 }
 
-bool DownloadServiceManager::GetNetworkStatus()
-{
-    bool isOnline = false;
-    std::unique_ptr<CURL, decltype(&curl_easy_cleanup)> handle(curl_easy_init(), curl_easy_cleanup);
-
-    if (!handle) {
-        DOWNLOAD_HILOGD("Failed to create network monitor task");
-        return false;
-    }
-
-    std::string example = "www.example.com";
-    curl_easy_setopt(handle.get(), CURLOPT_URL, example.c_str());
-    CURLcode code = curl_easy_perform(handle.get());
-    if (code == CURLE_OK) {
-        isOnline = true;
-    }
-    return isOnline;
-}
-
 void DownloadServiceManager::ResumeTaskByNetwork()
 {
     int taskCount = 0;
@@ -379,23 +373,24 @@ void DownloadServiceManager::ResumeTaskByNetwork()
     DOWNLOAD_HILOGD("[%{public}d] task has been resumed by network status changed", taskCount);
 }
 
-void DownloadServiceManager::MonitorNetwork(DownloadServiceManager *thisVal)
+int32_t DownloadServiceManager::MonitorNetwork()
 {
-    bool isOnline = true;
-    bool currentStatus = true;
-    if (thisVal == nullptr) {
-        DOWNLOAD_HILOGD("DownloadServiceManager::MonitorNetwork thisVal is nullptr");
-        return;
+    NetSpecifier netSpecifier;
+    NetAllCapabilities netAllCapabilities;
+    netAllCapabilities.netCaps_.insert(NetCap::NET_CAPABILITY_INTERNET);
+    netSpecifier.netCapabilities_ = netAllCapabilities;
+    sptr<NetSpecifier> specifier = new(std::nothrow) NetSpecifier(netSpecifier);
+    if (specifier == nullptr) {
+        DOWNLOAD_HILOGE("new operator error.specifier is nullptr");
+        return NET_CONN_ERR_INPUT_NULL_PTR;
     }
-    while (thisVal->initialized_) {
-        currentStatus = thisVal->GetNetworkStatus();
-        if (!isOnline && currentStatus) {
-            // offline --> online
-            thisVal->ResumeTaskByNetwork();
-        }
-        isOnline = currentStatus;
-        std::this_thread::sleep_for(std::chrono::milliseconds(MAX_NETWORK_TIMES));
-        std::this_thread::yield();
+    sptr<NetConnCallbackObserver> observer = new(std::nothrow) NetConnCallbackObserver();
+    if (observer == nullptr) {
+        DOWNLOAD_HILOGE("new operator error.observer is nullptr");
+        return NET_CONN_ERR_INPUT_NULL_PTR;
     }
+    int nRet = DelayedSingleton<NetConnClient>::GetInstance()->RegisterNetConnCallback(specifier, observer, 0);
+    DOWNLOAD_HILOGD("RegisterNetConnCallback retcode= %{public}d", nRet);
+    return nRet;
 }
 } // namespace OHOS::Request::Download
