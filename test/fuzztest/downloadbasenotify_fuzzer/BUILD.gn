@@ -1,0 +1,87 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#####################hydra-fuzz###################
+import("//build/config/features.gni")
+import("//build/ohos.gni")
+import("//build/test.gni")
+
+##############################fuzztest##########################################
+ohos_fuzztest("DownloadBaseNotifyFuzzTest") {
+  module_out_path = "miscservices/request"
+
+  include_dirs = [
+    "//base/miscservices/request/download/interfaces/kits/js/napi/download_single/include",
+    "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
+    "//foundation/arkui/ace_engine/frameworks/base/utils",
+    "//foundation/arkui/napi",
+    "//foundation/arkui/napi/interfaces/kits",
+    "//foundation/arkui/napi/interfaces/inner_api",
+    "//third_party/node/src",
+    "//third_party/curl/include",
+    "//foundation/aafwk/standard/services/common/include",
+    "//utils/system/safwk/native/include",
+    "//base/miscservices/request/download/interfaces/innerkits/include",
+    "//base/miscservices/request/download/utils/include",
+    "//foundation/aafwk/standard/frameworks/kits/appkit/native/app/include/",
+    "//foundation/aafwk/standard/frameworks/kits/ability/native/include",
+    "//foundation/aafwk/standard/interfaces/innerkits/base/include/ohos/aafwk/base",
+    "//foundation/aafwk/standard/services/abilitymgr/include",
+    "//foundation/aafwk/standard/interfaces/innerkits/want/include/ohos/aafwk/content",
+    "//foundation/aafwk/standard/interfaces/innerkits/ability_manager/include",
+    "//foundation/aafwk/standard/interfaces/innerkits/want/include",
+    "//foundation/aafwk/standard/interfaces/innerkits/uri/include",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+
+  sources = [ "downloadbasenotify_fuzzer.cpp" ]
+
+  fuzz_config_file =
+      "//base/miscservices/request/test/fuzztest/downloadbasenotify_fuzzer"
+
+  deps = [
+    "//base/miscservices/request/download/etc/init:downloadservice.cfg",
+    "//base/miscservices/request/download/interfaces/kits/js/napi/download_single:downloadsingle",
+    "//base/miscservices/request/download/sa_profile:download_sa_profiles",
+    "//base/miscservices/request/download/services:download_server",
+    "//foundation/arkui/napi:ace_napi",
+    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
+    "//foundation/communication/ipc/interfaces/innerkits/ipc_single:ipc_single",
+    "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "//foundation/multimodalinput/input/frameworks/proxy:libmmi-common",
+    "//third_party/curl:curl",
+    "//utils/native/base:utils",
+    "//utils/native/base:utils",
+  ]
+
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+}
+
+###############################################################################
+group("fuzztest") {
+  testonly = true
+  deps = []
+  deps += [
+    # deps file
+    ":DownloadBaseNotifyFuzzTest",
+  ]
+}
+###############################################################################
