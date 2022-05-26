@@ -33,6 +33,7 @@ enum ErrorCode {
     ERROR_TOO_MANY_REDIRECTS,
     ERROR_UNHANDLED_HTTP_CODE,
     ERROR_UNKNOWN,
+    ERROR_NETWORK_ERROR,
 };
 
 enum PausedReason {

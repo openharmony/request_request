@@ -14,13 +14,10 @@
  */
 
 #include "download_service_manager.h"
-
-#include "log.h"
-#include "net_conn_callback_observer.h"
-#include "net_specifier.h"
-#include "net_conn_client.h"
+#include "network_listener.h"
 #include "net_conn_constants.h"
 #include "unistd.h"
+#include "log.h"
 
 
 static constexpr uint32_t THREAD_POOL_NUM = 4;
@@ -375,21 +372,8 @@ void DownloadServiceManager::ResumeTaskByNetwork()
 
 int32_t DownloadServiceManager::MonitorNetwork()
 {
-    NetSpecifier netSpecifier;
-    NetAllCapabilities netAllCapabilities;
-    netAllCapabilities.netCaps_.insert(NetCap::NET_CAPABILITY_INTERNET);
-    netSpecifier.netCapabilities_ = netAllCapabilities;
-    sptr<NetSpecifier> specifier = new(std::nothrow) NetSpecifier(netSpecifier);
-    if (specifier == nullptr) {
-        DOWNLOAD_HILOGE("new operator error.specifier is nullptr");
-        return NET_CONN_ERR_INPUT_NULL_PTR;
-    }
-    sptr<NetConnCallbackObserver> observer = new(std::nothrow) NetConnCallbackObserver();
-    if (observer == nullptr) {
-        DOWNLOAD_HILOGE("new operator error.observer is nullptr");
-        return NET_CONN_ERR_INPUT_NULL_PTR;
-    }
-    int nRet = DelayedSingleton<NetConnClient>::GetInstance()->RegisterNetConnCallback(specifier, observer, 0);
+    int nRet = DelayedSingleton<NetworkListener>::GetInstance()->RegOnNetworkChange([this]() {
+        this->ResumeTaskByNetwork();});
     DOWNLOAD_HILOGD("RegisterNetConnCallback retcode= %{public}d", nRet);
     return nRet;
 }

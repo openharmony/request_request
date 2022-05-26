@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include "constant.h"
 #include "log.h"
+#include "network_listener.h"
 
 namespace OHOS::Request::Download {
 DownloadServiceTask::DownloadServiceTask(uint32_t taskId, const DownloadConfig &config)
@@ -51,6 +52,12 @@ bool DownloadServiceTask::Run()
 {
     DOWNLOAD_HILOGD("Task[%{public}d] start.", taskId_);
     if (HandleFileError()) {
+        return false;
+    }
+
+    if (!DelayedSingleton<MiscServices::NetworkListener>::GetInstance()->IsOnline())
+    {
+        SetStatus(SESSION_FAILED,ERROR_NETWORK_ERROR,PAUSED_UNKNOWN);
         return false;
     }
 
