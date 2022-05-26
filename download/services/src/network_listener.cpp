@@ -22,10 +22,7 @@
 using namespace OHOS::NetManagerStandard;
 namespace OHOS {
 namespace MiscServices {
-bool NetworkListener::isOnline_ = false;
-std::mutex NetworkListener::mutex_;
-
-NetworkListener::NetworkListener() {
+NetworkListener::NetworkListener() : isOnline_(false) {
 }
 
 NetworkListener::~NetworkListener() {
