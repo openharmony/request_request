@@ -373,7 +373,8 @@ void DownloadServiceManager::ResumeTaskByNetwork()
 int32_t DownloadServiceManager::MonitorNetwork()
 {
     int nRet = DelayedSingleton<NetworkListener>::GetInstance()->RegOnNetworkChange([this]() {
-        this->ResumeTaskByNetwork();});
+        this->ResumeTaskByNetwork();
+    });
     DOWNLOAD_HILOGD("RegisterNetConnCallback retcode= %{public}d", nRet);
     return nRet;
 }

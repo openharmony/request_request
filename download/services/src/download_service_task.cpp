@@ -55,9 +55,8 @@ bool DownloadServiceTask::Run()
         return false;
     }
 
-    if (!DelayedSingleton<MiscServices::NetworkListener>::GetInstance()->IsOnline())
-    {
-        SetStatus(SESSION_FAILED,ERROR_NETWORK_ERROR,PAUSED_UNKNOWN);
+    if (!DelayedSingleton<MiscServices::NetworkListener>::GetInstance()->IsOnline()) {
+        SetStatus(SESSION_FAILED, ERROR_NETWORK_ERROR, PAUSED_UNKNOWN);
         return false;
     }
 

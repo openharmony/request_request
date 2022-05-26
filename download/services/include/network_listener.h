@@ -23,8 +23,8 @@
 namespace OHOS {
 namespace MiscServices {
 using RegCallBack = std::function<void()>;
-class NetworkListener
-{
+
+class NetworkListener {
     DECLARE_DELAYED_SINGLETON(NetworkListener)
 public:
     bool RegOnNetworkChange(RegCallBack&& callback);
@@ -53,8 +53,8 @@ public:
     };
 private:
     RegCallBack callback_ = nullptr;
-    static bool isOnline_;
-    static std::mutex mutex_;
+    bool isOnline_;
+    std::mutex mutex_;
 };
 }   // namespace MiscServices
 }   // namespace OHOS

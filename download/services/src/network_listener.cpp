@@ -22,7 +22,6 @@
 using namespace OHOS::NetManagerStandard;
 namespace OHOS {
 namespace MiscServices {
-
 bool NetworkListener::isOnline_ = false;
 std::mutex NetworkListener::mutex_;
 
@@ -50,7 +49,7 @@ bool NetworkListener::RegOnNetworkChange(RegCallBack&& callback)
     }
     int nRet = DelayedSingleton<NetConnClient>::GetInstance()->RegisterNetConnCallback(specifier, observer, 0);
     if (nRet == NET_CONN_SUCCESS) {
-       callback_ = callback;
+        callback_ = callback;
     }
  
     DOWNLOAD_HILOGD("RegisterNetConnCallback retcode= %{public}d", nRet);
@@ -73,16 +72,16 @@ int32_t NetworkListener::NetConnCallbackObserver::NetAvailable(sptr<NetHandle> &
     return 0;
 }
 
-int32_t NetworkListener::NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandle,
-                                                       const sptr<NetAllCapabilities> &netAllCap)
+int32_t NetworkListener::NetConnCallbackObserver::NetCapabilitiesChange(sptr <NetHandle> &netHandle,
+                                                                        const sptr <NetAllCapabilities> &netAllCap)
 {
     DOWNLOAD_HILOGD("Observe net capabilities change. start");
     if (netAllCap->netCaps_.count(NetCap::NET_CAPABILITY_VALIDATED)) {
-       NetListener_.SetNetworkStatus(true);
-       if (NetListener_.callback_ != nullptr){
-           NetListener_.callback_();
-           DOWNLOAD_HILOGD("NetCapabilitiesChange callback");
-       }
+        NetListener_.SetNetworkStatus(true);
+        if (NetListener_.callback_ != nullptr) {
+            NetListener_.callback_();
+            DOWNLOAD_HILOGD("NetCapabilitiesChange callback");
+        }
     } else {
         NetListener_.SetNetworkStatus(false);
     }
@@ -91,7 +90,7 @@ int32_t NetworkListener::NetConnCallbackObserver::NetCapabilitiesChange(sptr<Net
 }
 
 int32_t NetworkListener::NetConnCallbackObserver::NetConnectionPropertiesChange(sptr<NetHandle> &netHandle,
-                                                               const sptr<NetLinkInfo> &info)
+                                                                                const sptr<NetLinkInfo> &info)
 {
     return 0;
 }
