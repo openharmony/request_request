@@ -17,11 +17,17 @@
 #include "net_specifier.h"
 #include "net_conn_client.h"
 #include "net_conn_constants.h"
+#include "telephony_errors.h"
+#include "core_service_client.h"
+#include "constant.h"
 #include "log.h"
 
 using namespace OHOS::NetManagerStandard;
+using namespace OHOS::Telephony;
+using namespace OHOS::Request::Download;
 namespace OHOS {
 namespace MiscServices {
+const int32_t ERROR = -1;
 NetworkAdapter& NetworkAdapter::GetInstance()
 {
     static NetworkAdapter adapter;
@@ -69,6 +75,18 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(sptr <Net
     DOWNLOAD_HILOGD("Observe net capabilities change. start");
     if (netAllCap->netCaps_.count(NetCap::NET_CAPABILITY_VALIDATED)) {
         netAdapter_.isOnline_ = true;
+        GetRoaming();
+        if (netAllCap->bearerTypes_.count(NetBearType::BEARER_CELLULAR)) {
+            DOWNLOAD_HILOGD("BearerCellular :[%{public}d]", NetBearType::BEARER_CELLULAR);
+            netAdapter_.networkType_ = static_cast<uint32_t>(NETWORK_MOBILE);
+        }
+        if (netAllCap->bearerTypes_.count(NetBearType::BEARER_WIFI)) {
+            DOWNLOAD_HILOGD("BearerWifi :[%{public}d]", NetBearType::BEARER_WIFI);
+            netAdapter_.networkType_ = static_cast<uint32_t>(NETWORK_WIFI);
+            netAdapter_.isMetered_ = false;
+        } else {
+            netAdapter_.isMetered_ = true;
+        }
         if (netAdapter_.callback_ != nullptr) {
             netAdapter_.callback_();
             DOWNLOAD_HILOGD("NetCapabilitiesChange callback");
@@ -88,6 +106,9 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetConnectionPropertiesChange(s
 
 int32_t NetworkAdapter::NetConnCallbackObserver::NetLost(sptr<NetHandle> &netHandle)
 {
+    DOWNLOAD_HILOGD("Observe bearer cellular lost");
+    netAdapter_.networkType_ = 0;
+    netAdapter_.isMetered_ = false;
     return 0;
 }
 
@@ -99,6 +120,37 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetUnavailable()
 int32_t NetworkAdapter::NetConnCallbackObserver::NetBlockStatusChange(sptr<NetHandle> &netHandle, bool blocked)
 {
     return 0;
+}
+
+void NetworkAdapter::NetConnCallbackObserver::GetRoaming()
+{
+    auto slotId = DelayedRefSingleton<CoreServiceClient>::GetInstance().GetPrimarySlotId();
+    if (slotId == TELEPHONY_ERR_IPC_CONNECT_STUB_FAIL || slotId == ERROR) {
+        DOWNLOAD_HILOGE("GetDefaultCellularDataSlotId InValidData");
+        return;
+    }
+    auto networkState = DelayedRefSingleton<CoreServiceClient>::GetInstance().GetNetworkState(slotId);
+    if (networkState == nullptr) {
+        DOWNLOAD_HILOGE("networkState is nullptr");
+        return;
+    }
+    DOWNLOAD_HILOGE("Roaming = %{public}d",networkState->IsRoaming());
+    netAdapter_.isRoaming_ = networkState->IsRoaming();
+}
+
+uint32_t NetworkAdapter::GetNetworkType()
+{
+    return networkType_;
+}
+
+bool NetworkAdapter::GetMetered()
+{
+    return isMetered_;
+}
+
+bool NetworkAdapter::GetRoaming()
+{
+    return isRoaming_;
 }
 } // namespace MiscServices
 } // namespace OHOS

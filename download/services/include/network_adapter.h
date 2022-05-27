@@ -29,6 +29,9 @@ public:
     bool IsOnline();
     static NetworkAdapter& GetInstance();
     friend class NetConnCallbackObserver;
+    uint32_t GetNetworkType();
+    bool GetMetered();
+    bool GetRoaming();
 private:
     class NetConnCallbackObserver :  public NetManagerStandard::NetConnCallbackStub {
     public:
@@ -48,12 +51,17 @@ private:
 
         int32_t NetBlockStatusChange(sptr<NetManagerStandard::NetHandle> &netHandle, bool blocked) override;
     private:
+        void GetRoaming();
+    private:
         NetworkAdapter& netAdapter_;
     };
 
     RegCallBack callback_ = nullptr;
     bool isOnline_ = false;
     std::mutex mutex_;
+    bool isMetered_ = false;
+    bool isRoaming_ = false;
+    uint32_t networkType_ = 0;
 };
 }   // namespace MiscServices
 }   // namespace OHOS

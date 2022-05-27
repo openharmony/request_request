@@ -33,7 +33,7 @@ public:
     explicit DownloadServiceManager();
     ~DownloadServiceManager();
 
-    static std::shared_ptr<DownloadServiceManager> Get();
+    static std::shared_ptr<DownloadServiceManager> GetInstance();
 
     bool Create(uint32_t threadNum);
     void Destroy();
@@ -68,7 +68,7 @@ private:
     void PushQueue(std::queue<uint32_t> &queue, uint32_t taskId);
     void RemoveFromQueue(std::queue<uint32_t> &queue, uint32_t taskId);
     int32_t MonitorNetwork();
-
+    void UpdateNetworkType();
 private:
     bool initialized_;
     std::recursive_mutex mutex_;

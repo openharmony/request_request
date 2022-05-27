@@ -26,17 +26,13 @@
 namespace OHOS::Request::Download {
 DownloadServiceTask::DownloadServiceTask(uint32_t taskId, const DownloadConfig &config)
     : taskId_(taskId), config_(config), status_(SESSION_UNKNOWN), code_(ERROR_UNKNOWN), reason_(PAUSED_UNKNOWN),
-      mimeType_(""), file_(nullptr), totalSize_(0), downloadSize_(0), isPartialMode_(false), forceStop_(false),
+      mimeType_(""), totalSize_(0), downloadSize_(0), isPartialMode_(false), forceStop_(false),
       isRemoved_(false), retryTime_(10), eventCb_(nullptr), hasFileSize_(false), isOnline_(true), prevSize_(0) {
 }
 
 DownloadServiceTask::~DownloadServiceTask(void)
 {
     DOWNLOAD_HILOGD("Destructed download service task [%{public}d]", taskId_);
-    if (file_ != nullptr) {
-        fflush(file_);
-        fclose(file_);
-    }
     if (config_.GetFD() > 0) {
         close(config_.GetFD());
         config_.SetFD(-1);
@@ -56,6 +52,7 @@ bool DownloadServiceTask::Run()
     }
 
     if (!MiscServices::NetworkAdapter::GetInstance().IsOnline()) {
+        DOWNLOAD_HILOGI("network is offline\n");
         SetStatus(SESSION_FAILED, ERROR_NETWORK_FAIL, PAUSED_UNKNOWN);
         return false;
     }
@@ -66,6 +63,12 @@ bool DownloadServiceTask::Run()
     SetStatus(SESSION_RUNNING);
     
     do {
+        if (!IsSatisfiedConfiguration()) {
+            DOWNLOAD_HILOGI("networktype not Satisfied Configuration\n");
+            ForceStopRunning();
+            SetStatus(SESSION_FAILED,ERROR_UNKNOWN,PAUSED_WAITING_FOR_NETWORK);
+            break;
+        }
         enableTimeout = false;
         if (status_ != SESSION_RUNNING && status_ != SESSION_PENDING) {
             break;
@@ -503,10 +506,6 @@ bool DownloadServiceTask::ExecHttp()
 
     CURLcode code = curl_easy_perform(handle.get());
 
-    if (file_ != nullptr) {
-        fflush(file_);
-        fclose(file_);
-    }
     int32_t httpCode;
     curl_easy_getinfo(handle.get(), CURLINFO_RESPONSE_CODE, &httpCode);
     HandleResponseCode(code, httpCode);
@@ -783,5 +782,28 @@ bool DownloadServiceTask::HandleFileError()
         return true;
     }
     return false;
+}
+
+bool DownloadServiceTask::IsSatisfiedConfiguration()
+{
+    auto &networkAdapter = MiscServices::NetworkAdapter::GetInstance();
+
+    bool isRoaming = networkAdapter.GetRoaming();
+    bool isMetered = networkAdapter.GetMetered();
+    uint32_t networkType = networkAdapter.GetNetworkType();
+    DOWNLOAD_HILOGD("isRoaming_: %{public}d, isMetered_: %{public}d, networkType_: %{public}u\n", isRoaming,
+                    isMetered, networkType);
+    DOWNLOAD_HILOGD("config_ { isRoaming_: %{public}d,isMetered_: %{public}d, networkType_: %{public}u}\n", config_.GetRoaming(),
+                    config_.GetMetered(), config_.GetNetworkType());
+    if (isRoaming && !config_.GetRoaming() ) {
+        return false;
+    }
+    if (isMetered && !config_.GetMetered()) {
+        return false;
+    }
+    if (networkType != config_.GetNetworkType()) {
+        return false;
+    }
+    return true;
 }
 } // namespace OHOS::Request::Download

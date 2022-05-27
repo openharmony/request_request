@@ -40,7 +40,7 @@ DownloadServiceManager::~DownloadServiceManager()
     Destroy();
 }
 
-std::shared_ptr<DownloadServiceManager> DownloadServiceManager::Get()
+std::shared_ptr<DownloadServiceManager> DownloadServiceManager::GetInstance()
 {
     if (instance_ == nullptr) {
         std::lock_guard<std::recursive_mutex> autoLock(instanceLock_);
@@ -70,6 +70,7 @@ bool DownloadServiceManager::Create(uint32_t threadNum)
         constexpr int RETRY_TIME_INTERVAL_MILLISECOND = 1 * 1000 * 1000; // retry after 1 second
         do {
             if (this->MonitorNetwork() == NET_CONN_SUCCESS) {
+                UpdateNetworkType();
                 break;
             }
             retryCount++;
@@ -373,8 +374,29 @@ int32_t DownloadServiceManager::MonitorNetwork()
 {
     int nRet = NetworkAdapter::GetInstance().RegOnNetworkChange([this]() {
         this->ResumeTaskByNetwork();
+        this->UpdateNetworkType();
     });
     DOWNLOAD_HILOGD("RegisterNetConnCallback retcode= %{public}d", nRet);
     return nRet;
+}
+
+void DownloadServiceManager::UpdateNetworkType()
+{
+    DOWNLOAD_HILOGD("UpdateNetworkType start\n");
+    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
+    for (auto it : taskMap_) {
+        DownloadStatus status;
+        ErrorCode code;
+        PausedReason reason;
+        it.second->GetRunResult(status, code, reason);
+        bool bRet = status == SESSION_RUNNING || status == SESSION_PENDING
+                    || status == SESSION_PAUSED;
+        if (bRet) {
+            if (!it.second->IsSatisfiedConfiguration()) {
+                RemoveFromQueue(pendingQueue_, it.first);
+                PushQueue(pausedQueue_, it.first);
+            }
+        }
+    }
 }
 } // namespace OHOS::Request::Download
