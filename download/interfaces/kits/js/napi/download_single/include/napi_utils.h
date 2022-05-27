@@ -27,10 +27,11 @@ static constexpr int32_t MAX_ARGC = 6;
 static constexpr int32_t NO_ARG = 0;
 static constexpr int32_t ONE_ARG = 1;
 static constexpr int32_t TWO_ARG = 2;
-static constexpr int32_t THE_ARG = 2;
+static constexpr int32_t THE_ARG = 3;
 
-static constexpr int32_t FIRST_ARGV = 1;
-static constexpr int32_t SECOND_ARGV = 2;
+static constexpr int32_t FIRST_ARGV = 0;
+static constexpr int32_t SECOND_ARGV = 1;
+static constexpr int32_t THIRD_ARGV = 2;
 
 static constexpr int32_t MAX_NUMBER_BYTES = 8;
 static constexpr int32_t MAX_LEN = 4096;
