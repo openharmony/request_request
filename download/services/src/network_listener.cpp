@@ -27,7 +27,8 @@ std::mutex NetworkListener::mutex_;
 bool NetworkListener::isOnline_ = false;
 RegCallBack NetworkListener::callback_ = nullptr;
 
-std::shared_ptr<NetworkListener> NetworkListener::GetInstance() {
+std::shared_ptr<NetworkListener> NetworkListener::GetInstance()
+{
     if (instance_ == nullptr) {
         std::lock_guard<std::mutex> autoLock(mutex_);
         instance_ = std::make_shared<NetworkListener>();
