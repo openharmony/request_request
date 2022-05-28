@@ -14,7 +14,7 @@
  */
 
 #include "download_service_manager.h"
-#include "network_listener.h"
+#include "network_adapter.h"
 #include "net_conn_constants.h"
 #include "unistd.h"
 #include "log.h"
