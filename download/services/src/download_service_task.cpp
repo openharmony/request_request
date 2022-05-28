@@ -21,7 +21,7 @@
 #include <sys/types.h>
 #include "constant.h"
 #include "log.h"
-#include "network_listener.h"
+#include "network_adapter.h"
 
 namespace OHOS::Request::Download {
 DownloadServiceTask::DownloadServiceTask(uint32_t taskId, const DownloadConfig &config)
@@ -55,7 +55,7 @@ bool DownloadServiceTask::Run()
         return false;
     }
 
-    if (!MiscServices::NetworkListener::GetInstance().IsOnline()) {
+    if (!MiscServices::NetworkAdapter::GetInstance().IsOnline()) {
         SetStatus(SESSION_FAILED, ERROR_NETWORK_ERROR, PAUSED_UNKNOWN);
         return false;
     }
@@ -508,7 +508,8 @@ bool DownloadServiceTask::ExecHttp()
         fclose(file_);
     }
     int32_t httpCode;
-    curl_easy_getinfo(handle.get(), CURLINFO_RESPONSE_CODE, &httpCode);
+    int32_t nRetCode = curl_easy_getinfo(handle.get(), CURLINFO_RESPONSE_CODE, &httpCode);
+    DOWNLOAD_HILOGD("httpCode: %{public}d,nRetCode: %{public}d, CURLcode: %{public}d", httpCode, nRetCode, code);
     HandleResponseCode(code, httpCode);
     HandleCleanup(status_);
     return code == CURLE_OK;

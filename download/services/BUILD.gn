@@ -30,7 +30,7 @@ ohos_shared_library("download_server") {
     "src/download_service_stub.cpp",
     "src/download_service_task.cpp",
     "src/download_thread.cpp",
-    "src/network_listener.cpp",
+    "src/network_adapter.cpp",
   ]
 
   public_configs = [
