@@ -508,8 +508,7 @@ bool DownloadServiceTask::ExecHttp()
         fclose(file_);
     }
     int32_t httpCode;
-    int32_t nRetCode = curl_easy_getinfo(handle.get(), CURLINFO_RESPONSE_CODE, &httpCode);
-    DOWNLOAD_HILOGD("httpCode: %{public}d,nRetCode: %{public}d, CURLcode: %{public}d", httpCode, nRetCode, code);
+    curl_easy_getinfo(handle.get(), CURLINFO_RESPONSE_CODE, &httpCode);
     HandleResponseCode(code, httpCode);
     HandleCleanup(status_);
     return code == CURLE_OK;
