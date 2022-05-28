@@ -49,7 +49,7 @@ static napi_value session_pending = nullptr;
 static napi_value session_paused = nullptr;
 static napi_value session_failed = nullptr;
 
-static napi_value Init(napi_env env, napi_value exports)
+void NapiCreateInt32(napi_env env)
 {
     /* Create Network Type Const */
     napi_create_int32(env, static_cast<int32_t>(NETWORK_MOBILE), &network_mobile);
@@ -80,6 +80,11 @@ static napi_value Init(napi_env env, napi_value exports)
     napi_create_int32(env, static_cast<int32_t>(SESSION_PENDING), &session_pending);
     napi_create_int32(env, static_cast<int32_t>(SESSION_PAUSED), &session_paused);
     napi_create_int32(env, static_cast<int32_t>(SESSION_FAILED), &session_failed);
+}
+
+static napi_value Init(napi_env env, napi_value exports)
+{
+    NapiCreateInt32(env);
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_STATIC_PROPERTY("NETWORK_MOBILE", network_mobile),
