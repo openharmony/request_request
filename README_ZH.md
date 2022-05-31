@@ -587,6 +587,23 @@ request.download(downloadConfig).then((data) => {
 }).catch((err) => {
     console.error('Failed to request the download. Cause: ' + JSON.stringify(err));
 })
+// 使用callback形式回调返回DownloadTask实例。
+request.download(BaseContext, downloadConfig, (err, data) => {
+    if (err) {
+        console.error('Failed to request the download. Cause: ' + JSON.stringify(err));
+        return;
+    }
+    console.info('Success to request the download.);
+    downloadTask = data;
+});
+
+// 使用promise形式回调返回DownloadTask实例。
+request.download(BaseContext, downloadConfig).then((data) => {
+    console.info('Success to request the download.);
+    downloadTask = data;
+}).catch((err) => {
+    console.error('Failed to request the download. Cause: ' + JSON.stringify(err));
+})
 ```
 2.创建监听下载进度
 
@@ -807,6 +824,23 @@ request.upload({ url, header, "POST", files, data }, (err, data) => {
 
 // 使用promise形式回调返回UploadTask实例。
 request.upload({ url, header, "POST", files, data }).then((data) => {
+    console.info('Success to request the upload.);
+    uploadTask = data;
+}).catch((err) => {
+    console.error('Failed to request the upload. Cause: ' + JSON.stringify(err));
+})
+// 使用callback形式回调返回UploadTask实例。
+request.upload(BaseContext, { url, header, "POST", files, data }, (err, data) => {
+    if (err) {
+        console.error('Failed to request the upload. Cause: ' + JSON.stringify(err));
+        return;
+    }
+    console.info('Success to request the upload.);
+    uploadTask = data;
+});
+
+// 使用promise形式回调返回UploadTask实例。
+request.upload(BaseContext, { url, header, "POST", files, data }).then((data) => {
     console.info('Success to request the upload.);
     uploadTask = data;
 }).catch((err) => {
