@@ -22,6 +22,7 @@ ohos_unittest("upload_obtain_file_UT_test") {
   module_out_path = module_output_path
 
   sources = [
+    "//base/miscservices/request/upload/frameworks/libs/src/file_adapter.cpp",
     "//base/miscservices/request/upload/frameworks/libs/src/obtain_file.cpp",
     "src/mock_obtain_file.cpp",
     "src/obtain_file_test.cpp",

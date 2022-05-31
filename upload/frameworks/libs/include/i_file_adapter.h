@@ -13,34 +13,21 @@
  * limitations under the License.
  */
 
-#ifndef OBTAIN_FILE_
-#define OBTAIN_FILE_
+#ifndef I_FILE_ADAPTER
+#define I_FILE_ADAPTER
 
 #include <stdio.h>
 #include "context.h"
 #include "ability_context.h"
 #include "data_ability_helper.h"
-#include "i_file_adapter.h"
-
-#define SPLIT_ZERO 0
-#define SPLIT_ONE 1
-#define SPLIT_TWO 2
-#define SPLIT_THREE 3
 
 namespace OHOS::Request::Upload {
-class ObtainFile {
+class IFileAdapter {
 public:
-    ObtainFile();
-    ~ObtainFile();
-    uint32_t GetFile(FILE **file, std::string& fileUri,
-        uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
-protected:
-    uint32_t GetDataAbilityFile(FILE **file, std::string& fileUri,
-        uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
-    uint32_t GetInternalFile(FILE **file, std::string& fileUri,
-        uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
-private:
-    std::shared_ptr<IFileAdapter> fileAdapter_;
+    virtual ~IFileAdapter() {};
+    virtual uint32_t DataAbilityOpenFile(std::string &fileUri,
+        std::shared_ptr<OHOS::AbilityRuntime::Context> &context) = 0;
+    virtual std::string InternalGetFilePath(std::shared_ptr<OHOS::AbilityRuntime::Context> &context) = 0;
 };
 } // end of OHOS::Request::Upload
 #endif
