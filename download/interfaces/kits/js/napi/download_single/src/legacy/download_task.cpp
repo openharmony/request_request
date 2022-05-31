@@ -15,6 +15,7 @@
 
 #include "legacy/download_task.h"
 #include "log.h"
+#include "constant.h"
 
 namespace OHOS::Request::Download::Legacy {
 bool DownloadTask::isCurlGlobalInited_ = false;
@@ -79,6 +80,8 @@ bool DownloadTask::SetOption(CURL *handle, curl_slist *&headers)
     curl_easy_setopt(handle, CURLOPT_URL, option_.url_.c_str());
     curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0L);
     curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(handle, CURLOPT_LOW_SPEED_TIME, DEFAULT_READ_TIMEOUT);
+    curl_easy_setopt(handle, CURLOPT_LOW_SPEED_LIMIT, DEFAULT_LOW_SPEED_LIMIT);
 
     if (!option_.header_.empty()) {
         for (const auto& head : option_.header_) {
