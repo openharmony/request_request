@@ -15,10 +15,13 @@
 
 #include "fail_callback.h"
 #include "upload_task.h"
+#include "upload_task_napi.h"
+using namespace OHOS::Request::UploadNapi;
 
 namespace OHOS::Request::Upload {
-FailCallback::FailCallback(napi_env env, napi_value callback)
-    : env_(env)
+FailCallback::FailCallback(ICallbackAbleJudger *judger, napi_env env, napi_value callback)
+    :judger_(judger),
+    env_(env)
 {
     napi_create_reference(env, callback, 1, &callback_);
     napi_get_uv_event_loop(env, &loop_);
@@ -27,56 +30,47 @@ FailCallback::FailCallback(napi_env env, napi_value callback)
 FailCallback::~FailCallback()
 {
     napi_delete_reference(env_, callback_);
-    status_ = napi_generic_failure;
-}
-
-void FailCallback::CheckQueueWorkRet(int ret, FailWorker *failWorker, uv_work_t *work)
-{
-    if (ret != 0) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Fail. uv_queue_work Failed");
-        delete failWorker;
-        delete work;
-    }
 }
 
 void FailCallback::Fail(const unsigned int error)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Fail. error : %{public}d", error);
-    FailWorker *failWorker = new FailWorker(this, error);
+    FailWorker *failWorker = new FailWorker(judger_, this, error);
     uv_work_t *work = new uv_work_t;
     work->data = failWorker;
     int ret = uv_queue_work(loop_, work,
         [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
+            UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Fail. uv_queue_work start");
             std::shared_ptr<FailWorker> failWorkerInner(reinterpret_cast<FailWorker *>(work->data));
             std::shared_ptr<uv_work_t> work_p(work);
+            if (!failWorkerInner->judger_->JudgeFail((void*)failWorkerInner->callback)) {
+                UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Fail. uv_queue_work callback removed!!");
+                return;
+            }
             napi_value jsError = nullptr;
             napi_value callback = nullptr;
             napi_value args[1];
             napi_value global = nullptr;
             napi_value result;
             napi_status callStatus = napi_generic_failure;
-            napi_env tmpEnv = failWorkerInner->callback->env_;
-            do {
-                if (failWorkerInner->callback->env_ != tmpEnv || failWorkerInner->callback->status_ != napi_ok) {
-                    break;
-                }
-                napi_create_uint32(failWorkerInner->callback->env_, failWorkerInner->error, &jsError);
-                args[0] = jsError;
-                if (failWorkerInner->callback->env_ != tmpEnv || failWorkerInner->callback->callback_ == nullptr ||
-                    failWorkerInner->callback->status_ != napi_ok) {
-                    break;
-                }
-                napi_get_reference_value(failWorkerInner->callback->env_,
-                    failWorkerInner->callback->callback_, &callback);
-                napi_get_global(failWorkerInner->callback->env_, &global);
-                callStatus = napi_call_function(failWorkerInner->callback->env_, global, callback, 1, args, &result);
-                if (callStatus != napi_ok) {
-                    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
-                        "Fail callback failed callStatus:%{public}d callback:%{public}p", callStatus, callback);
-                }
-            } while (false);
+
+            napi_create_uint32(failWorkerInner->callback->env_, failWorkerInner->error, &jsError);
+            args[0] = jsError;
+
+            napi_get_reference_value(failWorkerInner->callback->env_,
+                failWorkerInner->callback->callback_, &callback);
+            napi_get_global(failWorkerInner->callback->env_, &global);
+            callStatus = napi_call_function(failWorkerInner->callback->env_, global, callback, 1, args, &result);
+            if (callStatus != napi_ok) {
+                UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
+                    "Fail callback failed callStatus:%{public}d callback:%{public}p", callStatus, callback);
+            }
         });
-    CheckQueueWorkRet(ret, failWorker, work);
+    if (ret != 0) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Fail. uv_queue_work Failed");
+        delete failWorker;
+        delete work;
+    }
 }
 } // end of OHOS::Request::Upload
