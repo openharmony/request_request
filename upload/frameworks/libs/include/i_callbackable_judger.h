@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef I_CALLBACKABLE_JUDGER
-#define I_CALLBACKABLE_JUDGER
+#ifndef OHOS_REQUEST_UPLOAD_I_CALLBACKABLE_JUDGER
+#define OHOS_REQUEST_UPLOAD_I_CALLBACKABLE_JUDGER
 #include "i_fail_callback.h"
 #include "i_progress_callback.h"
 #include "i_header_receive_callback.h"

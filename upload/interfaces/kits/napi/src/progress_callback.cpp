@@ -38,7 +38,7 @@ void ProgressCallback::Progress(const int64_t uploadedSize, const int64_t totalS
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
         "Progress. uploadedSize : %lld, totalSize : %lld", (long long)uploadedSize, (long long)totalSize);
-    ProgressWorker *progressWorker = new ProgressWorker(judger_, this, uploadedSize, totalSize);
+    ProgressWorker *progressWorker = new (std::nothrow)ProgressWorker(judger_, this, uploadedSize, totalSize);
     if (progressWorker == nullptr) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create progressWorker");
         return;
