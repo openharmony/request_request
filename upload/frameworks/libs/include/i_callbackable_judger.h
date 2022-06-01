@@ -15,19 +15,19 @@
 
 #ifndef I_CALLBACKABLE_JUDGER
 #define I_CALLBACKABLE_JUDGER
+#include "i_fail_callback.h"
+#include "i_progress_callback.h"
+#include "i_header_receive_callback.h"
 
 namespace OHOS::Request::Upload {
-class IFailCallback;
-class IProgressCallback;
-class IHeaderReceiveCallback;
 class ICallbackAbleJudger {
 public:
     ICallbackAbleJudger() = default;
     virtual ~ICallbackAbleJudger()
     {}
-    virtual bool JudgeFail(IFailCallback *target) = 0;
-    virtual bool JudgeProgress(IProgressCallback *target) = 0;
-    virtual bool JudgeHeaderReceive(IHeaderReceiveCallback *target) = 0;
+    virtual bool JudgeFail(const IFailCallback *target) = 0;
+    virtual bool JudgeProgress(const IProgressCallback *target) = 0;
+    virtual bool JudgeHeaderReceive(const IHeaderReceiveCallback *target) = 0;
 };
 } // end of OHOS::Request::Upload
 #endif
