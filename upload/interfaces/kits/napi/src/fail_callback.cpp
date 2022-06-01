@@ -35,17 +35,25 @@ FailCallback::~FailCallback()
 void FailCallback::Fail(const unsigned int error)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Fail. error : %{public}d", error);
-    FailWorker *failWorker = new FailWorker(judger_, this, error);
-    uv_work_t *work = new uv_work_t;
+    FailWorker *failWorker = new (std::nothrow)FailWorker(judger_, this, error);
+    if (failWorker == nullptr) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create FailWorker");
+        return;
+    }
+    uv_work_t *work = new (std::nothrow)uv_work_t();
+    if (work == nullptr) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create uv work");
+        return;
+    }
     work->data = failWorker;
     int ret = uv_queue_work(loop_, work,
         [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
-            UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Fail. uv_queue_work start");
+            UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Fail. uv_queue_work start");
             std::shared_ptr<FailWorker> failWorkerInner(reinterpret_cast<FailWorker *>(work->data));
-            std::shared_ptr<uv_work_t> work_p(work);
-            if (!failWorkerInner->judger_->JudgeFail((void*)failWorkerInner->callback)) {
-                UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Fail. uv_queue_work callback removed!!");
+            std::shared_ptr<uv_work_t> sharedWork(work);
+            if (!failWorkerInner->judger_->JudgeFail(failWorkerInner->callback)) {
+                UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Fail. uv_queue_work callback removed!!");
                 return;
             }
             napi_value jsError = nullptr;
@@ -59,7 +67,7 @@ void FailCallback::Fail(const unsigned int error)
             args[0] = jsError;
 
             napi_get_reference_value(failWorkerInner->callback->env_,
-                failWorkerInner->callback->callback_, &callback);
+                                     failWorkerInner->callback->callback_, &callback);
             napi_get_global(failWorkerInner->callback->env_, &global);
             callStatus = napi_call_function(failWorkerInner->callback->env_, global, callback, 1, args, &result);
             if (callStatus != napi_ok) {

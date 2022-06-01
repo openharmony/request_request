@@ -17,14 +17,17 @@
 #define I_CALLBACKABLE_JUDGER
 
 namespace OHOS::Request::Upload {
+class IFailCallback;
+class IProgressCallback;
+class IHeaderReceiveCallback;
 class ICallbackAbleJudger {
 public:
     ICallbackAbleJudger() = default;
     virtual ~ICallbackAbleJudger()
     {}
-    virtual bool JudgeFail(void *target) = 0;
-    virtual bool JudgeProgress(void *target) = 0;
-    virtual bool JudgeHeaderReceive(void *target) = 0;
+    virtual bool JudgeFail(IFailCallback *target) = 0;
+    virtual bool JudgeProgress(IProgressCallback *target) = 0;
+    virtual bool JudgeHeaderReceive(IHeaderReceiveCallback *target) = 0;
 };
 } // end of OHOS::Request::Upload
 #endif

@@ -44,9 +44,9 @@ public:
     static void OnSystemFail(napi_env env, napi_ref ref, std::string &response, int32_t &code);
     static void OnSystemComplete(napi_env env, napi_ref ref);
 
-    bool JudgeFail(void *target);
-    bool JudgeProgress(void *target);
-    bool JudgeHeaderReceive(void *target);
+    bool JudgeFail(IFailCallback *target);
+    bool JudgeProgress(IProgressCallback *target);
+    bool JudgeHeaderReceive(IHeaderReceiveCallback *target);
     napi_ref success_;
     napi_ref fail_;
     napi_ref complete_;

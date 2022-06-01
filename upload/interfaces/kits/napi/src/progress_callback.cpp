@@ -39,16 +39,24 @@ void ProgressCallback::Progress(const int64_t uploadedSize, const int64_t totalS
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
         "Progress. uploadedSize : %lld, totalSize : %lld", (long long)uploadedSize, (long long)totalSize);
     ProgressWorker *progressWorker = new ProgressWorker(judger_, this, uploadedSize, totalSize);
-    uv_work_t *work = new uv_work_t;
+    if (progressWorker == nullptr) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create progressWorker");
+        return;
+    }
+    uv_work_t *work = new (std::nothrow)uv_work_t();
+    if (work == nullptr) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create uv work");
+        return;
+    }
     work->data = progressWorker;
     int ret = uv_queue_work(loop_, work,
         [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
-            UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Progress. uv_queue_work start");
+            UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Progress. uv_queue_work start");
             std::shared_ptr<ProgressWorker> progressWorkerInner(reinterpret_cast<ProgressWorker *>(work->data));
-            std::shared_ptr<uv_work_t> work_p(work);
-            if (!progressWorkerInner->judger_->JudgeProgress((void*)progressWorkerInner->callback)) {
-                UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Progress. uv_queue_work callback removed!!");
+            std::shared_ptr<uv_work_t> sharedWork(work);
+            if (!progressWorkerInner->judger_->JudgeProgress(progressWorkerInner->callback)) {
+                UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Progress. uv_queue_work callback removed!!");
                 return;
             }
             napi_value jsUploaded = nullptr;

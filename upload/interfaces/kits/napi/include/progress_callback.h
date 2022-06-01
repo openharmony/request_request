@@ -38,8 +38,8 @@ private:
         napi_env env_;
         const int64_t uploadedSize;
         const int64_t totalSize;
-        ProgressWorker(ICallbackAbleJudger *judger, const ProgressCallback * const & callbackIn,
-            const int64_t &uploadedSizeIn, const int64_t &totalSizeIn)
+        ProgressWorker(ICallbackAbleJudger *judger, const ProgressCallback *callbackIn,
+            int64_t uploadedSizeIn, int64_t totalSizeIn)
             : judger_(judger),
               callback(callbackIn),
               uploadedSize(uploadedSizeIn),

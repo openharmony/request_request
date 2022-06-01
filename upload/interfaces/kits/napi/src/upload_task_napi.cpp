@@ -552,26 +552,26 @@ void UploadTaskNapi::OnSystemComplete(napi_env env, napi_ref ref)
     }
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OnSystemComplete end");
 }
-bool UploadTaskNapi::JudgeFail(void *target)
+bool UploadTaskNapi::JudgeFail(IFailCallback *target)
 {
-    if ((this->onFail_ != nullptr && this->onFail_.get() == (IFailCallback*)target) ||
-       (this->offFail_ != nullptr && this->offFail_.get() == (IFailCallback*)target)) {
+    if ((this->onFail_ != nullptr && this->onFail_.get() == target) ||
+       (this->offFail_ != nullptr && this->offFail_.get() == target)) {
         return true;
     }
     return false;
 }
-bool UploadTaskNapi::JudgeProgress(void *target)
+bool UploadTaskNapi::JudgeProgress(IProgressCallback *target)
 {
-    if ((this->onProgress_ != nullptr && this->onProgress_.get() == (IProgressCallback*)target) ||
-       (this->offProgress_ != nullptr && this->offProgress_.get() == (IProgressCallback*)target)) {
+    if ((this->onProgress_ != nullptr && this->onProgress_.get() == target) ||
+       (this->offProgress_ != nullptr && this->offProgress_.get() == target)) {
         return true;
     }
     return false;
 }
-bool UploadTaskNapi::JudgeHeaderReceive(void *target)
+bool UploadTaskNapi::JudgeHeaderReceive(IHeaderReceiveCallback *target)
 {
-    if ((this->onHeaderReceive_ != nullptr && this->onHeaderReceive_.get() == (IHeaderReceiveCallback*)target) ||
-       (this->offHeaderReceive_ != nullptr && this->offHeaderReceive_.get() == (IHeaderReceiveCallback*)target)) {
+    if ((this->onHeaderReceive_ != nullptr && this->onHeaderReceive_.get() == target) ||
+       (this->offHeaderReceive_ != nullptr && this->offHeaderReceive_.get() == target)) {
         return true;
     }
     return false;

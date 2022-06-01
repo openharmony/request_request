@@ -35,8 +35,8 @@ private:
         ICallbackAbleJudger *judger_;
         const HeaderReceiveCallback *callback = nullptr;
         const std::string header;
-        HeaderReceiveWorker(ICallbackAbleJudger *judger, const HeaderReceiveCallback * const & callbackIn,
-		    const std::string &headerIn)
+        HeaderReceiveWorker(ICallbackAbleJudger *judger, const HeaderReceiveCallback *callbackIn,
+                            const std::string &headerIn)
             : judger_(judger),
               callback(callbackIn),
               header(headerIn) {}

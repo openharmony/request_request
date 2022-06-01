@@ -35,7 +35,7 @@ private:
         ICallbackAbleJudger *judger_;
         const FailCallback *callback = nullptr;
         const unsigned int error;
-        FailWorker(ICallbackAbleJudger *judger, const FailCallback * const & callbackIn, const unsigned int &errorIn)
+        FailWorker(ICallbackAbleJudger *judger, const FailCallback *callbackIn, unsigned int errorIn)
             : judger_(judger),
               callback(callbackIn),
               error(errorIn) {}

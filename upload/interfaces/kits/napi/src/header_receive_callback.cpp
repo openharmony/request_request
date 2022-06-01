@@ -35,20 +35,28 @@ HeaderReceiveCallback::~HeaderReceiveCallback()
 void HeaderReceiveCallback::HeaderReceive(const std::string &header)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "HeaderReceive. header : %{public}s", header.c_str());
-    HeaderReceiveWorker *headerReceiveWorker = new HeaderReceiveWorker(judger_, this, header);
-    uv_work_t *work = new uv_work_t;
+    HeaderReceiveWorker *headerReceiveWorker = new (std::nothrow)HeaderReceiveWorker(judger_, this, header);
+    if (headerReceiveWorker == nullptr) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create headerReceiveWorker");
+        return;
+    }
+    uv_work_t *work = new (std::nothrow)uv_work_t();
+    if (work == nullptr) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create uv work");
+        return;
+    }
     work->data = headerReceiveWorker;
     int ret = uv_queue_work(loop_, work,
         [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
-            UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "HeaderReceive. uv_queue_work start");
+            UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "HeaderReceive. uv_queue_work start");
             std::shared_ptr<HeaderReceiveWorker> headerReceiveWorkerInner(
                 reinterpret_cast<HeaderReceiveWorker *>(work->data));
-            if (!headerReceiveWorkerInner->judger_->JudgeHeaderReceive((void*)headerReceiveWorkerInner->callback)) {
-                UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "HeaderReceive. uv_queue_work callback removed!!");
+            std::shared_ptr<uv_work_t> sharedWork(work);
+            if (!headerReceiveWorkerInner->judger_->JudgeHeaderReceive(headerReceiveWorkerInner->callback)) {
+                UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "HeaderReceive. uv_queue_work callback removed!!");
                 return;
             }
-            std::shared_ptr<uv_work_t> work_p(work);
             napi_value jsHeader = nullptr;
             napi_value callback = nullptr;
             napi_value args[1];
