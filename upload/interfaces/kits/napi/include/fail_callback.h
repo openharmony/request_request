@@ -22,23 +22,26 @@
 #include "napi/native_common.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "i_callbackable_judger.h"
 
 namespace OHOS::Request::Upload {
 class FailCallback : public IFailCallback {
 public:
-    FailCallback(napi_env env, napi_value callback);
+    FailCallback(ICallbackAbleJudger *judger, napi_env env, napi_value callback);
     virtual ~FailCallback();
     void Fail(const unsigned int error) override;
 private:
     struct FailWorker {
+        ICallbackAbleJudger *judger_;
         const FailCallback *callback = nullptr;
         const unsigned int error;
-        FailWorker(const FailCallback * const & callbackIn, const unsigned int &errorIn)
-            : callback(callbackIn),
+        FailWorker(ICallbackAbleJudger *judger, const FailCallback *callbackIn, unsigned int errorIn)
+            : judger_(judger),
+              callback(callbackIn),
               error(errorIn) {}
     };
-    void CheckQueueWorkRet(int ret, FailWorker *failWorker, uv_work_t *work);
-    napi_status status_ = napi_ok;
+
+    ICallbackAbleJudger *judger_;
     napi_ref callback_ = nullptr;
     napi_env env_;
     uv_loop_s *loop_ = nullptr;

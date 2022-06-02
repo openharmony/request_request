@@ -22,26 +22,31 @@
 #include "napi/native_common.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "i_callbackable_judger.h"
 
 namespace OHOS::Request::Upload {
+using namespace OHOS::Request::UploadNapi;
 class ProgressCallback : public IProgressCallback {
 public:
-    ProgressCallback(napi_env env, napi_value callback);
+    ProgressCallback(ICallbackAbleJudger *judger, napi_env env, napi_value callback);
     virtual ~ProgressCallback();
     void Progress(const int64_t uploadedSize, const int64_t totalSize) override;
 private:
     struct ProgressWorker {
+        ICallbackAbleJudger *judger_;
         const ProgressCallback *callback = nullptr;
+        napi_env env_;
         const int64_t uploadedSize;
         const int64_t totalSize;
-        ProgressWorker(const ProgressCallback * const & callbackIn, const int64_t &uploadedSizeIn,
-            const int64_t &totalSizeIn)
-            : callback(callbackIn),
+        ProgressWorker(ICallbackAbleJudger *judger, const ProgressCallback *callbackIn,
+            int64_t uploadedSizeIn, int64_t totalSizeIn)
+            : judger_(judger),
+              callback(callbackIn),
               uploadedSize(uploadedSizeIn),
               totalSize(totalSizeIn) {}
     };
-    void CheckQueueWorkRet(int ret, ProgressWorker *progressWorker, uv_work_t *work);
-    napi_status status_ = napi_ok;
+
+    ICallbackAbleJudger *judger_;
     napi_ref callback_ = nullptr;
     napi_env env_;
     uv_loop_s *loop_ = nullptr;

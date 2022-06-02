@@ -39,6 +39,7 @@ UploadTask::UploadTask(std::shared_ptr<UploadConfig>& uploadConfig)
 UploadTask::~UploadTask()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "~UploadTask. In.");
+    std::lock_guard<std::mutex> guard(mutex_);
     SetCallback(TYPE_PROGRESS_CALLBACK, nullptr);
     SetCallback(TYPE_HEADER_RECEIVE_CALLBACK, nullptr);
     SetCallback(TYPE_FAIL_CALLBACK, nullptr);
@@ -58,6 +59,7 @@ bool UploadTask::Remove()
 void UploadTask::On(Type type, void *callback)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "On. In.");
+    std::lock_guard<std::mutex> guard(mutex_);
     SetCallback(type, callback);
 }
 
@@ -65,6 +67,7 @@ void UploadTask::Off(Type type, void *callback)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Off. In.");
 
+    std::lock_guard<std::mutex> guard(mutex_);
     if (callback == nullptr) {
         return;
     }
@@ -85,7 +88,6 @@ void UploadTask::Off(Type type, void *callback)
 void UploadTask::SetCallback(Type type, void *callback)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "SetCallback. In.");
-    std::lock_guard<std::mutex> guard(mutex_);
     if (type == TYPE_PROGRESS_CALLBACK) {
         progressCallback_ = (IProgressCallback*)callback;
         if (progressCallback_ && uploadedSize_ > 0) {

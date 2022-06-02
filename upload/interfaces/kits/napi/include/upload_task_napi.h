@@ -26,10 +26,11 @@
 #include "header_receive_callback.h"
 #include "fail_callback.h"
 #include "context.h"
+#include "i_callbackable_judger.h"
 
 namespace OHOS::Request::UploadNapi {
 using namespace OHOS::Request::Upload;
-class UploadTaskNapi {
+class UploadTaskNapi : public ICallbackAbleJudger {
 public:
     static napi_value JsUpload(napi_env env, napi_callback_info info);
 
@@ -42,6 +43,10 @@ public:
     static void OnSystemSuccess(napi_env env, napi_ref ref, Upload::UploadResponse &response);
     static void OnSystemFail(napi_env env, napi_ref ref, std::string &response, int32_t &code);
     static void OnSystemComplete(napi_env env, napi_ref ref);
+
+    bool JudgeFail(const IFailCallback *target);
+    bool JudgeProgress(const IProgressCallback *target);
+    bool JudgeHeaderReceive(const IHeaderReceiveCallback *target);
     napi_ref success_;
     napi_ref fail_;
     napi_ref complete_;
