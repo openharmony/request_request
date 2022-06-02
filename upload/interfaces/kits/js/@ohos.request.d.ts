@@ -124,6 +124,14 @@ declare namespace request {
   const ERROR_UNKNOWN: number;
 
   /**
+   * Indicates that the network is offline.
+   *
+   * @since 7
+   * @devices phone, tablet, tv, wearable, car
+   * @permission {@code ohos.permission.INTERNET}
+   */
+   const ERROR_NETWORK_FAIL: number;
+  /**
    * Indicates that the download is paused and waiting for a WLAN connection, because the file size exceeds the maximum allowed for a session using the cellular network.
    *
    * @since 7
