@@ -39,14 +39,21 @@ public:
 
     void Start();
 
-    void DoDownload();
+    void Run();
 
+    bool DoDownload();
+
+    void SetResumeFromLarge(CURL *curl, uint64_t pos);
 private:
     FILE *OpenDownloadFile() const;
+
+    uint32_t GetLocalFileSize();
 
     bool SetOption(CURL *handle, curl_slist *&headers);
 
     void NotifyDone(bool successful, const std::string& errMsg = "");
+
+    bool GetFileSize(uint32_t &result);
 
     std::string taskId_;
     DownloadOption option_;
@@ -55,6 +62,10 @@ private:
     FILE *filp_ {};
     char *errorBuffer_ {};
     static bool isCurlGlobalInited_;
+
+    uint32_t totalSize_;
+    uint32_t retryTime_;
+    bool hasFileSize_;
 };
 }
 #endif // LEGACY_DOWNLOAD_TASK_H
