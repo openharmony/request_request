@@ -29,31 +29,38 @@ IDL：提供NAPI之间的相互通信。
 ![](figures/subsystem_architecture_zh.png "子系统架构图")
 
 扩展/三方 应用：上传功能的客户端，是上传的发起方。
+
 JS接口：对外提供上传功能JS接口。
+
 本地接口：对外提供上传功能本地接口。
+
 上传任务：客户端每发起一个上传请求，上传内部都会创建一个上传任务，用于处理上传请求，转发服务器的上传应答。
+
 Curl适配：对三方库libcurl的一个封装。
+
 获取文件：根据客户端发起上传请求时传入的文件路径获取要上传的文件。
+
 libcurl: 三方库。
+
 DataAbility能力：DataAbility的使用方，用户获取DataAbility文件协议路径下的文件。
 
 ## 目录
 
 ```
 /base/miscservices/request
-├── figures                  # 架构图
-├── download/ability         # 下载服务数据库管理模块
-├── download/etc  # 下载服务包含的进程配置文件
-	└──interfaces/kits/js/napi  # 本组件对外提供的下载服务接口代码
-		└──download_single      # 下载服务的napi接口
-├── download/sa_profile      # 下载服务包含的系统服务的配置文件
-├── download/services        # 下载系统服务实现
-├── download/utils           # 下载服务包含日志打印和公共事件定义的常量
-├── upload/frameworks        # 上传服务功能实现
-├── upload/interfaces/kits   # 本组件对外提供的上传服务接口代码
-│   ├── js                   # 本组件js接口定义
-│   └── napi                 # 上传服务的napi接口
-└── upload/unitest           # 上传模块的单元测试
+├── figures                                # 架构图
+├── download/ability                       # 下载服务数据库管理模块
+├── download/etc 	                   # 下载服务包含的进程配置文件
+	 └──interfaces/kits/js/napi        # 本组件对外提供的下载服务接口代码
+		 └──download_single        # 下载服务的napi接口
+├── download/sa_profile                    # 下载服务包含的系统服务的配置文件
+├── download/services                      # 下载系统服务实现
+├── download/utils                         # 下载服务包含日志打印和公共事件定义的常量
+├── upload/frameworks                      # 上传服务功能实现
+├── upload/interfaces/kits                 # 本组件对外提供的上传服务接口代码
+│   ├── js                                 # 本组件js接口定义
+│   └── napi                               # 上传服务的napi接口
+└── upload/unitest                         # 上传模块的单元测试
 ```
 
 ##  说明
@@ -89,22 +96,22 @@ DataAbility能力：DataAbility的使用方，用户获取DataAbility文件协�
 <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p3335145451011"><a name="p3335145451011"></a><a name="p3335145451011"></a>异步接口，用于上传一组文件，使用promise形式回调返回UploadTask实例，该实例代表一个上传任务，用户可以通过该实例操作该上传任务，比如添加progress、headerReceive、fail监听，移除上传任务。</p>
 </td>
 </tr>
-<tr id="row204321219394"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1893413268144"><a name="p1893413268144"></a><a name="p1893413268144"></a>download(BaseContext: BaseContext,config: DownloadConfig, callback: AsyncCallback&lt;DownloadTask&gt;): void</p>
+<tr id="row204321219394"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1893413268144"><a name="p1893413268144"></a><a name="p1893413268144"></a>download(context: BaseContext,config: DownloadConfig, callback: AsyncCallback&lt;DownloadTask&gt;): void</p>
 </td>
 <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>异步接口，用于文件下载，使用callback形式回调返回DownloadTask实例，该实例代表一个下载任务，用户可以通过该实例操作该下载任务，比如添加progress、complete、fail监听，暂停、恢复、移除和查询下载任务。</p>
 </td>
 </tr>
-<tr id="row13335054111019"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p12832214151418"><a name="p12832214151418"></a><a name="p12832214151418"></a>download(BaseContext: BaseContext,config: DownloadConfig): Promise&lt;DownloadTask&gt;</p>
+<tr id="row13335054111019"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p12832214151418"><a name="p12832214151418"></a><a name="p12832214151418"></a>download(context: BaseContext,config: DownloadConfig): Promise&lt;DownloadTask&gt;</p>
 </td>
 <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p3335145451011"><a name="p3335145451011"></a><a name="p3335145451011"></a>异步接口，用于文件下载，使用promise形式回调返回DownloadTask实例，该实例代表一个下载任务，用户可以通过该实例操作该下载任务，比如添加progress、complete、fail监听，暂停、恢复、移除和查询下载任务。</p>
 </td>
 </tr>
-<tr id="row204321219395"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1893413268144"><a name="p1893413268144"></a><a name="p1893413268144"></a>upload(BaseContext: BaseContext,config: UploadConfig, callback: AsyncCallback&lt;UploadTask&gt;): void</p>
+<tr id="row204321219395"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1893413268144"><a name="p1893413268144"></a><a name="p1893413268144"></a>upload(context: BaseContext,config: UploadConfig, callback: AsyncCallback&lt;UploadTask&gt;): void</p>
 </td>
 <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>异步接口，用于上传一组文件，使用callback形式回调返回UploadTask实例，该实例代表一个上传任务，用户可以通过该实例操作该上传任务，比如添加progress、headerReceive、fail监听，移除上传任务。</p>
 </td>
 </tr>
-<tr id="row13335054111020"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p12832214151418"><a name="p12832214151418"></a><a name="p12832214151418"></a>upload(BaseContext: BaseContext,config: UploadConfig): Promise&lt;UploadTask&gt;</p>
+<tr id="row13335054111020"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p12832214151418"><a name="p12832214151418"></a><a name="p12832214151418"></a>upload(context: BaseContext,config: UploadConfig): Promise&lt;UploadTask&gt;</p>
 </td>
 <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p3335145451011"><a name="p3335145451011"></a><a name="p3335145451011"></a>异步接口，用于上传一组文件，使用promise形式回调返回UploadTask实例，该实例代表一个上传任务，用户可以通过该实例操作该上传任务，比如添加progress、headerReceive、fail监听，移除上传任务。</p>
 </td>
