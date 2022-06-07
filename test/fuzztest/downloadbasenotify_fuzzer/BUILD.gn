@@ -35,12 +35,12 @@ ohos_fuzztest("DownloadBaseNotifyFuzzTest") {
     "//base/miscservices/request/download/utils/include",
     "//foundation/ability/ability_runtime/frameworks/kits/appkit/native/app/include/",
     "//foundation/ability/ability_runtime/frameworks/kits/ability/native/include",
-    "//foundation/ability/ability_runtime/interfaces/innerkits/base/include/ohos/aafwk/base",
+    "//foundation/ability/ability_runtime/interfaces/inner_api/base/include/ohos/aafwk/base",
     "//foundation/ability/ability_runtime/services/abilitymgr/include",
-    "//foundation/ability/ability_runtime/interfaces/innerkits/want/include/ohos/aafwk/content",
-    "//foundation/ability/ability_runtime/interfaces/innerkits/ability_manager/include",
-    "//foundation/ability/ability_runtime/interfaces/innerkits/want/include",
-    "//foundation/ability/ability_runtime/interfaces/innerkits/uri/include",
+    "//foundation/ability/ability_runtime/interfaces/inner_api/want/include/ohos/aafwk/content",
+    "//foundation/ability/ability_runtime/interfaces/inner_api/ability_manager/include",
+    "//foundation/ability/ability_runtime/interfaces/inner_api/want/include",
+    "//foundation/ability/ability_runtime/interfaces/inner_api/uri/include",
   ]
 
   cflags = [
