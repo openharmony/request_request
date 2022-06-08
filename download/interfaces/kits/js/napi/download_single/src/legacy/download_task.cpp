@@ -19,9 +19,9 @@
 
 namespace OHOS::Request::Download::Legacy {
 bool DownloadTask::isCurlGlobalInited_ = false;
-
+constexpr uint32_t RETRY_TIME = 10;
 DownloadTask::DownloadTask(const std::string &token, const DownloadOption &option, const DoneFunc &callback)
-    : taskId_(token), option_(option), callback_(callback), totalSize_(0), retryTime_(10), hasFileSize_(false)
+    : taskId_(token), option_(option), callback_(callback), totalSize_(0), hasFileSize_(false)
 {
     DOWNLOAD_HILOGI("constructor");
 }
@@ -60,7 +60,12 @@ uint32_t DownloadTask::GetLocalFileSize()
         DOWNLOAD_HILOGE("fseek error");
         return 0;
     }
-    return ftell(filp_);
+    long lRet = ftell(filp_);
+    if (lRet < 0) {
+        DOWNLOAD_HILOGE("ftell error");
+        return 0;
+    }
+    return static_cast<uint32_t>(lRet);
 }
 void DownloadTask::NotifyDone(bool successful, const std::string &errMsg)
 {
@@ -100,7 +105,11 @@ bool DownloadTask::GetFileSize(uint32_t &result)
     curl_easy_getinfo(handle.get(), CURLINFO_CONTENT_LENGTH_DOWNLOAD, &size);
     
     if (code == CURLE_OK) {
-        result = static_cast<long long>(size);
+        if (size > UINT_MAX) {
+            DOWNLOAD_HILOGD("file size overflow");
+            return false;
+        }
+        result = static_cast<uint32_t>(size);
         if (result == static_cast<uint32_t>(-1)) {
             result = 0;
         }
@@ -167,10 +176,10 @@ void DownloadTask::Run()
             result = DoDownload();
         }
         retryTime++;
-        DOWNLOAD_HILOGD("download task retrytime: %{public}d", retryTime);
-    } while (!result && retryTime < retryTime_);
+        DOWNLOAD_HILOGD("download task retrytime: %{public}u, totalSize_: %{public}u", retryTime, totalSize_);
+    } while (!result && retryTime < RETRY_TIME);
 
-    if (retryTime >= retryTime_) {
+    if (retryTime >= RETRY_TIME) {
         NotifyDone(false, "Network failed");
     }
 }

@@ -64,7 +64,6 @@ private:
     static bool isCurlGlobalInited_;
 
     uint32_t totalSize_;
-    uint32_t retryTime_;
     bool hasFileSize_;
 };
 }
