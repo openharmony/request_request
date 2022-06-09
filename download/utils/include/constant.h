@@ -61,6 +61,7 @@ enum HttpErrorCode {
 const uint32_t DEFAULT_READ_TIMEOUT = 60;
 const uint32_t DEFAULT_CONNECT_TIMEOUT = 60;
 const uint32_t HTTP_FORCE_STOP = 1;
+const uint32_t DEFAULT_LOW_SPEED_LIMIT = 30;
 
 static constexpr const char *HTTP_METHOD_GET = "GET";
 static constexpr const char *HTTP_URL_PARAM_START = "?";
