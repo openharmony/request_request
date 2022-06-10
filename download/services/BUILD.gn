@@ -66,7 +66,7 @@ ohos_shared_library("download_server") {
     "ipc:ipc_core",
     "multimedia_image_standard:image_native",
     "os_account:os_account_innerkits",
-    "ril_adapter:hril_innerkits",
+    "ril_device_driver_interface:hril_innerkits",
   ]
   subsystem_name = "miscservices"
   part_name = "request"
