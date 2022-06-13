@@ -91,10 +91,10 @@ ohos_unittest("upload_UT_test") {
     "ability_runtime:ability_manager",
     "ability_runtime:napi_base_context",
     "ability_runtime:runtime",
-    "dataability:native_dataability",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "relational_store:native_appdatafwk",
+    "relational_store:native_dataability",
     "relational_store:native_rdb",
     "time_native:time_service",
   ]

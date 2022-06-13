@@ -73,12 +73,12 @@ ohos_shared_library("downloadsingle") {
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
     "ability_runtime:napi_base_context",
-    "dataability:native_dataability",
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "preferences:native_preferences",
+    "preference:native_preference",
     "relational_store:native_appdatafwk",
+    "relational_store:native_dataability",
     "relational_store:native_rdb",
   ]
   relative_install_dir = "module"
