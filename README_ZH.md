@@ -17,43 +17,50 @@ Request服务向三方应用提供系统下载/上传服务能力，以支撑应
 
 三方应用：依赖的第三方应用如淘宝等。
 
-Download API：提供下载功能的接口。
+下载 API：提供下载功能的接口。
 
 IDL：提供NAPI之间的相互通信。
 
 下载服务：负责下载的具体过程，客户端发起一个下载请求，下载内部创建下载任务，处理下载请求并完成下载任务。
 
-DataAbility能力：用来保存每一次下载的记录。
+下载数据能力：用来保存每一次下载的记录。
 
 **图 2** 上传子系统架构图  
 ![](figures/subsystem_architecture_zh.png "子系统架构图")
 
 扩展/三方 应用：上传功能的客户端，是上传的发起方。
+
 JS接口：对外提供上传功能JS接口。
-本地接口：对外提供上传功能本地接口。
+
+本地接口：上传本地文件的接口。
+
 上传任务：客户端每发起一个上传请求，上传内部都会创建一个上传任务，用于处理上传请求，转发服务器的上传应答。
+
 Curl适配：对三方库libcurl的一个封装。
+
 获取文件：根据客户端发起上传请求时传入的文件路径获取要上传的文件。
+
 libcurl: 三方库。
+
 DataAbility能力：DataAbility的使用方，用户获取DataAbility文件协议路径下的文件。
 
 ## 目录
 
 ```
 /base/miscservices/request
-├── figures                  # 架构图
-├── download/ability         # 下载服务数据库管理模块
-├── download/etc             # 下载服务包含的进程配置文件
-├── interfaces/kits/js/napi  # 本组件对外提供的下载服务接口代码
-│   └── download_single      # 下载服务的napi接口
-├── download/sa_profile      # 下载服务包含的系统服务的配置文件
-├── download/services        # 下载系统服务实现
-├── download/utils           # 下载服务包含日志打印和公共事件定义的常量
-├── upload/frameworks        # 上传服务功能实现
-├── upload/interfaces/kits   # 本组件对外提供的上传服务接口代码
-│   ├── js                   # 本组件js接口定义
-│   └── napi                 # 上传服务的napi接口
-└── upload/unitest           # 上传模块的单元测试
+├── figures                                # 架构图
+├── download/ability                       # 下载服务数据库管理模块
+├── download/etc 	                       # 下载服务包含的进程配置文件
+	 └──interfaces/kits/js/napi            # 本组件对外提供的下载服务接口代码
+		 └──download_single                # 下载服务的napi接口
+├── download/sa_profile                    # 下载服务包含的系统服务的配置文件
+├── download/services                      # 下载系统服务实现
+├── download/utils                         # 下载服务包含日志打印和公共事件定义的常量
+├── upload/frameworks                      # 上传服务功能实现
+├── upload/interfaces/kits                 # 本组件对外提供的上传服务接口代码
+│   ├── js                                 # 本组件js接口定义
+│   └── napi                               # 上传服务的napi接口
+└── upload/unitest                         # 上传模块的单元测试
 ```
 
 ##  说明
@@ -89,10 +96,30 @@ DataAbility能力：DataAbility的使用方，用户获取DataAbility文件协�
 <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p3335145451011"><a name="p3335145451011"></a><a name="p3335145451011"></a>异步接口，用于上传一组文件，使用promise形式回调返回UploadTask实例，该实例代表一个上传任务，用户可以通过该实例操作该上传任务，比如添加progress、headerReceive、fail监听，移除上传任务。</p>
 </td>
 </tr>
+<tr id="row204321219394"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1893413268144"><a name="p1893413268144"></a><a name="p1893413268144"></a>download(context: BaseContext,config: DownloadConfig, callback: AsyncCallback&lt;DownloadTask&gt;): void</p>
+</td>
+<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>异步接口，用于文件下载，使用callback形式回调返回DownloadTask实例，该实例代表一个下载任务，用户可以通过该实例操作该下载任务，比如添加progress、complete、fail监听，暂停、恢复、移除和查询下载任务。</p>
+</td>
+</tr>
+<tr id="row13335054111019"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p12832214151418"><a name="p12832214151418"></a><a name="p12832214151418"></a>download(context: BaseContext,config: DownloadConfig): Promise&lt;DownloadTask&gt;</p>
+</td>
+<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p3335145451011"><a name="p3335145451011"></a><a name="p3335145451011"></a>异步接口，用于文件下载，使用promise形式回调返回DownloadTask实例，该实例代表一个下载任务，用户可以通过该实例操作该下载任务，比如添加progress、complete、fail监听，暂停、恢复、移除和查询下载任务。</p>
+</td>
+</tr>
+<tr id="row204321219395"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1893413268144"><a name="p1893413268144"></a><a name="p1893413268144"></a>upload(context: BaseContext,config: UploadConfig, callback: AsyncCallback&lt;UploadTask&gt;): void</p>
+</td>
+<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>异步接口，用于上传一组文件，使用callback形式回调返回UploadTask实例，该实例代表一个上传任务，用户可以通过该实例操作该上传任务，比如添加progress、headerReceive、fail监听，移除上传任务。</p>
+</td>
+</tr>
+<tr id="row13335054111020"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p12832214151418"><a name="p12832214151418"></a><a name="p12832214151418"></a>upload(context: BaseContext,config: UploadConfig): Promise&lt;UploadTask&gt;</p>
+</td>
+<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p3335145451011"><a name="p3335145451011"></a><a name="p3335145451011"></a>异步接口，用于上传一组文件，使用promise形式回调返回UploadTask实例，该实例代表一个上传任务，用户可以通过该实例操作该上传任务，比如添加progress、headerReceive、fail监听，移除上传任务。</p>
+</td>
+</tr>
 </tbody>
 </table>
-**表 2** DownloadTask的主要接口
 
+**表 2** DownloadTask的主要接口
 <table><thead align="left"><tr id="row143351854201012"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="p103351154121010"><a name="p103351154121010"></a><a name="p103351154121010"></a>接口名</p>
 </th>
 <th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="p1033585416105"><a name="p1033585416105"></a><a name="p1033585416105"></a>描述</p>
@@ -245,6 +272,13 @@ DataAbility能力：DataAbility的使用方，用户获取DataAbility文件协�
 <td class="cellrowborder" valign="top" width="70%" headers="mcps1.2.3.1.3 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>下载任务标题。</p>
 </td>
 </tr>
+<tr id="row204321219393"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="p1893413268144"><a name="p1893413268144"></a><a name="p1893413268144"></a>background</p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.2.3.1.2 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>boolean</p>
+</td>
+<td class="cellrowborder" valign="top" width="70%" headers="mcps1.2.3.1.3 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>下载背景。</p>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -334,8 +368,8 @@ DataAbility能力：DataAbility的使用方，用户获取DataAbility文件协�
 </tr>
 </tbody>
 </table>
-**表 5** UploadTask的主要接口
 
+**表 5** UploadTask的主要接口
 <table><thead align="left"><tr id="row143351854201012"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="p103351154121010"><a name="p103351154121010"></a><a name="p103351154121010"></a>接口名</p>
 </th>
 <th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="p1033585416105"><a name="p1033585416105"></a><a name="p1033585416105"></a>描述</p>
@@ -370,6 +404,26 @@ DataAbility能力：DataAbility的使用方，用户获取DataAbility文件协�
 <tr id="row204321219393"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1893413268144"><a name="p1893413268144"></a><a name="p1893413268144"></a>remove(callback: AsyncCallback&lt;boolean&gt;): void</p>
 </td>
 <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>移除上传的任务，异步方法，使用callback形式返回结果。</p>
+</td>
+</tr>
+<tr id="row204321219393"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1893413268144"><a name="p1893413268144"></a><a name="p1893413268144"></a>on(type: 'fail', callback: (err: number, result?: Array<string>) => void): void</p>
+</td>
+<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>开启上传任务fail监听，使用callback形式返回结果。</p>
+</td>
+</tr>
+<tr id="row204321219393"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1893413268144"><a name="p1893413268144"></a><a name="p1893413268144"></a>off(type: 'fail', callback?: (err: number, result?: Array<string>) => void): void</p>
+</td>
+<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>关闭上传任务fail监听，使用callback形式返回结果。</p>
+</td>
+</tr>
+<tr id="row204321219393"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1893413268144"><a name="p1893413268144"></a><a name="p1893413268144"></a>on(type: 'complete', callback: (code: Array<number>, result?: Array<string>) => void): void</p>
+</td>
+<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>开启上传任务状态complete监听，使用callback形式返回结果。</p>
+</td>
+</tr>
+<tr id="row204321219393"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1893413268144"><a name="p1893413268144"></a><a name="p1893413268144"></a>off(type: 'complete', callback?: (code: Array<number>, result?: Array<string>) => void): void</p>
+</td>
+<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>关闭上传任务状态complete监听，使用callback形式返回结果。</p>
 </td>
 </tr>
 </tbody>
@@ -418,6 +472,13 @@ DataAbility能力：DataAbility的使用方，用户获取DataAbility文件协�
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.2.3.1.2 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>Array&lt;RequestData></p>
 </td>
 <td class="cellrowborder" valign="top" width="70%" headers="mcps1.2.3.1.3 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>上传请求表单列表信息。</p>
+</td>
+</tr>
+<tr id="row204321219393"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="p1893413268144"><a name="p1893413268144"></a><a name="p1893413268144"></a>background</p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.2.3.1.2 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>boolean</p>
+</td>
+<td class="cellrowborder" valign="top" width="70%" headers="mcps1.2.3.1.3 "><p id="p18761104812149"><a name="p18761104812149"></a><a name="p18761104812149"></a>上传背景。</p>
 </td>
 </tr>
 </tbody>
@@ -528,6 +589,23 @@ request.download(downloadConfig, (err, data) => {
 
 // 使用promise形式回调返回DownloadTask实例。
 request.download(downloadConfig).then((data) => {
+    console.info('Success to request the download.);
+    downloadTask = data;
+}).catch((err) => {
+    console.error('Failed to request the download. Cause: ' + JSON.stringify(err));
+})
+// 使用callback形式回调返回DownloadTask实例。
+request.download(BaseContext, downloadConfig, (err, data) => {
+    if (err) {
+        console.error('Failed to request the download. Cause: ' + JSON.stringify(err));
+        return;
+    }
+    console.info('Success to request the download.);
+    downloadTask = data;
+});
+
+// 使用promise形式回调返回DownloadTask实例。
+request.download(BaseContext, downloadConfig).then((data) => {
     console.info('Success to request the download.);
     downloadTask = data;
 }).catch((err) => {
@@ -758,6 +836,23 @@ request.upload({ url, header, "POST", files, data }).then((data) => {
 }).catch((err) => {
     console.error('Failed to request the upload. Cause: ' + JSON.stringify(err));
 })
+// 使用callback形式回调返回UploadTask实例。
+request.upload(BaseContext, { url, header, "POST", files, data }, (err, data) => {
+    if (err) {
+        console.error('Failed to request the upload. Cause: ' + JSON.stringify(err));
+        return;
+    }
+    console.info('Success to request the upload.);
+    uploadTask = data;
+});
+
+// 使用promise形式回调返回UploadTask实例。
+request.upload(BaseContext, { url, header, "POST", files, data }).then((data) => {
+    console.info('Success to request the upload.);
+    uploadTask = data;
+}).catch((err) => {
+    console.error('Failed to request the upload. Cause: ' + JSON.stringify(err));
+})
 ```
 3.创建上传任务进度的监听
 
@@ -775,15 +870,23 @@ uploadTask.on('headerReceive', (headers) => {
     console.info("on headerReceive headers:" + JSON.stringify(headers));
 });
 ```
-5.创建上传的错误码监听事件
+5.创建上传监听complete事件
+
+```
+// 开启上传任务complete监听，使用callback形式返回。
+uploadTask.on('complete', (code,result) => {
+    console.info("upload task has been completed"+code);
+});
+```
+6.创建上传的错误码监听事件
 
 ```js
 // 开启上传任务监听，使用callback形式返回错误码。
-uploadTask.on('fail', (error) => {
-    console.info("on fail error:" + error);
+uploadTask.on('fail', (error,result) => {
+    console.info("on fail error:" + error+"result is:"+result);
 });
 ```
-6.关闭上传任务进度任务监听
+7.关闭上传任务进度任务监听
 
 ```js
 // 关闭上传任务监听，使用callback形式返回上传进度结果。
@@ -791,7 +894,7 @@ uploadTask.off('progress', (uploadedSize, totalSize) => {
     console.info("on progress upload uploadedSize :" + uploadedSize + " totalSize :" + totalSize);
 });
 ```
-7.关闭上传的HTTP header response监听事件
+8.关闭上传的HTTP header response监听事件
 
 ```js
 // 关闭上传任务监听，使用callback形式返回HTTP header response结果。
@@ -799,15 +902,23 @@ uploadTask.off('headerReceive', (headers) => {
     console.info("on headerReceive headers:" + JSON.stringify(headers));
 });
 ```
-8.关闭上传的错误码监听事件
+9.关闭上传监听complete事件
+
+```js
+// 关闭上传任务complete监听，使用callback形式返回。
+uploadTask.off('complete', (code,result) => {
+    console.info("delete complete notification");
+});
+```
+10.关闭上传的错误码监听事件
 
 ```js
 // 关闭上传任务监听，使用callback形式返回错误码。
-uploadTask.off('fail', (error) => {
-    console.info("on fail error:" + error);
+uploadTask.off('fail', (error,result) => {
+    console.info("on fail error:" + error+"result is:"+result);
 });
 ```
-9.删除上传的任务
+11.删除上传的任务
 
 ```js
 // 移除上传的任务，使用promise形式返回结果。
