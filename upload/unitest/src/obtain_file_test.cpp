@@ -57,6 +57,7 @@ void ObtainFileTest::SetUp()
 
 void ObtainFileTest::TearDown()
 {
+    delete this->adapter;
 }
 
 /**
