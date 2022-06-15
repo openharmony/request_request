@@ -66,7 +66,7 @@ bool DownloadServiceTask::Run()
         if (!IsSatisfiedConfiguration()) {
             DOWNLOAD_HILOGI("networktype not Satisfied Configuration\n");
             ForceStopRunning();
-            SetStatus(SESSION_FAILED, ERROR_UNKNOWN,PAUSED_WAITING_FOR_NETWORK);
+            SetStatus(SESSION_FAILED, ERROR_UNKNOWN, PAUSED_WAITING_FOR_NETWORK);
             break;
         }
         enableTimeout = false;
