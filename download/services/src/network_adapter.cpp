@@ -109,6 +109,10 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetLost(sptr<NetHandle> &netHan
     DOWNLOAD_HILOGD("Observe bearer cellular lost");
     netAdapter_.networkType_ = 0;
     netAdapter_.isMetered_ = false;
+    if (netAdapter_.callback_ != nullptr) {
+        netAdapter_.callback_();
+        DOWNLOAD_HILOGD("NetCapabilitiesChange callback");
+    }
     return 0;
 }
 

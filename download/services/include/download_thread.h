@@ -24,7 +24,7 @@ class DownloadServiceManager;
 
 class DownloadThread final {
 public:
-    explicit DownloadThread(std::shared_ptr<DownloadServiceManager> mgr);
+    explicit DownloadThread();
     ~DownloadThread();
 
     void Start();
@@ -35,7 +35,6 @@ private:
 
 private:
     bool isRunning_;
-    std::shared_ptr<DownloadServiceManager> mgr_;
     std::thread thread_;
 };
 } // namespace OHOS::Request::Download
