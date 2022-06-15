@@ -66,7 +66,7 @@ bool DownloadServiceTask::Run()
         if (!IsSatisfiedConfiguration()) {
             DOWNLOAD_HILOGI("networktype not Satisfied Configuration\n");
             ForceStopRunning();
-            SetStatus(SESSION_FAILED,ERROR_UNKNOWN,PAUSED_WAITING_FOR_NETWORK);
+            SetStatus(SESSION_FAILED, ERROR_UNKNOWN,PAUSED_WAITING_FOR_NETWORK);
             break;
         }
         enableTimeout = false;
@@ -791,11 +791,11 @@ bool DownloadServiceTask::IsSatisfiedConfiguration()
     bool isRoaming = networkAdapter.GetRoaming();
     bool isMetered = networkAdapter.GetMetered();
     uint32_t networkType = networkAdapter.GetNetworkType();
-    DOWNLOAD_HILOGD("isRoaming_: %{public}d, isMetered_: %{public}d, networkType_: %{public}u\n", isRoaming,
-                    isMetered, networkType);
-    DOWNLOAD_HILOGD("config_ { isRoaming_: %{public}d,isMetered_: %{public}d, networkType_: %{public}u}\n", config_.GetRoaming(),
-                    config_.GetMetered(), config_.GetNetworkType());
-    if (isRoaming && !config_.GetRoaming() ) {
+    DOWNLOAD_HILOGD("isRoaming_: %{public}d, isMetered_: %{public}d, networkType_: %{public}u\n",
+                    isRoaming, isMetered, networkType);
+    DOWNLOAD_HILOGD("config_ { isRoaming_: %{public}d,isMetered_: %{public}d, networkType_: %{public}u}\n",
+                    config_.GetRoaming(), config_.GetMetered(), config_.GetNetworkType());
+    if (isRoaming && !config_.GetRoaming()) {
         return false;
     }
     if (isMetered && !config_.GetMetered()) {

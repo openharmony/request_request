@@ -138,7 +138,7 @@ void NetworkAdapter::NetConnCallbackObserver::GetRoaming()
         DOWNLOAD_HILOGE("networkState is nullptr");
         return;
     }
-    DOWNLOAD_HILOGE("Roaming = %{public}d",networkState->IsRoaming());
+    DOWNLOAD_HILOGD("Roaming = %{public}d", networkState->IsRoaming());
     netAdapter_.isRoaming_ = networkState->IsRoaming();
 }
 
