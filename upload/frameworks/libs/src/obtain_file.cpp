@@ -16,9 +16,14 @@
 #include <thread>
 #include <cstdio>
 #include "upload_task.h"
+#include "file_adapter.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS::Request::Upload {
+ObtainFile::ObtainFile()
+{
+    fileAdapter_ = std::make_shared<FileAdapter>();
+}
 ObtainFile::~ObtainFile()
 {
 }
@@ -56,11 +61,8 @@ uint32_t ObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri,
     FILE *filePtr = nullptr;
     int32_t fileLength = 0;
 
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(fileUri);
-    std::shared_ptr<DataAbilityHelper> dataAbilityHelper = DataAbilityHelper::Creator(context, uri);
-
     do {
-        int32_t fd = dataAbilityHelper->OpenFile(*uri, "r");
+        int32_t fd = fileAdapter_->DataAbilityOpenFile(fileUri, context);
         if (fd == -1) {
             UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetDataAbilityFile, open file error.");
             ret = UPLOAD_ERRORCODE_GET_FILE_ERROR;
@@ -76,6 +78,11 @@ uint32_t ObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri,
 
         (void)fseek(filePtr, 0, SEEK_END);
         fileLength = ftell(filePtr);
+        if (fileLength == -1) {
+            UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetDataAbilityFile, ftell error.");
+            ret = UPLOAD_ERRORCODE_GET_FILE_ERROR;
+            break;
+        }
         (void)fseek(filePtr, 0, SEEK_SET);
     } while (0);
 
@@ -109,7 +116,7 @@ uint32_t ObtainFile::GetInternalFile(FILE **file, std::string &fileUri,
             ret = UPLOAD_ERRORCODE_UNSUPPORT_URI;
             break;
         }
-        filePath = context->GetCacheDir();
+        filePath = fileAdapter_->InternalGetFilePath(context);
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, cache dir = [%{public}s].",
             filePath.c_str());
         if (filePath.size() == 0) {

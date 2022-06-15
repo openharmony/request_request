@@ -42,6 +42,7 @@ config("upload_lib_public_config") {
 ohos_shared_library("upload_lib") {
   sources = [
     "src/curl_adp.cpp",
+    "src/file_adapter.cpp",
     "src/module_init.cpp",
     "src/obtain_file.cpp",
     "src/upload_task.cpp",
