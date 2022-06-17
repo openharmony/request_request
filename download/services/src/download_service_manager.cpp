@@ -24,7 +24,6 @@ static constexpr uint32_t TASK_SLEEP_INTERVAL = 1;
 static constexpr uint32_t MAX_RETRY_TIMES = 3;
 
 using namespace OHOS::NetManagerStandard;
-using namespace OHOS::MiscServices;
 namespace OHOS::Request::Download {
 DownloadServiceManager::DownloadServiceManager()
     : initialized_(false), interval_(TASK_SLEEP_INTERVAL), threadNum_(THREAD_POOL_NUM), timeoutRetry_(MAX_RETRY_TIMES),
@@ -52,7 +51,9 @@ bool DownloadServiceManager::Create(uint32_t threadNum)
 
     threadNum_ = threadNum;
     for (uint32_t i = 0; i < threadNum; i++) {
-        threadList_.push_back(std::make_shared<DownloadThread>());
+        threadList_.push_back(std::make_shared<DownloadThread>([this]() {
+            return ProcessTask();
+        },interval_));
         threadList_[i]->Start();
     }
 
@@ -375,7 +376,7 @@ void DownloadServiceManager::UpdateNetworkType()
 {
     DOWNLOAD_HILOGD("UpdateNetworkType start\n");
     std::lock_guard<std::recursive_mutex> autoLock(mutex_);
-    for (auto it : taskMap_) {
+    for (const auto &it : taskMap_) {
         DownloadStatus status;
         ErrorCode code;
         PausedReason reason;

@@ -19,7 +19,6 @@
 #include <cerrno>
 #include <unistd.h>
 #include <sys/types.h>
-#include "constant.h"
 #include "log.h"
 #include "network_adapter.h"
 
@@ -51,7 +50,7 @@ bool DownloadServiceTask::Run()
         return false;
     }
 
-    if (!MiscServices::NetworkAdapter::GetInstance().IsOnline()) {
+    if (!NetworkAdapter::GetInstance().IsOnline()) {
         DOWNLOAD_HILOGI("network is offline\n");
         SetStatus(SESSION_FAILED, ERROR_NETWORK_FAIL, PAUSED_UNKNOWN);
         return false;
@@ -786,22 +785,18 @@ bool DownloadServiceTask::HandleFileError()
 
 bool DownloadServiceTask::IsSatisfiedConfiguration()
 {
-    auto &networkAdapter = MiscServices::NetworkAdapter::GetInstance();
-
-    bool isRoaming = networkAdapter.GetRoaming();
-    bool isMetered = networkAdapter.GetMetered();
-    uint32_t networkType = networkAdapter.GetNetworkType();
+    auto networkInfo = NetworkAdapter::GetInstance().GetNetworkInfo();
     DOWNLOAD_HILOGD("isRoaming_: %{public}d, isMetered_: %{public}d, networkType_: %{public}u\n",
-                    isRoaming, isMetered, networkType);
+                    networkInfo.isRoaming_, networkInfo.isMetered_, networkInfo.networkType_);
     DOWNLOAD_HILOGD("config_ { isRoaming_: %{public}d,isMetered_: %{public}d, networkType_: %{public}u}\n",
                     config_.GetRoaming(), config_.GetMetered(), config_.GetNetworkType());
-    if (isRoaming && !config_.GetRoaming()) {
+    if (networkInfo.isRoaming_ && !config_.GetRoaming()) {
         return false;
     }
-    if (isMetered && !config_.GetMetered()) {
+    if (networkInfo.isMetered_ && !config_.GetMetered()) {
         return false;
     }
-    if (networkType != config_.GetNetworkType()) {
+    if ((networkInfo.networkType_ & config_.GetNetworkType()) == NETWORK_INVALID) {
         return false;
     }
     return true;

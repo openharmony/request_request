@@ -18,9 +18,13 @@
 
 #include "net_all_capabilities.h"
 #include "net_conn_callback_stub.h"
-
-namespace OHOS {
-namespace MiscServices {
+#include "constant.h"
+namespace OHOS::Request::Download {
+struct NetworkInfo {
+    NetworkType networkType_ = NETWORK_INVALID;
+    bool isMetered_ = false;
+    bool isRoaming_ = false;
+};
 class NetworkAdapter {
 public:
     using RegCallBack = std::function<void()>;
@@ -29,9 +33,7 @@ public:
     bool IsOnline();
     static NetworkAdapter& GetInstance();
     friend class NetConnCallbackObserver;
-    uint32_t GetNetworkType();
-    bool GetMetered();
-    bool GetRoaming();
+    NetworkInfo GetNetworkInfo();
 private:
     class NetConnCallbackObserver :  public NetManagerStandard::NetConnCallbackStub {
     public:
@@ -59,10 +61,7 @@ private:
     RegCallBack callback_ = nullptr;
     bool isOnline_ = false;
     std::mutex mutex_;
-    bool isMetered_ = false;
-    bool isRoaming_ = false;
-    uint32_t networkType_ = 0;
+    NetworkInfo networkInfo_;
 };
-}   // namespace MiscServices
-}   // namespace OHOS
+}   // namespace OHOS::Request::Download
 #endif /* REQUEST_NETWORK_ADAPTER_H */
