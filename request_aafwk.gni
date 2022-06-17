@@ -17,3 +17,5 @@ aafwk_inner_api_path =
 aafwk_kits_path = "//foundation/ability/ability_runtime/frameworks/kits"
 
 aafwk_services_path = "//foundation/ability/ability_runtime/services"
+
+aafwk_path = "//foundation/ability/ability_runtime"

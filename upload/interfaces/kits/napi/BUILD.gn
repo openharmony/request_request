@@ -47,7 +47,7 @@ ohos_shared_library("request") {
   configs = [ ":upload_native_config" ]
 
   deps = [
-    "${aafwk_kits_path}/ability/native:abilitykit_native",
+    "${aafwk_path}/frameworks/native/ability/native:abilitykit_native",
     "//base/miscservices/request/download/interfaces/kits/js/napi/download_single:downloadsingle",
     "//base/miscservices/request/upload/frameworks/libs:upload_lib",
     "//foundation/arkui/napi/:ace_napi",

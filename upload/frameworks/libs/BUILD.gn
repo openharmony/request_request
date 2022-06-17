@@ -56,7 +56,7 @@ ohos_shared_library("upload_lib") {
   configs = [ ":upload_lib_config" ]
 
   deps = [
-    "${aafwk_kits_path}/ability/native:abilitykit_native",
+    "${aafwk_path}/frameworks/native/ability/native:abilitykit_native",
     "//third_party/curl/:curl",
   ]
 

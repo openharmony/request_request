@@ -37,7 +37,7 @@ ohos_unittest("upload_obtain_file_UT_test") {
   ]
 
   deps = [
-    "${aafwk_kits_path}/ability/native:abilitykit_native",
+    "${aafwk_path}/frameworks/native/ability/native:abilitykit_native",
     "//base/miscservices/request/upload/frameworks/libs/:upload_lib",
     "//third_party/googletest:gmock_main",
   ]
@@ -78,8 +78,8 @@ ohos_unittest("upload_UT_test") {
   ]
 
   deps = [
-    "${aafwk_kits_path}/ability/native:abilitykit_native",
-    "${aafwk_kits_path}/appkit:app_context",
+    "${aafwk_path}/frameworks/native/ability/native:abilitykit_native",
+    "${aafwk_path}/frameworks/native/appkit:app_context",
     "//base/miscservices/request/upload/frameworks/libs/:upload_lib",
     "//third_party/curl/:curl",
     "//utils/native/base:utils",

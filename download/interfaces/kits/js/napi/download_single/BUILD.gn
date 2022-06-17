@@ -32,8 +32,8 @@ ohos_shared_library("downloadsingle") {
     "//base/miscservices/request/download/interfaces/kits/napi/download_single/include",
     "//base/miscservices/request/download/interfaces/innerkits/include",
     "//base/miscservices/request/download/utils/include",
-    "${aafwk_kits_path}/appkit/native/app/include/",
-    "${aafwk_kits_path}/ability/native/include",
+    "${aafwk_path}/interfaces/kits/native/appkit/app/",
+    "${aafwk_path}/interfaces/kits/native/ability/native",
     "${aafwk_services_path}/abilitymgr/include",
     "${aafwk_inner_api_path}/ability_manager/include",
   ]

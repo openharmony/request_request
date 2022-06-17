@@ -57,12 +57,12 @@ ohos_shared_library("downloaddataability") {
     "//base/account/os_account/interfaces/innerkits/include",
     "${aafwk_inner_api_path}/ability_manager/include",
     "${aafwk_services_path}/abilitymgr/include",
-    "${aafwk_kits_path}/ability/native/include",
+    "${aafwk_path}/interfaces/kits/native/ability/native",
     "//base/miscservices/request/download/utils/include",
   ]
 
   deps = [
-    "${aafwk_kits_path}/ability/native:abilitykit_native",
+    "${aafwk_path}/frameworks/native/ability/native:abilitykit_native",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//third_party/jsoncpp:jsoncpp",
