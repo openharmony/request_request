@@ -785,6 +785,10 @@ bool DownloadServiceTask::HandleFileError()
 
 bool DownloadServiceTask::IsSatisfiedConfiguration()
 {
+    // Compatible does not support downloading network task configuration version
+    if ( config_.GetNetworkType() == NETWORK_INVALID) {
+        return true;
+    }
     auto networkInfo = NetworkAdapter::GetInstance().GetNetworkInfo();
     DOWNLOAD_HILOGD("isRoaming_: %{public}d, isMetered_: %{public}d, networkType_: %{public}u\n",
                     networkInfo.isRoaming_, networkInfo.isMetered_, networkInfo.networkType_);
