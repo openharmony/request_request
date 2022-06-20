@@ -786,7 +786,7 @@ bool DownloadServiceTask::HandleFileError()
 bool DownloadServiceTask::IsSatisfiedConfiguration()
 {
     // Compatible does not support downloading network task configuration version
-    if ( config_.GetNetworkType() == NETWORK_INVALID) {
+    if (config_.GetNetworkType() == NETWORK_INVALID) {
         return true;
     }
     auto networkInfo = NetworkAdapter::GetInstance().GetNetworkInfo();
