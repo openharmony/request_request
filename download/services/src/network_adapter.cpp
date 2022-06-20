@@ -72,12 +72,11 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(sptr <Net
     DOWNLOAD_HILOGD("Observe net capabilities change. start");
     if (netAllCap->netCaps_.count(NetCap::NET_CAPABILITY_VALIDATED)) {
         netAdapter_.isOnline_ = true;
-        GetRoaming();
+        UpdateRoaming();
         if (netAllCap->bearerTypes_.count(NetBearType::BEARER_CELLULAR)) {
             DOWNLOAD_HILOGI("Bearer Cellular");
             netAdapter_.networkInfo_.networkType_ = NETWORK_MOBILE;
-        }
-        if (netAllCap->bearerTypes_.count(NetBearType::BEARER_WIFI)) {
+        } else if (netAllCap->bearerTypes_.count(NetBearType::BEARER_WIFI)) {
             DOWNLOAD_HILOGI("Bearer Wifi");
             netAdapter_.networkInfo_.networkType_ = NETWORK_WIFI;
             netAdapter_.networkInfo_.isMetered_ = false;
@@ -123,7 +122,7 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetBlockStatusChange(sptr<NetHa
     return 0;
 }
 
-void NetworkAdapter::NetConnCallbackObserver::GetRoaming()
+void NetworkAdapter::NetConnCallbackObserver::UpdateRoaming()
 {
     auto slotId = DelayedRefSingleton<CoreServiceClient>::GetInstance().GetPrimarySlotId();
     if (slotId == TELEPHONY_ERR_IPC_CONNECT_STUB_FAIL || slotId == ERROR) {

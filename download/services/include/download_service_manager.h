@@ -30,9 +30,6 @@
 namespace OHOS::Request::Download {
 class DownloadServiceManager final {
 public:
-    explicit DownloadServiceManager();
-    ~DownloadServiceManager();
-
     static DownloadServiceManager &GetInstance();
 
     bool Create(uint32_t threadNum);
@@ -56,6 +53,8 @@ public:
 
     void ResumeTaskByNetwork();
 private:
+    explicit DownloadServiceManager();
+    ~DownloadServiceManager();
     enum class QueueType {
         NONE_QUEUE,
         PENDING_QUEUE,

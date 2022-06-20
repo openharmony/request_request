@@ -53,7 +53,7 @@ bool DownloadServiceManager::Create(uint32_t threadNum)
     for (uint32_t i = 0; i < threadNum; i++) {
         threadList_.push_back(std::make_shared<DownloadThread>([this]() {
             return ProcessTask();
-        },interval_));
+        }, interval_));
         threadList_[i]->Start();
     }
 
@@ -376,10 +376,10 @@ void DownloadServiceManager::UpdateNetworkType()
 {
     DOWNLOAD_HILOGD("UpdateNetworkType start\n");
     std::lock_guard<std::recursive_mutex> autoLock(mutex_);
+    DownloadStatus status;
+    ErrorCode code;
+    PausedReason reason;
     for (const auto &it : taskMap_) {
-        DownloadStatus status;
-        ErrorCode code;
-        PausedReason reason;
         it.second->GetRunResult(status, code, reason);
         bool bRet = status == SESSION_RUNNING || status == SESSION_PENDING
                     || status == SESSION_PAUSED;

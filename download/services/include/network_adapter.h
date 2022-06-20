@@ -53,7 +53,7 @@ private:
 
         int32_t NetBlockStatusChange(sptr<NetManagerStandard::NetHandle> &netHandle, bool blocked) override;
     private:
-        void GetRoaming();
+        void UpdateRoaming();
     private:
         NetworkAdapter& netAdapter_;
     };
