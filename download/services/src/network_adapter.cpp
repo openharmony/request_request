@@ -76,12 +76,11 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(sptr <Net
         if (netAllCap->bearerTypes_.count(NetBearType::BEARER_CELLULAR)) {
             DOWNLOAD_HILOGI("Bearer Cellular");
             netAdapter_.networkInfo_.networkType_ = NETWORK_MOBILE;
+            netAdapter_.networkInfo_.isMetered_ = true;
         } else if (netAllCap->bearerTypes_.count(NetBearType::BEARER_WIFI)) {
             DOWNLOAD_HILOGI("Bearer Wifi");
             netAdapter_.networkInfo_.networkType_ = NETWORK_WIFI;
             netAdapter_.networkInfo_.isMetered_ = false;
-        } else {
-            netAdapter_.networkInfo_.isMetered_ = true;
         }
         if (netAdapter_.callback_ != nullptr) {
             netAdapter_.callback_();
