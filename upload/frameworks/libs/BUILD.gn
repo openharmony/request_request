@@ -67,6 +67,7 @@ ohos_shared_library("upload_lib") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "time_native:time_service",
+    "utils_base:utils",
   ]
 
   public_configs = [ ":upload_lib_public_config" ]
