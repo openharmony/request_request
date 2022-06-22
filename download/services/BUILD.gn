@@ -40,8 +40,10 @@ ohos_shared_library("download_server") {
   include_dirs = [
     "//utils/native/base/include",
     "//utils/system/safwk/native/include",
+    "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient/include",
     "//base/miscservices/request/download/interfaces/innerkits/include",
     "//base/miscservices/request/download/utils/include",
+    "//base/telephony/core_service/interfaces/innerkits/include",
     "//third_party/json/include",
     "//base/miscservices/request/download/interfaces/kits/js/napi/download_single/include",
     "//third_party/curl/include",
@@ -67,6 +69,7 @@ ohos_shared_library("download_server") {
     "multimedia_image_standard:image_native",
     "os_account:os_account_innerkits",
     "ril_device_driver_interface:hril_innerkits",
+    "startup_l2:syspara",
   ]
   subsystem_name = "miscservices"
   part_name = "request"

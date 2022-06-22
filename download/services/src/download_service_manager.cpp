@@ -24,11 +24,7 @@ static constexpr uint32_t TASK_SLEEP_INTERVAL = 1;
 static constexpr uint32_t MAX_RETRY_TIMES = 3;
 
 using namespace OHOS::NetManagerStandard;
-using namespace OHOS::MiscServices;
 namespace OHOS::Request::Download {
-std::recursive_mutex DownloadServiceManager::instanceLock_;
-std::shared_ptr<DownloadServiceManager> DownloadServiceManager::instance_ = nullptr;
-
 DownloadServiceManager::DownloadServiceManager()
     : initialized_(false), interval_(TASK_SLEEP_INTERVAL), threadNum_(THREAD_POOL_NUM), timeoutRetry_(MAX_RETRY_TIMES),
     taskId_(0)
@@ -40,15 +36,10 @@ DownloadServiceManager::~DownloadServiceManager()
     Destroy();
 }
 
-std::shared_ptr<DownloadServiceManager> DownloadServiceManager::Get()
+DownloadServiceManager &DownloadServiceManager::GetInstance()
 {
-    if (instance_ == nullptr) {
-        std::lock_guard<std::recursive_mutex> autoLock(instanceLock_);
-        if (instance_ == nullptr) {
-            instance_ = std::make_shared<DownloadServiceManager>();
-        }
-    }
-    return instance_;
+    static DownloadServiceManager instance;
+    return instance;
 }
 
 bool DownloadServiceManager::Create(uint32_t threadNum)
@@ -60,7 +51,9 @@ bool DownloadServiceManager::Create(uint32_t threadNum)
 
     threadNum_ = threadNum;
     for (uint32_t i = 0; i < threadNum; i++) {
-        threadList_.push_back(std::make_shared<DownloadThread>(instance_));
+        threadList_.push_back(std::make_shared<DownloadThread>([this]() {
+            return ProcessTask();
+        }, interval_));
         threadList_[i]->Start();
     }
 
@@ -373,8 +366,29 @@ int32_t DownloadServiceManager::MonitorNetwork()
 {
     int nRet = NetworkAdapter::GetInstance().RegOnNetworkChange([this]() {
         this->ResumeTaskByNetwork();
+        this->UpdateNetworkType();
     });
     DOWNLOAD_HILOGD("RegisterNetConnCallback retcode= %{public}d", nRet);
     return nRet;
+}
+
+void DownloadServiceManager::UpdateNetworkType()
+{
+    DOWNLOAD_HILOGD("UpdateNetworkType start\n");
+    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
+    DownloadStatus status;
+    ErrorCode code;
+    PausedReason reason;
+    for (const auto &it : taskMap_) {
+        it.second->GetRunResult(status, code, reason);
+        bool bRet = status == SESSION_RUNNING || status == SESSION_PENDING
+                    || status == SESSION_PAUSED;
+        if (bRet) {
+            if (!it.second->IsSatisfiedConfiguration()) {
+                RemoveFromQueue(pendingQueue_, it.first);
+                PushQueue(pausedQueue_, it.first);
+            }
+        }
+    }
 }
 } // namespace OHOS::Request::Download

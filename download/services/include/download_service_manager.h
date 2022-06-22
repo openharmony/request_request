@@ -30,10 +30,7 @@
 namespace OHOS::Request::Download {
 class DownloadServiceManager final {
 public:
-    explicit DownloadServiceManager();
-    ~DownloadServiceManager();
-
-    static std::shared_ptr<DownloadServiceManager> Get();
+    static DownloadServiceManager &GetInstance();
 
     bool Create(uint32_t threadNum);
     void Destroy();
@@ -56,6 +53,8 @@ public:
 
     void ResumeTaskByNetwork();
 private:
+    explicit DownloadServiceManager();
+    ~DownloadServiceManager();
     enum class QueueType {
         NONE_QUEUE,
         PENDING_QUEUE,
@@ -68,7 +67,7 @@ private:
     void PushQueue(std::queue<uint32_t> &queue, uint32_t taskId);
     void RemoveFromQueue(std::queue<uint32_t> &queue, uint32_t taskId);
     int32_t MonitorNetwork();
-
+    void UpdateNetworkType();
 private:
     bool initialized_;
     std::recursive_mutex mutex_;
@@ -83,8 +82,6 @@ private:
     uint32_t timeoutRetry_;
 
     uint32_t taskId_;
-    static std::recursive_mutex instanceLock_;
-    static std::shared_ptr<DownloadServiceManager> instance_;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_SERVICE_MANAGER_H

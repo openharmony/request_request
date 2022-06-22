@@ -46,7 +46,7 @@ public:
 
     void SetRetryTime(uint32_t retryTime);
     void SetNetworkStatus(bool isOnline);
-
+    bool IsSatisfiedConfiguration();
 private:
     void SetStatus(DownloadStatus status, ErrorCode code, PausedReason reason);
     void SetStatus(DownloadStatus status);
@@ -85,7 +85,6 @@ private:
     ErrorCode code_;
     PausedReason reason_;
     std::string mimeType_;
-    FILE *file_;
     uint32_t totalSize_;
     uint32_t downloadSize_;
     bool isPartialMode_;
