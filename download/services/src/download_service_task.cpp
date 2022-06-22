@@ -55,7 +55,7 @@ bool DownloadServiceTask::Run()
     }
 
     if (!NetworkAdapter::GetInstance().IsOnline()) {
-        DOWNLOAD_HILOGI("network is offline\n");
+        DOWNLOAD_HILOGI("network is offline");
         SetStatus(SESSION_FAILED, ERROR_NETWORK_FAIL, PAUSED_UNKNOWN);
         return false;
     }
@@ -67,7 +67,7 @@ bool DownloadServiceTask::Run()
     
     do {
         if (!IsSatisfiedConfiguration()) {
-            DOWNLOAD_HILOGI("networktype not Satisfied Configuration\n");
+            DOWNLOAD_HILOGI("networktype not Satisfied Configuration");
             ForceStopRunning();
             SetStatus(SESSION_FAILED, ERROR_UNKNOWN, PAUSED_WAITING_FOR_NETWORK);
             break;
@@ -125,7 +125,7 @@ bool DownloadServiceTask::Resume()
 
 bool DownloadServiceTask::Remove()
 {
-    DOWNLOAD_HILOGI("Status [%{public}d], Code [%{public}d], Reason [%{public}d]", status_, code_, reason_);
+    DOWNLOAD_HILOGI("Task[%{public}d], Status [%{public}d], Code [%{public}d], Reason [%{public}d]",  taskId_, status_, code_, reason_);
     isRemoved_ = true;
     ForceStopRunning();
     if (eventCb_ != nullptr) {
@@ -136,7 +136,7 @@ bool DownloadServiceTask::Remove()
 
 bool DownloadServiceTask::Query(DownloadInfo &info)
 {
-    DOWNLOAD_HILOGD("Query Task[%{public}d], current status is %{public}d\n", taskId_, status_);
+    DOWNLOAD_HILOGD("Query Task[%{public}d], current status is %{public}d", taskId_, status_);
     info.SetDescription(config_.GetDescription());
     info.SetDownloadedBytes(downloadSize_);
     info.SetDownloadId(taskId_);
@@ -155,7 +155,7 @@ bool DownloadServiceTask::Query(DownloadInfo &info)
 
 bool DownloadServiceTask::QueryMimeType(std::string &mimeType)
 {
-    DOWNLOAD_HILOGD("Query Mime Type of Task[%{public}d], current status is %{public}d\n", taskId_, status_);
+    DOWNLOAD_HILOGD("Query Mime Type of Task[%{public}d], current status is %{public}d", taskId_, status_);
     mimeType = mimeType_;
     return true;
 }
@@ -438,11 +438,11 @@ int DownloadServiceTask::ProgressCallback(void *pParam, double dltotal, double d
     DownloadServiceTask *this_ = static_cast<DownloadServiceTask *>(pParam);
     if (this_ != nullptr) {
         if (this_->isRemoved_) {
-            DOWNLOAD_HILOGI("download task has been removed\n");
+            DOWNLOAD_HILOGI("download task has been removed");
             return  0;
         }
         if (this_->forceStop_) {
-            DOWNLOAD_HILOGI("Pause issued by user\n");
+            DOWNLOAD_HILOGI("Pause issued by user");
             return HTTP_FORCE_STOP;
         }
         if (this_->eventCb_ == nullptr) {
@@ -469,7 +469,7 @@ bool DownloadServiceTask::ExecHttp()
         return false;
     }
 
-    DOWNLOAD_HILOGI("final url: %{public}s\n", config_.GetUrl().c_str());
+    DOWNLOAD_HILOGI("final url: %{public}s", config_.GetUrl().c_str());
 
     std::vector<std::string> vec;
     std::for_each(
@@ -485,21 +485,18 @@ bool DownloadServiceTask::ExecHttp()
 
     if (config_.GetFD() > 0) {
         DOWNLOAD_HILOGD("Succeed to open download file");
-        long pos = lseek64(config_.GetFD(), 0, SEEK_END);
+        int64_t pos = lseek64(config_.GetFD(), 0, SEEK_END);
         downloadSize_ = 0;
         if (pos > 0) {
-            if (pos < totalSize_) {
+            if (static_cast<uint32_t>(pos) < totalSize_) {
                 isPartialMode_ = true;
                 downloadSize_ = static_cast<uint32_t>(pos);
                 SetResumeFromLarge(handle.get(), pos);
-            } else if (pos >= totalSize_) {
+            } else if (static_cast<uint32_t>(pos) >= totalSize_) {
                 downloadSize_ = totalSize_;
                 DOWNLOAD_HILOGI("Download task has already completed");
                 SetStatus(SESSION_SUCCESS);
                 return true;
-            } else {
-                DOWNLOAD_HILOGI("Download size exceed the file size, re-download it");
-                return false;
             }
         }
         prevSize_ = downloadSize_;
@@ -542,7 +539,7 @@ bool DownloadServiceTask::SetFileSizeOption(CURL *curl, struct curl_slist *reque
     curl_easy_setopt(curl, CURLOPT_PROXYUSERPWD, HTTP_PROXY_PASS);
 #endif // DOWNLOAD_PROXY_PASS
 #endif // DOWNLOAD_USE_PROXY
-    SetHttpOrHttpsOption(curl);
+    SetCertificationOption(curl);
 
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
 #if HTTP_CURL_PRINT_VERBOSE
@@ -586,7 +583,7 @@ bool DownloadServiceTask::SetOption(CURL *curl, struct curl_slist *requestHeader
     curl_easy_setopt(curl, CURLOPT_PROXYUSERPWD, HTTP_PROXY_PASS);
 #endif // DOWNLOAD_PROXY_PASS
 #endif // DOWNLOAD_USE_PROXY
-    SetHttpOrHttpsOption(curl);
+    SetCertificationOption(curl);
 
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
 #if HTTP_CURL_PRINT_VERBOSE
@@ -672,7 +669,7 @@ void DownloadServiceTask::HandleResponseCode(CURLcode code, int32_t httpCode)
         DOWNLOAD_HILOGI("download task has been removed");
         return;
     }
-    DOWNLOAD_HILOGI("Current CURLcode is %{public}d, httpCode is %{public}d\n", code, httpCode);
+    DOWNLOAD_HILOGI("Current CURLcode is %{public}d, httpCode is %{public}d", code, httpCode);
     if (status_ == SESSION_PAUSED && reason_ == PAUSED_BY_USER) {
         DOWNLOAD_HILOGI("Pause By User:ignore status changed caused by libcurl");
         return;
@@ -780,9 +777,9 @@ bool DownloadServiceTask::IsSatisfiedConfiguration()
         return true;
     }
     auto networkInfo = NetworkAdapter::GetInstance().GetNetworkInfo();
-    DOWNLOAD_HILOGD("isRoaming_: %{public}d, isMetered_: %{public}d, networkType_: %{public}u\n",
+    DOWNLOAD_HILOGD("isRoaming_: %{public}d, isMetered_: %{public}d, networkType_: %{public}u",
                     networkInfo.isRoaming_, networkInfo.isMetered_, networkInfo.networkType_);
-    DOWNLOAD_HILOGD("config_ { isRoaming_: %{public}d,isMetered_: %{public}d, networkType_: %{public}u}\n",
+    DOWNLOAD_HILOGD("config_ { isRoaming_: %{public}d,isMetered_: %{public}d, networkType_: %{public}u}",
                     config_.GetRoaming(), config_.GetMetered(), config_.GetNetworkType());
     if (networkInfo.isRoaming_ && !config_.GetRoaming()) {
         return false;
@@ -796,22 +793,22 @@ bool DownloadServiceTask::IsSatisfiedConfiguration()
     return true;
 }
 
-void DownloadServiceTask::SetHttpOrHttpsOption(CURL *curl)
+void DownloadServiceTask::SetCertificationOption(CURL *curl)
 {
     if (config_.GetUrl().find(URL_HTTPS) != std::string::npos) {
-        SetHttpsOneWayOption(curl);
+        OpenCertificationOption(curl);
     } else {
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
     }
 }
 
-void DownloadServiceTask::SetHttpsOneWayOption(CURL *curl)
+void DownloadServiceTask::OpenCertificationOption(CURL *curl)
 {
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
     std::ifstream inFile(std::string(HTTP_DEFAULT_CA_PATH), std::ios::in | std::ios::binary);
-    if (!inFile) {
+    if (!inFile.is_open()) {
         DOWNLOAD_HILOGE("open cacert.pem faild");
         return;
     }
@@ -821,9 +818,9 @@ void DownloadServiceTask::SetHttpsOneWayOption(CURL *curl)
     inFile.close();
     struct curl_blob blob;
     blob.data = const_cast<char*>(certInfo.c_str());
-    blob.len = const_cast<char*>(certInfo.size());
+    blob.len = certInfo.size();
     blob.flags = CURL_BLOB_COPY;
     curl_easy_setopt(curl, CURLOPT_CAINFO_BLOB, &blob);
-    DOWNLOAD_HILOGI("SetHttpsOneWayOption success");
+    DOWNLOAD_HILOGI("OpenCertificationOption success");
 }
 } // namespace OHOS::Request::Download

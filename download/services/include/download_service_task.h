@@ -76,8 +76,8 @@ private:
     bool CheckResumeCondition();
     void ForceStopRunning();
     bool HandleFileError();
-    void SetHttpOrHttpsOption(CURL *curl);
-    void SetHttpsOneWayOption(CURL *curl);
+    void SetCertificationOption(CURL *curl);
+    void OpenCertificationOption(CURL *curl);
 private:
     uint32_t taskId_;
     DownloadConfig config_;
