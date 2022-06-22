@@ -657,7 +657,7 @@ bool DownloadServiceTask::GetFileSize(uint32_t &result)
         }
     }
 
-    DOWNLOAD_HILOGI("fetch file size %{public}d, code: %{public}d", result,code);
+    DOWNLOAD_HILOGI("fetch file size %{public}d, code: %{public}d", result, code);
     return hasFileSize_;
 }
 
@@ -810,8 +810,8 @@ void DownloadServiceTask::SetHttpsOneWayOption(CURL *curl)
 {
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
-    std::ifstream inFile(std::string(HTTP_DEFAULT_CA_PATH),std::ios::in|std::ios::binary);
-    if(!inFile) {
+    std::ifstream inFile(std::string(HTTP_DEFAULT_CA_PATH), std::ios::in | std::ios::binary);
+    if (!inFile) {
         DOWNLOAD_HILOGE("open cacert.pem faild");
         return;
     }
@@ -821,7 +821,7 @@ void DownloadServiceTask::SetHttpsOneWayOption(CURL *curl)
     inFile.close();
     struct curl_blob blob;
     blob.data = const_cast<char*>(certInfo.c_str());
-    blob.len = certInfo.size();
+    blob.len = const_cast<char*>(certInfo.size());
     blob.flags = CURL_BLOB_COPY;
     curl_easy_setopt(curl, CURLOPT_CAINFO_BLOB, &blob);
     DOWNLOAD_HILOGI("SetHttpsOneWayOption success");
