@@ -539,7 +539,7 @@ bool DownloadServiceTask::SetFileSizeOption(CURL *curl, struct curl_slist *reque
     curl_easy_setopt(curl, CURLOPT_PROXYUSERPWD, HTTP_PROXY_PASS);
 #endif // DOWNLOAD_PROXY_PASS
 #endif // DOWNLOAD_USE_PROXY
-    if(!SetCertificationOption(curl)) {
+    if (!SetCertificationOption(curl)) {
         return false;
     }
 
@@ -585,7 +585,7 @@ bool DownloadServiceTask::SetOption(CURL *curl, struct curl_slist *requestHeader
     curl_easy_setopt(curl, CURLOPT_PROXYUSERPWD, HTTP_PROXY_PASS);
 #endif // DOWNLOAD_PROXY_PASS
 #endif // DOWNLOAD_USE_PROXY
-    if(!SetCertificationOption(curl)) {
+    if (!SetCertificationOption(curl)) {
         return false;
     }
 
