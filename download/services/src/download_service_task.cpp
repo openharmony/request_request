@@ -483,10 +483,9 @@ bool DownloadServiceTask::ExecHttp()
         DOWNLOAD_HILOGE("set option failed");
         return false;
     }
-
     if (config_.GetFD() > 0) {
         DOWNLOAD_HILOGD("Succeed to open download file");
-        int64_t pos = lseek64(config_.GetFD(), 0, SEEK_END);
+        int64_t pos = lseek(config_.GetFD(), 0, SEEK_END);
         downloadSize_ = 0;
         if (pos > 0) {
             if (static_cast<uint32_t>(pos) < totalSize_) {

@@ -57,7 +57,10 @@ ohos_shared_library("download_server") {
     "//utils/native/base:utils",
   ]
 
-  defines = [ "NO_SSL_CERTIFICATION=1" ]
+  defines = [
+    "NO_SSL_CERTIFICATION=1",
+    "_FILE_OFFSET_BITS=64",
+  ]
 
   external_deps = [
     "ability_base:zuri",
