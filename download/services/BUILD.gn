@@ -15,15 +15,24 @@ import("//build/ohos.gni")
 
 config("download_service_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "//third_party/curl/include",
+    "//third_party/openssl/include",
+  ]
+
+  ldflags = [ "-Wl,--exclude-libs,libcrypto_static.a" ]
+  ldflags += [ "-Wl,--exclude-libs,libcurl.a" ]
 
   cflags_cc = [ "-fexceptions" ]
+  cflags = [ "-DOPENSSL_ARM64_PLATFORM" ]
 }
 
 ohos_shared_library("download_server") {
   sources = [
     "//base/miscservices/request/download/interfaces/kits/js/napi/download_single/src/download_config.cpp",
     "//base/miscservices/request/download/interfaces/kits/js/napi/download_single/src/download_info.cpp",
+    "//base/miscservices/request/upload/frameworks/libs/src/module_init.cpp",
     "src/download_notify_proxy.cpp",
     "src/download_service_ability.cpp",
     "src/download_service_manager.cpp",
@@ -46,7 +55,9 @@ ohos_shared_library("download_server") {
     "//base/telephony/core_service/interfaces/innerkits/include",
     "//third_party/json/include",
     "//base/miscservices/request/download/interfaces/kits/js/napi/download_single/include",
+    "//base/miscservices/request/upload/frameworks/libs/include",
     "//third_party/curl/include",
+    "//third_party/openssl/include",
   ]
   deps = [
     "//base/telephony/core_service/interfaces/innerkits:tel_core_service_api",
@@ -57,7 +68,7 @@ ohos_shared_library("download_server") {
     "//utils/native/base:utils",
   ]
 
-  defines = ["NO_SSL_CERTIFICATION=1"]
+  defines = [ "NO_SSL_CERTIFICATION=1" ]
 
   external_deps = [
     "ability_base:zuri",
