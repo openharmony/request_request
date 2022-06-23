@@ -49,7 +49,7 @@ uint32_t DownloadServiceTask::GetId() const
 
 bool DownloadServiceTask::Run()
 {
-    DOWNLOAD_HILOGI("Task[%{public}d] start.", taskId_);
+    DOWNLOAD_HILOGI("Task[%{public}d] start", taskId_);
     if (HandleFileError()) {
         return false;
     }
