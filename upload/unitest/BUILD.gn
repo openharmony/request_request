@@ -47,6 +47,7 @@ ohos_unittest("upload_obtain_file_UT_test") {
     "ability_base:zuri",
     "ability_runtime:ability_manager",
     "bundle_framework:appexecfwk_base",
+    "hiviewdfx_hilog_native:libhilog",
     "time_native:time_service",
   ]
 }
