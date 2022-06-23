@@ -485,14 +485,14 @@ bool DownloadServiceTask::ExecHttp()
     }
     if (config_.GetFD() > 0) {
         DOWNLOAD_HILOGD("Succeed to open download file");
-        int64_t pos = lseek(config_.GetFD(), 0, SEEK_END);
+        off_t pos = lseek64(config_.GetFD(), 0, SEEK_END);
         downloadSize_ = 0;
         if (pos > 0) {
-            if (static_cast<uint32_t>(pos) < totalSize_) {
+            if (pos < static_cast<off_t>(totalSize_)) {
                 isPartialMode_ = true;
                 downloadSize_ = static_cast<uint32_t>(pos);
                 SetResumeFromLarge(handle.get(), pos);
-            } else if (static_cast<uint32_t>(pos) >= totalSize_) {
+            } else if (pos >= static_cast<off_t>(totalSize_)) {
                 downloadSize_ = totalSize_;
                 DOWNLOAD_HILOGI("Download task has already completed");
                 SetStatus(SESSION_SUCCESS);
@@ -539,7 +539,9 @@ bool DownloadServiceTask::SetFileSizeOption(CURL *curl, struct curl_slist *reque
     curl_easy_setopt(curl, CURLOPT_PROXYUSERPWD, HTTP_PROXY_PASS);
 #endif // DOWNLOAD_PROXY_PASS
 #endif // DOWNLOAD_USE_PROXY
-    SetCertificationOption(curl);
+    if(!SetCertificationOption(curl)) {
+        return false;
+    }
 
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
 #if HTTP_CURL_PRINT_VERBOSE
@@ -583,7 +585,9 @@ bool DownloadServiceTask::SetOption(CURL *curl, struct curl_slist *requestHeader
     curl_easy_setopt(curl, CURLOPT_PROXYUSERPWD, HTTP_PROXY_PASS);
 #endif // DOWNLOAD_PROXY_PASS
 #endif // DOWNLOAD_USE_PROXY
-    SetCertificationOption(curl);
+    if(!SetCertificationOption(curl)) {
+        return false;
+    }
 
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
 #if HTTP_CURL_PRINT_VERBOSE
@@ -793,34 +797,55 @@ bool DownloadServiceTask::IsSatisfiedConfiguration()
     return true;
 }
 
-void DownloadServiceTask::SetCertificationOption(CURL *curl)
+bool DownloadServiceTask::SetCertificationOption(CURL *curl)
 {
-    if (config_.GetUrl().find(URL_HTTPS) != std::string::npos) {
-        OpenCertificationOption(curl);
-    } else {
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-    }
+    return (IsHttpsURL() ? SetHttpsCertificationOption(curl) : SetHttpCertificationOption(curl));
 }
 
-void DownloadServiceTask::OpenCertificationOption(CURL *curl)
+bool DownloadServiceTask::IsHttpsURL()
 {
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
-    std::ifstream inFile(std::string(HTTP_DEFAULT_CA_PATH), std::ios::in | std::ios::binary);
-    if (!inFile.is_open()) {
-        DOWNLOAD_HILOGE("open cacert.pem faild");
-        return;
+    return config_.GetUrl().find(URL_HTTPS) == 0;
+}
+
+bool DownloadServiceTask::SetHttpCertificationOption(CURL *curl)
+{
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    return true;
+}
+
+bool DownloadServiceTask::SetHttpsCertificationOption(CURL *curl)
+{
+    std::string certInfo = ReadCertification();
+    if (certInfo.empty()) {
+        DOWNLOAD_HILOGE("Read certinfo failed");
+        return false;
     }
-    std::stringstream buf;
-    buf<<inFile.rdbuf();
-    std::string certInfo(buf.str());
-    inFile.close();
     struct curl_blob blob;
     blob.data = const_cast<char*>(certInfo.c_str());
     blob.len = certInfo.size();
     blob.flags = CURL_BLOB_COPY;
-    curl_easy_setopt(curl, CURLOPT_CAINFO_BLOB, &blob);
-    DOWNLOAD_HILOGI("OpenCertificationOption success");
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
+    CURLcode code = curl_easy_setopt(curl, CURLOPT_CAINFO_BLOB, &blob);
+    if (code != CURLE_OK) {
+        return false;
+    }
+    DOWNLOAD_HILOGI("SetHttpsCertificationOption success");
+    return true;
+}
+
+std::string DownloadServiceTask::ReadCertification()
+{
+    std::ifstream inFile(std::string(HTTP_DEFAULT_CA_PATH), std::ios::in | std::ios::binary);
+    if (!inFile.is_open()) {
+        DOWNLOAD_HILOGE("open cacert.pem faild");
+        return "";
+    }
+    std::stringstream buf;
+    buf << inFile.rdbuf();
+    std::string certInfo(buf.str());
+    inFile.close();
+    return certInfo;
 }
 } // namespace OHOS::Request::Download

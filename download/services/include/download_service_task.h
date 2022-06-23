@@ -76,8 +76,11 @@ private:
     bool CheckResumeCondition();
     void ForceStopRunning();
     bool HandleFileError();
-    void SetCertificationOption(CURL *curl);
-    void OpenCertificationOption(CURL *curl);
+    bool SetCertificationOption(CURL *curl);
+    bool IsHttpsURL();
+    bool SetHttpCertificationOption(CURL *curl);
+    bool SetHttpsCertificationOption(CURL *curl);
+    std::string ReadCertification();
 private:
     uint32_t taskId_;
     DownloadConfig config_;
