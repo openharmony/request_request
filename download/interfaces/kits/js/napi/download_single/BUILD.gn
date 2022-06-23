@@ -27,15 +27,15 @@ ohos_shared_library("downloadsingle") {
     "//foundation/arkui/napi/interfaces/inner_api",
     "//third_party/node/src",
     "//third_party/curl/include",
-    "${aafwk_services_path}/common/include",
+    "${ability_runtime_services_path}/common/include",
     "//utils/system/safwk/native/include",
     "//base/miscservices/request/download/interfaces/kits/napi/download_single/include",
     "//base/miscservices/request/download/interfaces/innerkits/include",
     "//base/miscservices/request/download/utils/include",
-    "${aafwk_kits_path}/appkit/native/app/include/",
-    "${aafwk_kits_path}/ability/native/include",
-    "${aafwk_services_path}/abilitymgr/include",
-    "${aafwk_inner_api_path}/ability_manager/include",
+    "${ability_runtime_kits_path}/appkit/native/app/include/",
+    "${ability_runtime_kits_path}/ability/native/include",
+    "${ability_runtime_services_path}/abilitymgr/include",
+    "${ability_runtime_inner_api_path}/ability_manager/include",
   ]
   public_configs = [ ":download_interfaces_kits_napi_config" ]
 
