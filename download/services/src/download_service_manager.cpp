@@ -391,4 +391,17 @@ void DownloadServiceManager::UpdateNetworkType()
         }
     }
 }
+
+bool DownloadServiceManager::QueryAllTask(std::map<uint32_t, std::shared_ptr<DownloadInfo>> &taskMap) const
+{
+    for (const auto &it : taskMap_) {
+        std::shared_ptr<DownloadInfo> downloadInfo = std::make_shared<DownloadInfo>();
+        if (downloadInfo == nullptr) {
+            return false;
+        }
+        it.second->Query(*downloadInfo);
+        taskMap[it.first] = downloadInfo;
+    }
+    return true;
+}
 } // namespace OHOS::Request::Download

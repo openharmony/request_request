@@ -79,6 +79,21 @@ void DownloadInfo::SetDownloadTotalBytes(uint32_t downloadTotalBytes)
     downloadTotalBytes_ = downloadTotalBytes;
 }
 
+void DownloadInfo::SetNetworkType(uint32_t networkType)
+{
+    networkType_ = networkType;
+}
+
+void DownloadInfo::SetMetered(bool enableMetered)
+{
+    enableMetered_ = enableMetered;
+}
+
+void DownloadInfo::SetRoaming(bool enableRoaming)
+{
+    enableRoaming_ = enableRoaming;
+}
+
 const std::string &DownloadInfo::GetDescription() const
 {
     return description_;
@@ -132,6 +147,21 @@ const std::string &DownloadInfo::GetDownloadTitle() const
 uint32_t DownloadInfo::GetDownloadTotalBytes() const
 {
     return downloadTotalBytes_;
+}
+
+uint32_t DownloadInfo::GetNetworkType() const
+{
+    return networkType_;
+}
+
+bool DownloadInfo::GetMetered() const
+{
+    return enableMetered_;
+}
+
+bool DownloadInfo::GetRoaming() const
+{
+    return enableRoaming_;
 }
 
 void DownloadInfo::Dump()

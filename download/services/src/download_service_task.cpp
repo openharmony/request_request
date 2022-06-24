@@ -24,6 +24,7 @@
 #include <sstream>
 #include "log.h"
 #include "network_adapter.h"
+#include "hitrace_meter.h"
 
 namespace OHOS::Request::Download {
 static const std::string URL_HTTPS = "https";
@@ -151,6 +152,9 @@ bool DownloadServiceTask::Query(DownloadInfo &info)
     info.SetTargetURI(config_.GetUrl());
     info.SetDownloadTitle(config_.GetTitle());
     info.SetDownloadTotalBytes(totalSize_);
+    info.SetNetworkType(config_.GetNetworkType());
+    info.SetMetered(config_.GetMetered());
+    info.SetRoaming(config_.GetRoaming());
     return true;
 }
 
@@ -463,6 +467,7 @@ int DownloadServiceTask::ProgressCallback(void *pParam, double dltotal, double d
 
 bool DownloadServiceTask::ExecHttp()
 {
+    HitraceScoped traceStart(HITRACE_TAG_MISC, "download file");
     std::unique_ptr<CURL, decltype(&curl_easy_cleanup)> handle(curl_easy_init(), curl_easy_cleanup);
 
     if (!handle) {
@@ -504,13 +509,20 @@ bool DownloadServiceTask::ExecHttp()
         DOWNLOAD_HILOGD("Failed to open download file");
     }
 
-    CURLcode code = curl_easy_perform(handle.get());
-
+    CURLcode code = CurlPerformFileTransfer(handle.get());
     int32_t httpCode;
     curl_easy_getinfo(handle.get(), CURLINFO_RESPONSE_CODE, &httpCode);
     HandleResponseCode(code, httpCode);
     HandleCleanup(status_);
     return code == CURLE_OK;
+}
+
+CURLcode DownloadServiceTask::CurlPerformFileTransfer(CURL *handle) const
+{
+    std::string traceParam = "name:" + config_.GetFilePath() + " size:" + std::to_string(totalSize_) +
+                             " downloaded size:" + std::to_string(prevSize_);
+    HitraceScoped trace(HITRACE_TAG_MISC, "download file" + traceParam);
+    return curl_easy_perform(handle);
 }
 
 bool DownloadServiceTask::SetFileSizeOption(CURL *curl, struct curl_slist *requestHeader)

@@ -58,6 +58,7 @@ private:
     void DumpPausedReason();
 
     bool ExecHttp();
+    CURLcode CurlPerformFileTransfer(CURL *handle) const;
     bool SetFileSizeOption(CURL *curl, struct curl_slist *requestHeader);
     bool SetOption(CURL *curl, struct curl_slist *requestHeader);
     struct curl_slist *MakeHeaders(const std::vector<std::string> &vec);

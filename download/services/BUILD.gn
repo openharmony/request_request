@@ -58,8 +58,11 @@ ohos_shared_library("download_server") {
     "//base/miscservices/request/upload/frameworks/libs/include",
     "//third_party/curl/include",
     "//third_party/openssl/include",
+    "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter",
+    "//base/miscservices/request/download/dfx/dump",
   ]
   deps = [
+    "//base/miscservices/request/download/dfx:misc_request_dfx_static",
     "//base/telephony/core_service/interfaces/innerkits:tel_core_service_api",
     "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient:net_conn_manager_if",
     "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
@@ -75,6 +78,7 @@ ohos_shared_library("download_server") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "eventhandler:libeventhandler",
+    "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "multimedia_image_standard:image_native",

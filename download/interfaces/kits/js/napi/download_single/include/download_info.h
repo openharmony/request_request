@@ -46,7 +46,11 @@ public:
     void SetDownloadTitle(const std::string & downloadTitle);
 
     void SetDownloadTotalBytes(uint32_t downloadTotalBytes);
-	
+
+    void SetNetworkType(uint32_t networkType);
+    void SetRoaming(bool enableRoaming);
+    void SetMetered(bool enableMetered);
+
     [[nodiscard]] const std::string &GetDescription() const;
 
     [[nodiscard]] uint32_t GetDownloadedBytes() const;
@@ -69,6 +73,9 @@ public:
 
     [[nodiscard]] uint32_t GetDownloadTotalBytes() const;
 
+    [[nodiscard]] uint32_t GetNetworkType() const;
+    [[nodiscard]] bool GetMetered() const;
+    [[nodiscard]] bool GetRoaming() const;
     void Dump();
 
 private:
@@ -93,6 +100,10 @@ private:
     std::string downloadTitle_;
 
     uint32_t downloadTotalBytes_;
+
+    bool enableMetered_;
+    bool enableRoaming_;
+    uint32_t networkType_;
 };
 } // namespace OHOS::Request::Download
 #endif /* DOWNLOAD_INFO_H */

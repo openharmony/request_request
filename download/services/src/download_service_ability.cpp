@@ -26,6 +26,7 @@
 #include "iservice_registry.h"
 #include "system_ability.h"
 #include "system_ability_definition.h"
+#include "dump_service_impl.h"
 
 #include "download_common.h"
 #include "download_service_manager.h"
@@ -278,5 +279,21 @@ void DownloadServiceAbility::OnDump()
     } else {
         DOWNLOAD_HILOGI("DownloadServiceAbility dump, time(0) is nullptr");
     }
+}
+
+int DownloadServiceAbility::Dump(int fd, const std::vector<std::u16string> &args)
+{
+    int uid = static_cast<int>(IPCSkeleton::GetCallingUid());
+    const int maxUid = 10000;
+    if (uid > maxUid) {
+        return 0;
+    }
+
+    std::vector<std::string> argsStr;
+    for (auto item : args) {
+        argsStr.emplace_back(Str16ToStr8(item));
+    }
+
+    return DumpServiceImpl::GetInstance().Dump(fd, argsStr);
 }
 } // namespace OHOS::Request::Download
