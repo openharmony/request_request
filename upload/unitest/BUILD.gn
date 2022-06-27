@@ -50,6 +50,7 @@ ohos_unittest("upload_obtain_file_UT_test") {
     "bundle_framework:appexecfwk_base",
     "hiviewdfx_hilog_native:libhilog",
     "time_native:time_service",
+    "utils_base:utils",
   ]
 }
 
