@@ -36,8 +36,8 @@ public:
 
     void TearDown();
 
-    MockFileAdapter *adapter;
-    std::shared_ptr<ObtainFile> obfile;
+    MockFileAdapter adapter;
+    ObtainFile obfile;
 };
 
 void ObtainFileTest::SetUpTestCase(void)
@@ -50,14 +50,13 @@ void ObtainFileTest::TearDownTestCase(void)
 
 void ObtainFileTest::SetUp()
 {
-    this->adapter = new MockFileAdapter();
-    this->obfile = std::make_shared<ObtainFile>();
-    this->obfile->fileAdapter_ = std::shared_ptr<IFileAdapter>(this->adapter);
+    if (this->obfile.fileAdapter_.get() != &adapter) {
+        this->obfile.fileAdapter_ = std::shared_ptr<IFileAdapter>(&adapter);
+        }
 }
 
 void ObtainFileTest::TearDown()
 {
-    delete this->adapter;
 }
 
 /**
@@ -74,10 +73,10 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest000, TestSize.Level0)
     std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
-    EXPECT_CALL(*this->adapter, DataAbilityOpenFile(testing::_, testing::_))
+    EXPECT_CALL(this->adapter, DataAbilityOpenFile(testing::_, testing::_))
         .Times(1)
         .WillOnce(testing::Return(-1));
-    result = this->obfile->GetFile(&file, uri, fileSize, context);
+    result = this->obfile.GetFile(&file, uri, fileSize, context);
     EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR);
     EXPECT_EQ(file, nullptr);
     EXPECT_EQ(fileSize, 0);
@@ -98,10 +97,10 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest001, TestSize.Level0)
     std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
-    EXPECT_CALL(*this->adapter, DataAbilityOpenFile(testing::_, testing::_))
+    EXPECT_CALL(this->adapter, DataAbilityOpenFile(testing::_, testing::_))
         .Times(1)
         .WillOnce(testing::Return(8888888));
-    result = this->obfile->GetFile(&file, uri, fileSize, context);
+    result = this->obfile.GetFile(&file, uri, fileSize, context);
     EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR);
     EXPECT_NE(file, nullptr);
     EXPECT_EQ(fileSize, -1);
@@ -132,11 +131,11 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest002, TestSize.Level0)
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
     uint32_t fd = fileno(fopen("/data/Dataability/file.txt", "r"));
 
-    EXPECT_CALL(*this->adapter, DataAbilityOpenFile(testing::_, testing::_))
+    EXPECT_CALL(this->adapter, DataAbilityOpenFile(testing::_, testing::_))
         .Times(1)
         .WillOnce(testing::Return(fd));
     
-    result = this->obfile->GetFile(&file, uri, fileSize, context);
+    result = this->obfile.GetFile(&file, uri, fileSize, context);
 
     EXPECT_EQ(result, UPLOAD_ERRORCODE_NO_ERROR);
     EXPECT_NE(file, nullptr);
@@ -161,7 +160,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest003, TestSize.Level0)
     std::string uri = "internal:--//cache/path/to/file.txt";
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
-    result = this->obfile->GetFile(&file, uri, fileSize, context);
+    result = this->obfile.GetFile(&file, uri, fileSize, context);
 
     EXPECT_EQ(result, UPLOAD_ERRORCODE_UNSUPPORT_URI);
     EXPECT_EQ(file, nullptr);
@@ -182,7 +181,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest004, TestSize.Level0)
     std::string uri = "internal:/ccc/cache/path/to/file.txt";
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
-    result = this->obfile->GetFile(&file, uri, fileSize, context);
+    result = this->obfile.GetFile(&file, uri, fileSize, context);
 
     EXPECT_EQ(result, UPLOAD_ERRORCODE_UNSUPPORT_URI);
     EXPECT_EQ(file, nullptr);
@@ -203,7 +202,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest005, TestSize.Level0)
     std::string uri = "internal://cache---/path/to/file.txt";
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
-    result = this->obfile->GetFile(&file, uri, fileSize, context);
+    result = this->obfile.GetFile(&file, uri, fileSize, context);
 
     EXPECT_EQ(result, UPLOAD_ERRORCODE_UNSUPPORT_URI);
     EXPECT_EQ(file, nullptr);
@@ -226,11 +225,11 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest006, TestSize.Level0)
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
     std::string path = "";
 
-    EXPECT_CALL(*this->adapter, InternalGetFilePath(testing::_))
+    EXPECT_CALL(this->adapter, InternalGetFilePath(testing::_))
         .Times(1)
         .WillOnce(testing::Return(path));
 
-    result = this->obfile->GetFile(&file, uri, fileSize, context);
+    result = this->obfile.GetFile(&file, uri, fileSize, context);
 
     EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR);
     EXPECT_EQ(file, nullptr);
@@ -252,11 +251,11 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest007, TestSize.Level0)
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
     std::string path = "XXXXX";
 
-    EXPECT_CALL(*this->adapter, InternalGetFilePath(testing::_))
+    EXPECT_CALL(this->adapter, InternalGetFilePath(testing::_))
         .Times(1)
         .WillOnce(testing::Return(path));
 
-    result = this->obfile->GetFile(&file, uri, fileSize, context);
+    result = this->obfile.GetFile(&file, uri, fileSize, context);
 
     EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR);
     EXPECT_EQ(file, nullptr);
@@ -287,11 +286,11 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest008, TestSize.Level0)
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
     std::string path = "/data/testApp/CacheDir/";
 
-    EXPECT_CALL(*this->adapter, InternalGetFilePath(testing::_))
+    EXPECT_CALL(this->adapter, InternalGetFilePath(testing::_))
         .Times(1)
         .WillOnce(testing::Return(path));
 
-    result = this->obfile->GetFile(&file, uri, fileSize, context);
+    result = this->obfile.GetFile(&file, uri, fileSize, context);
 
     EXPECT_EQ(result, UPLOAD_ERRORCODE_NO_ERROR);
     EXPECT_NE(file, nullptr);
@@ -315,7 +314,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest009, TestSize.Level0)
     std::string uri = "XXXXXXXXXXXXXX://cache/path/to/file.txt";
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
-    result = this->obfile->GetFile(&file, uri, fileSize, context);
+    result = this->obfile.GetFile(&file, uri, fileSize, context);
 
     EXPECT_EQ(result, UPLOAD_ERRORCODE_UNSUPPORT_URI);
     EXPECT_EQ(file, nullptr);
