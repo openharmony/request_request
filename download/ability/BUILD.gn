@@ -78,7 +78,7 @@ ohos_shared_library("downloaddataability") {
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "ipc:ipc_core",
-    "preference:native_preference",
+    "preferences:native_preferences",
     "relational_store:native_appdatafwk",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
