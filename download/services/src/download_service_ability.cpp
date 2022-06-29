@@ -26,6 +26,8 @@
 #include "iservice_registry.h"
 #include "system_ability.h"
 #include "system_ability_definition.h"
+#include "hisysevent.h"
+#include "task_statistics.h"
 
 #include "download_common.h"
 #include "download_service_manager.h"
@@ -96,6 +98,7 @@ void DownloadServiceAbility::OnStart()
         return;
     }
     InitServiceHandler();
+    TaskStatistics::GetInstance().StartTimerThread();
     if (Init() != ERR_OK) {
         auto callback = [=]() { Init(); };
         serviceHandler_->PostTask(callback, INIT_INTERVAL);

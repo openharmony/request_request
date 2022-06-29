@@ -68,7 +68,6 @@ private:
     std::string GetTmpPath();
     void HandleResponseCode(CURLcode code, int32_t httpCode);
     void HandleCleanup(DownloadStatus status);
-
     static size_t WriteCallback(void *buffer, size_t size, size_t num, void *param);
     static size_t HeaderCallback(void *buffer, size_t size, size_t num, void *param);
     static int ProgressCallback(void *param, double dltotal, double dlnow, double ultotal, double ulnow);
@@ -81,6 +80,7 @@ private:
     bool SetHttpCertificationOption(CURL *curl);
     bool SetHttpsCertificationOption(CURL *curl);
     std::string ReadCertification();
+    void RecordTaskEvent(int32_t httpCode);
 private:
     uint32_t taskId_;
     DownloadConfig config_;
