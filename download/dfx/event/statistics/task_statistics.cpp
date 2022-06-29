@@ -73,7 +73,7 @@ void TaskStatistics::ReportStatistics() const
                         HiSysEvent::EventType::STATISTIC,
                         "TASKS_SIZE", DayTasksSize_,
                         "TASKS_NUMBER", DayTasksNumber_);
-    DOWNLOAD_HILOGE("write service statistics stati event result: %{public}d", writeRet);
+    DOWNLOAD_HILOGD("write service statistics stati event result: %{public}d", writeRet);
 }
 
 void TaskStatistics::StartTimerThread()
