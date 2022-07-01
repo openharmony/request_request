@@ -527,7 +527,7 @@ void DownloadServiceTask::RecordTaskEvent(int32_t httpCode)
         TaskStatistics::GetInstance().ReportTasksSize(totalSize_);
         TaskStatistics::GetInstance().ReportTasksNumber();
     } else {
-        TaskFault::GetInstance().ReportFault(httpCode);
+        TaskFault::GetInstance().ReportTaskFault(httpCode);
     }
 }
    
