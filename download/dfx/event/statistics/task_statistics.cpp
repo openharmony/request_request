@@ -51,8 +51,7 @@ uint32_t TaskStatistics::GetDayTasksNumber() const
 int32_t TaskStatistics::GetNextReportInterval() const
 {
     time_t current = time(nullptr);
-    if(current == -1)
-    {
+    if (current == -1) {
         DOWNLOAD_HILOGE("GetNextReportInterval time fail");
         return -1;
     }
