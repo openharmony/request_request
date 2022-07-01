@@ -51,12 +51,17 @@ uint32_t TaskStatistics::GetDayTasksNumber() const
 int32_t TaskStatistics::GetNextReportInterval() const
 {
     time_t current = time(nullptr);
-        tm localTime = { 0 };
-        tm *result = localtime_r(&current, &localTime);
-        if (result == nullptr) {
-            DOWNLOAD_HILOGE("GetNextReportInterval fail");
-            return -1;
-        }
+    if(current == -1)
+    {
+        DOWNLOAD_HILOGE("GetNextReportInterval time fail");
+        return -1;
+    }
+    tm localTime = { 0 };
+    tm *result = localtime_r(&current, &localTime);
+    if (result == nullptr) {
+        DOWNLOAD_HILOGE("GetNextReportInterval localTime fail");
+        return -1;
+    }
     int currentTime = localTime.tm_hour * 3600 + localTime.tm_min * 60 + localTime.tm_sec;
     int sleepTime = 24 * 3600 - currentTime;
     return sleepTime;

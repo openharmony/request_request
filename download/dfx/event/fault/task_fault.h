@@ -16,8 +16,6 @@
 #ifndef TASK_FAULT_H
 #define TASK_FAULT_H
 
-#include <string>
-
 namespace OHOS::Request::Download {
 class TaskFault {
 public:
