@@ -61,10 +61,11 @@ int32_t TaskStatistics::GetNextReportInterval() const
     int sleepTime = 24 * 3600 - currentTime;
     return sleepTime;
 }
+
 void TaskStatistics::ReportStatistics() const
 {
     OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST,
-        REQUEST_SERVICE_START_STATISTIC,
+        REQUEST_TASK_INFO_STATISTICS,
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
         TASKS_SIZE, DayTasksSize_,
         TASKS_NUMBER, DayTasksNumber_);

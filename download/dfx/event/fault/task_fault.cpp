@@ -26,10 +26,18 @@ TaskFault &TaskFault::GetInstance()
     return instance;
 }
 
-void TaskFault::ReportFault(int error) const
+void TaskFault::ReportServiceStartFault(int error) const
 {
     OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST,
         REQUEST_SERVICE_START_FAULT,
+        OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
+        ERROR_INFO, error);
+}
+
+void TaskFault::ReportTaskFault(int error) const
+{
+    OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST,
+        REQUEST_TASK_FAULT,
         OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
         ERROR_INFO, error);
 }

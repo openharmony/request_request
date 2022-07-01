@@ -45,8 +45,13 @@ REQUEST_SERVICE_START_FAULT:
   MODULE_NAME: {type: STRING, desc: module name }
   ERROR_INFO: {type: INT32, desc: error code }
 
+REQUEST_TASK_FAULT:
+  __BASE: {type: FAULT, level: CRITICAL, desc: The download task fail }
+  USER_ID: {type: STRING, desc: user id }
+  MODULE_NAME: {type: STRING, desc: module name }
+  ERROR_INFO: {type: INT32, desc: error code }
 
-REQUEST_SERVICE_START_STATISTIC:
+REQUEST_TASK_INFO_STATISTICS:
   __BASE: {type: STATISTIC, level: CRITICAL, desc: Statistics of download tasks }
   TASKS_SIZE: {type: INT64, desc:  download tasks size}
   TASKS_NUMBER: {type: INT32, desc:  download tasks number}

@@ -39,13 +39,13 @@ private:
     int32_t GetNextReportInterval() const;
     void ReportStatistics() const;
 private:
-    static const inline std::string REQUEST_SERVICE_START_STATISTIC = "REQUEST_SERVICE_START_STATISTIC";
+    static const inline std::string REQUEST_TASK_INFO_STATISTICS = "REQUEST_TASK_INFO_STATISTICS";
     static const inline std::string TASKS_SIZE = "TASKS_SIZE";
     static const inline std::string TASKS_NUMBER = "TASKS_NUMBER";
 
     std::mutex mutex_;
-    int64_t DayTasksSize_ = 0;
-    int32_t DayTasksNumber_ = 0;
+    int64_t DayTasksSize_ {};
+    int32_t DayTasksNumber_ {};
     bool running_ { false };
 };
 }
