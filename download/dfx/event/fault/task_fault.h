@@ -21,21 +21,21 @@
 namespace OHOS::Request::Download {
 class TaskFault {
 public:
-   static TaskFault &GetInstance();
-   void ReportServiceStartFault(int error) const;
-   void ReportTaskFault(int error) const;
+    static TaskFault &GetInstance();
+    void ReportServiceStartFault(int error) const;
+    void ReportTaskFault(int error) const;
 private:
-   TaskFault() = default;
-   ~TaskFault() = default;
-   TaskFault(const TaskFault &) = delete;
-   TaskFault(TaskFault &&) = delete;
-   TaskFault &operator=(const TaskFault &) = delete;
-   TaskFault &operator=(TaskFault &&) = delete;
+    TaskFault() = default;
+    ~TaskFault() = default;
+    TaskFault(const TaskFault &) = delete;
+    TaskFault(TaskFault &&) = delete;
+    TaskFault &operator=(const TaskFault &) = delete;
+    TaskFault &operator=(TaskFault &&) = delete;
 
-   static const inline std::string REQUEST_SERVICE_START_FAULT = "REQUEST_SERVICE_START_FAULT";
-   static const inline std::string REQUEST_TASK_FAULT = "REQUEST_TASK_FAULT";
-   static const inline std::string ERROR_INFO = "ERROR_INFO";
-   static const inline std::string TASKS_NUMBER = "TASKS_NUMBER";
+    static constexpr const char *REQUEST_SERVICE_START_FAULT = "REQUEST_SERVICE_START_FAULT";
+    static constexpr const char *REQUEST_TASK_FAULT = "REQUEST_TASK_FAULT";
+    static constexpr const char *ERROR_INFO = "ERROR_INFO";
+    static constexpr const char *TASKS_NUMBER = "TASKS_NUMBER";
 };
 }
 #endif // TASK_FAULT_H

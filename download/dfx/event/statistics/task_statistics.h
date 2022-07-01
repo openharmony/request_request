@@ -39,9 +39,9 @@ private:
     int32_t GetNextReportInterval() const;
     void ReportStatistics() const;
 private:
-    static const inline std::string REQUEST_TASK_INFO_STATISTICS = "REQUEST_TASK_INFO_STATISTICS";
-    static const inline std::string TASKS_SIZE = "TASKS_SIZE";
-    static const inline std::string TASKS_NUMBER = "TASKS_NUMBER";
+    static constexpr const char *REQUEST_TASK_INFO_STATISTICS = "REQUEST_TASK_INFO_STATISTICS";
+    static constexpr const char *TASKS_SIZE = "TASKS_SIZE";
+    static constexpr const char *TASKS_NUMBER = "TASKS_NUMBER";
 
     std::mutex mutex_;
     int64_t DayTasksSize_ {};
