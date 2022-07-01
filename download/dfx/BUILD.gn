@@ -10,16 +10,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import("//build/ohos.gni")
 
 ohos_static_library("misc_request_dfx_static") {
   sources = [
+    "dump/dump_service_impl.cpp",
+    "dump/dump_task_info.cpp",
+    "dump/task_info_dumper_factory.cpp",
     "event/fault/task_fault.cpp",
     "event/statistics/task_statistics.cpp",
   ]
 
   include_dirs = [
+    "./dump",
     "./event/fault/",
     "./event/statistics/",
     "//base/miscservices/request/download/services/include",

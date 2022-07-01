@@ -36,6 +36,7 @@ config("upload_lib_public_config") {
     "//third_party/openssl/include",
     "//base/miscservices/time/interfaces/innerkits/include",
     "./",
+    "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter",
   ]
 }
 
@@ -56,8 +57,8 @@ ohos_shared_library("upload_lib") {
   configs = [ ":upload_lib_config" ]
 
   deps = [
-    "${aafwk_path}/frameworks/native/ability/native:abilitykit_native",
-    "${aafwk_path}/frameworks/native/ability/native:data_ability_helper",
+    "${ability_runtime_path}/frameworks/native/ability/native:abilitykit_native",
+    "${ability_runtime_path}/frameworks/native/ability/native:data_ability_helper",
     "//third_party/curl/:curl",
   ]
 
@@ -65,6 +66,7 @@ ohos_shared_library("upload_lib") {
     "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:ability_manager",
+    "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "time_native:time_service",

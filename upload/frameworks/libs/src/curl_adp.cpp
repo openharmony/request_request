@@ -22,6 +22,7 @@
 #include "upload_task.h"
 #include "upload_hilog_wrapper.h"
 #include "time_service_client.h"
+#include "hitrace_meter.h"
 #include "curl_adp.h"
 
 namespace OHOS::Request::Upload {
@@ -168,6 +169,9 @@ void CUrlAdp::SetHeadData(CURL *curl)
 
 void CUrlAdp::UploadFile()
 {
+    std::string traceParam = "name:" + mfileData_.filename + "index" + std::to_string(mfileData_.fileIndex) +
+                             "size:" + std::to_string(mfileData_.totalsize);
+    HitraceScoped trace(HITRACE_TAG_MISC, "upload file " + traceParam);
     int isRuning = 0;
     bool ret = false;
 

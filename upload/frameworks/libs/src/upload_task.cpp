@@ -16,7 +16,7 @@
 #include <thread>
 #include "curl/curl.h"
 #include "curl/easy.h"
-
+#include "hitrace_meter.h"
 #include "upload_task.h"
 
 namespace OHOS::Request::Upload {
@@ -134,6 +134,8 @@ void UploadTask::Run(void *arg)
 
 void UploadTask::OnRun()
 {
+    std::string traceParam = "url:" + uploadConfig_->url + "file num:" + std::to_string(uploadConfig_->files.size());
+    HitraceScoped trace(HITRACE_TAG_MISC, "exec upload task " + traceParam);
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnRun. In.");
     state_ = STATE_RUNNING;
     obtainFile_ =  std::make_shared<ObtainFile>();

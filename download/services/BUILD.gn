@@ -59,6 +59,8 @@ ohos_shared_library("download_server") {
     "//third_party/curl/include",
     "//third_party/openssl/include",
     "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
+    "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter",
+    "//base/miscservices/request/download/dfx/dump",
     "//base/miscservices/request/download/dfx/event/statistics",
     "//base/miscservices/request/download/dfx/event/fault",
   ]
@@ -79,7 +81,9 @@ ohos_shared_library("download_server") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "eventhandler:libeventhandler",
+    "hitrace_native:hitrace_meter",
     "hisysevent_native:libhisysevent",
+
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "multimedia_image_standard:image_native",

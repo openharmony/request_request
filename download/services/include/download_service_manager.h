@@ -43,6 +43,7 @@ public:
     bool Resume(uint32_t taskId);
     bool Remove(uint32_t taskId);
     bool Query(uint32_t taskId, DownloadInfo &info);
+    bool QueryAllTask(std::vector<DownloadInfo> &taskVector) const;
     bool QueryMimeType(uint32_t taskId, std::string &mimeType);
 
     void SetStartId(uint32_t startId);

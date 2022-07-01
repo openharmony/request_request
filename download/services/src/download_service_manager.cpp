@@ -391,4 +391,14 @@ void DownloadServiceManager::UpdateNetworkType()
         }
     }
 }
+
+bool DownloadServiceManager::QueryAllTask(std::vector<DownloadInfo> &taskVector) const
+{
+    for (const auto &it : taskMap_) {
+        DownloadInfo downloadInfo;
+        it.second->Query(downloadInfo);
+        taskVector.push_back(downloadInfo);
+    }
+    return true;
+}
 } // namespace OHOS::Request::Download
