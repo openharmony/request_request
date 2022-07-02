@@ -58,8 +58,13 @@ private:
     void InitTimerInfo();
     void StartTimer();
     void StopTimer();
+    void ReportTaskFault(int error) const;
 
 private:
+    static constexpr const char *REQUEST_TASK_FAULT = "REQUEST_TASK_FAULT";
+    static constexpr const char *ERROR_INFO = "ERROR_INFO";
+    static constexpr const char *TASKS_TYPE = "TASKS_TYPE";
+    static constexpr const char *UPLOAD = "UPLOAD";
     uint64_t timerId_;
     std::shared_ptr<UploadTimerInfo> timerInfo_;
     IUploadTask *uploadTask_;

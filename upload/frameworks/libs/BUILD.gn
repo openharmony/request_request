@@ -37,6 +37,7 @@ config("upload_lib_public_config") {
     "//base/miscservices/time/interfaces/innerkits/include",
     "./",
     "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter",
+    "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
   ]
 }
 
@@ -67,6 +68,7 @@ ohos_shared_library("upload_lib") {
     "ability_base:zuri",
     "ability_runtime:ability_manager",
     "hitrace_native:hitrace_meter",
+    "hisysevent_native:libhisysevent",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "time_native:time_service",

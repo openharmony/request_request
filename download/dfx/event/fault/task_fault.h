@@ -33,7 +33,8 @@ private:
     static constexpr const char *REQUEST_SERVICE_START_FAULT = "REQUEST_SERVICE_START_FAULT";
     static constexpr const char *REQUEST_TASK_FAULT = "REQUEST_TASK_FAULT";
     static constexpr const char *ERROR_INFO = "ERROR_INFO";
-    static constexpr const char *TASKS_NUMBER = "TASKS_NUMBER";
+    static constexpr const char *TASKS_TYPE = "TASKS_TYPE";
+    static constexpr const char *DOWNLOAD = "DOWNLOAD";
 };
 }
 #endif // TASK_FAULT_H

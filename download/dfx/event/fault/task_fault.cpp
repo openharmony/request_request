@@ -39,6 +39,7 @@ void TaskFault::ReportTaskFault(int error) const
     OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST,
         REQUEST_TASK_FAULT,
         OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
+        TASKS_TYPE, DOWNLOAD,
         ERROR_INFO, error);
 }
 } // namespace OHOS::Request::Download

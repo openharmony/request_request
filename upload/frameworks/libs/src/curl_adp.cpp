@@ -24,6 +24,7 @@
 #include "time_service_client.h"
 #include "hitrace_meter.h"
 #include "curl_adp.h"
+#include "hisysevent.h"
 
 namespace OHOS::Request::Upload {
 constexpr int TRANS_TIMEOUT_MS = 300 * 1000;
@@ -474,6 +475,15 @@ void CUrlAdp::FailNotify(unsigned int error)
             uploadTask_->OnFail(error);
         }
     }
+}
+
+void CUrlAdp::ReportTaskFault(int error) const
+{
+    OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST,
+        REQUEST_TASK_FAULT,
+        OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
+        TASKS_TYPE, UPLOAD,
+        ERROR_INFO, error);   
 }
 
 void CUrlAdp::InitTimerInfo()
