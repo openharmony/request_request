@@ -45,7 +45,7 @@ REQUEST_SERVICE_START_FAULT:
 
 REQUEST_TASK_FAULT:
   __BASE: {type: FAULT, level: CRITICAL, desc: The download task fail }
-  TASK_TYPE: {type: STRING, level: CRITICAL, desc: The task type }
+  TASK_TYPE: {type: STRING, desc: The task type }
   ERROR_INFO: {type: INT32, desc: error code }
 
 REQUEST_TASK_INFO_STATISTICS:
