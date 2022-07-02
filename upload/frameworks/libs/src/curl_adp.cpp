@@ -23,8 +23,8 @@
 #include "upload_hilog_wrapper.h"
 #include "time_service_client.h"
 #include "hitrace_meter.h"
-#include "curl_adp.h"
 #include "hisysevent.h"
+#include "curl_adp.h"
 
 namespace OHOS::Request::Upload {
 constexpr int TRANS_TIMEOUT_MS = 300 * 1000;
@@ -473,6 +473,7 @@ void CUrlAdp::FailNotify(unsigned int error)
     if (uploadTask_) {
         if (config_->protocolVersion != "L5") {
             uploadTask_->OnFail(error);
+            ReportTaskFault(error);
         }
     }
 }
@@ -483,7 +484,7 @@ void CUrlAdp::ReportTaskFault(int error) const
         REQUEST_TASK_FAULT,
         OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
         TASKS_TYPE, UPLOAD,
-        ERROR_INFO, error);   
+        ERROR_INFO, error);
 }
 
 void CUrlAdp::InitTimerInfo()
