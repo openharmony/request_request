@@ -95,6 +95,7 @@ ohos_unittest("upload_UT_test") {
     "ability_runtime:ability_manager",
     "ability_runtime:napi_base_context",
     "ability_runtime:runtime",
+    "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
