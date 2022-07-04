@@ -24,9 +24,9 @@ enum Type {
 };
 
 struct TaskResult {
-    int32_t successCount {};
-    int32_t failCount {};
-    int32_t errorCode {};
+    int32_t successCount {0};
+    int32_t failCount {0};
+    int32_t errorCode {0};
 };
 
 #ifndef UPLOAD_API

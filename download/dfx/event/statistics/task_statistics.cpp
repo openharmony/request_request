@@ -61,8 +61,8 @@ int32_t TaskStatistics::GetNextReportInterval() const
         DOWNLOAD_HILOGE("GetNextReportInterval localTime fail");
         return -1;
     }
-    int currentTime = localTime.tm_hour * 3600 + localTime.tm_min * 60 + localTime.tm_sec;
-    int sleepTime = 24 * 3600 - currentTime;
+    int currentTime = localTime.tm_hour * ONE_HOUR_SEC + localTime.tm_min * ONE_MINUTE_SEC + localTime.tm_sec;
+    int sleepTime = ONE_DAY_SEC - currentTime;
     return sleepTime;
 }
 
@@ -85,6 +85,9 @@ void TaskStatistics::StartTimerThread()
     auto fun = [this]() {
         while (true) {
             int32_t nextReportInterval = GetNextReportInterval();
+            if (nextReportInterval < 0) {
+                nextReportInterval = ONE_DAY_SEC;
+            }
             DOWNLOAD_HILOGD("taskRun next interval: %{public}d", nextReportInterval);
             sleep(nextReportInterval);
             ReportStatistics();

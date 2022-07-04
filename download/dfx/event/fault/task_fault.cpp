@@ -18,8 +18,6 @@
 #include "hisysevent.h"
 
 namespace OHOS::Request::Download {
-using OHOS::HiviewDFX::HiSysEvent;
-
 TaskFault &TaskFault::GetInstance()
 {
     static TaskFault instance;

@@ -42,10 +42,13 @@ private:
     static constexpr const char *REQUEST_TASK_INFO_STATISTICS = "REQUEST_TASK_INFO_STATISTICS";
     static constexpr const char *TASKS_SIZE = "TASKS_SIZE";
     static constexpr const char *TASKS_NUMBER = "TASKS_NUMBER";
+    static constexpr const int32_t ONE_DAY_SEC = 24 * 3600;
+    static constexpr const int32_t ONE_HOUR_SEC = 3600;
+    static constexpr const int32_t ONE_MINUTE_SEC = 60;
 
     std::mutex mutex_;
-    int64_t DayTasksSize_ {};
-    int32_t DayTasksNumber_ {};
+    int64_t DayTasksSize_ {0};
+    int32_t DayTasksNumber_ {0};
     bool running_ { false };
 };
 }
