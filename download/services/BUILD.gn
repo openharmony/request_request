@@ -80,6 +80,7 @@ ohos_shared_library("download_server") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
+    "drivers_interface_ril:hril_innerkits",
     "eventhandler:libeventhandler",
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
@@ -87,7 +88,6 @@ ohos_shared_library("download_server") {
     "ipc:ipc_core",
     "multimedia_image_standard:image_native",
     "os_account:os_account_innerkits",
-    "ril_device_driver_interface:hril_innerkits",
     "startup_l2:syspara",
   ]
   subsystem_name = "miscservices"
