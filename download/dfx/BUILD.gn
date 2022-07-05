@@ -17,10 +17,14 @@ ohos_static_library("misc_request_dfx_static") {
     "dump/dump_service_impl.cpp",
     "dump/dump_task_info.cpp",
     "dump/task_info_dumper_factory.cpp",
+    "event/fault/task_fault.cpp",
+    "event/statistics/task_statistics.cpp",
   ]
 
   include_dirs = [
     "./dump",
+    "./event/fault/",
+    "./event/statistics/",
     "//base/miscservices/request/download/services/include",
     "//base/miscservices/request/download/interfaces/kits/js/napi/download_single/include",
     "//base/miscservices/request/download/interfaces/innerkits/include",

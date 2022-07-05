@@ -23,6 +23,7 @@
 #include "upload_hilog_wrapper.h"
 #include "time_service_client.h"
 #include "hitrace_meter.h"
+#include "hisysevent.h"
 #include "curl_adp.h"
 
 namespace OHOS::Request::Upload {
@@ -57,32 +58,41 @@ CUrlAdp::~CUrlAdp()
 {
 }
 
-void CUrlAdp::DoUpload(IUploadTask *task)
+int32_t CUrlAdp::CheckUrlStatus()
 {
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload start");
-    uploadTask_ = task;
-
     if (config_ == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "config_ is null");
         FailNotify(UPLOAD_ERRORCODE_CONFIG_ERROR);
-        return;
+        return UPLOAD_ERRORCODE_CONFIG_ERROR;
     }
 
     if (config_->url.empty()) {
         UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "URL is empty");
         FailNotify(UPLOAD_ERRORCODE_CONFIG_ERROR);
-        return;
+        return UPLOAD_ERRORCODE_CONFIG_ERROR;
     }
-    UPLOAD_HILOGI(UPLOAD_MODULE_FRAMEWORK, "URL is %{public}s", config_->url.c_str());
 
     if (fileArray_.empty()) {
         UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "fileArray_ is empty");
         FailNotify(UPLOAD_ERRORCODE_GET_FILE_ERROR);
-        return;
+        return UPLOAD_ERRORCODE_GET_FILE_ERROR;
     }
 
     if (curlMulti_) {
         UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "DoUpload was multi called");
+        return UPLOAD_MODULE_FRAMEWORK;
+    }
+    return UPLOAD_ERRORCODE_NO_ERROR;
+}
+
+void CUrlAdp::DoUpload(IUploadTask *task, TaskResult &taskResult)
+{
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload start");
+    uploadTask_ = task;
+
+    taskResult.errorCode = CheckUrlStatus();
+    if (taskResult.errorCode != UPLOAD_ERRORCODE_NO_ERROR) {
+        taskResult.failCount = fileArray_.size();
         return;
     }
 
@@ -91,13 +101,21 @@ void CUrlAdp::DoUpload(IUploadTask *task)
     for (auto &vmem : fileArray_) {
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>vmem : fileArray_ isReadAbort is %{public}d", IsReadAbort());
         if (IsReadAbort()) {
+            taskResult.failCount = fileArray_.size() - taskResult.successCount;
+            taskResult.errorCode = IsReadAbort();
             return;
         }
         index++;
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>fileArray index %{public}u", index);
         mfileData_ = vmem;
         mfileData_.fileIndex = index;
-        UploadFile();
+        int32_t result = UploadFile();
+        if (result == UPLOAD_ERRORCODE_NO_ERROR) {
+            taskResult.successCount++;
+        } else {
+            taskResult.failCount++;
+            taskResult.errorCode = result;
+        }
         mfileData_.responseHead.clear();
         if (mfileData_.list) {
             curl_slist_free_all(mfileData_.list);
@@ -167,7 +185,7 @@ void CUrlAdp::SetHeadData(CURL *curl)
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, mfileData_.list);
 }
 
-void CUrlAdp::UploadFile()
+int32_t CUrlAdp::UploadFile()
 {
     std::string traceParam = "name:" + mfileData_.filename + "index" + std::to_string(mfileData_.fileIndex) +
                              "size:" + std::to_string(mfileData_.totalsize);
@@ -180,13 +198,13 @@ void CUrlAdp::UploadFile()
     if (curlMulti_ == nullptr) {
         FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
         CurlGlobalCleanup();
-        return;
+        return UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR;
     }
 
     ret = MultiAddHandle(curlMulti_, curlArray_);
     if (ret == false) {
         FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
-        return;
+        return UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR;
     }
     curl_multi_perform(curlMulti_, &isRuning);
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "isRuning = %{public}d", isRuning);
@@ -195,11 +213,11 @@ void CUrlAdp::UploadFile()
         int res = curl_multi_wait(curlMulti_, NULL, 0, TRANS_TIMEOUT_MS, &numfds);
         if (res != CURLM_OK) {
             FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
-            return;
+            return res;
         }
         curl_multi_perform(curlMulti_, &isRuning);
     } while (isRuning);
-    CheckUploadStatus(curlMulti_);
+    return CheckUploadStatus(curlMulti_);
 }
 
 void CUrlAdp::CurlGlobalInit()
@@ -238,30 +256,31 @@ void CUrlAdp::SetCurlOpt(CURL *curl)
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 }
 
-void CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
+int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
 {
     int msgsLeft = 0;
+    int returnCode = 0;
     CURLMsg* msg = NULL;
     while ((msg = curl_multi_info_read(curlMulti, &msgsLeft))) {
-        CURL *eh = NULL;
         if (msg->msg != CURLMSG_DONE) {
             continue;
         }
+        CURL *eh = NULL;
         eh = msg->easy_handle;
-        int returnCode = msg->data.result;
-        if (returnCode != CURLE_OK) {
-            if (config_->protocolVersion != "L5") {
-                FailNotify(UPLOAD_ERRORCODE_UPLOAD_FAIL);
-                UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Curl error code = %{public}d", msg->data.result);
-            }
-            continue;
-        }
         int statusCode = 0;
         char *szUrl = NULL;
         curl_easy_getinfo(eh, CURLINFO_RESPONSE_CODE, &statusCode);
         curl_easy_getinfo(eh, CURLINFO_PRIVATE, &szUrl);
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "statusCode is %{public}d, Url is %{public}s", statusCode, szUrl);
+        if (statusCode != HTTP_SUCCESS) {
+            returnCode = statusCode;
+            if (config_->protocolVersion != "L5") {
+                FailNotify(UPLOAD_ERRORCODE_UPLOAD_FAIL);
+                UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Curl error code = %{public}d", statusCode);
+            }
+        }
     }
+    return returnCode;
 }
 
 bool CUrlAdp::Remove()

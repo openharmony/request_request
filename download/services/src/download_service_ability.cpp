@@ -27,6 +27,9 @@
 #include "system_ability.h"
 #include "system_ability_definition.h"
 #include "dump_service_impl.h"
+#include "hisysevent.h"
+#include "task_fault.h"
+#include "task_statistics.h"
 
 #include "download_common.h"
 #include "download_service_manager.h"
@@ -97,7 +100,11 @@ void DownloadServiceAbility::OnStart()
         return;
     }
     InitServiceHandler();
-    if (Init() != ERR_OK) {
+    TaskStatistics::GetInstance().StartTimerThread();
+
+    int32_t ret = Init();
+    if (ret != ERR_OK) {
+        TaskFault::GetInstance().ReportServiceStartFault(ret);
         auto callback = [=]() { Init(); };
         serviceHandler_->PostTask(callback, INIT_INTERVAL);
         DOWNLOAD_HILOGE("DownloadServiceAbility Init failed. Try again 5s later");

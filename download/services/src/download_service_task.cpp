@@ -25,6 +25,8 @@
 #include "log.h"
 #include "network_adapter.h"
 #include "hitrace_meter.h"
+#include "task_statistics.h"
+#include "task_fault.h"
 
 namespace OHOS::Request::Download {
 static const std::string URL_HTTPS = "https";
@@ -514,9 +516,21 @@ bool DownloadServiceTask::ExecHttp()
     curl_easy_getinfo(handle.get(), CURLINFO_RESPONSE_CODE, &httpCode);
     HandleResponseCode(code, httpCode);
     HandleCleanup(status_);
+    RecordTaskEvent(httpCode);
     return code == CURLE_OK;
 }
 
+void DownloadServiceTask::RecordTaskEvent(int32_t httpCode)
+{
+    DOWNLOAD_HILOGI("in RecordTaskEvent");
+    if (status_ == SESSION_SUCCESS) {
+        TaskStatistics::GetInstance().ReportTasksSize(totalSize_);
+        TaskStatistics::GetInstance().ReportTasksNumber();
+    } else {
+        TaskFault::GetInstance().ReportTaskFault(httpCode);
+    }
+}
+   
 CURLcode DownloadServiceTask::CurlPerformFileTransfer(CURL *handle) const
 {
     std::string traceParam = "name:" + config_.GetFilePath() + " size:" + std::to_string(totalSize_) +

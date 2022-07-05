@@ -58,8 +58,11 @@ ohos_shared_library("download_server") {
     "//base/miscservices/request/upload/frameworks/libs/include",
     "//third_party/curl/include",
     "//third_party/openssl/include",
+    "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
     "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter",
     "//base/miscservices/request/download/dfx/dump",
+    "//base/miscservices/request/download/dfx/event/statistics",
+    "//base/miscservices/request/download/dfx/event/fault",
   ]
   deps = [
     "//base/miscservices/request/download/dfx:misc_request_dfx_static",
@@ -79,6 +82,7 @@ ohos_shared_library("download_server") {
     "bundle_framework:appexecfwk_core",
     "drivers_interface_ril:hril_innerkits",
     "eventhandler:libeventhandler",
+    "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",

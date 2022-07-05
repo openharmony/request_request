@@ -23,6 +23,9 @@
     ],
     "rom":"300KB",
     "ram":"1024KB",
+    "hisysevent_config": [
+      "//base/miscservices/request/hisysevent.yaml"
+    ],
     "deps": {
     "components": [
         "ipc",

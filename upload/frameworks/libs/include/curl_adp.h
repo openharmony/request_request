@@ -30,7 +30,7 @@ class CUrlAdp {
 public:
     CUrlAdp(std::vector<FileData>& fileArray, std::shared_ptr<UploadConfig>& config);
     virtual ~CUrlAdp();
-    void DoUpload(IUploadTask *task);
+    void DoUpload(IUploadTask *task, TaskResult &taskResult);
     bool Remove();
     void FailNotify(unsigned int error);
     bool IsReadAbort()
@@ -48,11 +48,12 @@ protected:
     static int OnDebug(CURL *curl, curl_infotype itype, char *pData, size_t size, void *lpvoid);
 
 private:
+    int CheckUploadStatus(CURLM *curlMulti);
     bool MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray);
-    void UploadFile();
+    int32_t CheckUrlStatus();
+    int32_t UploadFile();
     void SetHeadData(CURL *curl);
     void SetCurlOpt(CURL *curl);
-    void CheckUploadStatus(CURLM *curlMulti);
     void CurlGlobalInit();
     void CurlGlobalCleanup();
     void InitTimerInfo();
@@ -66,6 +67,7 @@ private:
     std::vector<FileData> fileArray_;
     FileData  mfileData_;
     std::shared_ptr<UploadConfig> config_;
+    static constexpr int32_t HTTP_SUCCESS = 200;
     std::mutex mutex_;
     std::mutex curlMutex_;
     std::mutex setAbortMutex_;

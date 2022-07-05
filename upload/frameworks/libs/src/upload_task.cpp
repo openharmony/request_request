@@ -17,6 +17,7 @@
 #include "curl/curl.h"
 #include "curl/easy.h"
 #include "hitrace_meter.h"
+#include "hisysevent.h"
 #include "upload_task.h"
 
 namespace OHOS::Request::Upload {
@@ -144,9 +145,24 @@ void UploadTask::OnRun()
         return;
     }
     curlAdp_ = std::make_shared<CUrlAdp>(fileArray_, uploadConfig_);
-
-    curlAdp_->DoUpload((IUploadTask*)this);
+    TaskResult taskResult;
+    curlAdp_->DoUpload((IUploadTask*)this, taskResult);
     ClearFileArray();
+    if (taskResult.failCount != 0) {
+        ReportTaskFault(taskResult);
+    }
+}
+
+void UploadTask::ReportTaskFault(TaskResult taskResult) const
+{
+    OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST,
+        REQUEST_TASK_FAULT,
+        OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
+        TASKS_TYPE, UPLOAD,
+        TOTAL_FILE_NUM, fileArray_.size(),
+        FAIL_FILE_NUM, taskResult.failCount,
+        SUCCESS_FILE_NUM, taskResult.successCount,
+        ERROR_INFO, taskResult.errorCode);
 }
 
 void UploadTask::OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)

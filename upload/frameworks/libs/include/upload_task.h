@@ -75,8 +75,17 @@ protected:
     std::vector<FileData>& GetFileArray();
     void ClearFileArray();
 private:
+    void ReportTaskFault(TaskResult taskResult) const;
+
     std::shared_ptr<UploadConfig> uploadConfig_;
     std::unique_ptr<std::thread> thread_;
+    static constexpr const char *REQUEST_TASK_FAULT = "REQUEST_TASK_FAULT";
+    static constexpr const char *TASKS_TYPE = "TASKS_TYPE";
+    static constexpr const char *UPLOAD = "UPLOAD";
+    static constexpr const char *TOTAL_FILE_NUM = "TOTAL_FILE_NUM";
+    static constexpr const char *FAIL_FILE_NUM = "FAIL_FILE_NUM";
+    static constexpr const char *SUCCESS_FILE_NUM = "SUCCESS_FILE_NUM";
+    static constexpr const char *ERROR_INFO = "ERROR_INFO";
 
     IProgressCallback* progressCallback_;
     IHeaderReceiveCallback* headerReceiveCallback_;
