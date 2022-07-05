@@ -90,7 +90,7 @@ void CUrlAdp::DoUpload(IUploadTask *task, TaskResult &taskResult)
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload start");
     uploadTask_ = task;
 
-	taskResult.errorCode = CheckUrlStatus();
+    taskResult.errorCode = CheckUrlStatus();
     if (taskResult.errorCode != UPLOAD_ERRORCODE_NO_ERROR) {
         taskResult.failCount = fileArray_.size();
         return;
