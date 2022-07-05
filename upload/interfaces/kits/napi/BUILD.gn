@@ -22,10 +22,10 @@ config("upload_native_config") {
 config("upload_native_public_config") {
   visibility = []
   include_dirs = [
+    "${ability_runtime_napi_path}/featureAbility",
+    "${ability_runtime_napi_path}/inner/napi_common",
     "include",
     "//foundation/arkui/napi/interfaces/kits",
-    "//foundation/ability/ability_runtime/frameworks/js/napi/aafwk/featureAbility",
-    "//foundation/ability/ability_runtime/frameworks/js/napi/aafwk/inner/napi_common",
     "//third_party/libuv/include",
     "./",
     "//base/miscservices/request/download/interfaces/kits/js/napi/download_single/include",
