@@ -67,7 +67,7 @@ private:
     std::vector<FileData> fileArray_;
     FileData  mfileData_;
     std::shared_ptr<UploadConfig> config_;
-    static constexpr const int32_t HTTP_MIN_ERROR_CODE = 400;
+    static constexpr int32_t HTTP_SUCCESS = 200;
     std::mutex mutex_;
     std::mutex curlMutex_;
     std::mutex setAbortMutex_;

@@ -62,8 +62,7 @@ int32_t TaskStatistics::GetNextReportInterval() const
         return -1;
     }
     int currentTime = localTime.tm_hour * ONE_HOUR_SEC + localTime.tm_min * ONE_MINUTE_SEC + localTime.tm_sec;
-    int sleepTime = ONE_DAY_SEC - currentTime;
-    return sleepTime;
+    return  ONE_DAY_SEC - currentTime;
 }
 
 void TaskStatistics::ReportStatistics() const

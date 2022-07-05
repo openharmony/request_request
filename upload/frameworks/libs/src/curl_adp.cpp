@@ -90,7 +90,7 @@ void CUrlAdp::DoUpload(IUploadTask *task, TaskResult &taskResult)
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload start");
     uploadTask_ = task;
 
-    taskResult.errorCode = CheckUrlStatus();
+	taskResult.errorCode = CheckUrlStatus();
     if (taskResult.errorCode != UPLOAD_ERRORCODE_NO_ERROR) {
         taskResult.failCount = fileArray_.size();
         return;
@@ -262,27 +262,23 @@ int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
     int returnCode = 0;
     CURLMsg* msg = NULL;
     while ((msg = curl_multi_info_read(curlMulti, &msgsLeft))) {
-        CURL *eh = NULL;
         if (msg->msg != CURLMSG_DONE) {
             continue;
         }
+        CURL *eh = NULL;
         eh = msg->easy_handle;
-        if (msg->data.result != CURLE_OK) {
-            returnCode = msg->data.result;
-            if (config_->protocolVersion != "L5") {
-                FailNotify(UPLOAD_ERRORCODE_UPLOAD_FAIL);
-                UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Curl error code = %{public}d", msg->data.result);
-            }
-            continue;
-        }
         int statusCode = 0;
         char *szUrl = NULL;
         curl_easy_getinfo(eh, CURLINFO_RESPONSE_CODE, &statusCode);
         curl_easy_getinfo(eh, CURLINFO_PRIVATE, &szUrl);
-        if (statusCode >= HTTP_MIN_ERROR_CODE) {
-            returnCode = statusCode;
-        }
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "statusCode is %{public}d, Url is %{public}s", statusCode, szUrl);
+        if (statusCode != HTTP_SUCCESS) {
+            returnCode = statusCode;
+            if (config_->protocolVersion != "L5") {
+                FailNotify(UPLOAD_ERRORCODE_UPLOAD_FAIL);
+                UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Curl error code = %{public}d", statusCode);
+            }
+        }
     }
     return returnCode;
 }
