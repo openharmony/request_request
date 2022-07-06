@@ -142,6 +142,7 @@ void UploadTask::OnRun()
     curlAdp_ = std::make_shared<CUrlAdp>(fileArray_, uploadConfig_);
 
     curlAdp_->DoUpload((IUploadTask*)this);
+    ClearFileArray();
 }
 
 void UploadTask::OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
@@ -220,14 +221,13 @@ std::vector<FileData>& UploadTask::GetFileArray()
 
 void UploadTask::ClearFileArray()
 {
-    while (fileArray_.empty() != true) {
-        auto file = fileArray_.begin();
-        if (file->fp != NULL) {
-            fclose(file->fp);
+    for (auto &file : fileArray_) {
+        if (file.fp != NULL) {
+            fclose(file.fp);
         }
-        file->name = "";
-        fileArray_.erase(file);
+        file.name = "";
     }
+    fileArray_.clear();
 }
 
 std::vector<std::string> UploadTask::StringSplit(const std::string& str, char delim)
