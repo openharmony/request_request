@@ -28,7 +28,7 @@
 #include "download_thread.h"
 
 namespace OHOS::Request::Download {
-class DownloadServiceManager final : public std::enable_shared_from_this<DownloadServiceManager> {
+class DownloadServiceManager final {
 public:
     static DownloadServiceManager *GetInstance();
 

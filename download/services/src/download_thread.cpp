@@ -14,12 +14,11 @@
  */
 
 #include "download_thread.h"
-
 #include "download_service_manager.h"
 
 namespace OHOS::Request::Download {
-DownloadThread::DownloadThread(DownloadServiceManager* mgr)
-    : isRunning_(false), thread_(Run, this), mgr_(mgr)
+DownloadThread::DownloadThread()
+    : isRunning_(false), thread_(Run, this)
 {
 }
 
@@ -42,10 +41,11 @@ void DownloadThread::Run(DownloadThread *this_)
         return;
     }
     this_->isRunning_ = true;
+    auto mgr  = DownloadServiceManager::GetInstance();
     while (this_->isRunning_) {
-        if (this_->mgr_ != nullptr) {
-            if (!this_->mgr_->ProcessTask()) {
-                std::this_thread::sleep_for(std::chrono::seconds(this_->mgr_->GetInterval()));
+        if (mgr != nullptr) {
+            if (!mgr->ProcessTask()) {
+                std::this_thread::sleep_for(std::chrono::seconds(mgr->GetInterval()));
                 std::this_thread::yield();
             }
         }

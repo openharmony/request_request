@@ -20,11 +20,9 @@
 #include <thread>
 
 namespace OHOS::Request::Download {
-class DownloadServiceManager;
-
 class DownloadThread final {
 public:
-    explicit DownloadThread(DownloadServiceManager* mgr);
+    explicit DownloadThread();
     ~DownloadThread();
 
     void Start();
@@ -36,7 +34,6 @@ private:
 private:
     bool isRunning_;
     std::thread thread_;
-    DownloadServiceManager* mgr_ = nullptr;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_THREAD_H
