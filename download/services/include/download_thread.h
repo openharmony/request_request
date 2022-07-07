@@ -22,7 +22,7 @@
 namespace OHOS::Request::Download {
 class DownloadThread final {
 public:
-    explicit DownloadThread(std::function<bool()> &&task, uint32_t interva);
+    explicit DownloadThread(std::function<bool()> &&task, uint32_t interval);
     ~DownloadThread();
 
     void Start();
