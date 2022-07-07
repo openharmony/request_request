@@ -85,7 +85,11 @@ void DumpTaskInfo::FormatDetailContent(const DownloadInfo &taskInfo, std::ostrin
 bool DumpTaskInfo::DumpAllTask(int fd)
 {
     std::vector<DownloadInfo> taskVector;
-    DownloadServiceManager::GetInstance().QueryAllTask(taskVector);
+    if (DownloadServiceManager::GetInstance() == nullptr) {
+        dprintf(fd, "not enough memory\n");
+        return false;
+    }
+    DownloadServiceManager::GetInstance()->QueryAllTask(taskVector);
     dprintf(fd, "task num: %u\n", taskVector.size());
     if (taskVector.empty()) {
         return true;
@@ -105,7 +109,11 @@ bool DumpTaskInfo::DumpAllTask(int fd)
 bool DumpTaskInfo::DumpTaskDetailInfo(int fd, uint32_t taskId)
 {
     DownloadInfo downloadInfo;
-    bool ret = DownloadServiceManager::GetInstance().Query(taskId, downloadInfo);
+    if (DownloadServiceManager::GetInstance() == nullptr) {
+        dprintf(fd, "not enough memory\n");
+        return false;
+    }
+    bool ret = DownloadServiceManager::GetInstance()->Query(taskId, downloadInfo);
     if (!ret) {
         dprintf(fd, "invalid task id %u\n", taskId);
         return false;

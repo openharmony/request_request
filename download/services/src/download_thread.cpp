@@ -18,8 +18,8 @@
 #include "download_service_manager.h"
 
 namespace OHOS::Request::Download {
-DownloadThread::DownloadThread(std::function<bool()> &&task, uint32_t interval)
-    : isRunning_(false), thread_(Run, this), interval_(interval), task_(std::move(task))
+DownloadThread::DownloadThread(DownloadServiceManager* mgr)
+    : isRunning_(false), thread_(Run, this), mgr_(mgr)
 {
 }
 
@@ -43,9 +43,9 @@ void DownloadThread::Run(DownloadThread *this_)
     }
     this_->isRunning_ = true;
     while (this_->isRunning_) {
-        if (this_->task_ != nullptr) {
-            if (!this_->task_()) {
-                std::this_thread::sleep_for(std::chrono::seconds(this_->interval_));
+        if (this_->mgr_ != nullptr) {
+            if (!this_->mgr_->ProcessTask()) {
+                std::this_thread::sleep_for(std::chrono::seconds(this_->mgr_->GetInterval()));
                 std::this_thread::yield();
             }
         }

@@ -30,7 +30,7 @@
 namespace OHOS::Request::Download {
 class DownloadServiceManager final : public std::enable_shared_from_this<DownloadServiceManager> {
 public:
-    static DownloadServiceManager &GetInstance();
+    static DownloadServiceManager *GetInstance();
 
     bool Create(uint32_t threadNum);
     void Destroy();
@@ -83,6 +83,8 @@ private:
     uint32_t timeoutRetry_;
 
     uint32_t taskId_;
+    static std::mutex instanceLock_;
+    static DownloadServiceManager* instance_;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_SERVICE_MANAGER_H

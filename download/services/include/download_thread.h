@@ -24,7 +24,7 @@ class DownloadServiceManager;
 
 class DownloadThread final {
 public:
-    explicit DownloadThread(std::function<bool()> &&task, uint32_t interval);
+    explicit DownloadThread(DownloadServiceManager* mgr);
     ~DownloadThread();
 
     void Start();
@@ -36,8 +36,7 @@ private:
 private:
     bool isRunning_;
     std::thread thread_;
-    uint32_t interval_;
-    std::function<bool()> task_ = nullptr;
+    DownloadServiceManager* mgr_ = nullptr;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_THREAD_H

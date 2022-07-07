@@ -25,6 +25,8 @@ static constexpr uint32_t MAX_RETRY_TIMES = 3;
 
 using namespace OHOS::NetManagerStandard;
 namespace OHOS::Request::Download {
+std::mutex DownloadServiceManager::instanceLock_;
+DownloadServiceManager *DownloadServiceManager::instance_ = nullptr;
 DownloadServiceManager::DownloadServiceManager()
     : initialized_(false), interval_(TASK_SLEEP_INTERVAL), threadNum_(THREAD_POOL_NUM), timeoutRetry_(MAX_RETRY_TIMES),
     taskId_(0)
@@ -36,10 +38,15 @@ DownloadServiceManager::~DownloadServiceManager()
     Destroy();
 }
 
-DownloadServiceManager &DownloadServiceManager::GetInstance()
+DownloadServiceManager *DownloadServiceManager::GetInstance()
 {
-    static DownloadServiceManager instance;
-    return instance;
+    if (instance_ == nullptr) {
+        std::lock_guard<std::mutex> lock(instanceLock_);
+        if (instance_ == nullptr) {
+            instance_ = new (std::nothrow) DownloadServiceManager;
+        }
+    }
+    return instance_;
 }
 
 bool DownloadServiceManager::Create(uint32_t threadNum)
@@ -51,9 +58,7 @@ bool DownloadServiceManager::Create(uint32_t threadNum)
 
     threadNum_ = threadNum;
     for (uint32_t i = 0; i < threadNum; i++) {
-        threadList_.push_back(std::make_shared<DownloadThread>([mgr = shared_from_this()]() {
-            return mgr->ProcessTask();
-        }, interval_));
+        threadList_.push_back(std::make_shared<DownloadThread>(instance_));
         threadList_[i]->Start();
     }
 
