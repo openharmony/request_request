@@ -41,7 +41,6 @@ void DownloadThread::Run(DownloadThread *this_)
         return;
     }
     this_->isRunning_ = true;
-    auto mgr  = DownloadServiceManager::GetInstance();
     while (this_->isRunning_) {
         if (this_->task_ != nullptr) {
             if (!this_->task_()) {
