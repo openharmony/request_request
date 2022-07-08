@@ -32,7 +32,7 @@ private:
     static void Run(DownloadThread *this_);
 
 private:
-    bool isRunning_;
+    volatile bool isRunning_;
     std::thread thread_;
     uint32_t interval_;
     std::function<bool()> task_ = nullptr;

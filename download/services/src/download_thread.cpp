@@ -24,6 +24,7 @@ DownloadThread::DownloadThread(std::function<bool()> &&task, uint32_t interval)
 
 DownloadThread::~DownloadThread()
 {
+    isRunning_ = false;
     thread_.join();
 }
 
@@ -37,7 +38,8 @@ void DownloadThread::Stop()
 
 void DownloadThread::Run(DownloadThread *this_)
 {
-    if (this_ == nullptr) {
+    bool ret = this_ == nullptr || this_->task_ == nullptr;
+    if (ret) {
         return;
     }
     this_->isRunning_ = true;
