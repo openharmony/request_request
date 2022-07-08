@@ -85,10 +85,10 @@ ohos_shared_library("download_server") {
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "multimedia_image_standard:image_native",
     "os_account:os_account_innerkits",
-    "startup_l2:syspara",
   ]
   subsystem_name = "miscservices"
   part_name = "request"
