@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,8 +39,8 @@ private:
     DumpServiceImpl &operator=(DumpServiceImpl &&) = delete;
 
     void InitDumperFactoryMap();
-    void DumpHelp(int fd);
-    DumperType GetDumperType(const std::string &cmd);
+    void DumpHelp(int fd) const;
+    DumperType GetDumperType(const std::string &cmd) const;
 private:
     using DumperFactoryMap = std::map<DumperType, std::shared_ptr<DumperFactory>>;
     DumperFactoryMap dumperFactoryMap_;

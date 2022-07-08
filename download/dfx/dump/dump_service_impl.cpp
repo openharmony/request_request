@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 #include <cstdio>
 #include <string>
@@ -44,7 +43,7 @@ DumpServiceImpl &DumpServiceImpl::GetInstance()
     return instance;
 }
 
-DumperType DumpServiceImpl::GetDumperType(const std::string &cmd)
+DumperType DumpServiceImpl::GetDumperType(const std::string &cmd) const
 {
     if (cmd == "-h") {
         return HELP_DUMPER;
@@ -68,7 +67,7 @@ int DumpServiceImpl::Dump(int fd, const std::vector<std::string> &args)
         return 0;
     }
 
-    DumperFactoryMap::iterator it = dumperFactoryMap_.find(dumperType);
+    DumperFactoryMap::const_iterator it = dumperFactoryMap_.find(dumperType);
     if (it == dumperFactoryMap_.end()) {
         dprintf(fd, "invalid arg\n");
         return 0;
@@ -82,7 +81,7 @@ int DumpServiceImpl::Dump(int fd, const std::vector<std::string> &args)
     return 0;
 }
 
-void DumpServiceImpl::DumpHelp(int fd)
+void DumpServiceImpl::DumpHelp(int fd) const
 {
     constexpr const char *DEFAULT_HELPER =
         "usage:\n"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,24 +28,22 @@ TaskStatistics &TaskStatistics::GetInstance()
 
 void TaskStatistics::ReportTasksSize(uint64_t totalSize)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    DayTasksSize_ += totalSize;
+    dayTasksSize_ += totalSize;
 }
 
 void TaskStatistics::ReportTasksNumber()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    DayTasksNumber_ ++;
+    dayTasksNumber_ ++;
 }
 
 uint64_t TaskStatistics::GetDayTasksSize() const
 {
-    return DayTasksSize_;
+    return dayTasksSize_;
 }
 
 uint32_t TaskStatistics::GetDayTasksNumber() const
 {
-    return DayTasksNumber_;
+    return dayTasksNumber_;
 }
 
 int32_t TaskStatistics::GetNextReportInterval() const
@@ -70,8 +68,8 @@ void TaskStatistics::ReportStatistics() const
     OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST,
         REQUEST_TASK_INFO_STATISTICS,
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
-        TASKS_SIZE, DayTasksSize_,
-        TASKS_NUMBER, DayTasksNumber_);
+        TASKS_SIZE, &dayTasksSize_,
+        TASKS_NUMBER, &dayTasksNumber_);
 }
 
 void TaskStatistics::StartTimerThread()
@@ -90,8 +88,8 @@ void TaskStatistics::StartTimerThread()
             DOWNLOAD_HILOGD("taskRun next interval: %{public}d", nextReportInterval);
             sleep(nextReportInterval);
             ReportStatistics();
-            this->DayTasksNumber_ = 0;
-            this->DayTasksSize_ = 0;
+            this->dayTasksNumber_ = 0;
+            this->dayTasksSize_ = 0;
         }
     };
     std::thread th = std::thread(fun);

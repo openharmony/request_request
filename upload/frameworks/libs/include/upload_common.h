@@ -24,8 +24,8 @@ enum Type {
 };
 
 struct TaskResult {
-    int32_t successCount {0};
-    int32_t failCount {0};
+    uint32_t successCount {0};
+    uint32_t failCount {0};
     int32_t errorCode {0};
 };
 
