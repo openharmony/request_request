@@ -150,9 +150,9 @@ void DownloadServiceAbility::OnStop()
         DOWNLOAD_HILOGE("DownloadServiceManager is null");
         return;
     }
+    instance->Destroy();
     serviceHandler_ = nullptr;
     instance_ = nullptr;
-    instance->Destroy();
     state_ = ServiceRunningState::STATE_NOT_START;
     DOWNLOAD_HILOGI("OnStop end.");
 }
