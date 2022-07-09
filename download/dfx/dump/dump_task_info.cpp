@@ -86,7 +86,7 @@ bool DumpTaskInfo::DumpAllTask(int fd)
 {
     std::vector<DownloadInfo> taskVector;
     DownloadServiceManager::GetInstance().QueryAllTask(taskVector);
-    dprintf(fd, "task num: %u\n", taskVector.size());
+    dprintf(fd, "task num: %lu\n", taskVector.size());
     if (taskVector.empty()) {
         return true;
     }
