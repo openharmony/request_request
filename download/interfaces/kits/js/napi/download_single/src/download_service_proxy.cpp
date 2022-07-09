@@ -59,21 +59,19 @@ uint32_t DownloadServiceProxy::Request(const DownloadConfig &config)
     fd = open(config.GetFilePath().c_str(), O_RDWR);
     if (fd > 0) {
         DOWNLOAD_HILOGD("Download File already exists");
-        close(fd);
         fd = -1;
     } else {
         fd = open(config.GetFilePath().c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
         if (fd < 0) {
             DOWNLOAD_HILOGE("Failed to open file errno [%{public}d]", errno);
             err = errno;
-        } else {
-            close(fd);
         }
     }
 
     DOWNLOAD_HILOGI("Succeed to open download file, fd [%{public}d]]", fd);
     data.WriteFileDescriptor(fd);
     data.WriteInt32(err);
+    close(fd);
     data.WriteString(config.GetUrl());
     data.WriteBool(config.GetMetered());
     data.WriteBool(config.GetRoaming());
