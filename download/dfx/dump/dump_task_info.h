@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,14 +31,14 @@ public:
 
     bool Dump(int fd, const std::vector<std::string> &args) override;
 private:
-    void DumpAllTaskTile(int fd);
+    void DumpAllTaskTile(int fd) const;
     bool DumpAllTask(int fd);
-    void DumpTaskDetailInfoTile(int fd);
+    void DumpTaskDetailInfoTile(int fd) const;
     bool DumpTaskDetailInfo(int fd, uint32_t taskId);
-    void FormatSummaryTitle(std::ostringstream &buffer);
-    void FormatDetailTitle(std::ostringstream &buffer);
-    void FormatSummaryContent(const DownloadInfo &taskInfo, std::ostringstream &buffer);
-    void FormatDetailContent(const DownloadInfo &taskInfo, std::ostringstream &buffer);
+    void FormatSummaryTitle(std::ostringstream &buffer) const;
+    void FormatDetailTitle(std::ostringstream &buffer) const;
+    void FormatSummaryContent(const DownloadInfo &taskInfo, std::ostringstream &buffer) const;
+    void FormatDetailContent(const DownloadInfo &taskInfo, std::ostringstream &buffer) const;
 private:
     std::string DumpTaskID(const DownloadInfo &taskInfo) const;
     std::string DumpTaskType(const DownloadInfo &taskInfo) const;

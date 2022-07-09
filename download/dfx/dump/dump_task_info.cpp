@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,7 @@
 namespace OHOS::Request::Download {
 bool DumpTaskInfo::Dump(int fd, const std::vector<std::string> &args)
 {
-    int32_t argsNum = args.size();
+    uint32_t argsNum = args.size();
     if (argsNum > 1) {
         dprintf(fd, "too many args, -t accept no arg or one arg \n");
         return false;
@@ -35,7 +35,7 @@ bool DumpTaskInfo::Dump(int fd, const std::vector<std::string> &args)
     return true;
 }
 
-void DumpTaskInfo::DumpAllTaskTile(int fd)
+void DumpTaskInfo::DumpAllTaskTile(int fd) const
 {
     std::ostringstream buffer;
     buffer << std::left;
@@ -43,21 +43,21 @@ void DumpTaskInfo::DumpAllTaskTile(int fd)
     dprintf(fd, "%s\n", buffer.str().c_str());
 }
 
-void DumpTaskInfo::FormatSummaryTitle(std::ostringstream &buffer)
+void DumpTaskInfo::FormatSummaryTitle(std::ostringstream &buffer) const
 {
     for (const auto &it: summaryColumnTitle_) {
         buffer << std::setw(it.first) << it.second;
     }
 }
 
-void DumpTaskInfo::FormatDetailTitle(std::ostringstream &buffer)
+void DumpTaskInfo::FormatDetailTitle(std::ostringstream &buffer) const
 {
     for (const auto &it: detailColumnTitle_) {
         buffer << std::setw(it.first) << it.second;
     }
 }
 
-void DumpTaskInfo::DumpTaskDetailInfoTile(int fd)
+void DumpTaskInfo::DumpTaskDetailInfoTile(int fd) const
 {
     std::ostringstream buffer;
     buffer << std::left;
@@ -66,7 +66,7 @@ void DumpTaskInfo::DumpTaskDetailInfoTile(int fd)
     dprintf(fd, "%s\n", buffer.str().c_str());
 }
 
-void DumpTaskInfo::FormatSummaryContent(const DownloadInfo &taskInfo, std::ostringstream &buffer)
+void DumpTaskInfo::FormatSummaryContent(const DownloadInfo &taskInfo, std::ostringstream &buffer) const
 {
     for (const auto &it: dumpSummaryCfg_) {
         auto columnFormatFun = it.second;
@@ -74,7 +74,7 @@ void DumpTaskInfo::FormatSummaryContent(const DownloadInfo &taskInfo, std::ostri
     }
 }
 
-void DumpTaskInfo::FormatDetailContent(const DownloadInfo &taskInfo, std::ostringstream &buffer)
+void DumpTaskInfo::FormatDetailContent(const DownloadInfo &taskInfo, std::ostringstream &buffer) const
 {
     for (const auto &it: dumpDetailCfg_) {
         auto columnFormatFun = it.second;
@@ -137,7 +137,7 @@ std::string DumpTaskInfo::DumpTaskID(const DownloadInfo &taskInfo) const
 
 std::string DumpTaskInfo::DumpTaskType(const DownloadInfo &taskInfo) const
 {
-    return "download";
+    return taskInfo.GetTaskType();
 }
 
 std::string DumpTaskInfo::DumpTaskStatus(const DownloadInfo &taskInfo) const

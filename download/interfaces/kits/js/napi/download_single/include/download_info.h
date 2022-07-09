@@ -76,6 +76,7 @@ public:
     [[nodiscard]] uint32_t GetNetworkType() const;
     [[nodiscard]] bool GetMetered() const;
     [[nodiscard]] bool GetRoaming() const;
+    [[nodiscard]] std::string GetTaskType() const;
     void Dump();
 
 private:
@@ -98,12 +99,14 @@ private:
     std::string targetURI_;
 	
     std::string downloadTitle_;
+    
+    std::string taskType_;
 
     uint32_t downloadTotalBytes_;
 
-    bool enableMetered_;
-    bool enableRoaming_;
-    uint32_t networkType_;
+    bool enableMetered_ {false};
+    bool enableRoaming_ {false};
+    uint32_t networkType_ {0};
 };
 } // namespace OHOS::Request::Download
 #endif /* DOWNLOAD_INFO_H */

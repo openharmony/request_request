@@ -21,7 +21,7 @@ namespace OHOS::Request::Download {
 DownloadInfo::DownloadInfo()
     : description_(""), downloadedBytes_(0), downloadId_(0), failedReason_(ERROR_UNKNOWN), fileName_(""),
       filePath_(""), pausedReason_(PAUSED_UNKNOWN), status_(SESSION_UNKNOWN), targetURI_(""), downloadTitle_(""),
-      downloadTotalBytes_(0) {
+      taskType_("download"), downloadTotalBytes_(0) {
 }
 
 void DownloadInfo::SetDescription(const std::string &description)
@@ -142,6 +142,11 @@ const std::string &DownloadInfo::GetTargetURI() const
 const std::string &DownloadInfo::GetDownloadTitle() const
 {
     return downloadTitle_;
+}
+
+std::string DownloadInfo::GetTaskType() const
+{
+    return taskType_;
 }
 
 uint32_t DownloadInfo::GetDownloadTotalBytes() const

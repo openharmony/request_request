@@ -303,19 +303,29 @@ void DownloadServiceManager::PushQueue(std::queue<uint32_t> &queue, uint32_t tas
         DOWNLOAD_HILOGD("invalid task id [%{public}d]", taskId);
         return;
     }
-    bool foundIt = false;
-    if (queue.size() > 0) {
-        uint32_t indicatorId = queue.front();
-        do {
-            if (queue.front() == taskId) {
-                foundIt = true;
-                continue;
-            }
-            queue.push(queue.front());
-            queue.pop();
-        } while (queue.front() != indicatorId);
+
+    if (queue.empty()) {
+        queue.push(taskId);
+        return;
     }
-    if (queue.empty() || !foundIt) {
+
+    auto headElement = queue.front();
+    if (headElement == taskId) {
+        return;
+    }
+
+    bool foundIt = false;
+    uint32_t indicatorId = headElement;
+    do {
+        if (queue.front() == taskId) {
+            foundIt = true;
+        }
+        queue.push(headElement);
+        queue.pop();
+        headElement = queue.front();
+    } while (headElement != indicatorId);
+
+    if (!foundIt) {
         queue.push(taskId);
     }
 }
@@ -323,15 +333,24 @@ void DownloadServiceManager::PushQueue(std::queue<uint32_t> &queue, uint32_t tas
 void DownloadServiceManager::RemoveFromQueue(std::queue<uint32_t> &queue, uint32_t taskId)
 {
     std::lock_guard<std::recursive_mutex> autoLock(mutex_);
-    if (queue.size() > 0) {
-        uint32_t indicatorId = queue.front();
-        do {
-            if (queue.front() != taskId) {
-                queue.push(queue.front());
-            }
-            queue.pop();
-        } while (queue.size() > 0 && queue.front() != indicatorId);
+    if (queue.empty()) {
+        return;
     }
+
+    auto headElement = queue.front();
+    if (headElement == taskId) {
+        queue.pop();
+        return;
+    }
+
+    auto indicatorId = headElement;
+    do {
+        if (headElement != taskId) {
+            queue.push(queue.front());
+        }
+        queue.pop();
+        headElement = queue.front();
+    } while (headElement != indicatorId);
 }
 
 void DownloadServiceManager::SetInterval(uint32_t interval)

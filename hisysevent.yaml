@@ -46,13 +46,13 @@ REQUEST_SERVICE_START_FAULT:
 REQUEST_TASK_FAULT:
   __BASE: {type: FAULT, level: MINOR, desc: The request task fail }
   TASK_TYPE: {type: STRING, desc: Task type}
-  TOTAL_FILE_NUM: {type: INT32, desc: Total number of documents }
-  FAIL_FILE_NUM: {type: INT32, desc: Number of failed files }
-  SUCCESS_FILE_NUM: {type: INT32, desc: Number of successful files }
+  TOTAL_FILE_NUM: {type: UINT32, desc: Total number of documents }
+  FAIL_FILE_NUM: {type: UINT32, desc: Number of failed files }
+  SUCCESS_FILE_NUM: {type: UINT32, desc: Number of successful files }
   ERROR_INFO: {type: INT32, desc: Error code }
 
 REQUEST_TASK_INFO_STATISTICS:
   __BASE: {type: STATISTIC, level: MINOR, desc: Statistics of download tasks }
-  TASKS_SIZE: {type: INT64, desc: Download tasks size}
-  TASKS_NUMBER: {type: INT32, desc: Download tasks number}
+  TASKS_SIZE: {type: UINT64, desc: Download tasks size}
+  TASKS_NUMBER: {type: UINT32, desc: Download tasks number}
 

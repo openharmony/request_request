@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,7 +16,6 @@
 #ifndef TASK_STATISTICS_H
 #define TASK_STATISTICS_H
 
-#include <mutex>
 #include <atomic>
 
 namespace OHOS::Request::Download {
@@ -42,13 +41,12 @@ private:
     static constexpr const char *REQUEST_TASK_INFO_STATISTICS = "REQUEST_TASK_INFO_STATISTICS";
     static constexpr const char *TASKS_SIZE = "TASKS_SIZE";
     static constexpr const char *TASKS_NUMBER = "TASKS_NUMBER";
-    static constexpr const int32_t ONE_DAY_SEC = 24 * 3600;
-    static constexpr const int32_t ONE_HOUR_SEC = 3600;
-    static constexpr const int32_t ONE_MINUTE_SEC = 60;
+    static constexpr int32_t ONE_DAY_SEC = 24 * 3600;
+    static constexpr int32_t ONE_HOUR_SEC = 3600;
+    static constexpr int32_t ONE_MINUTE_SEC = 60;
 
-    std::mutex mutex_;
-    int64_t DayTasksSize_ {0};
-    int32_t DayTasksNumber_ {0};
+    std::atomic<uint32_t> dayTasksNumber_ {0};
+    std::atomic<uint64_t> dayTasksSize_ {0};
     bool running_ { false };
 };
 }
