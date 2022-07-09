@@ -101,7 +101,7 @@ DownloadTask* DownloadManager::EnqueueTask(const DownloadConfig &config)
         return nullptr;
     }
     int32_t taskId = downloadServiceProxy_->Request(config);
-    if (taskId <= 0) {
+    if (taskId < 0) {
         DOWNLOAD_HILOGE("taskId invalid");
         return nullptr;
     }
