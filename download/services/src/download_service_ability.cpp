@@ -157,15 +157,17 @@ void DownloadServiceAbility::OnStop()
     DOWNLOAD_HILOGI("OnStop end.");
 }
 
-uint32_t DownloadServiceAbility::Request(const DownloadConfig &config)
+int32_t DownloadServiceAbility::Request(const DownloadConfig &config)
 {
     ManualStart();
-    uint32_t taskId = 0;
+    int32_t taskId = -1;
     auto instance = DownloadServiceManager::GetInstance();
-    if (instance != nullptr) {
-        taskId = instance->AddTask(config);
-        instance->InstallCallback(taskId, NotifyHandler);
+    if (instance == nullptr) {
+        DOWNLOAD_HILOGE("DownloadServiceManager is null");
+        return taskId;
     }
+    taskId = static_cast<int32_t>(instance->AddTask(config));
+    instance->InstallCallback(taskId, NotifyHandler);
     DOWNLOAD_HILOGI("DownloadServiceAbility Allocate Task[%{public}d] started.", taskId);
     return taskId;
 }

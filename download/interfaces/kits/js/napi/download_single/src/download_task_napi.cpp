@@ -139,7 +139,10 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     }
     DownloadManager::GetInstance()->SetDataAbilityHelper(GetDataAbilityHelper(env));
     auto *task = DownloadManager::GetInstance()->EnqueueTask(config);
-
+    if (task == nullptr) {
+        DOWNLOAD_HILOGE("download task fail");
+        return nullptr;
+    }
     auto finalize = [](napi_env env, void *data, void *hint) {
         DOWNLOAD_HILOGD("destructed download task");
         DownloadTask *task = reinterpret_cast<DownloadTask *>(data);

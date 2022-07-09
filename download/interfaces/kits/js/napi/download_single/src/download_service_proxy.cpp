@@ -44,7 +44,7 @@ bool DownloadServiceProxy::IsPathValid(const std::string &filePath)
     return true;
 }
 
-uint32_t DownloadServiceProxy::Request(const DownloadConfig &config)
+int32_t DownloadServiceProxy::Request(const DownloadConfig &config)
 {
     MessageParcel data, reply;
     MessageOption option;
@@ -94,7 +94,7 @@ uint32_t DownloadServiceProxy::Request(const DownloadConfig &config)
         DOWNLOAD_HILOGE("Request, ret = %{public}d", ret);
         return -1;
     }
-    uint32_t taskId = reply.ReadUint32();
+    int32_t taskId = reply.ReadInt32();
     DOWNLOAD_HILOGD("DownloadServiceProxy Request succeeded. TaskId = %{public}d", taskId);
     return taskId;
 }

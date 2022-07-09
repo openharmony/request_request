@@ -27,7 +27,7 @@ namespace OHOS::Request::Download {
 class DownloadServiceInterface : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Download.DownloadServiceInterface");
-    virtual uint32_t Request(const DownloadConfig &config) = 0;
+    virtual int32_t Request(const DownloadConfig &config) = 0;
     virtual bool Pause(uint32_t taskId) = 0;
     virtual bool Query(uint32_t taskId, DownloadInfo &info) = 0;
     virtual bool QueryMimeType(uint32_t taskId, std::string &mimeType) = 0;

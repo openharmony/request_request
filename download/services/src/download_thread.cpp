@@ -39,8 +39,7 @@ void DownloadThread::Stop()
 
 void DownloadThread::Run(DownloadThread *this_)
 {
-    bool ret = this_ == nullptr || this_->task_ == nullptr;
-    if (ret) {
+    if (this_ == nullptr || this_->task_ == nullptr) {
         return;
     }
     while (this_->isRunning_) {

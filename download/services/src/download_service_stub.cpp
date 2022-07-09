@@ -87,8 +87,8 @@ bool DownloadServiceStub::OnRequest(MessageParcel &data, MessageParcel &reply)
         config.SetHeader(data.ReadString(), data.ReadString());
     }
     config.Dump();
-    uint32_t result = Request(config);
-    if (!reply.WriteUint32(result)) {
+    int32_t result = Request(config);
+    if (!reply.WriteInt32(result)) {
         DOWNLOAD_HILOGE("WriteBool failed");
         return false;
     }

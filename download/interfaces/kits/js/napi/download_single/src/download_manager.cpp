@@ -100,7 +100,11 @@ DownloadTask* DownloadManager::EnqueueTask(const DownloadConfig &config)
         DOWNLOAD_HILOGE("Pause quit because redoing GetDownloadServiceProxy failed.");
         return nullptr;
     }
-    uint32_t taskId = downloadServiceProxy_->Request(config);
+    int32_t taskId = downloadServiceProxy_->Request(config);
+    if (taskId <= 0) {
+        DOWNLOAD_HILOGE("taskId invalid");
+        return nullptr;
+    }
     DOWNLOAD_HILOGD("DownloadManager EnqueueTask succeeded.");
     
     DOWNLOAD_HILOGD("DownloadManager EnqueueTask Save Data.");
