@@ -66,13 +66,14 @@ uint32_t DownloadServiceProxy::Request(const DownloadConfig &config)
         if (fd < 0) {
             DOWNLOAD_HILOGE("Failed to open file errno [%{public}d]", errno);
             err = errno;
-        } else {
-            close(fd);
         }
     }
 
     DOWNLOAD_HILOGI("Succeed to open download file, fd [%{public}d]]", fd);
     data.WriteFileDescriptor(fd);
+    if (fd > 0) {
+        close(fd);
+    }
     data.WriteInt32(err);
     data.WriteString(config.GetUrl());
     data.WriteBool(config.GetMetered());

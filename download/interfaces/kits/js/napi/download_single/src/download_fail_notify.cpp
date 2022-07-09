@@ -63,9 +63,9 @@ void DownloadFailNotify::OnCallBack(MessageParcel &data)
             napi_value callbackFunc = nullptr;
             napi_get_reference_value(notifyData->env, notifyData->ref, &callbackFunc);
             napi_value result = nullptr;
-            napi_value callbackValues;
-            napi_create_uint32(notifyData->env, notifyData->firstArgv, &callbackValues);
-            napi_call_function(notifyData->env, nullptr, callbackFunc, NapiUtils::ONE_ARG, &callbackValues, &result);
+            napi_value callbackValue;
+            napi_create_uint32(notifyData->env, notifyData->firstArgv, &callbackValue);
+            napi_call_function(notifyData->env, nullptr, callbackFunc, NapiUtils::ONE_ARG, &callbackValue, &result);
             if (work != nullptr) {
                 delete work;
                 work = nullptr;
