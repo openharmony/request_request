@@ -86,7 +86,7 @@ bool DumpTaskInfo::DumpAllTask(int fd)
 {
     std::vector<DownloadInfo> taskVector;
     auto instance = DownloadServiceManager::GetInstance();
-    if (instance != nullptr) {
+    if (instance == nullptr) {
         dprintf(fd, "not enough memory\n");
         return false;
     }
@@ -111,7 +111,7 @@ bool DumpTaskInfo::DumpTaskDetailInfo(int fd, uint32_t taskId)
 {
     DownloadInfo downloadInfo;
     auto instance = DownloadServiceManager::GetInstance();
-    if (instance != nullptr) {
+    if (instance == nullptr) {
         dprintf(fd, "not enough memory\n");
         return false;
     }
