@@ -216,7 +216,7 @@ void DownloadServiceTask::SetStatus(DownloadStatus status, ErrorCode code, Pause
             }
         }
 
-        return true;
+        return isChanged;
     };
     DOWNLOAD_HILOGI("Status [%{public}d], Code [%{public}d], Reason [%{public}d]", status, code, reason);
     if (!stateChange(status, code, reason)) {
