@@ -91,7 +91,7 @@ bool DumpTaskInfo::DumpAllTask(int fd)
         return false;
     }
     instance->QueryAllTask(taskVector);
-    dprintf(fd, "task num: %u\n", taskVector.size());
+    dprintf(fd, "task num: %lu\n", taskVector.size());
     if (taskVector.empty()) {
         return true;
     }
