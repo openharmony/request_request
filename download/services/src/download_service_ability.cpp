@@ -167,6 +167,11 @@ int32_t DownloadServiceAbility::Request(const DownloadConfig &config)
         return taskId;
     }
     taskId = static_cast<int32_t>(instance->AddTask(config));
+    if (taskId < 0) {
+        DOWNLOAD_HILOGE("taskId [%{public}d] is invalid, config url: %{public}s",
+                        taskId, config.GetUrl().c_str());
+        return taskId;
+    }
     instance->InstallCallback(taskId, NotifyHandler);
     DOWNLOAD_HILOGI("DownloadServiceAbility Allocate Task[%{public}d] started.", taskId);
     return taskId;

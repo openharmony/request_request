@@ -573,7 +573,8 @@ bool DownloadServiceTask::SetFileSizeOption(CURL *curl, struct curl_slist *reque
 #if HTTP_CURL_PRINT_VERBOSE
     curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L, context);
 #endif
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, DEFAULT_READ_TIMEOUT);
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, DEFAULT_READ_TIMEOUT);
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, DEFAULT_CONNECT_TIMEOUT);
 #endif
     return true;
@@ -619,7 +620,8 @@ bool DownloadServiceTask::SetOption(CURL *curl, struct curl_slist *requestHeader
 #if HTTP_CURL_PRINT_VERBOSE
     curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L, context);
 #endif
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, DEFAULT_READ_TIMEOUT);
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, DEFAULT_READ_TIMEOUT);
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, DEFAULT_CONNECT_TIMEOUT);
 #endif
     return true;
