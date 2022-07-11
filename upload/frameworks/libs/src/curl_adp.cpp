@@ -217,7 +217,6 @@ int32_t CUrlAdp::UploadFile()
         }
         curl_multi_perform(curlMulti_, &isRuning);
     } while (isRuning);
-
     return CheckUploadStatus(curlMulti_);
 }
 
