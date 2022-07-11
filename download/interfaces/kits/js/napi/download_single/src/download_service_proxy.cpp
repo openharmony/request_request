@@ -72,12 +72,16 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config)
     }
     data.WriteInt32(err);
     data.WriteString(config.GetUrl());
-    data.WriteBool(config.GetMetered());
-    data.WriteBool(config.GetRoaming());
+    data.WriteBool(config.IsMetered());
+    data.WriteBool(config.IsRoaming());
     data.WriteString(config.GetDescription());
     data.WriteUint32(config.GetNetworkType());
     data.WriteString(config.GetFilePath());
     data.WriteString(config.GetTitle());
+    data.WriteString(config.GetDescription());
+    data.WriteBool(config.IsBackground());
+    data.WriteString(config.GetBundleName());
+    data.WriteInt32(config.GetApplicationInfoUid());
     data.WriteUint32(config.GetHeader().size());
     std::map<std::string, std::string>::const_iterator iter;
     for (iter = config.GetHeader().begin(); iter != config.GetHeader().end(); ++iter) {

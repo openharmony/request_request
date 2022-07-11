@@ -44,13 +44,19 @@ public:
 
     void SetFDError(int32_t fdError);
 
+    void SetBundleName(const std::string &bundleName);
+
+    void SetBackground(bool background);
+
+    void SetApplicationInfoUid(const int32_t uid);
+
     [[nodiscard]] const std::string &GetUrl() const;
 
     [[nodiscard]] const std::map<std::string, std::string> &GetHeader() const;
 
-    [[nodiscard]] bool GetMetered() const;
+    [[nodiscard]] bool IsMetered() const;
 
-    [[nodiscard]] bool GetRoaming() const;
+    [[nodiscard]] bool IsRoaming() const;
 
     [[nodiscard]] const std::string &GetDescription() const;
 
@@ -64,28 +70,28 @@ public:
 
     int32_t GetFDError() const;
 
+    [[nodiscard]] const std::string &GetBundleName() const;
+
+    [[nodiscard]] bool IsBackground() const;
+
+    int32_t GetApplicationInfoUid() const;
+
     void Dump(bool isFull = true) const;
 
 private:
+    bool enableMetered_ = false;
+    bool enableRoaming_ = false;
+    bool background_ = false;
+    int32_t fd_ = -1;
+    int32_t fdError_ = 0;
+    int32_t uid_ = -1;
+    uint32_t networkType_ = 0;
     std::string url_;
-
-    std::map<std::string, std::string> header_;
-
-    bool enableMetered_;
-
-    bool enableRoaming_;
-
     std::string description_;
-
-    uint32_t networkType_;
-
     std::string filePath_;
-
     std::string title_;
-
-    int32_t fd_;
-
-    int32_t fdError_;
+    std::string bundleName_;
+    std::map<std::string, std::string> header_;
 };
 } // namespace OHOS::Request::Download
 

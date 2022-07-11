@@ -115,9 +115,12 @@ DownloadTask* DownloadManager::EnqueueTask(const DownloadConfig &config)
     rawContactValues.PutString("description", config.GetDescription().c_str());
     rawContactValues.PutString("title", config.GetTitle().c_str());
     rawContactValues.PutString("filePath", config.GetFilePath().c_str());
-    rawContactValues.PutBool("metered", config.GetMetered());
-    rawContactValues.PutBool("roaming", config.GetRoaming());
+    rawContactValues.PutBool("metered", config.IsMetered());
+    rawContactValues.PutBool("roaming", config.IsRoaming());
     rawContactValues.PutInt("network", config.GetNetworkType());
+    rawContactValues.PutBool("background", config.IsBackground());
+    rawContactValues.PutString("bundleName", config.GetBundleName());
+    rawContactValues.PutInt("uid", config.GetApplicationInfoUid());
 
     if (dataAbilityHelper_ != nullptr) {
         int rowId = dataAbilityHelper_->Insert(uriDownload, rawContactValues);

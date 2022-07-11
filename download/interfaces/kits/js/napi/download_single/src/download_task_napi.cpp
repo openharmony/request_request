@@ -31,6 +31,7 @@
 #include "napi_utils.h"
 #include "legacy/download_manager.h"
 #include "napi_base_context.h"
+#include "ipc_skeleton.h"
 
 static constexpr const char *FUNCTION_ON = "on";
 static constexpr const char *FUNCTION_OFF = "off";
@@ -48,6 +49,7 @@ static constexpr const char *PARAM_KEY_DESCRIPTION = "description";
 static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";
 static constexpr const char *PARAM_KEY_FILE_PATH = "filePath";
 static constexpr const char *PARAM_KEY_TITLE = "title";
+static constexpr const char *PARAM_KEY_BACKGROUND = "background";
 
 namespace OHOS::Request::Download {
 constexpr const std::uint32_t CONFIG_PARAM_AT_FIRST = 0;
@@ -134,12 +136,17 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
         DOWNLOAD_HILOGE("Initialize. GetContext fail.");
         return nullptr;
     }
-
+    if (context->GetApplicationInfo() == nullptr) {
+        DOWNLOAD_HILOGE("ApplicationInfo is null");
+        return nullptr;
+    }
     DownloadConfig config;
     if (!ParseConfig(env, argv[parametersPosition], config)) {
         DOWNLOAD_HILOGE("download config has wrong type");
         return nullptr;
     }
+    config.SetBundleName(context->GetBundleName());
+    config.SetApplicationInfoUid(IPCSkeleton::GetCallingUid());
     DownloadManager::GetInstance()->SetDataAbilityHelper(GetDataAbilityHelper(env));
     auto *task = DownloadManager::GetInstance()->EnqueueTask(config);
     if (task == nullptr) {
@@ -200,6 +207,7 @@ bool DownloadTaskNapi::ParseConfig(napi_env env, napi_value configValue, Downloa
     config.SetNetworkType(NapiUtils::GetUint32Property(env, configValue, PARAM_KEY_NETWORKTYPE));
     config.SetFilePath(NapiUtils::GetStringPropertyUtf8(env, configValue, PARAM_KEY_FILE_PATH));
     config.SetTitle(NapiUtils::GetStringPropertyUtf8(env, configValue, PARAM_KEY_TITLE));
+    config.SetBackground(NapiUtils::GetBooleanProperty(env, configValue, PARAM_KEY_BACKGROUND));
     return true;
 }
 

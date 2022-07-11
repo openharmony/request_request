@@ -24,6 +24,7 @@
 #include "hitrace_meter.h"
 #include "task_statistics.h"
 #include "task_fault.h"
+#include "download_background_notification.h"
 
 namespace OHOS::Request::Download {
 static const std::string URL_HTTPS = "https";
@@ -152,8 +153,8 @@ bool DownloadServiceTask::Query(DownloadInfo &info)
     info.SetDownloadTitle(config_.GetTitle());
     info.SetDownloadTotalBytes(totalSize_);
     info.SetNetworkType(config_.GetNetworkType());
-    info.SetMetered(config_.GetMetered());
-    info.SetRoaming(config_.GetRoaming());
+    info.SetMetered(config_.IsMetered());
+    info.SetRoaming(config_.IsRoaming());
     return true;
 }
 
@@ -439,24 +440,26 @@ size_t DownloadServiceTask::HeaderCallback(void *buffer, size_t size, size_t num
 
 int DownloadServiceTask::ProgressCallback(void *pParam, double dltotal, double dlnow, double ultotal, double ulnow)
 {
-    DownloadServiceTask *this_ = static_cast<DownloadServiceTask *>(pParam);
-    if (this_ != nullptr) {
-        if (this_->isRemoved_) {
+    DownloadServiceTask *task = static_cast<DownloadServiceTask *>(pParam);
+    if (task != nullptr) {
+        if (task->isRemoved_) {
             DOWNLOAD_HILOGI("download task has been removed");
             return  0;
         }
-        if (this_->forceStop_) {
+        if (task->forceStop_) {
             DOWNLOAD_HILOGI("Pause issued by user");
             return HTTP_FORCE_STOP;
         }
-        if (this_->eventCb_ == nullptr) {
+        if (task->eventCb_ == nullptr) {
             return 0;
         }
-        if (this_->prevSize_ != this_->downloadSize_) {
-            std::lock_guard<std::recursive_mutex> autoLock(this_->mutex_);
-            if (this_->status_ != SESSION_PAUSED) {
-                this_->eventCb_("progress",  this_->taskId_, this_->downloadSize_, this_->totalSize_);
-                this_->prevSize_ = this_->downloadSize_;
+        if (task->prevSize_ != task->downloadSize_) {
+            std::lock_guard<std::recursive_mutex> autoLock(task->mutex_);
+            if (task->status_ != SESSION_PAUSED) {
+                task->eventCb_("progress", task->taskId_, task->downloadSize_, task->totalSize_);
+                task->PublishNotification(task->config_.IsBackground(), task->prevSize_,
+                                          task->downloadSize_, task->totalSize_);
+                task->prevSize_ = task->downloadSize_;
             }
         }
         // calc the download speed
@@ -500,6 +503,7 @@ bool DownloadServiceTask::ExecHttp()
                 downloadSize_ = totalSize_;
                 DOWNLOAD_HILOGI("Download task has already completed");
                 SetStatus(SESSION_SUCCESS);
+                PublishNotification(config_.IsBackground(), HUNDRED_PERCENT);
                 return true;
             }
         }
@@ -507,7 +511,7 @@ bool DownloadServiceTask::ExecHttp()
     } else {
         DOWNLOAD_HILOGD("Failed to open download file");
     }
-
+    PublishNotification(config_.IsBackground(), prevSize_, downloadSize_, totalSize_);
     CURLcode code = CurlPerformFileTransfer(handle.get());
     int32_t httpCode;
     curl_easy_getinfo(handle.get(), CURLINFO_RESPONSE_CODE, &httpCode);
@@ -708,6 +712,7 @@ void DownloadServiceTask::HandleResponseCode(CURLcode code, int32_t httpCode)
         case CURLE_OK:
             if (httpCode == HTTP_OK || (isPartialMode_ && httpCode == HTTP_PARIAL_FILE)) {
                 SetStatus(SESSION_SUCCESS);
+                PublishNotification(config_.IsBackground(), HUNDRED_PERCENT);
                 return;
             }
             break;
@@ -809,11 +814,11 @@ bool DownloadServiceTask::IsSatisfiedConfiguration()
     DOWNLOAD_HILOGD("isRoaming_: %{public}d, isMetered_: %{public}d, networkType_: %{public}u",
                     networkInfo.isRoaming_, networkInfo.isMetered_, networkInfo.networkType_);
     DOWNLOAD_HILOGD("config_ { isRoaming_: %{public}d,isMetered_: %{public}d, networkType_: %{public}u}",
-                    config_.GetRoaming(), config_.GetMetered(), config_.GetNetworkType());
-    if (networkInfo.isRoaming_ && !config_.GetRoaming()) {
+                    config_.IsRoaming(), config_.IsMetered(), config_.GetNetworkType());
+    if (networkInfo.isRoaming_ && !config_.IsRoaming()) {
         return false;
     }
-    if (networkInfo.isMetered_ && !config_.GetMetered()) {
+    if (networkInfo.isMetered_ && !config_.IsMetered()) {
         return false;
     }
     if ((networkInfo.networkType_ & config_.GetNetworkType()) == NETWORK_INVALID) {
@@ -872,5 +877,57 @@ std::string DownloadServiceTask::ReadCertification()
     std::string certInfo(buf.str());
     inFile.close();
     return certInfo;
+}
+
+void DownloadServiceTask::PublishNotification(bool background, uint32_t percent)
+{
+    if (!background) {
+        return;
+    }
+    pid_t pid = static_cast<pid_t>(config_.GetApplicationInfoUid());
+    std::string filePath = config_.GetFilePath();
+    DownloadBackgroundNotification::PublishNotification(taskId_, pid, filePath, percent);
+}
+
+void DownloadServiceTask::PublishNotification(bool background, uint32_t prevSize,
+                                              uint32_t downloadSize, uint32_t totalSize)
+{
+    if (!background) {
+        return;
+    }
+    if (prevSize == 0) {
+        PublishNotification(background, 0);
+        lastTimestamp_ =  GetCurTimestamp();
+    } else {
+        uint32_t percent = ProgressNotification(prevSize, downloadSize, totalSize);
+        if (percent > 0) {
+            PublishNotification(background, percent);
+        }
+    }
+}
+
+std::time_t DownloadServiceTask::GetCurTimestamp()
+{
+    auto tp = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
+    return tp.time_since_epoch().count();
+}
+
+uint32_t DownloadServiceTask::ProgressNotification(uint32_t prevSize, uint32_t downloadSize, uint32_t totalSize)
+{
+    uint32_t ret = 0;
+    if (totalSize != 0) {
+        uint32_t percent = static_cast<uint32_t>(downloadSize * 100.0 / totalSize);
+        uint32_t lastPercent = static_cast<uint32_t>(prevSize  * 100.0 / totalSize);
+        std::time_t curTimestamp = GetCurTimestamp();
+        if (curTimestamp < lastTimestamp_) {
+            return 0;
+        }
+        if ((percent - lastPercent) >= TEN_PERCENT_THRESHOLD ||
+            (curTimestamp - lastTimestamp_) >= NOTIFICATION_FREQUENCY) {
+            ret = percent;
+            lastTimestamp_ = curTimestamp;
+        }
+    }
+    return ret;
 }
 } // namespace OHOS::Request::Download
