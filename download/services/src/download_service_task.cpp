@@ -848,7 +848,7 @@ bool DownloadServiceTask::SetHttpsCertificationOption(CURL *curl)
         return false;
     }
     struct curl_blob blob;
-    blob.data = const_cast<char*>(certInfo.c_str());
+    blob.data = certInfo.c_str();
     blob.len = certInfo.size();
     blob.flags = CURL_BLOB_COPY;
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);

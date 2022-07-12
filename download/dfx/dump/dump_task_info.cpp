@@ -82,7 +82,7 @@ void DumpTaskInfo::FormatDetailContent(const DownloadInfo &taskInfo, std::ostrin
     }
 }
 
-bool DumpTaskInfo::DumpAllTask(int fd)
+bool DumpTaskInfo::DumpAllTask(int fd) const
 {
     std::vector<DownloadInfo> taskVector;
     DownloadServiceManager::GetInstance().QueryAllTask(taskVector);
@@ -102,7 +102,7 @@ bool DumpTaskInfo::DumpAllTask(int fd)
     return true;
 }
 
-bool DumpTaskInfo::DumpTaskDetailInfo(int fd, uint32_t taskId)
+bool DumpTaskInfo::DumpTaskDetailInfo(int fd, uint32_t taskId) const
 {
     DownloadInfo downloadInfo;
     bool ret = DownloadServiceManager::GetInstance().Query(taskId, downloadInfo);
