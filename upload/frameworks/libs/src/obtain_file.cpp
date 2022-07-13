@@ -87,7 +87,7 @@ uint32_t ObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri,
     } while (0);
 
     *file = filePtr;
-    fileSize = static_cast<uint32_t>fileLength;
+    fileSize = static_cast<uint32_t>(fileLength);
     return ret;
 }
 
