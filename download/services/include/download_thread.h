@@ -18,7 +18,7 @@
 
 #include <thread>
 #include <cstdint>
-#include "functional"
+#include <functional>
 
 namespace OHOS::Request::Download {
 class DownloadServiceManager;
