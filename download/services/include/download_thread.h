@@ -16,8 +16,9 @@
 #ifndef DOWNLOAD_THREAD_H
 #define DOWNLOAD_THREAD_H
 
-#include <memory>
 #include <thread>
+#include <cstdint>
+#include <functional>
 
 namespace OHOS::Request::Download {
 class DownloadThread final {
