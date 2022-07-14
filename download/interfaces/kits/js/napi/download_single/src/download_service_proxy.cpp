@@ -49,10 +49,8 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config)
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
-
     int32_t fd = -1;
     int32_t err = 0;
-
     if (!IsPathValid(config.GetFilePath())) {
         return -1;
     }
@@ -89,7 +87,6 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config)
         data.WriteString(iter->first);
         data.WriteString(iter->second);
     }
-
     config.Dump();
     DOWNLOAD_HILOGD("DownloadServiceProxy Request started.");
     bool ret = Remote()->SendRequest(CMD_REQUEST, data, reply, option);

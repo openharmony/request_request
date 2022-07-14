@@ -32,9 +32,9 @@ public:
     bool Dump(int fd, const std::vector<std::string> &args) override;
 private:
     void DumpAllTaskTile(int fd) const;
-    bool DumpAllTask(int fd);
+    bool DumpAllTask(int fd) const;
     void DumpTaskDetailInfoTile(int fd) const;
-    bool DumpTaskDetailInfo(int fd, uint32_t taskId);
+    bool DumpTaskDetailInfo(int fd, uint32_t taskId) const;
     void FormatSummaryTitle(std::ostringstream &buffer) const;
     void FormatDetailTitle(std::ostringstream &buffer) const;
     void FormatSummaryContent(const DownloadInfo &taskInfo, std::ostringstream &buffer) const;
