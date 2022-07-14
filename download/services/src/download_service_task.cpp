@@ -16,10 +16,7 @@
 #include "download_service_task.h"
 
 #include <algorithm>
-#include <cerrno>
 #include <unistd.h>
-#include <sys/types.h>
-#include <iostream>
 #include <fstream>
 #include <sstream>
 #include "log.h"
