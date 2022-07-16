@@ -250,7 +250,6 @@ void CUrlAdp::SetCurlOpt(CURL *curl)
     }
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 30L);
-    curl_easy_setopt(curl, CURLOPT_UPLOAD_BUFFERSIZE, 8192L);
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
@@ -362,7 +361,6 @@ size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *u
     FileData *fData = (FileData *) userdata;
     CUrlAdp *url = (CUrlAdp *) fData->adp;
     std::string stmp(buffer, size * nitems);
-    uint32_t isize = 1;
     const int32_t codeOk = 200;
     const std::string headEndFlag = "\r\n";
 
@@ -400,8 +398,6 @@ size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *u
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback stoatalHead is %{public}s", stoatalHead.c_str());
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback stoatalHead.length() is %{public}zu",
             stoatalHead.length());
-        nitems = stoatalHead.length();
-        size = isize;
         if (codeOk == fData->httpCode) {
             if (url->fileArray_.size() == fData->fileIndex) {
                 url->uploadTask_->OnHeaderReceive(sbuff, size, nitems);
@@ -420,7 +416,6 @@ size_t CUrlAdp::HeaderCallbackL5(char *buffer, size_t size, size_t nitems, void 
     FileData *fData = (FileData *) userdata;
     CUrlAdp *url = (CUrlAdp *) fData->adp;
     std::string stmp(buffer, size * nitems);
-    uint32_t isize = 1;
     const int32_t codeOk = 200;
     UploadResponse resData;
     const std::string headEndFlag = "\r\n";
@@ -442,8 +437,6 @@ size_t CUrlAdp::HeaderCallbackL5(char *buffer, size_t size, size_t nitems, void 
         for (auto &smem : fData->responseHead) {
             stoatalHead += smem;
         }
-        size = isize;
-        nitems = stoatalHead.length();
         if (codeOk == fData->httpCode) {
             if (url->fileArray_.size() == fData->fileIndex && url->config_->fsuccess != nullptr) {
                 resData.headers = stoatalHead;
