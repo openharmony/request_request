@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-upload_path = "//base/miscservices/request/upload"
+upload_path = "//base/request/request/upload"
 
 kits_path = "${upload_path}/interfaces/kits"
 

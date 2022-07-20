@@ -25,10 +25,10 @@ ohos_static_library("misc_request_dfx_static") {
     "./dump",
     "./event/fault/",
     "./event/statistics/",
-    "//base/miscservices/request/download/services/include",
-    "//base/miscservices/request/download/interfaces/kits/js/napi/download_single/include",
-    "//base/miscservices/request/download/interfaces/innerkits/include",
-    "//base/miscservices/request/download/utils/include",
+    "//base/request/request/download/services/include",
+    "//base/request/request/download/interfaces/kits/js/napi/download_single/include",
+    "//base/request/request/download/interfaces/innerkits/include",
+    "//base/request/request/download/utils/include",
     "//third_party/curl/include",
   ]
 
@@ -40,6 +40,6 @@ ohos_static_library("misc_request_dfx_static") {
     "hitrace_native:libhitrace",
     "hiviewdfx_hilog_native:libhilog",
   ]
-  subsystem_name = "miscservices"
+  subsystem_name = "request"
   part_name = "request"
 }

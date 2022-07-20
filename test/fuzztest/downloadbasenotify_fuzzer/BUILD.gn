@@ -18,10 +18,10 @@ import("//build/test.gni")
 
 ##############################fuzztest##########################################
 ohos_fuzztest("DownloadBaseNotifyFuzzTest") {
-  module_out_path = "miscservices/request"
+  module_out_path = "request/request"
 
   include_dirs = [
-    "//base/miscservices/request/download/interfaces/kits/js/napi/download_single/include",
+    "//base/request/request/download/interfaces/kits/js/napi/download_single/include",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
     "//foundation/arkui/ace_engine/frameworks/base/utils",
     "//foundation/arkui/napi",
@@ -31,8 +31,8 @@ ohos_fuzztest("DownloadBaseNotifyFuzzTest") {
     "//third_party/curl/include",
     "//foundation/ability/ability_runtime/services/common/include",
     "//utils/system/safwk/native/include",
-    "//base/miscservices/request/download/interfaces/innerkits/include",
-    "//base/miscservices/request/download/utils/include",
+    "//base/request/request/download/interfaces/innerkits/include",
+    "//base/request/request/download/utils/include",
     "//foundation/ability/ability_runtime/interfaces/kits/native/appkit/app/include/",
     "//foundation/ability/ability_runtime/interfaces/kits/native/ability/native",
     "//foundation/ability/ability_runtime/interfaces/inner_api/base/include/ohos/aafwk/base",
@@ -53,13 +53,13 @@ ohos_fuzztest("DownloadBaseNotifyFuzzTest") {
   sources = [ "downloadbasenotify_fuzzer.cpp" ]
 
   fuzz_config_file =
-      "//base/miscservices/request/test/fuzztest/downloadbasenotify_fuzzer"
+      "//base/request/request/test/fuzztest/downloadbasenotify_fuzzer"
 
   deps = [
-    "//base/miscservices/request/download/etc/init:downloadservice.cfg",
-    "//base/miscservices/request/download/interfaces/kits/js/napi/download_single:downloadsingle",
-    "//base/miscservices/request/download/sa_profile:download_sa_profiles",
-    "//base/miscservices/request/download/services:download_server",
+    "//base/request/request/download/etc/init:downloadservice.cfg",
+    "//base/request/request/download/interfaces/kits/js/napi/download_single:downloadsingle",
+    "//base/request/request/download/sa_profile:download_sa_profiles",
+    "//base/request/request/download/services:download_server",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_single:ipc_single",

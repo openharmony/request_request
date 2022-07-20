@@ -19,5 +19,5 @@ ohos_prebuilt_etc("downloadservice.cfg") {
   source = "downloadservice.cfg"
   relative_install_dir = "init"
   part_name = "request"
-  subsystem_name = "miscservices"
+  subsystem_name = "request"
 }

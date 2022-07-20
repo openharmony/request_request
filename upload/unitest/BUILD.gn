@@ -11,9 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//base/miscservices/request/request_aafwk.gni")
+import("//base/request/request/request_aafwk.gni")
 
-#import("//base/miscservices/request/upload/upload.gni")
+#import("//base/request/request/upload/upload.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 module_output_path = "request/upload_service"
@@ -22,8 +22,8 @@ ohos_unittest("upload_obtain_file_UT_test") {
   module_out_path = module_output_path
 
   sources = [
-    "//base/miscservices/request/upload/frameworks/libs/src/file_adapter.cpp",
-    "//base/miscservices/request/upload/frameworks/libs/src/obtain_file.cpp",
+    "//base/request/request/upload/frameworks/libs/src/file_adapter.cpp",
+    "//base/request/request/upload/frameworks/libs/src/obtain_file.cpp",
     "src/mock_obtain_file.cpp",
     "src/obtain_file_test.cpp",
   ]
@@ -31,15 +31,15 @@ ohos_unittest("upload_obtain_file_UT_test") {
   include_dirs = [
     "include",
     "//third_party/curl/include",
-    "//base/miscservices/request/upload/frameworks/libs/include",
-    "//base/miscservices/time/interfaces/innerkits/include",
+    "//base/request/request/upload/frameworks/libs/include",
+    "//base/request/time/interfaces/innerkits/include",
     "//third_party/googletest/googlemock/include",
   ]
 
   deps = [
     "${ability_runtime_path}/frameworks/native/ability/native:abilitykit_native",
     "${ability_runtime_path}/frameworks/native/ability/native:data_ability_helper",
-    "//base/miscservices/request/upload/frameworks/libs/:upload_lib",
+    "//base/request/request/upload/frameworks/libs/:upload_lib",
     "//third_party/googletest:gmock_main",
   ]
 
@@ -58,15 +58,15 @@ ohos_unittest("upload_UT_test") {
   module_out_path = module_output_path
 
   sources = [
-    "//base/miscservices/request/upload/frameworks/libs/src/curl_adp.cpp",
-    "//base/miscservices/request/upload/frameworks/libs/src/upload_timer_info.cpp",
+    "//base/request/request/upload/frameworks/libs/src/curl_adp.cpp",
+    "//base/request/request/upload/frameworks/libs/src/upload_timer_info.cpp",
     "src/upload_test.cpp",
   ]
 
   include_dirs = [
     "include",
-    "//base/miscservices/request/upload/frameworks/libs/include",
-    "//base/miscservices/time/interfaces/innerkits/include",
+    "//base/request/request/upload/frameworks/libs/include",
+    "//base/request/time/interfaces/innerkits/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
     "//foundation/arkui/napi/interfaces/kits",
     "//third_party/json/single_include",
@@ -83,7 +83,7 @@ ohos_unittest("upload_UT_test") {
   deps = [
     "${ability_runtime_path}/frameworks/native/ability/native:abilitykit_native",
     "${ability_runtime_path}/frameworks/native/appkit:app_context",
-    "//base/miscservices/request/upload/frameworks/libs/:upload_lib",
+    "//base/request/request/upload/frameworks/libs/:upload_lib",
     "//third_party/curl/:curl",
     "//utils/native/base:utils",
   ]
