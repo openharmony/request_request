@@ -49,10 +49,8 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config)
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
-
     int32_t fd = -1;
     int32_t err = 0;
-
     if (!IsPathValid(config.GetFilePath())) {
         return -1;
     }
@@ -68,8 +66,6 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config)
             err = errno;
         }
     }
-
-    DOWNLOAD_HILOGI("Succeed to open download file, fd [%{public}d]]", fd);
     data.WriteFileDescriptor(fd);
     if (fd > 0) {
         close(fd);
@@ -83,22 +79,18 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config)
     data.WriteString(config.GetFilePath());
     data.WriteString(config.GetTitle());
     data.WriteUint32(config.GetHeader().size());
-
     std::map<std::string, std::string>::const_iterator iter;
     for (iter = config.GetHeader().begin(); iter != config.GetHeader().end(); ++iter) {
         data.WriteString(iter->first);
         data.WriteString(iter->second);
     }
-
     config.Dump();
-    DOWNLOAD_HILOGD("DownloadServiceProxy Request started.");
     bool ret = Remote()->SendRequest(CMD_REQUEST, data, reply, option);
     if (ret != ERR_NONE) {
         DOWNLOAD_HILOGE("Request, ret = %{public}d", ret);
         return -1;
     }
     int32_t taskId = reply.ReadInt32();
-    DOWNLOAD_HILOGD("DownloadServiceProxy Request succeeded. TaskId = %{public}d", taskId);
     return taskId;
 }
 

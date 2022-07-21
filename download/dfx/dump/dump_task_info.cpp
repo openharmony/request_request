@@ -82,7 +82,7 @@ void DumpTaskInfo::FormatDetailContent(const DownloadInfo &taskInfo, std::ostrin
     }
 }
 
-bool DumpTaskInfo::DumpAllTask(int fd)
+bool DumpTaskInfo::DumpAllTask(int fd) const
 {
     std::vector<DownloadInfo> taskVector;
     auto instance = DownloadServiceManager::GetInstance();
@@ -107,7 +107,7 @@ bool DumpTaskInfo::DumpAllTask(int fd)
     return true;
 }
 
-bool DumpTaskInfo::DumpTaskDetailInfo(int fd, uint32_t taskId)
+bool DumpTaskInfo::DumpTaskDetailInfo(int fd, uint32_t taskId) const
 {
     DownloadInfo downloadInfo;
     auto instance = DownloadServiceManager::GetInstance();
