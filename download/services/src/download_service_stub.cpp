@@ -32,6 +32,11 @@ int32_t DownloadServiceStub::OnRemoteRequest(
         DOWNLOAD_HILOGE("Remote descriptor not the same as local descriptor.");
         return E_DOWNLOAD_TRANSACT_ERROR;
     }
+    int32_t pid = IPCSkeleton::GetCallingPid();
+    if (!CheckPermission()) {
+        DOWNLOAD_HILOGE("no permission to access download service, pid:%{public}d", pid);
+        return E_DOWNLOAD_NO_PERMISSION;
+    }
     switch (code) {
         case CMD_REQUEST:
             return OnRequest(data, reply);
@@ -43,21 +48,17 @@ int32_t DownloadServiceStub::OnRemoteRequest(
             return OnQueryMimeType(data, reply);
         case CMD_REMOVE:
             return OnRemove(data, reply);
-            break;
         case CMD_RESUME:
             return OnResume(data, reply);
         case CMD_ON:
             return OnEventOn(data, reply);
-            break;
         case CMD_OFF:
             return OnEventOff(data, reply);
-            break;
         case CMD_CHECKPERMISSION:
             return OnCheckPermission(data, reply);
             break;
         case CMD_SETSTARTID:
             return OnSetStartId(data, reply);
-            break;
         default:
             DOWNLOAD_HILOGE("Default value received, check needed.");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);

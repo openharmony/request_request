@@ -275,15 +275,13 @@ bool DownloadServiceAbility::Off(uint32_t taskId, const std::string &type)
 
 bool DownloadServiceAbility::CheckPermission()
 {
-    AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int result = PERMISSION_DENIED;
-    if (AccessTokenKit::GetTokenTypeFlag(callerToken) == TOKEN_NATIVE) {
-        result = AccessTokenKit::VerifyNativeToken(callerToken, DOWNLOAD_PERMISSION_NAME_INTERNET);
-    } else if (AccessTokenKit::GetTokenTypeFlag(callerToken) == TOKEN_HAP) {
-        result = AccessTokenKit::VerifyAccessToken(callerToken, DOWNLOAD_PERMISSION_NAME_INTERNET);
-    } else {
-        DOWNLOAD_HILOGE("invalid token id %{public}d", callerToken);
+    AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
+    TypeATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (tokenType == TOKEN_INVALID) {
+        DOWNLOAD_HILOGE("invalid token id %{public}d", tokenId);
+        return false;
     }
+    int result = AccessTokenKit::VerifyAccessToken(tokenId, DOWNLOAD_PERMISSION_NAME_INTERNET);
     DOWNLOAD_HILOGI("Current token permission is %{public}d", result);
     return result == PERMISSION_GRANTED;
 }
