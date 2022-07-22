@@ -5,13 +5,13 @@
   "license": "Apache License 2.0",
   "publishAs": "code-segment",
   "segment": {
-    "destPath": "base/miscservices/request"
+    "destPath": "base/request/request"
   },
   "dirs": {},
   "scripts": {},
   "component": {
     "name": "request",
-    "subsystem": "miscservices",
+    "subsystem": "request",
     "syscap": [
         "SystemCapability.MiscServices.Download",
         "SystemCapability.MiscServices.Upload"
@@ -24,7 +24,7 @@
     "rom":"300KB",
     "ram":"1024KB",
     "hisysevent_config": [
-      "//base/miscservices/request/hisysevent.yaml"
+      "//base/request/request/hisysevent.yaml"
     ],
     "deps": {
     "components": [
@@ -43,18 +43,18 @@
     },
     "build": {
       "sub_component": [
-        "//base/miscservices/request:request_packages",
-        "//base/miscservices/request/download/ability:downloaddataability",
-        "//base/miscservices/request/download/ability:download_dataability",
-        "//base/miscservices/request/upload/frameworks/libs:upload_lib",
-        "//base/miscservices/request/upload/interfaces/kits/napi:request"
+        "//base/request/request:request_packages",
+        "//base/request/request/download/ability:downloaddataability",
+        "//base/request/request/download/ability:download_dataability",
+        "//base/request/request/upload/frameworks/libs:upload_lib",
+        "//base/request/request/upload/interfaces/kits/napi:request"
       ],
       "inner_kits": [
       ],
       "test": [
-        "//base/miscservices/request/upload/unitest:upload_obtain_file_UT_test",
-        "//base/miscservices/request/upload/unitest:upload_UT_test",
-         "//base/miscservices/request/test/fuzztest:fuzztest"
+        "//base/request/request/upload/unitest:upload_obtain_file_UT_test",
+        "//base/request/request/upload/unitest:upload_UT_test",
+         "//base/request/request/test/fuzztest:fuzztest"
       ]
     }
   }

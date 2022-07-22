@@ -30,9 +30,9 @@ config("download_service_config") {
 
 ohos_shared_library("download_server") {
   sources = [
-    "//base/miscservices/request/download/interfaces/kits/js/napi/download_single/src/download_config.cpp",
-    "//base/miscservices/request/download/interfaces/kits/js/napi/download_single/src/download_info.cpp",
-    "//base/miscservices/request/upload/frameworks/libs/src/module_init.cpp",
+    "//base/request/request/download/interfaces/kits/js/napi/download_single/src/download_config.cpp",
+    "//base/request/request/download/interfaces/kits/js/napi/download_single/src/download_info.cpp",
+    "//base/request/request/upload/frameworks/libs/src/module_init.cpp",
     "src/download_notify_proxy.cpp",
     "src/download_service_ability.cpp",
     "src/download_service_manager.cpp",
@@ -50,22 +50,22 @@ ohos_shared_library("download_server") {
     "//utils/native/base/include",
     "//utils/system/safwk/native/include",
     "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient/include",
-    "//base/miscservices/request/download/interfaces/innerkits/include",
-    "//base/miscservices/request/download/utils/include",
+    "//base/request/request/download/interfaces/innerkits/include",
+    "//base/request/request/download/utils/include",
     "//base/telephony/core_service/interfaces/innerkits/include",
     "//third_party/json/include",
-    "//base/miscservices/request/download/interfaces/kits/js/napi/download_single/include",
-    "//base/miscservices/request/upload/frameworks/libs/include",
+    "//base/request/request/download/interfaces/kits/js/napi/download_single/include",
+    "//base/request/request/upload/frameworks/libs/include",
     "//third_party/curl/include",
     "//third_party/openssl/include",
     "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
     "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter",
-    "//base/miscservices/request/download/dfx/dump",
-    "//base/miscservices/request/download/dfx/event/statistics",
-    "//base/miscservices/request/download/dfx/event/fault",
+    "//base/request/request/download/dfx/dump",
+    "//base/request/request/download/dfx/event/statistics",
+    "//base/request/request/download/dfx/event/fault",
   ]
   deps = [
-    "//base/miscservices/request/download/dfx:misc_request_dfx_static",
+    "//base/request/request/download/dfx:misc_request_dfx_static",
     "//base/telephony/core_service/interfaces/innerkits:tel_core_service_api",
     "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient:net_conn_manager_if",
     "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
@@ -90,6 +90,6 @@ ohos_shared_library("download_server") {
     "multimedia_image_standard:image_native",
     "os_account:os_account_innerkits",
   ]
-  subsystem_name = "miscservices"
+  subsystem_name = "request"
   part_name = "request"
 }

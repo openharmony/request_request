@@ -10,7 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import("//base/miscservices/request/request_aafwk.gni")
+import("//base/request/request/request_aafwk.gni")
 import("//build/ohos.gni")
 
 config("download_interfaces_kits_napi_config") {
@@ -29,9 +29,9 @@ ohos_shared_library("downloadsingle") {
     "//third_party/curl/include",
     "${ability_runtime_services_path}/common/include",
     "//utils/system/safwk/native/include",
-    "//base/miscservices/request/download/interfaces/kits/napi/download_single/include",
-    "//base/miscservices/request/download/interfaces/innerkits/include",
-    "//base/miscservices/request/download/utils/include",
+    "//base/request/request/download/interfaces/kits/napi/download_single/include",
+    "//base/request/request/download/interfaces/innerkits/include",
+    "//base/request/request/download/utils/include",
     "${ability_runtime_path}/interfaces/kits/native/appkit/app/",
     "${ability_runtime_path}/interfaces/kits/native/ability/native",
     "${ability_runtime_services_path}/abilitymgr/include",
@@ -83,6 +83,6 @@ ohos_shared_library("downloadsingle") {
     "relational_store:native_rdb",
   ]
   relative_install_dir = "module"
-  subsystem_name = "miscservices"
+  subsystem_name = "request"
   part_name = "request"
 }
