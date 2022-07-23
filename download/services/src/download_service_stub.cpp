@@ -26,15 +26,15 @@ using namespace OHOS::HiviewDFX;
 int32_t DownloadServiceStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    DOWNLOAD_HILOGD("OnRemoteRequest started, code = %{public}d", code);
+    DOWNLOAD_HILOGE("request code = %{public}d", code);
     auto descriptorToken = data.ReadInterfaceToken();
     if (descriptorToken != GetDescriptor()) {
-        DOWNLOAD_HILOGE("Remote descriptor not the same as local descriptor.");
+        DOWNLOAD_HILOGE("remote descriptor not the same as local descriptor");
         return E_DOWNLOAD_TRANSACT_ERROR;
     }
     int32_t pid = IPCSkeleton::GetCallingPid();
     if (!CheckPermission()) {
-        DOWNLOAD_HILOGE("no permission to access download service, pid:%{public}d", pid);
+        DOWNLOAD_HILOGE("no permission, pid:%{public}d", pid);
         return E_DOWNLOAD_NO_PERMISSION;
     }
     switch (code) {
@@ -56,7 +56,6 @@ int32_t DownloadServiceStub::OnRemoteRequest(
             return OnEventOff(data, reply);
         case CMD_CHECKPERMISSION:
             return OnCheckPermission(data, reply);
-            break;
         case CMD_SETSTARTID:
             return OnSetStartId(data, reply);
         default:
