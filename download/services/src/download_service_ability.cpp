@@ -283,7 +283,7 @@ bool DownloadServiceAbility::CheckPermission()
     }
     int result = AccessTokenKit::VerifyAccessToken(tokenId, DOWNLOAD_PERMISSION_NAME_INTERNET);
     if (result == PERMISSION_DENIED) {
-        DOWNLOAD_HILOGI("Current tokenId permission is %{public}d", result);
+        DOWNLOAD_HILOGE("Current tokenId permission is %{public}d", result);
     }
     return result == PERMISSION_GRANTED;
 }
