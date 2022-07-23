@@ -34,10 +34,10 @@ config("upload_lib_public_config") {
     "include",
     "//third_party/curl/include",
     "//third_party/openssl/include",
-    "//base/request/time/interfaces/innerkits/include",
     "./",
     "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter",
     "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
+    "//base/time/time_service/interfaces/innerkits/include",
   ]
 }
 
@@ -71,7 +71,7 @@ ohos_shared_library("upload_lib") {
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "time_native:time_service",
+    "time_service:time_service",
     "utils_base:utils",
   ]
 

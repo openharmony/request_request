@@ -59,7 +59,7 @@ ohos_shared_library("request") {
     "ability_runtime:ability_manager",
     "ability_runtime:napi_base_context",
     "hiviewdfx_hilog_native:libhilog",
-    "time_native:time_service",
+    "time_service:time_service",
   ]
 
   public_configs = [ ":upload_native_public_config" ]
