@@ -32,9 +32,8 @@ int32_t DownloadServiceStub::OnRemoteRequest(
         DOWNLOAD_HILOGE("remote descriptor not the same as local descriptor");
         return E_DOWNLOAD_TRANSACT_ERROR;
     }
-    int32_t pid = IPCSkeleton::GetCallingPid();
     if (!CheckPermission()) {
-        DOWNLOAD_HILOGE("no permission, pid:%{public}d", pid);
+        DOWNLOAD_HILOGE("no permission, pid:%{public}d", IPCSkeleton::GetCallingPid());
         return E_DOWNLOAD_NO_PERMISSION;
     }
     switch (code) {
