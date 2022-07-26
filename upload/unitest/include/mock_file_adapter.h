@@ -26,7 +26,7 @@ public:
     MockFileAdapter() = default;
     virtual ~MockFileAdapter() = default;
 
-    MOCK_METHOD2(DataAbilityOpenFile, uint32_t(std::string &,
+    MOCK_METHOD2(DataAbilityOpenFile, int32_t(std::string &,
                                                std::shared_ptr<OHOS::AbilityRuntime::Context> &));
     MOCK_METHOD1(InternalGetFilePath,
                  std::string(std::shared_ptr<OHOS::AbilityRuntime::Context> &));
