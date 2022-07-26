@@ -70,7 +70,7 @@ void ObtainFileTest::TearDown()
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest001, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest000 start";
+    GTEST_LOG_(INFO) << "ObtainFileUtTest001 start";
     FILE* file = nullptr;
     unsigned int fileSize = 0;
     unsigned int result = UPLOAD_ERRORCODE_NO_ERROR;
@@ -84,7 +84,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest001, TestSize.Level0)
     EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR);
     EXPECT_EQ(file, nullptr);
     EXPECT_EQ(fileSize, 0);
-    GTEST_LOG_(INFO) << "ObtainFileUtTest000 end";
+    GTEST_LOG_(INFO) << "ObtainFileUtTest001 end";
 }
 
 /**
@@ -154,7 +154,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest003, TestSize.Level0)
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest004, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest003 start";
+    GTEST_LOG_(INFO) << "ObtainFileUtTest004 start";
     FILE* file = nullptr;
     unsigned int fileSize = 0;
     unsigned int result = UPLOAD_ERRORCODE_GET_FILE_ERROR;
@@ -175,7 +175,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest004, TestSize.Level0)
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest005, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest003 start";
+    GTEST_LOG_(INFO) << "ObtainFileUtTest005 start";
     FILE* file = nullptr;
     unsigned int fileSize = 0;
     unsigned int result = UPLOAD_ERRORCODE_GET_FILE_ERROR;
@@ -197,7 +197,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest005, TestSize.Level0)
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest006, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest003 start";
+    GTEST_LOG_(INFO) << "ObtainFileUtTest006 start";
     FILE* file = nullptr;
     unsigned int fileSize = 0;
     unsigned int result = UPLOAD_ERRORCODE_GET_FILE_ERROR;
@@ -223,7 +223,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest006, TestSize.Level0)
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest007, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest003 start";
+    GTEST_LOG_(INFO) << "ObtainFileUtTest007 start";
     FILE* file = nullptr;
     unsigned int fileSize = 0;
     unsigned int result = UPLOAD_ERRORCODE_GET_FILE_ERROR;
@@ -249,7 +249,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest007, TestSize.Level0)
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest008, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest003 start";
+    GTEST_LOG_(INFO) << "ObtainFileUtTest008 start";
     std::string testFileInfo = "test date for internal file.";
     std::string createCachePathCommend = "mkdir -p /data/testApp/CacheDir/path/to/";
     std::string createCacheFileCommend = "touch /data/testApp/CacheDir/path/to/file.txt";

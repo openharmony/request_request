@@ -18,7 +18,7 @@
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS::Request::Upload {
-uint32_t FileAdapter::DataAbilityOpenFile(std::string &fileUri,
+int32_t FileAdapter::DataAbilityOpenFile(std::string &fileUri,
     std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     std::shared_ptr<Uri> uri = std::make_shared<Uri>(fileUri);
