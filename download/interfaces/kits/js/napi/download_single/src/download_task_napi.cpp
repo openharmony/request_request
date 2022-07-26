@@ -58,12 +58,15 @@ napi_value DownloadTaskNapi::JsMain(napi_env env, napi_callback_info info)
 {
     DOWNLOAD_HILOGD("Enter download JsMain.");
     if (Legacy::DownloadManager::IsLegacy(env, info)) {
-        DOWNLOAD_HILOGD("Enter download legacy.");
+        DOWNLOAD_HILOGE("Enter download legacy.");
         return Legacy::DownloadManager::Download(env, info);
     }
-
+    if (!DownloadManager::GetInstance()->LoadDownloadServer()) {
+        DOWNLOAD_HILOGE("load download server fail");
+        return nullptr;
+    }
     if (!DownloadManager::GetInstance()->CheckPermission()) {
-        DOWNLOAD_HILOGD("no permission to access download service");
+        DOWNLOAD_HILOGE("no permission to access download service");
         return nullptr;
     }
     struct ContextInfo {

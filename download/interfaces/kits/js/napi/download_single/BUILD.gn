@@ -36,6 +36,8 @@ ohos_shared_library("downloadsingle") {
     "${ability_runtime_path}/interfaces/kits/native/ability/native",
     "${ability_runtime_services_path}/abilitymgr/include",
     "${ability_runtime_inner_api_path}/ability_manager/include",
+    "//foundation/distributedschedule/samgr/interfaces/innerkits/Isamgr",
+    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
   ]
   public_configs = [ ":download_interfaces_kits_napi_config" ]
 
@@ -60,6 +62,7 @@ ohos_shared_library("downloadsingle") {
     "src/legacy/download_manager.cpp",
     "src/legacy/download_task.cpp",
     "src/napi_utils.cpp",
+    "src/download_sync_load_callback.cpp"
   ]
   deps = [
     "//foundation/arkui/napi:ace_napi",
