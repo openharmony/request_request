@@ -43,11 +43,11 @@ ohos_shared_library("download_server") {
   ]
 
   public_configs = [
-    "//utils/native/base:utils_config",
+    "//commonlibrary/c_utils/base:utils_config",
     ":download_service_config",
   ]
   include_dirs = [
-    "//utils/native/base/include",
+    "//commonlibrary/c_utils/base/include",
     "//utils/system/safwk/native/include",
     "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient/include",
     "//base/request/request/download/interfaces/innerkits/include",
@@ -71,7 +71,6 @@ ohos_shared_library("download_server") {
     "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/curl:curl",
-    "//utils/native/base:utils",
   ]
 
   defines = [ "NO_SSL_CERTIFICATION=1" ]
@@ -80,6 +79,7 @@ ohos_shared_library("download_server") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
     "drivers_interface_ril:hril_innerkits",
     "eventhandler:libeventhandler",
     "hisysevent_native:libhisysevent",

@@ -37,7 +37,7 @@
         "samgr_standard",
         "window_manager",
         "napi",
-        "utils_base"		
+        "c_utils"		
     ],
       "third_party": []
     },
