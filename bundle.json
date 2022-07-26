@@ -42,19 +42,29 @@
       "third_party": []
     },
     "build": {
-      "sub_component": [
-        "//base/request/request:request_packages",
-        "//base/request/request/download/ability:downloaddataability",
-        "//base/request/request/download/ability:download_dataability",
-        "//base/request/request/upload/frameworks/libs:upload_lib",
-        "//base/request/request/upload/interfaces/kits/napi:request"
-      ],
+      "group_type": {
+        "base_group": [
+          "//base/request/request/upload/interfaces/kits/napi:request",
+          "//base/request/request/upload/frameworks/libs:upload_lib"
+
+        ],
+        "fwk_group": [
+          "//base/request/request/download/ability:downloaddataability",
+          "//base/request/request/download/ability:download_dataability",
+          "//base/request/request/download/interfaces/kits/js/napi/download_single:downloadsingle"
+        ],
+        "service_group": [
+          "//base/request/request/download/etc/init:downloadservice.cfg",
+          "//base/request/request/download/sa_profile:download_sa_profiles",
+          "//base/request/request/download/services:download_server"
+        ]
+      },
       "inner_kits": [
       ],
       "test": [
         "//base/request/request/upload/unitest:upload_obtain_file_UT_test",
         "//base/request/request/upload/unitest:upload_UT_test",
-         "//base/request/request/test/fuzztest:fuzztest"
+        "//base/request/request/test/fuzztest:fuzztest"
       ]
     }
   }

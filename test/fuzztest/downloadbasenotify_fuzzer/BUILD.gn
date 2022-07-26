@@ -56,10 +56,6 @@ ohos_fuzztest("DownloadBaseNotifyFuzzTest") {
       "//base/request/request/test/fuzztest/downloadbasenotify_fuzzer"
 
   deps = [
-    "//base/request/request/download/etc/init:downloadservice.cfg",
-    "//base/request/request/download/interfaces/kits/js/napi/download_single:downloadsingle",
-    "//base/request/request/download/sa_profile:download_sa_profiles",
-    "//base/request/request/download/services:download_server",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_single:ipc_single",
