@@ -62,8 +62,8 @@ uint32_t ObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri,
     int32_t fileLength = 0;
 
     do {
-        uint32_t fd = fileAdapter_->DataAbilityOpenFile(fileUri, context);
-        if (fd < 0) {
+        int32_t fd = fileAdapter_->DataAbilityOpenFile(fileUri, context);
+        if (fd == -1) {
             UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetDataAbilityFile, open file error.");
             ret = UPLOAD_ERRORCODE_GET_FILE_ERROR;
             break;
