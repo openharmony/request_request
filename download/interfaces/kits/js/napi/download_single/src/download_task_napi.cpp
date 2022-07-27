@@ -58,7 +58,7 @@ napi_value DownloadTaskNapi::JsMain(napi_env env, napi_callback_info info)
 {
     DOWNLOAD_HILOGD("Enter download JsMain.");
     if (Legacy::DownloadManager::IsLegacy(env, info)) {
-        DOWNLOAD_HILOGE("Enter download legacy.");
+        DOWNLOAD_HILOGD("Enter download legacy.");
         return Legacy::DownloadManager::Download(env, info);
     }
     if (!DownloadManager::GetInstance()->LoadDownloadServer()) {
