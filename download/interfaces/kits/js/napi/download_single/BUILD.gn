@@ -36,6 +36,8 @@ ohos_shared_library("downloadsingle") {
     "${ability_runtime_path}/interfaces/kits/native/ability/native",
     "${ability_runtime_services_path}/abilitymgr/include",
     "${ability_runtime_inner_api_path}/ability_manager/include",
+    "//foundation/distributedschedule/samgr/interfaces/innerkits/Isamgr",
+    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
   ]
   public_configs = [ ":download_interfaces_kits_napi_config" ]
 
@@ -55,6 +57,7 @@ ohos_shared_library("downloadsingle") {
     "src/download_remove.cpp",
     "src/download_resume.cpp",
     "src/download_service_proxy.cpp",
+    "src/download_sync_load_callback.cpp",
     "src/download_task.cpp",
     "src/download_task_napi.cpp",
     "src/legacy/download_manager.cpp",

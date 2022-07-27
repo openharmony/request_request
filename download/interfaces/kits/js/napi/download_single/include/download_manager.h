@@ -17,6 +17,8 @@
 #define DOWNLOAD_MANAGER_H
 
 #include <map>
+#include <mutex>
+#include <condition_variable>
 
 #include "data_ability_helper.h"
 #include "iremote_object.h"
@@ -56,17 +58,24 @@ public:
     
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
     void SetDataAbilityHelper(std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> dataAbilityHelper);
-
+    bool LoadDownloadServer();
+    void LoadServerSuccess();
+    void LoadServerFail();
 private:
     sptr<DownloadServiceInterface> GetDownloadServiceProxy();
 
 private:
     static std::mutex instanceLock_;
     static sptr<DownloadManager> instance_;
-	
+    std::mutex downloadMutex_;
+    std::mutex conditionMutex_;
+
     sptr<DownloadServiceInterface> downloadServiceProxy_;
     sptr<DownloadSaDeathRecipient> deathRecipient_;
     std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> dataAbilityHelper_;
+    std::condition_variable downloadSyncCon_;
+    bool ready_ = false;
+    static constexpr int LOAD_SA_TIMEOUT_MS = 15000;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_MANAGER_H
