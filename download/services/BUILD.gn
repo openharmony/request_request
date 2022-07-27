@@ -68,8 +68,8 @@ ohos_shared_library("download_server") {
     "//base/request/request/download/dfx:misc_request_dfx_static",
     "//base/telephony/core_service/interfaces/innerkits:tel_core_service_api",
     "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient:net_conn_manager_if",
-    "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/curl:curl",
     "//utils/native/base:utils",
   ]
