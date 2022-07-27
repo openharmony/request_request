@@ -291,7 +291,7 @@ bool DownloadManager::LoadDownloadServer()
         return true;
     }
 
-    auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();;
+    auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sm == nullptr) {
         DOWNLOAD_HILOGE("GetSystemAbilityManager return null");
         return false;
@@ -303,9 +303,9 @@ bool DownloadManager::LoadDownloadServer()
         return false;
     }
 
-    int32_t result =  sm->LoadSystemAbility(DOWNLOAD_SERVICE_ID,loadCallback_);
+    int32_t result =  sm->LoadSystemAbility(DOWNLOAD_SERVICE_ID, loadCallback_);
     if (result != ERR_OK) {
-        DOWNLOAD_HILOGE("LoadSystemAbility %{public}d failed", DOWNLOAD_SERVICE_ID);
+        DOWNLOAD_HILOGE("LoadSystemAbility %{public}d failed, result: %{public}d", DOWNLOAD_SERVICE_ID, result);
         return false;
     }
 

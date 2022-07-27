@@ -21,14 +21,11 @@
 #include "download_sync_load_callback.h"
 
 namespace OHOS::Request::Download {
-void DownloadSyncLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject>& remoteObject)
+void DownloadSyncLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
+                                                          const sptr<IRemoteObject>& remoteObject)
 {
     if (systemAbilityId != DOWNLOAD_SERVICE_ID) {
         DOWNLOAD_HILOGE("start systemAbilityId is not download server");
-        return;
-    }
-    if (remoteObject == nullptr) {
-        DOWNLOAD_HILOGE("remoteObject is null");
         return;
     }
     DownloadManager::GetInstance()->LoadServerSuccess();

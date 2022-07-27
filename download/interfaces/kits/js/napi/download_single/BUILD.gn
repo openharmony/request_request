@@ -57,12 +57,12 @@ ohos_shared_library("downloadsingle") {
     "src/download_remove.cpp",
     "src/download_resume.cpp",
     "src/download_service_proxy.cpp",
+    "src/download_sync_load_callback.cpp",
     "src/download_task.cpp",
     "src/download_task_napi.cpp",
     "src/legacy/download_manager.cpp",
     "src/legacy/download_task.cpp",
     "src/napi_utils.cpp",
-    "src/download_sync_load_callback.cpp"
   ]
   deps = [
     "//foundation/arkui/napi:ace_napi",

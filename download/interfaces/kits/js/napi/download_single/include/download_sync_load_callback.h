@@ -15,6 +15,7 @@
 
 #ifndef DOWNLOAD_SYNC_LOAD_CALLBACK_H
 #define DOWNLOAD_SYNC_LOAD_CALLBACK_H
+
 #include "system_ability_load_callback_stub.h"
 
 namespace OHOS::Request::Download {
