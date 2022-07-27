@@ -65,7 +65,6 @@ ohos_shared_library("downloadsingle") {
     "//foundation/arkui/napi:ace_napi",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/curl:curl",
-    "//utils/native/base:utils",
   ]
   external_deps = [
     "ability_base:want",
@@ -74,6 +73,7 @@ ohos_shared_library("downloadsingle") {
     "ability_runtime:abilitykit_native",
     "ability_runtime:data_ability_helper",
     "ability_runtime:napi_base_context",
+    "c_utils:utils",
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",

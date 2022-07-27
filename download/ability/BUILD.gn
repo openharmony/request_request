@@ -48,7 +48,7 @@ ohos_shared_library("downloaddataability") {
     "src/uri_utils.cpp",
   ]
   include_dirs = [
-    "//utils/native/base/include",
+    "//commonlibrary/c_utils/base/include",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits/include",
     "//third_party/jsoncpp",
     "//third_party/jsoncpp/include/json",
@@ -66,8 +66,6 @@ ohos_shared_library("downloaddataability") {
     "//foundation/arkui/napi:ace_napi",
     "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//third_party/jsoncpp:jsoncpp",
-    "//utils/native/base:utils",
-    "//utils/native/base:utilsbase",
   ]
 
   public_configs = [ ":downloaddataability_public_config" ]
@@ -75,6 +73,8 @@ ohos_shared_library("downloaddataability") {
     "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:ability_manager",
+    "c_utils:utils",
+    "c_utils:utilsbase",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "ipc:ipc_core",
