@@ -948,4 +948,4 @@ uploadTask.remove((err, result) => {
 
 ##  相关仓
 
-[miscservices_request](https://gitee.com/openharmony/miscservices_request/tree/master/)
+[request_request](https://gitee.com/openharmony/request_request/tree/master/)
