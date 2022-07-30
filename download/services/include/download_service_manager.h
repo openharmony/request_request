@@ -20,6 +20,11 @@
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <stdint.h>
+#include <functional>
+#include <mutex>
+#include <iosfwd>
+#include <vector>
 
 #include "constant.h"
 #include "download_config.h"

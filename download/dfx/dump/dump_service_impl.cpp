@@ -15,10 +15,9 @@
 
 #include "dump_service_impl.h"
 
-#include <cstdio>
+#include <stdio.h>
 #include <string>
 #include <vector>
-#include <cstdlib>
 #include <utility>
 #include <map>
 #include "dumper_factory.h"

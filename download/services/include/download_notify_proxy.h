@@ -16,8 +16,12 @@
 #ifndef DOWNLOAD_NOTIFY_PROXY_H
 #define DOWNLOAD_NOTIFY_PROXY_H
 
+#include <functional>
+#include "iremote_broker.h"
+#include "iremote_object.h"
 #include "iremote_proxy.h"
-
+#include "message_parcel.h"
+#include "refbase.h"
 #include "download_notify_interface.h"
 
 namespace OHOS::Request::Download {

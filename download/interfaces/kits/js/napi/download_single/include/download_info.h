@@ -16,8 +16,9 @@
 #ifndef DOWNLOAD_INFO_H
 #define DOWNLOAD_INFO_H
 
-#include <map>
 #include <string>
+#include <stdint.h>
+#include <iosfwd>
 #include "constant.h"
 
 namespace OHOS::Request::Download {

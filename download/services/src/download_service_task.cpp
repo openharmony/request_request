@@ -16,9 +16,19 @@
 #include "download_service_task.h"
 
 #include <algorithm>
+#include <mutex>
 #include <unistd.h>
 #include <fstream>
 #include <sstream>
+#include <ios>
+#include <map>
+#include <memory>
+#include <string>
+#include <ostream>
+#include <utility>
+#include <vector>
+#include <bits/errno.h>
+#include <curl/easy.h>
 #include "log.h"
 #include "network_adapter.h"
 #include "hitrace_meter.h"

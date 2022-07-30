@@ -16,8 +16,14 @@
 #ifndef REQUEST_NETWORK_ADAPTER_H
 #define REQUEST_NETWORK_ADAPTER_H
 
+#include <stdint.h>
+#include <mutex>
+#include <functional>
+#include "net_handle.h"
+#include "net_link_info.h"
 #include "net_all_capabilities.h"
 #include "net_conn_callback_stub.h"
+#include "refbase.h"
 #include "constant.h"
 namespace OHOS::Request::Download {
 struct NetworkInfo {

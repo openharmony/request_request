@@ -14,7 +14,9 @@
  */
 
 #include "download_thread.h"
-#include "download_service_manager.h"
+#include <chrono>
+#include <thread>
+#include <type_traits>
 
 namespace OHOS::Request::Download {
 DownloadThread::DownloadThread(std::function<bool()> &&task, uint32_t interval)

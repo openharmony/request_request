@@ -14,7 +14,6 @@
  */
 
 #include "task_fault.h"
-#include "log.h"
 #include "hisysevent.h"
 
 namespace OHOS::Request::Download {

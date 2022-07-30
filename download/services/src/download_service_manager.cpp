@@ -14,8 +14,20 @@
  */
 
 #include "download_service_manager.h"
+#include <stddef.h>
+#include <algorithm>
+#include <cstdint>
+#include <functional>
+#include <map>
+#include <memory>
+#include <new>
+#include <queue>
+#include <mutex>
+#include <thread>
+#include <utility>
 #include "network_adapter.h"
 #include "net_conn_constants.h"
+#include "net_all_capabilities.h"
 #include "unistd.h"
 #include "log.h"
 

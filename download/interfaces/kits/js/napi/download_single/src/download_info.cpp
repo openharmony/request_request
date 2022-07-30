@@ -15,6 +15,7 @@
 
 #include "download_info.h"
 #include "log.h"
+#include <string>
 #include "constant.h"
 
 namespace OHOS::Request::Download {

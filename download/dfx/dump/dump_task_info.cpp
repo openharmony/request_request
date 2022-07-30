@@ -14,6 +14,14 @@
  */
 
 #include <iomanip>
+#include <vector>
+#include <string>
+#include <ability>
+#include <sstream>
+#include <ostream>
+#include <ios>
+#include "constant.h"
+#include "download_info.h"
 #include "download_service_manager.h"
 #include "dump_task_info.h"
 

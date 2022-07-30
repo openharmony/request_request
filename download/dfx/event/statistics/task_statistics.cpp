@@ -14,7 +14,10 @@
  */
 
 #include <thread>
+#include <atomic>
+#include <sys/types.h>
 #include <unistd.h>
+#include <time.h>
 #include "log.h"
 #include "hisysevent.h"
 #include "task_statistics.h"

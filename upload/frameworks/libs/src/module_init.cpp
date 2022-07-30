@@ -17,8 +17,8 @@
 #define USE_OPENSSL
 
 #include <curl/curl.h>
-#include <thread>
 #include <pthread.h>
+#include <stddef.h>
 #include "upload_hilog_wrapper.h"
 static pthread_mutex_t *lockarray;
 
