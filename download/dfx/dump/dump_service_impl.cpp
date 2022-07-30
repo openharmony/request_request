@@ -15,11 +15,12 @@
 
 #include "dump_service_impl.h"
 
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include <vector>
 #include <utility>
 #include <map>
+#include "string_ex.h" 
 #include "dumper_factory.h"
 #include "i_dumper.h"
 #include "task_info_dumper_factory.h"
