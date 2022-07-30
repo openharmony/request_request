@@ -25,8 +25,8 @@
 #include "rdb_predicates.h"
 #include "rdb_store.h"
 #include "result_set.h"
-
 #include "log.h"
+#include "download_sync_load_callback.h"
 
 namespace OHOS::Request::Download {
 std::mutex DownloadManager::instanceLock_;
@@ -266,6 +266,8 @@ sptr<DownloadServiceInterface> DownloadManager::GetDownloadServiceProxy()
 
 void DownloadManager::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
 {
+    ready_ = false;
+    LoadDownloadServer();
     downloadServiceProxy_ = GetDownloadServiceProxy();
 }
 
@@ -277,5 +279,59 @@ void DownloadSaDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
     DOWNLOAD_HILOGE("DownloadSaDeathRecipient on remote systemAbility died.");
     DownloadManager::GetInstance()->OnRemoteSaDied(object);
+}
+
+bool DownloadManager::LoadDownloadServer()
+{
+    if (ready_) {
+        return true;
+    }
+    std::lock_guard<std::mutex> lock(downloadMutex_);
+    if (ready_) {
+        return true;
+    }
+
+    auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (sm == nullptr) {
+        DOWNLOAD_HILOGE("GetSystemAbilityManager return null");
+        return false;
+    }
+
+    sptr<DownloadSyncLoadCallback> loadCallback_ = new (std::nothrow) DownloadSyncLoadCallback();
+    if (loadCallback_ == nullptr) {
+        DOWNLOAD_HILOGE("new DownloadAbilityCallback fail");
+        return false;
+    }
+
+    int32_t result =  sm->LoadSystemAbility(DOWNLOAD_SERVICE_ID, loadCallback_);
+    if (result != ERR_OK) {
+        DOWNLOAD_HILOGE("LoadSystemAbility %{public}d failed, result: %{public}d", DOWNLOAD_SERVICE_ID, result);
+        return false;
+    }
+
+    {
+        std::unique_lock<std::mutex> conditionLock(conditionMutex_);
+        auto waitStatus = downloadSyncCon_.wait_for(conditionLock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
+                                                    [this]() { return ready_; });
+        if (!waitStatus) {
+            DOWNLOAD_HILOGE("download server load sa timeout");
+            return false;
+        }
+    }
+    return true;
+}
+
+void DownloadManager::LoadServerSuccess()
+{
+    std::unique_lock<std::mutex> lock(conditionMutex_);
+    ready_ = true;
+    downloadSyncCon_.notify_one();
+    DOWNLOAD_HILOGE("load download server success");
+}
+
+void DownloadManager::LoadServerFail()
+{
+    ready_ = false;
+    DOWNLOAD_HILOGE("load download server fail");
 }
 } // namespace OHOS::Request::Download

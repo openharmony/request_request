@@ -52,12 +52,12 @@ ohos_shared_library("request") {
     "//base/request/request/upload/frameworks/libs:upload_lib",
     "//foundation/arkui/napi/:ace_napi",
     "//third_party/libuv:uv_static",
-    "//utils/native/base:utils",
   ]
 
   external_deps = [
     "ability_runtime:ability_manager",
     "ability_runtime:napi_base_context",
+    "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "time_service:time_service",
   ]
