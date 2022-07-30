@@ -19,6 +19,9 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <stddef.h>
+#include <stdint.h>
+#include <iosfwd>
 
 #include "constant.h"
 #include "curl/curl.h"

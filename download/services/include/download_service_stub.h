@@ -16,8 +16,11 @@
 #ifndef DOWNLOAD_SERVICE_STUB_H
 #define DOWNLOAD_SERVICE_STUB_H
 
+#include <stdint.h>
+#include "message_option.h"
+#include "message_parcel.h"
+#include "refbase.h"
 #include "iremote_stub.h"
-
 #include "download_service_interface.h"
 
 namespace OHOS::Request::Download {

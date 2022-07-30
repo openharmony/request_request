@@ -15,6 +15,7 @@
 
 #include "task_info_dumper_factory.h"
 #include "dump_task_info.h"
+#include "i_dumper.h"
 
 namespace OHOS::Request::Download {
 std::shared_ptr<IDumper> TaskInfoDumperFactory::CreateDumper()

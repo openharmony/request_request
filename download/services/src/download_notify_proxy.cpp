@@ -15,6 +15,7 @@
 #include "download_notify_proxy.h"
 
 #include "log.h"
+#include "message_option.h"
 #include "message_parcel.h"
 
 namespace OHOS::Request::Download {

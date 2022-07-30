@@ -18,6 +18,7 @@
 
 #include <thread>
 #include <cstdint>
+#include <functional>
 
 namespace OHOS::Request::Download {
 class DownloadThread final {

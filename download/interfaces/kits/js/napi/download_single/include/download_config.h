@@ -17,6 +17,7 @@
 #define DOWNLOAD_CONFIG_H
 
 #include <map>
+#include <iosfwd>
 #include <string>
 
 namespace OHOS::Request::Download {

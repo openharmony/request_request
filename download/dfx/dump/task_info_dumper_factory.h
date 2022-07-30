@@ -16,6 +16,7 @@
 #ifndef REQUEST_DUMP_TASK_INFO_FACTORY_H
 #define REQUEST_DUMP_TASK_INFO_FACTORY_H
 
+#include <memory>
 #include "dumper_factory.h"
 
 namespace OHOS::Request::Download {

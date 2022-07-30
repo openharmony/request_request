@@ -17,6 +17,7 @@
 #define TASK_STATISTICS_H
 
 #include <atomic>
+#include <cstdint>
 
 namespace OHOS::Request::Download {
 class TaskStatistics {

@@ -18,8 +18,7 @@
 
 #include <vector>
 #include <string>
-#include <memory>
-#include <sstream>
+#include <iosfwd>
 #include "i_dumper.h"
 
 namespace OHOS::Request::Download {

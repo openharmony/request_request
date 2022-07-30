@@ -17,11 +17,20 @@
 #define DOWNLOAD_SERVICE_ABILITY_H
 
 #include <mutex>
+#include <stdint.h>
+#include <iosfwd>
+#include <functional>
+#include <mutex>
+#include <map>
 #include <string>
 #include <vector>
+#include <memory>
+#include "nocopyable.h"
+#include "refbase.h"
 #include "event_handler.h"
-#include "iremote_object.h"
 #include "system_ability.h"
+#include "download_info.h"
+#include "download_config.h"
 #include "download_notify_interface.h"
 #include "download_service_stub.h"
 

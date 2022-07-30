@@ -18,7 +18,6 @@
 #include <cstdio>
 #include <string>
 #include <vector>
-#include <cstdlib>
 #include <utility>
 #include <map>
 #include "dumper_factory.h"

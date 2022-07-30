@@ -18,6 +18,14 @@
 #include "message_parcel.h"
 #include "download_common.h"
 #include "download_service_interface.h"
+#include "download_config.h"
+#include "download_info.h"
+#include "download_notify_interface.h"
+#include "hilog/log_cpp.h"
+#include "ipc_object_stub.h"
+#include "ipc_types.h"
+#include "iremote_broker.h"
+#include "iremote_object.h"
 #include "log.h"
 
 namespace OHOS::Request::Download {
