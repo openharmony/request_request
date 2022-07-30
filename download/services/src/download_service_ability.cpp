@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 #include <functional>
-#include "__config"
+#include "string_ex.h"
 #include "access_token.h"
 #include "errors.h"
 #include "event_runner.h"
@@ -39,7 +39,6 @@
 #include "log.h"
 
 namespace OHOS::Request::Download {
-using namespace std;
 using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
 
