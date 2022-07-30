@@ -17,7 +17,6 @@
 #define TASK_STATISTICS_H
 
 #include <atomic>
-#include <stdint.h>
 #include <cstdint>
 
 namespace OHOS::Request::Download {

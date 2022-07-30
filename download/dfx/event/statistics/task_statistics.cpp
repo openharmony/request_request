@@ -17,7 +17,7 @@
 #include <atomic>
 #include <sys/types.h>
 #include <unistd.h>
-#include <time.h>
+#include <ctime>
 #include "log.h"
 #include "hisysevent.h"
 #include "task_statistics.h"

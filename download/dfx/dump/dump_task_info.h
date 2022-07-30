@@ -17,11 +17,8 @@
 #define DUMP_TASK_INFO_H
 
 #include <vector>
-#include <stdint.h>
-#include <cstdint>
 #include <string>
 #include <iosfwd>
-#include <utility>
 #include "i_dumper.h"
 
 namespace OHOS::Request::Download {

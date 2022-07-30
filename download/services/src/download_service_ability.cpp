@@ -17,7 +17,6 @@
 #include <new>
 #include <ctime>
 #include <string>
-#include <time.h>
 #include <utility>
 #include <vector>
 #include <functional>
@@ -35,7 +34,6 @@
 #include "dump_service_impl.h"
 #include "task_fault.h"
 #include "task_statistics.h"
-
 #include "download_common.h"
 #include "download_service_manager.h"
 #include "log.h"

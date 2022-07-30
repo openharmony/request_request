@@ -23,7 +23,7 @@
 #include "i_net_conn_callback.h"
 #include "net_specifier.h"
 #include "net_conn_client.h"
-#include "network_state.h" 
+#include "network_state.h"
 #include "net_conn_constants.h"
 #include "telephony_errors.h"
 #include "core_service_client.h"

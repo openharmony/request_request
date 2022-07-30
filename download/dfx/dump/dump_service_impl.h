@@ -17,10 +17,8 @@
 #define DUMP_SERVICE_IMPL_H
 
 #include <map>
-#include <stdint.h>
 #include <memory>
 #include <iosfwd>
-#include <functional>
 #include "dumper_factory.h"
 
 namespace OHOS::Request::Download {

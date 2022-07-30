@@ -14,8 +14,6 @@
  */
 
 #include "download_service_stub.h"
-#include <string>
-#include <iosfwd>
 #include "ipc_skeleton.h"
 #include "message_parcel.h"
 #include "download_common.h"

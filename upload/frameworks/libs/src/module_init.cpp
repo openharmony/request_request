@@ -18,7 +18,7 @@
 
 #include <curl/curl.h>
 #include <pthread.h>
-#include <stddef.h>
+#include <cstddef>
 #include "upload_hilog_wrapper.h"
 static pthread_mutex_t *lockarray;
 

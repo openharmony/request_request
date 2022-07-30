@@ -14,7 +14,7 @@
  */
 
 #include "download_service_manager.h"
-#include <stddef.h>
+#include <cstddef>
 #include <algorithm>
 #include <cstdint>
 #include <functional>

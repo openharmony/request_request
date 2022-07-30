@@ -15,7 +15,6 @@
 #include "download_notify_proxy.h"
 
 #include "log.h"
-#include <stdint.h>
 #include "message_option.h"
 #include "message_parcel.h"
 
