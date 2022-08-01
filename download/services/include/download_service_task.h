@@ -85,6 +85,10 @@ private:
     bool SetHttpsCertificationOption(CURL *curl);
     std::string ReadCertification();
     void RecordTaskEvent(int32_t httpCode);
+    void PublishNotification(bool background, uint32_t percent);
+    void PublishNotification(bool background, uint32_t prevSize, uint32_t downloadSize, uint32_t totalSize);
+    std::time_t GetCurTimestamp();
+    uint32_t ProgressNotification(uint32_t prevSize, uint32_t downloadSize, uint32_t totalSize);
 private:
     uint32_t taskId_;
     DownloadConfig config_;
@@ -106,6 +110,10 @@ private:
     bool hasFileSize_;
     bool isOnline_;
     uint32_t prevSize_;
+    static constexpr uint32_t HUNDRED_PERCENT = 100;
+    static constexpr uint32_t TEN_PERCENT_THRESHOLD = 10;
+    static constexpr uint32_t NOTIFICATION_FREQUENCY = 2000;
+    std::time_t lastTimestamp_ = 0;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_TASK_H

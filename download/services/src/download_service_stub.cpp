@@ -88,7 +88,9 @@ bool DownloadServiceStub::OnRequest(MessageParcel &data, MessageParcel &reply)
     config.SetFilePath(data.ReadString());
     config.SetTitle(data.ReadString());
     config.SetDescription(data.ReadString());
-
+    config.SetBackground(data.ReadBool());
+    config.SetBundleName(data.ReadString());
+    config.SetApplicationInfoUid(data.ReadInt32());
     uint32_t headerSize = data.ReadUint32();
     for (uint32_t i = 0; i < headerSize; i++) {
         config.SetHeader(data.ReadString(), data.ReadString());

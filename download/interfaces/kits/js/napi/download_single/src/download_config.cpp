@@ -19,8 +19,7 @@
 
 namespace OHOS::Request::Download {
 DownloadConfig::DownloadConfig()
-    : url_(""), enableMetered_(false), enableRoaming_(false), description_(""), networkType_(0),
-      filePath_(""), title_(""), fd_(-1), fdError_(0) {
+{
 }
 
 void DownloadConfig::SetUrl(const std::string &url)
@@ -73,6 +72,21 @@ void DownloadConfig::SetFDError(int32_t fdError)
     fdError_ = fdError;
 }
 
+void DownloadConfig::SetBundleName(const std::string &bundleName)
+{
+    bundleName_ = bundleName;
+}
+
+void DownloadConfig::SetBackground(bool background)
+{
+    background_ = background;
+}
+
+void DownloadConfig::SetApplicationInfoUid(const int32_t uid)
+{
+    uid_ = uid;
+}
+
 const std::string &DownloadConfig::GetUrl() const
 {
     return url_;
@@ -83,12 +97,12 @@ const std::map<std::string, std::string> &DownloadConfig::GetHeader() const
     return header_;
 }
 
-bool DownloadConfig::GetMetered() const
+bool DownloadConfig::IsMetered() const
 {
     return enableMetered_;
 }
 
-bool DownloadConfig::GetRoaming() const
+bool DownloadConfig::IsRoaming() const
 {
     return enableRoaming_;
 }
@@ -123,6 +137,21 @@ int32_t DownloadConfig::GetFDError() const
     return fdError_;
 }
 
+const std::string &DownloadConfig::GetBundleName() const
+{
+    return bundleName_;
+}
+
+bool DownloadConfig::IsBackground() const
+{
+    return background_;
+}
+
+int32_t DownloadConfig::GetApplicationInfoUid() const
+{
+    return uid_;
+}
+
 void DownloadConfig::Dump(bool isFull) const
 {
     DOWNLOAD_HILOGD("fd: %{public}d", fd_);
@@ -147,5 +176,8 @@ void DownloadConfig::Dump(bool isFull) const
         });
         DOWNLOAD_HILOGD("Header Information -------------- End");
     }
+    DOWNLOAD_HILOGD("bundleName: %{public}s", bundleName_.c_str());
+    DOWNLOAD_HILOGD("background: %{public}s", background_ ? "true" : "false");
+    DOWNLOAD_HILOGD("uid: %{public}d", uid_);
 }
 } // namespace OHOS::Request::Download

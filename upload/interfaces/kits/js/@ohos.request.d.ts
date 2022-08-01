@@ -340,6 +340,13 @@ declare namespace request {
      * @permission ohos.permission.INTERNET
      */
     title?: string;
+    /**
+     * Whether to display the background.
+     *
+     * @since 9
+     * @permission N/A
+     */
+    background?: boolean;
   }
 
   /**
