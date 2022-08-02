@@ -20,7 +20,8 @@ class DownloadBackgroundNotification {
 public:
     DownloadBackgroundNotification() = default;
     ~DownloadBackgroundNotification() = default;
-    static void PublishNotification(uint32_t taskId, pid_t uid, const std::string &filePath, uint32_t percent);
+    static void PublishDownloadNotification(uint32_t taskId, pid_t uid,
+                                            const std::string &filePath, uint32_t percent);
 };
 } // Download
 
