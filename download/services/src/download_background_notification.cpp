@@ -25,8 +25,8 @@
 
 using namespace OHOS::Notification;
 namespace OHOS::Request::Download {
-void DownloadBackgroundNotification::PublishNotification(uint32_t taskId, pid_t uid, const std::string &filePath,
-                                                         uint32_t percent)
+void DownloadBackgroundNotification::PublishDownloadNotification(uint32_t taskId, pid_t uid,
+                                                                 const std::string &filePath, uint32_t percent)
 {
     auto downloadTemplate = std::make_shared<NotificationTemplate>();
     if (downloadTemplate == nullptr) {

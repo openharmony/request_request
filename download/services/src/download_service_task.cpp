@@ -896,7 +896,7 @@ void DownloadServiceTask::PublishNotification(bool background, uint32_t percent)
     }
     pid_t pid = static_cast<pid_t>(config_.GetApplicationInfoUid());
     std::string filePath = config_.GetFilePath();
-    DownloadBackgroundNotification::PublishNotification(taskId_, pid, filePath, percent);
+    DownloadBackgroundNotification::PublishDownloadNotification(taskId_, pid, filePath, percent);
 }
 
 void DownloadServiceTask::PublishNotification(bool background, uint32_t prevSize,

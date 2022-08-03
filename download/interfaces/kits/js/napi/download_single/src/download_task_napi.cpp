@@ -17,6 +17,7 @@
 
 #include <mutex>
 #include <uv.h>
+#include <unistd.h>
 
 #include "ability.h"
 #include "async_call.h"
@@ -31,7 +32,6 @@
 #include "napi_utils.h"
 #include "legacy/download_manager.h"
 #include "napi_base_context.h"
-#include "ipc_skeleton.h"
 
 static constexpr const char *FUNCTION_ON = "on";
 static constexpr const char *FUNCTION_OFF = "off";
@@ -146,7 +146,7 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
         return nullptr;
     }
     config.SetBundleName(context->GetBundleName());
-    config.SetApplicationInfoUid(IPCSkeleton::GetCallingUid());
+    config.SetApplicationInfoUid(static_cast<int32_t>(getuid()));
     DownloadManager::GetInstance()->SetDataAbilityHelper(GetDataAbilityHelper(env));
     auto *task = DownloadManager::GetInstance()->EnqueueTask(config);
     if (task == nullptr) {
