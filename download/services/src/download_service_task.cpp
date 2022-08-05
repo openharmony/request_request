@@ -27,7 +27,6 @@
 #include <ostream>
 #include <utility>
 #include <vector>
-#include <bits/errno.h>
 #include <curl/easy.h>
 #include "log.h"
 #include "network_adapter.h"
