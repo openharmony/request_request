@@ -64,7 +64,7 @@ ohos_shared_library("downloaddataability") {
   deps = [
     "${ability_runtime_path}/frameworks/native/ability/native:abilitykit_native",
     "//foundation/arkui/napi:ace_napi",
-    "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//third_party/jsoncpp:jsoncpp",
   ]
 

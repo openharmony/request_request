@@ -66,7 +66,7 @@ ohos_shared_library("downloadsingle") {
   ]
   deps = [
     "//foundation/arkui/napi:ace_napi",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/curl:curl",
   ]
   external_deps = [
