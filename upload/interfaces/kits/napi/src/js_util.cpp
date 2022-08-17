@@ -113,7 +113,7 @@ napi_value JSUtil::Convert2JSStringVector(napi_env env, const std::vector<std::s
     return jsStrings;
 }
 
-napi_value JSUtil::Convet2JSValue(napi_env env, const std::vector<int32_t> &cInts)
+napi_value JSUtil::Convert2JSValue(napi_env env, const std::vector<int32_t> &cInts)
 {
     napi_value jsInts = nullptr;
     napi_create_array_with_length(env, cInts.size(), &jsInts);
@@ -135,7 +135,7 @@ napi_value JSUtil::Convert2JSUploadResponse(napi_env env, const Upload::UploadRe
     return jsResponse;
 }
 
-napi_value JSUtil::Convet2JSValue(napi_env env, const std::vector<Upload::TaskState> &taskStates)
+napi_value JSUtil::Convert2JSValue(napi_env env, const std::vector<Upload::TaskState> &taskStates)
 {
     napi_value jsTaskStates = nullptr;
     napi_create_array_with_length(env, taskStates.size(), &jsTaskStates);
