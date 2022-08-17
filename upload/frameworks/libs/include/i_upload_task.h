@@ -16,12 +16,14 @@
 #ifndef IUPLOAD_TASK_
 #define IUPLOAD_TASK_
 
+#include "upload_common.h"
 namespace OHOS::Request::Upload {
 class IUploadTask {
 public:
     virtual void OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) = 0;
     virtual void OnHeaderReceive(char *buffer, size_t size, size_t nitems) = 0;
-    virtual void OnFail(unsigned int error) = 0;
+    virtual void OnFail(const std::vector<TaskState> &taskStates) = 0;
+    virtual void OnComplete(const std::vector<TaskState> &taskStates) = 0;
 };
 } // end of OHOS::Request::Upload
 #endif

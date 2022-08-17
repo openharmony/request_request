@@ -113,6 +113,18 @@ napi_value JSUtil::Convert2JSStringVector(napi_env env, const std::vector<std::s
     return jsStrings;
 }
 
+napi_value JSUtil::Convet2JSValue(napi_env env, const std::vector<int32_t> &cInts)
+{
+    napi_value jsInts = nullptr;
+    napi_create_array_with_length(env, cInts.size(), &jsInts);
+    int index = 0;
+    for (const auto &cInt : cInts) {
+        napi_value jsInt = Convert2JSValue(env, cInt);
+        napi_set_element(env, jsInts, index++, jsInt);
+    }
+    return jsInts;
+}
+
 napi_value JSUtil::Convert2JSUploadResponse(napi_env env, const Upload::UploadResponse &response)
 {
     napi_value jsResponse = nullptr;
@@ -121,6 +133,22 @@ napi_value JSUtil::Convert2JSUploadResponse(napi_env env, const Upload::UploadRe
     napi_set_named_property(env, jsResponse, "data", Convert2JSString(env, response.data));
     napi_set_named_property(env, jsResponse, "headers", Convert2JSString(env, response.headers));
     return jsResponse;
+}
+
+napi_value JSUtil::Convet2JSValue(napi_env env, const std::vector<Upload::TaskState> &taskStates)
+{
+    napi_value jsTaskStates = nullptr;
+    napi_create_array_with_length(env, taskStates.size(), &jsTaskStates);
+    int index = 0;
+    for (const auto &taskState : taskStates) {
+        napi_value jsTaskState = nullptr;
+        napi_create_object(env, &jsTaskState);
+        napi_set_named_property(env, jsTaskState, "path", Convert2JSString(env, taskState.path));
+        napi_set_named_property(env, jsTaskState, "responseCode ", Convert2JSValue(env, taskState.responseCode));
+        napi_set_named_property(env, jsTaskState, "message", Convert2JSString(env, taskState.message));
+        napi_set_element(env, jsTaskStates, index++, jsTaskState);
+    }
+    return jsTaskStates;
 }
 
 napi_value JSUtil::Convert2JSValue(napi_env env, int32_t value)
@@ -319,5 +347,18 @@ napi_value JSUtil::Convert2JSRequestDataVector(napi_env env, const std::vector<U
         napi_set_element(env, jsRequestData, index++, jsRequestDatas);
     }
     return jsRequestDatas;
+}
+
+bool JSUtil::Equals(napi_env env, napi_value value, napi_ref copy)
+{
+    if (copy == nullptr) {
+        return (value == nullptr);
+    }
+    napi_value copyValue = nullptr;
+    napi_get_reference_value(env, copy, &copyValue);
+
+    bool isEquals = false;
+    napi_strict_equals(env, value, copyValue, &isEquals);
+    return isEquals;
 }
 } // namespace OHOS::Request::UploadNapi

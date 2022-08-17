@@ -31,8 +31,9 @@ public:
     CUrlAdp(std::vector<FileData>& fileArray, std::shared_ptr<UploadConfig>& config);
     virtual ~CUrlAdp();
     void DoUpload(IUploadTask *task, TaskResult &taskResult);
+    TaskState SetTaskState(const std::string &path, int32_t responseCode, const std::string &message);
     bool Remove();
-    void FailNotify(unsigned int error);
+    void FailNotify(const std::vector<TaskState> &taskStates);
     bool IsReadAbort()
     {
         return isReadAbort_;
@@ -46,11 +47,11 @@ protected:
     static size_t HeaderCallbackL5(char *buffer, size_t size, size_t nitems, void *userdata);
     static size_t ReadCallback(char *buffer, size_t size, size_t nitems, void *arg);
     static int OnDebug(CURL *curl, curl_infotype itype, char *pData, size_t size, void *lpvoid);
-
+    
 private:
     int CheckUploadStatus(CURLM *curlMulti);
     bool MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray);
-    int32_t CheckUrlStatus();
+    int32_t CheckUrl();
     int32_t UploadFile();
     void SetHeadData(CURL *curl);
     void SetCurlOpt(CURL *curl);
@@ -61,6 +62,10 @@ private:
     void StopTimer();
 
 private:
+    static constexpr const char *CHECK_URL_ERROR = "Check URL error";
+    static constexpr const char *CHECK_URL_SUCCEEDED = "Check URL succeeded";
+    static constexpr const char *FILE_UPLOADED_FAILED = "File uploaded failed";
+    static constexpr const char *FILE_UPLOADED_SUCCESSFULLY = "File uploaded successfully";
     uint64_t timerId_;
     std::shared_ptr<UploadTimerInfo> timerInfo_;
     IUploadTask *uploadTask_;

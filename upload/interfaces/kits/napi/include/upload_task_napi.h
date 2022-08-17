@@ -25,6 +25,7 @@
 #include "progress_callback.h"
 #include "header_receive_callback.h"
 #include "fail_callback.h"
+#include "complete_callback.h"
 #include "context.h"
 #include "i_callbackable_judger.h"
 
@@ -45,6 +46,7 @@ public:
     static void OnSystemComplete(napi_env env, napi_ref ref);
 
     bool JudgeFail(const IFailCallback *target);
+    bool JudgeComplete(const ICompleteCallback *target);
     bool JudgeProgress(const IProgressCallback *target);
     bool JudgeHeaderReceive(const IHeaderReceiveCallback *target);
     napi_ref success_;
@@ -109,17 +111,19 @@ private:
     static napi_status OnHeaderReceive(napi_env env,
         size_t argc, napi_value *argv, napi_value self, napi_value *result);
     static napi_status OnFail(napi_env env, size_t argc, napi_value *argv, napi_value self, napi_value *result);
+    static napi_status OnComplete(napi_env env, size_t argc, napi_value *argv, napi_value self, napi_value *result);
     static napi_status OffProgress(napi_env env, size_t argc, napi_value *argv, napi_value self, napi_value *result);
     static napi_status OffHeaderReceive(napi_env env,
         size_t argc, napi_value *argv, napi_value self, napi_value *result);
     static napi_status OffFail(napi_env env, size_t argc, napi_value *argv, napi_value self, napi_value *result);
+    static napi_status OffComplete(napi_env env, size_t argc, napi_value *argv, napi_value self, napi_value *result);
 
     std::shared_ptr<Upload::IProgressCallback> onProgress_ = nullptr;
     std::shared_ptr<Upload::IHeaderReceiveCallback> onHeaderReceive_ = nullptr;
     std::shared_ptr<Upload::IFailCallback> onFail_ = nullptr;
+    std::shared_ptr<Upload::ICompleteCallback> onComplete_ = nullptr;
     std::shared_ptr<Upload::IProgressCallback> offProgress_ = nullptr;
     std::shared_ptr<Upload::IHeaderReceiveCallback> offHeaderReceive_ = nullptr;
-    std::shared_ptr<Upload::IFailCallback> offFail_ = nullptr;
 };
 } // namespace OHOS::Request::UploadNapi
 #endif // REQUEST_NAPI_H

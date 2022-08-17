@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <map>
 #include <vector>
+#include "upload_common.h"
 #include "upload_config.h"
 #include "upload_hilog_wrapper.h"
 #include "napi/native_common.h"

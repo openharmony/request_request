@@ -22,8 +22,7 @@ namespace OHOS::Request::Upload {
 class IHeaderReceiveCallback {
 public:
     IHeaderReceiveCallback() = default;
-    virtual ~IHeaderReceiveCallback()
-    {}
+    virtual ~IHeaderReceiveCallback() {};
     virtual void HeaderReceive(const std::string &header) = 0;
 };
 } // end of OHOS::Request::Upload

@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
-#ifndef I_FAIL_CALLBACK_H
-#define I_FAIL_CALLBACK_H
+#ifndef I_COMPLETE_CALLBACK_H
+#define I_COMPLETE_CALLBACK_H
 
 #include "upload_common.h"
 #include "napi/native_api.h"
 
 namespace OHOS::Request::Upload {
-class IFailCallback {
+class ICompleteCallback {
 public:
-    IFailCallback() = default;
-    virtual ~IFailCallback() {};
-    virtual void Fail(const std::vector<TaskState> &taskStates) = 0;
+    ICompleteCallback() = default;
+    virtual ~ICompleteCallback() {};
+    virtual void Complete(const std::vector<TaskState> &taskStates) = 0;
     virtual napi_ref GetCallback() = 0;
 };
 } // end of OHOS::Request::Upload

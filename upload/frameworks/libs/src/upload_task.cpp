@@ -28,12 +28,12 @@ UploadTask::UploadTask(std::shared_ptr<UploadConfig>& uploadConfig)
     uploadConfig_ = uploadConfig;
     curlAdp_ = nullptr;
     state_ = STATE_INIT;
-    error_ = 0;
     uploadedSize_ = 0;
     totalSize_ = 0;
     progressCallback_ = nullptr;
     headerReceiveCallback_ = nullptr;
     failCallback_ = nullptr;
+    completeCallback_ = nullptr;
     context_ = nullptr;
 }
 
@@ -64,6 +64,13 @@ void UploadTask::On(Type type, void *callback)
     SetCallback(type, callback);
 }
 
+void UploadTask::Off(Type type)
+{
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Off. In.");
+    std::lock_guard<std::mutex> guard(mutex_);
+    SetCallback(type, nullptr);
+}
+
 void UploadTask::Off(Type type, void *callback)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Off. In.");
@@ -75,14 +82,9 @@ void UploadTask::Off(Type type, void *callback)
 
     if (type == TYPE_PROGRESS_CALLBACK && progressCallback_ != nullptr) {
         ((IProgressCallback*)callback)->Progress(uploadedSize_, totalSize_);
-    } else if (type == TYPE_HEADER_RECEIVE_CALLBACK && headerReceiveCallback_ != nullptr) {
-        ((IHeaderReceiveCallback*)callback)->HeaderReceive(header_);
-    } else if (type == TYPE_FAIL_CALLBACK && failCallback_ != nullptr) {
-        ((IFailCallback*)callback)->Fail(error_);
-    } else {
+    }  else {
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Off. type[%{public}d] not match.", type);
     }
-
     SetCallback(type, nullptr);
 }
 
@@ -107,7 +109,12 @@ void UploadTask::SetCallback(Type type, void *callback)
     } else if (type == TYPE_FAIL_CALLBACK) {
         failCallback_ = (IFailCallback*)callback;
         if (failCallback_ && state_ == STATE_FAILURE) {
-            failCallback_->Fail(error_);
+            failCallback_->Fail(taskStates_);
+        }
+    } else if (type == TYPE_COMPLETE_CALLBACK) {
+        completeCallback_ = (ICompleteCallback*)callback;
+        if (completeCallback_ && state_ == STATE_SUCCESS) {
+            completeCallback_->Complete(taskStates_);
         }
     } else {
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "SetCallback. type[%{public}d] not match.", type);
@@ -191,14 +198,28 @@ void UploadTask::OnHeaderReceive(char *buffer, size_t size, size_t nitems)
     }
 }
 
-void UploadTask::OnFail(unsigned int error)
+void UploadTask::OnFail(const std::vector<TaskState> &taskStates)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnFail. In.");
-    std::lock_guard<std::mutex> guard(mutex_);
-    error_ = error;
-    state_ = STATE_FAILURE;
+    {
+        std::lock_guard<std::mutex> guard(mutex_);
+        taskStates_ = taskStates;
+        state_ = STATE_FAILURE;
+    }
     if (failCallback_) {
-        failCallback_->Fail(error_);
+        failCallback_->Fail(taskStates);
+    }
+}
+
+void UploadTask::OnComplete(const std::vector<TaskState> &taskStates)
+{
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnComplete. In.");
+    {
+        std::lock_guard<std::mutex> guard(mutex_);
+        taskStates_ = taskStates;
+    }
+    if (completeCallback_) {
+        completeCallback_->Complete(taskStates_);
     }
 }
 
@@ -213,18 +234,26 @@ void UploadTask::ExecuteTask()
 std::vector<FileData>& UploadTask::GetFileArray()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "GetFileArray. In.");
+    std::vector<TaskState> taskStates;
+    TaskState taskState;
     unsigned int fileSize = 0;
     FileData data;
     FILE *file;
     totalSize_ = 0;
+
     for (auto f : uploadConfig_->files) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "filename is %{public}s", f.filename.c_str());
         unsigned int error = obtainFile_->GetFile(&file, f.uri, fileSize, context_);
         if (error != UPLOAD_ERRORCODE_NO_ERROR) {
-            OnFail(error);
+            taskState = curlAdp_->SetTaskState(f.filename, error, FILE_READ_FAILED);
+            taskStates.push_back(taskState);
+            OnFail(taskStates);
             ClearFileArray();
             totalSize_ = 0;
             return fileArray_;
         }
+        taskState = curlAdp_->SetTaskState(f.filename, error, FILE_READ_SUCCEEDED);
+        taskStates.push_back(taskState);
         data.fp = file;
         std::size_t position = f.uri.find_last_of("/");
         if (position != std::string::npos) {

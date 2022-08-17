@@ -17,6 +17,8 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <cstdio>
+#include <vector>
+#include <string>
 #include <climits>
 #include <cinttypes>
 #include "upload_task.h"
@@ -58,23 +60,20 @@ CUrlAdp::~CUrlAdp()
 {
 }
 
-int32_t CUrlAdp::CheckUrlStatus()
+int32_t CUrlAdp::CheckUrl()
 {
     if (config_ == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "config_ is null");
-        FailNotify(UPLOAD_ERRORCODE_CONFIG_ERROR);
         return UPLOAD_ERRORCODE_CONFIG_ERROR;
     }
 
     if (config_->url.empty()) {
         UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "URL is empty");
-        FailNotify(UPLOAD_ERRORCODE_CONFIG_ERROR);
         return UPLOAD_ERRORCODE_CONFIG_ERROR;
     }
 
     if (fileArray_.empty()) {
         UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "fileArray_ is empty");
-        FailNotify(UPLOAD_ERRORCODE_GET_FILE_ERROR);
         return UPLOAD_ERRORCODE_GET_FILE_ERROR;
     }
 
@@ -85,17 +84,31 @@ int32_t CUrlAdp::CheckUrlStatus()
     return UPLOAD_ERRORCODE_NO_ERROR;
 }
 
+TaskState CUrlAdp::SetTaskState(const std::string &path, int32_t responseCode, const std::string &message)
+{
+    TaskState taskState;
+    taskState.path = path;
+    taskState.responseCode = responseCode;
+    taskState.message = message;
+    return taskState;
+}
+
 void CUrlAdp::DoUpload(IUploadTask *task, TaskResult &taskResult)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload start");
     uploadTask_ = task;
-
-    taskResult.errorCode = CheckUrlStatus();
+    std::vector<TaskState> taskStates;
+    TaskState taskState;
+    taskResult.errorCode = CheckUrl();
     if (taskResult.errorCode != UPLOAD_ERRORCODE_NO_ERROR) {
         taskResult.failCount = fileArray_.size();
+        for (uint32_t i = 0; i < taskResult.failCount; i++) {
+            taskState = SetTaskState(fileArray_[i].filename, taskResult.errorCode, CHECK_URL_ERROR);
+            taskStates.push_back(taskState);
+        }
+        FailNotify(taskStates);
         return;
     }
-
     InitTimerInfo();
     uint32_t index = 0;
     for (auto &vmem : fileArray_) {
@@ -103,18 +116,27 @@ void CUrlAdp::DoUpload(IUploadTask *task, TaskResult &taskResult)
         if (IsReadAbort()) {
             taskResult.failCount = fileArray_.size() - taskResult.successCount;
             taskResult.errorCode = IsReadAbort();
+            taskState = SetTaskState(vmem.filename, taskResult.errorCode, CHECK_URL_ERROR);
+            taskStates.push_back(taskState);
+            FailNotify(taskStates);
             return;
         }
         index++;
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>fileArray index %{public}u", index);
         mfileData_ = vmem;
         mfileData_.fileIndex = index;
-        int32_t result = UploadFile();
-        if (result == UPLOAD_ERRORCODE_NO_ERROR) {
+        int32_t res = UploadFile();
+        if (res == UPLOAD_ERRORCODE_NO_ERROR) {
             taskResult.successCount++;
+            taskState = SetTaskState(vmem.filename, res, CHECK_URL_ERROR);
+            taskStates.push_back(taskState);
         } else {
             taskResult.failCount++;
-            taskResult.errorCode = result;
+            taskResult.errorCode = res;
+            taskState = SetTaskState(vmem.filename, res, CHECK_URL_ERROR);
+            taskStates.push_back(taskState);
+            FailNotify(taskStates);
+            break;
         }
         mfileData_.responseHead.clear();
         if (mfileData_.list) {
@@ -124,7 +146,9 @@ void CUrlAdp::DoUpload(IUploadTask *task, TaskResult &taskResult)
         RemoveInner();
         usleep(SLEEP);
     }
-
+    if (taskResult.successCount == fileArray_.size()) {
+        uploadTask_->OnComplete(taskStates);
+    }
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload end");
 }
 
@@ -135,17 +159,14 @@ bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray)
     struct stat fileInfo;
     if (mfileData_.fp == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "file ptr is null");
-        FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
         return false;
     }
     if (fstat(fileno(mfileData_.fp), &fileInfo) != 0) {
         UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "get the file info fail");
-        FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
         return false;
     }
     CURL *curl = curl_easy_init();
     if (curl == nullptr) {
-        FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
         return false;
     }
     SetHeadData(curl);
@@ -196,14 +217,12 @@ int32_t CUrlAdp::UploadFile()
     CurlGlobalInit();
     curlMulti_ = curl_multi_init();
     if (curlMulti_ == nullptr) {
-        FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
         CurlGlobalCleanup();
         return UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR;
     }
 
     ret = MultiAddHandle(curlMulti_, curlArray_);
     if (ret == false) {
-        FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
         return UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR;
     }
     curl_multi_perform(curlMulti_, &isRuning);
@@ -212,7 +231,6 @@ int32_t CUrlAdp::UploadFile()
         int numfds = 0;
         int res = curl_multi_wait(curlMulti_, NULL, 0, TRANS_TIMEOUT_MS, &numfds);
         if (res != CURLM_OK) {
-            FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
             return res;
         }
         curl_multi_perform(curlMulti_, &isRuning);
@@ -274,7 +292,6 @@ int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
         if (statusCode != HTTP_SUCCESS) {
             returnCode = statusCode;
             if (config_->protocolVersion != "L5") {
-                FailNotify(UPLOAD_ERRORCODE_UPLOAD_FAIL);
                 UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Curl error code = %{public}d", statusCode);
             }
         }
@@ -479,11 +496,11 @@ size_t CUrlAdp::ReadCallback(char *buffer, size_t size, size_t nitems, void *arg
     return readSize;
 }
 
-void CUrlAdp::FailNotify(unsigned int error)
+void CUrlAdp::FailNotify(const std::vector<TaskState> &taskStates)
 {
     if (uploadTask_) {
         if (config_->protocolVersion != "L5") {
-            uploadTask_->OnFail(error);
+            uploadTask_->OnFail(taskStates);
         }
     }
 }
@@ -497,7 +514,6 @@ void CUrlAdp::InitTimerInfo()
     timerInfo_->SetWantAgent(nullptr);
 
     timerInfo_->SetCallbackInfo([this]() {
-        this->FailNotify(UPLOAD_ERRORCODE_UPLOAD_OUTTIME);
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OutTime error");
         this->isReadAbort_ = true;
         });

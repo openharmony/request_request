@@ -16,17 +16,35 @@
 #ifndef UPLOAD_COMMON_
 #define UPLOAD_COMMON_
 
+#include <string>
 namespace OHOS::Request::Upload {
 enum Type {
     TYPE_PROGRESS_CALLBACK,
     TYPE_HEADER_RECEIVE_CALLBACK,
     TYPE_FAIL_CALLBACK,
+    TYPE_COMPLETE_CALLBACK,
+};
+
+enum UploadErrorCode {
+    UPLOAD_ERRORCODE_NO_ERROR = 0,
+    UPLOAD_ERRORCODE_UNSUPPORT_URI,
+    UPLOAD_ERRORCODE_GET_FILE_ERROR,
+    UPLOAD_ERRORCODE_CONFIG_ERROR,
+    UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR,
+    UPLOAD_ERRORCODE_UPLOAD_FAIL,
+    UPLOAD_ERRORCODE_UPLOAD_OUTTIME,
 };
 
 struct TaskResult {
     uint32_t successCount {0};
     uint32_t failCount {0};
-    int32_t errorCode {0};
+    int32_t errorCode {UPLOAD_ERRORCODE_NO_ERROR};
+};
+
+struct TaskState {
+    std::string path;
+    int32_t responseCode {UPLOAD_ERRORCODE_NO_ERROR};
+    std::string message;
 };
 
 #ifndef UPLOAD_API
