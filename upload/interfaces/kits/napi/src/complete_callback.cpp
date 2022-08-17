@@ -70,7 +70,7 @@ void CompleteCallback::Complete(const std::vector<TaskState> &taskStates)
             napi_value args[1] = {nullptr};
             napi_value result;
             napi_status callStatus = napi_generic_failure;
-            args[0] = UploadNapi::JSUtil::Convet2JSValue(completeWorker->callback->env_,
+            args[0] = UploadNapi::JSUtil::Convert2JSValue(completeWorker->callback->env_,
                                                          completeWorker->taskStates);
             napi_get_reference_value(completeWorker->callback->env_,
                                      completeWorker->callback->callback_, &callback);

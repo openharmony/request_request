@@ -70,7 +70,7 @@ void FailCallback::Fail(const std::vector<TaskState> &taskStates)
             napi_value global = nullptr;
             napi_value result;
             napi_status callStatus = napi_generic_failure;
-            args[0] = UploadNapi::JSUtil::Convet2JSValue(failWorker->callback->env_, failWorker->taskStates);
+            args[0] = UploadNapi::JSUtil::Convert2JSValue(failWorker->callback->env_, failWorker->taskStates);
             napi_get_reference_value(failWorker->callback->env_,
                                      failWorker->callback->callback_, &callback);
             napi_get_global(failWorker->callback->env_, &global);
