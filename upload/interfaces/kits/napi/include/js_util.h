@@ -59,7 +59,7 @@ public:
     static napi_value Convert2JSRequestDataVector(napi_env env, const std::vector<Upload::RequestData> &requestDatas);
 
     static napi_value Convert2JSValue(napi_env env, const std::vector<int32_t> &cInts);
-    static napi_value Convet2JSValue(napi_env env, const std::vector<Upload::TaskState> &taskStates);
+    static napi_value Convert2JSValue(napi_env env, const std::vector<Upload::TaskState> &taskStates);
     static bool Equals(napi_env env, napi_value value, napi_ref copy);
 };
 }
