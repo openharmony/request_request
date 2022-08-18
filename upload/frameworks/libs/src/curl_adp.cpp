@@ -128,15 +128,13 @@ void CUrlAdp::DoUpload(IUploadTask *task, TaskResult &taskResult)
         int32_t res = UploadFile();
         if (res == UPLOAD_ERRORCODE_NO_ERROR) {
             taskResult.successCount++;
-            taskState = SetTaskState(vmem.filename, res, CHECK_URL_ERROR);
+            taskState = SetTaskState(vmem.filename, res, CHECK_URL_SUCCEEDED);
             taskStates.push_back(taskState);
         } else {
             taskResult.failCount++;
             taskResult.errorCode = res;
             taskState = SetTaskState(vmem.filename, res, CHECK_URL_ERROR);
             taskStates.push_back(taskState);
-            FailNotify(taskStates);
-            break;
         }
         mfileData_.responseHead.clear();
         if (mfileData_.list) {
@@ -148,6 +146,8 @@ void CUrlAdp::DoUpload(IUploadTask *task, TaskResult &taskResult)
     }
     if (taskResult.successCount == fileArray_.size()) {
         uploadTask_->OnComplete(taskStates);
+    } else {
+        FailNotify(taskStates);
     }
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload end");
 }
@@ -273,6 +273,7 @@ void CUrlAdp::SetCurlOpt(CURL *curl)
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 }
 
+
 int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
 {
     int msgsLeft = 0;
@@ -284,21 +285,23 @@ int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
         }
         CURL *eh = NULL;
         eh = msg->easy_handle;
-        int statusCode = 0;
-        char *szUrl = NULL;
-        curl_easy_getinfo(eh, CURLINFO_RESPONSE_CODE, &statusCode);
-        curl_easy_getinfo(eh, CURLINFO_PRIVATE, &szUrl);
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "statusCode is %{public}d, Url is %{public}s", statusCode, szUrl);
-        if (statusCode != HTTP_SUCCESS) {
-            returnCode = statusCode;
-            if (config_->protocolVersion != "L5") {
-                UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Curl error code = %{public}d", statusCode);
-            }
+        returnCode = msg->data.result;
+        if (returnCode != CURLE_OK) {
+            UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "upload fail curl error %{public}d", returnCode);
+            return returnCode;
+        }
+
+        long respCode = 0;
+        curl_easy_getinfo(eh, CURLINFO_RESPONSE_CODE, &respCode);
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload http code %{public}ld", respCode);
+        if (respCode != HTTP_SUCCESS) {
+            returnCode = respCode;
+            UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "upload fail http error %{public}d", returnCode);
+            return returnCode;
         }
     }
     return returnCode;
 }
-
 bool CUrlAdp::Remove()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "remove");

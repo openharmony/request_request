@@ -75,7 +75,7 @@ void CompleteCallback::Complete(const std::vector<TaskState> &taskStates)
             napi_get_reference_value(completeWorker->callback->env_,
                                      completeWorker->callback->callback_, &callback);
             napi_get_global(completeWorker->callback->env_, &global);
-            callStatus = napi_call_function(completeWorker->callback->env_, global, callback, 2, args, &result);
+            callStatus = napi_call_function(completeWorker->callback->env_, global, callback, 1, args, &result);
             if (callStatus != napi_ok) {
                 UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
                     "Complete callback failed callStatus:%{public}d", callStatus);
