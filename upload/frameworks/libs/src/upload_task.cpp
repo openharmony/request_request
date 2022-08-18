@@ -154,10 +154,10 @@ void UploadTask::OnRun()
     curlAdp_ = std::make_shared<CUrlAdp>(fileArray_, uploadConfig_);
     TaskResult taskResult;
     curlAdp_->DoUpload((IUploadTask*)this, taskResult);
-    ClearFileArray();
     if (taskResult.failCount != 0) {
         ReportTaskFault(taskResult);
     }
+    ClearFileArray();
 }
 
 void UploadTask::ReportTaskFault(TaskResult taskResult) const

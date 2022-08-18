@@ -273,7 +273,6 @@ void CUrlAdp::SetCurlOpt(CURL *curl)
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 }
 
-
 int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
 {
     int msgsLeft = 0;
@@ -302,6 +301,7 @@ int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
     }
     return returnCode;
 }
+
 bool CUrlAdp::Remove()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "remove");
