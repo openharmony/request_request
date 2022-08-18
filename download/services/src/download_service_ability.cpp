@@ -112,7 +112,7 @@ void DownloadServiceAbility::OnStart()
     int32_t ret = Init();
     if (ret != ERR_OK) {
         TaskFault::GetInstance().ReportServiceStartFault(ret);
-        auto callback = [=]() { Init(); };
+        auto callback = [ = ]() { Init(); };
         serviceHandler_->PostTask(callback, INIT_INTERVAL);
         DOWNLOAD_HILOGE("DownloadServiceAbility Init failed. Try again 5s later");
         return;
@@ -305,11 +305,11 @@ bool DownloadServiceAbility::SetStartId(uint32_t startId)
 void DownloadServiceAbility::NotifyHandler(const std::string& type, uint32_t taskId, uint32_t argv1, uint32_t argv2)
 {
     std::string combineType = type + "-" + std::to_string(taskId);
-    DOWNLOAD_HILOGI("DownloadServiceAbility::NotifyHandler started %{public}s [%{public}d, %{public}d].",
+    DOWNLOAD_HILOGD("DownloadServiceAbility::NotifyHandler started %{public}s [%{public}d, %{public}d].",
                     combineType.c_str(), argv1, argv2);
     auto iter = DownloadServiceAbility::GetInstance()->registeredListeners_.find(combineType);
     if (iter != DownloadServiceAbility::GetInstance()->registeredListeners_.end()) {
-        DOWNLOAD_HILOGE("DownloadServiceAbility::NotifyHandler type=%{public}s object message.", combineType.c_str());
+        DOWNLOAD_HILOGD("DownloadServiceAbility::NotifyHandler type=%{public}s object message.", combineType.c_str());
         MessageParcel data;
         data.WriteUint32(argv1);
         data.WriteUint32(argv2);
