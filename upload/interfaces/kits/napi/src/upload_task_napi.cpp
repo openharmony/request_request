@@ -198,7 +198,6 @@ napi_status UploadTaskNapi::OnFail(napi_env env, size_t argc, napi_value *argv, 
     std::shared_ptr<IFailCallback> callback = std::make_shared<FailCallback>(proxy, env, argv[0]);
     if (JSUtil::Equals(env, argv[0], callback->GetCallback()) && proxy->onFail_ != nullptr) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OnFail callback already register!");
-        proxy->napiUploadTask_->Off(TYPE_FAIL_CALLBACK);
         return napi_generic_failure;
     }
 
@@ -224,7 +223,6 @@ napi_status UploadTaskNapi::OnComplete(napi_env env, size_t argc, napi_value *ar
     std::shared_ptr<ICompleteCallback> callback = std::make_shared<CompleteCallback>(proxy, env, argv[0]);
     if (JSUtil::Equals(env, argv[0], callback->GetCallback()) && proxy->onComplete_ != nullptr) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OnComplete callback already register!");
-        proxy->napiUploadTask_->Off(TYPE_COMPLETE_CALLBACK);
         return napi_generic_failure;
     }
 

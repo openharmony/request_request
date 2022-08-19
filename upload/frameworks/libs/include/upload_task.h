@@ -66,7 +66,7 @@ public:
     std::vector<std::string> StringSplit(const std::string& str, char delim);
 
 protected:
-    std::vector<FileData>& GetFileArray();
+    uint32_t GetFileArray();
     void ClearFileArray();
 private:
     void ReportTaskFault(TaskResult taskResult) const;

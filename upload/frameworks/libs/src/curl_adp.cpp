@@ -84,15 +84,6 @@ int32_t CUrlAdp::CheckUrl()
     return UPLOAD_OK;
 }
 
-TaskState CUrlAdp::SetTaskState(const std::string &path, int32_t responseCode, const std::string &message)
-{
-    TaskState taskState;
-    taskState.path = path;
-    taskState.responseCode = responseCode;
-    taskState.message = message;
-    return taskState;
-}
-
 void CUrlAdp::DoUpload(IUploadTask *task, TaskResult &taskResult)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload start");
@@ -103,7 +94,7 @@ void CUrlAdp::DoUpload(IUploadTask *task, TaskResult &taskResult)
     if (taskResult.errorCode != UPLOAD_OK) {
         taskResult.failCount = fileArray_.size();
         for (uint32_t i = 0; i < taskResult.failCount; i++) {
-            taskState = SetTaskState(fileArray_[i].filename, taskResult.errorCode, CHECK_URL_ERROR);
+            taskState = {fileArray_[i].filename, taskResult.errorCode, CHECK_URL_ERROR};
             taskStates.push_back(taskState);
         }
         FailNotify(taskStates);
@@ -116,7 +107,7 @@ void CUrlAdp::DoUpload(IUploadTask *task, TaskResult &taskResult)
         if (IsReadAbort()) {
             taskResult.failCount = fileArray_.size() - taskResult.successCount;
             taskResult.errorCode = IsReadAbort();
-            taskState = SetTaskState(vmem.filename, UPLOAD_ERRORCODE_UPLOAD_FAIL, CHECK_URL_ERROR);
+            taskState = {vmem.filename, UPLOAD_ERRORCODE_UPLOAD_FAIL, FILE_UPLOADED_FAILED};
             taskStates.push_back(taskState);
             FailNotify(taskStates);
             return;
@@ -128,12 +119,12 @@ void CUrlAdp::DoUpload(IUploadTask *task, TaskResult &taskResult)
         int32_t res = UploadFile();
         if (res == UPLOAD_OK) {
             taskResult.successCount++;
-            taskState = SetTaskState(vmem.filename, UPLOAD_OK, CHECK_URL_SUCCEEDED);
+            taskState = {vmem.filename, UPLOAD_OK, FILE_UPLOADED_SUCCESSFULLY};
             taskStates.push_back(taskState);
         } else {
             taskResult.failCount++;
             taskResult.errorCode = res;
-            taskState = SetTaskState(vmem.filename, UPLOAD_ERRORCODE_UPLOAD_FAIL, CHECK_URL_ERROR);
+            taskState = {vmem.filename, UPLOAD_ERRORCODE_UPLOAD_FAIL, FILE_UPLOADED_FAILED};
             taskStates.push_back(taskState);
         }
         mfileData_.responseHead.clear();

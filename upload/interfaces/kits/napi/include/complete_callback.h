@@ -36,12 +36,12 @@ public:
     napi_ref GetCallback() override;
 private:
     struct CompleteWorker {
-        ICallbackAbleJudger *judger_;
+        ICallbackAbleJudger *judger;
         const CompleteCallback *callback = nullptr;
         const std::vector<TaskState> taskStates;
         CompleteWorker(ICallbackAbleJudger *judger, const CompleteCallback *callbackIn,
             const std::vector<TaskState> &taskStatesIn)
-            : judger_(judger), callback(callbackIn), taskStates(taskStatesIn) {}
+            : judger(judger), callback(callbackIn), taskStates(taskStatesIn) {}
     };
 
     ICallbackAbleJudger *judger_;

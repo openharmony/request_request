@@ -31,7 +31,6 @@ public:
     CUrlAdp(std::vector<FileData>& fileArray, std::shared_ptr<UploadConfig>& config);
     virtual ~CUrlAdp();
     void DoUpload(IUploadTask *task, TaskResult &taskResult);
-    TaskState SetTaskState(const std::string &path, int32_t responseCode, const std::string &message);
     bool Remove();
     void FailNotify(const std::vector<TaskState> &taskStates);
     bool IsReadAbort()
@@ -63,7 +62,6 @@ private:
 
 private:
     static constexpr const char *CHECK_URL_ERROR = "Check URL error";
-    static constexpr const char *CHECK_URL_SUCCEEDED = "Check URL succeeded";
     static constexpr const char *FILE_UPLOADED_FAILED = "File uploaded failed";
     static constexpr const char *FILE_UPLOADED_SUCCESSFULLY = "File uploaded successfully";
     uint64_t timerId_;

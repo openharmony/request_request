@@ -148,7 +148,13 @@ void UploadTask::OnRun()
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnRun. In.");
     state_ = STATE_RUNNING;
     obtainFile_ =  std::make_shared<ObtainFile>();
-    GetFileArray();
+    uint32_t res = GetFileArray();
+    if (res != UPLOAD_OK) {
+        OnFail(taskStates_);
+        ClearFileArray();
+        totalSize_ = 0;
+    }
+
     if (fileArray_.empty()) {
         return;
     }
@@ -230,10 +236,9 @@ void UploadTask::ExecuteTask()
     thread_->detach();
 }
 
-std::vector<FileData>& UploadTask::GetFileArray()
+uint32_t UploadTask::GetFileArray()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "GetFileArray. In.");
-    std::vector<TaskState> taskStates;
     TaskState taskState;
     unsigned int fileSize = 0;
     FileData data;
@@ -244,15 +249,12 @@ std::vector<FileData>& UploadTask::GetFileArray()
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "filename is %{public}s", f.filename.c_str());
         unsigned int error = obtainFile_->GetFile(&file, f.uri, fileSize, context_);
         if (error != UPLOAD_OK) {
-            taskState = curlAdp_->SetTaskState(f.filename, error, FILE_READ_FAILED);
-            taskStates.push_back(taskState);
-            OnFail(taskStates);
-            ClearFileArray();
-            totalSize_ = 0;
-            return fileArray_;
+            taskState = {f.filename, error, FILE_READ_SUCCEEDED};
+            taskStates_.push_back(taskState);
+            return error;
         }
-        taskState = curlAdp_->SetTaskState(f.filename, error, FILE_READ_SUCCEEDED);
-        taskStates.push_back(taskState);
+        taskState = {f.filename, error, FILE_READ_SUCCEEDED};
+        taskStates_.push_back(taskState);
         data.fp = file;
         std::size_t position = f.uri.find_last_of("/");
         if (position != std::string::npos) {
@@ -264,7 +266,7 @@ std::vector<FileData>& UploadTask::GetFileArray()
         fileArray_.push_back(data);
         totalSize_ += fileSize;
     }
-    return fileArray_;
+    return UPLOAD_OK;
 }
 
 void UploadTask::ClearFileArray()
