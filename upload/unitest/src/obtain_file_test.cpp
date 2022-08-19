@@ -73,7 +73,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest001, TestSize.Level0)
     GTEST_LOG_(INFO) << "ObtainFileUtTest001 start";
     FILE* file = nullptr;
     unsigned int fileSize = 0;
-    unsigned int result = UPLOAD_ERRORCODE_NO_ERROR;
+    unsigned int result = UPLOAD_OK;
     std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
@@ -117,7 +117,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest002, TestSize.Level0)
     
     result = this->obfile->GetFile(&file, uri, fileSize, context);
 
-    EXPECT_EQ(result, UPLOAD_ERRORCODE_NO_ERROR);
+    EXPECT_EQ(result, UPLOAD_OK);
     EXPECT_NE(file, nullptr);
     EXPECT_EQ(fileSize, testFileInfo.size()+1);
     GTEST_LOG_(INFO) << "ObtainFileUtTest002 end";
@@ -272,7 +272,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest008, TestSize.Level0)
 
     result = this->obfile->GetFile(&file, uri, fileSize, context);
 
-    EXPECT_EQ(result, UPLOAD_ERRORCODE_NO_ERROR);
+    EXPECT_EQ(result, UPLOAD_OK);
     EXPECT_NE(file, nullptr);
     EXPECT_EQ(fileSize, testFileInfo.size()+1);
     GTEST_LOG_(INFO) << "ObtainFileUtTest008 end";

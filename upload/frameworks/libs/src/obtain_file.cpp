@@ -31,7 +31,7 @@ ObtainFile::~ObtainFile()
 uint32_t ObtainFile::GetFile(FILE **file, std::string &fileUri,
     unsigned int& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
-    uint32_t ret = UPLOAD_ERRORCODE_NO_ERROR;
+    uint32_t ret = UPLOAD_OK;
     std::string dataAbilityHead("dataability");
     std::string internalHead("internal");
 
@@ -57,7 +57,7 @@ uint32_t ObtainFile::GetFile(FILE **file, std::string &fileUri,
 uint32_t ObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri,
     uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
-    uint32_t ret = UPLOAD_ERRORCODE_NO_ERROR;
+    uint32_t ret = UPLOAD_OK;
     FILE *filePtr = nullptr;
     int32_t fileLength = 0;
 
@@ -94,7 +94,7 @@ uint32_t ObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri,
 uint32_t ObtainFile::GetInternalFile(FILE **file, std::string &fileUri,
     uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
-    uint32_t ret = UPLOAD_ERRORCODE_NO_ERROR;
+    uint32_t ret = UPLOAD_OK;
     std::string filePath;
     FILE *filePtr = nullptr;
     int32_t fileLength = 0;

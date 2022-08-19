@@ -44,6 +44,7 @@ UploadTask::~UploadTask()
     SetCallback(TYPE_PROGRESS_CALLBACK, nullptr);
     SetCallback(TYPE_HEADER_RECEIVE_CALLBACK, nullptr);
     SetCallback(TYPE_FAIL_CALLBACK, nullptr);
+    SetCallback(TYPE_COMPLETE_CALLBACK, nullptr);
     Remove();
 }
 
@@ -201,11 +202,10 @@ void UploadTask::OnHeaderReceive(char *buffer, size_t size, size_t nitems)
 void UploadTask::OnFail(const std::vector<TaskState> &taskStates)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnFail. In.");
-    {
-        std::lock_guard<std::mutex> guard(mutex_);
-        taskStates_ = taskStates;
-        state_ = STATE_FAILURE;
-    }
+    
+    std::lock_guard<std::mutex> guard(mutex_);
+    taskStates_ = taskStates;
+    state_ = STATE_FAILURE;
     if (failCallback_) {
         failCallback_->Fail(taskStates);
     }
@@ -214,10 +214,9 @@ void UploadTask::OnFail(const std::vector<TaskState> &taskStates)
 void UploadTask::OnComplete(const std::vector<TaskState> &taskStates)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnComplete. In.");
-    {
-        std::lock_guard<std::mutex> guard(mutex_);
-        taskStates_ = taskStates;
-    }
+    
+    std::lock_guard<std::mutex> guard(mutex_);
+    taskStates_ = taskStates;
     if (completeCallback_) {
         completeCallback_->Complete(taskStates_);
     }
@@ -244,7 +243,7 @@ std::vector<FileData>& UploadTask::GetFileArray()
     for (auto f : uploadConfig_->files) {
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "filename is %{public}s", f.filename.c_str());
         unsigned int error = obtainFile_->GetFile(&file, f.uri, fileSize, context_);
-        if (error != UPLOAD_ERRORCODE_NO_ERROR) {
+        if (error != UPLOAD_OK) {
             taskState = curlAdp_->SetTaskState(f.filename, error, FILE_READ_FAILED);
             taskStates.push_back(taskState);
             OnFail(taskStates);

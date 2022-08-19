@@ -26,7 +26,7 @@ enum Type {
 };
 
 enum UploadErrorCode {
-    UPLOAD_ERRORCODE_NO_ERROR = 0,
+    UPLOAD_OK = 0,
     UPLOAD_ERRORCODE_UNSUPPORT_URI,
     UPLOAD_ERRORCODE_GET_FILE_ERROR,
     UPLOAD_ERRORCODE_CONFIG_ERROR,
@@ -38,12 +38,12 @@ enum UploadErrorCode {
 struct TaskResult {
     uint32_t successCount {0};
     uint32_t failCount {0};
-    int32_t errorCode {UPLOAD_ERRORCODE_NO_ERROR};
+    int32_t errorCode {UPLOAD_OK};
 };
 
 struct TaskState {
     std::string path;
-    int32_t responseCode {UPLOAD_ERRORCODE_NO_ERROR};
+    int32_t responseCode {UPLOAD_OK};
     std::string message;
 };
 
