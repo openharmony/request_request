@@ -243,7 +243,7 @@ void UploadTask::OnRun()
     uint32_t ret = StartUploadFile();
     if (ret != UPLOAD_OK) {
         OnFail();
-        ReportTaskFault();
+        ReportTaskFault(ret);
     } else {
         OnComplete();
     }
@@ -252,7 +252,7 @@ void UploadTask::OnRun()
     totalSize_ = 0;
 }
 
-void UploadTask::ReportTaskFault() const
+void UploadTask::ReportTaskFault(uint32_t ret) const
 {
     uint32_t successCount = 0;
     uint32_t failCount = 0;
@@ -270,7 +270,7 @@ void UploadTask::ReportTaskFault() const
         TOTAL_FILE_NUM, fileArray_.size(),
         FAIL_FILE_NUM, failCount,
         SUCCESS_FILE_NUM, successCount,
-        ERROR_INFO, static_cast<int>(fileArray_.sesult));
+        ERROR_INFO, static_cast<int>(ret));
 }
 
 void UploadTask::OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)

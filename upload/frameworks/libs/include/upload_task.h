@@ -72,7 +72,7 @@ protected:
     std::string GetCodeMessage(uint32_t code);
     std::vector<TaskState> GetTaskStates();
 private:
-    void ReportTaskFault() const;
+    void ReportTaskFault(uint32_t ret) const;
     uint32_t StartUploadFile();
 
     std::shared_ptr<UploadConfig> uploadConfig_;
