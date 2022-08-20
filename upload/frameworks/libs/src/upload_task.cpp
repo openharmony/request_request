@@ -27,12 +27,12 @@ UploadTask::UploadTask(std::shared_ptr<UploadConfig>& uploadConfig)
     uploadConfig_ = uploadConfig;
     curlAdp_ = nullptr;
     state_ = STATE_INIT;
-    error_ = 0;
     uploadedSize_ = 0;
     totalSize_ = 0;
     progressCallback_ = nullptr;
     headerReceiveCallback_ = nullptr;
     failCallback_ = nullptr;
+    completeCallback_ = nullptr;
     context_ = nullptr;
 }
 
@@ -43,6 +43,7 @@ UploadTask::~UploadTask()
     SetCallback(TYPE_PROGRESS_CALLBACK, nullptr);
     SetCallback(TYPE_HEADER_RECEIVE_CALLBACK, nullptr);
     SetCallback(TYPE_FAIL_CALLBACK, nullptr);
+    SetCallback(TYPE_COMPLETE_CALLBACK, nullptr);
     Remove();
 }
 
@@ -63,6 +64,13 @@ void UploadTask::On(Type type, void *callback)
     SetCallback(type, callback);
 }
 
+void UploadTask::Off(Type type)
+{
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Off. In.");
+    std::lock_guard<std::mutex> guard(mutex_);
+    SetCallback(type, nullptr);
+}
+
 void UploadTask::Off(Type type, void *callback)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Off. In.");
@@ -74,14 +82,9 @@ void UploadTask::Off(Type type, void *callback)
 
     if (type == TYPE_PROGRESS_CALLBACK && progressCallback_ != nullptr) {
         ((IProgressCallback*)callback)->Progress(uploadedSize_, totalSize_);
-    } else if (type == TYPE_HEADER_RECEIVE_CALLBACK && headerReceiveCallback_ != nullptr) {
-        ((IHeaderReceiveCallback*)callback)->HeaderReceive(header_);
-    } else if (type == TYPE_FAIL_CALLBACK && failCallback_ != nullptr) {
-        ((IFailCallback*)callback)->Fail(error_);
-    } else {
+    }  else {
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Off. type[%{public}d] not match.", type);
     }
-
     SetCallback(type, nullptr);
 }
 
@@ -106,7 +109,12 @@ void UploadTask::SetCallback(Type type, void *callback)
     } else if (type == TYPE_FAIL_CALLBACK) {
         failCallback_ = (IFailCallback*)callback;
         if (failCallback_ && state_ == STATE_FAILURE) {
-            failCallback_->Fail(error_);
+            failCallback_->Fail(taskStates_);
+        }
+    } else if (type == TYPE_COMPLETE_CALLBACK) {
+        completeCallback_ = (ICompleteCallback*)callback;
+        if (completeCallback_ && state_ == STATE_SUCCESS) {
+            completeCallback_->Complete(taskStates_);
         }
     } else {
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "SetCallback. type[%{public}d] not match.", type);
@@ -132,36 +140,137 @@ void UploadTask::Run(void *arg)
     }
 }
 
+uint32_t UploadTask::InitFileArray()
+{
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "InitFileArray. In.");
+    unsigned int fileSize = 0;
+    FileData data;
+    FILE *file;
+    totalSize_ = 0;
+    uint32_t initResult = UPLOAD_OK;
+    ObtainFile obtainFile;
+    uint32_t index = 1;
+    for (auto f : uploadConfig_->files) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "filename is %{public}s", f.filename.c_str());
+        data.result = UPLOAD_ERRORCODE_UPLOAD_FAIL;
+        uint32_t ret = obtainFile.GetFile(&file, f.uri, fileSize, context_);
+        if (ret != UPLOAD_OK) {
+            initResult = data.result;
+            data.result = ret;
+        }
+
+        data.fp = file;
+        std::size_t position = f.uri.find_last_of("/");
+        if (position != std::string::npos) {
+            data.filename = std::string(f.uri, position + 1);
+            data.filename.erase(data.filename.find_last_not_of(" ") + 1);
+        }
+        data.name = f.name;
+        data.type = f.type;
+        data.fileIndex = index++;
+        data.adp = nullptr;
+        data.upsize = 0;
+        data.totalsize = 0;
+        data.list = nullptr;
+        data.headSendFlag = 0;
+        data.httpCode = 0;
+        
+        fileArray_.push_back(data);
+        totalSize_ += fileSize;
+    }
+
+    return initResult;
+}
+
+uint32_t UploadTask::CheckConfig()
+{
+    if (uploadConfig_ == nullptr) {
+        return UPLOAD_ERRORCODE_CONFIG_ERROR;
+    }
+
+    if (uploadConfig_->url.empty()) {
+        return UPLOAD_ERRORCODE_CONFIG_ERROR;
+    }
+
+    if (uploadConfig_->files.empty()) {
+        return UPLOAD_ERRORCODE_CONFIG_ERROR;
+    }
+    return UPLOAD_OK;
+}
+
+uint32_t UploadTask::StartUploadFile()
+{
+    uint32_t ret = CheckConfig();
+    if (ret != UPLOAD_OK) {
+        return ret;
+    }
+
+    ret = InitFileArray();
+    if (ret != UPLOAD_OK) {
+        return ret;
+    }
+
+    curlAdp_ = std::make_shared<CUrlAdp>(fileArray_, uploadConfig_);
+    return curlAdp_->DoUpload(this);
+}
+
+std::string UploadTask::GetCodeMessage(uint32_t code)
+{
+    std::vector<std::pair<UploadErrorCode, std::string>> codeMap = {
+        {UPLOAD_OK, "file uploaded successfully"},
+        {UPLOAD_ERRORCODE_UNSUPPORT_URI, "file path error"},
+        {UPLOAD_ERRORCODE_GET_FILE_ERROR, "failed to get file"},
+        {UPLOAD_ERRORCODE_CONFIG_ERROR,  "upload configuration error"},
+        {UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR,  "libcurl return error"},
+        {UPLOAD_ERRORCODE_UPLOAD_FAIL, "upload failed"},
+        {UPLOAD_ERRORCODE_UPLOAD_OUTTIME, "upload timeout"},
+    };
+
+    for (const auto &it: codeMap) {
+        if (it.first == code) {
+            return it.second;
+        }
+    }
+    return "unknown";
+}
+
 void UploadTask::OnRun()
 {
     std::string traceParam = "url:" + uploadConfig_->url + "file num:" + std::to_string(uploadConfig_->files.size());
     HitraceScoped trace(HITRACE_TAG_MISC, "exec upload task " + traceParam);
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnRun. In.");
     state_ = STATE_RUNNING;
-    obtainFile_ =  std::make_shared<ObtainFile>();
-    GetFileArray();
-    if (fileArray_.empty()) {
-        return;
+    uint32_t ret = StartUploadFile();
+    if (ret != UPLOAD_OK) {
+        OnFail();
+        ReportTaskFault(ret);
+    } else {
+        OnComplete();
     }
-    curlAdp_ = std::make_shared<CUrlAdp>(fileArray_, uploadConfig_);
-    TaskResult taskResult;
-    curlAdp_->DoUpload((IUploadTask*)this, taskResult);
+
     ClearFileArray();
-    if (taskResult.failCount != 0) {
-        ReportTaskFault(taskResult);
-    }
+    totalSize_ = 0;
 }
 
-void UploadTask::ReportTaskFault(TaskResult taskResult) const
+void UploadTask::ReportTaskFault(uint32_t ret) const
 {
+    uint32_t successCount = 0;
+    uint32_t failCount = 0;
+    for (auto &vmem : fileArray_) {
+        if (vmem.result == UPLOAD_OK) {
+            successCount++;
+        } else {
+            failCount++;
+        }
+    }
     OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST,
         REQUEST_TASK_FAULT,
         OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
         TASKS_TYPE, UPLOAD,
         TOTAL_FILE_NUM, fileArray_.size(),
-        FAIL_FILE_NUM, taskResult.failCount,
-        SUCCESS_FILE_NUM, taskResult.successCount,
-        ERROR_INFO, taskResult.errorCode);
+        FAIL_FILE_NUM, failCount,
+        SUCCESS_FILE_NUM, successCount,
+        ERROR_INFO, static_cast<int>(ret));
 }
 
 void UploadTask::OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
@@ -193,14 +302,40 @@ void UploadTask::OnHeaderReceive(const std::string &header)
     }
 }
 
-void UploadTask::OnFail(unsigned int error)
+std::vector<TaskState> UploadTask::GetTaskStates()
+{
+    std::vector<TaskState> taskStates;
+    TaskState taskState;
+    for (auto &vmem : fileArray_) {
+        taskState = {vmem.filename, vmem.result, GetCodeMessage(vmem.result)};
+        taskStates.push_back(taskState);
+    }
+    return taskStates;
+}
+void UploadTask::OnFail()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnFail. In.");
+    if (uploadConfig_->protocolVersion == "L5") {
+        return;
+    }
     std::lock_guard<std::mutex> guard(mutex_);
-    error_ = error;
+    std::vector<TaskState> taskStates = GetTaskStates();
+    taskStates_ = taskStates;
     state_ = STATE_FAILURE;
     if (failCallback_) {
-        failCallback_->Fail(error_);
+        failCallback_->Fail(taskStates);
+    }
+}
+
+void UploadTask::OnComplete()
+{
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnComplete. In.");
+    std::lock_guard<std::mutex> guard(mutex_);
+    std::vector<TaskState> taskStates = GetTaskStates();
+    taskStates_ = taskStates;
+    state_ = STATE_SUCCESS;
+    if (completeCallback_) {
+        completeCallback_->Complete(taskStates);
     }
 }
 
@@ -210,35 +345,6 @@ void UploadTask::ExecuteTask()
     thread_ = std::make_unique<std::thread>(UploadTask::Run, this);
     thread_handle_ = thread_->native_handle();
     thread_->detach();
-}
-
-std::vector<FileData>& UploadTask::GetFileArray()
-{
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "GetFileArray. In.");
-    unsigned int fileSize = 0;
-    FileData data;
-    FILE *file;
-    totalSize_ = 0;
-    for (auto f : uploadConfig_->files) {
-        unsigned int error = obtainFile_->GetFile(&file, f.uri, fileSize, context_);
-        if (error != UPLOAD_ERRORCODE_NO_ERROR) {
-            OnFail(error);
-            ClearFileArray();
-            totalSize_ = 0;
-            return fileArray_;
-        }
-        data.fp = file;
-        std::size_t position = f.uri.find_last_of("/");
-        if (position != std::string::npos) {
-            data.filename = std::string(f.uri, position + 1);
-            data.filename.erase(data.filename.find_last_not_of(" ") + 1);
-        }
-        data.name = f.name;
-        data.type = f.type;
-        fileArray_.push_back(data);
-        totalSize_ += fileSize;
-    }
-    return fileArray_;
 }
 
 void UploadTask::ClearFileArray()

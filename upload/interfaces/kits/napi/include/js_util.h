@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <map>
 #include <vector>
+#include "upload_common.h"
 #include "upload_config.h"
 #include "upload_hilog_wrapper.h"
 #include "napi/native_common.h"
@@ -56,6 +57,10 @@ public:
 
     static std::vector<Upload::RequestData> Convert2RequestDataVector(napi_env env, napi_value jsRequestDatas);
     static napi_value Convert2JSRequestDataVector(napi_env env, const std::vector<Upload::RequestData> &requestDatas);
+
+    static napi_value Convert2JSValue(napi_env env, const std::vector<int32_t> &cInts);
+    static napi_value Convert2JSValue(napi_env env, const std::vector<Upload::TaskState> &taskStates);
+    static bool Equals(napi_env env, napi_value value, napi_ref copy);
 };
 }
 #endif // REQUEST_JS_UTIL_H

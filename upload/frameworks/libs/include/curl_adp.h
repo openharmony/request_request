@@ -30,28 +30,26 @@ class CUrlAdp {
 public:
     CUrlAdp(std::vector<FileData>& fileArray, std::shared_ptr<UploadConfig>& config);
     virtual ~CUrlAdp();
-    void DoUpload(IUploadTask *task, TaskResult &taskResult);
+    uint32_t DoUpload(IUploadTask *task);
     bool Remove();
-    void FailNotify(unsigned int error);
     bool IsReadAbort()
     {
         return isReadAbort_;
     }
 
 protected:
-    bool RemoveInner();
+    bool ClearCurlResource();
     static int ProgressCallback(void *clientp,
         curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
     static size_t HeaderCallback(char *buffer, size_t size, size_t nitems, void *userdata);
     static size_t HeaderCallbackL5(char *buffer, size_t size, size_t nitems, void *userdata);
     static size_t ReadCallback(char *buffer, size_t size, size_t nitems, void *arg);
     static int OnDebug(CURL *curl, curl_infotype itype, char *pData, size_t size, void *lpvoid);
-
+    
 private:
     int CheckUploadStatus(CURLM *curlMulti);
     bool MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray);
-    int32_t CheckUrlStatus();
-    int32_t UploadFile();
+    int32_t UploadOneFile();
     void SetHeadData(CURL *curl);
     void SetCurlOpt(CURL *curl);
     void CurlGlobalInit();
@@ -64,7 +62,7 @@ private:
     uint64_t timerId_;
     std::shared_ptr<UploadTimerInfo> timerInfo_;
     IUploadTask *uploadTask_;
-    std::vector<FileData> fileArray_;
+    std::vector<FileData> &fileArray_;
     FileData  mfileData_;
     std::shared_ptr<UploadConfig> config_;
     static constexpr int32_t HTTP_SUCCESS = 200;

@@ -27,7 +27,7 @@ uint32_t MockObtainFile::GetFile(FILE **file, std::string &fileUri,
 uint32_t MockObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri,
     uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
-    uint32_t ret = UPLOAD_ERRORCODE_NO_ERROR;
+    uint32_t ret = UPLOAD_OK;
     FILE *filePtr = nullptr;
     int32_t fileLength = 0;
 

@@ -18,14 +18,15 @@
 #include "i_fail_callback.h"
 #include "i_progress_callback.h"
 #include "i_header_receive_callback.h"
+#include "i_complete_callback.h"
 
 namespace OHOS::Request::Upload {
 class ICallbackAbleJudger {
 public:
     ICallbackAbleJudger() = default;
-    virtual ~ICallbackAbleJudger()
-    {}
+    virtual ~ICallbackAbleJudger() {};
     virtual bool JudgeFail(const IFailCallback *target) = 0;
+    virtual bool JudgeComplete(const ICompleteCallback *target) = 0;
     virtual bool JudgeProgress(const IProgressCallback *target) = 0;
     virtual bool JudgeHeaderReceive(const IHeaderReceiveCallback *target) = 0;
 };

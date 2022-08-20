@@ -17,6 +17,8 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <cstdio>
+#include <vector>
+#include <string>
 #include <climits>
 #include <cinttypes>
 #include "upload_task.h"
@@ -27,98 +29,52 @@
 #include "curl_adp.h"
 
 namespace OHOS::Request::Upload {
-CUrlAdp::CUrlAdp(std::vector<FileData>& fileArray, std::shared_ptr<UploadConfig>& config)
+CUrlAdp::CUrlAdp(std::vector<FileData>& fileArray, std::shared_ptr<UploadConfig>& config) : fileArray_(fileArray)
 {
-    fileArray_ = fileArray;
     config_ = config;
     isCurlGlobalInit_ = false;
     isReadAbort_ = false;
     curlMulti_ = nullptr;
     timerId_ = 0;
     timerInfo_ = nullptr;
-    for (auto &vmem : fileArray_) {
-        vmem.upsize = 0;
-        vmem.totalsize = 0;
-        vmem.fileIndex = 0;
-        vmem.mcurl = nullptr;
-        vmem.headSendFlag = 0;
-        vmem.httpCode = 0;
-        vmem.list = nullptr;
-    }
 }
 
 CUrlAdp::~CUrlAdp()
 {
 }
 
-int32_t CUrlAdp::CheckUrlStatus()
-{
-    if (config_ == nullptr) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "config_ is null");
-        FailNotify(UPLOAD_ERRORCODE_CONFIG_ERROR);
-        return UPLOAD_ERRORCODE_CONFIG_ERROR;
-    }
-
-    if (config_->url.empty()) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "URL is empty");
-        FailNotify(UPLOAD_ERRORCODE_CONFIG_ERROR);
-        return UPLOAD_ERRORCODE_CONFIG_ERROR;
-    }
-
-    if (fileArray_.empty()) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "fileArray_ is empty");
-        FailNotify(UPLOAD_ERRORCODE_GET_FILE_ERROR);
-        return UPLOAD_ERRORCODE_GET_FILE_ERROR;
-    }
-
-    if (curlMulti_) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "DoUpload was multi called");
-        return UPLOAD_MODULE_FRAMEWORK;
-    }
-    return UPLOAD_ERRORCODE_NO_ERROR;
-}
-
-void CUrlAdp::DoUpload(IUploadTask *task, TaskResult &taskResult)
+uint32_t CUrlAdp::DoUpload(IUploadTask *task)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload start");
     uploadTask_ = task;
 
-    taskResult.errorCode = CheckUrlStatus();
-    if (taskResult.errorCode != UPLOAD_ERRORCODE_NO_ERROR) {
-        taskResult.failCount = fileArray_.size();
-        return;
-    }
-
     InitTimerInfo();
-    uint32_t index = 0;
+    uint32_t allFileUploadResult = UPLOAD_OK;
     for (auto &vmem : fileArray_) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>vmem : fileArray_ isReadAbort is %{public}d", IsReadAbort());
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "read abort stat: %{public}d file index: %{public}u",
+                      IsReadAbort(), vmem.fileIndex);
         if (IsReadAbort()) {
-            taskResult.failCount = fileArray_.size() - taskResult.successCount;
-            taskResult.errorCode = IsReadAbort();
-            return;
+            vmem.result = UPLOAD_ERRORCODE_UPLOAD_FAIL;
+            allFileUploadResult = UPLOAD_ERRORCODE_UPLOAD_FAIL;
+            continue;
         }
-        index++;
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>fileArray index %{public}u", index);
+
         mfileData_ = vmem;
-        mfileData_.fileIndex = index;
-        int32_t result = UploadFile();
-        if (result == UPLOAD_ERRORCODE_NO_ERROR) {
-            taskResult.successCount++;
-        } else {
-            taskResult.failCount++;
-            taskResult.errorCode = result;
+        vmem.result = UploadOneFile();
+        if (vmem.result != UPLOAD_OK) {
+            allFileUploadResult = UPLOAD_ERRORCODE_UPLOAD_FAIL;
         }
         mfileData_.responseHead.clear();
         if (mfileData_.list) {
             curl_slist_free_all(mfileData_.list);
             mfileData_.list = nullptr;
         }
-        RemoveInner();
+        ClearCurlResource();
         usleep(FILE_UPLOAD_INTERVEL);
     }
 
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload end");
+    return allFileUploadResult;
 }
 
 bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray)
@@ -128,17 +84,14 @@ bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray)
     struct stat fileInfo;
     if (mfileData_.fp == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "file ptr is null");
-        FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
         return false;
     }
     if (fstat(fileno(mfileData_.fp), &fileInfo) != 0) {
         UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "get the file info fail");
-        FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
         return false;
     }
     CURL *curl = curl_easy_init();
     if (curl == nullptr) {
-        FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
         return false;
     }
     SetHeadData(curl);
@@ -178,38 +131,36 @@ void CUrlAdp::SetHeadData(CURL *curl)
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, mfileData_.list);
 }
 
-int32_t CUrlAdp::UploadFile()
+int32_t CUrlAdp::UploadOneFile()
 {
     std::string traceParam = "name:" + mfileData_.filename + "index" + std::to_string(mfileData_.fileIndex) +
                              "size:" + std::to_string(mfileData_.totalsize);
     HitraceScoped trace(HITRACE_TAG_MISC, "upload file " + traceParam);
-    int isRuning = 0;
-    bool ret = false;
 
     CurlGlobalInit();
     curlMulti_ = curl_multi_init();
     if (curlMulti_ == nullptr) {
-        FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
         CurlGlobalCleanup();
         return UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR;
     }
 
-    ret = MultiAddHandle(curlMulti_, curlArray_);
+    bool ret = MultiAddHandle(curlMulti_, curlArray_);
     if (ret == false) {
-        FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
         return UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR;
     }
+
+    int isRuning = 0;
     curl_multi_perform(curlMulti_, &isRuning);
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "isRuning = %{public}d", isRuning);
     do {
         int numfds = 0;
         int res = curl_multi_wait(curlMulti_, NULL, 0, TRANS_TIMEOUT_MS, &numfds);
         if (res != CURLM_OK) {
-            FailNotify(UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR);
             return res;
         }
         curl_multi_perform(curlMulti_, &isRuning);
     } while (isRuning);
+
     return CheckUploadStatus(curlMulti_);
 }
 
@@ -251,7 +202,7 @@ void CUrlAdp::SetCurlOpt(CURL *curl)
 int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
 {
     int msgsLeft = 0;
-    int returnCode = 0;
+    int returnCode = UPLOAD_ERRORCODE_UPLOAD_FAIL;
     CURLMsg* msg = NULL;
     while ((msg = curl_multi_info_read(curlMulti, &msgsLeft))) {
         if (msg->msg != CURLMSG_DONE) {
@@ -262,8 +213,7 @@ int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
         returnCode = msg->data.result;
         if (returnCode != CURLE_OK) {
             UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "upload fail curl error %{public}d", returnCode);
-            FailNotify(UPLOAD_ERRORCODE_UPLOAD_FAIL);
-            continue;
+            return UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR;
         }
 
         long respCode = 0;
@@ -272,8 +222,9 @@ int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
         if (respCode != HTTP_SUCCESS) {
             returnCode = respCode;
             UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "upload fail http error %{public}d", returnCode);
-            FailNotify(UPLOAD_ERRORCODE_UPLOAD_FAIL);
+            return UPLOAD_ERRORCODE_UPLOAD_FAIL;
         }
+        returnCode = UPLOAD_OK;
     }
     return returnCode;
 }
@@ -285,7 +236,7 @@ bool CUrlAdp::Remove()
     return true;
 }
 
-bool CUrlAdp::RemoveInner()
+bool CUrlAdp::ClearCurlResource()
 {
     std::lock_guard<std::mutex> guard(mutex_);
     for (auto url : curlArray_) {
@@ -454,15 +405,6 @@ size_t CUrlAdp::ReadCallback(char *buffer, size_t size, size_t nitems, void *arg
     return readSize;
 }
 
-void CUrlAdp::FailNotify(unsigned int error)
-{
-    if (uploadTask_) {
-        if (config_->protocolVersion != "L5") {
-            uploadTask_->OnFail(error);
-        }
-    }
-}
-
 void CUrlAdp::InitTimerInfo()
 {
     timerInfo_ = std::make_shared<UploadTimerInfo>();
@@ -472,7 +414,6 @@ void CUrlAdp::InitTimerInfo()
     timerInfo_->SetWantAgent(nullptr);
 
     timerInfo_->SetCallbackInfo([this]() {
-        this->FailNotify(UPLOAD_ERRORCODE_UPLOAD_OUTTIME);
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OutTime error");
         this->isReadAbort_ = true;
         });

@@ -60,11 +60,11 @@ struct FileData {
     int64_t upsize;
     int64_t totalsize;
     uint32_t fileIndex;
-    CURL *mcurl;
     struct curl_slist *list;
     std::vector<std::string> responseHead;
     int32_t headSendFlag;
     int32_t httpCode;
+    uint32_t result;
 };
 } // end of OHOS::Request::Upload
 #endif

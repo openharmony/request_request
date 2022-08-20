@@ -13,12 +13,13 @@
  * limitations under the License.
  */
 
-#ifndef FAIL_CALLBACK_H
-#define FAIL_CALLBACK_H
+#ifndef COMPLETE_CALLBACK_H
+#define COMPLETE_CALLBACK_H
 
 #include <uv.h>
+#include <map>
 #include <vector>
-#include "i_fail_callback.h"
+#include "i_complete_callback.h"
 #include "upload_common.h"
 #include "js_util.h"
 #include "napi/native_common.h"
@@ -27,22 +28,20 @@
 #include "i_callbackable_judger.h"
 
 namespace OHOS::Request::Upload {
-class FailCallback : public IFailCallback {
+class CompleteCallback : public ICompleteCallback {
 public:
-    FailCallback(ICallbackAbleJudger *judger, napi_env env, napi_value callback);
-    virtual ~FailCallback();
-    void Fail(const std::vector<TaskState> &taskStates) override;
+    CompleteCallback(ICallbackAbleJudger *judger, napi_env env, napi_value callback);
+    virtual ~CompleteCallback();
+    void Complete(const std::vector<TaskState> &taskStates) override;
     napi_ref GetCallback() override;
 private:
-    struct FailWorker {
+    struct CompleteWorker {
         ICallbackAbleJudger *judger;
-        const FailCallback *callback = nullptr;
+        const CompleteCallback *callback = nullptr;
         const std::vector<TaskState> taskStates;
-        FailWorker(ICallbackAbleJudger *judger, const FailCallback *callbackIn,
+        CompleteWorker(ICallbackAbleJudger *judger, const CompleteCallback *callbackIn,
             const std::vector<TaskState> &taskStatesIn)
-            : judger(judger),
-              callback(callbackIn),
-              taskStates(taskStatesIn) {}
+            : judger(judger), callback(callbackIn), taskStates(taskStatesIn) {}
     };
 
     ICallbackAbleJudger *judger_;

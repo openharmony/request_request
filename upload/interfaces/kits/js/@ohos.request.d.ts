@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 import { AsyncCallback } from './basic';
+import { Callback } from './basic';
 import BaseContext from './application/BaseContext';
 
 /**
@@ -722,6 +723,38 @@ declare namespace request {
     data: Array<RequestData>;
   }
 
+  /**
+   * TaskState data Structure
+   *
+   * @name TaskState
+   * @since 9
+   * @syscap SystemCapability.MiscServices.Upload
+   * @permission ohos.permission.INTERNET
+   */
+   interface TaskState {
+    /**
+     * Upload file path.
+     *
+     * @since 9
+     * @permission ohos.permission.INTERNET
+     */
+    path: string;
+    /**
+     * Upload task return value.
+     *
+     * @since 9
+     * @permission ohos.permission.INTERNET
+     */
+    responseCode: number;
+    /**
+     * Upload task information.
+     *
+     * @since 9
+     * @permission ohos.permission.INTERNET
+     */
+    message: string;
+  }
+
   interface UploadTask {
     /**
      * Called when the current upload session is in process.
@@ -772,6 +805,31 @@ declare namespace request {
      * @return -
      */
     off(type: 'headerReceive', callback?: (header: object) => void): void;
+
+    /**
+     * Called when the current upload session complete or fail.
+     * @syscap SystemCapability.MiscServices.Upload
+     * @since 9
+     * @param type Indicates the upload session event type
+     *        complete: upload task completed
+     *        fail: upload task failed
+     * @param callback The callback function for the upload complete or fail change event.
+     * @permission ohos.permission.INTERNET
+     * @return -
+     */
+     on(type:'complete' | 'fail', callback: Callback<Array<TaskState>>): void;
+
+     /**
+      * Called when the current upload session complete or fail.
+      * @syscap SystemCapability.MiscServices.Upload
+      * @since 9
+      * @param type Indicates the upload session event type
+      *        complete: upload task completed
+     *         fail: upload task failed
+      * @permission ohos.permission.INTERNET
+      * @return -
+      */
+    off(type:'complete' | 'fail'): void;
 
     /**
      * Deletes a upload session.
