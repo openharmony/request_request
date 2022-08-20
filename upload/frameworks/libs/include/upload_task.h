@@ -69,10 +69,10 @@ protected:
     uint32_t InitFileArray();
     void ClearFileArray();
 	uint32_t CheckConfig();
-    std::string GetCodeMessage(int32_t code);
+    std::string GetCodeMessage(uint32_t code);
     std::vector<TaskState> GetTaskStates();
 private:
-    void ReportTaskFault(TaskResult taskResult) const;
+    void ReportTaskFault() const;
     uint32_t StartUploadFile();
 
     std::shared_ptr<UploadConfig> uploadConfig_;

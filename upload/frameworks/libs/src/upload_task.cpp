@@ -165,10 +165,16 @@ uint32_t UploadTask::InitFileArray()
             data.filename = std::string(f.uri, position + 1);
             data.filename.erase(data.filename.find_last_not_of(" ") + 1);
         }
-
         data.name = f.name;
         data.type = f.type;
         data.fileIndex = index++;
+        data.adp = nullptr;
+        data.upsize = 0;
+        data.totalsize = 0;
+        data.list = nullptr;
+        data.headSendFlag = 0;
+        data.httpCode = 0;
+        
         fileArray_.push_back(data);
         totalSize_ += fileSize;
     }
@@ -208,7 +214,7 @@ uint32_t UploadTask::StartUploadFile()
     return curlAdp_->DoUpload(this);
 }
 
-std::string UploadTask::GetCodeMessage(int32_t code)
+std::string UploadTask::GetCodeMessage(uint32_t code)
 {
     std::vector<std::pair<UploadErrorCode, std::string>> codeMap = {
         {UPLOAD_OK, "file uploaded successfully"},
@@ -237,7 +243,7 @@ void UploadTask::OnRun()
     uint32_t ret = StartUploadFile();
     if (ret != UPLOAD_OK) {
         OnFail();
- //       ReportTaskFault();
+        ReportTaskFault();
     } else {
         OnComplete();
     }
@@ -246,16 +252,25 @@ void UploadTask::OnRun()
     totalSize_ = 0;
 }
 
-void UploadTask::ReportTaskFault(TaskResult taskResult) const
+void UploadTask::ReportTaskFault() const
 {
+    uint32_t successCount = 0;
+    uint32_t failCount = 0;
+    for (auto &vmem : fileArray_) {
+        if (vmem.result == UPLOAD_OK) {
+            successCount++;
+        } else {
+            failCount++;
+        }
+    }
     OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST,
         REQUEST_TASK_FAULT,
         OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
         TASKS_TYPE, UPLOAD,
         TOTAL_FILE_NUM, fileArray_.size(),
-        FAIL_FILE_NUM, taskResult.failCount,
-        SUCCESS_FILE_NUM, taskResult.successCount,
-        ERROR_INFO, taskResult.errorCode);
+        FAIL_FILE_NUM, failCount,
+        SUCCESS_FILE_NUM, successCount,
+        ERROR_INFO, static_cast<int>(fileArray_.sesult));
 }
 
 void UploadTask::OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
@@ -318,6 +333,7 @@ void UploadTask::OnComplete()
     std::lock_guard<std::mutex> guard(mutex_);
     std::vector<TaskState> taskStates = GetTaskStates();
     taskStates_ = taskStates;
+    state_ = STATE_SUCCESS;
     if (completeCallback_) {
         completeCallback_->Complete(taskStates);
     }

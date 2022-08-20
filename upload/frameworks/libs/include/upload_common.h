@@ -35,12 +35,6 @@ enum UploadErrorCode {
     UPLOAD_ERRORCODE_UPLOAD_OUTTIME,
 };
 
-struct TaskResult {
-    uint32_t successCount {0};
-    uint32_t failCount {0};
-    int32_t errorCode {UPLOAD_OK};
-};
-
 struct TaskState {
     std::string path;
     int32_t responseCode {UPLOAD_OK};

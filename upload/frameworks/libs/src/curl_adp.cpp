@@ -213,7 +213,7 @@ int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
         returnCode = msg->data.result;
         if (returnCode != CURLE_OK) {
             UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "upload fail curl error %{public}d", returnCode);
-            return returnCode;
+            return UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR;
         }
 
         long respCode = 0;
@@ -222,8 +222,9 @@ int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
         if (respCode != HTTP_SUCCESS) {
             returnCode = respCode;
             UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "upload fail http error %{public}d", returnCode);
-            return returnCode;
+            return UPLOAD_ERRORCODE_UPLOAD_FAIL;
         }
+        returnCode = UPLOAD_OK;
     }
     return returnCode;
 }

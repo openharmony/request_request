@@ -76,8 +76,7 @@ HWTEST_F(UploadTest, UploadTest_001, TestSize.Level1)
         fileArray.push_back(fileInfo1);
         fileArray.push_back(fileInfo2);
         auto curl = std::make_shared<CUrlAdp>(fileArray, uploadConfig);
-        TaskResult taskResult = {0};
-        curl->DoUpload(nullptr, taskResult);
+        curl->DoUpload(nullptr);
     } else {
         UPLOAD_HILOGE(UPLOAD_MODULE_TEST, "open file failed");
     }
