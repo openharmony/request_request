@@ -68,7 +68,7 @@ public:
 protected:
     uint32_t InitFileArray();
     void ClearFileArray();
-	uint32_t CheckConfig();
+    uint32_t CheckConfig();
     std::string GetCodeMessage(uint32_t code);
     std::vector<TaskState> GetTaskStates();
 private:

@@ -69,7 +69,7 @@ uint32_t CUrlAdp::DoUpload(IUploadTask *task)
             curl_slist_free_all(mfileData_.list);
             mfileData_.list = nullptr;
         }
-		ClearCurlResource();
+        ClearCurlResource();
         usleep(FILE_UPLOAD_INTERVEL);
     }
 
