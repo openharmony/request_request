@@ -29,13 +29,6 @@
 #include "curl_adp.h"
 
 namespace OHOS::Request::Upload {
-constexpr int TRANS_TIMEOUT_MS = 300 * 1000;
-constexpr int READFILE_TIMEOUT_MS = 30 * 1000;
-constexpr int TIMEOUTTYPE = 1;
-constexpr int SLEEP = 1000;
-constexpr int COLLECT_DO_FLAG = 1;
-constexpr int COLLECT_END_FLAG = 2;
-
 CUrlAdp::CUrlAdp(std::vector<FileData>& fileArray, std::shared_ptr<UploadConfig>& config)
 {
     fileArray_ = fileArray;
@@ -133,7 +126,7 @@ void CUrlAdp::DoUpload(IUploadTask *task, TaskResult &taskResult)
             mfileData_.list = nullptr;
         }
         RemoveInner();
-        usleep(SLEEP);
+        usleep(FILE_UPLOAD_INTERVEL);
     }
     if (taskResult.successCount == fileArray_.size()) {
         uploadTask_->OnComplete(taskStates);
@@ -333,35 +326,27 @@ int CUrlAdp::OnDebug(CURL *curl, curl_infotype itype, char *pData, size_t size, 
 }
 int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
 {
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>ProgressCallback thread id is %{public}lu", pthread_self());
     FileData *fData = (FileData *) clientp;
     CUrlAdp *url = (CUrlAdp *) fData->adp;
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>ProgressCallback ultotal is %{public}" PRIu64, ultotal);
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>ProgressCallback ulnow is %{public}" PRIu64, ulnow);
-    UPLOAD_HILOGD(
-        UPLOAD_MODULE_FRAMEWORK, "===>ProgressCallback fData->totalsize is %{public}" PRIu64, fData->totalsize);
     if (ulnow > 0) {
         fData->upsize = fData->totalsize - (ultotal - ulnow);
     } else {
         fData->upsize = ulnow;
     }
 
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>ProgressCallback fData->totalsize - (ultotal - ulnow) is %{public}lld",
-        (long long)fData->upsize);
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "progress upload total: %{public}" PRIu64 " upload now: %{public}" PRIu64
+        " upload size: %{public}" PRIu64 " total size: %{public}" PRIu64 " thread:%{public}lu",
+        ultotal, ulnow, fData->upsize, fData->totalsize, pthread_self());
     int64_t totalulnow = 0;
     if (url && url->uploadTask_) {
         for (auto &vmem : url->fileArray_) {
-            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>ProgressCallback vmem.filename is %{public}s",
-                vmem.filename.c_str());
             if (fData->filename == vmem.filename) {
                 vmem.upsize = fData->upsize;
             }
             totalulnow += vmem.upsize;
-            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>ProgressCallback vmem.upsize is %{public}lld",
-                (long long)vmem.upsize);
         }
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>ProgressCallback totalulnow is %{public}lld",
-            (long long)totalulnow);
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "report progress total upload size: %{public}" PRIu64
+            " upload now: %{public}" PRIu64, totalulnow, ultotal);
         url->uploadTask_->OnProgress(dltotal, dlnow, ultotal, totalulnow);
     }
     return 0;
@@ -377,14 +362,14 @@ size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *u
 
     if (std::string::npos != stmp.find("HTTP")) {
         fData->headSendFlag = COLLECT_DO_FLAG;
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback collect begin  is %{public}s", stmp.c_str());
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "http header begin: %{public}s", stmp.c_str());
         const int codeLen = 3;
         std::string::size_type position = stmp.find_first_of(" ");
         std::string scode(stmp, position + 1, codeLen);
         fData->httpCode = std::stol(scode);
     } else if (stmp == headEndFlag) {
         fData->headSendFlag = COLLECT_END_FLAG;
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback collect end  is %{public}s", stmp.c_str());
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "http header end: %{public}s", stmp.c_str());
     }
     if (fData->headSendFlag == COLLECT_DO_FLAG || fData->headSendFlag == COLLECT_END_FLAG) {
         fData->responseHead.push_back(stmp);
@@ -392,29 +377,16 @@ size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *u
     if (url && url->uploadTask_ && fData->headSendFlag == COLLECT_END_FLAG) {
         std::string stoatalHead = "";
         for (auto &smem : fData->responseHead) {
-            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback smem is %{public}s", smem.c_str());
             stoatalHead += smem;
         }
-        char sbuff[stoatalHead.length()];
-        int nRet = memset_s(sbuff, stoatalHead.length(), 0, stoatalHead.length());
-        if (nRet != 0) {
-            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback memset_s Ret is %{public}d", nRet);
-        }
-
-        nRet = memcpy_s(sbuff, stoatalHead.length(), stoatalHead.c_str(), stoatalHead.length());
-        if (nRet != 0) {
-            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback memcpy_s Ret is %{public}d", nRet);
-        }
-
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback stoatalHead is %{public}s", stoatalHead.c_str());
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallback stoatalHead.length() is %{public}zu",
-            stoatalHead.length());
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "report head len: %{public}zu, content: %{public}s",
+                      stoatalHead.length(), stoatalHead.c_str());
         if (codeOk == fData->httpCode) {
             if (url->fileArray_.size() == fData->fileIndex) {
-                url->uploadTask_->OnHeaderReceive(sbuff, size, nitems);
+                url->uploadTask_->OnHeaderReceive(stoatalHead);
             }
         } else {
-            url->uploadTask_->OnHeaderReceive(sbuff, size, nitems);
+            url->uploadTask_->OnHeaderReceive(stoatalHead);
         }
         fData->responseHead.clear();
         fData->httpCode = 0;

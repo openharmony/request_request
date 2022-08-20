@@ -164,9 +164,13 @@ napi_value JSUtil::Convert2JSValue(napi_env env, int32_t value)
 void JSUtil::ParseFunction(napi_env env, napi_value &object, const char *name, bool &hasFunction, napi_ref &output)
 {
     napi_value value = nullptr;
-    if (napi_get_named_property(env, object, name, &value) == napi_ok) {
+    auto ret = napi_get_named_property(env, object, name, &value);
+    if ((ret == napi_ok) && (value != nullptr)) {
         napi_valuetype valueType = napi_null;
         NAPI_CALL_RETURN_VOID(env, napi_typeof(env, value, &valueType));
+        if (valueType == napi_undefined) {
+            return;
+        }
         NAPI_ASSERT_RETURN_VOID(env, valueType == napi_function, "Wrong argument, function expected.");
         NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, value, 1, &output));
         hasFunction = true;

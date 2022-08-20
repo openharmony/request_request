@@ -21,7 +21,6 @@
 #include "upload_task.h"
 
 namespace OHOS::Request::Upload {
-const int USLEEPRUN = 50 * 1000;
 UploadTask::UploadTask(std::shared_ptr<UploadConfig>& uploadConfig)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "UploadTask. In.");
@@ -131,7 +130,7 @@ void UploadTask::SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> conte
 void UploadTask::Run(void *arg)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Run. In.");
-    usleep(USLEEPRUN);
+    usleep(USLEEP_INTERVEL_BEFOR_RUN);
     ((UploadTask*)arg)->OnRun();
     if (((UploadTask*)arg)->uploadConfig_->protocolVersion == "L5") {
         if (((UploadTask*)arg)->uploadConfig_->fcomplete) {
@@ -182,6 +181,10 @@ void UploadTask::ReportTaskFault(TaskResult taskResult) const
 void UploadTask::OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnProgress. In.");
+    if (ulnow == uploadedSize_) {
+        return;
+    }
+
     std::lock_guard<std::mutex> guard(mutex_);
     uploadedSize_ = ulnow;
     if (uploadedSize_ == totalSize_) {
@@ -192,11 +195,10 @@ void UploadTask::OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ult
     }
 }
 
-void UploadTask::OnHeaderReceive(char *buffer, size_t size, size_t nitems)
+void UploadTask::OnHeaderReceive(const std::string &header)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnHeaderReceive. In.");
     std::lock_guard<std::mutex> guard(mutex_);
-    std::string header(buffer, size * nitems);
     header_ = header;
     if (headerReceiveCallback_) {
         headerReceiveCallback_->HeaderReceive(header_);

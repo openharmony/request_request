@@ -79,6 +79,13 @@ private:
     bool isReadAbort_;
     CURLM *curlMulti_;
     std::vector<CURL*> curlArray_;
+
+    static constexpr int TRANS_TIMEOUT_MS = 300 * 1000;
+    static constexpr int READFILE_TIMEOUT_MS = 30 * 1000;
+    static constexpr int TIMEOUTTYPE = 1;
+    static constexpr int FILE_UPLOAD_INTERVEL = 1000;
+    static constexpr int COLLECT_DO_FLAG = 1;
+    static constexpr int COLLECT_END_FLAG = 2;
 };
 } // end of OHOS::Request::Upload
 #endif

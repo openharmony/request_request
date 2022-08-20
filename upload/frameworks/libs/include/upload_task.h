@@ -60,7 +60,7 @@ public:
     UPLOAD_API virtual void SetCallback(Type type, void *callback);
     UPLOAD_API virtual void SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> context);
     virtual void OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
-    virtual void OnHeaderReceive(char *buffer, size_t size, size_t nitems);
+    virtual void OnHeaderReceive(const std::string &header);
     virtual void OnFail(const std::vector<TaskState> &taskStates);
     virtual void OnComplete(const std::vector<TaskState> &taskStates);
     std::vector<std::string> StringSplit(const std::string& str, char delim);
@@ -102,6 +102,7 @@ private:
     UploadTaskState state_;
     std::mutex mutex_;
     std::thread::native_handle_type thread_handle_;
+    static constexpr int USLEEP_INTERVEL_BEFOR_RUN = 50 * 1000;
 };
 } // end of OHOS::Request::Upload
 #endif
