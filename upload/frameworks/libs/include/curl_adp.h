@@ -30,16 +30,15 @@ class CUrlAdp {
 public:
     CUrlAdp(std::vector<FileData>& fileArray, std::shared_ptr<UploadConfig>& config);
     virtual ~CUrlAdp();
-    void DoUpload(IUploadTask *task, TaskResult &taskResult);
+    uint32_t DoUpload(IUploadTask *task);
     bool Remove();
-    void FailNotify(const std::vector<TaskState> &taskStates);
     bool IsReadAbort()
     {
         return isReadAbort_;
     }
 
 protected:
-    bool RemoveInner();
+    bool ClearCurlResource();
     static int ProgressCallback(void *clientp,
         curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
     static size_t HeaderCallback(char *buffer, size_t size, size_t nitems, void *userdata);
@@ -50,8 +49,7 @@ protected:
 private:
     int CheckUploadStatus(CURLM *curlMulti);
     bool MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray);
-    int32_t CheckUrl();
-    int32_t UploadFile();
+    int32_t UploadOneFile();
     void SetHeadData(CURL *curl);
     void SetCurlOpt(CURL *curl);
     void CurlGlobalInit();
@@ -61,13 +59,10 @@ private:
     void StopTimer();
 
 private:
-    static constexpr const char *CHECK_URL_ERROR = "Check URL error";
-    static constexpr const char *FILE_UPLOADED_FAILED = "File uploaded failed";
-    static constexpr const char *FILE_UPLOADED_SUCCESSFULLY = "File uploaded successfully";
     uint64_t timerId_;
     std::shared_ptr<UploadTimerInfo> timerInfo_;
     IUploadTask *uploadTask_;
-    std::vector<FileData> fileArray_;
+    std::vector<FileData> &fileArray_;
     FileData  mfileData_;
     std::shared_ptr<UploadConfig> config_;
     static constexpr int32_t HTTP_SUCCESS = 200;

@@ -22,8 +22,8 @@ class IUploadTask {
 public:
     virtual void OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) = 0;
     virtual void OnHeaderReceive(const std::string &header) = 0;
-    virtual void OnFail(const std::vector<TaskState> &taskStates) = 0;
-    virtual void OnComplete(const std::vector<TaskState> &taskStates) = 0;
+    virtual void OnFail() = 0;
+    virtual void OnComplete() = 0;
 };
 } // end of OHOS::Request::Upload
 #endif

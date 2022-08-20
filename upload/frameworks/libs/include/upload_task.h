@@ -61,15 +61,19 @@ public:
     UPLOAD_API virtual void SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> context);
     virtual void OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
     virtual void OnHeaderReceive(const std::string &header);
-    virtual void OnFail(const std::vector<TaskState> &taskStates);
-    virtual void OnComplete(const std::vector<TaskState> &taskStates);
+    virtual void OnFail();
+    virtual void OnComplete();
     std::vector<std::string> StringSplit(const std::string& str, char delim);
 
 protected:
-    uint32_t GetFileArray();
+    uint32_t InitFileArray();
     void ClearFileArray();
+	uint32_t CheckConfig();
+    std::string GetCodeMessage(int32_t code);
+    std::vector<TaskState> GetTaskStates();
 private:
     void ReportTaskFault(TaskResult taskResult) const;
+    uint32_t StartUploadFile();
 
     std::shared_ptr<UploadConfig> uploadConfig_;
     std::unique_ptr<std::thread> thread_;
@@ -81,24 +85,19 @@ private:
     static constexpr const char *SUCCESS_FILE_NUM = "SUCCESS_FILE_NUM";
     static constexpr const char *ERROR_INFO = "ERROR_INFO";
 
-    static constexpr const char *FILE_READ_FAILED = "File read failed";
-    static constexpr const char *FILE_READ_SUCCEEDED = "File read succeeded";
-    static constexpr const char *ERROR_BY_LAST_FAILURE = "Error by last failure";
-
     IProgressCallback* progressCallback_;
     IHeaderReceiveCallback* headerReceiveCallback_;
     IFailCallback* failCallback_;
     ICompleteCallback* completeCallback_;
 
     std::shared_ptr<CUrlAdp> curlAdp_;
-    std::shared_ptr<ObtainFile> obtainFile_;
     std::shared_ptr<OHOS::AbilityRuntime::Context> context_;
     int64_t uploadedSize_;
     int64_t totalSize_;
-    std::vector<TaskState> taskStates_;
     std::vector<std::string> headerArray_;
     std::string header_;
     std::vector<FileData> fileArray_;
+    std::vector<TaskState> taskStates_;
     UploadTaskState state_;
     std::mutex mutex_;
     std::thread::native_handle_type thread_handle_;
