@@ -39,7 +39,7 @@ napi_ref FailCallback::GetCallback()
 
 void FailCallback::Fail(const std::vector<TaskState> &taskStates)
 {
-    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Fail. taskStates.size : %{public}u", taskStates.size());
+    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Fail. taskStates.size : %{public}lu", taskStates.size());
     FailWorker *failWorker = new (std::nothrow)FailWorker(judger_, this, taskStates);
     if (failWorker == nullptr) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create FailWorker");
