@@ -39,7 +39,7 @@ napi_ref CompleteCallback::GetCallback()
 
 void CompleteCallback::Complete(const std::vector<TaskState> &taskStates)
 {
-    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Complete taskStates.size : %{public}u", taskStates.size());
+    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "CompleteCallback::Complete in");
     CompleteWorker *completeWorker = new (std::nothrow)CompleteWorker(judger_, this, taskStates);
     if (completeWorker == nullptr) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create CompleteWorker");
