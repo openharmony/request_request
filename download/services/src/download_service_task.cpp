@@ -86,9 +86,12 @@ bool DownloadServiceTask::Run()
         if (status_ != SESSION_RUNNING && status_ != SESSION_PENDING) {
             break;
         }
-        if (GetFileSize(totalSize_)) {
-            result = ExecHttp();
+        if (!GetFileSize(totalSize_)) {
+            SetStatus(SESSION_FAILED, ERROR_UNKNOWN, PAUSED_UNKNOWN);
+            break;
         }
+
+        result = ExecHttp();
         DumpStatus();
         DumpErrorCode();
         DumpPausedReason();
@@ -659,9 +662,8 @@ bool DownloadServiceTask::GetFileSize(uint32_t &result)
         DOWNLOAD_HILOGI("Already get file size");
         return true;
     }
-    double size = 0.0;
+    double size = -1;
     std::unique_ptr<CURL, decltype(&curl_easy_cleanup)> handle(curl_easy_init(), curl_easy_cleanup);
-
     if (!handle) {
         DOWNLOAD_HILOGE("Failed to create download service task");
         return false;
@@ -681,22 +683,18 @@ bool DownloadServiceTask::GetFileSize(uint32_t &result)
 
     curl_easy_setopt(handle.get(), CURLOPT_NOBODY, 1L);
     CURLcode code = curl_easy_perform(handle.get());
-    curl_easy_getinfo(handle.get(), CURLINFO_CONTENT_LENGTH_DOWNLOAD, &size);
-    
-    if (code == CURLE_OK) {
-        result = static_cast<long long>(size);
-        if (result == static_cast<uint32_t>(-1)) {
-            result = 0;
-        }
-        hasFileSize_ = true;
-        DOWNLOAD_HILOGD("Has got file size");
-    } else {
-        if (status_ == SESSION_RUNNING || status_ == SESSION_PENDING) {
-            SetStatus(SESSION_PENDING, ERROR_UNKNOWN, PAUSED_UNKNOWN);
+    long respCode = 0;
+    curl_easy_getinfo(handle.get(), CURLINFO_RESPONSE_CODE, &respCode);
+    if ((code == CURLE_OK) && (respCode == HTTP_OK)) {
+        curl_easy_getinfo(handle.get(), CURLINFO_CONTENT_LENGTH_DOWNLOAD, &size);
+        if (size >= 0) {
+            result = static_cast<uint32_t>(size);
+            hasFileSize_ = true;
         }
     }
 
-    DOWNLOAD_HILOGI("fetch file size %{public}d, code: %{public}d", result, code);
+    DOWNLOAD_HILOGI("fetch file size: %{public}u curl error: %{public}d, http resp: %{public}ld",
+                    result, code, respCode);
     return hasFileSize_;
 }
 
