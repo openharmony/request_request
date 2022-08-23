@@ -49,9 +49,9 @@ private:
     std::string DumpFileSize(const DownloadInfo &taskInfo) const;
     std::string DumpTransferredSize(const DownloadInfo &taskInfo) const;
 private:
-    static const int32_t columnWidthInt = 12;
-    static const int32_t columnWidthShort = 8;
-    static const int32_t columnWidthFileName = 256;
+    const int32_t columnWidthInt = 12;
+    const int32_t columnWidthShort = 8;
+    const int32_t columnWidthFileName = 256;
 
     using ColumnDumpFunc = std::string (DumpTaskInfo::*)(const DownloadInfo &taskInfo) const;
     std::vector<std::pair<int32_t, std::string>> summaryColumnTitle_ = {
