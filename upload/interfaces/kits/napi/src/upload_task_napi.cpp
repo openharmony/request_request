@@ -298,27 +298,60 @@ napi_status UploadTaskNapi::OffHeaderReceive(napi_env env,
 napi_status UploadTaskNapi::OffFail(napi_env env, size_t argc, napi_value *argv, napi_value self, napi_value *result)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Enter OffFail.");
-    NAPI_ASSERT_BASE(env, argc == 0, "argc should be 0", napi_invalid_arg);
+    NAPI_ASSERT_BASE(env, argc == 0 || argc == 1, "argc should be 0 or 1", napi_invalid_arg);
     NAPI_ASSERT_BASE(env, self != nullptr, "self is nullptr", napi_invalid_arg);
+
+    std::shared_ptr<IFailCallback> callback = nullptr;
+
+    if (argc == 1) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OffFail. argc == 1.");
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[0], &valueType);
+        NAPI_ASSERT_BASE(env, valueType == napi_function, "callback is not a function", napi_invalid_arg);
+    }
 
     UploadTaskNapi *proxy = nullptr;
     NAPI_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&proxy)), napi_invalid_arg);
     NAPI_ASSERT_BASE(env, proxy != nullptr, "there is no native upload task", napi_invalid_arg);
-    proxy->napiUploadTask_->Off(TYPE_FAIL_CALLBACK);
+
+    if (proxy->onFail_ == nullptr) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Fail. proxy->onFail_ == nullptr.");
+        return napi_generic_failure;
+    } else {
+        callback = std::make_shared<FailCallback>(proxy, env, argv[0]);
+        proxy->napiUploadTask_->Off(TYPE_FAIL_CALLBACK, (void *)(callback.get()));
+        proxy->onFail_ = nullptr;
+    }
     return napi_ok;
 }
 
-napi_status UploadTaskNapi::OffComplete(napi_env env, size_t argc, napi_value *argv,
-    napi_value self, napi_value *result)
+napi_status UploadTaskNapi::OffComplete(napi_env env, size_t argc, napi_value *argv, napi_value self, napi_value *result)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Enter OffComplete.");
-    NAPI_ASSERT_BASE(env, argc == 0, "argc should be 0", napi_invalid_arg);
+    NAPI_ASSERT_BASE(env, argc == 0 || argc == 1, "argc should be 0 or 1", napi_invalid_arg);
     NAPI_ASSERT_BASE(env, self != nullptr, "self is nullptr", napi_invalid_arg);
+
+    std::shared_ptr<ICompleteCallback> callback = nullptr;
+
+    if (argc == 1) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OffComplete. argc == 1.");
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[0], &valueType);
+        NAPI_ASSERT_BASE(env, valueType == napi_function, "callback is not a function", napi_invalid_arg);
+    }
 
     UploadTaskNapi *proxy = nullptr;
     NAPI_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&proxy)), napi_invalid_arg);
     NAPI_ASSERT_BASE(env, proxy != nullptr, "there is no native upload task", napi_invalid_arg);
-    proxy->napiUploadTask_->Off(TYPE_COMPLETE_CALLBACK);
+
+    if (proxy->onComplete_ == nullptr) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "CompleteCallback. proxy->onFail_ == nullptr.");
+        return napi_generic_failure;
+    } else {
+        callback = std::make_shared<CompleteCallback>(proxy, env, argv[0]);
+        proxy->napiUploadTask_->Off(TYPE_FAIL_CALLBACK, (void *)(callback.get()));
+        proxy->onComplete_ = nullptr;
+    }
     return napi_ok;
 }
 

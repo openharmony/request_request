@@ -64,13 +64,6 @@ void UploadTask::On(Type type, void *callback)
     SetCallback(type, callback);
 }
 
-void UploadTask::Off(Type type)
-{
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Off. In.");
-    std::lock_guard<std::mutex> guard(mutex_);
-    SetCallback(type, nullptr);
-}
-
 void UploadTask::Off(Type type, void *callback)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Off. In.");
@@ -82,8 +75,6 @@ void UploadTask::Off(Type type, void *callback)
 
     if (type == TYPE_PROGRESS_CALLBACK && progressCallback_ != nullptr) {
         ((IProgressCallback*)callback)->Progress(uploadedSize_, totalSize_);
-    }  else {
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Off. type[%{public}d] not match.", type);
     }
     SetCallback(type, nullptr);
 }
