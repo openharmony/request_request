@@ -347,7 +347,7 @@ napi_status UploadTaskNapi::OffComplete(napi_env env,
     NAPI_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&proxy)), napi_invalid_arg);
     NAPI_ASSERT_BASE(env, proxy != nullptr, "there is no native upload task", napi_invalid_arg);
     if (proxy->onComplete_ == nullptr) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "CompleteCallback. proxy->onFail_ == nullptr.");
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "CompleteCallback. proxy->OffComplete_ == nullptr.");
         return napi_generic_failure;
     } else {
         std::shared_ptr<ICompleteCallback> callback = std::make_shared<CompleteCallback>(proxy, env, argv[0]);
