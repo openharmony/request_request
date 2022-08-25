@@ -295,22 +295,30 @@ napi_status UploadTaskNapi::OffHeaderReceive(napi_env env,
     return napi_ok;
 }
 
-napi_status UploadTaskNapi::OffFail(napi_env env,
-    size_t argc, napi_value *argv, napi_value self, napi_value *result)
+napi_status UploadTaskNapi::CheckInput(napi_env env, size_t argc, napi_value *argv, napi_value self)
 {
-    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Enter OffFail.");
     NAPI_ASSERT_BASE(env, argc == 0 || argc == 1, "argc should be 0 or 1", napi_invalid_arg);
     NAPI_ASSERT_BASE(env, self != nullptr, "self is nullptr", napi_invalid_arg);
 
-    std::shared_ptr<IFailCallback> callback = nullptr;
-
     if (argc == 1) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OffFail. argc == 1.");
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Input. argc == 1.");
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, argv[0], &valueType);
         NAPI_ASSERT_BASE(env, valueType == napi_function, "callback is not a function", napi_invalid_arg);
     }
+    return napi_ok;
+}
 
+napi_status UploadTaskNapi::OffFail(napi_env env,
+    size_t argc, napi_value *argv, napi_value self, napi_value *result)
+{
+    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Enter OffFail.");
+    napi_status status = CheckInput(env, argc, argv, self);
+    if (status != napi_ok) {
+        return status;
+    }
+
+    std::shared_ptr<IFailCallback> callback = nullptr;
     UploadTaskNapi *proxy = nullptr;
     NAPI_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&proxy)), napi_invalid_arg);
     NAPI_ASSERT_BASE(env, proxy != nullptr, "there is no native upload task", napi_invalid_arg);
@@ -326,26 +334,20 @@ napi_status UploadTaskNapi::OffFail(napi_env env,
     return napi_ok;
 }
 
+
 napi_status UploadTaskNapi::OffComplete(napi_env env,
     size_t argc, napi_value *argv, napi_value self, napi_value *result)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Enter OffComplete.");
-    NAPI_ASSERT_BASE(env, argc == 0 || argc == 1, "argc should be 0 or 1", napi_invalid_arg);
-    NAPI_ASSERT_BASE(env, self != nullptr, "self is nullptr", napi_invalid_arg);
-
-    std::shared_ptr<ICompleteCallback> callback = nullptr;
-
-    if (argc == 1) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OffComplete. argc == 1.");
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, argv[0], &valueType);
-        NAPI_ASSERT_BASE(env, valueType == napi_function, "callback is not a function", napi_invalid_arg);
+    napi_status status = CheckInput(env, argc, argv, self);
+    if (status != napi_ok) {
+        return status;
     }
 
+    std::shared_ptr<ICompleteCallback> callback = nullptr;
     UploadTaskNapi *proxy = nullptr;
     NAPI_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&proxy)), napi_invalid_arg);
     NAPI_ASSERT_BASE(env, proxy != nullptr, "there is no native upload task", napi_invalid_arg);
-
     if (proxy->onComplete_ == nullptr) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "CompleteCallback. proxy->onFail_ == nullptr.");
         return napi_generic_failure;
