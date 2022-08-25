@@ -313,7 +313,7 @@ napi_status UploadTaskNapi::OffFail(napi_env env,
     size_t argc, napi_value *argv, napi_value self, napi_value *result)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Enter OffFail.");
-    napi_status status = CheckInput(env, argc, argv, self);
+    napi_status status = CheckOffCompleteParam(env, argc, argv, self);
     if (status != napi_ok) {
         return status;
     }
@@ -339,7 +339,7 @@ napi_status UploadTaskNapi::OffComplete(napi_env env,
     size_t argc, napi_value *argv, napi_value self, napi_value *result)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Enter OffComplete.");
-    napi_status status = CheckInput(env, argc, argv, self);
+    napi_status status = CheckOffCompleteParam(env, argc, argv, self);
     if (status != napi_ok) {
         return status;
     }
