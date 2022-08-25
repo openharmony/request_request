@@ -326,9 +326,8 @@ napi_status UploadTaskNapi::OffFail(napi_env env,
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Fail. proxy->onFail_ == nullptr.");
         return napi_generic_failure;
     } else {
-        std::shared_ptr<IFailCallback> callback = nullptr;
-        callback = std::make_shared<FailCallback>(proxy, env, argv[0]);
-        proxy->napiUploadTask_->Off(TYPE_FAIL_CALLBACK, (void *)(callback.get()));
+        std::shared_ptr<IFailCallback> callback = std::make_shared<FailCallback>(proxy, env, argv[0]);
+        proxy->napiUploadTask_->Off(TYPE_FAIL_CALLBACK, callback.get());
         proxy->onFail_ = nullptr;
     }
     return napi_ok;
@@ -351,9 +350,8 @@ napi_status UploadTaskNapi::OffComplete(napi_env env,
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "CompleteCallback. proxy->onFail_ == nullptr.");
         return napi_generic_failure;
     } else {
-        std::shared_ptr<ICompleteCallback> callback = nullptr;
-        callback = std::make_shared<CompleteCallback>(proxy, env, argv[0]);
-        proxy->napiUploadTask_->Off(TYPE_FAIL_CALLBACK, (void *)(callback.get()));
+        std::shared_ptr<ICompleteCallback> callback = std::make_shared<CompleteCallback>(proxy, env, argv[0]);
+        proxy->napiUploadTask_->Off(TYPE_COMPLETE_CALLBACK, callback.get());
         proxy->onComplete_ = nullptr;
     }
     return napi_ok;
