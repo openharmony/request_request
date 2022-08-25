@@ -342,10 +342,9 @@ declare namespace request {
      */
     title?: string;
     /**
-     * Whether to display the background.
+     * Allow download background task notifications.
      *
      * @since 9
-     * @permission N/A
      */
     background?: boolean;
   }
@@ -829,7 +828,7 @@ declare namespace request {
       * @permission ohos.permission.INTERNET
       * @return -
       */
-    off(type:'complete' | 'fail'): void;
+    off(type:'complete' | 'fail', callback?: Callback<Array<TaskState>>): void;
 
     /**
      * Deletes a upload session.

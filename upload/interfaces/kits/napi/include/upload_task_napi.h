@@ -117,6 +117,7 @@ private:
         size_t argc, napi_value *argv, napi_value self, napi_value *result);
     static napi_status OffFail(napi_env env, size_t argc, napi_value *argv, napi_value self, napi_value *result);
     static napi_status OffComplete(napi_env env, size_t argc, napi_value *argv, napi_value self, napi_value *result);
+    static napi_status CheckOffCompleteParam(napi_env env, size_t argc, napi_value *argv, napi_value self);
 
     std::shared_ptr<Upload::IProgressCallback> onProgress_ = nullptr;
     std::shared_ptr<Upload::IHeaderReceiveCallback> onHeaderReceive_ = nullptr;

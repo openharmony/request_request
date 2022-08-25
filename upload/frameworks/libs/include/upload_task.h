@@ -52,7 +52,6 @@ public:
     UPLOAD_API virtual bool Remove();
     UPLOAD_API virtual void On(Type type, void *callback);
     UPLOAD_API virtual void Off(Type type, void *callback);
-    UPLOAD_API virtual void Off(Type type);
     UPLOAD_API void ExecuteTask();
     static void Run(void *arg);
     virtual void OnRun();
