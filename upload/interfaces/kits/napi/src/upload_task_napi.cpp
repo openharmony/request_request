@@ -295,7 +295,7 @@ napi_status UploadTaskNapi::OffHeaderReceive(napi_env env,
     return napi_ok;
 }
 
-napi_status UploadTaskNapi::CheckInput(napi_env env, size_t argc, napi_value *argv, napi_value self)
+napi_status UploadTaskNapi::CheckOffCompleteParam(napi_env env, size_t argc, napi_value *argv, napi_value self)
 {
     NAPI_ASSERT_BASE(env, argc == 0 || argc == 1, "argc should be 0 or 1", napi_invalid_arg);
     NAPI_ASSERT_BASE(env, self != nullptr, "self is nullptr", napi_invalid_arg);
