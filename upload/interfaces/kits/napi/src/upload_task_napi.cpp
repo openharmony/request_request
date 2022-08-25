@@ -295,7 +295,8 @@ napi_status UploadTaskNapi::OffHeaderReceive(napi_env env,
     return napi_ok;
 }
 
-napi_status UploadTaskNapi::OffFail(napi_env env, size_t argc, napi_value *argv, napi_value self, napi_value *result)
+napi_status UploadTaskNapi::OffFail(napi_env env,
+    size_t argc, napi_value *argv, napi_value self, napi_value *result)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Enter OffFail.");
     NAPI_ASSERT_BASE(env, argc == 0 || argc == 1, "argc should be 0 or 1", napi_invalid_arg);
