@@ -36,6 +36,7 @@ private:
         std::shared_ptr<OHOS::AbilityRuntime::Context>& context);
     static bool ParseConfig(napi_env env, napi_value configValue, DownloadConfig &config);
     static bool ParseHeader(napi_env env, napi_value configValue, DownloadConfig &config);
+    static bool ParseUrl(napi_env env, napi_value configValue, DownloadConfig &config);
     static std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> GetDataAbilityHelper(napi_env env);
 
 private:

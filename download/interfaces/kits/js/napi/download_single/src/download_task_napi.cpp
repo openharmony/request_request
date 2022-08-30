@@ -50,6 +50,8 @@ static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";
 static constexpr const char *PARAM_KEY_FILE_PATH = "filePath";
 static constexpr const char *PARAM_KEY_TITLE = "title";
 static constexpr const char *PARAM_KEY_BACKGROUND = "background";
+static constexpr const char *URL_HTTPS = "https";
+static constexpr const char *URL_HTTP = "http";
 
 namespace OHOS::Request::Download {
 constexpr const std::uint32_t CONFIG_PARAM_AT_FIRST = 0;
@@ -200,7 +202,10 @@ bool DownloadTaskNapi::ParseConfig(napi_env env, napi_value configValue, Downloa
     if (!ParseHeader(env, configValue, config)) {
         return false;
     }
-    config.SetUrl(NapiUtils::GetStringPropertyUtf8(env, configValue, PARAM_KEY_URI));
+    if (!ParseUrl(env, configValue, config)) {
+        DOWNLOAD_HILOGI("Input url error");
+        return false;
+    }
     config.SetMetered(NapiUtils::GetBooleanProperty(env, configValue, PARAM_KEY_METERED));
     config.SetRoaming(NapiUtils::GetBooleanProperty(env, configValue, PARAM_KEY_ROAMING));
     config.SetDescription(NapiUtils::GetStringPropertyUtf8(env, configValue, PARAM_KEY_DESCRIPTION));
@@ -208,6 +213,21 @@ bool DownloadTaskNapi::ParseConfig(napi_env env, napi_value configValue, Downloa
     config.SetFilePath(NapiUtils::GetStringPropertyUtf8(env, configValue, PARAM_KEY_FILE_PATH));
     config.SetTitle(NapiUtils::GetStringPropertyUtf8(env, configValue, PARAM_KEY_TITLE));
     config.SetBackground(NapiUtils::GetBooleanProperty(env, configValue, PARAM_KEY_BACKGROUND));
+    return true;
+}
+
+bool DownloadTaskNapi::ParseUrl(napi_env env, napi_value configValue, DownloadConfig &config)
+{
+    std::string url = NapiUtils::GetStringPropertyUtf8(env, configValue, PARAM_KEY_URI);
+    std::size_t pos = url.find("://");
+    if (pos == std::string::npos) {
+        return false;
+    }
+    std::string urlStr = url.substr(0, pos);
+    if (urlStr != URL_HTTP && urlStr != URL_HTTPS) {
+        return false;
+    }
+    config.SetUrl(url);
     return true;
 }
 
