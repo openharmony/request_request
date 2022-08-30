@@ -19,6 +19,7 @@
 #include <memory>
 #include "iremote_stub.h"
 #include "download_notify_interface.h"
+#include "visibility.h"
 
 namespace OHOS::Request::Download {
 class DownloadNotifyStub : public IRemoteStub<DownloadNotifyInterface> {
@@ -27,7 +28,8 @@ public:
     virtual ~DownloadNotifyStub()
     {
     }
-    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+    DOWNLOAD_API int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
+                                         MessageOption &option) override;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_NOTIFY_STUB_H
