@@ -79,6 +79,7 @@
         "//base/request/request/upload/unitest:upload_obtain_file_UT_test",
         "//base/request/request/upload/unitest:upload_UT_test",
         "//base/request/request/test/fuzztest:fuzztest"
+		"//base/request/request/test/unittest/common:unittest"
       ]
     }
   }
