@@ -33,6 +33,10 @@ public:
     virtual ~DownloadProgressNotify();
 
     void OnCallBack(MessageParcel &data) override;
+
+private:
+    uint32_t firstArgv;
+    uint32_t secondArgv;
 };
 } // namespace OHOS::Request::Download
 

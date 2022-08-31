@@ -218,7 +218,7 @@ bool DownloadTaskNapi::ParseConfig(napi_env env, napi_value configValue, Downloa
 bool DownloadTaskNapi::ParseUrl(napi_env env, napi_value configValue, DownloadConfig &config)
 {
     std::string url = NapiUtils::GetStringPropertyUtf8(env, configValue, PARAM_KEY_URI);
-    if (!regex_match(url, std::regex("/^http(s)?:\\/\\/.+/"))) {
+    if (!regex_match(url, std::regex("^http(s)?:\\/\\/.+"))) {
         return false;
     }
     config.SetUrl(url);
