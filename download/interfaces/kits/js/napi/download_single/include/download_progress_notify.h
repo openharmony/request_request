@@ -32,7 +32,7 @@ public:
     explicit DownloadProgressNotify(napi_env env, const std::string &type, const DownloadTask *task, napi_ref ref);
     virtual ~DownloadProgressNotify();
 
-    void OnCallBack(MessageParcel &data) override;  
+    void OnCallBack(MessageParcel &data) override;
 };
 } // namespace OHOS::Request::Download
 
