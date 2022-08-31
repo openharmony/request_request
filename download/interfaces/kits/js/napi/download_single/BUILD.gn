@@ -18,6 +18,12 @@ config("download_interfaces_kits_napi_config") {
   include_dirs = [ "include" ]
 
   cflags_cc = [ "-fexceptions" ]
+  ldflags = [ "-Wl,--exclude-libs=ALL" ]
+  cflags = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fvisibility=hidden",
+  ]
 }
 ohos_shared_library("downloadsingle") {
   include_dirs = [

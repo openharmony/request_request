@@ -17,6 +17,12 @@ import("//build/ohos.gni")
 config("upload_native_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
+  ldflags = [ "-Wl,--exclude-libs=ALL" ]
+  cflags = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fvisibility=hidden",
+  ]
 }
 
 config("upload_native_public_config") {
@@ -52,7 +58,7 @@ ohos_shared_library("request") {
     "//base/request/request/download/interfaces/kits/js/napi/download_single:downloadsingle",
     "//base/request/request/upload/frameworks/libs:upload_lib",
     "//foundation/arkui/napi/:ace_napi",
-    "//third_party/libuv:uv_static",
+    "//third_party/libuv:uv",
   ]
 
   external_deps = [
