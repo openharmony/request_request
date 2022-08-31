@@ -202,7 +202,7 @@ bool DownloadTaskNapi::ParseConfig(napi_env env, napi_value configValue, Downloa
         return false;
     }
     if (!ParseUrl(env, configValue, config)) {
-        DOWNLOAD_HILOGI("Input url error");
+        DOWNLOAD_HILOGE("Input url error");
         return false;
     }
     config.SetMetered(NapiUtils::GetBooleanProperty(env, configValue, PARAM_KEY_METERED));
