@@ -64,12 +64,9 @@ napi_value AsyncCall::Call(napi_env env, Context::ExecAction exec)
     } else {
         napi_get_undefined(env, &promise);
     }
-    DOWNLOAD_HILOGE("async call exec %{public}p, %{public}p", promise, context_->callback);
     napi_async_work work = context_->work;
     napi_value resource = nullptr;
-    
     napi_create_string_utf8(env, "AsyncCall", NAPI_AUTO_LENGTH, &resource);
-
     napi_create_async_work(env, nullptr, resource, AsyncCall::OnExecute, AsyncCall::OnComplete, context_, &work);
     context_->work = work;
     context_ = nullptr;
@@ -123,7 +120,6 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         napi_create_error(env, nullptr, message, &result[ARG_ERROR]);
         napi_get_undefined(env, &result[ARG_DATA]);
     }
-    DOWNLOAD_HILOGE("run the OnComplete %{public}u, %{public}u, %{public}p", status, runStatus, context->defer);
     if (context->defer != nullptr) {
         // promise
         if (status == napi_ok && runStatus == napi_ok) {

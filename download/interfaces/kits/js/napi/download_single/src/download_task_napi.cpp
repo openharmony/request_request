@@ -95,8 +95,7 @@ napi_value DownloadTaskNapi::JsMain(napi_env env, napi_callback_info info)
     };
     auto context = std::make_shared<AsyncCall::Context>(input, output);
     AsyncCall asyncCall(env, info, context, 1);
-    napi_value ret = asyncCall.Call(env);
-    return ret;
+    return asyncCall.Call(env);
 }
 
 napi_value DownloadTaskNapi::GetCtor(napi_env env)
@@ -144,7 +143,7 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     }
     DownloadConfig config;
     if (!ParseConfig(env, argv[parametersPosition], config)) {
-        DOWNLOAD_HILOGD("download config has wrong type");
+        DOWNLOAD_HILOGE("download config has wrong type");
         return nullptr;
     }
     config.SetBundleName(context->GetBundleName());
