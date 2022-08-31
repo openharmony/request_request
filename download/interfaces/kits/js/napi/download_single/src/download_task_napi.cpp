@@ -17,6 +17,7 @@
 
 #include <mutex>
 #include <uv.h>
+#include <regex>
 #include <unistd.h>
 
 #include "ability.h"
@@ -50,8 +51,6 @@ static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";
 static constexpr const char *PARAM_KEY_FILE_PATH = "filePath";
 static constexpr const char *PARAM_KEY_TITLE = "title";
 static constexpr const char *PARAM_KEY_BACKGROUND = "background";
-static constexpr const char *URL_HTTPS = "https";
-static constexpr const char *URL_HTTP = "http";
 
 namespace OHOS::Request::Download {
 constexpr const std::uint32_t CONFIG_PARAM_AT_FIRST = 0;
@@ -96,7 +95,8 @@ napi_value DownloadTaskNapi::JsMain(napi_env env, napi_callback_info info)
     };
     auto context = std::make_shared<AsyncCall::Context>(input, output);
     AsyncCall asyncCall(env, info, context, 1);
-    return asyncCall.Call(env);
+    napi_value ret = asyncCall.Call(env);
+    return ret;
 }
 
 napi_value DownloadTaskNapi::GetCtor(napi_env env)
@@ -144,7 +144,7 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     }
     DownloadConfig config;
     if (!ParseConfig(env, argv[parametersPosition], config)) {
-        DOWNLOAD_HILOGE("download config has wrong type");
+        DOWNLOAD_HILOGD("download config has wrong type");
         return nullptr;
     }
     config.SetBundleName(context->GetBundleName());
@@ -219,12 +219,7 @@ bool DownloadTaskNapi::ParseConfig(napi_env env, napi_value configValue, Downloa
 bool DownloadTaskNapi::ParseUrl(napi_env env, napi_value configValue, DownloadConfig &config)
 {
     std::string url = NapiUtils::GetStringPropertyUtf8(env, configValue, PARAM_KEY_URI);
-    std::size_t pos = url.find("://");
-    if (pos == std::string::npos) {
-        return false;
-    }
-    std::string urlStr = url.substr(0, pos);
-    if (urlStr != URL_HTTP && urlStr != URL_HTTPS) {
+    if (!regex_match(url, std::regex("/^http(s)?:\\/\\/.+/"))) {
         return false;
     }
     config.SetUrl(url);
