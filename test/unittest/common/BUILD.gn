@@ -16,14 +16,14 @@ import("//build/test.gni")
 module_output_path = "request/request"
 
 ohos_js_unittest("RequestJsTest") {
-    module_out_path = module_output_path
+  module_out_path = module_output_path
 
-    hap_profile = "./config.json"
+  hap_profile = "./config.json"
 
-    certificate_profile = "./openharmony_sx.p7b"
+  certificate_profile = "./openharmony_sx.p7b"
 }
 
 group("unittest") {
-    testonly = true
-    deps = [ ":RequestJsTest" ]
+  testonly = true
+  deps = [ ":RequestJsTest" ]
 }
