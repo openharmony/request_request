@@ -18,45 +18,42 @@ import request from '@ohos.request';
 const TAG = "REQUEST_TEST";
 let keyStr = 'download test ';
 
+describe('RequestTest', function () {
+    beforeAll(function () {
+        console.info('beforeAll caled')
+    })
 
-let DownloadConfig = {
-    //https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe
-    //  url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe', // Resource address.
-    //url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png', // Resource address.
-    url: 'http://192.168.8.128:8080/HFS_SERVER/123.rar',
-    // url: 'http://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
-    filePath: '/data/storage/el2/base/haps/entry/files/123.rar', // Sets the path for downloads./data/accounts/account_0/appdata/com.example.downloaddemo/files/picture.png
-    enableMetered: false,
-    enableRoaming: false,
-    networkType: 65536, //65536 wifi  1 sim卡网络
-    background: true,
-}
+    afterAll(function () {
+        console.info('afterAll caled')
+    })
 
-describe('requestTest',function () {
+    beforeEach(function () {
+        console.info('beforeEach caled')
+    })
 
-   console.log(TAG + "*************Unit Test Begin*************");
-
+    afterEach(function () {
+        console.info('afterEach caled')
+    })
+    console.log(TAG + "*************Unit Test Begin*************");
 
     /**
      * @tc.name: downloadTest001
      * @tc.desc see if download starts correctly
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.require: 000000
      */
     it('downloadTest001', 0, function () {
         console.log(TAG + "************* downloadTest001 start *************");
-
         request.download(DownloadConfig).then((DownloadTask) => {
+            expect(DownloadTask == undefined).assertEqual(false);
             console.log(keyStr + 'download start, DownloadTask: ' + DownloadTask);
             console.log(keyStr + 'download start, DownloadTask: ' + JSON.stringify(DownloadTask));
-            DownloadTask.on('progress',(receivedSize, totalSize) => {
-                expect(totalSize == 0).assertEqual(false)
+            DownloadTask.on('progress', (receivedSize, totalSize) => {
+                expect(totalSize == 0).assertEqual(false);
                 expect(receivedSize == 0).assertEqual(false);
             })
-        })
-
+        }).catch((err) => console.log(keyStr + 'download start failed, err: ' + err))
         console.log(TAG + "************* downloadTest001 end *************");
     })
-
     console.log(TAG + "*************Unit Test End*************");
 })

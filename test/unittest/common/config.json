@@ -3,8 +3,8 @@
     "bundleName": "com.example.myapplication",
     "vendor": "example",
     "version": {
-      "code": 1,
-      "name": "1.0"
+      "code": 1000000,
+      "name": "1.0.0"
     },
     "apiVersion": {
       "compatible": 4,
@@ -16,37 +16,22 @@
     "package": "com.example.myapplication",
     "name": ".MyApplication",
     "deviceType": [
-      "phone"
+      "default"
+    ],
+    "reqPermissions": [
+      {
+        "name": "ohos.permission.INTERNET",
+        "reason": "need use ohos.permission.INTERNET"
+      }
     ],
     "distro": {
       "deliveryWithInstall": true,
       "moduleName": "entry",
-      "moduleType": "entry"
+      "moduleType": "entry",
+      "installationFree": false
     },
-    "defPermissions": [
-      {
-        "availableScope": [],
-        "grantMode": "user_grant",
-        "name": "ohos.permission.DISTRIBUTED_DATASYNC"
-      }
-    ],
-    "reqPermissions": [
-      {
-        "name": "ohos.permission.GRANT_SENSITIVE_PERMISSIONS",
-        "reason": "ceshi"
-      },
-      {
-        "name": "ohos.permission.DISTRIBUTED_DATASYNC",
-        "reason": "ceshi"
-      },
-      {
-        "name": "ohos.permission.INTERNET",
-        "reason": "ceshi"
-      }
-    ],
     "abilities": [
       {
-        "visible": true,
         "skills": [
           {
             "entities": [
@@ -57,7 +42,9 @@
             ]
           }
         ],
-        "name": "com.example.myapplication.MainAbility",
+        "orientation": "unspecified",
+        "visible": true,
+        "name": ".MainAbility",
         "icon": "$media:icon",
         "description": "$string:mainability_description",
         "label": "MyApplication",
