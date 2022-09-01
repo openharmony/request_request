@@ -33,7 +33,12 @@ config("downloaddataability_public_config") {
     "//third_party/node/src",
     "include",
   ]
-  cflags = []
+  ldflags = [ "-Wl,--exclude-libs=ALL" ]
+  cflags = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fvisibility=hidden",
+  ]
 }
 
 ohos_shared_library("downloaddataability") {

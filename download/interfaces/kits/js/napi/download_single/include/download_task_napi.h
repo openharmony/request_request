@@ -19,15 +19,15 @@
 #include <string>
 #include <vector>
 
+#include "visibility.h"
 #include "async_call.h"
 #include "download_config.h"
-
 #include "data_ability_helper.h"
 
 namespace OHOS::Request::Download {
 class DownloadTaskNapi {
 public:
-    static napi_value JsMain(napi_env env, napi_callback_info info);
+    DOWNLOAD_API static napi_value JsMain(napi_env env, napi_callback_info info);
 
 private:
     static napi_value GetCtor(napi_env env);
@@ -36,6 +36,7 @@ private:
         std::shared_ptr<OHOS::AbilityRuntime::Context>& context);
     static bool ParseConfig(napi_env env, napi_value configValue, DownloadConfig &config);
     static bool ParseHeader(napi_env env, napi_value configValue, DownloadConfig &config);
+    static bool ParseUrl(napi_env env, napi_value configValue, DownloadConfig &config);
     static std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> GetDataAbilityHelper(napi_env env);
 
 private:

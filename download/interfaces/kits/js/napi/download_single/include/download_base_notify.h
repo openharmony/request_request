@@ -37,7 +37,8 @@ struct NotifyData {
 class DownloadBaseNotify : public DownloadNotifyStub {
 public:
     ACE_DISALLOW_COPY_AND_MOVE(DownloadBaseNotify);
-    explicit DownloadBaseNotify(napi_env env, const std::string &type, const DownloadTask *task, napi_ref ref);
+    DOWNLOAD_API explicit DownloadBaseNotify(napi_env env, const std::string &type, const DownloadTask *task,
+                                             napi_ref ref);
     virtual ~DownloadBaseNotify();
     void OnCallBack(MessageParcel &data) override;
 
