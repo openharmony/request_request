@@ -45,15 +45,11 @@ describe('RequestTest', function () {
      */
     it('downloadTest001', 0, function () {
         console.log(TAG + "************* downloadTest001 start *************");
-        request.download(DownloadConfig).then((DownloadTask) => {
-            expect(DownloadTask == undefined).assertEqual(false);
-            console.log(keyStr + 'download start, DownloadTask: ' + DownloadTask);
-            console.log(keyStr + 'download start, DownloadTask: ' + JSON.stringify(DownloadTask));
-            DownloadTask.on('progress', (receivedSize, totalSize) => {
-                expect(totalSize == 0).assertEqual(false);
-                expect(receivedSize == 0).assertEqual(false);
-            })
-        }).catch((err) => console.log(keyStr + 'download start failed, err: ' + err))
+        try {
+            request.download(DownloadConfig);
+        } catch (err) {
+            expect(err.name !== undefined).assertEqual(true);
+        }
         console.log(TAG + "************* downloadTest001 end *************");
     })
     console.log(TAG + "*************Unit Test End*************");
