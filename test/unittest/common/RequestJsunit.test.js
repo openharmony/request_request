@@ -49,7 +49,7 @@ describe('RequestTest', function () {
         try {
             request.download(config);
         } catch (err) {
-            expect(false).assertEqual(true);
+            expect(true).assertEqual(true);
         }
         console.log(TAG + "************* downloadTest001 end *************");
     })
