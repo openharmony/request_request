@@ -45,9 +45,9 @@ describe('RequestTest', function () {
      */
     it('downloadTest001', 0, function () {
         console.log(TAG + "************* downloadTest001 start *************");
-        let DownloadConfig;
+        let config;
         try {
-            request.download(DownloadConfig);
+            request.download(config);
         } catch (err) {
             expect(false).assertEqual(true);
         }
