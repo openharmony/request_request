@@ -13,46 +13,46 @@
     "name": "request",
     "subsystem": "request",
     "syscap": [
-        "SystemCapability.MiscServices.Download",
-        "SystemCapability.MiscServices.Upload"
+      "SystemCapability.MiscServices.Download",
+      "SystemCapability.MiscServices.Upload"
     ],
     "features": [
     ],
     "adapted_system_type": [
       "standard"
     ],
-    "rom":"300KB",
-    "ram":"1024KB",
+    "rom": "300KB",
+    "ram": "1024KB",
     "hisysevent_config": [
       "//base/request/request/hisysevent.yaml"
     ],
     "deps": {
-    "components": [
-      "common",
-      "jsoncpp",
-      "preference",
-      "samgr",
-      "os_account",
-      "ipc",
-      "netmanager_base",
-      "common_event_service",
-      "utils_base",
-      "time_native",
-      "multimedia_image_standard",
-      "eventhandler",
-      "bundle_framework",
-      "ability_runtime",
-      "safwk",
-      "access_token",
-      "relational_store",
-      "napi",
-      "ril_device_driver_interface",
-      "startup_l2",
-      "ability_base",
-      "hiviewdfx_hilog_native",
-      "core_service",
-      "libuv"	
-    ],
+      "components": [
+        "common",
+        "jsoncpp",
+        "preference",
+        "samgr",
+        "os_account",
+        "ipc",
+        "netmanager_base",
+        "common_event_service",
+        "utils_base",
+        "time_native",
+        "multimedia_image_standard",
+        "eventhandler",
+        "bundle_framework",
+        "ability_runtime",
+        "safwk",
+        "access_token",
+        "relational_store",
+        "napi",
+        "ril_device_driver_interface",
+        "startup_l2",
+        "ability_base",
+        "hiviewdfx_hilog_native",
+        "core_service",
+        "libuv"
+      ],
       "third_party": []
     },
     "build": {
@@ -60,7 +60,6 @@
         "base_group": [
           "//base/request/request/upload/interfaces/kits/napi:request",
           "//base/request/request/upload/frameworks/libs:upload_lib"
-
         ],
         "fwk_group": [
           "//base/request/request/download/ability:downloaddataability",
@@ -78,7 +77,8 @@
       "test": [
         "//base/request/request/upload/unitest:upload_obtain_file_UT_test",
         "//base/request/request/upload/unitest:upload_UT_test",
-        "//base/request/request/test/fuzztest:fuzztest"
+        "//base/request/request/test/fuzztest:fuzztest",
+        "//base/request/request/test/unittest/common:unittest"
       ]
     }
   }
