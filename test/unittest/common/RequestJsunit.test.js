@@ -21,34 +21,35 @@ let keyStr = 'download test ';
 
 describe('RequestTest', function () {
     beforeAll(function () {
-        console.info('beforeAll caled')
+        console.info('beforeAll called')
     })
 
     afterAll(function () {
-        console.info('afterAll caled')
+        console.info('afterAll called')
     })
 
     beforeEach(function () {
-        console.info('beforeEach caled')
+        console.info('beforeEach called')
     })
 
     afterEach(function () {
-        console.info('afterEach caled')
+        console.info('afterEach called')
     })
     console.log(TAG + "*************Unit Test Begin*************");
 
     /**
      * @tc.name: downloadTest001
-     * @tc.desc see if download starts correctly
+     * @tc.desc download parameter verification
      * @tc.type: FUNC
      * @tc.require: 000000
      */
     it('downloadTest001', 0, function () {
         console.log(TAG + "************* downloadTest001 start *************");
+        let DownloadConfig;
         try {
             request.download(DownloadConfig);
         } catch (err) {
-            expect(err.name !== undefined).assertEqual(true);
+            expect(false).assertEqual(true);
         }
         console.log(TAG + "************* downloadTest001 end *************");
     })
