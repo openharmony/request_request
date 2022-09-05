@@ -33,7 +33,7 @@ void DownloadNotifyProxy::CallBack(const std::vector<uint32_t> &params)
         DOWNLOAD_HILOGE("write descriptor failed");
         return;
     }
-    data.WriteUint32Vector(params);
+    data.WriteUInt32Vector(params);
 
     int error = Remote()->SendRequest(DOWNLOAD_NOTIFY, data, reply, option);
     if (error != 0) {
