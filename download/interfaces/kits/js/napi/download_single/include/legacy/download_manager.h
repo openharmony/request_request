@@ -20,6 +20,7 @@
 #include <functional>
 #include <map>
 #include <mutex>
+#include "visibility.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "legacy/download_task.h"
@@ -31,7 +32,7 @@ public:
 
     static napi_value Download(napi_env env, napi_callback_info info);
 
-    static napi_value OnDownloadComplete(napi_env env, napi_callback_info info);
+    DOWNLOAD_API static napi_value OnDownloadComplete(napi_env env, napi_callback_info info);
 
     static void OnTaskDone(const std::string &token, bool successful, const std::string &errMsg);
 

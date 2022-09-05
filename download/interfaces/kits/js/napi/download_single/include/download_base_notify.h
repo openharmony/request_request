@@ -39,7 +39,7 @@ struct NotifyData {
 class DownloadBaseNotify : public DownloadNotifyStub {
 public:
     ACE_DISALLOW_COPY_AND_MOVE(DownloadBaseNotify);
-    explicit DownloadBaseNotify(napi_env env, uint32_t paramNumber, napi_ref ref);
+    DOWNLOAD_API explicit DownloadBaseNotify(napi_env env, uint32_t paramNumber, napi_ref ref);
     virtual ~DownloadBaseNotify();
     void CallBack(const std::vector<uint32_t> &params);
 	NotifyDataPtr *GetNotifyDataPtr();

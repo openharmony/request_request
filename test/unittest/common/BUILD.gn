@@ -11,18 +11,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
+import("//build/test.gni")
 
-################################################################################
+module_output_path = "request/request"
 
-group("request_packages") {
-  if (is_standard_system) {
-    deps = [
-      "download/etc/init:downloadservice.cfg",
-      "download/interfaces/kits/js/napi/download_single:downloadsingle",
-      "download/sa_profile:download_sa_profiles",
-      "download/services:download_server",
-      "test/unittest/common:unittest",
-    ]
-  }
+ohos_js_unittest("RequestJsTest") {
+  module_out_path = module_output_path
+
+  hap_profile = "./config.json"
+
+  certificate_profile = "./openharmony_sx.p7b"
+}
+
+group("unittest") {
+  testonly = true
+  deps = [ ":RequestJsTest" ]
 }
