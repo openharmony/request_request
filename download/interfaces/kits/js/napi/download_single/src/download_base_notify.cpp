@@ -51,13 +51,13 @@ void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
         notifyData_->params = params;
     }
     notifyDataPtr->notifyData = notifyData_;
-    work->data = notifyData;
+    work->data = notifyDataPtr;
 
     uv_queue_work(
         loop, work, [](uv_work_t *work) {},
         [](uv_work_t *work, int statusInt) {
-            NotifyDataPtr *notifyDataPtr = static_cast<notifyDataPtr*>(work->data);
-            if (notifyData != nullptr) {
+            NotifyDataPtr *notifyDataPtr = static_cast<NotifyDataPtr*>(work->data);
+            if (notifyDataPtr != nullptr) {
                 napi_value undefined = 0;
                 napi_get_undefined(notifyDataPtr->notifyData->env, &undefined);
                 napi_value callbackFunc = nullptr;
@@ -65,12 +65,12 @@ void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
                     notifyDataPtr->notifyData->ref, &callbackFunc);
                 napi_value callbackResult = nullptr;
                 napi_value callbackValues[NapiUtils::MAX_PARAM] = {0};
-                for (int i = 0; i < notifyData_->paramNumber; i++) {
+                for (uint32_t i = 0; i < notifyDataPtr->notifyData->paramNumber; i++) {
                     napi_create_uint32(notifyDataPtr->notifyData->env, 
                         notifyDataPtr->notifyData->params[i], &callbackValues[i]);
                 }
                 napi_call_function(notifyDataPtr->notifyData->env, nullptr, callbackFunc,
-                                   notifyData_->paramNumber, callbackValues, &callbackResult);
+                                   notifyDataPtr->notifyData->paramNumber, callbackValues, &callbackResult);
                 if (work != nullptr) {
                     delete work;
                     work = nullptr;
