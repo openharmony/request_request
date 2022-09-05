@@ -44,9 +44,6 @@ void DownloadNotifyStub::OnCallBack(MessageParcel &data)
 {
     DOWNLOAD_HILOGD("Receive callback");
     std::vector<uint32_t> params = data.ReadUint32Vector();
-    // for (int i = 0; i < 2; i++) {
-    //     params.push_back(data.ReadUint32Vector());
-    // }
     CallBack(params);
 }
 
