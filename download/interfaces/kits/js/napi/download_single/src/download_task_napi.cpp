@@ -16,6 +16,7 @@
 #include "download_task_napi.h"
 
 #include <uv.h>
+#include <regex>
 
 #include "ability.h"
 #include "async_call.h"
@@ -149,13 +150,26 @@ bool DownloadTaskNapi::ParseConfig(napi_env env, napi_value configValue, Downloa
     if (!ParseHeader(env, configValue, config)) {
         return false;
     }
-    config.SetUrl(NapiUtils::GetStringPropertyUtf8(env, configValue, PARAM_KEY_URI));
+    if (!ParseUrl(env, configValue, config)) {
+        DOWNLOAD_HILOGE("Input url error");
+        return false;
+    }
     config.SetMetered(NapiUtils::GetBooleanProperty(env, configValue, PARAM_KEY_METERED));
     config.SetRoaming(NapiUtils::GetBooleanProperty(env, configValue, PARAM_KEY_ROAMING));
     config.SetDescription(NapiUtils::GetStringPropertyUtf8(env, configValue, PARAM_KEY_DESCRIPTION));
     config.SetNetworkType(NapiUtils::GetUint32Property(env, configValue, PARAM_KEY_NETWORKTYPE));
     config.SetFilePath(NapiUtils::GetStringPropertyUtf8(env, configValue, PARAM_KEY_FILE_PATH));
     config.SetTitle(NapiUtils::GetStringPropertyUtf8(env, configValue, PARAM_KEY_TITLE));
+    return true;
+}
+
+bool DownloadTaskNapi::ParseUrl(napi_env env, napi_value configValue, DownloadConfig &config)
+{
+    std::string url = NapiUtils::GetStringPropertyUtf8(env, configValue, PARAM_KEY_URI);
+    if (!regex_match(url, std::regex("^http(s)?:\\/\\/.+"))) {
+        return false;
+    }
+    config.SetUrl(url);
     return true;
 }
 

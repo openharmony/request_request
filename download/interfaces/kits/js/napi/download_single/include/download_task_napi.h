@@ -34,6 +34,7 @@ private:
     static napi_value Initialize(napi_env env, napi_callback_info info);
     static bool ParseConfig(napi_env env, napi_value configValue, DownloadConfig &config);
     static bool ParseHeader(napi_env env, napi_value configValue, DownloadConfig &config);
+    static bool ParseUrl(napi_env env, napi_value configValue, DownloadConfig &config);
     static napi_status OnHeaderReceive(
         napi_env env, size_t argc, napi_value *argv, napi_value self, napi_value *result);
     static std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> GetDataAbilityHelper(napi_env env);
