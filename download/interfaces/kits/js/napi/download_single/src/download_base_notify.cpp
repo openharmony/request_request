@@ -14,16 +14,15 @@
  */
 
 #include "download_base_notify.h"
-
 #include <uv.h>
-
 #include "log.h"
 #include "napi_utils.h"
 
 namespace OHOS::Request::Download {
-DownloadBaseNotify::DownloadBaseNotify(napi_env env, const std::string &type, const DownloadTask *task, napi_ref ref)
-    : DownloadNotifyStub(), env_(env), type_(type), task_(const_cast<DownloadTask *>(task)), ref_(ref)
+DownloadBaseNotify::DownloadBaseNotify(napi_env env, uint32_t paramNumber, napi_ref ref)
+    : DownloadNotifyStub()
 {
+    notifyData_ = std::make_shared<NotifyData>(env, ref, paramNumber);
 }
 
 DownloadBaseNotify::~DownloadBaseNotify()
@@ -31,7 +30,7 @@ DownloadBaseNotify::~DownloadBaseNotify()
     DOWNLOAD_HILOGD("");
 }
 
-void DownloadBaseNotify::OnCallBack(MessageParcel &data)
+void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
 {
     DOWNLOAD_HILOGD("Pause callback in");
     uv_loop_s *loop = nullptr;
@@ -46,40 +45,42 @@ void DownloadBaseNotify::OnCallBack(MessageParcel &data)
         return;
     }
 
-    NotifyData *notifyData = GetNotifyData();
-    notifyData->env = env_;
-    notifyData->ref = ref_;
-    notifyData->type = type_;
-    notifyData->task = task_;
+    NotifyDataPtr *notifyDataPtr = GetNotifyDataPtr();
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        notifyData_->params = params;
+    }
+    notifyDataPtr->notifyData = notifyData_;
     work->data = notifyData;
 
     uv_queue_work(
         loop, work, [](uv_work_t *work) {},
         [](uv_work_t *work, int statusInt) {
-            NotifyData *notifyData = static_cast<NotifyData*>(work->data);
+            NotifyDataPtr *notifyDataPtr = static_cast<notifyDataPtr*>(work->data);
             if (notifyData != nullptr) {
                 napi_value undefined = 0;
-                napi_get_undefined(notifyData->env, &undefined);
+                napi_get_undefined(notifyDataPtr->notifyData->env, &undefined);
                 napi_value callbackFunc = nullptr;
-                napi_get_reference_value(notifyData->env, notifyData->ref, &callbackFunc);
+                napi_get_reference_value(notifyDataPtr->notifyData->env, notifyDataPtr->notifyData->ref, &callbackFunc);
                 napi_value callbackResult = nullptr;
-                napi_value callbackValues[NapiUtils::ONE_ARG] = {0};
-                napi_get_undefined(notifyData->env, &callbackValues[NapiUtils::FIRST_ARGV]);
-                napi_call_function(notifyData->env, nullptr, callbackFunc,
-                                   NapiUtils::ONE_ARG, callbackValues, &callbackResult);
+                napi_value callbackValues[NapiUtils::MAX_PARAM] = {0};
+                for (int i = 0; i < notifyData_->paramNumber; i++) {
+                    napi_create_uint32(notifyDataPtr->notifyData->env, notifyDataPtr->notifyData->params[i], &callbackVal[i]);
+                }
+                napi_call_function(notifyDataPtr->notifyData->env, nullptr, callbackFunc,
+                                   notifyData_->paramNumber, callbackValues, &callbackResult);
                 if (work != nullptr) {
                     delete work;
                     work = nullptr;
                 }
-                delete notifyData;
-                notifyData = nullptr;
+                delete notifyDataPtr;
+                notifyDataPtr = nullptr;
             }
         });
 }
 
-NotifyData *DownloadBaseNotify::GetNotifyData()
-
+NotifyDataPtr *DownloadBaseNotify::GetNotifyDataPtr()
 {
-    return new (std::nothrow) NotifyData;
+    return new (std::nothrow) NotifyDataPtr;
 }
 } // namespace OHOS::Request::Download

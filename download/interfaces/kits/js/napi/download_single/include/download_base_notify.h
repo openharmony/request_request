@@ -17,6 +17,7 @@
 #define DOWNLOAD_BASE_NOTIFY_H
 
 #include <string>
+#include <mutex>
 #include "async_call.h"
 #include "download_notify_stub.h"
 #include "download_task.h"
@@ -28,27 +29,26 @@ namespace OHOS::Request::Download {
 struct NotifyData {
     napi_env env;
     napi_ref ref;
-    std::string type;
-    DownloadTask *task;
-    uint32_t firstArgv;
-    uint32_t secondArgv;
+    uint32_t paramNumber;
+    std::mutex mutex_;
+    std::vector<uint32_t> params;
+    NotifyData(napi_env envIn, napi_ref refIn, uint32_t paramNumberIn, std::vector<uint32_t> &paramsIn)
+        :env(envIn), ref(refIn), paramNumber(paramNumberIn) {}
 };
 
 class DownloadBaseNotify : public DownloadNotifyStub {
 public:
     ACE_DISALLOW_COPY_AND_MOVE(DownloadBaseNotify);
-    explicit DownloadBaseNotify(napi_env env, const std::string &type, const DownloadTask *task, napi_ref ref);
+    explicit DownloadBaseNotify(napi_env env, uint32_t paramNumber, napi_ref ref);
     virtual ~DownloadBaseNotify();
-    void OnCallBack(MessageParcel &data) override;
+    void CallBack(const std::vector<uint32_t> &params);
+	NotifyDataPtr *GetNotifyDataPtr();
 
-protected:
-	NotifyData *GetNotifyData();
-
-protected:
-    napi_env env_;
-    std::string type_;
-    DownloadTask *task_;
-    napi_ref ref_;
+private:
+    NotifyDataPtr {
+        std::shared_ptr<NotifyData> notifyData;
+    }
+    std::shared_ptr<NotifyData> notifyData_;
 };
 } // namespace OHOS::Request::Download
 

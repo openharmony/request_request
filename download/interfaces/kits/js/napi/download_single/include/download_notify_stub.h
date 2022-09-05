@@ -28,6 +28,8 @@ public:
     {
     }
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+private:
+    void OnCallBack(MessageParcel &data) override;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_NOTIFY_STUB_H

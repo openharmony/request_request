@@ -64,7 +64,7 @@ napi_value DownloadEvent::On(napi_env env, napi_callback_info info)
     napi_ref callbackRef = nullptr;
     napi_create_reference(env, argv[argc - 1], 1, &callbackRef);
 
-    sptr<DownloadNotifyInterface> listener = CreateNotify(env, task, type, callbackRef);
+    sptr<DownloadNotifyInterface> listener = CreateNotify(env, type, callbackRef);
     if (listener == nullptr) {
         DOWNLOAD_HILOGD("DownloadPause create callback object fail");
         return result;
@@ -125,38 +125,39 @@ napi_value DownloadEvent::Off(napi_env env, napi_callback_info info)
     return asyncCall.Call(env, exec);
 }
 
-int32_t DownloadEvent::GetEventType(const std::string &type)
+uint32_t DownloadEvent::GetParamNumber(const std::string &type)
 {
     if (type == EVENT_PROGRESS) {
-        return TWO_ARG_EVENT;
+        return TWO_PARAMETER;
     } else if (type == EVENT_FAIL) {
-        return ONE_ARG_EVENT;
+        return ONE_PARAMETER;
     }
-    return NO_ARG_EVENT;
+    return NO_PARAMETER;
 }
 
-sptr<DownloadNotifyInterface> DownloadEvent::CreateNotify(napi_env env,
-    const DownloadTask *task, const std::string &type, napi_ref callbackRef)
+sptr<DownloadNotifyInterface> DownloadEvent::CreateNotify(napi_env env, const std::string &type, napi_ref callbackRef)
 {
     sptr<DownloadNotifyInterface> listener = nullptr;
-    int32_t eventType = GetEventType(type);
-    switch (eventType) {
-        case NO_ARG_EVENT:
-            listener = new DownloadBaseNotify(env, type, task, callbackRef);
-            break;
+    uint32_t paramNumber = GetParamNumber(type);
+    listener = new DownloadBaseNotify(env, paramNumber, callbackRef);
 
-        case ONE_ARG_EVENT:
-            listener = new DownloadFailNotify(env, type, task, callbackRef);
-            break;
+    // switch (eventType) {
+    //     case NO_PARAMETER:
+    //         listener = new DownloadBaseNotify(env, type, task, callbackRef);
+    //         break;
 
-        case TWO_ARG_EVENT:
-            listener = new DownloadProgressNotify(env, type, task, callbackRef);
-            break;
+    //     case ONE_PARAMETER:
+    //         listener = new DownloadFailNotify(env, type, task, callbackRef);
+    //         break;
 
-        default:
-            DOWNLOAD_HILOGE("not support event type");
-            break;
-    }
+    //     case TWO_PARAMETER:
+    //         listener = new DownloadProgressNotify(env, type, task, callbackRef);
+    //         break;
+
+    //     default:
+    //         DOWNLOAD_HILOGE("not support event type");
+    //         break;
+    // }
     return listener;
 }
 } // namespace OHOS::Request::Download

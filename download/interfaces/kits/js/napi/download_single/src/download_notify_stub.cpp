@@ -39,4 +39,15 @@ int32_t DownloadNotifyStub::OnRemoteRequest(
     }
     return E_DOWNLOAD_OK;
 }
+
+void DownloadNotifyStub::OnCallBack(MessageParcel &data)
+{
+    DOWNLOAD_HILOGD("Receive callback");
+    std::vector<uint32_t> params;
+    for (int i = 0; i < data.size(); i++) {
+        params.push_back(data.ReadUint32());
+    }
+    CallBack(params);
+}
+
 } // namespace OHOS::Request::Download
