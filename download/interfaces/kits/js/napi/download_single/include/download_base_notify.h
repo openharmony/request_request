@@ -42,8 +42,7 @@ public:
     DOWNLOAD_API explicit DownloadBaseNotify(napi_env env, uint32_t paramNumber, napi_ref ref);
     virtual ~DownloadBaseNotify();
     void CallBack(const std::vector<uint32_t> &params);
-	NotifyDataPtr *GetNotifyDataPtr();
-
+    NotifyDataPtr *GetNotifyDataPtr();
 private:
     NotifyDataPtr {
         std::shared_ptr<NotifyData> notifyData;
