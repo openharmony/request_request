@@ -43,7 +43,11 @@ int32_t DownloadNotifyStub::OnRemoteRequest(
 void DownloadNotifyStub::OnCallBack(MessageParcel &data)
 {
     DOWNLOAD_HILOGD("Receive callback");
-    std::vector<uint32_t> params = data.ReadUInt32Vector();
+    std::vector<uint32_t> params;
+    if (!data.ReadUInt32Vector(&params) || params.empty()) {
+        DOWNLOAD_HILOGE("read params fail");
+        return;
+    }
     CallBack(params);
 }
 
