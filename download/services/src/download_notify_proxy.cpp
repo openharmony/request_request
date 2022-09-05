@@ -23,25 +23,19 @@ DownloadNotifyProxy::DownloadNotifyProxy(const sptr<IRemoteObject> &impl) : IRem
 {
 }
 
-void DownloadNotifyProxy::OnCallBack(MessageParcel &data)
+void DownloadNotifyProxy::CallBack(const std::vector<uint32_t> &params)
 {
     DOWNLOAD_HILOGD("DownloadNotifyProxy::OnCallBack Start");
     DOWNLOAD_HILOGD("data should be filled within service module");
-    MessageParcel realData;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
-
-    if (!realData.WriteInterfaceToken(DownloadNotifyProxy::GetDescriptor())) {
+    if (!data.WriteInterfaceToken(DownloadNotifyProxy::GetDescriptor())) {
         DOWNLOAD_HILOGE("write descriptor failed");
         return;
     }
-    uint32_t argv1 = data.ReadUint32();
-    uint32_t argv2 = data.ReadUint32();
-    DOWNLOAD_HILOGD("notification's argument:[%{public}d, %{public}d]", argv1, argv2);
-    realData.WriteUint32(argv1);
-    realData.WriteUint32(argv2);
+    data.WriteUint32Vector(params);
 
-    int error = Remote()->SendRequest(DOWNLOAD_NOTIFY, realData, reply, option);
+    int error = Remote()->SendRequest(DOWNLOAD_NOTIFY, data, reply, option);
     if (error != 0) {
         DOWNLOAD_HILOGE("SendRequest failed, error %{public}d", error);
     }

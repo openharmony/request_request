@@ -34,7 +34,7 @@ void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
 {
     DOWNLOAD_HILOGD("Pause callback in");
     uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
+    napi_get_uv_event_loop(notifyData_->env, &loop);
     if (loop == nullptr) {
         DOWNLOAD_HILOGE("Failed to get uv event loop");
         return;
@@ -47,7 +47,7 @@ void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
 
     NotifyDataPtr *notifyDataPtr = GetNotifyDataPtr();
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> lock(notifyData_->mutex_);
         notifyData_->params = params;
     }
     notifyDataPtr->notifyData = notifyData_;

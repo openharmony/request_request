@@ -35,18 +35,17 @@ struct NotifyData {
     NotifyData(napi_env envIn, napi_ref refIn, uint32_t paramNumberIn, std::vector<uint32_t> &paramsIn)
         :env(envIn), ref(refIn), paramNumber(paramNumberIn) {}
 };
-
+struct NotifyDataPtr {
+    std::shared_ptr<NotifyData> notifyData;
+};
 class DownloadBaseNotify : public DownloadNotifyStub {
 public:
     ACE_DISALLOW_COPY_AND_MOVE(DownloadBaseNotify);
     DOWNLOAD_API explicit DownloadBaseNotify(napi_env env, uint32_t paramNumber, napi_ref ref);
     virtual ~DownloadBaseNotify();
-    void CallBack(const std::vector<uint32_t> &params);
+    void CallBack(const std::vector<uint32_t> &params) override;
     NotifyDataPtr *GetNotifyDataPtr();
 private:
-    NotifyDataPtr {
-        std::shared_ptr<NotifyData> notifyData;
-    }
     std::shared_ptr<NotifyData> notifyData_;
 };
 } // namespace OHOS::Request::Download
