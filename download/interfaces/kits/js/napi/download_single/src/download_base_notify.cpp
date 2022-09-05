@@ -65,7 +65,7 @@ void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
                 napi_value callbackResult = nullptr;
                 napi_value callbackValues[NapiUtils::MAX_PARAM] = {0};
                 for (int i = 0; i < notifyData_->paramNumber; i++) {
-                    napi_create_uint32(notifyDataPtr->notifyData->env, notifyDataPtr->notifyData->params[i], &callbackVal[i]);
+                    napi_create_uint32(notifyDataPtr->notifyData->env, notifyDataPtr->notifyData->params[i], &callbackValues[i]);
                 }
                 napi_call_function(notifyDataPtr->notifyData->env, nullptr, callbackFunc,
                                    notifyData_->paramNumber, callbackValues, &callbackResult);

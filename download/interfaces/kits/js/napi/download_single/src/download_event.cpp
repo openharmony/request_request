@@ -16,9 +16,7 @@
 #include "download_event.h"
 
 #include "download_base_notify.h"
-#include "download_fail_notify.h"
 #include "download_manager.h"
-#include "download_progress_notify.h"
 #include "download_task.h"
 #include "log.h"
 #include "napi_utils.h"
@@ -140,24 +138,6 @@ sptr<DownloadNotifyInterface> DownloadEvent::CreateNotify(napi_env env, const st
     sptr<DownloadNotifyInterface> listener = nullptr;
     uint32_t paramNumber = GetParamNumber(type);
     listener = new DownloadBaseNotify(env, paramNumber, callbackRef);
-
-    // switch (eventType) {
-    //     case NO_PARAMETER:
-    //         listener = new DownloadBaseNotify(env, type, task, callbackRef);
-    //         break;
-
-    //     case ONE_PARAMETER:
-    //         listener = new DownloadFailNotify(env, type, task, callbackRef);
-    //         break;
-
-    //     case TWO_PARAMETER:
-    //         listener = new DownloadProgressNotify(env, type, task, callbackRef);
-    //         break;
-
-    //     default:
-    //         DOWNLOAD_HILOGE("not support event type");
-    //         break;
-    // }
     return listener;
 }
 } // namespace OHOS::Request::Download
