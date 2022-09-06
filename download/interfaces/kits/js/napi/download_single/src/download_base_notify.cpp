@@ -24,7 +24,7 @@ DownloadBaseNotify::DownloadBaseNotify(napi_env env, uint32_t paramNumber, napi_
 {
     notifyData_ = std::make_shared<NotifyData>();
     notifyData_->env = env;
-    notifyData_->paramNumber = env;
+    notifyData_->paramNumber = paramNumber;
     notifyData_->ref = ref;
 }
 
