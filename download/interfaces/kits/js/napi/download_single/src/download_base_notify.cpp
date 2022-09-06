@@ -74,7 +74,7 @@ void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
                     notifyDataPtr->notifyData->params[0], notifyDataPtr->notifyData->params[1]);
 
                 for (uint32_t i = 0; i < notifyDataPtr->notifyData->paramNumber; i++) {
-                    std::lock_guard<std::mutex> lock(notifyDataPtr->notifyData_->mutex_);
+                    std::lock_guard<std::mutex> lock(notifyDataPtr->notifyData->mutex_);
                     napi_create_uint32(notifyDataPtr->notifyData->env, 
                         notifyDataPtr->notifyData->params[i], &callbackValues[i]);
                 }
