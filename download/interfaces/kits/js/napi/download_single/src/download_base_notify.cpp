@@ -50,6 +50,9 @@ void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
         std::lock_guard<std::mutex> lock(notifyData_->mutex_);
         notifyData_->params = params;
     }
+    DOWNLOAD_HILOGE("InCallBack recv progress notification's arg: [%{public}d, %{public}d]",
+                    notifyData_->params[0], notifyData_->params[1]);
+
     notifyDataPtr->notifyData = notifyData_;
     work->data = notifyDataPtr;
 
@@ -58,6 +61,8 @@ void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
         [](uv_work_t *work, int statusInt) {
             NotifyDataPtr *notifyDataPtr = static_cast<NotifyDataPtr*>(work->data);
             if (notifyDataPtr != nullptr) {
+                notifyDataPtr->count++;
+                DOWNLOAD_HILOGE("notifyDataPtr->count: [%{public}d", notifyDataPtr->count);
                 napi_value undefined = 0;
                 napi_get_undefined(notifyDataPtr->notifyData->env, &undefined);
                 napi_value callbackFunc = nullptr;
@@ -65,7 +70,11 @@ void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
                     notifyDataPtr->notifyData->ref, &callbackFunc);
                 napi_value callbackResult = nullptr;
                 napi_value callbackValues[NapiUtils::MAX_PARAM] = {0};
+                DOWNLOAD_HILOGE("InWork recv progress notification's arg: [%{public}d, %{public}d]",
+                    notifyDataPtr->notifyData->params[0], notifyDataPtr->notifyData->params[1]);
+
                 for (uint32_t i = 0; i < notifyDataPtr->notifyData->paramNumber; i++) {
+                    std::lock_guard<std::mutex> lock(notifyDataPtr->notifyData_->mutex_);
                     napi_create_uint32(notifyDataPtr->notifyData->env, 
                         notifyDataPtr->notifyData->params[i], &callbackValues[i]);
                 }
