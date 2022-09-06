@@ -37,7 +37,6 @@ struct NotifyData {
 };
 struct NotifyDataPtr {
     std::shared_ptr<NotifyData> notifyData;
-    uint32_t count;
 };
 class DownloadBaseNotify : public DownloadNotifyStub {
 public:
