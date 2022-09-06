@@ -876,7 +876,7 @@ std::string DownloadServiceTask::ReadCertification()
 {
     std::ifstream inFile(std::string(HTTP_DEFAULT_CA_PATH), std::ios::in | std::ios::binary);
     if (!inFile.is_open()) {
-        DOWNLOAD_HILOGE("open cacert.pem faild");
+        DOWNLOAD_HILOGE("open cacert.pem failed");
         return "";
     }
     std::stringstream buf;
