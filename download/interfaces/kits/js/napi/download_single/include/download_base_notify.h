@@ -30,10 +30,8 @@ struct NotifyData {
     napi_env env;
     napi_ref ref;
     uint32_t paramNumber;
-    std::mutex mutex_;
+    std::mutex mutex;
     std::vector<uint32_t> params;
-    NotifyData(napi_env envIn, napi_ref refIn, uint32_t paramNumberIn)
-        : env(envIn), ref(refIn), paramNumber(paramNumberIn) {}
 };
 struct NotifyDataPtr {
     std::shared_ptr<NotifyData> notifyData;

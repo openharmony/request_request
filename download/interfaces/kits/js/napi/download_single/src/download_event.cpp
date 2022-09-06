@@ -135,9 +135,7 @@ uint32_t DownloadEvent::GetParamNumber(const std::string &type)
 
 sptr<DownloadNotifyInterface> DownloadEvent::CreateNotify(napi_env env, const std::string &type, napi_ref callbackRef)
 {
-    sptr<DownloadNotifyInterface> listener = nullptr;
     uint32_t paramNumber = GetParamNumber(type);
-    listener = new DownloadBaseNotify(env, paramNumber, callbackRef);
-    return listener;
+    return new (std::nothrow) DownloadBaseNotify(env, paramNumber, callbackRef);
 }
 } // namespace OHOS::Request::Download

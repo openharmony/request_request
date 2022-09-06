@@ -22,7 +22,10 @@ namespace OHOS::Request::Download {
 DownloadBaseNotify::DownloadBaseNotify(napi_env env, uint32_t paramNumber, napi_ref ref)
     : DownloadNotifyStub()
 {
-    notifyData_ = std::make_shared<NotifyData>(env, ref, paramNumber);
+    notifyData_ = std::make_shared<NotifyData>();
+    notifyData_->env = env;
+    notifyData_->paramNumber = env;
+    notifyData_->ref = ref;
 }
 
 DownloadBaseNotify::~DownloadBaseNotify()
@@ -46,7 +49,7 @@ void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
     }
     NotifyDataPtr *notifyDataPtr = GetNotifyDataPtr();
     {
-        std::lock_guard<std::mutex> lock(notifyData_->mutex_);
+        std::lock_guard<std::mutex> lock(notifyData_->mutex);
         notifyData_->params = params;
     }
     notifyDataPtr->notifyData = notifyData_;
@@ -62,11 +65,9 @@ void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
                 napi_get_reference_value(notifyDataPtr->notifyData->env,
                     notifyDataPtr->notifyData->ref, &callbackFunc);
                 napi_value callbackResult = nullptr;
-                napi_value callbackValues[NapiUtils::MAX_PARAM] = {0};
+                napi_value callbackValues[Download::TWO_PARAMETER] = {0};
                 {
-                    std::lock_guard<std::mutex> lock(notifyDataPtr->notifyData->mutex_);
-                    DOWNLOAD_HILOGE("InWork recv progress notification's arg: [%{public}u, %{public}u]",
-                        notifyDataPtr->notifyData->params[0], notifyDataPtr->notifyData->params[1]);
+                    std::lock_guard<std::mutex> lock(notifyDataPtr->notifyData->mutex);
                     for (uint32_t i = 0; i < notifyDataPtr->notifyData->paramNumber; i++) {
                         napi_create_uint32(notifyDataPtr->notifyData->env,
                             notifyDataPtr->notifyData->params[i], &callbackValues[i]);
