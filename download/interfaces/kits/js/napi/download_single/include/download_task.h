@@ -29,6 +29,12 @@ static constexpr const char *EVENT_PROGRESS = "progress";
 static constexpr const char *EVENT_FAIL = "fail";
 
 namespace OHOS::Request::Download {
+
+enum ParamNumber {
+    NO_PARAMETER,
+    ONE_PARAMETER,
+    TWO_PARAMETER,
+};
 class DownloadTask {
 public:
     explicit DownloadTask(uint32_t taskId);

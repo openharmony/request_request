@@ -310,10 +310,10 @@ void DownloadServiceAbility::NotifyHandler(const std::string& type, uint32_t tas
     auto iter = DownloadServiceAbility::GetInstance()->registeredListeners_.find(combineType);
     if (iter != DownloadServiceAbility::GetInstance()->registeredListeners_.end()) {
         DOWNLOAD_HILOGD("DownloadServiceAbility::NotifyHandler type=%{public}s object message.", combineType.c_str());
-        MessageParcel data;
-        data.WriteUint32(argv1);
-        data.WriteUint32(argv2);
-        iter->second->OnCallBack(data);
+        std::vector<uint32_t> params;
+        params.push_back(argv1);
+        params.push_back(argv2);
+        iter->second->CallBack(params);
     }
 }
 

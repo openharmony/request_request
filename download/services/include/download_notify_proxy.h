@@ -29,7 +29,7 @@ class DownloadNotifyProxy : public IRemoteProxy<DownloadNotifyInterface> {
 public:
     explicit DownloadNotifyProxy(const sptr<IRemoteObject> &impl);
     ~DownloadNotifyProxy() = default;
-    void OnCallBack(MessageParcel &data) override;
+    void CallBack(const std::vector<uint32_t> &params) override;
 
 private:
     static inline BrokerDelegator<DownloadNotifyProxy> delegator_;

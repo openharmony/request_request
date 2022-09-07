@@ -23,11 +23,6 @@
 #include "async_call.h"
 
 namespace OHOS::Request::Download {
-enum EventType {
-    NO_ARG_EVENT,
-    ONE_ARG_EVENT,
-    TWO_ARG_EVENT,
-};
 class DownloadEvent final {
 public:
     ACE_DISALLOW_COPY_AND_MOVE(DownloadEvent);
@@ -37,11 +32,10 @@ public:
 
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);
-    static int32_t GetEventType(const std::string &type);
+    static uint32_t GetParamNumber(const std::string &type);
 	
 private:
-	static sptr<DownloadNotifyInterface> CreateNotify(napi_env env,
-            const DownloadTask *task, const std::string &type, napi_ref callbackRef);
+	static sptr<DownloadNotifyInterface> CreateNotify(napi_env env, const std::string &type, napi_ref callbackRef);
 
 private:
     struct EventOffContext : public AsyncCall::Context {
