@@ -68,9 +68,9 @@ ohos_shared_library("download_server") {
     "//base/request/request/download/dfx/dump",
     "//base/request/request/download/dfx/event/statistics",
     "//base/request/request/download/dfx/event/fault",
-    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb/include", #appexecfwk_core
-    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/appdatafwk/include", #appexecfwk_core
-    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/dataability/include", #appexecfwk_core
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb/include",
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/appdatafwk/include",
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/dataability/include",
   ]
   deps = [
     "//base/notification/distributed_notification_service/frameworks/ans:ans_innerkits",
