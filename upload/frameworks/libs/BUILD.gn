@@ -66,14 +66,11 @@ ohos_shared_library("upload_lib") {
   ]
 
   external_deps = [
-    "ability_base:want",
     "ability_base:zuri",
-    "ability_runtime:ability_manager",
     "c_utils:utils",
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
     "time_service:time_service",
   ]
 

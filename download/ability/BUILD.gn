@@ -68,8 +68,6 @@ ohos_shared_library("downloaddataability") {
 
   deps = [
     "${ability_runtime_path}/frameworks/native/ability/native:abilitykit_native",
-    "//foundation/arkui/napi:ace_napi",
-    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//third_party/jsoncpp:jsoncpp",
   ]
 
@@ -77,14 +75,8 @@ ohos_shared_library("downloaddataability") {
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",
-    "ability_runtime:ability_manager",
-    "c_utils:utils",
     "c_utils:utilsbase",
     "common_event_service:cesfwk_innerkits",
-    "eventhandler:libeventhandler",
-    "ipc:ipc_core",
-    "preferences:native_preferences",
-    "relational_store:native_appdatafwk",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
   ]

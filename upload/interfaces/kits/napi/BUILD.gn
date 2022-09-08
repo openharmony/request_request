@@ -51,6 +51,12 @@ ohos_shared_library("request") {
     "src/upload_task_napi.cpp",
   ]
 
+  include_dirs = [
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb/include", #ability_manager
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/appdatafwk/include", #ability_manager
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/dataability/include", #ability_manager
+  ]
+
   configs = [ ":upload_native_config" ]
 
   deps = [
@@ -62,11 +68,8 @@ ohos_shared_library("request") {
   ]
 
   external_deps = [
-    "ability_runtime:ability_manager",
     "ability_runtime:napi_base_context",
-    "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
-    "time_service:time_service",
   ]
 
   public_configs = [ ":upload_native_public_config" ]

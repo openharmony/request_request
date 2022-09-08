@@ -68,6 +68,9 @@ ohos_shared_library("download_server") {
     "//base/request/request/download/dfx/dump",
     "//base/request/request/download/dfx/event/statistics",
     "//base/request/request/download/dfx/event/fault",
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb/include", #appexecfwk_core
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/appdatafwk/include", #appexecfwk_core
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/dataability/include", #appexecfwk_core
   ]
   deps = [
     "//base/notification/distributed_notification_service/frameworks/ans:ans_innerkits",
@@ -75,7 +78,6 @@ ohos_shared_library("download_server") {
     "//base/telephony/core_service/interfaces/innerkits:tel_core_service_api",
     "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient:net_conn_manager_if",
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
-    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/curl:curl",
   ]
 
@@ -86,18 +88,12 @@ ohos_shared_library("download_server") {
     "ability_base:want",
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
-    "drivers_interface_ril:hril_innerkits",
     "eventhandler:libeventhandler",
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
-    "init:libbegetutil",
     "ipc:ipc_core",
-    "multimedia_image_standard:image_native",
-    "os_account:os_account_innerkits",
-    "relational_store:native_rdb",
   ]
   subsystem_name = "request"
   part_name = "request"

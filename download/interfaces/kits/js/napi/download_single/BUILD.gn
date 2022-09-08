@@ -42,8 +42,6 @@ ohos_shared_library("downloadsingle") {
     "${ability_runtime_path}/interfaces/kits/native/ability/native",
     "${ability_runtime_services_path}/abilitymgr/include",
     "${ability_runtime_inner_api_path}/ability_manager/include",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/Isamgr",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
   ]
   public_configs = [ ":download_interfaces_kits_napi_config" ]
 
@@ -76,18 +74,13 @@ ohos_shared_library("downloadsingle") {
     "//third_party/curl:curl",
   ]
   external_deps = [
-    "ability_base:want",
     "ability_base:zuri",
-    "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
     "ability_runtime:data_ability_helper",
     "ability_runtime:napi_base_context",
     "c_utils:utils",
-    "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "preferences:native_preferences",
-    "relational_store:native_appdatafwk",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
   ]
