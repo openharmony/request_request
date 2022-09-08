@@ -23,7 +23,7 @@ namespace OHOS::Request::Download {
 class DownloadNotifyInterface : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Download.DownloadNotifyInterface");
-    virtual void OnCallBack(MessageParcel &data) = 0;
+    virtual void CallBack(const std::vector<uint32_t> &params) = 0;
 };
 
 enum {

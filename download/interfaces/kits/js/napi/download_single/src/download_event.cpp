@@ -16,9 +16,7 @@
 #include "download_event.h"
 
 #include "download_base_notify.h"
-#include "download_fail_notify.h"
 #include "download_manager.h"
-#include "download_progress_notify.h"
 #include "download_task.h"
 #include "log.h"
 #include "napi_utils.h"
@@ -64,7 +62,7 @@ napi_value DownloadEvent::On(napi_env env, napi_callback_info info)
     napi_ref callbackRef = nullptr;
     napi_create_reference(env, argv[argc - 1], 1, &callbackRef);
 
-    sptr<DownloadNotifyInterface> listener = CreateNotify(env, task, type, callbackRef);
+    sptr<DownloadNotifyInterface> listener = CreateNotify(env, type, callbackRef);
     if (listener == nullptr) {
         DOWNLOAD_HILOGD("DownloadPause create callback object fail");
         return result;
@@ -125,38 +123,19 @@ napi_value DownloadEvent::Off(napi_env env, napi_callback_info info)
     return asyncCall.Call(env, exec);
 }
 
-int32_t DownloadEvent::GetEventType(const std::string &type)
+uint32_t DownloadEvent::GetParamNumber(const std::string &type)
 {
     if (type == EVENT_PROGRESS) {
-        return TWO_ARG_EVENT;
+        return TWO_PARAMETER;
     } else if (type == EVENT_FAIL) {
-        return ONE_ARG_EVENT;
+        return ONE_PARAMETER;
     }
-    return NO_ARG_EVENT;
+    return NO_PARAMETER;
 }
 
-sptr<DownloadNotifyInterface> DownloadEvent::CreateNotify(napi_env env,
-    const DownloadTask *task, const std::string &type, napi_ref callbackRef)
+sptr<DownloadNotifyInterface> DownloadEvent::CreateNotify(napi_env env, const std::string &type, napi_ref callbackRef)
 {
-    sptr<DownloadNotifyInterface> listener = nullptr;
-    int32_t eventType = GetEventType(type);
-    switch (eventType) {
-        case NO_ARG_EVENT:
-            listener = new DownloadBaseNotify(env, type, task, callbackRef);
-            break;
-
-        case ONE_ARG_EVENT:
-            listener = new DownloadFailNotify(env, type, task, callbackRef);
-            break;
-
-        case TWO_ARG_EVENT:
-            listener = new DownloadProgressNotify(env, type, task, callbackRef);
-            break;
-
-        default:
-            DOWNLOAD_HILOGE("not support event type");
-            break;
-    }
-    return listener;
+    uint32_t paramNumber = GetParamNumber(type);
+    return new (std::nothrow) DownloadBaseNotify(env, paramNumber, callbackRef);
 }
 } // namespace OHOS::Request::Download
