@@ -36,6 +36,9 @@ config("upload_native_public_config") {
     "./",
     "//base/request/request/download/interfaces/kits/js/napi/download_single/include",
     "//base/request/request/download/utils/include",
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb/include",
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/appdatafwk/include",
+    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/dataability/include",
   ]
 }
 
@@ -62,11 +65,8 @@ ohos_shared_library("request") {
   ]
 
   external_deps = [
-    "ability_runtime:ability_manager",
     "ability_runtime:napi_base_context",
-    "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
-    "time_service:time_service",
   ]
 
   public_configs = [ ":upload_native_public_config" ]
