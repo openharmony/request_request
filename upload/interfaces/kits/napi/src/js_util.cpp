@@ -218,7 +218,7 @@ Upload::UploadConfig JSUtil::Convert2UploadConfig(napi_env env, napi_value jsCon
     napi_get_named_property(env, jsConfig, "method", &value);
     if (value != nullptr) {
         config.method = Convert2String(env, value);
-        transform(method.begin(), method.end(), method.begin(), ::toupper);
+        transform(config.method.begin(), config.method.end(), config.method.begin(), ::toupper);
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Convert2UploadConfig. method = [%{public}s]", config.method.c_str());
     }
     value = nullptr;
