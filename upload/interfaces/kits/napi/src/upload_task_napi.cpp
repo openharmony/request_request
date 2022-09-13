@@ -421,7 +421,11 @@ napi_value UploadTaskNapi::Initialize(napi_env env, napi_callback_info info)
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Initialize. GetContext fail.");
         return nullptr;
     }
-    proxy->napiUploadConfig_ = JSUtil::Convert2UploadConfig(env, argv[parametersPosition]);
+    proxy->napiUploadConfig_ = JSUtil::ParseUploadConfig(env, argv[parametersPosition]);
+    if (proxy->napiUploadConfig_ == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Initialize. ParseUploadConfig fail.");
+        return nullptr;
+    }
     AddCallbackToConfig(proxy->napiUploadConfig_, env, argv[parametersPosition], proxy);
     proxy->napiUploadTask_ = std::make_unique<Upload::UploadTask>(proxy->napiUploadConfig_);
     proxy->napiUploadTask_->SetContext(context);

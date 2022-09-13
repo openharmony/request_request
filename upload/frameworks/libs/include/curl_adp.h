@@ -18,6 +18,7 @@
 
 #include <vector>
 #include <mutex>
+#include <sys/stat.h>
 #include "curl/curl.h"
 #include "curl/easy.h"
 #include "upload_common.h"
@@ -50,8 +51,15 @@ private:
     int CheckUploadStatus(CURLM *curlMulti);
     bool MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray);
     int32_t UploadOneFile();
+    void SetCurlOpt(CURL *curl, struct stat fileInfo);
     void SetHeadData(CURL *curl);
-    void SetCurlOpt(CURL *curl);
+    void SetHttpPut(CURL *curl);
+    void SetMimePost(CURL *curl, struct stat fileInfo);
+    void SetSslOpt(CURL *curl);
+    void SetConnectionOpt(CURL *curl);
+    void SetNetworkOpt(CURL *curl);
+    void SetCallbackOpt(CURL *curl);
+    void SetBehaviorOpt(CURL *curl);
     void CurlGlobalInit();
     void CurlGlobalCleanup();
     void InitTimerInfo();
