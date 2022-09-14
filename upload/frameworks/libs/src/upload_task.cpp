@@ -161,7 +161,7 @@ uint32_t UploadTask::InitFileArray()
         data.fileIndex = index++;
         data.adp = nullptr;
         data.upsize = 0;
-        data.totalsize = 0;
+        data.totalsize = fileSize;
         data.list = nullptr;
         data.headSendFlag = 0;
         data.httpCode = 0;

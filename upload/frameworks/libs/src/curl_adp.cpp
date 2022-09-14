@@ -59,6 +59,7 @@ uint32_t CUrlAdp::DoUpload(IUploadTask *task)
         }
 
         mfileData_ = vmem;
+        mfileData_.adp = this;
         vmem.result = UploadOneFile();
         if (vmem.result != UPLOAD_OK) {
             allFileUploadResult = UPLOAD_ERRORCODE_UPLOAD_FAIL;
@@ -78,21 +79,11 @@ uint32_t CUrlAdp::DoUpload(IUploadTask *task)
 
 bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray)
 {
-    struct stat fileInfo;
-    if (mfileData_.fp == nullptr) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "file ptr is null");
-        return false;
-    }
-    if (fstat(fileno(mfileData_.fp), &fileInfo) != 0) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "get the file info fail");
-        return false;
-    }
     CURL *curl = curl_easy_init();
     if (curl == nullptr) {
         return false;
     }
-    mfileData_.adp = this;
-    mfileData_.totalsize = fileInfo.st_size;
+
     SetCurlOpt(curl);
     curlArray.push_back(curl);
     curl_multi_add_handle(curlMulti, curl);
@@ -109,12 +100,11 @@ void CUrlAdp::SetHeadData(CURL *curl)
         }
         mfileData_.list = curl_slist_append(mfileData_.list, headerData.c_str());
     }
-    if ((flag == false) && (config_->method == "POST")) {
-            mfileData_.list = curl_slist_append(mfileData_.list,
-                "Content-Type:multipart/form-data");
-    } else if ((flag == false) && (config_->method == "PUT")) {
-        mfileData_.list = curl_slist_append(mfileData_.list,
-            "Content-Type:application/octet-stream");
+
+    if (!flag) {
+        std::string str = config_->method == "POST" ? "Content-Type:multipart/form-data" :
+            "Content-Type:application/octet-stream";
+        mfileData_.list = curl_slist_append(mfileData_.list, str.c_str());
     }
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, mfileData_.list);
 }
