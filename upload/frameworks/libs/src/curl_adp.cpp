@@ -93,7 +93,7 @@ bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray)
     }
     mfileData_.adp = this;
     mfileData_.totalsize = fileInfo.st_size;
-    SetCurlOpt(curl, fileInfo);
+    SetCurlOpt(curl);
     curlArray.push_back(curl);
     curl_multi_add_handle(curlMulti, curl);
     return true;
@@ -101,16 +101,20 @@ bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray)
 
 void CUrlAdp::SetHeadData(CURL *curl)
 {
+    bool flag = false;
     for (auto &headerData : config_->header) {
         std::size_t pos = headerData.find("Content-Type:");
-        if ((pos == std::string::npos) && (config_->method == "POST")) {
-            mfileData_.list = curl_slist_append(mfileData_.list,
-                "Content-Type:multipart/form-data");
-        } else if ((pos == std::string::npos) && (config_->method == "PUT")) {
-            mfileData_.list = curl_slist_append(mfileData_.list,
-                "Content-Type:application/octet-stream");
+        if (pos != std::string::npos) {
+            flag = true;
         }
         mfileData_.list = curl_slist_append(mfileData_.list, headerData.c_str());
+    }
+    if ((flag == false) && (config_->method == "POST")) {
+            mfileData_.list = curl_slist_append(mfileData_.list,
+                "Content-Type:multipart/form-data");
+    } else if ((flag == false) && (config_->method == "PUT")) {
+        mfileData_.list = curl_slist_append(mfileData_.list,
+            "Content-Type:application/octet-stream");
     }
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, mfileData_.list);
 }
@@ -152,11 +156,11 @@ void CUrlAdp::SetSslOpt(CURL *curl)
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 }
 
-void CUrlAdp::SetCurlOpt(CURL *curl, struct stat fileInfo)
+void CUrlAdp::SetCurlOpt(CURL *curl)
 {
     SetHeadData(curl);
     if (config_->method == "POST") {
-        SetMimePost(curl, fileInfo);
+        SetMimePost(curl);
     } else if (config_->method == "PUT") {
         SetHttpPut(curl);
     }
@@ -167,7 +171,7 @@ void CUrlAdp::SetCurlOpt(CURL *curl, struct stat fileInfo)
     SetSslOpt(curl);
 }
 
-void CUrlAdp::SetMimePost(CURL *curl, struct stat fileInfo)
+void CUrlAdp::SetMimePost(CURL *curl)
 {
     curl_mime *mime;
     curl_mimepart *part;
@@ -189,7 +193,7 @@ void CUrlAdp::SetMimePost(CURL *curl, struct stat fileInfo)
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===> MultiAddHandle mfileData_.type=%{public}s",
         mfileData_.type.c_str());
     curl_mime_filename(part, mfileData_.filename.c_str());
-    curl_mime_data_cb(part, fileInfo.st_size, ReadCallback, NULL, NULL, &mfileData_);
+    curl_mime_data_cb(part, mfileData_.totalsize, ReadCallback, NULL, NULL, &mfileData_);
     curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
 }
 

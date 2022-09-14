@@ -43,7 +43,7 @@ public:
     static void ParseFunction(napi_env env, napi_value &object, const char *name, bool &hasFunction, napi_ref &output);
     static std::vector<std::string> Convert2Header(napi_env env, napi_value value);
     static std::shared_ptr<Upload::UploadConfig> ParseUploadConfig(napi_env env, napi_value jsConfig);
-    static Upload::UploadConfig Convert2UploadConfig(napi_env env, napi_value jsConfig);
+    static void Convert2UploadConfig(napi_env env, napi_value jsConfig, Upload::UploadConfig &config);
     static napi_value Convert2JSUploadConfig(napi_env env, const Upload::UploadConfig &config);
 
     static Upload::File Convert2File(napi_env env, napi_value jsFile);

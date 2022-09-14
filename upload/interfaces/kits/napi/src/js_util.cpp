@@ -185,11 +185,12 @@ napi_value JSUtil::Convert2JSString(napi_env env, const std::string &cString)
 }
 std::shared_ptr<Upload::UploadConfig> JSUtil::ParseUploadConfig(napi_env env, napi_value jsConfig)
 {
-    Upload::UploadConfig config = Convert2UploadConfig(env, jsConfig);
+    Upload::UploadConfig config;
+    Convert2UploadConfig(env, jsConfig, config);
     if (!CheckConfig(config)) {
         return nullptr;
     }
-    return std::make_shared<Upload::UploadConfig>(config); 
+    return std::make_shared<Upload::UploadConfig>(config);
 }
 
 bool JSUtil::CheckConfig(const Upload::UploadConfig &config)
@@ -201,9 +202,8 @@ bool JSUtil::CheckConfig(const Upload::UploadConfig &config)
     return true;
 }
 
-Upload::UploadConfig JSUtil::Convert2UploadConfig(napi_env env, napi_value jsConfig)
+void JSUtil::Convert2UploadConfig(napi_env env, napi_value jsConfig, Upload::UploadConfig &config)
 {
-    Upload::UploadConfig config;
     napi_value value = nullptr;
     napi_get_named_property(env, jsConfig, "url", &value);
     if (value != nullptr) {
@@ -219,7 +219,6 @@ Upload::UploadConfig JSUtil::Convert2UploadConfig(napi_env env, napi_value jsCon
     if (value != nullptr) {
         config.method = Convert2String(env, value);
         transform(config.method.begin(), config.method.end(), config.method.begin(), ::toupper);
-        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Convert2UploadConfig. method = [%{public}s]", config.method.c_str());
     }
     value = nullptr;
     napi_get_named_property(env, jsConfig, "files", &value);
@@ -231,8 +230,6 @@ Upload::UploadConfig JSUtil::Convert2UploadConfig(napi_env env, napi_value jsCon
     if (value != nullptr) {
         config.data = Convert2RequestDataVector(env, value);
     }
-
-    return config;
 }
 
 napi_value JSUtil::Convert2JSUploadConfig(napi_env env, const Upload::UploadConfig &config)
