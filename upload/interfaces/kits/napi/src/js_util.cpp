@@ -14,7 +14,6 @@
  */
 
 #include <securec.h>
-#include "curl_adp.h"
 #include "js_util.h"
 
 using namespace OHOS::Request::Upload;
@@ -196,7 +195,12 @@ std::shared_ptr<Upload::UploadConfig> JSUtil::ParseUploadConfig(napi_env env, na
 
 bool JSUtil::CheckConfig(const Upload::UploadConfig &config)
 {
-    return (config.method == Upload::CUrlAdp::POST || config.method == Upload::CUrlAdp::PUT);
+    return CheckMethod(config.method);
+}
+
+bool JSUtil::CheckMethod(const std::string &method)
+{
+    return (method == POST || method == PUT);
 }
 
 void JSUtil::Convert2UploadConfig(napi_env env, napi_value jsConfig, Upload::UploadConfig &config)

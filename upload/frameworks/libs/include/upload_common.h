@@ -41,6 +41,9 @@ struct TaskState {
     std::string message;
 };
 
+static constexpr const char *POST = "POST";
+static constexpr const char *PUT = "PUT";
+
 #ifndef UPLOAD_API
 #define UPLOAD_API __attribute__ ((visibility ("default")))
 #endif

@@ -37,9 +37,6 @@ public:
         return isReadAbort_;
     }
 
-    static constexpr const char *POST = "POST";
-    static constexpr const char *PUT = "PUT";
-
 protected:
     bool ClearCurlResource();
     static int ProgressCallback(void *clientp,
