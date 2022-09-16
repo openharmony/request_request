@@ -18,7 +18,6 @@
 
 #include <vector>
 #include <mutex>
-#include <sys/stat.h>
 #include "curl/curl.h"
 #include "curl/easy.h"
 #include "upload_common.h"
@@ -37,6 +36,9 @@ public:
     {
         return isReadAbort_;
     }
+
+    static constexpr const char *POST = "POST";
+    static constexpr const char *PUT = "PUT";
 
 protected:
     bool ClearCurlResource();

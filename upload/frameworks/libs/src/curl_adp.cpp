@@ -102,7 +102,7 @@ void CUrlAdp::SetHeadData(CURL *curl)
     }
 
     if (!flag) {
-        std::string str = config_->method == "POST" ? "Content-Type:multipart/form-data" :
+        std::string str = config_->method == POST ? "Content-Type:multipart/form-data" :
             "Content-Type:application/octet-stream";
         mfileData_.list = curl_slist_append(mfileData_.list, str.c_str());
     }
@@ -147,9 +147,9 @@ void CUrlAdp::SetSslOpt(CURL *curl)
 void CUrlAdp::SetCurlOpt(CURL *curl)
 {
     SetHeadData(curl);
-    if (config_->method == "POST") {
+    if (config_->method == POST) {
         SetMimePost(curl);
-    } else if (config_->method == "PUT") {
+    } else if (config_->method == PUT) {
         SetHttpPut(curl);
     }
     SetNetworkOpt(curl);
