@@ -125,8 +125,6 @@ void CUrlAdp::SetCallbackOpt(CURL *curl)
         curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
         curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, ProgressCallback);
         curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &mfileData_);
-        // curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &mfileData_);
-        // curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, ProgressCallback);
     }
 }
 
@@ -191,8 +189,7 @@ void CUrlAdp::SetHttpPut(CURL *curl)
 {
     curl_easy_setopt(curl, CURLOPT_UPLOAD, 1);
     curl_easy_setopt(curl, CURLOPT_READFUNCTION, ReadCallback);
-    curl_easy_setopt(curl, CURLOPT_READDATA, mfileData_.fp);
-    curl_easy_setopt(curl, CURLOPT_INFILE, mfileData_.fp);
+    curl_easy_setopt(curl, CURLOPT_READDATA, &mfileData_);
     curl_easy_setopt(curl, CURLOPT_INFILESIZE, mfileData_.totalsize);
 }
 
@@ -431,17 +428,17 @@ size_t CUrlAdp::HeaderCallbackL5(char *buffer, size_t size, size_t nitems, void 
 
 size_t CUrlAdp::ReadCallback(char *buffer, size_t size, size_t nitems, void *arg)
 {
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "size is %{public}zu, nitems is %{public}zu.", size, nitems);
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "size is %{public}zu, nitems is %{public}zu", size, nitems);
     FileData *read = (FileData *) arg;
     CUrlAdp *adp = (CUrlAdp *) read->adp;
     if (adp == nullptr) {
-        UPLOAD_HILOGI(UPLOAD_MODULE_FRAMEWORK, "adp is null");
+        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "adp is null");
         return CURL_READFUNC_ABORT;
     }
     std::lock_guard<std::mutex> guard(adp->readMutex_);
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "isReadAbort is %{public}d", adp->IsReadAbort());
     if (ferror(read->fp) || adp->IsReadAbort()) {
-        UPLOAD_HILOGI(UPLOAD_MODULE_FRAMEWORK, "read abort or ferror");
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "read abort or ferror");
         return CURL_READFUNC_ABORT;
     }
     adp->StartTimer();
