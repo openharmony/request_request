@@ -94,16 +94,15 @@ void CUrlAdp::SetHeadData(CURL *curl)
 {
     bool flag = false;
     for (auto &headerData : config_->header) {
-        std::size_t pos = headerData.find("Content-Type:");
-        if (pos != std::string::npos) {
+        if (headerData.find("Content-Type:") != std::string::npos) {
             flag = true;
         }
         mfileData_.list = curl_slist_append(mfileData_.list, headerData.c_str());
     }
 
     if (!flag) {
-        std::string str = config_->method == POST ? "Content-Type:multipart/form-data" :
-            "Content-Type:application/octet-stream";
+        std::string str = config_->method == PUT ? "Content-Type:application/octet-stream" :
+            "Content-Type:multipart/form-data";
         mfileData_.list = curl_slist_append(mfileData_.list, str.c_str());
     }
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, mfileData_.list);
@@ -147,16 +146,16 @@ void CUrlAdp::SetSslOpt(CURL *curl)
 void CUrlAdp::SetCurlOpt(CURL *curl)
 {
     SetHeadData(curl);
-    if (config_->method == POST) {
-        SetMimePost(curl);
-    } else if (config_->method == PUT) {
-        SetHttpPut(curl);
-    }
     SetNetworkOpt(curl);
-    SetBehaviorOpt(curl);
-    SetCallbackOpt(curl);
     SetConnectionOpt(curl);
     SetSslOpt(curl);
+    SetBehaviorOpt(curl);
+    SetCallbackOpt(curl);
+    if (config_->method == PUT) {
+        SetHttpPut(curl);
+    } else {
+        SetMimePost(curl);
+    }
 }
 
 void CUrlAdp::SetMimePost(CURL *curl)
