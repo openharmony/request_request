@@ -62,7 +62,6 @@ public:
     static napi_value Convert2JSValue(napi_env env, const std::vector<Upload::TaskState> &taskStates);
     static bool Equals(napi_env env, napi_value value, napi_ref copy);
     static bool CheckConfig(const Upload::UploadConfig &config);
-    static bool CheckMethod(const std::string &method);
 };
 }
 #endif // REQUEST_JS_UTIL_H
