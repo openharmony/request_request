@@ -424,6 +424,7 @@ napi_value UploadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     proxy->napiUploadConfig_ = JSUtil::ParseUploadConfig(env, argv[parametersPosition]);
     if (proxy->napiUploadConfig_ == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Initialize. ParseUploadConfig fail.");
+        delete proxy;
         return nullptr;
     }
     AddCallbackToConfig(proxy->napiUploadConfig_, env, argv[parametersPosition], proxy);

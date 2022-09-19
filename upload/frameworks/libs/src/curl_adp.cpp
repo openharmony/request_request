@@ -92,15 +92,15 @@ bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray)
 
 void CUrlAdp::SetHeadData(CURL *curl)
 {
-    bool flag = false;
+    bool hasContentType = false;
     for (auto &headerData : config_->header) {
         if (headerData.find("Content-Type:") != std::string::npos) {
-            flag = true;
+            hasContentType = true;
         }
         mfileData_.list = curl_slist_append(mfileData_.list, headerData.c_str());
     }
 
-    if (!flag) {
+    if (!hasContentType) {
         std::string str = config_->method == PUT ? "Content-Type:application/octet-stream" :
             "Content-Type:multipart/form-data";
         mfileData_.list = curl_slist_append(mfileData_.list, str.c_str());
@@ -160,9 +160,8 @@ void CUrlAdp::SetCurlOpt(CURL *curl)
 
 void CUrlAdp::SetMimePost(CURL *curl)
 {
-    curl_mime *mime;
     curl_mimepart *part;
-    mime = curl_mime_init(curl);
+    curl_mime *mime = curl_mime_init(curl);
     if (config_->data.size()) {
         for (auto &vdata : config_->data) {
             part = curl_mime_addpart(mime);
