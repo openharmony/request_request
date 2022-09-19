@@ -50,8 +50,15 @@ private:
     int CheckUploadStatus(CURLM *curlMulti);
     bool MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray);
     int32_t UploadOneFile();
-    void SetHeadData(CURL *curl);
     void SetCurlOpt(CURL *curl);
+    void SetHeadData(CURL *curl);
+    void SetHttpPut(CURL *curl);
+    void SetMimePost(CURL *curl);
+    void SetSslOpt(CURL *curl);
+    void SetConnectionOpt(CURL *curl);
+    void SetNetworkOpt(CURL *curl);
+    void SetCallbackOpt(CURL *curl);
+    void SetBehaviorOpt(CURL *curl);
     void CurlGlobalInit();
     void CurlGlobalCleanup();
     void InitTimerInfo();

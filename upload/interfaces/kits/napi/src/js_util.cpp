@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include "js_util.h"
 #include <securec.h>
+#include "js_util.h"
 
 using namespace OHOS::Request::Upload;
 namespace OHOS::Request::UploadNapi {
@@ -183,10 +183,28 @@ napi_value JSUtil::Convert2JSString(napi_env env, const std::string &cString)
     napi_create_string_utf8(env, cString.c_str(), cString.size(), &jsValue);
     return jsValue;
 }
-
-std::shared_ptr<Upload::UploadConfig> JSUtil::Convert2UploadConfig(napi_env env, napi_value jsConfig)
+std::shared_ptr<Upload::UploadConfig> JSUtil::ParseUploadConfig(napi_env env, napi_value jsConfig)
 {
     Upload::UploadConfig config;
+    Convert2UploadConfig(env, jsConfig, config);
+    if (!CheckConfig(config)) {
+        return nullptr;
+    }
+    return std::make_shared<Upload::UploadConfig>(config);
+}
+
+bool JSUtil::CheckConfig(const Upload::UploadConfig &config)
+{
+    return CheckMethod(config.method);
+}
+
+bool JSUtil::CheckMethod(const std::string &method)
+{
+    return (method == POST || method == PUT);
+}
+
+void JSUtil::Convert2UploadConfig(napi_env env, napi_value jsConfig, Upload::UploadConfig &config)
+{
     napi_value value = nullptr;
     napi_get_named_property(env, jsConfig, "url", &value);
     if (value != nullptr) {
@@ -201,6 +219,7 @@ std::shared_ptr<Upload::UploadConfig> JSUtil::Convert2UploadConfig(napi_env env,
     napi_get_named_property(env, jsConfig, "method", &value);
     if (value != nullptr) {
         config.method = Convert2String(env, value);
+        transform(config.method.begin(), config.method.end(), config.method.begin(), ::toupper);
     }
     value = nullptr;
     napi_get_named_property(env, jsConfig, "files", &value);
@@ -212,9 +231,6 @@ std::shared_ptr<Upload::UploadConfig> JSUtil::Convert2UploadConfig(napi_env env,
     if (value != nullptr) {
         config.data = Convert2RequestDataVector(env, value);
     }
-
-    std::shared_ptr<Upload::UploadConfig> tmpConfig = std::make_shared<Upload::UploadConfig>(config);
-    return tmpConfig;
 }
 
 napi_value JSUtil::Convert2JSUploadConfig(napi_env env, const Upload::UploadConfig &config)

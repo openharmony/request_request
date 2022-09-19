@@ -15,7 +15,6 @@
 
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/stat.h>
 #include <cstdio>
 #include <vector>
 #include <string>
@@ -60,6 +59,7 @@ uint32_t CUrlAdp::DoUpload(IUploadTask *task)
         }
 
         mfileData_ = vmem;
+        mfileData_.adp = this;
         vmem.result = UploadOneFile();
         if (vmem.result != UPLOAD_OK) {
             allFileUploadResult = UPLOAD_ERRORCODE_UPLOAD_FAIL;
@@ -79,24 +79,89 @@ uint32_t CUrlAdp::DoUpload(IUploadTask *task)
 
 bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray)
 {
-    curl_mime *mime;
-    curl_mimepart *part;
-    struct stat fileInfo;
-    if (mfileData_.fp == nullptr) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "file ptr is null");
-        return false;
-    }
-    if (fstat(fileno(mfileData_.fp), &fileInfo) != 0) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "get the file info fail");
-        return false;
-    }
     CURL *curl = curl_easy_init();
     if (curl == nullptr) {
         return false;
     }
-    SetHeadData(curl);
+
+    SetCurlOpt(curl);
     curlArray.push_back(curl);
-    mime = curl_mime_init(curl);
+    curl_multi_add_handle(curlMulti, curl);
+    return true;
+}
+
+void CUrlAdp::SetHeadData(CURL *curl)
+{
+    bool hasContentType = false;
+    for (auto &headerData : config_->header) {
+        if (headerData.find("Content-Type:") != std::string::npos) {
+            hasContentType = true;
+        }
+        mfileData_.list = curl_slist_append(mfileData_.list, headerData.c_str());
+    }
+
+    if (!hasContentType) {
+        std::string str = config_->method == PUT ? "Content-Type:application/octet-stream" :
+            "Content-Type:multipart/form-data";
+        mfileData_.list = curl_slist_append(mfileData_.list, str.c_str());
+    }
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, mfileData_.list);
+}
+
+void CUrlAdp::SetBehaviorOpt(CURL *curl)
+{
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+}
+
+void CUrlAdp::SetCallbackOpt(CURL *curl)
+{
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, &mfileData_);
+    if (config_->protocolVersion == "L5") {
+        curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallbackL5);
+    } else {
+        curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
+        curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, ProgressCallback);
+        curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &mfileData_);
+    }
+}
+
+void CUrlAdp::SetNetworkOpt(CURL *curl)
+{
+    curl_easy_setopt(curl, CURLOPT_URL, config_->url.c_str());
+}
+
+void CUrlAdp::SetConnectionOpt(CURL *curl)
+{
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 30L);
+}
+
+void CUrlAdp::SetSslOpt(CURL *curl)
+{
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+}
+
+void CUrlAdp::SetCurlOpt(CURL *curl)
+{
+    SetHeadData(curl);
+    SetNetworkOpt(curl);
+    SetConnectionOpt(curl);
+    SetSslOpt(curl);
+    SetBehaviorOpt(curl);
+    SetCallbackOpt(curl);
+    if (config_->method == PUT) {
+        SetHttpPut(curl);
+    } else {
+        SetMimePost(curl);
+    }
+}
+
+void CUrlAdp::SetMimePost(CURL *curl)
+{
+    curl_mimepart *part;
+    curl_mime *mime = curl_mime_init(curl);
     if (config_->data.size()) {
         for (auto &vdata : config_->data) {
             part = curl_mime_addpart(mime);
@@ -114,21 +179,16 @@ bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray)
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===> MultiAddHandle mfileData_.type=%{public}s",
         mfileData_.type.c_str());
     curl_mime_filename(part, mfileData_.filename.c_str());
-    mfileData_.adp = this;
-    mfileData_.totalsize = fileInfo.st_size;
-    curl_mime_data_cb(part, fileInfo.st_size, ReadCallback, NULL, NULL, &mfileData_);
+    curl_mime_data_cb(part, mfileData_.totalsize, ReadCallback, NULL, NULL, &mfileData_);
     curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
-    SetCurlOpt(curl);
-    curl_multi_add_handle(curlMulti, curl);
-    return true;
 }
 
-void CUrlAdp::SetHeadData(CURL *curl)
+void CUrlAdp::SetHttpPut(CURL *curl)
 {
-    for (auto &headerData : config_->header) {
-        mfileData_.list = curl_slist_append(mfileData_.list, headerData.c_str());
-    }
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, mfileData_.list);
+    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1);
+    curl_easy_setopt(curl, CURLOPT_READFUNCTION, ReadCallback);
+    curl_easy_setopt(curl, CURLOPT_READDATA, &mfileData_);
+    curl_easy_setopt(curl, CURLOPT_INFILESIZE, mfileData_.totalsize);
 }
 
 int32_t CUrlAdp::UploadOneFile()
@@ -178,25 +238,6 @@ void CUrlAdp::CurlGlobalCleanup()
     if (isCurlGlobalInit_) {
         isCurlGlobalInit_ = false;
     }
-}
-
-void CUrlAdp::SetCurlOpt(CURL *curl)
-{
-    curl_easy_setopt(curl, CURLOPT_URL, config_->url.c_str());
-    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-    curl_easy_setopt(curl, CURLOPT_HEADERDATA, &mfileData_);
-    if (config_->protocolVersion == "L5") {
-        curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallbackL5);
-    } else {
-        curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
-        curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, ProgressCallback);
-        curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &mfileData_);
-    }
-    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
-    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 30L);
-    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 }
 
 int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
