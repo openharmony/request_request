@@ -38,7 +38,7 @@
         "common_event_service",
         "utils_base",
         "time_native",
-        "multimedia_image_standard",
+        "multimedia_image_framework",
         "eventhandler",
         "bundle_framework",
         "ability_runtime",
