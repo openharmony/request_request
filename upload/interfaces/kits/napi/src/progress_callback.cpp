@@ -34,7 +34,7 @@ ProgressCallback::~ProgressCallback()
     }
 }
 
-void ProgressCallback::Progress(const uint64_t uploadedSize, const uint64_t totalSize)
+void ProgressCallback::Progress(const int64_t uploadedSize, const int64_t totalSize)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
         "Progress. uploadedSize : %lld, totalSize : %lld", (long long)uploadedSize, (long long)totalSize);
