@@ -91,8 +91,8 @@ private:
 
     std::shared_ptr<CUrlAdp> curlAdp_;
     std::shared_ptr<OHOS::AbilityRuntime::Context> context_;
-    uint64_t uploadedSize_;
-    uint64_t totalSize_;
+    int64_t uploadedSize_;
+    int64_t totalSize_;
     std::vector<std::string> headerArray_;
     std::string header_;
     std::vector<FileData> fileArray_;
