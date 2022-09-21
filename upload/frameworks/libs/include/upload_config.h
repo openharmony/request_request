@@ -64,7 +64,7 @@ struct FileData {
     std::vector<std::string> responseHead;
     int32_t headSendFlag;
     int32_t httpCode;
-    uint32_t result;
+    int32_t result;
 };
 } // end of OHOS::Request::Upload
 #endif
