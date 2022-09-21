@@ -39,8 +39,8 @@ namespace OHOS::Request::Download {
 static const std::string URL_HTTPS = "https";
 DownloadServiceTask::DownloadServiceTask(uint32_t taskId, const DownloadConfig &config)
     : taskId_(taskId), config_(config), status_(SESSION_UNKNOWN), code_(ERROR_UNKNOWN), reason_(PAUSED_UNKNOWN),
-      mimeType_(""), totalSize_(0), downloadSize_(0), isPartialMode_(false), forceStop_(false),
-      isRemoved_(false), retryTime_(RETRY_TIME_MAX), eventCb_(nullptr), hasFileSize_(false), isOnline_(true), prevSize_(0) {
+      mimeType_(""), totalSize_(0), downloadSize_(0), isPartialMode_(false), forceStop_(false), isRemoved_(false),
+      retryTime_(RETRY_TIME_MAX), eventCb_(nullptr), hasFileSize_(false), isOnline_(true), prevSize_(0) {
 }
 
 DownloadServiceTask::~DownloadServiceTask(void)

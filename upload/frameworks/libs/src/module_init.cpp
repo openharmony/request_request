@@ -45,6 +45,7 @@ static unsigned long ThreadIdCallback(void)
 
 static void InitLocks(void)
 {
+
     lockarray = (pthread_mutex_t *)OPENSSL_malloc(CRYPTO_num_locks() *
                                                 sizeof(pthread_mutex_t));
     for (int i = 0; i<CRYPTO_num_locks(); i++) {
@@ -87,4 +88,4 @@ ModuleInit::~ModuleInit()
     curl_global_cleanup();
 }
 
-static ModuleInit mi;
+__attribute__((used)) static ModuleInit mi;
