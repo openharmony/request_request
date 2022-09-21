@@ -113,6 +113,7 @@ private:
     static constexpr uint32_t HUNDRED_PERCENT = 100;
     static constexpr uint32_t TEN_PERCENT_THRESHOLD = 10;
     static constexpr uint32_t NOTIFICATION_FREQUENCY = 2000;
+    static constexpr uint32_t RETRY_TIME_MAX = 10;
     std::time_t lastTimestamp_ = 0;
 };
 } // namespace OHOS::Request::Download

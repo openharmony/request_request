@@ -34,7 +34,7 @@ ProgressCallback::~ProgressCallback()
     }
 }
 
-void ProgressCallback::Progress(const int64_t uploadedSize, const int64_t totalSize)
+void ProgressCallback::Progress(const uint64_t uploadedSize, const uint64_t totalSize)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
         "Progress. uploadedSize : %lld, totalSize : %lld", (long long)uploadedSize, (long long)totalSize);
@@ -46,6 +46,7 @@ void ProgressCallback::Progress(const int64_t uploadedSize, const int64_t totalS
     uv_work_t *work = new (std::nothrow)uv_work_t();
     if (work == nullptr) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create uv work");
+        delete progressWorker;
         return;
     }
     work->data = progressWorker;

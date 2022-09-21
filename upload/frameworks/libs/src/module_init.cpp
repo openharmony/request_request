@@ -43,22 +43,15 @@ static unsigned long ThreadIdCallback(void)
     return ret;
 }
 
-using  THREAD_ID_CALLBACK = unsigned long (*)(void);
-using LOCK_CALLBACK = void (*)(int mode, int type, char *file, int line);
 static void InitLocks(void)
 {
-    int i;
-    THREAD_ID_CALLBACK threadIdCallback;
-    LOCK_CALLBACK lockCallback;
-    threadIdCallback = ThreadIdCallback;
-    lockCallback = LockCallback;
     lockarray = (pthread_mutex_t *)OPENSSL_malloc(CRYPTO_num_locks() *
                                                 sizeof(pthread_mutex_t));
-    for (i = 0; i<CRYPTO_num_locks(); i++) {
+    for (int i = 0; i<CRYPTO_num_locks(); i++) {
         pthread_mutex_init(&(lockarray[i]), NULL);
     }
-    CRYPTO_set_id_callback(threadIdCallback);
-    CRYPTO_set_locking_callback(lockCallback);
+    CRYPTO_set_id_callback(ThreadIdCallback);
+    CRYPTO_set_locking_callback(LockCallback);
 }
 
 static void KillLocks(void)
