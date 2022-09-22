@@ -78,8 +78,8 @@ void DownloadManager::SetDataAbilityHelper(std::shared_ptr<OHOS::AppExecFwk::Dat
             DOWNLOAD_HILOGI("DownloadManager query result id  = %{public}d", taskId);
             
             auto proxy = GetDownloadServiceProxy();
-            if (proxy == nullptr) {
-                return;
+            if (proxy != nullptr) {
+                proxy->SetStartId(taskId + 1);
             }
             proxy->SetStartId(taskId + 1);
         }
