@@ -39,16 +39,6 @@ void TaskStatistics::ReportTasksNumber()
     dayTasksNumber_ ++;
 }
 
-uint64_t TaskStatistics::GetDayTasksSize() const
-{
-    return dayTasksSize_;
-}
-
-uint32_t TaskStatistics::GetDayTasksNumber() const
-{
-    return dayTasksNumber_;
-}
-
 int32_t TaskStatistics::GetNextReportInterval() const
 {
     time_t current = time(nullptr);

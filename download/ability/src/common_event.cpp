@@ -21,7 +21,6 @@ std::shared_ptr<CommonEvent> CommonEvent::subscriber = nullptr;
 
 void CommonEvent::OnReceiveEvent(const OHOS::EventFwk::CommonEventData &data)
 {
-    OHOS::AAFwk::Want want = data.GetWant();
     std::string action = data.GetWant().GetAction();
     DOWNLOAD_HILOGI("CommonEvent::OnReceiveEvent action = %{public}s", action.c_str());
     int msgCode = data.GetCode();

@@ -55,11 +55,6 @@ napi_value GetNamedProperty(napi_env env, napi_value object, const std::string &
     return value;
 }
 
-void SetNamedProperty(napi_env env, napi_value object, const std::string &name, napi_value value)
-{
-    (void)napi_set_named_property(env, object, name.c_str(), value);
-}
-
 std::vector<std::string> GetPropertyNames(napi_env env, napi_value object)
 {
     std::vector<std::string> ret;
@@ -133,25 +128,6 @@ int32_t GetInt32FromValue(napi_env env, napi_value value)
     return ret;
 }
 
-int32_t GetInt32Property(napi_env env, napi_value object, const std::string &propertyName)
-{
-    if (!HasNamedProperty(env, object, propertyName)) {
-        return 0;
-    }
-    napi_value value = GetNamedProperty(env, object, propertyName);
-    return GetInt32FromValue(env, value);
-}
-
-void SetInt32Property(napi_env env, napi_value object, const std::string &name, int32_t value)
-{
-    napi_value jsValue = CreateInt32(env, value);
-    if (GetValueType(env, jsValue) != napi_number) {
-        return;
-    }
-
-    napi_set_named_property(env, object, name.c_str(), jsValue);
-}
-
 /* String UTF8 */
 napi_value CreateStringUtf8(napi_env env, const std::string &str)
 {
@@ -192,25 +168,6 @@ void SetStringPropertyUtf8(napi_env env, napi_value object, const std::string &n
     napi_set_named_property(env, object, name.c_str(), jsValue);
 }
 
-/* array buffer */
-bool ValueIsArrayBuffer(napi_env env, napi_value value)
-{
-    bool isArrayBuffer = false;
-    NAPI_CALL_BASE(env, napi_is_arraybuffer(env, value, &isArrayBuffer), false);
-    return isArrayBuffer;
-}
-
-void *GetInfoFromArrayBufferValue(napi_env env, napi_value value, size_t *length)
-{
-    if (length == nullptr) {
-        return nullptr;
-    }
-
-    void *data = nullptr;
-    NAPI_CALL(env, napi_get_arraybuffer_info(env, value, &data, length));
-    return data;
-}
-
 /* object */
 napi_value CreateObject(napi_env env)
 {
@@ -235,26 +192,6 @@ napi_value CallFunction(napi_env env, napi_value recv, napi_value func, size_t a
     return res;
 }
 
-/* reference */
-napi_ref CreateReference(napi_env env, napi_value callback)
-{
-    napi_ref callbackRef = nullptr;
-    NAPI_CALL(env, napi_create_reference(env, callback, 1, &callbackRef));
-    return callbackRef;
-}
-
-napi_value GetReference(napi_env env, napi_ref callbackRef)
-{
-    napi_value callback = nullptr;
-    NAPI_CALL(env, napi_get_reference_value(env, callbackRef, &callback));
-    return callback;
-}
-
-void DeleteReference(napi_env env, napi_ref callbackRef)
-{
-    (void)napi_delete_reference(env, callbackRef);
-}
-
 /* boolean */
 bool GetBooleanProperty(napi_env env, napi_value object, const std::string &propertyName)
 {
@@ -265,27 +202,6 @@ bool GetBooleanProperty(napi_env env, napi_value object, const std::string &prop
     bool ret = false;
     NAPI_CALL_BASE(env, napi_get_value_bool(env, value, &ret), false);
     return ret;
-}
-
-void SetBooleanProperty(napi_env env, napi_value object, const std::string &name, bool value)
-{
-    napi_value jsValue = nullptr;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, value, &jsValue));
-    if (GetValueType(env, jsValue) != napi_boolean) {
-        return;
-    }
-
-    napi_set_named_property(env, object, name.c_str(), jsValue);
-}
-
-/* define properties */
-void DefineProperties(
-    napi_env env, napi_value object, const std::initializer_list<napi_property_descriptor> &properties)
-{
-    napi_property_descriptor descriptors[properties.size()];
-    std::copy(properties.begin(), properties.end(), descriptors);
-
-    (void)napi_define_properties(env, object, properties.size(), descriptors);
 }
 
 std::string ToLower(const std::string &s)
