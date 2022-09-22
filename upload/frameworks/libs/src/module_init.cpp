@@ -53,7 +53,7 @@ static void InitLocks(void)
     lockCallback = LockCallback;
     lockarray = (pthread_mutex_t *)OPENSSL_malloc(CRYPTO_num_locks() *
                                                 sizeof(pthread_mutex_t));
-    for (int i = 0; i<CRYPTO_num_locks(); i++) {
+    for (int i = 0; i < CRYPTO_num_locks(); i++) {
         pthread_mutex_init(&(lockarray[i]), NULL);
     }
     CRYPTO_set_id_callback(threadIdCallback);
@@ -64,7 +64,7 @@ static void KillLocks(void)
 {
     int i;
     CRYPTO_set_locking_callback(NULL);
-    for (i = 0; i<CRYPTO_num_locks(); i++) {
+    for (i = 0; i < CRYPTO_num_locks(); i++) {
         pthread_mutex_destroy(&(lockarray[i]));
     }
     OPENSSL_free(lockarray);
