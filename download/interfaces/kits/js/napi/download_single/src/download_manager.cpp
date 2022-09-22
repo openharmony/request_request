@@ -76,13 +76,12 @@ void DownloadManager::SetDataAbilityHelper(std::shared_ptr<OHOS::AppExecFwk::Dat
             resultSet->GetColumnIndex(contactIdKey, contactIndex);
             resultSet->GetInt(contactIndex, taskId);
             DOWNLOAD_HILOGI("DownloadManager query result id  = %{public}d", taskId);
-            if (downloadServiceProxy_ == nullptr) {
-                DOWNLOAD_HILOGW("Redo GetDownloadServiceProxy");
-                downloadServiceProxy_ = GetDownloadServiceProxy();
+            
+            auto proxy = GetDownloadServiceProxy();
+            if (proxy == nullptr) {
+                return;
             }
-            if (downloadServiceProxy_ != nullptr) {
-                downloadServiceProxy_->SetStartId(taskId + 1);
-            }
+            proxy->SetStartId(taskId + 1);
         }
         resultSet->Close();
     }
