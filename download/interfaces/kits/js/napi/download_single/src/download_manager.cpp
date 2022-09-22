@@ -94,7 +94,7 @@ DownloadTask* DownloadManager::EnqueueTask(const DownloadConfig &config)
 
     auto proxy = GetDownloadServiceProxy();
     if (proxy == nullptr) {
-        return false;
+        return nullptr;
     }
     
     int32_t taskId = proxy->Request(config);
@@ -226,6 +226,10 @@ sptr<DownloadServiceInterface> DownloadManager::GetDownloadServiceProxy()
     deathRecipient_ = new DownloadSaDeathRecipient();
     systemAbility->AddDeathRecipient(deathRecipient_);
     downloadServiceProxy_ = iface_cast<DownloadServiceInterface>(systemAbility);
+    if (downloadServiceProxy_ == nullptr) {
+        DOWNLOAD_HILOGE("Get downloadServiceProxy_ fail.");
+        return nullptr;
+    }
     return downloadServiceProxy_;
 }
 
