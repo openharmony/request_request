@@ -92,15 +92,12 @@ DownloadTask* DownloadManager::EnqueueTask(const DownloadConfig &config)
 {
     DOWNLOAD_HILOGD("DownloadManager EnqueueTask start.");
 
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGW("Redo GetDownloadServiceProxy");
-        downloadServiceProxy_ = GetDownloadServiceProxy();
+    auto proxy = GetDownloadServiceProxy();
+    if (proxy == nullptr) {
+        return false;
     }
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGE("Pause quit because redoing GetDownloadServiceProxy failed.");
-        return nullptr;
-    }
-    int32_t taskId = downloadServiceProxy_->Request(config);
+    
+    int32_t taskId = proxy->Request(config);
     if (taskId < 0) {
         DOWNLOAD_HILOGE("taskId invalid");
         return nullptr;
@@ -132,119 +129,89 @@ DownloadTask* DownloadManager::EnqueueTask(const DownloadConfig &config)
 
 bool DownloadManager::Pause(uint32_t taskId)
 {
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGW("Redo GetDownloadServiceProxy");
-        downloadServiceProxy_ = GetDownloadServiceProxy();
-    }
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGE("Pause quit because redoing GetDownloadServiceProxy failed.");
+    auto proxy = GetDownloadServiceProxy();
+    if (proxy == nullptr) {
         return false;
     }
-    DOWNLOAD_HILOGD("DownloadManager Pause succeeded.");
-    return downloadServiceProxy_->Pause(taskId);
+
+    return proxy->Pause(taskId);
 }
 
 bool DownloadManager::Query(uint32_t taskId, DownloadInfo &info)
 {
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGW("Redo GetDownloadServiceProxy");
-        downloadServiceProxy_ = GetDownloadServiceProxy();
-    }
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGE("Query quit because redoing GetDownloadServiceProxy failed.");
+    auto proxy = GetDownloadServiceProxy();
+    if (proxy == nullptr) {
         return false;
     }
-    DOWNLOAD_HILOGD("DownloadManager Query succeeded.");
-    return downloadServiceProxy_->Query(taskId, info);
+    
+    return proxy->Query(taskId, info);
 }
 
 bool DownloadManager::QueryMimeType(uint32_t taskId, std::string &mimeType)
 {
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGW("Redo GetDownloadServiceProxy");
-        downloadServiceProxy_ = GetDownloadServiceProxy();
-    }
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGE("QueryMimeType quit because redoing GetDownloadServiceProxy failed.");
+    auto proxy = GetDownloadServiceProxy();
+    if (proxy == nullptr) {
         return false;
     }
-    DOWNLOAD_HILOGD("DownloadManager QueryMimeType succeeded.");
-    return downloadServiceProxy_->QueryMimeType(taskId, mimeType);
+    
+    return proxy->QueryMimeType(taskId, mimeType);
 }
 
 bool DownloadManager::Remove(uint32_t taskId)
 {
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGW("Redo GetDownloadServiceProxy");
-        downloadServiceProxy_ = GetDownloadServiceProxy();
-    }
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGE("Remove quit because redoing GetDownloadServiceProxy failed.");
+    auto proxy = GetDownloadServiceProxy();
+    if (proxy == nullptr) {
         return false;
     }
-    DOWNLOAD_HILOGD("DownloadManager Remove succeeded.");
-    return downloadServiceProxy_->Remove(taskId);
+
+    return proxy->Remove(taskId);
 }
 
 bool DownloadManager::Resume(uint32_t taskId)
 {
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGW("Redo GetDownloadServiceProxy");
-        downloadServiceProxy_ = GetDownloadServiceProxy();
-    }
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGE("Resume quit because redoing GetDownloadServiceProxy failed.");
+    auto proxy = GetDownloadServiceProxy();
+    if (proxy == nullptr) {
         return false;
     }
-    DOWNLOAD_HILOGD("DownloadManager Resume succeeded.");
-    return downloadServiceProxy_->Resume(taskId);
+
+    return proxy->Resume(taskId);
 }
 
 bool DownloadManager::On(uint32_t taskId, const std::string &type, const sptr<DownloadNotifyInterface> &listener)
 {
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGW("Redo GetDownloadServiceProxy");
-        downloadServiceProxy_ = GetDownloadServiceProxy();
-    }
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGE("Resume quit because redoing GetDownloadServiceProxy failed.");
+    auto proxy = GetDownloadServiceProxy();
+    if (proxy == nullptr) {
         return false;
     }
-    DOWNLOAD_HILOGD("DownloadManager On succeeded.");
-    return downloadServiceProxy_->On(taskId, type, listener);
+
+    return proxy->On(taskId, type, listener);
 }
 
 bool DownloadManager::Off(uint32_t taskId, const std::string &type)
 {
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGW("Redo GetDownloadServiceProxy");
-        downloadServiceProxy_ = GetDownloadServiceProxy();
-    }
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGE("Resume quit because redoing GetDownloadServiceProxy failed.");
+    auto proxy = GetDownloadServiceProxy();
+    if (proxy == nullptr) {
         return false;
     }
-    DOWNLOAD_HILOGD("DownloadManager Off succeeded.");
-    return downloadServiceProxy_->Off(taskId, type);
+
+    return proxy->Off(taskId, type);
 }
 
 bool DownloadManager::CheckPermission()
 {
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGW("Redo GetDownloadServiceProxy");
-        downloadServiceProxy_ = GetDownloadServiceProxy();
-    }
-    if (downloadServiceProxy_ == nullptr) {
-        DOWNLOAD_HILOGE("Resume quit because redoing GetDownloadServiceProxy failed.");
+    auto proxy = GetDownloadServiceProxy();
+    if (proxy == nullptr) {
         return false;
     }
-    DOWNLOAD_HILOGD("DownloadManager CheckPermission succeeded.");
-    DOWNLOAD_HILOGD("Check Permission enable");
-    return downloadServiceProxy_->CheckPermission();
+
+    return proxy->CheckPermission();
 }
 
 sptr<DownloadServiceInterface> DownloadManager::GetDownloadServiceProxy()
 {
+    if (downloadServiceProxy_ != nullptr) {
+        return downloadServiceProxy_;
+    }
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityManager == nullptr) {
@@ -258,20 +225,16 @@ sptr<DownloadServiceInterface> DownloadManager::GetDownloadServiceProxy()
     }
     deathRecipient_ = new DownloadSaDeathRecipient();
     systemAbility->AddDeathRecipient(deathRecipient_);
-    sptr<DownloadServiceInterface> serviceProxy = iface_cast<DownloadServiceInterface>(systemAbility);
-    if (serviceProxy == nullptr) {
-        DOWNLOAD_HILOGE("Get DownloadManagerProxy from SA failed.");
-        return nullptr;
-    }
-    DOWNLOAD_HILOGD("Getting DownloadManagerProxy succeeded.");
-    return serviceProxy;
+    downloadServiceProxy_ = iface_cast<DownloadServiceInterface>(systemAbility);
+    return downloadServiceProxy_;
 }
 
 void DownloadManager::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
 {
+    downloadServiceProxy_ = nullptr;
     ready_ = false;
     LoadDownloadServer();
-    downloadServiceProxy_ = GetDownloadServiceProxy();
+    GetDownloadServiceProxy();
 }
 
 DownloadSaDeathRecipient::DownloadSaDeathRecipient()

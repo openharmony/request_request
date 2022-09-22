@@ -321,8 +321,9 @@ int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlno
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "progress upload total: %{public}" PRIu64 " upload now: %{public}" PRIu64
         " upload size: %{public}" PRIu64 " total size: %{public}" PRIu64 " thread:%{public}lu",
         ultotal, ulnow, fData->upsize, fData->totalsize, pthread_self());
-    int64_t totalulnow = 0;
+
     if (url && url->uploadTask_) {
+        int64_t totalulnow = 0;
         for (auto &vmem : url->fileArray_) {
             if (fData->filename == vmem.filename) {
                 vmem.upsize = fData->upsize;
