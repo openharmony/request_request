@@ -22,7 +22,7 @@ group("request_packages") {
       "download/interfaces/kits/js/napi/download_single:downloadsingle",
       "download/sa_profile:download_sa_profiles",
       "download/services:download_server",
-      "test/unittest/common:unittest",
+      "test/unittest/common/napi/requestTest:unittest",
     ]
   }
 }
