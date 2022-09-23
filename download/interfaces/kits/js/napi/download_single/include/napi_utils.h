@@ -43,8 +43,6 @@ bool HasNamedProperty(napi_env env, napi_value object, const std::string &proper
 
 napi_value GetNamedProperty(napi_env env, napi_value object, const std::string &propertyName);
 
-void SetNamedProperty(napi_env env, napi_value object, const std::string &name, napi_value value);
-
 std::vector<std::string> GetPropertyNames(napi_env env, napi_value object);
 
 /* UINT32 */
@@ -61,10 +59,6 @@ napi_value CreateInt32(napi_env env, int32_t code);
 
 int32_t GetInt32FromValue(napi_env env, napi_value value);
 
-int32_t GetInt32Property(napi_env env, napi_value object, const std::string &propertyName);
-
-void SetInt32Property(napi_env env, napi_value object, const std::string &name, int32_t value);
-
 /* String UTF8 */
 napi_value CreateStringUtf8(napi_env env, const std::string &str);
 
@@ -73,13 +67,6 @@ std::string GetStringFromValueUtf8(napi_env env, napi_value value);
 std::string GetStringPropertyUtf8(napi_env env, napi_value object, const std::string &propertyName);
 
 void SetStringPropertyUtf8(napi_env env, napi_value object, const std::string &name, const std::string &value);
-
-/* array buffer */
-bool ValueIsArrayBuffer(napi_env env, napi_value value);
-
-void *GetInfoFromArrayBufferValue(napi_env env, napi_value value, size_t *length);
-
-napi_value CreateArrayBuffer(napi_env env, size_t length, void **data);
 
 /* object */
 napi_value CreateObject(napi_env env);
@@ -90,23 +77,8 @@ napi_value GetUndefined(napi_env env);
 /* function */
 napi_value CallFunction(napi_env env, napi_value recv, napi_value func, size_t argc, const napi_value *argv);
 
-napi_value CreateFunction(napi_env env, const std::string &name, napi_callback func, void *arg);
-
-/* reference */
-napi_ref CreateReference(napi_env env, napi_value callback);
-
-napi_value GetReference(napi_env env, napi_ref callbackRef);
-
-void DeleteReference(napi_env env, napi_ref callbackRef);
-
 /* boolean */
 bool GetBooleanProperty(napi_env env, napi_value object, const std::string &propertyName);
-
-void SetBooleanProperty(napi_env env, napi_value object, const std::string &name, bool value);
-
-/* define properties */
-void DefineProperties(
-    napi_env env, napi_value object, const std::initializer_list<napi_property_descriptor> &properties);
 
 std::string ToLower(const std::string &s);
 } // namespace OHOS::Request::Download::NapiUtils
