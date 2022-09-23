@@ -25,8 +25,6 @@ public:
     static TaskStatistics &GetInstance();
     void ReportTasksSize(uint64_t totalSize);
     void ReportTasksNumber();
-    uint64_t GetDayTasksSize() const;
-    uint32_t GetDayTasksNumber() const;
     void StartTimerThread();
 
 private:

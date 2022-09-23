@@ -75,12 +75,8 @@ void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
                 }
                 napi_call_function(notifyDataPtr->notifyData->env, nullptr, callbackFunc,
                                    notifyDataPtr->notifyData->paramNumber, callbackValues, &callbackResult);
-                if (work != nullptr) {
-                    delete work;
-                    work = nullptr;
-                }
                 delete notifyDataPtr;
-                notifyDataPtr = nullptr;
+                delete work;
             }
         });
 }
