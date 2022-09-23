@@ -414,11 +414,16 @@ napi_value UploadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     napi_value argv[JSUtil::MAX_ARGC] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
     auto *proxy = new UploadTaskNapi();
+    if (proxy == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create UploadTaskNapi");
+        return nullptr;
+    }
     proxy->env_ = env;
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
     napi_status getStatus = GetContext(env, &argv[0], parametersPosition, context);
     if (getStatus != napi_ok) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Initialize. GetContext fail.");
+        delete proxy;
         return nullptr;
     }
     proxy->napiUploadConfig_ = JSUtil::Convert2UploadConfig(env, argv[parametersPosition]);
@@ -496,6 +501,7 @@ void UploadTaskNapi::OnSystemSuccess(napi_env env, napi_ref ref, Upload::UploadR
     SystemSuccessCallback *successCallback = new (std::nothrow)SystemSuccessCallback;
     if (successCallback == nullptr) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create successCallback");
+        delete work;
         return;
     }
     successCallback->env = env;

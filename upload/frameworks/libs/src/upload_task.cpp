@@ -167,7 +167,7 @@ uint32_t UploadTask::InitFileArray()
         data.httpCode = 0;
         
         fileArray_.push_back(data);
-        totalSize_ += fileSize;
+        totalSize_ += static_cast<int64_t>(fileSize);
     }
 
     return initResult;

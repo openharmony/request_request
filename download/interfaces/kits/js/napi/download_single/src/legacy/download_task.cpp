@@ -50,9 +50,9 @@ uint32_t DownloadTask::GetLocalFileSize()
 {
     if (filp_ == nullptr) {
         filp_ = OpenDownloadFile();
-    }
-    if (filp_ == nullptr) {
-        return 0;
+        if (filp_ == nullptr) {
+            return 0;
+        }
     }
 
     int nRet = fseek(filp_, 0, SEEK_END);
