@@ -413,7 +413,7 @@ napi_value UploadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     int parametersPosition = 0;
     napi_value argv[JSUtil::MAX_ARGC] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
-    auto *proxy = new UploadTaskNapi();
+    auto *proxy = new (std::nothrow) UploadTaskNapi();
     if (proxy == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create UploadTaskNapi");
         return nullptr;
