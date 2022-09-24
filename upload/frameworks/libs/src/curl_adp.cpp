@@ -60,7 +60,7 @@ uint32_t CUrlAdp::DoUpload(IUploadTask *task)
         }
 
         mfileData_ = vmem;
-        vmem.result = UploadOneFile();
+        vmem.result = static_cast<uint32_t>(UploadOneFile());
         if (vmem.result != UPLOAD_OK) {
             allFileUploadResult = UPLOAD_ERRORCODE_UPLOAD_FAIL;
         }
