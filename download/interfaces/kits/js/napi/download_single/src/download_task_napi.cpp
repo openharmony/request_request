@@ -132,7 +132,7 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
 
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
-    napi_status getStatus = GetContext(env, &argv[0], parametersPosition, context);
+    napi_status getStatus = GetContext(env, argv[0], parametersPosition, context);
     if (getStatus != napi_ok) {
         DOWNLOAD_HILOGE("Initialize. GetContext fail.");
         return nullptr;
@@ -148,7 +148,7 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     }
     config.SetBundleName(context->GetBundleName());
     config.SetApplicationInfoUid(static_cast<int32_t>(getuid()));
-    DownloadManager::GetInstance()->SetDataAbilityHelper(GetDataAbilityHelper(env));
+    SetDataAbilityHelper(env, argv[0]);
     auto *task = DownloadManager::GetInstance()->EnqueueTask(config);
     if (task == nullptr) {
         DOWNLOAD_HILOGE("download task fail");
@@ -167,27 +167,25 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     return self;
 }
 
-napi_status DownloadTaskNapi::GetContext(napi_env env, napi_value *argv, int& parametersPosition,
+napi_status DownloadTaskNapi::GetContext(napi_env env, napi_value value, int& parametersPosition,
     std::shared_ptr<OHOS::AbilityRuntime::Context>& context)
 {
-    bool stageMode = false;
-    napi_status status = OHOS::AbilityRuntime::IsStageContext(env, argv[0], stageMode);
-    if (status != napi_ok || !stageMode) {
-        DOWNLOAD_HILOGE("GetContext. L7");
+    if (!IsStageMode(env, value)) {
         auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
         if (ability == nullptr) {
             DOWNLOAD_HILOGE("GetContext. L7. GetCurrentAbility ability == nullptr.");
             return napi_generic_failure;
         }
         context = ability->GetAbilityContext();
+        DOWNLOAD_HILOGE("GetContext. L7");
     } else {
-        DOWNLOAD_HILOGE("GetContext. L8");
         parametersPosition = CONFIG_PARAM_AT_SECOND;
-        context = OHOS::AbilityRuntime::GetStageModeContext(env, argv[0]);
+        context = OHOS::AbilityRuntime::GetStageModeContext(env, value);
         if (context == nullptr) {
             DOWNLOAD_HILOGE("GetContext. L8. GetStageModeContext contextRtm == nullptr.");
             return napi_generic_failure;
         }
+        DOWNLOAD_HILOGE("GetContext. L8");
     }
     if (context == nullptr) {
         DOWNLOAD_HILOGE("GetContext failed. context is nullptr.");
@@ -256,20 +254,12 @@ std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> DownloadTaskNapi::GetDataAb
         return dataAbilityHelper_;
     }
 
-    napi_value global = nullptr;
-    NAPI_CALL(env, napi_get_global(env, &global));
-    napi_value abilityObj = nullptr;
-    NAPI_CALL(env, napi_get_named_property(env, global, "ability", &abilityObj));
-    if (abilityObj == nullptr) {
-        DOWNLOAD_HILOGE("Failed to get ability field from env context!");
-        return nullptr;
-    }
-    OHOS::AppExecFwk::Ability *ability = nullptr;
-    NAPI_CALL(env, napi_get_value_external(env, abilityObj, (void **)&ability));
+    auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
     if (ability == nullptr) {
         DOWNLOAD_HILOGE("Failed to get ability object from env contex!");
         return nullptr;
     }
+
     std::shared_ptr<OHOS::Uri> uriPtr = std::make_shared<OHOS::Uri>("dataability:///com.ohos.download");
     dataAbilityHelper_ = OHOS::AppExecFwk::DataAbilityHelper::Creator(ability->GetContext(), uriPtr);
     if (dataAbilityHelper_ == nullptr) {
@@ -277,5 +267,22 @@ std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> DownloadTaskNapi::GetDataAb
     }
     DOWNLOAD_HILOGD("Succeed to create data ability helper");
     return dataAbilityHelper_;
+}
+
+bool DownloadTaskNapi::IsStageMode(napi_env env, napi_value value)
+{
+    bool stageMode = true;
+    napi_status status = OHOS::AbilityRuntime::IsStageContext(env, value, stageMode);
+    if (status != napi_ok || !stageMode) {
+        return false;
+    }
+    return stageMode;
+}
+
+void DownloadTaskNapi::SetDataAbilityHelper(napi_env env, napi_value value)
+{
+    if (!IsStageMode(env, value)) {
+        DownloadManager::GetInstance()->SetDataAbilityHelper(GetDataAbilityHelper(env));
+    }
 }
 } // namespace OHOS::Request::Download
