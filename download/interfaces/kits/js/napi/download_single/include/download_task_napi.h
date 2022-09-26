@@ -32,12 +32,14 @@ public:
 private:
     static napi_value GetCtor(napi_env env);
     static napi_value Initialize(napi_env env, napi_callback_info info);
-    static napi_status GetContext(napi_env env, napi_value *argv, int& parametersPosition,
+    static napi_status GetContext(napi_env env, napi_value value, int& parametersPosition,
         std::shared_ptr<OHOS::AbilityRuntime::Context>& context);
     static bool ParseConfig(napi_env env, napi_value configValue, DownloadConfig &config);
     static bool ParseHeader(napi_env env, napi_value configValue, DownloadConfig &config);
     static bool ParseUrl(napi_env env, napi_value configValue, DownloadConfig &config);
     static std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> GetDataAbilityHelper(napi_env env);
+    static bool IsStageMode(napi_env env, napi_value value);
+    static void SetDataAbilityHelper(napi_env env, napi_value value);
 
 private:
     static __thread napi_ref globalCtor;
