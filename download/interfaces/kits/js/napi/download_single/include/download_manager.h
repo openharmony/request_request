@@ -57,7 +57,6 @@ public:
     bool CheckPermission();
     
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
-    void SetDataAbilityHelper(std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> dataAbilityHelper);
     bool LoadDownloadServer();
     void LoadServerSuccess();
     void LoadServerFail();
@@ -72,7 +71,6 @@ private:
 
     sptr<DownloadServiceInterface> downloadServiceProxy_;
     sptr<DownloadSaDeathRecipient> deathRecipient_;
-    std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> dataAbilityHelper_;
     std::condition_variable downloadSyncCon_;
     bool ready_ = false;
     static constexpr int LOAD_SA_TIMEOUT_MS = 15000;

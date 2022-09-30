@@ -148,7 +148,6 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     }
     config.SetBundleName(context->GetBundleName());
     config.SetApplicationInfoUid(static_cast<int32_t>(getuid()));
-    SetDataAbilityHelper(env, argv[0]);
     auto *task = DownloadManager::GetInstance()->EnqueueTask(config);
     if (task == nullptr) {
         DOWNLOAD_HILOGE("download task fail");
@@ -244,31 +243,6 @@ bool DownloadTaskNapi::ParseHeader(napi_env env, napi_value configValue, Downloa
     }
     return true;
 }
-
-std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> dataAbilityHelper_ = nullptr;
-
-std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> DownloadTaskNapi::GetDataAbilityHelper(napi_env env)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (dataAbilityHelper_ != nullptr) {
-        return dataAbilityHelper_;
-    }
-
-    auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
-    if (ability == nullptr) {
-        DOWNLOAD_HILOGE("Failed to get ability object from env contex!");
-        return nullptr;
-    }
-
-    std::shared_ptr<OHOS::Uri> uriPtr = std::make_shared<OHOS::Uri>("dataability:///com.ohos.download");
-    dataAbilityHelper_ = OHOS::AppExecFwk::DataAbilityHelper::Creator(ability->GetContext(), uriPtr);
-    if (dataAbilityHelper_ == nullptr) {
-        DOWNLOAD_HILOGE("Failed to create data ability helper");
-    }
-    DOWNLOAD_HILOGD("Succeed to create data ability helper");
-    return dataAbilityHelper_;
-}
-
 bool DownloadTaskNapi::IsStageMode(napi_env env, napi_value value)
 {
     bool stageMode = true;
@@ -277,12 +251,5 @@ bool DownloadTaskNapi::IsStageMode(napi_env env, napi_value value)
         return false;
     }
     return stageMode;
-}
-
-void DownloadTaskNapi::SetDataAbilityHelper(napi_env env, napi_value value)
-{
-    if (!IsStageMode(env, value)) {
-        DownloadManager::GetInstance()->SetDataAbilityHelper(GetDataAbilityHelper(env));
-    }
 }
 } // namespace OHOS::Request::Download

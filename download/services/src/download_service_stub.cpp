@@ -92,7 +92,7 @@ bool DownloadServiceStub::OnRequest(MessageParcel &data, MessageParcel &reply)
     config.SetBundleName(data.ReadString());
     config.SetApplicationInfoUid(data.ReadInt32());
     uint32_t headerSize = data.ReadUint32();
-    size_t readAbleSize = data.GetReadableBytes() / HEADER_DATA_MIN;
+    size_t readAbleSize = data.GetReadableBytes() / MIN_HEADER_LENGTH;
     if (static_cast<size_t>(headerSize) > readAbleSize) {
         if (fd > 0) {
             close(fd);
