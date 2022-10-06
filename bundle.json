@@ -62,8 +62,6 @@
           "//base/request/request/upload/frameworks/libs:upload_lib"
         ],
         "fwk_group": [
-          "//base/request/request/download/ability:downloaddataability",
-          "//base/request/request/download/ability:download_dataability",
           "//base/request/request/download/interfaces/kits/js/napi/download_single:downloadsingle"
         ],
         "service_group": [

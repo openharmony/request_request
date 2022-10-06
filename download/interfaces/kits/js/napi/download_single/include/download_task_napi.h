@@ -37,9 +37,7 @@ private:
     static bool ParseConfig(napi_env env, napi_value configValue, DownloadConfig &config);
     static bool ParseHeader(napi_env env, napi_value configValue, DownloadConfig &config);
     static bool ParseUrl(napi_env env, napi_value configValue, DownloadConfig &config);
-    static std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> GetDataAbilityHelper(napi_env env);
     static bool IsStageMode(napi_env env, napi_value value);
-    static void SetDataAbilityHelper(napi_env env, napi_value value);
 
 private:
     static __thread napi_ref globalCtor;

@@ -32,8 +32,8 @@ namespace OHOS::Request::Download {
 std::mutex DownloadManager::instanceLock_;
 sptr<DownloadManager> DownloadManager::instance_ = nullptr;
 
-DownloadManager::DownloadManager() : downloadServiceProxy_(nullptr), deathRecipient_(nullptr),
-    dataAbilityHelper_(nullptr) {
+DownloadManager::DownloadManager() : downloadServiceProxy_(nullptr), deathRecipient_(nullptr)
+{
 }
 
 DownloadManager::~DownloadManager()
@@ -51,41 +51,6 @@ sptr<DownloadManager> DownloadManager::GetInstance()
     return instance_;
 }
 
-void DownloadManager::SetDataAbilityHelper(std::shared_ptr<OHOS::AppExecFwk::DataAbilityHelper> dataAbilityHelper)
-{
-    if (dataAbilityHelper_ == nullptr && dataAbilityHelper != nullptr) {
-        dataAbilityHelper_ = dataAbilityHelper;
-        std::vector<std::string> columns;
-        columns.push_back("taskid");
-        OHOS::NativeRdb::DataAbilityPredicates predicates;
-        predicates.GreaterThan("taskid", "0");
-        std::shared_ptr<OHOS::NativeRdb::AbsSharedResultSet> resultSet;
-        OHOS::Uri uriDownload("dataability:///com.ohos.download/download/downloadInfo");
-        resultSet = dataAbilityHelper_->Query(uriDownload, columns, predicates);
-        if (resultSet == nullptr) {
-            DOWNLOAD_HILOGE("Failed to get query result");
-            return;
-        }
-        int rowCount = 0;
-        resultSet->GetRowCount(rowCount);
-        DOWNLOAD_HILOGI("DownloadManager ResultSet rowCount = %{public}d", rowCount);
-        if (resultSet->GoToLastRow() == 0) {
-            int taskId;
-            std::string contactIdKey = "taskid";
-            int contactIndex = 0;
-            resultSet->GetColumnIndex(contactIdKey, contactIndex);
-            resultSet->GetInt(contactIndex, taskId);
-            DOWNLOAD_HILOGI("DownloadManager query result id  = %{public}d", taskId);
-
-            auto proxy = GetDownloadServiceProxy();
-            if (proxy != nullptr) {
-                proxy->SetStartId(taskId + 1);
-            }
-        }
-        resultSet->Close();
-    }
-}
-
 DownloadTask* DownloadManager::EnqueueTask(const DownloadConfig &config)
 {
     DOWNLOAD_HILOGD("DownloadManager EnqueueTask start.");
@@ -101,27 +66,6 @@ DownloadTask* DownloadManager::EnqueueTask(const DownloadConfig &config)
         return nullptr;
     }
     DOWNLOAD_HILOGD("DownloadManager EnqueueTask succeeded.");
-    
-    DOWNLOAD_HILOGD("DownloadManager EnqueueTask Save Data.");
-    OHOS::Uri uriDownload("dataability:///com.ohos.download/download/downloadInfo");
-    OHOS::NativeRdb::ValuesBucket rawContactValues;
-    rawContactValues.PutInt("taskId", taskId);
-    rawContactValues.PutString("url", config.GetUrl().c_str());
-    rawContactValues.PutString("description", config.GetDescription().c_str());
-    rawContactValues.PutString("title", config.GetTitle().c_str());
-    rawContactValues.PutString("filePath", config.GetFilePath().c_str());
-    rawContactValues.PutBool("metered", config.IsMetered());
-    rawContactValues.PutBool("roaming", config.IsRoaming());
-    rawContactValues.PutInt("network", config.GetNetworkType());
-    rawContactValues.PutBool("background", config.IsBackground());
-    rawContactValues.PutString("bundleName", config.GetBundleName());
-    rawContactValues.PutInt("uid", config.GetApplicationInfoUid());
-
-    if (dataAbilityHelper_ != nullptr) {
-        int rowId = dataAbilityHelper_->Insert(uriDownload, rawContactValues);
-        DOWNLOAD_HILOGI("DownloadManager EnqueueTask rowId = %{public}d", rowId);
-    }
-
     return new DownloadTask(taskId);
 }
 
