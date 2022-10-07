@@ -13,22 +13,17 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_REQUEST_UPLOAD_I_CALLBACKABLE_JUDGER
-#define OHOS_REQUEST_UPLOAD_I_CALLBACKABLE_JUDGER
-#include "i_fail_callback.h"
-#include "i_progress_callback.h"
-#include "i_header_receive_callback.h"
-#include "i_complete_callback.h"
+#ifndef FILE_ADAPTERV9_H
+#define FILE_ADAPTERV9_H
+
+#include "i_file_adapter.h"
 
 namespace OHOS::Request::Upload {
-class ICallbackAbleJudger {
+class FileAdapterV9 : public IFileAdapter {
 public:
-    ICallbackAbleJudger() = default;
-    virtual ~ICallbackAbleJudger() {};
-    virtual bool JudgeFail(const IFailCallback *target) = 0;
-    virtual bool JudgeComplete(const ICompleteCallback *target) = 0;
-    virtual bool JudgeProgress(const IProgressCallback *target) = 0;
-    virtual bool JudgeHeaderReceive(const IHeaderReceiveCallback *target) = 0;
+    int32_t DataAbilityOpenFile(std::string &fileUri,
+                                 std::shared_ptr<OHOS::AbilityRuntime::Context> &context) override;
+    std::string InternalGetFilePath(std::shared_ptr<OHOS::AbilityRuntime::Context> &context) override;
 };
 } // end of OHOS::Request::Upload
 #endif

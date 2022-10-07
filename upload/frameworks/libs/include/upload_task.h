@@ -25,8 +25,7 @@
 #include "upload_common.h"
 #include "i_header_receive_callback.h"
 #include "i_progress_callback.h"
-#include "i_complete_callback.h"
-#include "i_fail_callback.h"
+#include "i_notify_callback.h"
 #include "i_upload_task.h"
 #include "upload_config.h"
 #include "curl_adp.h"
@@ -58,6 +57,7 @@ public:
 
     UPLOAD_API virtual void SetCallback(Type type, void *callback);
     UPLOAD_API virtual void SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> context);
+    UPLOAD_API virtual void SetFileParam(std::vector<FileData> fileDatas, int64_t totalSize, bool isStage);
     virtual void OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
     virtual void OnHeaderReceive(const std::string &header);
     virtual void OnFail();
@@ -67,7 +67,6 @@ public:
 protected:
     uint32_t InitFileArray();
     void ClearFileArray();
-    uint32_t CheckConfig();
     std::string GetCodeMessage(uint32_t code);
     std::vector<TaskState> GetTaskStates();
 private:
@@ -86,16 +85,17 @@ private:
 
     IProgressCallback* progressCallback_;
     IHeaderReceiveCallback* headerReceiveCallback_;
-    IFailCallback* failCallback_;
-    ICompleteCallback* completeCallback_;
+    INotifyCallback* failCallback_;
+    INotifyCallback* completeCallback_;
 
+    bool isStage_ {false};
     std::shared_ptr<CUrlAdp> curlAdp_;
     std::shared_ptr<OHOS::AbilityRuntime::Context> context_;
     int64_t uploadedSize_;
     int64_t totalSize_;
     std::vector<std::string> headerArray_;
     std::string header_;
-    std::vector<FileData> fileArray_;
+    std::vector<FileData> fileDatas_;
     std::vector<TaskState> taskStates_;
     UploadTaskState state_;
     std::mutex mutex_;

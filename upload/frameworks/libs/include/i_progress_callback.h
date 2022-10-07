@@ -15,12 +15,16 @@
 
 #ifndef I_PROGRESS_CALLBACK
 #define I_PROGRESS_CALLBACK
+
+#include "napi/native_api.h"
+
 namespace OHOS::Request::Upload {
 class IProgressCallback {
 public:
     IProgressCallback() = default;
     virtual ~IProgressCallback() {};
     virtual void Progress(const int64_t uploadedSize, const int64_t totalSize) = 0;
+    virtual napi_ref GetCallback() = 0;
 };
 } // end of OHOS::Request::Upload
 #endif

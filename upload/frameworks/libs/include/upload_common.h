@@ -17,6 +17,7 @@
 #define UPLOAD_COMMON_
 
 #include <string>
+
 namespace OHOS::Request::Upload {
 enum Type {
     TYPE_PROGRESS_CALLBACK,
@@ -43,6 +44,8 @@ struct TaskState {
 
 static constexpr const char *POST = "POST";
 static constexpr const char *PUT = "PUT";
+static constexpr int32_t ONE_ARG = 1;
+static constexpr int32_t TWO_ARG = 2;
 
 #ifndef UPLOAD_API
 #define UPLOAD_API __attribute__ ((visibility ("default")))
