@@ -30,7 +30,8 @@ public:
 
     ~DownloadResume() = default;
 
-    static napi_value Exec(napi_env env, napi_callback_info info);
+    static napi_value Resume(napi_env env, napi_callback_info info);
+    static napi_value Restore(napi_env env, napi_callback_info info);
 
 private:
     struct ResumeContext : public AsyncCall::Context {
@@ -56,6 +57,7 @@ private:
             return Context::operator()(env, result);
         }
     };
+    static napi_value Exec(napi_env env, napi_callback_info info);
 };
 } // namespace OHOS::Request::Download
 

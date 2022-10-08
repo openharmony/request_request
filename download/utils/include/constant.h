@@ -34,7 +34,8 @@ enum ErrorCode {
     ERROR_TOO_MANY_REDIRECTS,
     ERROR_UNHANDLED_HTTP_CODE,
     ERROR_UNKNOWN,
-    ERROR_NETWORK_FAIL,
+    ERROR_OFFLINE,
+    ERROR_UNSUPPORTED_NETWORK_TYPE,
 };
 
 enum PausedReason {
@@ -59,17 +60,14 @@ enum HttpErrorCode {
     HTTP_PARIAL_FILE = 206,
 };
 enum ExceptionErrorCode : uint32_t {
+    EXCEPTION_OK = 0,
     EXCEPTION_PERMISSION = 13400201,
     EXCEPTION_PARAMETER_CHECK = 13400401,
     EXCEPTION_UNSUPPORTED = 13400801,
-    EXCEPTION_HTTP_RESPONSE = 13400001,
-    EXCEPTION_FILE_IO = 13400002,
-    EXCEPTION_FILE_SIZE = 13400003,
-    EXCEPTION_FILE_PATH = 13400004,
-    EXCEPTION_TASK_TIMEOUT = 13400005,
-    EXCEPTION_TASK_RETRIES = 13400006,
-    EXCEPTION_DATA_ERROR = 13400007,
-    EXCEPTION_SERVICE_ERROR = 13400008,
+    EXCEPTION_FILE_IO = 13400001,
+    EXCEPTION_FILE_SIZE = 13400002,
+    EXCEPTION_FILE_PATH = 13400003,
+    EXCEPTION_SERVICE_ERROR = 13400004,
     EXCEPTION_OTHER = 13499999,
 };
 
@@ -101,13 +99,9 @@ static constexpr const char *HTTP_CONTENT_TYPE_JSON = "application/json";
 static constexpr const char *EXCEPTION_PERMISSION_INFO = "the permissions check fails";
 static constexpr const char *EXCEPTION_PARAMETER_CHECK_INFO = "the parameters check fails";
 static constexpr const char *EXCEPTION_UNSUPPORTED_INFO = "call unsupported api";
-static constexpr const char *EXCEPTION_HTTP_RESPONSE_INFO = "http response status code is not ok";
-static constexpr const char *EXCEPTION_FILE_IO_INFO = " file operation error";
 static constexpr const char *EXCEPTION_FILE_SIZE_INFO = "get/compute file size error";
+static constexpr const char *EXCEPTION_FILE_IO_INFO = " file operation error";
 static constexpr const char *EXCEPTION_FILE_PATH_INFO = "bad file path";
-static constexpr const char *EXCEPTION_TASK_TIMEOUT_INFO = "task timeout";
-static constexpr const char *EXCEPTION_TASK_RETRIES_INFO = "exceed task retries limit";
-static constexpr const char *EXCEPTION_DATA_ERROR_INFO = "task data ability error";
 static constexpr const char *EXCEPTION_SERVICE_ERROR_INFO = "task service ability error";
 static constexpr const char *EXCEPTION_OTHER_INFO = "other error";
 

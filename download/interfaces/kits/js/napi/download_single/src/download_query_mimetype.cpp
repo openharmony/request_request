@@ -20,13 +20,30 @@
 #include "napi_utils.h"
 
 namespace OHOS::Request::Download {
-napi_value DownloadQueryMimeType::Exec(napi_env env, napi_callback_info info)
+napi_value DownloadQueryMimeType::QueryMimeType(napi_env env, napi_callback_info info)
 {
     DOWNLOAD_HILOGD("Enter ---->");
     if (!DownloadManager::GetInstance()->CheckPermission()) {
         DOWNLOAD_HILOGD("no permission to access download service");
         return nullptr;
     }
+    return Exec(env, info);
+}
+
+napi_value DownloadQueryMimeType::GetTaskMimeType(napi_env env, napi_callback_info info)
+{
+    DOWNLOAD_HILOGD("Enter ---->");
+    ExceptionError err;
+    if (!NapiUtils::CheckParameterCorrect(env, info, FUNCTION_GET_TASK_MIME_TYPE, err)) {
+        DOWNLOAD_HILOGE("%{public}s", err.errInfo.c_str());
+        NapiUtils::ThrowError(env, err.code, err.errInfo);
+        return nullptr;
+    }
+    return Exec(env, info);
+}
+
+napi_value DownloadQueryMimeType::Exec(napi_env env, napi_callback_info info)
+{
     auto context = std::make_shared<QueryMimeContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         NAPI_ASSERT_BASE(env, argc == 0, " should 0 parameter!", napi_invalid_arg);

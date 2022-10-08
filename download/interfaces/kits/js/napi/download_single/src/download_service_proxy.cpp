@@ -44,7 +44,7 @@ bool DownloadServiceProxy::IsPathValid(const std::string &filePath)
     return true;
 }
 
-int32_t DownloadServiceProxy::Request(const DownloadConfig &config)
+int32_t DownloadServiceProxy::Request(const DownloadConfig &config, ExceptionError &error)
 {
     MessageParcel data, reply;
     MessageOption option;
@@ -52,20 +52,29 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config)
     int32_t fd = -1;
     int32_t err = 0;
     if (!IsPathValid(config.GetFilePath())) {
+        error.code = EXCEPTION_FILE_PATH;
+        error.errInfo = "Download File Path Valid";
         return -1;
     }
     fd = open(config.GetFilePath().c_str(), O_RDWR);
-    if (fd > 0) {
-        DOWNLOAD_HILOGD("Download File already exists");
+    DOWNLOAD_HILOGE("fd: %{public}d start", fd);
+    if (fd >= 0) {
+        error.code = EXCEPTION_FILE_PATH;
+        error.errInfo = "Download File already exists";
+        DOWNLOAD_HILOGE("%{public}s", error.errInfo.c_str());
         close(fd);
         fd = -1;
     } else {
         fd = open(config.GetFilePath().c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
         if (fd < 0) {
-            DOWNLOAD_HILOGE("Failed to open file errno [%{public}d]", errno);
+            error.code = EXCEPTION_FILE_IO;
+            error.errInfo = "Failed to open file errno " + std::to_string(errno);
+            DOWNLOAD_HILOGE("%{public}s", error.errInfo.c_str());
             err = errno;
+            return -1;
         }
     }
+    DOWNLOAD_HILOGE("fd: %{public}d end", fd);
     data.WriteFileDescriptor(fd);
     if (fd > 0) {
         close(fd);

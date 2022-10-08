@@ -38,7 +38,7 @@ static constexpr const char *FUNCTION_ON = "on";
 static constexpr const char *FUNCTION_OFF = "off";
 static constexpr const char *FUNCTION_PAUSE = "pause";
 static constexpr const char *FUNCTION_QUERY = "query";
-static constexpr const char *FUNCTION_QUERYMIMETYPE = "queryMimeType";
+static constexpr const char *FUNCTION_QUERY_MIME_TYPE = "queryMimeType";
 static constexpr const char *FUNCTION_REMOVE = "remove";
 static constexpr const char *FUNCTION_RESUME = "resume";
 
@@ -53,10 +53,12 @@ static constexpr const char *PARAM_KEY_TITLE = "title";
 static constexpr const char *PARAM_KEY_BACKGROUND = "background";
 
 namespace OHOS::Request::Download {
+__thread napi_ref DownloadTaskNapi::globalCtor = nullptr;
+namespace {
 constexpr const std::uint32_t CONFIG_PARAM_AT_FIRST = 0;
 constexpr const std::uint32_t CONFIG_PARAM_AT_SECOND = 1;
-__thread napi_ref DownloadTaskNapi::globalCtor = nullptr;
 std::mutex mutex_;
+}
 napi_value DownloadTaskNapi::JsMain(napi_env env, napi_callback_info info)
 {
     DOWNLOAD_HILOGD("Enter download JsMain.");
@@ -110,11 +112,11 @@ napi_value DownloadTaskNapi::GetCtor(napi_env env)
     napi_property_descriptor clzDes[] = {
         {FUNCTION_ON, 0, DownloadEvent::On, 0, 0, 0, napi_default, 0},
         {FUNCTION_OFF, 0, DownloadEvent::Off, 0, 0, 0, napi_default, 0},
-        {FUNCTION_PAUSE, 0, DownloadPause::Exec, 0, 0, 0, napi_default, 0},
-        {FUNCTION_QUERY, 0, DownloadQuery::Exec, 0, 0, 0, napi_default, 0},
-        {FUNCTION_QUERYMIMETYPE, 0, DownloadQueryMimeType::Exec, 0, 0, 0, napi_default, 0},
-        {FUNCTION_REMOVE, 0, DownloadRemove::Exec, 0, 0, 0, napi_default, 0},
-        {FUNCTION_RESUME, 0, DownloadResume::Exec, 0, 0, 0, napi_default, 0},
+        {FUNCTION_PAUSE, 0, DownloadPause::Pause, 0, 0, 0, napi_default, 0},
+        {FUNCTION_QUERY, 0, DownloadQuery::Query, 0, 0, 0, napi_default, 0},
+        {FUNCTION_QUERY_MIME_TYPE, 0, DownloadQueryMimeType::QueryMimeType, 0, 0, 0, napi_default, 0},
+        {FUNCTION_REMOVE, 0, DownloadRemove::Remove, 0, 0, 0, napi_default, 0},
+        {FUNCTION_RESUME, 0, DownloadResume::Resume, 0, 0, 0, napi_default, 0},
     };
     NAPI_CALL(env, napi_define_class(env, "DownloadTaskNapi", NAPI_AUTO_LENGTH, Initialize, nullptr,
                        sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
@@ -148,7 +150,8 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     }
     config.SetBundleName(context->GetBundleName());
     config.SetApplicationInfoUid(static_cast<int32_t>(getuid()));
-    auto *task = DownloadManager::GetInstance()->EnqueueTask(config);
+    ExceptionError err;
+    auto *task = DownloadManager::GetInstance()->EnqueueTask(config, err);
     if (task == nullptr) {
         DOWNLOAD_HILOGE("download task fail");
         return nullptr;
@@ -243,6 +246,7 @@ bool DownloadTaskNapi::ParseHeader(napi_env env, napi_value configValue, Downloa
     }
     return true;
 }
+
 bool DownloadTaskNapi::IsStageMode(napi_env env, napi_value value)
 {
     bool stageMode = true;

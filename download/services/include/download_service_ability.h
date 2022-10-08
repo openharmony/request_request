@@ -49,7 +49,7 @@ public:
     ~DownloadServiceAbility();
     static sptr<DownloadServiceAbility> GetInstance();
 
-    int32_t Request(const DownloadConfig &config) override;
+    int32_t Request(const DownloadConfig &config, ExceptionError &err) override;
     bool Pause(uint32_t taskId) override;
     bool Query(uint32_t taskId, DownloadInfo &info) override;
     bool QueryMimeType(uint32_t taskId, std::string &mimeType) override;

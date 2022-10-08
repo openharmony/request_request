@@ -18,8 +18,9 @@
 #include <cstring>
 #include <initializer_list>
 #include <memory>
-
+#include "log.h"
 #include "securec.h"
+#include "download_manager.h"
 
 namespace OHOS::Request::Download::NapiUtils {
 static constexpr const int MAX_STRING_LENGTH = 65536;
@@ -209,5 +210,65 @@ std::string ToLower(const std::string &s)
     std::string res = s;
     std::transform(res.begin(), res.end(), res.begin(), tolower);
     return res;
+}
+
+int32_t GetParameterNumber(napi_env env, napi_callback_info info, napi_value *argv, napi_value *this_arg)
+{
+    size_t argc = NapiUtils::MAX_ARGC;
+    void *data = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, this_arg, &data);
+    if (status != napi_ok) {
+        return -1;
+    }
+    return static_cast<int32_t>(argc);
+}
+
+void ThrowError(napi_env env, const ExceptionErrorCode &code, const std::string &msg)
+{
+    std::string errorCode = std::to_string(code);
+    auto iter = ErrorCodeToMsg.find(code);
+    std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + ": "+ msg;
+    napi_status status = napi_throw_error(env, errorCode.c_str(), strMsg.c_str());
+    if (status != napi_ok) {
+        DOWNLOAD_HILOGE("Failed to napi_throw_error");
+    }
+}
+
+napi_value CreateBusinessError(napi_env env, const ExceptionErrorCode &errorCode, const std::string &msg)
+{
+    napi_value result = nullptr;
+    napi_value codeValue = nullptr;
+    napi_value message = nullptr;
+    auto iter = ErrorCodeToMsg.find(errorCode);
+    std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + msg;
+    NAPI_CALL(env, napi_create_string_utf8(env, strMsg.c_str(), strMsg.length(), &message));
+    NAPI_CALL(env, napi_create_int32(env, errorCode, &codeValue));
+    NAPI_CALL(env, napi_create_error(env, codeValue, message, &result));
+    return result;
+}
+
+bool CheckParameterCorrect(napi_env env, napi_callback_info info, const std::string &type, ExceptionError &err)
+{
+    if (!DownloadManager::GetInstance()->CheckPermission()) {
+        err.code = EXCEPTION_PERMISSION;
+        err.errInfo = "Permission denied.An attempt was made to forbidden by permission:INTERNET";
+        return false;
+    }
+    std::string errInfo;
+    napi_value argv[NapiUtils::MAX_ARGC] = {nullptr};
+    int32_t num = NapiUtils::GetParameterNumber(env, info, argv, nullptr);
+    if (num < 0) {
+        err.code = EXCEPTION_PARAMETER_CHECK;
+        err.errInfo = "function ${" + type + "} Wrong number of arguments";
+        return false;
+    }
+    if (num == NapiUtils::ONE_ARG) {
+        if (NapiUtils::GetValueType(env, argv[NapiUtils::FIRST_ARGV]) != napi_function) {
+            err.code = EXCEPTION_PARAMETER_CHECK;
+            err.errInfo = "function ${" + type + "} the first parameter must be function";
+            return false;
+        }
+    }
+    return true;
 }
 } // namespace OHOS::Request::Download::NapiUtils

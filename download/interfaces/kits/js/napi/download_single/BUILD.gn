@@ -62,6 +62,7 @@ ohos_shared_library("downloadsingle") {
     "src/download_sync_load_callback.cpp",
     "src/download_task.cpp",
     "src/download_task_napi.cpp",
+    "src/download_task_napi_V9.cpp",
     "src/legacy/download_manager.cpp",
     "src/legacy/download_task.cpp",
     "src/napi_utils.cpp",

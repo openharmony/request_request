@@ -18,9 +18,11 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include "napi/native_api.h"
 #include "napi/native_common.h"
+#include "constant.h"
 
 namespace OHOS::Request::Download::NapiUtils {
 static constexpr int32_t MAX_ARGC = 6;
@@ -35,6 +37,16 @@ static constexpr int32_t THIRD_ARGV = 2;
 
 static constexpr int32_t MAX_NUMBER_BYTES = 8;
 static constexpr int32_t MAX_LEN = 4096;
+
+static const std::map<ExceptionErrorCode, std::string> ErrorCodeToMsg {
+    {EXCEPTION_PERMISSION, EXCEPTION_PERMISSION_INFO },
+    {EXCEPTION_PARAMETER_CHECK, EXCEPTION_PARAMETER_CHECK_INFO },
+    {EXCEPTION_UNSUPPORTED, EXCEPTION_UNSUPPORTED_INFO },
+    {EXCEPTION_FILE_IO, EXCEPTION_FILE_IO_INFO },
+    {EXCEPTION_FILE_PATH, EXCEPTION_FILE_PATH_INFO },
+    {EXCEPTION_SERVICE_ERROR, EXCEPTION_SERVICE_ERROR_INFO },
+    {EXCEPTION_OTHER, EXCEPTION_OTHER_INFO },
+};
 
 napi_valuetype GetValueType(napi_env env, napi_value value);
 
@@ -81,6 +93,15 @@ napi_value CallFunction(napi_env env, napi_value recv, napi_value func, size_t a
 bool GetBooleanProperty(napi_env env, napi_value object, const std::string &propertyName);
 
 std::string ToLower(const std::string &s);
+
+int32_t GetParameterNumber(napi_env env, napi_callback_info info, napi_value *argv, napi_value *this_arg);
+
+void ThrowError(napi_env env, const ExceptionErrorCode &code, const std::string &msg);
+
+napi_value CreateBusinessError(napi_env env, const ExceptionErrorCode &errorCode, const std::string &msg);
+
+bool CheckParameterCorrect(napi_env env, napi_callback_info info, const std::string &type, ExceptionError &err);
+
 } // namespace OHOS::Request::Download::NapiUtils
 
 #endif /* DOWNLOAD_NAPI_UTILS_H */

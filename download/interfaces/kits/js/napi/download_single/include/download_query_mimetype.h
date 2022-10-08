@@ -32,7 +32,8 @@ public:
 
     ~DownloadQueryMimeType() = default;
 
-    static napi_value Exec(napi_env env, napi_callback_info info);
+    static napi_value QueryMimeType(napi_env env, napi_callback_info info);
+    static napi_value GetTaskMimeType(napi_env env, napi_callback_info info);
 
 private:
     struct QueryMimeContext : public AsyncCall::Context {
@@ -58,6 +59,7 @@ private:
             return Context::operator()(env, result);
         }
     };
+    static napi_value Exec(napi_env env, napi_callback_info info);
 };
 } // namespace OHOS::Request::Download
 
