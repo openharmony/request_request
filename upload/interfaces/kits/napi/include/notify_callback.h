@@ -13,39 +13,34 @@
  * limitations under the License.
  */
 
-#ifndef FAIL_CALLBACK_H
-#define FAIL_CALLBACK_H
+#ifndef NOTIFY_CALLBACK_H
+#define NOTIFY_CALLBACK_H
 
 #include <uv.h>
+#include <map>
 #include <vector>
-#include "i_fail_callback.h"
 #include "upload_common.h"
 #include "js_util.h"
+#include "i_notify_callback.h"
 #include "napi/native_common.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-#include "i_callbackable_judger.h"
 
 namespace OHOS::Request::Upload {
-class FailCallback : public IFailCallback {
+class NotifyCallback : public INotifyCallback {
 public:
-    FailCallback(ICallbackAbleJudger *judger, napi_env env, napi_value callback);
-    virtual ~FailCallback();
-    void Fail(const std::vector<TaskState> &taskStates) override;
+    NotifyCallback(napi_env env, napi_value callback);
+    virtual ~NotifyCallback();
+    void Notify(const std::vector<TaskState> &taskStates) override;
     napi_ref GetCallback() override;
 private:
-    struct FailWorker {
-        ICallbackAbleJudger *judger;
-        const FailCallback *callback = nullptr;
+    struct NotifyWorker {
+        const NotifyCallback *callback = nullptr;
         const std::vector<TaskState> taskStates;
-        FailWorker(ICallbackAbleJudger *judger, const FailCallback *callbackIn,
-            const std::vector<TaskState> &taskStatesIn)
-            : judger(judger),
-              callback(callbackIn),
-              taskStates(taskStatesIn) {}
+        NotifyWorker(const NotifyCallback *callbackIn, const std::vector<TaskState> &taskStatesIn)
+            : callback(callbackIn), taskStates(taskStatesIn) {}
     };
 
-    ICallbackAbleJudger *judger_;
     napi_ref callback_ = nullptr;
     napi_env env_;
     uv_loop_s *loop_ = nullptr;

@@ -13,19 +13,20 @@
  * limitations under the License.
  */
 
-#ifndef I_FAIL_CALLBACK_H
-#define I_FAIL_CALLBACK_H
+#include "file_adapterV9.h"
 
-#include "upload_common.h"
-#include "napi/native_api.h"
-
+using namespace OHOS::AppExecFwk;
 namespace OHOS::Request::Upload {
-class IFailCallback {
-public:
-    IFailCallback() = default;
-    virtual ~IFailCallback() {};
-    virtual void Fail(const std::vector<TaskState> &taskStates) = 0;
-    virtual napi_ref GetCallback() = 0;
-};
+int32_t FileAdapterV9::DataAbilityOpenFile(std::string &fileUri,
+    std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
+{
+    std::shared_ptr<Uri> uri = std::make_shared<Uri>(fileUri);
+    std::shared_ptr<DataAbilityHelper> dataAbilityHelper = DataAbilityHelper::Creator(context, uri);
+    return dataAbilityHelper->OpenFile(*uri, "r");
+}
+
+std::string FileAdapterV9::InternalGetFilePath(std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
+{
+    return context->GetCacheDir();
+}
 } // end of OHOS::Request::Upload
-#endif

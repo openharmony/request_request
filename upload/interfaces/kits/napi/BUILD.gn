@@ -45,26 +45,31 @@ config("upload_native_public_config") {
 ohos_shared_library("request") {
   sources = [
     "src/async_call.cpp",
-    "src/complete_callback.cpp",
-    "src/fail_callback.cpp",
+    "src/file_adapterV9.cpp",
     "src/header_receive_callback.cpp",
     "src/js_util.cpp",
+    "src/notify_callback.cpp",
+    "src/obtain_fileV9.cpp",
     "src/progress_callback.cpp",
     "src/request_module.cpp",
     "src/upload_task_napi.cpp",
+    "src/upload_task_napiV9.cpp",
   ]
 
   configs = [ ":upload_native_config" ]
 
   deps = [
     "${ability_runtime_path}/frameworks/native/ability/native:abilitykit_native",
+    "${ability_runtime_path}/frameworks/native/ability/native:data_ability_helper",
     "//base/request/request/download/interfaces/kits/js/napi/download_single:downloadsingle",
     "//base/request/request/upload/frameworks/libs:upload_lib",
     "//foundation/arkui/napi/:ace_napi",
+    "//third_party/curl/:curl",
     "//third_party/libuv:uv",
   ]
 
   external_deps = [
+    "ability_base:zuri",
     "ability_runtime:napi_base_context",
     "hiviewdfx_hilog_native:libhilog",
   ]

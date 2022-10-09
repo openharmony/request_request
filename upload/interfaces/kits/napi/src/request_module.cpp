@@ -17,6 +17,7 @@
 #include "napi/native_node_api.h"
 #include "legacy/download_manager.h"
 #include "upload_task_napi.h"
+#include "upload_task_napiV9.h"
 #include "js_util.h"
 #include "download_task_napi.h"
 #include "constant.h"
@@ -26,6 +27,18 @@ using namespace OHOS::Request::Upload;
 using namespace OHOS::Request::Download;
 
 // fix code rule issue
+static napi_value exception_permission = nullptr;
+static napi_value exception_parameter_check = nullptr;
+static napi_value exception_unsupported = nullptr;
+static napi_value exception_http_response = nullptr;
+static napi_value exception_file_IO = nullptr;
+static napi_value exception_file_size = nullptr;
+static napi_value exception_file_path = nullptr;
+static napi_value exception_task_timeout = nullptr;
+static napi_value exception_task_retries = nullptr;
+static napi_value exception_data_error = nullptr;
+static napi_value exception_service_error = nullptr;
+static napi_value exception_other = nullptr;
 static napi_value network_mobile = nullptr;
 static napi_value network_wifi = nullptr;
 static napi_value err_cannot_resume = nullptr;
@@ -51,6 +64,20 @@ static napi_value session_failed = nullptr;
 
 static void NapiCreateInt32(napi_env env)
 {
+    /*create exception type const*/
+    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_PERMISSION), &exception_permission);
+    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_PARAMETER_CHECK), &exception_parameter_check);
+    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_UNSUPPORTED), &exception_unsupported);
+    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_HTTP_RESPONSE), &exception_http_response);
+    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_FILE_IO), &exception_file_IO);
+    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_FILE_SIZE), &exception_file_size);
+    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_FILE_PATH), &exception_file_path);
+    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_TASK_TIMEOUT), &exception_task_timeout);
+    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_TASK_RETRIES), &exception_task_retries);
+    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_DATA_ERROR), &exception_data_error);
+    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_SERVICE_ERROR), &exception_service_error);
+    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_OTHER), &exception_other);
+
     /* Create Network Type Const */
     napi_create_int32(env, static_cast<int32_t>(NETWORK_MOBILE), &network_mobile);
     napi_create_int32(env, static_cast<int32_t>(NETWORK_WIFI), &network_wifi);
@@ -87,6 +114,19 @@ static napi_value Init(napi_env env, napi_value exports)
     NapiCreateInt32(env);
 
     napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_PERMISSION", exception_permission),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_PARAMETER_CHECK", exception_parameter_check),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_UNSUPPORTED", exception_unsupported),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_HTTP_RESPONSE", exception_http_response),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_FILE_IO", exception_file_IO),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_FILE_SIZE", exception_file_size),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_FILE_PATH", exception_file_path),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_TASK_TIMEOUT", exception_task_timeout),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_TASK_RETRIES", exception_task_retries),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_DATA_ERROR", exception_data_error),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_SERVICE_ERROR", exception_service_error),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_OTHER", exception_other),
+
         DECLARE_NAPI_STATIC_PROPERTY("NETWORK_MOBILE", network_mobile),
         DECLARE_NAPI_STATIC_PROPERTY("NETWORK_WIFI", network_wifi),
 
@@ -115,6 +155,7 @@ static napi_value Init(napi_env env, napi_value exports)
 
         DECLARE_NAPI_METHOD("download", DownloadTaskNapi::JsMain),
         DECLARE_NAPI_METHOD("upload", UploadTaskNapi::JsUpload),
+        DECLARE_NAPI_METHOD("uploadFile", UploadTaskNapiV9::JsUploadFile),
         DECLARE_NAPI_METHOD("onDownloadComplete", Legacy::DownloadManager::OnDownloadComplete),
     };
 

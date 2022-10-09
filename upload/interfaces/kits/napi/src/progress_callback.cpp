@@ -19,9 +19,8 @@
 using namespace OHOS::Request::UploadNapi;
 
 namespace OHOS::Request::Upload {
-ProgressCallback::ProgressCallback(ICallbackAbleJudger *judger, napi_env env, napi_value callback)
-    :judger_(judger),
-    env_(env)
+ProgressCallback::ProgressCallback(napi_env env, napi_value callback)
+    : env_(env)
 {
     napi_create_reference(env, callback, 1, &callback_);
     napi_get_uv_event_loop(env, &loop_);
@@ -34,11 +33,16 @@ ProgressCallback::~ProgressCallback()
     }
 }
 
+napi_ref ProgressCallback::GetCallback()
+{
+    return callback_;
+}
+
 void ProgressCallback::Progress(const int64_t uploadedSize, const int64_t totalSize)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
         "Progress. uploadedSize : %lld, totalSize : %lld", (long long)uploadedSize, (long long)totalSize);
-    ProgressWorker *progressWorker = new (std::nothrow)ProgressWorker(judger_, this, uploadedSize, totalSize);
+    ProgressWorker *progressWorker = new (std::nothrow)ProgressWorker(this, uploadedSize, totalSize);
     if (progressWorker == nullptr) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create progressWorker");
         return;
@@ -54,9 +58,12 @@ void ProgressCallback::Progress(const int64_t uploadedSize, const int64_t totalS
         [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
             UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Progress. uv_queue_work start");
-            std::shared_ptr<ProgressWorker> progressWorkerInner(reinterpret_cast<ProgressWorker *>(work->data));
-            std::shared_ptr<uv_work_t> sharedWork(work);
-            if (!progressWorkerInner->judger_->JudgeProgress(progressWorkerInner->callback)) {
+            std::shared_ptr<ProgressWorker> progressWorker(reinterpret_cast<ProgressWorker *>(work->data),
+                [work](ProgressWorker *data) {
+                    delete data;
+                    delete work;
+            });
+            if (progressWorker == nullptr) {
                 UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Progress. uv_queue_work callback removed!!");
                 return;
             }
@@ -65,12 +72,12 @@ void ProgressCallback::Progress(const int64_t uploadedSize, const int64_t totalS
             napi_value global = nullptr;
             napi_value result;
             napi_status calStatus = napi_generic_failure;
-            napi_create_int64(progressWorkerInner->callback->env_, progressWorkerInner->uploadedSize, &args[0]);
-            napi_create_int64(progressWorkerInner->callback->env_, progressWorkerInner->totalSize, &args[1]);
-            napi_get_reference_value(progressWorkerInner->callback->env_,
-                                     progressWorkerInner->callback->callback_, &callback);
-            napi_get_global(progressWorkerInner->callback->env_, &global);
-            calStatus = napi_call_function(progressWorkerInner->callback->env_, global, callback, 2, args, &result);
+            napi_create_int64(progressWorker->callback->env_, progressWorker->uploadedSize, &args[0]);
+            napi_create_int64(progressWorker->callback->env_, progressWorker->totalSize, &args[1]);
+            napi_get_reference_value(progressWorker->callback->env_,
+                                     progressWorker->callback->callback_, &callback);
+            napi_get_global(progressWorker->callback->env_, &global);
+            calStatus = napi_call_function(progressWorker->callback->env_, global, callback, 2, args, &result);
             if (calStatus != napi_ok) {
                 UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
                     "Progress callback failed calStatus:%{public}d callback:%{public}p", calStatus, callback);

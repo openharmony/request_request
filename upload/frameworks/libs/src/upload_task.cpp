@@ -98,14 +98,14 @@ void UploadTask::SetCallback(Type type, void *callback)
             headerArray_.clear();
         }
     } else if (type == TYPE_FAIL_CALLBACK) {
-        failCallback_ = (IFailCallback*)callback;
+        failCallback_ = (INotifyCallback*)callback;
         if (failCallback_ && state_ == STATE_FAILURE) {
-            failCallback_->Fail(taskStates_);
+            failCallback_->Notify(taskStates_);
         }
     } else if (type == TYPE_COMPLETE_CALLBACK) {
-        completeCallback_ = (ICompleteCallback*)callback;
+        completeCallback_ = (INotifyCallback*)callback;
         if (completeCallback_ && state_ == STATE_SUCCESS) {
-            completeCallback_->Complete(taskStates_);
+            completeCallback_->Notify(taskStates_);
         }
     } else {
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "SetCallback. type[%{public}d] not match.", type);
@@ -116,6 +116,14 @@ void UploadTask::SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> conte
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "SetContext. In.");
     context_ = context;
+}
+
+void UploadTask::SetFileParam(std::vector<FileData> fileDatas, int64_t totalSize, bool isStage)
+{
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "SetFileData. In.");
+    fileDatas_ = fileDatas;
+    totalSize_ = totalSize;
+    isStage_ = isStage;
 }
 
 void UploadTask::Run(void *arg)
@@ -166,42 +174,23 @@ uint32_t UploadTask::InitFileArray()
         data.headSendFlag = 0;
         data.httpCode = 0;
         
-        fileArray_.push_back(data);
+        fileDatas_.push_back(data);
         totalSize_ += static_cast<int64_t>(fileSize);
     }
 
     return initResult;
 }
 
-uint32_t UploadTask::CheckConfig()
-{
-    if (uploadConfig_ == nullptr) {
-        return UPLOAD_ERRORCODE_CONFIG_ERROR;
-    }
-
-    if (uploadConfig_->url.empty()) {
-        return UPLOAD_ERRORCODE_CONFIG_ERROR;
-    }
-
-    if (uploadConfig_->files.empty()) {
-        return UPLOAD_ERRORCODE_CONFIG_ERROR;
-    }
-    return UPLOAD_OK;
-}
-
 uint32_t UploadTask::StartUploadFile()
 {
-    uint32_t ret = CheckConfig();
-    if (ret != UPLOAD_OK) {
-        return ret;
+    if(!isStage_) {
+        uint32_t ret = InitFileArray();
+        if (InitFileArray() != UPLOAD_OK) {
+            return ret;
+        }
     }
 
-    ret = InitFileArray();
-    if (ret != UPLOAD_OK) {
-        return ret;
-    }
-
-    curlAdp_ = std::make_shared<CUrlAdp>(fileArray_, uploadConfig_);
+    curlAdp_ = std::make_shared<CUrlAdp>(fileDatas_, uploadConfig_);
     return curlAdp_->DoUpload(this);
 }
 
@@ -247,7 +236,7 @@ void UploadTask::ReportTaskFault(uint32_t ret) const
 {
     uint32_t successCount = 0;
     uint32_t failCount = 0;
-    for (auto &vmem : fileArray_) {
+    for (auto &vmem : fileDatas_) {
         if (vmem.result == UPLOAD_OK) {
             successCount++;
         } else {
@@ -258,7 +247,7 @@ void UploadTask::ReportTaskFault(uint32_t ret) const
         REQUEST_TASK_FAULT,
         OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
         TASKS_TYPE, UPLOAD,
-        TOTAL_FILE_NUM, fileArray_.size(),
+        TOTAL_FILE_NUM, fileDatas_.size(),
         FAIL_FILE_NUM, failCount,
         SUCCESS_FILE_NUM, successCount,
         ERROR_INFO, static_cast<int>(ret));
@@ -297,7 +286,7 @@ std::vector<TaskState> UploadTask::GetTaskStates()
 {
     std::vector<TaskState> taskStates;
     TaskState taskState;
-    for (auto &vmem : fileArray_) {
+    for (auto &vmem : fileDatas_) {
         taskState = {vmem.filename, vmem.result, GetCodeMessage(vmem.result)};
         taskStates.push_back(taskState);
     }
@@ -314,7 +303,7 @@ void UploadTask::OnFail()
     taskStates_ = taskStates;
     state_ = STATE_FAILURE;
     if (failCallback_) {
-        failCallback_->Fail(taskStates);
+        failCallback_->Notify(taskStates);
     }
 }
 
@@ -326,7 +315,7 @@ void UploadTask::OnComplete()
     taskStates_ = taskStates;
     state_ = STATE_SUCCESS;
     if (completeCallback_) {
-        completeCallback_->Complete(taskStates);
+        completeCallback_->Notify(taskStates);
     }
 }
 
@@ -340,13 +329,13 @@ void UploadTask::ExecuteTask()
 
 void UploadTask::ClearFileArray()
 {
-    for (auto &file : fileArray_) {
+    for (auto &file : fileDatas_) {
         if (file.fp != NULL) {
             fclose(file.fp);
         }
         file.name = "";
     }
-    fileArray_.clear();
+    fileDatas_.clear();
 }
 
 std::vector<std::string> UploadTask::StringSplit(const std::string& str, char delim)

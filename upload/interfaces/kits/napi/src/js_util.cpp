@@ -14,10 +14,39 @@
  */
 
 #include <securec.h>
+#include <regex>
+#include <string>
 #include "js_util.h"
 
 using namespace OHOS::Request::Upload;
 namespace OHOS::Request::UploadNapi {
+
+static const std::map<Download::ExceptionErrorCode, std::string> ErrorCodeToMsg {
+    {Download::EXCEPTION_PERMISSION, Download::EXCEPTION_PERMISSION_INFO },
+    {Download::EXCEPTION_PARAMETER_CHECK, Download::EXCEPTION_PARAMETER_CHECK_INFO },
+    {Download::EXCEPTION_UNSUPPORTED, Download::EXCEPTION_UNSUPPORTED_INFO },
+    {Download::EXCEPTION_HTTP_RESPONSE, Download::EXCEPTION_HTTP_RESPONSE_INFO },
+    {Download::EXCEPTION_FILE_IO, Download::EXCEPTION_FILE_IO_INFO },
+    {Download::EXCEPTION_FILE_SIZE, Download::EXCEPTION_FILE_SIZE_INFO },
+    {Download::EXCEPTION_FILE_PATH, Download::EXCEPTION_FILE_PATH_INFO },
+    {Download::EXCEPTION_TASK_TIMEOUT, Download::EXCEPTION_TASK_TIMEOUT_INFO },
+    {Download::EXCEPTION_TASK_RETRIES, Download::EXCEPTION_TASK_RETRIES_INFO },
+    {Download::EXCEPTION_DATA_ERROR, Download::EXCEPTION_DATA_ERROR_INFO },
+    {Download::EXCEPTION_SERVICE_ERROR, Download::EXCEPTION_SERVICE_ERROR_INFO },
+    {Download::EXCEPTION_OTHER, Download::EXCEPTION_OTHER_INFO },
+};
+
+void JSUtil::ThrowError(napi_env env, Download::ExceptionErrorCode code, const std::string &msg)
+{
+    std::string errorCode = std::to_string(code);
+    auto iter = ErrorCodeToMsg.find(code);
+    std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + "  " + msg;
+    napi_status status = napi_throw_error(env, errorCode.c_str(), strMsg.c_str());
+    if (status != napi_ok) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI,"Failed to napi_throw_error");
+    }
+}
+
 std::string JSUtil::Convert2String(napi_env env, napi_value jsString)
 {
     size_t maxLen = JSUtil::MAX_LEN;
@@ -195,7 +224,21 @@ std::shared_ptr<Upload::UploadConfig> JSUtil::ParseUploadConfig(napi_env env, na
 
 bool JSUtil::CheckConfig(const Upload::UploadConfig &config)
 {
+    if (!CheckUrl(config.url)) {
+        return false;
+    }
+    if (config.files.empty()) {
+        return false;
+    }
     return CheckMethod(config.method);
+}
+
+bool JSUtil::CheckUrl(const std::string &url)
+{
+    if (url.empty()) {
+        return false;
+    }
+    return regex_match(url, std::regex("^http(s)?:\\/\\/.+"));
 }
 
 bool JSUtil::CheckMethod(const std::string &method)
@@ -380,5 +423,49 @@ bool JSUtil::Equals(napi_env env, napi_value value, napi_ref copy)
     bool isEquals = false;
     napi_strict_equals(env, value, copyValue, &isEquals);
     return isEquals;
+}
+
+bool JSUtil::CheckParamNumber(size_t argc, bool IsRequiredParam)
+{
+    if (IsRequiredParam) {
+        return argc == TWO_ARG;
+    }
+    return (argc == ONE_ARG || argc == TWO_ARG);
+}
+
+bool JSUtil::CheckParamType(napi_env env, napi_value jsType, napi_valuetype type)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_status status = napi_typeof(env, jsType, &valueType);
+    if (status != napi_ok || valueType != type) {
+        return false;
+    }
+    return true;
+}
+
+napi_value JSUtil::CreateBusinessError(napi_env env, const 
+    Download::ExceptionErrorCode &errorCode, const std::string &msg)
+{
+    napi_value result = nullptr;
+    napi_value codeValue = nullptr;
+    napi_value message = nullptr;
+    auto iter = ErrorCodeToMsg.find(errorCode);
+    std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + "  "+ msg;
+    NAPI_CALL(env, napi_create_string_utf8(env, strMsg.c_str(), strMsg.length(), &message));
+    NAPI_CALL(env, napi_create_int32(env, errorCode, &codeValue));
+    NAPI_CALL(env, napi_create_error(env, codeValue, message, &result));
+    return result;
+}
+
+void JSUtil::GetMessage(const std::vector<Upload::FileData> &fileDatas, std::string &msg)
+{
+    for (auto &vmem : fileDatas) {
+        std::string strMsg;
+        auto iter = ErrorCodeToMsg.find(static_cast<Download::ExceptionErrorCode>(vmem.result));
+        if (iter != ErrorCodeToMsg.end()) {
+            strMsg = vmem.filename + " " + std::to_string(vmem.result) + " " + iter->second + "\n";
+        }
+        msg += strMsg;
+    }
 }
 } // namespace OHOS::Request::UploadNapi

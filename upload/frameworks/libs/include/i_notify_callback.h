@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
-#ifndef I_COMPLETE_CALLBACK_H
-#define I_COMPLETE_CALLBACK_H
+#ifndef I_NOTIFY_CALLBACK_H
+#define I_NOTIFY_CALLBACK_H
 
-#include "upload_common.h"
 #include "napi/native_api.h"
+#include "upload_common.h"
 
 namespace OHOS::Request::Upload {
-class ICompleteCallback {
+class INotifyCallback {
 public:
-    ICompleteCallback() = default;
-    virtual ~ICompleteCallback() {};
-    virtual void Complete(const std::vector<TaskState> &taskStates) = 0;
+    INotifyCallback() = default;
+    virtual ~INotifyCallback() {};
+    virtual void Notify(const std::vector<TaskState> &taskStates) = 0;
     virtual napi_ref GetCallback() = 0;
 };
 } // end of OHOS::Request::Upload

@@ -22,27 +22,22 @@
 #include "napi/native_common.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-#include "i_callbackable_judger.h"
 
 namespace OHOS::Request::Upload {
 class HeaderReceiveCallback : public IHeaderReceiveCallback {
 public:
-    HeaderReceiveCallback(ICallbackAbleJudger *judger, napi_env env, napi_value callback);
+    HeaderReceiveCallback(napi_env env, napi_value callback);
     virtual ~HeaderReceiveCallback();
     virtual void HeaderReceive(const std::string &header) override;
+    napi_ref GetCallback() override;
 private:
     struct HeaderReceiveWorker {
-        ICallbackAbleJudger *judger_;
         const HeaderReceiveCallback *callback = nullptr;
         const std::string header;
-        HeaderReceiveWorker(ICallbackAbleJudger *judger, const HeaderReceiveCallback *callbackIn,
-                            const std::string &headerIn)
-            : judger_(judger),
-              callback(callbackIn),
-              header(headerIn) {}
+        HeaderReceiveWorker(const HeaderReceiveCallback *callbackIn, const std::string &headerIn)
+            : callback(callbackIn), header(headerIn) {}
     };
 
-    ICallbackAbleJudger *judger_;
     napi_ref callback_ = nullptr;
     napi_env env_;
     uv_loop_s *loop_ = nullptr;

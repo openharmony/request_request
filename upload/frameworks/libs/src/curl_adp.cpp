@@ -28,7 +28,7 @@
 #include "curl_adp.h"
 
 namespace OHOS::Request::Upload {
-CUrlAdp::CUrlAdp(std::vector<FileData>& fileArray, std::shared_ptr<UploadConfig>& config) : fileArray_(fileArray)
+CUrlAdp::CUrlAdp(std::vector<FileData>& fileDatas, std::shared_ptr<UploadConfig>& config) : fileDatas_(fileDatas)
 {
     config_ = config;
     isCurlGlobalInit_ = false;
@@ -49,7 +49,7 @@ uint32_t CUrlAdp::DoUpload(IUploadTask *task)
 
     InitTimerInfo();
     uint32_t allFileUploadResult = UPLOAD_OK;
-    for (auto &vmem : fileArray_) {
+    for (auto &vmem : fileDatas_) {
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "read abort stat: %{public}d file index: %{public}u",
                       IsReadAbort(), vmem.fileIndex);
         if (IsReadAbort()) {
@@ -324,7 +324,7 @@ int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlno
 
     if (url && url->uploadTask_) {
         int64_t totalulnow = 0;
-        for (auto &vmem : url->fileArray_) {
+        for (auto &vmem : url->fileDatas_) {
             if (fData->filename == vmem.filename) {
                 vmem.upsize = fData->upsize;
             }
@@ -367,7 +367,7 @@ size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *u
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "report head len: %{public}zu, content: %{public}s",
                       stoatalHead.length(), stoatalHead.c_str());
         if (codeOk == fData->httpCode) {
-            if (url->fileArray_.size() == fData->fileIndex) {
+            if (url->fileDatas_.size() == fData->fileIndex) {
                 url->uploadTask_->OnHeaderReceive(stoatalHead);
             }
         } else {
@@ -406,7 +406,7 @@ size_t CUrlAdp::HeaderCallbackL5(char *buffer, size_t size, size_t nitems, void 
             stoatalHead += smem;
         }
         if (codeOk == fData->httpCode) {
-            if (url->fileArray_.size() == fData->fileIndex && url->config_->fsuccess != nullptr) {
+            if (url->fileDatas_.size() == fData->fileIndex && url->config_->fsuccess != nullptr) {
                 resData.headers = stoatalHead;
                 resData.code = fData->httpCode;
                 UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallbackL5 success response head is %{public}s",

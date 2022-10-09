@@ -18,6 +18,8 @@
 #include <cstdint>
 #include <map>
 #include <vector>
+#include "context.h"
+#include "constant.h"
 #include "upload_common.h"
 #include "upload_config.h"
 #include "upload_hilog_wrapper.h"
@@ -61,8 +63,15 @@ public:
     static napi_value Convert2JSValue(napi_env env, const std::vector<int32_t> &cInts);
     static napi_value Convert2JSValue(napi_env env, const std::vector<Upload::TaskState> &taskStates);
     static bool Equals(napi_env env, napi_value value, napi_ref copy);
+    static void ThrowError(napi_env env, Download::ExceptionErrorCode code, const std::string &msg);
     static bool CheckConfig(const Upload::UploadConfig &config);
     static bool CheckMethod(const std::string &method);
+    static bool CheckParamType(napi_env env, napi_value jsType, napi_valuetype type);
+    static bool CheckParamNumber(size_t argc, bool IsRequiredParam);
+    static bool CheckUrl(const std::string &url);
+    static napi_value CreateBusinessError(napi_env env, const 
+        Download::ExceptionErrorCode &errorCode, const std::string &msg);
+    static void GetMessage(const std::vector<Upload::FileData> &fileDatas, std::string &msg);
 };
 }
 #endif // REQUEST_JS_UTIL_H

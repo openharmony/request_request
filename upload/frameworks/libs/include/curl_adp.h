@@ -69,7 +69,7 @@ private:
     uint64_t timerId_;
     std::shared_ptr<UploadTimerInfo> timerInfo_;
     IUploadTask *uploadTask_;
-    std::vector<FileData> &fileArray_;
+    std::vector<FileData> &fileDatas_;
     FileData  mfileData_;
     std::shared_ptr<UploadConfig> config_;
     static constexpr int32_t HTTP_SUCCESS = 200;

@@ -16,6 +16,7 @@
 #ifndef I_HEADER_RECEIVE_CALLBACK
 #define I_HEADER_RECEIVE_CALLBACK
 
+#include "napi/native_api.h"
 #include <string>
 
 namespace OHOS::Request::Upload {
@@ -24,6 +25,7 @@ public:
     IHeaderReceiveCallback() = default;
     virtual ~IHeaderReceiveCallback() {};
     virtual void HeaderReceive(const std::string &header) = 0;
+    virtual napi_ref GetCallback() = 0;
 };
 } // end of OHOS::Request::Upload
 #endif
