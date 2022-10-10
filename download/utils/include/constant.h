@@ -111,7 +111,6 @@ static constexpr const char *FUNCTION_GET_TASK_MIME_TYPE = "getTaskMimeType";
 static constexpr const char *FUNCTION_DELETE = "delete";
 static constexpr const char *FUNCTION_RESTORE = "restore";
 
-static const std::string TLS_HEADER = "X-TLS-Version";
 static const std::string tlsVersion = "X-TLS-Version";
 static const std::string cipherList = "X-Cipher-List";
 static const std::string TLS_VERSION = "CURL_SSLVERSION_TLSv1_2";

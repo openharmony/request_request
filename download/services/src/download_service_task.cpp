@@ -864,7 +864,7 @@ bool DownloadServiceTask::SetHttpsCertificationOption(CURL *curl)
     blob.len = certInfo.size();
     blob.flags = CURL_BLOB_COPY;
     std::string version = TLS_VERSION_DEFAULT;
-    std::map<std::string, std::string>::const_iterator iter = config_.GetHeader().find(TLS_HEADER);
+    std::map<std::string, std::string>::const_iterator iter = config_.GetHeader().find(tlsVersion);
     if (iter != config_.GetHeader().end()) {
         version = iter->second;
         DOWNLOAD_HILOGI("version changes: %{public}s", version.c_str());
