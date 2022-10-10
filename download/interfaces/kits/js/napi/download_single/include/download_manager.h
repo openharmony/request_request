@@ -44,7 +44,7 @@ public:
     DownloadManager();
     ~DownloadManager();
     static sptr<DownloadManager> GetInstance();
-    DownloadTask *EnqueueTask(const DownloadConfig &config);
+    DownloadTask *EnqueueTask(const DownloadConfig &config, ExceptionError &err);
     bool Pause(uint32_t taskId);
     bool Query(uint32_t taskId, DownloadInfo &info);
     bool QueryMimeType(uint32_t taskId, std::string &mimeType);

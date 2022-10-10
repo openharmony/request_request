@@ -31,7 +31,8 @@ public:
     DownloadQuery() = default;
     ~DownloadQuery() = default;
 
-    static napi_value Exec(napi_env env, napi_callback_info info);
+    static napi_value Query(napi_env env, napi_callback_info info);
+    static napi_value GetTaskInfo(napi_env env, napi_callback_info info);
 
 private:
     struct QueryContext : public AsyncCall::Context {
@@ -57,6 +58,7 @@ private:
             return Context::operator()(env, result);
         }
     };
+    static napi_value Exec(napi_env env, napi_callback_info info);
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_QUERY_H

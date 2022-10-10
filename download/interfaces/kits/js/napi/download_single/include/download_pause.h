@@ -29,7 +29,8 @@ public:
     DownloadPause() = default;
     ~DownloadPause() = default;
 
-    static napi_value Exec(napi_env env, napi_callback_info info);
+    static napi_value Pause(napi_env env, napi_callback_info info);
+    static napi_value Suspend(napi_env env, napi_callback_info info);
 
 private:
     struct PauseContext : public AsyncCall::Context {
@@ -55,6 +56,7 @@ private:
             return Context::operator()(env, result);
         }
     };
+    static napi_value Exec(napi_env env, napi_callback_info info);
 };
 } // namespace OHOS::Request::Download
 

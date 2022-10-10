@@ -66,7 +66,7 @@ bool DownloadServiceTask::Run()
 
     if (!NetworkAdapter::GetInstance().IsOnline()) {
         DOWNLOAD_HILOGI("network is offline");
-        SetStatus(SESSION_FAILED, ERROR_NETWORK_FAIL, PAUSED_UNKNOWN);
+        SetStatus(SESSION_FAILED, ERROR_OFFLINE, PAUSED_UNKNOWN);
         return false;
     }
 
@@ -79,7 +79,7 @@ bool DownloadServiceTask::Run()
         if (!IsSatisfiedConfiguration()) {
             DOWNLOAD_HILOGI("networktype not Satisfied Configuration");
             ForceStopRunning();
-            SetStatus(SESSION_FAILED, ERROR_UNKNOWN, PAUSED_WAITING_FOR_NETWORK);
+            SetStatus(SESSION_FAILED, ERROR_UNSUPPORTED_NETWORK_TYPE, PAUSED_UNKNOWN);
             break;
         }
         enableTimeout = false;
@@ -87,7 +87,7 @@ bool DownloadServiceTask::Run()
             break;
         }
         if (!GetFileSize(totalSize_)) {
-            SetStatus(SESSION_FAILED, ERROR_UNKNOWN, PAUSED_UNKNOWN);
+            SetStatus(SESSION_FAILED, static_cast<ErrorCode>(EXCEPTION_FILE_SIZE), PAUSED_UNKNOWN);
             break;
         }
 

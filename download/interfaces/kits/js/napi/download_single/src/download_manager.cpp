@@ -51,7 +51,7 @@ sptr<DownloadManager> DownloadManager::GetInstance()
     return instance_;
 }
 
-DownloadTask* DownloadManager::EnqueueTask(const DownloadConfig &config)
+DownloadTask* DownloadManager::EnqueueTask(const DownloadConfig &config, ExceptionError &err)
 {
     DOWNLOAD_HILOGD("DownloadManager EnqueueTask start.");
 
@@ -60,7 +60,7 @@ DownloadTask* DownloadManager::EnqueueTask(const DownloadConfig &config)
         return nullptr;
     }
     
-    int32_t taskId = proxy->Request(config);
+    int32_t taskId = proxy->Request(config, err);
     if (taskId < 0) {
         DOWNLOAD_HILOGE("taskId invalid");
         return nullptr;
