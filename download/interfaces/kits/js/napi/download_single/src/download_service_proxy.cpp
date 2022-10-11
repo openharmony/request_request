@@ -100,10 +100,18 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config, ExceptionErr
     config.Dump();
     bool ret = Remote()->SendRequest(CMD_REQUEST, data, reply, option);
     if (ret != ERR_NONE) {
-        DOWNLOAD_HILOGE("Request, ret = %{public}d", ret);
+        error.code = EXCEPTION_SERVICE_ERROR;
+        error.errInfo = "ipc request  ret = " + std::to_string(ret);
+        DOWNLOAD_HILOGE("%{public}s", error.errInfo.c_str());
         return -1;
     }
     int32_t taskId = reply.ReadInt32();
+    if (taskId < 0) {
+        error.code = EXCEPTION_SERVICE_ERROR;
+        error.errInfo = "taskId: " + std::to_string(taskId);
+        DOWNLOAD_HILOGE("%{public}s", error.errInfo.c_str());
+        return -1;
+    }
     return taskId;
 }
 
