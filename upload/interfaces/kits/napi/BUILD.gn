@@ -45,11 +45,9 @@ config("upload_native_public_config") {
 ohos_shared_library("request") {
   sources = [
     "src/async_call.cpp",
-    "src/file_adapterV9.cpp",
     "src/header_receive_callback.cpp",
     "src/js_util.cpp",
     "src/notify_callback.cpp",
-    "src/obtain_fileV9.cpp",
     "src/progress_callback.cpp",
     "src/request_module.cpp",
     "src/upload_task_napi.cpp",

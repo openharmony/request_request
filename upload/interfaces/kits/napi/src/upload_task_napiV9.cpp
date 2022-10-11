@@ -15,14 +15,13 @@
 
 #include "upload_task_napiV9.h"
 #include <uv.h>
+#include "uri.h"
 #include "async_call.h"
 #include "js_util.h"
 #include "constant.h"
 #include "upload_task.h"
 #include "upload_config.h"
 #include "napi_base_context.h"
-#include "file_adapterV9.h"
-#include "obtain_fileV9.h"
 #include "napi_data_ability_operation.h"
 
 using namespace OHOS::AppExecFwk;
@@ -50,7 +49,7 @@ napi_value UploadTaskNapiV9::JsUploadFile(napi_env env, napi_callback_info info)
     auto ctxInfo = std::make_shared<ContextInfo>();
     auto input = [ctxInfo](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Upload parser to native params %{public}d!", static_cast<int>(argc));
-        if (argc != 2) {
+        if (argc < 2) {
             JSUtil::ThrowError(env, Download::EXCEPTION_PARAMETER_CHECK, "need 2 parameters!");
             return napi_invalid_arg;
         }
@@ -114,8 +113,6 @@ napi_value UploadTaskNapiV9::Initialize(napi_env env, napi_callback_info info)
     }
 
     proxy->napiUploadTask_->SetContext(proxy->context_);
-    bool isStage = true;
-    proxy->napiUploadTask_->SetFileParam(proxy->fileDatas_, proxy->totalSize_, isStage);
     proxy->napiUploadTask_->ExecuteTask();
     
     auto finalize = [](napi_env env, void * data, void * hint) {
@@ -152,11 +149,11 @@ napi_status UploadTaskNapiV9::InitParam(napi_env env, napi_callback_info info, n
         JSUtil::ThrowError(env, Download::EXCEPTION_PARAMETER_CHECK, "config error!");
         return napi_invalid_arg;
     }
-
-    uint32_t ret = InitFileArray(proxy->napiUploadConfig_, proxy->context_, proxy->totalSize_, proxy->fileDatas_);
-    if (ret != UPLOAD_OK) {
+    std::vector<TaskState> taskStates;
+    uint32_t ret = CheckFilePath(proxy->napiUploadConfig_, proxy->context_, taskStates);
+    if (ret != Download::EXCEPTION_OK) {
         std::string msg;
-        JSUtil::GetMessage(proxy->fileDatas_, msg);
+        JSUtil::GetMessage(taskStates, msg);
         JSUtil::ThrowError(env, static_cast<Download::ExceptionErrorCode>(ret), msg);
         return napi_invalid_arg;
     }
@@ -182,47 +179,67 @@ napi_status UploadTaskNapiV9::GetContext(napi_env env, napi_value *argv,
     return napi_ok;
 }
 
-uint32_t UploadTaskNapiV9::InitFileArray(const std::shared_ptr<Upload::UploadConfig> &config,
-    std::shared_ptr<OHOS::AbilityRuntime::Context> &context, int64_t &totalSize, std::vector<FileData> &fileDatas)
+uint32_t UploadTaskNapiV9::CheckFilePath(const std::shared_ptr<Upload::UploadConfig> &config,
+    std::shared_ptr<OHOS::AbilityRuntime::Context> &context, std::vector<Upload::TaskState> &taskStates)
 {
-    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "InitFileArray. In.");
-    unsigned int fileSize = 0;
-    FileData data;
-    FILE *file;
-    totalSize = 0;
-    uint32_t initResult = UPLOAD_OK;
-    ObtainFileV9 obtainFile;
-    uint32_t index = 1;
+    uint32_t ret = Download::EXCEPTION_OK;
+    std::string dataAbilityHead("dataability");
+    std::string internalHead("internal");
+    TaskState taskState;
     for (auto f : config->files) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "filename is %{public}s", f.filename.c_str());
-        data.result = Download::EXCEPTION_OTHER;
-        uint32_t ret = obtainFile.GetFile(&file, f.uri, fileSize, context);
-        if (ret != UPLOAD_OK) {
-            initResult = data.result;
-            data.result = ret;
+        if (f.uri.compare(0, dataAbilityHead.size(), dataAbilityHead) == 0) {
+            ret = CheckAbilityPath(f.uri, context);
+        } else if (f.uri.compare(0, internalHead.size(), internalHead) == 0) {
+            ret = CheckInternalPath(f.uri, context);
+        } else {
+            UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "wrong path");
+            ret = Download::EXCEPTION_FILE_PATH;
         }
-
-        data.fp = file;
-        std::size_t position = f.uri.find_last_of("/");
-        if (position != std::string::npos) {
-            data.filename = std::string(f.uri, position + 1);
-            data.filename.erase(data.filename.find_last_not_of(" ") + 1);
-        }
-        data.name = f.name;
-        data.type = f.type;
-        data.fileIndex = index++;
-        data.adp = nullptr;
-        data.upsize = 0;
-        data.totalsize = fileSize;
-        data.list = nullptr;
-        data.headSendFlag = 0;
-        data.httpCode = 0;
-        
-        fileDatas.push_back(data);
-        totalSize += static_cast<int64_t>(fileSize);
+        taskState.path = f.filename;
+        taskState.responseCode = ret;
+        taskStates.push_back(taskState);
     }
+    return ret;
+}
 
-    return initResult;
+uint32_t UploadTaskNapiV9::CheckAbilityPath(const std::string &fileUri,
+    std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
+{
+    std::shared_ptr<Uri> uri = std::make_shared<Uri>(fileUri);
+    std::shared_ptr<DataAbilityHelper> dataAbilityHelper = DataAbilityHelper::Creator(context, uri);
+    int32_t fd = dataAbilityHelper->OpenFile(*uri, "r");
+    if (fd < 0) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "ObtainFileV9::GetDataAbilityFile, open file error.");
+        return Download::EXCEPTION_FILE_PATH;
+    }
+    return Download::EXCEPTION_OK;
+}
+
+uint32_t UploadTaskNapiV9::CheckInternalPath(const std::string &fileUri,
+    std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
+{
+    std::string filePath;
+    std::vector<std::string> uriSplit;
+    std::string pattern = "/";
+    std::string pathTmp = fileUri + pattern;
+    size_t pos = pathTmp.find(pattern);
+    while (pos != pathTmp.npos) {
+        std::string temp = pathTmp.substr(0, pos);
+        uriSplit.push_back(temp);
+        pathTmp = pathTmp.substr(pos + 1, pathTmp.size());
+        pos = pathTmp.find(pattern);
+    }
+    if (uriSplit[SPLIT_ZERO] != "internal:" || uriSplit[SPLIT_ONE] != "" ||
+        uriSplit[SPLIT_TWO] != "cache" || uriSplit.size() <= SPLIT_THREE) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "ObtainFileV9::GetInternalFile, internal path woring");
+        return Download::EXCEPTION_FILE_PATH;
+    }
+    filePath = context->GetCacheDir();
+    if (filePath.size() == 0) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "ObtainFileV9::GetInternalFile, internal to cache error");
+        return Download::EXCEPTION_FILE_PATH;
+    }
+    return Download::EXCEPTION_OK;
 }
 
 napi_status UploadTaskNapiV9::ParseParam(napi_env env, napi_callback_info info, bool IsRequiredParam,

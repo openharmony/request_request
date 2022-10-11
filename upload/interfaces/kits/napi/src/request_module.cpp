@@ -32,7 +32,6 @@ static napi_value exception_permission = nullptr;
 static napi_value exception_parameter_check = nullptr;
 static napi_value exception_unsupported = nullptr;
 static napi_value exception_file_IO = nullptr;
-static napi_value exception_file_size = nullptr;
 static napi_value exception_file_path = nullptr;
 static napi_value exception_service_error = nullptr;
 static napi_value exception_other = nullptr;
@@ -47,8 +46,6 @@ static napi_value err_no_space = nullptr;
 static napi_value err_many_redirect = nullptr;
 static napi_value err_http_code = nullptr;
 static napi_value err_unknown = nullptr;
-static napi_value err_off_line = nullptr;
-static napi_value err_unsupported_network_type = nullptr;
 static napi_value paused_queue_wifi = nullptr;
 static napi_value paused_for_network = nullptr;
 static napi_value paused_to_retry = nullptr;
@@ -67,7 +64,6 @@ static void NapiCreateInt32(napi_env env)
     napi_create_int32(env, static_cast<int32_t>(EXCEPTION_PARAMETER_CHECK), &exception_parameter_check);
     napi_create_int32(env, static_cast<int32_t>(EXCEPTION_UNSUPPORTED), &exception_unsupported);
     napi_create_int32(env, static_cast<int32_t>(EXCEPTION_FILE_IO), &exception_file_IO);
-    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_FILE_SIZE), &exception_file_size);
     napi_create_int32(env, static_cast<int32_t>(EXCEPTION_FILE_PATH), &exception_file_path);
     napi_create_int32(env, static_cast<int32_t>(EXCEPTION_SERVICE_ERROR), &exception_service_error);
     napi_create_int32(env, static_cast<int32_t>(EXCEPTION_OTHER), &exception_other);
@@ -86,8 +82,6 @@ static void NapiCreateInt32(napi_env env)
     napi_create_int32(env, static_cast<int32_t>(ERROR_TOO_MANY_REDIRECTS), &err_many_redirect);
     napi_create_int32(env, static_cast<int32_t>(ERROR_UNHANDLED_HTTP_CODE), &err_http_code);
     napi_create_int32(env, static_cast<int32_t>(ERROR_UNKNOWN), &err_unknown);
-    napi_create_int32(env, static_cast<int32_t>(ERROR_OFFLINE), &err_off_line);
-    napi_create_int32(env, static_cast<int32_t>(ERROR_UNSUPPORTED_NETWORK_TYPE), &err_unsupported_network_type);
 
     /* Create paused reason Const */
     napi_create_int32(env, static_cast<int32_t>(PAUSED_QUEUED_FOR_WIFI), &paused_queue_wifi);
@@ -113,7 +107,6 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_PARAMETER_CHECK", exception_parameter_check),
         DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_UNSUPPORTED", exception_unsupported),
         DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_FILE_IO", exception_file_IO),
-        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_FILE_SIZE", exception_file_size),
         DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_FILE_PATH", exception_file_path),
         DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_SERVICE_ERROR", exception_service_error),
         DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_OTHER", exception_other),
@@ -129,8 +122,6 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("ERROR_INSUFFICIENT_SPACE", err_no_space),
         DECLARE_NAPI_STATIC_PROPERTY("ERROR_TOO_MANY_REDIRECTS", err_many_redirect),
         DECLARE_NAPI_STATIC_PROPERTY("ERROR_UNHANDLED_HTTP_CODE", err_http_code),
-        DECLARE_NAPI_STATIC_PROPERTY("ERROR_OFFLINE", err_off_line),
-        DECLARE_NAPI_STATIC_PROPERTY("ERROR_UNSUPPORTED_NETWORK_TYPE", err_unsupported_network_type),
         DECLARE_NAPI_STATIC_PROPERTY("ERROR_UNKNOWN", err_unknown),
 
         DECLARE_NAPI_STATIC_PROPERTY("PAUSED_QUEUED_FOR_WIFI", paused_queue_wifi),

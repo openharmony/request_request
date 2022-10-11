@@ -71,7 +71,7 @@ public:
     static bool CheckUrl(const std::string &url);
     static napi_value CreateBusinessError(napi_env env, const 
         Download::ExceptionErrorCode &errorCode, const std::string &msg);
-    static void GetMessage(const std::vector<Upload::FileData> &fileDatas, std::string &msg);
+    static void GetMessage(const std::vector<Upload::TaskState> &taskStates, std::string &msg);
 };
 }
 #endif // REQUEST_JS_UTIL_H

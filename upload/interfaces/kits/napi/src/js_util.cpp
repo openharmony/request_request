@@ -22,11 +22,11 @@ using namespace OHOS::Request::Upload;
 namespace OHOS::Request::UploadNapi {
 
 static const std::map<Download::ExceptionErrorCode, std::string> ErrorCodeToMsg {
+    {Download::EXCEPTION_OK, Download::EXCEPTION_OK_INFO },
     {Download::EXCEPTION_PERMISSION, Download::EXCEPTION_PERMISSION_INFO },
     {Download::EXCEPTION_PARAMETER_CHECK, Download::EXCEPTION_PARAMETER_CHECK_INFO },
     {Download::EXCEPTION_UNSUPPORTED, Download::EXCEPTION_UNSUPPORTED_INFO },
     {Download::EXCEPTION_FILE_IO, Download::EXCEPTION_FILE_IO_INFO },
-    {Download::EXCEPTION_FILE_SIZE, Download::EXCEPTION_FILE_SIZE_INFO },
     {Download::EXCEPTION_FILE_PATH, Download::EXCEPTION_FILE_PATH_INFO },
     {Download::EXCEPTION_SERVICE_ERROR, Download::EXCEPTION_SERVICE_ERROR_INFO },
     {Download::EXCEPTION_OTHER, Download::EXCEPTION_OTHER_INFO },
@@ -453,13 +453,13 @@ napi_value JSUtil::CreateBusinessError(napi_env env, const
     return result;
 }
 
-void JSUtil::GetMessage(const std::vector<Upload::FileData> &fileDatas, std::string &msg)
+void JSUtil::GetMessage(const std::vector<Upload::TaskState> &taskStates, std::string &msg)
 {
-    for (auto &vmem : fileDatas) {
+    for (auto &vmem : taskStates) {
         std::string strMsg;
-        auto iter = ErrorCodeToMsg.find(static_cast<Download::ExceptionErrorCode>(vmem.result));
+        auto iter = ErrorCodeToMsg.find(static_cast<Download::ExceptionErrorCode>(vmem.responseCode));
         if (iter != ErrorCodeToMsg.end()) {
-            strMsg = vmem.filename + " " + std::to_string(vmem.result) + " " + iter->second + "\n";
+            strMsg = " --{" + vmem.path + " " + std::to_string(vmem.responseCode) + " " + iter->second + "}-- ";
         }
         msg += strMsg;
     }
