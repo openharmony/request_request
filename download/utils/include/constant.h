@@ -111,6 +111,29 @@ static constexpr const char *FUNCTION_GET_TASK_MIME_TYPE = "getTaskMimeType";
 static constexpr const char *FUNCTION_DELETE = "delete";
 static constexpr const char *FUNCTION_RESTORE = "restore";
 
+static const std::string tlsVersion = "X-TLS-Version";
+static const std::string cipherList = "X-Cipher-List";
+static const std::string TLS_VERSION = "CURL_SSLVERSION_TLSv1_2";
+static const std::string TLS_CIPHER = "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,"
+                                      "TLS_DHE_DSS_WITH_AES_128_GCM_SHA256,TLS_DSS_RSA_WITH_AES_256_GCM_SHA384,"
+                                      "TLS_PSK_WITH_AES_256_GCM_SHA384,TLS_DHE_PSK_WITH_AES_128_GCM_SHA256,"
+                                      "TLS_DHE_PSK_WITH_AES_256_GCM_SHA384,"
+                                      "TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256,"
+                                      "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,"
+                                      "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,"
+                                      "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,"
+                                      "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,"
+                                      "TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256,"
+                                      "TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256,TLS_ECDHE_PSK_WITH_AES_256_GCM_SHA384,"
+                                      "TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256,"
+                                      "TLS_DHE_RSA_WITH_AES_128_CCM,TLS_DHE_RSA_WITH_AES_256_CCM,"
+                                      "TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256,TLS_PSK_WITH_AES_256_CCM,"
+                                      "TLS_DHE_PSK_WITH_AES_128_CCM,TLS_DHE_PSK_WITH_AES_256_CCM,"
+                                      "TLS_ECDHE_ECDSA_WITH_AES_128_CCM,TLS_ECDHE_ECDSA_WITH_AES_256_CCM,"
+                                      "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_AES_128_GCM_SHA256,"
+                                      "TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256,TLS_AES_128_CCM_SHA256,"
+                                      "TLS_SM4_GCM_SM3,TLS_SM4_CCM_SM3";
+
 static constexpr int RDB_EXECUTE_OK = 0;
 static constexpr int RDB_EXECUTE_FAIL = -1;
 static constexpr int OPERATION_OK = 0;

@@ -37,6 +37,7 @@
 
 namespace OHOS::Request::Download {
 static const std::string URL_HTTPS = "https";
+static std::string TLS_VERSION_DEFAULT = "CURL_SSLVERSION_TLSv1_2";
 DownloadServiceTask::DownloadServiceTask(uint32_t taskId, const DownloadConfig &config)
     : taskId_(taskId), config_(config), status_(SESSION_UNKNOWN), code_(ERROR_UNKNOWN), reason_(PAUSED_UNKNOWN),
       mimeType_(""), totalSize_(0), downloadSize_(0), isPartialMode_(false), forceStop_(false), isRemoved_(false),
@@ -862,8 +863,14 @@ bool DownloadServiceTask::SetHttpsCertificationOption(CURL *curl)
     blob.data = const_cast<char*>(certInfo.c_str());
     blob.len = certInfo.size();
     blob.flags = CURL_BLOB_COPY;
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
+    std::string version = TLS_VERSION_DEFAULT;
+    std::map<std::string, std::string>::const_iterator iter = config_.GetHeader().find(tlsVersion);
+    if (iter != config_.GetHeader().end()) {
+        version = iter->second;
+        DOWNLOAD_HILOGI("version changes: %{public}s", version.c_str());
+    }
+    curl_easy_setopt(curl, CURLOPT_SSLVERSION, version.c_str());
+    DOWNLOAD_HILOGI("security version is: %{public}s", version.c_str());
     CURLcode code = curl_easy_setopt(curl, CURLOPT_CAINFO_BLOB, &blob);
     if (code != CURLE_OK) {
         return false;
