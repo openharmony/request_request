@@ -118,14 +118,6 @@ void UploadTask::SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> conte
     context_ = context;
 }
 
-void UploadTask::SetFileParam(std::vector<FileData> fileDatas, int64_t totalSize, bool isStage)
-{
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "SetFileData. In.");
-    fileDatas_ = fileDatas;
-    totalSize_ = totalSize;
-    isStage_ = isStage;
-}
-
 void UploadTask::Run(void *arg)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Run. In.");
@@ -183,11 +175,9 @@ uint32_t UploadTask::InitFileArray()
 
 uint32_t UploadTask::StartUploadFile()
 {
-    if(!isStage_) {
-        uint32_t ret = InitFileArray();
-        if (InitFileArray() != UPLOAD_OK) {
-            return ret;
-        }
+    uint32_t ret = InitFileArray();
+    if (ret != UPLOAD_OK) {
+        return ret;
     }
 
     curlAdp_ = std::make_shared<CUrlAdp>(fileDatas_, uploadConfig_);

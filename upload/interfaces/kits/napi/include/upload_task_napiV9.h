@@ -29,6 +29,8 @@
 #include "i_header_receive_callback.h"
 #include "i_notify_callback.h"
 #include "context.h"
+#include "ability_context.h"
+#include "data_ability_helper.h"
 
 namespace OHOS::Request::UploadNapi {
 using namespace OHOS::Request::Upload;
@@ -96,14 +98,18 @@ private:
     static napi_status OffFail(napi_env env, napi_value callback, napi_value self);
     static napi_status OffComplete(napi_env env, napi_value callback, napi_value self);
     static napi_status ParseParam(napi_env env, napi_callback_info info, bool IsRequiredParam, JsParam &jsParam);
+    static uint32_t CheckFilePath(const std::shared_ptr<Upload::UploadConfig> &config,
+    std::shared_ptr<OHOS::AbilityRuntime::Context> &context, std::vector<Upload::TaskState> &taskStates);
+    static uint32_t CheckAbilityPath(const std::string &fileUri,
+       std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
+    static uint32_t CheckInternalPath(const std::string &fileUri,
+        std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
 
     std::shared_ptr<Upload::IProgressCallback> onProgress_ = nullptr;
     std::shared_ptr<Upload::IHeaderReceiveCallback> onHeaderReceive_ = nullptr;
     std::shared_ptr<Upload::INotifyCallback> onFail_ = nullptr;
     std::shared_ptr<Upload::INotifyCallback> onComplete_ = nullptr;
     std::shared_ptr<OHOS::AbilityRuntime::Context> context_ = nullptr;
-    std::vector<FileData> fileDatas_;
-    int64_t totalSize_ = 0;
 };
 } // namespace OHOS::Request::UploadNapi
 #endif // UPLOAD_TASK_NAPIV9_H

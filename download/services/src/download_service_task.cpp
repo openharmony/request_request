@@ -88,7 +88,7 @@ bool DownloadServiceTask::Run()
             break;
         }
         if (!GetFileSize(totalSize_)) {
-            SetStatus(SESSION_FAILED, static_cast<ErrorCode>(EXCEPTION_FILE_SIZE), PAUSED_UNKNOWN);
+            SetStatus(SESSION_FAILED, ERROR_UNKNOWN, PAUSED_UNKNOWN);
             break;
         }
 
