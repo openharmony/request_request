@@ -69,6 +69,7 @@ ohos_shared_library("request") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:napi_base_context",
+    "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
   ]
 

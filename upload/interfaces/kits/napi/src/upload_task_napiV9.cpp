@@ -205,7 +205,7 @@ uint32_t UploadTaskNapiV9::CheckFilePath(const std::shared_ptr<Upload::UploadCon
 uint32_t UploadTaskNapiV9::CheckAbilityPath(const std::string &fileUri,
     std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(fileUri);
+    std::shared_ptr<OHOS::Uri> uri = std::make_shared<OHOS::Uri>(fileUri);
     std::shared_ptr<DataAbilityHelper> dataAbilityHelper = DataAbilityHelper::Creator(context, uri);
     int32_t fd = dataAbilityHelper->OpenFile(*uri, "r");
     if (fd < 0) {
