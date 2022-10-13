@@ -55,9 +55,8 @@ void HeaderReceiveCallback::HeaderReceive(const std::string &header)
         [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
             UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "HeaderReceive. uv_queue_work start");
-            std::shared_ptr<HeaderReceiveWorker> headerReceiveWorker
-                (reinterpret_cast<HeaderReceiveWorker *>(work->data),
-                [work](HeaderReceiveWorker *data) {
+            std::shared_ptr<HeaderReceiveWorker> headerReceiveWorker (reinterpret_cast<HeaderReceiveWorker *>
+                (work->data), [work](HeaderReceiveWorker *data) {
                     delete data;
                     delete work;
             });

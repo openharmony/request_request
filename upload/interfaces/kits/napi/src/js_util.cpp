@@ -39,7 +39,7 @@ void JSUtil::ThrowError(napi_env env, Download::ExceptionErrorCode code, const s
     std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + "  " + msg;
     napi_status status = napi_throw_error(env, errorCode.c_str(), strMsg.c_str());
     if (status != napi_ok) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI,"Failed to napi_throw_error");
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to napi_throw_error");
     }
 }
 
@@ -439,7 +439,7 @@ bool JSUtil::CheckParamType(napi_env env, napi_value jsType, napi_valuetype type
     return true;
 }
 
-napi_value JSUtil::CreateBusinessError(napi_env env, const 
+napi_value JSUtil::CreateBusinessError(napi_env env, const
     Download::ExceptionErrorCode &errorCode, const std::string &msg)
 {
     napi_value result = nullptr;
