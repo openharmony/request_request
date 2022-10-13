@@ -251,6 +251,7 @@ bool DownloadTaskNapiV9::ParseHeader(napi_env env, napi_value configValue, Downl
         DOWNLOAD_HILOGD("No header present, Reassign value");
         config.SetHeader(tlsVersion, TLS_VERSION);
         config.SetHeader(cipherList, TLS_CIPHER);
+        return true;
     }
     napi_value header = NapiUtils::GetNamedProperty(env, configValue, PARAM_KEY_HEADER);
     if (NapiUtils::GetValueType(env, header) != napi_object) {
