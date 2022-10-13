@@ -23,6 +23,10 @@ int32_t FileAdapter::DataAbilityOpenFile(std::string &fileUri,
 {
     std::shared_ptr<Uri> uri = std::make_shared<Uri>(fileUri);
     std::shared_ptr<DataAbilityHelper> dataAbilityHelper = DataAbilityHelper::Creator(context, uri);
+    if (dataAbilityHelper == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "dataAbilityHelper is nullptr!");
+        return -1;
+    }
     return dataAbilityHelper->OpenFile(*uri, "r");
 }
 
