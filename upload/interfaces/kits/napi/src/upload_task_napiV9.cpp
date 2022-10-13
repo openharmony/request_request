@@ -207,6 +207,10 @@ uint32_t UploadTaskNapiV9::CheckAbilityPath(const std::string &fileUri,
 {
     std::shared_ptr<OHOS::Uri> uri = std::make_shared<OHOS::Uri>(fileUri);
     std::shared_ptr<DataAbilityHelper> dataAbilityHelper = DataAbilityHelper::Creator(context, uri);
+    if (dataAbilityHelper == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "dataAbilityHelper is nullptr!");
+        return Download::EXCEPTION_FILE_PATH;
+    }
     int32_t fd = dataAbilityHelper->OpenFile(*uri, "r");
     if (fd < 0) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "ObtainFileV9::GetDataAbilityFile, open file error.");
