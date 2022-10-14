@@ -43,7 +43,7 @@ bool FuzzDownloadBaseNotify(const uint8_t* rawData, size_t size)
     rawData = rawData + OFFSET;
     size = size - OFFSET;
 
-    struct NotifyDataPtr mNotifyDataPtr;
+    struct NotifyData mNotifyData;
 
     MessageParcel data;
     data.WriteInterfaceToken(DOWNLDBN_INTERFACE_TOKEN);
@@ -52,8 +52,8 @@ bool FuzzDownloadBaseNotify(const uint8_t* rawData, size_t size)
     MessageParcel reply;
     MessageOption option;
     
-    sptr<DownloadBaseNotify> mDownld = new DownloadBaseNotify(mNotifyDataPtr.notifyData->env, \
-    mNotifyDataPtr.notifyData->paramNumber, mNotifyDataPtr.notifyData->ref);
+    sptr<DownloadBaseNotify> mDownld = new DownloadBaseNotify(mNotifyData.env, \
+    mNotifyData.paramNumber, mNotifyData.ref);
     mDownld->OnRemoteRequest(code, data, reply, option);
 
     return true;
