@@ -80,8 +80,8 @@ napi_value UploadTaskNapiV9::GetCtor(napi_env env)
         DECLARE_NAPI_METHOD("off", JsOff),
         DECLARE_NAPI_METHOD("delete", JsDelete),
     };
-    napi_status status =  napi_define_class(env, "UploadTaskNapiV9", NAPI_AUTO_LENGTH, Initialize, nullptr,
-                                     sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons);
+    napi_status status = napi_define_class(env, "UploadTaskNapiV9", NAPI_AUTO_LENGTH, Initialize, nullptr,
+        sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons);
     if (status != napi_ok || cons == nullptr) {
         return nullptr;
     }
@@ -120,7 +120,6 @@ napi_value UploadTaskNapiV9::Initialize(napi_env env, napi_callback_info info)
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "UploadTaskNapiV9. delete.");
         delete proxy;
     };
-
     if (napi_wrap(env, self, proxy, finalize, nullptr, nullptr) != napi_ok) {
         finalize(env, proxy, nullptr);
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "UploadTaskNapiV9. napi_wrap fail.");
@@ -268,7 +267,7 @@ napi_status UploadTaskNapiV9::ParseParam(napi_env env, napi_callback_info info, 
     if (!JSUtil::CheckParamType(env, argv[0], napi_string)) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "argv[0] CheckParamType is fail");
         return napi_invalid_arg;
-    }     
+    } 
     jsParam.type = JSUtil::Convert2String(env, argv[0]);
     if (onTypeHandlers_.find(jsParam.type) == onTypeHandlers_.end()) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "type find fail");

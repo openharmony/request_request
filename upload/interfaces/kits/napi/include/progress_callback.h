@@ -37,7 +37,7 @@ private:
         napi_env env_;
         const int64_t uploadedSize;
         const int64_t totalSize;
-        ProgressWorker( const ProgressCallback *callbackIn, int64_t uploadedSizeIn, int64_t totalSizeIn)
+        ProgressWorker(const ProgressCallback *callbackIn, int64_t uploadedSizeIn, int64_t totalSizeIn)
             : callback(callbackIn), uploadedSize(uploadedSizeIn), totalSize(totalSizeIn) {}
     };
 

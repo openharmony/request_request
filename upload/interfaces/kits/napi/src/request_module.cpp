@@ -59,7 +59,7 @@ static napi_value session_failed = nullptr;
 
 static void NapiCreateInt32(napi_env env)
 {
-    /*create exception type const*/
+    /* create exception type const */
     napi_create_int32(env, static_cast<int32_t>(EXCEPTION_PERMISSION), &exception_permission);
     napi_create_int32(env, static_cast<int32_t>(EXCEPTION_PARAMETER_CHECK), &exception_parameter_check);
     napi_create_int32(env, static_cast<int32_t>(EXCEPTION_UNSUPPORTED), &exception_unsupported);
