@@ -15,12 +15,11 @@
 
 #include "header_receive_callback.h"
 #include "upload_task.h"
-#include "upload_task_napi.h"
 using namespace OHOS::Request::UploadNapi;
 
 namespace OHOS::Request::Upload {
-HeaderReceiveCallback::HeaderReceiveCallback(napi_env env, napi_value callback)
-    : env_(env)
+HeaderReceiveCallback::HeaderReceiveCallback(ICallbackAbleJudger *judger, napi_env env, napi_value callback)
+    :judger_(judger), env_(env)
 {
     napi_create_reference(env, callback, 1, &callback_);
     napi_get_uv_event_loop(env, &loop_);
@@ -39,7 +38,7 @@ napi_ref HeaderReceiveCallback::GetCallback()
 void HeaderReceiveCallback::HeaderReceive(const std::string &header)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "HeaderReceive. header : %{public}s", header.c_str());
-    HeaderReceiveWorker *headerReceiveWorker = new (std::nothrow)HeaderReceiveWorker(this, header);
+    HeaderReceiveWorker *headerReceiveWorker = new (std::nothrow)HeaderReceiveWorker(judger_, this, header);
     if (headerReceiveWorker == nullptr) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create headerReceiveWorker");
         return;
@@ -60,11 +59,10 @@ void HeaderReceiveCallback::HeaderReceive(const std::string &header)
                     delete data;
                     delete work;
             });
-            if (headerReceiveWorker == nullptr) {
+            if (!headerReceiveWorker->judger->JudgeHeaderReceive(headerReceiveWorker->callback)) {
                 UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "HeaderReceive. uv_queue_work callback removed!!");
                 return;
             }
-
             napi_value jsHeader = nullptr;
             napi_value callback = nullptr;
             napi_value args[1];

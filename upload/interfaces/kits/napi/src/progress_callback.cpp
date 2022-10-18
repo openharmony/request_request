@@ -15,12 +15,11 @@
 
 #include "progress_callback.h"
 #include "upload_task.h"
-#include "upload_task_napi.h"
 using namespace OHOS::Request::UploadNapi;
 
 namespace OHOS::Request::Upload {
-ProgressCallback::ProgressCallback(napi_env env, napi_value callback)
-    : env_(env)
+ProgressCallback::ProgressCallback(ICallbackAbleJudger *judger, napi_env env, napi_value callback)
+    :judger_(judger), env_(env)
 {
     napi_create_reference(env, callback, 1, &callback_);
     napi_get_uv_event_loop(env, &loop_);
@@ -42,7 +41,7 @@ void ProgressCallback::Progress(const int64_t uploadedSize, const int64_t totalS
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
         "Progress. uploadedSize : %lld, totalSize : %lld", (long long)uploadedSize, (long long)totalSize);
-    ProgressWorker *progressWorker = new (std::nothrow)ProgressWorker(this, uploadedSize, totalSize);
+    ProgressWorker *progressWorker = new (std::nothrow)ProgressWorker(judger_, this, uploadedSize, totalSize);
     if (progressWorker == nullptr) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create progressWorker");
         return;
@@ -63,7 +62,7 @@ void ProgressCallback::Progress(const int64_t uploadedSize, const int64_t totalS
                     delete data;
                     delete work;
             });
-            if (progressWorker == nullptr) {
+            if (!progressWorker->judger->JudgeProgress(progressWorker->callback)) {
                 UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Progress. uv_queue_work callback removed!!");
                 return;
             }
