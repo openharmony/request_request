@@ -28,7 +28,7 @@ constexpr size_t THRESHOLD = 10;
 constexpr int32_t OFFSET = 4;
 const std::u16string DOWNLDBN_INTERFACE_TOKEN = u"ohos.miscseervice.request";
 
-uint32_t ConvertToUint32(const uint8_t* ptr)
+uint32_t ConvertToUint32(const uint8_t *ptr)
 {
     if (ptr == nullptr) {
         return 0;
@@ -37,13 +37,13 @@ uint32_t ConvertToUint32(const uint8_t* ptr)
     return bigvar;
 }
 
-bool FuzzDownloadBaseNotify(const uint8_t* rawData, size_t size)
+bool FuzzDownloadBaseNotify(const uint8_t *rawData, size_t size)
 {
     uint32_t code = ConvertToUint32(rawData);
     rawData = rawData + OFFSET;
     size = size - OFFSET;
 
-    struct NotifyDataPtr mNotifyDataPtr;
+    struct NotifyData notifyData;
 
     MessageParcel data;
     data.WriteInterfaceToken(DOWNLDBN_INTERFACE_TOKEN);
@@ -51,17 +51,16 @@ bool FuzzDownloadBaseNotify(const uint8_t* rawData, size_t size)
     data.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
-    
-    sptr<DownloadBaseNotify> mDownld = new DownloadBaseNotify(mNotifyDataPtr.notifyData->env, \
-    mNotifyDataPtr.notifyData->paramNumber, mNotifyDataPtr.notifyData->ref);
-    mDownld->OnRemoteRequest(code, data, reply, option);
+
+    sptr<DownloadBaseNotify> download = new DownloadBaseNotify(notifyData.env, notifyData.paramNumber, notifyData.ref);
+    download->OnRemoteRequest(code, data, reply, option);
 
     return true;
 }
-}
+} // namespace OHOS
 
 /* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     if (size < OHOS::THRESHOLD) {
         return 0;
