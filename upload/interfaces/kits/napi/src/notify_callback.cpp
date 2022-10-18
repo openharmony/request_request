@@ -15,14 +15,12 @@
  
 #include "notify_callback.h"
 #include "upload_task.h"
-#include "upload_task_napi.h"
-#include "async_call.h"
 
 using namespace OHOS::Request::UploadNapi;
 
 namespace OHOS::Request::Upload {
-NotifyCallback::NotifyCallback(napi_env env, napi_value callback)
-    : env_(env)
+NotifyCallback::NotifyCallback(ICallbackAbleJudger *judger, napi_env env, napi_value callback)
+    : judger_(judger), env_(env)
 {
     napi_create_reference(env, callback, 1, &callback_);
     napi_get_uv_event_loop(env, &loop_);
@@ -41,7 +39,7 @@ napi_ref NotifyCallback::GetCallback()
 void NotifyCallback::Notify(const std::vector<TaskState> &taskStates)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "NotifyCallback::Notify in");
-    NotifyWorker *notifyWorker = new (std::nothrow)NotifyWorker(this, taskStates);
+    NotifyWorker *notifyWorker = new (std::nothrow)NotifyWorker(judger_, this, taskStates);
     if (notifyWorker == nullptr) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create NotifyWorker");
         return;
@@ -62,7 +60,7 @@ void NotifyCallback::Notify(const std::vector<TaskState> &taskStates)
                     delete data;
                     delete work;
             });
-            if (notifyWorker == nullptr) {
+            if (!notifyWorker->judger->JudgeNotify(notifyWorker->callback)) {
                 UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Notify. uv_queue_work callback removed!!");
                 return;
             }

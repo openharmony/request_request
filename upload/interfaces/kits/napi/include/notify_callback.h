@@ -25,22 +25,27 @@
 #include "napi/native_common.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "i_callbackable_judger.h"
 
 namespace OHOS::Request::Upload {
+using namespace OHOS::Request::UploadNapi;
 class NotifyCallback : public INotifyCallback {
 public:
-    NotifyCallback(napi_env env, napi_value callback);
+    NotifyCallback(ICallbackAbleJudger *judger, napi_env env, napi_value callback);
     virtual ~NotifyCallback();
     void Notify(const std::vector<TaskState> &taskStates) override;
     napi_ref GetCallback() override;
 private:
     struct NotifyWorker {
+        ICallbackAbleJudger *judger;
         const NotifyCallback *callback = nullptr;
         const std::vector<TaskState> taskStates;
-        NotifyWorker(const NotifyCallback *callbackIn, const std::vector<TaskState> &taskStatesIn)
-            : callback(callbackIn), taskStates(taskStatesIn) {}
+        NotifyWorker(ICallbackAbleJudger *judgerIn, const NotifyCallback *callbackIn,
+			const std::vector<TaskState> &taskStatesIn)
+            : judger(judgerIn), callback(callbackIn), taskStates(taskStatesIn) {}
     };
 
+    ICallbackAbleJudger *judger_;
     napi_ref callback_ = nullptr;
     napi_env env_;
     uv_loop_s *loop_ = nullptr;
