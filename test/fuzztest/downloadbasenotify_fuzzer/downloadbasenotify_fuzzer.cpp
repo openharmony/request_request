@@ -52,8 +52,8 @@ bool FuzzDownloadBaseNotify(const uint8_t *rawData, size_t size)
     MessageParcel reply;
     MessageOption option;
 
-    sptr<DownloadBaseNotify> mDownld = new DownloadBaseNotify(notifyData.env, notifyData.paramNumber, notifyData.ref);
-    mDownld->OnRemoteRequest(code, data, reply, option);
+    sptr<DownloadBaseNotify> download = new DownloadBaseNotify(notifyData.env, notifyData.paramNumber, notifyData.ref);
+    download->OnRemoteRequest(code, data, reply, option);
 
     return true;
 }
