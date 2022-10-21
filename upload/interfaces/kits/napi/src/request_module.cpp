@@ -104,12 +104,12 @@ static napi_value Init(napi_env env, napi_value exports)
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_PERMISSION", exception_permission),
-        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_PARAMETER_CHECK", exception_parameter_check),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_PARAMCHECK", exception_parameter_check),
         DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_UNSUPPORTED", exception_unsupported),
-        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_FILE_IO", exception_file_IO),
-        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_FILE_PATH", exception_file_path),
-        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_SERVICE_ERROR", exception_service_error),
-        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_OTHER", exception_other),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_FILEIO", exception_file_IO),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_FILEPATH", exception_file_path),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_SERVICE", exception_service_error),
+        DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_OTHERS", exception_other),
 
         DECLARE_NAPI_STATIC_PROPERTY("NETWORK_MOBILE", network_mobile),
         DECLARE_NAPI_STATIC_PROPERTY("NETWORK_WIFI", network_wifi),
