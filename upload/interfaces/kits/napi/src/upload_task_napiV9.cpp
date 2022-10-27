@@ -125,6 +125,7 @@ napi_value UploadTaskNapiV9::Initialize(napi_env env, napi_callback_info info)
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "UploadTaskNapiV9. napi_wrap fail.");
         return nullptr;
     }
+
     return self;
 }
 
