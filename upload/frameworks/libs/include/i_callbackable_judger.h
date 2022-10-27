@@ -15,6 +15,7 @@
 
 #ifndef OHOS_REQUEST_UPLOAD_I_CALLBACKABLE_JUDGER
 #define OHOS_REQUEST_UPLOAD_I_CALLBACKABLE_JUDGER
+
 #include "i_notify_callback.h"
 #include "i_progress_callback.h"
 #include "i_header_receive_callback.h"
