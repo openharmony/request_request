@@ -195,7 +195,7 @@ uint32_t UploadTaskNapiV9::CheckFilePath(const std::shared_ptr<Upload::UploadCon
             ret = Download::EXCEPTION_FILE_PATH;
         }
         taskState.path = f.filename;
-        taskState.responseCode = ret;
+        taskState.responseCode = static_cast<int32_t>(ret);
         taskStates.push_back(taskState);
     }
     return ret;
