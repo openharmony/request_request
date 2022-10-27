@@ -19,6 +19,7 @@
 #include "ability.h"
 #include "mock_file_adapter.h"
 #include "obtain_file.h"
+#include "file_adapter.h"
 #include "obtain_file_test.h"
 
 
@@ -300,5 +301,23 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest009, TestSize.Level0)
     EXPECT_EQ(file, nullptr);
     EXPECT_EQ(fileSize, 0);
     GTEST_LOG_(INFO) << "ObtainFileUtTest009 end";
+}
+
+/**
+ * @tc.name: ObtainFileUtTest010
+ * @tc.desc: GetFile with DataAbilityUri succsee
+ * @tc.type: FUNC
+ */
+HWTEST_F(ObtainFileTest, ObtainFileUtTest010, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "ObtainFileUtTest010 start";
+
+    std::shared_ptr<IFileAdapter> fileAdapter = std::make_shared<FileAdapter>();
+    std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
+    std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
+    int32_t fd = fileAdapter->DataAbilityOpenFile(uri, context);
+    EXPECT_EQ(fd, -1);
+
+    GTEST_LOG_(INFO) << "ObtainFileUtTest010 end";
 }
 }  // namespace OHOS::Request::Upload

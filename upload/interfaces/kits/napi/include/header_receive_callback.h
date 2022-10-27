@@ -37,7 +37,7 @@ private:
         const HeaderReceiveCallback *callback = nullptr;
         const std::string header;
         HeaderReceiveWorker(ICallbackAbleJudger *judgerIn, const HeaderReceiveCallback *callbackIn,
-                            const std::string &headerIn)
+            const std::string &headerIn)
             : judger(judgerIn), callback(callbackIn), header(headerIn) {}
     };
 
