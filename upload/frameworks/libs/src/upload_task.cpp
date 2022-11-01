@@ -13,15 +13,17 @@
  * limitations under the License.
  */
 
-#include <thread>
-#include "curl/curl.h"
-#include "curl/easy.h"
-#include "hitrace_meter.h"
-#include "hisysevent.h"
 #include "upload_task.h"
 
+#include <thread>
+
+#include "curl/curl.h"
+#include "curl/easy.h"
+#include "hisysevent.h"
+#include "hitrace_meter.h"
+
 namespace OHOS::Request::Upload {
-UploadTask::UploadTask(std::shared_ptr<UploadConfig>& uploadConfig)
+UploadTask::UploadTask(std::shared_ptr<UploadConfig> &uploadConfig)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "UploadTask. In.");
     uploadConfig_ = uploadConfig;
@@ -74,7 +76,7 @@ void UploadTask::Off(Type type, void *callback)
     }
 
     if (type == TYPE_PROGRESS_CALLBACK && progressCallback_ != nullptr) {
-        ((IProgressCallback*)callback)->Progress(uploadedSize_, totalSize_);
+        ((IProgressCallback *)callback)->Progress(uploadedSize_, totalSize_);
     }
     SetCallback(type, nullptr);
 }
@@ -83,12 +85,12 @@ void UploadTask::SetCallback(Type type, void *callback)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "SetCallback. In.");
     if (type == TYPE_PROGRESS_CALLBACK) {
-        progressCallback_ = (IProgressCallback*)callback;
+        progressCallback_ = (IProgressCallback *)callback;
         if (progressCallback_ && uploadedSize_ > 0) {
             progressCallback_->Progress(uploadedSize_, totalSize_);
         }
     } else if (type == TYPE_HEADER_RECEIVE_CALLBACK) {
-        headerReceiveCallback_ = (IHeaderReceiveCallback*)callback;
+        headerReceiveCallback_ = (IHeaderReceiveCallback *)callback;
         if (headerReceiveCallback_ && headerArray_.empty() == false) {
             for (auto header : headerArray_) {
                 if (header.length() > 0) {
@@ -98,12 +100,12 @@ void UploadTask::SetCallback(Type type, void *callback)
             headerArray_.clear();
         }
     } else if (type == TYPE_FAIL_CALLBACK) {
-        failCallback_ = (INotifyCallback*)callback;
+        failCallback_ = (INotifyCallback *)callback;
         if (failCallback_ && state_ == STATE_FAILURE) {
             failCallback_->Notify(taskStates_);
         }
     } else if (type == TYPE_COMPLETE_CALLBACK) {
-        completeCallback_ = (INotifyCallback*)callback;
+        completeCallback_ = (INotifyCallback *)callback;
         if (completeCallback_ && state_ == STATE_SUCCESS) {
             completeCallback_->Notify(taskStates_);
         }
@@ -122,10 +124,10 @@ void UploadTask::Run(void *arg)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Run. In.");
     usleep(USLEEP_INTERVEL_BEFOR_RUN);
-    ((UploadTask*)arg)->OnRun();
-    if (((UploadTask*)arg)->uploadConfig_->protocolVersion == "L5") {
-        if (((UploadTask*)arg)->uploadConfig_->fcomplete) {
-            ((UploadTask*)arg)->uploadConfig_->fcomplete();
+    ((UploadTask *)arg)->OnRun();
+    if (((UploadTask *)arg)->uploadConfig_->protocolVersion == "L5") {
+        if (((UploadTask *)arg)->uploadConfig_->fcomplete) {
+            ((UploadTask *)arg)->uploadConfig_->fcomplete();
             UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Complete.");
         }
     }
@@ -165,7 +167,7 @@ uint32_t UploadTask::InitFileArray()
         data.list = nullptr;
         data.headSendFlag = 0;
         data.httpCode = 0;
-        
+
         fileDatas_.push_back(data);
         totalSize_ += static_cast<int64_t>(fileSize);
     }
@@ -187,16 +189,16 @@ uint32_t UploadTask::StartUploadFile()
 std::string UploadTask::GetCodeMessage(uint32_t code)
 {
     std::vector<std::pair<UploadErrorCode, std::string>> codeMap = {
-        {UPLOAD_OK, "file uploaded successfully"},
-        {UPLOAD_ERRORCODE_UNSUPPORT_URI, "file path error"},
-        {UPLOAD_ERRORCODE_GET_FILE_ERROR, "failed to get file"},
-        {UPLOAD_ERRORCODE_CONFIG_ERROR,  "upload configuration error"},
-        {UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR,  "libcurl return error"},
-        {UPLOAD_ERRORCODE_UPLOAD_FAIL, "upload failed"},
-        {UPLOAD_ERRORCODE_UPLOAD_OUTTIME, "upload timeout"},
+        { UPLOAD_OK, "file uploaded successfully" },
+        { UPLOAD_ERRORCODE_UNSUPPORT_URI, "file path error" },
+        { UPLOAD_ERRORCODE_GET_FILE_ERROR, "failed to get file" },
+        { UPLOAD_ERRORCODE_CONFIG_ERROR, "upload configuration error" },
+        { UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR, "libcurl return error" },
+        { UPLOAD_ERRORCODE_UPLOAD_FAIL, "upload failed" },
+        { UPLOAD_ERRORCODE_UPLOAD_OUTTIME, "upload timeout" },
     };
 
-    for (const auto &it: codeMap) {
+    for (const auto &it : codeMap) {
         if (it.first == code) {
             return it.second;
         }
@@ -233,14 +235,9 @@ void UploadTask::ReportTaskFault(uint32_t ret) const
             failCount++;
         }
     }
-    OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST,
-        REQUEST_TASK_FAULT,
-        OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
-        TASKS_TYPE, UPLOAD,
-        TOTAL_FILE_NUM, fileDatas_.size(),
-        FAIL_FILE_NUM, failCount,
-        SUCCESS_FILE_NUM, successCount,
-        ERROR_INFO, static_cast<int>(ret));
+    OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST, REQUEST_TASK_FAULT,
+        OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, TASKS_TYPE, UPLOAD, TOTAL_FILE_NUM, fileDatas_.size(),
+        FAIL_FILE_NUM, failCount, SUCCESS_FILE_NUM, successCount, ERROR_INFO, static_cast<int>(ret));
 }
 
 void UploadTask::OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
@@ -277,7 +274,7 @@ std::vector<TaskState> UploadTask::GetTaskStates()
     std::vector<TaskState> taskStates;
     TaskState taskState;
     for (auto &vmem : fileDatas_) {
-        taskState = {vmem.filename, vmem.result, GetCodeMessage(vmem.result)};
+        taskState = { vmem.filename, vmem.result, GetCodeMessage(vmem.result) };
         taskStates.push_back(taskState);
     }
     return taskStates;
@@ -328,7 +325,7 @@ void UploadTask::ClearFileArray()
     fileDatas_.clear();
 }
 
-std::vector<std::string> UploadTask::StringSplit(const std::string& str, char delim)
+std::vector<std::string> UploadTask::StringSplit(const std::string &str, char delim)
 {
     std::size_t previous = 0;
     std::size_t current = str.find(delim);

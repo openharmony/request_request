@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 
-#include <thread>
 #include <cstdio>
-#include "upload_task.h"
+#include <thread>
+
 #include "file_adapter.h"
+#include "upload_task.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS::Request::Upload {
@@ -28,8 +29,8 @@ ObtainFile::~ObtainFile()
 {
 }
 
-uint32_t ObtainFile::GetFile(FILE **file, std::string &fileUri,
-    unsigned int& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
+uint32_t ObtainFile::GetFile(FILE **file, std::string &fileUri, unsigned int &fileSize,
+    std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     uint32_t ret = UPLOAD_OK;
     std::string dataAbilityHead("dataability");
@@ -49,13 +50,13 @@ uint32_t ObtainFile::GetFile(FILE **file, std::string &fileUri,
         fileSize = 0;
     }
 
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK,
-        "ObtainFile::GetFile, ret : %{public}d, size : %{public}d, pf : %{public}p", ret, fileSize, *file);
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetFile, ret : %{public}d, size : %{public}d, pf : %{public}p",
+        ret, fileSize, *file);
     return ret;
 }
 
-uint32_t ObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri,
-    uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
+uint32_t ObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri, uint32_t &fileSize,
+    std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     uint32_t ret = UPLOAD_OK;
     FILE *filePtr = nullptr;
@@ -91,8 +92,8 @@ uint32_t ObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri,
     return ret;
 }
 
-uint32_t ObtainFile::GetInternalFile(FILE **file, std::string &fileUri,
-    uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
+uint32_t ObtainFile::GetInternalFile(FILE **file, std::string &fileUri, uint32_t &fileSize,
+    std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     uint32_t ret = UPLOAD_OK;
     std::string filePath;
@@ -110,8 +111,8 @@ uint32_t ObtainFile::GetInternalFile(FILE **file, std::string &fileUri,
             pathTmp = pathTmp.substr(pos + 1, pathTmp.size());
             pos = pathTmp.find(pattern);
         }
-        if (uriSplit[SPLIT_ZERO] != "internal:" || uriSplit[SPLIT_ONE] != "" ||
-            uriSplit[SPLIT_TWO] != "cache" || uriSplit.size() <= SPLIT_THREE) {
+        if (uriSplit[SPLIT_ZERO] != "internal:" || uriSplit[SPLIT_ONE] != "" || uriSplit[SPLIT_TWO] != "cache" ||
+            uriSplit.size() <= SPLIT_THREE) {
             UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, internal path woring");
             ret = UPLOAD_ERRORCODE_UNSUPPORT_URI;
             break;
@@ -146,4 +147,4 @@ uint32_t ObtainFile::GetInternalFile(FILE **file, std::string &fileUri,
     fileSize = fileLength;
     return ret;
 }
-} // end of OHOS::Request::Upload
+} // namespace OHOS::Request::Upload

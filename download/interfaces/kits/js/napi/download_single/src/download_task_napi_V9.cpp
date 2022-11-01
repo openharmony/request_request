@@ -12,10 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "download_task_napi_v9.h"
+
 #include <mutex>
-#include <uv.h>
 #include <regex>
 #include <unistd.h>
+#include <uv.h>
+
 #include "ability.h"
 #include "async_call.h"
 #include "download_event.h"
@@ -25,11 +28,10 @@
 #include "download_query_mimetype.h"
 #include "download_remove.h"
 #include "download_resume.h"
-#include "log.h"
-#include "napi_utils.h"
 #include "legacy/download_manager.h"
+#include "log.h"
 #include "napi_base_context.h"
-#include "download_task_napi_v9.h"
+#include "napi_utils.h"
 
 static constexpr const char *FUNCTION_ON = "on";
 static constexpr const char *FUNCTION_OFF = "off";
@@ -50,7 +52,7 @@ namespace {
 constexpr const std::uint32_t CONFIG_PARAM_AT_FIRST = 0;
 constexpr const std::uint32_t CONFIG_PARAM_AT_SECOND = 1;
 std::mutex mutex_;
-}
+} // namespace
 napi_value DownloadTaskNapiV9::JsMain(napi_env env, napi_callback_info info)
 {
     DOWNLOAD_HILOGD("Enter download JsMain.");
@@ -108,16 +110,16 @@ napi_value DownloadTaskNapiV9::GetCtor(napi_env env)
     }
 
     napi_property_descriptor clzDes[] = {
-        {FUNCTION_ON, 0, DownloadEvent::On, 0, 0, 0, napi_default, 0},
-        {FUNCTION_OFF, 0, DownloadEvent::Off, 0, 0, 0, napi_default, 0},
-        {FUNCTION_SUSPEND, 0, DownloadPause::Suspend, 0, 0, 0, napi_default, 0},
-        {FUNCTION_GET_TASK_INFO, 0, DownloadQuery::GetTaskInfo, 0, 0, 0, napi_default, 0},
-        {FUNCTION_GET_TASK_MIME_TYPE, 0, DownloadQueryMimeType::GetTaskMimeType, 0, 0, 0, napi_default, 0},
-        {FUNCTION_DELETE, 0, DownloadRemove::Delete, 0, 0, 0, napi_default, 0},
-        {FUNCTION_RESTORE, 0, DownloadResume::Restore, 0, 0, 0, napi_default, 0},
+        { FUNCTION_ON, 0, DownloadEvent::On, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_OFF, 0, DownloadEvent::Off, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_SUSPEND, 0, DownloadPause::Suspend, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_GET_TASK_INFO, 0, DownloadQuery::GetTaskInfo, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_GET_TASK_MIME_TYPE, 0, DownloadQueryMimeType::GetTaskMimeType, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_DELETE, 0, DownloadRemove::Delete, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_RESTORE, 0, DownloadResume::Restore, 0, 0, 0, napi_default, 0 },
     };
     napi_status status = napi_define_class(env, "DownloadTaskNapi", NAPI_AUTO_LENGTH, Initialize, nullptr,
-                                           sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons);
+        sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons);
     if (status != napi_ok) {
         DOWNLOAD_HILOGE("napi_define_class Failed");
         return nullptr;
@@ -137,7 +139,7 @@ napi_value DownloadTaskNapiV9::Initialize(napi_env env, napi_callback_info info)
     std::string errInfo;
     int parametersPosition = CONFIG_PARAM_AT_FIRST;
     size_t argc = NapiUtils::MAX_ARGC;
-    napi_value argv[NapiUtils::MAX_ARGC] = {nullptr};
+    napi_value argv[NapiUtils::MAX_ARGC] = { nullptr };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
 
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
@@ -186,8 +188,8 @@ napi_value DownloadTaskNapiV9::Initialize(napi_env env, napi_callback_info info)
     return self;
 }
 
-napi_status DownloadTaskNapiV9::GetContext(napi_env env, napi_value value, int& parametersPosition,
-                                           std::shared_ptr<OHOS::AbilityRuntime::Context>& context)
+napi_status DownloadTaskNapiV9::GetContext(napi_env env, napi_value value, int &parametersPosition,
+    std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     if (!IsStageMode(env, value)) {
         auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);

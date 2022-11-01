@@ -14,29 +14,30 @@
  */
 #include "download_service_ability.h"
 
-#include <new>
 #include <ctime>
+#include <functional>
+#include <new>
 #include <string>
 #include <utility>
 #include <vector>
-#include <functional>
-#include "string_ex.h"
+
 #include "access_token.h"
+#include "accesstoken_kit.h"
+#include "download_common.h"
+#include "download_service_manager.h"
+#include "dump_service_impl.h"
 #include "errors.h"
 #include "event_runner.h"
 #include "inner_event.h"
-#include "iremote_object.h"
-#include "message_parcel.h"
 #include "ipc_skeleton.h"
-#include "accesstoken_kit.h"
+#include "iremote_object.h"
+#include "log.h"
+#include "message_parcel.h"
+#include "string_ex.h"
 #include "system_ability.h"
 #include "system_ability_definition.h"
-#include "dump_service_impl.h"
 #include "task_fault.h"
 #include "task_statistics.h"
-#include "download_common.h"
-#include "download_service_manager.h"
-#include "log.h"
 
 namespace OHOS::Request::Download {
 using namespace OHOS::HiviewDFX;
@@ -44,7 +45,6 @@ using namespace Security::AccessToken;
 
 static const std::string DOWNLOAD_PERMISSION_NAME_INTERNET = "ohos.permission.INTERNET";
 static const std::string DOWNLOAD_PERMISSION_NAME_SESSION = "ohos.permission.DOWNLOAD_SESSION_MANAGER";
-
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DownloadServiceAbility, DOWNLOAD_SERVICE_ID, true);
 const std::int64_t INIT_INTERVAL = 5000L;
@@ -112,7 +112,7 @@ void DownloadServiceAbility::OnStart()
     int32_t ret = Init();
     if (ret != ERR_OK) {
         TaskFault::GetInstance().ReportServiceStartFault(ret);
-        auto callback = [ = ]() { Init(); };
+        auto callback = [=]() { Init(); };
         serviceHandler_->PostTask(callback, INIT_INTERVAL);
         DOWNLOAD_HILOGE("DownloadServiceAbility Init failed. Try again 5s later");
         return;
@@ -172,10 +172,9 @@ int32_t DownloadServiceAbility::Request(const DownloadConfig &config, ExceptionE
     }
     taskId = static_cast<int32_t>(instance->AddTask(config));
     if (taskId < 0) {
-        DOWNLOAD_HILOGE("taskId [%{public}d] is invalid, config url: %{public}s",
-                        taskId, config.GetUrl().c_str());
+        DOWNLOAD_HILOGE("taskId [%{public}d] is invalid, config url: %{public}s", taskId, config.GetUrl().c_str());
         err.code = EXCEPTION_SERVICE_ERROR;
-        err.errInfo = "taskId "+ std::to_string(taskId) + " is invalid, config url: " + config.GetUrl();
+        err.errInfo = "taskId " + std::to_string(taskId) + " is invalid, config url: " + config.GetUrl();
         return taskId;
     }
     instance->InstallCallback(taskId, NotifyHandler);
@@ -306,11 +305,11 @@ bool DownloadServiceAbility::SetStartId(uint32_t startId)
     return true;
 }
 
-void DownloadServiceAbility::NotifyHandler(const std::string& type, uint32_t taskId, uint32_t argv1, uint32_t argv2)
+void DownloadServiceAbility::NotifyHandler(const std::string &type, uint32_t taskId, uint32_t argv1, uint32_t argv2)
 {
     std::string combineType = type + "-" + std::to_string(taskId);
     DOWNLOAD_HILOGD("DownloadServiceAbility::NotifyHandler started %{public}s [%{public}d, %{public}d].",
-                    combineType.c_str(), argv1, argv2);
+        combineType.c_str(), argv1, argv2);
     auto iter = DownloadServiceAbility::GetInstance()->registeredListeners_.find(combineType);
     if (iter != DownloadServiceAbility::GetInstance()->registeredListeners_.end()) {
         DOWNLOAD_HILOGD("DownloadServiceAbility::NotifyHandler type=%{public}s object message.", combineType.c_str());
@@ -329,8 +328,8 @@ void DownloadServiceAbility::OnDump()
     if (second > 0) {
         timeNow = localtime(&second);
         if (timeNow != nullptr) {
-            DOWNLOAD_HILOGI(
-                "DownloadServiceAbility dump time:%{public}d-%{public}d-%{public}d %{public}d:%{public}d:%{public}d",
+            DOWNLOAD_HILOGI("DownloadServiceAbility dump time:%{public}d-%{public}d-%{public}d "
+                            "%{public}d:%{public}d:%{public}d",
                 timeNow->tm_year + startTime_, timeNow->tm_mon + extraMonth_, timeNow->tm_mday, timeNow->tm_hour,
                 timeNow->tm_min, timeNow->tm_sec);
         }

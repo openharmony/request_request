@@ -15,12 +15,12 @@
 
 #include "download_notify_stub.h"
 
-#include "log.h"
 #include "download_common.h"
+#include "log.h"
 
 namespace OHOS::Request::Download {
-int32_t DownloadNotifyStub::OnRemoteRequest(
-    uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+int32_t DownloadNotifyStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
+    MessageOption &option)
 {
     auto descriptorToken = data.ReadInterfaceToken();
     if (descriptorToken != GetDescriptor()) {

@@ -14,6 +14,7 @@
  */
 
 #include "download_resume.h"
+
 #include "download_manager.h"
 #include "log.h"
 #include "napi_utils.h"

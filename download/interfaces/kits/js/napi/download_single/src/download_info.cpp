@@ -14,14 +14,16 @@
  */
 
 #include "download_info.h"
-#include "log.h"
+
 #include "constant.h"
+#include "log.h"
 
 namespace OHOS::Request::Download {
 DownloadInfo::DownloadInfo()
     : description_(""), downloadedBytes_(0), downloadId_(0), failedReason_(ERROR_UNKNOWN), fileName_(""),
       filePath_(""), pausedReason_(PAUSED_UNKNOWN), status_(SESSION_UNKNOWN), targetURI_(""), downloadTitle_(""),
-      taskType_("download"), downloadTotalBytes_(0) {
+      taskType_("download"), downloadTotalBytes_(0)
+{
 }
 
 void DownloadInfo::SetDescription(const std::string &description)

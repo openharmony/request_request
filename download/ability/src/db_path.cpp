@@ -14,6 +14,7 @@
  */
 
 #include "db_path.h"
+
 #include "constant.h"
 #include "log.h"
 

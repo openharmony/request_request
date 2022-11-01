@@ -14,22 +14,24 @@
  */
 
 #include "download_service_manager.h"
-#include <cstddef>
+
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <new>
 #include <queue>
-#include <mutex>
 #include <thread>
 #include <utility>
-#include "network_adapter.h"
-#include "net_conn_constants.h"
-#include "net_all_capabilities.h"
-#include "unistd.h"
+
 #include "log.h"
+#include "net_all_capabilities.h"
+#include "net_conn_constants.h"
+#include "network_adapter.h"
+#include "unistd.h"
 
 static constexpr uint32_t THREAD_POOL_NUM = 4;
 static constexpr uint32_t TASK_SLEEP_INTERVAL = 1;
@@ -41,7 +43,7 @@ std::mutex DownloadServiceManager::instanceLock_;
 DownloadServiceManager *DownloadServiceManager::instance_ = nullptr;
 DownloadServiceManager::DownloadServiceManager()
     : initialized_(false), interval_(TASK_SLEEP_INTERVAL), threadNum_(THREAD_POOL_NUM), timeoutRetry_(MAX_RETRY_TIMES),
-    taskId_(0)
+      taskId_(0)
 {
 }
 
@@ -70,9 +72,7 @@ bool DownloadServiceManager::Create(uint32_t threadNum)
 
     threadNum_ = threadNum;
     for (uint32_t i = 0; i < threadNum; i++) {
-        threadList_.push_back(std::make_shared<DownloadThread>([this]() {
-            return ProcessTask();
-        }, interval_));
+        threadList_.push_back(std::make_shared<DownloadThread>([this]() { return ProcessTask(); }, interval_));
         threadList_[i]->Start();
     }
 
@@ -102,7 +102,7 @@ void DownloadServiceManager::Destroy()
     initialized_ = false;
 }
 
-uint32_t DownloadServiceManager::AddTask(const DownloadConfig& config)
+uint32_t DownloadServiceManager::AddTask(const DownloadConfig &config)
 {
     if (!initialized_) {
         return -1;
@@ -271,7 +271,7 @@ DownloadServiceManager::QueueType DownloadServiceManager::DecideQueueType(Downlo
 
         case SESSION_UNKNOWN:
             return QueueType::PENDING_QUEUE;
-    
+
         case SESSION_PENDING:
         case SESSION_RUNNING:
         case SESSION_SUCCESS:
@@ -419,8 +419,7 @@ void DownloadServiceManager::UpdateNetworkType()
     PausedReason reason;
     for (const auto &it : taskMap_) {
         it.second->GetRunResult(status, code, reason);
-        bool bRet = status == SESSION_RUNNING || status == SESSION_PENDING
-                    || status == SESSION_PAUSED;
+        bool bRet = status == SESSION_RUNNING || status == SESSION_PENDING || status == SESSION_PAUSED;
         if (bRet) {
             if (!it.second->IsSatisfiedConfiguration()) {
                 RemoveFromQueue(pendingQueue_, it.first);

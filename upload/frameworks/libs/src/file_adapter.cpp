@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#include "upload_task.h"
 #include "file_adapter.h"
+
+#include "upload_task.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS::Request::Upload {
-int32_t FileAdapter::DataAbilityOpenFile(std::string &fileUri,
-    std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
+int32_t FileAdapter::DataAbilityOpenFile(std::string &fileUri, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     std::shared_ptr<Uri> uri = std::make_shared<Uri>(fileUri);
     std::shared_ptr<DataAbilityHelper> dataAbilityHelper = DataAbilityHelper::Creator(context, uri);
@@ -34,4 +34,4 @@ std::string FileAdapter::InternalGetFilePath(std::shared_ptr<OHOS::AbilityRuntim
 {
     return context->GetCacheDir();
 }
-} // end of OHOS::Request::Upload
+} // namespace OHOS::Request::Upload

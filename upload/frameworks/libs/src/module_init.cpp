@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
- 
+
 #define USE_OPENSSL
 
+#include <cstddef>
 #include <curl/curl.h>
 #include <pthread.h>
-#include <cstddef>
+
 #include "upload_hilog_wrapper.h"
 static pthread_mutex_t *lockarray;
 
@@ -51,8 +51,7 @@ static void InitLocks(void)
     LOCK_CALLBACK lockCallback;
     threadIdCallback = ThreadIdCallback;
     lockCallback = LockCallback;
-    lockarray = (pthread_mutex_t *)OPENSSL_malloc(CRYPTO_num_locks() *
-                                                sizeof(pthread_mutex_t));
+    lockarray = (pthread_mutex_t *)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t));
     for (int i = 0; i < CRYPTO_num_locks(); i++) {
         pthread_mutex_init(&(lockarray[i]), NULL);
     }

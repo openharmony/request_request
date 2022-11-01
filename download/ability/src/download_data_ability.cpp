@@ -29,7 +29,6 @@
 #include "sql_analyzer.h"
 #include "uri_utils.h"
 
-
 namespace OHOS::AppExecFwk {
 REGISTER_AA(DownloadDataAbility);
 namespace {
@@ -38,8 +37,8 @@ std::mutex g_mutex;
 using namespace OHOS::Request::Download;
 
 std::shared_ptr<DownloadDataBase> DownloadDataAbility::database_ = nullptr;
-std::map<std::string, int> DownloadDataAbility::uriValueMap_ = {
-    {"/com.ohos.download/download/downloadInfo", DOWNLOAD_INFO}};
+std::map<std::string, int> DownloadDataAbility::uriValueMap_ = { { "/com.ohos.download/download/downloadInfo",
+    DOWNLOAD_INFO } };
 
 DownloadDataAbility::DownloadDataAbility()
 {
@@ -234,8 +233,8 @@ int DownloadDataAbility::BatchInsert(const Uri &uri, const std::vector<NativeRdb
  *
  * @return Update database results code
  */
-int DownloadDataAbility::Update(
-    const Uri &uri, const NativeRdb::ValuesBucket &value, const NativeRdb::DataAbilityPredicates &predicates)
+int DownloadDataAbility::Update(const Uri &uri, const NativeRdb::ValuesBucket &value,
+    const NativeRdb::DataAbilityPredicates &predicates)
 {
     SqlAnalyzer sqlAnalyzer;
     bool isOk = sqlAnalyzer.CheckValuesBucket(value);
@@ -306,8 +305,8 @@ int DownloadDataAbility::Delete(const Uri &uri, const NativeRdb::DataAbilityPred
  *
  * @return Query database results
  */
-std::shared_ptr<NativeRdb::AbsSharedResultSet> DownloadDataAbility::Query(
-    const Uri &uri, const std::vector<std::string> &columns, const NativeRdb::DataAbilityPredicates &predicates)
+std::shared_ptr<NativeRdb::AbsSharedResultSet> DownloadDataAbility::Query(const Uri &uri,
+    const std::vector<std::string> &columns, const NativeRdb::DataAbilityPredicates &predicates)
 {
     DOWNLOAD_HILOGI("DownloadDataAbility ====>Query start");
     database_ = DownloadDataBase::GetInstance();

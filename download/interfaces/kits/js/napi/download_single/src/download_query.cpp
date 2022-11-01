@@ -14,6 +14,7 @@
  */
 
 #include "download_query.h"
+
 #include "download_manager.h"
 #include "log.h"
 #include "napi_utils.h"
@@ -63,15 +64,15 @@ napi_value DownloadQuery::Exec(napi_env env, napi_callback_info info)
         DOWNLOAD_HILOGD("downloadTotalBytes: %{public}d", context->info.GetDownloadTotalBytes());
         napi_create_object(env, result);
 
-        NapiUtils::SetStringPropertyUtf8(env, *result, "description",  context->info.GetDescription().c_str());
+        NapiUtils::SetStringPropertyUtf8(env, *result, "description", context->info.GetDescription().c_str());
         NapiUtils::SetUint32Property(env, *result, "downloadedBytes", context->info.GetDownloadedBytes());
         NapiUtils::SetUint32Property(env, *result, "downloadId", context->info.GetDownloadId());
         NapiUtils::SetUint32Property(env, *result, "failedReason", context->info.GetFailedReason());
-        NapiUtils::SetStringPropertyUtf8(env, *result, "fileName",  context->info.GetFileName().c_str());
-        NapiUtils::SetStringPropertyUtf8(env, *result, "filePath",  context->info.GetFilePath().c_str());
+        NapiUtils::SetStringPropertyUtf8(env, *result, "fileName", context->info.GetFileName().c_str());
+        NapiUtils::SetStringPropertyUtf8(env, *result, "filePath", context->info.GetFilePath().c_str());
         NapiUtils::SetUint32Property(env, *result, "pausedReason", context->info.GetPausedReason());
         NapiUtils::SetUint32Property(env, *result, "status", context->info.GetStatus());
-        NapiUtils::SetStringPropertyUtf8(env, *result, "targetURI",  context->info.GetTargetURI().c_str());
+        NapiUtils::SetStringPropertyUtf8(env, *result, "targetURI", context->info.GetTargetURI().c_str());
         NapiUtils::SetStringPropertyUtf8(env, *result, "downloadTitle", context->info.GetDownloadTitle().c_str());
         NapiUtils::SetUint32Property(env, *result, "downloadTotalBytes", context->info.GetDownloadTotalBytes());
         return napi_ok;

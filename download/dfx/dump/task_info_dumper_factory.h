@@ -17,6 +17,7 @@
 #define REQUEST_DUMP_TASK_INFO_FACTORY_H
 
 #include <memory>
+
 #include "dumper_factory.h"
 
 namespace OHOS::Request::Download {
@@ -24,5 +25,5 @@ class TaskInfoDumperFactory : public DumperFactory {
 public:
     std::shared_ptr<IDumper> CreateDumper() override;
 };
-}
+} // namespace OHOS::Request::Download
 #endif // REQUEST_DUMP_TASK_INFO_FACTORY_H

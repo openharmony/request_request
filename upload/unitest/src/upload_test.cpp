@@ -13,13 +13,15 @@
  * limitations under the License.
  */
 
+#include "upload_test.h"
+
+#include <fcntl.h>
 #include <gtest/gtest.h>
 #include <string>
-#include <fcntl.h>
-#include "upload_hilog_wrapper.h"
-#include "upload_config.h"
+
 #include "curl_adp.h"
-#include "upload_test.h"
+#include "upload_config.h"
+#include "upload_hilog_wrapper.h"
 
 using namespace testing::ext;
 namespace OHOS::Request::Upload {
@@ -83,4 +85,4 @@ HWTEST_F(UploadTest, UploadTest_001, TestSize.Level1)
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********UploadUtTest_001***out**********");
     SUCCEED();
 }
-} // end of OHOS::Request::Upload
+} // namespace OHOS::Request::Upload

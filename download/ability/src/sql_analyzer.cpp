@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "sql_analyzer.h"
+
 #include "log.h"
 
 namespace OHOS::Request::Download {

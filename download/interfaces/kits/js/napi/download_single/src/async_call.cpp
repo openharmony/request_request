@@ -24,7 +24,7 @@ AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Cont
     context_ = new AsyncContext();
     size_t argc = NapiUtils::MAX_ARGC;
     napi_value self = nullptr;
-    napi_value argv[NapiUtils::MAX_ARGC] = {nullptr};
+    napi_value argv[NapiUtils::MAX_ARGC] = { nullptr };
     NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
     NAPI_ASSERT_BASE(env, pos <= argc, " Invalid Args!", NAPI_RETVAL_NOTHING);
     pos = ((pos == ASYNC_DEFAULT_POS) ? (argc - 1) : pos);
@@ -109,7 +109,7 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
     AsyncContext *context = reinterpret_cast<AsyncContext *>(data);
     napi_value output = nullptr;
     napi_status runStatus = (*context->ctx)(env, &output);
-    napi_value result[ARG_BUTT] = {0};
+    napi_value result[ARG_BUTT] = { 0 };
     if (status == napi_ok && runStatus == napi_ok) {
         napi_get_undefined(env, &result[ARG_ERROR]);
         if (output != nullptr) {
@@ -118,8 +118,7 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
             napi_get_undefined(env, &result[ARG_DATA]);
         }
     } else {
-        result[ARG_ERROR] = NapiUtils::CreateBusinessError(env, EXCEPTION_SERVICE_ERROR,
-                                                           "download service failed");
+        result[ARG_ERROR] = NapiUtils::CreateBusinessError(env, EXCEPTION_SERVICE_ERROR, "download service failed");
         napi_get_undefined(env, &result[ARG_DATA]);
     }
     if (context->defer != nullptr) {
@@ -134,7 +133,7 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         napi_value callback = nullptr;
         napi_get_reference_value(env, context->callback, &callback);
         napi_value returnValue;
-        napi_call_function(env, nullptr, callback, ARG_BUTT, result, &returnValue);
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback, ARG_BUTT, result, &returnValue));
     }
     DeleteContext(env, context);
 }

@@ -12,27 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <unistd.h>
 #include "download_service_stub.h"
-#include "ipc_skeleton.h"
-#include "message_parcel.h"
+
+#include <unistd.h>
+
 #include "download_common.h"
-#include "download_service_interface.h"
 #include "download_config.h"
 #include "download_info.h"
 #include "download_notify_interface.h"
+#include "download_service_interface.h"
 #include "hilog/log_cpp.h"
 #include "ipc_object_stub.h"
+#include "ipc_skeleton.h"
 #include "ipc_types.h"
 #include "iremote_broker.h"
 #include "iremote_object.h"
 #include "log.h"
+#include "message_parcel.h"
 
 namespace OHOS::Request::Download {
 using namespace OHOS::HiviewDFX;
 
-int32_t DownloadServiceStub::OnRemoteRequest(
-    uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+int32_t DownloadServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
+    MessageOption &option)
 {
     DOWNLOAD_HILOGE("request code = %{public}d", code);
     auto descriptorToken = data.ReadInterfaceToken();
@@ -76,7 +78,7 @@ bool DownloadServiceStub::OnRequest(MessageParcel &data, MessageParcel &reply)
 {
     DOWNLOAD_HILOGD("Receive request");
     DownloadConfig config;
-    int32_t fd  = data.ReadFileDescriptor();
+    int32_t fd = data.ReadFileDescriptor();
     DOWNLOAD_HILOGI("Get FD from client, fd [%{public}d]", fd);
     config.SetFD(fd);
     config.SetFDError(data.ReadInt32());

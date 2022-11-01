@@ -14,6 +14,7 @@
  */
 
 #include "task_fault.h"
+
 #include "hisysevent.h"
 
 namespace OHOS::Request::Download {
@@ -25,21 +26,14 @@ TaskFault &TaskFault::GetInstance()
 
 void TaskFault::ReportServiceStartFault(int error) const
 {
-    OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST,
-        REQUEST_SERVICE_START_FAULT,
-        OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
-        ERROR_INFO, error);
+    OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST, REQUEST_SERVICE_START_FAULT,
+        OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, ERROR_INFO, error);
 }
 
 void TaskFault::ReportTaskFault(int error) const
 {
-    OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST,
-        REQUEST_TASK_FAULT,
-        OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
-        TASKS_TYPE, DOWNLOAD,
-        TOTAL_FILE_NUM, 1,
-        FAIL_FILE_NUM, 1,
-        SUCCESS_FILE_NUM, 0,
-        ERROR_INFO, error);
+    OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST, REQUEST_TASK_FAULT,
+        OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, TASKS_TYPE, DOWNLOAD, TOTAL_FILE_NUM, 1, FAIL_FILE_NUM, 1,
+        SUCCESS_FILE_NUM, 0, ERROR_INFO, error);
 }
 } // namespace OHOS::Request::Download

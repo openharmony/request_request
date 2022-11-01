@@ -165,8 +165,8 @@ int DownloadDataBase::Delete(OHOS::NativeRdb::RdbPredicates &predicates)
  *
  * @return Query database results
  */
-std::unique_ptr<OHOS::NativeRdb::AbsSharedResultSet> DownloadDataBase::Query(
-    OHOS::NativeRdb::RdbPredicates &predicates, std::vector<std::string> columns)
+std::unique_ptr<OHOS::NativeRdb::AbsSharedResultSet> DownloadDataBase::Query(OHOS::NativeRdb::RdbPredicates &predicates,
+    std::vector<std::string> columns)
 {
     if (store_ == nullptr) {
         DOWNLOAD_HILOGE("DownloadDataBase Query store_ is  nullptr");

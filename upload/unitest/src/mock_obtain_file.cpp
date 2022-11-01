@@ -14,18 +14,19 @@
  */
 
 #include "mock_obtain_file.h"
+
 #include <gtest/gtest.h>
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS::Request::Upload {
-uint32_t MockObtainFile::GetFile(FILE **file, std::string &fileUri,
-    unsigned int& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
+uint32_t MockObtainFile::GetFile(FILE **file, std::string &fileUri, unsigned int &fileSize,
+    std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     return GetDataAbilityFile(file, fileUri, fileSize, context);
 }
 
-uint32_t MockObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri,
-    uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
+uint32_t MockObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri, uint32_t &fileSize,
+    std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     uint32_t ret = UPLOAD_OK;
     FILE *filePtr = nullptr;
@@ -63,4 +64,4 @@ uint32_t MockObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri,
     fileSize = fileLength;
     return ret;
 }
-} // end of OHOS::Request::Upload
+} // namespace OHOS::Request::Upload

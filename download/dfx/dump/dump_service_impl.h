@@ -16,9 +16,10 @@
 #ifndef DUMP_SERVICE_IMPL_H
 #define DUMP_SERVICE_IMPL_H
 
+#include <iosfwd>
 #include <map>
 #include <memory>
-#include <iosfwd>
+
 #include "dumper_factory.h"
 
 namespace OHOS::Request::Download {
@@ -32,6 +33,7 @@ class DumpServiceImpl {
 public:
     static DumpServiceImpl &GetInstance();
     int Dump(int fd, const std::vector<std::string> &args);
+
 private:
     DumpServiceImpl();
     virtual ~DumpServiceImpl();
@@ -43,10 +45,11 @@ private:
     void InitDumperFactoryMap();
     void DumpHelp(int fd) const;
     DumperType GetDumperType(const std::string &cmd) const;
+
 private:
     using DumperFactoryMap = std::map<DumperType, std::shared_ptr<DumperFactory>>;
     DumperFactoryMap dumperFactoryMap_;
 };
-}
+} // namespace OHOS::Request::Download
 
 #endif // DUMP_SERVICE_IMPL_H

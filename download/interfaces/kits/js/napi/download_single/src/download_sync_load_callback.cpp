@@ -13,16 +13,17 @@
  * limitations under the License.
  */
 
+#include "download_sync_load_callback.h"
+
 #include "download_manager.h"
 #include "iservice_registry.h"
 #include "isystem_ability_load_callback.h"
-#include "system_ability_definition.h"
 #include "log.h"
-#include "download_sync_load_callback.h"
+#include "system_ability_definition.h"
 
 namespace OHOS::Request::Download {
 void DownloadSyncLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
-                                                          const sptr<IRemoteObject>& remoteObject)
+    const sptr<IRemoteObject> &remoteObject)
 {
     if (systemAbilityId != DOWNLOAD_SERVICE_ID) {
         DOWNLOAD_HILOGE("start systemAbilityId is not download server");
@@ -39,4 +40,4 @@ void DownloadSyncLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
     }
     DownloadManager::GetInstance()->LoadServerFail();
 }
-}
+} // namespace OHOS::Request::Download
