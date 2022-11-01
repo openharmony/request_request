@@ -14,43 +14,45 @@
  */
 
 #include "network_adapter.h"
+
 #include <functional>
 #include <memory>
 #include <new>
 #include <set>
 #include <singleton.h>
 #include <type_traits>
-#include "i_net_conn_callback.h"
-#include "net_specifier.h"
-#include "net_conn_client.h"
-#include "network_state.h"
-#include "net_conn_constants.h"
-#include "telephony_errors.h"
+
 #include "core_service_client.h"
+#include "i_net_conn_callback.h"
 #include "log.h"
+#include "net_conn_client.h"
+#include "net_conn_constants.h"
+#include "net_specifier.h"
+#include "network_state.h"
+#include "telephony_errors.h"
 
 using namespace OHOS::NetManagerStandard;
 using namespace OHOS::Telephony;
 namespace OHOS::Request::Download {
 const int32_t ERROR = -1;
-NetworkAdapter& NetworkAdapter::GetInstance()
+NetworkAdapter &NetworkAdapter::GetInstance()
 {
     static NetworkAdapter adapter;
     return adapter;
 }
 
-bool NetworkAdapter::RegOnNetworkChange(RegCallBack&& callback)
+bool NetworkAdapter::RegOnNetworkChange(RegCallBack &&callback)
 {
     NetSpecifier netSpecifier;
     NetAllCapabilities netAllCapabilities;
     netAllCapabilities.netCaps_.insert(NetCap::NET_CAPABILITY_INTERNET);
     netSpecifier.netCapabilities_ = netAllCapabilities;
-    sptr<NetSpecifier> specifier = new(std::nothrow) NetSpecifier(netSpecifier);
+    sptr<NetSpecifier> specifier = new (std::nothrow) NetSpecifier(netSpecifier);
     if (specifier == nullptr) {
         DOWNLOAD_HILOGE("new operator error.specifier is nullptr");
         return NET_CONN_ERR_INPUT_NULL_PTR;
     }
-    sptr<NetConnCallbackObserver> observer = new(std::nothrow) NetConnCallbackObserver(*this);
+    sptr<NetConnCallbackObserver> observer = new (std::nothrow) NetConnCallbackObserver(*this);
     if (observer == nullptr) {
         DOWNLOAD_HILOGE("new operator error.observer is nullptr");
         return NET_CONN_ERR_INPUT_NULL_PTR;
@@ -59,7 +61,7 @@ bool NetworkAdapter::RegOnNetworkChange(RegCallBack&& callback)
     if (nRet == NET_CONN_SUCCESS) {
         callback_ = callback;
     }
- 
+
     DOWNLOAD_HILOGD("RegisterNetConnCallback retcode= %{public}d", nRet);
     return nRet;
 }
@@ -74,8 +76,8 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetAvailable(sptr<NetHandle> &n
     return 0;
 }
 
-int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(sptr <NetHandle> &netHandle,
-                                                                       const sptr <NetAllCapabilities> &netAllCap)
+int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandle,
+    const sptr<NetAllCapabilities> &netAllCap)
 {
     DOWNLOAD_HILOGD("Observe net capabilities change. start");
     if (netAllCap->netCaps_.count(NetCap::NET_CAPABILITY_VALIDATED)) {
@@ -102,7 +104,7 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(sptr <Net
 }
 
 int32_t NetworkAdapter::NetConnCallbackObserver::NetConnectionPropertiesChange(sptr<NetHandle> &netHandle,
-                                                                               const sptr<NetLinkInfo> &info)
+    const sptr<NetLinkInfo> &info)
 {
     return 0;
 }

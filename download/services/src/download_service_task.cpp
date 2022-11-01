@@ -16,24 +16,25 @@
 #include "download_service_task.h"
 
 #include <algorithm>
-#include <mutex>
-#include <unistd.h>
+#include <curl/easy.h>
 #include <fstream>
-#include <sstream>
 #include <ios>
 #include <map>
 #include <memory>
-#include <string>
+#include <mutex>
 #include <ostream>
+#include <sstream>
+#include <string>
+#include <unistd.h>
 #include <utility>
 #include <vector>
-#include <curl/easy.h>
+
+#include "download_background_notification.h"
+#include "hitrace_meter.h"
 #include "log.h"
 #include "network_adapter.h"
-#include "hitrace_meter.h"
-#include "task_statistics.h"
 #include "task_fault.h"
-#include "download_background_notification.h"
+#include "task_statistics.h"
 
 namespace OHOS::Request::Download {
 static const std::string URL_HTTPS = "https";
@@ -41,7 +42,8 @@ static std::string TLS_VERSION_DEFAULT = "CURL_SSLVERSION_TLSv1_2";
 DownloadServiceTask::DownloadServiceTask(uint32_t taskId, const DownloadConfig &config)
     : taskId_(taskId), config_(config), status_(SESSION_UNKNOWN), code_(ERROR_UNKNOWN), reason_(PAUSED_UNKNOWN),
       mimeType_(""), totalSize_(0), downloadSize_(0), isPartialMode_(false), forceStop_(false), isRemoved_(false),
-      retryTime_(RETRY_TIME_MAX), eventCb_(nullptr), hasFileSize_(false), isOnline_(true), prevSize_(0) {
+      retryTime_(RETRY_TIME_MAX), eventCb_(nullptr), hasFileSize_(false), isOnline_(true), prevSize_(0)
+{
 }
 
 DownloadServiceTask::~DownloadServiceTask(void)
@@ -75,7 +77,7 @@ bool DownloadServiceTask::Run()
     bool result = false;
     bool enableTimeout = false;
     SetStatus(SESSION_RUNNING);
-    
+
     do {
         if (!IsSatisfiedConfiguration()) {
             DOWNLOAD_HILOGI("networktype not Satisfied Configuration");
@@ -139,8 +141,8 @@ bool DownloadServiceTask::Resume()
 
 bool DownloadServiceTask::Remove()
 {
-    DOWNLOAD_HILOGI("Task[%{public}d], Status [%{public}d], Code [%{public}d], Reason [%{public}d]",  taskId_,
-                    status_, code_, reason_);
+    DOWNLOAD_HILOGI("Task[%{public}d], Status [%{public}d], Code [%{public}d], Reason [%{public}d]", taskId_, status_,
+        code_, reason_);
     isRemoved_ = true;
     ForceStopRunning();
     if (eventCb_ != nullptr) {
@@ -457,7 +459,7 @@ int DownloadServiceTask::ProgressCallback(void *pParam, double dltotal, double d
     if (task != nullptr) {
         if (task->isRemoved_) {
             DOWNLOAD_HILOGI("download task has been removed");
-            return  0;
+            return 0;
         }
         if (task->forceStop_) {
             DOWNLOAD_HILOGI("Pause issued by user");
@@ -470,8 +472,8 @@ int DownloadServiceTask::ProgressCallback(void *pParam, double dltotal, double d
             std::lock_guard<std::recursive_mutex> autoLock(task->mutex_);
             if (task->status_ != SESSION_PAUSED) {
                 task->eventCb_("progress", task->taskId_, task->downloadSize_, task->totalSize_);
-                task->PublishNotification(task->config_.IsBackground(), task->prevSize_,
-                                          task->downloadSize_, task->totalSize_);
+                task->PublishNotification(task->config_.IsBackground(), task->prevSize_, task->downloadSize_,
+                    task->totalSize_);
                 task->prevSize_ = task->downloadSize_;
             }
         }
@@ -493,8 +495,8 @@ bool DownloadServiceTask::ExecHttp()
     DOWNLOAD_HILOGI("final url: %{public}s", config_.GetUrl().c_str());
 
     std::vector<std::string> vec;
-    std::for_each(
-        config_.GetHeader().begin(), config_.GetHeader().end(), [&vec](const std::pair<std::string, std::string> &p) {
+    std::for_each(config_.GetHeader().begin(), config_.GetHeader().end(),
+        [&vec](const std::pair<std::string, std::string> &p) {
             vec.emplace_back(p.first + HTTP_HEADER_SEPARATOR + p.second);
         });
     std::unique_ptr<struct curl_slist, decltype(&curl_slist_free_all)> header(MakeHeaders(vec), curl_slist_free_all);
@@ -544,7 +546,7 @@ void DownloadServiceTask::RecordTaskEvent(int32_t httpCode)
         TaskFault::GetInstance().ReportTaskFault(httpCode);
     }
 }
-   
+
 CURLcode DownloadServiceTask::CurlPerformFileTransfer(CURL *handle) const
 {
     std::string traceParam = "name:" + config_.GetFilePath() + " size:" + std::to_string(totalSize_) +
@@ -556,7 +558,7 @@ CURLcode DownloadServiceTask::CurlPerformFileTransfer(CURL *handle) const
 bool DownloadServiceTask::SetFileSizeOption(CURL *curl, struct curl_slist *requestHeader)
 {
     curl_easy_setopt(curl, CURLOPT_URL, config_.GetUrl().c_str());
-    
+
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, this);
 
@@ -671,8 +673,8 @@ bool DownloadServiceTask::GetFileSize(uint32_t &result)
     }
 
     std::vector<std::string> vec;
-    std::for_each(
-        config_.GetHeader().begin(), config_.GetHeader().end(), [&vec](const std::pair<std::string, std::string> &p) {
+    std::for_each(config_.GetHeader().begin(), config_.GetHeader().end(),
+        [&vec](const std::pair<std::string, std::string> &p) {
             vec.emplace_back(p.first + HTTP_HEADER_SEPARATOR + p.second);
         });
     std::unique_ptr<struct curl_slist, decltype(&curl_slist_free_all)> header(MakeHeaders(vec), curl_slist_free_all);
@@ -694,8 +696,8 @@ bool DownloadServiceTask::GetFileSize(uint32_t &result)
         }
     }
 
-    DOWNLOAD_HILOGI("fetch file size: %{public}u curl error: %{public}d, http resp: %{public}ld",
-                    result, code, respCode);
+    DOWNLOAD_HILOGI("fetch file size: %{public}u curl error: %{public}d, http resp: %{public}ld", result, code,
+        respCode);
     return hasFileSize_;
 }
 
@@ -715,7 +717,7 @@ void DownloadServiceTask::HandleResponseCode(CURLcode code, int32_t httpCode)
         DOWNLOAD_HILOGI("Pause By User:ignore status changed caused by libcurl");
         return;
     }
-    
+
     switch (code) {
         case CURLE_OK:
             if (httpCode == HTTP_OK || (isPartialMode_ && httpCode == HTTP_PARIAL_FILE)) {
@@ -724,7 +726,7 @@ void DownloadServiceTask::HandleResponseCode(CURLcode code, int32_t httpCode)
                 return;
             }
             break;
-            
+
         case CURLE_ABORTED_BY_CALLBACK:
             if (httpCode == HTTP_OK || (isPartialMode_ && httpCode == HTTP_PARIAL_FILE)) {
                 SetStatus(SESSION_PAUSED, ERROR_UNKNOWN, PAUSED_BY_USER);
@@ -738,7 +740,7 @@ void DownloadServiceTask::HandleResponseCode(CURLcode code, int32_t httpCode)
                 return;
             }
             break;
-            
+
         case CURLE_TOO_MANY_REDIRECTS:
             SetStatus(SESSION_FAILED, ERROR_TOO_MANY_REDIRECTS, PAUSED_UNKNOWN);
             return;
@@ -797,7 +799,7 @@ bool DownloadServiceTask::HandleFileError()
                 DOWNLOAD_HILOGD("Download File already exists");
                 code = ERROR_FILE_ALREADY_EXISTS;
                 break;
-                
+
             case ENODEV:
                 code = ERROR_DEVICE_NOT_FOUND;
                 break;
@@ -819,10 +821,10 @@ bool DownloadServiceTask::IsSatisfiedConfiguration()
         return true;
     }
     auto networkInfo = NetworkAdapter::GetInstance().GetNetworkInfo();
-    DOWNLOAD_HILOGD("isRoaming_: %{public}d, isMetered_: %{public}d, networkType_: %{public}u",
-                    networkInfo.isRoaming_, networkInfo.isMetered_, networkInfo.networkType_);
+    DOWNLOAD_HILOGD("isRoaming_: %{public}d, isMetered_: %{public}d, networkType_: %{public}u", networkInfo.isRoaming_,
+        networkInfo.isMetered_, networkInfo.networkType_);
     DOWNLOAD_HILOGD("config_ { isRoaming_: %{public}d,isMetered_: %{public}d, networkType_: %{public}u}",
-                    config_.IsRoaming(), config_.IsMetered(), config_.GetNetworkType());
+        config_.IsRoaming(), config_.IsMetered(), config_.GetNetworkType());
     if (networkInfo.isRoaming_ && !config_.IsRoaming()) {
         return false;
     }
@@ -860,7 +862,7 @@ bool DownloadServiceTask::SetHttpsCertificationOption(CURL *curl)
         return false;
     }
     struct curl_blob blob;
-    blob.data = const_cast<char*>(certInfo.c_str());
+    blob.data = const_cast<char *>(certInfo.c_str());
     blob.len = certInfo.size();
     blob.flags = CURL_BLOB_COPY;
     std::string version = TLS_VERSION_DEFAULT;
@@ -903,15 +905,15 @@ void DownloadServiceTask::PublishNotification(bool background, uint32_t percent)
     DownloadBackgroundNotification::PublishDownloadNotification(taskId_, pid, filePath, percent);
 }
 
-void DownloadServiceTask::PublishNotification(bool background, uint32_t prevSize,
-                                              uint32_t downloadSize, uint32_t totalSize)
+void DownloadServiceTask::PublishNotification(bool background, uint32_t prevSize, uint32_t downloadSize,
+    uint32_t totalSize)
 {
     if (!background) {
         return;
     }
     if (prevSize == 0) {
         PublishNotification(background, 0);
-        lastTimestamp_ =  GetCurTimestamp();
+        lastTimestamp_ = GetCurTimestamp();
     } else {
         uint32_t percent = ProgressNotification(prevSize, downloadSize, totalSize);
         if (percent > 0) {
@@ -931,7 +933,7 @@ uint32_t DownloadServiceTask::ProgressNotification(uint32_t prevSize, uint32_t d
     uint32_t ret = 0;
     if (totalSize != 0) {
         uint32_t percent = static_cast<uint32_t>(downloadSize * 100.0 / totalSize);
-        uint32_t lastPercent = static_cast<uint32_t>(prevSize  * 100.0 / totalSize);
+        uint32_t lastPercent = static_cast<uint32_t>(prevSize * 100.0 / totalSize);
         std::time_t curTimestamp = GetCurTimestamp();
         if (curTimestamp < lastTimestamp_) {
             return 0;

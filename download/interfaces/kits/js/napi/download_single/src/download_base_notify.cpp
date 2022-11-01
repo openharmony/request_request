@@ -14,13 +14,14 @@
  */
 
 #include "download_base_notify.h"
+
 #include <uv.h>
+
 #include "log.h"
 #include "napi_utils.h"
 
 namespace OHOS::Request::Download {
-DownloadBaseNotify::DownloadBaseNotify(napi_env env, uint32_t paramNumber, napi_ref ref)
-    : DownloadNotifyStub()
+DownloadBaseNotify::DownloadBaseNotify(napi_env env, uint32_t paramNumber, napi_ref ref) : DownloadNotifyStub()
 {
     notifyData_ = std::make_shared<NotifyData>();
     notifyData_->env = env;
@@ -57,24 +58,23 @@ void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
     uv_queue_work(
         loop, work, [](uv_work_t *work) {},
         [](uv_work_t *work, int statusInt) {
-            NotifyDataPtr *notifyDataPtr = static_cast<NotifyDataPtr*>(work->data);
+            NotifyDataPtr *notifyDataPtr = static_cast<NotifyDataPtr *>(work->data);
             if (notifyDataPtr != nullptr) {
                 napi_value undefined = 0;
                 napi_get_undefined(notifyDataPtr->notifyData->env, &undefined);
                 napi_value callbackFunc = nullptr;
-                napi_get_reference_value(notifyDataPtr->notifyData->env,
-                    notifyDataPtr->notifyData->ref, &callbackFunc);
+                napi_get_reference_value(notifyDataPtr->notifyData->env, notifyDataPtr->notifyData->ref, &callbackFunc);
                 napi_value callbackResult = nullptr;
-                napi_value callbackValues[Download::TWO_PARAMETER] = {0};
+                napi_value callbackValues[Download::TWO_PARAMETER] = { 0 };
                 {
                     std::lock_guard<std::mutex> lock(notifyDataPtr->notifyData->mutex);
                     for (uint32_t i = 0; i < notifyDataPtr->notifyData->paramNumber; i++) {
-                        napi_create_uint32(notifyDataPtr->notifyData->env,
-                            notifyDataPtr->notifyData->params[i], &callbackValues[i]);
+                        napi_create_uint32(notifyDataPtr->notifyData->env, notifyDataPtr->notifyData->params[i],
+                            &callbackValues[i]);
                     }
                 }
                 napi_call_function(notifyDataPtr->notifyData->env, nullptr, callbackFunc,
-                                   notifyDataPtr->notifyData->paramNumber, callbackValues, &callbackResult);
+                    notifyDataPtr->notifyData->paramNumber, callbackValues, &callbackResult);
                 delete notifyDataPtr;
                 delete work;
             }

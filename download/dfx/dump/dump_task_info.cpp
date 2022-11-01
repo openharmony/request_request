@@ -13,16 +13,18 @@
  * limitations under the License.
  */
 
+#include "dump_task_info.h"
+
 #include <iomanip>
-#include <vector>
-#include <string>
-#include <sstream>
-#include <ostream>
 #include <ios>
+#include <ostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
 #include "constant.h"
 #include "download_info.h"
 #include "download_service_manager.h"
-#include "dump_task_info.h"
 
 namespace OHOS::Request::Download {
 bool DumpTaskInfo::Dump(int fd, const std::vector<std::string> &args)
@@ -52,14 +54,14 @@ void DumpTaskInfo::DumpAllTaskTile(int fd) const
 
 void DumpTaskInfo::FormatSummaryTitle(std::ostringstream &buffer) const
 {
-    for (const auto &it: summaryColumnTitle_) {
+    for (const auto &it : summaryColumnTitle_) {
         buffer << std::setw(it.first) << it.second;
     }
 }
 
 void DumpTaskInfo::FormatDetailTitle(std::ostringstream &buffer) const
 {
-    for (const auto &it: detailColumnTitle_) {
+    for (const auto &it : detailColumnTitle_) {
         buffer << std::setw(it.first) << it.second;
     }
 }
@@ -75,7 +77,7 @@ void DumpTaskInfo::DumpTaskDetailInfoTile(int fd) const
 
 void DumpTaskInfo::FormatSummaryContent(const DownloadInfo &taskInfo, std::ostringstream &buffer) const
 {
-    for (const auto &it: dumpSummaryCfg_) {
+    for (const auto &it : dumpSummaryCfg_) {
         auto columnFormatFun = it.second;
         buffer << std::setw(it.first) << (this->*columnFormatFun)(taskInfo);
     }
@@ -83,7 +85,7 @@ void DumpTaskInfo::FormatSummaryContent(const DownloadInfo &taskInfo, std::ostri
 
 void DumpTaskInfo::FormatDetailContent(const DownloadInfo &taskInfo, std::ostringstream &buffer) const
 {
-    for (const auto &it: dumpDetailCfg_) {
+    for (const auto &it : dumpDetailCfg_) {
         auto columnFormatFun = it.second;
         buffer << std::setw(it.first) << (this->*columnFormatFun)(taskInfo);
     }
@@ -104,7 +106,7 @@ bool DumpTaskInfo::DumpAllTask(int fd) const
     }
 
     DumpAllTaskTile(fd);
-    for (const auto &iter: taskVector) {
+    for (const auto &iter : taskVector) {
         std::ostringstream buffer;
         buffer << std::left;
         FormatSummaryContent(iter, buffer);
@@ -151,15 +153,15 @@ std::string DumpTaskInfo::DumpTaskStatus(const DownloadInfo &taskInfo) const
 {
     DownloadStatus status = taskInfo.GetStatus();
     std::vector<std::pair<DownloadStatus, std::string>> mapping = {
-        {SESSION_SUCCESS, "complete"},
-        {SESSION_RUNNING, "running"},
-        {SESSION_PENDING, "pending"},
-        {SESSION_PAUSED,  "pause"},
-        {SESSION_FAILED,  "failed"},
-        {SESSION_UNKNOWN, "unknown"},
+        { SESSION_SUCCESS, "complete" },
+        { SESSION_RUNNING, "running" },
+        { SESSION_PENDING, "pending" },
+        { SESSION_PAUSED, "pause" },
+        { SESSION_FAILED, "failed" },
+        { SESSION_UNKNOWN, "unknown" },
     };
 
-    for (const auto &it: mapping) {
+    for (const auto &it : mapping) {
         if (it.first == status) {
             return it.second;
         }
@@ -196,4 +198,4 @@ std::string DumpTaskInfo::DumpTransferredSize(const DownloadInfo &taskInfo) cons
 {
     return std::to_string(taskInfo.GetDownloadedBytes());
 }
-}
+} // namespace OHOS::Request::Download

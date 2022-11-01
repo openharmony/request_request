@@ -14,15 +14,17 @@
  */
 
 #include "legacy/download_manager.h"
+
+#include <cerrno>
 #include <climits>
 #include <cstdlib>
-#include <cerrno>
-#include "legacy/download_task.h"
+
 #include "ability.h"
-#include "napi_base_context.h"
-#include "uv.h"
-#include "napi_utils.h"
+#include "legacy/download_task.h"
 #include "log.h"
+#include "napi_base_context.h"
+#include "napi_utils.h"
+#include "uv.h"
 
 namespace OHOS::Request::Download::Legacy {
 std::map<std::string, DownloadManager::DownloadDescriptor> DownloadManager::downloadDescriptors_;
@@ -32,7 +34,7 @@ std::atomic<uint32_t> DownloadManager::taskId_;
 bool DownloadManager::IsLegacy(napi_env env, napi_callback_info info)
 {
     size_t argc = DOWNLOAD_ARGC;
-    napi_value argv[DOWNLOAD_ARGC] {};
+    napi_value argv[DOWNLOAD_ARGC]{};
     NAPI_CALL_BASE(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr), false);
     auto successCb = NapiUtils::GetNamedProperty(env, argv[0], "success");
     auto failCb = NapiUtils::GetNamedProperty(env, argv[0], "fail");
@@ -51,39 +53,41 @@ void DownloadManager::CallFunctionAsync(napi_env env, napi_ref func, const ArgsG
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env, &loop);
 
-    auto* work = new (std::nothrow) uv_work_t;
+    auto *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
         return;
     }
-    auto* data = new(std::nothrow) CallFunctionData;
+    auto *data = new (std::nothrow) CallFunctionData;
     data->env_ = env;
     data->func_ = func;
     data->generator_ = generator;
     work->data = data;
 
-    uv_queue_work(loop, work, [](uv_work_t* work) {}, [](uv_work_t* work, int st) {
-        int argc {};
-        napi_value argv[MAX_CB_ARGS] {};
-        napi_ref recv {};
-        auto* data = static_cast<CallFunctionData*>(work->data);
-        data->generator_(data->env_, &recv, argc, argv);
-        napi_value callback {};
-        napi_get_reference_value(data->env_, data->func_, &callback);
-        napi_value thiz {};
-        napi_get_reference_value(data->env_, recv, &thiz);
-        napi_value result {};
-        napi_call_function(data->env_, thiz, callback, argc, argv, &result);
-        napi_delete_reference(data->env_, data->func_);
-        napi_delete_reference(data->env_, recv);
-        delete work;
-        delete data;
-    });
+    uv_queue_work(
+        loop, work, [](uv_work_t *work) {},
+        [](uv_work_t *work, int st) {
+            int argc{};
+            napi_value argv[MAX_CB_ARGS]{};
+            napi_ref recv{};
+            auto *data = static_cast<CallFunctionData *>(work->data);
+            data->generator_(data->env_, &recv, argc, argv);
+            napi_value callback{};
+            napi_get_reference_value(data->env_, data->func_, &callback);
+            napi_value thiz{};
+            napi_get_reference_value(data->env_, recv, &thiz);
+            napi_value result{};
+            napi_call_function(data->env_, thiz, callback, argc, argv, &result);
+            napi_delete_reference(data->env_, data->func_);
+            napi_delete_reference(data->env_, recv);
+            delete work;
+            delete data;
+        });
 }
 
 void DownloadManager::OnTaskDone(const std::string &token, bool successful, const std::string &errMsg)
 {
     DOWNLOAD_HILOGI("token=%{public}s", token.c_str());
-    DownloadDescriptor descriptor {};
+    DownloadDescriptor descriptor{};
     {
         std::lock_guard<std::mutex> lockGuard(lock_);
         auto it = downloadDescriptors_.find(token);
@@ -97,20 +101,20 @@ void DownloadManager::OnTaskDone(const std::string &token, bool successful, cons
     if (successful && descriptor.successCb_) {
         CallFunctionAsync(descriptor.env_, descriptor.successCb_,
             [descriptor](napi_env env, napi_ref *recv, int &argc, napi_value *argv) {
-            *recv = descriptor.this_;
-            argc = SUCCESS_CB_ARGC;
-            argv[0] = NapiUtils::CreateObject(descriptor.env_);
-            NapiUtils::SetStringPropertyUtf8(descriptor.env_, argv[0], "uri", URI_PREFIX + descriptor.filename_);
-        });
+                *recv = descriptor.this_;
+                argc = SUCCESS_CB_ARGC;
+                argv[0] = NapiUtils::CreateObject(descriptor.env_);
+                NapiUtils::SetStringPropertyUtf8(descriptor.env_, argv[0], "uri", URI_PREFIX + descriptor.filename_);
+            });
     }
     if (!successful && descriptor.failCb_) {
         CallFunctionAsync(descriptor.env_, descriptor.failCb_,
             [descriptor, errMsg](napi_env env, napi_ref *recv, int &argc, napi_value *argv) {
-            *recv = descriptor.this_;
-            argc = FAIL_CB_ARGC;
-            argv[0] = NapiUtils::CreateStringUtf8(descriptor.env_, errMsg);
-            argv[1] = NapiUtils::CreateInt32(descriptor.env_, FAIL_CB_DOWNLOAD_ERROR);
-        });
+                *recv = descriptor.this_;
+                argc = FAIL_CB_ARGC;
+                argv[0] = NapiUtils::CreateStringUtf8(descriptor.env_, errMsg);
+                argv[1] = NapiUtils::CreateInt32(descriptor.env_, FAIL_CB_DOWNLOAD_ERROR);
+            });
     }
     delete descriptor.task_;
 }
@@ -153,7 +157,7 @@ std::vector<std::string> DownloadManager::ParseHeader(napi_env env, napi_value o
     auto names = NapiUtils::GetPropertyNames(env, header);
     DOWNLOAD_HILOGD("names size=%{public}d", static_cast<int32_t>(names.size()));
     std::vector<std::string> headerVector;
-    for (const auto& name : names) {
+    for (const auto &name : names) {
         auto value = NapiUtils::GetStringPropertyUtf8(env, header, name);
         headerVector.push_back(name + ":" + value);
     }
@@ -187,7 +191,7 @@ bool DownloadManager::IsPathValid(const std::string &dir, const std::string &fil
 {
     auto filepath = dir + '/' + filename;
     auto fileDirectory = filepath.substr(0, filepath.rfind('/'));
-    char resolvedPath[PATH_MAX] = {0};
+    char resolvedPath[PATH_MAX] = { 0 };
     if (realpath(fileDirectory.c_str(), resolvedPath) && !strncmp(resolvedPath, dir.c_str(), dir.length())) {
         return true;
     }
@@ -198,7 +202,7 @@ bool DownloadManager::IsPathValid(const std::string &dir, const std::string &fil
 bool DownloadManager::HasSameFilename(const std::string &filename)
 {
     std::lock_guard<std::mutex> lockGuard(lock_);
-    for (const auto& element : downloadDescriptors_) {
+    for (const auto &element : downloadDescriptors_) {
         if (element.second.filename_ == filename) {
             return true;
         }
@@ -206,24 +210,24 @@ bool DownloadManager::HasSameFilename(const std::string &filename)
     return false;
 }
 
-void DownloadManager::CallFailCallback(napi_env env, napi_value object, const std::string& msg)
+void DownloadManager::CallFailCallback(napi_env env, napi_value object, const std::string &msg)
 {
     auto callback = NapiUtils::GetNamedProperty(env, object, "fail");
     if (callback != nullptr) {
         DOWNLOAD_HILOGI("call fail of download");
-        napi_value result[FAIL_CB_ARGC] {};
+        napi_value result[FAIL_CB_ARGC]{};
         result[0] = NapiUtils::CreateStringUtf8(env, msg);
         result[1] = NapiUtils::CreateInt32(env, FAIL_CB_DOWNLOAD_ERROR);
         NapiUtils::CallFunction(env, object, callback, FAIL_CB_ARGC, result);
     }
 }
 
-void DownloadManager::CallSuccessCallback(napi_env env, napi_value object, const std::string& token)
+void DownloadManager::CallSuccessCallback(napi_env env, napi_value object, const std::string &token)
 {
     auto successCb = NapiUtils::GetNamedProperty(env, object, "success");
     if (successCb != nullptr) {
         DOWNLOAD_HILOGI("call success of download");
-        auto responseObject =  NapiUtils::CreateObject(env);
+        auto responseObject = NapiUtils::CreateObject(env);
         NapiUtils::SetStringPropertyUtf8(env, responseObject, "token", token);
         NapiUtils::CallFunction(env, object, successCb, 1, &responseObject);
     }
@@ -232,7 +236,7 @@ void DownloadManager::CallSuccessCallback(napi_env env, napi_value object, const
 napi_value DownloadManager::Download(napi_env env, napi_callback_info info)
 {
     size_t argc = DOWNLOAD_ARGC;
-    napi_value argv[DOWNLOAD_ARGC] {};
+    napi_value argv[DOWNLOAD_ARGC]{};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     napi_value res = NapiUtils::GetUndefined(env);
 
@@ -247,11 +251,11 @@ napi_value DownloadManager::Download(napi_env env, napi_callback_info info)
     }
 
     auto token = GetTaskToken();
-    auto* task = new(std::nothrow) DownloadTask(token, option, OnTaskDone);
+    auto *task = new (std::nothrow) DownloadTask(token, option, OnTaskDone);
     if (task == nullptr) {
         return res;
     }
-    DownloadDescriptor descriptor { task, option.filename_, env };
+    DownloadDescriptor descriptor{ task, option.filename_, env };
     {
         std::lock_guard<std::mutex> lockGuard(lock_);
         downloadDescriptors_[token] = descriptor;
@@ -264,7 +268,7 @@ napi_value DownloadManager::Download(napi_env env, napi_callback_info info)
 napi_value DownloadManager::OnDownloadComplete(napi_env env, napi_callback_info info)
 {
     size_t argc = DOWNLOAD_ARGC;
-    napi_value argv[DOWNLOAD_ARGC] {};
+    napi_value argv[DOWNLOAD_ARGC]{};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     napi_value res = NapiUtils::GetUndefined(env);
 
@@ -286,11 +290,11 @@ napi_value DownloadManager::OnDownloadComplete(napi_env env, napi_callback_info 
     DOWNLOAD_HILOGE("%{public}s is not exist", token.c_str());
     auto callback = NapiUtils::GetNamedProperty(env, argv[0], "fail");
     if (callback != nullptr) {
-        napi_value result[FAIL_CB_ARGC] {};
+        napi_value result[FAIL_CB_ARGC]{};
         result[0] = NapiUtils::CreateStringUtf8(env, "Download task doesn't exist!");
         result[1] = NapiUtils::CreateInt32(env, FAIL_CB_TASK_NOT_EXIST);
         NapiUtils::CallFunction(env, argv[0], callback, FAIL_CB_ARGC, result);
     }
     return res;
 }
-}
+} // namespace OHOS::Request::Download::Legacy

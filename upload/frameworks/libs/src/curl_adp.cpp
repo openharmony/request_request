@@ -13,22 +13,24 @@
  * limitations under the License.
  */
 
-#include <unistd.h>
-#include <fcntl.h>
-#include <cstdio>
-#include <vector>
-#include <string>
-#include <climits>
-#include <cinttypes>
-#include "upload_task.h"
-#include "upload_hilog_wrapper.h"
-#include "time_service_client.h"
-#include "hitrace_meter.h"
-#include "hisysevent.h"
 #include "curl_adp.h"
 
+#include <cinttypes>
+#include <climits>
+#include <cstdio>
+#include <fcntl.h>
+#include <string>
+#include <unistd.h>
+#include <vector>
+
+#include "hisysevent.h"
+#include "hitrace_meter.h"
+#include "time_service_client.h"
+#include "upload_hilog_wrapper.h"
+#include "upload_task.h"
+
 namespace OHOS::Request::Upload {
-CUrlAdp::CUrlAdp(std::vector<FileData>& fileDatas, std::shared_ptr<UploadConfig>& config) : fileDatas_(fileDatas)
+CUrlAdp::CUrlAdp(std::vector<FileData> &fileDatas, std::shared_ptr<UploadConfig> &config) : fileDatas_(fileDatas)
 {
     config_ = config;
     isCurlGlobalInit_ = false;
@@ -50,8 +52,8 @@ uint32_t CUrlAdp::DoUpload(IUploadTask *task)
     InitTimerInfo();
     uint32_t allFileUploadResult = UPLOAD_OK;
     for (auto &vmem : fileDatas_) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "read abort stat: %{public}d file index: %{public}u",
-                      IsReadAbort(), vmem.fileIndex);
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "read abort stat: %{public}d file index: %{public}u", IsReadAbort(),
+            vmem.fileIndex);
         if (IsReadAbort()) {
             vmem.result = UPLOAD_ERRORCODE_UPLOAD_FAIL;
             allFileUploadResult = UPLOAD_ERRORCODE_UPLOAD_FAIL;
@@ -77,7 +79,7 @@ uint32_t CUrlAdp::DoUpload(IUploadTask *task)
     return allFileUploadResult;
 }
 
-bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray)
+bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL *> &curlArray)
 {
     CURL *curl = curl_easy_init();
     if (curl == nullptr) {
@@ -101,8 +103,8 @@ void CUrlAdp::SetHeadData(CURL *curl)
     }
 
     if (!hasContentType) {
-        std::string str = config_->method == PUT ? "Content-Type:application/octet-stream" :
-            "Content-Type:multipart/form-data";
+        std::string str = config_->method == PUT ? "Content-Type:application/octet-stream"
+                                                 : "Content-Type:multipart/form-data";
         mfileData_.list = curl_slist_append(mfileData_.list, str.c_str());
     }
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, mfileData_.list);
@@ -176,8 +178,7 @@ void CUrlAdp::SetMimePost(CURL *curl)
         curl_mime_name(part, "file");
     }
     curl_mime_type(part, mfileData_.type.c_str());
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===> MultiAddHandle mfileData_.type=%{public}s",
-        mfileData_.type.c_str());
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===> MultiAddHandle mfileData_.type=%{public}s", mfileData_.type.c_str());
     curl_mime_filename(part, mfileData_.filename.c_str());
     curl_mime_data_cb(part, mfileData_.totalsize, ReadCallback, NULL, NULL, &mfileData_);
     curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
@@ -244,7 +245,7 @@ int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
 {
     int msgsLeft = 0;
     int returnCode = UPLOAD_ERRORCODE_UPLOAD_FAIL;
-    CURLMsg* msg = NULL;
+    CURLMsg *msg = NULL;
     while ((msg = curl_multi_info_read(curlMulti, &msgsLeft))) {
         if (msg->msg != CURLMSG_DONE) {
             continue;
@@ -310,16 +311,17 @@ int CUrlAdp::OnDebug(CURL *curl, curl_infotype itype, char *pData, size_t size, 
 }
 int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
 {
-    FileData *fData = (FileData *) clientp;
-    CUrlAdp *url = (CUrlAdp *) fData->adp;
+    FileData *fData = (FileData *)clientp;
+    CUrlAdp *url = (CUrlAdp *)fData->adp;
     if (ulnow > 0) {
         fData->upsize = fData->totalsize - (ultotal - ulnow);
     } else {
         fData->upsize = ulnow;
     }
 
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "progress upload total: %{public}" PRIu64 " upload now: %{public}" PRIu64
-        " upload size: %{public}" PRIu64 " total size: %{public}" PRIu64 " thread:%{public}lu",
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK,
+        "progress upload total: %{public}" PRIu64 " upload now: %{public}" PRIu64 " upload size: %{public}" PRIu64
+        " total size: %{public}" PRIu64 " thread:%{public}lu",
         ultotal, ulnow, fData->upsize, fData->totalsize, pthread_self());
 
     if (url && url->uploadTask_) {
@@ -330,8 +332,8 @@ int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlno
             }
             totalulnow += vmem.upsize;
         }
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "report progress total upload size: %{public}" PRIu64
-            " upload now: %{public}" PRIu64, totalulnow, ultotal);
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK,
+            "report progress total upload size: %{public}" PRIu64 " upload now: %{public}" PRIu64, totalulnow, ultotal);
         url->uploadTask_->OnProgress(dltotal, dlnow, ultotal, totalulnow);
     }
     return 0;
@@ -339,8 +341,8 @@ int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlno
 
 size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *userdata)
 {
-    FileData *fData = (FileData *) userdata;
-    CUrlAdp *url = (CUrlAdp *) fData->adp;
+    FileData *fData = (FileData *)userdata;
+    CUrlAdp *url = (CUrlAdp *)fData->adp;
     std::string stmp(buffer, size * nitems);
     const int32_t codeOk = 200;
     const std::string headEndFlag = "\r\n";
@@ -365,7 +367,7 @@ size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *u
             stoatalHead += smem;
         }
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "report head len: %{public}zu, content: %{public}s",
-                      stoatalHead.length(), stoatalHead.c_str());
+            stoatalHead.length(), stoatalHead.c_str());
         if (codeOk == fData->httpCode) {
             if (url->fileDatas_.size() == fData->fileIndex) {
                 url->uploadTask_->OnHeaderReceive(stoatalHead);
@@ -381,8 +383,8 @@ size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *u
 
 size_t CUrlAdp::HeaderCallbackL5(char *buffer, size_t size, size_t nitems, void *userdata)
 {
-    FileData *fData = (FileData *) userdata;
-    CUrlAdp *url = (CUrlAdp *) fData->adp;
+    FileData *fData = (FileData *)userdata;
+    CUrlAdp *url = (CUrlAdp *)fData->adp;
     std::string stmp(buffer, size * nitems);
     const int32_t codeOk = 200;
     UploadResponse resData;
@@ -428,8 +430,8 @@ size_t CUrlAdp::HeaderCallbackL5(char *buffer, size_t size, size_t nitems, void 
 size_t CUrlAdp::ReadCallback(char *buffer, size_t size, size_t nitems, void *arg)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "size is %{public}zu, nitems is %{public}zu.", size, nitems);
-    FileData *read = (FileData *) arg;
-    CUrlAdp *adp = (CUrlAdp *) read->adp;
+    FileData *read = (FileData *)arg;
+    CUrlAdp *adp = (CUrlAdp *)read->adp;
     if (adp == nullptr) {
         UPLOAD_HILOGI(UPLOAD_MODULE_FRAMEWORK, "adp is null");
         return CURL_READFUNC_ABORT;
@@ -458,7 +460,7 @@ void CUrlAdp::InitTimerInfo()
     timerInfo_->SetCallbackInfo([this]() {
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OutTime error");
         this->isReadAbort_ = true;
-        });
+    });
 }
 
 void CUrlAdp::StartTimer()

@@ -13,14 +13,16 @@
  * limitations under the License.
  */
 
-#include <thread>
-#include <atomic>
-#include <sys/types.h>
-#include <unistd.h>
-#include <ctime>
-#include "log.h"
-#include "hisysevent.h"
 #include "task_statistics.h"
+
+#include <atomic>
+#include <ctime>
+#include <sys/types.h>
+#include <thread>
+#include <unistd.h>
+
+#include "hisysevent.h"
+#include "log.h"
 
 namespace OHOS::Request::Download {
 TaskStatistics &TaskStatistics::GetInstance()
@@ -36,7 +38,7 @@ void TaskStatistics::ReportTasksSize(uint64_t totalSize)
 
 void TaskStatistics::ReportTasksNumber()
 {
-    dayTasksNumber_ ++;
+    dayTasksNumber_++;
 }
 
 int32_t TaskStatistics::GetNextReportInterval() const
@@ -53,16 +55,13 @@ int32_t TaskStatistics::GetNextReportInterval() const
         return -1;
     }
     int currentTime = localTime.tm_hour * ONE_HOUR_SEC + localTime.tm_min * ONE_MINUTE_SEC + localTime.tm_sec;
-    return  ONE_DAY_SEC - currentTime;
+    return ONE_DAY_SEC - currentTime;
 }
 
 void TaskStatistics::ReportStatistics() const
 {
-    OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST,
-        REQUEST_TASK_INFO_STATISTICS,
-        OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
-        TASKS_SIZE, &dayTasksSize_,
-        TASKS_NUMBER, &dayTasksNumber_);
+    OHOS::HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST, REQUEST_TASK_INFO_STATISTICS,
+        OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, TASKS_SIZE, &dayTasksSize_, TASKS_NUMBER, &dayTasksNumber_);
 }
 
 void TaskStatistics::StartTimerThread()

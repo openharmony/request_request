@@ -14,6 +14,7 @@
  */
 
 #include "common_event.h"
+
 #include "log.h"
 
 namespace OHOS::Request::Download {

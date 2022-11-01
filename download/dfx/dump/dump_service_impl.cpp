@@ -16,10 +16,11 @@
 #include "dump_service_impl.h"
 
 #include <cstdio>
-#include <string>
-#include <vector>
-#include <utility>
 #include <map>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "dumper_factory.h"
 #include "i_dumper.h"
 #include "task_info_dumper_factory.h"
@@ -78,7 +79,7 @@ int DumpServiceImpl::Dump(int fd, const std::vector<std::string> &args)
 
     auto dumper = it->second->CreateDumper();
     if (dumper != nullptr) {
-        dumper->Dump(fd, {args.begin() + 1, args.end()});
+        dumper->Dump(fd, { args.begin() + 1, args.end() });
     }
 
     return 0;
@@ -86,10 +87,10 @@ int DumpServiceImpl::Dump(int fd, const std::vector<std::string> &args)
 
 void DumpServiceImpl::DumpHelp(int fd) const
 {
-    constexpr const char *DEFAULT_HELPER =
-        "usage:\n"
-        "  -h                    help text for the tool\n"
-        "  -t [taskid]           with no taskid: display all task summary info; taskid: display one task detail info\n";
+    constexpr const char *DEFAULT_HELPER = "usage:\n"
+                                           "  -h                    help text for the tool\n"
+                                           "  -t [taskid]           with no taskid: display all task summary info; "
+                                           "taskid: display one task detail info\n";
     dprintf(fd, "%s\n", DEFAULT_HELPER);
 }
-}
+} // namespace OHOS::Request::Download

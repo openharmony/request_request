@@ -13,14 +13,15 @@
  * limitations under the License.
  */
 #include "download_service_proxy.h"
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include "download_common.h"
 #include "iremote_broker.h"
 #include "log.h"
-#include "download_common.h"
 
 static constexpr uint32_t FILE_PERMISSION = 0644;
 
@@ -36,8 +37,8 @@ bool DownloadServiceProxy::IsPathValid(const std::string &filePath)
 {
     auto path = filePath.substr(0, filePath.rfind('/'));
     char resolvedPath[PATH_MAX + 1] = { 0 };
-    if (path.length() > PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr
-        || strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
+    if (path.length() > PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr ||
+        strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
         DOWNLOAD_HILOGE("invalid file path!");
         return false;
     }
@@ -226,7 +227,7 @@ bool DownloadServiceProxy::On(uint32_t taskId, const std::string &type, const sp
         DOWNLOAD_HILOGE("write taskId=%{public}d fail", taskId);
         return false;
     }
-    
+
     DOWNLOAD_HILOGD("DownloadServiceProxy::On type=%{public}s", type.c_str());
     if (type.empty()) {
         DOWNLOAD_HILOGE("DownloadServiceProxy::On type is null.");
@@ -259,12 +260,12 @@ bool DownloadServiceProxy::Off(uint32_t taskId, const std::string &type)
         DOWNLOAD_HILOGE(" Failed to write parcelable ");
         return false;
     }
-    
+
     if (!data.WriteUint32(taskId)) {
         DOWNLOAD_HILOGE("write taskId=%{public}d fail", taskId);
         return false;
     }
-    
+
     if (!data.WriteString(type)) {
         DOWNLOAD_HILOGE("write type=%{public}s fail", type.c_str());
         return false;
@@ -288,7 +289,7 @@ bool DownloadServiceProxy::CheckPermission()
         DOWNLOAD_HILOGE(" Failed to write parcelable ");
         return false;
     }
-    
+
     int32_t result = Remote()->SendRequest(CMD_CHECKPERMISSION, data, reply, option);
     if (result != ERR_NONE) {
         DOWNLOAD_HILOGE(" DownloadServiceProxy::CheckPermission fail, ret = %{public}d ", result);
@@ -309,7 +310,7 @@ bool DownloadServiceProxy::SetStartId(uint32_t startId)
         return false;
     }
     data.WriteUint32(startId);
-    
+
     int32_t result = Remote()->SendRequest(CMD_SETSTARTID, data, reply, option);
     if (result != ERR_NONE) {
         DOWNLOAD_HILOGE(" DownloadServiceProxy::SetStartId fail, ret = %{public}d ", result);

@@ -31,7 +31,7 @@ napi_value DownloadEvent::On(napi_env env, napi_callback_info info)
     }
     napi_value result = nullptr;
     size_t argc = NapiUtils::MAX_ARGC;
-    napi_value argv[NapiUtils::MAX_ARGC] = {nullptr};
+    napi_value argv[NapiUtils::MAX_ARGC] = { nullptr };
     napi_value thisVal = nullptr;
     void *data = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
@@ -43,7 +43,7 @@ napi_value DownloadEvent::On(napi_env env, napi_callback_info info)
     napi_valuetype valuetype;
     NAPI_CALL(env, napi_typeof(env, argv[NapiUtils::FIRST_ARGV], &valuetype));
     NAPI_ASSERT(env, valuetype == napi_string, "type is not a string");
-    char event[NapiUtils::MAX_LEN] = {0};
+    char event[NapiUtils::MAX_LEN] = { 0 };
     size_t len = 0;
     napi_get_value_string_utf8(env, argv[NapiUtils::FIRST_ARGV], event, NapiUtils::MAX_LEN, &len);
     std::string type = event;
@@ -82,7 +82,7 @@ napi_value DownloadEvent::Off(napi_env env, napi_callback_info info)
     auto context = std::make_shared<EventOffContext>();
     napi_value result = nullptr;
     size_t argc = NapiUtils::MAX_ARGC;
-    napi_value argv[NapiUtils::MAX_ARGC] = {nullptr};
+    napi_value argv[NapiUtils::MAX_ARGC] = { nullptr };
     napi_value thisVal = nullptr;
     void *data = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
@@ -94,12 +94,12 @@ napi_value DownloadEvent::Off(napi_env env, napi_callback_info info)
     napi_valuetype valuetype;
     NAPI_CALL(env, napi_typeof(env, argv[NapiUtils::FIRST_ARGV], &valuetype));
     NAPI_ASSERT(env, valuetype == napi_string, "type is not a string");
-    char event[NapiUtils::MAX_LEN] = {0};
+    char event[NapiUtils::MAX_LEN] = { 0 };
     size_t len = 0;
     napi_get_value_string_utf8(env, argv[NapiUtils::FIRST_ARGV], event, NapiUtils::MAX_LEN, &len);
     context->type_ = event;
     DOWNLOAD_HILOGD("type : %{public}s", context->type_.c_str());
-    
+
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         return napi_ok;
     };

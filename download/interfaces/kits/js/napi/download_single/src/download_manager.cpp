@@ -15,18 +15,17 @@
 
 #include "download_manager.h"
 
-#include "system_ability_definition.h"
-#include "iservice_registry.h"
-
 #include "data_ability_predicates.h"
+#include "download_sync_load_callback.h"
+#include "iservice_registry.h"
+#include "log.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_predicates.h"
 #include "rdb_store.h"
 #include "result_set.h"
-#include "log.h"
-#include "download_sync_load_callback.h"
+#include "system_ability_definition.h"
 
 namespace OHOS::Request::Download {
 std::mutex DownloadManager::instanceLock_;
@@ -51,7 +50,7 @@ sptr<DownloadManager> DownloadManager::GetInstance()
     return instance_;
 }
 
-DownloadTask* DownloadManager::EnqueueTask(const DownloadConfig &config, ExceptionError &err)
+DownloadTask *DownloadManager::EnqueueTask(const DownloadConfig &config, ExceptionError &err)
 {
     DOWNLOAD_HILOGD("DownloadManager EnqueueTask start.");
 
@@ -59,7 +58,7 @@ DownloadTask* DownloadManager::EnqueueTask(const DownloadConfig &config, Excepti
     if (proxy == nullptr) {
         return nullptr;
     }
-    
+
     int32_t taskId = proxy->Request(config, err);
     if (taskId < 0) {
         DOWNLOAD_HILOGE("taskId invalid");
@@ -85,7 +84,7 @@ bool DownloadManager::Query(uint32_t taskId, DownloadInfo &info)
     if (proxy == nullptr) {
         return false;
     }
-    
+
     return proxy->Query(taskId, info);
 }
 
@@ -95,7 +94,7 @@ bool DownloadManager::QueryMimeType(uint32_t taskId, std::string &mimeType)
     if (proxy == nullptr) {
         return false;
     }
-    
+
     return proxy->QueryMimeType(taskId, mimeType);
 }
 
@@ -215,7 +214,7 @@ bool DownloadManager::LoadDownloadServer()
         return false;
     }
 
-    int32_t result =  sm->LoadSystemAbility(DOWNLOAD_SERVICE_ID, loadCallback_);
+    int32_t result = sm->LoadSystemAbility(DOWNLOAD_SERVICE_ID, loadCallback_);
     if (result != ERR_OK) {
         DOWNLOAD_HILOGE("LoadSystemAbility %{public}d failed, result: %{public}d", DOWNLOAD_SERVICE_ID, result);
         return false;
@@ -224,7 +223,7 @@ bool DownloadManager::LoadDownloadServer()
     {
         std::unique_lock<std::mutex> conditionLock(conditionMutex_);
         auto waitStatus = downloadSyncCon_.wait_for(conditionLock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
-                                                    [this]() { return ready_; });
+            [this]() { return ready_; });
         if (!waitStatus) {
             DOWNLOAD_HILOGE("download server load sa timeout");
             return false;

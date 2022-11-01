@@ -14,6 +14,7 @@
  */
 
 #include "task_info_dumper_factory.h"
+
 #include "dump_task_info.h"
 #include "i_dumper.h"
 
@@ -22,4 +23,4 @@ std::shared_ptr<IDumper> TaskInfoDumperFactory::CreateDumper()
 {
     return std::make_shared<DumpTaskInfo>();
 }
-}
+} // namespace OHOS::Request::Download

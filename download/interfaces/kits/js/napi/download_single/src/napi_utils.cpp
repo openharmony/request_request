@@ -18,9 +18,10 @@
 #include <cstring>
 #include <initializer_list>
 #include <memory>
+
+#include "download_manager.h"
 #include "log.h"
 #include "securec.h"
-#include "download_manager.h"
 
 namespace OHOS::Request::Download::NapiUtils {
 static constexpr const int MAX_STRING_LENGTH = 65536;
@@ -227,7 +228,7 @@ void ThrowError(napi_env env, const ExceptionErrorCode &code, const std::string 
 {
     std::string errorCode = std::to_string(code);
     auto iter = ErrorCodeToMsg.find(code);
-    std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + ": "+ msg;
+    std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + ": " + msg;
     napi_status status = napi_throw_error(env, errorCode.c_str(), strMsg.c_str());
     if (status != napi_ok) {
         DOWNLOAD_HILOGE("Failed to napi_throw_error");
@@ -240,9 +241,10 @@ napi_value CreateBusinessError(napi_env env, const ExceptionErrorCode &errorCode
     napi_value codeValue = nullptr;
     napi_value message = nullptr;
     auto iter = ErrorCodeToMsg.find(errorCode);
+    std::string errCode = std::to_string(errorCode);
     std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + msg;
     NAPI_CALL(env, napi_create_string_utf8(env, strMsg.c_str(), strMsg.length(), &message));
-    NAPI_CALL(env, napi_create_int32(env, errorCode, &codeValue));
+    NAPI_CALL(env, napi_create_string_utf8(env, errCode.c_str(), errCode.length(), &codeValue));
     NAPI_CALL(env, napi_create_error(env, codeValue, message, &result));
     return result;
 }
@@ -255,7 +257,7 @@ bool CheckParameterCorrect(napi_env env, napi_callback_info info, const std::str
         return false;
     }
     std::string errInfo;
-    napi_value argv[NapiUtils::MAX_ARGC] = {nullptr};
+    napi_value argv[NapiUtils::MAX_ARGC] = { nullptr };
     int32_t num = NapiUtils::GetParameterNumber(env, info, argv, nullptr);
     if (num < 0) {
         err.code = EXCEPTION_PARAMETER_CHECK;

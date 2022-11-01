@@ -24,23 +24,23 @@ PredicatesConvert::~PredicatesConvert()
 {
 }
 
-OHOS::NativeRdb::RdbPredicates PredicatesConvert::ConvertPredicates(
-    std::string tableName, OHOS::NativeRdb::DataAbilityPredicates &dataPredicates)
+OHOS::NativeRdb::RdbPredicates PredicatesConvert::ConvertPredicates(std::string tableName,
+    OHOS::NativeRdb::DataAbilityPredicates &dataPredicates)
 {
     OHOS::NativeRdb::RdbPredicates predicates(tableName);
-    OHOS::NativeRdb::PredicatesUtils::SetWhereClauseAndArgs(
-        &predicates, dataPredicates.GetWhereClause(), dataPredicates.GetWhereArgs());
+    OHOS::NativeRdb::PredicatesUtils::SetWhereClauseAndArgs(&predicates, dataPredicates.GetWhereClause(),
+        dataPredicates.GetWhereArgs());
     OHOS::NativeRdb::PredicatesUtils::SetAttributes(&predicates, dataPredicates.IsDistinct(), dataPredicates.GetIndex(),
         dataPredicates.GetGroup(), dataPredicates.GetOrder(), dataPredicates.GetLimit(), dataPredicates.GetOffset());
     return predicates;
 }
 
-OHOS::NativeRdb::RdbPredicates PredicatesConvert::CopyPredicates(
-    std::string tableName, OHOS::NativeRdb::RdbPredicates &oldRdbPredicates)
+OHOS::NativeRdb::RdbPredicates PredicatesConvert::CopyPredicates(std::string tableName,
+    OHOS::NativeRdb::RdbPredicates &oldRdbPredicates)
 {
     OHOS::NativeRdb::RdbPredicates predicates(tableName);
-    OHOS::NativeRdb::PredicatesUtils::SetWhereClauseAndArgs(
-        &predicates, oldRdbPredicates.GetWhereClause(), oldRdbPredicates.GetWhereArgs());
+    OHOS::NativeRdb::PredicatesUtils::SetWhereClauseAndArgs(&predicates, oldRdbPredicates.GetWhereClause(),
+        oldRdbPredicates.GetWhereArgs());
     OHOS::NativeRdb::PredicatesUtils::SetAttributes(&predicates, oldRdbPredicates.IsDistinct(),
         oldRdbPredicates.GetIndex(), oldRdbPredicates.GetGroup(), oldRdbPredicates.GetOrder(),
         oldRdbPredicates.GetLimit(), oldRdbPredicates.GetOffset());

@@ -14,8 +14,9 @@
  */
 
 #include "legacy/download_task.h"
-#include "log.h"
+
 #include "constant.h"
+#include "log.h"
 
 namespace OHOS::Request::Download::Legacy {
 bool DownloadTask::isCurlGlobalInited_ = false;
@@ -103,7 +104,7 @@ bool DownloadTask::GetFileSize(uint32_t &result)
     CURLcode code = curl_easy_perform(handle.get());
     double size = 0.0;
     curl_easy_getinfo(handle.get(), CURLINFO_CONTENT_LENGTH_DOWNLOAD, &size);
-    
+
     if (code == CURLE_OK) {
         if (size > UINT_MAX) {
             DOWNLOAD_HILOGD("file size overflow");
@@ -128,7 +129,7 @@ bool DownloadTask::SetOption(CURL *handle, curl_slist *&headers)
     }
     curl_easy_setopt(handle, CURLOPT_WRITEDATA, filp_);
 
-    errorBuffer_ = new(std::nothrow) char[CURL_ERROR_SIZE];
+    errorBuffer_ = new (std::nothrow) char[CURL_ERROR_SIZE];
     if (errorBuffer_ == nullptr) {
         return false;
     }
@@ -141,7 +142,7 @@ bool DownloadTask::SetOption(CURL *handle, curl_slist *&headers)
     curl_easy_setopt(handle, CURLOPT_LOW_SPEED_LIMIT, DEFAULT_LOW_SPEED_LIMIT);
 
     if (!option_.header_.empty()) {
-        for (const auto& head : option_.header_) {
+        for (const auto &head : option_.header_) {
             headers = curl_slist_append(headers, head.c_str());
         }
         curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
@@ -151,14 +152,14 @@ bool DownloadTask::SetOption(CURL *handle, curl_slist *&headers)
 
 void DownloadTask::Start()
 {
-    DOWNLOAD_HILOGD("taskId=%{public}s url=%{public}s file=%{public}s dir=%{public}s",
-                    taskId_.c_str(), option_.url_.c_str(), option_.filename_.c_str(), option_.fileDir_.c_str());
+    DOWNLOAD_HILOGD("taskId=%{public}s url=%{public}s file=%{public}s dir=%{public}s", taskId_.c_str(),
+        option_.url_.c_str(), option_.filename_.c_str(), option_.fileDir_.c_str());
     if (!isCurlGlobalInited_) {
         curl_global_init(CURL_GLOBAL_ALL);
         isCurlGlobalInited_ = true;
     }
 
-    thread_ = new(std::nothrow) std::thread(&DownloadTask::Run, this);
+    thread_ = new (std::nothrow) std::thread(&DownloadTask::Run, this);
     if (thread_ == nullptr) {
         NotifyDone(false, "create download thread failed");
         return;
@@ -187,8 +188,8 @@ void DownloadTask::Run()
 bool DownloadTask::DoDownload()
 {
     DOWNLOAD_HILOGD("download task DoDownload");
-    curl_slist *headers {};
-    std::shared_ptr<CURL> handle(curl_easy_init(), [headers](CURL* handle) {
+    curl_slist *headers{};
+    std::shared_ptr<CURL> handle(curl_easy_init(), [headers](CURL *handle) {
         if (headers) {
             curl_slist_free_all(headers);
         }
@@ -227,4 +228,4 @@ void DownloadTask::SetResumeFromLarge(CURL *curl, uint64_t pos)
 {
     curl_easy_setopt(curl, CURLOPT_RESUME_FROM_LARGE, pos);
 }
-}
+} // namespace OHOS::Request::Download::Legacy
