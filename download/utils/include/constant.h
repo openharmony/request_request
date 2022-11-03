@@ -90,6 +90,7 @@ static constexpr int TRANSACTION_COUNT = 100;
 constexpr int DOWNLOAD_INFO = 10000;
 
 constexpr int REQUEST_PARAMS_NUM = 2;
+constexpr size_t HEADER_DATA_MIN = sizeof(std::string) * 2;
 } // namespace OHOS::Request::Download
 
 #endif // CONSTANT_H

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <unistd.h>
 #include "download_service_stub.h"
 #include "ipc_skeleton.h"
 #include "message_parcel.h"
@@ -80,6 +81,13 @@ bool DownloadServiceStub::OnRequest(MessageParcel &data, MessageParcel &reply)
     config.SetDescription(data.ReadString());
 
     uint32_t headerSize = data.ReadUint32();
+    size_t readAbleSize = data.GetReadableBytes() / HEADER_DATA_MIN;
+    if (static_cast<size_t>(headerSize) > readAbleSize) {
+        if (fd > 0) {
+            close(fd);
+        }
+        return false;
+    }
     for (uint32_t i = 0; i < headerSize; i++) {
         config.SetHeader(data.ReadString(), data.ReadString());
     }
