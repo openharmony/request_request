@@ -169,7 +169,7 @@ napi_value JSUtil::Convert2JSValue(napi_env env, const std::vector<Upload::TaskS
         napi_value jsTaskState = nullptr;
         napi_create_object(env, &jsTaskState);
         napi_set_named_property(env, jsTaskState, "path", Convert2JSString(env, taskState.path));
-        napi_set_named_property(env, jsTaskState, "responseCode ", Convert2JSValue(env, taskState.responseCode));
+        napi_set_named_property(env, jsTaskState, "responseCode", Convert2JSValue(env, taskState.responseCode));
         napi_set_named_property(env, jsTaskState, "message", Convert2JSString(env, taskState.message));
         napi_set_element(env, jsTaskStates, index++, jsTaskState);
     }
