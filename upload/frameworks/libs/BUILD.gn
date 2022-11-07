@@ -71,7 +71,7 @@ ohos_shared_library("upload_lib") {
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
-    "time_service:time_service",
+    "time_service:time_client",
   ]
 
   public_configs = [ ":upload_lib_public_config" ]
