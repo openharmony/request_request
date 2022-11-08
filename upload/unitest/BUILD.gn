@@ -50,7 +50,7 @@ ohos_unittest("upload_obtain_file_UT_test") {
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
-    "time_service:time_service",
+    "time_service:time_client",
   ]
 }
 
@@ -102,6 +102,6 @@ ohos_unittest("upload_UT_test") {
     "relational_store:native_appdatafwk",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
-    "time_service:time_service",
+    "time_service:time_client",
   ]
 }
