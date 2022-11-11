@@ -42,16 +42,17 @@ public:
     static std::vector<std::string> Convert2StrVector(napi_env env, napi_value value);
     static napi_value Convert2JSStringVector(napi_env env, const std::vector<std::string> &cStrings);
     static napi_value Convert2JSUploadResponse(napi_env env, const Upload::UploadResponse &response);
-    static void ParseFunction(napi_env env, napi_value &object, const char *name, bool &hasFunction, napi_ref &output);
+    static bool ParseFunction(napi_env env, napi_value &object, const char *name, napi_ref &output);
     static std::vector<std::string> Convert2Header(napi_env env, napi_value value);
-    static std::shared_ptr<Upload::UploadConfig> ParseUploadConfig(napi_env env, napi_value jsConfig);
-    static void Convert2UploadConfig(napi_env env, napi_value jsConfig, Upload::UploadConfig &config);
+    static std::shared_ptr<Upload::UploadConfig> ParseUploadConfig(napi_env env, napi_value jsConfig,
+        const std::string &version);
+    static bool ToUploadConfig(napi_env env, napi_value jsConfig, Upload::UploadConfig &config);
     static napi_value Convert2JSUploadConfig(napi_env env, const Upload::UploadConfig &config);
 
-    static Upload::File Convert2File(napi_env env, napi_value jsFile);
+    static bool Convert2File(napi_env env, napi_value jsFile, Upload::File &file);
     static napi_value Convert2JSFile(napi_env env, const Upload::File &file);
 
-    static std::vector<Upload::File> Convert2FileVector(napi_env env, napi_value jsFiles);
+    static std::vector<Upload::File> Convert2FileVector(napi_env env, napi_value jsFiles, const std::string &version);
     static napi_value Convert2JSFileVector(napi_env env, const std::vector<Upload::File> &files);
 
     static Upload::RequestData Convert2RequestData(napi_env env, napi_value jsRequestData);
@@ -72,6 +73,15 @@ public:
     static napi_value CreateBusinessError(napi_env env, const
         Download::ExceptionErrorCode &errorCode, const std::string &msg);
     static void GetMessage(const std::vector<Upload::TaskState> &taskStates, std::string &msg);
+    static napi_value GetNamedProperty(napi_env env, napi_value object, const std::string &propertyName);
+    static bool HasNamedProperty(napi_env env, napi_value object, const std::string &propertyName);
+    static bool ToUploadOption(napi_env env, napi_value jsConfig, Upload::UploadConfig &config);
+    static bool SetData(napi_env env, napi_value jsConfig, Upload::UploadConfig &config);
+    static bool SetFiles(napi_env env, napi_value jsConfig, Upload::UploadConfig &config);
+    static bool SetHeader(napi_env env, napi_value jsConfig, Upload::UploadConfig &config);
+    static bool Convert2FileL5(napi_env env, napi_value jsFile, Upload::File &file);
+    static bool SetMandatoryParam(napi_env env, napi_value jsValue, const std::string &str, std::string &out);
+    static bool SetOptionalParam(napi_env env, napi_value jsValue, const std::string &str, std::string &out);
 };
 }
 #endif // REQUEST_JS_UTIL_H

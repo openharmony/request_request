@@ -121,6 +121,7 @@ private:
     static napi_status OffFail(napi_env env, napi_value callback, napi_value self);
     static napi_status OffComplete(napi_env env, napi_value callback, napi_value self);
     static napi_status ParseParam(napi_env env, napi_callback_info info, bool IsRequiredParam, JsParam &jsParam);
+    static void SetVersion(napi_env env, napi_value jsConfig, UploadTaskNapi *proxy, std::string &version);
 
     std::shared_ptr<Upload::IProgressCallback> onProgress_ = nullptr;
     std::shared_ptr<Upload::IHeaderReceiveCallback> onHeaderReceive_ = nullptr;

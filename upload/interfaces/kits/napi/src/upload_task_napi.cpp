@@ -306,20 +306,9 @@ bool UploadTaskNapi::operator==(const std::unique_ptr<Upload::UploadTask> &uploa
     return napiUploadTask_ == uploadTask;
 }
 
-void AddCallbackToConfig(std::shared_ptr<Upload::UploadConfig> &config, napi_env env, napi_value jsConfig,
+void AddCallbackToConfig(std::shared_ptr<UploadConfig> &config, napi_env env, napi_value jsConfig,
     UploadTaskNapi *proxy)
 {
-    bool hasSuccess = false;
-    bool hasFail = false;
-    bool hasComplete = false;
-
-    JSUtil::ParseFunction(env, jsConfig, "success", hasSuccess, proxy->success_);
-    JSUtil::ParseFunction(env, jsConfig, "fail", hasFail, proxy->fail_);
-    JSUtil::ParseFunction(env, jsConfig, "complete", hasComplete, proxy->complete_);
-
-    if (hasSuccess || hasFail || hasComplete) {
-        config->protocolVersion = "L5";
-    }
     config->fsuccess = std::bind(&UploadTaskNapi::OnSystemSuccess, proxy->env_, proxy->success_,
         std::placeholders::_1);
     config->ffail = std::bind(&UploadTaskNapi::OnSystemFail, proxy->env_, proxy->fail_,
@@ -361,13 +350,17 @@ napi_value UploadTaskNapi::Initialize(napi_env env, napi_callback_info info)
         delete proxy;
         return nullptr;
     }
-    proxy->napiUploadConfig_ = JSUtil::ParseUploadConfig(env, argv[parametersPosition]);
+    std::string version;
+    SetVersion(env, argv[parametersPosition], proxy, version);
+    proxy->napiUploadConfig_ = JSUtil::ParseUploadConfig(env, argv[parametersPosition], version);
     if (proxy->napiUploadConfig_ == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Initialize. ParseUploadConfig fail.");
         delete proxy;
         return nullptr;
     }
-    AddCallbackToConfig(proxy->napiUploadConfig_, env, argv[parametersPosition], proxy);
+    if (proxy->napiUploadConfig_->protocolVersion == API5) {
+        AddCallbackToConfig(proxy->napiUploadConfig_, env, argv[parametersPosition], proxy);
+    }
     proxy->napiUploadTask_ = std::make_unique<Upload::UploadTask>(proxy->napiUploadConfig_);
     proxy->napiUploadTask_->SetContext(context);
     proxy->napiUploadTask_->ExecuteTask();
@@ -385,33 +378,43 @@ napi_value UploadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     return self;
 }
 
+void UploadTaskNapi::SetVersion(napi_env env, napi_value jsConfig, UploadTaskNapi *proxy, std::string &version)
+{
+    if ((JSUtil::ParseFunction(env, jsConfig, "success", proxy->success_)) ||
+        (JSUtil::ParseFunction(env, jsConfig, "fail", proxy->fail_)) ||
+        (JSUtil::ParseFunction(env, jsConfig, "complete", proxy->complete_))) {
+        version = API5;
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "config.protocolVersion = API5");
+    }
+}
+
 napi_status UploadTaskNapi::GetContext(napi_env env, napi_value *argv, int& parametersPosition,
     std::shared_ptr<OHOS::AbilityRuntime::Context>& context)
 {
     bool stageMode = false;
     napi_status status = OHOS::AbilityRuntime::IsStageContext(env, argv[0], stageMode);
     if (status != napi_ok) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "GetAndSetContext. L7");
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "GetAndSetContext. API8");
         auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
         if (ability == nullptr) {
-            UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "GetAndSetContext. L7. GetCurrentAbility ability == nullptr.");
+            UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "GetAndSetContext. API8. GetCurrentAbility ability == nullptr.");
             return napi_generic_failure;
         }
         context = ability->GetAbilityContext();
     } else {
-        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "GetAndSetContext. L8");
+        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "GetAndSetContext. API9");
         parametersPosition = 1;
         if (stageMode) {
             context = OHOS::AbilityRuntime::GetStageModeContext(env, argv[0]);
             if (context == nullptr) {
                 UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
-                    "GetAndSetContext. L8. GetStageModeContext contextRtm == nullptr.");
+                    "GetAndSetContext. API9. GetStageModeContext contextRtm == nullptr.");
                 return napi_generic_failure;
             }
         } else {
             auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
             if (ability == nullptr) {
-                UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "GetAndSetContext. L8. GetCurrentAbility ability == nullptr.");
+                UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "GetAndSetContext. API9. GetCurrentAbility ability == nullptr.");
                 return napi_generic_failure;
             }
             context = ability->GetAbilityContext();
