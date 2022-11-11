@@ -125,7 +125,7 @@ void UploadTask::Run(void *arg)
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Run. In.");
     usleep(USLEEP_INTERVEL_BEFOR_RUN);
     ((UploadTask *)arg)->OnRun();
-    if (((UploadTask *)arg)->uploadConfig_->protocolVersion == "L5") {
+    if (((UploadTask *)arg)->uploadConfig_->protocolVersion == API5) {
         if (((UploadTask *)arg)->uploadConfig_->fcomplete) {
             ((UploadTask *)arg)->uploadConfig_->fcomplete();
             UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Complete.");
@@ -282,7 +282,7 @@ std::vector<TaskState> UploadTask::GetTaskStates()
 void UploadTask::OnFail()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnFail. In.");
-    if (uploadConfig_->protocolVersion == "L5") {
+    if (uploadConfig_->protocolVersion == API5) {
         return;
     }
     std::lock_guard<std::mutex> guard(mutex_);

@@ -120,7 +120,7 @@ void CUrlAdp::SetBehaviorOpt(CURL *curl)
 void CUrlAdp::SetCallbackOpt(CURL *curl)
 {
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, &mfileData_);
-    if (config_->protocolVersion == "L5") {
+    if (config_->protocolVersion == API5) {
         curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallbackL5);
     } else {
         curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
