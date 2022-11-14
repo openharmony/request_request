@@ -143,7 +143,7 @@ napi_status UploadTaskNapiV9::InitParam(napi_env env, napi_callback_info info, n
         return napi_invalid_arg;
     }
 
-    proxy->napiUploadConfig_ = JSUtil::ParseUploadConfig(env, argv[1]);
+    proxy->napiUploadConfig_ = JSUtil::ParseUploadConfig(env, argv[1], "API9");
     if (proxy->napiUploadConfig_ == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Initialize. ParseConfig fail.");
         JSUtil::ThrowError(env, Download::EXCEPTION_PARAMETER_CHECK, "config error!");
@@ -173,13 +173,13 @@ napi_status UploadTaskNapiV9::GetContext(napi_env env, napi_value *argv,
     context = OHOS::AbilityRuntime::GetStageModeContext(env, argv[0]);
     if (context == nullptr) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
-            "GetAndSetContext. L8. GetStageModeContext contextRtm == nullptr.");
+            "GetAndSetContext. API9. GetStageModeContext contextRtm == nullptr.");
         return napi_generic_failure;
     }
     return napi_ok;
 }
 
-uint32_t UploadTaskNapiV9::CheckFilePath(const std::shared_ptr<Upload::UploadConfig> &config,
+uint32_t UploadTaskNapiV9::CheckFilePath(const std::shared_ptr<UploadConfig> &config,
     std::shared_ptr<OHOS::AbilityRuntime::Context> &context, std::vector<Upload::TaskState> &taskStates)
 {
     uint32_t ret = Download::EXCEPTION_OK;

@@ -186,20 +186,19 @@ napi_value JSUtil::Convert2JSValue(napi_env env, int32_t value)
     return jsValue;
 }
 
-void JSUtil::ParseFunction(napi_env env, napi_value &object, const char *name, bool &hasFunction, napi_ref &output)
+bool JSUtil::ParseFunction(napi_env env, napi_value &object, const char *name, napi_ref &output)
 {
-    napi_value value = nullptr;
-    auto ret = napi_get_named_property(env, object, name, &value);
-    if ((ret == napi_ok) && (value != nullptr)) {
-        napi_valuetype valueType = napi_null;
-        NAPI_CALL_RETURN_VOID(env, napi_typeof(env, value, &valueType));
-        if (valueType == napi_undefined) {
-            return;
-        }
-        NAPI_ASSERT_RETURN_VOID(env, valueType == napi_function, "Wrong argument, function expected.");
-        NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, value, 1, &output));
-        hasFunction = true;
+    napi_value value = GetNamedProperty(env, object, name);
+    if (value == nullptr) {
+        return false;
     }
+    napi_valuetype valueType = napi_null;
+    auto ret = napi_typeof(env, value, &valueType);
+    if ((ret != napi_ok) || (valueType != napi_function)) {
+        return false;
+    }
+    napi_create_reference(env, value, 1, &output);
+    return true;
 }
 
 napi_value JSUtil::Convert2JSString(napi_env env, const std::string &cString)
@@ -208,17 +207,22 @@ napi_value JSUtil::Convert2JSString(napi_env env, const std::string &cString)
     napi_create_string_utf8(env, cString.c_str(), cString.size(), &jsValue);
     return jsValue;
 }
-std::shared_ptr<Upload::UploadConfig> JSUtil::ParseUploadConfig(napi_env env, napi_value jsConfig)
+
+std::shared_ptr<UploadConfig> JSUtil::ParseUploadConfig(napi_env env, napi_value jsConfig,
+    const std::string &version)
 {
-    Upload::UploadConfig config;
-    Convert2UploadConfig(env, jsConfig, config);
-    if (!CheckConfig(config)) {
+    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "ParseUploadConfig in");
+    UploadConfig config;
+    config.protocolVersion = version;
+    auto func = (config.protocolVersion == API5) ? ToUploadOption : ToUploadConfig;
+    bool ret = func(env, jsConfig, config);
+    if ((!ret) || (!CheckConfig(config))) {
         return nullptr;
     }
-    return std::make_shared<Upload::UploadConfig>(config);
+    return std::make_shared<UploadConfig>(config);
 }
 
-bool JSUtil::CheckConfig(const Upload::UploadConfig &config)
+bool JSUtil::CheckConfig(const UploadConfig &config)
 {
     if (!CheckUrl(config.url)) {
         return false;
@@ -242,37 +246,122 @@ bool JSUtil::CheckMethod(const std::string &method)
     return (method == POST || method == PUT);
 }
 
-void JSUtil::Convert2UploadConfig(napi_env env, napi_value jsConfig, Upload::UploadConfig &config)
+napi_value JSUtil::GetNamedProperty(napi_env env, napi_value object, const std::string &propertyName)
 {
     napi_value value = nullptr;
-    napi_get_named_property(env, jsConfig, "url", &value);
-    if (value != nullptr) {
-        config.url = Convert2String(env, value);
+    bool hasProperty = false;
+    NAPI_CALL(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty));
+    if (!hasProperty) {
+        return value;
     }
-    value = nullptr;
-    napi_get_named_property(env, jsConfig, "header", &value);
-    if (value != nullptr) {
-        config.header = Convert2Header(env, value);
-    }
-    value = nullptr;
-    napi_get_named_property(env, jsConfig, "method", &value);
-    if (value != nullptr) {
-        config.method = Convert2String(env, value);
-        transform(config.method.begin(), config.method.end(), config.method.begin(), ::toupper);
-    }
-    value = nullptr;
-    napi_get_named_property(env, jsConfig, "files", &value);
-    if (value != nullptr) {
-        config.files = Convert2FileVector(env, value);
-    }
-    value = nullptr;
-    napi_get_named_property(env, jsConfig, "data", &value);
-    if (value != nullptr) {
-        config.data = Convert2RequestDataVector(env, value);
-    }
+    NAPI_CALL(env, napi_get_named_property(env, object, propertyName.c_str(), &value));
+    return value;
 }
 
-napi_value JSUtil::Convert2JSUploadConfig(napi_env env, const Upload::UploadConfig &config)
+bool JSUtil::HasNamedProperty(napi_env env, napi_value object, const std::string &propertyName)
+{
+    bool hasProperty = false;
+    NAPI_CALL_BASE(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty), false);
+    return hasProperty;
+}
+
+bool JSUtil::SetData(napi_env env, napi_value jsConfig, UploadConfig &config)
+{
+    if (!HasNamedProperty(env, jsConfig, "data")) {
+        return true;
+    }
+    napi_value data = nullptr;
+    napi_get_named_property(env, jsConfig, "data", &data);
+    if (data == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "GetNamedProperty SetData failed");
+        return false;
+    }
+    config.data = Convert2RequestDataVector(env, data);
+    return true;
+}
+
+bool JSUtil::SetFiles(napi_env env, napi_value jsConfig, UploadConfig &config)
+{
+    napi_value files = GetNamedProperty(env, jsConfig, "files");
+    if (files == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "GetNamedProperty SetFiles failed");
+        return false;
+    }
+    config.files = Convert2FileVector(env, files, config.protocolVersion);
+    return true;
+}
+
+bool JSUtil::SetHeader(napi_env env, napi_value jsConfig, UploadConfig &config)
+{
+    if (!HasNamedProperty(env, jsConfig, "header")) {
+        return true;
+    }
+    napi_value header = nullptr;
+    napi_get_named_property(env, jsConfig, "header", &header);
+    if (header == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "GetNamedProperty SetHeader failed");
+        return false;
+    }
+    config.header = Convert2Header(env, header);
+    return true;
+}
+
+bool JSUtil::ToUploadOption(napi_env env, napi_value jsConfig, UploadConfig &config)
+{
+    if (!SetMandatoryParam(env, jsConfig, "url", config.url)) {
+        return false;
+    }
+    if (!SetData(env, jsConfig, config)) {
+        return false;
+    }
+    if (!SetFiles(env, jsConfig, config)) {
+        return false;
+    }
+    if (!SetHeader(env, jsConfig, config)) {
+        return false;
+    }
+    if (!SetOptionalParam(env, jsConfig, "method", config.method)) {
+        return false;
+    }
+    return true;
+}
+
+bool JSUtil::ToUploadConfig(napi_env env, napi_value jsConfig, UploadConfig &config)
+{
+    napi_value url = GetNamedProperty(env, jsConfig, "url");
+    if (url == nullptr) {
+        return false;
+    }
+    config.url = Convert2String(env, url);
+
+    napi_value header = GetNamedProperty(env, jsConfig, "header");
+    if (header == nullptr) {
+        return false;
+    }
+    config.header = Convert2Header(env, header);
+
+    napi_value method = GetNamedProperty(env, jsConfig, "method");
+    if (method == nullptr) {
+        return false;
+    }
+    config.method = Convert2String(env, method);
+    transform(config.method.begin(), config.method.end(), config.method.begin(), ::toupper);
+
+    napi_value files = GetNamedProperty(env, jsConfig, "files");
+    if (files == nullptr) {
+        return false;
+    }
+    config.files = Convert2FileVector(env, files, config.protocolVersion);
+
+    napi_value data = GetNamedProperty(env, jsConfig, "data");
+    if (data == nullptr) {
+        return false;
+    }
+    config.data = Convert2RequestDataVector(env, data);
+    return true;
+}
+
+napi_value JSUtil::Convert2JSUploadConfig(napi_env env, const UploadConfig &config)
 {
     napi_value jsConfig = nullptr;
     napi_create_object(env, &jsConfig);
@@ -284,30 +373,76 @@ napi_value JSUtil::Convert2JSUploadConfig(napi_env env, const Upload::UploadConf
     return jsConfig;
 }
 
-Upload::File JSUtil::Convert2File(napi_env env, napi_value jsFile)
+bool JSUtil::Convert2File(napi_env env, napi_value jsFile, Upload::File &file)
 {
-    Upload::File file;
+    napi_value filename = GetNamedProperty(env, jsFile, "filename");
+    if (filename == nullptr) {
+        return false;
+    }
+    file.filename = Convert2String(env, filename);
+
+    napi_value name = GetNamedProperty(env, jsFile, "name");
+    if (name == nullptr) {
+        return false;
+    }
+    file.name = Convert2String(env, name);
+
+    napi_value uri = GetNamedProperty(env, jsFile, "uri");
+    if (uri == nullptr) {
+        return false;
+    }
+    file.uri = Convert2String(env, uri);
+
+    napi_value type = GetNamedProperty(env, jsFile, "type");
+    if (type == nullptr) {
+        return false;
+    }
+    file.type = Convert2String(env, type);
+    return true;
+}
+
+bool JSUtil::SetMandatoryParam(napi_env env, napi_value jsValue, const std::string &str, std::string &out)
+{
+    napi_value value = GetNamedProperty(env, jsValue, str);
+    if (value == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "SetMandatoryParam failed");
+        return false;
+    }
+    out = Convert2String(env, value);
+    return true;
+}
+
+bool JSUtil::SetOptionalParam(napi_env env, napi_value jsValue, const std::string &str, std::string &out)
+{
+    if (!HasNamedProperty(env, jsValue, str)) {
+        out = (str == "method" ? "POST" : "");
+        return true;
+    }
     napi_value value = nullptr;
-    napi_get_named_property(env, jsFile, "filename", &value);
-    if (value != nullptr) {
-        file.filename = Convert2String(env, value);
+    napi_get_named_property(env, jsValue, str.c_str(), &value);
+    if (value == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "SetOptionalParam failed");
+        return false;
     }
-    value = nullptr;
-    napi_get_named_property(env, jsFile, "name", &value);
-    if (value != nullptr) {
-        file.name = Convert2String(env, value);
+    out = Convert2String(env, value);
+    return true;
+}
+
+bool JSUtil::Convert2FileL5(napi_env env, napi_value jsFile, Upload::File &file)
+{
+    if (!SetOptionalParam(env, jsFile, "filename", file.filename)) {
+        return false;
     }
-    value = nullptr;
-    napi_get_named_property(env, jsFile, "uri", &value);
-    if (value != nullptr) {
-        file.uri = Convert2String(env, value);
+    if (!SetOptionalParam(env, jsFile, "name", file.name)) {
+        return false;
     }
-    value = nullptr;
-    napi_get_named_property(env, jsFile, "type", &value);
-    if (value != nullptr) {
-        file.type = Convert2String(env, value);
+    if (!SetMandatoryParam(env, jsFile, "uri", file.uri)) {
+        return false;
     }
-    return file;
+    if (!SetOptionalParam(env, jsFile, "type", file.type)) {
+        return false;
+    }
+    return true;
 }
 
 napi_value JSUtil::Convert2JSFile(napi_env env, const Upload::File &file)
@@ -321,7 +456,7 @@ napi_value JSUtil::Convert2JSFile(napi_env env, const Upload::File &file)
     return jsFile;
 }
 
-std::vector<Upload::File> JSUtil::Convert2FileVector(napi_env env, napi_value jsFiles)
+std::vector<Upload::File> JSUtil::Convert2FileVector(napi_env env, napi_value jsFiles, const std::string &version)
 {
     bool isArray = false;
     napi_is_array(env, jsFiles, &isArray);
@@ -330,12 +465,22 @@ std::vector<Upload::File> JSUtil::Convert2FileVector(napi_env env, napi_value js
     napi_get_array_length(env, jsFiles, &length);
     std::vector<Upload::File> files;
     for (uint32_t i = 0; i < length; ++i) {
-        napi_value file = nullptr;
-        napi_get_element(env, jsFiles, i, &file);
-        if (file == nullptr) {
+        napi_value jsFile = nullptr;
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(env, &scope);
+        napi_get_element(env, jsFiles, i, &jsFile);
+        if (jsFile == nullptr) {
             continue;
         }
-        files.push_back(Convert2File(env, file));
+
+        Upload::File file;
+        auto func = (version == API5) ? Convert2FileL5 : Convert2File;
+        bool ret = func(env, jsFile, file);
+        if (!ret) {
+            continue;
+        }
+        files.push_back(file);
+        napi_close_handle_scope(env, scope);
     }
     return files;
 }
