@@ -340,6 +340,7 @@ napi_value UploadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     auto *proxy = new (std::nothrow) UploadTaskNapi();
     if (proxy == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create UploadTaskNapi");
+        NAPI_ASSERT(env, false, "Failed to create UploadTaskNapi");
         return nullptr;
     }
     proxy->env_ = env;
@@ -348,6 +349,7 @@ napi_value UploadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     if (getStatus != napi_ok) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Initialize. GetContext fail.");
         delete proxy;
+        NAPI_ASSERT(env, false, "Initialize. GetContext fail");
         return nullptr;
     }
     std::string version;
@@ -356,6 +358,7 @@ napi_value UploadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     if (proxy->napiUploadConfig_ == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Initialize. ParseUploadConfig fail.");
         delete proxy;
+        NAPI_ASSERT(env, false, "Initialize. ParseUploadConfig fail");
         return nullptr;
     }
     if (proxy->napiUploadConfig_->protocolVersion == API5) {
@@ -373,6 +376,7 @@ napi_value UploadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "UploadTaskNapi. napi_wrap OK.");
     if (napi_wrap(env, self, proxy, finalize, nullptr, nullptr) != napi_ok) {
         finalize(env, proxy, nullptr);
+        NAPI_ASSERT(env, false, "napi_wrap fail");
         return nullptr;
     }
     return self;
