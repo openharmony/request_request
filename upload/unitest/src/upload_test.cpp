@@ -51,36 +51,74 @@ void UploadTest::TearDown()
 }
 
 /**
- * @tc.name: UploadTest.UploadTestTest_001
+ * @tc.name: UploadTest.PostUploadNetworkOff
+ * @tc.desc: Use post to upload files when the network is off.
  * @tc.type: FUNC
  */
-HWTEST_F(UploadTest, UploadTest_001, TestSize.Level1)
+HWTEST_F(UploadTest, PostUploadNetworkOff, TestSize.Level0)
 {
-    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********UploadUtTest_001**in**********");
-    FILE *fd1;
-    FILE *fd2;
-    FileData fileInfo1;
-    FileData fileInfo2;
-    std::vector<FileData> fileArray;
-    std::shared_ptr<UploadConfig> uploadConfig = std::make_shared<UploadConfig>();
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********PostUploadNetworkOff**in**********");
+    FileData fileData;
+    fileData.name = "upload_UT_test_1.xml";
+    std::vector<FileData> fileDatas;
+    fileDatas.push_back(fileData);
 
-    fd1 = fopen("upload_UT_test_1.xml", "rb");
-    fd2 = fopen("upload_UT_test_2.xml", "rb");
-    fileInfo1.fp = fd1;
-    fileInfo1.name = "upload_UT_test_1.xml";
-    fileInfo2.fp = fd2;
-    fileInfo2.name = "upload_UT_test_2.xml";
-    if (fd1 && fd2) {
-        // url needs to be configured according to the server URL
-        uploadConfig->url = "http://192.168.1.180/uploadservice/";
-        fileArray.push_back(fileInfo1);
-        fileArray.push_back(fileInfo2);
-        auto curl = std::make_shared<CUrlAdp>(fileArray, uploadConfig);
-        curl->DoUpload(nullptr);
-    } else {
-        UPLOAD_HILOGE(UPLOAD_MODULE_TEST, "open file failed");
-    }
-    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********UploadUtTest_001***out**********");
-    SUCCEED();
+    std::shared_ptr<UploadConfig> uploadConfig = std::make_shared<UploadConfig>();
+    uploadConfig->url = "http://192.168.1.180/uploadservice/";
+    uploadConfig->method = "POST";
+
+    auto curl = std::make_shared<CUrlAdp>(fileDatas, uploadConfig);
+    uint32_t ret = curl->DoUpload(nullptr);
+    EXPECT_EQ(ret, UPLOAD_ERRORCODE_UPLOAD_FAIL);
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********PostUploadNetworkOff***out**********");
+}
+
+/**
+ * @tc.name: UploadTest.PutUploadNetworkOff
+ * @tc.desc: Use put to upload files when the network is off.
+ * @tc.type: FUNC
+ */
+HWTEST_F(UploadTest, PutUploadNetworkOff, TestSize.Level0)
+{
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********PutUploadNetworkOff**in**********");
+    FileData fileData;
+    fileData.name = "upload_UT_test_1.xml";
+    std::vector<FileData> fileDatas;
+    fileDatas.push_back(fileData);
+
+    std::shared_ptr<UploadConfig> uploadConfig = std::make_shared<UploadConfig>();
+    uploadConfig->url = "http://192.168.1.180/uploadservice/";
+    uploadConfig->method = "PUT";
+    uploadConfig->protocolVersion = "API5";
+
+    auto curl = std::make_shared<CUrlAdp>(fileDatas, uploadConfig);
+    uint32_t ret = curl->DoUpload(nullptr);
+    EXPECT_EQ(ret, UPLOAD_ERRORCODE_UPLOAD_FAIL);
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********PutUploadNetworkOff***out**********");
+}
+
+/**
+ * @tc.name: UploadTest.UploadAfterRemoveTask
+ * @tc.desc: Upload after removing the task.
+ * @tc.type: FUNC
+ */
+HWTEST_F(UploadTest, UploadAfterRemoveTask, TestSize.Level0)
+{
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********UploadAfterRemoveTask**in**********");
+    FileData fileData;
+    fileData.name = "upload_UT_test_1.xml";
+    std::vector<FileData> fileDatas;
+    fileDatas.push_back(fileData);
+
+    std::shared_ptr<UploadConfig> uploadConfig = std::make_shared<UploadConfig>();
+    uploadConfig->url = "http://192.168.1.180/uploadservice/";
+    uploadConfig->method = "POST";
+
+    auto curl = std::make_shared<CUrlAdp>(fileDatas, uploadConfig);
+    bool res = curl->Remove();
+    EXPECT_EQ(res, true);
+    uint32_t ret = curl->DoUpload(nullptr);
+    EXPECT_EQ(ret, UPLOAD_ERRORCODE_UPLOAD_FAIL);
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********UploadAfterRemoveTask***out**********");
 }
 } // end of OHOS::Request::Upload
