@@ -137,15 +137,18 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     napi_status getStatus = GetContext(env, argv[0], parametersPosition, context);
     if (getStatus != napi_ok) {
         DOWNLOAD_HILOGE("Initialize. GetContext fail.");
+        NAPI_ASSERT(env, false, "Initialize. GetContext fail.");
         return nullptr;
     }
     if (context->GetApplicationInfo() == nullptr) {
         DOWNLOAD_HILOGE("ApplicationInfo is null");
+        NAPI_ASSERT(env, false, "ApplicationInfo is null");
         return nullptr;
     }
     DownloadConfig config;
     if (!ParseConfig(env, argv[parametersPosition], config)) {
         DOWNLOAD_HILOGE("download config has wrong type");
+        NAPI_ASSERT(env, false, "download config has wrong type");
         return nullptr;
     }
     config.SetBundleName(context->GetBundleName());
@@ -154,6 +157,7 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     auto *task = DownloadManager::GetInstance()->EnqueueTask(config, err);
     if (task == nullptr) {
         DOWNLOAD_HILOGE("download task fail");
+        NAPI_ASSERT(env, false, "download task fail");
         return nullptr;
     }
     auto finalize = [](napi_env env, void *data, void *hint) {
@@ -163,6 +167,7 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     };
     if (napi_wrap(env, self, task, finalize, nullptr, nullptr) != napi_ok) {
         finalize(env, task, nullptr);
+        NAPI_ASSERT(env, false, "napi_wrap fail");
         return nullptr;
     }
     DOWNLOAD_HILOGD("Succeed to allocate download task");
