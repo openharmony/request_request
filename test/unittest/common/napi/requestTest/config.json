@@ -16,7 +16,8 @@
     "package": "com.example.myapplication",
     "name": ".MyApplication",
     "deviceType": [
-      "default"
+      "default",
+      "tablet"
     ],
     "reqPermissions": [
       {
