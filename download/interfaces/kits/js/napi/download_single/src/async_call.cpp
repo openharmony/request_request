@@ -156,13 +156,20 @@ void AsyncCall::GetOffCallbackParameter(napi_env env, const std::string &type, n
 {
     DOWNLOAD_HILOGD("type:%{public}s", type.c_str());
     if (type == FUNCTION_OFF_PROGRESS || type == FUNCTION_OFF_FAIL) {
-        bool status;
-        NAPI_CALL_RETURN_VOID(env, napi_get_value_bool(env, result[ARG_DATA], &status));
+        napi_valuetype valueType = napi_undefined;
         int ret = 0;
-        if (status == false) {
+        napi_typeof(env, result[ARG_DATA], &valueType);
+        if (valueType == napi_boolean) {
+            bool status;
+            NAPI_CALL_RETURN_VOID(env, napi_get_value_bool(env, result[ARG_DATA], &status));
+
+            if (status == false) {
+                ret = -1;
+            }
+        } else {
             ret = -1;
         }
-        DOWNLOAD_HILOGD("status:%{public}d, ret:%{public}d", status, ret);
+        DOWNLOAD_HILOGD("ret:%{public}d", ret);
         result[ARG_ERROR] = NapiUtils::CreateInt32(env, ret);
         if (type == "progress") {
             result[ARG_DATA] = NapiUtils::CreateInt32(env, ret);
