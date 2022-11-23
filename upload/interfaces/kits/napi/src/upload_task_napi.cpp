@@ -292,7 +292,7 @@ napi_status UploadTaskNapi::OffComplete(napi_env env, napi_value callback, napi_
     return napi_ok;
 }
 
-UploadTaskNapi &UploadTaskNapi::operator=(std::unique_ptr<Upload::UploadTask> &&uploadTask)
+UploadTaskNapi &UploadTaskNapi::operator=(std::shared_ptr<Upload::UploadTask> &&uploadTask)
 {
     if (napiUploadTask_ == uploadTask) {
         return *this;
@@ -301,7 +301,7 @@ UploadTaskNapi &UploadTaskNapi::operator=(std::unique_ptr<Upload::UploadTask> &&
     return *this;
 }
 
-bool UploadTaskNapi::operator==(const std::unique_ptr<Upload::UploadTask> &uploadTask)
+bool UploadTaskNapi::operator==(const std::shared_ptr<Upload::UploadTask> &uploadTask)
 {
     return napiUploadTask_ == uploadTask;
 }
@@ -364,7 +364,7 @@ napi_value UploadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     if (proxy->napiUploadConfig_->protocolVersion == API5) {
         AddCallbackToConfig(proxy->napiUploadConfig_, env, argv[parametersPosition], proxy);
     }
-    proxy->napiUploadTask_ = std::make_unique<Upload::UploadTask>(proxy->napiUploadConfig_);
+    proxy->napiUploadTask_ = std::make_shared<Upload::UploadTask>(proxy->napiUploadConfig_);
     proxy->napiUploadTask_->SetContext(context);
     proxy->napiUploadTask_->ExecuteTask();
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Initialize. GetAndSetContext[%{public}d]", getStatus);
