@@ -105,7 +105,7 @@ napi_value UploadTaskNapiV9::Initialize(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    proxy->napiUploadTask_ = std::make_unique<Upload::UploadTask>(proxy->napiUploadConfig_);
+    proxy->napiUploadTask_ = std::make_shared<Upload::UploadTask>(proxy->napiUploadConfig_);
     if (proxy->napiUploadTask_ == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create UploadTask");
         delete proxy;
@@ -482,7 +482,7 @@ napi_status UploadTaskNapiV9::OffComplete(napi_env env, napi_value callback, nap
     return napi_ok;
 }
 
-UploadTaskNapiV9 &UploadTaskNapiV9::operator=(std::unique_ptr<Upload::UploadTask> &&uploadTask)
+UploadTaskNapiV9 &UploadTaskNapiV9::operator=(std::shared_ptr<Upload::UploadTask> &&uploadTask)
 {
     if (napiUploadTask_ == uploadTask) {
         return *this;
@@ -491,7 +491,7 @@ UploadTaskNapiV9 &UploadTaskNapiV9::operator=(std::unique_ptr<Upload::UploadTask
     return *this;
 }
 
-bool UploadTaskNapiV9::operator==(const std::unique_ptr<Upload::UploadTask> &uploadTask)
+bool UploadTaskNapiV9::operator==(const std::shared_ptr<Upload::UploadTask> &uploadTask)
 {
     return napiUploadTask_ == uploadTask;
 }
