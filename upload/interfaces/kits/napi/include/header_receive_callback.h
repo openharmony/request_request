@@ -25,26 +25,26 @@
 #include "i_callbackable_judger.h"
 
 namespace OHOS::Request::Upload {
-class HeaderReceiveCallback : public IHeaderReceiveCallback {
+class HeaderReceiveCallback : public IHeaderReceiveCallback,
+                              public std::enable_shared_from_this<HeaderReceiveCallback> {
 public:
-    HeaderReceiveCallback(ICallbackAbleJudger *judger, napi_env env, napi_value callback);
+    HeaderReceiveCallback(napi_env env, napi_value callback);
     virtual ~HeaderReceiveCallback();
     virtual void HeaderReceive(const std::string &header) override;
     napi_ref GetCallback() override;
-private:
-    struct HeaderReceiveWorker {
-        ICallbackAbleJudger *judger;
-        const HeaderReceiveCallback *callback = nullptr;
-        const std::string header;
-        HeaderReceiveWorker(ICallbackAbleJudger *judgerIn, const HeaderReceiveCallback *callbackIn,
-            const std::string &headerIn)
-            : judger(judgerIn), callback(callbackIn), header(headerIn) {}
-    };
+    std::string GetHeader();
+    napi_env GetEnv();
+    std::mutex mutex_;
 
-    ICallbackAbleJudger *judger_;
+private:
+    std::string header_;
     napi_ref callback_ = nullptr;
     napi_env env_;
     uv_loop_s *loop_ = nullptr;
+};
+
+struct HeaderReceiveWorker {
+    std::shared_ptr<HeaderReceiveCallback> observer = nullptr;
 };
 } // end of OHOS::Request::Upload
 #endif

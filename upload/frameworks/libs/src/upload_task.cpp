@@ -36,25 +36,32 @@ UploadTask::UploadTask(std::shared_ptr<UploadConfig> &uploadConfig)
     failCallback_ = nullptr;
     completeCallback_ = nullptr;
     context_ = nullptr;
+    isRemoved_ = false;
 }
 
 UploadTask::~UploadTask()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "~UploadTask. In.");
     std::lock_guard<std::mutex> guard(mutex_);
-    SetCallback(TYPE_PROGRESS_CALLBACK, nullptr);
-    SetCallback(TYPE_HEADER_RECEIVE_CALLBACK, nullptr);
-    SetCallback(TYPE_FAIL_CALLBACK, nullptr);
-    SetCallback(TYPE_COMPLETE_CALLBACK, nullptr);
-    Remove();
+    progressCallback_ = nullptr;
+    headerReceiveCallback_ = nullptr;
+    failCallback_ = nullptr;
+    completeCallback_ = nullptr;
+    if (!isRemoved_) {
+        Remove();
+    }
 }
 
 bool UploadTask::Remove()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Remove. In.");
-    if (curlAdp_ != nullptr) {
-        return curlAdp_->Remove();
+    if (curlAdp_ == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "curlAdp_ == nullptr");
+        return false;
     }
+    std::lock_guard<std::mutex> guard(removeMutex_);
+    isRemoved_ = true;
+    curlAdp_->Remove();
     ClearFileArray();
     return true;
 }
@@ -124,10 +131,18 @@ void UploadTask::Run(void *arg)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Run. In.");
     usleep(USLEEP_INTERVEL_BEFOR_RUN);
-    ((UploadTask *)arg)->OnRun();
-    if (((UploadTask *)arg)->uploadConfig_->protocolVersion == API5) {
-        if (((UploadTask *)arg)->uploadConfig_->fcomplete) {
-            ((UploadTask *)arg)->uploadConfig_->fcomplete();
+    if (task == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "task == nullptr");
+        return;
+    }
+    task->OnRun();
+    std::lock_guard<std::mutex> guard(task->removeMutex_);
+    if (task->isRemoved_) {
+        return;
+    }
+    if (task->uploadConfig_->protocolVersion == API5) {
+        if (task->uploadConfig_->fcomplete) {
+            task->uploadConfig_->fcomplete();
             UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Complete.");
         }
     }
@@ -183,7 +198,7 @@ uint32_t UploadTask::StartUploadFile()
     }
 
     curlAdp_ = std::make_shared<CUrlAdp>(fileDatas_, uploadConfig_);
-    return curlAdp_->DoUpload(this);
+    return curlAdp_->DoUpload(shared_from_this());
 }
 
 std::string UploadTask::GetCodeMessage(uint32_t code)
@@ -213,14 +228,17 @@ void UploadTask::OnRun()
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnRun. In.");
     state_ = STATE_RUNNING;
     uint32_t ret = StartUploadFile();
-    if (ret != UPLOAD_OK) {
-        OnFail();
-        ReportTaskFault(ret);
-    } else {
-        OnComplete();
+    std::lock_guard<std::mutex> guard(removeMutex_);
+    if (!isRemoved_) {
+        if (ret != UPLOAD_OK) {
+            UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "ret != UPLOAD_OK");
+            OnFail();
+            ReportTaskFault(ret);
+        } else {
+            OnComplete();
+        }
+        ClearFileArray();
     }
-
-    ClearFileArray();
     totalSize_ = 0;
 }
 
@@ -243,6 +261,10 @@ void UploadTask::ReportTaskFault(uint32_t ret) const
 void UploadTask::OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnProgress. In.");
+    if (isRemoved_) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnProgress isRemoved");
+        return;
+    }
     if (ulnow == uploadedSize_) {
         return;
     }
@@ -260,6 +282,10 @@ void UploadTask::OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ult
 void UploadTask::OnHeaderReceive(const std::string &header)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnHeaderReceive. In.");
+    if (isRemoved_) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnHeaderReceive isRemoved");
+        return;
+    }
     std::lock_guard<std::mutex> guard(mutex_);
     header_ = header;
     if (headerReceiveCallback_) {
@@ -282,6 +308,10 @@ std::vector<TaskState> UploadTask::GetTaskStates()
 void UploadTask::OnFail()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnFail. In.");
+    if (isRemoved_) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnFail isRemoved");
+        return;
+    }
     if (uploadConfig_->protocolVersion == API5) {
         return;
     }
@@ -297,6 +327,13 @@ void UploadTask::OnFail()
 void UploadTask::OnComplete()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnComplete. In.");
+    if (isRemoved_) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnComplete isRemoved");
+        return;
+    }
+    if (uploadConfig_->protocolVersion == API5) {
+        return;
+    }
     std::lock_guard<std::mutex> guard(mutex_);
     std::vector<TaskState> taskStates = GetTaskStates();
     taskStates_ = taskStates;
@@ -316,6 +353,10 @@ void UploadTask::ExecuteTask()
 
 void UploadTask::ClearFileArray()
 {
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "ClearFileArray()");
+    if (fileDatas_.empty()) {
+        return;
+    }
     for (auto &file : fileDatas_) {
         if (file.fp != NULL) {
             fclose(file.fp);

@@ -58,9 +58,6 @@ private:
     static napi_status GetContext(napi_env env, napi_value *argv, int& parametersPosition,
         std::shared_ptr<OHOS::AbilityRuntime::Context>& context);
 
-    std::unique_ptr<Upload::UploadTask> napiUploadTask_ = nullptr;
-    std::shared_ptr<Upload::UploadConfig> napiUploadConfig_ = nullptr;
-
     struct RemoveContextInfo : public AsyncCall::Context {
         UploadTaskNapi *proxy = nullptr;
         bool removeStatus = false;
@@ -127,6 +124,8 @@ private:
     std::shared_ptr<Upload::IHeaderReceiveCallback> onHeaderReceive_ = nullptr;
     std::shared_ptr<Upload::INotifyCallback> onFail_ = nullptr;
     std::shared_ptr<Upload::INotifyCallback> onComplete_ = nullptr;
+    std::shared_ptr<Upload::UploadTask> napiUploadTask_ = nullptr;
+    std::shared_ptr<Upload::UploadConfig> napiUploadConfig_ = nullptr;
 };
 } // namespace OHOS::Request::UploadNapi
 #endif // REQUEST_NAPI_H
