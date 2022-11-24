@@ -235,7 +235,7 @@ uint32_t UploadTaskNapiV9::CheckInternalPath(const std::string &fileUri,
     }
     if (uriSplit[SPLIT_ZERO] != "internal:" || uriSplit[SPLIT_ONE] != "" ||
         uriSplit[SPLIT_TWO] != "cache" || uriSplit.size() <= SPLIT_THREE) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "ObtainFileV9::GetInternalFile, internal path woring");
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "ObtainFileV9::GetInternalFile, internal path wrong");
         return Download::EXCEPTION_FILE_PATH;
     }
     filePath = context->GetCacheDir();

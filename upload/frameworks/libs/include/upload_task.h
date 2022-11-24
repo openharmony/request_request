@@ -98,7 +98,7 @@ private:
     UploadTaskState state_;
     std::mutex mutex_;
     std::thread::native_handle_type thread_handle_;
-    static constexpr int USLEEP_INTERVEL_BEFOR_RUN = 50 * 1000;
+    static constexpr int USLEEP_INTERVAL_BEFORE_RUN = 50 * 1000;
 };
 } // end of OHOS::Request::Upload
 #endif

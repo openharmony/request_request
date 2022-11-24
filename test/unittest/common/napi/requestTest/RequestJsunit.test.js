@@ -484,21 +484,21 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_REMUSE_0001
+     * @tc.number    SUB_REQUEST_DOWNLOAD_API_REUSE_0001
      * @tc.desc      Resume a paused download session.
      * @tc.size      : MEDIUM
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
-    it('SUB_REQUEST_DOWNLOAD_API_REMUSE_0001', 0, async function (done) {
-        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REMUSE_0001 is starting-----------------------");
+    it('SUB_REQUEST_DOWNLOAD_API_REUSE_0001', 0, async function (done) {
+        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REUSE_0001 is starting-----------------------");
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
             expect(downloadTask !== undefined).assertEqual(true);
             try{
                 downloadTask.resume(()=>{
-                    console.info('SUB_REQUEST_DOWNLOAD_API_REMUSE_0001 Download task resume success.');
+                    console.info('SUB_REQUEST_DOWNLOAD_API_REUSE_0001 Download task resume success.');
                     expect(true).assertTrue();
                 })
             }catch(err){
@@ -506,32 +506,32 @@ describe('RequestTest', function () {
                 expect().assertFail();
             }
         })
-        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REMUSE_0001 end-----------------------");
+        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REUSE_0001 end-----------------------");
         done();
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_REMUSE_0002
+     * @tc.number    SUB_REQUEST_DOWNLOAD_API_REUSE_0002
      * @tc.desc      Resume a paused download session.
      * @tc.size      : MEDIUM
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
-    it('SUB_REQUEST_DOWNLOAD_API_REMUSE_0002', 0, async function (done) {
-        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REMUSE_0002 is starting-----------------------");
+    it('SUB_REQUEST_DOWNLOAD_API_REUSE_0002', 0, async function (done) {
+        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REUSE_0002 is starting-----------------------");
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
             expect(downloadTask !== undefined).assertEqual(true);
             downloadTask.resume().then(() => {
-                console.info('SUB_REQUEST_DOWNLOAD_API_REMUSE_0002 Download task resume success.');
+                console.info('SUB_REQUEST_DOWNLOAD_API_REUSE_0002 Download task resume success.');
                 expect(true).assertTrue();
             }).catch((err) => {
                 console.error('Failed to pause the download task resume. because: ' + JSON.stringify(err));
                 expect().assertFail();
             })
         })
-        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REMUSE_0002 end-----------------------");
+        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REUSE_0002 end-----------------------");
         done();
     });
 

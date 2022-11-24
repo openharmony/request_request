@@ -57,7 +57,7 @@ enum DownloadStatus {
 
 enum HttpErrorCode {
     HTTP_OK = 200,
-    HTTP_PARIAL_FILE = 206,
+    HTTP_PARTIAL_FILE = 206,
 };
 enum ExceptionErrorCode : uint32_t {
     EXCEPTION_OK = 0,

@@ -89,7 +89,7 @@ int32_t DownloadServiceAbility::Init()
     }
     state_ = ServiceRunningState::STATE_RUNNING;
     uint32_t threadNum = 4;
-    DOWNLOAD_HILOGI("Start Download Service Manager with %{public}d threas", threadNum);
+    DOWNLOAD_HILOGI("Start Download Service Manager with %{public}d threads", threadNum);
     instance->Create(threadNum);
     DOWNLOAD_HILOGE("state_  is %{public}d.", static_cast<int>(state_));
     DOWNLOAD_HILOGI("Init DownloadServiceAbility success.");
