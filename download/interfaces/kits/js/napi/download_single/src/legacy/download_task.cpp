@@ -206,10 +206,10 @@ bool DownloadTask::DoDownload()
         DOWNLOAD_HILOGD("curl set option failed");
         return false;
     }
-    uint32_t localFileLenth = GetLocalFileSize();
-    if (localFileLenth > 0) {
-        if (localFileLenth < totalSize_) {
-            SetResumeFromLarge(handle.get(), localFileLenth);
+    uint32_t localFileLength = GetLocalFileSize();
+    if (localFileLength > 0) {
+        if (localFileLength < totalSize_) {
+            SetResumeFromLarge(handle.get(), localFileLength);
         } else {
             NotifyDone(true, "Download task has already completed");
             return true;

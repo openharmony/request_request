@@ -82,7 +82,7 @@ describe('RequestTest', function () {
             request.download(downloadConfig, (data)=>{
                 downloadTask = data;
                 console.info("SUB_REQUEST_DOWNLOAD_API_CALLBACK_0001 downloadTask: " + downloadTask);
-                expect(downloadTask != undefined).assertEqual(true);
+                expect(downloadTask !== undefined).assertEqual(true);
             });
         } catch (err) {
             console.error("SUB_REQUEST_DOWNLOAD_API_CALLBACK_0001 error: " + err);
@@ -104,7 +104,7 @@ describe('RequestTest', function () {
         request.download(downloadConfig).then(data => {
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_PROMISE_0001 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
         }).catch(err => {
             console.error("SUB_REQUEST_DOWNLOAD_API_PROMISE_0001 error: " + err);
             expect().assertFail();
@@ -125,12 +125,12 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0001 downloadTask: " + downloadTask);
-            expect(true).assertEqual(downloadTask != undefined);
+            expect(true).assertEqual(downloadTask !== undefined);
             downloadTask.on('progress', (data1, data2) => {
                 console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0001 on data1 =" + data1);
                 console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0001 on data2 =" + data2);
-                expect(true).assertEqual(data1 != undefined);
-                expect(true).assertEqual(data2 != undefined);
+                expect(true).assertEqual(data1 !== undefined);
+                expect(true).assertEqual(data2 !== undefined);
             });
         });
 
@@ -150,7 +150,7 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0002 downloadTask: " + downloadTask);
-            expect(true).assertEqual(downloadTask != undefined);
+            expect(true).assertEqual(downloadTask !== undefined);
             try{
                 downloadTask.on('complete', () => {
                     console.info('SUB_REQUEST_DOWNLOAD_API_CALLBACK_0002 task completed.')
@@ -176,7 +176,7 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003 downloadTask: " + downloadTask);
-            expect(true).assertEqual(downloadTask != undefined);
+            expect(true).assertEqual(downloadTask !== undefined);
             try{
                 downloadTask.on('pause', () => {
                     console.info('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003 task pause.')
@@ -202,7 +202,7 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0004 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             try{
                 downloadTask.on('remove', () => {
                     console.info('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0004 task remove.')
@@ -228,7 +228,7 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             try{
                 downloadTask.on('remove', () => {
                     console.info('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005 task remove.')
@@ -254,12 +254,12 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             downloadTask.off('progress', (data1, data2) => {
                 console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001 on data1 =" + data1);
                 console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001 on data2 =" + data2);
-                expect(data1 != undefined).assertEqual(true);
-                expect(data2 != undefined).assertEqual(true);
+                expect(data1 !== undefined).assertEqual(true);
+                expect(data2 !== undefined).assertEqual(true);
             });
         });
         console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001 end-----------------------");
@@ -278,7 +278,7 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             try{
                 downloadTask.off('complete', () => {
                     console.info('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002 task complete.')
@@ -304,7 +304,7 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             try{
                 downloadTask.off('pause', () => {
                     console.info('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003 task pause.')
@@ -330,7 +330,7 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0004 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             try{
                 downloadTask.off('remove', () => {
                     console.info('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0004 task remove.')
@@ -356,7 +356,7 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             try{
                 downloadTask.off('pause', () => {
                     console.info('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 task complete.')
@@ -382,7 +382,7 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             downloadTask.remove((err, data)=>{
                 if(err) {
                     console.error('SUB_REQUEST_DOWNLOAD_API_REMOVE_0001 Failed to remove the download task.');
@@ -390,7 +390,7 @@ describe('RequestTest', function () {
                 }
                 if (data) {
                     console.info('SUB_REQUEST_DOWNLOAD_API_REMOVE_0001 Download task removed.');
-                    expect(data == true).assertTrue();
+                    expect(data === true).assertTrue();
                 } else {
                     console.error('SUB_REQUEST_DOWNLOAD_API_REMOVE_0001 Failed to remove the download task.');
                     expect().assertFail();
@@ -413,11 +413,11 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             downloadTask.remove().then(data => {
                 if (data) {
                     console.info('SUB_REQUEST_DOWNLOAD_API_REMOVE_0002 Download task removed.');
-                    expect(data == true).assertTrue();
+                    expect(data === true).assertTrue();
                 } else {
                     console.error('SUB_REQUEST_DOWNLOAD_API_REMOVE_0002 Failed to remove the download task.');
                     expect().assertFail();
@@ -443,7 +443,7 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             try{
                 downloadTask.pause(()=>{
                     console.info('SUB_REQUEST_DOWNLOAD_API_PAUSE_0001 Download task pause success.');
@@ -470,7 +470,7 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             downloadTask.pause().then(() => {
                 console.info('SUB_REQUEST_DOWNLOAD_API_PAUSE_0002 Download task pause success.');
                 expect(true).assertTrue();
@@ -484,21 +484,21 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_REMUSE_0001
+     * @tc.number    SUB_REQUEST_DOWNLOAD_API_REUSE_0001
      * @tc.desc      Resume a paused download session.
      * @tc.size      : MEDIUM
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
-    it('SUB_REQUEST_DOWNLOAD_API_REMUSE_0001', 0, async function (done) {
-        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REMUSE_0001 is starting-----------------------");
+    it('SUB_REQUEST_DOWNLOAD_API_REUSE_0001', 0, async function (done) {
+        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REUSE_0001 is starting-----------------------");
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             try{
                 downloadTask.resume(()=>{
-                    console.info('SUB_REQUEST_DOWNLOAD_API_REMUSE_0001 Download task resume success.');
+                    console.info('SUB_REQUEST_DOWNLOAD_API_REUSE_0001 Download task resume success.');
                     expect(true).assertTrue();
                 })
             }catch(err){
@@ -506,32 +506,32 @@ describe('RequestTest', function () {
                 expect().assertFail();
             }
         })
-        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REMUSE_0001 end-----------------------");
+        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REUSE_0001 end-----------------------");
         done();
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_REMUSE_0002
+     * @tc.number    SUB_REQUEST_DOWNLOAD_API_REUSE_0002
      * @tc.desc      Resume a paused download session.
      * @tc.size      : MEDIUM
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
-    it('SUB_REQUEST_DOWNLOAD_API_REMUSE_0002', 0, async function (done) {
-        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REMUSE_0002 is starting-----------------------");
+    it('SUB_REQUEST_DOWNLOAD_API_REUSE_0002', 0, async function (done) {
+        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REUSE_0002 is starting-----------------------");
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             downloadTask.resume().then(() => {
-                console.info('SUB_REQUEST_DOWNLOAD_API_REMUSE_0002 Download task resume success.');
+                console.info('SUB_REQUEST_DOWNLOAD_API_REUSE_0002 Download task resume success.');
                 expect(true).assertTrue();
             }).catch((err) => {
                 console.error('Failed to pause the download task resume. because: ' + JSON.stringify(err));
                 expect().assertFail();
             })
         })
-        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REMUSE_0002 end-----------------------");
+        console.info("-----------------------SUB_REQUEST_DOWNLOAD_API_REUSE_0002 end-----------------------");
         done();
     });
 
@@ -547,7 +547,7 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             try{
                 downloadTask.query((err, downloadInfo)=>{
                     if(err) {
@@ -589,7 +589,7 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             downloadTask.query().then((err, downloadInfo)=>{
                 if(err) {
                     console.error('SUB_REQUEST_DOWNLOAD_API_QUERY_0002 Failed to query: ' + JSON.stringify(err));
@@ -629,7 +629,7 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             downloadTask.queryMimeType((err, data)=>{
                 if(err) {
                     console.error('SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 Failed to queryMimeType the download task.');
@@ -660,11 +660,11 @@ describe('RequestTest', function () {
         request.download( downloadConfig, (data)=>{
             downloadTask = data;
             console.info("SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
-            expect(downloadTask != undefined).assertEqual(true);
+            expect(downloadTask !== undefined).assertEqual(true);
             downloadTask.queryMimeType().then(data => {
                 if (data) {
                     console.info('SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002 Download task queryMimeType.');
-                    expect(data == true).assertTrue();
+                    expect(data === true).assertTrue();
                 } else {
                     console.error('SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002 Failed to queryMimeType the download task.');
                     expect().assertFail();

@@ -72,7 +72,7 @@ uint32_t CUrlAdp::DoUpload(IUploadTask *task)
             mfileData_.list = nullptr;
         }
         ClearCurlResource();
-        usleep(FILE_UPLOAD_INTERVEL);
+        usleep(FILE_UPLOAD_INTERVAL);
     }
 
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload end");
@@ -210,17 +210,17 @@ int32_t CUrlAdp::UploadOneFile()
         return UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR;
     }
 
-    int isRuning = 0;
-    curl_multi_perform(curlMulti_, &isRuning);
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "isRuning = %{public}d", isRuning);
+    int isRunning = 0;
+    curl_multi_perform(curlMulti_, &isRunning);
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "isRunning = %{public}d", isRunning);
     do {
         int numfds = 0;
         int res = curl_multi_wait(curlMulti_, NULL, 0, TRANS_TIMEOUT_MS, &numfds);
         if (res != CURLM_OK) {
             return res;
         }
-        curl_multi_perform(curlMulti_, &isRuning);
-    } while (isRuning);
+        curl_multi_perform(curlMulti_, &isRunning);
+    } while (isRunning);
 
     return CheckUploadStatus(curlMulti_);
 }

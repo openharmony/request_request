@@ -113,7 +113,7 @@ uint32_t ObtainFile::GetInternalFile(FILE **file, std::string &fileUri, uint32_t
         }
         if (uriSplit[SPLIT_ZERO] != "internal:" || uriSplit[SPLIT_ONE] != "" || uriSplit[SPLIT_TWO] != "cache" ||
             uriSplit.size() <= SPLIT_THREE) {
-            UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, internal path woring");
+            UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, internal path wrong");
             ret = UPLOAD_ERRORCODE_UNSUPPORT_URI;
             break;
         }

@@ -50,19 +50,19 @@ static constexpr OHOS::HiviewDFX::HiLogLabel UPLOAD_MODULE_LABEL[UPLOAD_MODULE_B
 };
 
 #define FILENAME            (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
-#define FORMATED(fmt, ...)    "[%{public}s] %{public}s# " fmt, FILENAME, __FUNCTION__, ##__VA_ARGS__
+#define FORMATTED(fmt, ...)    "[%{public}s] %{public}s# " fmt, FILENAME, __FUNCTION__, ##__VA_ARGS__
 
 // In order to improve performance, do not check the module range.
 // Besides, make sure module is less than UPLOAD_MODULE_BUTT.
 #define UPLOAD_HILOGF(module, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Fatal(UPLOAD_MODULE_LABEL[module], FORMATED(__VA_ARGS__))
+    (void)OHOS::HiviewDFX::HiLog::Fatal(UPLOAD_MODULE_LABEL[module], FORMATTED(__VA_ARGS__))
 #define UPLOAD_HILOGE(module, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Error(UPLOAD_MODULE_LABEL[module], FORMATED(__VA_ARGS__))
+    (void)OHOS::HiviewDFX::HiLog::Error(UPLOAD_MODULE_LABEL[module], FORMATTED(__VA_ARGS__))
 #define UPLOAD_HILOGW(module, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Warn(UPLOAD_MODULE_LABEL[module], FORMATED(__VA_ARGS__))
+    (void)OHOS::HiviewDFX::HiLog::Warn(UPLOAD_MODULE_LABEL[module], FORMATTED(__VA_ARGS__))
 #define UPLOAD_HILOGI(module, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Info(UPLOAD_MODULE_LABEL[module], FORMATED(__VA_ARGS__))
+    (void)OHOS::HiviewDFX::HiLog::Info(UPLOAD_MODULE_LABEL[module], FORMATTED(__VA_ARGS__))
 #define UPLOAD_HILOGD(module, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Debug(UPLOAD_MODULE_LABEL[module], FORMATED(__VA_ARGS__))
+    (void)OHOS::HiviewDFX::HiLog::Debug(UPLOAD_MODULE_LABEL[module], FORMATTED(__VA_ARGS__))
 } // end of OHOS::Request::Upload
 #endif // UPLOAD_HILOG_WRAPPER_H

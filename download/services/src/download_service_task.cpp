@@ -720,7 +720,7 @@ void DownloadServiceTask::HandleResponseCode(CURLcode code, int32_t httpCode)
 
     switch (code) {
         case CURLE_OK:
-            if (httpCode == HTTP_OK || (isPartialMode_ && httpCode == HTTP_PARIAL_FILE)) {
+            if (httpCode == HTTP_OK || (isPartialMode_ && httpCode == HTTP_PARTIAL_FILE)) {
                 SetStatus(SESSION_SUCCESS);
                 PublishNotification(config_.IsBackground(), HUNDRED_PERCENT);
                 return;
@@ -728,14 +728,14 @@ void DownloadServiceTask::HandleResponseCode(CURLcode code, int32_t httpCode)
             break;
 
         case CURLE_ABORTED_BY_CALLBACK:
-            if (httpCode == HTTP_OK || (isPartialMode_ && httpCode == HTTP_PARIAL_FILE)) {
+            if (httpCode == HTTP_OK || (isPartialMode_ && httpCode == HTTP_PARTIAL_FILE)) {
                 SetStatus(SESSION_PAUSED, ERROR_UNKNOWN, PAUSED_BY_USER);
                 return;
             }
             break;
 
         case CURLE_WRITE_ERROR:
-            if (httpCode == HTTP_OK || (isPartialMode_ && httpCode == HTTP_PARIAL_FILE)) {
+            if (httpCode == HTTP_OK || (isPartialMode_ && httpCode == HTTP_PARTIAL_FILE)) {
                 SetStatus(SESSION_FAILED, ERROR_HTTP_DATA_ERROR, PAUSED_UNKNOWN);
                 return;
             }

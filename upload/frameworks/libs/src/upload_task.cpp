@@ -123,7 +123,7 @@ void UploadTask::SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> conte
 void UploadTask::Run(std::shared_ptr<Upload::UploadTask> task)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Run. In.");
-    usleep(USLEEP_INTERVEL_BEFOR_RUN);
+    usleep(USLEEP_INTERVAL_BEFORE_RUN);
     if (task == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "task == nullptr");
         return;

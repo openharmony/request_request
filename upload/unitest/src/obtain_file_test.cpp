@@ -67,7 +67,7 @@ void ObtainFileTest::TearDown()
 
 /**
  * @tc.name: ObtainFileUtTest001
- * @tc.desc: GetFile with DataAbilityUri succsee
+ * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest001, TestSize.Level0)
@@ -91,7 +91,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest001, TestSize.Level0)
 
 /**
  * @tc.name: ObtainFileUtTest001
- * @tc.desc: GetFile with DataAbilityUri succsee
+ * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest002, TestSize.Level0)
@@ -130,7 +130,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest002, TestSize.Level0)
 
 /**
  * @tc.name: ObtainFileUtTest001
- * @tc.desc: GetFile with DataAbilityUri succsee
+ * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest003, TestSize.Level0)
@@ -151,7 +151,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest003, TestSize.Level0)
 }
 /**
  * @tc.name: ObtainFileUtTest001
- * @tc.desc: GetFile with DataAbilityUri succsee
+ * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest004, TestSize.Level0)
@@ -172,7 +172,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest004, TestSize.Level0)
 }
 /**
  * @tc.name: ObtainFileUtTest001
- * @tc.desc: GetFile with DataAbilityUri succsee
+ * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest005, TestSize.Level0)
@@ -194,7 +194,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest005, TestSize.Level0)
 
 /**
  * @tc.name: ObtainFileUtTest001
- * @tc.desc: GetFile with DataAbilityUri succsee
+ * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest006, TestSize.Level0)
@@ -218,7 +218,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest006, TestSize.Level0)
 }
 /**
  * @tc.name: ObtainFileUtTest001
- * @tc.desc: GetFile with DataAbilityUri succsee
+ * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest007, TestSize.Level0)
@@ -242,7 +242,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest007, TestSize.Level0)
 }
 /**
  * @tc.name: ObtainFileUtTest001
- * @tc.desc: GetFile with DataAbilityUri succsee
+ * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest008, TestSize.Level0)
@@ -278,7 +278,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest008, TestSize.Level0)
 }
 /**
  * @tc.name: ObtainFileUtTest001
- * @tc.desc: GetFile with DataAbilityUri succsee
+ * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest009, TestSize.Level0)
@@ -300,7 +300,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest009, TestSize.Level0)
 
 /**
  * @tc.name: ObtainFileUtTest010
- * @tc.desc: GetFile with DataAbilityUri succsee
+ * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest010, TestSize.Level0)
