@@ -90,10 +90,7 @@ static constexpr const char *HTTP_LINE_SEPARATOR = "\r\n";
 static constexpr const char *HTTP_DEFAULT_USER_AGENT = "libcurl-agent/1.0";
 static constexpr const char *HTTP_DEFAULT_CA_PATH = "/etc/ssl/certs/cacert.pem";
 
-static constexpr const char *HTTP_CONTENT_TYPE = "content-type";
-static constexpr const char *HTTP_CONTENT_TYPE_TEXT = "text/plain";
-static constexpr const char *HTTP_CONTENT_TYPE_URL_ENCODE = "application/x-www-form-urlencoded";
-static constexpr const char *HTTP_CONTENT_TYPE_JSON = "application/json";
+static constexpr const char *HTTP_CONTENT_TYPE = "Content-Type";
 
 static constexpr const char *EXCEPTION_OK_INFO = "check succeeded";
 static constexpr const char *EXCEPTION_PERMISSION_INFO = "the permissions check fails";
