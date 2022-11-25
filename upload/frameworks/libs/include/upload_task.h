@@ -44,7 +44,7 @@ enum UploadTaskState {
     STATE_FAILURE,
 };
 
-class UploadTask : public IUploadTask {
+class UploadTask : public IUploadTask, public std::enable_shared_from_this<UploadTask> {
 public:
     UPLOAD_API UploadTask(std::shared_ptr<UploadConfig>& uploadConfig);
     UPLOAD_API virtual ~UploadTask();
@@ -52,7 +52,7 @@ public:
     UPLOAD_API virtual void On(Type type, void *callback);
     UPLOAD_API virtual void Off(Type type, void *callback);
     UPLOAD_API void ExecuteTask();
-    static void Run(void *arg);
+    static void Run(std::shared_ptr<Upload::UploadTask> task);
     virtual void OnRun();
 
     UPLOAD_API virtual void SetCallback(Type type, void *callback);

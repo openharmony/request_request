@@ -46,8 +46,8 @@ public:
     bool JudgeProgress(const IProgressCallback *target) override;
     bool JudgeHeaderReceive(const IHeaderReceiveCallback *target) override;
 
-    UploadTaskNapiV9 &operator=(std::unique_ptr<Upload::UploadTask> &&uploadTask);
-    bool operator==(const std::unique_ptr<Upload::UploadTask> &uploadTask);
+    UploadTaskNapiV9 &operator=(std::shared_ptr<Upload::UploadTask> &&uploadTask);
+    bool operator==(const std::shared_ptr<Upload::UploadTask> &uploadTask);
 
 private:
     static napi_value GetCtor(napi_env env);
@@ -58,7 +58,7 @@ private:
     static uint32_t InitFileArray(const std::shared_ptr<Upload::UploadConfig> &config,
         std::shared_ptr<OHOS::AbilityRuntime::Context> &context, int64_t &totalSize, std::vector<FileData> &fileDatas);
 
-    std::unique_ptr<Upload::UploadTask> napiUploadTask_ = nullptr;
+    std::shared_ptr<Upload::UploadTask> napiUploadTask_ = nullptr;
     std::shared_ptr<Upload::UploadConfig> napiUploadConfig_ = nullptr;
 
     struct RemoveContextInfo : public AsyncCall::Context {

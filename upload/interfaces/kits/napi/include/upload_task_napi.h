@@ -38,8 +38,8 @@ public:
     static napi_value JsOff(napi_env env, napi_callback_info info);
     static napi_value JsRemove(napi_env env, napi_callback_info info);
 
-    UploadTaskNapi &operator=(std::unique_ptr<Upload::UploadTask> &&uploadTask);
-    bool operator==(const std::unique_ptr<Upload::UploadTask> &uploadTask);
+    UploadTaskNapi &operator=(std::shared_ptr<Upload::UploadTask> &&uploadTask);
+    bool operator==(const std::shared_ptr<Upload::UploadTask> &uploadTask);
     static void OnSystemSuccess(napi_env env, napi_ref ref, Upload::UploadResponse &response);
     static void OnSystemFail(napi_env env, napi_ref ref, std::string &response, int32_t &code);
     static void OnSystemComplete(napi_env env, napi_ref ref);
@@ -57,7 +57,7 @@ private:
     static napi_value Initialize(napi_env env, napi_callback_info info);
     static napi_status GetContext(napi_env env, napi_value *argv, int& parametersPosition,
         std::shared_ptr<OHOS::AbilityRuntime::Context>& context);
-
+        
     struct RemoveContextInfo : public AsyncCall::Context {
         UploadTaskNapi *proxy = nullptr;
         bool removeStatus = false;
