@@ -156,8 +156,8 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     ExceptionError err;
     auto *task = DownloadManager::GetInstance()->EnqueueTask(config, err);
     if (task == nullptr) {
-        DOWNLOAD_HILOGE("download task fail");
-        NAPI_ASSERT(env, false, "download task fail");
+        DOWNLOAD_HILOGE("download task fail: %{public}s", err.errInfo.c_str());
+        NapiUtils::ThrowError(env, err.code, err.errInfo);
         return nullptr;
     }
     auto finalize = [](napi_env env, void *data, void *hint) {
