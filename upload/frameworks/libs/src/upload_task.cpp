@@ -120,14 +120,18 @@ void UploadTask::SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> conte
     context_ = context;
 }
 
-void UploadTask::Run(void *arg)
+void UploadTask::Run(std::shared_ptr<Upload::UploadTask> task)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Run. In.");
     usleep(USLEEP_INTERVEL_BEFOR_RUN);
-    ((UploadTask *)arg)->OnRun();
-    if (((UploadTask *)arg)->uploadConfig_->protocolVersion == API5) {
-        if (((UploadTask *)arg)->uploadConfig_->fcomplete) {
-            ((UploadTask *)arg)->uploadConfig_->fcomplete();
+    if (task == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "task == nullptr");
+        return;
+    }
+    task->OnRun();
+    if (task->uploadConfig_->protocolVersion == API5) {
+        if (task->uploadConfig_->fcomplete) {
+            task->uploadConfig_->fcomplete();
             UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Complete.");
         }
     }
@@ -309,7 +313,7 @@ void UploadTask::OnComplete()
 void UploadTask::ExecuteTask()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "ExecuteTask. In.");
-    thread_ = std::make_unique<std::thread>(UploadTask::Run, this);
+    thread_ = std::make_unique<std::thread>(UploadTask::Run, shared_from_this());
     thread_handle_ = thread_->native_handle();
     thread_->detach();
 }
