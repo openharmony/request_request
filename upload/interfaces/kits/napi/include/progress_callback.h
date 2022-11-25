@@ -26,27 +26,27 @@
 
 namespace OHOS::Request::Upload {
 using namespace OHOS::Request::UploadNapi;
-class ProgressCallback : public IProgressCallback {
+class ProgressCallback : public IProgressCallback, public std::enable_shared_from_this<ProgressCallback> {
 public:
-    ProgressCallback(ICallbackAbleJudger *judger, napi_env env, napi_value callback);
+    ProgressCallback(napi_env env, napi_value callback);
     virtual ~ProgressCallback();
     void Progress(const int64_t uploadedSize, const int64_t totalSize) override;
     napi_ref GetCallback() override;
-private:
-    struct ProgressWorker {
-        ICallbackAbleJudger *judger;
-        const ProgressCallback *callback = nullptr;
-        const int64_t uploadedSize;
-        const int64_t totalSize;
-        ProgressWorker(ICallbackAbleJudger *judgerIn, const ProgressCallback *callbackIn,
-            int64_t uploadedSizeIn, int64_t totalSizeIn)
-            : judger(judgerIn), callback(callbackIn), uploadedSize(uploadedSizeIn), totalSize(totalSizeIn) {}
-    };
+    napi_env GetEnv();
+    int64_t GetUploadedSize();
+    int64_t GetTotalSize();
+    std::mutex mutex_;
 
-    ICallbackAbleJudger *judger_;
+private:
     napi_ref callback_ = nullptr;
     napi_env env_;
     uv_loop_s *loop_ = nullptr;
+    int64_t uploadedSize_;
+    int64_t totalSize_;
+};
+
+struct ProgressWorker {
+    std::shared_ptr<ProgressCallback> observer = nullptr;
 };
 } // end of OHOS::Request::Upload
 #endif

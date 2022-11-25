@@ -97,6 +97,8 @@ private:
     std::vector<TaskState> taskStates_;
     UploadTaskState state_;
     std::mutex mutex_;
+    bool isRemoved_ {false};
+    std::mutex removeMutex_;
     std::thread::native_handle_type thread_handle_;
     static constexpr int USLEEP_INTERVAL_BEFORE_RUN = 50 * 1000;
 };
