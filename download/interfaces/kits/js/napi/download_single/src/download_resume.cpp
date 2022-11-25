@@ -22,7 +22,7 @@
 namespace OHOS::Request::Download {
 napi_value DownloadResume::Resume(napi_env env, napi_callback_info info)
 {
-    DOWNLOAD_HILOGD("Enter ---->");
+    DOWNLOAD_HILOGD("Resume Enter ---->");
     if (!DownloadManager::GetInstance()->CheckPermission()) {
         DOWNLOAD_HILOGD("no permission to access download service");
         return nullptr;
@@ -32,7 +32,7 @@ napi_value DownloadResume::Resume(napi_env env, napi_callback_info info)
 
 napi_value DownloadResume::Restore(napi_env env, napi_callback_info info)
 {
-    DOWNLOAD_HILOGD("Enter ---->");
+    DOWNLOAD_HILOGD("Restore Enter ---->");
     ExceptionError err;
     if (!NapiUtils::CheckParameterCorrect(env, info, FUNCTION_RESTORE, err)) {
         DOWNLOAD_HILOGE("%{public}s", err.errInfo.c_str());

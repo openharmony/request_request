@@ -101,6 +101,12 @@ static constexpr const char *EXCEPTION_FILE_PATH_INFO = "bad file path";
 static constexpr const char *EXCEPTION_SERVICE_ERROR_INFO = "task service ability error";
 static constexpr const char *EXCEPTION_OTHER_INFO = "other error";
 
+static constexpr const char *FUNCTION_PAUSE = "pause";
+static constexpr const char *FUNCTION_QUERY = "query";
+static constexpr const char *FUNCTION_QUERY_MIME_TYPE = "queryMimeType";
+static constexpr const char *FUNCTION_REMOVE = "remove";
+static constexpr const char *FUNCTION_RESUME = "resume";
+
 static constexpr const char *FUNCTION_SUSPEND = "suspend";
 static constexpr const char *FUNCTION_GET_TASK_INFO = "getTaskInfo";
 static constexpr const char *FUNCTION_GET_TASK_MIME_TYPE = "getTaskMimeType";
