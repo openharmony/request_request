@@ -42,10 +42,12 @@ CUrlAdp::~CUrlAdp()
 {
 }
 
-uint32_t CUrlAdp::DoUpload(IUploadTask *task)
+uint32_t CUrlAdp::DoUpload(std::shared_ptr<IUploadTask> task)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload start");
-    uploadTask_ = task;
+    if (task != nullptr) {
+        uploadTask_ = task;
+    }
 
     InitTimerInfo();
     uint32_t allFileUploadResult = UPLOAD_OK;
@@ -59,7 +61,7 @@ uint32_t CUrlAdp::DoUpload(IUploadTask *task)
         }
 
         mfileData_ = vmem;
-        mfileData_.adp = this;
+        mfileData_.adp = shared_from_this();
         vmem.result = static_cast<uint32_t>(UploadOneFile());
         if (vmem.result != UPLOAD_OK) {
             allFileUploadResult = UPLOAD_ERRORCODE_UPLOAD_FAIL;
@@ -118,13 +120,9 @@ void CUrlAdp::SetBehaviorOpt(CURL *curl)
 void CUrlAdp::SetCallbackOpt(CURL *curl)
 {
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, &mfileData_);
-    if (config_->protocolVersion == API5) {
-        curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallbackL5);
-    } else {
-        curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
-        curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, ProgressCallback);
-        curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &mfileData_);
-    }
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
+    curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, ProgressCallback);
+    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &mfileData_);
 }
 
 void CUrlAdp::SetNetworkOpt(CURL *curl)
@@ -226,7 +224,7 @@ int32_t CUrlAdp::UploadOneFile()
 
 void CUrlAdp::CurlGlobalInit()
 {
-    std::lock_guard<std::mutex> guard(curlMutex_);
+    std::lock_guard<std::mutex> guard(globalMutex_);
     if (!isCurlGlobalInit_) {
         isCurlGlobalInit_ = true;
     }
@@ -234,7 +232,7 @@ void CUrlAdp::CurlGlobalInit()
 
 void CUrlAdp::CurlGlobalCleanup()
 {
-    std::lock_guard<std::mutex> guard(curlMutex_);
+    std::lock_guard<std::mutex> guard(globalMutex_);
     if (isCurlGlobalInit_) {
         isCurlGlobalInit_ = false;
     }
@@ -245,6 +243,10 @@ int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
     int msgsLeft = 0;
     int returnCode = UPLOAD_ERRORCODE_UPLOAD_FAIL;
     CURLMsg* msg = NULL;
+    if (IsReadAbort()) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "CheckUploadStatus  IsReadAbort is %{public}d", IsReadAbort());
+        return returnCode;
+    }
     while ((msg = curl_multi_info_read(curlMulti, &msgsLeft))) {
         if (msg->msg != CURLMSG_DONE) {
             continue;
@@ -273,6 +275,7 @@ int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
 bool CUrlAdp::Remove()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "remove");
+    std::lock_guard<std::mutex> guard(curlMutex_);
     isReadAbort_ = true;
     return true;
 }
@@ -308,10 +311,30 @@ int CUrlAdp::OnDebug(CURL *curl, curl_infotype itype, char *pData, size_t size, 
     }
     return (int)itype;
 }
+
+bool CUrlAdp::CheckCUrlAdp(FileData *fData)
+{
+    if (fData == nullptr || fData->adp == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "CheckCUrlAdp url == nullptr");
+        return false;
+    }
+    std::lock_guard<std::mutex> lock(fData->adp->curlMutex_);
+    if (fData->adp->IsReadAbort()) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "CheckCUrlAdp url->IsReadAbort()");
+        return false;
+    }
+    return true;
+}
+
 int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
 {
-    FileData *fData = (FileData *) clientp;
-    CUrlAdp *url = (CUrlAdp *) fData->adp;
+    FileData *fData = (FileData *)clientp;
+    std::shared_ptr<CUrlAdp> url = fData->adp;
+    if (!CheckCUrlAdp(fData)) {
+        return UPLOAD_ERRORCODE_UPLOAD_FAIL;
+    }
+
+    std::lock_guard<std::mutex> lock(url->curlMutex_);
     if (ulnow > 0) {
         fData->upsize = fData->totalsize - (ultotal - ulnow);
     } else {
@@ -339,55 +362,34 @@ int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlno
 
 size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *userdata)
 {
-    FileData *fData = (FileData *) userdata;
-    CUrlAdp *url = (CUrlAdp *) fData->adp;
-    std::string stmp(buffer, size * nitems);
-    const int32_t codeOk = 200;
-    const std::string headEndFlag = "\r\n";
+    FileData *fData = (FileData *)userdata;
+    std::shared_ptr<CUrlAdp> url = fData->adp;
+    if (!CheckCUrlAdp(fData)) {
+        return CURLE_WRITE_ERROR;
+    }
 
-    if (std::string::npos != stmp.find("HTTP")) {
-        fData->headSendFlag = COLLECT_DO_FLAG;
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "http header begin: %{public}s", stmp.c_str());
-        const int codeLen = 3;
-        std::string::size_type position = stmp.find_first_of(" ");
-        std::string scode(stmp, position + 1, codeLen);
-        fData->httpCode = std::stol(scode);
-    } else if (stmp == headEndFlag) {
-        fData->headSendFlag = COLLECT_END_FLAG;
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "http header end: %{public}s", stmp.c_str());
-    }
-    if (fData->headSendFlag == COLLECT_DO_FLAG || fData->headSendFlag == COLLECT_END_FLAG) {
-        fData->responseHead.push_back(stmp);
-    }
+    std::lock_guard<std::mutex> lock(url->curlMutex_);
+    std::string stmp(buffer, size * nitems);
+    url->SplitHttpMessage(stmp, fData);
+
     if (url && url->uploadTask_ && fData->headSendFlag == COLLECT_END_FLAG) {
-        std::string stoatalHead = "";
+        std::string headers = "";
         for (auto &smem : fData->responseHead) {
-            stoatalHead += smem;
+            headers += smem;
         }
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "report head len: %{public}zu, content: %{public}s",
-                      stoatalHead.length(), stoatalHead.c_str());
-        if (codeOk == fData->httpCode) {
-            if (url->fileDatas_.size() == fData->fileIndex) {
-                url->uploadTask_->OnHeaderReceive(stoatalHead);
-            }
-        } else {
-            url->uploadTask_->OnHeaderReceive(stoatalHead);
-        }
+            headers.length(), headers.c_str());
+        auto func = (url->config_->protocolVersion == API5) ? NotifyAPI5 : Notify;
+        func(fData, headers);
         fData->responseHead.clear();
         fData->httpCode = 0;
     }
     return size * nitems;
 }
 
-size_t CUrlAdp::HeaderCallbackL5(char *buffer, size_t size, size_t nitems, void *userdata)
+void CUrlAdp::SplitHttpMessage(const std::string &stmp, FileData* &fData)
 {
-    FileData *fData = (FileData *) userdata;
-    CUrlAdp *url = (CUrlAdp *) fData->adp;
-    std::string stmp(buffer, size * nitems);
-    const int32_t codeOk = 200;
-    UploadResponse resData;
     const std::string headEndFlag = "\r\n";
-
     if (std::string::npos != stmp.find("HTTP")) {
         fData->headSendFlag = COLLECT_DO_FLAG;
         const int codeLen = 3;
@@ -397,52 +399,52 @@ size_t CUrlAdp::HeaderCallbackL5(char *buffer, size_t size, size_t nitems, void 
     } else if (stmp == headEndFlag) {
         fData->headSendFlag = COLLECT_END_FLAG;
     }
-    if (COLLECT_DO_FLAG == fData->headSendFlag || COLLECT_END_FLAG == fData->headSendFlag) {
+    if (fData->headSendFlag == COLLECT_DO_FLAG || fData->headSendFlag == COLLECT_END_FLAG) {
         fData->responseHead.push_back(stmp);
     }
-    if (url && url->uploadTask_ && COLLECT_END_FLAG == fData->headSendFlag) {
-        std::string stoatalHead = "";
-        for (auto &smem : fData->responseHead) {
-            stoatalHead += smem;
+}
+
+void CUrlAdp::Notify(FileData *fData, std::string &headers)
+{
+    if (fData->httpCode == HTTP_SUCCESS) {
+        if (fData->adp->fileDatas_.size() == fData->fileIndex) {
+            fData->adp->uploadTask_->OnHeaderReceive(headers);
         }
-        if (codeOk == fData->httpCode) {
-            if (url->fileDatas_.size() == fData->fileIndex && url->config_->fsuccess != nullptr) {
-                resData.headers = stoatalHead;
-                resData.code = fData->httpCode;
-                UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallbackL5 success response head is %{public}s",
-                    resData.headers.c_str());
-                url->config_->fsuccess(resData);
-            }
-        } else {
-            if (url->config_->ffail) {
-                url->config_->ffail(stoatalHead, fData->httpCode);
-            }
-            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>HeaderCallbackL5 fail Data.code is %{public}d", resData.code);
-        }
-        fData->responseHead.clear();
-        fData->httpCode = 0;
+    } else {
+        fData->adp->uploadTask_->OnHeaderReceive(headers);
     }
-    return size * nitems;
+}
+
+void CUrlAdp::NotifyAPI5(FileData *fData, std::string &headers)
+{
+    if (fData->httpCode == HTTP_SUCCESS) {
+        if (fData->adp->fileDatas_.size() == fData->fileIndex && fData->adp->config_->fsuccess != nullptr) {
+            UploadResponse resData;
+            resData.headers = headers;
+            resData.code = fData->httpCode;
+            fData->adp->config_->fsuccess(resData);
+        }
+    } else {
+        if (fData->adp->config_->ffail) {
+            fData->adp->config_->ffail(headers, fData->httpCode);
+        }
+    }
 }
 
 size_t CUrlAdp::ReadCallback(char *buffer, size_t size, size_t nitems, void *arg)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "size is %{public}zu, nitems is %{public}zu.", size, nitems);
-    FileData *read = (FileData *) arg;
-    CUrlAdp *adp = (CUrlAdp *) read->adp;
-    if (adp == nullptr) {
-        UPLOAD_HILOGI(UPLOAD_MODULE_FRAMEWORK, "adp is null");
+    FileData *fData = (FileData *)arg;
+    std::shared_ptr<CUrlAdp> url = fData->adp;
+
+    if (!CheckCUrlAdp(fData) || ferror(fData->fp)) {
         return CURL_READFUNC_ABORT;
     }
-    std::lock_guard<std::mutex> guard(adp->readMutex_);
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "isReadAbort is %{public}d", adp->IsReadAbort());
-    if (ferror(read->fp) || adp->IsReadAbort()) {
-        UPLOAD_HILOGI(UPLOAD_MODULE_FRAMEWORK, "read abort or ferror");
-        return CURL_READFUNC_ABORT;
-    }
-    adp->StartTimer();
-    size_t readSize = fread(buffer, size, nitems, read->fp);
-    adp->StopTimer();
+
+    std::lock_guard<std::mutex> lock(url->curlMutex_);
+    url->StartTimer();
+    size_t readSize = fread(buffer, size, nitems, fData->fp);
+    url->StopTimer();
 
     return readSize;
 }

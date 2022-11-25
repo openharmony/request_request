@@ -29,26 +29,25 @@
 
 namespace OHOS::Request::Upload {
 using namespace OHOS::Request::UploadNapi;
-class NotifyCallback : public INotifyCallback {
+class NotifyCallback : public INotifyCallback, public std::enable_shared_from_this<NotifyCallback> {
 public:
-    NotifyCallback(ICallbackAbleJudger *judger, napi_env env, napi_value callback);
+    NotifyCallback(napi_env env, napi_value callback);
     virtual ~NotifyCallback();
     void Notify(const std::vector<TaskState> &taskStates) override;
     napi_ref GetCallback() override;
-private:
-    struct NotifyWorker {
-        ICallbackAbleJudger *judger;
-        const NotifyCallback *callback = nullptr;
-        const std::vector<TaskState> taskStates;
-        NotifyWorker(ICallbackAbleJudger *judgerIn, const NotifyCallback *callbackIn,
-			const std::vector<TaskState> &taskStatesIn)
-            : judger(judgerIn), callback(callbackIn), taskStates(taskStatesIn) {}
-    };
+    napi_env GetEnv();
+    std::vector<TaskState> GetTaskStates();
+    std::mutex mutex_;
 
-    ICallbackAbleJudger *judger_;
+private:
+    std::vector<TaskState> taskStates_;
     napi_ref callback_ = nullptr;
     napi_env env_;
     uv_loop_s *loop_ = nullptr;
+};
+
+struct NotifyWorker {
+    std::shared_ptr<NotifyCallback> observer = nullptr;
 };
 } // end of OHOS::Request::Upload
 #endif

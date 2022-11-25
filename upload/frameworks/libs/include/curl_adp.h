@@ -26,11 +26,11 @@
 #include "upload_timer_info.h"
 
 namespace OHOS::Request::Upload {
-class CUrlAdp {
+class CUrlAdp : public std::enable_shared_from_this<CUrlAdp> {
 public:
     CUrlAdp(std::vector<FileData>& fileArray, std::shared_ptr<UploadConfig>& config);
     virtual ~CUrlAdp();
-    uint32_t DoUpload(IUploadTask *task);
+    uint32_t DoUpload(std::shared_ptr<IUploadTask> task);
     bool Remove();
     bool IsReadAbort()
     {
@@ -39,13 +39,16 @@ public:
 
 protected:
     bool ClearCurlResource();
+    void SplitHttpMessage(const std::string &stmp, FileData *&fData);
     static int ProgressCallback(void *clientp,
         curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
     static size_t HeaderCallback(char *buffer, size_t size, size_t nitems, void *userdata);
-    static size_t HeaderCallbackL5(char *buffer, size_t size, size_t nitems, void *userdata);
     static size_t ReadCallback(char *buffer, size_t size, size_t nitems, void *arg);
     static int OnDebug(CURL *curl, curl_infotype itype, char *pData, size_t size, void *lpvoid);
-    
+    static void Notify(FileData *fData, std::string &headers);
+    static void NotifyAPI5(FileData *fData, std::string &headers);
+    static bool CheckCUrlAdp(FileData *fData);
+
 private:
     int CheckUploadStatus(CURLM *curlMulti);
     bool MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray);
@@ -68,19 +71,18 @@ private:
 private:
     uint64_t timerId_;
     std::shared_ptr<UploadTimerInfo> timerInfo_;
-    IUploadTask *uploadTask_;
+    std::shared_ptr<IUploadTask> uploadTask_;
     std::vector<FileData> &fileDatas_;
     FileData  mfileData_;
     std::shared_ptr<UploadConfig> config_;
     static constexpr int32_t HTTP_SUCCESS = 200;
     std::mutex mutex_;
     std::mutex curlMutex_;
-    std::mutex setAbortMutex_;
-    std::mutex readMutex_;
+    std::mutex globalMutex_;
     bool isCurlGlobalInit_;
-    bool isReadAbort_;
     CURLM *curlMulti_;
     std::vector<CURL*> curlArray_;
+    bool isReadAbort_;
 
     static constexpr int TRANS_TIMEOUT_MS = 300 * 1000;
     static constexpr int READFILE_TIMEOUT_MS = 30 * 1000;
