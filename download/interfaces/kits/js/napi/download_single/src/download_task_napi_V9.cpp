@@ -115,6 +115,11 @@ napi_value DownloadTaskNapiV9::GetCtor(napi_env env)
         {FUNCTION_GET_TASK_MIME_TYPE, 0, DownloadQueryMimeType::GetTaskMimeType, 0, 0, 0, napi_default, 0},
         {FUNCTION_DELETE, 0, DownloadRemove::Delete, 0, 0, 0, napi_default, 0},
         {FUNCTION_RESTORE, 0, DownloadResume::Restore, 0, 0, 0, napi_default, 0},
+        { FUNCTION_PAUSE, 0, DownloadPause::Pause, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_QUERY, 0, DownloadQuery::Query, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_QUERY_MIME_TYPE, 0, DownloadQueryMimeType::QueryMimeType, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_REMOVE, 0, DownloadRemove::Remove, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_RESUME, 0, DownloadResume::Resume, 0, 0, 0, napi_default, 0 },
     };
     napi_status status = napi_define_class(env, "DownloadTaskNapi", NAPI_AUTO_LENGTH, Initialize, nullptr,
                                            sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons);
