@@ -155,7 +155,7 @@ void AsyncCall::DeleteContext(napi_env env, AsyncContext *context)
 void AsyncCall::GetOffCallbackParameter(napi_env env, const std::string &type, napi_value (&result)[ARG_BUTT])
 {
     DOWNLOAD_HILOGD("type:%{public}s", type.c_str());
-    if (type == FUNCTION_OFF_PROGRESS || type == FUNCTION_OFF_FAIL) {
+    if (type == EVENT_PROGRESS || type == EVENT_FAIL) {
         napi_valuetype valueType = napi_undefined;
         int ret = 0;
         napi_typeof(env, result[ARG_DATA], &valueType);

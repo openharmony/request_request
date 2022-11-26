@@ -151,8 +151,9 @@ constexpr int DOWNLOAD_INFO = 10000;
 constexpr int REQUEST_PARAMS_NUM = 2;
 constexpr size_t MIN_HEADER_LENGTH = sizeof(std::string) * 2;
 
-static constexpr const char *FUNCTION_OFF_PROGRESS = "progress";
-static constexpr const char *FUNCTION_OFF_FAIL = "fail";
+static constexpr const char *EVENT_PROGRESS = "progress";
+static constexpr const char *EVENT_COMPLETE = "complete";
+static constexpr const char *EVENT_FAIL = "fail";
 } // namespace OHOS::Request::Download
 
 #endif // CONSTANT_H

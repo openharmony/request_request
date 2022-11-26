@@ -260,6 +260,9 @@ bool DownloadServiceAbility::On(uint32_t taskId, const std::string &type, const 
         std::lock_guard<std::mutex> lck(listenerMapMutex_);
         DOWNLOAD_HILOGI("DownloadServiceAbility::On Replace listener.");
         registeredListeners_[combineType] = listener;
+        if (DoUnregisteredNotify(taskId, type)) {
+            DOWNLOAD_HILOGD("notify unregistered on event");
+        }
     }
     DOWNLOAD_HILOGI("DownloadServiceAbility::On end.");
     return true;
@@ -318,6 +321,9 @@ void DownloadServiceAbility::NotifyHandler(const std::string& type, uint32_t tas
         params.push_back(argv1);
         params.push_back(argv2);
         iter->second->CallBack(params);
+        DownloadServiceAbility::GetInstance()->DeleteUnregisteredNotify(combineType);
+    } else {
+        DownloadServiceAbility::GetInstance()->AddUnregisteredNotify(taskId, type);
     }
 }
 
@@ -353,5 +359,55 @@ int DownloadServiceAbility::Dump(int fd, const std::vector<std::u16string> &args
     }
 
     return DumpServiceImpl::GetInstance().Dump(fd, argsStr);
+}
+
+void DownloadServiceAbility::AddUnregisteredNotify(uint32_t taskId, const std::string &type)
+{
+    std::string combineType = type + "-" + std::to_string(taskId);
+    DOWNLOAD_HILOGD("add combineType %{public}s", combineType.c_str());
+    if (type == EVENT_COMPLETE || type == EVENT_FAIL) {
+        std::lock_guard<std::mutex> lck(unregisteredNotifyMutex_);
+        auto iter = unregisteredNotify_.find(combineType);
+        if (iter == unregisteredNotify_.end()) {
+            unregisteredNotify_.insert(std::make_pair(combineType, taskId));
+        }
+    }
+}
+
+void DownloadServiceAbility::DeleteUnregisteredNotify(const std::string &combineType)
+{
+    DOWNLOAD_HILOGD("delete combineType %{public}s",combineType.c_str());
+    std::lock_guard<std::mutex> lck(unregisteredNotifyMutex_);
+    auto iter = unregisteredNotify_.find(combineType);
+    if (iter != unregisteredNotify_.end()) {
+        unregisteredNotify_.erase(iter);
+    }
+}
+
+bool DownloadServiceAbility::DoUnregisteredNotify(uint32_t taskId, const std::string &type)
+{
+    std::string combineType = type + "-" + std::to_string(taskId);
+    DOWNLOAD_HILOGD("notify combineType: %{public}s", combineType.c_str());
+    DownloadInfo info;
+    if (!Query(taskId, info)) {
+        DOWNLOAD_HILOGD("not find task download info");
+        return false;
+    }
+    auto status = info.GetStatus();
+    uint32_t code = 0;
+    if (info.GetFailedReason() != ERROR_UNKNOWN) {
+        code = static_cast<uint32_t>(info.GetFailedReason());
+    }
+    std::lock_guard<std::mutex> lck(unregisteredNotifyMutex_);
+    auto iter = unregisteredNotify_.find(combineType);
+    if (iter != unregisteredNotify_.end()) {
+        if (status == SESSION_SUCCESS || status == SESSION_FAILED) {
+            DOWNLOAD_HILOGD("notify taskId: %{public}d event: %{public}s", taskId, type.c_str());
+            NotifyHandler(type, status, code, 0);
+            unregisteredNotify_.erase(iter);
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace OHOS::Request::Download
