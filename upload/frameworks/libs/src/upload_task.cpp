@@ -55,13 +55,11 @@ UploadTask::~UploadTask()
 bool UploadTask::Remove()
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Remove. In.");
-    if (curlAdp_ == nullptr) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "curlAdp_ == nullptr");
-        return false;
-    }
     std::lock_guard<std::mutex> guard(removeMutex_);
     isRemoved_ = true;
-    curlAdp_->Remove();
+    if (curlAdp_ != nullptr) {
+        curlAdp_->Remove();
+    }
     ClearFileArray();
     return true;
 }
@@ -192,11 +190,14 @@ uint32_t UploadTask::InitFileArray()
 
 uint32_t UploadTask::StartUploadFile()
 {
+    if (isRemoved_) {
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload task removed");
+        return UPLOAD_TASK_REMOVED;
+    }
     uint32_t ret = InitFileArray();
     if (ret != UPLOAD_OK) {
         return ret;
     }
-
     curlAdp_ = std::make_shared<CUrlAdp>(fileDatas_, uploadConfig_);
     return curlAdp_->DoUpload(shared_from_this());
 }
@@ -211,6 +212,7 @@ std::string UploadTask::GetCodeMessage(uint32_t code)
         { UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR, "libcurl return error" },
         { UPLOAD_ERRORCODE_UPLOAD_FAIL, "upload failed" },
         { UPLOAD_ERRORCODE_UPLOAD_OUTTIME, "upload timeout" },
+        { UPLOAD_TASK_REMOVED, "upload task removed"}
     };
 
     for (const auto &it : codeMap) {
