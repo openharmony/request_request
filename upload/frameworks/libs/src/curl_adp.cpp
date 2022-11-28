@@ -52,21 +52,20 @@ uint32_t CUrlAdp::DoUpload(std::shared_ptr<IUploadTask> task)
     }
 
     InitTimerInfo();
-    uint32_t allFileUploadResult = UPLOAD_OK;
+    uint32_t successCount = 0;
     for (auto &vmem : fileDatas_) {
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "read abort stat: %{public}d file index: %{public}u", IsReadAbort(),
             vmem.fileIndex);
         if (IsReadAbort()) {
-            vmem.result = UPLOAD_ERRORCODE_UPLOAD_FAIL;
-            allFileUploadResult = UPLOAD_ERRORCODE_UPLOAD_FAIL;
+            vmem.result = UPLOAD_TASK_REMOVED;
             continue;
         }
 
         mfileData_ = vmem;
         mfileData_.adp = shared_from_this();
         vmem.result = static_cast<uint32_t>(UploadOneFile());
-        if (vmem.result != UPLOAD_OK) {
-            allFileUploadResult = UPLOAD_ERRORCODE_UPLOAD_FAIL;
+        if (vmem.result == UPLOAD_OK) {
+            successCount++;
         }
         mfileData_.responseHead.clear();
         if (mfileData_.list) {
@@ -77,8 +76,15 @@ uint32_t CUrlAdp::DoUpload(std::shared_ptr<IUploadTask> task)
         usleep(FILE_UPLOAD_INTERVAL);
     }
 
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload end");
-    return allFileUploadResult;
+    return (IsSuccess(successCount, fileDatas_.size())) ? UPLOAD_OK : UPLOAD_ERRORCODE_UPLOAD_FAIL;
+}
+
+bool CUrlAdp::IsSuccess(const uint32_t count, const uint32_t size)
+{
+    if (count == 0) {
+        return false;
+    }
+    return (count == size);
 }
 
 bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL *> &curlArray)
@@ -295,22 +301,6 @@ bool CUrlAdp::ClearCurlResource()
     }
     CurlGlobalCleanup();
     return true;
-}
-
-int CUrlAdp::OnDebug(CURL *curl, curl_infotype itype, char *pData, size_t size, void *lpvoid)
-{
-    if (itype == CURLINFO_TEXT) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>OnDebug CURLINFO_TEXT is %{public}s", pData);
-    } else if (itype == CURLINFO_HEADER_IN) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>OnDebug CURLINFO_HEADER_IN is %{public}s", pData);
-    } else if (itype == CURLINFO_HEADER_OUT) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>OnDebug CURLINFO_HEADER_OUT is %{public}s", pData);
-    } else if (itype == CURLINFO_DATA_IN) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>OnDebug CURLINFO_DATA_IN is %{public}s", pData);
-    } else if (itype == CURLINFO_DATA_OUT) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===>OnDebug CURLINFO_DATA_OUT is %{public}s", pData);
-    }
-    return (int)itype;
 }
 
 bool CUrlAdp::CheckCUrlAdp(FileData *fData)

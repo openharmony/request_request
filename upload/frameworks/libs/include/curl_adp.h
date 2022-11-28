@@ -44,7 +44,6 @@ protected:
         curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
     static size_t HeaderCallback(char *buffer, size_t size, size_t nitems, void *userdata);
     static size_t ReadCallback(char *buffer, size_t size, size_t nitems, void *arg);
-    static int OnDebug(CURL *curl, curl_infotype itype, char *pData, size_t size, void *lpvoid);
     static void Notify(FileData *fData, std::string &headers);
     static void NotifyAPI5(FileData *fData, std::string &headers);
     static bool CheckCUrlAdp(FileData *fData);
@@ -53,6 +52,7 @@ private:
     int CheckUploadStatus(CURLM *curlMulti);
     bool MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray);
     int32_t UploadOneFile();
+    bool IsSuccess(const uint32_t count, const uint32_t size);
     void SetCurlOpt(CURL *curl);
     void SetHeadData(CURL *curl);
     void SetHttpPut(CURL *curl);

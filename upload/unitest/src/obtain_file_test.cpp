@@ -72,7 +72,7 @@ void ObtainFileTest::TearDown()
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest001, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest001 start";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest001**in**********");
     FILE *file = nullptr;
     unsigned int fileSize = 0;
     unsigned int result = UPLOAD_OK;
@@ -86,17 +86,17 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest001, TestSize.Level0)
     EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR);
     EXPECT_EQ(file, nullptr);
     EXPECT_EQ(fileSize, 0);
-    GTEST_LOG_(INFO) << "ObtainFileUtTest001 end";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest001***out**********");
 }
 
 /**
- * @tc.name: ObtainFileUtTest001
+ * @tc.name: ObtainFileUtTest002
  * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest002, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest002 start";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest002**in**********");
     std::string testFileInfo = "test date for dataability file.";
     std::string createCachePathCommend = "mkdir -p /data/Dataability/";
     std::string createCacheFileCommend = "touch /data/Dataability/file.txt";
@@ -122,20 +122,19 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest002, TestSize.Level0)
     EXPECT_EQ(result, UPLOAD_OK);
     EXPECT_NE(file, nullptr);
     EXPECT_EQ(fileSize, testFileInfo.size() + 1);
-    GTEST_LOG_(INFO) << "ObtainFileUtTest002 end";
-
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest002***out**********");
     fclose(file);
     system(deleteCacheFileCommend.c_str());
 }
 
 /**
- * @tc.name: ObtainFileUtTest001
+ * @tc.name: ObtainFileUtTest003
  * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest003, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest003 start";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest003**in**********");
     FILE *file = nullptr;
     unsigned int fileSize = 0;
     unsigned int result = UPLOAD_ERRORCODE_GET_FILE_ERROR;
@@ -147,16 +146,16 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest003, TestSize.Level0)
     EXPECT_EQ(result, UPLOAD_ERRORCODE_UNSUPPORT_URI);
     EXPECT_EQ(file, nullptr);
     EXPECT_EQ(fileSize, 0);
-    GTEST_LOG_(INFO) << "ObtainFileUtTest003 end";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest003***out**********");
 }
 /**
- * @tc.name: ObtainFileUtTest001
+ * @tc.name: ObtainFileUtTest004
  * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest004, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest004 start";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest004**in**********");
     FILE *file = nullptr;
     unsigned int fileSize = 0;
     unsigned int result = UPLOAD_ERRORCODE_GET_FILE_ERROR;
@@ -168,16 +167,16 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest004, TestSize.Level0)
     EXPECT_EQ(result, UPLOAD_ERRORCODE_UNSUPPORT_URI);
     EXPECT_EQ(file, nullptr);
     EXPECT_EQ(fileSize, 0);
-    GTEST_LOG_(INFO) << "ObtainFileUtTest004 end";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest004***out**********");
 }
 /**
- * @tc.name: ObtainFileUtTest001
+ * @tc.name: ObtainFileUtTest005
  * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest005, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest005 start";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest005**in**********");
     FILE *file = nullptr;
     unsigned int fileSize = 0;
     unsigned int result = UPLOAD_ERRORCODE_GET_FILE_ERROR;
@@ -189,17 +188,17 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest005, TestSize.Level0)
     EXPECT_EQ(result, UPLOAD_ERRORCODE_UNSUPPORT_URI);
     EXPECT_EQ(file, nullptr);
     EXPECT_EQ(fileSize, 0);
-    GTEST_LOG_(INFO) << "ObtainFileUtTest005 end";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest005***out**********");
 }
 
 /**
- * @tc.name: ObtainFileUtTest001
+ * @tc.name: ObtainFileUtTest006
  * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest006, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest006 start";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest006**in**********");
     FILE *file = nullptr;
     unsigned int fileSize = 0;
     unsigned int result = UPLOAD_ERRORCODE_GET_FILE_ERROR;
@@ -214,16 +213,16 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest006, TestSize.Level0)
     EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR);
     EXPECT_EQ(file, nullptr);
     EXPECT_EQ(fileSize, 0);
-    GTEST_LOG_(INFO) << "ObtainFileUtTest006 end";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest006***out**********");
 }
 /**
- * @tc.name: ObtainFileUtTest001
+ * @tc.name: ObtainFileUtTest007
  * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest007, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest007 start";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest007**in**********");
     FILE *file = nullptr;
     unsigned int fileSize = 0;
     unsigned int result = UPLOAD_ERRORCODE_GET_FILE_ERROR;
@@ -238,16 +237,16 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest007, TestSize.Level0)
     EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR);
     EXPECT_EQ(file, nullptr);
     EXPECT_EQ(fileSize, 0);
-    GTEST_LOG_(INFO) << "ObtainFileUtTest007 end";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest007***out**********");
 }
 /**
- * @tc.name: ObtainFileUtTest001
+ * @tc.name: ObtainFileUtTest008
  * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest008, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest008 start";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest008**in**********");
     std::string testFileInfo = "test date for internal file.";
     std::string createCachePathCommend = "mkdir -p /data/testApp/CacheDir/path/to/";
     std::string createCacheFileCommend = "touch /data/testApp/CacheDir/path/to/file.txt";
@@ -271,19 +270,19 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest008, TestSize.Level0)
     EXPECT_EQ(result, UPLOAD_OK);
     EXPECT_NE(file, nullptr);
     EXPECT_EQ(fileSize, testFileInfo.size() + 1);
-    GTEST_LOG_(INFO) << "ObtainFileUtTest008 end";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest008***out**********");
 
     fclose(file);
     system(deleteCacheFileCommend.c_str());
 }
 /**
- * @tc.name: ObtainFileUtTest001
+ * @tc.name: ObtainFileUtTest009
  * @tc.desc: GetFile with DataAbilityUri success
  * @tc.type: FUNC
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest009, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest009 start";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest009**in**********");
     FILE *file = nullptr;
     unsigned int fileSize = 0;
     unsigned int result = UPLOAD_ERRORCODE_GET_FILE_ERROR;
@@ -295,7 +294,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest009, TestSize.Level0)
     EXPECT_EQ(result, UPLOAD_ERRORCODE_UNSUPPORT_URI);
     EXPECT_EQ(file, nullptr);
     EXPECT_EQ(fileSize, 0);
-    GTEST_LOG_(INFO) << "ObtainFileUtTest009 end";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest009***out**********");
 }
 
 /**
@@ -305,7 +304,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest009, TestSize.Level0)
  */
 HWTEST_F(ObtainFileTest, ObtainFileUtTest010, TestSize.Level0)
 {
-    GTEST_LOG_(INFO) << "ObtainFileUtTest010 start";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest010**in**********");
 
     std::shared_ptr<IFileAdapter> fileAdapter = std::make_shared<FileAdapter>();
     std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
@@ -313,6 +312,6 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest010, TestSize.Level0)
     int32_t fd = fileAdapter->DataAbilityOpenFile(uri, context);
     EXPECT_EQ(fd, -1);
 
-    GTEST_LOG_(INFO) << "ObtainFileUtTest010 end";
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest010**in**********");
 }
 }  // namespace OHOS::Request::Upload
