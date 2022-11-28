@@ -65,6 +65,7 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config, ExceptionErr
         DOWNLOAD_HILOGE("%{public}s", error.errInfo.c_str());
         close(fd);
         fd = -1;
+        return -1;
     } else {
         fd = open(config.GetFilePath().c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
         if (fd < 0) {

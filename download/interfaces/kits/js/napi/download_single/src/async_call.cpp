@@ -28,7 +28,6 @@ AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Cont
     napi_value self = nullptr;
     napi_value argv[NapiUtils::MAX_ARGC] = { nullptr };
     NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
-    NAPI_ASSERT_BASE(env, pos <= argc, " Invalid Args!", NAPI_RETVAL_NOTHING);
     pos = ((pos == ASYNC_DEFAULT_POS) ? (argc - 1) : pos);
     if (pos >= 0 && pos < argc) {
         napi_valuetype valueType = napi_undefined;
@@ -155,7 +154,7 @@ void AsyncCall::DeleteContext(napi_env env, AsyncContext *context)
 void AsyncCall::GetOffCallbackParameter(napi_env env, const std::string &type, napi_value (&result)[ARG_BUTT])
 {
     DOWNLOAD_HILOGD("type:%{public}s", type.c_str());
-    if (type == FUNCTION_OFF_PROGRESS || type == FUNCTION_OFF_FAIL) {
+    if (type == EVENT_PROGRESS || type == EVENT_FAIL) {
         napi_valuetype valueType = napi_undefined;
         int ret = 0;
         napi_typeof(env, result[ARG_DATA], &valueType);
