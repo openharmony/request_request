@@ -305,7 +305,7 @@ bool UploadTaskNapi::operator==(const std::shared_ptr<Upload::UploadTask> &uploa
     return napiUploadTask_ == uploadTask;
 }
 
-void AddCallbackToConfig(std::shared_ptr<UploadConfig> &config, napi_env env, napi_value jsConfig,
+void AddCallbackToConfig(const std::shared_ptr<UploadConfig> &config, napi_env env, napi_value jsConfig,
     UploadTaskNapi *proxy)
 {
     config->fsuccess = std::bind(&UploadTaskNapi::OnSystemSuccess, proxy->env_, proxy->success_,
