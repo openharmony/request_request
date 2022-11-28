@@ -154,6 +154,7 @@ constexpr size_t MIN_HEADER_LENGTH = sizeof(std::string) * 2;
 static constexpr const char *EVENT_PROGRESS = "progress";
 static constexpr const char *EVENT_COMPLETE = "complete";
 static constexpr const char *EVENT_FAIL = "fail";
+static constexpr size_t ASYNC_DEFAULT_POS = -1;
 } // namespace OHOS::Request::Download
 
 #endif // CONSTANT_H
