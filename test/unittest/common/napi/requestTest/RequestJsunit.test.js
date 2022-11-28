@@ -168,6 +168,7 @@ describe('RequestTest', function () {
                     }catch(err){
                         console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003 throw_error: " + err);
                     }
+                    downloadTask.remove()
                     done();
                 });
                 downloadTask.on('progress', (data1, data2) => {
@@ -314,6 +315,7 @@ describe('RequestTest', function () {
                     }catch(err){
                         console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001 off_err: " + err);
                     }
+                    downloadTask.remove()
                     done();
                 });
             }catch(err){
@@ -358,6 +360,7 @@ describe('RequestTest', function () {
                     }catch(err){
                         console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002 off_err: " + err);
                     }
+                    downloadTask.remove()
                     done();
                 });
             }catch(err){
@@ -402,6 +405,7 @@ describe('RequestTest', function () {
                     }catch(err){
                         console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003 off_err: " + err);
                     }
+                    downloadTask.remove()
                     done();
                 });
             }catch(err){
@@ -446,6 +450,7 @@ describe('RequestTest', function () {
                     }catch(err){
                         console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003 off_err: " + err);
                     }
+                    downloadTask.remove()
                     done();
                 });
             }catch(err){
@@ -492,6 +497,7 @@ describe('RequestTest', function () {
                     }catch(err){
                         console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 fail_error: " + err);
                     }
+                    downloadTask.remove()
                     done();
                 });
             }catch(err){
@@ -724,6 +730,7 @@ describe('RequestTest', function () {
                     }catch(err){
                         console.info('====>SUB_REQUEST_DOWNLOAD_API_REMUSE_0001 pause_throw_err:' + JSON.stringify(err))
                     }
+                    downloadTask.remove()
                     done();
                 })
             }catch(err){
@@ -764,6 +771,7 @@ describe('RequestTest', function () {
                 downloadTask.resume().then(() => {
                     console.info('====>SUB_REQUEST_DOWNLOAD_API_REMUSE_0002 Download task resume success.');
                     expect(true).assertTrue();
+                    downloadTask.remove()
                     done()
                 }).catch((err) => {
                     console.error("====>SUB_REQUEST_DOWNLOAD_API_REMUSE_0002 throw_error: " + JSON.stringify(err));
