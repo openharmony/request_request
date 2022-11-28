@@ -24,7 +24,7 @@
 namespace OHOS::Request::Download {
 napi_value DownloadEvent::On(napi_env env, napi_callback_info info)
 {
-    DOWNLOAD_HILOGD("Enter ---->");
+    DOWNLOAD_HILOGD("on Enter ---->");
     if (!DownloadManager::GetInstance()->CheckPermission()) {
         DOWNLOAD_HILOGD("no permission to access download service");
         return nullptr;
@@ -74,7 +74,7 @@ napi_value DownloadEvent::On(napi_env env, napi_callback_info info)
 
 napi_value DownloadEvent::Off(napi_env env, napi_callback_info info)
 {
-    DOWNLOAD_HILOGD("Enter ---->");
+    DOWNLOAD_HILOGD("off Enter ---->");
     if (!DownloadManager::GetInstance()->CheckPermission()) {
         DOWNLOAD_HILOGD("no permission to access download service");
         return nullptr;
@@ -116,10 +116,12 @@ napi_value DownloadEvent::Off(napi_env env, napi_callback_info info)
         context->result = DownloadManager::GetInstance()->Off(context->task_->GetId(), context->type_);
         if (context->result == true) {
             context->task_->RemoveListener(context->type_);
+            context->status = napi_ok;
         }
     };
     context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context), NapiUtils::SECOND_ARGV);
+    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context), context->type_,
+        NapiUtils::SECOND_ARGV);
     return asyncCall.Call(env, exec);
 }
 

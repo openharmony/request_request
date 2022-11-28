@@ -17,16 +17,17 @@
 
 #include "log.h"
 #include "napi_utils.h"
+#include "constant.h"
 
 namespace OHOS::Request::Download {
-AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context, size_t pos) : env_(env)
+AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context, const std::string &type,
+    size_t pos) : env_(env)
 {
     context_ = new AsyncContext();
     size_t argc = NapiUtils::MAX_ARGC;
     napi_value self = nullptr;
     napi_value argv[NapiUtils::MAX_ARGC] = {nullptr};
     NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
-    NAPI_ASSERT_BASE(env, pos <= argc, " Invalid Args!", NAPI_RETVAL_NOTHING);
     pos = ((pos == ASYNC_DEFAULT_POS) ? (argc - 1) : pos);
     if (pos >= 0 && pos < argc) {
         napi_valuetype valueType = napi_undefined;
@@ -39,6 +40,7 @@ AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Cont
     napi_status status = (*context)(env, argc, argv, self);
     if (status == napi_ok) {
         context_->ctx = std::move(context);
+        context_->type = type;
         napi_create_reference(env, self, 1, &context_->self);
     }
     DOWNLOAD_HILOGE("input result:%{public}d", static_cast<int32_t>(status));
@@ -134,10 +136,12 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         napi_value callback = nullptr;
         napi_get_reference_value(env, context->callback, &callback);
         napi_value returnValue;
-        napi_call_function(env, nullptr, callback, ARG_BUTT, result, &returnValue);
+        GetOffCallbackParameter(env, context->type, result);
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback, ARG_BUTT, result, &returnValue));
     }
     DeleteContext(env, context);
 }
+
 void AsyncCall::DeleteContext(napi_env env, AsyncContext *context)
 {
     if (env != nullptr) {
@@ -146,5 +150,30 @@ void AsyncCall::DeleteContext(napi_env env, AsyncContext *context)
         napi_delete_async_work(env, context->work);
     }
     delete context;
+}
+
+void AsyncCall::GetOffCallbackParameter(napi_env env, const std::string &type, napi_value (&result)[ARG_BUTT])
+{
+    DOWNLOAD_HILOGD("type:%{public}s", type.c_str());
+    if (type == EVENT_PROGRESS || type == EVENT_FAIL) {
+        napi_valuetype valueType = napi_undefined;
+        int ret = 0;
+        napi_typeof(env, result[ARG_DATA], &valueType);
+        if (valueType == napi_boolean) {
+            bool status;
+            NAPI_CALL_RETURN_VOID(env, napi_get_value_bool(env, result[ARG_DATA], &status));
+
+            if (status == false) {
+                ret = -1;
+            }
+        } else {
+            ret = -1;
+        }
+        DOWNLOAD_HILOGD("ret:%{public}d", ret);
+        result[ARG_ERROR] = NapiUtils::CreateInt32(env, ret);
+        if (type == "progress") {
+            result[ARG_DATA] = NapiUtils::CreateInt32(env, ret);
+        }
+    }
 }
 } // namespace OHOS::Request::Download

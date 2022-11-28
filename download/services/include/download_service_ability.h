@@ -76,7 +76,9 @@ private:
     int32_t Init();
     void InitServiceHandler();
     void ManualStart();
-
+    void AddUnregisteredNotify(uint32_t taskId, const std::string &type);
+    void DeleteUnregisteredNotify(const std::string &combineType);
+    bool DoUnregisteredNotify(uint32_t taskId, const std::string &type);
 private:
     ServiceRunningState state_;
     static std::mutex instanceLock_;
@@ -88,6 +90,8 @@ private:
     std::mutex lock_;
     const int32_t startTime_ = 1900;
     const int32_t extraMonth_ = 1;
+    std::mutex unregisteredNotifyMutex_;
+    std::map<std::string, uint32_t> unregisteredNotify_;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_SYSTEM_ABILITY_H

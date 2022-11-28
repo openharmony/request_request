@@ -90,10 +90,7 @@ static constexpr const char *HTTP_LINE_SEPARATOR = "\r\n";
 static constexpr const char *HTTP_DEFAULT_USER_AGENT = "libcurl-agent/1.0";
 static constexpr const char *HTTP_DEFAULT_CA_PATH = "/etc/ssl/certs/cacert.pem";
 
-static constexpr const char *HTTP_CONTENT_TYPE = "content-type";
-static constexpr const char *HTTP_CONTENT_TYPE_TEXT = "text/plain";
-static constexpr const char *HTTP_CONTENT_TYPE_URL_ENCODE = "application/x-www-form-urlencoded";
-static constexpr const char *HTTP_CONTENT_TYPE_JSON = "application/json";
+static constexpr const char *HTTP_CONTENT_TYPE = "Content-Type";
 
 static constexpr const char *EXCEPTION_OK_INFO = "check succeeded";
 static constexpr const char *EXCEPTION_PERMISSION_INFO = "the permissions check fails";
@@ -103,6 +100,12 @@ static constexpr const char *EXCEPTION_FILE_IO_INFO = " file operation error";
 static constexpr const char *EXCEPTION_FILE_PATH_INFO = "bad file path";
 static constexpr const char *EXCEPTION_SERVICE_ERROR_INFO = "task service ability error";
 static constexpr const char *EXCEPTION_OTHER_INFO = "other error";
+
+static constexpr const char *FUNCTION_PAUSE = "pause";
+static constexpr const char *FUNCTION_QUERY = "query";
+static constexpr const char *FUNCTION_QUERY_MIME_TYPE = "queryMimeType";
+static constexpr const char *FUNCTION_REMOVE = "remove";
+static constexpr const char *FUNCTION_RESUME = "resume";
 
 static constexpr const char *FUNCTION_SUSPEND = "suspend";
 static constexpr const char *FUNCTION_GET_TASK_INFO = "getTaskInfo";
@@ -143,11 +146,15 @@ static constexpr int PARAMETER_EMPTY = -1;
 
 static constexpr int TRANSACTION_COUNT = 100;
 
-
 constexpr int DOWNLOAD_INFO = 10000;
 
 constexpr int REQUEST_PARAMS_NUM = 2;
 constexpr size_t MIN_HEADER_LENGTH = sizeof(std::string) * 2;
+
+static constexpr const char *EVENT_PROGRESS = "progress";
+static constexpr const char *EVENT_COMPLETE = "complete";
+static constexpr const char *EVENT_FAIL = "fail";
+static constexpr size_t ASYNC_DEFAULT_POS = -1;
 } // namespace OHOS::Request::Download
 
 #endif // CONSTANT_H

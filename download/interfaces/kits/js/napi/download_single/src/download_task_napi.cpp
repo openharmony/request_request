@@ -22,6 +22,7 @@
 
 #include "ability.h"
 #include "async_call.h"
+#include "constant.h"
 #include "download_event.h"
 #include "download_manager.h"
 #include "download_pause.h"
@@ -36,11 +37,6 @@
 
 static constexpr const char *FUNCTION_ON = "on";
 static constexpr const char *FUNCTION_OFF = "off";
-static constexpr const char *FUNCTION_PAUSE = "pause";
-static constexpr const char *FUNCTION_QUERY = "query";
-static constexpr const char *FUNCTION_QUERY_MIME_TYPE = "queryMimeType";
-static constexpr const char *FUNCTION_REMOVE = "remove";
-static constexpr const char *FUNCTION_RESUME = "resume";
 
 static constexpr const char *PARAM_KEY_URI = "url";
 static constexpr const char *PARAM_KEY_HEADER = "header";
@@ -96,7 +92,7 @@ napi_value DownloadTaskNapi::JsMain(napi_env env, napi_callback_info info)
         return status;
     };
     auto context = std::make_shared<AsyncCall::Context>(input, output);
-    AsyncCall asyncCall(env, info, context, 1);
+    AsyncCall asyncCall(env, info, context, "", ASYNC_DEFAULT_POS);
     return asyncCall.Call(env);
 }
 
@@ -117,6 +113,11 @@ napi_value DownloadTaskNapi::GetCtor(napi_env env)
         {FUNCTION_QUERY_MIME_TYPE, 0, DownloadQueryMimeType::QueryMimeType, 0, 0, 0, napi_default, 0},
         {FUNCTION_REMOVE, 0, DownloadRemove::Remove, 0, 0, 0, napi_default, 0},
         {FUNCTION_RESUME, 0, DownloadResume::Resume, 0, 0, 0, napi_default, 0},
+        { FUNCTION_SUSPEND, 0, DownloadPause::Suspend, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_GET_TASK_INFO, 0, DownloadQuery::GetTaskInfo, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_GET_TASK_MIME_TYPE, 0, DownloadQueryMimeType::GetTaskMimeType, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_DELETE, 0, DownloadRemove::Delete, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_RESTORE, 0, DownloadResume::Restore, 0, 0, 0, napi_default, 0 },
     };
     NAPI_CALL(env, napi_define_class(env, "DownloadTaskNapi", NAPI_AUTO_LENGTH, Initialize, nullptr,
                        sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
@@ -137,15 +138,18 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     napi_status getStatus = GetContext(env, argv[0], parametersPosition, context);
     if (getStatus != napi_ok) {
         DOWNLOAD_HILOGE("Initialize. GetContext fail.");
+        NAPI_ASSERT(env, false, "Initialize. GetContext fail.");
         return nullptr;
     }
     if (context->GetApplicationInfo() == nullptr) {
         DOWNLOAD_HILOGE("ApplicationInfo is null");
+        NAPI_ASSERT(env, false, "ApplicationInfo is null");
         return nullptr;
     }
     DownloadConfig config;
     if (!ParseConfig(env, argv[parametersPosition], config)) {
         DOWNLOAD_HILOGE("download config has wrong type");
+        NAPI_ASSERT(env, false, "download config has wrong type");
         return nullptr;
     }
     config.SetBundleName(context->GetBundleName());
@@ -153,7 +157,8 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     ExceptionError err;
     auto *task = DownloadManager::GetInstance()->EnqueueTask(config, err);
     if (task == nullptr) {
-        DOWNLOAD_HILOGE("download task fail");
+        DOWNLOAD_HILOGE("download task fail: %{public}s", err.errInfo.c_str());
+        NapiUtils::ThrowError(env, err.code, err.errInfo);
         return nullptr;
     }
     auto finalize = [](napi_env env, void *data, void *hint) {
@@ -163,6 +168,7 @@ napi_value DownloadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     };
     if (napi_wrap(env, self, task, finalize, nullptr, nullptr) != napi_ok) {
         finalize(env, task, nullptr);
+        NAPI_ASSERT(env, false, "napi_wrap fail");
         return nullptr;
     }
     DOWNLOAD_HILOGD("Succeed to allocate download task");

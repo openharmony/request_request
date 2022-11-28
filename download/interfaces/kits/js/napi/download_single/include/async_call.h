@@ -17,6 +17,8 @@
 
 #include <functional>
 #include <memory>
+#include <string>
+#include "constant.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -75,8 +77,8 @@ public:
     };
 
     // The default AsyncCallback in the parameters is at the end position.
-    static constexpr size_t ASYNC_DEFAULT_POS = -1;
-    AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context, size_t pos = ASYNC_DEFAULT_POS);
+    AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context, const std::string &type,
+        size_t pos = ASYNC_DEFAULT_POS);
     ~AsyncCall();
     napi_value Call(napi_env env, Context::ExecAction exec = nullptr);
     napi_value SyncCall(napi_env env, Context::ExecAction exec = nullptr);
@@ -91,9 +93,10 @@ private:
         napi_ref self = nullptr;
         napi_deferred defer = nullptr;
         napi_async_work work = nullptr;
+        std::string type;
     };
     static void DeleteContext(napi_env env, AsyncContext *context);
-
+    static void GetOffCallbackParameter(napi_env env, const std::string &type, napi_value (&result)[ARG_BUTT]);
     AsyncContext *context_ = nullptr;
     napi_env env_ = nullptr;
 };
