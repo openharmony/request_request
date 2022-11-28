@@ -18,6 +18,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include "constant.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -76,7 +77,6 @@ public:
     };
 
     // The default AsyncCallback in the parameters is at the end position.
-    static constexpr size_t ASYNC_DEFAULT_POS = -1;
     AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context, const std::string &type,
         size_t pos = ASYNC_DEFAULT_POS);
     ~AsyncCall();

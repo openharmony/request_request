@@ -21,7 +21,7 @@
 namespace OHOS::Request::Download {
 napi_value DownloadQuery::Query(napi_env env, napi_callback_info info)
 {
-    DOWNLOAD_HILOGD("Query Enter ---->");
+    DOWNLOAD_HILOGD("Enter ---->");
     if (!DownloadManager::GetInstance()->CheckPermission()) {
         DOWNLOAD_HILOGD("no permission to access download service");
         return nullptr;
@@ -31,7 +31,7 @@ napi_value DownloadQuery::Query(napi_env env, napi_callback_info info)
 
 napi_value DownloadQuery::GetTaskInfo(napi_env env, napi_callback_info info)
 {
-    DOWNLOAD_HILOGD("GetTaskInfo Enter ---->");
+    DOWNLOAD_HILOGD("Enter ---->");
     ExceptionError err;
     if (!NapiUtils::CheckParameterCorrect(env, info, FUNCTION_GET_TASK_INFO, err)) {
         DOWNLOAD_HILOGE("%{public}s", err.errInfo.c_str());

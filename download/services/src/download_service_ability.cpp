@@ -256,13 +256,13 @@ bool DownloadServiceAbility::On(uint32_t taskId, const std::string &type, const 
             DOWNLOAD_HILOGE("DownloadServiceAbility::On insert type=%{public}s object fail.", combineType.c_str());
             return false;
         }
+        if (DoUnregisteredNotify(taskId, type)) {
+            DOWNLOAD_HILOGD("notify unregistered on event");
+        }
     } else {
         std::lock_guard<std::mutex> lck(listenerMapMutex_);
         DOWNLOAD_HILOGI("DownloadServiceAbility::On Replace listener.");
         registeredListeners_[combineType] = listener;
-        if (DoUnregisteredNotify(taskId, type)) {
-            DOWNLOAD_HILOGD("notify unregistered on event");
-        }
     }
     DOWNLOAD_HILOGI("DownloadServiceAbility::On end.");
     return true;

@@ -22,7 +22,7 @@
 namespace OHOS::Request::Download {
 napi_value DownloadQueryMimeType::QueryMimeType(napi_env env, napi_callback_info info)
 {
-    DOWNLOAD_HILOGD("QueryMimeType Enter ---->");
+    DOWNLOAD_HILOGD("Enter ---->");
     if (!DownloadManager::GetInstance()->CheckPermission()) {
         DOWNLOAD_HILOGD("no permission to access download service");
         return nullptr;
@@ -32,7 +32,7 @@ napi_value DownloadQueryMimeType::QueryMimeType(napi_env env, napi_callback_info
 
 napi_value DownloadQueryMimeType::GetTaskMimeType(napi_env env, napi_callback_info info)
 {
-    DOWNLOAD_HILOGD("GetTaskMimeType Enter ---->");
+    DOWNLOAD_HILOGD("Enter ---->");
     ExceptionError err;
     if (!NapiUtils::CheckParameterCorrect(env, info, FUNCTION_GET_TASK_MIME_TYPE, err)) {
         DOWNLOAD_HILOGE("%{public}s", err.errInfo.c_str());

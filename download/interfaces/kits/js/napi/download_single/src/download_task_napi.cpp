@@ -22,6 +22,7 @@
 
 #include "ability.h"
 #include "async_call.h"
+#include "constant.h"
 #include "download_event.h"
 #include "download_manager.h"
 #include "download_pause.h"
@@ -91,7 +92,7 @@ napi_value DownloadTaskNapi::JsMain(napi_env env, napi_callback_info info)
         return status;
     };
     auto context = std::make_shared<AsyncCall::Context>(input, output);
-    AsyncCall asyncCall(env, info, context, "", -1);
+    AsyncCall asyncCall(env, info, context, "", ASYNC_DEFAULT_POS);
     return asyncCall.Call(env);
 }
 

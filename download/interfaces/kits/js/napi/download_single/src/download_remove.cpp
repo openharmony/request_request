@@ -21,7 +21,7 @@
 namespace OHOS::Request::Download {
 napi_value DownloadRemove::Remove(napi_env env, napi_callback_info info)
 {
-    DOWNLOAD_HILOGD("Remove Enter ---->");
+    DOWNLOAD_HILOGD("Enter ---->");
     if (!DownloadManager::GetInstance()->CheckPermission()) {
         DOWNLOAD_HILOGD("no permission to access download service");
         return nullptr;
@@ -31,7 +31,7 @@ napi_value DownloadRemove::Remove(napi_env env, napi_callback_info info)
 
 napi_value DownloadRemove::Delete(napi_env env, napi_callback_info info)
 {
-    DOWNLOAD_HILOGD("Delete Enter ---->");
+    DOWNLOAD_HILOGD("Enter ---->");
     ExceptionError err;
     if (!NapiUtils::CheckParameterCorrect(env, info, FUNCTION_DELETE, err)) {
         DOWNLOAD_HILOGE("%{public}s", err.errInfo.c_str());
