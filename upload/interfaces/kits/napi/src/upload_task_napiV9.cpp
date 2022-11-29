@@ -343,7 +343,7 @@ napi_status UploadTaskNapiV9::OnProgress(napi_env env, napi_value callback, napi
     NAPI_ASSERT_BASE(env, proxy != nullptr, "there is no native upload task", napi_invalid_arg);
 
     std::shared_ptr<IProgressCallback> progressCallback = std::make_shared<ProgressCallback>(env, callback);
-    if (JSUtil::Equals(env, callback, progressCallback->GetCallback()) && proxy->onFail_ != nullptr) {
+    if (JSUtil::Equals(env, callback, progressCallback->GetCallback()) && proxy->onProgress_ != nullptr) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OnProgress callback already register!");
         return napi_generic_failure;
     }
@@ -362,7 +362,7 @@ napi_status UploadTaskNapiV9::OnHeaderReceive(napi_env env, napi_value callback,
 
     std::shared_ptr<IHeaderReceiveCallback> headerReceiveCallback =
         std::make_shared<HeaderReceiveCallback>(env, callback);
-    if (JSUtil::Equals(env, callback, headerReceiveCallback->GetCallback()) && proxy->onFail_ != nullptr) {
+    if (JSUtil::Equals(env, callback, headerReceiveCallback->GetCallback()) && proxy->onHeaderReceive_ != nullptr) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OnHeaderReceive callback already register!");
         return napi_generic_failure;
     }

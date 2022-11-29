@@ -376,7 +376,7 @@ void DownloadServiceAbility::AddUnregisteredNotify(uint32_t taskId, const std::s
 
 void DownloadServiceAbility::DeleteUnregisteredNotify(const std::string &combineType)
 {
-    DOWNLOAD_HILOGD("delete combineType %{public}s",combineType.c_str());
+    DOWNLOAD_HILOGD("delete combineType %{public}s", combineType.c_str());
     std::lock_guard<std::mutex> lck(unregisteredNotifyMutex_);
     auto iter = unregisteredNotify_.find(combineType);
     if (iter != unregisteredNotify_.end()) {
