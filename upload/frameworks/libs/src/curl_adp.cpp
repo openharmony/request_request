@@ -319,11 +319,11 @@ bool CUrlAdp::CheckCUrlAdp(FileData *fData)
 int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
 {
     FileData *fData = (FileData *)clientp;
-    std::shared_ptr<CUrlAdp> url = fData->adp;
     if (!CheckCUrlAdp(fData)) {
         return UPLOAD_ERRORCODE_UPLOAD_FAIL;
     }
 
+    std::shared_ptr<CUrlAdp> url = fData->adp;
     std::lock_guard<std::mutex> lock(url->curlMutex_);
     if (ulnow > 0) {
         fData->upsize = fData->totalsize - (ultotal - ulnow);
@@ -335,7 +335,7 @@ int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlno
         " upload size: %{public}" PRIu64 " total size: %{public}" PRIu64 " thread:%{public}lu",
         ultotal, ulnow, fData->upsize, fData->totalsize, pthread_self());
 
-    if (url && url->uploadTask_) {
+    if (url->uploadTask_) {
         int64_t totalulnow = 0;
         for (auto &vmem : url->fileDatas_) {
             if (fData->filename == vmem.filename) {
@@ -353,20 +353,17 @@ int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlno
 size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *userdata)
 {
     FileData *fData = (FileData *)userdata;
-    std::shared_ptr<CUrlAdp> url = fData->adp;
     if (!CheckCUrlAdp(fData)) {
         return CURLE_WRITE_ERROR;
     }
 
+    std::shared_ptr<CUrlAdp> url = fData->adp;
     std::lock_guard<std::mutex> lock(url->curlMutex_);
     std::string stmp(buffer, size * nitems);
     url->SplitHttpMessage(stmp, fData);
 
-    if (url && url->uploadTask_ && fData->headSendFlag == COLLECT_END_FLAG) {
-        std::string headers = "";
-        for (auto &smem : fData->responseHead) {
-            headers += smem;
-        }
+    if (url->uploadTask_ && fData->headSendFlag == COLLECT_END_FLAG) {
+        std::string headers = std::accumulate(fData->responseHead.begin(), fData->responseHead.end(), std::string(""));
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "report head len: %{public}zu, content: %{public}s",
             headers.length(), headers.c_str());
         auto func = (url->config_->protocolVersion == API5) ? NotifyAPI5 : Notify;
@@ -425,12 +422,11 @@ size_t CUrlAdp::ReadCallback(char *buffer, size_t size, size_t nitems, void *arg
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "size is %{public}zu, nitems is %{public}zu.", size, nitems);
     FileData *fData = (FileData *)arg;
-    std::shared_ptr<CUrlAdp> url = fData->adp;
-
     if (!CheckCUrlAdp(fData) || ferror(fData->fp)) {
         return CURL_READFUNC_ABORT;
     }
 
+    std::shared_ptr<CUrlAdp> url = fData->adp;
     std::lock_guard<std::mutex> lock(url->curlMutex_);
     url->StartTimer();
     size_t readSize = fread(buffer, size, nitems, fData->fp);
