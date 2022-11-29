@@ -17,6 +17,7 @@
 #define PROGRESS_CALLBACK
 
 #include <uv.h>
+#include <atomic>
 #include "i_progress_callback.h"
 #include "js_util.h"
 #include "napi/native_common.h"
@@ -35,14 +36,13 @@ public:
     napi_env GetEnv();
     int64_t GetUploadedSize();
     int64_t GetTotalSize();
-    std::mutex mutex_;
 
 private:
     napi_ref callback_ = nullptr;
     napi_env env_;
     uv_loop_s *loop_ = nullptr;
-    int64_t uploadedSize_;
-    int64_t totalSize_;
+    std::atomic<int64_t> uploadedSize_ {0};
+    std::atomic<int64_t> totalSize_ {0};
 };
 
 struct ProgressWorker {

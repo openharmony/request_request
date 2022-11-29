@@ -45,13 +45,11 @@ napi_env ProgressCallback::GetEnv()
 
 int64_t ProgressCallback::GetUploadedSize()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     return uploadedSize_;
 }
 
 int64_t ProgressCallback::GetTotalSize()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     return totalSize_;
 }
 
@@ -95,13 +93,9 @@ void ProgressCallback::Progress(const int64_t uploadedSize, const int64_t totalS
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create progressWorker");
         return;
     }
-
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        progressWorker->observer = shared_from_this();
-        uploadedSize_ = uploadedSize;
-        totalSize_ = totalSize;
-    }
+    progressWorker->observer = shared_from_this();
+    uploadedSize_ = uploadedSize;
+    totalSize_ = totalSize;
 
     uv_work_t *work = new (std::nothrow)uv_work_t();
     if (work == nullptr) {
