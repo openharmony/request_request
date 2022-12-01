@@ -80,8 +80,7 @@ HWTEST_F(UploadTest, PostUploadNetworkOff001, TestSize.Level0)
     uploadConfig->header = header;
 
     auto curl = std::make_shared<CUrlAdp>(fileDatas, uploadConfig);
-    auto task = std::make_shared<Upload::UploadTask>(uploadConfig);
-    uint32_t ret = curl->DoUpload(task);
+    uint32_t ret = curl->DoUpload(nullptr);
     EXPECT_EQ(ret, UPLOAD_ERRORCODE_UPLOAD_FAIL);
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********PostUploadNetworkOff001***out**********");
 }
@@ -198,6 +197,7 @@ HWTEST_F(UploadTest, ProgressCallback001, TestSize.Level0)
     fData->adp = curl;
     int ret = CUrlAdp::ProgressCallback(static_cast<void *> (fData), 10, 3, 10, 3);
     EXPECT_EQ(ret, 0);
+    delete fData;
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ProgressCallback001***out**********");
 }
 
@@ -218,6 +218,7 @@ HWTEST_F(UploadTest, ProgressCallback002, TestSize.Level0)
     fData->adp = curl;
     int ret = CUrlAdp::ProgressCallback(static_cast<void *> (fData), 9, 3, 9, 0);
     EXPECT_EQ(ret, 0);
+    delete fData;
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ProgressCallback002***out**********");
 }
 
@@ -238,6 +239,7 @@ HWTEST_F(UploadTest, ProgressCallback003, TestSize.Level0)
     fData->adp = curl;
     int ret = CUrlAdp::ProgressCallback(static_cast<void *> (fData), 10, 3, 10, 0);
     EXPECT_EQ(ret, UPLOAD_ERRORCODE_UPLOAD_FAIL);
+    delete fData;
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ProgressCallback003***out**********");
 }
 
@@ -274,6 +276,7 @@ HWTEST_F(UploadTest, HeaderCallback001, TestSize.Level0)
     char str[] = "/1.1 200";
     size_t ret = CUrlAdp::HeaderCallback(str, 1, 8, static_cast<void *> (fData));
     EXPECT_EQ(ret, 8);
+    delete fData;
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********HeaderCallback001***out**********");
 }
 
@@ -291,10 +294,10 @@ HWTEST_F(UploadTest, HeaderCallback002, TestSize.Level0)
 
     FileData *fData = new FileData();
     fData->adp = curl;
-    fData->adp->uploadTask_ = std::make_shared<Upload::UploadTask>(uploadConfig);
     char str[] = "HTTP/1.1 200 OK\r\n";
     size_t ret = CUrlAdp::HeaderCallback(str, 1, 19, static_cast<void *> (fData));
     EXPECT_EQ(ret, 19);
+    delete fData;
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********HeaderCallback002***out**********");
 }
 
@@ -308,15 +311,14 @@ HWTEST_F(UploadTest, HeaderCallback003, TestSize.Level0)
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********HeaderCallback003**in**********");
     std::vector<FileData> fileDatas;
     std::shared_ptr<UploadConfig> uploadConfig = std::make_shared<UploadConfig>();
-    uploadConfig->protocolVersion = "API5";
     auto curl = std::make_shared<CUrlAdp>(fileDatas, uploadConfig);
 
     FileData *fData = new FileData();
     fData->adp = curl;
-    fData->adp->uploadTask_ = std::make_shared<Upload::UploadTask>(uploadConfig);
-    char str[] = "HTTP/1.1 200 OK\r\n";
-    size_t ret = CUrlAdp::HeaderCallback(str, 1, 19, static_cast<void *> (fData));
-    EXPECT_EQ(ret, 19);
+    char str[] = "\r\n";
+    size_t ret = CUrlAdp::HeaderCallback(str, 1, 4, static_cast<void *> (fData));
+    EXPECT_EQ(ret, 4);
+    delete fData;
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********HeaderCallback003***out**********");
 }
 
@@ -347,6 +349,30 @@ HWTEST_F(UploadTest, ReadCallback001, TestSize.Level0)
     fData->adp = nullptr;
     size_t ret = CUrlAdp::ReadCallback(nullptr, 0, 0, static_cast<void *> (fData));
     EXPECT_EQ(ret, CURL_READFUNC_ABORT);
+    delete fData;
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ReadCallback001***out**********");
+}
+
+/**
+ * @tc.name: UploadTest.ReadCallback002
+ * @tc.desc: Uoload read callback test.
+ * @tc.type: FUNC
+ */
+HWTEST_F(UploadTest, ReadCallback002, TestSize.Level0)
+{
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ReadCallback002**in**********");
+    std::vector<FileData> fileDatas;
+    std::shared_ptr<UploadConfig> uploadConfig = std::make_shared<UploadConfig>();
+    auto curl = std::make_shared<CUrlAdp>(fileDatas, uploadConfig);
+
+    FileData *fData = new FileData();
+    fData->adp = curl;
+    FILE *fp = fopen("file.txt", "w");
+    fData->fp = fp;
+    size_t ret = CUrlAdp::ReadCallback(nullptr, 0, 0, static_cast<void *> (fData));
+    EXPECT_EQ(ret, 0);
+    fclose(fp);
+    delete fData;
+    UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ReadCallback002***out**********");
 }
 } // end of OHOS::Request::Upload
