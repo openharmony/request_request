@@ -81,7 +81,16 @@ void UploadTask::Off(Type type, void *callback)
     }
 
     if (type == TYPE_PROGRESS_CALLBACK && progressCallback_ != nullptr) {
-        ((IProgressCallback *)callback)->Progress(uploadedSize_, totalSize_);
+        (static_cast<IProgressCallback *>(callback))->Progress(uploadedSize_, totalSize_);
+    }
+    if (type == TYPE_HEADER_RECEIVE_CALLBACK && headerReceiveCallback_ != nullptr) {
+        (static_cast<IHeaderReceiveCallback *>(callback))->HeaderReceive(header_);
+    }
+    if (type == TYPE_COMPLETE_CALLBACK && completeCallback_ != nullptr) {
+        (static_cast<INotifyCallback *>(callback))->Notify(taskStates_);
+    }
+    if (type == TYPE_FAIL_CALLBACK && failCallback_ != nullptr) {
+        (static_cast<INotifyCallback *>(callback))->Notify(taskStates_);
     }
     SetCallback(type, nullptr);
 }
