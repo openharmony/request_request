@@ -27,6 +27,7 @@
 #include <thread>
 #include <utility>
 
+#include "application_state_observer.h"
 #include "log.h"
 #include "net_all_capabilities.h"
 #include "net_conn_constants.h"
@@ -41,6 +42,19 @@ using namespace OHOS::NetManagerStandard;
 namespace OHOS::Request::Download {
 std::mutex DownloadServiceManager::instanceLock_;
 DownloadServiceManager *DownloadServiceManager::instance_ = nullptr;
+namespace {
+enum class ApplicationState {
+    APP_STATE_BEGIN = 0,
+    APP_STATE_CREATE = APP_STATE_BEGIN,
+    APP_STATE_READY,
+    APP_STATE_FOREGROUND,
+    APP_STATE_FOCUS,
+    APP_STATE_BACKGROUND,
+    APP_STATE_TERMINATED,
+    APP_STATE_END,
+};
+}
+
 DownloadServiceManager::DownloadServiceManager()
     : initialized_(false), interval_(TASK_SLEEP_INTERVAL), threadNum_(THREAD_POOL_NUM), timeoutRetry_(MAX_RETRY_TIMES),
       taskId_(0)
@@ -91,6 +105,7 @@ bool DownloadServiceManager::Create(uint32_t threadNum)
     });
     th.detach();
 
+    MonitorAppState();
     initialized_ = true;
     return initialized_;
 }
@@ -426,6 +441,48 @@ void DownloadServiceManager::UpdateNetworkType()
             }
         }
     }
+}
+void DownloadServiceManager::MonitorAppState()
+{
+    bool ret = ApplicationStateObserver::GetInstance().RegisterAppStateChanged(
+        [this](const std::string bundleName, int32_t uid, int32_t state) {
+        this->UpdateAppState(bundleName, uid, state);
+    });
+    DOWNLOAD_HILOGD("RegisterAppStateChanged retcode= %{public}d", ret);
+}
+
+void DownloadServiceManager::UpdateAppState(const std::string bundleName, int32_t uid, int32_t state)
+{
+    DOWNLOAD_HILOGI("UpdateAppState uid=%{public}d, bundleName=%{public}s, state=%{public}d",
+                    uid, bundleName.c_str(), state);
+    std::lock_guard<std::mutex> lck(appStateMutex_);
+    for (const auto &iter : taskMap_) {
+        if (IsSameApplication(bundleName, uid,
+                              iter.second->GetTaskBundleName(), iter.second->GetTaskApplicationInfoUid())) {
+            if (IsBackgroundOrTerminated(state)) {
+                iter.second->SetNotifyApp(false);
+            } else if (IsForeground(state)) {
+                iter.second->SetNotifyApp(true);
+            }
+        }
+    }
+}
+
+bool DownloadServiceManager::IsSameApplication(const std::string sName, int32_t sUid,
+                                               const std::string dName, int32_t dUid)
+{
+    return  (sName ==  dName) && (sUid == dUid);
+}
+
+bool DownloadServiceManager::IsBackgroundOrTerminated(int32_t state)
+{
+    return state == static_cast<int32_t>(ApplicationState::APP_STATE_BACKGROUND) ||
+           state == static_cast<int32_t>(ApplicationState::APP_STATE_TERMINATED);
+}
+
+bool DownloadServiceManager::IsForeground(int32_t state)
+{
+    return state == static_cast<int32_t>(ApplicationState::APP_STATE_FOREGROUND);
 }
 
 bool DownloadServiceManager::QueryAllTask(std::vector<DownloadInfo> &taskVector) const

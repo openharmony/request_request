@@ -74,6 +74,11 @@ private:
     void RemoveFromQueue(std::queue<uint32_t> &queue, uint32_t taskId);
     int32_t MonitorNetwork();
     void UpdateNetworkType();
+    void MonitorAppState();
+    void UpdateAppState(const std::string bundleName, int32_t uid, int32_t state);
+    bool IsSameApplication(const std::string sName, int32_t sUid, const std::string dName, int32_t dUid);
+    bool IsBackgroundOrTerminated(int32_t state);
+    bool IsForeground(int32_t state);
 private:
     bool initialized_;
     std::recursive_mutex mutex_;
@@ -90,6 +95,7 @@ private:
     uint32_t taskId_;
     static std::mutex instanceLock_;
     static DownloadServiceManager* instance_;
+    std::mutex appStateMutex_;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_SERVICE_MANAGER_H
