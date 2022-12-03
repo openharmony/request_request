@@ -65,7 +65,7 @@ public:
 
     int Dump(int fd, const std::vector<std::u16string> &args) override;
 
-    static void NotifyHandler(const std::string& type, uint32_t taskId, int64_t argv1, int64_t argv2);
+    static void NotifyHandler(const std::string& type, uint32_t taskId, int64_t argv1, int64_t argv2, bool isNotify);
 
 protected:
     void OnDump() override;

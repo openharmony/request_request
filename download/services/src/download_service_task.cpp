@@ -155,7 +155,7 @@ bool DownloadServiceTask::Remove()
     isRemoved_ = true;
     ForceStopRunning();
     if (eventCb_ != nullptr) {
-        eventCb_("remove", taskId_, 0, 0);
+        eventCb_("remove", taskId_, 0, 0, true);
     }
     return true;
 }
@@ -248,15 +248,15 @@ void DownloadServiceTask::SetStatus(DownloadStatus status, ErrorCode code, Pause
         std::lock_guard<std::recursive_mutex> autoLock(mutex_);
         switch (status_) {
             case SESSION_SUCCESS:
-                eventCb_("complete", taskId_, 0, 0);
+                eventCb_("complete", taskId_, 0, 0, true);
                 break;
 
             case SESSION_PAUSED:
-                eventCb_("pause", taskId_, 0, 0);
+                eventCb_("pause", taskId_, 0, 0, true);
                 break;
 
             case SESSION_FAILED:
-                eventCb_("fail", taskId_, code_, 0);
+                eventCb_("fail", taskId_, code_, 0, true);
                 break;
 
             default:
@@ -284,15 +284,15 @@ void DownloadServiceTask::SetStatus(DownloadStatus status)
         std::lock_guard<std::recursive_mutex> autoLock(mutex_);
         switch (status_) {
             case SESSION_SUCCESS:
-                eventCb_("complete", taskId_, 0, 0);
+                eventCb_("complete", taskId_, 0, 0, true);
                 break;
 
             case SESSION_PAUSED:
-                eventCb_("pause", taskId_, 0, 0);
+                eventCb_("pause", taskId_, 0, 0, true);
                 break;
 
             case SESSION_FAILED:
-                eventCb_("fail", taskId_, code_, 0);
+                eventCb_("fail", taskId_, code_, 0, true);
                 break;
 
             default:
@@ -468,7 +468,7 @@ int DownloadServiceTask::ProgressCallback(void *pParam, double dltotal, double d
         if (task->prevSize_ != task->downloadSize_) {
             std::lock_guard<std::recursive_mutex> autoLock(task->mutex_);
             if (task->status_ != SESSION_PAUSED) {
-                task->eventCb_("progress", task->taskId_, task->downloadSize_, task->totalSize_);
+                task->eventCb_("progress", task->taskId_, task->downloadSize_, task->totalSize_,  task->isNotifyApp_);
                 task->PublishNotification(task->config_.IsBackground(), task->prevSize_,
                                           task->downloadSize_, task->totalSize_);
                 task->prevSize_ = task->downloadSize_;
@@ -934,4 +934,20 @@ uint32_t DownloadServiceTask::ProgressNotification(int64_t prevSize, int64_t dow
     }
     return ret;
 }
+
+void DownloadServiceTask::SetNotifyApp(bool isNotifyApp)
+{
+    isNotifyApp_ = isNotifyApp;
+}
+
+std::string DownloadServiceTask::GetTaskBundleName() const
+{
+    return config_.GetBundleName();
+}
+
+int32_t DownloadServiceTask::GetTaskApplicationInfoUid() const
+{
+    return config_.GetApplicationInfoUid();
+}
+
 } // namespace OHOS::Request::Download
