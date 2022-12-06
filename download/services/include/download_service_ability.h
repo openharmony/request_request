@@ -77,7 +77,6 @@ private:
     void InitServiceHandler();
     void ManualStart();
     void AddUnregisteredNotify(uint32_t taskId, const std::string &type);
-    void DeleteUnregisteredNotify(const std::string &combineType);
     bool DoUnregisteredNotify(uint32_t taskId, const std::string &type);
 private:
     ServiceRunningState state_;

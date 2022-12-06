@@ -50,7 +50,6 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config, ExceptionErr
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     int32_t fd = -1;
-    int32_t err = 0;
     if (!IsPathValid(config.GetFilePath())) {
         error.code = EXCEPTION_FILE_PATH;
         error.errInfo = "Download File Path Valid";
@@ -70,7 +69,6 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config, ExceptionErr
             error.code = EXCEPTION_FILE_IO;
             error.errInfo = "Failed to open file errno " + std::to_string(errno);
             DOWNLOAD_HILOGE("%{public}s", error.errInfo.c_str());
-            err = errno;
             return -1;
         }
     }
@@ -79,7 +77,7 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config, ExceptionErr
     if (fd > 0) {
         close(fd);
     }
-    data.WriteInt32(err);
+    data.WriteInt32(static_cast<int32_t>(errno));
     data.WriteString(config.GetUrl());
     data.WriteBool(config.IsMetered());
     data.WriteBool(config.IsRoaming());
