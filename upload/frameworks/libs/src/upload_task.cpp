@@ -269,7 +269,7 @@ void UploadTask::ReportTaskFault(uint32_t ret) const
         FAIL_FILE_NUM, failCount, SUCCESS_FILE_NUM, successCount, ERROR_INFO, static_cast<int>(ret));
 }
 
-void UploadTask::OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
+void UploadTask::OnProgress(curl_off_t ulnow)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OnProgress. In.");
     if (isRemoved_) {
@@ -375,23 +375,5 @@ void UploadTask::ClearFileArray()
         file.name = "";
     }
     fileDatas_.clear();
-}
-
-std::vector<std::string> UploadTask::StringSplit(const std::string &str, char delim)
-{
-    std::size_t previous = 0;
-    std::size_t current = str.find(delim);
-    std::vector<std::string> elems;
-    while (current != std::string::npos) {
-        if (current > previous) {
-            elems.push_back(str.substr(previous, current - previous));
-        }
-        previous = current + 1;
-        current = str.find(delim, previous);
-    }
-    if (previous != str.size()) {
-        elems.push_back(str.substr(previous));
-    }
-    return elems;
 }
 } // namespace OHOS::Request::Upload
