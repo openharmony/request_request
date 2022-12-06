@@ -225,27 +225,22 @@ int32_t GetParameterNumber(napi_env env, napi_callback_info info, napi_value *ar
 
 void ThrowError(napi_env env, const ExceptionErrorCode &code, const std::string &msg)
 {
-    std::string errorCode = std::to_string(code);
-    auto iter = ErrorCodeToMsg.find(code);
-    std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + ": "+ msg;
-    napi_status status = napi_throw_error(env, errorCode.c_str(), strMsg.c_str());
-    if (status != napi_ok) {
-        DOWNLOAD_HILOGE("Failed to napi_throw_error");
-    }
+    napi_value error = CreateBusinessError(env, code, msg);
+    napi_throw(env, error);
 }
 
-napi_value CreateBusinessError(napi_env env, const ExceptionErrorCode &errorCode, const std::string &msg)
+napi_value CreateBusinessError(napi_env env, const ExceptionErrorCode &errorCode, const std::string &errorMessage)
 {
-    napi_value result = nullptr;
-    napi_value codeValue = nullptr;
-    napi_value message = nullptr;
+    napi_value error = nullptr;
+    napi_value code = nullptr;
+    napi_value msg = nullptr;
     auto iter = ErrorCodeToMsg.find(errorCode);
-    std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + msg;
-    std::string errCode = std::to_string(errorCode);
-    NAPI_CALL(env, napi_create_string_utf8(env, strMsg.c_str(), strMsg.length(), &message));
-    NAPI_CALL(env, napi_create_string_utf8(env, errCode.c_str(), errCode.length(), &codeValue));
-    NAPI_CALL(env, napi_create_error(env, codeValue, message, &result));
-    return result;
+    std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + "   "+ errorMessage;
+    NAPI_CALL(env, napi_create_string_utf8(env, strMsg.c_str(), strMsg.length(), &msg));
+    NAPI_CALL(env, napi_create_uint32(env, errorCode, &code));
+    NAPI_CALL(env, napi_create_error(env, nullptr, msg, &error));
+    napi_set_named_property(env, error, "code", code);
+    return error;
 }
 
 bool CheckParameterCorrect(napi_env env, napi_callback_info info, const std::string &type, ExceptionError &err)

@@ -345,7 +345,7 @@ int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlno
         }
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "report progress total upload size: %{public}" PRIu64
             " upload now: %{public}" PRIu64, totalulnow, ultotal);
-        url->uploadTask_->OnProgress(dltotal, dlnow, ultotal, totalulnow);
+        url->uploadTask_->OnProgress(totalulnow);
     }
     return 0;
 }
