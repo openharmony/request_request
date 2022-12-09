@@ -98,7 +98,7 @@ int32_t GetParameterNumber(napi_env env, napi_callback_info info, napi_value *ar
 
 void ThrowError(napi_env env, const ExceptionErrorCode &code, const std::string &msg);
 
-napi_value CreateBusinessError(napi_env env, const ExceptionErrorCode &errorCode, const std::string &msg);
+napi_value CreateBusinessError(napi_env env, const ExceptionErrorCode &errorCode, const std::string &errorMessage);
 
 bool CheckParameterCorrect(napi_env env, napi_callback_info info, const std::string &type, ExceptionError &err);
 
