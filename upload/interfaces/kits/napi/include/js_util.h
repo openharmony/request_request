@@ -71,7 +71,7 @@ public:
     static bool CheckParamNumber(size_t argc, bool IsRequiredParam);
     static bool CheckUrl(const std::string &url);
     static napi_value CreateBusinessError(napi_env env, const
-        Download::ExceptionErrorCode &errorCode, const std::string &msg);
+        Download::ExceptionErrorCode &errorCode, const std::string &errorMessage);
     static void GetMessage(const std::vector<Upload::TaskState> &taskStates, std::string &msg);
     static napi_value GetNamedProperty(napi_env env, napi_value object, const std::string &propertyName);
     static bool HasNamedProperty(napi_env env, napi_value object, const std::string &propertyName);

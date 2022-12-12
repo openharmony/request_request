@@ -57,11 +57,10 @@ public:
 
     UPLOAD_API virtual void SetCallback(Type type, void *callback);
     UPLOAD_API virtual void SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> context);
-    virtual void OnProgress(curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
+    virtual void OnProgress(curl_off_t ulnow);
     virtual void OnHeaderReceive(const std::string &header);
     virtual void OnFail();
     virtual void OnComplete();
-    std::vector<std::string> StringSplit(const std::string& str, char delim);
 
 protected:
     uint32_t InitFileArray();
