@@ -31,7 +31,7 @@ struct NotifyData {
     napi_ref ref;
     uint32_t paramNumber;
     std::mutex mutex;
-    std::vector<uint32_t> params;
+    std::vector<int64_t> params;
 };
 struct NotifyDataPtr {
     std::shared_ptr<NotifyData> notifyData;
@@ -41,7 +41,7 @@ public:
     ACE_DISALLOW_COPY_AND_MOVE(DownloadBaseNotify);
     DOWNLOAD_API explicit DownloadBaseNotify(napi_env env, uint32_t paramNumber, napi_ref ref);
     virtual ~DownloadBaseNotify();
-    void CallBack(const std::vector<uint32_t> &params) override;
+    void CallBack(const std::vector<int64_t> &params) override;
     NotifyDataPtr *GetNotifyDataPtr();
 private:
     std::shared_ptr<NotifyData> notifyData_;
