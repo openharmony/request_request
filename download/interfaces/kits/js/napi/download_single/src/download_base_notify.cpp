@@ -33,7 +33,7 @@ DownloadBaseNotify::~DownloadBaseNotify()
     DOWNLOAD_HILOGD("");
 }
 
-void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
+void DownloadBaseNotify::CallBack(const std::vector<int64_t> &params)
 {
     DOWNLOAD_HILOGD("Pause callback in");
     uv_loop_s *loop = nullptr;
@@ -69,8 +69,8 @@ void DownloadBaseNotify::CallBack(const std::vector<uint32_t> &params)
                 {
                     std::lock_guard<std::mutex> lock(notifyDataPtr->notifyData->mutex);
                     for (uint32_t i = 0; i < notifyDataPtr->notifyData->paramNumber; i++) {
-                        napi_create_uint32(notifyDataPtr->notifyData->env,
-                            notifyDataPtr->notifyData->params[i], &callbackValues[i]);
+                        napi_create_int64(notifyDataPtr->notifyData->env, notifyDataPtr->notifyData->params[i],
+                            &callbackValues[i]);
                     }
                 }
                 napi_call_function(notifyDataPtr->notifyData->env, nullptr, callbackFunc,

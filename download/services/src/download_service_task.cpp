@@ -36,12 +36,23 @@
 #include "download_background_notification.h"
 
 namespace OHOS::Request::Download {
-static const std::string URL_HTTPS = "https";
-static std::string TLS_VERSION_DEFAULT = "CURL_SSLVERSION_TLSv1_2";
+namespace {
+static constexpr const char *URL_HTTPS = "https";
+static constexpr const char *TLS_VERSION_DEFAULT = "CURL_SSLVERSION_TLSv1_2";
+static constexpr const char *HTTP_GET_METHOD = "GET";
+static constexpr uint32_t HUNDRED_PERCENT = 100;
+static constexpr uint32_t TEN_PERCENT_THRESHOLD = 10;
+static constexpr uint32_t NOTIFICATION_FREQUENCY = 2000;
+static constexpr uint32_t RETRY_TIME_MAX = 10;
+static constexpr int CURL_REMOVE_TASK = 1;
+static constexpr int64_t INVALID_LEN = -1;
+}
 DownloadServiceTask::DownloadServiceTask(uint32_t taskId, const DownloadConfig &config)
     : taskId_(taskId), config_(config), status_(SESSION_UNKNOWN), code_(ERROR_UNKNOWN), reason_(PAUSED_UNKNOWN),
-      mimeType_(""), totalSize_(0), downloadSize_(0), isPartialMode_(false), forceStop_(false), isRemoved_(false),
-      retryTime_(RETRY_TIME_MAX), eventCb_(nullptr), hasFileSize_(false), isOnline_(true), prevSize_(0) {
+      mimeType_(""), totalSize_(INVALID_LEN), downloadSize_(INVALID_LEN), isPartialMode_(false), forceStop_(false),
+      isRemoved_(false), retryTime_(RETRY_TIME_MAX), eventCb_(nullptr), hasFileSize_(false), isOnline_(true),
+      prevSize_(INVALID_LEN)
+{
 }
 
 DownloadServiceTask::~DownloadServiceTask(void)
@@ -88,8 +99,7 @@ bool DownloadServiceTask::Run()
             break;
         }
         if (!GetFileSize(totalSize_)) {
-            SetStatus(SESSION_FAILED, ERROR_HTTP_DATA_ERROR, PAUSED_UNKNOWN);
-            break;
+            DOWNLOAD_HILOGI("get file size fail");
         }
 
         result = ExecHttp();
@@ -429,35 +439,23 @@ size_t DownloadServiceTask::WriteCallback(void *buffer, size_t size, size_t num,
 {
     size_t result = 0;
     DownloadServiceTask *this_ = static_cast<DownloadServiceTask *>(param);
-    if (this_ != nullptr && this_->config_.GetFD() > 0) {
+    if (this_ != nullptr && this_->config_.GetFD() > 0 && this_->hasFileSize_) {
         result = static_cast<size_t>(write(this_->config_.GetFD(), buffer, size * num));
         if (result < size * num) {
             DOWNLOAD_HILOGE("origin size = %{public}zu, write size = %{public}zu", size * num, result);
         }
-        this_->downloadSize_ += static_cast<uint32_t>(result);
+        this_->downloadSize_ += static_cast<int64_t>(result);
     }
     return result;
-}
-
-size_t DownloadServiceTask::HeaderCallback(void *buffer, size_t size, size_t num, void *param)
-{
-    DownloadServiceTask *this_ = static_cast<DownloadServiceTask *>(param);
-    std::string recvHeader = static_cast<char *>(buffer);
-    if (this_ != nullptr && recvHeader.find(HTTP_CONTENT_TYPE) != std::string::npos) {
-        std::string mimeType = recvHeader.substr(recvHeader.find(HTTP_HEADER_SEPARATOR) + 2);
-        mimeType = mimeType.substr(0, mimeType.find(HTTP_LINE_SEPARATOR));
-        this_->mimeType_ = mimeType;
-    }
-    return size * num;
 }
 
 int DownloadServiceTask::ProgressCallback(void *pParam, double dltotal, double dlnow, double ultotal, double ulnow)
 {
     DownloadServiceTask *task = static_cast<DownloadServiceTask *>(pParam);
-    if (task != nullptr) {
+    if (task != nullptr && task->hasFileSize_) {
         if (task->isRemoved_) {
             DOWNLOAD_HILOGI("download task has been removed");
-            return  0;
+            return CURL_REMOVE_TASK;
         }
         if (task->forceStop_) {
             DOWNLOAD_HILOGI("Pause issued by user");
@@ -484,21 +482,17 @@ bool DownloadServiceTask::ExecHttp()
 {
     HitraceScoped traceStart(HITRACE_TAG_MISC, "download file");
     std::unique_ptr<CURL, decltype(&curl_easy_cleanup)> handle(curl_easy_init(), curl_easy_cleanup);
-
     if (!handle) {
         DOWNLOAD_HILOGE("Failed to create fetch task");
         return false;
     }
-
     DOWNLOAD_HILOGI("final url: %{public}s", config_.GetUrl().c_str());
-
     std::vector<std::string> vec;
     std::for_each(
         config_.GetHeader().begin(), config_.GetHeader().end(), [&vec](const std::pair<std::string, std::string> &p) {
             vec.emplace_back(p.first + HTTP_HEADER_SEPARATOR + p.second);
         });
     std::unique_ptr<struct curl_slist, decltype(&curl_slist_free_all)> header(MakeHeaders(vec), curl_slist_free_all);
-
     if (!SetOption(handle.get(), header.get())) {
         DOWNLOAD_HILOGE("set option failed");
         return false;
@@ -508,11 +502,9 @@ bool DownloadServiceTask::ExecHttp()
         off_t pos = lseek64(config_.GetFD(), 0, SEEK_END);
         downloadSize_ = 0;
         if (pos > 0) {
-            if (pos < static_cast<off_t>(totalSize_)) {
-                isPartialMode_ = true;
-                downloadSize_ = static_cast<uint32_t>(pos);
+            if (totalSize_ == INVALID_LEN || pos < static_cast<off_t>(totalSize_)) {
                 SetResumeFromLarge(handle.get(), pos);
-            } else if (pos >= static_cast<off_t>(totalSize_)) {
+            } else {
                 downloadSize_ = totalSize_;
                 DOWNLOAD_HILOGI("Download task has already completed");
                 SetStatus(SESSION_SUCCESS);
@@ -556,9 +548,7 @@ CURLcode DownloadServiceTask::CurlPerformFileTransfer(CURL *handle) const
 bool DownloadServiceTask::SetFileSizeOption(CURL *curl, struct curl_slist *requestHeader)
 {
     curl_easy_setopt(curl, CURLOPT_URL, config_.GetUrl().c_str());
-    
-    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
-    curl_easy_setopt(curl, CURLOPT_HEADERDATA, this);
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, HTTP_GET_METHOD);
 
     if (requestHeader != nullptr) {
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, requestHeader);
@@ -603,9 +593,6 @@ bool DownloadServiceTask::SetOption(CURL *curl, struct curl_slist *requestHeader
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
     curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, ProgressCallback);
     curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, this);
-
-    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
-    curl_easy_setopt(curl, CURLOPT_HEADERDATA, this);
 
     if (requestHeader != nullptr) {
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, requestHeader);
@@ -654,10 +641,12 @@ struct curl_slist *DownloadServiceTask::MakeHeaders(const std::vector<std::strin
 
 void DownloadServiceTask::SetResumeFromLarge(CURL *curl, long long pos)
 {
+    isPartialMode_ = true;
+    downloadSize_ = static_cast<int64_t>(pos);
     curl_easy_setopt(curl, CURLOPT_RESUME_FROM_LARGE, pos);
 }
 
-bool DownloadServiceTask::GetFileSize(uint32_t &result)
+bool DownloadServiceTask::GetFileSize(int64_t &result)
 {
     if (hasFileSize_) {
         DOWNLOAD_HILOGI("Already get file size");
@@ -688,14 +677,13 @@ bool DownloadServiceTask::GetFileSize(uint32_t &result)
     curl_easy_getinfo(handle.get(), CURLINFO_RESPONSE_CODE, &respCode);
     if ((code == CURLE_OK) && (respCode == HTTP_OK)) {
         curl_easy_getinfo(handle.get(), CURLINFO_CONTENT_LENGTH_DOWNLOAD, &size);
-        if (size >= 0) {
-            result = static_cast<uint32_t>(size);
-            hasFileSize_ = true;
-        }
+        result = static_cast<int64_t>(size);
+        char *ct = nullptr;
+        curl_easy_getinfo(handle.get(), CURLINFO_CONTENT_TYPE, &ct);
+        mimeType_ = static_cast<char *>(ct);
+        hasFileSize_ = true;
     }
-
-    DOWNLOAD_HILOGI("fetch file size: %{public}u curl error: %{public}d, http resp: %{public}ld",
-                    result, code, respCode);
+    DOWNLOAD_HILOGI("file size: %{public}jd curl code: %{public}d, http resp: %{public}ld", result, code, respCode);
     return hasFileSize_;
 }
 
@@ -903,10 +891,10 @@ void DownloadServiceTask::PublishNotification(bool background, uint32_t percent)
     DownloadBackgroundNotification::PublishDownloadNotification(taskId_, pid, filePath, percent);
 }
 
-void DownloadServiceTask::PublishNotification(bool background, uint32_t prevSize,
-                                              uint32_t downloadSize, uint32_t totalSize)
+void DownloadServiceTask::PublishNotification(bool background, int64_t prevSize, int64_t downloadSize,
+    int64_t totalSize)
 {
-    if (!background) {
+    if (!background || totalSize == -1) {
         return;
     }
     if (prevSize == 0) {
@@ -926,7 +914,7 @@ std::time_t DownloadServiceTask::GetCurTimestamp()
     return tp.time_since_epoch().count();
 }
 
-uint32_t DownloadServiceTask::ProgressNotification(uint32_t prevSize, uint32_t downloadSize, uint32_t totalSize)
+uint32_t DownloadServiceTask::ProgressNotification(int64_t prevSize, int64_t downloadSize, int64_t totalSize)
 {
     uint32_t ret = 0;
     if (totalSize != 0) {

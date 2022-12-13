@@ -51,7 +51,7 @@ napi_value DownloadQuery::Exec(napi_env env, napi_callback_info info)
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         // create object with download info
         DOWNLOAD_HILOGD("description: %{public}s", context->info.GetDescription().c_str());
-        DOWNLOAD_HILOGD("downloadedBytes: %{public}d", context->info.GetDownloadedBytes());
+        DOWNLOAD_HILOGD("downloadedBytes: %{public}jd", context->info.GetDownloadedBytes());
         DOWNLOAD_HILOGD("downloadId: %{public}d", context->info.GetDownloadId());
         DOWNLOAD_HILOGD("failedReason: %{public}d", context->info.GetFailedReason());
         DOWNLOAD_HILOGD("fileName: %{public}s", context->info.GetFileName().c_str());
@@ -60,7 +60,7 @@ napi_value DownloadQuery::Exec(napi_env env, napi_callback_info info)
         DOWNLOAD_HILOGD("status: %{public}d", context->info.GetStatus());
         DOWNLOAD_HILOGD("targetURI: %{public}s", context->info.GetTargetURI().c_str());
         DOWNLOAD_HILOGD("downloadTitle: %{public}s", context->info.GetDownloadTitle().c_str());
-        DOWNLOAD_HILOGD("downloadTotalBytes: %{public}d", context->info.GetDownloadTotalBytes());
+        DOWNLOAD_HILOGD("downloadTotalBytes: %{public}jd", context->info.GetDownloadTotalBytes());
         napi_create_object(env, result);
 
         NapiUtils::SetStringPropertyUtf8(env, *result, "description",  context->info.GetDescription().c_str());
