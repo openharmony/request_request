@@ -16,6 +16,7 @@
 #include "download_service_task.h"
 
 #include <algorithm>
+#include <cinttypes>
 #include <mutex>
 #include <unistd.h>
 #include <fstream>
@@ -680,10 +681,11 @@ bool DownloadServiceTask::GetFileSize(int64_t &result)
         result = static_cast<int64_t>(size);
         char *ct = nullptr;
         curl_easy_getinfo(handle.get(), CURLINFO_CONTENT_TYPE, &ct);
-        mimeType_ = static_cast<char *>(ct);
+        mimeType_ = ct;
         hasFileSize_ = true;
     }
-    DOWNLOAD_HILOGI("file size: %{public}jd curl code: %{public}d, http resp: %{public}ld", result, code, respCode);
+    DOWNLOAD_HILOGI("file size: %{public}" PRId64 "curl code: %{public}d, http resp: %{public}ld",
+        result, code, respCode);
     return hasFileSize_;
 }
 

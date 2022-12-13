@@ -16,6 +16,7 @@
 
 #include <new>
 #include <ctime>
+#include <cinttypes>
 #include <string>
 #include <utility>
 #include <vector>
@@ -312,8 +313,8 @@ bool DownloadServiceAbility::SetStartId(uint32_t startId)
 void DownloadServiceAbility::NotifyHandler(const std::string &type, uint32_t taskId, int64_t argv1, int64_t argv2)
 {
     std::string combineType = type + "-" + std::to_string(taskId);
-    DOWNLOAD_HILOGD("DownloadServiceAbility::NotifyHandler started %{public}s [%{public}jd, %{public}jd].",
-                    combineType.c_str(), argv1, argv2);
+    DOWNLOAD_HILOGD("combineType=%{public}s argv1=%{public}" PRId64 "argv2=%{public}" PRId64, combineType.c_str(),
+        argv1, argv2);
     auto iter = DownloadServiceAbility::GetInstance()->registeredListeners_.find(combineType);
     if (iter != DownloadServiceAbility::GetInstance()->registeredListeners_.end()) {
         DOWNLOAD_HILOGD("DownloadServiceAbility::NotifyHandler type=%{public}s object message.", combineType.c_str());
