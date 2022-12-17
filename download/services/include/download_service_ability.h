@@ -53,7 +53,8 @@ public:
     bool CheckPermission() override;
 
     static void NotifyHandler(const std::string& type, uint32_t taskId, uint32_t argv1, uint32_t argv2);
-
+    void AddUnregisteredNotify(uint32_t taskId, const std::string &type);
+    bool DoUnregisteredNotify(uint32_t taskId, const std::string &type);
 protected:
     void OnDump() override;
     void OnStart() override;
@@ -75,6 +76,8 @@ private:
     std::mutex lock_;
     const int32_t startTime_ = 1900;
     const int32_t extraMonth_ = 1;
+    std::mutex unregisteredNotifyMutex_;
+    std::map<std::string, uint32_t> unregisteredNotify_;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_SYSTEM_ABILITY_H

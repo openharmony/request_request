@@ -38,7 +38,10 @@ using namespace Security::AccessToken;
 
 static const std::string DOWNLOAD_PERMISSION_NAME_INTERNET = "ohos.permission.INTERNET";
 static const std::string DOWNLOAD_PERMISSION_NAME_SESSION = "ohos.permission.DOWNLOAD_SESSION_MANAGER";
-
+namespace {
+static constexpr const char *EVENT_COMPLETE = "complete";
+static constexpr const char *EVENT_FAIL = "fail";
+}
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DownloadServiceAbility, DOWNLOAD_SERVICE_ID, true);
 const std::int64_t INIT_INTERVAL = 5000L;
@@ -202,6 +205,9 @@ bool DownloadServiceAbility::On(uint32_t taskId, const std::string &type, const 
             DOWNLOAD_HILOGE("DownloadServiceAbility::On insert type=%{public}s object fail.", combineType.c_str());
             return false;
         }
+        if (DoUnregisteredNotify(taskId, type)) {
+            DOWNLOAD_HILOGD("notify unregistered on event");
+        }
     } else {
         std::lock_guard<std::mutex> lck(listenerMapMutex_);
         DOWNLOAD_HILOGI("DownloadServiceAbility::On Replace listener.");
@@ -252,6 +258,8 @@ void DownloadServiceAbility::NotifyHandler(const std::string& type, uint32_t tas
         data.WriteUint32(argv1);
         data.WriteUint32(argv2);
         iter->second->OnCallBack(data);
+    } else {
+        DownloadServiceAbility::GetInstance()->AddUnregisteredNotify(taskId, type);
     }
 }
 
@@ -271,5 +279,45 @@ void DownloadServiceAbility::OnDump()
     } else {
         DOWNLOAD_HILOGI("DownloadServiceAbility dump, time(0) is nullptr");
     }
+}
+
+void DownloadServiceAbility::AddUnregisteredNotify(uint32_t taskId, const std::string &type)
+{
+    std::string combineType = type + "-" + std::to_string(taskId);
+    DOWNLOAD_HILOGD("add combineType %{public}s", combineType.c_str());
+    if (type == EVENT_COMPLETE || type == EVENT_FAIL) {
+        std::lock_guard<std::mutex> lck(unregisteredNotifyMutex_);
+        auto iter = unregisteredNotify_.find(combineType);
+        if (iter == unregisteredNotify_.end()) {
+            unregisteredNotify_.insert(std::make_pair(combineType, taskId));
+        }
+    }
+}
+
+bool DownloadServiceAbility::DoUnregisteredNotify(uint32_t taskId, const std::string &type)
+{
+    std::string combineType = type + "-" + std::to_string(taskId);
+    DOWNLOAD_HILOGD("notify combineType: %{public}s", combineType.c_str());
+    DownloadInfo info;
+    if (!Query(taskId, info)) {
+        DOWNLOAD_HILOGD("not find task download info");
+        return false;
+    }
+    auto status = info.GetStatus();
+    uint32_t code = 0;
+    if (info.GetFailedReason() != ERROR_UNKNOWN) {
+        code = static_cast<uint32_t>(info.GetFailedReason());
+    }
+    std::lock_guard<std::mutex> lck(unregisteredNotifyMutex_);
+    auto iter = unregisteredNotify_.find(combineType);
+    if (iter != unregisteredNotify_.end()) {
+        if (status == SESSION_SUCCESS || status == SESSION_FAILED) {
+            DOWNLOAD_HILOGD("notify taskId: %{public}d event: %{public}s", taskId, type.c_str());
+            NotifyHandler(type, taskId, code, 0);
+            unregisteredNotify_.erase(iter);
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace OHOS::Request::Download
