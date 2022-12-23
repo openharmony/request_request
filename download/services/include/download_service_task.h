@@ -29,7 +29,7 @@
 #include "download_info.h"
 
 namespace OHOS::Request::Download {
-    using DownloadTaskCallback = void(*)(const std::string& type, uint32_t taskId, uint32_t argv1, uint32_t argv2);
+    using DownloadTaskCallback = void(*)(const std::string& type, uint32_t taskId, int64_t argv1, int64_t argv2);
 
 class DownloadServiceTask {
 public:
@@ -68,12 +68,11 @@ private:
 
     void SetResumeFromLarge(CURL *curl, long long pos);
 
-    bool GetFileSize(uint32_t &result);
+    bool GetFileSize(int64_t &result);
     std::string GetTmpPath();
     void HandleResponseCode(CURLcode code, int32_t httpCode);
     void HandleCleanup(DownloadStatus status);
     static size_t WriteCallback(void *buffer, size_t size, size_t num, void *param);
-    static size_t HeaderCallback(void *buffer, size_t size, size_t num, void *param);
     static int ProgressCallback(void *param, double dltotal, double dlnow, double ultotal, double ulnow);
 
     bool CheckResumeCondition();
@@ -86,9 +85,9 @@ private:
     std::string ReadCertification();
     void RecordTaskEvent(int32_t httpCode);
     void PublishNotification(bool background, uint32_t percent);
-    void PublishNotification(bool background, uint32_t prevSize, uint32_t downloadSize, uint32_t totalSize);
+    void PublishNotification(bool background, int64_t prevSize, int64_t downloadSize, int64_t totalSize);
     std::time_t GetCurTimestamp();
-    uint32_t ProgressNotification(uint32_t prevSize, uint32_t downloadSize, uint32_t totalSize);
+    uint32_t ProgressNotification(int64_t prevSize, int64_t downloadSize, int64_t totalSize);
 private:
     uint32_t taskId_;
     DownloadConfig config_;
@@ -97,8 +96,8 @@ private:
     ErrorCode code_;
     PausedReason reason_;
     std::string mimeType_;
-    uint32_t totalSize_;
-    uint32_t downloadSize_;
+    int64_t totalSize_;
+    int64_t downloadSize_;
     bool isPartialMode_;
 
     bool forceStop_;
@@ -109,11 +108,8 @@ private:
     std::recursive_mutex mutex_;
     bool hasFileSize_;
     bool isOnline_;
-    uint32_t prevSize_;
-    static constexpr uint32_t HUNDRED_PERCENT = 100;
-    static constexpr uint32_t TEN_PERCENT_THRESHOLD = 10;
-    static constexpr uint32_t NOTIFICATION_FREQUENCY = 2000;
-    static constexpr uint32_t RETRY_TIME_MAX = 10;
+    int64_t prevSize_;
+
     std::time_t lastTimestamp_ = 0;
 };
 } // namespace OHOS::Request::Download
