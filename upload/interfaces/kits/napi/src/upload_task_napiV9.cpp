@@ -496,29 +496,4 @@ bool UploadTaskNapiV9::operator==(const std::shared_ptr<Upload::UploadTask> &upl
 {
     return napiUploadTask_ == uploadTask;
 }
-
-bool UploadTaskNapiV9::JudgeNotify(const INotifyCallback *target)
-{
-    if ((this->onFail_ != nullptr && this->onFail_.get() == target) ||
-       (this->onComplete_ != nullptr && this->onComplete_.get() == target)) {
-        return true;
-    }
-    return false;
-}
-
-bool UploadTaskNapiV9::JudgeProgress(const IProgressCallback *target)
-{
-    if ((this->onProgress_ != nullptr && this->onProgress_.get() == target)) {
-        return true;
-    }
-    return false;
-}
-
-bool UploadTaskNapiV9::JudgeHeaderReceive(const IHeaderReceiveCallback *target)
-{
-    if ((this->onHeaderReceive_ != nullptr && this->onHeaderReceive_.get() == target)) {
-        return true;
-    }
-    return false;
-}
 } // namespace OHOS::Request::UploadNapi
