@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <cinttypes>
+
 #include "download_info.h"
 #include "log.h"
 #include "constant.h"
@@ -29,7 +31,7 @@ void DownloadInfo::SetDescription(const std::string &description)
     description_ = description;
 }
 
-void DownloadInfo::SetDownloadedBytes(uint32_t downloadedBytes)
+void DownloadInfo::SetDownloadedBytes(int64_t downloadedBytes)
 {
     downloadedBytes_ = downloadedBytes;
 }
@@ -74,7 +76,7 @@ void DownloadInfo::SetDownloadTitle(const std::string &downloadTitle)
     downloadTitle_ = downloadTitle;
 }
 
-void DownloadInfo::SetDownloadTotalBytes(uint32_t downloadTotalBytes)
+void DownloadInfo::SetDownloadTotalBytes(int64_t downloadTotalBytes)
 {
     downloadTotalBytes_ = downloadTotalBytes;
 }
@@ -99,7 +101,7 @@ const std::string &DownloadInfo::GetDescription() const
     return description_;
 }
 
-uint32_t DownloadInfo::GetDownloadedBytes() const
+int64_t DownloadInfo::GetDownloadedBytes() const
 {
     return downloadedBytes_;
 }
@@ -149,7 +151,7 @@ std::string DownloadInfo::GetTaskType() const
     return taskType_;
 }
 
-uint32_t DownloadInfo::GetDownloadTotalBytes() const
+int64_t DownloadInfo::GetDownloadTotalBytes() const
 {
     return downloadTotalBytes_;
 }
@@ -172,7 +174,7 @@ bool DownloadInfo::GetRoaming() const
 void DownloadInfo::Dump()
 {
     DOWNLOAD_HILOGD("description: %{public}s", description_.c_str());
-    DOWNLOAD_HILOGD("downloadedBytes: %{public}d", downloadedBytes_);
+    DOWNLOAD_HILOGD("downloadedBytes: %{public}" PRId64, downloadedBytes_);
     DOWNLOAD_HILOGD("downloadId: %{public}d", downloadId_);
     DOWNLOAD_HILOGD("failedReason: %{public}d", failedReason_);
     DOWNLOAD_HILOGD("fileName: %{public}s", fileName_.c_str());
@@ -181,6 +183,6 @@ void DownloadInfo::Dump()
     DOWNLOAD_HILOGD("status: %{public}d", status_);
     DOWNLOAD_HILOGD("targetURI: %{public}s", targetURI_.c_str());
     DOWNLOAD_HILOGD("downloadTitle: %{public}s", downloadTitle_.c_str());
-    DOWNLOAD_HILOGD("downloadTotalBytes: %{public}d", downloadTotalBytes_);
+    DOWNLOAD_HILOGD("downloadTotalBytes: %{public}" PRId64, downloadTotalBytes_);
 }
 } // namespace OHOS::Request::Download

@@ -207,14 +207,13 @@ bool DownloadServiceManager::Remove(uint32_t taskId)
         return false;
     }
     DOWNLOAD_HILOGD("Remove Task[%{public}d]", taskId);
+    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
     auto it = taskMap_.find(taskId);
     if (it == taskMap_.end()) {
         return false;
     }
-
     bool result = it->second->Remove();
     if (result) {
-        std::lock_guard<std::recursive_mutex> autoLock(mutex_);
         taskMap_.erase(it);
         RemoveFromQueue(pendingQueue_, taskId);
         RemoveFromQueue(pausedQueue_, taskId);
