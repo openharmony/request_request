@@ -30,8 +30,8 @@ private:
     TaskFault &operator=(const TaskFault &) = delete;
     TaskFault &operator=(TaskFault &&) = delete;
 
-    static constexpr const char *REQUEST_SERVICE_START_FAULT = "REQUEST_SERVICE_START_FAULT";
-    static constexpr const char *REQUEST_TASK_FAULT = "REQUEST_TASK_FAULT";
+    static constexpr const char *SERVICE_START_FAULT = "SERVICE_START_FAULT";
+    static constexpr const char *TASK_FAULT = "TASK_FAULT";
     static constexpr const char *TASKS_TYPE = "TASKS_TYPE";
     static constexpr const char *DOWNLOAD = "DOWNLOAD";
     static constexpr const char *TOTAL_FILE_NUM = "TOTAL_FILE_NUM";

@@ -37,7 +37,7 @@ private:
     int32_t GetNextReportInterval() const;
     void ReportStatistics() const;
 private:
-    static constexpr const char *REQUEST_TASK_INFO_STATISTICS = "REQUEST_TASK_INFO_STATISTICS";
+    static constexpr const char *TASK_INFO_STATISTICS = "TASK_INFO_STATISTICS";
     static constexpr const char *TASKS_SIZE = "TASKS_SIZE";
     static constexpr const char *TASKS_NUMBER = "TASKS_NUMBER";
     static constexpr int32_t ONE_DAY_SEC = 24 * 3600;
