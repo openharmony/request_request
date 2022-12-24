@@ -26,13 +26,13 @@ TaskFault &TaskFault::GetInstance()
 
 void TaskFault::ReportServiceStartFault(int error) const
 {
-    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST, REQUEST_SERVICE_START_FAULT,
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST, SERVICE_START_FAULT,
         OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, ERROR_INFO, error);
 }
 
 void TaskFault::ReportTaskFault(int error) const
 {
-    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST, REQUEST_TASK_FAULT,
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST, TASK_FAULT,
         OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, TASKS_TYPE, DOWNLOAD, TOTAL_FILE_NUM, 1, FAIL_FILE_NUM, 1,
         SUCCESS_FILE_NUM, 0, ERROR_INFO, error);
 }

@@ -73,7 +73,7 @@ private:
 
     std::shared_ptr<UploadConfig> uploadConfig_;
     std::unique_ptr<std::thread> thread_;
-    static constexpr const char *REQUEST_TASK_FAULT = "REQUEST_TASK_FAULT";
+    static constexpr const char *TASK_FAULT = "TASK_FAULT";
     static constexpr const char *TASKS_TYPE = "TASKS_TYPE";
     static constexpr const char *UPLOAD = "UPLOAD";
     static constexpr const char *TOTAL_FILE_NUM = "TOTAL_FILE_NUM";

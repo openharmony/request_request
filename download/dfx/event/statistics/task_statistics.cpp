@@ -60,7 +60,7 @@ int32_t TaskStatistics::GetNextReportInterval() const
 
 void TaskStatistics::ReportStatistics() const
 {
-    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST, REQUEST_TASK_INFO_STATISTICS,
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST, TASK_INFO_STATISTICS,
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, TASKS_SIZE, &dayTasksSize_, TASKS_NUMBER, &dayTasksNumber_);
 }
 

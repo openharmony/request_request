@@ -264,7 +264,7 @@ void UploadTask::ReportTaskFault(uint32_t ret) const
             failCount++;
         }
     }
-    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST, REQUEST_TASK_FAULT,
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::REQUEST, TASK_FAULT,
         OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, TASKS_TYPE, UPLOAD, TOTAL_FILE_NUM, fileDatas_.size(),
         FAIL_FILE_NUM, failCount, SUCCESS_FILE_NUM, successCount, ERROR_INFO, static_cast<int>(ret));
 }
