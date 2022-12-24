@@ -59,8 +59,6 @@ public:
     UPLOAD_API virtual void SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> context);
     virtual void OnProgress(curl_off_t ulnow);
     virtual void OnHeaderReceive(const std::string &header);
-    virtual void OnFail();
-    virtual void OnComplete();
 
 protected:
     uint32_t InitFileArray();
@@ -68,6 +66,8 @@ protected:
     std::string GetCodeMessage(uint32_t code);
     std::vector<TaskState> GetTaskStates();
 private:
+    void OnFail();
+    void OnComplete();
     void ReportTaskFault(uint32_t ret) const;
     uint32_t StartUploadFile();
 

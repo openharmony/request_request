@@ -565,29 +565,4 @@ void UploadTaskNapi::OnSystemComplete(napi_env env, napi_ref ref)
     }
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OnSystemComplete end");
 }
-
-bool UploadTaskNapi::JudgeNotify(const INotifyCallback *target)
-{
-    if ((this->onFail_ != nullptr && this->onFail_.get() == target) ||
-       (this->onComplete_ != nullptr && this->onComplete_.get() == target)) {
-        return true;
-    }
-    return false;
-}
-
-bool UploadTaskNapi::JudgeProgress(const IProgressCallback *target)
-{
-    if ((this->onProgress_ != nullptr && this->onProgress_.get() == target)) {
-        return true;
-    }
-    return false;
-}
-
-bool UploadTaskNapi::JudgeHeaderReceive(const IHeaderReceiveCallback *target)
-{
-    if ((this->onHeaderReceive_ != nullptr && this->onHeaderReceive_.get() == target)) {
-        return true;
-    }
-    return false;
-}
 } // namespace OHOS::Request::UploadNapi

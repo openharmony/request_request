@@ -221,7 +221,8 @@ std::string UploadTask::GetCodeMessage(uint32_t code)
         { UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR, "libcurl return error" },
         { UPLOAD_ERRORCODE_UPLOAD_FAIL, "upload failed" },
         { UPLOAD_ERRORCODE_UPLOAD_OUTTIME, "upload timeout" },
-        { UPLOAD_TASK_REMOVED, "upload task removed"}
+        { UPLOAD_TASK_REMOVED, "upload task removed"},
+        { UPLOAD_CURLE_SSL_CONNECT_ERROR, "upload curle ssl connect error"},
     };
 
     for (const auto &it : codeMap) {

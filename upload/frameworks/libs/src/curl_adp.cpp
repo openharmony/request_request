@@ -261,6 +261,10 @@ int CUrlAdp::CheckUploadStatus(CURLM *curlMulti)
         CURL *eh = NULL;
         eh = msg->easy_handle;
         returnCode = msg->data.result;
+        if (returnCode == CURLE_SSL_CONNECT_ERROR) {
+            UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "upload fail curl error %{public}d", returnCode);
+            return UPLOAD_CURLE_SSL_CONNECT_ERROR;
+        }
         if (returnCode != CURLE_OK) {
             UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "upload fail curl error %{public}d", returnCode);
             return UPLOAD_ERRORCODE_UPLOAD_LIB_ERROR;
