@@ -36,6 +36,7 @@ ohos_shared_library("download_server") {
     "//base/request/request/download/interfaces/kits/js/napi/download_single/src/download_config.cpp",
     "//base/request/request/download/interfaces/kits/js/napi/download_single/src/download_info.cpp",
     "//base/request/request/upload/frameworks/libs/src/module_init.cpp",
+    "src/application_state_observer.cpp",
     "src/download_background_notification.cpp",
     "src/download_notify_proxy.cpp",
     "src/download_service_ability.cpp",
@@ -78,6 +79,7 @@ ohos_shared_library("download_server") {
     "//base/telephony/core_service/interfaces/innerkits:tel_core_service_api",
     "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient:net_conn_manager_if",
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/curl:curl",
   ]
 
@@ -87,6 +89,7 @@ ohos_shared_library("download_server") {
     "ability_base:base",
     "ability_base:want",
     "ability_base:zuri",
+    "ability_runtime:app_manager",
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
     "eventhandler:libeventhandler",
