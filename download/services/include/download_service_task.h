@@ -29,7 +29,8 @@
 #include "download_info.h"
 
 namespace OHOS::Request::Download {
-    using DownloadTaskCallback = void(*)(const std::string& type, uint32_t taskId, int64_t argv1, int64_t argv2);
+    using DownloadTaskCallback = void(*)(const std::string& type, uint32_t taskId,
+                                         int64_t argv1, int64_t argv2, bool isNotify);
 
 class DownloadServiceTask {
 public:
@@ -50,6 +51,9 @@ public:
     void SetRetryTime(uint32_t retryTime);
     void SetNetworkStatus(bool isOnline);
     bool IsSatisfiedConfiguration();
+    void SetNotifyApp(bool isNotifyApp);
+    std::string GetTaskBundleName() const;
+    int32_t GetTaskApplicationInfoUid() const;
 private:
     void SetStatus(DownloadStatus status, ErrorCode code, PausedReason reason);
     void SetStatus(DownloadStatus status);
@@ -111,6 +115,7 @@ private:
     int64_t prevSize_;
 
     std::time_t lastTimestamp_ = 0;
+    bool isNotifyApp_ = true;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_TASK_H

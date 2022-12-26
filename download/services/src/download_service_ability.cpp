@@ -310,8 +310,13 @@ bool DownloadServiceAbility::SetStartId(uint32_t startId)
     return true;
 }
 
-void DownloadServiceAbility::NotifyHandler(const std::string &type, uint32_t taskId, int64_t argv1, int64_t argv2)
+void DownloadServiceAbility::NotifyHandler(const std::string &type, uint32_t taskId, int64_t argv1, int64_t argv2,
+    bool isNotify)
 {
+    if (!isNotify) {
+        DOWNLOAD_HILOGE("isNotify false");
+        return;
+    }
     std::string combineType = type + "-" + std::to_string(taskId);
     DOWNLOAD_HILOGD("combineType=%{public}s argv1=%{public}" PRId64 "argv2=%{public}" PRId64, combineType.c_str(),
         argv1, argv2);
@@ -393,7 +398,7 @@ bool DownloadServiceAbility::DoUnregisteredNotify(uint32_t taskId, const std::st
     if (iter != unregisteredNotify_.end()) {
         if (status == SESSION_SUCCESS || status == SESSION_FAILED) {
             DOWNLOAD_HILOGD("notify taskId: %{public}d event: %{public}s", taskId, type.c_str());
-            NotifyHandler(type, taskId, code, 0);
+            NotifyHandler(type, taskId, code, 0, true);
             unregisteredNotify_.erase(iter);
             return true;
         }
