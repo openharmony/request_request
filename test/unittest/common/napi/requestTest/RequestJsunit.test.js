@@ -75,6 +75,8 @@ describe('RequestTest', function () {
                         expect(true).assertEqual(data1 != undefined);
                         expect(true).assertEqual(data2 != undefined);
                         if (data1 == data2){
+                            expect(true).assertTrue();
+                            downloadTask.remove()
                             done();
                         }
                     }catch(err){

@@ -207,7 +207,11 @@ bool DownloadManager::LoadDownloadServer()
         DOWNLOAD_HILOGE("GetSystemAbilityManager return null");
         return false;
     }
-
+    auto systemAbility = sm->GetSystemAbility(DOWNLOAD_SERVICE_ID);
+    if (systemAbility != nullptr) {
+        DOWNLOAD_HILOGE("service already exists");
+        return true;
+    }
     sptr<DownloadSyncLoadCallback> loadCallback_ = new (std::nothrow) DownloadSyncLoadCallback();
     if (loadCallback_ == nullptr) {
         DOWNLOAD_HILOGE("new DownloadAbilityCallback fail");
