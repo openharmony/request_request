@@ -199,7 +199,7 @@ std::vector<FileData>& UploadTask::GetFileArray()
     totalSize_ = 0;
     for (auto f : uploadConfig_->files) {
         unsigned int error = obtainFile_->GetFile(&file, f.uri, fileSize, context_);
-        if (error != UPLOAD_ERRORCODE_NO_ERROR) {
+        if (error != UPLOAD_OK) {
             OnFail(error);
             ClearFileArray();
             totalSize_ = 0;
