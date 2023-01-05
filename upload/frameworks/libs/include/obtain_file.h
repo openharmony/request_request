@@ -37,8 +37,10 @@ public:
 protected:
     uint32_t GetDataAbilityFile(FILE **file, std::string& fileUri,
         uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
-    uint32_t GetInternalFile(FILE **file, std::string& fileUri,
+    uint32_t GetInternalFile(FILE **file, const std::string& fileUri,
         uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
+    bool SplitPath(const std::string &fileUri, std::string &fileName);
+    bool IsValidPath(const std::string &filePath);
 private:
     std::shared_ptr<IFileAdapter> fileAdapter_;
 };
