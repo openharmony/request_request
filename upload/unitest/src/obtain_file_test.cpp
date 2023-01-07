@@ -264,7 +264,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest008, TestSize.Level0)
     unsigned int result = UPLOAD_ERRORCODE_GET_FILE_ERROR;
     std::string uri = "internal://cache/path/to/file.txt";
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
-    std::string path = "/data/testApp/CacheDir/";
+    std::string path = "/data/testApp/CacheDir";
 
     EXPECT_CALL(*(this->adapter.get()), InternalGetFilePath(testing::_))
         .Times(1)
