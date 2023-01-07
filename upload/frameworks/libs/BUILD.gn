@@ -62,7 +62,7 @@ ohos_shared_library("upload_lib") {
   deps = [
     "${ability_runtime_path}/frameworks/native/ability/native:abilitykit_native",
     "${ability_runtime_path}/frameworks/native/ability/native:data_ability_helper",
-    "//third_party/curl/:curl",
+    "//third_party/curl:curl_shared",
   ]
 
   external_deps = [
