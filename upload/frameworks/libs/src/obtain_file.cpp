@@ -92,59 +92,56 @@ uint32_t ObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri, uint3
     return ret;
 }
 
-uint32_t ObtainFile::GetInternalFile(FILE **file, std::string &fileUri, uint32_t &fileSize,
+bool ObtainFile::IsValidPath(const std::string &filePath)
+{
+    char resolvedPath[PATH_MAX + 1] = { 0 };
+    if (filePath.length() > PATH_MAX || realpath(filePath.c_str(), resolvedPath) == nullptr ||
+        strncmp(resolvedPath, filePath.c_str(), filePath.length()) != 0) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "filePath error");
+        return false;
+    }
+    return true;
+}
+
+bool ObtainFile::SplitPath(const std::string &fileUri, std::string &fileName)
+{
+    std::string pattern = "internal://cache/";
+    size_t pos = fileUri.find(pattern);
+    if (pos != 0) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "internal path is invalid");
+        return false;
+    }
+    fileName = fileUri.substr(pattern.size(), fileUri.size());
+    return true;
+}
+
+uint32_t ObtainFile::GetInternalFile(FILE **file, const std::string &fileUri, uint32_t &fileSize,
     std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
-    uint32_t ret = UPLOAD_OK;
-    std::string filePath;
-    FILE *filePtr = nullptr;
-    int32_t fileLength = 0;
-
-    do {
-        std::vector<std::string> uriSplit;
-        std::string pattern = "/";
-        std::string pathTmp = fileUri + pattern;
-        size_t pos = pathTmp.find(pattern);
-        while (pos != pathTmp.npos) {
-            std::string temp = pathTmp.substr(0, pos);
-            uriSplit.push_back(temp);
-            pathTmp = pathTmp.substr(pos + 1, pathTmp.size());
-            pos = pathTmp.find(pattern);
-        }
-        if (uriSplit[SPLIT_ZERO] != "internal:" || uriSplit[SPLIT_ONE] != "" || uriSplit[SPLIT_TWO] != "cache" ||
-            uriSplit.size() <= SPLIT_THREE) {
-            UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, internal path wrong");
-            ret = UPLOAD_ERRORCODE_UNSUPPORT_URI;
-            break;
-        }
-        filePath = fileAdapter_->InternalGetFilePath(context);
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, cache dir = [%{public}s].",
-            filePath.c_str());
-        if (filePath.size() == 0) {
-            UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, internal to cache error");
-            ret = UPLOAD_ERRORCODE_GET_FILE_ERROR;
-            break;
-        }
-        for (size_t i = SPLIT_THREE; i < uriSplit.size(); ++i) {
-            filePath = filePath + "/" + uriSplit[i];
-        }
-
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, internal file path = [%{public}s].",
-            filePath.c_str());
-        filePtr = fopen(filePath.c_str(), "r");
-        if (filePtr == nullptr) {
-            UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, open file error");
-            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, error info : %{public}d.", errno);
-            ret = UPLOAD_ERRORCODE_GET_FILE_ERROR;
-            break;
-        }
-        (void)fseek(filePtr, 0, SEEK_END);
-        fileLength = ftell(filePtr);
-        (void)fseek(filePtr, 0, SEEK_SET);
-    } while (0);
+    std::string fileName;
+    if (!SplitPath(fileUri, fileName)) {
+        return UPLOAD_ERRORCODE_UNSUPPORT_URI;
+    }
+    std::string filePath = fileAdapter_->InternalGetFilePath(context);
+    if (filePath.empty()) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "ObtainFile::GetInternalFile, internal to cache error");
+        return UPLOAD_ERRORCODE_GET_FILE_ERROR;
+    }
+    filePath += "/" + fileName;
+    if (!IsValidPath(filePath)) {
+        return UPLOAD_ERRORCODE_GET_FILE_ERROR;
+    }
+    FILE *filePtr = fopen(filePath.c_str(), "r");
+    if (filePtr == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "open file error, error info : %{public}d.", errno);
+        return UPLOAD_ERRORCODE_GET_FILE_ERROR;
+    }
+    (void)fseek(filePtr, 0, SEEK_END);
+    int32_t fileLength = ftell(filePtr);
+    (void)fseek(filePtr, 0, SEEK_SET);
 
     *file = filePtr;
     fileSize = fileLength;
-    return ret;
+    return UPLOAD_OK;
 }
 } // namespace OHOS::Request::Upload
