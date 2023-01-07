@@ -62,7 +62,6 @@ ohos_shared_library("request") {
     "//base/request/request/download/interfaces/kits/js/napi/download_single:downloadsingle",
     "//base/request/request/upload/frameworks/libs:upload_lib",
     "//foundation/arkui/napi/:ace_napi",
-    "//third_party/curl/:curl",
     "//third_party/libuv:uv",
   ]
 
