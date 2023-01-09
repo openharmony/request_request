@@ -1,6 +1,6 @@
 
 
-# 杂散子系统/Request服务
+# Request服务
 
 ##  简介
 
@@ -47,7 +47,7 @@ DataAbility能力：DataAbility的使用方，用户获取DataAbility文件协�
 ## 目录
 
 ```
-/base/miscservices/request
+/base/request/request
 ├── figures                                # 架构图
 ├── download/ability                       # 下载服务数据库管理模块
 ├── download/etc 	                       # 下载服务包含的进程配置文件
@@ -941,4 +941,4 @@ uploadTask.remove((err, result) => {
 
 ##  相关仓
 
-[request_request](https://gitee.com/openharmony/request_request/tree/master/)
+[request_request](https://gitee.com/openharmony/request_request)
