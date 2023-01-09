@@ -1,4 +1,4 @@
-# Miscservices/Request
+# Request
 
 ##  Introduction
 
@@ -45,7 +45,7 @@ DataAbility capability: used to obtain files in the DataAbility file protocol pa
 ## Directory Structure
 
 ```
-/base/miscservices/request
+/base/request/request
 ├── figures                                # Architecture diagrams
 ├── download/ability                       # Database management module of the download service
 ├── download/etc 	                       # Process configuration files of the download service
@@ -618,4 +618,4 @@ uploadTask.remove((err, result) => {
 
 ##  Repositories Involved
 
-[request_request](https://gitee.com/openharmony/request_request/tree/master/)
+[request_request](https://gitee.com/openharmony/request_request)

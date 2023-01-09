@@ -1,6 +1,6 @@
 
 
-# 杂散子系统/Request服务
+# Request服务
 ##  简介
 ### 内容介绍
 
@@ -42,7 +42,7 @@ libcurl: 封装libcurl接口完成上传。
 ## 目录
 
 ```
-/base/miscservices/request
+/base/request/request
 ├── figures                                # 架构图
 ├── download/ability                       # 下载服务数据库管理模块
 ├── download/etc 	                       # 下载服务包含的进程配置文件
