@@ -59,14 +59,12 @@ ohos_unittest("upload_UT_test") {
 
   sources = [
     "//base/request/request/upload/frameworks/libs/src/curl_adp.cpp",
-    "//base/request/request/upload/frameworks/libs/src/upload_timer_info.cpp",
     "src/upload_test.cpp",
   ]
 
   include_dirs = [
     "include",
     "//base/request/request/upload/frameworks/libs/include",
-    "//base/time/time_service/interfaces/innerkits/include",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy/include",
     "//foundation/arkui/napi/interfaces/kits",
     "//third_party/json/single_include",
