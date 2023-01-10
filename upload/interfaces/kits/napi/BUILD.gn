@@ -18,6 +18,7 @@ config("upload_native_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
   ldflags = [ "-Wl,--exclude-libs=ALL" ]
+  cflags_cc = [ "-fno-exceptions" ]
   cflags = [
     "-fdata-sections",
     "-ffunction-sections",

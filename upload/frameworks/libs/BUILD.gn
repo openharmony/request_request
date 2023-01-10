@@ -21,6 +21,7 @@ config("upload_lib_config") {
     "//third_party/curl/include",
     "//third_party/openssl/include",
   ]
+  cflags_cc = [ "-fno-exceptions" ]
   cflags = [ "-DOPENSSL_ARM64_PLATFORM" ]
   ldflags = [ "-Wl,--exclude-libs=ALL" ]
   cflags += [
