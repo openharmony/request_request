@@ -16,14 +16,15 @@
 #ifndef CURLADP_H
 #define CURLADP_H
 
-#include <vector>
 #include <mutex>
+#include <vector>
+
 #include "curl/curl.h"
 #include "curl/easy.h"
+#include "i_upload_task.h"
+#include "timer.h"
 #include "upload_common.h"
 #include "upload_config.h"
-#include "i_upload_task.h"
-#include "upload_timer_info.h"
 
 namespace OHOS::Request::Upload {
 class CUrlAdp : public std::enable_shared_from_this<CUrlAdp> {
@@ -64,13 +65,11 @@ private:
     void SetBehaviorOpt(CURL *curl);
     void CurlGlobalInit();
     void CurlGlobalCleanup();
-    void InitTimerInfo();
     void StartTimer();
     void StopTimer();
 
 private:
-    uint64_t timerId_;
-    std::shared_ptr<UploadTimerInfo> timerInfo_;
+    uint32_t timerId_;
     std::shared_ptr<IUploadTask> uploadTask_;
     std::vector<FileData> &fileDatas_;
     FileData  mfileData_;
@@ -83,6 +82,7 @@ private:
     CURLM *curlMulti_;
     std::vector<CURL*> curlArray_;
     bool isReadAbort_;
+    Utils::Timer timer_;
 
     static constexpr int TRANS_TIMEOUT_MS = 300 * 1000;
     static constexpr int READFILE_TIMEOUT_MS = 30 * 1000;

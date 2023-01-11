@@ -20,22 +20,22 @@
 #include <string>
 #include <climits>
 #include <cinttypes>
+#include "common_timer_errors.h"
 #include "upload_task.h"
 #include "upload_hilog_wrapper.h"
-#include "time_service_client.h"
 #include "hitrace_meter.h"
 #include "hisysevent.h"
 #include "curl_adp.h"
 
 namespace OHOS::Request::Upload {
-CUrlAdp::CUrlAdp(std::vector<FileData>& fileDatas, std::shared_ptr<UploadConfig>& config) : fileDatas_(fileDatas)
+CUrlAdp::CUrlAdp(std::vector<FileData> &fileDatas, std::shared_ptr<UploadConfig> &config)
+    : fileDatas_(fileDatas), timer_("uploadTimer")
 {
     config_ = config;
     isCurlGlobalInit_ = false;
     isReadAbort_ = false;
     curlMulti_ = nullptr;
     timerId_ = 0;
-    timerInfo_ = nullptr;
 }
 
 CUrlAdp::~CUrlAdp()
@@ -49,7 +49,6 @@ uint32_t CUrlAdp::DoUpload(std::shared_ptr<IUploadTask> task)
         uploadTask_ = task;
     }
 
-    InitTimerInfo();
     uint32_t successCount = 0;
     for (auto &vmem : fileDatas_) {
         UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "read abort stat: %{public}d file index: %{public}u",
@@ -435,42 +434,23 @@ size_t CUrlAdp::ReadCallback(char *buffer, size_t size, size_t nitems, void *arg
     return readSize;
 }
 
-void CUrlAdp::InitTimerInfo()
-{
-    timerInfo_ = std::make_shared<UploadTimerInfo>();
-    timerInfo_->SetType(TIMEOUTTYPE);
-    timerInfo_->SetRepeat(false);
-    timerInfo_->SetInterval(READFILE_TIMEOUT_MS);
-    timerInfo_->SetWantAgent(nullptr);
-
-    timerInfo_->SetCallbackInfo([this]() {
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OutTime error");
-        this->isReadAbort_ = true;
-        });
-}
-
 void CUrlAdp::StartTimer()
 {
-    timerId_ = MiscServices::TimeServiceClient::GetInstance()->CreateTimer(timerInfo_);
-    if (timerId_ == 0) {
+    uint32_t ret = timer_.Setup();
+    if (ret != Utils::TIMER_ERR_OK) {
         UPLOAD_HILOGI(UPLOAD_MODULE_FRAMEWORK, "Create Timer error");
         return;
     }
-
-    bool ret = MiscServices::TimeServiceClient::GetInstance()->StartTimer(timerId_, READFILE_TIMEOUT_MS);
-    if (ret != true) {
-        UPLOAD_HILOGI(UPLOAD_MODULE_FRAMEWORK, "Start Timer error");
-        MiscServices::TimeServiceClient::GetInstance()->DestroyTimer(timerId_);
-        timerId_ = 0;
-    }
-
-    return;
+    auto TimeOutCallback = [this]() {
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "OutTime error");
+        this->isReadAbort_ = true;
+    };
+    timerId_ = timer_.Register(TimeOutCallback, READFILE_TIMEOUT_MS, true);
 }
 
 void CUrlAdp::StopTimer()
 {
-    MiscServices::TimeServiceClient::GetInstance()->StopTimer(timerId_);
-    MiscServices::TimeServiceClient::GetInstance()->DestroyTimer(timerId_);
-    return;
+    timer_.Unregister(timerId_);
+    timer_.Shutdown();
 }
 } // namespace OHOS::Request::Upload
