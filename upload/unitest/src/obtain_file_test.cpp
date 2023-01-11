@@ -59,7 +59,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest000, TestSize.Level0)
     GTEST_LOG_(INFO) << "ObtainFileUtTest000 start";
     FILE* file;
     unsigned int fileSize = 0;
-    unsigned int result = UPLOAD_ERRORCODE_NO_ERROR;
+    unsigned int result = UPLOAD_OK;
     std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
@@ -68,7 +68,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest000, TestSize.Level0)
         .Times(1)
         .WillOnce(testing::Return(0));
     result = mockObfile->GetFile(&file, uri, fileSize, context);
-    EXPECT_EQ(result, UPLOAD_ERRORCODE_NO_ERROR);
+    EXPECT_EQ(result, UPLOAD_OK);
     GTEST_LOG_(INFO) << "ObtainFileUtTest000 end";
 }
 
@@ -105,7 +105,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest002, TestSize.Level0)
     GTEST_LOG_(INFO) << "ObtainFileUtTest002 start";
     FILE* file;
     unsigned int fileSize = 0;
-    unsigned int result = UPLOAD_ERRORCODE_NO_ERROR;
+    unsigned int result = UPLOAD_OK;
     std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
@@ -114,7 +114,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest002, TestSize.Level0)
         .Times(1)
         .WillOnce(testing::Return(0));
     result = mockObfile->GetDataAbilityFile(&file, uri, fileSize, context);
-    EXPECT_EQ(result, UPLOAD_ERRORCODE_NO_ERROR);
+    EXPECT_EQ(result, UPLOAD_OK);
     GTEST_LOG_(INFO) << "ObtainFileUtTest002 end";
 }
 
@@ -151,7 +151,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest004, TestSize.Level0)
     GTEST_LOG_(INFO) << "ObtainFileUtTest004 start";
     FILE* file;
     unsigned int fileSize = 0;
-    unsigned int result = UPLOAD_ERRORCODE_NO_ERROR;
+    unsigned int result = UPLOAD_OK;
     std::string uri = "dataability:///com.domainname.dataability.persondata/person/10";
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
 
@@ -160,7 +160,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest004, TestSize.Level0)
         .Times(1)
         .WillOnce(testing::Return(0));
     result = mockObfile->GetInternalFile(&file, uri, fileSize, context);
-    EXPECT_EQ(result, UPLOAD_ERRORCODE_NO_ERROR);
+    EXPECT_EQ(result, UPLOAD_OK);
     GTEST_LOG_(INFO) << "ObtainFileUtTest004 end";
 }
 
