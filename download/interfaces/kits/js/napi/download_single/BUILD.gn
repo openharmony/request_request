@@ -17,7 +17,7 @@ config("download_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
 
-  cflags_cc = [ "-fexceptions" ]
+  cflags_cc = [ "-fno-exceptions" ]
   ldflags = [ "-Wl,--exclude-libs=ALL" ]
   cflags = [
     "-fdata-sections",
