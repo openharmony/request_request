@@ -82,6 +82,7 @@ ohos_shared_library("download_server") {
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/curl:curl_shared",
     "//third_party/openssl:libssl_shared",
+    "//third_party/openssl:libcrypto_shared",
   ]
 
   defines = [ "NO_SSL_CERTIFICATION=1" ]
