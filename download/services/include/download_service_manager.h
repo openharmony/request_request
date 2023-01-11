@@ -48,7 +48,7 @@ public:
     bool Resume(uint32_t taskId);
     bool Remove(uint32_t taskId);
     bool Query(uint32_t taskId, DownloadInfo &info);
-    bool QueryAllTask(std::vector<DownloadInfo> &taskVector) const;
+    bool QueryAllTask(std::vector<DownloadInfo> &taskVector);
     bool QueryMimeType(uint32_t taskId, std::string &mimeType);
 
     void SetStartId(uint32_t startId);
@@ -75,8 +75,8 @@ private:
     int32_t MonitorNetwork();
     void UpdateNetworkType();
     void MonitorAppState();
-    void UpdateAppState(const std::string bundleName, int32_t uid, int32_t state);
-    bool IsSameApplication(const std::string sName, int32_t sUid, const std::string dName, int32_t dUid);
+    void UpdateAppState(const std::string &bundleName, int32_t uid, int32_t state);
+    bool IsSameApplication(const std::string &sName, int32_t sUid, const std::string &dName, int32_t dUid);
     bool IsBackgroundOrTerminated(int32_t state);
     bool IsForeground(int32_t state);
 private:
@@ -95,7 +95,6 @@ private:
     uint32_t taskId_;
     static std::mutex instanceLock_;
     static DownloadServiceManager* instance_;
-    std::mutex appStateMutex_;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_SERVICE_MANAGER_H

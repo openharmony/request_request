@@ -440,13 +440,13 @@ void DownloadServiceTask::DumpPausedReason()
 size_t DownloadServiceTask::WriteCallback(void *buffer, size_t size, size_t num, void *param)
 {
     size_t result = 0;
-    DownloadServiceTask *this_ = static_cast<DownloadServiceTask *>(param);
-    if (this_ != nullptr && this_->config_.GetFD() > 0 && this_->hasFileSize_) {
-        result = static_cast<size_t>(write(this_->config_.GetFD(), buffer, size * num));
+    DownloadServiceTask *task = static_cast<DownloadServiceTask *>(param);
+    if (task != nullptr && task->config_.GetFD() > 0 && task->hasFileSize_) {
+        result = static_cast<size_t>(write(task->config_.GetFD(), buffer, size * num));
         if (result < size * num) {
             DOWNLOAD_HILOGE("origin size = %{public}zu, write size = %{public}zu", size * num, result);
         }
-        this_->downloadSize_ += static_cast<int64_t>(result);
+        task->downloadSize_ += static_cast<int64_t>(result);
     }
     return result;
 }

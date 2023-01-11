@@ -120,9 +120,11 @@ void DownloadServiceManager::Destroy()
 uint32_t DownloadServiceManager::AddTask(const DownloadConfig &config)
 {
     if (!initialized_) {
+        DOWNLOAD_HILOGE("service ability init fail");
         return -1;
     }
     uint32_t taskId = GetCurrentTaskId();
+    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
     if (taskMap_.find(taskId) != taskMap_.end()) {
         DOWNLOAD_HILOGD("Invalid case: duplicate taskId");
         return -1;
@@ -144,7 +146,8 @@ void DownloadServiceManager::InstallCallback(uint32_t taskId, DownloadTaskCallba
     if (!initialized_) {
         return;
     }
-    std::map<uint32_t, std::shared_ptr<DownloadServiceTask>>::iterator it = taskMap_.find(taskId);
+    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
+    auto it = taskMap_.find(taskId);
     if (it != taskMap_.end()) {
         it->second->InstallCallback(eventCb);
     }
@@ -169,12 +172,12 @@ bool DownloadServiceManager::ProcessTask()
         return nullptr;
     };
 
-    auto execTask = [this, &taskId](std::shared_ptr<DownloadServiceTask> task) -> bool {
+    auto execTask = [&taskId, this](const std::shared_ptr<DownloadServiceTask>& task) -> bool {
         if (task == nullptr) {
             return false;
         }
         bool result = task->Run();
-        this->MoveTaskToQueue(taskId, task);
+        MoveTaskToQueue(taskId, task);
         return result;
     };
     return execTask(pickupTask());
@@ -186,6 +189,7 @@ bool DownloadServiceManager::Pause(uint32_t taskId)
         return false;
     }
     DOWNLOAD_HILOGD("Pause Task[%{public}d]", taskId);
+    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
     auto it = taskMap_.find(taskId);
     if (it == taskMap_.end()) {
         return false;
@@ -204,6 +208,7 @@ bool DownloadServiceManager::Resume(uint32_t taskId)
         return false;
     }
     DOWNLOAD_HILOGD("Resume Task[%{public}d]", taskId);
+    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
     auto it = taskMap_.find(taskId);
     if (it == taskMap_.end()) {
         return false;
@@ -241,6 +246,7 @@ bool DownloadServiceManager::Query(uint32_t taskId, DownloadInfo &info)
     if (!initialized_) {
         return false;
     }
+    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
     auto it = taskMap_.find(taskId);
     if (it == taskMap_.end()) {
         return false;
@@ -253,6 +259,7 @@ bool DownloadServiceManager::QueryMimeType(uint32_t taskId, std::string &mimeTyp
     if (!initialized_) {
         return false;
     }
+    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
     auto it = taskMap_.find(taskId);
     if (it == taskMap_.end()) {
         return false;
@@ -324,7 +331,6 @@ void DownloadServiceManager::MoveTaskToQueue(uint32_t taskId, std::shared_ptr<Do
 
 void DownloadServiceManager::PushQueue(std::queue<uint32_t> &queue, uint32_t taskId)
 {
-    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
     if (taskMap_.find(taskId) == taskMap_.end()) {
         DOWNLOAD_HILOGD("invalid task id [%{public}d]", taskId);
         return;
@@ -358,7 +364,6 @@ void DownloadServiceManager::PushQueue(std::queue<uint32_t> &queue, uint32_t tas
 
 void DownloadServiceManager::RemoveFromQueue(std::queue<uint32_t> &queue, uint32_t taskId)
 {
-    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
     if (queue.empty()) {
         return;
     }
@@ -451,11 +456,11 @@ void DownloadServiceManager::MonitorAppState()
     DOWNLOAD_HILOGD("RegisterAppStateChanged retcode= %{public}d", ret);
 }
 
-void DownloadServiceManager::UpdateAppState(const std::string bundleName, int32_t uid, int32_t state)
+void DownloadServiceManager::UpdateAppState(const std::string &bundleName, int32_t uid, int32_t state)
 {
     DOWNLOAD_HILOGI("UpdateAppState uid=%{public}d, bundleName=%{public}s, state=%{public}d",
                     uid, bundleName.c_str(), state);
-    std::lock_guard<std::mutex> lck(appStateMutex_);
+    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
     for (const auto &iter : taskMap_) {
         if (IsSameApplication(bundleName, uid,
                               iter.second->GetTaskBundleName(), iter.second->GetTaskApplicationInfoUid())) {
@@ -468,8 +473,8 @@ void DownloadServiceManager::UpdateAppState(const std::string bundleName, int32_
     }
 }
 
-bool DownloadServiceManager::IsSameApplication(const std::string sName, int32_t sUid,
-                                               const std::string dName, int32_t dUid)
+bool DownloadServiceManager::IsSameApplication(const std::string &sName, int32_t sUid,
+                                               const std::string &dName, int32_t dUid)
 {
     return  (sName ==  dName) && (sUid == dUid);
 }
@@ -485,8 +490,9 @@ bool DownloadServiceManager::IsForeground(int32_t state)
     return state == static_cast<int32_t>(ApplicationState::APP_STATE_FOREGROUND);
 }
 
-bool DownloadServiceManager::QueryAllTask(std::vector<DownloadInfo> &taskVector) const
+bool DownloadServiceManager::QueryAllTask(std::vector<DownloadInfo> &taskVector)
 {
+    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
     for (const auto &it : taskMap_) {
         DownloadInfo downloadInfo;
         it.second->Query(downloadInfo);
