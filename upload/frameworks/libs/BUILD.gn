@@ -40,7 +40,6 @@ config("upload_lib_public_config") {
     "./",
     "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter",
     "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
-    "//base/time/time_service/interfaces/innerkits/include",
   ]
 }
 
@@ -51,7 +50,6 @@ ohos_shared_library("upload_lib") {
     "src/module_init.cpp",
     "src/obtain_file.cpp",
     "src/upload_task.cpp",
-    "src/upload_timer_info.cpp",
   ]
   include_dirs = [
     "//third_party/curl/include",
@@ -73,7 +71,6 @@ ohos_shared_library("upload_lib") {
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
-    "time_service:time_client",
   ]
 
   public_configs = [ ":upload_lib_public_config" ]
