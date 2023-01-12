@@ -34,7 +34,8 @@
 using namespace OHOS::NetManagerStandard;
 using namespace OHOS::Telephony;
 namespace OHOS::Request::Download {
-const int32_t ERROR = -1;
+constexpr int32_t INVALID_SLOT_ID = -1;
+
 NetworkAdapter &NetworkAdapter::GetInstance()
 {
     static NetworkAdapter adapter;
@@ -133,12 +134,14 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetBlockStatusChange(sptr<NetHa
 
 void NetworkAdapter::NetConnCallbackObserver::UpdateRoaming()
 {
-    auto slotId = DelayedRefSingleton<CoreServiceClient>::GetInstance().GetPrimarySlotId();
-    if (slotId == TELEPHONY_ERR_IPC_CONNECT_STUB_FAIL || slotId == ERROR) {
+    int32_t slotId = INVALID_SLOT_ID;
+    DelayedRefSingleton<CoreServiceClient>::GetInstance().GetPrimarySlotId(slotId);
+    if (slotId <= INVALID_SLOT_ID) {
         DOWNLOAD_HILOGE("GetDefaultCellularDataSlotId InValidData");
         return;
     }
-    auto networkClient = DelayedRefSingleton<CoreServiceClient>::GetInstance().GetNetworkState(slotId);
+    sptr<NetworkState> networkClient = nullptr;
+    DelayedRefSingleton<CoreServiceClient>::GetInstance().GetNetworkState(slotId, networkClient);
     if (networkClient == nullptr) {
         DOWNLOAD_HILOGE("networkState is nullptr");
         return;
