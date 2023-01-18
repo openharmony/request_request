@@ -1,0 +1,28 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+1.0 {
+  global:
+    extern "C++" {
+        "OHOS::Request::Upload::UploadTask::ExecuteTask()";
+        "OHOS::Request::Upload::UploadTask::Remove()";
+        "OHOS::Request::Upload::UploadTask::~UploadTask()";
+        "OHOS::Request::Upload::UploadTask::SetContext(std::__h::shared_ptr<OHOS::AbilityRuntime::Context>)";
+        "OHOS::Request::Upload::UploadTask::Off(OHOS::Request::Upload::Type, void*)";
+        "OHOS::Request::Upload::UploadTask::UploadTask(std::__h::shared_ptr<OHOS::Request::Upload::UploadConfig>&)";
+        "OHOS::Request::Upload::UploadTask::SetCallback(OHOS::Request::Upload::Type, void*)";
+        "OHOS::Request::Upload::UploadTask::On(OHOS::Request::Upload::Type, void*)";
+    };
+  local:
+    *;
+};
