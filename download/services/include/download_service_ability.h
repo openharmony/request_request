@@ -68,7 +68,6 @@ public:
     static void NotifyHandler(const std::string& type, uint32_t taskId, int64_t argv1, int64_t argv2, bool isNotify);
 
 protected:
-    void OnDump() override;
     void OnStart() override;
     void OnStop() override;
 
@@ -86,7 +85,6 @@ private:
     std::map<std::string, sptr<DownloadNotifyInterface>> registeredListeners_;
     std::vector<sptr<DownloadNotifyInterface>> unlockVecListeners_;
     std::mutex listenerMapMutex_;
-    std::mutex lock_;
     const int32_t startTime_ = 1900;
     const int32_t extraMonth_ = 1;
     std::mutex unregisteredNotifyMutex_;

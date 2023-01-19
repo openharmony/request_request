@@ -245,24 +245,21 @@ bool DownloadServiceAbility::Resume(uint32_t taskId)
 
 bool DownloadServiceAbility::On(uint32_t taskId, const std::string &type, const sptr<DownloadNotifyInterface> &listener)
 {
+    if (listener == nullptr) {
+        DOWNLOAD_HILOGI("invalid listener");
+        return false;
+    }
     std::string combineType = type + "-" + std::to_string(taskId);
     DOWNLOAD_HILOGI("DownloadServiceAbility::On started. type=%{public}s", combineType.c_str());
-    auto iter = registeredListeners_.find(combineType);
-    if (iter == registeredListeners_.end()) {
+    bool isListenerExist;
+    {
         std::lock_guard<std::mutex> lck(listenerMapMutex_);
-        std::pair<std::string, sptr<DownloadNotifyInterface>> newObj(combineType, listener);
-        const auto temp = registeredListeners_.insert(newObj);
-        if (!temp.second) {
-            DOWNLOAD_HILOGE("DownloadServiceAbility::On insert type=%{public}s object fail.", combineType.c_str());
-            return false;
-        }
-        if (DoUnregisteredNotify(taskId, type)) {
-            DOWNLOAD_HILOGD("notify unregistered on event");
-        }
-    } else {
-        std::lock_guard<std::mutex> lck(listenerMapMutex_);
-        DOWNLOAD_HILOGI("DownloadServiceAbility::On Replace listener.");
+        auto iter = registeredListeners_.find(combineType);
+        isListenerExist = iter != registeredListeners_.end();
         registeredListeners_[combineType] = listener;
+    }
+    if (!isListenerExist && DoUnregisteredNotify(taskId, type)) {
+        DOWNLOAD_HILOGD("notify unregistered on event");
     }
     DOWNLOAD_HILOGI("DownloadServiceAbility::On end.");
     return true;
@@ -272,10 +269,10 @@ bool DownloadServiceAbility::Off(uint32_t taskId, const std::string &type)
 {
     std::string combineType = type + "-" + std::to_string(taskId);
     DOWNLOAD_HILOGI("DownloadServiceAbility::Off started.");
+    std::lock_guard<std::mutex> lck(listenerMapMutex_);
     auto iter = registeredListeners_.find(combineType);
     if (iter != registeredListeners_.end()) {
         DOWNLOAD_HILOGE("DownloadServiceAbility::Off delete type=%{public}s object message.", combineType.c_str());
-        std::lock_guard<std::mutex> lck(listenerMapMutex_);
         registeredListeners_.erase(iter);
         return true;
     }
@@ -317,36 +314,22 @@ void DownloadServiceAbility::NotifyHandler(const std::string &type, uint32_t tas
         return;
     }
     std::string combineType = type + "-" + std::to_string(taskId);
-    DOWNLOAD_HILOGD("combineType=%{public}s argv1=%{public}" PRId64 "argv2=%{public}" PRId64, combineType.c_str(),
-        argv1, argv2);
-    auto iter = DownloadServiceAbility::GetInstance()->registeredListeners_.find(combineType);
-    if (iter != DownloadServiceAbility::GetInstance()->registeredListeners_.end()) {
-        DOWNLOAD_HILOGD("DownloadServiceAbility::NotifyHandler type=%{public}s object message.", combineType.c_str());
-        std::vector<int64_t> params;
-        params.push_back(argv1);
-        params.push_back(argv2);
-        iter->second->CallBack(params);
-    } else {
-        DownloadServiceAbility::GetInstance()->AddUnregisteredNotify(taskId, type);
-    }
-}
-
-void DownloadServiceAbility::OnDump()
-{
-    std::lock_guard<std::mutex> guard(lock_);
-    struct tm *timeNow = nullptr;
-    time_t second = time(0);
-    if (second > 0) {
-        timeNow = localtime(&second);
-        if (timeNow != nullptr) {
-            DOWNLOAD_HILOGI("DownloadServiceAbility dump time:%{public}d-%{public}d-%{public}d "
-                            "%{public}d:%{public}d:%{public}d",
-                timeNow->tm_year + startTime_, timeNow->tm_mon + extraMonth_, timeNow->tm_mday, timeNow->tm_hour,
-                timeNow->tm_min, timeNow->tm_sec);
+    DOWNLOAD_HILOGD(
+        "combineType=%{public}s argv1=%{public}" PRId64 "argv2=%{public}" PRId64, combineType.c_str(), argv1, argv2);
+    {
+        std::lock_guard<std::mutex> lck(DownloadServiceAbility::GetInstance()->listenerMapMutex_);
+        auto iter = DownloadServiceAbility::GetInstance()->registeredListeners_.find(combineType);
+        if (iter != DownloadServiceAbility::GetInstance()->registeredListeners_.end()) {
+            DOWNLOAD_HILOGD(
+                "DownloadServiceAbility::NotifyHandler type=%{public}s object message.", combineType.c_str());
+            std::vector<int64_t> params;
+            params.push_back(argv1);
+            params.push_back(argv2);
+            iter->second->CallBack(params);
+            return;
         }
-    } else {
-        DOWNLOAD_HILOGI("DownloadServiceAbility dump, time(0) is nullptr");
     }
+    DownloadServiceAbility::GetInstance()->AddUnregisteredNotify(taskId, type);
 }
 
 int DownloadServiceAbility::Dump(int fd, const std::vector<std::u16string> &args)

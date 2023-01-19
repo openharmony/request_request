@@ -20,6 +20,7 @@
 namespace OHOS::Request::Upload {
 class IUploadTask {
 public:
+    virtual ~IUploadTask() = default;
     virtual void OnProgress(curl_off_t ulnow) = 0;
     virtual void OnHeaderReceive(const std::string &header) = 0;
 };

@@ -21,13 +21,18 @@ config("upload_lib_config") {
     "//third_party/curl/include",
     "//third_party/openssl/include",
   ]
-  cflags_cc = [ "-fno-exceptions" ]
+  cflags_cc = [
+    "-fno-exceptions",
+    "-fvisibility-inlines-hidden",
+    "-Os",
+  ]
   cflags = [ "-DOPENSSL_ARM64_PLATFORM" ]
   ldflags = [ "-Wl,--exclude-libs=ALL" ]
   cflags += [
     "-fdata-sections",
     "-ffunction-sections",
     "-fvisibility=hidden",
+    "-Os",
   ]
 }
 
@@ -57,6 +62,7 @@ ohos_shared_library("upload_lib") {
   ]
 
   configs = [ ":upload_lib_config" ]
+  version_script = "libupload_lib.map"
 
   deps = [
     "${ability_runtime_path}/frameworks/native/ability/native:abilitykit_native",
