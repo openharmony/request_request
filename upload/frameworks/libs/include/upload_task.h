@@ -47,20 +47,20 @@ enum UploadTaskState {
 class UploadTask : public IUploadTask, public std::enable_shared_from_this<UploadTask> {
 public:
     UPLOAD_API UploadTask(std::shared_ptr<UploadConfig>& uploadConfig);
-    UPLOAD_API virtual ~UploadTask();
-    UPLOAD_API virtual bool Remove();
-    UPLOAD_API virtual void On(Type type, void *callback);
-    UPLOAD_API virtual void Off(Type type, void *callback);
+    UPLOAD_API ~UploadTask();
+    UPLOAD_API bool Remove();
+    UPLOAD_API void On(Type type, void *callback);
+    UPLOAD_API void Off(Type type, void *callback);
     UPLOAD_API void ExecuteTask();
     static void Run(std::shared_ptr<Upload::UploadTask> task);
-    virtual void OnRun();
+    void OnRun();
 
-    UPLOAD_API virtual void SetCallback(Type type, void *callback);
-    UPLOAD_API virtual void SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> context);
-    virtual void OnProgress(curl_off_t ulnow);
-    virtual void OnHeaderReceive(const std::string &header);
-    virtual void OnFail();
-    virtual void OnComplete();
+    UPLOAD_API void SetCallback(Type type, void *callback);
+    UPLOAD_API void SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> context);
+    void OnProgress(curl_off_t ulnow) override;
+    void OnHeaderReceive(const std::string &header) override;
+    void OnFail() override;
+    void OnComplete() override;
 
 protected:
     uint32_t InitFileArray();
