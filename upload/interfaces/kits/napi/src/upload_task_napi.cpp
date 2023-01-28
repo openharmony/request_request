@@ -459,6 +459,8 @@ void UploadTaskNapi::OnSystemSuccess(napi_env env, napi_ref ref, Upload::UploadR
         [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
             SystemSuccessCallback *successCallback = reinterpret_cast<SystemSuccessCallback *>(work->data);
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(successCallback->env, &scope);
             napi_value callback = nullptr;
             napi_value global = nullptr;
             napi_value result = nullptr;
@@ -467,6 +469,8 @@ void UploadTaskNapi::OnSystemSuccess(napi_env env, napi_ref ref, Upload::UploadR
             napi_get_reference_value(successCallback->env, successCallback->ref, &callback);
             napi_get_global(successCallback->env, &global);
             napi_call_function(successCallback->env, global, callback, 1, args, &result);
+            napi_delete_reference(successCallback->env, successCallback->ref);
+            napi_close_handle_scope(successCallback->env, scope);
             delete successCallback;
             successCallback = nullptr;
             delete work;
@@ -503,6 +507,8 @@ void UploadTaskNapi::OnSystemFail(napi_env env, napi_ref ref, std::string &data,
     int ret = uv_queue_work(loop_, work, [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
             SystemFailCallback *failCallback = reinterpret_cast<SystemFailCallback *>(work->data);
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(failCallback->env, &scope);
             napi_value callback = nullptr;
             napi_value global = nullptr;
             napi_value result = nullptr;
@@ -514,6 +520,8 @@ void UploadTaskNapi::OnSystemFail(napi_env env, napi_ref ref, std::string &data,
             napi_get_reference_value(failCallback->env, failCallback->ref, &callback);
             napi_get_global(failCallback->env, &global);
             napi_call_function(failCallback->env, global, callback, sizeof(args) / sizeof(args[0]), args, &result);
+            napi_delete_reference(failCallback->env, failCallback->ref);
+            napi_close_handle_scope(failCallback->env, scope);
             delete failCallback;
             failCallback = nullptr;
             delete work;
@@ -547,6 +555,8 @@ void UploadTaskNapi::OnSystemComplete(napi_env env, napi_ref ref)
         [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
             SystemCompleteCallback *completeCallback = reinterpret_cast<SystemCompleteCallback *>(work->data);
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(completeCallback->env, &scope);
             napi_value callback = nullptr;
             napi_value global = nullptr;
             napi_value result = nullptr;
@@ -554,6 +564,8 @@ void UploadTaskNapi::OnSystemComplete(napi_env env, napi_ref ref)
             napi_get_reference_value(completeCallback->env, completeCallback->ref, &callback);
             napi_get_global(completeCallback->env, &global);
             napi_call_function(completeCallback->env, global, callback, 0, nullptr, &result);
+            napi_delete_reference(completeCallback->env, completeCallback->ref);
+            napi_close_handle_scope(completeCallback->env, scope);
             delete completeCallback;
             completeCallback = nullptr;
             delete work;
