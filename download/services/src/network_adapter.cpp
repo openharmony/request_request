@@ -59,7 +59,7 @@ bool NetworkAdapter::RegOnNetworkChange(RegCallBack &&callback)
         return NET_CONN_ERR_INPUT_NULL_PTR;
     }
     int nRet = DelayedSingleton<NetConnClient>::GetInstance()->RegisterNetConnCallback(specifier, observer, 0);
-    if (nRet == NET_CONN_SUCCESS) {
+    if (nRet == NETMANAGER_SUCCESS) {
         callback_ = callback;
     }
 
