@@ -1,0 +1,88 @@
+# Copyright (C) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/request/request/request_aafwk.gni")
+import("//build/ohos.gni")
+
+config("download_service_config") {
+  visibility = [ ":*" ]
+  include_dirs = [ "include" ]
+
+  ldflags = [ "-Wl,--exclude-libs=ALL" ]
+  cflags_cc = [ "-fno-exceptions" ]
+  cflags = [ "-DOPENSSL_ARM64_PLATFORM" ]
+  cflags += [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fvisibility=hidden",
+  ]
+}
+
+ohos_shared_library("download_server") {
+  sources = [
+    "src/application_state_observer.cpp",
+    "src/download_background_notification.cpp",
+    "src/download_notify_proxy.cpp",
+    "src/download_service_ability.cpp",
+    "src/download_service_manager.cpp",
+    "src/download_service_stub.cpp",
+    "src/download_service_task.cpp",
+    "src/download_thread.cpp",
+    "src/network_adapter.cpp",
+  ]
+
+  public_configs = [
+    "${c_utils_path}/base:utils_config",
+    ":download_service_config",
+  ]
+  configs = [ "//build/config/gcc:symbol_visibility_hidden" ]
+
+  include_dirs = [
+    "${request_path}/frameworks/native/download/include",
+    "${request_path}/services/dfx/dump",
+    "${request_path}/services/dfx/event/statistics",
+    "${request_path}/services/dfx/event/fault",
+    "${core_service_path}/innerkits/include",
+    "${notification_path}/interfaces/inner_api",
+  ]
+  deps = [
+    "${core_service_path}/innerkits:tel_core_service_api",
+    "${notification_path}/frameworks/ans:ans_innerkits",
+    "${request_path}/common:request_common_static",
+    "${request_path}/services/dfx:request_dfx_static",
+  ]
+
+  defines = [ "NO_SSL_CERTIFICATION=1" ]
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:app_manager",
+    "access_token:libaccesstoken_sdk",
+    "c_utils:utils",
+    "eventhandler:libeventhandler",
+    "hisysevent_native:libhisysevent",
+    "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_single",
+    "netmanager_base:net_conn_manager_if",
+    "relational_store:native_appdatafwk",
+    "relational_store:native_dataability",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+  subsystem_name = "request"
+  part_name = "request"
+}

@@ -18,10 +18,10 @@ import("//build/ohos.gni")
 group("request_packages") {
   if (is_standard_system) {
     deps = [
-      "download/etc/init:downloadservice.cfg",
-      "download/interfaces/kits/js/napi/download_single:downloadsingle",
-      "download/sa_profile:download_sa_profiles",
-      "download/services:download_server",
+      "frameworks/native/download:downloadsingle",
+      "services/etc/init:downloadservice.cfg",
+      "services/sa_profile:download_sa_profiles",
+      "services/service:download_server",
       "test/unittest/common/napi/requestTest:unittest",
     ]
   }

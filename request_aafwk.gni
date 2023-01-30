@@ -20,3 +20,15 @@ ability_runtime_kits_path = "${ability_runtime_path}/frameworks/kits"
 ability_runtime_napi_path = "${ability_runtime_path}/frameworks/js/napi"
 
 ability_runtime_services_path = "${ability_runtime_path}/services"
+
+arkui_path = "//foundation/arkui"
+
+request_path = "//base/request/request"
+
+core_service_path = "//base/telephony/core_service/interfaces"
+
+notification_path = "//base/notification/distributed_notification_service"
+
+test_path = "//test/testfwk/developer_test/signature"
+
+c_utils_path = "//commonlibrary/c_utils"
