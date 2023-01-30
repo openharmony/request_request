@@ -63,7 +63,6 @@ ohos_shared_library("upload_lib") {
 
   configs = [ ":upload_lib_config" ]
   version_script = "libupload_lib.map"
-
   deps = [
     "${ability_runtime_path}/frameworks/native/ability/native:abilitykit_native",
     "${ability_runtime_path}/frameworks/native/ability/native:data_ability_helper",
