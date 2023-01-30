@@ -51,33 +51,38 @@ void DownloadManager::CallFunctionAsync(napi_env env, napi_ref func, const ArgsG
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env, &loop);
 
-    auto* work = new (std::nothrow) uv_work_t;
+    auto *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
         return;
     }
-    auto* data = new(std::nothrow) CallFunctionData;
+    auto *data = new (std::nothrow) CallFunctionData;
     data->env_ = env;
     data->func_ = func;
     data->generator_ = generator;
     work->data = data;
 
-    uv_queue_work(loop, work, [](uv_work_t* work) {}, [](uv_work_t* work, int st) {
-        int argc {};
-        napi_value argv[MAX_CB_ARGS] {};
-        napi_ref recv {};
-        auto* data = static_cast<CallFunctionData*>(work->data);
-        data->generator_(data->env_, &recv, argc, argv);
-        napi_value callback {};
-        napi_get_reference_value(data->env_, data->func_, &callback);
-        napi_value thiz {};
-        napi_get_reference_value(data->env_, recv, &thiz);
-        napi_value result {};
-        napi_call_function(data->env_, thiz, callback, argc, argv, &result);
-        napi_delete_reference(data->env_, data->func_);
-        napi_delete_reference(data->env_, recv);
-        delete work;
-        delete data;
-    });
+    uv_queue_work(
+        loop, work, [](uv_work_t *work) {},
+        [](uv_work_t *work, int st) {
+            int argc{};
+            auto data = static_cast<CallFunctionData *>(work->data);
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(data->env_, &scope);
+            napi_value argv[MAX_CB_ARGS]{};
+            napi_ref recv{};
+            data->generator_(data->env_, &recv, argc, argv);
+            napi_value callback{};
+            napi_get_reference_value(data->env_, data->func_, &callback);
+            napi_value thiz{};
+            napi_get_reference_value(data->env_, recv, &thiz);
+            napi_value result{};
+            napi_call_function(data->env_, thiz, callback, argc, argv, &result);
+            napi_delete_reference(data->env_, data->func_);
+            napi_delete_reference(data->env_, recv);
+            napi_close_handle_scope(data->env_, scope);
+            delete work;
+            delete data;
+        });
 }
 
 void DownloadManager::OnTaskDone(const std::string &token, bool successful, const std::string &errMsg)

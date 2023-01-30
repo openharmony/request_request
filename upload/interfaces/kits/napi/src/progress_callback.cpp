@@ -66,7 +66,8 @@ void UvOnProgress(uv_work_t *work, int status)
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "progressWorker->observer == nullptr");
         return;
     }
-
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(progressWorker->observer->GetEnv(), &scope);
     napi_value callback = nullptr;
     napi_value args[2];
     napi_value global = nullptr;
@@ -81,6 +82,7 @@ void UvOnProgress(uv_work_t *work, int status)
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
             "Progress callback failed calStatus:%{public}d callback:%{public}p", calStatus, callback);
     }
+    napi_close_handle_scope(progressWorker->observer->GetEnv(), scope);
 }
 
 

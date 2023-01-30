@@ -48,7 +48,9 @@ public:
             if (input_ == nullptr) {
                 return napi_ok;
             }
-            return input_(env, argc, argv, self);
+            napi_status ret = input_(env, argc, argv, self);
+            input_ = nullptr;
+            return ret;
         }
 
         virtual napi_status operator()(napi_env env, napi_value *result)
@@ -57,7 +59,9 @@ public:
                 *result = nullptr;
                 return napi_ok;
             }
-            return output_(env, result);
+            napi_status ret = output_(env, result);
+            output_ = nullptr;
+            return ret;
         }
 
         virtual void Exec()
@@ -66,6 +70,7 @@ public:
                 return;
             }
             exec_(this);
+            exec_ = nullptr;
         };
     protected:
         friend class AsyncCall;
