@@ -49,7 +49,7 @@ std::vector<TaskState> NotifyCallback::GetTaskStates()
 
 void UvOnNotify(uv_work_t *work, int status)
 {
-    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Notify. uv_queue_work start");
+    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Notify.  start");
     std::shared_ptr<NotifyWorker> notifyWorker(reinterpret_cast<NotifyWorker *>(work->data),
         [work](NotifyWorker *data) {
             delete data;
@@ -59,6 +59,8 @@ void UvOnNotify(uv_work_t *work, int status)
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "notifyWorker->observer == nullptr");
         return;
     }
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(notifyWorker->observer->GetEnv(), &scope);
     napi_value callback = nullptr;
     napi_value global = nullptr;
     napi_value args[1] = {nullptr};
@@ -74,6 +76,7 @@ void UvOnNotify(uv_work_t *work, int status)
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
             "Notify callback failed callStatus:%{public}d", callStatus);
     }
+    napi_close_handle_scope(notifyWorker->observer->GetEnv(), scope);
 }
 
 void NotifyCallback::Notify(const std::vector<TaskState> &taskStates)

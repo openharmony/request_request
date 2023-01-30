@@ -60,6 +60,8 @@ void DownloadBaseNotify::CallBack(const std::vector<int64_t> &params)
         [](uv_work_t *work, int statusInt) {
             NotifyDataPtr *notifyDataPtr = static_cast<NotifyDataPtr *>(work->data);
             if (notifyDataPtr != nullptr) {
+                napi_handle_scope scope = nullptr;
+                napi_open_handle_scope(notifyDataPtr->notifyData->env, &scope);
                 napi_value undefined = 0;
                 napi_get_undefined(notifyDataPtr->notifyData->env, &undefined);
                 napi_value callbackFunc = nullptr;
@@ -75,6 +77,7 @@ void DownloadBaseNotify::CallBack(const std::vector<int64_t> &params)
                 }
                 napi_call_function(notifyDataPtr->notifyData->env, nullptr, callbackFunc,
                     notifyDataPtr->notifyData->paramNumber, callbackValues, &callbackResult);
+                napi_close_handle_scope(notifyDataPtr->notifyData->env, scope);
                 delete notifyDataPtr;
                 delete work;
             }
