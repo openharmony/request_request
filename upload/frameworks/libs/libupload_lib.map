@@ -13,16 +13,7 @@
 
 1.0 {
   global:
-    extern "C++" {
-        "OHOS::Request::Upload::UploadTask::ExecuteTask()";
-        "OHOS::Request::Upload::UploadTask::Remove()";
-        "OHOS::Request::Upload::UploadTask::~UploadTask()";
-        "OHOS::Request::Upload::UploadTask::SetContext(std::__h::shared_ptr<OHOS::AbilityRuntime::Context>)";
-        "OHOS::Request::Upload::UploadTask::Off(OHOS::Request::Upload::Type, void*)";
-        "OHOS::Request::Upload::UploadTask::UploadTask(std::__h::shared_ptr<OHOS::Request::Upload::UploadConfig>&)";
-        "OHOS::Request::Upload::UploadTask::SetCallback(OHOS::Request::Upload::Type, void*)";
-        "OHOS::Request::Upload::UploadTask::On(OHOS::Request::Upload::Type, void*)";
-    };
+    *UploadTask*;
   local:
     *;
 };
