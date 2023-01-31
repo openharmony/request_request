@@ -58,6 +58,8 @@ void UvOnHeaderReceive(uv_work_t *work, int status)
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "headerReceiveWorker->observer == nullptr");
         return;
     }
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(headerReceiveWorker->observer->GetEnv(), &scope);
     napi_value jsHeader = nullptr;
     napi_value callback = nullptr;
     napi_value args[1];
@@ -77,6 +79,7 @@ void UvOnHeaderReceive(uv_work_t *work, int status)
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
             "HeaderReceive callback failed callStatus:%{public}d callback:%{public}p", callStatus, callback);
     }
+    napi_close_handle_scope(headerReceiveWorker->observer->GetEnv(), scope);
 }
 
 void HeaderReceiveCallback::HeaderReceive(const std::string &header)
