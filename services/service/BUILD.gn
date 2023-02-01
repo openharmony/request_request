@@ -46,6 +46,7 @@ ohos_shared_library("download_server") {
     ":download_service_config",
   ]
   configs = [ "//build/config/gcc:symbol_visibility_hidden" ]
+  version_script = "libdownload_server.map"
 
   include_dirs = [
     "${request_path}/frameworks/native/download/include",
