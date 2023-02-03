@@ -46,7 +46,8 @@ bool DownloadServiceProxy::IsPathValid(const std::string &filePath)
 
 int32_t DownloadServiceProxy::Request(const DownloadConfig &config, ExceptionError &error)
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     int32_t fd = -1;
@@ -115,7 +116,8 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config, ExceptionErr
 
 bool DownloadServiceProxy::Pause(uint32_t taskId)
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteUint32(taskId);
@@ -131,7 +133,8 @@ bool DownloadServiceProxy::Pause(uint32_t taskId)
 
 bool DownloadServiceProxy::Query(uint32_t taskId, DownloadInfo &info)
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(DownloadServiceProxy::GetDescriptor());
     data.WriteInt32(taskId);
@@ -159,7 +162,8 @@ bool DownloadServiceProxy::Query(uint32_t taskId, DownloadInfo &info)
 
 bool DownloadServiceProxy::QueryMimeType(uint32_t taskId, std::string &mimeType)
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(DownloadServiceProxy::GetDescriptor());
     data.WriteInt32(taskId);
@@ -176,7 +180,8 @@ bool DownloadServiceProxy::QueryMimeType(uint32_t taskId, std::string &mimeType)
 
 bool DownloadServiceProxy::Remove(uint32_t taskId)
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(DownloadServiceProxy::GetDescriptor());
     data.WriteInt32(taskId);
@@ -192,7 +197,8 @@ bool DownloadServiceProxy::Remove(uint32_t taskId)
 
 bool DownloadServiceProxy::Resume(uint32_t taskId)
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(DownloadServiceProxy::GetDescriptor());
     data.WriteInt32(taskId);
@@ -209,7 +215,8 @@ bool DownloadServiceProxy::Resume(uint32_t taskId)
 bool DownloadServiceProxy::On(uint32_t taskId, const std::string &type, const sptr<DownloadNotifyInterface> &listener)
 {
     DOWNLOAD_HILOGD("DownloadServiceProxy::On listener=%{public}p", listener.GetRefPtr());
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         DOWNLOAD_HILOGE(" Failed to write parcelable ");
@@ -251,7 +258,8 @@ bool DownloadServiceProxy::On(uint32_t taskId, const std::string &type, const sp
 bool DownloadServiceProxy::Off(uint32_t taskId, const std::string &type)
 {
     DOWNLOAD_HILOGD("DownloadServiceProxy::Off in");
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         DOWNLOAD_HILOGE(" Failed to write parcelable ");
@@ -280,7 +288,8 @@ bool DownloadServiceProxy::Off(uint32_t taskId, const std::string &type)
 bool DownloadServiceProxy::CheckPermission()
 {
     DOWNLOAD_HILOGD("DownloadServiceProxy::CheckPermission in");
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         DOWNLOAD_HILOGE(" Failed to write parcelable ");
@@ -300,7 +309,8 @@ bool DownloadServiceProxy::CheckPermission()
 bool DownloadServiceProxy::SetStartId(uint32_t startId)
 {
     DOWNLOAD_HILOGD("DownloadServiceProxy::SetStartId in");
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         DOWNLOAD_HILOGE(" Failed to write parcelable ");
