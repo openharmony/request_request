@@ -27,7 +27,8 @@ void DownloadNotifyProxy::CallBack(const std::vector<int64_t> &params)
 {
     DOWNLOAD_HILOGD("DownloadNotifyProxy::OnCallBack Start");
     DOWNLOAD_HILOGD("data should be filled within service module");
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(DownloadNotifyProxy::GetDescriptor())) {
         DOWNLOAD_HILOGE("write descriptor failed");
@@ -41,56 +42,4 @@ void DownloadNotifyProxy::CallBack(const std::vector<int64_t> &params)
     }
     DOWNLOAD_HILOGD("DownloadNotifyProxy::OnCallBack End");
 }
-
-/*
-void DownloadNotifyProxy::OnCallBack(const std::string &event)
-{
-    DOWNLOAD_HILOGD("DownloadNotifyProxy::OnCallBack Start");
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(DownloadNotifyProxy::GetDescriptor())) {
-        DOWNLOAD_HILOGE("write descriptor failed");
-        return;
-    }
-    if (!data.WriteString(event)) {
-        DOWNLOAD_HILOGE("write string failed");
-        return;
-    }
-    int error = Remote()->SendRequest(ONCALLBACK_VOID, data, reply, option);
-    if (error != 0) {
-        DOWNLOAD_HILOGE("SendRequest failed, error %{public}d", error);
-    }
-    DOWNLOAD_HILOGD("DownloadNotifyProxy::OnCallBack End");
-}
-
-void DownloadNotifyProxy::OnCallBack(const std::string &event, int result)
-{
-    DOWNLOAD_HILOGD("DownloadNotifyProxy::OnCallBack Start");
-    DOWNLOAD_HILOGD("event =%{public}s, result = %{public}d", event.c_str(), result);
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(DownloadNotifyProxy::GetDescriptor())) {
-        DOWNLOAD_HILOGE("write descriptor failed");
-        return;
-    }
-    DOWNLOAD_HILOGD("DownloadNotifyProxy::OnCallBack Start1");
-    if (!data.WriteString(event)) {
-        DOWNLOAD_HILOGE("write string failed");
-        return;
-    }
-    DOWNLOAD_HILOGD("DownloadNotifyProxy::OnCallBack Start2");
-    if (!data.WriteInt32(result)) {
-        DOWNLOAD_HILOGE("write bool failed");
-        return;
-    }
-    DOWNLOAD_HILOGD("DownloadNotifyProxy::OnCallBack Start3");
-    int error = Remote()->SendRequest(ONCALLBACK_INT, data, reply, option);
-    if (error != 0) {
-        DOWNLOAD_HILOGE("SendRequest failed, error %{public}d", error);
-    }
-    DOWNLOAD_HILOGD("DownloadNotifyProxy::OnCallBack End");
-}
-*/
 } // namespace OHOS::Request::Download
