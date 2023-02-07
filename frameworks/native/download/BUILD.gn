@@ -34,7 +34,7 @@ ohos_shared_library("downloadsingle") {
   ]
   configs = [ "//build/config/gcc:symbol_visibility_hidden" ]
   public_configs = [ ":download_interfaces_kits_napi_config" ]
-  version_script = "downloadsingle.map"
+  version_script = "libdownload_single.map"
 
   sources = [
     "src/download_manager.cpp",
