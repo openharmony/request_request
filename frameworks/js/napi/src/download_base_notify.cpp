@@ -31,7 +31,42 @@ DownloadBaseNotify::DownloadBaseNotify(napi_env env, uint32_t paramNumber, napi_
 
 DownloadBaseNotify::~DownloadBaseNotify()
 {
-    DOWNLOAD_HILOGD("");
+    DOWNLOAD_HILOGD("~DownloadBaseNotify()");
+    if (notifyData_ != nullptr) {
+        uv_loop_s *loop = nullptr;
+        napi_get_uv_event_loop(notifyData_->env, &loop);
+        if (loop == nullptr) {
+            DOWNLOAD_HILOGE("Failed to get uv event loop");
+            return;
+        }
+        uv_work_t *work = new (std::nothrow) uv_work_t;
+        if (work == nullptr) {
+            DOWNLOAD_HILOGE("Failed to create uv work");
+            return;
+        }
+        CallbackData *callbackData = new (std::nothrow) CallbackData;
+        if (callbackData == nullptr) {
+            delete work;
+            return;
+        }
+        callbackData->env_ = notifyData_->env;
+        callbackData->ref_ = notifyData_->ref;
+        work->data = reinterpret_cast<void *>(callbackData);
+        int ret = uv_queue_work(
+            loop, work, [](uv_work_t *work) {},
+            [](uv_work_t *work, int statusInt) {
+                CallbackData *callbackDataPtr = reinterpret_cast<CallbackData *>(work->data);
+                if (callbackDataPtr != nullptr) {
+                    napi_delete_reference(callbackDataPtr->env_, callbackDataPtr->ref_);
+                    delete callbackDataPtr;
+                    delete work;
+                }
+            });
+        if (ret != 0) {
+            delete callbackData;
+            delete work;
+        }
+    }
 }
 
 void DownloadBaseNotify::CallBack(const std::vector<int64_t> &params)
