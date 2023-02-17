@@ -32,11 +32,13 @@ struct NotifyData {
     uint32_t paramNumber;
     std::mutex mutex;
     std::vector<int64_t> params;
-    ~NotifyData()
-    {
-        napi_delete_reference(env, ref);
-    }
 };
+
+struct CallbackData {
+  napi_env env_;
+  napi_ref ref_;
+};
+
 struct NotifyDataPtr {
     std::shared_ptr<NotifyData> notifyData;
 };
