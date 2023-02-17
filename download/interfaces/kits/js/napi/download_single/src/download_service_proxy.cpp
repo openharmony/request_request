@@ -214,7 +214,6 @@ bool DownloadServiceProxy::Resume(uint32_t taskId)
 
 bool DownloadServiceProxy::On(uint32_t taskId, const std::string &type, const sptr<DownloadNotifyInterface> &listener)
 {
-    DOWNLOAD_HILOGD("DownloadServiceProxy::On listener=%{public}p", listener.GetRefPtr());
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

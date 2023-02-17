@@ -49,8 +49,7 @@ uint32_t ObtainFile::GetFile(FILE **file, std::string &fileUri,
         fileSize = 0;
     }
 
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK,
-        "ObtainFile::GetFile, ret : %{public}d, size : %{public}d, pf : %{public}p", ret, fileSize, *file);
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "get file ret : %{public}d, size : %{public}u", ret, fileSize);
     return ret;
 }
 
