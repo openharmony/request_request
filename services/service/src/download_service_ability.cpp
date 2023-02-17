@@ -70,7 +70,6 @@ sptr<DownloadServiceAbility> DownloadServiceAbility::GetInstance()
         std::lock_guard<std::mutex> autoLock(instanceLock_);
         if (instance_ == nullptr) {
             instance_ = new DownloadServiceAbility(DOWNLOAD_SERVICE_ID, true);
-            DOWNLOAD_HILOGE("DownloadServiceAbility instance_ create,addr=%{public}p", instance_.GetRefPtr());
         }
     }
     return instance_;
