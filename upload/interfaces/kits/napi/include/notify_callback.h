@@ -25,7 +25,6 @@
 #include "napi/native_common.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-#include "i_callbackable_judger.h"
 
 namespace OHOS::Request::Upload {
 using namespace OHOS::Request::UploadNapi;

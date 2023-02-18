@@ -134,6 +134,11 @@ void UploadTask::SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> conte
     context_ = context;
 }
 
+void UploadTask::SetUploadProxy(std::shared_ptr<UploadTaskNapiV5> proxy)
+{
+    uploadProxy_ = proxy;
+}
+
 void UploadTask::Run(std::shared_ptr<Upload::UploadTask> task)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Run. In.");
@@ -145,6 +150,7 @@ void UploadTask::Run(std::shared_ptr<Upload::UploadTask> task)
     task->OnRun();
     std::lock_guard<std::mutex> guard(task->removeMutex_);
     if (task->isRemoved_) {
+        task->SetUploadProxy(nullptr);
         return;
     }
     if (task->uploadConfig_->protocolVersion == API5) {
@@ -153,6 +159,7 @@ void UploadTask::Run(std::shared_ptr<Upload::UploadTask> task)
             UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "Complete.");
         }
     }
+    task->SetUploadProxy(nullptr);
 }
 
 uint32_t UploadTask::InitFileArray()

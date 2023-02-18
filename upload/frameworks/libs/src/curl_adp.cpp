@@ -40,6 +40,7 @@ CUrlAdp::CUrlAdp(std::vector<FileData> &fileDatas, std::shared_ptr<UploadConfig>
 
 CUrlAdp::~CUrlAdp()
 {
+    UPLOAD_HILOGI(UPLOAD_MODULE_FRAMEWORK, "~CUrlAdp()");
 }
 
 uint32_t CUrlAdp::DoUpload(std::shared_ptr<IUploadTask> task)
@@ -72,7 +73,8 @@ uint32_t CUrlAdp::DoUpload(std::shared_ptr<IUploadTask> task)
         ClearCurlResource();
         usleep(FILE_UPLOAD_INTERVEL);
     }
-
+    mfileData_.adp = nullptr;
+    uploadTask_ = nullptr;
     return (IsSuccess(successCount, fileDatas_.size())) ? UPLOAD_OK : UPLOAD_ERRORCODE_UPLOAD_FAIL;
 }
 

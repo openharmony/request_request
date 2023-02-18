@@ -52,7 +52,9 @@ ohos_shared_library("request") {
     "src/progress_callback.cpp",
     "src/request_module.cpp",
     "src/upload_task_napi.cpp",
+    "src/upload_task_napiV5.cpp",
     "src/upload_task_napiV9.cpp",
+    "src/uv_queue.cpp",
   ]
 
   configs = [ ":upload_native_config" ]

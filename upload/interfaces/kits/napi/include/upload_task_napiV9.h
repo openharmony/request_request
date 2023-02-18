@@ -30,21 +30,16 @@
 #include "i_notify_callback.h"
 #include "context.h"
 #include "ability_context.h"
-#include "i_callbackable_judger.h"
 #include "data_ability_helper.h"
 
 namespace OHOS::Request::UploadNapi {
 using namespace OHOS::Request::Upload;
-class UploadTaskNapiV9 : public ICallbackAbleJudger {
+class UploadTaskNapiV9 {
 public:
     static napi_value JsUploadFile(napi_env env, napi_callback_info info);
     static napi_value JsOn(napi_env env, napi_callback_info info);
     static napi_value JsOff(napi_env env, napi_callback_info info);
     static napi_value JsDelete(napi_env env, napi_callback_info info);
-
-    bool JudgeNotify(const INotifyCallback *target) override;
-    bool JudgeProgress(const IProgressCallback *target) override;
-    bool JudgeHeaderReceive(const IHeaderReceiveCallback *target) override;
 
     UploadTaskNapiV9 &operator=(std::shared_ptr<Upload::UploadTask> &&uploadTask);
     bool operator==(const std::shared_ptr<Upload::UploadTask> &uploadTask);
