@@ -43,7 +43,7 @@ enum UploadTaskState {
     STATE_SUCCESS,
     STATE_FAILURE,
 };
-
+class UploadTaskNapiV5;
 class UploadTask : public IUploadTask, public std::enable_shared_from_this<UploadTask> {
 public:
     UPLOAD_API UploadTask(std::shared_ptr<UploadConfig>& uploadConfig);
@@ -57,6 +57,7 @@ public:
 
     UPLOAD_API void SetCallback(Type type, void *callback);
     UPLOAD_API void SetContext(std::shared_ptr<OHOS::AbilityRuntime::Context> context);
+    UPLOAD_API void SetUploadProxy(std::shared_ptr<UploadTaskNapiV5> proxy);
     void OnProgress(curl_off_t ulnow) override;
     void OnHeaderReceive(const std::string &header) override;
 
@@ -87,6 +88,7 @@ private:
     INotifyCallback* completeCallback_;
 
     std::shared_ptr<CUrlAdp> curlAdp_;
+    std::shared_ptr<UploadTaskNapiV5> uploadProxy_;
     std::shared_ptr<OHOS::AbilityRuntime::Context> context_;
     int64_t uploadedSize_;
     int64_t totalSize_;

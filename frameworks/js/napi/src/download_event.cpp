@@ -18,8 +18,8 @@
 #include "download_base_notify.h"
 #include "download_manager.h"
 #include "download_task.h"
+#include "js_util.h"
 #include "log.h"
-#include "napi_utils.h"
 
 namespace OHOS::Request::Download {
 napi_value DownloadEvent::On(napi_env env, napi_callback_info info)
@@ -76,10 +76,9 @@ napi_value DownloadEvent::Off(napi_env env, napi_callback_info info)
 {
     DOWNLOAD_HILOGD("off Enter ---->");
     if (!DownloadManager::GetInstance()->CheckPermission()) {
-        DOWNLOAD_HILOGD("no permission to access download service");
+        DOWNLOAD_HILOGE("no permission to access download service");
         return nullptr;
     }
-    auto context = std::make_shared<EventOffContext>();
     napi_value result = nullptr;
     size_t argc = NapiUtils::MAX_ARGC;
     napi_value argv[NapiUtils::MAX_ARGC] = { nullptr };
@@ -90,39 +89,54 @@ napi_value DownloadEvent::Off(napi_env env, napi_callback_info info)
         DOWNLOAD_HILOGE("Wrong number of arguments, requires 1 or 2");
         return result;
     }
-
-    napi_valuetype valuetype;
+    napi_value callback = nullptr;
+    if (argc == NapiUtils::TWO_ARG) {
+        callback = argv[NapiUtils::SECOND_ARGV];
+    }
+    napi_valuetype valuetype = napi_null;
     NAPI_CALL(env, napi_typeof(env, argv[NapiUtils::FIRST_ARGV], &valuetype));
     NAPI_ASSERT(env, valuetype == napi_string, "type is not a string");
-    char event[NapiUtils::MAX_LEN] = { 0 };
-    size_t len = 0;
-    napi_get_value_string_utf8(env, argv[NapiUtils::FIRST_ARGV], event, NapiUtils::MAX_LEN, &len);
-    context->type_ = event;
-    DOWNLOAD_HILOGD("type : %{public}s", context->type_.c_str());
+    std::string eventType = UploadNapi::JSUtil::Convert2String(env, argv[NapiUtils::FIRST_ARGV]);
+    DOWNLOAD_HILOGD("eventType : %{public}s", eventType.c_str());
 
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        return napi_ok;
-    };
-    auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        DOWNLOAD_HILOGD("context->result = %{public}d", context->result);
-        return status;
-    };
-    auto exec = [context](AsyncCall::Context *ctx) {
-        if (context->task_ == nullptr || !context->task_->IsSupportType(context->type_)) {
-            DOWNLOAD_HILOGD("Event Off type : %{public}s not support", context->type_.c_str());
-            return;
+    DownloadTask *task = nullptr;
+    NAPI_CALL(env, napi_unwrap(env, thisVal, reinterpret_cast<void **>(&task)));
+    if (task == nullptr) {
+        DOWNLOAD_HILOGE("Unwrap DownloadTsk failed.");
+        return result;
+    }
+    if (!task->IsSupportType(eventType)) {
+        DOWNLOAD_HILOGE("Unkown event type.");
+        return result;
+    }
+    bool isSuccess = DownloadManager::GetInstance()->Off(task->GetId(), eventType);
+    if (isSuccess) {
+        task->RemoveListener(eventType);
+    }
+    if (callback == nullptr) {
+        return result;
+    }
+    napi_value params[NapiUtils::TWO_ARG] = { 0 };
+    GetCallbackParams(env, eventType, isSuccess, params);
+    napi_value returnValue = nullptr;
+    NAPI_CALL(env, napi_call_function(env, nullptr, callback, NapiUtils::TWO_ARG, params, &returnValue));
+    return result;
+}
+
+void DownloadEvent::GetCallbackParams(
+    napi_env env, const std::string &type, bool result, napi_value (&params)[NapiUtils::TWO_ARG])
+{
+    if (type == EVENT_PROGRESS || type == EVENT_FAIL) {
+        int ret = 0;
+        if (!result) {
+            ret = -1;
         }
-        context->result = DownloadManager::GetInstance()->Off(context->task_->GetId(), context->type_);
-        if (context->result == true) {
-            context->task_->RemoveListener(context->type_);
-            context->status = napi_ok;
+        DOWNLOAD_HILOGD("ret is:%{public}d", ret);
+        params[NapiUtils::FIRST_ARGV] = NapiUtils::CreateInt32(env, ret);
+        if (type == EVENT_PROGRESS) {
+            params[NapiUtils::SECOND_ARGV] = NapiUtils::CreateInt32(env, ret);
         }
-    };
-    context->SetAction(std::move(input), std::move(output));
-    AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context), context->type_,
-        NapiUtils::SECOND_ARGV);
-    return asyncCall.Call(env, exec);
+    }
 }
 
 uint32_t DownloadEvent::GetParamNumber(const std::string &type)
