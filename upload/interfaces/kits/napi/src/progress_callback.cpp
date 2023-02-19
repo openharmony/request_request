@@ -80,7 +80,7 @@ void UvOnProgress(uv_work_t *work, int status)
     calStatus = napi_call_function(progressWorker->observer->GetEnv(), global, callback, TWO_ARG, args, &result);
     if (calStatus != napi_ok) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
-            "Progress callback failed calStatus:%{public}d callback:%{public}p", calStatus, callback);
+            "Progress callback failed calStatus:%{public}d", calStatus);
     }
     napi_close_handle_scope(progressWorker->observer->GetEnv(), scope);
 }
