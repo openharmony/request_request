@@ -433,7 +433,6 @@ napi_status UploadTaskNapi::GetContext(napi_env env, napi_value *argv, int& para
 
 void UploadTaskNapi::OnSystemSuccess(napi_env env, napi_ref ref, Upload::UploadResponse &response)
 {
-    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OnSystemSuccess enter");
     uv_loop_s *loop_ = nullptr;
     napi_get_uv_event_loop(env, &loop_);
     if (loop_ == nullptr) {
@@ -442,12 +441,12 @@ void UploadTaskNapi::OnSystemSuccess(napi_env env, napi_ref ref, Upload::UploadR
     }
     uv_work_t *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create uv work");
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create uv work");
         return;
     }
-    SystemSuccessCallback *successCallback = new (std::nothrow)SystemSuccessCallback;
+    SystemSuccessCallback *successCallback = new (std::nothrow)SystemSuccessCallback();
     if (successCallback == nullptr) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create successCallback");
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create successCallback");
         delete work;
         return;
     }
@@ -486,26 +485,29 @@ void UploadTaskNapi::OnSystemSuccess(napi_env env, napi_ref ref, Upload::UploadR
 
 void UploadTaskNapi::OnSystemFail(napi_env env, napi_ref ref, std::string &data, int32_t &code)
 {
-    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OnSystemFail enter");
     uv_loop_s *loop_ = nullptr;
     napi_get_uv_event_loop(env, &loop_);
     if (loop_ == nullptr) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to get uv event loop");
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to get uv event loop");
         return;
     }
     uv_work_t *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create uv work");
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create uv work");
         return;
     }
-    SystemFailCallback *failCallback = new (std::nothrow) SystemFailCallback;
+    SystemFailCallback *failCallback = new (std::nothrow) SystemFailCallback();
+    if (failCallback == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create fail callback");
+        delete work;
+        return;
+    }
     failCallback->data = data;
     failCallback->code = code;
     failCallback->env = env;
     failCallback->ref = ref;
     work->data = (void *)failCallback;
-    int ret = uv_queue_work(loop_, work, [](uv_work_t *work) {},
-        [](uv_work_t *work, int status) {
+    int ret = uv_queue_work(loop_, work, [](uv_work_t *work) {}, [](uv_work_t *work, int status) {
             SystemFailCallback *failCallback = reinterpret_cast<SystemFailCallback *>(work->data);
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(failCallback->env, &scope);
@@ -539,15 +541,20 @@ void UploadTaskNapi::OnSystemComplete(napi_env env, napi_ref ref)
     uv_loop_s *loop_ = nullptr;
     napi_get_uv_event_loop(env, &loop_);
     if (loop_ == nullptr) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to get uv event loop");
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to get uv event loop");
         return;
     }
     uv_work_t *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Failed to create uv work");
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create uv work");
         return;
     }
-    SystemCompleteCallback *completeCallback = new (std::nothrow)SystemCompleteCallback;
+    SystemCompleteCallback *completeCallback = new (std::nothrow)SystemCompleteCallback();
+    if (completeCallback == nullptr) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create complete lcallback");
+        delete work;
+        return;
+    }
     completeCallback->env = env;
     completeCallback->ref = ref;
     work->data = (void *)completeCallback;
