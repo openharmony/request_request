@@ -18,8 +18,9 @@
 #include <cstddef>
 #include <curl/curl.h>
 #include <pthread.h>
+#include "log.h"
 
-static pthread_mutex_t *lockarray;
+static pthread_mutex_t *lockArray = nullptr;
 
 #ifdef USE_OPENSSL
 #include <openssl/crypto.h>
@@ -29,9 +30,9 @@ static void LockCallback(int mode, int type, char *file, int line)
     (void)file;
     (void)line;
     if (mode & CRYPTO_LOCK) {
-        pthread_mutex_lock(&(lockarray[type]));
+        pthread_mutex_lock(&(lockArray[type]));
     } else {
-        pthread_mutex_unlock(&(lockarray[type]));
+        pthread_mutex_unlock(&(lockArray[type]));
     }
 }
 
@@ -49,9 +50,13 @@ static void InitLocks(void)
     LOCK_CALLBACK lockCallback;
     threadIdCallback = ThreadIdCallback;
     lockCallback = LockCallback;
-    lockarray = (pthread_mutex_t *)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t));
+    lockArray = (pthread_mutex_t *)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t));
+    if (lockArray == nullptr) {
+        DOWNLOAD_HILOGE("failed to create openssl lock");
+        return;
+    }
     for (int i = 0; i < CRYPTO_num_locks(); i++) {
-        pthread_mutex_init(&(lockarray[i]), NULL);
+        pthread_mutex_init(&(lockArray[i]), NULL);
     }
     CRYPTO_set_id_callback(threadIdCallback);
     CRYPTO_set_locking_callback(lockCallback);
@@ -62,9 +67,9 @@ static void KillLocks(void)
     int i;
     CRYPTO_set_locking_callback(NULL);
     for (i = 0; i < CRYPTO_num_locks(); i++) {
-        pthread_mutex_destroy(&(lockarray[i]));
+        pthread_mutex_destroy(&(lockArray[i]));
     }
-    OPENSSL_free(lockarray);
+    OPENSSL_free(lockArray);
 }
 #endif
 
