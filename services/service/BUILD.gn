@@ -84,6 +84,8 @@ ohos_shared_library("download_server") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  shlib_type = "sa"
   subsystem_name = "request"
   part_name = "request"
 }
