@@ -51,20 +51,20 @@ bool NetworkAdapter::RegOnNetworkChange(RegCallBack &&callback)
     sptr<NetSpecifier> specifier = new (std::nothrow) NetSpecifier(netSpecifier);
     if (specifier == nullptr) {
         DOWNLOAD_HILOGE("new operator error.specifier is nullptr");
-        return NET_CONN_ERR_INPUT_NULL_PTR;
+        return false;
     }
     sptr<NetConnCallbackObserver> observer = new (std::nothrow) NetConnCallbackObserver(*this);
     if (observer == nullptr) {
         DOWNLOAD_HILOGE("new operator error.observer is nullptr");
-        return NET_CONN_ERR_INPUT_NULL_PTR;
+        return false;
     }
     int nRet = DelayedSingleton<NetConnClient>::GetInstance()->RegisterNetConnCallback(specifier, observer, 0);
     if (nRet == NETMANAGER_SUCCESS) {
         callback_ = callback;
+        return true;
     }
-
-    DOWNLOAD_HILOGD("RegisterNetConnCallback retcode= %{public}d", nRet);
-    return nRet;
+    DOWNLOAD_HILOGE("Failed to register the callback retcode= %{public}d", nRet);
+    return false;
 }
 
 bool NetworkAdapter::IsOnline()
