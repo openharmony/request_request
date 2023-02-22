@@ -20,6 +20,7 @@
 #include "upload_task.h"
 #include "napi_base_context.h"
 #include "napi_data_ability_operation.h"
+#include "upload_task_napiV5.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Request::Upload;
@@ -40,6 +41,12 @@ std::map<std::string, UploadTaskNapi::Exec> UploadTaskNapi::offTypeHandlers_ = {
 napi_value UploadTaskNapi::JsUpload(napi_env env, napi_callback_info info)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Enter JsUpload.");
+
+    std::shared_ptr<UploadTaskNapiV5> proxy = std::make_shared<UploadTaskNapiV5>(env);
+    if (proxy->ParseCallback(env, info)) {
+        return proxy->JsUpload(env, info);
+    }
+    proxy->SetEnv(nullptr);
     struct ContextInfo {
         napi_ref ref = nullptr;
     };
@@ -305,16 +312,6 @@ bool UploadTaskNapi::operator==(const std::shared_ptr<Upload::UploadTask> &uploa
     return napiUploadTask_ == uploadTask;
 }
 
-void AddCallbackToConfig(const std::shared_ptr<UploadConfig> &config, napi_env env, napi_value jsConfig,
-    UploadTaskNapi *proxy)
-{
-    config->fsuccess = std::bind(&UploadTaskNapi::OnSystemSuccess, proxy->env_, proxy->success_,
-        std::placeholders::_1);
-    config->ffail = std::bind(&UploadTaskNapi::OnSystemFail, proxy->env_, proxy->fail_,
-        std::placeholders::_1, std::placeholders::_2);
-    config->fcomplete = std::bind(&UploadTaskNapi::OnSystemComplete, proxy->env_, proxy->complete_);
-}
-
 napi_value UploadTaskNapi::GetCtor(napi_env env)
 {
     napi_value cons = nullptr;
@@ -333,7 +330,6 @@ napi_value UploadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "constructor upload task!");
     napi_value self = nullptr;
     size_t argc = JSUtil::MAX_ARGC;
-    int parametersPosition = 0;
     napi_value argv[JSUtil::MAX_ARGC] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
     auto *proxy = new (std::nothrow) UploadTaskNapi();
@@ -342,27 +338,24 @@ napi_value UploadTaskNapi::Initialize(napi_env env, napi_callback_info info)
         NAPI_ASSERT(env, false, "Failed to create UploadTaskNapi");
         return nullptr;
     }
-    proxy->env_ = env;
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
-    napi_status getStatus = GetContext(env, &argv[0], parametersPosition, context);
+    int paramPosition = 0;
+    napi_status getStatus = GetContext(env, &argv[0], paramPosition, context);
     if (getStatus != napi_ok) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Initialize. GetContext fail.");
         delete proxy;
         NAPI_ASSERT(env, false, "Initialize. GetContext fail");
         return nullptr;
     }
-    std::string version;
-    SetVersion(env, argv[parametersPosition], proxy, version);
-    proxy->napiUploadConfig_ = JSUtil::ParseUploadConfig(env, argv[parametersPosition], version);
+
+    proxy->napiUploadConfig_ = JSUtil::ParseUploadConfig(env, argv[paramPosition], "");
     if (proxy->napiUploadConfig_ == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Initialize. ParseUploadConfig fail.");
         delete proxy;
         NAPI_ASSERT(env, false, "Initialize. ParseUploadConfig fail");
         return nullptr;
     }
-    if (proxy->napiUploadConfig_->protocolVersion == API5) {
-        AddCallbackToConfig(proxy->napiUploadConfig_, env, argv[parametersPosition], proxy);
-    }
+
     proxy->napiUploadTask_ = std::make_shared<Upload::UploadTask>(proxy->napiUploadConfig_);
     proxy->napiUploadTask_->SetContext(context);
     proxy->napiUploadTask_->ExecuteTask();
@@ -382,17 +375,7 @@ napi_value UploadTaskNapi::Initialize(napi_env env, napi_callback_info info)
     return self;
 }
 
-void UploadTaskNapi::SetVersion(napi_env env, napi_value jsConfig, UploadTaskNapi *proxy, std::string &version)
-{
-    if ((JSUtil::ParseFunction(env, jsConfig, "success", proxy->success_)) ||
-        (JSUtil::ParseFunction(env, jsConfig, "fail", proxy->fail_)) ||
-        (JSUtil::ParseFunction(env, jsConfig, "complete", proxy->complete_))) {
-        version = API5;
-        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "config.protocolVersion = API5");
-    }
-}
-
-napi_status UploadTaskNapi::GetContext(napi_env env, napi_value *argv, int& parametersPosition,
+napi_status UploadTaskNapi::GetContext(napi_env env, napi_value *argv, int& paramPosition,
     std::shared_ptr<OHOS::AbilityRuntime::Context>& context)
 {
     bool stageMode = false;
@@ -407,7 +390,7 @@ napi_status UploadTaskNapi::GetContext(napi_env env, napi_value *argv, int& para
         context = ability->GetAbilityContext();
     } else {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "GetAndSetContext. API9");
-        parametersPosition = 1;
+        paramPosition = 1;
         if (stageMode) {
             context = OHOS::AbilityRuntime::GetStageModeContext(env, argv[0]);
             if (context == nullptr) {
@@ -430,183 +413,5 @@ napi_status UploadTaskNapi::GetContext(napi_env env, napi_value *argv, int& para
     }
     return napi_ok;
 }
-
-void UploadTaskNapi::OnSystemSuccess(napi_env env, napi_ref ref, Upload::UploadResponse &response)
-{
-    uv_loop_s *loop_ = nullptr;
-    napi_get_uv_event_loop(env, &loop_);
-    if (loop_ == nullptr) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to get uv event loop");
-        return;
-    }
-    uv_work_t *work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create uv work");
-        return;
-    }
-    SystemSuccessCallback *successCallback = new (std::nothrow)SystemSuccessCallback();
-    if (successCallback == nullptr) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create successCallback");
-        delete work;
-        return;
-    }
-    successCallback->env = env;
-    successCallback->ref = ref;
-    successCallback->response = response;
-    work->data = (void *)successCallback;
-    int ret = uv_queue_work(loop_, work,
-        [](uv_work_t *work) {},
-        [](uv_work_t *work, int status) {
-            SystemSuccessCallback *successCallback = reinterpret_cast<SystemSuccessCallback *>(work->data);
-            napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(successCallback->env, &scope);
-            napi_value callback = nullptr;
-            napi_value global = nullptr;
-            napi_value result = nullptr;
-            napi_value jsResponse = JSUtil::Convert2JSUploadResponse(successCallback->env, successCallback->response);
-            napi_value args[1] = { jsResponse };
-            napi_get_reference_value(successCallback->env, successCallback->ref, &callback);
-            napi_get_global(successCallback->env, &global);
-            napi_call_function(successCallback->env, global, callback, 1, args, &result);
-            napi_delete_reference(successCallback->env, successCallback->ref);
-            napi_close_handle_scope(successCallback->env, scope);
-            delete successCallback;
-            successCallback = nullptr;
-            delete work;
-            work = nullptr;
-        });
-    if (ret != 0) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "OnSystemSuccess. uv_queue_work Failed");
-        delete successCallback;
-        delete work;
-    }
-    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OnSystemSuccess end");
-}
-
-void UploadTaskNapi::OnSystemFail(napi_env env, napi_ref ref, std::string &data, int32_t &code)
-{
-    uv_loop_s *loop_ = nullptr;
-    napi_get_uv_event_loop(env, &loop_);
-    if (loop_ == nullptr) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to get uv event loop");
-        return;
-    }
-    uv_work_t *work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create uv work");
-        return;
-    }
-    SystemFailCallback *failCallback = new (std::nothrow) SystemFailCallback();
-    if (failCallback == nullptr) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create fail callback");
-        delete work;
-        return;
-    }
-    failCallback->data = data;
-    failCallback->code = code;
-    failCallback->env = env;
-    failCallback->ref = ref;
-    work->data = (void *)failCallback;
-    int ret = uv_queue_work(loop_, work, [](uv_work_t *work) {}, [](uv_work_t *work, int status) {
-            SystemFailCallback *failCallback = reinterpret_cast<SystemFailCallback *>(work->data);
-            napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(failCallback->env, &scope);
-            napi_value callback = nullptr;
-            napi_value global = nullptr;
-            napi_value result = nullptr;
-            napi_value jsData = nullptr;
-            napi_create_string_utf8(failCallback->env, failCallback->data.c_str(), failCallback->data.size(), &jsData);
-            napi_value jsCode = nullptr;
-            napi_create_int32(failCallback->env, failCallback->code, &jsCode);
-            napi_value args[2] = { jsData, jsCode };
-            napi_get_reference_value(failCallback->env, failCallback->ref, &callback);
-            napi_get_global(failCallback->env, &global);
-            napi_call_function(failCallback->env, global, callback, sizeof(args) / sizeof(args[0]), args, &result);
-            napi_delete_reference(failCallback->env, failCallback->ref);
-            napi_close_handle_scope(failCallback->env, scope);
-            delete failCallback;
-            failCallback = nullptr;
-            delete work;
-            work = nullptr;
-        });
-    if (ret != 0) {
-        delete failCallback;
-        delete work;
-    }
-}
-
-void UploadTaskNapi::OnSystemComplete(napi_env env, napi_ref ref)
-{
-    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OnSystemComplete enter");
-    uv_loop_s *loop_ = nullptr;
-    napi_get_uv_event_loop(env, &loop_);
-    if (loop_ == nullptr) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to get uv event loop");
-        return;
-    }
-    uv_work_t *work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create uv work");
-        return;
-    }
-    SystemCompleteCallback *completeCallback = new (std::nothrow)SystemCompleteCallback();
-    if (completeCallback == nullptr) {
-        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create complete lcallback");
-        delete work;
-        return;
-    }
-    completeCallback->env = env;
-    completeCallback->ref = ref;
-    work->data = (void *)completeCallback;
-    int ret = uv_queue_work(loop_, work,
-        [](uv_work_t *work) {},
-        [](uv_work_t *work, int status) {
-            SystemCompleteCallback *completeCallback = reinterpret_cast<SystemCompleteCallback *>(work->data);
-            napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(completeCallback->env, &scope);
-            napi_value callback = nullptr;
-            napi_value global = nullptr;
-            napi_value result = nullptr;
-
-            napi_get_reference_value(completeCallback->env, completeCallback->ref, &callback);
-            napi_get_global(completeCallback->env, &global);
-            napi_call_function(completeCallback->env, global, callback, 0, nullptr, &result);
-            napi_delete_reference(completeCallback->env, completeCallback->ref);
-            napi_close_handle_scope(completeCallback->env, scope);
-            delete completeCallback;
-            completeCallback = nullptr;
-            delete work;
-            work = nullptr;
-        });
-    if (ret != 0) {
-        delete completeCallback;
-        delete work;
-    }
-    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "OnSystemComplete end");
-}
-
-bool UploadTaskNapi::JudgeNotify(const INotifyCallback *target)
-{
-    if ((this->onFail_ != nullptr && this->onFail_.get() == target) ||
-       (this->onComplete_ != nullptr && this->onComplete_.get() == target)) {
-        return true;
-    }
-    return false;
-}
-
-bool UploadTaskNapi::JudgeProgress(const IProgressCallback *target)
-{
-    if ((this->onProgress_ != nullptr && this->onProgress_.get() == target)) {
-        return true;
-    }
-    return false;
-}
-
-bool UploadTaskNapi::JudgeHeaderReceive(const IHeaderReceiveCallback *target)
-{
-    if ((this->onHeaderReceive_ != nullptr && this->onHeaderReceive_.get() == target)) {
-        return true;
-    }
-    return false;
-}
 } // namespace OHOS::Request::UploadNapi
+

@@ -95,6 +95,7 @@ napi_value AsyncCall::SyncCall(napi_env env, AsyncCall::Context::ExecAction exec
     }
     AsyncCall::OnExecute(env, context_);
     AsyncCall::OnComplete(env, napi_ok, context_);
+    context_ = nullptr;
     return promise;
 }
 
@@ -136,7 +137,6 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         napi_value callback = nullptr;
         napi_get_reference_value(env, context->callback, &callback);
         napi_value returnValue;
-        GetOffCallbackParameter(env, context->type, result);
         NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback, ARG_BUTT, result, &returnValue));
     }
     DeleteContext(env, context);
@@ -150,30 +150,5 @@ void AsyncCall::DeleteContext(napi_env env, AsyncContext *context)
         napi_delete_async_work(env, context->work);
     }
     delete context;
-}
-
-void AsyncCall::GetOffCallbackParameter(napi_env env, const std::string &type, napi_value (&result)[ARG_BUTT])
-{
-    DOWNLOAD_HILOGD("type:%{public}s", type.c_str());
-    if (type == EVENT_PROGRESS || type == EVENT_FAIL) {
-        napi_valuetype valueType = napi_undefined;
-        int ret = 0;
-        napi_typeof(env, result[ARG_DATA], &valueType);
-        if (valueType == napi_boolean) {
-            bool status;
-            NAPI_CALL_RETURN_VOID(env, napi_get_value_bool(env, result[ARG_DATA], &status));
-
-            if (status == false) {
-                ret = -1;
-            }
-        } else {
-            ret = -1;
-        }
-        DOWNLOAD_HILOGD("ret:%{public}d", ret);
-        result[ARG_ERROR] = NapiUtils::CreateInt32(env, ret);
-        if (type == "progress") {
-            result[ARG_DATA] = NapiUtils::CreateInt32(env, ret);
-        }
-    }
 }
 } // namespace OHOS::Request::Download
