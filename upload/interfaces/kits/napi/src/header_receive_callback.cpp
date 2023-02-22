@@ -77,7 +77,7 @@ void UvOnHeaderReceive(uv_work_t *work, int status)
     callStatus = napi_call_function(headerReceiveWorker->observer->GetEnv(), global, callback, 1, args, &result);
     if (callStatus != napi_ok) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI,
-            "HeaderReceive callback failed callStatus:%{public}d callback:%{public}p", callStatus, callback);
+            "HeaderReceive callback failed callStatus:%{public}d", callStatus);
     }
     napi_close_handle_scope(headerReceiveWorker->observer->GetEnv(), scope);
 }
