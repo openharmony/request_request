@@ -36,19 +36,7 @@ uint32_t MockObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri, u
     std::shared_ptr<DataAbilityHelper> dataAbilityHelper = DataAbilityHelper::Creator(context, uri);
 
     do {
-        // dataAbilityHelper->OpenFile unavailble, dummyStart
-        int fd = -1;
-        FILE *fp = fopen("/data/Dataability/file.txt", "r");
-        if (fp == nullptr) {
-            return -1;
-        }
-        fd = fileno(fp);
-        if (fd == -1) {
-            break;
-        }
-        // dummyEnd
-
-        filePtr = fdopen(fd, "r");
+        filePtr = fopen("/data/Dataability/file.txt", "r");
         if (filePtr == nullptr) {
             break;
         }
