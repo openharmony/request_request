@@ -90,20 +90,9 @@ bool DownloadServiceManager::Create(uint32_t threadNum)
         threadList_[i]->Start();
     }
 
-    std::thread th = std::thread([this]() {
-        constexpr int RETRY_MAX_TIMES = 100;
-        int retryCount = 0;
-        constexpr int RETRY_TIME_INTERVAL_MILLISECOND = 1 * 1000 * 1000; // retry after 1 second
-        do {
-            if (this->MonitorNetwork() == NETMANAGER_SUCCESS) {
-                break;
-            }
-            retryCount++;
-            usleep(RETRY_TIME_INTERVAL_MILLISECOND);
-        } while (retryCount < RETRY_MAX_TIMES);
-        DOWNLOAD_HILOGD("RegisterNetConnCallback retryCount= %{public}d", retryCount);
-    });
-    th.detach();
+    if (!MonitorNetwork()) {
+        DOWNLOAD_HILOGE("network management SA does not exist");
+    }
 
     MonitorAppState();
     initialized_ = true;
@@ -414,14 +403,12 @@ void DownloadServiceManager::ResumeTaskByNetwork()
     DOWNLOAD_HILOGD("[%{public}d] task has been resumed by network status changed", taskCount);
 }
 
-int32_t DownloadServiceManager::MonitorNetwork()
+bool DownloadServiceManager::MonitorNetwork()
 {
-    int nRet = NetworkAdapter::GetInstance().RegOnNetworkChange([this]() {
+    return NetworkAdapter::GetInstance().RegOnNetworkChange([this]() {
         this->ResumeTaskByNetwork();
         this->UpdateNetworkType();
     });
-    DOWNLOAD_HILOGD("RegisterNetConnCallback retcode= %{public}d", nRet);
-    return nRet;
 }
 
 void DownloadServiceManager::UpdateNetworkType()
