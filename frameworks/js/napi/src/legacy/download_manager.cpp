@@ -52,12 +52,21 @@ void DownloadManager::CallFunctionAsync(napi_env env, napi_ref func, const ArgsG
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env, &loop);
-
+    if (loop == nullptr) {
+        DOWNLOAD_HILOGE("Failed to get uv event loop");
+        return;
+    }
     auto *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
+        DOWNLOAD_HILOGE("Failed to create uv work");
         return;
     }
     auto *data = new (std::nothrow) CallFunctionData;
+    if (data == nullptr) {
+        DOWNLOAD_HILOGE("Failed to create CallFunctionData");
+        delete work;
+        return;
+    }
     data->env_ = env;
     data->func_ = func;
     data->generator_ = generator;
