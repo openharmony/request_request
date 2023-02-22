@@ -17,10 +17,10 @@
 #define DOWNLOAD_EVENT_H
 
 #include <string>
-#include "napi/native_api.h"
-#include "noncopyable.h"
 #include "download_task.h"
-#include "download/async_call.h"
+#include "napi/native_api.h"
+#include "napi_utils.h"
+#include "noncopyable.h"
 
 namespace OHOS::Request::Download {
 class DownloadEvent final {
@@ -33,35 +33,11 @@ public:
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);
     static uint32_t GetParamNumber(const std::string &type);
-	
-private:
-	static sptr<DownloadNotifyInterface> CreateNotify(napi_env env, const std::string &type, napi_ref callbackRef);
 
 private:
-    struct EventOffContext : public AsyncCall::Context {
-        DownloadTask *task_ = nullptr;
-        std::string type_ = "";
-        bool result = false;
-        napi_status status = napi_generic_failure;
-        EventOffContext() : Context(nullptr, nullptr) {};
-        EventOffContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
-        virtual ~EventOffContext() {};
-
-        napi_status operator()(napi_env env, size_t argc, napi_value *argv, napi_value self) override
-        {
-            NAPI_ASSERT_BASE(env, self != nullptr, "self is nullptr", napi_invalid_arg);
-            NAPI_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&task_)), napi_invalid_arg);
-            NAPI_ASSERT_BASE(env, task_ != nullptr, "there is no native task", napi_invalid_arg);
-            return Context::operator()(env, argc, argv, self);
-        }
-        napi_status operator()(napi_env env, napi_value *result) override
-        {
-            if (status != napi_ok) {
-                return status;
-            }
-            return Context::operator()(env, result);
-        }
-    };
+    static sptr<DownloadNotifyInterface> CreateNotify(napi_env env, const std::string &type, napi_ref callbackRef);
+    static void GetCallbackParams(
+        napi_env env, const std::string &type, bool result, napi_value (&params)[NapiUtils::TWO_ARG]);
 };
 } // namespace OHOS::Request::Download
 

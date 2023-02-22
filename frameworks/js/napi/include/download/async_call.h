@@ -101,7 +101,6 @@ private:
         std::string type;
     };
     static void DeleteContext(napi_env env, AsyncContext *context);
-    static void GetOffCallbackParameter(napi_env env, const std::string &type, napi_value (&result)[ARG_BUTT]);
     AsyncContext *context_ = nullptr;
     napi_env env_ = nullptr;
 };

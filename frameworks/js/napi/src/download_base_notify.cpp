@@ -31,7 +31,7 @@ DownloadBaseNotify::DownloadBaseNotify(napi_env env, uint32_t paramNumber, napi_
 
 DownloadBaseNotify::~DownloadBaseNotify()
 {
-    DOWNLOAD_HILOGD("~DownloadBaseNotify()");
+    DOWNLOAD_HILOGI("~DownloadBaseNotify()");
     if (notifyData_ != nullptr) {
         uv_loop_s *loop = nullptr;
         napi_get_uv_event_loop(notifyData_->env, &loop);

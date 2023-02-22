@@ -60,7 +60,9 @@ ohos_shared_library("request") {
     "src/request_module.cpp",
     "src/upload/async_call.cpp",
     "src/upload_task_napi.cpp",
+    "src/upload_task_napiV5.cpp",
     "src/upload_task_napiV9.cpp",
+    "src/uv_queue.cpp",
   ]
 
   deps = [
