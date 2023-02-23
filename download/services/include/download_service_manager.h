@@ -72,7 +72,7 @@ private:
     void MoveTaskToQueue(uint32_t taskId, std::shared_ptr<DownloadServiceTask> task);
     void PushQueue(std::queue<uint32_t> &queue, uint32_t taskId);
     void RemoveFromQueue(std::queue<uint32_t> &queue, uint32_t taskId);
-    int32_t MonitorNetwork();
+    bool MonitorNetwork();
     void UpdateNetworkType();
     void MonitorAppState();
     void UpdateAppState(const std::string bundleName, int32_t uid, int32_t state);
