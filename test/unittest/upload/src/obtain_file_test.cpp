@@ -123,6 +123,7 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest002, TestSize.Level0)
     EXPECT_NE(file, nullptr);
     EXPECT_EQ(fileSize, testFileInfo.size() + 1);
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest002***out**********");
+    close(fd);
     fclose(file);
     system(deleteCacheFileCommend.c_str());
 }
