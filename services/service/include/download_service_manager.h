@@ -79,6 +79,10 @@ private:
     bool IsSameApplication(const std::string &sName, int32_t sUid, const std::string &dName, int32_t dUid);
     bool IsBackgroundOrTerminated(int32_t state);
     bool IsForeground(int32_t state);
+    void DownloadServiceManager::WaittingForQuitSa()
+    void DownloadServiceManager::WaittingTime()
+    void DownloadServiceManager::QuitSystemAbility()
+    bool DownloadServiceManager::IsSaQuit()
 private:
     bool initialized_;
     std::recursive_mutex mutex_;
@@ -91,6 +95,10 @@ private:
     uint32_t interval_;
     uint32_t threadNum_;
     uint32_t timeoutRetry_;
+    std::thread timeThreadHandler_;
+    bool waittingFlag_ = false;
+    std::mutex waittingLock_;
+    bool isSaQuitFlag_ = false;
 
     uint32_t taskId_;
     static std::mutex instanceLock_;

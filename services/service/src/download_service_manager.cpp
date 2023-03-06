@@ -34,6 +34,8 @@
 #include "net_conn_constants.h"
 #include "network_adapter.h"
 #include "unistd.h"
+#include "system_ability_definition.h"
+#include "iservice_registry.h"
 
 static constexpr uint32_t THREAD_POOL_NUM = 4;
 static constexpr uint32_t TASK_SLEEP_INTERVAL = 1;
@@ -168,6 +170,7 @@ bool DownloadServiceManager::ProcessTask()
         }
         bool result = task->Run();
         MoveTaskToQueue(taskId, task);
+        WaittingForQuitSa();
         return result;
     };
     return execTask(pickupTask());
@@ -227,12 +230,14 @@ bool DownloadServiceManager::Remove(uint32_t taskId)
         taskMap_.erase(it);
         RemoveFromQueue(pendingQueue_, taskId);
         RemoveFromQueue(pausedQueue_, taskId);
+        WaittingForQuitSa();
     }
     return result;
 }
 
 bool DownloadServiceManager::Query(uint32_t taskId, DownloadInfo &info)
 {
+    WaittingForQuitSa();
     if (!initialized_) {
         return false;
     }
@@ -246,6 +251,7 @@ bool DownloadServiceManager::Query(uint32_t taskId, DownloadInfo &info)
 
 bool DownloadServiceManager::QueryMimeType(uint32_t taskId, std::string &mimeType)
 {
+    WaittingForQuitSa();
     if (!initialized_) {
         return false;
     }
@@ -486,6 +492,75 @@ bool DownloadServiceManager::QueryAllTask(std::vector<DownloadInfo> &taskVector)
         it.second->Query(downloadInfo);
         taskVector.push_back(downloadInfo);
     }
+    WaittingForQuitSa();
     return true;
+}
+
+bool DownloadServiceManager::IsSaQuit()
+{
+    DOWNLOAD_HILOGI("pendingQueue_.size() ===== %{public}d", static_cast<int32_t>(pendingQueue_.size()));
+    DOWNLOAD_HILOGI("pausedQueue_.size()  ===== %{public}d", static_cast<int32_t>(pausedQueue_.size()));
+    if (!pendingQueue_.empty() || !pausedQueue_.empty()) {
+        DOWNLOAD_HILOGD("pendingQueue_ or pausedQueue_ is not empty!");
+        return false;
+    }
+    for (const auto &iter : taskMap_) {
+        DownloadStatus status;
+        ErrorCode code;
+        PausedReason reason;
+        iter.second->GetRunResult(status, code, reason);
+        if (status == DownloadStatus::SESSION_RUNNING) {
+            DOWNLOAD_HILOGD("taskMap_ has running task!");
+            return false;
+        }
+    }
+    return true;
+}
+
+void DownloadServiceManager::QuitSystemAbility()
+{
+    auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (sm == nullptr) {
+        DOWNLOAD_HILOGE("Check return null");
+        return;
+    }
+    int32_t result = saManager->UnloadSystemAbility(DOWNLOAD_SERVICE_ID);
+    if (result != ERR_OK) {
+        DOWNLOAD_HILOGE("UnloadSystemAbility %{public}d failed, result: %{public}d", DOWNLOAD_SERVICE_ID, result);
+        return;
+    }
+    DOWNLOAD_HILOGE("QuitSystemAbility finish");
+}
+
+void DownloadServiceManager::WaittingTime()
+{
+    DOWNLOAD_HILOGD("Check return null");
+    waittingFlag_ = true;
+    std::this_thread::sleep_for(std::chrono::seconds(10));
+    std::this_thread::yield();
+    if (IsSaQuit()) {
+        isSaQuitFlag_ = true;
+        DOWNLOAD_HILOGD("Quit System Ability");
+        QuitSystemAbility();
+    }
+    waittingFlag_ = false;
+}
+
+void DownloadServiceManager::WaittingForQuitSa()
+{
+    if (waittingFlag_) 
+    {
+        return;
+    }
+    std::lock_guard<std::mutex> lock(waittingLock_);
+    if (waittingFlag_) 
+    {
+        return;
+    }
+    if (IsSaQuit()) {
+        DOWNLOAD_HILOGI("Waitting 10s for Sa to exit");
+        timeThreadHandler_ = std::thread([this] { WaittingTime();});
+        timeThreadHandler_.detach();
+    }
 }
 } // namespace OHOS::Request::Download
