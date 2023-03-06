@@ -66,6 +66,7 @@ ohos_unittest("upload_UT_test") {
   ]
 
   deps = [
+    "${request_path}/common:request_common_static",
     "${request_path}/frameworks/native/upload:upload_lib",
     "//third_party/curl:curl_shared",
   ]
