@@ -79,10 +79,10 @@ private:
     bool IsSameApplication(const std::string &sName, int32_t sUid, const std::string &dName, int32_t dUid);
     bool IsBackgroundOrTerminated(int32_t state);
     bool IsForeground(int32_t state);
-    void DownloadServiceManager::WaittingForQuitSa()
-    void DownloadServiceManager::WaittingTime()
-    void DownloadServiceManager::QuitSystemAbility()
-    bool DownloadServiceManager::IsSaQuit()
+    void WaittingForQuitSa();
+    void WaittingTime();
+    int32_t QuitSystemAbility();
+    bool IsSaQuit();
 private:
     bool initialized_;
     std::recursive_mutex mutex_;

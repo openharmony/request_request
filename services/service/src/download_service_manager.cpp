@@ -518,19 +518,20 @@ bool DownloadServiceManager::IsSaQuit()
     return true;
 }
 
-void DownloadServiceManager::QuitSystemAbility()
+int32_t DownloadServiceManager::QuitSystemAbility()
 {
     auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (sm == nullptr) {
+    if (saManager == nullptr) {
         DOWNLOAD_HILOGE("Check return null");
-        return;
+        return -1;
     }
     int32_t result = saManager->UnloadSystemAbility(DOWNLOAD_SERVICE_ID);
     if (result != ERR_OK) {
         DOWNLOAD_HILOGE("UnloadSystemAbility %{public}d failed, result: %{public}d", DOWNLOAD_SERVICE_ID, result);
-        return;
+        return result;
     }
     DOWNLOAD_HILOGE("QuitSystemAbility finish");
+    return ERR_OK;
 }
 
 void DownloadServiceManager::WaittingTime()
@@ -542,7 +543,10 @@ void DownloadServiceManager::WaittingTime()
     if (IsSaQuit()) {
         isSaQuitFlag_ = true;
         DOWNLOAD_HILOGD("Quit System Ability");
-        QuitSystemAbility();
+        int32_t ret = QuitSystemAbility();
+        if (ret != ERR_OK) {
+            DOWNLOAD_HILOGE("QuitSystemAbility failed! ret = %{public}d", ret);
+        }
     }
     waittingFlag_ = false;
 }
