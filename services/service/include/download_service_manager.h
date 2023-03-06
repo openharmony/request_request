@@ -99,6 +99,7 @@ private:
     bool waittingFlag_ = false;
     std::mutex waittingLock_;
     bool isSaQuitFlag_ = false;
+    static constexpr int32_t WAITTING_TIME = 10;
 
     uint32_t taskId_;
     static std::mutex instanceLock_;

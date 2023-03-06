@@ -15,6 +15,8 @@
 
 #include "download_service_manager.h"
 
+#include <pthread.h>
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -25,17 +27,16 @@
 #include <new>
 #include <queue>
 #include <thread>
-#include <pthread.h>
 #include <utility>
 
 #include "application_state_observer.h"
+#include "iservice_registry.h"
 #include "log.h"
 #include "net_all_capabilities.h"
 #include "net_conn_constants.h"
 #include "network_adapter.h"
-#include "unistd.h"
 #include "system_ability_definition.h"
-#include "iservice_registry.h"
+#include "unistd.h"
 
 static constexpr uint32_t THREAD_POOL_NUM = 4;
 static constexpr uint32_t TASK_SLEEP_INTERVAL = 1;
@@ -536,7 +537,7 @@ void DownloadServiceManager::WaittingTime()
 {
     DOWNLOAD_HILOGD("Check return null");
     waittingFlag_ = true;
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+    std::this_thread::sleep_for(std::chrono::seconds(WAITTING_TIME));
     std::this_thread::yield();
     if (IsSaQuit()) {
         isSaQuitFlag_ = true;
@@ -548,18 +549,16 @@ void DownloadServiceManager::WaittingTime()
 
 void DownloadServiceManager::WaittingForQuitSa()
 {
-    if (waittingFlag_) 
-    {
+    if (waittingFlag_) {
         return;
     }
     std::lock_guard<std::mutex> lock(waittingLock_);
-    if (waittingFlag_) 
-    {
+    if (waittingFlag_) {
         return;
     }
     if (IsSaQuit()) {
         DOWNLOAD_HILOGI("Waitting 10s for Sa to exit");
-        timeThreadHandler_ = std::thread([this] { WaittingTime();});
+        timeThreadHandler_ = std::thread([this] { WaittingTime(); });
         timeThreadHandler_.detach();
     }
 }
