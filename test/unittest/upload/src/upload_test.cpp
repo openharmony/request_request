@@ -72,9 +72,8 @@ HWTEST_F(UploadTest, PostUploadNetworkOff001, TestSize.Level0)
     std::shared_ptr<UploadConfig> uploadConfig = std::make_shared<UploadConfig>();
     uploadConfig->url = "http://192.168.1.180/uploadservice/";
     uploadConfig->method = "POST";
-    std::vector<std::string> header;
-    std::string str = "Content-Type:multipart/form-data";
-    header.push_back(str);
+    std::map<std::string, std::string> header;
+    header["Content-Type"] = "multipart/form-data";
     uploadConfig->header = header;
 
     auto curl = std::make_shared<CUrlAdp>(fileDatas, uploadConfig);
@@ -128,9 +127,8 @@ HWTEST_F(UploadTest, PutUploadNetworkOff001, TestSize.Level0)
     uploadConfig->url = "http://192.168.1.180/uploadservice/";
     uploadConfig->method = "PUT";
     uploadConfig->protocolVersion = "API5";
-    std::vector<std::string> header;
-    std::string str = "multipart/form-data";
-    header.push_back(str);
+    std::map<std::string, std::string> header;
+    header[""] = "multipart/form-data";
     uploadConfig->header = header;
 
     auto curl = std::make_shared<CUrlAdp>(fileDatas, uploadConfig);
