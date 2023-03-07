@@ -211,7 +211,6 @@ void CUrlAdp::SetMimePost(CURL *curl)
     curl_mime *mime = curl_mime_init(curl);
     part = curl_mime_addpart(mime);
     if (!config_->data.empty()) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "config_->data.size = %{public}u", config_->data.size());
         auto vdata = config_->data;
         curl_mime_name(part, vdata[0].name.c_str());
         curl_mime_data(part, vdata[0].value.c_str(), vdata[0].value.size());
