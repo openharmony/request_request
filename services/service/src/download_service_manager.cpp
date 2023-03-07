@@ -553,11 +553,11 @@ void DownloadServiceManager::WaittingTime()
 
 void DownloadServiceManager::WaittingForQuitSa()
 {
-    if (waittingFlag_) {
+    if (waittingFlag_ || isSaQuitFlag_) {
         return;
     }
     std::lock_guard<std::mutex> lock(waittingLock_);
-    if (waittingFlag_) {
+    if (waittingFlag_ || isSaQuitFlag_) {
         return;
     }
     if (IsSaQuit()) {
