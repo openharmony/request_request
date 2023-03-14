@@ -58,6 +58,8 @@ public:
     uint32_t GetInterval() const;
 
     void ResumeTaskByNetwork();
+
+    void WaittingForQuitSa();
 private:
     explicit DownloadServiceManager();
     ~DownloadServiceManager();
@@ -79,7 +81,6 @@ private:
     bool IsSameApplication(const std::string &sName, int32_t sUid, const std::string &dName, int32_t dUid);
     bool IsBackgroundOrTerminated(int32_t state);
     bool IsForeground(int32_t state);
-    void WaittingForQuitSa();
     void WaittingTime();
     int32_t QuitSystemAbility();
     bool IsSaQuit();
@@ -99,7 +100,7 @@ private:
     bool waittingFlag_ = false;
     std::mutex waittingLock_;
     bool isSaQuitFlag_ = false;
-    static constexpr int32_t WAITTING_TIME = 10;
+    static constexpr int32_t WAITTING_TIME = 30;
 
     uint32_t taskId_;
     static std::mutex instanceLock_;
