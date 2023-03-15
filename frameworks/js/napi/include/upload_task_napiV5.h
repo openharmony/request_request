@@ -40,9 +40,9 @@ public:
     };
 
     struct SystemSuccessCallback {
-        Upload::UploadResponse response;
         napi_env env;
         napi_ref ref;
+        Upload::UploadResponse response;
     };
 
     struct SystemCompleteCallback {

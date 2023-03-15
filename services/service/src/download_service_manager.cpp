@@ -91,11 +91,13 @@ bool DownloadServiceManager::Create(uint32_t threadNum)
         threadList_[i]->Start();
     }
 
-    if (!MonitorNetwork()) {
-        DOWNLOAD_HILOGE("network management SA does not exist");
-    }
-
-    MonitorAppState();
+    std::thread th = std::thread([this]() {
+        if (!MonitorNetwork()) {
+            DOWNLOAD_HILOGE("network management SA does not exist");
+        }
+        MonitorAppState();
+    });
+    th.detach();
     initialized_ = true;
     return initialized_;
 }
