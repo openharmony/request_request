@@ -15,8 +15,6 @@
 
 #include "download_service_manager.h"
 
-#include <pthread.h>
-
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -27,6 +25,7 @@
 #include <new>
 #include <queue>
 #include <thread>
+#include <pthread.h>
 #include <utility>
 
 #include "application_state_observer.h"
@@ -238,7 +237,6 @@ bool DownloadServiceManager::Remove(uint32_t taskId)
 
 bool DownloadServiceManager::Query(uint32_t taskId, DownloadInfo &info)
 {
-    WaittingForQuitSa();
     if (!initialized_) {
         return false;
     }
@@ -252,7 +250,6 @@ bool DownloadServiceManager::Query(uint32_t taskId, DownloadInfo &info)
 
 bool DownloadServiceManager::QueryMimeType(uint32_t taskId, std::string &mimeType)
 {
-    WaittingForQuitSa();
     if (!initialized_) {
         return false;
     }
@@ -493,7 +490,6 @@ bool DownloadServiceManager::QueryAllTask(std::vector<DownloadInfo> &taskVector)
         it.second->Query(downloadInfo);
         taskVector.push_back(downloadInfo);
     }
-    WaittingForQuitSa();
     return true;
 }
 
@@ -522,7 +518,7 @@ int32_t DownloadServiceManager::QuitSystemAbility()
 {
     auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saManager == nullptr) {
-        DOWNLOAD_HILOGE("Check return null");
+        DOWNLOAD_HILOGE("GetSystemAbilityManager return nullptr");
         return -1;
     }
     int32_t result = saManager->UnloadSystemAbility(DOWNLOAD_SERVICE_ID);
@@ -530,13 +526,12 @@ int32_t DownloadServiceManager::QuitSystemAbility()
         DOWNLOAD_HILOGE("UnloadSystemAbility %{public}d failed, result: %{public}d", DOWNLOAD_SERVICE_ID, result);
         return result;
     }
-    DOWNLOAD_HILOGE("QuitSystemAbility finish");
+    DOWNLOAD_HILOGD("QuitSystemAbility finish");
     return ERR_OK;
 }
 
 void DownloadServiceManager::WaittingTime()
 {
-    DOWNLOAD_HILOGD("Check return null");
     waittingFlag_ = true;
     std::this_thread::sleep_for(std::chrono::seconds(WAITTING_TIME));
     std::this_thread::yield();

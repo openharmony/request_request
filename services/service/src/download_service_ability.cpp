@@ -120,7 +120,7 @@ void DownloadServiceAbility::OnStart()
     state_ = ServiceRunningState::STATE_RUNNING;
     auto instance = DownloadServiceManager::GetInstance();
     if (instance == nullptr) {
-        DOWNLOAD_HILOGE("DownloadServiceManager is null");
+        DOWNLOAD_HILOGE("DownloadServiceManager is nullptr");
         return;
     }
     instance->WaittingForQuitSa();
