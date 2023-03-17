@@ -209,12 +209,16 @@ void CUrlAdp::SetMimePost(CURL *curl)
 {
     curl_mimepart *part;
     curl_mime *mime = curl_mime_init(curl);
-    part = curl_mime_addpart(mime);
     if (!config_->data.empty()) {
-        auto vdata = config_->data;
-        curl_mime_name(part, vdata[0].name.c_str());
-        curl_mime_data(part, vdata[0].value.c_str(), vdata[0].value.size());
-        config_->data.erase(config_->data.begin());
+        for (auto &item : config_->data) {
+            part = curl_mime_addpart(mime);
+            curl_mime_name(part, item.name.c_str());
+            curl_mime_data(part, item.value.c_str(), item.value.size());
+        }
+    }
+    part = curl_mime_addpart(mime);
+    if (!mfileData_.name.empty()) {
+        curl_mime_name(part, mfileData_.name.c_str());
     } else {
         curl_mime_name(part, "file");
     }
