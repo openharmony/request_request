@@ -35,8 +35,8 @@ struct NotifyData {
 };
 
 struct CallbackData {
-  napi_env env_;
-  napi_ref ref_;
+    napi_env env_;
+    napi_ref ref_;
 };
 
 struct NotifyDataPtr {
