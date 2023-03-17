@@ -97,10 +97,9 @@ private:
     uint32_t threadNum_;
     uint32_t timeoutRetry_;
     std::thread timeThreadHandler_;
-    bool waittingFlag_ = false;
+    bool waittingFlag_;
     std::mutex waittingLock_;
-    bool isSaQuitFlag_ = false;
-    static constexpr int32_t WAITTING_TIME = 30;
+    bool isSaQuitFlag_;
 
     uint32_t taskId_;
     static std::mutex instanceLock_;

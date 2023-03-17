@@ -45,6 +45,7 @@ using namespace OHOS::NetManagerStandard;
 namespace OHOS::Request::Download {
 std::mutex DownloadServiceManager::instanceLock_;
 DownloadServiceManager *DownloadServiceManager::instance_ = nullptr;
+constexpr const int32_t WAITTING_TIME = 30;
 namespace {
 enum class ApplicationState {
     APP_STATE_BEGIN = 0,
@@ -60,7 +61,7 @@ enum class ApplicationState {
 
 DownloadServiceManager::DownloadServiceManager()
     : initialized_(false), interval_(TASK_SLEEP_INTERVAL), threadNum_(THREAD_POOL_NUM), timeoutRetry_(MAX_RETRY_TIMES),
-      taskId_(0)
+      taskId_(0), waittingFlag_(false), isSaQuitFlag_(false)
 {
 }
 
@@ -495,8 +496,6 @@ bool DownloadServiceManager::QueryAllTask(std::vector<DownloadInfo> &taskVector)
 
 bool DownloadServiceManager::IsSaQuit()
 {
-    DOWNLOAD_HILOGI("pendingQueue_.size() ===== %{public}d", static_cast<int32_t>(pendingQueue_.size()));
-    DOWNLOAD_HILOGI("pausedQueue_.size()  ===== %{public}d", static_cast<int32_t>(pausedQueue_.size()));
     if (!pendingQueue_.empty() || !pausedQueue_.empty()) {
         DOWNLOAD_HILOGD("pendingQueue_ or pausedQueue_ is not empty!");
         return false;
@@ -556,7 +555,7 @@ void DownloadServiceManager::WaittingForQuitSa()
         return;
     }
     if (IsSaQuit()) {
-        DOWNLOAD_HILOGI("Waitting 10s for Sa to exit");
+        DOWNLOAD_HILOGI("Waitting 30s for Sa to exit");
         timeThreadHandler_ = std::thread([this] { WaittingTime(); });
         timeThreadHandler_.detach();
     }
