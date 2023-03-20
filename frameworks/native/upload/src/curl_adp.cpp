@@ -217,11 +217,7 @@ void CUrlAdp::SetMimePost(CURL *curl)
         }
     }
     part = curl_mime_addpart(mime);
-    if (!mfileData_.name.empty()) {
-        curl_mime_name(part, mfileData_.name.c_str());
-    } else {
-        curl_mime_name(part, "file");
-    }
+    curl_mime_name(part, "file");
     curl_mime_type(part, mfileData_.type.c_str());
     curl_mime_filename(part, mfileData_.filename.c_str());
     curl_mime_data_cb(part, mfileData_.totalsize, ReadCallback, NULL, NULL, &mfileData_);
