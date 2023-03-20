@@ -90,11 +90,13 @@ bool DownloadServiceManager::Create(uint32_t threadNum)
         threadList_[i]->Start();
     }
 
-    if (!MonitorNetwork()) {
-        DOWNLOAD_HILOGE("network management SA does not exist");
-    }
-
-    MonitorAppState();
+    std::thread th = std::thread([this]() {
+        if (!MonitorNetwork()) {
+            DOWNLOAD_HILOGE("network management SA does not exist");
+        }
+        MonitorAppState();
+    });
+    th.detach();
     initialized_ = true;
     return initialized_;
 }
@@ -169,7 +171,7 @@ bool DownloadServiceManager::ProcessTask()
     return execTask(pickupTask());
 }
 
-bool DownloadServiceManager::Pause(uint32_t taskId)
+bool DownloadServiceManager::Pause(uint32_t taskId, uint32_t uid)
 {
     if (!initialized_) {
         return false;
@@ -179,7 +181,9 @@ bool DownloadServiceManager::Pause(uint32_t taskId)
     if (it == taskMap_.end()) {
         return false;
     }
-
+    if (!IsSameUid(static_cast<int32_t>(uid), it->second->GetTaskApplicationInfoUid())) {
+        return false;
+    }
     if (it->second->Pause()) {
         MoveTaskToQueue(taskId, it->second);
         return true;
@@ -187,7 +191,7 @@ bool DownloadServiceManager::Pause(uint32_t taskId)
     return false;
 }
 
-bool DownloadServiceManager::Resume(uint32_t taskId)
+bool DownloadServiceManager::Resume(uint32_t taskId, uint32_t uid)
 {
     if (!initialized_) {
         return false;
@@ -197,7 +201,9 @@ bool DownloadServiceManager::Resume(uint32_t taskId)
     if (it == taskMap_.end()) {
         return false;
     }
-
+    if (!IsSameUid(static_cast<int32_t>(uid), it->second->GetTaskApplicationInfoUid())) {
+        return false;
+    }
     if (it->second->Resume()) {
         MoveTaskToQueue(taskId, it->second);
         return true;
@@ -205,7 +211,7 @@ bool DownloadServiceManager::Resume(uint32_t taskId)
     return false;
 }
 
-bool DownloadServiceManager::Remove(uint32_t taskId)
+bool DownloadServiceManager::Remove(uint32_t taskId, uint32_t uid)
 {
     if (!initialized_) {
         return false;
@@ -214,6 +220,9 @@ bool DownloadServiceManager::Remove(uint32_t taskId)
     std::lock_guard<std::recursive_mutex> autoLock(mutex_);
     auto it = taskMap_.find(taskId);
     if (it == taskMap_.end()) {
+        return false;
+    }
+    if (!IsSameUid(static_cast<int32_t>(uid), it->second->GetTaskApplicationInfoUid())) {
         return false;
     }
     bool result = it->second->Remove();
@@ -237,13 +246,32 @@ bool DownloadServiceManager::Query(uint32_t taskId, DownloadInfo &info)
     return it->second->Query(info);
 }
 
-bool DownloadServiceManager::QueryMimeType(uint32_t taskId, std::string &mimeType)
+bool DownloadServiceManager::Query(uint32_t taskId, uint32_t uid, DownloadInfo &info)
+{
+    if (!initialized_) {
+        return false;
+    }
+    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
+    auto it = taskMap_.find(taskId);
+    if (it == taskMap_.end()) {
+        return false;
+    }
+    if (!IsSameUid(static_cast<int32_t>(uid), it->second->GetTaskApplicationInfoUid())) {
+        return false;
+    }
+    return it->second->Query(info);
+}
+
+bool DownloadServiceManager::QueryMimeType(uint32_t taskId, uint32_t uid, std::string &mimeType)
 {
     if (!initialized_) {
         return false;
     }
     auto it = taskMap_.find(taskId);
     if (it == taskMap_.end()) {
+        return false;
+    }
+    if (!IsSameUid(static_cast<int32_t>(uid), it->second->GetTaskApplicationInfoUid())) {
         return false;
     }
     return it->second->QueryMimeType(mimeType);
@@ -459,7 +487,7 @@ void DownloadServiceManager::UpdateAppState(const std::string bundleName, int32_
 bool DownloadServiceManager::IsSameApplication(const std::string sName, int32_t sUid,
                                                const std::string dName, int32_t dUid)
 {
-    return  (sName ==  dName) && (sUid == dUid);
+    return  (IsSameBundleName(sName, dName)) && (IsSameUid(sUid, dUid));
 }
 
 bool DownloadServiceManager::IsBackgroundOrTerminated(int32_t state)
@@ -481,5 +509,15 @@ bool DownloadServiceManager::QueryAllTask(std::vector<DownloadInfo> &taskVector)
         taskVector.push_back(downloadInfo);
     }
     return true;
+}
+
+bool DownloadServiceManager::IsSameBundleName(const std::string &sName, const std::string &dName)
+{
+    return sName == dName;
+}
+
+bool DownloadServiceManager::IsSameUid(int32_t sUid, int32_t dUid)
+{
+    return sUid = dUid;
 }
 } // namespace OHOS::Request::Download
