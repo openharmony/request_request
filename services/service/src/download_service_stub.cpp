@@ -42,10 +42,6 @@ int32_t DownloadServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
         DOWNLOAD_HILOGE("remote descriptor not the same as local descriptor");
         return E_DOWNLOAD_TRANSACT_ERROR;
     }
-    if (!CheckPermission()) {
-        DOWNLOAD_HILOGE("no permission, pid:%{public}d", IPCSkeleton::GetCallingPid());
-        return E_DOWNLOAD_NO_PERMISSION;
-    }
     switch (code) {
         case CMD_REQUEST:
             return OnRequest(data, reply);
@@ -76,6 +72,10 @@ int32_t DownloadServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
 
 bool DownloadServiceStub::OnRequest(MessageParcel &data, MessageParcel &reply)
 {
+    if (!CheckPermission()) {
+        DOWNLOAD_HILOGE("download no permission, pid:%{public}d", IPCSkeleton::GetCallingPid());
+        return false;
+    }
     DOWNLOAD_HILOGD("Receive request");
     DownloadConfig config;
     int32_t fd = data.ReadFileDescriptor();
@@ -116,6 +116,10 @@ bool DownloadServiceStub::OnRequest(MessageParcel &data, MessageParcel &reply)
 
 bool DownloadServiceStub::OnPause(MessageParcel &data, MessageParcel &reply)
 {
+    if (!CheckPermission()) {
+        DOWNLOAD_HILOGE("pause no permission, pid:%{public}d", IPCSkeleton::GetCallingPid());
+        return false;
+    }
     bool result = Pause(data.ReadUint32());
     if (!reply.WriteBool(result)) {
         DOWNLOAD_HILOGE("WriteBool failed");
@@ -126,6 +130,10 @@ bool DownloadServiceStub::OnPause(MessageParcel &data, MessageParcel &reply)
 
 bool DownloadServiceStub::OnQuery(MessageParcel &data, MessageParcel &reply)
 {
+    if (!CheckPermission()) {
+        DOWNLOAD_HILOGE("query no permission, pid:%{public}d", IPCSkeleton::GetCallingPid());
+        return false;
+    }
     DownloadInfo info;
     bool result = Query(data.ReadUint32(), info);
     if (result) {
@@ -151,6 +159,10 @@ bool DownloadServiceStub::OnQuery(MessageParcel &data, MessageParcel &reply)
 
 bool DownloadServiceStub::OnQueryMimeType(MessageParcel &data, MessageParcel &reply)
 {
+    if (!CheckPermission()) {
+        DOWNLOAD_HILOGE("query mime type no permission, pid:%{public}d", IPCSkeleton::GetCallingPid());
+        return false;
+    }
     std::string mime;
     bool result = QueryMimeType(data.ReadInt32(), mime);
     if (result) {
@@ -165,6 +177,10 @@ bool DownloadServiceStub::OnQueryMimeType(MessageParcel &data, MessageParcel &re
 
 bool DownloadServiceStub::OnRemove(MessageParcel &data, MessageParcel &reply)
 {
+    if (!CheckPermission()) {
+        DOWNLOAD_HILOGE("query mime type no permission, pid:%{public}d", IPCSkeleton::GetCallingPid());
+        return false;
+    }
     bool result = Remove(data.ReadInt32());
     if (!reply.WriteBool(result)) {
         DOWNLOAD_HILOGE("WriteBool failed");
@@ -175,6 +191,10 @@ bool DownloadServiceStub::OnRemove(MessageParcel &data, MessageParcel &reply)
 
 bool DownloadServiceStub::OnResume(MessageParcel &data, MessageParcel &reply)
 {
+    if (!CheckPermission()) {
+        DOWNLOAD_HILOGE("resume no permission, pid:%{public}d", IPCSkeleton::GetCallingPid());
+        return false;
+    }
     bool result = Resume(data.ReadInt32());
     if (!reply.WriteBool(result)) {
         DOWNLOAD_HILOGE("WriteBool failed");
@@ -185,6 +205,10 @@ bool DownloadServiceStub::OnResume(MessageParcel &data, MessageParcel &reply)
 
 bool DownloadServiceStub::OnEventOn(MessageParcel &data, MessageParcel &reply)
 {
+    if (!CheckPermission()) {
+        DOWNLOAD_HILOGE("register listener no permission, pid:%{public}d", IPCSkeleton::GetCallingPid());
+        return false;
+    }
     uint32_t taskId = data.ReadUint32();
     std::string type = data.ReadString();
     DOWNLOAD_HILOGD("DownloadServiceStub::OnEventOn taskId = %{public}d type=%{public}s ", taskId, type.c_str());
@@ -216,6 +240,10 @@ bool DownloadServiceStub::OnEventOn(MessageParcel &data, MessageParcel &reply)
 
 bool DownloadServiceStub::OnEventOff(MessageParcel &data, MessageParcel &reply)
 {
+    if (!CheckPermission()) {
+        DOWNLOAD_HILOGE("de-register listener, pid:%{public}d", IPCSkeleton::GetCallingPid());
+        return false;
+    }
     DOWNLOAD_HILOGD("DownloadServiceStub::OnEventOff in");
     uint32_t taskId = data.ReadUint32();
     std::string type = data.ReadString();
@@ -242,6 +270,10 @@ bool DownloadServiceStub::OnCheckPermission(MessageParcel &data, MessageParcel &
 
 bool DownloadServiceStub::OnSetStartId(MessageParcel &data, MessageParcel &reply)
 {
+    if (!CheckPermission()) {
+        DOWNLOAD_HILOGE("set start Id no permission, pid:%{public}d", IPCSkeleton::GetCallingPid());
+        return false;
+    }
     DOWNLOAD_HILOGD("DownloadServiceStub::OnSetStartId in");
     uint32_t startId = data.ReadUint32();
     bool result = SetStartId(startId);
