@@ -130,7 +130,7 @@ bool DownloadServiceStub::OnQuery(MessageParcel &data, MessageParcel &reply)
     bool result = Query(data.ReadUint32(), info);
     if (result) {
         reply.WriteString(info.GetDescription());
-        reply.WriteUint32(info.GetDownloadedBytes());
+        reply.WriteInt64(info.GetDownloadedBytes());
         reply.WriteUint32(info.GetDownloadId());
         reply.WriteUint32(info.GetFailedReason());
         reply.WriteString(info.GetFileName());
@@ -139,6 +139,7 @@ bool DownloadServiceStub::OnQuery(MessageParcel &data, MessageParcel &reply)
         reply.WriteUint32(info.GetStatus());
         reply.WriteString(info.GetTargetURI());
         reply.WriteString(info.GetDownloadTitle());
+        reply.WriteInt64(info.GetDownloadTotalBytes());
         info.Dump();
     }
     if (!reply.WriteBool(result)) {
