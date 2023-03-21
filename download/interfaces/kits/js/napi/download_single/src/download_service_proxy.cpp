@@ -147,7 +147,7 @@ bool DownloadServiceProxy::Query(uint32_t taskId, DownloadInfo &info)
     DOWNLOAD_HILOGD("DownloadServiceProxy Query succeeded.");
     info.SetDescription(reply.ReadString());
     info.SetDownloadedBytes(reply.ReadUint32());
-    info.SetDownloadId(reply.ReadUint32());
+    info.SetDownloadId(reply.ReadInt64());
     info.SetFailedReason(static_cast<ErrorCode>(reply.ReadUint32()));
     info.SetFileName(reply.ReadString());
     info.SetFilePath(reply.ReadString());
@@ -155,7 +155,7 @@ bool DownloadServiceProxy::Query(uint32_t taskId, DownloadInfo &info)
     info.SetStatus(static_cast<DownloadStatus>(reply.ReadUint32()));
     info.SetTargetURI(reply.ReadString());
     info.SetDownloadTitle(reply.ReadString());
-    info.SetDownloadTotalBytes(reply.ReadUint32());
+    info.SetDownloadTotalBytes(reply.ReadInt64());
     info.Dump();
     return true;
 }
