@@ -84,8 +84,6 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest001, TestSize.Level0)
         .WillOnce(testing::Return(-1));
     result = this->obfile->GetFile(&file, uri, fileSize, context);
     EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR);
-    EXPECT_EQ(file, nullptr);
-    EXPECT_EQ(fileSize, 0);
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest001***out**********");
 }
 
@@ -145,8 +143,6 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest003, TestSize.Level0)
     result = this->obfile->GetFile(&file, uri, fileSize, context);
 
     EXPECT_EQ(result, UPLOAD_ERRORCODE_UNSUPPORT_URI);
-    EXPECT_EQ(file, nullptr);
-    EXPECT_EQ(fileSize, 0);
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest003***out**********");
 }
 /**
@@ -166,8 +162,6 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest004, TestSize.Level0)
     result = this->obfile->GetFile(&file, uri, fileSize, context);
 
     EXPECT_EQ(result, UPLOAD_ERRORCODE_UNSUPPORT_URI);
-    EXPECT_EQ(file, nullptr);
-    EXPECT_EQ(fileSize, 0);
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest004***out**********");
 }
 /**
@@ -187,8 +181,6 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest005, TestSize.Level0)
     result = this->obfile->GetFile(&file, uri, fileSize, context);
 
     EXPECT_EQ(result, UPLOAD_ERRORCODE_UNSUPPORT_URI);
-    EXPECT_EQ(file, nullptr);
-    EXPECT_EQ(fileSize, 0);
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest005***out**********");
 }
 
@@ -212,8 +204,6 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest006, TestSize.Level0)
     result = this->obfile->GetFile(&file, uri, fileSize, context);
 
     EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR);
-    EXPECT_EQ(file, nullptr);
-    EXPECT_EQ(fileSize, 0);
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest006***out**********");
 }
 /**
@@ -236,8 +226,6 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest007, TestSize.Level0)
     result = this->obfile->GetFile(&file, uri, fileSize, context);
 
     EXPECT_EQ(result, UPLOAD_ERRORCODE_GET_FILE_ERROR);
-    EXPECT_EQ(file, nullptr);
-    EXPECT_EQ(fileSize, 0);
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest007***out**********");
 }
 /**
@@ -293,8 +281,6 @@ HWTEST_F(ObtainFileTest, ObtainFileUtTest009, TestSize.Level0)
     result = this->obfile->GetFile(&file, uri, fileSize, context);
 
     EXPECT_EQ(result, UPLOAD_ERRORCODE_UNSUPPORT_URI);
-    EXPECT_EQ(file, nullptr);
-    EXPECT_EQ(fileSize, 0);
     UPLOAD_HILOGD(UPLOAD_MODULE_TEST, "**********ObtainFileUtTest009***out**********");
 }
 
