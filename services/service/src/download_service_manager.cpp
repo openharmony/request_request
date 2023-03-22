@@ -92,6 +92,7 @@ bool DownloadServiceManager::Create(uint32_t threadNum)
     }
 
     std::thread th = std::thread([this]() {
+        pthread_setname_np(pthread_self(), "download_network");
         if (!MonitorNetwork()) {
             DOWNLOAD_HILOGE("network management SA does not exist");
         }
