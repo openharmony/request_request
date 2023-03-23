@@ -79,6 +79,7 @@ napi_value UploadTaskNapiV9::GetCtor(napi_env env)
         DECLARE_NAPI_METHOD("on", JsOn),
         DECLARE_NAPI_METHOD("off", JsOff),
         DECLARE_NAPI_METHOD("delete", JsDelete),
+        DECLARE_NAPI_METHOD("remove", JsDelete),
     };
     napi_status status = napi_define_class(env, "UploadTaskNapiV9", NAPI_AUTO_LENGTH, Initialize, nullptr,
         sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons);
