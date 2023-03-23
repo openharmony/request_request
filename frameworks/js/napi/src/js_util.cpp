@@ -327,7 +327,7 @@ bool JSUtil::ParseHeader(napi_env env, napi_value configValue, std::map<std::str
     for (iter = names.begin(); iter != names.end(); ++iter) {
         auto value = Download::NapiUtils::GetStringPropertyUtf8(env, jsHeader, *iter);
         if (!value.empty()) {
-            header[Download::NapiUtils::ToLower(*iter)] = value;
+            header[*iter] = value;
         }
     }
     return true;
