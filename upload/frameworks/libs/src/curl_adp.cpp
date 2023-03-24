@@ -175,11 +175,7 @@ void CUrlAdp::SetMimePost(CURL *curl)
         }
     }
     part = curl_mime_addpart(mime);
-    if (mfileData_.name.size()) {
-        curl_mime_name(part, mfileData_.name.c_str());
-    } else {
-        curl_mime_name(part, "file");
-    }
+    curl_mime_name(part, "file");
     curl_mime_type(part, mfileData_.type.c_str());
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===> MultiAddHandle mfileData_.type=%{public}s",
         mfileData_.type.c_str());
