@@ -588,6 +588,8 @@ void DownloadServiceManager::WaittingForQuitSa()
         timeThreadHandler_ = std::thread([this] { WaittingTime(); });
         timeThreadHandler_.detach();
     }
+}
+
 bool DownloadServiceManager::IsSameBundleName(const std::string &sName, const std::string &dName)
 {
     return sName == dName;
