@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include "curl/curl.h"
 
 namespace OHOS::Request::Upload {
@@ -41,7 +42,7 @@ struct UploadResponse {
 
 struct UploadConfig {
     std::string url;
-    std::vector<std::string> header;
+    std::map<std::string, std::string> header;
     std::string method;
     std::vector<File> files;
     std::vector<RequestData> data;

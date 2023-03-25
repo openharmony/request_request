@@ -197,7 +197,7 @@ bool DownloadServiceAbility::Pause(uint32_t taskId)
         return false;
     }
     DOWNLOAD_HILOGI("DownloadServiceAbility Pause started.");
-    return instance->Pause(taskId);
+    return instance->Pause(taskId, IPCSkeleton::GetCallingUid());
 }
 
 bool DownloadServiceAbility::Query(uint32_t taskId, DownloadInfo &info)
@@ -209,7 +209,7 @@ bool DownloadServiceAbility::Query(uint32_t taskId, DownloadInfo &info)
         return false;
     }
     DOWNLOAD_HILOGI("DownloadServiceAbility Query started.");
-    return instance->Query(taskId, info);
+    return instance->Query(taskId, IPCSkeleton::GetCallingUid(), info);
 }
 
 bool DownloadServiceAbility::QueryMimeType(uint32_t taskId, std::string &mimeType)
@@ -221,7 +221,7 @@ bool DownloadServiceAbility::QueryMimeType(uint32_t taskId, std::string &mimeTyp
         return false;
     }
     DOWNLOAD_HILOGI("DownloadServiceAbility QueryMimeType started.");
-    return instance->QueryMimeType(taskId, mimeType);
+    return instance->QueryMimeType(taskId, IPCSkeleton::GetCallingUid(), mimeType);
 }
 
 bool DownloadServiceAbility::Remove(uint32_t taskId)
@@ -233,7 +233,7 @@ bool DownloadServiceAbility::Remove(uint32_t taskId)
         return false;
     }
     DOWNLOAD_HILOGI("DownloadServiceAbility Remove started.");
-    return instance->Remove(taskId);
+    return instance->Remove(taskId, IPCSkeleton::GetCallingUid());
 }
 
 bool DownloadServiceAbility::Resume(uint32_t taskId)
@@ -245,7 +245,7 @@ bool DownloadServiceAbility::Resume(uint32_t taskId)
         return false;
     }
     DOWNLOAD_HILOGI("DownloadServiceAbility Resume started.");
-    return instance->Resume(taskId);
+    return instance->Resume(taskId, IPCSkeleton::GetCallingUid());
 }
 
 bool DownloadServiceAbility::On(uint32_t taskId, const std::string &type, const sptr<DownloadNotifyInterface> &listener)

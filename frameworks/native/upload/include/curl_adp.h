@@ -63,6 +63,7 @@ private:
     void SetNetworkOpt(CURL *curl);
     void SetCallbackOpt(CURL *curl);
     void SetBehaviorOpt(CURL *curl);
+    std::string ReadCertification();
     void CurlGlobalInit();
     void CurlGlobalCleanup();
     void StartTimer();

@@ -47,7 +47,6 @@ public:
     static std::shared_ptr<Upload::UploadConfig> ParseUploadConfig(napi_env env, napi_value jsConfig,
         const std::string &version);
     static bool ToUploadConfig(napi_env env, napi_value jsConfig, Upload::UploadConfig &config);
-    static napi_value Convert2JSUploadConfig(napi_env env, const Upload::UploadConfig &config);
 
     static bool Convert2File(napi_env env, napi_value jsFile, Upload::File &file);
     static napi_value Convert2JSFile(napi_env env, const Upload::File &file);
@@ -78,10 +77,10 @@ public:
     static bool ToUploadOption(napi_env env, napi_value jsConfig, Upload::UploadConfig &config);
     static bool SetData(napi_env env, napi_value jsConfig, Upload::UploadConfig &config);
     static bool SetFiles(napi_env env, napi_value jsConfig, Upload::UploadConfig &config);
-    static bool SetHeader(napi_env env, napi_value jsConfig, Upload::UploadConfig &config);
     static bool Convert2FileL5(napi_env env, napi_value jsFile, Upload::File &file);
     static bool SetMandatoryParam(napi_env env, napi_value jsValue, const std::string &str, std::string &out);
     static bool SetOptionalParam(napi_env env, napi_value jsValue, const std::string &str, std::string &out);
+    static bool ParseHeader(napi_env env, napi_value configValue, std::map<std::string, std::string> &header);
 };
 }
 #endif // REQUEST_JS_UTIL_H

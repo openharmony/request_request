@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,12 +44,13 @@ public:
     void InstallCallback(uint32_t taskId, DownloadTaskCallback eventCb);
     bool ProcessTask();
 
-    bool Pause(uint32_t taskId);
-    bool Resume(uint32_t taskId);
-    bool Remove(uint32_t taskId);
+    bool Pause(uint32_t taskId, uint32_t uid);
+    bool Resume(uint32_t taskId, uint32_t uid);
+    bool Remove(uint32_t taskId, uint32_t uid);
     bool Query(uint32_t taskId, DownloadInfo &info);
+    bool Query(uint32_t taskId, uint32_t uid, DownloadInfo &info);
     bool QueryAllTask(std::vector<DownloadInfo> &taskVector);
-    bool QueryMimeType(uint32_t taskId, std::string &mimeType);
+    bool QueryMimeType(uint32_t taskId, uint32_t uid, std::string &mimeType);
 
     void SetStartId(uint32_t startId);
     uint32_t GetStartId() const;
@@ -84,6 +85,8 @@ private:
     void WaittingTime();
     int32_t QuitSystemAbility();
     bool IsSaQuit();
+    bool IsSameBundleName(const std::string &sName, const std::string &dName);
+    bool IsSameUid(int32_t sUid, int32_t dUid);
 private:
     bool initialized_;
     std::recursive_mutex mutex_;

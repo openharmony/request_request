@@ -22,6 +22,9 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
+#include <fstream>
+#include <ios>
+#include "constant.h"
 
 #include "common_timer_errors.h"
 #include "hisysevent.h"
@@ -103,8 +106,13 @@ bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL *> &curlArray)
 
 void CUrlAdp::SetHeadData(CURL *curl)
 {
+    std::vector<std::string> vec;
+    std::for_each(config_->header.begin(), config_->header.end(),
+        [&vec](const std::pair<std::string, std::string> &header) {
+            vec.emplace_back(header.first + ":" + header.second);
+        });
     bool hasContentType = false;
-    for (auto &headerData : config_->header) {
+    for (auto &headerData : vec) {
         if (headerData.find("Content-Type:") != std::string::npos) {
             hasContentType = true;
         }
@@ -146,8 +154,40 @@ void CUrlAdp::SetConnectionOpt(CURL *curl)
 
 void CUrlAdp::SetSslOpt(CURL *curl)
 {
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+    if (config_->url.find("https") != 0) {
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+        return;
+    }
+    std::string certInfo = ReadCertification();
+    if (certInfo.empty()) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "Read certinfo failed");
+        return;
+    }
+    struct curl_blob blob {.data = const_cast<char *>(certInfo.c_str()),
+                           .len = certInfo.size(),
+                           .flags = CURL_BLOB_COPY};
+    std::string version = "CURL_SSLVERSION_TLSv1_2";
+    if (config_->header.find(Download::tlsVersion) != config_->header.end()) {
+        version = config_->header[Download::tlsVersion];
+    }
+    curl_easy_setopt(curl, CURLOPT_SSLVERSION, version.c_str());
+    CURLcode code = curl_easy_setopt(curl, CURLOPT_CAINFO_BLOB, &blob);
+    if (code != CURLE_OK) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "set ssl ca option failed");
+    }
+}
+
+std::string CUrlAdp::ReadCertification()
+{
+    std::ifstream inFile(Download::HTTP_DEFAULT_CA_PATH, std::ios::in | std::ios::binary);
+    if (!inFile.is_open()) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "open cacert.pem failed, errno:%{public}d", errno);
+        return "";
+    }
+    std::stringstream buf;
+    buf << inFile.rdbuf();
+    return std::string(buf.str());
 }
 
 void CUrlAdp::SetCurlOpt(CURL *curl)
@@ -169,21 +209,16 @@ void CUrlAdp::SetMimePost(CURL *curl)
 {
     curl_mimepart *part;
     curl_mime *mime = curl_mime_init(curl);
-    if (config_->data.size()) {
-        for (auto &vdata : config_->data) {
+    if (!config_->data.empty()) {
+        for (auto &item : config_->data) {
             part = curl_mime_addpart(mime);
-            curl_mime_name(part, vdata.name.c_str());
-            curl_mime_data(part, vdata.value.c_str(), vdata.value.size());
+            curl_mime_name(part, item.name.c_str());
+            curl_mime_data(part, item.value.c_str(), item.value.size());
         }
     }
     part = curl_mime_addpart(mime);
-    if (mfileData_.name.size()) {
-        curl_mime_name(part, mfileData_.name.c_str());
-    } else {
-        curl_mime_name(part, "file");
-    }
+    curl_mime_name(part, "file");
     curl_mime_type(part, mfileData_.type.c_str());
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "===> MultiAddHandle mfileData_.type=%{public}s", mfileData_.type.c_str());
     curl_mime_filename(part, mfileData_.filename.c_str());
     curl_mime_data_cb(part, mfileData_.totalsize, ReadCallback, NULL, NULL, &mfileData_);
     curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
