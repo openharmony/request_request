@@ -530,9 +530,9 @@ bool DownloadServiceManager::IsSaQuit()
         return false;
     }
     for (const auto &iter : taskMap_) {
-        DownloadStatus status;
-        ErrorCode code;
-        PausedReason reason;
+        DownloadStatus status = DownloadStatus::SESSION_UNKNOWN;
+        ErrorCode code = ErrorCode::ERROR_UNKNOWN;
+        PausedReason reason = PausedReason::PAUSED_UNKNOWN;
         iter.second->GetRunResult(status, code, reason);
         if (status == DownloadStatus::SESSION_RUNNING) {
             DOWNLOAD_HILOGD("taskMap_ has running task!");
