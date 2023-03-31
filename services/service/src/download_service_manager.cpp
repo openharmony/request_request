@@ -45,7 +45,7 @@ using namespace OHOS::NetManagerStandard;
 namespace OHOS::Request::Download {
 std::mutex DownloadServiceManager::instanceLock_;
 DownloadServiceManager *DownloadServiceManager::instance_ = nullptr;
-constexpr const int32_t WAITTING_TIME = 30;
+constexpr const int32_t WAITTING_TIME = 60;
 namespace {
 enum class ApplicationState {
     APP_STATE_BEGIN = 0,
@@ -547,7 +547,7 @@ int32_t DownloadServiceManager::QuitSystemAbility()
     auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saManager == nullptr) {
         DOWNLOAD_HILOGE("GetSystemAbilityManager return nullptr");
-        return -1;
+        return ERR_INVALID_VALUE;
     }
     int32_t result = saManager->UnloadSystemAbility(DOWNLOAD_SERVICE_ID);
     if (result != ERR_OK) {
@@ -584,7 +584,7 @@ void DownloadServiceManager::WaittingForQuitSa()
         return;
     }
     if (IsSaQuit()) {
-        DOWNLOAD_HILOGI("Waitting 30s for Sa to exit");
+        DOWNLOAD_HILOGI("Waitting 60s for Sa to exit");
         timeThreadHandler_ = std::thread([this] { WaittingTime(); });
         timeThreadHandler_.detach();
     }
