@@ -178,7 +178,6 @@ void DownloadManager::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
 {
     downloadServiceProxy_ = nullptr;
     ready_ = false;
-    LoadDownloadServer();
     GetDownloadServiceProxy();
 }
 

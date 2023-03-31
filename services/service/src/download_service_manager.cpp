@@ -564,6 +564,7 @@ void DownloadServiceManager::WaittingTime()
     std::this_thread::sleep_for(std::chrono::seconds(WAITTING_TIME));
     std::this_thread::yield();
     if (IsSaQuit()) {
+        initialized_ = false;
         isSaQuitFlag_ = true;
         DOWNLOAD_HILOGD("Quit System Ability");
         int32_t ret = QuitSystemAbility();
