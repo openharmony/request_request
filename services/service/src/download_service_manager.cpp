@@ -545,7 +545,7 @@ int32_t DownloadServiceManager::QuitSystemAbility()
         DOWNLOAD_HILOGE("UnloadSystemAbility %{public}d failed, result: %{public}d", DOWNLOAD_SERVICE_ID, result);
         return result;
     }
-    DOWNLOAD_HILOGD("QuitSystemAbility finish");
+    DOWNLOAD_HILOGD("QuitSystemAbility finish.");
     return ERR_OK;
 }
 
@@ -559,7 +559,7 @@ void DownloadServiceManager::MinusTaskCount()
 
 void DownloadServiceManager::StartTimer(const TimerCallback &callback)
 {
-    DOWNLOAD_HILOGD("StartTimer in");
+    DOWNLOAD_HILOGD("run in");
     waittingFlag_ = true;
     uint32_t ret = timer_.Setup();
     if (ret != Utils::TIMER_ERR_OK) {
@@ -571,7 +571,7 @@ void DownloadServiceManager::StartTimer(const TimerCallback &callback)
 
 void DownloadServiceManager::StopTimer()
 {
-    DOWNLOAD_HILOGD("StopTimer in");
+    DOWNLOAD_HILOGD("run in");
     timer_.Unregister(timerId_);
     timer_.Shutdown();
     waittingFlag_ = false;
@@ -579,22 +579,22 @@ void DownloadServiceManager::StopTimer()
 
 void DownloadServiceManager::StartTimerForQuitSa()
 {
-    DOWNLOAD_HILOGE("StartTimerForQuitSa in");
+    DOWNLOAD_HILOGD("run in");
     auto QuitSaCallback = [this]() {
         if (taskCount_ == 0) {
             initialized_ = false;
-            DOWNLOAD_HILOGD("Quit System Ability. taskCount_ %{public}d", taskCount_.load());
+            DOWNLOAD_HILOGD("Quit system ability. taskCount_ = %{public}d", taskCount_.load());
             int32_t ret = QuitSystemAbility();
             if (ret != ERR_OK) {
-                DOWNLOAD_HILOGE("QuitSystemAbility failed! ret = %{public}d", ret);
+                DOWNLOAD_HILOGE("QuitSystemAbility() failed! ret = %{public}d", ret);
             }
         }
         StopTimer();
     };
-    if(waittingFlag_) {
-        DOWNLOAD_HILOGD("waittingFlag_ true");
+    if (waittingFlag_) {
+        DOWNLOAD_HILOGD("waittingFlag_ is true.");
         StopTimer();
-    } 
+    }
     StartTimer(QuitSaCallback);
 }
 
