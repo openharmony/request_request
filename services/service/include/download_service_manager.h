@@ -31,6 +31,7 @@
 #include "download_info.h"
 #include "download_service_task.h"
 #include "download_thread.h"
+#include "timer.h"
 
 namespace OHOS::Request::Download {
 class DownloadServiceManager final {
@@ -82,11 +83,15 @@ private:
     bool IsSameApplication(const std::string &sName, int32_t sUid, const std::string &dName, int32_t dUid);
     bool IsBackgroundOrTerminated(int32_t state);
     bool IsForeground(int32_t state);
-    void WaittingTime();
-    int32_t QuitSystemAbility();
-    bool IsSaQuit();
     bool IsSameBundleName(const std::string &sName, const std::string &dName);
     bool IsSameUid(int32_t sUid, int32_t dUid);
+
+    using TimerCallback = std::function<void ()>;
+    void StartTimer(const TimerCallback &callback);
+    void StopTimer();
+    void StartTimerForQuitSa();
+    int32_t QuitSystemAbility();
+    void MinusTaskCount();
 private:
     bool initialized_;
     std::recursive_mutex mutex_;
@@ -99,15 +104,15 @@ private:
     uint32_t interval_;
     uint32_t threadNum_;
     uint32_t timeoutRetry_;
-    std::thread timeThreadHandler_;
-    std::mutex waittingLock_;
 
     uint32_t taskId_;
     static std::mutex instanceLock_;
     static DownloadServiceManager* instance_;
 
     bool waittingFlag_;
-    bool isSaQuitFlag_;
+    Utils::Timer timer_;
+    uint32_t timerId_;
+    std::atomic<int> taskCount_;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_SERVICE_MANAGER_H

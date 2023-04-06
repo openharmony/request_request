@@ -29,6 +29,7 @@
 #include <utility>
 
 #include "application_state_observer.h"
+#include "common_timer_errors.h"
 #include "iservice_registry.h"
 #include "log.h"
 #include "net_all_capabilities.h"
@@ -174,7 +175,7 @@ bool DownloadServiceManager::ProcessTask()
         }
         bool result = task->Run();
         MoveTaskToQueue(taskId, task);
-        WaittingForQuitSa();
+        MinusTaskCount();
         return result;
     };
     return execTask(pickupTask());
@@ -241,7 +242,6 @@ bool DownloadServiceManager::Remove(uint32_t taskId, uint32_t uid)
         taskMap_.erase(it);
         RemoveFromQueue(pendingQueue_, taskId);
         RemoveFromQueue(pausedQueue_, taskId);
-        WaittingForQuitSa();
     }
     return result;
 }
@@ -337,14 +337,14 @@ void DownloadServiceManager::MoveTaskToQueue(uint32_t taskId, std::shared_ptr<Do
     switch (DecideQueueType(status)) {
         case QueueType::PENDING_QUEUE: {
             std::lock_guard<std::recursive_mutex> autoLock(mutex_);
-            RemoveFromQueue(pausedQueue_, taskId);
             PushQueue(pendingQueue_, taskId);
+            RemoveFromQueue(pausedQueue_, taskId);
             break;
         }
         case QueueType::PAUSED_QUEUE: {
             std::lock_guard<std::recursive_mutex> autoLock(mutex_);
-            RemoveFromQueue(pendingQueue_, taskId);
             PushQueue(pausedQueue_, taskId);
+            RemoveFromQueue(pendingQueue_, taskId);
             break;
         }
         case QueueType::NONE_QUEUE:
@@ -362,6 +362,7 @@ void DownloadServiceManager::PushQueue(std::queue<uint32_t> &queue, uint32_t tas
 
     if (queue.empty()) {
         queue.push(taskId);
+        taskCount_++;
         return;
     }
 
@@ -383,6 +384,7 @@ void DownloadServiceManager::PushQueue(std::queue<uint32_t> &queue, uint32_t tas
 
     if (!foundIt) {
         queue.push(taskId);
+        taskCount_++;
     }
 }
 
@@ -395,17 +397,25 @@ void DownloadServiceManager::RemoveFromQueue(std::queue<uint32_t> &queue, uint32
     auto headElement = queue.front();
     if (headElement == taskId) {
         queue.pop();
+        MinusTaskCount();
         return;
     }
 
     auto indicatorId = headElement;
+    bool isRemove = false;
     do {
         if (headElement != taskId) {
             queue.push(queue.front());
+        } else {
+            isRemove = true;
         }
         queue.pop();
         headElement = queue.front();
     } while (headElement != indicatorId);
+
+    if (isRemove) {
+        MinusTaskCount();
+    }
 }
 
 void DownloadServiceManager::SetInterval(uint32_t interval)
@@ -463,8 +473,8 @@ void DownloadServiceManager::UpdateNetworkType()
         bool bRet = status == SESSION_RUNNING || status == SESSION_PENDING || status == SESSION_PAUSED;
         if (bRet) {
             if (!it.second->IsSatisfiedConfiguration()) {
-                RemoveFromQueue(pendingQueue_, it.first);
                 PushQueue(pausedQueue_, it.first);
+                RemoveFromQueue(pendingQueue_, it.first);
             }
         }
     }
@@ -523,25 +533,6 @@ bool DownloadServiceManager::QueryAllTask(std::vector<DownloadInfo> &taskVector)
     return true;
 }
 
-bool DownloadServiceManager::IsSaQuit()
-{
-    if (!pendingQueue_.empty() || !pausedQueue_.empty()) {
-        DOWNLOAD_HILOGD("pendingQueue_ or pausedQueue_ is not empty!");
-        return false;
-    }
-    for (const auto &iter : taskMap_) {
-        DownloadStatus status = DownloadStatus::SESSION_UNKNOWN;
-        ErrorCode code = ErrorCode::ERROR_UNKNOWN;
-        PausedReason reason = PausedReason::PAUSED_UNKNOWN;
-        iter.second->GetRunResult(status, code, reason);
-        if (status == DownloadStatus::SESSION_RUNNING) {
-            DOWNLOAD_HILOGD("taskMap_ has running task!");
-            return false;
-        }
-    }
-    return true;
-}
-
 int32_t DownloadServiceManager::QuitSystemAbility()
 {
     auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -558,37 +549,53 @@ int32_t DownloadServiceManager::QuitSystemAbility()
     return ERR_OK;
 }
 
-void DownloadServiceManager::WaittingTime()
+void DownloadServiceManager::MinusTaskCount()
 {
-    waittingFlag_ = true;
-    std::this_thread::sleep_for(std::chrono::seconds(WAITTING_TIME));
-    std::this_thread::yield();
-    if (IsSaQuit()) {
-        initialized_ = false;
-        isSaQuitFlag_ = true;
-        DOWNLOAD_HILOGD("Quit System Ability");
-        int32_t ret = QuitSystemAbility();
-        if (ret != ERR_OK) {
-            DOWNLOAD_HILOGE("QuitSystemAbility failed! ret = %{public}d", ret);
-        }
+    taskCount_--;
+    if (taskCount_ == 0) {
+        StartTimerForQuitSa();
     }
+}
+
+void DownloadServiceManager::StartTimer(const TimerCallback &callback)
+{
+    DOWNLOAD_HILOGD("StartTimer in");
+    waittingFlag_ = true;
+    uint32_t ret = timer_.Setup();
+    if (ret != Utils::TIMER_ERR_OK) {
+        DOWNLOAD_HILOGE("Create Timer error");
+        return;
+    }
+    timerId_ = timer_.Register(callback, WAITTING_TIME, true);
+}
+
+void DownloadServiceManager::StopTimer()
+{
+    DOWNLOAD_HILOGD("StopTimer in");
+    timer_.Unregister(timerId_);
+    timer_.Shutdown();
     waittingFlag_ = false;
 }
 
-void DownloadServiceManager::WaittingForQuitSa()
+void DownloadServiceManager::StartTimerForQuitSa()
 {
-    if (waittingFlag_ || isSaQuitFlag_) {
-        return;
-    }
-    std::lock_guard<std::mutex> lock(waittingLock_);
-    if (waittingFlag_ || isSaQuitFlag_) {
-        return;
-    }
-    if (IsSaQuit()) {
-        DOWNLOAD_HILOGI("Waitting 60s for Sa to exit");
-        timeThreadHandler_ = std::thread([this] { WaittingTime(); });
-        timeThreadHandler_.detach();
-    }
+    DOWNLOAD_HILOGE("StartTimerForQuitSa in");
+    auto QuitSaCallback = [this]() {
+        if (taskCount_ == 0) {
+            initialized_ = false;
+            DOWNLOAD_HILOGD("Quit System Ability. taskCount_ %{public}d", taskCount_.load());
+            int32_t ret = QuitSystemAbility();
+            if (ret != ERR_OK) {
+                DOWNLOAD_HILOGE("QuitSystemAbility failed! ret = %{public}d", ret);
+            }
+        }
+        StopTimer();
+    };
+    if(waittingFlag_) {
+        DOWNLOAD_HILOGD("waittingFlag_ true");
+        StopTimer();
+    } 
+    StartTimer(QuitSaCallback);
 }
 
 bool DownloadServiceManager::IsSameBundleName(const std::string &sName, const std::string &dName)
