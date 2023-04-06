@@ -46,7 +46,7 @@ using namespace OHOS::NetManagerStandard;
 namespace OHOS::Request::Download {
 std::mutex DownloadServiceManager::instanceLock_;
 DownloadServiceManager *DownloadServiceManager::instance_ = nullptr;
-constexpr const int32_t WAITTING_TIME = 60;
+constexpr const int32_t WAITTING_TIME = 60 * 1000;
 namespace {
 enum class ApplicationState {
     APP_STATE_BEGIN = 0,
