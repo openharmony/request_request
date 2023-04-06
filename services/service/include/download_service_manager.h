@@ -60,8 +60,6 @@ public:
     uint32_t GetInterval() const;
 
     void ResumeTaskByNetwork();
-
-    void WaittingForQuitSa();
 private:
     explicit DownloadServiceManager();
     ~DownloadServiceManager();
