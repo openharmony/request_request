@@ -111,6 +111,7 @@ private:
     Utils::Timer timer_;
     uint32_t timerId_;
     std::atomic<int> taskCount_;
+    std::mutex quitingLock_;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_SERVICE_MANAGER_H

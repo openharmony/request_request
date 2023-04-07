@@ -46,7 +46,7 @@ using namespace OHOS::NetManagerStandard;
 namespace OHOS::Request::Download {
 std::mutex DownloadServiceManager::instanceLock_;
 DownloadServiceManager *DownloadServiceManager::instance_ = nullptr;
-constexpr const int32_t WAITTING_TIME = 60 * 1000;
+constexpr const int32_t WAITTING_TIME = 90 * 1000;
 namespace {
 enum class ApplicationState {
     APP_STATE_BEGIN = 0,
@@ -361,8 +361,8 @@ void DownloadServiceManager::PushQueue(std::queue<uint32_t> &queue, uint32_t tas
     }
 
     if (queue.empty()) {
-        queue.push(taskId);
         ++taskCount_;
+        queue.push(taskId);
         return;
     }
 
@@ -383,8 +383,8 @@ void DownloadServiceManager::PushQueue(std::queue<uint32_t> &queue, uint32_t tas
     } while (headElement != indicatorId);
 
     if (!foundIt) {
-        queue.push(taskId);
         ++taskCount_;
+        queue.push(taskId);
     }
 }
 
@@ -540,6 +540,11 @@ int32_t DownloadServiceManager::QuitSystemAbility()
         DOWNLOAD_HILOGE("GetSystemAbilityManager return nullptr");
         return ERR_INVALID_VALUE;
     }
+    std::lock_guard<std::mutex> lock(quitingLock_);
+    if (taskCount_ <= 0) {
+        DOWNLOAD_HILOGE("taskCount_ > 0, stop quit Sa!");
+        return ERR_INVALID_VALUE;
+    }
     int32_t result = saManager->UnloadSystemAbility(DOWNLOAD_SERVICE_ID);
     if (result != ERR_OK) {
         DOWNLOAD_HILOGE("UnloadSystemAbility %{public}d failed, result: %{public}d", DOWNLOAD_SERVICE_ID, result);
@@ -581,7 +586,7 @@ void DownloadServiceManager::StartTimerForQuitSa()
 {
     DOWNLOAD_HILOGD("run in");
     auto QuitSaCallback = [this]() {
-        if (taskCount_ == 0) {
+        if (taskCount_ <= 0) {
             initialized_ = false;
             DOWNLOAD_HILOGD("Quit system ability. taskCount_ = %{public}d", taskCount_.load());
             int32_t ret = QuitSystemAbility();
