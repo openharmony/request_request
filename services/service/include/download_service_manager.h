@@ -89,7 +89,7 @@ private:
     void StopTimer();
     void StartTimerForQuitSa();
     int32_t QuitSystemAbility();
-    void MinusTaskCount();
+    void DecreaseTaskCount();
 private:
     bool initialized_;
     std::recursive_mutex mutex_;

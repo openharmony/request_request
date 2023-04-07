@@ -175,7 +175,7 @@ bool DownloadServiceManager::ProcessTask()
         }
         bool result = task->Run();
         MoveTaskToQueue(taskId, task);
-        MinusTaskCount();
+        DecreaseTaskCount();
         return result;
     };
     return execTask(pickupTask());
@@ -362,7 +362,7 @@ void DownloadServiceManager::PushQueue(std::queue<uint32_t> &queue, uint32_t tas
 
     if (queue.empty()) {
         queue.push(taskId);
-        taskCount_++;
+        ++taskCount_;
         return;
     }
 
@@ -384,7 +384,7 @@ void DownloadServiceManager::PushQueue(std::queue<uint32_t> &queue, uint32_t tas
 
     if (!foundIt) {
         queue.push(taskId);
-        taskCount_++;
+        ++taskCount_;
     }
 }
 
@@ -397,7 +397,7 @@ void DownloadServiceManager::RemoveFromQueue(std::queue<uint32_t> &queue, uint32
     auto headElement = queue.front();
     if (headElement == taskId) {
         queue.pop();
-        MinusTaskCount();
+        DecreaseTaskCount();
         return;
     }
 
@@ -414,7 +414,7 @@ void DownloadServiceManager::RemoveFromQueue(std::queue<uint32_t> &queue, uint32
     } while (headElement != indicatorId);
 
     if (isRemove) {
-        MinusTaskCount();
+        DecreaseTaskCount();
     }
 }
 
@@ -549,10 +549,10 @@ int32_t DownloadServiceManager::QuitSystemAbility()
     return ERR_OK;
 }
 
-void DownloadServiceManager::MinusTaskCount()
+void DownloadServiceManager::DecreaseTaskCount()
 {
-    taskCount_--;
-    if (taskCount_ == 0) {
+    --taskCount_;
+    if (taskCount_ <= 0) {
         StartTimerForQuitSa();
     }
 }
