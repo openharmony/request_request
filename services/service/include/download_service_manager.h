@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@
 #include "download_info.h"
 #include "download_service_task.h"
 #include "download_thread.h"
+#include "timer.h"
 
 namespace OHOS::Request::Download {
 class DownloadServiceManager final {
@@ -82,6 +83,13 @@ private:
     bool IsForeground(int32_t state);
     bool IsSameBundleName(const std::string &sName, const std::string &dName);
     bool IsSameUid(int32_t sUid, int32_t dUid);
+
+    using TimerCallback = std::function<void ()>;
+    void StartTimer(const TimerCallback &callback);
+    void StopTimer();
+    void StartTimerForQuitSa();
+    int32_t QuitSystemAbility();
+    void DecreaseTaskCount();
 private:
     bool initialized_;
     std::recursive_mutex mutex_;
@@ -98,6 +106,12 @@ private:
     uint32_t taskId_;
     static std::mutex instanceLock_;
     static DownloadServiceManager* instance_;
+
+    bool waittingFlag_;
+    Utils::Timer timer_;
+    uint32_t timerId_;
+    std::atomic<int> taskCount_;
+    std::mutex quitingLock_;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_SERVICE_MANAGER_H
