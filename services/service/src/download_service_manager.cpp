@@ -556,6 +556,7 @@ int32_t DownloadServiceManager::QuitSystemAbility()
 
 void DownloadServiceManager::DecreaseTaskCount()
 {
+    DOWNLOAD_HILOGD("run in");
     --taskCount_;
     if (taskCount_ <= 0) {
         StartTimerForQuitSa();
@@ -591,6 +592,7 @@ void DownloadServiceManager::StartTimerForQuitSa()
             DOWNLOAD_HILOGD("Quit system ability. taskCount_ = %{public}d", taskCount_.load());
             int32_t ret = QuitSystemAbility();
             if (ret != ERR_OK) {
+                initialized_ = true;
                 DOWNLOAD_HILOGE("QuitSystemAbility() failed! ret = %{public}d", ret);
             }
         }
