@@ -46,7 +46,7 @@ using namespace OHOS::NetManagerStandard;
 namespace OHOS::Request::Download {
 std::mutex DownloadServiceManager::instanceLock_;
 DownloadServiceManager *DownloadServiceManager::instance_ = nullptr;
-constexpr const int32_t WAITTING_TIME = 90 * 1000;
+constexpr const int32_t WAITTING_TIME = 60 * 1000;
 namespace {
 enum class ApplicationState {
     APP_STATE_BEGIN = 0,
@@ -541,7 +541,7 @@ int32_t DownloadServiceManager::QuitSystemAbility()
         return ERR_INVALID_VALUE;
     }
     std::lock_guard<std::mutex> lock(quitingLock_);
-    if (taskCount_ <= 0) {
+    if (taskCount_ > 0) {
         DOWNLOAD_HILOGE("taskCount_ > 0, stop quit Sa!");
         return ERR_INVALID_VALUE;
     }
