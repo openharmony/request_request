@@ -612,6 +612,6 @@ bool DownloadServiceManager::IsSameBundleName(const std::string &sName, const st
 
 bool DownloadServiceManager::IsSameUid(int32_t sUid, int32_t dUid)
 {
-    return sUid = dUid;
+    return sUid == dUid;
 }
 } // namespace OHOS::Request::Download

@@ -26,62 +26,67 @@ config("upload_public_config") {
   ]
 }
 
-ohos_shared_library("request") {
-  include_dirs = [
-    "${arkui_path}/ace_engine/frameworks/base/utils",
-    "${ability_runtime_napi_path}/featureAbility",
-    "${ability_runtime_napi_path}/inner/napi_common",
-    "${request_path}/frameworks/native/download/include",
-    "${request_path}/frameworks/native/upload/include",
-    "//third_party/libuv/include",
-  ]
+request_src = [
+  "src/download/async_call.cpp",
+  "src/download_base_notify.cpp",
+  "src/download_event.cpp",
+  "src/download_pause.cpp",
+  "src/download_query.cpp",
+  "src/download_query_mimetype.cpp",
+  "src/download_remove.cpp",
+  "src/download_resume.cpp",
+  "src/download_task_napi.cpp",
+  "src/download_task_napi_V9.cpp",
+  "src/header_receive_callback.cpp",
+  "src/js_util.cpp",
+  "src/legacy/download_manager.cpp",
+  "src/legacy/download_task.cpp",
+  "src/napi_utils.cpp",
+  "src/notify_callback.cpp",
+  "src/progress_callback.cpp",
+  "src/request_module.cpp",
+  "src/upload/async_call.cpp",
+  "src/upload_task_napi.cpp",
+  "src/upload_task_napiV5.cpp",
+  "src/upload_task_napiV9.cpp",
+  "src/uv_queue.cpp",
+]
 
+request_include = [
+  "${arkui_path}/ace_engine/frameworks/base/utils",
+  "${ability_runtime_napi_path}/featureAbility",
+  "${ability_runtime_napi_path}/inner/napi_common",
+  "${request_path}/frameworks/native/download/include",
+  "${request_path}/frameworks/native/upload/include",
+  "//third_party/libuv/include",
+]
+
+request_deps = [
+  "${request_path}/common:request_common_static",
+  "${request_path}/frameworks/native/download:downloadsingle",
+  "//third_party/libuv:uv",
+]
+
+request_external_deps = [
+  "ability_base:zuri",
+  "ability_runtime:abilitykit_native",
+  "ability_runtime:data_ability_helper",
+  "ability_runtime:napi_base_context",
+  "c_utils:utils",
+  "hiviewdfx_hilog_native:libhilog",
+  "ipc:ipc_single",
+  "napi:ace_napi",
+]
+
+ohos_shared_library("request") {
+  include_dirs = request_include
   configs = [ "//build/config/gcc:symbol_visibility_hidden" ]
   public_configs = [ ":upload_public_config" ]
+  sources = request_src
 
-  sources = [
-    "src/download/async_call.cpp",
-    "src/download_base_notify.cpp",
-    "src/download_event.cpp",
-    "src/download_pause.cpp",
-    "src/download_query.cpp",
-    "src/download_query_mimetype.cpp",
-    "src/download_remove.cpp",
-    "src/download_resume.cpp",
-    "src/download_task_napi.cpp",
-    "src/download_task_napi_V9.cpp",
-    "src/header_receive_callback.cpp",
-    "src/js_util.cpp",
-    "src/legacy/download_manager.cpp",
-    "src/legacy/download_task.cpp",
-    "src/napi_utils.cpp",
-    "src/notify_callback.cpp",
-    "src/progress_callback.cpp",
-    "src/request_module.cpp",
-    "src/upload/async_call.cpp",
-    "src/upload_task_napi.cpp",
-    "src/upload_task_napiV5.cpp",
-    "src/upload_task_napiV9.cpp",
-    "src/uv_queue.cpp",
-  ]
-
-  deps = [
-    "${request_path}/common:request_common_static",
-    "${request_path}/frameworks/native/download:downloadsingle",
-    "${request_path}/frameworks/native/upload:upload_lib",
-    "//third_party/libuv:uv",
-  ]
-
-  external_deps = [
-    "ability_base:zuri",
-    "ability_runtime:abilitykit_native",
-    "ability_runtime:data_ability_helper",
-    "ability_runtime:napi_base_context",
-    "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_single",
-    "napi:ace_napi",
-  ]
+  deps = request_deps
+  deps += [ "${request_path}/frameworks/native/upload:upload_lib" ]
+  external_deps = request_external_deps
 
   relative_install_dir = "module"
   subsystem_name = "request"
@@ -89,60 +94,13 @@ ohos_shared_library("request") {
 }
 
 ohos_static_library("request_static") {
-  include_dirs = [
-    "${arkui_path}/ace_engine/frameworks/base/utils",
-    "${ability_runtime_napi_path}/featureAbility",
-    "${ability_runtime_napi_path}/inner/napi_common",
-    "${request_path}/frameworks/native/download/include",
-    "${request_path}/frameworks/native/upload/include",
-    "//third_party/libuv/include",
-    "./inlcude",
-  ]
-
+  include_dirs = request_include
   configs = [ "//build/config/gcc:symbol_visibility_hidden" ]
   public_configs = [ ":upload_public_config" ]
+  sources = request_src
 
-  sources = [
-    "src/download/async_call.cpp",
-    "src/download_base_notify.cpp",
-    "src/download_event.cpp",
-    "src/download_pause.cpp",
-    "src/download_query.cpp",
-    "src/download_query_mimetype.cpp",
-    "src/download_remove.cpp",
-    "src/download_resume.cpp",
-    "src/download_task_napi.cpp",
-    "src/download_task_napi_V9.cpp",
-    "src/header_receive_callback.cpp",
-    "src/js_util.cpp",
-    "src/legacy/download_manager.cpp",
-    "src/legacy/download_task.cpp",
-    "src/napi_utils.cpp",
-    "src/notify_callback.cpp",
-    "src/progress_callback.cpp",
-    "src/request_module.cpp",
-    "src/upload/async_call.cpp",
-    "src/upload_task_napi.cpp",
-    "src/upload_task_napiV9.cpp",
-  ]
-
-  deps = [
-    "${request_path}/common:request_common_static",
-    "${request_path}/frameworks/native/download:downloadsingle",
-    "${request_path}/frameworks/native/upload:upload_lib",
-    "//third_party/libuv:uv",
-  ]
-
-  external_deps = [
-    "ability_base:zuri",
-    "ability_runtime:abilitykit_native",
-    "ability_runtime:data_ability_helper",
-    "ability_runtime:napi_base_context",
-    "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_single",
-    "napi:ace_napi",
-  ]
+  deps = request_deps
+  external_deps = request_external_deps
 
   subsystem_name = "request"
   part_name = "request"
