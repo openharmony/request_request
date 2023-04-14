@@ -600,10 +600,12 @@ void DownloadServiceManager::StartTimerForQuitSa(uint32_t interval)
     };
     std::lock_guard<std::mutex> lock(timerLock_);
     if (waittingFlag_) {
-        DOWNLOAD_HILOGD("waittingFlag_ is true.");
-        StopTimer();
+        DOWNLOAD_HILOGD("waittingFlag_ is true. Update timer.");
+        timer_.Unregister(timerId_);
+        timerId_ = timer_.Register(QuitSaCallback, WAITTING_TIME, true);
+    } else {
+        StartTimer(QuitSaCallback, interval);
     }
-    StartTimer(QuitSaCallback, interval);
 }
 
 bool DownloadServiceManager::IsSameBundleName(const std::string &sName, const std::string &dName)
