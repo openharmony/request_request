@@ -94,25 +94,19 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config)
     config.Dump();
     auto remote = Remote();
     if (remote == nullptr) {
-        close(fd);
         DOWNLOAD_HILOGE("remote is nullptr.");
         return ErrorCodeInner::ERROR_CLIENT_NULL_POINTER;
     }
     int32_t ret = remote->SendRequest(CMD_REQUEST, data, reply, option);
     // 29189 dead reply for kernel, 32 dead reply for IPC
     if (ret != ERR_NONE && ret != 32 && ret != 29189) {
-        close(fd);
         DOWNLOAD_HILOGE("ipc error number: %{public}d", ret);
         return ErrorCodeInner::ERROR_CLIENT_IPC_ERR;
     } else if (ret == 32 || ret == 29189) {
-        close(fd);
         DOWNLOAD_HILOGE("service is dead.");
         return ErrorCodeInner::ERROR_CLIENT_DEAD_REPLY;
     }
     int32_t taskId = reply.ReadInt32();
-    if (taskId < 0) {
-        close(fd);
-    }
     return taskId;
 }
 

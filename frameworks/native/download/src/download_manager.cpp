@@ -63,6 +63,7 @@ DownloadTask *DownloadManager::EnqueueTask(const DownloadConfig &config, Excepti
     if (taskId < 0) {
         int32_t ret = Retry(taskId, config);
         if (ret != ERROR_NO_ERR) {
+            DOWNLOAD_HILOGE("Request retry failed, ret = %{public}d", ret);
             return nullptr;
         }
     }
@@ -75,9 +76,10 @@ DownloadTask *DownloadManager::EnqueueTask(const DownloadConfig &config, Excepti
 }
 int32_t DownloadManager::Retry(int32_t &errorCode, const DownloadConfig &config)
 {
-    int32_t interval = 0;
-    while ((errorCode == ERROR_SERVICE_SA_QUITTING || errorCode == ERROR_CLIENT_DEAD_REPLY) && interval < 5) {
-        DOWNLOAD_HILOGD("Sa quitting or died, retry.");
+    int32_t interval = 1;
+    DOWNLOAD_HILOGE("Request retry, errorCode = %{public}d", errorCode);
+    while ((errorCode == ERROR_SERVICE_SA_QUITTING || errorCode == ERROR_CLIENT_DEAD_REPLY) && interval <= 5) {
+        DOWNLOAD_HILOGD("Sa quitting or died, retry! Retry number:%{public}d.", interval);
         int32_t ret = std::remove(config.GetFilePath().c_str());
         if (ret != ERROR_NO_ERR) {
             DOWNLOAD_HILOGE("Remove file failed.");
@@ -90,7 +92,8 @@ int32_t DownloadManager::Retry(int32_t &errorCode, const DownloadConfig &config)
         LoadDownloadServer();
         auto proxy = GetDownloadServiceProxy();
         if (proxy == nullptr) {
-            return -1;
+            DOWNLOAD_HILOGE("proxy is nullptr!");
+            return ERROR_CLIENT_NULL_POINTER;
         }
         errorCode = proxy->Request(config);
         ++interval;
@@ -102,7 +105,7 @@ void DownloadManager::DealErrorCode(int32_t errorCode, ExceptionError &err)
     auto generateError = [&err](ExceptionErrorCode errorCode, const char* info) {
         err.code = errorCode;
         err.errInfo = "errorCode: " + std::to_string(errorCode) + " info:" + std::string(info);
-        DOWNLOAD_HILOGD("%{public}s", info);
+        DOWNLOAD_HILOGE("%{public}s", info);
     };
 
     switch (errorCode) {

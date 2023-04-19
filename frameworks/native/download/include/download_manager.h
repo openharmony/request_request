@@ -63,7 +63,7 @@ public:
     void LoadServerFail();
 private:
     sptr<DownloadServiceInterface> GetDownloadServiceProxy();
-    int32_t Retry(int32_t &errorCode,const DownloadConfig &config);
+    int32_t Retry(int32_t &errorCode, const DownloadConfig &config);
     void DealErrorCode(int32_t errorCode, ExceptionError &err);
 
 private:
