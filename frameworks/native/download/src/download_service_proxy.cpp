@@ -99,7 +99,7 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config)
         return ErrorCodeInner::ERROR_CLIENT_NULL_POINTER;
     }
     int32_t ret = remote->SendRequest(CMD_REQUEST, data, reply, option);
-    // 29189 dead reply for binder, 32 dead reply for IPC
+    // 29189 dead reply for kernel, 32 dead reply for IPC
     if (ret != ERR_NONE && ret != 32 && ret != 29189) {
         close(fd);
         DOWNLOAD_HILOGE("ipc error number: %{public}d", ret);

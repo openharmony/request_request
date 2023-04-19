@@ -62,7 +62,7 @@ DownloadTask *DownloadManager::EnqueueTask(const DownloadConfig &config, Excepti
     int32_t taskId = proxy->Request(config);
     if (taskId < 0) {
         int32_t ret = Retry(taskId, config);
-        if (ret != 0) {
+        if (ret != ERROR_NO_ERR) {
             return nullptr;
         }
     }
@@ -83,6 +83,7 @@ int32_t DownloadManager::Retry(int32_t &errorCode, const DownloadConfig &config)
             DOWNLOAD_HILOGE("Remove file failed.");
         }
         if (errorCode == ERROR_SERVICE_SA_QUITTING) {
+            // Waitting for system ability quit
             usleep(500 * 1000);
         }
         downloadServiceProxy_ = nullptr;
@@ -130,6 +131,7 @@ void DownloadManager::DealErrorCode(int32_t errorCode, ExceptionError &err)
             generateError(EXCEPTION_FILE_IO, "Failed to open file errno.");
             break;
         default:
+            DOWNLOAD_HILOGD("errorCode: %{public}d", errorCode);
             break;
     }
 }
