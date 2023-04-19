@@ -59,13 +59,79 @@ DownloadTask *DownloadManager::EnqueueTask(const DownloadConfig &config, Excepti
         return nullptr;
     }
 
-    int32_t taskId = proxy->Request(config, err);
+    int32_t taskId = proxy->Request(config);
     if (taskId < 0) {
-        DOWNLOAD_HILOGE("taskId invalid");
+        int32_t ret = Retry(taskId, config);
+        if (ret != 0) {
+            return nullptr;
+        }
+    }
+    if (taskId < 0) {
+        DealErrorCode(taskId, err);
         return nullptr;
     }
     DOWNLOAD_HILOGD("DownloadManager EnqueueTask succeeded.");
     return new DownloadTask(taskId);
+}
+int32_t DownloadManager::Retry(int32_t &errorCode, const DownloadConfig &config)
+{
+    int32_t interval = 0;
+    while ((errorCode == ERROR_SERVICE_SA_QUITTING || errorCode == ERROR_CLIENT_DEAD_REPLY) && interval < 5) {
+        DOWNLOAD_HILOGD("Sa quitting or died, retry.");
+        int32_t ret = std::remove(config.GetFilePath().c_str());
+        if (ret != ERROR_NO_ERR) {
+            DOWNLOAD_HILOGE("Remove file failed.");
+        }
+        if (errorCode == ERROR_SERVICE_SA_QUITTING) {
+            usleep(500 * 1000);
+        }
+        downloadServiceProxy_ = nullptr;
+        LoadDownloadServer();
+        auto proxy = GetDownloadServiceProxy();
+        if (proxy == nullptr) {
+            return -1;
+        }
+        errorCode = proxy->Request(config);
+        ++interval;
+    }
+    return 0;
+}
+void DownloadManager::DealErrorCode(int32_t errorCode, ExceptionError &err)
+{
+    auto generateError = [&err](ExceptionErrorCode errorCode, const char* info) {
+        err.code = errorCode;
+        err.errInfo = "errorCode: " + std::to_string(errorCode) + " info:" + std::string(info);
+        DOWNLOAD_HILOGD("%{public}s", info);
+    };
+
+    switch (errorCode) {
+        case ERROR_SERVICE_SA_QUITTING:
+            generateError(EXCEPTION_SERVICE_ERROR, "Service ability is quitting.");
+            break;
+        case ERROR_SERVICE_NOT_INITIALISE:
+            generateError(EXCEPTION_SERVICE_ERROR, "Service ability init fail.");
+            break;
+        case ERROR_SERVICE_NULL_POINTER:
+            generateError(EXCEPTION_SERVICE_ERROR, "Service nullptr.");
+            break;
+        case ERROR_SERVICE_DUPLICATE_TASK_ID:
+            generateError(EXCEPTION_SERVICE_ERROR, "Duplicate taskId");
+            break;
+        case ERROR_CLIENT_IPC_ERR:
+            generateError(EXCEPTION_SERVICE_ERROR, "Ipc error.");
+            break;
+        case ERROR_CLIENT_FILE_APTH_INVALID:
+            generateError(EXCEPTION_FILE_PATH, "Download file path invalid.");
+            break;
+        case ERROR_CLIENT_FILE_PATH_EXISTS:
+            generateError(EXCEPTION_FILE_PATH, "Download File already exists.");
+            break;
+        case ERROR_CLIENT_FILE_IO:
+            generateError(EXCEPTION_FILE_IO, "Failed to open file errno.");
+            break;
+        default:
+            break;
+    }
 }
 
 bool DownloadManager::Pause(uint32_t taskId)
@@ -176,9 +242,9 @@ sptr<DownloadServiceInterface> DownloadManager::GetDownloadServiceProxy()
 
 void DownloadManager::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
 {
-    downloadServiceProxy_ = nullptr;
+    // downloadServiceProxy_ = nullptr;
     ready_ = false;
-    GetDownloadServiceProxy();
+    // GetDownloadServiceProxy();
 }
 
 DownloadSaDeathRecipient::DownloadSaDeathRecipient()

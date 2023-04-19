@@ -62,7 +62,7 @@ enum class ApplicationState {
 
 DownloadServiceManager::DownloadServiceManager()
     : initialized_(false), interval_(TASK_SLEEP_INTERVAL), threadNum_(THREAD_POOL_NUM), timeoutRetry_(MAX_RETRY_TIMES),
-      taskId_(0), waittingFlag_(false), timer_("downloadTimer"), timerId_(0), taskCount_(0)
+      taskId_(0), waittingFlag_(false), timer_("downloadTimer"), timerId_(0), taskCount_(0), saQuitFlag_(false)
 {
 }
 
@@ -118,18 +118,22 @@ uint32_t DownloadServiceManager::AddTask(const DownloadConfig &config)
 {
     if (!initialized_) {
         DOWNLOAD_HILOGE("service ability init fail");
-        return -1;
+        return ErrorCodeInner::ERROR_SERVICE_NOT_INITIALISE;
+    }
+    if (saQuitFlag_) {
+        DOWNLOAD_HILOGE("service ability is quitting");
+        return ErrorCodeInner::ERROR_SERVICE_SA_QUITTING;
     }
     uint32_t taskId = GetCurrentTaskId();
     std::lock_guard<std::recursive_mutex> autoLock(mutex_);
     if (taskMap_.find(taskId) != taskMap_.end()) {
         DOWNLOAD_HILOGD("Invalid case: duplicate taskId");
-        return -1;
+        return ErrorCodeInner::ERROR_SERVICE_DUPLICATE_TASK_ID;
     }
     auto task = std::make_shared<DownloadServiceTask>(taskId, config);
     if (task == nullptr) {
         DOWNLOAD_HILOGD("No mem to add task");
-        return -1;
+        return ErrorCodeInner::ERROR_SERVICE_NULL_POINTER;
     }
     // move new task into pending queue
     task->SetRetryTime(timeoutRetry_);
@@ -588,11 +592,11 @@ void DownloadServiceManager::StartTimerForQuitSa()
     DOWNLOAD_HILOGD("run in");
     auto QuitSaCallback = [this]() {
         if (taskCount_ <= 0) {
-            initialized_ = false;
+            saQuitFlag_ = true;
             DOWNLOAD_HILOGD("Quit system ability. taskCount_ = %{public}d", taskCount_.load());
             int32_t ret = QuitSystemAbility();
             if (ret != ERR_OK) {
-                initialized_ = true;
+                saQuitFlag_ = false;
                 DOWNLOAD_HILOGE("QuitSystemAbility() failed! ret = %{public}d", ret);
             }
         }
