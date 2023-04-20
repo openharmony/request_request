@@ -586,7 +586,7 @@ void DownloadServiceManager::StopTimer()
 void DownloadServiceManager::StartTimerForQuitSa(uint32_t interval)
 {
     DOWNLOAD_HILOGD("run in");
-    auto QuitSaCallback = [this]() {
+    auto quitSaCallback = [this]() {
         if (taskCount_ <= 0) {
             initialized_ = false;
             DOWNLOAD_HILOGD("Quit system ability. taskCount_ = %{public}d", taskCount_.load());
@@ -602,9 +602,9 @@ void DownloadServiceManager::StartTimerForQuitSa(uint32_t interval)
     if (waittingFlag_) {
         DOWNLOAD_HILOGD("waittingFlag_ is true. Update timer.");
         timer_.Unregister(timerId_);
-        timerId_ = timer_.Register(QuitSaCallback, WAITTING_TIME, true);
+        timerId_ = timer_.Register(quitSaCallback, WAITTING_TIME, true);
     } else {
-        StartTimer(QuitSaCallback, interval);
+        StartTimer(quitSaCallback, interval);
     }
 }
 
