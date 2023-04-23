@@ -19,6 +19,8 @@
 #include <string>
 #include <mutex>
 #include "visibility.h"
+#include <uv.h>
+#include "uv_queue.h"
 #include "download/async_call.h"
 #include "download_notify_stub.h"
 #include "download_task.h"
@@ -33,11 +35,10 @@ struct NotifyData {
     uint32_t paramNumber;
     std::mutex mutex;
     std::vector<int64_t> params;
-};
-
-struct CallbackData {
-    napi_env env_;
-    napi_ref ref_;
+    ~NotifyData()
+    {
+        UvQueue::DeleteRef(env, ref);
+    }
 };
 
 struct NotifyDataPtr {

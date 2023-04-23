@@ -14,7 +14,7 @@
  */
 #include "uv_queue.h"
 
-namespace OHOS::Request::UploadNapi {
+namespace OHOS::Request {
 bool UvQueue::Call(napi_env env, void *data, uv_after_work_cb afterCallback)
 {
     uv_loop_s *loop = nullptr;
@@ -31,4 +31,25 @@ bool UvQueue::Call(napi_env env, void *data, uv_after_work_cb afterCallback)
         loop, work, [](uv_work_t *work) {}, afterCallback);
     return true;
 }
-} // namespace OHOS::Request::UploadNapi
+
+void UvQueue::DeleteRef(napi_env env, napi_ref ref)
+{
+    CallbackData *callbackData = new (std::nothrow) CallbackData();
+    if (callbackData == nullptr) {
+        return;
+    }
+    callbackData->env = env;
+    callbackData->ref = ref;
+    UvQueue::Call(env, reinterpret_cast<void *>(callbackData), UvDelete);
+}
+
+void UvQueue::UvDelete(uv_work_t *work, int status)
+{
+    CallbackData *callbackData = reinterpret_cast<CallbackData *>(work->data);
+    if (callbackData != nullptr) {
+        napi_delete_reference(callbackData->env, callbackData->ref);
+        delete callbackData;
+        delete work;
+    }
+}
+} // namespace OHOS::Request

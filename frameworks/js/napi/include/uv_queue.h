@@ -19,10 +19,16 @@
 #include "napi/native_api.h"
 #include "uv.h"
 
-namespace OHOS::Request::UploadNapi {
+namespace OHOS::Request {
+struct CallbackData {
+    napi_env env;
+    napi_ref ref;
+};
 class UvQueue {
 public:
     static bool Call(napi_env env, void *data, uv_after_work_cb afterCallback);
+    static void DeleteRef(napi_env env, napi_ref ref);
+    static void UvDelete(uv_work_t *work, int status);
 };
-} // namespace OHOS::Request::UploadNapi
+} // namespace OHOS::Request
 #endif // UV_QUEUE_H
