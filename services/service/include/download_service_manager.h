@@ -85,9 +85,9 @@ private:
     bool IsSameUid(int32_t sUid, int32_t dUid);
 
     using TimerCallback = std::function<void ()>;
-    void StartTimer(const TimerCallback &callback);
+    void StartTimer(const TimerCallback &callback, uint32_t interval);
     void StopTimer();
-    void StartTimerForQuitSa();
+    void StartTimerForQuitSa(uint32_t interval);
     int32_t QuitSystemAbility();
     void DecreaseTaskCount();
 private:
@@ -112,6 +112,7 @@ private:
     uint32_t timerId_;
     std::atomic<int> taskCount_;
     std::mutex quitingLock_;
+    std::mutex timerLock_;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_SERVICE_MANAGER_H
