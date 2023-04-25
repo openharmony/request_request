@@ -46,7 +46,7 @@ using namespace OHOS::NetManagerStandard;
 namespace OHOS::Request::Download {
 std::mutex DownloadServiceManager::instanceLock_;
 DownloadServiceManager *DownloadServiceManager::instance_ = nullptr;
-constexpr const int32_t WAITTING_TIME = 60 * 1000;
+constexpr const uint32_t WAITTING_TIME = 60 * 1000;
 namespace {
 enum class ApplicationState {
     APP_STATE_BEGIN = 0,
@@ -563,11 +563,11 @@ void DownloadServiceManager::DecreaseTaskCount()
     DOWNLOAD_HILOGD("run in");
     --taskCount_;
     if (taskCount_ <= 0) {
-        StartTimerForQuitSa();
+        StartTimerForQuitSa(WAITTING_TIME);
     }
 }
 
-void DownloadServiceManager::StartTimer(const TimerCallback &callback)
+void DownloadServiceManager::StartTimer(const TimerCallback &callback, uint32_t interval)
 {
     DOWNLOAD_HILOGD("run in");
     waittingFlag_ = true;
@@ -576,7 +576,7 @@ void DownloadServiceManager::StartTimer(const TimerCallback &callback)
         DOWNLOAD_HILOGE("Create Timer error");
         return;
     }
-    timerId_ = timer_.Register(callback, WAITTING_TIME, true);
+    timerId_ = timer_.Register(callback, interval, true);
 }
 
 void DownloadServiceManager::StopTimer()
@@ -587,10 +587,10 @@ void DownloadServiceManager::StopTimer()
     waittingFlag_ = false;
 }
 
-void DownloadServiceManager::StartTimerForQuitSa()
+void DownloadServiceManager::StartTimerForQuitSa(uint32_t interval)
 {
     DOWNLOAD_HILOGD("run in");
-    auto QuitSaCallback = [this]() {
+    auto quitSaCallback = [this]() {
         if (taskCount_ <= 0) {
             saQuitFlag_ = true;
             DOWNLOAD_HILOGD("Quit system ability. taskCount_ = %{public}d", taskCount_.load());
@@ -602,11 +602,14 @@ void DownloadServiceManager::StartTimerForQuitSa()
         }
         StopTimer();
     };
+    std::lock_guard<std::mutex> lock(timerLock_);
     if (waittingFlag_) {
-        DOWNLOAD_HILOGD("waittingFlag_ is true.");
-        StopTimer();
+        DOWNLOAD_HILOGD("waittingFlag_ is true. Update timer.");
+        timer_.Unregister(timerId_);
+        timerId_ = timer_.Register(quitSaCallback, WAITTING_TIME, true);
+    } else {
+        StartTimer(quitSaCallback, interval);
     }
-    StartTimer(QuitSaCallback);
 }
 
 bool DownloadServiceManager::IsSameBundleName(const std::string &sName, const std::string &dName)
@@ -616,6 +619,6 @@ bool DownloadServiceManager::IsSameBundleName(const std::string &sName, const st
 
 bool DownloadServiceManager::IsSameUid(int32_t sUid, int32_t dUid)
 {
-    return sUid = dUid;
+    return sUid == dUid;
 }
 } // namespace OHOS::Request::Download

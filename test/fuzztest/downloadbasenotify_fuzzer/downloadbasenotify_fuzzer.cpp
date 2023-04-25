@@ -17,7 +17,6 @@
 
 #include <cstddef>
 #include <cstdint>
-
 #include "download_base_notify.h"
 #include "message_parcel.h"
 
