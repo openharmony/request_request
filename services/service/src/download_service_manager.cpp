@@ -62,7 +62,8 @@ enum class ApplicationState {
 
 DownloadServiceManager::DownloadServiceManager()
     : initialized_(false), interval_(TASK_SLEEP_INTERVAL), threadNum_(THREAD_POOL_NUM), timeoutRetry_(MAX_RETRY_TIMES),
-      taskId_(0), waittingFlag_(false), timer_("downloadTimer"), timerId_(0), taskCount_(0), saQuitFlag_(false)
+      taskId_(0), waittingFlag_(false), timer_("downloadTimer"), timerId_(0), taskCount_(0), saQuitFlag_(false),
+      isLastTask_(false)
 {
 }
 
@@ -114,7 +115,7 @@ void DownloadServiceManager::Destroy()
     initialized_ = false;
 }
 
-uint32_t DownloadServiceManager::AddTask(const DownloadConfig &config)
+int32_t DownloadServiceManager::AddTask(const DownloadConfig &config, uint32_t &taskId)
 {
     if (!initialized_) {
         DOWNLOAD_HILOGE("service ability init fail");
@@ -124,7 +125,7 @@ uint32_t DownloadServiceManager::AddTask(const DownloadConfig &config)
         DOWNLOAD_HILOGE("service ability is quitting");
         return ErrorCodeInner::ERROR_SERVICE_SA_QUITTING;
     }
-    uint32_t taskId = GetCurrentTaskId();
+    taskId = GetCurrentTaskId();
     std::lock_guard<std::recursive_mutex> autoLock(mutex_);
     if (taskMap_.find(taskId) != taskMap_.end()) {
         DOWNLOAD_HILOGD("Invalid case: duplicate taskId");
@@ -139,7 +140,10 @@ uint32_t DownloadServiceManager::AddTask(const DownloadConfig &config)
     task->SetRetryTime(timeoutRetry_);
     taskMap_[taskId] = task;
     MoveTaskToQueue(taskId, task);
-    return taskId;
+    if (saQuitFlag_) {
+        NotifyQuittigThread();
+    }
+    return ERROR_NO_ERR;
 }
 
 void DownloadServiceManager::InstallCallback(uint32_t taskId, DownloadTaskCallback eventCb)
@@ -545,6 +549,7 @@ int32_t DownloadServiceManager::QuitSystemAbility()
         return ERR_INVALID_VALUE;
     }
     std::lock_guard<std::mutex> lock(quitingLock_);
+    WaittingIfLastTask();
     if (taskCount_ > 0) {
         DOWNLOAD_HILOGE("taskCount_ > 0, stop quit Sa!");
         return ERR_INVALID_VALUE;
@@ -610,6 +615,20 @@ void DownloadServiceManager::StartTimerForQuitSa(uint32_t interval)
     } else {
         StartTimer(quitSaCallback, interval);
     }
+}
+
+void DownloadServiceManager::NotifyQuittigThread()
+{
+    std::lock_guard<std::mutex> lock(cvMutex_);
+    isLastTask_ = true;
+    saQuitCv_.notify_one();
+}
+
+void DownloadServiceManager::WaittingIfLeftTask()
+{
+    std::unique_lock<std::mutex> lock(cvMutex_);
+    saQuitCv_.wait_for(lock, std::chrono::seconds(1), [this]() { return isLastTask_; });
+    isLastTask_ = false;
 }
 
 bool DownloadServiceManager::IsSameBundleName(const std::string &sName, const std::string &dName)

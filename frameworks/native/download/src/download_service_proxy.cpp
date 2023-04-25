@@ -45,7 +45,7 @@ bool DownloadServiceProxy::IsPathValid(const std::string &filePath)
     return true;
 }
 
-int32_t DownloadServiceProxy::Request(const DownloadConfig &config)
+int32_t DownloadServiceProxy::Request(const DownloadConfig &config, uint32_t &taskId)
 {
     MessageParcel data, reply;
     MessageOption option;
@@ -99,15 +99,12 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config)
     }
     int32_t ret = remote->SendRequest(CMD_REQUEST, data, reply, option);
     // 29189 dead reply for kernel, 32 dead reply for IPC
-    if (ret != ERR_NONE && ret != 32 && ret != 29189) {
+    if (ret != ERR_NONE) {
         DOWNLOAD_HILOGE("ipc error number: %{public}d", ret);
         return ErrorCodeInner::ERROR_CLIENT_IPC_ERR;
-    } else if (ret == 32 || ret == 29189) {
-        DOWNLOAD_HILOGE("service is dead.");
-        return ErrorCodeInner::ERROR_CLIENT_DEAD_REPLY;
     }
-    int32_t taskId = reply.ReadInt32();
-    return taskId;
+    taskId = reply.ReadUint32();
+    return reply.ReadInt32();;
 }
 
 bool DownloadServiceProxy::Pause(uint32_t taskId)

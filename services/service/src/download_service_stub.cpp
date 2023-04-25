@@ -105,9 +105,10 @@ bool DownloadServiceStub::OnRequest(MessageParcel &data, MessageParcel &reply)
         config.SetHeader(data.ReadString(), data.ReadString());
     }
     config.Dump();
-    int32_t result = Request(config);
-    if (!reply.WriteInt32(result)) {
-        DOWNLOAD_HILOGE("WriteBool failed");
+    uint32_t taskId = 0;
+    int32_t result = Request(config, taskId);
+    if (!(reply.WriteUint32(taskId) && reply.WriteInt32(result))) {
+        DOWNLOAD_HILOGE("Write reply failed");
         return false;
     }
     return true;
