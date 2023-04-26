@@ -83,7 +83,8 @@ int32_t DownloadManager::Retry(uint32_t &taskId, const DownloadConfig &config, i
 {
     int32_t interval = 1;
     DOWNLOAD_HILOGD("Request retry, errorCode = %{public}d", errorCode);
-    while ((errorCode == ERROR_SERVICE_SA_QUITTING || errorCode == ERROR_CLIENT_IPC_ERR) && interval <= RETRY_FIVE_TIMES) {
+    while ((errorCode == ERROR_SERVICE_SA_QUITTING || errorCode == ERROR_CLIENT_IPC_ERR)
+           && interval <= RETRY_FIVE_TIMES) {
         DOWNLOAD_HILOGD("Sa quitting or died, retry! Retry number:%{public}d.", interval);
         int32_t ret = std::remove(config.GetFilePath().c_str());
         if (ret != ERROR_NO_ERR) {

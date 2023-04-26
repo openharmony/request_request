@@ -568,7 +568,7 @@ void DownloadServiceManager::DecreaseTaskCount()
     DOWNLOAD_HILOGD("run in");
     --taskCount_;
     if (taskCount_ <= 0) {
-        StartTimerForQuitSa(WAITTING_TIME);
+        StartTimerForQuitSa();
     }
 }
 
@@ -592,7 +592,7 @@ void DownloadServiceManager::StopTimer()
     waittingFlag_ = false;
 }
 
-void DownloadServiceManager::StartTimerForQuitSa(uint32_t interval)
+void DownloadServiceManager::StartTimerForQuitSa()
 {
     DOWNLOAD_HILOGD("run in");
     auto quitSaCallback = [this]() {
@@ -613,7 +613,7 @@ void DownloadServiceManager::StartTimerForQuitSa(uint32_t interval)
         timer_.Unregister(timerId_);
         timerId_ = timer_.Register(quitSaCallback, WAITTING_TIME, true);
     } else {
-        StartTimer(quitSaCallback, interval);
+        StartTimer(quitSaCallback, WAITTING_TIME);
     }
 }
 

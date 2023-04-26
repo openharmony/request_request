@@ -104,7 +104,7 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config, uint32_t &ta
         return ErrorCodeInner::ERROR_CLIENT_IPC_ERR;
     }
     taskId = reply.ReadUint32();
-    return reply.ReadInt32();;
+    return reply.ReadInt32();
 }
 
 bool DownloadServiceProxy::Pause(uint32_t taskId)
