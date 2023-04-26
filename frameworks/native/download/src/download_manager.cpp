@@ -68,10 +68,6 @@ DownloadTask *DownloadManager::EnqueueTask(const DownloadConfig &config, Excepti
     }
     if (ret != ERROR_NO_ERR) {
         DealErrorCode(ret, err);
-        int32_t ret = std::remove(config.GetFilePath().c_str());
-        if (ret != ERROR_NO_ERR) {
-            DOWNLOAD_HILOGE("Remove file failed.");
-        }
         DOWNLOAD_HILOGE("Request retry failed, ret = %{public}d", ret);
         return nullptr;
     }
@@ -103,6 +99,12 @@ int32_t DownloadManager::Retry(uint32_t &taskId, const DownloadConfig &config, i
         }
         errorCode = proxy->Request(config, taskId);
         ++interval;
+    }
+    if (ret != ERROR_NO_ERR) {
+        int32_t ret = std::remove(config.GetFilePath().c_str());
+        if (ret != ERROR_NO_ERR) {
+            DOWNLOAD_HILOGE("Remove file failed.");
+        }
     }
     return errorCode;
 }
