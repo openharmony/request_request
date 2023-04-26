@@ -603,6 +603,7 @@ void DownloadServiceManager::StartTimerForQuitSa()
             if (ret != ERR_OK) {
                 saQuitFlag_ = false;
                 DOWNLOAD_HILOGE("QuitSystemAbility() failed! ret = %{public}d", ret);
+                return;
             }
         }
         StopTimer();
