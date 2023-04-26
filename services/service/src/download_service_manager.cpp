@@ -549,7 +549,7 @@ int32_t DownloadServiceManager::QuitSystemAbility()
         return ERR_INVALID_VALUE;
     }
     std::lock_guard<std::mutex> lock(quitingLock_);
-    WaittingIfLastTask();
+    WaittingIfLeftTask();
     if (taskCount_ > 0) {
         DOWNLOAD_HILOGE("taskCount_ > 0, stop quit Sa!");
         return ERR_INVALID_VALUE;

@@ -42,7 +42,7 @@ public:
     bool Create(uint32_t threadNum);
     void Destroy();
 
-    uint32_t AddTask(const DownloadConfig &config, uint32_t &taskId);
+    int32_t AddTask(const DownloadConfig &config, uint32_t &taskId);
     void InstallCallback(uint32_t taskId, DownloadTaskCallback eventCb);
     bool ProcessTask();
 
