@@ -100,7 +100,7 @@ int32_t DownloadManager::Retry(uint32_t &taskId, const DownloadConfig &config, i
         errorCode = proxy->Request(config, taskId);
         ++interval;
     }
-    if (ret != ERROR_NO_ERR) {
+    if (errorCode != ERROR_NO_ERR) {
         int32_t ret = std::remove(config.GetFilePath().c_str());
         if (ret != ERROR_NO_ERR) {
             DOWNLOAD_HILOGE("Remove file failed.");
