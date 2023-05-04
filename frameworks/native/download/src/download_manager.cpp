@@ -31,7 +31,7 @@ namespace OHOS::Request::Download {
 std::mutex DownloadManager::instanceLock_;
 sptr<DownloadManager> DownloadManager::instance_ = nullptr;
 constexpr const int32_t RETRY_INTERVAL = 500 * 1000;
-constexpr const int32_t RETRY_FIVE_TIMES = 5;
+constexpr const int32_t RETRY_MAX_TIMES = 5;
 
 DownloadManager::DownloadManager() : downloadServiceProxy_(nullptr), deathRecipient_(nullptr)
 {
@@ -68,7 +68,7 @@ DownloadTask *DownloadManager::EnqueueTask(const DownloadConfig &config, Excepti
     }
     if (ret != ERROR_NO_ERR) {
         DealErrorCode(ret, err);
-        DOWNLOAD_HILOGE("Request retry failed, ret = %{public}d", ret);
+        DOWNLOAD_HILOGE("Request failed, ret = %{public}d", ret);
         return nullptr;
     }
     DOWNLOAD_HILOGD("DownloadManager EnqueueTask succeeded.");
@@ -80,17 +80,17 @@ int32_t DownloadManager::Retry(uint32_t &taskId, const DownloadConfig &config, i
     int32_t interval = 1;
     DOWNLOAD_HILOGD("Request retry, errorCode = %{public}d", errorCode);
     while ((errorCode == ERROR_SERVICE_SA_QUITTING || errorCode == ERROR_CLIENT_IPC_ERR)
-           && interval <= RETRY_FIVE_TIMES) {
+           && interval <= RETRY_MAX_TIMES) {
         DOWNLOAD_HILOGD("Sa quitting or died, retry! Retry number:%{public}d.", interval);
         int32_t ret = std::remove(config.GetFilePath().c_str());
-        if (ret != ERROR_NO_ERR) {
-            DOWNLOAD_HILOGE("Remove file failed.");
+        if (ret != 0) {
+            DOWNLOAD_HILOGW("Remove file failed.");
         }
         if (errorCode == ERROR_SERVICE_SA_QUITTING) {
             // Waitting for system ability quit
             usleep(RETRY_INTERVAL);
         }
-        downloadServiceProxy_ = nullptr;
+        SetDownloadServiceProxy(nullptr);
         LoadDownloadServer();
         auto proxy = GetDownloadServiceProxy();
         if (proxy == nullptr) {
@@ -102,8 +102,8 @@ int32_t DownloadManager::Retry(uint32_t &taskId, const DownloadConfig &config, i
     }
     if (errorCode != ERROR_NO_ERR) {
         int32_t ret = std::remove(config.GetFilePath().c_str());
-        if (ret != ERROR_NO_ERR) {
-            DOWNLOAD_HILOGE("Remove file failed.");
+        if (ret != 0) {
+            DOWNLOAD_HILOGW("Remove file failed.");
         }
     }
     return errorCode;
@@ -121,7 +121,7 @@ void DownloadManager::DealErrorCode(int32_t errorCode, ExceptionError &err)
         case ERROR_SERVICE_SA_QUITTING:
             generateError(EXCEPTION_SERVICE_ERROR, "Service ability is quitting.");
             break;
-        case ERROR_SERVICE_NOT_INITIALISE:
+        case ERROR_SERVICE_NOT_INITIALIZE:
             generateError(EXCEPTION_SERVICE_ERROR, "Service ability init fail.");
             break;
         case ERROR_SERVICE_NULL_POINTER:
@@ -133,7 +133,7 @@ void DownloadManager::DealErrorCode(int32_t errorCode, ExceptionError &err)
         case ERROR_CLIENT_IPC_ERR:
             generateError(EXCEPTION_SERVICE_ERROR, "Ipc error.");
             break;
-        case ERROR_CLIENT_FILE_APTH_INVALID:
+        case ERROR_CLIENT_FILE_PATH_INVALID:
             generateError(EXCEPTION_FILE_PATH, "Download file path invalid.");
             break;
         case ERROR_CLIENT_FILE_PATH_EXISTS:
@@ -141,6 +141,10 @@ void DownloadManager::DealErrorCode(int32_t errorCode, ExceptionError &err)
             break;
         case ERROR_CLIENT_FILE_IO:
             generateError(EXCEPTION_FILE_IO, "Failed to open file errno.");
+            break;
+        case ERROR_PERMISSION_DENIED:
+            generateError(EXCEPTION_PERMISSION, 
+                          "Permission denied.An attempt was made to forbidden by permission:INTERNET");
             break;
         default:
             DOWNLOAD_HILOGD("errorCode: %{public}d", errorCode);
@@ -218,19 +222,9 @@ bool DownloadManager::Off(uint32_t taskId, const std::string &type)
     return proxy->Off(taskId, type);
 }
 
-bool DownloadManager::CheckPermission()
-{
-    downloadServiceProxy_ = nullptr;
-    auto proxy = GetDownloadServiceProxy();
-    if (proxy == nullptr) {
-        return false;
-    }
-
-    return proxy->CheckPermission();
-}
-
 sptr<DownloadServiceInterface> DownloadManager::GetDownloadServiceProxy()
 {
+    std::lock_guard<std::mutex> lock(serviceProxyMutex_);
     if (downloadServiceProxy_ != nullptr) {
         return downloadServiceProxy_;
     }
@@ -253,6 +247,12 @@ sptr<DownloadServiceInterface> DownloadManager::GetDownloadServiceProxy()
         return nullptr;
     }
     return downloadServiceProxy_;
+}
+
+void DownloadManager::SetDownloadServiceProxy(sptr<DownloadServiceInterface> proxy)
+{
+    std::lock_guard<std::mutex> lock(serviceProxyMutex_);
+    downloadServiceProxy_ = proxy;
 }
 
 void DownloadManager::OnRemoteSaDied(const wptr<IRemoteObject> &remote)

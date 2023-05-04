@@ -54,8 +54,6 @@ public:
 
     DOWNLOAD_API bool On(uint32_t taskId, const std::string &type, const sptr<DownloadNotifyInterface> &listener);
     DOWNLOAD_API bool Off(uint32_t taskId, const std::string &type);
-
-    DOWNLOAD_API bool CheckPermission();
     
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
     DOWNLOAD_API bool LoadDownloadServer();
@@ -65,12 +63,14 @@ private:
     sptr<DownloadServiceInterface> GetDownloadServiceProxy();
     int32_t Retry(uint32_t &taskId, const DownloadConfig &config, int32_t errorCode);
     void DealErrorCode(int32_t errorCode, ExceptionError &err);
+    void SetDownloadServiceProxy(sptr<DownloadServiceInterface> proxy);
 
 private:
     static std::mutex instanceLock_;
     static sptr<DownloadManager> instance_;
     std::mutex downloadMutex_;
     std::mutex conditionMutex_;
+    std::mutex serviceProxyMutex_;
 
     sptr<DownloadServiceInterface> downloadServiceProxy_;
     sptr<DownloadSaDeathRecipient> deathRecipient_;

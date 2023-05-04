@@ -93,8 +93,6 @@ private:
     void StartTimerForQuitSa(uint32_t interval);
     int32_t QuitSystemAbility();
     void DecreaseTaskCount();
-    void NotifyQuittigThread();
-    void WaittingIfLeftTask();
 
 private:
     bool initialized_;
@@ -117,12 +115,10 @@ private:
     Utils::Timer timer_;
     uint32_t timerId_;
     std::atomic<int> taskCount_;
-    std::mutex quitingLock_;
     std::atomic<bool> saQuitFlag_;
     std::condition_variable saQuitCv_;
     std::mutex cvMutex_;
     std::mutex timerLock_;
-    bool isLastTask_;
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_SERVICE_MANAGER_H

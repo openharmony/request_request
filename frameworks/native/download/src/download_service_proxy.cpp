@@ -53,7 +53,7 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config, uint32_t &ta
     int32_t fd = -1;
     if (!IsPathValid(config.GetFilePath())) {
         DOWNLOAD_HILOGE("Download file path invalid!");
-        return ErrorCodeInner::ERROR_CLIENT_FILE_APTH_INVALID;
+        return ErrorCodeInner::ERROR_CLIENT_FILE_PATH_INVALID;
     }
     fd = open(config.GetFilePath().c_str(), O_RDWR);
     DOWNLOAD_HILOGE("fd: %{public}d start", fd);
@@ -98,7 +98,6 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config, uint32_t &ta
         return ErrorCodeInner::ERROR_CLIENT_NULL_POINTER;
     }
     int32_t ret = remote->SendRequest(CMD_REQUEST, data, reply, option);
-    // 29189 dead reply for kernel, 32 dead reply for IPC
     if (ret != ERR_NONE) {
         DOWNLOAD_HILOGE("ipc error number: %{public}d", ret);
         return ErrorCodeInner::ERROR_CLIENT_IPC_ERR;
@@ -270,26 +269,6 @@ bool DownloadServiceProxy::Off(uint32_t taskId, const std::string &type)
     return ret;
 }
 
-bool DownloadServiceProxy::CheckPermission()
-{
-    DOWNLOAD_HILOGD("DownloadServiceProxy::CheckPermission in");
-    MessageParcel data, reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        DOWNLOAD_HILOGE(" Failed to write parcelable ");
-        return false;
-    }
-
-    int32_t result = Remote()->SendRequest(CMD_CHECKPERMISSION, data, reply, option);
-    if (result != ERR_NONE) {
-        DOWNLOAD_HILOGE(" DownloadServiceProxy::CheckPermission fail, ret = %{public}d ", result);
-        return false;
-    }
-    bool ret = reply.ReadBool();
-    DOWNLOAD_HILOGD("DownloadServiceProxy::CheckPermission out [ret: %{public}d]", ret);
-    return ret;
-}
-
 bool DownloadServiceProxy::SetStartId(uint32_t startId)
 {
     DOWNLOAD_HILOGD("DownloadServiceProxy::SetStartId in");
@@ -309,5 +288,10 @@ bool DownloadServiceProxy::SetStartId(uint32_t startId)
     bool ret = reply.ReadBool();
     DOWNLOAD_HILOGD("DownloadServiceProxy::SetStartId out [ret: %{public}d]", ret);
     return ret;
+}
+
+bool DownloadServiceProxy::CheckPermission()
+{
+    return true;
 }
 } // namespace OHOS::Request::Download
