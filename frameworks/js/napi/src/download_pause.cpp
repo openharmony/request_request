@@ -23,6 +23,10 @@ namespace OHOS::Request::Download {
 napi_value DownloadPause::Pause(napi_env env, napi_callback_info info)
 {
     DOWNLOAD_HILOGD("Enter ---->");
+    if (!DownloadManager::GetInstance()->CheckPermission()) {
+        DOWNLOAD_HILOGD("no permission to access download service");
+        return nullptr;
+    }
     return Exec(env, info);
 }
 

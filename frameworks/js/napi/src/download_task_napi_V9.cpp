@@ -64,7 +64,6 @@ napi_value DownloadTaskNapiV9::JsMain(napi_env env, napi_callback_info info)
         NapiUtils::ThrowError(env, EXCEPTION_OTHER, errInfo);
         return nullptr;
     }
-
     struct ContextInfo {
         napi_ref ref = nullptr;
     };

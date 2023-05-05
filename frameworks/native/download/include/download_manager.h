@@ -55,6 +55,8 @@ public:
     DOWNLOAD_API bool On(uint32_t taskId, const std::string &type, const sptr<DownloadNotifyInterface> &listener);
     DOWNLOAD_API bool Off(uint32_t taskId, const std::string &type);
     
+    DOWNLOAD_API bool CheckPermission();
+
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
     DOWNLOAD_API bool LoadDownloadServer();
     void LoadServerSuccess();

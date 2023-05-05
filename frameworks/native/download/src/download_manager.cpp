@@ -222,6 +222,16 @@ bool DownloadManager::Off(uint32_t taskId, const std::string &type)
     return proxy->Off(taskId, type);
 }
 
+bool DownloadManager::CheckPermission()
+{
+    auto proxy = GetDownloadServiceProxy();
+    if (proxy == nullptr) {
+        return false;
+    }
+
+    return proxy->CheckPermission();
+}
+
 sptr<DownloadServiceInterface> DownloadManager::GetDownloadServiceProxy()
 {
     std::lock_guard<std::mutex> lock(serviceProxyMutex_);
