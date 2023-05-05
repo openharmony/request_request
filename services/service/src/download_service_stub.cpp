@@ -59,6 +59,8 @@ int32_t DownloadServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
             return OnEventOn(data, reply);
         case CMD_OFF:
             return OnEventOff(data, reply);
+        case CMD_CHECKPERMISSION:
+            return OnCheckPermission(data, reply);
         case CMD_SETSTARTID:
             return OnSetStartId(data, reply);
         default:
@@ -251,6 +253,18 @@ bool DownloadServiceStub::OnEventOff(MessageParcel &data, MessageParcel &reply)
         return false;
     }
     DOWNLOAD_HILOGD("DownloadServiceStub::OnEventOff out");
+    return true;
+}
+
+bool DownloadServiceStub::OnCheckPermission(MessageParcel &data, MessageParcel &reply)
+{
+    DOWNLOAD_HILOGD("DownloadServiceStub::OnCheckPermission in");
+
+    bool result = CheckPermission();
+    if (!reply.WriteBool(result)) {
+        return false;
+    }
+    DOWNLOAD_HILOGD("DownloadServiceStub::OnCheckPermission out");
     return true;
 }
 
