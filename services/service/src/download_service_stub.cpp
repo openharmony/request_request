@@ -45,7 +45,8 @@ int32_t DownloadServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
     switch (code) {
         case CMD_REQUEST: {
             uint32_t taskId = 0;
-            if (!(reply.WriteUint32(taskId) && reply.WriteInt32(OnRequest(data, taskId)))) {
+            int32_t ret = OnRequest(data, taskId);
+            if (!(reply.WriteUint32(taskId) && reply.WriteInt32(ret))) {
                 DOWNLOAD_HILOGE("Write reply failed");
             }
             break;
