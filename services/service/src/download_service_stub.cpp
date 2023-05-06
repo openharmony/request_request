@@ -43,8 +43,13 @@ int32_t DownloadServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
         return E_DOWNLOAD_TRANSACT_ERROR;
     }
     switch (code) {
-        case CMD_REQUEST:
-            return OnRequest(data, reply);
+        case CMD_REQUEST: {
+            uint32_t taskId = 0;
+            if (!(reply.WriteUint32(taskId) && reply.WriteInt32(OnRequest(data, taskId)))) {
+                DOWNLOAD_HILOGE("Write reply failed");
+            }
+            break;
+        }
         case CMD_PAUSE:
             return OnPause(data, reply);
         case CMD_QUERY:
@@ -70,11 +75,11 @@ int32_t DownloadServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
     return E_DOWNLOAD_OK;
 }
 
-bool DownloadServiceStub::OnRequest(MessageParcel &data, MessageParcel &reply)
+int32_t DownloadServiceStub::OnRequest(MessageParcel &data, uint32_t &taskId)
 {
     if (!CheckPermission()) {
         DOWNLOAD_HILOGE("download no permission, pid:%{public}d", IPCSkeleton::GetCallingPid());
-        return false;
+        return ERROR_PERMISSION_DENIED;
     }
     DOWNLOAD_HILOGD("Receive request");
     DownloadConfig config;
@@ -96,22 +101,18 @@ bool DownloadServiceStub::OnRequest(MessageParcel &data, MessageParcel &reply)
     uint32_t headerSize = data.ReadUint32();
     size_t readAbleSize = data.GetReadableBytes() / MIN_HEADER_LENGTH;
     if (static_cast<size_t>(headerSize) > readAbleSize) {
+        DOWNLOAD_HILOGE("Out of readable size.");
         if (fd > 0) {
             close(fd);
         }
-        return false;
+        return ERROR_SERVICE_ERR;
     }
     for (uint32_t i = 0; i < headerSize; i++) {
         config.SetHeader(data.ReadString(), data.ReadString());
     }
     config.Dump();
-    uint32_t taskId = 0;
     int32_t result = Request(config, taskId);
-    if (!(reply.WriteUint32(taskId) && reply.WriteInt32(result))) {
-        DOWNLOAD_HILOGE("Write reply failed");
-        return false;
-    }
-    return true;
+    return result;
 }
 
 bool DownloadServiceStub::OnPause(MessageParcel &data, MessageParcel &reply)

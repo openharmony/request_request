@@ -143,8 +143,7 @@ void DownloadManager::DealErrorCode(int32_t errorCode, ExceptionError &err)
             generateError(EXCEPTION_FILE_IO, "Failed to open file errno.");
             break;
         case ERROR_PERMISSION_DENIED:
-            generateError(EXCEPTION_PERMISSION, 
-                          "Permission denied.An attempt was made to forbidden by permission:INTERNET");
+            generateError(EXCEPTION_PERMISSION, "Permission denied.");
             break;
         default:
             DOWNLOAD_HILOGD("errorCode: %{public}d", errorCode);

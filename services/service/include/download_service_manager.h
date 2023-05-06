@@ -25,7 +25,6 @@
 #include <mutex>
 #include <iosfwd>
 #include <vector>
-#include <condition_variable>
 
 #include "constant.h"
 #include "download_config.h"
@@ -116,8 +115,6 @@ private:
     uint32_t timerId_;
     std::atomic<int> taskCount_;
     std::atomic<bool> saQuitFlag_;
-    std::condition_variable saQuitCv_;
-    std::mutex cvMutex_;
     std::mutex timerLock_;
 };
 } // namespace OHOS::Request::Download

@@ -29,7 +29,7 @@ public:
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
-    bool OnRequest(MessageParcel &data, MessageParcel &reply);
+    int32_t OnRequest(MessageParcel &data, uint32_t &taskId);
     bool OnPause(MessageParcel &data, MessageParcel &reply);
     bool OnQuery(MessageParcel &data, MessageParcel &reply);
     bool OnQueryMimeType(MessageParcel &data, MessageParcel &reply);
