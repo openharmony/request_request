@@ -37,7 +37,6 @@ public:
     virtual bool On(uint32_t taskId, const std::string &type, const sptr<DownloadNotifyInterface> &listener) = 0;
     virtual bool Off(uint32_t taskId, const std::string &type) = 0;
     virtual bool CheckPermission() = 0;
-    virtual bool SetStartId(uint32_t startId) = 0;
 };
 
 enum {
@@ -50,7 +49,6 @@ enum {
     CMD_ON,
     CMD_OFF,
     CMD_CHECKPERMISSION,
-    CMD_SETSTARTID,
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_SERVICE_INTERFACE_H

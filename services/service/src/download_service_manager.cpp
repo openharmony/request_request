@@ -291,12 +291,6 @@ bool DownloadServiceManager::QueryMimeType(uint32_t taskId, uint32_t uid, std::s
     return it->second->QueryMimeType(mimeType);
 }
 
-void DownloadServiceManager::SetStartId(uint32_t startId)
-{
-    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
-    taskId_ = startId;
-}
-
 uint32_t DownloadServiceManager::GetStartId() const
 {
     return taskId_;

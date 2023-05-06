@@ -45,7 +45,6 @@ using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
 
 static const std::string DOWNLOAD_PERMISSION_NAME_INTERNET = "ohos.permission.INTERNET";
-static const std::string DOWNLOAD_PERMISSION_NAME_SESSION = "ohos.permission.DOWNLOAD_SESSION_MANAGER";
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DownloadServiceAbility, DOWNLOAD_SERVICE_ID, true);
 const std::int64_t INIT_INTERVAL = 5000L;
@@ -291,18 +290,6 @@ bool DownloadServiceAbility::CheckPermission()
         DOWNLOAD_HILOGE("Current tokenId permission is %{public}d", result);
     }
     return result == PERMISSION_GRANTED;
-}
-
-bool DownloadServiceAbility::SetStartId(uint32_t startId)
-{
-    auto instance = DownloadServiceManager::GetInstance();
-    if (instance == nullptr) {
-        DOWNLOAD_HILOGE("DownloadServiceManager is null");
-        return false;
-    }
-    instance->SetStartId(startId);
-    DOWNLOAD_HILOGI("Set Start Task id is %{public}d", startId);
-    return true;
 }
 
 void DownloadServiceAbility::NotifyHandler(const std::string &type, uint32_t taskId, int64_t argv1, int64_t argv2,

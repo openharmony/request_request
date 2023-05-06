@@ -38,7 +38,6 @@ private:
     bool OnEventOn(MessageParcel &data, MessageParcel &reply);
     bool OnEventOff(MessageParcel &data, MessageParcel &reply);
     bool OnCheckPermission(MessageParcel &data, MessageParcel &reply);
-    bool OnSetStartId(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace OHOS::Request::Download
 #endif // DOWNLOAD_SERVICE_STUB_H
