@@ -112,8 +112,7 @@ int32_t DownloadServiceStub::OnRequest(MessageParcel &data, uint32_t &taskId)
         config.SetHeader(data.ReadString(), data.ReadString());
     }
     config.Dump();
-    int32_t result = Request(config, taskId);
-    return result;
+    return Request(config, taskId);
 }
 
 bool DownloadServiceStub::OnPause(MessageParcel &data, MessageParcel &reply)
