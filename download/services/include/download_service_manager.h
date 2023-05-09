@@ -52,7 +52,6 @@ public:
     bool QueryAllTask(std::vector<DownloadInfo> &taskVector) const;
     bool QueryMimeType(uint32_t taskId, uint32_t uid, std::string &mimeType);
 
-    void SetStartId(uint32_t startId);
     uint32_t GetStartId() const;
 
     void SetInterval(uint32_t interval);

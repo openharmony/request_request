@@ -297,18 +297,6 @@ bool DownloadServiceAbility::CheckPermission()
     return result == PERMISSION_GRANTED;
 }
 
-bool DownloadServiceAbility::SetStartId(uint32_t startId)
-{
-    auto instance = DownloadServiceManager::GetInstance();
-    if (instance == nullptr) {
-        DOWNLOAD_HILOGE("DownloadServiceManager is null");
-        return false;
-    }
-    instance->SetStartId(startId);
-    DOWNLOAD_HILOGI("Set Start Task id is %{public}d", startId);
-    return true;
-}
-
 void DownloadServiceAbility::NotifyHandler(const std::string &type, uint32_t taskId, int64_t argv1, int64_t argv2,
     bool isNotify)
 {

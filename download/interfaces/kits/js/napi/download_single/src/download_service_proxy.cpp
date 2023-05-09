@@ -304,26 +304,4 @@ bool DownloadServiceProxy::CheckPermission()
     DOWNLOAD_HILOGD("DownloadServiceProxy::CheckPermission out [ret: %{public}d]", ret);
     return ret;
 }
-
-bool DownloadServiceProxy::SetStartId(uint32_t startId)
-{
-    DOWNLOAD_HILOGD("DownloadServiceProxy::SetStartId in");
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        DOWNLOAD_HILOGE(" Failed to write parcelable ");
-        return false;
-    }
-    data.WriteUint32(startId);
-    
-    int32_t result = Remote()->SendRequest(CMD_SETSTARTID, data, reply, option);
-    if (result != ERR_NONE) {
-        DOWNLOAD_HILOGE(" DownloadServiceProxy::SetStartId fail, ret = %{public}d ", result);
-        return false;
-    }
-    bool ret = reply.ReadBool();
-    DOWNLOAD_HILOGD("DownloadServiceProxy::SetStartId out [ret: %{public}d]", ret);
-    return ret;
-}
 } // namespace OHOS::Request::Download

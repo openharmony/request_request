@@ -59,8 +59,6 @@ int32_t DownloadServiceStub::OnRemoteRequest(
             return OnEventOff(data, reply);
         case CMD_CHECKPERMISSION:
             return OnCheckPermission(data, reply);
-        case CMD_SETSTARTID:
-            return OnSetStartId(data, reply);
         default:
             DOWNLOAD_HILOGE("Default value received, check needed.");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -263,22 +261,6 @@ bool DownloadServiceStub::OnCheckPermission(MessageParcel &data, MessageParcel &
         return false;
     }
     DOWNLOAD_HILOGD("DownloadServiceStub::OnCheckPermission out");
-    return true;
-}
-
-bool DownloadServiceStub::OnSetStartId(MessageParcel &data, MessageParcel &reply)
-{
-    if (!CheckPermission()) {
-        DOWNLOAD_HILOGE("set start Id no permission, pid:%{public}d", IPCSkeleton::GetCallingPid());
-        return false;
-    }
-    DOWNLOAD_HILOGD("DownloadServiceStub::OnSetStartId in");
-    uint32_t startId = data.ReadUint32();
-    bool result = SetStartId(startId);
-    if (!reply.WriteBool(result)) {
-        return false;
-    }
-    DOWNLOAD_HILOGD("DownloadServiceStub::OnSetStartId out");
     return true;
 }
 } // namespace OHOS::Request::Download
