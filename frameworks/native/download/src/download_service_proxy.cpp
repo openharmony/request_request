@@ -45,32 +45,27 @@ bool DownloadServiceProxy::IsPathValid(const std::string &filePath)
     return true;
 }
 
-int32_t DownloadServiceProxy::Request(const DownloadConfig &config, ExceptionError &error)
+int32_t DownloadServiceProxy::Request(const DownloadConfig &config, uint32_t &taskId)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     int32_t fd = -1;
     if (!IsPathValid(config.GetFilePath())) {
-        error.code = EXCEPTION_FILE_PATH;
-        error.errInfo = "Download File Path Valid";
-        return -1;
+        DOWNLOAD_HILOGE("Download file path invalid!");
+        return ErrorCodeInner::ERROR_CLIENT_FILE_PATH_INVALID;
     }
     fd = open(config.GetFilePath().c_str(), O_RDWR);
     DOWNLOAD_HILOGE("fd: %{public}d start", fd);
     if (fd >= 0) {
-        error.code = EXCEPTION_FILE_PATH;
-        error.errInfo = "Download File already exists";
-        DOWNLOAD_HILOGE("%{public}s", error.errInfo.c_str());
+        DOWNLOAD_HILOGE("Download File already exists");
         close(fd);
-        return -1;
+        return ErrorCodeInner::ERROR_CLIENT_FILE_PATH_EXISTS;
     } else {
         fd = open(config.GetFilePath().c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
         if (fd < 0) {
-            error.code = EXCEPTION_FILE_IO;
-            error.errInfo = "Failed to open file errno " + std::to_string(errno);
-            DOWNLOAD_HILOGE("%{public}s", error.errInfo.c_str());
-            return -1;
+            DOWNLOAD_HILOGE("Failed to open file errno %{public}d", errno);
+            return ErrorCodeInner::ERROR_CLIENT_FILE_IO;
         }
     }
     DOWNLOAD_HILOGE("fd: %{public}d end", fd);
@@ -97,21 +92,18 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config, ExceptionErr
         data.WriteString(iter->second);
     }
     config.Dump();
-    bool ret = Remote()->SendRequest(CMD_REQUEST, data, reply, option);
+    auto remote = Remote();
+    if (remote == nullptr) {
+        DOWNLOAD_HILOGE("remote is nullptr.");
+        return ErrorCodeInner::ERROR_CLIENT_NULL_POINTER;
+    }
+    int32_t ret = remote->SendRequest(CMD_REQUEST, data, reply, option);
     if (ret != ERR_NONE) {
-        error.code = EXCEPTION_SERVICE_ERROR;
-        error.errInfo = "ipc request  ret = " + std::to_string(ret);
-        DOWNLOAD_HILOGE("%{public}s", error.errInfo.c_str());
-        return -1;
+        DOWNLOAD_HILOGE("ipc error number: %{public}d", ret);
+        return ErrorCodeInner::ERROR_CLIENT_IPC_ERR;
     }
-    int32_t taskId = reply.ReadInt32();
-    if (taskId < 0) {
-        error.code = EXCEPTION_SERVICE_ERROR;
-        error.errInfo = "taskId: " + std::to_string(taskId);
-        DOWNLOAD_HILOGE("%{public}s", error.errInfo.c_str());
-        return -1;
-    }
-    return taskId;
+    taskId = reply.ReadUint32();
+    return reply.ReadInt32();
 }
 
 bool DownloadServiceProxy::Pause(uint32_t taskId)

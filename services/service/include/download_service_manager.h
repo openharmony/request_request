@@ -41,7 +41,7 @@ public:
     bool Create(uint32_t threadNum);
     void Destroy();
 
-    uint32_t AddTask(const DownloadConfig &config);
+    int32_t AddTask(const DownloadConfig &config, uint32_t &taskId);
     void InstallCallback(uint32_t taskId, DownloadTaskCallback eventCb);
     bool ProcessTask();
 
@@ -59,6 +59,8 @@ public:
     uint32_t GetInterval() const;
 
     void ResumeTaskByNetwork();
+    void StartTimerForQuitSa();
+
 private:
     explicit DownloadServiceManager();
     ~DownloadServiceManager();
@@ -89,6 +91,7 @@ private:
     void StartTimerForQuitSa(uint32_t interval);
     int32_t QuitSystemAbility();
     void DecreaseTaskCount();
+
 private:
     bool initialized_;
     std::recursive_mutex mutex_;
@@ -110,7 +113,7 @@ private:
     Utils::Timer timer_;
     uint32_t timerId_;
     std::atomic<int> taskCount_;
-    std::mutex quitingLock_;
+    std::atomic<bool> saQuitFlag_;
     std::mutex timerLock_;
 };
 } // namespace OHOS::Request::Download

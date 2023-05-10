@@ -117,6 +117,13 @@ void DownloadServiceAbility::OnStart()
         return;
     }
     state_ = ServiceRunningState::STATE_RUNNING;
+
+    auto instance = DownloadServiceManager::GetInstance();
+    if (instance == nullptr) {
+        DOWNLOAD_HILOGE("DownloadServiceManager is null");
+        return;
+    }
+    instance->StartTimerForQuitSa();
     return;
 }
 
@@ -158,27 +165,22 @@ void DownloadServiceAbility::OnStop()
     DOWNLOAD_HILOGI("OnStop end.");
 }
 
-int32_t DownloadServiceAbility::Request(const DownloadConfig &config, ExceptionError &err)
+int32_t DownloadServiceAbility::Request(const DownloadConfig &config, uint32_t &taskId)
 {
     ManualStart();
-    int32_t taskId = -1;
     auto instance = DownloadServiceManager::GetInstance();
     if (instance == nullptr) {
         DOWNLOAD_HILOGE("DownloadServiceManager is null");
-        err.code = EXCEPTION_SERVICE_ERROR;
-        err.errInfo = "DownloadServiceManager is null";
-        return taskId;
+        return ErrorCodeInner::ERROR_SERVICE_NULL_POINTER;
     }
-    taskId = static_cast<int32_t>(instance->AddTask(config));
-    if (taskId < 0) {
-        DOWNLOAD_HILOGE("taskId [%{public}d] is invalid, config url: %{public}s", taskId, config.GetUrl().c_str());
-        err.code = EXCEPTION_SERVICE_ERROR;
-        err.errInfo = "taskId " + std::to_string(taskId) + " is invalid, config url: " + config.GetUrl();
-        return taskId;
+    int32_t ret = instance->AddTask(config, taskId);
+    if (ret != ERROR_NO_ERR) {
+        DOWNLOAD_HILOGE("taskId [%{public}u] is invalid, config url: %{public}s", taskId, config.GetUrl().c_str());
+        return ret;
     }
     instance->InstallCallback(taskId, NotifyHandler);
     DOWNLOAD_HILOGI("DownloadServiceAbility Allocate Task[%{public}d] started.", taskId);
-    return taskId;
+    return ERROR_NO_ERR;
 }
 
 bool DownloadServiceAbility::Pause(uint32_t taskId)

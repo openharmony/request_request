@@ -27,7 +27,7 @@ public:
     explicit DownloadServiceProxy(const sptr<IRemoteObject> &object);
     ~DownloadServiceProxy() = default;
     DISALLOW_COPY_AND_MOVE(DownloadServiceProxy);
-    int32_t Request(const DownloadConfig &config, ExceptionError &error) override;
+    int32_t Request(const DownloadConfig &config, uint32_t &taskId) override;
     bool Pause(uint32_t taskId) override;
     bool Query(uint32_t taskId, DownloadInfo &info) override;
     bool QueryMimeType(uint32_t taskId, std::string &mimeType) override;

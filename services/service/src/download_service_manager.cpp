@@ -62,7 +62,7 @@ enum class ApplicationState {
 
 DownloadServiceManager::DownloadServiceManager()
     : initialized_(false), interval_(TASK_SLEEP_INTERVAL), threadNum_(THREAD_POOL_NUM), timeoutRetry_(MAX_RETRY_TIMES),
-      taskId_(0), waittingFlag_(false), timer_("downloadTimer"), timerId_(0), taskCount_(0)
+      taskId_(0), waittingFlag_(false), timer_("downloadTimer"), timerId_(0), taskCount_(0), saQuitFlag_(false)
 {
 }
 
@@ -114,28 +114,32 @@ void DownloadServiceManager::Destroy()
     initialized_ = false;
 }
 
-uint32_t DownloadServiceManager::AddTask(const DownloadConfig &config)
+int32_t DownloadServiceManager::AddTask(const DownloadConfig &config, uint32_t &taskId)
 {
     if (!initialized_) {
         DOWNLOAD_HILOGE("service ability init fail");
-        return -1;
+        return ErrorCodeInner::ERROR_SERVICE_NOT_INITIALIZE;
     }
-    uint32_t taskId = GetCurrentTaskId();
+    if (saQuitFlag_) {
+        DOWNLOAD_HILOGE("service ability is quitting");
+        return ErrorCodeInner::ERROR_SERVICE_SA_QUITTING;
+    }
     std::lock_guard<std::recursive_mutex> autoLock(mutex_);
+    taskId = GetCurrentTaskId();
     if (taskMap_.find(taskId) != taskMap_.end()) {
         DOWNLOAD_HILOGD("Invalid case: duplicate taskId");
-        return -1;
+        return ErrorCodeInner::ERROR_SERVICE_DUPLICATE_TASK_ID;
     }
     auto task = std::make_shared<DownloadServiceTask>(taskId, config);
     if (task == nullptr) {
         DOWNLOAD_HILOGD("No mem to add task");
-        return -1;
+        return ErrorCodeInner::ERROR_SERVICE_NULL_POINTER;
     }
     // move new task into pending queue
     task->SetRetryTime(timeoutRetry_);
     taskMap_[taskId] = task;
     MoveTaskToQueue(taskId, task);
-    return taskId;
+    return ErrorCodeInner::ERROR_NO_ERR;
 }
 
 void DownloadServiceManager::InstallCallback(uint32_t taskId, DownloadTaskCallback eventCb)
@@ -298,7 +302,6 @@ uint32_t DownloadServiceManager::GetStartId() const
 
 uint32_t DownloadServiceManager::GetCurrentTaskId()
 {
-    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
     return taskId_++;
 }
 
@@ -534,7 +537,7 @@ int32_t DownloadServiceManager::QuitSystemAbility()
         DOWNLOAD_HILOGE("GetSystemAbilityManager return nullptr");
         return ERR_INVALID_VALUE;
     }
-    std::lock_guard<std::mutex> lock(quitingLock_);
+    std::lock_guard<std::recursive_mutex> autoLock(mutex_);
     if (taskCount_ > 0) {
         DOWNLOAD_HILOGE("taskCount_ > 0, stop quit Sa!");
         return ERR_INVALID_VALUE;
@@ -553,7 +556,7 @@ void DownloadServiceManager::DecreaseTaskCount()
     DOWNLOAD_HILOGD("run in");
     --taskCount_;
     if (taskCount_ <= 0) {
-        StartTimerForQuitSa(WAITTING_TIME);
+        StartTimerForQuitSa();
     }
 }
 
@@ -577,17 +580,18 @@ void DownloadServiceManager::StopTimer()
     waittingFlag_ = false;
 }
 
-void DownloadServiceManager::StartTimerForQuitSa(uint32_t interval)
+void DownloadServiceManager::StartTimerForQuitSa()
 {
     DOWNLOAD_HILOGD("run in");
     auto quitSaCallback = [this]() {
         if (taskCount_ <= 0) {
-            initialized_ = false;
+            saQuitFlag_ = true;
             DOWNLOAD_HILOGD("Quit system ability. taskCount_ = %{public}d", taskCount_.load());
             int32_t ret = QuitSystemAbility();
             if (ret != ERR_OK) {
-                initialized_ = true;
+                saQuitFlag_ = false;
                 DOWNLOAD_HILOGE("QuitSystemAbility() failed! ret = %{public}d", ret);
+                return;
             }
         }
         StopTimer();
@@ -598,7 +602,7 @@ void DownloadServiceManager::StartTimerForQuitSa(uint32_t interval)
         timer_.Unregister(timerId_);
         timerId_ = timer_.Register(quitSaCallback, WAITTING_TIME, true);
     } else {
-        StartTimer(quitSaCallback, interval);
+        StartTimer(quitSaCallback, WAITTING_TIME);
     }
 }
 

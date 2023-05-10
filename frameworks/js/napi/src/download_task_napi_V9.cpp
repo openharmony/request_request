@@ -64,12 +64,6 @@ napi_value DownloadTaskNapiV9::JsMain(napi_env env, napi_callback_info info)
         NapiUtils::ThrowError(env, EXCEPTION_OTHER, errInfo);
         return nullptr;
     }
-    if (!DownloadManager::GetInstance()->CheckPermission()) {
-        errInfo = "Permission denied.An attempt was made to forbidden by permission:INTERNET";
-        DOWNLOAD_HILOGE("%{public}s", errInfo.c_str());
-        NapiUtils::ThrowError(env, EXCEPTION_PERMISSION, errInfo);
-        return nullptr;
-    }
     struct ContextInfo {
         napi_ref ref = nullptr;
     };
