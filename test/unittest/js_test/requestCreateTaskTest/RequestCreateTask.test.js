@@ -18,7 +18,7 @@ import { agent } from '@ohos.request';
 import featureAbility from '@ohos.ability.featureAbility'
 import fs from '@ohos.file.fs';
 
-describe('RequestTaskTest', function () {
+describe('RequestCreateTaskTest', function () {
     beforeAll(function () {
         console.info('beforeAll called')
     })
@@ -72,7 +72,7 @@ describe('RequestTaskTest', function () {
             url: 'http://127.0.0.1',
         }
         try {
-            agent.create(conf, (err) => {
+            agent.create(context, conf, (err) => {
                 if (err) {
                     expect(err.code).assertEqual(401)
                     done()
@@ -99,7 +99,7 @@ describe('RequestTaskTest', function () {
             url: 'http://127.0.0.1'
         }
         try {
-            agent.create(conf, (err) => {
+            agent.create(context, conf, (err) => {
                 if (err) {
                     expect(err.code).assertEqual(401)
                     done()
@@ -125,7 +125,7 @@ describe('RequestTaskTest', function () {
             action: 2,
             url: 'http://127.0.0.1'
         }
-        agent.create(conf, (err) => {
+        agent.create(context, conf, (err) => {
             if (err) {
                 expect(true).assertTrue()
                 done()
@@ -150,7 +150,7 @@ describe('RequestTaskTest', function () {
             url: 'http://127.0.0.1',
             data: formItem
         }
-        agent.create(conf, async (err, data) => {
+        agent.create(context, conf, async (err, data) => {
             if (err) {
                 expect(false).assertTrue()
                 done()
@@ -170,9 +170,10 @@ describe('RequestTaskTest', function () {
         let conf = {
             action: agent.Action.DOWNLOAD,
             url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-            saveas: `${cacheDir}`
+            saveas: `${cacheDir}`,
+            gauge: true
         }
-        agent.create(conf, async (err, data) => {
+        agent.create(context, conf, async (err, data) => {
             if (err) {
                 expect(false).assertTrue()
                 done()
@@ -197,7 +198,7 @@ describe('RequestTaskTest', function () {
             action: agent.Action.DOWNLOAD,
         }
         try {
-            agent.create(conf, (err) => {
+            agent.create(context, conf, (err) => {
                 if (err) {
                     expect(err.code).assertEqual(401)
                     done()
@@ -223,7 +224,7 @@ describe('RequestTaskTest', function () {
             action: agent.Action.DOWNLOAD,
             url: '',
         }
-        agent.create(conf, (err) => {
+        agent.create(context, conf, (err) => {
             if (err) {
                 expect(true).assertTrue()
                 done()
@@ -245,7 +246,7 @@ describe('RequestTaskTest', function () {
             action: agent.Action.DOWNLOAD,
             url: 'https://gitee.com/openharmony/request_request',
         }
-        agent.create(conf, (err) => {
+        agent.create(context, conf, (err) => {
             if (err) {
                 expect(err.code).assertEqual(13400003)
                 done()
@@ -270,7 +271,7 @@ describe('RequestTaskTest', function () {
             url: 'https://gitee.com/openharmony/request_request',
             data: formItem
         }
-        agent.create(conf, (err) => {
+        agent.create(context, conf, (err) => {
             if (err) {
                 expect(err.code).assertEqual(13400003)
                 done()
@@ -301,7 +302,7 @@ describe('RequestTaskTest', function () {
             },
             title: 'upload test.txt'
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         expect(task.title).assertEqual('upload test.txt')
         done()
     })
@@ -324,7 +325,7 @@ describe('RequestTaskTest', function () {
             },
             title: 123
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         expect(task.title).assertEqual("")
         done()
     })
@@ -349,7 +350,7 @@ describe('RequestTaskTest', function () {
             },
             description: 'test upload'
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         expect(task.description).assertEqual('test upload')
         expect(task.conf.mode).assertEqual(agent.Mode.BACKGROUND)
         done()
@@ -373,7 +374,7 @@ describe('RequestTaskTest', function () {
             },
             title: 123
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         expect(task.description).assertEqual("")
         done()
     })
@@ -396,7 +397,7 @@ describe('RequestTaskTest', function () {
             },
             mode: agent.Mode.FRONTEND
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             agent.remove(context, task.tid)
             expect(true).assertTrue()
@@ -425,7 +426,7 @@ describe('RequestTaskTest', function () {
             },
             mode: agent.Mode.BACKGROUND
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(true).assertTrue()
             done()
@@ -453,7 +454,7 @@ describe('RequestTaskTest', function () {
             },
             mode: "BACKGROUND"
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(task.conf.mode).assertEqual(agent.Mode.BACKGROUND)
             done()
@@ -483,7 +484,7 @@ describe('RequestTaskTest', function () {
             },
             cover: true
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(true).assertTrue()
             done()
@@ -511,7 +512,7 @@ describe('RequestTaskTest', function () {
             },
             cover: true
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(true).assertTrue()
             done()
@@ -541,7 +542,7 @@ describe('RequestTaskTest', function () {
             },
             cover: false
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(true).assertTrue()
             done()
@@ -569,7 +570,7 @@ describe('RequestTaskTest', function () {
             },
             cover: false
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(true).assertTrue()
             done()
@@ -597,7 +598,7 @@ describe('RequestTaskTest', function () {
             },
             cover: "true"
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(task.conf.cover).assertEqual(true)
             done()
@@ -627,7 +628,7 @@ describe('RequestTaskTest', function () {
             },
             method: 'POST'
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(true).assertTrue()
             done()
@@ -650,7 +651,7 @@ describe('RequestTaskTest', function () {
             saveas: `${cacheDir}`,
             method: 'POST'
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(true).assertTrue()
             done()
@@ -673,7 +674,7 @@ describe('RequestTaskTest', function () {
             saveas: `${cacheDir}`,
             method: 123
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(task.conf.method).assertEqual('GET')
             done()
@@ -696,7 +697,7 @@ describe('RequestTaskTest', function () {
             saveas: `${cacheDir}`,
             method: ''
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(task.conf.method).assertEqual('GET')
             done()
@@ -726,7 +727,7 @@ describe('RequestTaskTest', function () {
             },
             method: 'GET'
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(true).assertTrue()
             done()
@@ -749,7 +750,7 @@ describe('RequestTaskTest', function () {
             saveas: `${cacheDir}`,
             method: 'PUT'
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(true).assertTrue()
             done()
@@ -779,7 +780,7 @@ describe('RequestTaskTest', function () {
             },
             headers: JSON.stringify({'content-type': 'application/json'}),
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(true).assertTrue()
             done()
@@ -808,7 +809,7 @@ describe('RequestTaskTest', function () {
                 },
             },
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(task.conf.headers).assertEqual('multipart/form-data')
             done()
@@ -829,7 +830,7 @@ describe('RequestTaskTest', function () {
             action: agent.Action.DOWNLOAD,
             url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start().then(() => {
             expect(task.conf.headers).assertEqual('application/json')
             done()
@@ -849,9 +850,10 @@ describe('RequestTaskTest', function () {
         let conf = {
             action: agent.Action.DOWNLOAD,
             url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            mode: agent.Mode.FRONTEND,
             saveas: 123
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.on('completed', function() {
             if (fs.accessSync(`${cacheDir}/test.apk`)) {
                 expect(true).assertTrue()
@@ -880,7 +882,7 @@ describe('RequestTaskTest', function () {
             }
         }
         try {
-            agent.create(conf, (err) => {
+            agent.create(context, conf, (err) => {
                 if (err) {
                     expect(err.code).assertEqual(401)
                     done()
@@ -915,7 +917,7 @@ describe('RequestTaskTest', function () {
             }
         }
         try {
-            agent.create(conf, (err) => {
+            agent.create(context, conf, (err) => {
                 if (err) {
                     expect(err.code).assertEqual(401)
                     done()
@@ -947,7 +949,7 @@ describe('RequestTaskTest', function () {
             }
         }
         try {
-            agent.create(conf, (err) => {
+            agent.create(context, conf, (err) => {
                 if (err) {
                     expect(err.code).assertEqual(401)
                     done()
@@ -980,7 +982,7 @@ describe('RequestTaskTest', function () {
             }
         }
         try {
-            agent.create(conf, (err) => {
+            agent.create(context, conf, (err) => {
                 if (err) {
                     expect(err.code).assertEqual(401)
                     done()
@@ -1015,7 +1017,7 @@ describe('RequestTaskTest', function () {
             }
         }
         try {
-            agent.create(conf, (err) => {
+            agent.create(context, conf, (err) => {
                 if (err) {
                     expect(err.code).assertEqual(401)
                     done()
@@ -1050,7 +1052,7 @@ describe('RequestTaskTest', function () {
             }
         }
         try {
-            agent.create(conf, (err) => {
+            agent.create(context, conf, (err) => {
                 if (err) {
                     expect(err.code).assertEqual(401)
                     done()
@@ -1085,7 +1087,7 @@ describe('RequestTaskTest', function () {
                 }
             }
         }
-        agent.create(conf, (err) => {
+        agent.create(context, conf, (err) => {
             if (err) {
                 expect(err.code).assertEqual(13400001)
                 done()
@@ -1116,7 +1118,7 @@ describe('RequestTaskTest', function () {
                 }
             }
         }
-        agent.create(conf, (err) => {
+        agent.create(context, conf, (err) => {
             if (err) {
                 expect(false).assertTrue()
                 done()
@@ -1148,7 +1150,7 @@ describe('RequestTaskTest', function () {
                 }
             }
         }
-        agent.create(conf, (err) => {
+        agent.create(context, conf, (err) => {
             if (err) {
                 expect(false).assertTrue()
                 done()
@@ -1179,7 +1181,7 @@ describe('RequestTaskTest', function () {
                 }
             }
         }
-        agent.create(conf, (err) => {
+        agent.create(context, conf, (err) => {
             if (err) {
                 expect(false).assertTrue()
                 done()
@@ -1214,7 +1216,7 @@ describe('RequestTaskTest', function () {
                 ]
             }
         }
-        agent.create(conf, (err) => {
+        agent.create(context, conf, (err) => {
             if (err) {
                 expect(false).assertTrue()
                 done()
@@ -1242,7 +1244,7 @@ describe('RequestTaskTest', function () {
                 value: 'test'
             }
         }
-        agent.create(conf, (err) => {
+        agent.create(context, conf, (err) => {
             if (err) {
                 expect(false).assertTrue()
                 done()
@@ -1273,7 +1275,7 @@ describe('RequestTaskTest', function () {
                 }
             }
         }
-        agent.create(conf, (err) => {
+        agent.create(context, conf, (err) => {
             if (err) {
                 expect(false).assertTrue()
                 done()
@@ -1384,7 +1386,7 @@ describe('RequestTaskTest', function () {
             network: agent.NetWork.WIFI
         }
 
-        task = await agent.create(conf);
+        task = await agent.create(context,  conf);
         task.start().then(() => {
             expect(true).assertTrue()
             done()
@@ -1408,11 +1410,13 @@ describe('RequestTaskTest', function () {
             retry: true
         }
         task = await agent.create(context, conf);
-        task.on('failed', function () {
+        task.start().then(() => {
             expect(true).assertTrue()
             done()
+        }).catch((err) => {
+            expect(false).assertTrue()
+            done()
         })
-        task.start()
     })
 
     /**
@@ -1426,16 +1430,17 @@ describe('RequestTaskTest', function () {
             action: agent.Action.DOWNLOAD,
             url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
             mode: agent.Mode.BACKGROUND,
-            retry: true
+            retry: true,
+            gauge: true
         }
-        task = await agent.create(conf);
-        task.on('progress', function (progress) {
-            if (progress.state === agent.State.RETRYING) {
-                expect(true).assertTrue()
-                done()
-            }
+        task = await agent.create(context, conf);
+        task.start().then(() => {
+            expect(true).assertTrue()
+            done()
+        }).catch((err) => {
+            expect(false).assertTrue()
+            done()
         })
-        task.start()
     })
 
     /**
@@ -1472,7 +1477,7 @@ describe('RequestTaskTest', function () {
             mode: agent.Mode.FRONTEND,
             retry: false
         }
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.on('failed', function () {
             expect(true).assertTrue()
             done()
@@ -1497,7 +1502,466 @@ describe('RequestTaskTest', function () {
             expect(true).assertTrue()
             done()
         })
-        task = await agent.create(conf);
+        task = await agent.create(context, conf);
         task.start()
+    })
+
+    /**
+     * @tc.name: testTaskIndex001
+     * @tc.desc: Test create task when index is string
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskIndex001', async function (done) {
+        let conf = {
+            action: agent.Action.DOWNLOAD,
+            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            index: '0',
+            mode: agent.Mode.FRONTEND
+        }
+        task = await agent.create(context, conf);
+        task.on('completed', function() {
+            expect(fs.statSync(`${cacheDir}/test.apk`).size() >= 1042000).assertTrue()
+            done()
+        })
+        task.start()
+    })
+
+    /**
+     * @tc.name: testTaskIndex002
+     * @tc.desc: Test create task when index is 0 and begins greater than ends
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskIndex002', async function (done) {
+        let conf = {
+            action: agent.Action.DOWNLOAD,
+            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            index: 0,
+            begins: 10,
+            ends: 5
+        }
+        try {
+            task = await agent.create(context, conf);
+            task.start().then(() => {
+                expect(false).assertTrue()
+                done()
+            }).catch(async (err) => {
+                expect(err.code).assertEqual(401)
+                done()
+            })
+        } catch (err) {
+            expect(err.code).assertEqual(401)
+            done()
+        }
+    })
+
+    /**
+     * @tc.name: testTaskIndex003
+     * @tc.desc: Test create task when index is 1 but only one file for upload
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskIndex003', async function (done) {
+        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+        fs.closeSync(file);
+        let conf = {
+            action: agent.Action.UPLOAD,
+            url: 'http://127.0.0.1',
+            index: 1
+        }
+        try {
+            task = await agent.create(context, conf);
+            task.start().then(() => {
+                expect(false).assertTrue()
+                done()
+            }).catch(async (err) => {
+                expect(err.code).assertEqual(401)
+                done()
+            })
+        } catch (err) {
+            expect(err.code).assertEqual(401)
+            done()
+        }
+    })
+
+    /**
+     * @tc.name: testTaskIndex004
+     * @tc.desc: Test create task when index is 0 and begins is 5 and ends is 10 for download
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskIndex004', async function (done) {
+        let conf = {
+            action: agent.Action.DOWNLOAD,
+            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            mode: agent.Mode.FRONTEND,
+            data: [
+                {
+                    path: `${cacheDir}`,
+                    filename: 'test.apk'
+                },
+            ],
+            begins: 5,
+            ends: 10,
+            gauge: true
+        }
+        task = await agent.create(context, conf);
+        await task.start()
+        task.on('completed', function(err, progress) {
+            expect(progress.state).assertEqual(agent.State.COMPLETED)
+            expect(progress.index).assertEqual(0)
+            expect(progress.processed).assertEqual(5)
+            expect(progress.sizes[0]).assertEqual(5)
+            done()
+        })
+    })
+
+    /**
+     * @tc.name: testTaskIndex005
+     * @tc.desc: Test create task when index is 0 and begins is 5 and ends is 10 for upload
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskIndex005', async function (done) {
+        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+        fs.closeSync(file);
+        let conf = {
+            action: agent.Action.UPLOAD,
+            url: 'http://127.0.0.1',
+            data: {
+                name: 'test',
+                value: {
+                    path: `${cacheDir}/test.txt`,
+                }
+            },
+            begins: 5,
+            ends: 10
+        }
+        task = await agent.create(context, conf);
+        task.start().then(() => {
+            expect(true).assertTrue()
+            done()
+        }).catch((err) => {
+            expect(false).assertTrue()
+            done()
+        })
+    })
+
+    /**
+     * @tc.name: testTaskIndex006
+     * @tc.desc: Test create task when index is 0 and begins is 5 and ends is not exists for download
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskIndex006', async function (done) {
+        let conf = {
+            action: agent.Action.DOWNLOAD,
+            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            mode: agent.Mode.FRONTEND,
+            begins: 5,
+            gauge: true
+        }
+        task = await agent.create(context, conf);
+        await task.start()
+        task.on('completed', function(err, progress) {
+            expect(progress.sizes[0]).assertLess(1042000)
+            done()
+        })
+    })
+
+    /**
+     * @tc.name: testTaskIndex007
+     * @tc.desc: Test create task when index is 0 and begins is 5 and ends is not exists for upload
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskIndex007', async function (done) {
+        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+        fs.closeSync(file);
+        let conf = {
+            action: agent.Action.UPLOAD,
+            url: 'http://127.0.0.1',
+            data: {
+                name: 'test',
+                value: {
+                    path: `${cacheDir}/test.txt`,
+                }
+            },
+            begins: 5,
+        }
+        task = await agent.create(context, conf);
+        task.start().then(() => {
+            expect(true).assertTrue()
+            done()
+        }).catch((err) => {
+            expect(false).assertTrue()
+            done()
+        })
+    })
+
+    /**
+     * @tc.name: testTaskIndex008
+     * @tc.desc: Test create task when index is 0 and begins is not exists and ends is 10 for download
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskIndex008', async function (done) {
+        let conf = {
+            action: agent.Action.DOWNLOAD,
+            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            mode: agent.Mode.FRONTEND,
+            ends: 10,
+            gauge: true
+        }
+        task = await agent.create(context, conf);
+        await task.start()
+        task.on('completed', function(err, progress) {
+            expect(progress.sizes[0]).assertLess(15)
+            done()
+        })
+    })
+
+    /**
+     * @tc.name: testTaskIndex009
+     * @tc.desc: Test create task when index is 0 and begins is 5 and ends is not exists for upload
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskIndex009', async function (done) {
+        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+        fs.closeSync(file);
+        let conf = {
+            action: agent.Action.UPLOAD,
+            url: 'http://127.0.0.1',
+            data: {
+                name: 'test',
+                value: {
+                    path: `${cacheDir}/test.txt`,
+                }
+            },
+            ends: 10,
+        }
+        task = await agent.create(context, conf);
+        task.start().then(() => {
+            expect(true).assertTrue()
+            done()
+        }).catch((err) => {
+            expect(false).assertTrue()
+            done()
+        })
+    })
+
+    /**
+     * @tc.name: testTaskIndex009
+     * @tc.desc: Test create task when index is 1 but have two files for upload
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskIndex009', async function (done) {
+        let test1 = fs.openSync(cacheDir + '/test1.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+        fs.closeSync(test1);
+        let test2 = fs.openSync(cacheDir + '/test2.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+        fs.closeSync(test2);
+        let conf = {
+            action: agent.Action.UPLOAD,
+            url: 'http://127.0.0.1',
+            data: [
+                {
+                    path: `${cacheDir}`,
+                    filename: 'test1.txt'
+                },
+                {
+                    path: `${cacheDir}`,
+                    filename: 'test2.txt'
+                },
+            ],
+            index: 1,
+        }
+        task = await agent.create(context, conf);
+        task.start().then(() => {
+            fs.unlinkSync(cacheDir + '/test1.txt')
+            fs.unlinkSync(cacheDir + '/test2.txt')
+            expect(true).assertTrue()
+            done()
+        }).catch(async (err) => {
+            expect(false).assertTrue()
+            done()
+        })
+    })
+
+    /**
+     * @tc.name: testTaskAbility001
+     * @tc.desc: Test create task when ability is number
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskAbility001', async function (done) {
+        let conf = {
+            action: agent.Action.DOWNLOAD,
+            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            ability: 123
+        }
+        task = await agent.create(context, conf);
+        task.start().then(() => {
+            expect(true).assertTrue()
+            done()
+        }).catch((err) => {
+            expect(false).assertTrue()
+            done()
+        })
+    })
+
+    /**
+     * @tc.name: testTaskAbility002
+     * @tc.desc: Test create task when the ability is not exists
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskAbility002', async function (done) {
+        let conf = {
+            action: agent.Action.DOWNLOAD,
+            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            ability: 'com.test'
+        }
+        try {
+            task.create(context, conf).then(()=> {
+                expect(false).assertTrue()
+                done()
+            }).catch((err) => {
+                expect(err.code).assertEqual(401)
+                done()
+            })
+        } catch (err) {
+            expect(err.code).assertEqual(401)
+            done()
+        }
+    })
+
+    /**
+     * @tc.name: testTaskAbility003
+     * @tc.desc: Test create task when the ability is exists
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskAbility003', async function (done) {
+        let conf = {
+            action: agent.Action.DOWNLOAD,
+            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            ability: 'com.acts.request'
+        }
+        task = await agent.create(conf);
+        task.create(context, conf).then(()=> {
+            expect(true).assertTrue()
+            done()
+        }).catch((err) => {
+            expect(false).assertTrue()
+            done()
+        })
+    })
+
+    /**
+     * @tc.name: testTaskToken001
+     * @tc.desc: Test create task when token is 7 bytes
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskToken001', async function (done) {
+        let conf = {
+            action: agent.Action.DOWNLOAD,
+            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            token: 'abcdef'
+        }
+        try {
+            agent.create(conf).then((data) => {
+                expect(false).assertTrue()
+                done()
+            }).catch((err) => {
+                expect(err.code).assertEqual(401)
+                done()
+            })
+        } catch (err) {
+            expect(err.code).assertEqual(401)
+            done()
+        }
+    })
+
+    /**
+     * @tc.name: testTaskToken002
+     * @tc.desc: Test create task when token is 2049 bytes
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskToken002', async function (done) {
+        let conf = {
+            action: agent.Action.DOWNLOAD,
+            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            token: 'a'.padStart(2049, 'a')
+        }
+        try {
+            agent.create(conf).then((data) => {
+                expect(false).assertTrue()
+                done()
+            }).catch((err) => {
+                expect(err.code).assertEqual(401)
+                done()
+            })
+        } catch (err) {
+            expect(err.code).assertEqual(401)
+            done()
+        }
+    })
+
+    /**
+     * @tc.name: testTaskToken003
+     * @tc.desc: Test create task when token is number
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskToken003', async function (done) {
+        let conf = {
+            action: agent.Action.DOWNLOAD,
+            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            data: [{
+                path: `${cacheDir}`
+            }],
+            token: 666
+        }
+        try {
+            agent.create(conf).then((data) => {
+                expect(false).assertTrue()
+                done()
+            }).catch((err) => {
+                expect(err.code).assertEqual(401)
+                done()
+            })
+        } catch (err) {
+            expect(err.code).assertEqual(401)
+            done()
+        }
+    })
+
+    /**
+     * @tc.name: testTaskToken004
+     * @tc.desc: Test create task when token is 2048 bytes
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testTaskToken004', async function (done) {
+        let conf = {
+            action: agent.Action.DOWNLOAD,
+            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            data: [{
+                path: `${cacheDir}`
+            }],
+            token: 'a'.padStart(2048, 'a')
+        }
+        agent.create(conf).then((data) => {
+            expect(true).assertTrue()
+            done()
+        }).catch((err) => {
+            expect(false).assertTrue()
+            done()
+        })
     })
 })

@@ -15,7 +15,7 @@ import("//build/test.gni")
 
 module_output_path = "request/request"
 
-ohos_js_unittest("RequestTaskTest") {
+ohos_js_unittest("RequestOperateTaskTest") {
   module_out_path = module_output_path
 
   hap_profile = "./config.json"
@@ -25,5 +25,5 @@ ohos_js_unittest("RequestTaskTest") {
 
 group("unittest") {
   testonly = true
-  deps = [ ":RequestTaskTest" ]
+  deps = [ ":RequestOperateTaskTest" ]
 }
