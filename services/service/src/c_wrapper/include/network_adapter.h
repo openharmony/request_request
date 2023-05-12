@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,34 +16,45 @@
 #ifndef REQUEST_NETWORK_ADAPTER_H
 #define REQUEST_NETWORK_ADAPTER_H
 
-#include <stdint.h>
-#include <mutex>
 #include <functional>
-#include "net_handle.h"
-#include "net_link_info.h"
+#include <mutex>
+#include <stdint.h>
+
 #include "net_all_capabilities.h"
 #include "net_conn_callback_stub.h"
+#include "net_handle.h"
+#include "net_link_info.h"
 #include "refbase.h"
-#include "constant.h"
-namespace OHOS::Request::Download {
-struct NetworkInfo {
-    NetworkType networkType_ = NETWORK_INVALID;
-    bool isMetered_ = false;
-    bool isRoaming_ = false;
+
+enum Network {
+    ANY = 0,
+    WIFI = 1,
+    CELLULAR = 2,
 };
+
+struct NetworkInfo {
+    Network networkType = Network::ANY;
+    bool isMetered = false;
+    bool isRoaming = false;
+};
+
+namespace OHOS::Request {
 class NetworkAdapter {
 public:
     using RegCallBack = std::function<void()>;
 
-    bool RegOnNetworkChange(RegCallBack&& callback);
+    bool RegOnNetworkChange(RegCallBack &&callback);
     bool IsOnline();
-    static NetworkAdapter& GetInstance();
+    static NetworkAdapter &GetInstance();
     friend class NetConnCallbackObserver;
-    NetworkInfo GetNetworkInfo();
-private:
-    class NetConnCallbackObserver :  public NetManagerStandard::NetConnCallbackStub {
+    NetworkInfo *GetNetworkInfo();
+
+public:
+    class NetConnCallbackObserver : public NetManagerStandard::NetConnCallbackStub {
     public:
-        explicit NetConnCallbackObserver(NetworkAdapter &netAdapter) : netAdapter_(netAdapter) {}
+        explicit NetConnCallbackObserver(NetworkAdapter &netAdapter) : netAdapter_(netAdapter)
+        {
+        }
         ~NetConnCallbackObserver() override = default;
         int32_t NetAvailable(sptr<NetManagerStandard::NetHandle> &netHandle) override;
 
@@ -58,10 +69,12 @@ private:
         int32_t NetUnavailable() override;
 
         int32_t NetBlockStatusChange(sptr<NetManagerStandard::NetHandle> &netHandle, bool blocked) override;
+
     private:
         void UpdateRoaming();
+
     private:
-        NetworkAdapter& netAdapter_;
+        NetworkAdapter &netAdapter_;
     };
 
     RegCallBack callback_ = nullptr;
@@ -69,5 +82,19 @@ private:
     std::mutex mutex_;
     NetworkInfo networkInfo_;
 };
-}   // namespace OHOS::Request::Download
-#endif /* REQUEST_NETWORK_ADAPTER_H */
+} // namespace OHOS::Request
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef void (*NetworkCallback)();
+bool IsOnline();
+void RegisterNetworkCallback(NetworkCallback fun);
+NetworkInfo *GetNetworkInfo();
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

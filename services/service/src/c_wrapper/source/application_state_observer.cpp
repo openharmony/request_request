@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2022 Huawei Device Co., Ltd.
+* Copyright (c) 2023 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -14,21 +14,26 @@
 */
 
 #include "application_state_observer.h"
+
+#include <string>
+
+#include "app_mgr_client.h"
 #include "app_mgr_interface.h"
 #include "app_process_data.h"
-#include "app_mgr_client.h"
 #include "iservice_registry.h"
+#include "log.h"
+#include "sys_mgr_client.h"
 #include "system_ability.h"
 #include "system_ability_definition.h"
-#include "sys_mgr_client.h"
-#include "log.h"
 
-namespace OHOS::Request::Download {
+namespace OHOS::Request {
 ApplicationStateObserver::ApplicationStateObserver()
-{}
+{
+}
 
 ApplicationStateObserver::~ApplicationStateObserver()
-{}
+{
+}
 
 ApplicationStateObserver &ApplicationStateObserver::GetInstance()
 {
@@ -36,17 +41,17 @@ ApplicationStateObserver &ApplicationStateObserver::GetInstance()
     return observer;
 }
 
-bool ApplicationStateObserver::RegisterAppStateChanged(RegCallBack&& callback)
+bool ApplicationStateObserver::RegisterAppStateChanged(RegCallBack &&callback)
 {
-    DOWNLOAD_HILOGD("RegisterAppState");
+    REQUEST_HILOGI("RegisterAppState In");
     sptr<AppProcessState> appProcessState_ = new (std::nothrow) AppProcessState(*this);
     if (appProcessState_ == nullptr) {
-        DOWNLOAD_HILOGE("create AppProcessState fail, not enough memory");
+        REQUEST_HILOGE("create AppProcessState fail, not enough memory");
         return false;
     }
     auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityManager == nullptr) {
-        DOWNLOAD_HILOGE("get SystemAbilityManager failed.");
+        REQUEST_HILOGE("get SystemAbilityManager failed.");
         return false;
     }
     sptr<AppExecFwk::IAppMgr> appObject =
@@ -54,14 +59,14 @@ bool ApplicationStateObserver::RegisterAppStateChanged(RegCallBack&& callback)
     if (appObject) {
         int ret = appObject->RegisterApplicationStateObserver(appProcessState_);
         if (ret == ERR_OK) {
-            DOWNLOAD_HILOGD("register success");
+            REQUEST_HILOGD("register success");
             callback_ = callback;
             return true;
         }
-        DOWNLOAD_HILOGE("register fail, ret = %{public}d", ret);
+        REQUEST_HILOGE("register fail, ret = %{public}d", ret);
         return false;
     }
-    DOWNLOAD_HILOGE("get SystemAbilityManager fail");
+    REQUEST_HILOGI("RegisterAppState Out");
     return false;
 }
 
@@ -73,9 +78,9 @@ void ApplicationStateObserver::AppProcessState::OnForegroundApplicationChanged(
 void ApplicationStateObserver::AppProcessState::OnAbilityStateChanged(
     const AppExecFwk::AbilityStateData &abilityStateData)
 {
-    DOWNLOAD_HILOGD("OnAbilityStateChanged uid=%{public}d,  bundleName=%{public}s,state=%{public}d",
+    REQUEST_HILOGD("OnAbilityStateChanged uid=%{public}d,  bundleName=%{public}s,state=%{public}d",
         abilityStateData.uid, abilityStateData.bundleName.c_str(), abilityStateData.abilityState);
-    RunCallback(abilityStateData.bundleName, abilityStateData.uid, abilityStateData.abilityState);
+    RunCallback(abilityStateData.uid, abilityStateData.abilityState);
 }
 
 void ApplicationStateObserver::AppProcessState::OnExtensionStateChanged(
@@ -89,15 +94,25 @@ void ApplicationStateObserver::AppProcessState::OnProcessCreated(const AppExecFw
 
 void ApplicationStateObserver::AppProcessState::OnProcessDied(const AppExecFwk::ProcessData &processData)
 {
-    DOWNLOAD_HILOGD("OnProcessDied uid=%{public}d, bundleName=%{public}s", processData.uid,
-        processData.bundleName.c_str());
-    RunCallback(processData.bundleName, processData.uid, static_cast<int32_t>(processData.state));
+    REQUEST_HILOGD("OnProcessDied uid=%{public}d,  bundleName=%{public}s, state=%{public}d", processData.uid,
+        processData.bundleName.c_str(), static_cast<int32_t>(processData.state));
+    RunCallback(processData.uid, static_cast<int32_t>(processData.state));
 }
 
-void ApplicationStateObserver::AppProcessState::RunCallback(const std::string bundleName, int32_t uid, int32_t state)
+void ApplicationStateObserver::AppProcessState::RunCallback(int32_t uid, int32_t state)
 {
+    REQUEST_HILOGI("running callback function in");
     if (appStateObserver_.callback_ != nullptr) {
-        appStateObserver_.callback_(bundleName, uid, state);
+        REQUEST_HILOGI("appStateObserver_.callback_ != nullptr");
+        appStateObserver_.callback_(uid, state);
     }
+    REQUEST_HILOGI("running callback function end");
 }
+} // namespace OHOS::Request
+
+using namespace OHOS::Request;
+void RegisterAPPStateCallback(APPStateCallback fun)
+{
+    ApplicationStateObserver::GetInstance().RegisterAppStateChanged(fun);
+    REQUEST_HILOGD("running RegisterAPPStateCallback");
 }

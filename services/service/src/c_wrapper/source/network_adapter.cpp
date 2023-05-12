@@ -20,6 +20,7 @@
 #include <new>
 #include <set>
 #include <singleton.h>
+#include <string>
 #include <type_traits>
 
 #include "core_service_client.h"
@@ -33,7 +34,7 @@
 
 using namespace OHOS::NetManagerStandard;
 using namespace OHOS::Telephony;
-namespace OHOS::Request::Download {
+namespace OHOS::Request {
 constexpr int32_t INVALID_SLOT_ID = -1;
 
 NetworkAdapter &NetworkAdapter::GetInstance()
@@ -50,20 +51,21 @@ bool NetworkAdapter::RegOnNetworkChange(RegCallBack &&callback)
     netSpecifier.netCapabilities_ = netAllCapabilities;
     sptr<NetSpecifier> specifier = new (std::nothrow) NetSpecifier(netSpecifier);
     if (specifier == nullptr) {
-        DOWNLOAD_HILOGE("new operator error.specifier is nullptr");
+        REQUEST_HILOGE("new operator error.specifier is nullptr");
         return false;
     }
     sptr<NetConnCallbackObserver> observer = new (std::nothrow) NetConnCallbackObserver(*this);
     if (observer == nullptr) {
-        DOWNLOAD_HILOGE("new operator error.observer is nullptr");
+        REQUEST_HILOGE("new operator error.observer is nullptr");
         return false;
     }
     int nRet = DelayedSingleton<NetConnClient>::GetInstance()->RegisterNetConnCallback(specifier, observer, 0);
     if (nRet == NETMANAGER_SUCCESS) {
         callback_ = callback;
+        REQUEST_HILOGD("RegisterNetConnCallback successfully registered");
         return true;
     }
-    DOWNLOAD_HILOGE("Failed to register the callback retcode= %{public}d", nRet);
+    REQUEST_HILOGE("Failed to register the callback retcode= %{public}d", nRet);
     return false;
 }
 
@@ -80,27 +82,27 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetAvailable(sptr<NetHandle> &n
 int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandle,
     const sptr<NetAllCapabilities> &netAllCap)
 {
-    DOWNLOAD_HILOGD("Observe net capabilities change. start");
+    REQUEST_HILOGD("Observe net capabilities change. start");
     if (netAllCap->netCaps_.count(NetCap::NET_CAPABILITY_INTERNET)) {
         netAdapter_.isOnline_ = true;
         UpdateRoaming();
         if (netAllCap->bearerTypes_.count(NetBearType::BEARER_CELLULAR)) {
-            DOWNLOAD_HILOGI("Bearer Cellular");
-            netAdapter_.networkInfo_.networkType_ = NETWORK_MOBILE;
-            netAdapter_.networkInfo_.isMetered_ = true;
+            REQUEST_HILOGI("Bearer Cellular");
+            netAdapter_.networkInfo_.networkType = Network::CELLULAR;
+            netAdapter_.networkInfo_.isMetered = true;
         } else if (netAllCap->bearerTypes_.count(NetBearType::BEARER_WIFI)) {
-            DOWNLOAD_HILOGI("Bearer Wifi");
-            netAdapter_.networkInfo_.networkType_ = NETWORK_WIFI;
-            netAdapter_.networkInfo_.isMetered_ = false;
+            REQUEST_HILOGI("Bearer Wifi");
+            netAdapter_.networkInfo_.networkType = Network::WIFI;
+            netAdapter_.networkInfo_.isMetered = false;
         }
         if (netAdapter_.callback_ != nullptr) {
             netAdapter_.callback_();
-            DOWNLOAD_HILOGD("NetCapabilitiesChange callback");
+            REQUEST_HILOGD("NetCapabilitiesChange callback");
         }
     } else {
         netAdapter_.isOnline_ = false;
     }
-    DOWNLOAD_HILOGD("Observe net capabilities change. end");
+    REQUEST_HILOGD("Observe net capabilities change. end");
     return 0;
 }
 
@@ -112,12 +114,13 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetConnectionPropertiesChange(s
 
 int32_t NetworkAdapter::NetConnCallbackObserver::NetLost(sptr<NetHandle> &netHandle)
 {
-    DOWNLOAD_HILOGD("Observe bearer cellular lost");
-    netAdapter_.networkInfo_.networkType_ = NETWORK_INVALID;
-    netAdapter_.networkInfo_.isMetered_ = false;
+    REQUEST_HILOGD("Observe bearer cellular lost");
+    netAdapter_.networkInfo_.networkType = Network::ANY;
+    netAdapter_.networkInfo_.isMetered = false;
+    netAdapter_.isOnline_ = false;
     if (netAdapter_.callback_ != nullptr) {
         netAdapter_.callback_();
-        DOWNLOAD_HILOGD("NetCapabilitiesChange callback");
+        REQUEST_HILOGI("NetCapabilitiesChange callback");
     }
     return 0;
 }
@@ -137,21 +140,41 @@ void NetworkAdapter::NetConnCallbackObserver::UpdateRoaming()
     int32_t slotId = INVALID_SLOT_ID;
     DelayedRefSingleton<CoreServiceClient>::GetInstance().GetPrimarySlotId(slotId);
     if (slotId <= INVALID_SLOT_ID) {
-        DOWNLOAD_HILOGE("GetDefaultCellularDataSlotId InValidData");
+        REQUEST_HILOGE("GetDefaultCellularDataSlotId InValidData");
         return;
     }
     sptr<NetworkState> networkClient = nullptr;
     DelayedRefSingleton<CoreServiceClient>::GetInstance().GetNetworkState(slotId, networkClient);
     if (networkClient == nullptr) {
-        DOWNLOAD_HILOGE("networkState is nullptr");
+        REQUEST_HILOGE("networkState is nullptr");
         return;
     }
-    DOWNLOAD_HILOGI("Roaming = %{public}d", networkClient->IsRoaming());
-    netAdapter_.networkInfo_.isRoaming_ = networkClient->IsRoaming();
+    REQUEST_HILOGI("Roaming = %{public}d", networkClient->IsRoaming());
+    netAdapter_.networkInfo_.isRoaming = networkClient->IsRoaming();
 }
 
-NetworkInfo NetworkAdapter::GetNetworkInfo()
+NetworkInfo *NetworkAdapter::GetNetworkInfo()
 {
-    return networkInfo_;
+    return &networkInfo_;
 }
-} // namespace OHOS::Request::Download
+} // namespace OHOS::Request
+
+using namespace OHOS::Request;
+bool IsOnline()
+{
+    bool ret = NetworkAdapter::GetInstance().IsOnline();
+    REQUEST_HILOGI("IsOnline result is %{public}d", ret);
+    return ret;
+}
+
+void RegisterNetworkCallback(NetworkCallback fun)
+{
+    REQUEST_HILOGI("running RegisterNetworkCallback");
+    NetworkAdapter::GetInstance().RegOnNetworkChange(fun);
+    REQUEST_HILOGI("running RegisterNetworkCallback end");
+}
+
+NetworkInfo *GetNetworkInfo()
+{
+    return NetworkAdapter::GetInstance().GetNetworkInfo();
+}

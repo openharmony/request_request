@@ -12,17 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef DOWNLOAD_BACKGROUND_NOTIFICATION_H
-#define DOWNLOAD_BACKGROUND_NOTIFICATION_H
+#ifndef BACKGROUND_NOTIFICATION_H
+#define BACKGROUND_NOTIFICATION_H
 
-namespace OHOS::Request::Download {
-class DownloadBackgroundNotification {
-public:
-    DownloadBackgroundNotification() = default;
-    ~DownloadBackgroundNotification() = default;
-    static void PublishDownloadNotification(uint32_t taskId, pid_t uid,
-                                            const std::string &filePath, uint32_t percent);
-};
-} // Download
+#include <stdint.h>
+#include <sys/types.h>
 
-#endif // DOWNLOAD_BACKGROUND_NOTIFICATION_H
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void BackgroundNotify(uint32_t taskId, pid_t uid, const char *str, int32_t strLen, uint32_t percent);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // BACKGROUND_NOTIFICATION_H
