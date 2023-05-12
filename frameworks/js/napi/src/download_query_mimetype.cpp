@@ -27,7 +27,7 @@ napi_value DownloadQueryMimeType::QueryMimeType(napi_env env, napi_callback_info
         DOWNLOAD_HILOGD("no permission to access download service");
         return nullptr;
     }
-    return Exec(env, info);
+    return Exec(env, info, "queryMimeType");
 }
 
 napi_value DownloadQueryMimeType::GetTaskMimeType(napi_env env, napi_callback_info info)
@@ -39,10 +39,10 @@ napi_value DownloadQueryMimeType::GetTaskMimeType(napi_env env, napi_callback_in
         NapiUtils::ThrowError(env, err.code, err.errInfo);
         return nullptr;
     }
-    return Exec(env, info);
+    return Exec(env, info, "getTaskMimeType");
 }
 
-napi_value DownloadQueryMimeType::Exec(napi_env env, napi_callback_info info)
+napi_value DownloadQueryMimeType::Exec(napi_env env, napi_callback_info info, const std::string &resourceName)
 {
     auto context = std::make_shared<QueryMimeContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
@@ -61,6 +61,6 @@ napi_value DownloadQueryMimeType::Exec(napi_env env, napi_callback_info info)
     };
     context->SetAction(std::move(input), std::move(output));
     AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context), "", 0);
-    return asyncCall.Call(env, exec);
+    return asyncCall.Call(env, exec, resourceName);
 }
 } // namespace OHOS::Request::Download

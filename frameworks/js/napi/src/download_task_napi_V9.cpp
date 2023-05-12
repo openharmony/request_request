@@ -92,7 +92,7 @@ napi_value DownloadTaskNapiV9::JsMain(napi_env env, napi_callback_info info)
     };
     auto context = std::make_shared<AsyncCall::Context>(input, output);
     AsyncCall asyncCall(env, info, context, "", ASYNC_DEFAULT_POS);
-    return asyncCall.Call(env);
+    return asyncCall.Call(env, nullptr, "downloadFile");
 }
 
 napi_value DownloadTaskNapiV9::GetCtor(napi_env env)

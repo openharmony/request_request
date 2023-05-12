@@ -69,7 +69,7 @@ napi_value UploadTaskNapiV9::JsUploadFile(napi_env env, napi_callback_info info)
     };
     auto context = std::make_shared<AsyncCall::Context>(input, output);
     AsyncCall asyncCall(env, info, context);
-    return asyncCall.Call(env);
+    return asyncCall.Call(env, nullptr, "uploadFile");
 }
 
 napi_value UploadTaskNapiV9::GetCtor(napi_env env)
@@ -333,7 +333,7 @@ napi_value UploadTaskNapiV9::JsDelete(napi_env env, napi_callback_info info)
     };
     context->SetAction(std::move(input), std::move(output));
     AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
-    return asyncCall.Call(env, exec);
+    return asyncCall.Call(env, exec, "delete");
 }
 
 napi_status UploadTaskNapiV9::OnProgress(napi_env env, napi_value callback, napi_value self)
