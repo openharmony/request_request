@@ -231,10 +231,6 @@ impl RequestTask {
                     sizes.push(file_size);
                     file_total_size += file_size;
                 }
-                for f in files.iter() {
-                    let test_metadata_size = f.metadata().unwrap().len() as i64;
-                    log_debug!("test metadata size is {}", test_metadata_size);
-                }
             }
         }
         let file_count = files.len();
@@ -262,22 +258,20 @@ impl RequestTask {
 
     fn build_notify_data(&self) -> NotifyData {
         let mut vec = Vec::<(String, Reason, String)>::new();
-        if self.conf.version == Version::API9 && self.conf.common_data.action == Action::UPLOAD {
-            let size = self.conf.file_specs.len();
-            let guard = self.code.lock().unwrap();
-            for i in 0..size {
-                vec.push((
-                    self.conf.file_specs[i].path.clone(),
-                    guard[i],
-                    guard[i].convert().into(),
-                ));
-            }
+        let size = self.conf.file_specs.len();
+        let guard = self.code.lock().unwrap();
+        for i in 0..size {
+            vec.push((
+                self.conf.file_specs[i].path.clone(),
+                guard[i],
+                guard[i].convert().into(),
+            ));
         }
         NotifyData {
             progress: self.progress.lock().unwrap().clone(),
             action: self.conf.common_data.action,
             version: self.conf.version,
-            upload_status: vec,
+            each_file_status: vec,
             task_id: self.task_id,
             uid: self.uid,
             bundle: self.conf.bundle.clone(),
@@ -374,15 +368,11 @@ impl RequestTask {
         let mut begins = self.conf.common_data.begins;
         begins += self.progress.lock().unwrap().processed[0] as u64;
         let ends = self.conf.common_data.ends;
-        let range: String;
-        if ends < 0 {
-            range = "bytes=".to_string() + begins.to_string().as_str() + "-";
+        let range = if ends < 0 {
+            format!("bytes={begins}-")
         } else {
-            range = "bytes=".to_string()
-                + begins.to_string().as_str()
-                + "-"
-                + ends.to_string().as_str();
-        }
+            format!("bytes={begins}-{ends}")
+        };
         request_builder = request_builder.header("Range", range.as_str());
         let result = request_builder.body(self.conf.data.clone());
         match result {
@@ -606,13 +596,17 @@ impl RequestTask {
     }
 
     fn state_change_notify(&self, state: State) {
-        if state == State::INITIALIZED {
+        if state == State::INITIALIZED
+            || (self.progress.lock().unwrap().common_data.total_processed == 0
+                && (state == State::RUNNING || state == State::RETRYING))
+        {
             return;
         }
         let version = self.conf.version;
         let mode = self.conf.common_data.mode;
         if version == Version::API9 || mode == Mode::FRONTEND {
             let notify_data = self.build_notify_data();
+            TaskManager::get_instance().front_notify("progress".into(), &notify_data);
             match state {
                 State::COMPLETED => {
                     TaskManager::get_instance().front_notify("complete".into(), &notify_data)
@@ -626,10 +620,8 @@ impl RequestTask {
                 State::REMOVED => {
                     TaskManager::get_instance().front_notify("remove".into(), &notify_data)
                 }
-
                 _ => {}
             }
-            TaskManager::get_instance().front_notify("progress".into(), &notify_data);
         }
         self.background_notify();
     }
@@ -732,7 +724,6 @@ impl RequestTask {
     }
 
     fn background_notify(&self) {
-        log_info!("background notify");
         if self.conf.version == Version::API9 && !self.conf.common_data.background {
             return;
         }
@@ -751,6 +742,7 @@ impl RequestTask {
         let file_path = self.conf.file_specs[index].path.as_ptr() as *const c_char;
         let file_path_len = self.conf.file_specs[index].path.as_bytes().len() as i32;
         let percent = self.calculate_progress();
+        log_info!("background notify");
         unsafe {
             BackgroundNotify(
                 self.task_id,
@@ -927,15 +919,19 @@ fn build_stream_request(
     task: Arc<RequestTask>,
     index: usize,
 ) -> Option<Request<Uploader<TaskReader, TaskOperator>>> {
+    log_info!("build stream request");
     let task_reader = TaskReader { task: task.clone() };
     let task_operator = TaskOperator { task: task.clone() };
     let mut request_builder = task.build_request_builder();
     if task.conf.headers.get("Content-Type").is_none() {
         request_builder = request_builder.header("Content-Type", "application/octet-stream");
     }
+    let content_length = task.progress.lock().unwrap().sizes[index];
+    log_info!("content_length is {}", content_length);
     let uploader = Uploader::builder()
         .reader(task_reader)
         .operator(task_operator)
+        .total_bytes(Some(content_length as u64))
         .build();
     let request = request_builder.body(uploader);
     build_request_common(&task, index, request)

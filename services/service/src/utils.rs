@@ -28,3 +28,8 @@ pub fn convert_to_string(ptr: *const c_char) -> String {
     str_slice.to_owned()
 }
 
+pub fn generate_task_id() -> u32 {
+    SystemTime::now().duration_since(UNIX_EPOCH).unwrap().subsec_nanos()
+}
+
+

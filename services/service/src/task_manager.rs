@@ -32,7 +32,6 @@ static SECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60;
 type AppTask = HashMap<u32, Arc<RequestTask>>;
 pub struct TaskManager {
     task_map: Arc<Mutex<HashMap<u64, AppTask>>>,
-    task_id: AtomicU32,
     event_cb: Option<Box<dyn Fn(String, &NotifyData) + Send + Sync + 'static>>,
     pub global_front_task: Option<Arc<RequestTask>>,
     pub front_app_uid: Option<u64>,
@@ -91,7 +90,6 @@ impl TaskManager {
     fn new() -> Self {
         TaskManager {
             task_map: Arc::new(Mutex::new(HashMap::<u64, AppTask>::new())),
-            task_id: AtomicU32::new(1),
             event_cb: None,
             global_front_task: None,
             front_app_uid: None,
@@ -159,7 +157,7 @@ impl TaskManager {
         files: Vec<File>,
     ) -> ErrorCode {
         log_debug!("Begin construct a task");
-        *task_id = self.task_id.fetch_add(1, Ordering::SeqCst);
+        *task_id = generate_task_id();
         let bundle = conf.bundle.clone();
         let task = RequestTask::constructor(conf, uid, *task_id, files);
         if task.conf.common_data.mode == Mode::FRONTEND {

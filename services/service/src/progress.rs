@@ -61,7 +61,7 @@ pub struct NotifyData {
     pub progress: Progress,
     pub action: Action,
     pub version: Version,
-    pub upload_status: Vec<(String, Reason, String)>, // (path, each_file_state, reason)
+    pub each_file_status: Vec<(String, Reason, String)>, // (path, each_file_state, reason)
     pub task_id: u32,
     pub uid: u64,
     pub bundle: String,
