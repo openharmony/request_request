@@ -69,7 +69,7 @@ napi_value UploadTaskNapi::JsUpload(napi_env env, napi_callback_info info)
     };
     auto context = std::make_shared<AsyncCall::Context>(input, output);
     AsyncCall asyncCall(env, info, context);
-    return asyncCall.Call(env);
+    return asyncCall.Call(env, nullptr, "upload");
 }
 
 napi_status UploadTaskNapi::ParseParam(napi_env env, napi_callback_info info, bool IsRequiredParam,
@@ -148,7 +148,7 @@ napi_value UploadTaskNapi::JsRemove(napi_env env, napi_callback_info info)
     };
     context->SetAction(std::move(input), std::move(output));
     AsyncCall asyncCall(env, info, std::dynamic_pointer_cast<AsyncCall::Context>(context));
-    return asyncCall.Call(env, exec);
+    return asyncCall.Call(env, exec, "remove");
 }
 
 napi_status UploadTaskNapi::OnProgress(napi_env env, napi_value callback, napi_value self)

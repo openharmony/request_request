@@ -81,7 +81,7 @@ public:
 
     AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context);
     ~AsyncCall();
-    napi_value Call(napi_env env, Context::ExecAction exec = nullptr);
+    napi_value Call(napi_env env, Context::ExecAction exec = nullptr, const std::string &resourceName = "AsyncCall");
     napi_value SyncCall(napi_env env, Context::ExecAction exec = nullptr);
 private:
     enum {
