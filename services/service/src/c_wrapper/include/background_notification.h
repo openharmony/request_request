@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-void BackgroundNotify(uint32_t taskId, pid_t uid, const char *str, int32_t strLen, uint32_t percent);
+void BackgroundNotify(uint32_t taskId, pid_t uid, uint8_t action, const char *path, int32_t pathLen, uint32_t percent);
 
 #ifdef __cplusplus
 }

@@ -264,7 +264,7 @@ impl RequestTask {
             vec.push((
                 self.conf.file_specs[i].path.clone(),
                 guard[i],
-                guard[i].convert().into(),
+                guard[i].to_str().into(),
             ));
         }
         NotifyData {
@@ -516,10 +516,6 @@ impl RequestTask {
             let notify_data = self.build_notify_data();
             TaskManager::get_instance().front_notify("headerReceive".into(), &notify_data);
         }
-        let guard = self.progress.lock().unwrap();
-        for (k, v) in guard.extras.iter() {
-            log_debug!("{}: {}", k, v);
-        }
     }
 
     // a file can set code only once
@@ -528,7 +524,7 @@ impl RequestTask {
         let mut code_guard = self.code.lock().unwrap();
         if index < file_counts {
             if code_guard[index] == Reason::Default {
-                println!("set code");
+                log_debug!("set code");
                 code_guard[index] = code;
             }
         }
@@ -538,7 +534,7 @@ impl RequestTask {
         let file_counts = self.conf.file_specs.len();
         let mut code_guard = self.code.lock().unwrap();
         if index < file_counts {
-            println!("reset code");
+            log_debug!("reset code");
             code_guard[index] = Reason::Default;
         }
     }
@@ -589,7 +585,7 @@ impl RequestTask {
             progress_guard.common_data.state = state;
             current_status.state = state;
             current_status.reason = reason;
-            println!("current state is {:?}, reason is {:?}", state, reason);
+            log_debug!("current state is {:?}, reason is {:?}", state, reason);
         }
         self.state_change_notify(state);
         true
@@ -706,13 +702,13 @@ impl RequestTask {
     }
 
     fn dump_reason(&self) {
-        log_info!("Reason is {}", self.status.lock().unwrap().reason.convert());
+        log_info!("Reason is {}", self.status.lock().unwrap().reason.to_str());
         let code_guard = self.code.lock().unwrap();
         for i in 0..code_guard.len() {
             log_info!(
                 "The reason of the {} file is {}",
                 i,
-                code_guard[i].convert()
+                code_guard[i].to_str()
             );
         }
     }
@@ -747,6 +743,7 @@ impl RequestTask {
             BackgroundNotify(
                 self.task_id,
                 self.uid as i32,
+                self.conf.common_data.action as u8,
                 file_path,
                 file_path_len,
                 percent as u32,

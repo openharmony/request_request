@@ -26,7 +26,8 @@
 #include "want_params.h"
 
 using namespace OHOS::Notification;
-void BackgroundNotify(uint32_t taskId, pid_t uid, const char *str, int32_t strLen, uint32_t percent)
+static constexpr uint8_t DOWNLOAD = 0;
+void BackgroundNotify(uint32_t taskId, pid_t uid, uint8_t action, const char *path, int32_t pathLen, uint32_t percent)
 {
     REQUEST_HILOGE("BackgroundNotify");
     auto requestTemplate = std::make_shared<NotificationTemplate>();
@@ -34,12 +35,16 @@ void BackgroundNotify(uint32_t taskId, pid_t uid, const char *str, int32_t strLe
         REQUEST_HILOGE("taskId: %{public}d, downloadTemplate is null", taskId);
         return;
     }
-    std::string filepath(str, strLen);
+    std::string filepath(path, pathLen);
     requestTemplate->SetTemplateName("requestTemplate");
     OHOS::AAFwk::WantParams wantParams;
     wantParams.SetParam("progressValue", OHOS::AAFwk::Integer::Box(percent));
     wantParams.SetParam("fileName", OHOS::AAFwk::String::Box(filepath));
-    wantParams.SetParam("title", OHOS::AAFwk::String::Box("Download"));
+    if (action == DOWNLOAD) {
+        wantParams.SetParam("title", OHOS::AAFwk::String::Box("Download"));
+    } else {
+        wantParams.SetParam("title", OHOS::AAFwk::String::Box("Upload"));
+    }
     requestTemplate->SetTemplateData(std::make_shared<OHOS::AAFwk::WantParams>(wantParams));
     auto normalContent = std::make_shared<NotificationNormalContent>();
     if (normalContent == nullptr) {

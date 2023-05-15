@@ -531,7 +531,7 @@ impl TaskManager {
             task
         };
         self.after_task_processed(task);
-        println!("Stopped success");
+        log_info!("Stopped success");
         ErrorCode::ErrOk
     }
 

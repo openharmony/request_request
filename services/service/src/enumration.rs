@@ -102,7 +102,7 @@ pub enum ApplicationState {
 #[repr(u32)]
 pub enum ErrorCode {
     ErrOk = 0,
-    UnloadingSA = 9,
+    UnloadingSA = 1,
     FileOperationErr = 13400001,
     ServiceAbilityErr = 13400003,
     TaskEnqueueErr = 21900004,
@@ -153,7 +153,7 @@ pub enum Reason {
 }
 
 impl Reason {
-    pub fn convert(&self) -> &'static str {
+    pub fn to_str(&self) -> &'static str {
         match self {
             Reason::Default => "".into(),
             Reason::TaskSurvivalOneMonth => "The task has not been completed for a month yet",
