@@ -56,5 +56,6 @@ ohos_shared_library("request_native") {
     "samgr:samgr_proxy",
   ]
   subsystem_name = "request"
+  innerapi_tags = [ "platformsdk" ]
   part_name = "request"
 }
