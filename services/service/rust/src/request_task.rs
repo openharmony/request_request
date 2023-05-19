@@ -16,9 +16,9 @@
 use std::{ffi::CString, ffi::c_char, fs::File, pin::Pin};
 use super::{
     enumration::*, progress::*, task_info::*, task_config::*, task_manager::*, utils::*, request_binding::*,
-    log_debug, log_info, log_error
+    log::LOG_LABEL,
 };
-use crate::log::LOG_LABEL;
+use hilog_rust::*;
 use std::io::{Read, SeekFrom};
 use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -95,7 +95,7 @@ impl TaskOperator {
         if (state != State::RUNNING && state != State::RETRYING)
             || (!self.task.check_net_work_status())
         {
-            log_debug!("Pause the task");
+            debug!(LOG_LABEL, "pause the task");
             return Poll::Ready(Err(HttpClientError::user_aborted()));
         }
         let last_front_notify_time = TaskManager::get_instance().front_notify_time;
@@ -169,7 +169,6 @@ impl AsyncRead for TaskReader {
         let mut progress_guard = self.task.progress.lock().unwrap();
         let index = progress_guard.common_data.index;
         let mut file_guard = self.task.files.lock().unwrap();
-
         let file = file_guard.get_mut(index).unwrap();
         let begin = self.task.conf.common_data.begins;
         let mut end = self.task.conf.common_data.ends;
@@ -192,7 +191,7 @@ impl AsyncRead for TaskReader {
         } else {
             if !self.task.seek_flag.load(Ordering::SeqCst) {
                 match Pin::new(file).start_seek(SeekFrom::Start(begin)) {
-                    Err(e) => log_error!("seek err is {:?}", e),
+                    Err(e) => { error!(LOG_LABEL, "seek err is {:?}",  @public(e)); },
                     Ok(_) => self.task.seek_flag.store(true, Ordering::SeqCst),
                 }
             }
@@ -227,7 +226,7 @@ impl RequestTask {
                 file_total_size = 0;
                 for f in files.iter() {
                     let file_size = f.metadata().unwrap().len() as i64;
-                    log_debug!("file size size is {}", file_size);
+                    debug!(LOG_LABEL, "file size size is {}",  @public(file_size));
                     sizes.push(file_size);
                     file_total_size += file_size;
                 }
@@ -335,7 +334,7 @@ impl RequestTask {
                     client = client.add_root_certificate(cert);
                 }
                 Err(e) => {
-                    log_error!("open cacert.pem failed, error is {:?}", e);
+                    error!(LOG_LABEL, "open cacert.pem failed, error is {:?}",  @public(e));
                     self.set_status(State::FAILED, Reason::IoError);
                     return None;
                 }
@@ -345,7 +344,7 @@ impl RequestTask {
         match result {
             Ok(value) => Some(value),
             Err(e) => {
-                log_error!("build client error is {:?}", e);
+                error!(LOG_LABEL, "build client error is {:?}",  @public(e));
                 self.set_status(State::FAILED, Reason::BuildClientFailed);
                 return None;
             }
@@ -380,7 +379,7 @@ impl RequestTask {
                 return Some(value);
             }
             Err(e) => {
-                log_error!("build download request error is {:?}", e);
+                error!(LOG_LABEL, "build download request error is {:?}",  @public(e));
                 self.set_status(State::FAILED, Reason::BuildRequestFailed);
                 return None;
             }
@@ -410,15 +409,15 @@ impl RequestTask {
                             let mut guard = self.progress.lock().unwrap();
                             guard.sizes[0] = v;
                             self.file_total_size.store(v, Ordering::SeqCst);
-                            log_debug!("The download task content-length is {}", v);
+                            debug!(LOG_LABEL, "the download task content-length is {}",  @public(v));
                         }
-                        Err(e) => log_error!("Convert string to i64 error: {:?}", e),
+                        Err(e) => { error!(LOG_LABEL, "convert string to i64 error: {:?}",  @public(e)); },
                     }
                 }
-                Err(e) => log_error!("Convert header value to string error: {:?}", e),
+                Err(e) => { error!(LOG_LABEL, "convert header value to string error: {:?}",  @public(e)); },
             }
         } else {
-            log_error!("Cannot get content-length of the task");
+            error!(LOG_LABEL, "cannot get content-length of the task");
             if self.conf.common_data.precise {
                 self.set_status(State::FAILED, Reason::GetFileSizeFailed);
                 return false;
@@ -453,7 +452,7 @@ impl RequestTask {
         match response {
             Ok(r) => {
                 let code = r.status();
-                log_info!("The http return code is {}", code);
+                info!(LOG_LABEL, "the http return code is {}", @public(code));
                 if code.is_server_error() || (code.as_str() != "408" && code.is_client_error()) {
                     self.set_code(index, Reason::ProtocolError);
                     return false;
@@ -470,11 +469,11 @@ impl RequestTask {
                 return true;
             }
             Err(e) => {
-                log_error!("http client err is {:?}", e);
+                error!(LOG_LABEL, "http client err is {:?}",  @public(e));
                 if !self.net_work_online() {
                     return false;
                 }
-                log_error!("err kind is {:?}", e.error_kind());
+                error!(LOG_LABEL, "err kind is {:?}",  @public(e.error_kind()));
                 match e.error_kind() {
                     ErrorKind::UserAborted => self.set_code(index, Reason::UserOperation),
                     ErrorKind::Timeout => self.set_code(index, Reason::ContinuousTaskTimeOut),
@@ -518,13 +517,12 @@ impl RequestTask {
         }
     }
 
-    // a file can set code only once
     fn set_code(&self, index: usize, code: Reason) {
         let file_counts = self.conf.file_specs.len();
         let mut code_guard = self.code.lock().unwrap();
         if index < file_counts {
             if code_guard[index] == Reason::Default {
-                log_debug!("set code");
+                debug!(LOG_LABEL, "set code");
                 code_guard[index] = code;
             }
         }
@@ -534,12 +532,13 @@ impl RequestTask {
         let file_counts = self.conf.file_specs.len();
         let mut code_guard = self.code.lock().unwrap();
         if index < file_counts {
-            log_debug!("reset code");
+            debug!(LOG_LABEL, "reset code");
             code_guard[index] = Reason::Default;
         }
     }
 
     pub fn set_status(&self, state: State, reason: Reason) -> bool {
+        debug!(LOG_LABEL, "set status");
         {
             let mut current_status = self.status.lock().unwrap();
             if state == current_status.state && reason == current_status.reason {
@@ -548,6 +547,8 @@ impl RequestTask {
             let mut progress_guard = self.progress.lock().unwrap();
             let index = progress_guard.common_data.index;
             let current_state = current_status.state;
+            debug!(LOG_LABEL, "set state {:?}, reason {:?} current_state {:?}",
+                @public(state), @public(reason), @public(current_state));
             match state {
                 State::PAUSED | State::STOPPED => {
                     if current_state != State::RUNNING
@@ -585,7 +586,7 @@ impl RequestTask {
             progress_guard.common_data.state = state;
             current_status.state = state;
             current_status.reason = reason;
-            log_debug!("current state is {:?}, reason is {:?}", state, reason);
+            debug!(LOG_LABEL, "current state is {:?}, reason is {:?}", @public(state), @public(reason));
         }
         self.state_change_notify(state);
         true
@@ -598,6 +599,7 @@ impl RequestTask {
         {
             return;
         }
+        debug!(LOG_LABEL, "state change notification");
         let version = self.conf.version;
         let mode = self.conf.common_data.mode;
         if version == Version::API9 || mode == Mode::FRONTEND {
@@ -668,47 +670,49 @@ impl RequestTask {
         if self.conf.common_data.network == Network::ANY {
             return true;
         }
-        let ret = unsafe {
+        unsafe {
             let network_info = GetNetworkInfo();
-            log_debug!("network_info {:?}", network_info);
+            debug!(LOG_LABEL, "network info is {:?}", @public(*network_info));
             if (!self.conf.common_data.roaming && (*network_info).isRoaming) {
+                debug!(LOG_LABEL, "not allow roaming");
                 return false;
             }
             if (!self.conf.common_data.metered && (*network_info).isMetered) {
+                debug!(LOG_LABEL, "not allow metered");
                 return false;
             }
             if ((*network_info).networkType != self.conf.common_data.network) {
+                debug!(LOG_LABEL, "dismatch network type");
                 return false;
             }
-            true
         };
-        ret
+        true
     }
 
     fn dump_state(&self) {
         let state = self.status.lock().unwrap().state;
         match state {
-            State::INITIALIZED => log_info!("Task in initialized state"),
-            State::WAITING => log_info!("Task in waitting state"),
-            State::RUNNING => log_info!("Task in running state"),
-            State::RETRYING => log_info!("Task in retrying state"),
-            State::PAUSED => log_info!("Task in paused state"),
-            State::STOPPED => log_info!("Task in stopped state"),
-            State::COMPLETED => log_info!("Task in completed state"),
-            State::FAILED => log_info!("Task in failed state"),
-            State::REMOVED => log_info!("Task in removed state"),
+            State::INITIALIZED => { info!(LOG_LABEL, "task in initialized state"); },
+            State::WAITING => { info!(LOG_LABEL, "task in waitting state"); },
+            State::RUNNING => { info!(LOG_LABEL, "task in running state"); },
+            State::RETRYING => { info!(LOG_LABEL, "task in retrying state"); },
+            State::PAUSED => { info!(LOG_LABEL, "task in paused state"); },
+            State::STOPPED => { info!(LOG_LABEL, "task in stopped state"); },
+            State::COMPLETED => { info!(LOG_LABEL, "task in completed state"); },
+            State::FAILED => { info!(LOG_LABEL, "task in failed state"); },
+            State::REMOVED => { info!(LOG_LABEL, "task in removed state"); },
             _ => {}
         }
     }
 
     fn dump_reason(&self) {
-        log_info!("Reason is {}", self.status.lock().unwrap().reason.to_str());
+        info!(LOG_LABEL, "reason is {}", @public(self.status.lock().unwrap().reason.to_str()));
         let code_guard = self.code.lock().unwrap();
         for i in 0..code_guard.len() {
-            log_info!(
-                "The reason of the {} file is {}",
-                i,
-                code_guard[i].to_str()
+            info!(LOG_LABEL,
+                "the reason of the {} file is {}",
+                @public(i),
+                @public(code_guard[i].to_str())
             );
         }
     }
@@ -738,12 +742,15 @@ impl RequestTask {
         let file_path = self.conf.file_specs[index].path.as_ptr() as *const c_char;
         let file_path_len = self.conf.file_specs[index].path.as_bytes().len() as i32;
         let percent = self.calculate_progress();
-        log_info!("background notify");
+        info!(LOG_LABEL, "background notify");
+        let task_msg = RequestTaskMsg {
+            taskId: self.task_id,
+            uid: self.uid as i32,
+            action: self.conf.common_data.action as u8,
+        };
         unsafe {
-            BackgroundNotify(
-                self.task_id,
-                self.uid as i32,
-                self.conf.common_data.action as u8,
+            RequestBackgroundNotify(
+                task_msg,
                 file_path,
                 file_path_len,
                 percent as u32,
@@ -754,7 +761,7 @@ impl RequestTask {
 
 
 pub async fn run(task: Arc<RequestTask>) {
-    log_info!("Run the task which id is {}", task.task_id);
+    info!(LOG_LABEL, "run the task which id is {}", @public(task.task_id));
     let action = task.conf.common_data.action;
     match action {
         Action::DOWNLOAD => loop {
@@ -779,11 +786,11 @@ pub async fn run(task: Arc<RequestTask>) {
     }
     task.dump_state();
     task.dump_reason();
-    log_info!("run end");
+    info!(LOG_LABEL, "run end");
 }
 
 async fn download(task: Arc<RequestTask>) {
-    log_info!("Begin download");
+    info!(LOG_LABEL, "begin download");
     let client = task.build_client();
     if client.is_none() {
         return;
@@ -797,23 +804,21 @@ async fn download(task: Arc<RequestTask>) {
     let response = client.request(request).await;
     task.record_response_header(&response);
     if !task.handle_response_error(&response) {
-        log_error!("response error");
+        error!(LOG_LABEL, "response error");
         return;
     }
     let response = response.unwrap();
-
     if !task.get_file_info(&response) {
         return;
     }
-
     let mut downloader = build_downloader(task.clone(), response);
     let result = downloader.download().await;
     if !task.handle_download_error(&result) {
-        log_error!("handle_download_error");
+        error!(LOG_LABEL, "handle_download_error");
         return;
     }
     if task.set_status(State::COMPLETED, Reason::Default) {
-        log_info!("download success");
+        info!(LOG_LABEL, "download success");
     }   
 }
 
@@ -829,7 +834,7 @@ fn build_downloader(task: Arc<RequestTask>, response: Response) -> Downloader<Ta
 }
 
 async fn upload(task: Arc<RequestTask>) {
-    log_info!("begin upload");
+    info!(LOG_LABEL, "begin upload");
     let size = task.conf.file_specs.len();
     let client = task.build_client();
     if client.is_none() {
@@ -837,7 +842,7 @@ async fn upload(task: Arc<RequestTask>) {
     }
     let client = client.unwrap();
     let index = task.progress.lock().unwrap().common_data.index;
-    log_info!("index is {}", index);
+    info!(LOG_LABEL, "index is {}", @public(index));
     for i in index..size {
         let result: bool;
         if task.conf.version == Version::API10 {
@@ -861,7 +866,7 @@ async fn upload(task: Arc<RequestTask>) {
             }
         }
         if result {
-            log_info!("Upload one file success, which index is {}", i);
+            info!(LOG_LABEL, "upload one file success, which index is {}", @public(i));
             task.upload_counts.fetch_add(1, Ordering::SeqCst);
         }
         let state = task.status.lock().unwrap().state;
@@ -877,7 +882,7 @@ async fn upload(task: Arc<RequestTask>) {
         task.set_status(State::FAILED, Reason::UploadFileError);
     }
 
-    log_info!("upload end");
+    info!(LOG_LABEL, "upload end");
 }
 
 async fn upload_one_file<F, T>(
@@ -890,7 +895,7 @@ where
     F: Fn(Arc<RequestTask>, usize) -> Option<Request<T>>,
     T: Body,
 {
-    log_info!("begin upload one file");
+    info!(LOG_LABEL, "begin upload one file");
     loop {
         task.reset_code(index);
         let request = build_upload_request(task.clone(), index);
@@ -906,7 +911,7 @@ where
         task.record_upload_response(response).await;
         let code = task.code.lock().unwrap()[index];
         if code != Reason::Default {
-            log_error!("Upload {} file fail, which reason is {}", index, code as u32);
+            error!(LOG_LABEL, "upload {} file fail, which reason is {}", @public(index), @public(code as u32));
             return false;
         }
     }
@@ -916,7 +921,7 @@ fn build_stream_request(
     task: Arc<RequestTask>,
     index: usize,
 ) -> Option<Request<Uploader<TaskReader, TaskOperator>>> {
-    log_info!("build stream request");
+    info!(LOG_LABEL, "build stream request");
     let task_reader = TaskReader { task: task.clone() };
     let task_operator = TaskOperator { task: task.clone() };
     let mut request_builder = task.build_request_builder();
@@ -924,7 +929,7 @@ fn build_stream_request(
         request_builder = request_builder.header("Content-Type", "application/octet-stream");
     }
     let content_length = task.progress.lock().unwrap().sizes[index];
-    log_info!("content_length is {}", content_length);
+    info!(LOG_LABEL, "content_length is {}", @public(content_length));
     let uploader = Uploader::builder()
         .reader(task_reader)
         .operator(task_operator)
@@ -963,7 +968,7 @@ fn build_multipart_request(
         }
         length
     };
-    log_info!("upload length is {}", length);
+    info!(LOG_LABEL, "upload length is {}", @public(length));
     let part = Part::new()
         .name(task.conf.file_specs[index].name.as_str())
         .file_name(task.conf.file_specs[index].file_name.as_str())
@@ -987,11 +992,11 @@ fn build_request_common<T: Body>(
 ) -> Option<Request<T>> {
     match request {
         Ok(value) => {
-            log_info!("build upload request success");
+            info!(LOG_LABEL, "build upload request success");
             return Some(value);
         }
         Err(e) => {
-            log_error!("build upload request error is {:?}", e);
+            error!(LOG_LABEL, "build upload request error is {:?}", @public(e));
             {
                 let mut guard = task.code.lock().unwrap();
                 for i in index..guard.len() {

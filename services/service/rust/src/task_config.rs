@@ -34,6 +34,7 @@ pub struct CommonTaskConfig {
     pub precise: bool,
     pub background: bool,
 }
+
 #[derive(Debug)]
 pub struct TaskConfig {
     pub bundle: String,
@@ -42,8 +43,7 @@ pub struct TaskConfig {
     pub description: String,
     pub method: String,
     pub headers: HashMap<String, String>,
-    pub data: String, // use for download
-    pub ability: String,
+    pub data: String,
     pub token: String,
     pub extras: HashMap<String, String>,
     pub version: Version,

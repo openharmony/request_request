@@ -13,21 +13,25 @@
  * limitations under the License.
  */
 
+extern crate rust_samgr;
 use super::{
     enumration::*, request_task::*, task_config::*, utils::*, task_info::*, progress::*, request_binding::*,
-    log_debug, log_info, log_error
+    log::LOG_LABEL,
 };
-use crate::log::LOG_LABEL;
+use hilog_rust::*;
 use std::{collections::HashMap, ffi::CString, ffi::c_char, fs::File, time::Duration};
 use std::sync::atomic::{AtomicU32, Ordering, AtomicBool};
 use std::sync::{Arc, Mutex, MutexGuard, Once};
+use rust_samgr::get_systemability_manager;
 use ylong_runtime::{builder::RuntimeBuilder, executor::Runtime, timer::sleep::sleep};
+
 static MAX_TASK_COUNT: u32 = 300;
 static MAX_TASK_COUNT_EACH_APP: u8 = 10;
 static MAX_RUNNING_TASK_COUNT_EACH_APP: u8 = 5;
-static INTERVAL_SECONDS: u64 = 30 * 60; // half hour
+static INTERVAL_SECONDS: u64 = 30 * 60;
 static SECONDS_IN_ONE_DAY: u64 = 24 * 60 * 60;
 static SECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60;
+static REQUEST_SERVICE_ID: i32 = 3706;
 
 type AppTask = HashMap<u32, Arc<RequestTask>>;
 pub struct TaskManager {
@@ -38,8 +42,7 @@ pub struct TaskManager {
     rt: Runtime,
     pub front_notify_time: u64,
     pub unloading: AtomicBool,
-    pub ipc_request: Mutex<bool>,
-    total_task_count: AtomicU32, // for unload sa
+    total_task_count: AtomicU32,
     api10_background_task_count: AtomicU32,
 }
 
@@ -99,7 +102,6 @@ impl TaskManager {
                 .unwrap(),
             front_notify_time: get_current_timestamp(),
             unloading: AtomicBool::new(false),
-            ipc_request: Mutex::new(false),
             total_task_count: AtomicU32::new(0),
             api10_background_task_count: AtomicU32::new(0),
         }
@@ -115,6 +117,28 @@ impl TaskManager {
         unsafe { TASK_MANAGER.as_mut().unwrap() }
     }
 
+    pub fn clear_all_task(&mut self) {
+        if self.global_front_task.is_some() {
+            self.global_front_task.take();
+        }
+        let mut guard = self.task_map.lock().unwrap();
+        guard.clear();
+        self.total_task_count.store(0, Ordering::SeqCst);
+        self.api10_background_task_count.store(0, Ordering::SeqCst);
+    }
+
+    pub fn get_total_task_count(&self) -> u32 {
+        self.total_task_count.load(Ordering::SeqCst)
+    }
+
+    pub fn get_api10_background_task_count(&self) -> u32 {
+        self.api10_background_task_count.load(Ordering::SeqCst)
+    }
+
+    pub fn has_event_callback(&self) -> bool {
+        self.event_cb.is_some()
+    }
+
     pub fn register_callback(
         &mut self,
         cb: Box<dyn Fn(String, &NotifyData) + Send + Sync + 'static>,
@@ -122,14 +146,13 @@ impl TaskManager {
         self.event_cb = Some(cb);
     }
 
-    // app callback
     pub fn front_notify(&mut self, event: String, notify_data: &NotifyData) {
         if self.event_cb.is_none()
             || !self.is_front_app(notify_data.uid, notify_data.bundle.as_str())
         {
             return;
         }
-        log_debug!("front notify");
+        debug!(LOG_LABEL, "front notify");
         self.front_notify_time = get_current_timestamp();
         self.event_cb.as_ref().unwrap()(event, notify_data);
     }
@@ -138,14 +161,14 @@ impl TaskManager {
         if self.front_app_uid.is_none() {
             let top_bundle = unsafe { GetTopBundleName() };
             let top_bundle = convert_to_string(top_bundle);
-            let x: String = bundle.into();
-            log_debug!("top_bundle {} bundle {}", top_bundle, x);
+            debug!(LOG_LABEL, "top_bundle {}", @public(top_bundle));
             if !top_bundle.eq(bundle) {
                 return false;
             }
         } else if uid != *self.front_app_uid.as_ref().unwrap() {
             return false;
         }
+        debug!(LOG_LABEL, "is front app");
         true
     }
 
@@ -156,10 +179,14 @@ impl TaskManager {
         task_id: &mut u32,
         files: Vec<File>,
     ) -> ErrorCode {
-        log_debug!("Begin construct a task");
+        debug!(LOG_LABEL, "begin construct a task");
         *task_id = generate_task_id();
         let bundle = conf.bundle.clone();
         let task = RequestTask::constructor(conf, uid, *task_id, files);
+        let mut task_map_guard = self.task_map.lock().unwrap();
+        if self.unloading.load(Ordering::SeqCst) {
+            return ErrorCode::UnloadingSA;
+        }
         if task.conf.common_data.mode == Mode::FRONTEND {
             task.set_status(State::INITIALIZED, Reason::Default);
             if !self.is_front_app(uid, bundle.as_str()) {
@@ -178,10 +205,10 @@ impl TaskManager {
             return ErrorCode::ErrOk;
         }
 
-        log_debug!("uid {} task_id {} version {:?}", uid, task_id, task.conf.version);
+        debug!(LOG_LABEL, "uid {} task_id {} version {:?}", @public(uid), @public(task_id), @public(task.conf.version));
         match task.conf.version {
             Version::API10 => {
-                if !self.add_task(uid, *task_id, Arc::new(task)) {
+                if !self.add_task(uid, *task_id, Arc::new(task), &mut task_map_guard) {
                     return ErrorCode::TaskEnqueueErr;
                 }
                 self.total_task_count.fetch_add(1, Ordering::SeqCst);
@@ -190,55 +217,53 @@ impl TaskManager {
                 return ErrorCode::ErrOk;
             }
             Version::API9 => {
-                self.add_task_api9(uid, *task_id, Arc::new(task));
+                self.add_task_api9(uid, *task_id, Arc::new(task), &mut task_map_guard);
                 self.total_task_count.fetch_add(1, Ordering::SeqCst);
                 return ErrorCode::ErrOk;
             }
         }
     }
 
-    fn add_task_api9(&self, uid: u64, task_id: u32, task: Arc<RequestTask>) {
-        log_debug!("Begin add a v9 task");
-        let mut task_map_guard = self.task_map.lock().unwrap();
-        let app_task = task_map_guard.get_mut(&uid);
+    fn add_task_api9(&self, uid: u64, task_id: u32, task: Arc<RequestTask>, guard: &mut MutexGuard<HashMap<u64, AppTask>>) {
+        debug!(LOG_LABEL, "begin add a v9 task");
+        let app_task = guard.get_mut(&uid);
         match app_task {
             Some(map) => {
                 task.set_status(State::INITIALIZED, Reason::Default);
                 map.insert(task_id, task);
-                log_debug!(
-                    "Add v9 task sccuess, the current number of tasks which belongs to the app is {}",
-                    map.len() as u8
+                debug!(LOG_LABEL,
+                    "add v9 task sccuess, the current number of tasks which belongs to the app is {}",
+                    @public(map.len() as u8)
                 );
             }
             None => {
                 let mut app_task = AppTask::new();
                 task.set_status(State::INITIALIZED, Reason::Default);
                 app_task.insert(task_id, task);
-                task_map_guard.insert(uid, app_task);
-                log_debug!("Add v9 task sccuess, there is one task which belongs to the app");
+                guard.insert(uid, app_task);
+                debug!(LOG_LABEL, "add v9 task sccuess, there is one task which belongs to the app");
             }
         }
     }
 
-    fn add_task(&self, uid: u64, task_id: u32, task: Arc<RequestTask>) -> bool {
-        log_debug!("Begin add a v10 task");
-        let mut task_map_guard = self.task_map.lock().unwrap();
+    fn add_task(&self, uid: u64, task_id: u32, task: Arc<RequestTask>, guard: &mut MutexGuard<HashMap<u64, AppTask>>) -> bool {
+        debug!(LOG_LABEL, "begin add a v10 task");
         if self.api10_background_task_count.load(Ordering::SeqCst) >= MAX_TASK_COUNT {
-            log_error!("Add v10 task failed, the number of tasks has reached the limit of the maximum number of tasks in the system");
+            error!(LOG_LABEL, "add v10 task failed, the number of tasks has reached the limit of the maximum number of tasks in the system");
             return false;
         }
-        let app_task = task_map_guard.get_mut(&uid);
+        let app_task = guard.get_mut(&uid);
         match app_task {
             Some(map) => {
                 if (map.len() as u8) == MAX_TASK_COUNT_EACH_APP {
-                    log_error!("Add v10 task failed, the maximum value for each application processing task has been reached");
+                    error!(LOG_LABEL, "add v10 task failed, the maximum value for each application processing task has been reached");
                     return false;
                 }
                 task.set_status(State::INITIALIZED, Reason::Default);
                 map.insert(task_id, task);
-                log_debug!(
-                    "Add v10 task sccuess, the current number of tasks which belongs to the app is {}",
-                    map.len() as u8
+                debug!(LOG_LABEL,
+                    "add v10 task sccuess, the current number of tasks which belongs to the app is {}",
+                    @public(map.len() as u8)
                 );
                 return true;
             }
@@ -246,8 +271,8 @@ impl TaskManager {
                 let mut app_task = AppTask::new();
                 task.set_status(State::INITIALIZED, Reason::Default);
                 app_task.insert(task_id, task);
-                task_map_guard.insert(uid, app_task);
-                log_debug!("Add v10 task sccuess, there is one task which belongs to the app");
+                guard.insert(uid, app_task);
+                debug!(LOG_LABEL, "add v10 task sccuess, there is one task which belongs to the app");
                 return true;
             }
         }
@@ -261,24 +286,24 @@ impl TaskManager {
     ) -> Option<Arc<RequestTask>> {
         if let Some(v) = &self.global_front_task {
             if v.task_id == task_id {
-                log_debug!("Get the global front task");
+                debug!(LOG_LABEL, "get the global front task");
                 return Some(v.clone());
             }
         }
         let app_task = guard.get(&uid);
-        if let None = app_task {
-            log_error!("The Application has not any task");
+        if app_task.is_none() {
+            error!(LOG_LABEL, "the Application has not any task");
             return None;
         }
-        log_debug!("task_id: {}", task_id);
+        debug!(LOG_LABEL, "task_id: {}", @public(task_id));
         let task = app_task.unwrap().get(&task_id);
         match task {
             Some(v) => {
-                log_debug!("Get the task by uid and task id success");
+                debug!(LOG_LABEL, "get the task by uid and task id success");
                 return Some(v.clone());
             }
             None => {
-                log_error!("Can not found the task which belongs to the application");
+                error!(LOG_LABEL, "can not found the task which belongs to the application");
                 return None;
             }
         }
@@ -291,8 +316,8 @@ impl TaskManager {
     ) -> u8 {
         let app_task = guard.get(&uid);
         let mut count = 0;
-        if let None = app_task {
-            log_info!("The Application has not any background task");
+        if app_task.is_none() {
+            debug!(LOG_LABEL, "the Application has not any background task");
             return count;
         }
         for (_, task) in app_task.unwrap().iter() {
@@ -303,9 +328,9 @@ impl TaskManager {
                 count += 1;
             }
         }
-        log_debug!(
-            "The running background task which belongs to the app is {}",
-            count
+        debug!(LOG_LABEL,
+            "the running background task which belongs to the app is {}",
+            @public(count)
         );
         count
     }
@@ -317,7 +342,7 @@ impl TaskManager {
         guard: &MutexGuard<HashMap<u64, AppTask>>,
     ) {
         if !task.check_net_work_status() {
-            log_error!("check net work failed");
+            error!(LOG_LABEL, "check net work failed");
             return;
         }
 
@@ -325,7 +350,7 @@ impl TaskManager {
         if vesion == Version::API10 && task.conf.common_data.mode == Mode::BACKGROUND {
             let running_task_count = self.get_running_background_task_count(uid, guard);
             if running_task_count >= MAX_RUNNING_TASK_COUNT_EACH_APP {
-                log_debug!("Too many task in running state");
+                debug!(LOG_LABEL, "too many task in running state");
                 task.set_status(State::WAITING, Reason::RunningTaskMeetLimits);
                 return;
             }
@@ -349,39 +374,38 @@ impl TaskManager {
             run(task.clone()).await;
             TaskManager::get_instance().after_task_processed(task);
         });
-        log_debug!("Start the task success");
+        debug!(LOG_LABEL, "start the task success");
         return;
     }
 
     pub fn start(&self, uid: u64, task_id: u32) -> ErrorCode {
-        log_debug!("Start a task");
+        debug!(LOG_LABEL, "start a task");
         let task_map_guard = self.task_map.lock().unwrap();
         let task = self.get_task(uid, task_id, &task_map_guard);
-        if let None = task {
-            log_error!("Start failed");
-            return ErrorCode::TaskNotFound;
+        if let Some(task) = task {
+            let task_state = task.status.lock().unwrap().state;
+            if task_state != State::INITIALIZED {
+                error!(LOG_LABEL, "can not start a task which state is {}", @public(task_state as u32));
+                return ErrorCode::TaskStateErr;
+            }
+            self.start_inner(uid, task, &task_map_guard);
+            return ErrorCode::ErrOk;
         }
-        let task = task.unwrap();
-        let task_state = task.status.lock().unwrap().state;
-        if task_state != State::INITIALIZED {
-            log_error!("Can not start a task which state is {}", task_state as u32);
-            return ErrorCode::TaskStateErr;
-        }
-        self.start_inner(uid, task, &task_map_guard);
-        ErrorCode::ErrOk
+        error!(LOG_LABEL, "task not found");
+        ErrorCode::TaskNotFound
     }
 
     fn process_app_waitting_task(&self, uid: u64) {
         let task_map_guard = self.task_map.lock().unwrap();
         let app_task = task_map_guard.get(&uid);
-        if let None = app_task {
+        if app_task.is_none() {
             return;
         }
         let app_task = app_task.unwrap();
         for (_, request_task) in app_task.iter() {
             let state = request_task.status.lock().unwrap().state;
             if state == State::WAITING {
-                log_debug!("Begin process the task which in waitting state");
+                debug!(LOG_LABEL, "begin process the task which in waitting state");
                 self.start_inner(request_task.uid, request_task.clone(), &task_map_guard);
             }
         }
@@ -394,7 +418,7 @@ impl TaskManager {
             || state == State::REMOVED
             || state == State::STOPPED
         {
-            log_debug!("remove task from map");
+            debug!(LOG_LABEL, "remove task from map");
             if task.conf.version == Version::API9 && state != State::REMOVED {
                 let mut file = task.files.lock().unwrap();
                 file.clear();
@@ -412,11 +436,11 @@ impl TaskManager {
                     }
                 }
                 let app_task = task_map_guard.get_mut(&task.uid);
-                if let None = app_task {
+                if app_task.is_none() {
                     return;
                 }
                 let app_task = app_task.unwrap();
-                log_debug!("Task has been processed, begin remove task from task map");
+                debug!(LOG_LABEL, "task has been processed, begin remove task from task map");
                 let removed_task = app_task.remove(&task.task_id);
                 if !removed_task.is_none() {
                     self.total_task_count.fetch_sub(1, Ordering::SeqCst);
@@ -427,7 +451,7 @@ impl TaskManager {
                 }
 
                 if (app_task.len() as u8) == 0 {
-                    log_debug!("All task of the app has been processed, begin remove app task map");
+                    debug!(LOG_LABEL, "all task of the app has been processed, begin remove app task map");
                     task_map_guard.remove(&task.uid);
                     return;
                 }
@@ -438,110 +462,108 @@ impl TaskManager {
         }
     }
 
-    // fn unload_sa(&self) {
-    //     if !self.global_front_task.is_none() ||
-    //         self.total_task_count.load(Ordering::SeqCst) != 0 {
-    //         return;
-    //     }
-    //     static ONCE: Once = Once::new();
-    //     ONCE.call_once(|| {
-    //         TaskManager::get_instance().rt.spawn(async move {
-    //             loop {
-    //                 sleep(Duration::from_secs(60)).await;
-    //                 let task_manager = TaskManager::get_instance();
-    //                 if task_manager.total_task_count.load(Ordering::SeqCst) != 0 {
-    //                    continue;
-    //                 }
-    //                 match task_manager.ipc_request.try_lock() {
-    //                     Ok(_) => {
-    //                         task_manager.unloading.store(true, Ordering::SeqCst);
-    //                         unload_systemability();
-    //                         return;
-    //                     }
-    //                     Err(_) => continue,
-    //                 }
-    //             }
-    //         });
-    //     });
-    // }
+    fn unload_sa(&self) {
+        if self.total_task_count.load(Ordering::SeqCst) != 0 {
+            return;
+        }
+        static ONCE: Once = Once::new();
+        ONCE.call_once(|| {
+            TaskManager::get_instance().rt.spawn(async move {
+                loop {
+                    sleep(Duration::from_secs(60)).await;
+                    let task_manager = TaskManager::get_instance();
+                    match task_manager.task_map.try_lock() {
+                        Ok(_) => {
+                            if task_manager.total_task_count.load(Ordering::SeqCst) != 0 {
+                                continue;
+                            }
+                            task_manager.unloading.store(true, Ordering::SeqCst);
+                            let samgr_proxy = get_systemability_manager();
+                            samgr_proxy.unload_systemability(REQUEST_SERVICE_ID).expect("unload_systemability failed");
+                            return;
+                        }
+                        Err(_) => continue,
+                    }
+                }
+            });
+        });
+    }
 
     fn after_task_processed(&mut self, task: Arc<RequestTask>) {
         self.remove_task_from_map(task);
-        // self.unload_sa();
+        self.unload_sa();
     }
 
     pub fn pause(&self, uid: u64, task_id: u32) -> ErrorCode {
-        log_debug!("Pause a task");
+        debug!(LOG_LABEL, "pause a task");
         let task_map_guard = self.task_map.lock().unwrap();
         let task = self.get_task(uid, task_id, &task_map_guard);
-        if let None = task {
-            log_error!("Pause failed");
-            return ErrorCode::TaskNotFound;
+        if let Some(task) = task {
+            if task.conf.common_data.mode == Mode::FRONTEND {
+                error!(LOG_LABEL, "front task is not support pause action");
+                return ErrorCode::TaskModeErr;
+            }
+            if !task.set_status(State::PAUSED, Reason::UserOperation) {
+                error!(LOG_LABEL, "can not pause a task which state is not meet the requirements");
+                return ErrorCode::TaskStateErr;
+            }
+            error!(LOG_LABEL, "pause the task success");
+            return ErrorCode::ErrOk;
         }
-        let task = task.unwrap();
-        if task.conf.common_data.mode == Mode::FRONTEND {
-            log_error!("Front task is not support pause action");
-            return ErrorCode::TaskModeErr;
-        }
-        if !task.set_status(State::PAUSED, Reason::UserOperation) {
-            log_error!("Can not pause a task which state is not meet the requirements");
-            return ErrorCode::TaskStateErr;
-        }
-        log_info!("Pause the task success");
-        ErrorCode::ErrOk
+        error!(LOG_LABEL, "task not found");
+        ErrorCode::TaskNotFound
     }
 
     pub fn resume(&self, uid: u64, task_id: u32) -> ErrorCode {
-        log_debug!("Resume a task");
+        debug!(LOG_LABEL, "resume a task");
         let task_map_guard = self.task_map.lock().unwrap();
         let task = self.get_task(uid, task_id, &task_map_guard);
-        if let None = task {
-            log_error!("Resume failed");
-            return ErrorCode::TaskNotFound;
+        if let Some(task) = task {
+            if task.conf.common_data.mode == Mode::FRONTEND {
+                error!(LOG_LABEL, "front task is not support resume action");
+                return ErrorCode::TaskModeErr;
+            }
+            let state = task.status.lock().unwrap().state;
+            if state != State::PAUSED {
+                error!(LOG_LABEL, "can not resume a task which state is not paused");
+                return ErrorCode::TaskStateErr;
+            }
+            error!(LOG_LABEL, "resume the task success");
+            self.start_inner(uid, task, &task_map_guard);
+            return ErrorCode::ErrOk;
         }
-        let task = task.unwrap();
-        if task.conf.common_data.mode == Mode::FRONTEND {
-            log_error!("Front task is not support resume action");
-            return ErrorCode::TaskModeErr;
-        }
-        let state = task.status.lock().unwrap().state;
-        if state != State::PAUSED {
-            log_error!("Can not resume a task which state is not paused");
-            return ErrorCode::TaskStateErr;
-        }
-        log_info!("Resume the task success");
-        self.start_inner(uid, task, &task_map_guard);
-        ErrorCode::ErrOk
+        error!(LOG_LABEL, "task not found");
+        ErrorCode::TaskNotFound
     }
 
     pub fn stop(&mut self, uid: u64, task_id: u32) -> ErrorCode {
-        log_debug!("Stop a task");
+        debug!(LOG_LABEL, "stop a task");
         let task = {
             let task_map_guard = self.task_map.lock().unwrap();
             let task = self.get_task(uid, task_id, &task_map_guard);
-            if let None = task {
-                log_error!("Stop failed");
+            if task.is_none() {
+                error!(LOG_LABEL, "stop failed");
                 return ErrorCode::TaskNotFound;
             }
             let task = task.unwrap();
             if !task.set_status(State::STOPPED, Reason::UserOperation) {
-                log_error!("Can not stop a task which state is not meet the requirements");
+                error!(LOG_LABEL, "can not stop a task which state is not meet the requirements");
                 return ErrorCode::TaskStateErr;
             }
             task
         };
         self.after_task_processed(task);
-        log_info!("Stopped success");
+        info!(LOG_LABEL, "stopped success");
         ErrorCode::ErrOk
     }
 
     pub fn remove(&mut self, uid: u64, task_id: u32) -> ErrorCode {
-        log_debug!("Remove a task");
+        debug!(LOG_LABEL, "remove a task");
         let task = {
             let task_map_guard = self.task_map.lock().unwrap();
             let task = self.get_task(uid, task_id, &task_map_guard);
-            if let None = task {
-                log_error!("Remove failed");
+            if task.is_none() {
+                error!(LOG_LABEL, "remove failed");
                 return ErrorCode::TaskNotFound;
             }
             let task = task.unwrap();
@@ -549,40 +571,37 @@ impl TaskManager {
             task
         };
         self.after_task_processed(task);
-        log_info!("remove success");
+        info!(LOG_LABEL, "remove success");
         ErrorCode::ErrOk
     }
 
     pub fn show(&self, uid: u64, task_id: u32) -> Option<TaskInfo> {
-        log_debug!("Show a task");
+        debug!(LOG_LABEL, "show a task");
         let task_map_guard = self.task_map.lock().unwrap();
         let task = self.get_task(uid, task_id, &task_map_guard);
         match task {
             Some(value) => {
-                log_debug!("Query task info by memory");
+                debug!(LOG_LABEL, "query task info by memory");
                 let task_info = value.show();
                 return Some(task_info);
             }
             None => {
-                // API10 query in database
                 return None;
             }
         }
     }
 
-    // use only for download
     pub fn query_mime_type(&self, uid: u64, task_id: u32) -> String {
-        log_debug!("Query a task mime type");
+        debug!(LOG_LABEL, "query a task mime type");
         let task_map_guard = self.task_map.lock().unwrap();
         let task = self.get_task(uid, task_id, &task_map_guard);
         match task {
             Some(value) => {
-                log_debug!("Query task mime type by memory");
+                debug!(LOG_LABEL, "query task mime type by memory");
                 let mimt_type = value.query_mime_type();
                 return mimt_type;
             }
             None => {
-                // API10 query in database
                 return "".into();
             }
         }
@@ -590,19 +609,19 @@ impl TaskManager {
 }
 
 pub fn monitor_network() {
-    log_info!("monitor_network");
+    info!(LOG_LABEL, "monitor_network");
     unsafe {
         RegisterNetworkCallback(resume_task_by_network);
     }
 
 }
 
-// 前台任务不会恢复
+
 extern "C" fn resume_task_by_network() {
     if unsafe { !IsOnline() } {
         return;
     }
-    log_info!("resume task by network");
+    info!(LOG_LABEL, "resume task by network");
     let task_manager = TaskManager::get_instance();
     let guard = task_manager.task_map.lock().unwrap();
     for (uid, app_task) in guard.iter() {
@@ -610,7 +629,7 @@ extern "C" fn resume_task_by_network() {
         for (_, task) in app_task.iter() {
             let state = task.status.lock().unwrap().state;
             if state == State::WAITING && task.is_satisfied_configuration() {
-                log_debug!("Begin try resume task as network condition resume");
+                debug!(LOG_LABEL, "begin try resume task as network condition resume");
                 let task = task.clone();
                 task_manager.rt.spawn(async move {
                     sleep(Duration::from_secs(10)).await;
@@ -624,17 +643,17 @@ extern "C" fn resume_task_by_network() {
 }
 
 pub fn monitor_app_state() {
-    log_info!("monitor_app_state");
+    info!(LOG_LABEL, "monitor_app_state");
     unsafe {
         RegisterAPPStateCallback(update_app_state);
     }
 }
 
 extern "C" fn update_app_state(uid: i32, state: i32) {
-    log_info!("Update app state, uid = {}, state = {}", uid, state);
+    info!(LOG_LABEL, "update app state, uid = {}, state = {}", @public(uid), @public(state));
     let task_manager = TaskManager::get_instance();
     if is_foreground(state) {
-        log_debug!("Save front app uid");
+        debug!(LOG_LABEL, "save front app uid");
         task_manager.front_app_uid = Some(uid as u64);
     } else if is_background_or_terminated(state) {
         if let Some(v) = task_manager.front_app_uid {
