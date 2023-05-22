@@ -13,6 +13,6 @@
 import("//build/ohos.gni")
 import("//build/ohos/sa_profile/sa_profile.gni")
 ohos_sa_profile("download_sa_profiles") {
-  sources = [ "3706.xml" ]
+  sources = [ "3706.json" ]
   part_name = "request"
 }
