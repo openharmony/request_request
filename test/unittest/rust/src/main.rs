@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #![allow(unused_assignments)]
 mod common;
 extern crate request;
