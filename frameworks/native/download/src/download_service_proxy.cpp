@@ -45,12 +45,8 @@ bool DownloadServiceProxy::IsPathValid(const std::string &filePath)
     return true;
 }
 
-int32_t DownloadServiceProxy::Request(const DownloadConfig &config, uint32_t &taskId)
+int32_t DownloadServiceProxy::GetRequestFd(const DownloadConfig &config, int32_t &fd)
 {
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
-    int32_t fd = -1;
     if (!IsPathValid(config.GetFilePath())) {
         DOWNLOAD_HILOGE("Download file path invalid!");
         return ErrorCodeInner::ERROR_CLIENT_FILE_PATH_INVALID;
@@ -67,6 +63,20 @@ int32_t DownloadServiceProxy::Request(const DownloadConfig &config, uint32_t &ta
             DOWNLOAD_HILOGE("Failed to open file errno %{public}d", errno);
             return ErrorCodeInner::ERROR_CLIENT_FILE_IO;
         }
+    }
+    return ErrorCodeInner::ERROR_NO_ERR;
+}
+
+int32_t DownloadServiceProxy::Request(const DownloadConfig &config, uint32_t &taskId)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    int32_t fd = -1;
+    auto result = GetRequestFd(config, fd);
+    if (result != ERROR_NO_ERR) {
+        DOWNLOAD_HILOGE("GetRequestFd failed, result = %{public}d", result);
+        return result;
     }
     DOWNLOAD_HILOGE("fd: %{public}d end", fd);
     data.WriteFileDescriptor(fd);
