@@ -30,10 +30,6 @@ void RequestBackgroundNotify(RequestTaskMsg msg, const char *path, int32_t pathL
 {
     REQUEST_HILOGD("Background Notification, percent is %{public}d", percent);
     auto requestTemplate = std::make_shared<NotificationTemplate>();
-    if (requestTemplate == nullptr) {
-        REQUEST_HILOGE("taskId: %{public}d, downloadTemplate is null", msg.taskId);
-        return;
-    }
     std::string filepath(path, pathLen);
     requestTemplate->SetTemplateName("requestTemplate");
     OHOS::AAFwk::WantParams wantParams;
@@ -46,15 +42,7 @@ void RequestBackgroundNotify(RequestTaskMsg msg, const char *path, int32_t pathL
     }
     requestTemplate->SetTemplateData(std::make_shared<OHOS::AAFwk::WantParams>(wantParams));
     auto normalContent = std::make_shared<NotificationNormalContent>();
-    if (normalContent == nullptr) {
-        REQUEST_HILOGE("taskId: %{public}d, normalContent is null", msg.taskId);
-        return;
-    }
     auto content = std::make_shared<NotificationContent>(normalContent);
-    if (content == nullptr) {
-        REQUEST_HILOGE("taskId: %{public}d, content is null", msg.taskId);
-        return;
-    }
     NotificationRequest req(msg.taskId);
     req.SetCreatorUid(msg.uid);
     req.SetContent(content);

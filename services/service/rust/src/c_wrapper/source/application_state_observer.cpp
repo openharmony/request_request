@@ -44,8 +44,8 @@ ApplicationStateObserver &ApplicationStateObserver::GetInstance()
 bool ApplicationStateObserver::RegisterAppStateChanged(RegCallBack &&callback)
 {
     REQUEST_HILOGI("RegisterAppState In");
-    sptr<AppProcessState> appProcessState_ = new (std::nothrow) AppProcessState(*this);
-    if (appProcessState_ == nullptr) {
+    sptr<AppProcessState> appProcessState = new (std::nothrow) AppProcessState(*this);
+    if (appProcessState == nullptr) {
         REQUEST_HILOGE("create AppProcessState fail, not enough memory");
         return false;
     }
@@ -54,10 +54,14 @@ bool ApplicationStateObserver::RegisterAppStateChanged(RegCallBack &&callback)
         REQUEST_HILOGE("get SystemAbilityManager failed.");
         return false;
     }
-    sptr<AppExecFwk::IAppMgr> appObject =
-        iface_cast<AppExecFwk::IAppMgr>(systemAbilityManager->GetSystemAbility(APP_MGR_SERVICE_ID));
+    auto systemAbility = systemAbilityManager->GetSystemAbility(APP_MGR_SERVICE_ID);
+    if (systemAbility == nullptr) {
+        REQUEST_HILOGE("get SystemAbility failed.");
+        return false;
+    }
+    sptr<AppExecFwk::IAppMgr> appObject = iface_cast<AppExecFwk::IAppMgr>(systemAbility);
     if (appObject) {
-        int ret = appObject->RegisterApplicationStateObserver(appProcessState_);
+        int ret = appObject->RegisterApplicationStateObserver(appProcessState);
         if (ret == ERR_OK) {
             REQUEST_HILOGD("register success");
             callback_ = callback;
