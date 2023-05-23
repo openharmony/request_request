@@ -42,7 +42,7 @@ void PostTask(fun f)
         REQUEST_HILOGE("serviceHandler_ is null");
         return;
     }
-    auto callback = [=]() { f(); };
+    auto callback = [f]() { f(); };
     serviceHandler_->PostTask(callback, INIT_INTERVAL);
     REQUEST_HILOGE("DownloadServiceAbility Init failed. Try again 5s later");
 }

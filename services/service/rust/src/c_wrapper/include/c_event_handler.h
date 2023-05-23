@@ -16,11 +16,11 @@
 #ifndef C_EVENT_HANDLER_H
 #define C_EVENT_HANDLER_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
 
 using fun = int32_t (*)();
 

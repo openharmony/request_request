@@ -16,11 +16,11 @@
 #ifndef REQUEST_C_CHECK_PERMISSION_H
 #define REQUEST_C_CHECK_PERMISSION_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
 
 bool CheckPermission(uint64_t taskId);
 
