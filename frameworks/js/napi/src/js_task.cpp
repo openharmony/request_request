@@ -92,51 +92,85 @@ napi_value JsTask::JsCreate(napi_env env, napi_callback_info info)
 
 napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version)
 {
-    std::string errInfo;
-    bool withErrCode = version != Version::API8 ? true : false;
-    if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        NapiUtils::ThrowError(env, E_SERVICE_ERROR, "Load download server fail", withErrCode);
-        return nullptr;
-    }
-
     struct ContextInfo : public AsyncCall::Context {
-        napi_ref ref = nullptr;
+        napi_ref taskRef = nullptr;
+        napi_value jsConfig = nullptr;
+        Config config{};
+        int32_t tid{};
     };
     auto context = std::make_shared<ContextInfo>();
-    context->withErrCode_ = withErrCode;
+    context->withErrCode_ = version != Version::API8;
     auto input = [context, version](size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        napi_value proxy = nullptr;
+        if (version == Version::API10) {
+            context->jsConfig = argv[1];
+        }
         int32_t number = version == Version::API8 ? NapiUtils::ONE_ARG : NapiUtils::TWO_ARG;
         if (argc < number) {
-            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Load download server fail",
-                context->withErrCode_);
+            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "invalid parameter count", context->withErrCode_);
             return napi_generic_failure;
         }
         napi_value ctor = GetCtor(context->env_, version);
-        napi_status status = napi_new_instance(context->env_, ctor, argc, argv, &proxy);
-        if (proxy == nullptr || status != napi_ok) {
-            REQUEST_HILOGE("Get proxy failed");
+        napi_value jsTask = nullptr;
+        napi_status status = napi_new_instance(context->env_, ctor, argc, argv, &jsTask);
+        if (jsTask == nullptr || status != napi_ok) {
+            REQUEST_HILOGE("Get jsTask failed");
             return napi_generic_failure;
         }
-        napi_create_reference(context->env_, proxy, 1, &(context->ref));
+        napi_create_reference(context->env_, jsTask, 1, &(context->taskRef));
         return napi_ok;
     };
+    auto exec = [context]() {
+        if (!RequestManager::GetInstance()->LoadRequestServer()) {
+            context->innerCode_ = E_SERVICE_ERROR;
+            return;
+        }
+        int32_t ret = RequestManager::GetInstance()->Create(context->config, context->tid);
+        if (ret != E_OK || context->tid < 0) {
+            context->innerCode_ = ret;
+        }
+    };
     auto output = [context](napi_value *result) -> napi_status {
-        napi_status status = napi_get_reference_value(context->env_, context->ref, result);
-        napi_delete_reference(context->env_, context->ref);
+        if (result == nullptr) {
+            return napi_generic_failure;
+        }
+        napi_status status = napi_get_reference_value(context->env_, context->taskRef, result);
+        JsTask *task = nullptr;
+        napi_unwrap(context->env_, *result, reinterpret_cast<void **>(&task));
+        task->SetTid(context->tid);
+        JsTask::AddTaskMap(std::to_string(context->tid), task);
+        if (task->config_.version == Version::API10) {
+            NapiUtils::SetStringPropertyUtf8(context->env_, *result, "tid", task->GetTid());
+            napi_set_named_property(context->env_, *result, "conf", context->jsConfig);
+        }
         return status;
     };
-    context->SetInput(input).SetOutput(output);
+    auto creator = [context](bool withErrCode, int32_t innerErrCode) -> napi_value {
+        ExceptionError error;
+        NapiUtils::ConvertError(innerErrCode, error);
+        return NapiUtils::CreateBusinessError(context->env_, error.code, error.errInfo, withErrCode);
+    };
+    context->SetInput(input).SetOutput(output).SetExec(exec).SetErrorCreator(creator);
     AsyncCall asyncCall(env, info, context);
     return asyncCall.Call(context, "create");
 }
 
 napi_value JsTask::GetCtor(napi_env env, Version version)
 {
-    if (version != Version::API10) {
-        auto func = version == Version::API9 ? GetCtorV9 : GetCtorV8;
-        return func(env);
+    switch (version) {
+        case Version::API8:
+            return GetCtorV8(env);
+        case Version::API9:
+            return GetCtorV9(env);
+        case Version::API10:
+            return GetCtorV10(env);
+        default:
+            break;
     }
+    return nullptr;
+}
+
+napi_value JsTask::GetCtorV10(napi_env env)
+{
     REQUEST_HILOGD("GetCtorV10 in");
     std::lock_guard<std::mutex> lock(createMutex_);
     napi_value cons;

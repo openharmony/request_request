@@ -61,6 +61,7 @@ private:
     static napi_value GetCtor(napi_env env, Version version);
     static napi_value GetCtorV8(napi_env env);
     static napi_value GetCtorV9(napi_env env);
+    static napi_value GetCtorV10(napi_env env);
     static napi_value RequestFile(napi_env env, napi_callback_info info);
     static napi_value RequestFileV8(napi_env env, napi_callback_info info);
     bool Equals(napi_env env, napi_value value, napi_ref copy);

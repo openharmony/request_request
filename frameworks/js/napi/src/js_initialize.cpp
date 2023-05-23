@@ -48,23 +48,12 @@ napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Versi
         NapiUtils::ThrowError(env, err.code, err.errInfo, config.withErrCode);
         return nullptr;
     }
-
-    int32_t tid;
-    int32_t ret = RequestManager::GetInstance()->Create(config, tid);
-    if (ret != E_OK || tid < 0) {
-        NapiUtils::ConvertError(ret, err);
-        NapiUtils::ThrowError(env, err.code, err.errInfo, config.withErrCode);
-        return nullptr;
-    }
     auto *task = new (std::nothrow) JsTask();
     if (task == nullptr) {
         REQUEST_HILOGE("Create task object failed");
         return nullptr;
     }
-    task->SetTid(tid);
     task->config_ = config;
-    JsTask::AddTaskMap(task->GetTid(), task);
-    
     auto finalize = [](napi_env env, void *data, void *hint) {
         REQUEST_HILOGD("destructed task");
         JsTask *task = reinterpret_cast<JsTask *>(data);
@@ -76,7 +65,6 @@ napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Versi
         finalize(env, task, nullptr);
         return nullptr;
     }
-    CreatProperties(env, self, argv[1], task);
     return self;
 }
 

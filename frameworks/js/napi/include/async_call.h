@@ -28,7 +28,7 @@ public:
         using InputAction = std::function<napi_status(size_t, napi_value *, napi_value)>;
         using OutputAction = std::function<napi_status(napi_value *)>;
         using ExecAction = std::function<void()>;
-        using ErrorCreator = std::function<napi_value(bool withErrCode, uint32_t innerErrCode)>;
+        using ErrorCreator = std::function<napi_value(bool withErrCode, int32_t innerErrCode)>;
         Context() = default;
         virtual ~Context()
         {
