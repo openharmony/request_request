@@ -23,7 +23,7 @@ ohos_fuzztest("DownloadBaseNotifyFuzzTest") {
 
   include_dirs = [
     "${request_path}/frameworks/js/napi/include",
-    "${request_path}/frameworks/native/download/include",
+    "${request_path}/frameworks/native/include",
     "${arkui_path}/ace_engine/frameworks/base/utils",
     "//third_party/node/src",
   ]
@@ -43,7 +43,7 @@ ohos_fuzztest("DownloadBaseNotifyFuzzTest") {
     "${arkui_path}/napi:ace_napi",
     "${request_path}/common:request_common_static",
     "${request_path}/frameworks/js/napi:request_static",
-    "${request_path}/frameworks/native/download:downloadsingle",
+    "${request_path}/frameworks/native:request_native",
   ]
 
   external_deps = [

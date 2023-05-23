@@ -20,7 +20,7 @@
 #include "uv.h"
 
 namespace OHOS::Request {
-struct UvCallbackData {
+struct CallbackData {
     napi_env env;
     napi_ref ref;
 };

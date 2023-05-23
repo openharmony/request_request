@@ -50,7 +50,7 @@ AsyncCall::~AsyncCall()
     DeleteContext(env_, context_);
 }
 
-napi_value AsyncCall::Call(napi_env env, Context::ExecAction exec, const std::string &resourceName)
+napi_value AsyncCall::Call(napi_env env, Context::ExecAction exec)
 {
     if ((context_ == nullptr) || (context_->ctx == nullptr)) {
         UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "context_ or context_->ctx is null");
@@ -66,8 +66,7 @@ napi_value AsyncCall::Call(napi_env env, Context::ExecAction exec, const std::st
     }
     napi_async_work work = context_->work;
     napi_value resource = nullptr;
-    std::string name = "REQUEST_UPLOAD_" + resourceName;
-    napi_create_string_utf8(env, name.c_str(), NAPI_AUTO_LENGTH, &resource);
+    napi_create_string_utf8(env, "AsyncCall", NAPI_AUTO_LENGTH, &resource);
     napi_create_async_work(env, nullptr, resource, AsyncCall::OnExecute, AsyncCall::OnComplete, context_, &work);
     context_->work = work;
     context_ = nullptr;
@@ -117,7 +116,7 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
             napi_get_undefined(env, &result[ARG_DATA]);
         }
     } else {
-        result[ARG_ERROR] = JSUtil::CreateBusinessError(env, Download::EXCEPTION_SERVICE_ERROR, "upload fail");
+        result[ARG_ERROR] = JSUtil::CreateBusinessError(env, E_SERVICE_ERROR, "upload fail");
         napi_get_undefined(env, &result[ARG_DATA]);
     }
     if (context->defer != nullptr) {

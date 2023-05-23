@@ -15,6 +15,8 @@
 
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index';
 import request from '@ohos.request';
+import featureAbility from '@ohos.ability.featureAbility';
+import fs from '@ohos.file.fs';
 
 const TAG = "UPLOAD_TEST";
 
@@ -35,6 +37,13 @@ describe('RequestUploadTest', function () {
         console.info('afterEach called')
     })
     console.log(TAG + "*************Unit Test Begin*************");
+
+    let context = featureAbility.getContext();
+    context.getCacheDir().then((data) => {
+      let pathDir = data;
+      let file = fs.openSync(pathDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+    })
 
     let uploadTask;
     let RequestData = {
@@ -215,8 +224,8 @@ describe('RequestUploadTest', function () {
     it('SUB_REQUEST_UPLOAD_API_CALLBACK_0001', 0, async function (done) {
         console.info("-----------------------SUB_REQUEST_UPLOAD_API_CALLBACK_0001 is starting-----------------------");
         try {
-          console.info("SUB_REQUEST_UPLOAD_API_CALLBACK_0001 uploadConfig: " + JSON.stringify(uploadConfig));
-          request.upload(uploadConfig1, (data) => {
+          console.info("SUB_REQUEST_UPLOAD_API_CALLBACK_0001 uploadConfig: " + JSON.stringify(uploadConfig1));
+          request.upload(uploadConfig1, (err, data) => {
             uploadTask = data;
             console.info("SUB_REQUEST_UPLOAD_API_CALLBACK_0001 progress uploadTask: " + JSON.stringify(uploadTask));
             expect(uploadTask !== undefined).assertEqual(true);
@@ -257,7 +266,7 @@ describe('RequestUploadTest', function () {
     it('SUB_REQUEST_UPLOAD_API_PROMISE_0001', 0, async function (done) {
         console.info("-----------------------SUB_REQUEST_UPLOAD_API_PROMISE_0001 is starting-----------------------");
         try {
-          console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0001 UploadConfig: " + JSON.stringify(uploadConfig));
+          console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0001 UploadConfig: " + JSON.stringify(uploadConfig1));
           request.upload(uploadConfig1).then((data) => {
             uploadTask = data;
             console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0001 uploadTask: " + uploadTask);

@@ -144,7 +144,7 @@ describe('RequestTest', function () {
      */
     it('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003', 0, async function (done) {
         downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
+            url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
             header: {
                 headers: 'http'
             },
@@ -307,19 +307,9 @@ describe('RequestTest', function () {
                 downloadTask = data;
                 console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001 downloadTask: " + downloadTask);
                 expect(downloadTask != undefined).assertEqual(true);
-                downloadTask.on('progress', (data1, data2) => {});
-                downloadTask.off('progress', (data1, data2) => {
-                    try{
-                        console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001 on data1 =" + data1);
-                        console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001 on data2 =" + data2);
-                        expect(data1).assertEqual(0);
-                        expect(data2).assertEqual(0);
-                    }catch(err){
-                        console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001 off_err: " + err);
-                    }
-                    downloadTask.remove()
-                    done();
-                });
+                downloadTask.on('progress', async (data1, data2) => {});
+                downloadTask.off('progress');
+                done();
             }catch(err){
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001 error: " + err);
                 done();
@@ -355,16 +345,9 @@ describe('RequestTest', function () {
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002 downloadTask: " + downloadTask);
             try{
                 expect(downloadTask != undefined).assertEqual(true);
-                downloadTask.off('complete', () => {
-                    try{
-                        console.info('====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002 task complete.')
-                        expect(true).assertTrue();
-                    }catch(err){
-                        console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002 off_err: " + err);
-                    }
-                    downloadTask.remove()
-                    done();
-                });
+                downloadTask.on('complete', () => {});
+                downloadTask.off('complete');
+                done();
             }catch(err){
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002 error: " + err);
                 done();
@@ -400,16 +383,10 @@ describe('RequestTest', function () {
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003 downloadTask: " + downloadTask);
             try{
                 expect(downloadTask != undefined).assertEqual(true);
-                downloadTask.off('pause', () => {
-                    try{
-                        console.info('====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003 task complete.')
-                        expect(true).assertTrue();
-                    }catch(err){
-                        console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003 off_err: " + err);
-                    }
-                    downloadTask.remove()
-                    done();
-                });
+                function PauseCallback() {}
+                downloadTask.on('pause', PauseCallback);
+                downloadTask.off('pause', PauseCallback);
+                done();
             }catch(err){
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003 error: " + err);
                 done();
@@ -445,16 +422,10 @@ describe('RequestTest', function () {
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0004 downloadTask: " + downloadTask);
             try{
                 expect(downloadTask != undefined).assertEqual(true);
-                downloadTask.off('remove', (data) => {
-                    try{
-                        console.info('====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003 remove data:' +JSON.stringify(data))
-                        expect(true).assertTrue();
-                    }catch(err){
-                        console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003 off_err: " + err);
-                    }
-                    downloadTask.remove()
-                    done();
-                });
+                function RemoveCallback() {}
+                downloadTask.on('remove', RemoveCallback);
+                downloadTask.off('remove', RemoveCallback);
+                done();
             }catch(err){
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0004 error: " + err);
                 done();
@@ -490,18 +461,10 @@ describe('RequestTest', function () {
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
             try{
                 expect(downloadTask != undefined).assertEqual(true);
-                downloadTask.on('fail', (data) => {});
-                downloadTask.off('fail', (data) => {
-                    try{
-                        console.info('====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 fail_data:' + JSON.stringify(data))
-                        expect(data).assertEqual(0)
-                        console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 end-----------------------");
-                    }catch(err){
-                        console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 fail_error: " + err);
-                    }
-                    downloadTask.remove()
-                    done();
-                });
+                function FailCallback(data) {}
+                downloadTask.on('fail', FailCallback);
+                downloadTask.off('fail', FailCallback);
+                done();
             }catch(err){
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 error: " + err);
                 done();

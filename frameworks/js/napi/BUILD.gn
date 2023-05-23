@@ -1,4 +1,4 @@
-# Copyright (C) 2022 Huawei Device Co., Ltd.
+# Copyright (C) 2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -26,44 +26,38 @@ config("upload_public_config") {
   ]
 }
 
-request_src = [
-  "src/download/async_call.cpp",
-  "src/download_base_notify.cpp",
-  "src/download_event.cpp",
-  "src/download_pause.cpp",
-  "src/download_query.cpp",
-  "src/download_query_mimetype.cpp",
-  "src/download_remove.cpp",
-  "src/download_resume.cpp",
-  "src/download_task_napi.cpp",
-  "src/download_task_napi_V9.cpp",
-  "src/header_receive_callback.cpp",
-  "src/js_util.cpp",
-  "src/legacy/download_manager.cpp",
-  "src/legacy/download_task.cpp",
-  "src/napi_utils.cpp",
-  "src/notify_callback.cpp",
-  "src/progress_callback.cpp",
-  "src/request_module.cpp",
-  "src/upload/async_call.cpp",
-  "src/upload_task_napi.cpp",
-  "src/upload_task_napiV5.cpp",
-  "src/upload_task_napiV9.cpp",
-  "src/uv_queue.cpp",
-]
-
 request_include = [
   "${arkui_path}/ace_engine/frameworks/base/utils",
   "${ability_runtime_napi_path}/featureAbility",
   "${ability_runtime_napi_path}/inner/napi_common",
-  "${request_path}/frameworks/native/download/include",
-  "${request_path}/frameworks/native/upload/include",
+  "${request_path}/frameworks/native/include",
   "//third_party/libuv/include",
+]
+
+request_src = [
+  "src/async_call.cpp",
+  "src/request_event.cpp",
+  "src/legacy/request_manager.cpp",
+  "src/legacy/download_task.cpp",
+  "src/notify_stub.cpp",
+  "src/js_initialize.cpp",
+  "src/js_task.cpp",
+  "src/napi_utils.cpp",
+  "src/request_module.cpp",
+  "src/request_notify.cpp",
+  "src/uv_queue.cpp",
+  "src/upload/js_util.cpp",
+  "src/upload/async_call.cpp",
+  "src/upload/upload_task_napiV5.cpp",
+  "src/upload/curl_adp.cpp",
+  "src/upload/file_adapter.cpp",
+  "src/upload/obtain_file.cpp",
+  "src/upload/upload_task.cpp",
 ]
 
 request_deps = [
   "${request_path}/common:request_common_static",
-  "${request_path}/frameworks/native/download:downloadsingle",
+  "${request_path}/frameworks/native:request_native",
   "//third_party/libuv:uv",
 ]
 
@@ -85,7 +79,6 @@ ohos_shared_library("request") {
   sources = request_src
 
   deps = request_deps
-  deps += [ "${request_path}/frameworks/native/upload:upload_lib" ]
   external_deps = request_external_deps
 
   relative_install_dir = "module"

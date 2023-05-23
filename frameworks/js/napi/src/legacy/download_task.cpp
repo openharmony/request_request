@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,18 +19,20 @@
 #include "constant.h"
 #include "log.h"
 
-namespace OHOS::Request::Download::Legacy {
+namespace OHOS::Request::Legacy {
 bool DownloadTask::isCurlGlobalInited_ = false;
+const uint32_t DEFAULT_READ_TIMEOUT = 60;
+const uint32_t DEFAULT_LOW_SPEED_LIMIT = 30;
 constexpr uint32_t RETRY_TIME = 10;
 DownloadTask::DownloadTask(const std::string &token, const DownloadOption &option, const DoneFunc &callback)
     : taskId_(token), option_(option), callback_(callback), totalSize_(0), hasFileSize_(false)
 {
-    DOWNLOAD_HILOGI("constructor");
+    REQUEST_HILOGI("constructor");
 }
 
 DownloadTask::~DownloadTask()
 {
-    DOWNLOAD_HILOGI("destroy");
+    REQUEST_HILOGI("destroy");
     if (filp_ != nullptr) {
         fclose(filp_);
     }
@@ -43,7 +45,7 @@ FILE *DownloadTask::OpenDownloadFile() const
     auto downloadFile = option_.fileDir_ + '/' + option_.filename_;
     FILE *filp = fopen(downloadFile.c_str(), "w+");
     if (filp == nullptr) {
-        DOWNLOAD_HILOGE("open download file failed");
+        REQUEST_HILOGE("open download file failed");
     }
     return filp;
 }
@@ -59,12 +61,12 @@ uint32_t DownloadTask::GetLocalFileSize()
 
     int nRet = fseek(filp_, 0, SEEK_END);
     if (nRet != 0) {
-        DOWNLOAD_HILOGE("fseek error");
+        REQUEST_HILOGE("fseek error");
         return 0;
     }
     long lRet = ftell(filp_);
     if (lRet < 0) {
-        DOWNLOAD_HILOGE("ftell error");
+        REQUEST_HILOGE("ftell error");
         return 0;
     }
     return static_cast<uint32_t>(lRet);
@@ -76,7 +78,7 @@ void DownloadTask::NotifyDone(bool successful, const std::string &errMsg)
         filp_ = nullptr;
 
         if (!successful) {
-            DOWNLOAD_HILOGE("remove download file");
+            REQUEST_HILOGE("remove download file");
             remove((option_.fileDir_ + '/' + option_.filename_).c_str());
         }
     }
@@ -89,13 +91,13 @@ void DownloadTask::NotifyDone(bool successful, const std::string &errMsg)
 bool DownloadTask::GetFileSize(uint32_t &result)
 {
     if (hasFileSize_) {
-        DOWNLOAD_HILOGD("Already get file size");
+        REQUEST_HILOGD("Already get file size");
         return true;
     }
     std::unique_ptr<CURL, decltype(&curl_easy_cleanup)> handle(curl_easy_init(), curl_easy_cleanup);
 
     if (!handle) {
-        DOWNLOAD_HILOGD("Failed to create download service task");
+        REQUEST_HILOGD("Failed to create download service task");
         return false;
     }
 
@@ -108,7 +110,7 @@ bool DownloadTask::GetFileSize(uint32_t &result)
 
     if (code == CURLE_OK) {
         if (size > UINT_MAX) {
-            DOWNLOAD_HILOGD("file size overflow");
+            REQUEST_HILOGD("file size overflow");
             return false;
         }
         result = static_cast<uint32_t>(size);
@@ -116,9 +118,9 @@ bool DownloadTask::GetFileSize(uint32_t &result)
             result = 0;
         }
         hasFileSize_ = true;
-        DOWNLOAD_HILOGD("Has got file size");
+        REQUEST_HILOGD("Has got file size");
     }
-    DOWNLOAD_HILOGD("fetch file size %{public}d", result);
+    REQUEST_HILOGD("fetch file size %{public}d", result);
     return hasFileSize_;
 }
 
@@ -153,7 +155,7 @@ bool DownloadTask::SetOption(CURL *handle, curl_slist *&headers)
 
 void DownloadTask::Start()
 {
-    DOWNLOAD_HILOGD("taskId=%{public}s url=%{public}s file=%{public}s dir=%{public}s", taskId_.c_str(),
+    REQUEST_HILOGD("taskId=%{public}s url=%{public}s file=%{public}s dir=%{public}s", taskId_.c_str(),
         option_.url_.c_str(), option_.filename_.c_str(), option_.fileDir_.c_str());
     if (!isCurlGlobalInited_) {
         curl_global_init(CURL_GLOBAL_ALL);
@@ -170,7 +172,7 @@ void DownloadTask::Start()
 
 void DownloadTask::Run()
 {
-    DOWNLOAD_HILOGD("start download task");
+    REQUEST_HILOGD("start download task");
     pthread_setname_np(pthread_self(), "system_download");
     uint32_t retryTime = 0;
     bool result = false;
@@ -179,7 +181,7 @@ void DownloadTask::Run()
             result = DoDownload();
         }
         retryTime++;
-        DOWNLOAD_HILOGD("download task retrytime: %{public}u, totalSize_: %{public}u", retryTime, totalSize_);
+        REQUEST_HILOGD("download task retrytime: %{public}u, totalSize_: %{public}u", retryTime, totalSize_);
     } while (!result && retryTime < RETRY_TIME);
 
     if (retryTime >= RETRY_TIME) {
@@ -189,7 +191,7 @@ void DownloadTask::Run()
 
 bool DownloadTask::DoDownload()
 {
-    DOWNLOAD_HILOGD("download task DoDownload");
+    REQUEST_HILOGD("download task DoDownload");
     curl_slist *headers{};
     std::shared_ptr<CURL> handle(curl_easy_init(), [headers](CURL *handle) {
         if (headers) {
@@ -200,12 +202,12 @@ bool DownloadTask::DoDownload()
 
     if (handle == nullptr) {
         NotifyDone(false, "curl failed");
-        DOWNLOAD_HILOGD("curl failed");
+        REQUEST_HILOGD("curl failed");
         return false;
     }
 
     if (!SetOption(handle.get(), headers)) {
-        DOWNLOAD_HILOGD("curl set option failed");
+        REQUEST_HILOGD("curl set option failed");
         return false;
     }
     uint32_t localFileLength = GetLocalFileSize();
@@ -219,7 +221,7 @@ bool DownloadTask::DoDownload()
     }
 
     auto code = curl_easy_perform(handle.get());
-    DOWNLOAD_HILOGI("code=%{public}d, %{public}s", code, errorBuffer_);
+    REQUEST_HILOGI("code=%{public}d, %{public}s", code, errorBuffer_);
     if (code == CURLE_OK) {
         NotifyDone(code == CURLE_OK, errorBuffer_);
     }
@@ -230,4 +232,4 @@ void DownloadTask::SetResumeFromLarge(CURL *curl, uint64_t pos)
 {
     curl_easy_setopt(curl, CURLOPT_RESUME_FROM_LARGE, pos);
 }
-} // namespace OHOS::Request::Download::Legacy
+} // namespace OHOS::Request::Legacy

@@ -12,23 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef UV_QUEUE_H
-#define UV_QUEUE_H
 
-#include <iostream>
-#include "napi/native_api.h"
-#include "uv.h"
+#ifndef DOWNLOAD_SYNC_LOAD_CALLBACK_H
+#define DOWNLOAD_SYNC_LOAD_CALLBACK_H
+
+#include "system_ability_load_callback_stub.h"
 
 namespace OHOS::Request {
-struct UvCallbackData {
-    napi_env env;
-    napi_ref ref;
-};
-class UvQueue {
+class RequestSyncLoadCallback : public SystemAbilityLoadCallbackStub {
 public:
-    static bool Call(napi_env env, void *data, uv_after_work_cb afterCallback);
-    static void DeleteRef(napi_env env, napi_ref ref);
-    static void UvDelete(uv_work_t *work, int status);
+    void OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject>& remoteObject) override;
+    void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
 };
-} // namespace OHOS::Request
-#endif // UV_QUEUE_H
+} // // namespace OHOS::Request
+#endif // DOWNLOAD_SYNC_LOAD_CALLBACK_H

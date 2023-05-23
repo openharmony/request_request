@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,8 +16,8 @@
 #ifndef OH_DOWNLOAD_VISIBILITY_H
 #define OH_DOWNLOAD_VISIBILITY_H
 
-#ifndef DOWNLOAD_API
-#define DOWNLOAD_API __attribute__ ((visibility ("default")))
+#ifndef REQUEST_API
+#define REQUEST_API __attribute__ ((visibility ("default")))
 #endif
 
 #endif // OH_DOWNLOAD_VISIBILITY_H

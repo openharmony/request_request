@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,17 +15,15 @@
 
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-#include "legacy/download_manager.h"
-#include "upload_task_napi.h"
-#include "upload_task_napiV9.h"
-#include "js_util.h"
-#include "download_task_napi.h"
-#include "download_task_napi_v9.h"
+#include "legacy/request_manager.h"
+#include "js_task.h"
+#include "napi_utils.h"
+#include "request_event.h"
 #include "constant.h"
+#include "log.h"
 
-using namespace OHOS::Request::UploadNapi;
-using namespace OHOS::Request::Upload;
-using namespace OHOS::Request::Download;
+using namespace OHOS::Request;
+#define DECLARE_NAPI_METHOD(name, func) { name, 0, func, 0, 0, 0, napi_default, 0 }
 
 // fix code rule issue
 static napi_value exception_permission = nullptr;
@@ -59,16 +57,23 @@ static napi_value session_pending = nullptr;
 static napi_value session_paused = nullptr;
 static napi_value session_failed = nullptr;
 
+enum NetworkType {
+    NETWORK_INVALID = 0x00000000,
+    NETWORK_MOBILE = 0x00000001,
+    NETWORK_WIFI = 0x00010000,
+    NETWORK_MASK = 0x00010001,
+};
+
 static void NapiCreateInt32(napi_env env)
 {
     /* create exception type const */
-    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_PERMISSION), &exception_permission);
-    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_PARAMETER_CHECK), &exception_parameter_check);
-    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_UNSUPPORTED), &exception_unsupported);
-    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_FILE_IO), &exception_file_IO);
-    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_FILE_PATH), &exception_file_path);
-    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_SERVICE_ERROR), &exception_service_error);
-    napi_create_int32(env, static_cast<int32_t>(EXCEPTION_OTHER), &exception_other);
+    napi_create_int32(env, static_cast<int32_t>(E_PERMISSION), &exception_permission);
+    napi_create_int32(env, static_cast<int32_t>(E_PARAMETER_CHECK), &exception_parameter_check);
+    napi_create_int32(env, static_cast<int32_t>(E_UNSUPPORTED), &exception_unsupported);
+    napi_create_int32(env, static_cast<int32_t>(E_FILE_IO), &exception_file_IO);
+    napi_create_int32(env, static_cast<int32_t>(E_FILE_PATH), &exception_file_path);
+    napi_create_int32(env, static_cast<int32_t>(E_SERVICE_ERROR), &exception_service_error);
+    napi_create_int32(env, static_cast<int32_t>(E_OTHER), &exception_other);
 
     /* Create Network Type Const */
     napi_create_int32(env, static_cast<int32_t>(NETWORK_MOBILE), &network_mobile);
@@ -102,9 +107,37 @@ static void NapiCreateInt32(napi_env env)
     napi_create_int32(env, static_cast<int32_t>(SESSION_FAILED), &session_failed);
 }
 
+static void NapiCreateAction(napi_env env, napi_value &action)
+{
+    napi_create_object(env, &action);
+    NapiUtils::SetUint32Property(env, action, "DOWNLOAD", static_cast<uint32_t>(Action::DOWNLOAD));
+    NapiUtils::SetUint32Property(env, action, "UPLOAD", static_cast<uint32_t>(Action::UPLOAD));
+}
+
+static void NapiCreateMode(napi_env env, napi_value &mode)
+{
+    napi_create_object(env, &mode);
+    NapiUtils::SetUint32Property(env, mode, "BACKGROUND", static_cast<uint32_t>(Mode::BACKGROUND));
+    NapiUtils::SetUint32Property(env, mode, "FOREGROUND", static_cast<uint32_t>(Mode::FOREGROUND));
+}
+
+static void NapiCreateNetwork(napi_env env, napi_value &network)
+{
+    napi_create_object(env, &network);
+    NapiUtils::SetUint32Property(env, network, "ANY", static_cast<uint32_t>(Network::ANY));
+    NapiUtils::SetUint32Property(env, network, "WIFI", static_cast<uint32_t>(Network::WIFI));
+    NapiUtils::SetUint32Property(env, network, "CELLULAR", static_cast<uint32_t>(Network::CELLULAR));
+}
+
 static napi_value Init(napi_env env, napi_value exports)
 {
     NapiCreateInt32(env);
+    napi_value action = nullptr;
+    NapiCreateAction(env, action);
+    napi_value mode = nullptr;
+    NapiCreateMode(env, mode);
+    napi_value network = nullptr;
+    NapiCreateNetwork(env, network);
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_PERMISSION", exception_permission),
@@ -114,10 +147,8 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_FILEPATH", exception_file_path),
         DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_SERVICE", exception_service_error),
         DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_OTHERS", exception_other),
-
         DECLARE_NAPI_STATIC_PROPERTY("NETWORK_MOBILE", network_mobile),
         DECLARE_NAPI_STATIC_PROPERTY("NETWORK_WIFI", network_wifi),
-
         DECLARE_NAPI_STATIC_PROPERTY("ERROR_CANNOT_RESUME", err_cannot_resume),
         DECLARE_NAPI_STATIC_PROPERTY("ERROR_DEVICE_NOT_FOUND", err_dev_not_found),
         DECLARE_NAPI_STATIC_PROPERTY("ERROR_FILE_ALREADY_EXISTS", err_file_exist),
@@ -129,28 +160,35 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("ERROR_UNKNOWN", err_unknown),
         DECLARE_NAPI_STATIC_PROPERTY("ERROR_OFFLINE", err_offline),
         DECLARE_NAPI_STATIC_PROPERTY("ERROR_UNSUPPORTED_NETWORK_TYPE", err_unsupported_network_type),
-
         DECLARE_NAPI_STATIC_PROPERTY("PAUSED_QUEUED_FOR_WIFI", paused_queue_wifi),
         DECLARE_NAPI_STATIC_PROPERTY("PAUSED_WAITING_FOR_NETWORK", paused_for_network),
         DECLARE_NAPI_STATIC_PROPERTY("PAUSED_WAITING_TO_RETRY", paused_to_retry),
         DECLARE_NAPI_STATIC_PROPERTY("PAUSED_BY_USER", paused_by_user),
         DECLARE_NAPI_STATIC_PROPERTY("PAUSED_UNKNOWN", paused_unknown),
-
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_SUCCESSFUL", session_success),
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_RUNNING", session_running),
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_PENDING", session_pending),
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_PAUSED", session_paused),
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_FAILED", session_failed),
-
-        DECLARE_NAPI_METHOD("download", DownloadTaskNapi::JsMain),
-        DECLARE_NAPI_METHOD("upload", UploadTaskNapi::JsUpload),
-        DECLARE_NAPI_METHOD("downloadFile", DownloadTaskNapiV9::JsMain),
-        DECLARE_NAPI_METHOD("uploadFile", UploadTaskNapiV9::JsUploadFile),
-        DECLARE_NAPI_METHOD("onDownloadComplete", Legacy::DownloadManager::OnDownloadComplete),
+        DECLARE_NAPI_PROPERTY("Action", action),
+        DECLARE_NAPI_PROPERTY("Mode", mode),
+        DECLARE_NAPI_PROPERTY("Network", network),
+        DECLARE_NAPI_METHOD("create", JsTask::JsCreate),
+        DECLARE_NAPI_METHOD("remove", JsTask::Remove),
+        DECLARE_NAPI_METHOD("show", JsTask::Show),
+        DECLARE_NAPI_METHOD("touch", JsTask::Touch),
+        DECLARE_NAPI_METHOD("search", JsTask::Search),
+        DECLARE_NAPI_METHOD("query", JsTask::Query),
+        DECLARE_NAPI_METHOD("clear", JsTask::Clear),
+        DECLARE_NAPI_METHOD("download", JsTask::JsDownload),
+        DECLARE_NAPI_METHOD("upload", JsTask::JsUpload),
+        DECLARE_NAPI_METHOD("downloadFile", JsTask::JsRequestFile),
+        DECLARE_NAPI_METHOD("uploadFile", JsTask::JsRequestFile),
+        DECLARE_NAPI_METHOD("onDownloadComplete", Legacy::RequestManager::OnDownloadComplete),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
-    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "init upload %{public}d", status);
+    REQUEST_HILOGD("init upload %{public}d", status);
     return exports;
 }
 
@@ -166,5 +204,5 @@ static __attribute__((constructor)) void RegisterModule()
         .reserved = { 0 }
     };
     napi_module_register(&module);
-    UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "module register request");
+    REQUEST_HILOGD("module register request");
 }

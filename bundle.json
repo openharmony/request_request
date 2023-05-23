@@ -58,11 +58,10 @@
     "build": {
       "group_type": {
         "base_group": [
-          "//base/request/request/frameworks/js/napi:request",
-          "//base/request/request/frameworks/native/upload:upload_lib"
+          "//base/request/request/frameworks/js/napi:request"
         ],
         "fwk_group": [
-          "//base/request/request/frameworks/native/download:downloadsingle"
+          "//base/request/request/frameworks/native:request_native"
         ],
         "service_group": [
           "//base/request/request/services/etc/init:downloadservice.cfg",
@@ -73,8 +72,6 @@
       "inner_kits": [
       ],
       "test": [
-        "//base/request/request/test/unittest/upload:upload_obtain_file_UT_test",
-        "//base/request/request/test/unittest/upload:upload_UT_test",
         "//base/request/request/test/fuzztest:fuzztest",
         "//base/request/request/test/unittest/common/napi/requestTest:unittest"
       ]

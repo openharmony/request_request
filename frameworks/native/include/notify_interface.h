@@ -12,23 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef UV_QUEUE_H
-#define UV_QUEUE_H
 
-#include <iostream>
-#include "napi/native_api.h"
-#include "uv.h"
+#ifndef DOWNLOAD_NOTIFY_INTERFACE_H
+#define DOWNLOAD_NOTIFY_INTERFACE_H
+
+#include "iremote_broker.h"
+#include "iremote_object.h"
+#include "constant.h"
+#include "js_common.h"
 
 namespace OHOS::Request {
-struct UvCallbackData {
-    napi_env env;
-    napi_ref ref;
-};
-class UvQueue {
+class NotifyInterface : public IRemoteBroker {
 public:
-    static bool Call(napi_env env, void *data, uv_after_work_cb afterCallback);
-    static void DeleteRef(napi_env env, napi_ref ref);
-    static void UvDelete(uv_work_t *work, int status);
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Download.NotifyInterface");
+    virtual void CallBack(const Notify &notify) = 0;
+};
+
+enum {
+    REQUEST_NOTIFY,
 };
 } // namespace OHOS::Request
-#endif // UV_QUEUE_H
+#endif // DOWNLOAD_NOTIFY_INTERFACE_H

@@ -17,10 +17,11 @@
 
 #include <cstddef>
 #include <cstdint>
-#include "download_base_notify.h"
+
+#include "request_notify.h"
 #include "message_parcel.h"
 
-using namespace OHOS::Request::Download;
+using namespace OHOS::Request;
 
 namespace OHOS {
 constexpr size_t THRESHOLD = 10;
@@ -42,8 +43,10 @@ bool FuzzDownloadBaseNotify(const uint8_t *rawData, size_t size)
     rawData = rawData + OFFSET;
     size = size - OFFSET;
 
-    struct NotifyData notifyData;
-
+    napi_value value;
+    struct CallbackData notifyData;
+    napi_get_reference_value(notifyData.env, notifyData.ref, &value);
+    
     MessageParcel data;
     data.WriteInterfaceToken(DOWNLDBN_INTERFACE_TOKEN);
     data.WriteBuffer(rawData, size);
@@ -51,7 +54,7 @@ bool FuzzDownloadBaseNotify(const uint8_t *rawData, size_t size)
     MessageParcel reply;
     MessageOption option;
 
-    sptr<DownloadBaseNotify> download = new DownloadBaseNotify(notifyData.env, notifyData.paramNumber, notifyData.ref);
+    sptr<RequestNotify> download = new RequestNotify(notifyData.env, value);
     download->OnRemoteRequest(code, data, reply, option);
 
     return true;

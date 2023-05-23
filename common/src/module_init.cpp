@@ -52,7 +52,7 @@ static void InitLocks(void)
     lockCallback = LockCallback;
     g_lockArray = reinterpret_cast<pthread_mutex_t *>(OPENSSL_malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t)));
     if (g_lockArray == nullptr) {
-        DOWNLOAD_HILOGE("failed to create openssl lock");
+        REQUEST_HILOGE("failed to create openssl lock");
         return;
     }
     for (int i = 0; i < CRYPTO_num_locks(); i++) {
