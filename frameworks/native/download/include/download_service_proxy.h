@@ -39,6 +39,7 @@ public:
     bool CheckPermission() override;
 
 private:
+    int32_t GetRequestFd(const DownloadConfig &config, int32_t &fd);
     static bool IsPathValid(const std::string &filePath);
     static inline BrokerDelegator<DownloadServiceProxy> delegator_;
 };

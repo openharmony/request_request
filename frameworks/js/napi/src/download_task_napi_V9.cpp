@@ -57,9 +57,8 @@ std::mutex mutex_;
 napi_value DownloadTaskNapiV9::JsMain(napi_env env, napi_callback_info info)
 {
     DOWNLOAD_HILOGD("Enter download JsMain.");
-    std::string errInfo;
     if (!DownloadManager::GetInstance()->LoadDownloadServer()) {
-        errInfo = "load download server fail";
+        std::string errInfo = "load download server fail";
         DOWNLOAD_HILOGE("%{public}s", errInfo.c_str());
         NapiUtils::ThrowError(env, EXCEPTION_OTHER, errInfo);
         return nullptr;
