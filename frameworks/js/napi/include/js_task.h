@@ -42,7 +42,7 @@ public:
     void AddListener(const std::string &key, const sptr<RequestNotify> &listener);
     void RemoveListener(const std::string &type, const std::string &tid, napi_value callback);
     void RemoveListener(const std::string &type, const std::string &tid);
-    bool IsRegistered(const std::string &key);
+    size_t GetListenerSize(const std::string &key);
     void ClearListener();
 
     static void ClearTaskMap(const std::string &key);
@@ -53,7 +53,16 @@ public:
     static std::map<std::string, JsTask*> taskMap_;
     std::mutex listenerMutex_;
     std::map<std::string, std::vector<sptr<RequestNotify>>> listenerMap_;
+    std::map<std::string, uint32_t> countMap_;
 private:
+    struct ContextInfo : public AsyncCall::Context {
+        JsTask *task = nullptr;
+        napi_ref taskRef = nullptr;
+        napi_value jsConfig = nullptr;
+        Config config{};
+        int32_t tid{};
+    };
+
     static napi_value DefineClass(napi_env env, const napi_property_descriptor* desc, size_t count,
         napi_callback cb, napi_ref *ctor);
     static napi_value JsMain(napi_env env, napi_callback_info info, Version version);

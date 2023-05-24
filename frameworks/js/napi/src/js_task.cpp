@@ -92,22 +92,11 @@ napi_value JsTask::JsCreate(napi_env env, napi_callback_info info)
 
 napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version)
 {
-    struct ContextInfo : public AsyncCall::Context {
-        napi_ref taskRef = nullptr;
-        napi_value jsConfig = nullptr;
-        Config config{};
-        int32_t tid{};
-    };
     auto context = std::make_shared<ContextInfo>();
     context->withErrCode_ = version != Version::API8;
     auto input = [context, version](size_t argc, napi_value *argv, napi_value self) -> napi_status {
         if (version == Version::API10) {
             context->jsConfig = argv[1];
-        }
-        int32_t number = version == Version::API8 ? NapiUtils::ONE_ARG : NapiUtils::TWO_ARG;
-        if (argc < number) {
-            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "invalid parameter count", context->withErrCode_);
-            return napi_generic_failure;
         }
         napi_value ctor = GetCtor(context->env_, version);
         napi_value jsTask = nullptr;
@@ -116,6 +105,7 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
             REQUEST_HILOGE("Get jsTask failed");
             return napi_generic_failure;
         }
+        napi_unwrap(context->env_, jsTask, reinterpret_cast<void **>(&context->task));
         napi_create_reference(context->env_, jsTask, 1, &(context->taskRef));
         return napi_ok;
     };
@@ -124,7 +114,7 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
             context->innerCode_ = E_SERVICE_ERROR;
             return;
         }
-        int32_t ret = RequestManager::GetInstance()->Create(context->config, context->tid);
+        int32_t ret = RequestManager::GetInstance()->Create(context->task->config_, context->tid);
         if (ret != E_OK || context->tid < 0) {
             context->innerCode_ = ret;
         }
@@ -134,14 +124,9 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
             return napi_generic_failure;
         }
         napi_status status = napi_get_reference_value(context->env_, context->taskRef, result);
-        JsTask *task = nullptr;
-        napi_unwrap(context->env_, *result, reinterpret_cast<void **>(&task));
-        task->SetTid(context->tid);
-        JsTask::AddTaskMap(std::to_string(context->tid), task);
-        if (task->config_.version == Version::API10) {
-            NapiUtils::SetStringPropertyUtf8(context->env_, *result, "tid", task->GetTid());
-            napi_set_named_property(context->env_, *result, "conf", context->jsConfig);
-        }
+        context->task->SetTid(context->tid);
+        JsTask::AddTaskMap(std::to_string(context->tid), context->task);
+        JsInitialize::CreatProperties(context->env_, *result, context->jsConfig, context->task);
         return status;
     };
     auto creator = [context](bool withErrCode, int32_t innerErrCode) -> napi_value {
@@ -312,10 +297,15 @@ void JsTask::SetTid(int32_t tid)
     tid_ = std::to_string(tid);
 }
 
-bool JsTask::IsRegistered(const std::string &key)
+size_t JsTask::GetListenerSize(const std::string &key)
 {
     std::lock_guard<std::mutex> autoLock(listenerMutex_);
-    return listenerMap_.find(key) != listenerMap_.end() ? true : false;
+    auto it = listenerMap_.find(key);
+    if (it == listenerMap_.end()) {
+        return 0;
+    }
+    REQUEST_HILOGD("listenerMap_ size %{public}d", it->second.size());
+    return it->second.size();
 }
 
 void JsTask::AddTaskMap(const std::string &key, JsTask* task)
@@ -326,6 +316,7 @@ void JsTask::AddTaskMap(const std::string &key, JsTask* task)
 
 void JsTask::AddListener(const std::string &key, const sptr<RequestNotify> &listener)
 {
+    REQUEST_HILOGD("AddListener key %{public}s", key.c_str());
     std::lock_guard<std::mutex> autoLock(listenerMutex_);
     listenerMap_[key].push_back(listener);
 }

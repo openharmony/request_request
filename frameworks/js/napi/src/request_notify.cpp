@@ -36,6 +36,7 @@ RequestNotify::~RequestNotify()
 
 void RequestNotify::CallBack(const Notify &notify)
 {
+    REQUEST_HILOGI("RequestNotify CallBack in");
     GetDataPtrParam(data_, notify);
     NotifyDataPtr *notifyDataPtr = new (std::nothrow) NotifyDataPtr;
     notifyDataPtr->dataPtr = data_;

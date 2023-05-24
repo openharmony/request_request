@@ -34,18 +34,25 @@ namespace OHOS::Request {
 napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Version version)
 {
     REQUEST_HILOGD("constructor request task!");
+    bool withErrCode = version != Version::API8;
     napi_value self = nullptr;
     size_t argc = NapiUtils::MAX_ARGC;
     napi_value argv[NapiUtils::MAX_ARGC] = { nullptr };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
+    int32_t number = version == Version::API8 ? NapiUtils::ONE_ARG : NapiUtils::TWO_ARG;
+    if (argc < number) {
+        NapiUtils::ThrowError(env, E_PARAMETER_CHECK, "invalid parameter count", withErrCode);
+        return nullptr;
+    }
 
     Config config;
     config.version = version;
+    config.withErrCode = withErrCode;
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
     ExceptionError err = InitParam(env, argv, context, config);
     if (err.code != E_OK) {
         REQUEST_HILOGE("err.code : %{public}d, err.errInfo :  %{public}s", err.code, err.errInfo.c_str());
-        NapiUtils::ThrowError(env, err.code, err.errInfo, config.withErrCode);
+        NapiUtils::ThrowError(env, err.code, err.errInfo, withErrCode);
         return nullptr;
     }
     auto *task = new (std::nothrow) JsTask();
@@ -74,7 +81,6 @@ ExceptionError JsInitialize::InitParam(napi_env env, napi_value* argv,
     REQUEST_HILOGD("InitParam in");
     ExceptionError err = {.code = E_OK};
     int parametersPosition = config.version == Version::API8 ? CONFIG_PARAM_AT_FIRST : CONFIG_PARAM_AT_SECOND;
-    config.withErrCode = config.version == Version::API8 ? false : true;
 
     napi_status getStatus = GetContext(env, argv[0], context);
     if (getStatus != napi_ok) {
@@ -90,6 +96,7 @@ ExceptionError JsInitialize::InitParam(napi_env env, napi_value* argv,
         return err;
     }
     config.bundleName = context->GetBundleName();
+    REQUEST_HILOGD("config.bundleName is %{public}s", config.bundleName.c_str());
     return CheckFilePath(context, config);
 }
 

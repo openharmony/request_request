@@ -101,7 +101,7 @@ struct Config {
     bool overwrite = false;
     bool metered = false;
     bool roaming = false;
-    bool retry = false;
+    bool retry = true;
     bool redirect = true;
     bool gauge = false;
     bool precise = false;

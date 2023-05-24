@@ -262,9 +262,6 @@ std::string Convert2String(napi_env env, napi_value object, const std::string &p
 
 void ThrowError(napi_env env, ExceptionErrorCode code, const std::string &msg, bool withErrCode)
 {
-    if (code == E_UNLOADING_SA) {
-        code = E_SERVICE_ERROR;
-    }
     napi_value error = CreateBusinessError(env, code, msg, withErrCode);
     napi_throw(env, error);
 }

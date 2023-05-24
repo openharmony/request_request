@@ -78,10 +78,10 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
     }
     REQUEST_HILOGD("On event %{public}s + %{public}s", jsParam.type.c_str(), jsParam.task->GetTid().c_str());
     std::string key = jsParam.type + jsParam.task->GetTid();
-    if (!jsParam.task->IsRegistered(key)) {
+    jsParam.task->AddListener(key, listener);
+    if (jsParam.task->GetListenerSize(key) == 1) {
         RequestManager::GetInstance()->On(jsParam.type, jsParam.task->GetTid(), listener);
     }
-    jsParam.task->AddListener(key, listener);
     return nullptr;
 }
 
@@ -110,20 +110,20 @@ ExceptionError RequestEvent::ParseOnOffParameters(napi_env env, napi_callback_in
     napi_value argv[NapiUtils::MAX_ARGC] = { nullptr };
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &jsParam.self, nullptr);
     if (status != napi_ok) {
-        return {.code = E_PARAMETER_CHECK, err.errInfo = "Failed to obtain parameters"};
+        return {.code = E_PARAMETER_CHECK, .errInfo = "Failed to obtain parameters"};
     }
     napi_unwrap(env, jsParam.self, reinterpret_cast<void **>(&jsParam.task));
     if (jsParam.task == nullptr) {
-        return {.code = E_PARAMETER_CHECK, err.errInfo = "Failed to obtain the current object"};
+        return {.code = E_PARAMETER_CHECK, .errInfo = "Failed to obtain the current object"};
     }
 
     if ((IsRequiredParam && argc < NapiUtils::TWO_ARG) || (!IsRequiredParam && argc < NapiUtils::ONE_ARG)) {
-        return {.code = E_PARAMETER_CHECK, err.errInfo = "Wrong number of arguments"};
+        return {.code = E_PARAMETER_CHECK, .errInfo = "Wrong number of arguments"};
     }
     napi_valuetype valuetype;
     napi_typeof(env, argv[NapiUtils::FIRST_ARGV], &valuetype);
     if (valuetype != napi_string) {
-        return {.code = E_PARAMETER_CHECK, err.errInfo = "The first parameter is not of string type"};
+        return {.code = E_PARAMETER_CHECK, .errInfo = "The first parameter is not of string type"};
     }
     jsParam.type = NapiUtils::Convert2String(env, argv[NapiUtils::FIRST_ARGV]);
 
@@ -133,7 +133,7 @@ ExceptionError RequestEvent::ParseOnOffParameters(napi_env env, napi_callback_in
     valuetype = napi_undefined;
     napi_typeof(env, argv[NapiUtils::SECOND_ARGV], &valuetype);
     if (valuetype != napi_function) {
-        return {.code = E_PARAMETER_CHECK, err.errInfo = "The second parameter is not of function type"};
+        return {.code = E_PARAMETER_CHECK, .errInfo = "The second parameter is not of function type"};
     }
     jsParam.callback = argv[NapiUtils::SECOND_ARGV];
     return err;

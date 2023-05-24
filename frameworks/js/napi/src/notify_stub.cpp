@@ -92,13 +92,14 @@ void NotifyStub::RequestCallBack(const std::string &type, const std::string &tid
         REQUEST_HILOGE("Unregistered %{public}s callback", type.c_str());
         return;
     }
-    for (const auto &sptr : it->second) {
-        sptr->CallBack(notify);
+    for (const auto &callback : it->second) {
+        callback->CallBack(notify);
     }
 }
 
 void NotifyStub::GetDownloadNotify(const std::string &type, const NotifyData &notifyData, Notify &notify)
 {
+    REQUEST_HILOGD("Get download notify data");
     notify.type = DATA_CALLBACK;
     if (type == "progress") {
         notify.data.push_back(notifyData.progress.processed);
@@ -122,6 +123,7 @@ void NotifyStub::GetDownloadNotify(const std::string &type, const NotifyData &no
 
 void NotifyStub::GetUploadNotify(const std::string &type, const NotifyData &notifyData, Notify &notify)
 {
+    REQUEST_HILOGD("Get upload notify data");
     if (type == "complete" || type == "fail") {
         notify.type = TASK_STATE_CALLBACK;
         notify.taskStates = notifyData.taskStates;

@@ -1,0 +1,138 @@
+# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/request/request/request_aafwk.gni")
+import("//build/ohos.gni")
+
+config("download_service_config") {
+  visibility = [ ":*" ]
+  include_dirs = [ "include" ]
+
+  ldflags = [ "-Wl,--exclude-libs=ALL" ]
+  cflags_cc = [ "-fno-exceptions" ]
+  cflags = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fvisibility=hidden",
+  ]
+}
+
+ohos_rust_shared_library("download_server") {
+  sources = [ "src/request_service_init.rs" ]
+
+  public_configs = [ ":download_service_config" ]
+
+  deps = [
+    ":request",
+    "//foundation/communication/ipc/interfaces/innerkits/rust:ipc_rust",
+    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk_rust",
+  ]
+
+  external_deps = [ "hilog_native:hilog_rust" ]
+
+  clippy_lints = "none"
+  rustflags = [
+    "-Copt-level=3",
+    "-Cprefer-dynamic",
+  ]
+  crate_name = "download_server"
+  crate_type = "dylib"
+  subsystem_name = "request"
+  part_name = "request"
+}
+
+ohos_rust_shared_library("request") {
+  sources = [
+    "src/enumration.rs",
+    "src/form_item.rs",
+    "src/lib.rs",
+    "src/log.rs",
+    "src/progress.rs",
+    "src/request_binding.rs",
+    "src/request_service.rs",
+    "src/request_service_ability.rs",
+    "src/request_task.rs",
+    "src/task_config.rs",
+    "src/task_info.rs",
+    "src/task_manager.rs",
+    "src/utils.rs",
+  ]
+
+  public_configs = [ ":download_service_config" ]
+
+  deps = [
+    ":request_service_c",
+    "//base/hiviewdfx/hilog/interfaces/rust:hilog_rust",
+    "//foundation/communication/ipc/interfaces/innerkits/rust:ipc_rust",
+    "//foundation/communication/netstack/interfaces/innerkits/rust/ylong_http_client:ylong_http_client",
+    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk_rust",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/rust:rust_samgr",
+    "//third_party/rust/crates/tokio/ylong_runtime:lib",
+  ]
+
+  clippy_lints = "none"
+  rustflags = [
+    "-Copt-level=3",
+    "-Cprefer-dynamic",
+    "-Zmacro-backtrace",
+  ]
+  crate_name = "request"
+  crate_type = "dylib"
+  subsystem_name = "request"
+  part_name = "request"
+}
+
+ohos_shared_library("request_service_c") {
+  include_dirs = [
+    "${request_path}/common/include",
+    "${request_path}/services/service/rust/src/c_wrapper/include",
+    "${core_service_path}/innerkits/include",
+    "${notification_path}/interfaces/inner_api",
+  ]
+  sources = [
+    "${request_path}/services/service/rust/src/c_wrapper/source/application_state_observer.cpp",
+    "${request_path}/services/service/rust/src/c_wrapper/source/background_notification.cpp",
+    "${request_path}/services/service/rust/src/c_wrapper/source/c_check_permission.cpp",
+    "${request_path}/services/service/rust/src/c_wrapper/source/c_event_handler.cpp",
+    "${request_path}/services/service/rust/src/c_wrapper/source/get_top_bundle.cpp",
+    "${request_path}/services/service/rust/src/c_wrapper/source/network_adapter.cpp",
+  ]
+  cflags_cc = [ "-O2" ]
+
+  deps = [
+    "${core_service_path}/innerkits:tel_core_service_api",
+    "${notification_path}/frameworks/ans:ans_innerkits",
+  ]
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:app_manager",
+    "access_token:libaccesstoken_sdk",
+    "c_utils:utils",
+    "eventhandler:libeventhandler",
+    "hiviewdfx_hilog_native:libhilog",
+    "netmanager_base:net_conn_manager_if",
+    "relational_store:native_appdatafwk",
+    "relational_store:native_dataability",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+  output_extension = "so"
+  install_images = [ system_base_dir ]
+  subsystem_name = "request"
+  part_name = "request"
+}

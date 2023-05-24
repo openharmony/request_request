@@ -141,8 +141,8 @@ impl RequestAbility {
     pub fn on(&self, task_id: u32, on_type: String, obj: RemoteObj) -> ErrorCode {
         let key = on_type.clone() + &String::from("-") + &task_id.to_string();
         debug!(LOG_LABEL, "on key {}", @public(key));
-        RequestAbility::get_ability_instance().do_unregistered_notify(task_id, on_type);
         self.reg_remote_obj.lock().unwrap().insert(key, obj);
+        RequestAbility::get_ability_instance().do_unregistered_notify(task_id, on_type);
         ErrorCode::ErrOk
     }
 
@@ -195,11 +195,12 @@ impl RequestAbility {
     }
 
     pub fn add_unregister_notify(&self, task_id: u32, reg_type: String) {
+        debug!(LOG_LABEL, "add_unregister_notify taskId: {} event: {}",  @public(task_id),  @public(reg_type));
         match reg_type.as_str() {
-            "complete" | "fail" => {
+            "complete" | "fail" | "progress" | "pause" | "remove" => {
                 let key = reg_type.clone() + &String::from("-") + &task_id.to_string();
                 let notify = self.unregistered_notify.lock().unwrap().clone();
-                if !notify.contains_key(&key) {
+                if notify.contains_key(&key) {
                     return;
                 }
                 self.unregistered_notify
@@ -216,34 +217,28 @@ impl RequestAbility {
             Some(df) => {
                 let key = reg_type.clone() + &String::from("-") + &task_id.to_string();
                 let notify = self.unregistered_notify.lock().unwrap().clone();
+                debug!(LOG_LABEL, "notify {:?}",  @public(notify));
                 if notify.contains_key(&key) {
-                    match df.progress.common_data.state {
-                        State::COMPLETED | State::FAILED => {
-                            debug!(LOG_LABEL, "notify taskId: {} event: {}",  @public(task_id),  @public(reg_type));
-                            let mut each_file_status = Vec::<(String, Reason, String)>::new();
-                            for item in df.file_specs.iter() {
-                                each_file_status.push((
-                                    item.path.clone(),
-                                    df.reason,
-                                    String::new(),
-                                ));
-                            }
-                            let notify_data = NotifyData {
-                                progress: df.progress,
-                                action: df.common_data.action,
-                                version: Version::API9,
-                                each_file_status,
-                                task_id: df.task_id,
-                                uid: df.uid,
-                                bundle: df.bundle,
-                            };
-                            RequestAbility::notify_client(reg_type, &notify_data);
-                            self.unregistered_notify.lock().unwrap().remove(&key);
-                        }
-                        _ => {
-                            error!(LOG_LABEL, "not match status");
-                        }
+                    debug!(LOG_LABEL, "notify taskId: {} event: {}",  @public(task_id),  @public(reg_type));
+                    let mut each_file_status = Vec::<(String, Reason, String)>::new();
+                    for item in df.file_specs.iter() {
+                        each_file_status.push((
+                            item.path.clone(),
+                            df.reason,
+                            String::new(),
+                        ));
                     }
+                    let notify_data = NotifyData {
+                        progress: df.progress,
+                        action: df.common_data.action,
+                        version: Version::API9,
+                        each_file_status,
+                        task_id: df.task_id,
+                        uid: df.uid,
+                        bundle: df.bundle,
+                    };
+                    RequestAbility::notify_client(reg_type, &notify_data);
+                    self.unregistered_notify.lock().unwrap().remove(&key);
                 }
             }
             None => {

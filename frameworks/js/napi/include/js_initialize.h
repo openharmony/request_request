@@ -26,6 +26,7 @@ public:
     ~JsInitialize() = default;
 
     static napi_value Initialize(napi_env env, napi_callback_info info, Version version);
+    static void CreatProperties(napi_env env, napi_value &self, napi_value config, JsTask *task);
     static napi_status GetContext(napi_env env, napi_value value,
             std::shared_ptr<OHOS::AbilityRuntime::Context>& context);
 private:
@@ -63,7 +64,6 @@ private:
     static ExceptionError CheckFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
     static ExceptionError GetFD(const std::string &path, const Config &config, int32_t &fd);
     static void InterceptData(const std::string &str, const std::string &in, std::string &out);
-    static void CreatProperties(napi_env env, napi_value &self, napi_value config, JsTask *task);
     static bool IsStageMode(napi_env env, napi_value value);
 };
 } // namespace OHOS::Request
