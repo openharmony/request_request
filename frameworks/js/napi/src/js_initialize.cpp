@@ -405,6 +405,42 @@ bool JsInitialize::ParseName(napi_env env, napi_value jsVal, std::string &name)
     return true;
 }
 
+bool JsInitialize::GetFormItems(napi_env env, napi_value jsVal, std::vector<FormItem> &forms,
+    std::vector<FileSpec> &files)
+{
+    if (!NapiUtils::HasNamedProperty(env, jsVal, "name") || !NapiUtils::HasNamedProperty(env, jsVal, "value")) {
+        return false;
+    }
+    
+    std::string name;
+    if (!ParseName(env, jsVal, name)) {
+        return false;
+    }
+    napi_value value = NapiUtils::GetNamedProperty(env, jsVal, "value");
+    if (value == nullptr) {
+        REQUEST_HILOGE("Get upload value failed");
+        return false;
+    }
+    bool isArray = false;
+    napi_is_array(env, value, &isArray);
+    if (NapiUtils::GetValueType(env, value) == napi_string) {
+        FormItem form;
+        form.name = name;
+        form.value = NapiUtils::Convert2String(env, value);
+        forms.push_back(form);
+    } else if (!isArray) {
+        FileSpec file;
+        if (!Convert2FileSpec(env, value, name, file)) {
+            return false;
+        }
+        files.push_back(file);
+    } else {
+        if (!Convert2FileSpecs(env, value, name, files)) {
+            return false;
+        }
+    }
+}
+
 bool JsInitialize::Convert2FormItems(napi_env env, napi_value jsValue, std::vector<FormItem> &forms,
     std::vector<FileSpec> &files)
 {
@@ -422,36 +458,7 @@ bool JsInitialize::Convert2FormItems(napi_env env, napi_value jsValue, std::vect
             REQUEST_HILOGE("Get element jsVal failed");
             return false;
         }
-        if (!NapiUtils::HasNamedProperty(env, jsVal, "name") || !NapiUtils::HasNamedProperty(env, jsVal, "value")) {
-            return false;
-        }
-        
-        std::string name;
-        if (!ParseName(env, jsVal, name)) {
-            return false;
-        }
-        napi_value value = NapiUtils::GetNamedProperty(env, jsVal, "value");
-        if (value == nullptr) {
-            REQUEST_HILOGE("Get upload value failed");
-            return false;
-        }
-        napi_is_array(env, value, &isArray);
-        if (NapiUtils::GetValueType(env, value) == napi_string) {
-            FormItem form;
-            form.name = name;
-            form.value = NapiUtils::Convert2String(env, value);
-            forms.push_back(form);
-        } else if (!isArray) {
-            FileSpec file;
-            if (!Convert2FileSpec(env, value, name, file)) {
-                return false;
-            }
-            files.push_back(file);
-        } else {
-            if (!Convert2FileSpecs(env, value, name, files)) {
-                return false;
-            }
-        }
+        GetFormItems(env, jsVal, forms, files);
         napi_close_handle_scope(env, scope);
     }
     if (files.empty()) {

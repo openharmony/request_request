@@ -53,6 +53,8 @@ private:
     static std::map<std::string, std::string> ParseMap(napi_env env, napi_value jsConfig,
         const std::string &propertyName);
 
+    static bool GetFormItems(napi_env env, napi_value jsVal, std::vector<FormItem> &forms,
+        std::vector<FileSpec> &files);
     static bool Convert2FormItems(napi_env env, napi_value jsValue, std::vector<FormItem> &forms,
         std::vector<FileSpec> &files);
     static bool Convert2FileSpecs(napi_env env, napi_value jsValue, const std::string &name,

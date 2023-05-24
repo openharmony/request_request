@@ -25,11 +25,11 @@
 #include "js_initialize.h"
 #include "js_task.h"
 namespace OHOS::Request {
-std::mutex createMutex_;
+std::mutex JsTask::createMutex_;
 thread_local napi_ref JsTask::createCtor = nullptr;
-std::mutex requestMutex_;
+std::mutex JsTask::requestMutex_;
 thread_local napi_ref JsTask::requestCtor = nullptr;
-std::mutex requestFileMutex_;
+std::mutex JsTask::requestFileMutex_;
 thread_local napi_ref JsTask::requestFileCtor = nullptr;
 std::mutex JsTask::taskMutex_;
 std::map<std::string, JsTask*> JsTask::taskMap_;

@@ -75,8 +75,11 @@ private:
     static napi_value RequestFileV8(napi_env env, napi_callback_info info);
     bool Equals(napi_env env, napi_value value, napi_ref copy);
 
+    static std::mutex createMutex_;
     static thread_local napi_ref requestCtor;
+    static std::mutex requestMutex_;
     static thread_local napi_ref requestFileCtor;
+    static std::mutex requestFileMutex_;
     static thread_local napi_ref createCtor;
     std::string tid_;
 };
