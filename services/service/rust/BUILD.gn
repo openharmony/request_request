@@ -34,8 +34,8 @@ ohos_rust_shared_library("download_server") {
 
   deps = [
     ":request",
-    "//foundation/communication/ipc/interfaces/innerkits/rust:ipc_rust",
-    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk_rust",
+    "${foundation_path}/communication/ipc/interfaces/innerkits/rust:ipc_rust",
+    "${foundation_path}/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk_rust",
   ]
 
   external_deps = [ "hilog_native:hilog_rust" ]
@@ -72,12 +72,12 @@ ohos_rust_shared_library("request") {
 
   deps = [
     ":request_service_c",
-    "//base/hiviewdfx/hilog/interfaces/rust:hilog_rust",
-    "//foundation/communication/ipc/interfaces/innerkits/rust:ipc_rust",
-    "//foundation/communication/netstack/interfaces/innerkits/rust/ylong_http_client:ylong_http_client",
-    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk_rust",
-    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/rust:rust_samgr",
-    "//third_party/rust/crates/tokio/ylong_runtime:lib",
+    "${base_path}/hilog/interfaces/rust:hilog_rust",
+    "${foundation_path}/communication/ipc/interfaces/innerkits/rust:ipc_rust",
+    "${foundation_path}/communication/netstack/interfaces/innerkits/rust/ylong_http_client:ylong_http_client",
+    "${foundation_path}/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk_rust",
+    "${foundation_path}/systemabilitymgr/samgr/interfaces/innerkits/rust:rust_samgr",
+    "${third_path}/rust/crates/tokio/ylong_runtime:lib",
   ]
 
   clippy_lints = "none"

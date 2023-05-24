@@ -16,7 +16,7 @@
     <process>download_server</process>
     <systemability>
         <name>3706</name>
-        <libpath>libdownload_server.z.so</libpath>
+        <libpath>libdownload_server.dylib.so</libpath>
         <run-on-create>false</run-on-create>
         <distributed>false</distributed>
         <dump-level>1</dump-level>
