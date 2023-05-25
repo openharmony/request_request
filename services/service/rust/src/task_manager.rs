@@ -632,7 +632,6 @@ extern "C" fn resume_task_by_network() {
                 debug!(LOG_LABEL, "begin try resume task as network condition resume");
                 let task = task.clone();
                 task_manager.rt.spawn(async move {
-                    sleep(Duration::from_secs(10)).await;
                     let manager = TaskManager::get_instance();
                     let guard = manager.task_map.lock().unwrap();
                     manager.start_inner(uid, task, &guard);
