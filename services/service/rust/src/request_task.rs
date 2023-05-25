@@ -277,7 +277,7 @@ impl RequestTask {
         }
     }
 
-    fn record_waitting_network_time(&self) {
+    pub fn record_waitting_network_time(&self) {
         let mut staus = self.status.lock().unwrap();
         staus.waitting_network_time = Some(get_current_timestamp());
     }
@@ -296,7 +296,7 @@ impl RequestTask {
         true
     }
 
-    fn net_work_online(&self) -> bool {
+    pub fn net_work_online(&self) -> bool {
         if unsafe { !IsOnline() }  {
             if self.conf.common_data.mode == Mode::FRONTEND || !self.conf.common_data.retry {
                 self.set_status(State::FAILED, Reason::NetWorkOffline);
@@ -430,6 +430,7 @@ impl RequestTask {
         match result {
             Ok(_) => return true,
             Err(err) => {
+                error!(LOG_LABEL, "download err is {:?}", @public(err));
                 if !self.net_work_online() {
                     return false;
                 }
@@ -473,7 +474,6 @@ impl RequestTask {
                 if !self.net_work_online() {
                     return false;
                 }
-                error!(LOG_LABEL, "err kind is {:?}",  @public(e.error_kind()));
                 match e.error_kind() {
                     ErrorKind::UserAborted => self.set_code(index, Reason::UserOperation),
                     ErrorKind::Timeout => self.set_code(index, Reason::ContinuousTaskTimeOut),
@@ -537,6 +537,19 @@ impl RequestTask {
         }
     }
 
+    fn update_total_task_count(&self) {
+        let state = self.status.lock().unwrap().state;
+        match state {
+            State::COMPLETED | State::FAILED | State::REMOVED | State::STOPPED => {
+                TaskManager::get_instance().total_task_count.fetch_sub(1, Ordering::SeqCst);
+                if self.conf.version == Version::API10 && self.conf.common_data.mode == Mode::BACKGROUND {
+                    TaskManager::get_instance().api10_background_task_count.fetch_sub(1, Ordering::SeqCst);
+                }
+            },
+            _ => {}
+        }
+    }
+
     pub fn set_status(&self, state: State, reason: Reason) -> bool {
         debug!(LOG_LABEL, "set status");
         {
@@ -559,25 +572,25 @@ impl RequestTask {
                     }
                     self.set_code(index, reason);
                 }
-                State::FAILED | State::COMPLETED => {
+                State::COMPLETED => {
                     if current_state != State::RUNNING && current_state != State::RETRYING {
                         return false;
                     }
+                }
+                State::FAILED | State::WAITING => {
+                    if current_state == State::COMPLETED
+                        || current_state == State::REMOVED
+                        || current_state == State::STOPPED
+                    {
+                        return false;
+                    }
+                    self.set_code(index, reason);
                     if state == State::FAILED {
                         let file_counts = self.conf.file_specs.len();
                         for i in index..file_counts {
                             self.set_code(i, reason);
                         }
                     }
-                }
-                State::WAITING => {
-                    if current_state != State::RUNNING
-                        && current_state != State::RETRYING
-                        && current_state != State::INITIALIZED
-                    {
-                        return false;
-                    }
-                    self.set_code(index, reason);
                 }
                 State::REMOVED => self.set_code(index, reason),
                 _ => {}
@@ -588,6 +601,7 @@ impl RequestTask {
             current_status.reason = reason;
             debug!(LOG_LABEL, "current state is {:?}, reason is {:?}", @public(state), @public(reason));
         }
+        self.update_total_task_count();
         self.state_change_notify(state);
         true
     }
@@ -762,13 +776,13 @@ impl RequestTask {
 
 pub async fn run(task: Arc<RequestTask>) {
     info!(LOG_LABEL, "run the task which id is {}", @public(task.task_id));
+    if !task.net_work_online() || !task.check_net_work_status() {
+        return;
+    }
     let action = task.conf.common_data.action;
     match action {
         Action::DOWNLOAD => loop {
             task.reset_code(0);
-            if !task.check_net_work_status() {
-                break;
-            }
             download(task.clone()).await;
             let state = task.status.lock().unwrap().state;
             if state != State::RUNNING && state != State::RETRYING {
