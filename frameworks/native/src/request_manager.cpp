@@ -315,7 +315,7 @@ bool RequestManager::LoadRequestServer()
         REQUEST_HILOGE("GetSystemAbilityManager return null");
         return false;
     }
-    auto systemAbility = sm->GetSystemAbility(DOWNLOAD_SERVICE_ID);
+    auto systemAbility = sm->CheckSystemAbility(DOWNLOAD_SERVICE_ID);
     if (systemAbility != nullptr) {
         REQUEST_HILOGE("service already exists");
         return true;
