@@ -45,6 +45,7 @@ NetworkAdapter &NetworkAdapter::GetInstance()
 
 bool NetworkAdapter::RegOnNetworkChange(RegCallBack &&callback)
 {
+    callback_ = callback;
     NetSpecifier netSpecifier;
     NetAllCapabilities netAllCapabilities;
     netAllCapabilities.netCaps_.insert(NetCap::NET_CAPABILITY_INTERNET);
@@ -61,7 +62,6 @@ bool NetworkAdapter::RegOnNetworkChange(RegCallBack &&callback)
     }
     int nRet = DelayedSingleton<NetConnClient>::GetInstance()->RegisterNetConnCallback(specifier, observer, 0);
     if (nRet == NETMANAGER_SUCCESS) {
-        callback_ = callback;
         REQUEST_HILOGD("RegisterNetConnCallback successfully registered");
         return true;
     }
