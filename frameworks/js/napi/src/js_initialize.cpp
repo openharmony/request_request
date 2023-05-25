@@ -161,7 +161,7 @@ ExceptionError JsInitialize::GetFD(const std::string &path, const Config &config
         if (config.action == Action::UPLOAD) {
             return error;
         }
-        if (config.version == Version::API10 && config.overwrite == true) {
+        if (config.version == Version::API10 && config.overwrite) {
             return error;
         }
         return {.code = E_FILE_PATH, .errInfo = "Download File already exists"};
@@ -180,7 +180,7 @@ ExceptionError JsInitialize::GetFD(const std::string &path, const Config &config
 bool JsInitialize::GetInternalPath(const std::string &fileUri,
     const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, std::string &filePath)
 {
-    if (config.action == Action::DOWNLOAD &&config.version != Version::API10) {
+    if (config.action == Action::DOWNLOAD && config.version != Version::API10 && fileUri.find('/') == 0) {
         filePath = fileUri;
         return true;
     }
@@ -188,9 +188,6 @@ bool JsInitialize::GetInternalPath(const std::string &fileUri,
     std::string pattern = config.version == Version::API10 ? "./" : "internal://cache/";
     size_t pos = fileUri.find(pattern);
     if (pos != 0) {
-        if (config.version == Version::API9) {
-            return false;
-        }
         fileName = fileUri;
     } else {
         fileName = fileUri.substr(pattern.size(), fileUri.size());
@@ -493,12 +490,12 @@ bool JsInitialize::Convert2FileSpecs(napi_env env, napi_value jsValue, const std
 
 void JsInitialize::InterceptData(const std::string &str, const std::string &in, std::string &out)
 {
-    std::size_t position = in.find_last_of(str.c_str());
+    std::size_t position = in.find_last_of(str);
     if (position == std::string::npos) {
         return;
     }
     out = std::string(in, position + 1);
-    out.erase(out.find_last_not_of(" ") + 1);
+    out.erase(out.find_last_not_of(' ') + 1);
 }
 
 bool JsInitialize::Convert2FileSpec(napi_env env, napi_value jsValue, const std::string &name, FileSpec &file)
