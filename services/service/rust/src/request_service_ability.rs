@@ -61,11 +61,9 @@ impl RequestAbility {
     pub fn init(&mut self) -> i32 {
         debug!(LOG_LABEL, "init");
         TaskManager::get_instance().register_callback(Box::new(RequestAbility::notify_client));
-        thread::spawn(|| {
-            monitor_network();
-            monitor_app_state();
-            monitor_task();
-        });
+        monitor_network();
+        monitor_app_state();
+        monitor_task();
         0
     }
 
