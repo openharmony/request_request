@@ -182,12 +182,16 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn pause(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
-            error!(LOG_LABEL, "permission denied");
-            reply.write(&(ErrorCode::Permission as i32));
-            return Err(IpcStatusCode::Failed);
-        }
         debug!(LOG_LABEL, "Pause");
+        let version: u32 = data.read()?;
+        if Version::from(version as u8) == Version::API9 {
+            if !RequestAbility::get_ability_instance().check_permission() {
+                error!(LOG_LABEL, "permission denied");
+                reply.write(&(ErrorCode::Permission as i32));
+                return Err(IpcStatusCode::Failed);
+            }
+        }
+
         let id: String = data.read()?;
         match id.parse::<u32>() {
             Ok(id) => {
@@ -240,12 +244,16 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn remove(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
-            error!(LOG_LABEL, "permission denied");
-            reply.write(&(ErrorCode::Permission as i32));
-            return Err(IpcStatusCode::Failed);
-        }
         debug!(LOG_LABEL, "remove");
+        let version: u32 = data.read()?;
+        if Version::from(version as u8) == Version::API9 {
+            if !RequestAbility::get_ability_instance().check_permission() {
+                error!(LOG_LABEL, "permission denied");
+                reply.write(&(ErrorCode::Permission as i32));
+                return Err(IpcStatusCode::Failed);
+            }
+        }
+
         let id: String = data.read()?;
         debug!(LOG_LABEL, "id {}",  @public(id));
         match id.parse::<u32>() {
@@ -293,11 +301,6 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn on(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
-            error!(LOG_LABEL, "permission denied");
-            reply.write(&(ErrorCode::Permission as i32));
-            return Err(IpcStatusCode::Failed);
-        }
         debug!(LOG_LABEL, "on");
         let on_type: String = data.read()?;
         if on_type.is_empty() {
@@ -326,11 +329,6 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn off(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
-            error!(LOG_LABEL, "permission denied");
-            reply.write(&(ErrorCode::Permission as i32));
-            return Err(IpcStatusCode::Failed);
-        }
         debug!(LOG_LABEL, "off");
         let off_type: String = data.read()?;
         debug!(LOG_LABEL, "off_type: {:?}",  @public(off_type));
@@ -387,11 +385,6 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn stop(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
-            error!(LOG_LABEL, "permission denied");
-            reply.write(&(ErrorCode::Permission as i32));
-            return Err(IpcStatusCode::Failed);
-        }
         debug!(LOG_LABEL, "stop");
         let id: String = data.read()?;
         match id.parse::<u32>() {
@@ -417,12 +410,15 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn show(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
-            error!(LOG_LABEL, "permission denied");
-            reply.write(&(ErrorCode::Permission as i32));
-            return Err(IpcStatusCode::Failed);
-        }
         debug!(LOG_LABEL, "show");
+        let version: u32 = data.read()?;
+        if Version::from(version as u8) == Version::API9 {
+            if !RequestAbility::get_ability_instance().check_permission() {
+                error!(LOG_LABEL, "permission denied");
+                reply.write(&(ErrorCode::Permission as i32));
+                return Err(IpcStatusCode::Failed);
+            }
+        }
         let id: String = data.read()?;
         debug!(LOG_LABEL, "id: {}", @public(id));
         match id.parse::<u32>() {
