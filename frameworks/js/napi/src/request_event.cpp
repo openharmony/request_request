@@ -276,7 +276,7 @@ int32_t RequestEvent::QueryExec(const std::shared_ptr<ExecContext> &context)
     if (context->version_ != Version::API10 && ret != E_PERMISSION) {
         return E_OK;
     }
-	GetDownloadInfo(*infoRes, context->infoRes);
+    GetDownloadInfo(*infoRes, context->infoRes);
     return ret;
 }
 
