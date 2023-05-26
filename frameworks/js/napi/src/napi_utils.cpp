@@ -45,16 +45,16 @@ static const std::map<ExceptionErrorCode, std::string> ErrorCodeToMsg {
 napi_status Convert2JSValue(napi_env env, DownloadInfo &in, napi_value &out)
 {
     napi_create_object(env, &out);
-    SetStringPropertyUtf8(env, out, "description", in.description.c_str());
+    SetStringPropertyUtf8(env, out, "description", in.description);
     SetUint32Property(env, out, "downloadedBytes", in.downloadedBytes);
     SetUint32Property(env, out, "downloadId", in.downloadId);
     SetUint32Property(env, out, "failedReason", in.failedReason);
-    SetStringPropertyUtf8(env, out, "fileName", in.fileName.c_str());
-    SetStringPropertyUtf8(env, out, "filePath", in.filePath.c_str());
+    SetStringPropertyUtf8(env, out, "fileName", in.fileName);
+    SetStringPropertyUtf8(env, out, "filePath", in.filePath);
     SetUint32Property(env, out, "pausedReason", in.pausedReason);
     SetUint32Property(env, out, "status", in.status);
-    SetStringPropertyUtf8(env, out, "targetURI", in.url.c_str());
-    SetStringPropertyUtf8(env, out, "downloadTitle", in.downloadTitle.c_str());
+    SetStringPropertyUtf8(env, out, "targetURI", in.url);
+    SetStringPropertyUtf8(env, out, "downloadTitle", in.downloadTitle);
     SetUint32Property(env, out, "downloadTotalBytes", in.downloadTotalBytes);
     return napi_ok;
 }

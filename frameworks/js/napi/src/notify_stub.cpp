@@ -14,10 +14,9 @@
  */
 
 #include "notify_stub.h"
-#include "request_manager.h"
 #include "request_event.h"
-#include "js_task.h"
 #include "log.h"
+#include "parcel_helper.h"
 
 namespace OHOS::Request {
 int32_t NotifyStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
@@ -31,6 +30,10 @@ int32_t NotifyStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
     switch (code) {
         case REQUEST_NOTIFY: {
             OnCallBack(data);
+            break;
+        }
+        case REQUEST_DONE_NOTIFY: {
+            OnDone(data);
             break;
         }
         default: {
@@ -139,5 +142,12 @@ void NotifyStub::GetUploadNotify(const std::string &type, const NotifyData &noti
         notify.type = HEADER_CALLBACK;
         notify.header = notifyData.progress.extras;
     }
+}
+void NotifyStub::OnDone(MessageParcel &data)
+{
+    auto taskInfo = std::make_shared<TaskInfo>();
+    ParcelHelper::UnMarshal(data, *taskInfo);
+    REQUEST_HILOGI("task %{public}s done", taskInfo->tid.c_str());
+    RequestEvent::AddCache(taskInfo->tid, taskInfo);
 }
 } // namespace OHOS::Request

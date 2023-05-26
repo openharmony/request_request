@@ -42,12 +42,10 @@ public:
     int32_t Query(const std::string &tid, TaskInfo &info, Version version) override;
     int32_t Clear(const std::vector<std::string> &tids, std::vector<std::string> &res) override;
 
-    int32_t On(const std::string &type, const std::string &tid,
-        const sptr<NotifyInterface> &listener) override;
+    int32_t On(const std::string &type, const std::string &tid, const sptr<NotifyInterface> &listener) override;
     int32_t Off(const std::string &type, const std::string &tid) override;
 
 private:
-    static void SetTaskInfo(MessageParcel &reply, TaskInfo &info);
     static void GetVectorData(const Config &config, MessageParcel &data);
     static inline BrokerDelegator<RequestServiceProxy> delegator_;
 };

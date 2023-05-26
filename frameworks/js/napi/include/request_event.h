@@ -47,6 +47,10 @@ public:
     static napi_value Stop(napi_env env, napi_callback_info info);
     static std::map<Reason, DownloadErrorCode> failMap_;
 
+    static void AddCache(const std::string &taskId, const std::shared_ptr<TaskInfo> &info);
+    static bool GetCache(const std::string &taskId, std::shared_ptr<TaskInfo> &info);
+    static void RemoveCache(const std::string &taskId);
+
 private:
     struct JsParam {
         std::string type;
@@ -83,6 +87,9 @@ private:
     static napi_status GetResult(napi_env env, const std::shared_ptr<ExecContext> &context,
         const std::string &execType, napi_value &result);
     static void GetDownloadInfo(const TaskInfo &infoRes, DownloadInfo &info);
+
+    static std::mutex taskCacheMutex_;
+    static std::map<std::string, std::shared_ptr<TaskInfo>> taskCache_;
 };
 } // namespace OHOS::Request
 

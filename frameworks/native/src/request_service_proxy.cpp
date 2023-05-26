@@ -21,6 +21,7 @@
 
 #include "iremote_broker.h"
 #include "log.h"
+#include "parcel_helper.h"
 
 namespace OHOS::Request {
 using namespace OHOS::HiviewDFX;
@@ -136,54 +137,6 @@ int32_t RequestServiceProxy::Stop(const std::string &tid)
     return reply.ReadInt32();
 }
 
-void RequestServiceProxy::SetTaskInfo(MessageParcel &reply, TaskInfo &info)
-{
-    REQUEST_HILOGD("SetTaskInfo");
-    info.gauge = reply.ReadBool();
-    info.retry = reply.ReadBool();
-    info.action = static_cast<Action>(reply.ReadUint32());
-    info.mode = static_cast<Mode>(reply.ReadUint32());
-    info.code = static_cast<Reason>(reply.ReadUint32());
-    info.tries = reply.ReadUint32();
-    info.uid = reply.ReadString();
-    info.bundle = reply.ReadString();
-    info.url = reply.ReadString();
-    info.tid = reply.ReadString();
-    info.title = reply.ReadString();
-    info.mimeType = reply.ReadString();
-    info.ctime = reply.ReadString();
-    info.mtime = reply.ReadString();
-    info.data = reply.ReadString();
-    uint32_t size = reply.ReadUint32();
-    for (uint32_t i = 0; i < size; i++) {
-        FormItem form;
-        form.name = reply.ReadString();
-        form.value = reply.ReadString();
-        info.forms.push_back(form);
-    }
-    size = reply.ReadUint32();
-    for (uint32_t i = 0; i < size; i++) {
-        FileSpec file;
-        file.name = reply.ReadString();
-        file.uri = reply.ReadString();
-        file.filename = reply.ReadString();
-        file.type = reply.ReadString();
-        info.files.push_back(file);
-    }
-    info.progress.state = static_cast<State>(reply.ReadUint32());
-    info.progress.index = reply.ReadUint32();
-    info.progress.processed = reply.ReadInt64();
-    reply.ReadInt64Vector(&info.progress.sizes);
-    size = reply.ReadUint32();
-    for (uint32_t i = 0; i < size; i++) {
-        info.progress.extras[reply.ReadString()] = reply.ReadString();
-    }
-    size = reply.ReadUint32();
-    for (uint32_t i = 0; i < size; i++) {
-        info.extras[reply.ReadString()] = reply.ReadString();
-    }
-}
-
 int32_t RequestServiceProxy::Show(const std::string &tid, TaskInfo &info)
 {
     MessageParcel data, reply;
@@ -201,7 +154,7 @@ int32_t RequestServiceProxy::Show(const std::string &tid, TaskInfo &info)
     if (errCode != E_OK) {
         return errCode;
     }
-    SetTaskInfo(reply, info);
+    ParcelHelper::UnMarshal(reply, info);
     return E_OK;
 }
 
@@ -221,7 +174,7 @@ int32_t RequestServiceProxy::Touch(const std::string &tid, const std::string &to
     if (errCode != E_OK) {
         return errCode;
     }
-    SetTaskInfo(reply, info);
+    ParcelHelper::UnMarshal(reply, info);
     return E_OK;
 }
 
@@ -293,7 +246,7 @@ int32_t RequestServiceProxy::Query(const std::string &tid, TaskInfo &info, Versi
     if (errCode != E_OK) {
         return errCode;
     }
-    SetTaskInfo(reply, info);
+    ParcelHelper::UnMarshal(reply, info);
     return E_OK;
 }
 

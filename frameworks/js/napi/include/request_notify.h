@@ -47,8 +47,10 @@ struct NotifyDataPtr {
 class RequestNotify : public NotifyStub {
 public:
     REQUEST_API explicit RequestNotify(napi_env env, napi_value callback);
+    REQUEST_API explicit RequestNotify() = default;
     virtual ~RequestNotify();
     void CallBack(const Notify &notify) override;
+    void Done(const TaskInfo &taskInfo) override;
     void GetDataPtrParam(const std::shared_ptr<CallbackData> &dataPtr, const Notify &notify);
     static void GetCallBackData(NotifyDataPtr *notifyDataPtr);
     static void ConvertCallBackData(const std::shared_ptr<CallbackData> &dataPtr, uint32_t &paramNumber,

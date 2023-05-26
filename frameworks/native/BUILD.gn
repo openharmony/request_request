@@ -37,6 +37,7 @@ ohos_shared_library("request_native") {
   version_script = "libdownload_single.map"
 
   sources = [
+    "src/parcel_helper.cpp",
     "src/request_manager.cpp",
     "src/request_service_proxy.cpp",
     "src/request_sync_load_callback.cpp",
