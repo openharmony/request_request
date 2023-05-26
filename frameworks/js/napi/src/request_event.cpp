@@ -283,12 +283,12 @@ int32_t RequestEvent::QueryExec(const std::shared_ptr<ExecContext> &context)
 {
     std::shared_ptr<TaskInfo> infoRes;
     int32_t ret = E_OK;
-    if (GetCache(context->task->GetTid(), infoRes) || infoRes == nullptr) {
+    if (!GetCache(context->task->GetTid(), infoRes) || infoRes == nullptr) {
         infoRes = std::make_shared<TaskInfo>();
         ret = RequestManager::GetInstance()->Query(context->task->GetTid(), *infoRes, context->version_);
     }
     if (context->version_ != Version::API10 && ret != E_PERMISSION) {
-        return E_OK;
+        ret = E_OK;
     }
     GetDownloadInfo(*infoRes, context->infoRes);
     return ret;
@@ -362,12 +362,14 @@ int32_t RequestEvent::ResumeExec(const std::shared_ptr<ExecContext> &context)
 
 void RequestEvent::AddCache(const std::string &taskId, const std::shared_ptr<TaskInfo> &info)
 {
+    REQUEST_HILOGI("AddCache in, task id is %{public}s", taskId.c_str());
     std::lock_guard<std::mutex> lock(taskCacheMutex_);
     taskCache_[taskId] = info;
 }
 
 bool RequestEvent::GetCache(const std::string &taskId, std::shared_ptr<TaskInfo> &info)
 {
+    REQUEST_HILOGI("GetCache in, task id is %{public}s", taskId.c_str());
     std::lock_guard<std::mutex> lock(taskCacheMutex_);
     auto it = taskCache_.find(taskId);
     if (it != taskCache_.end()) {
@@ -380,6 +382,7 @@ bool RequestEvent::GetCache(const std::string &taskId, std::shared_ptr<TaskInfo>
 void RequestEvent::RemoveCache(const std::string &taskId)
 {
     std::lock_guard<std::mutex> lock(taskCacheMutex_);
+    REQUEST_HILOGI("RemoveCache in, task id is %{public}s", taskId.c_str());
     taskCache_.erase(taskId);
 }
 } // namespace OHOS::Request

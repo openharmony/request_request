@@ -140,8 +140,8 @@ impl RequestAbility {
     pub fn on(&self, task_id: u32, on_type: String, obj: RemoteObj) -> ErrorCode {
         let key = on_type.clone() + &String::from("-") + &task_id.to_string();
         debug!(LOG_LABEL, "on key {}", @public(key));
-        RequestAbility::get_ability_instance().do_unregistered_notify(task_id, on_type);
         self.reg_remote_obj.lock().unwrap().insert(key, obj);
+        RequestAbility::get_ability_instance().do_unregistered_notify(task_id, on_type);
         ErrorCode::ErrOk
     }
 
@@ -195,10 +195,10 @@ impl RequestAbility {
 
     pub fn add_unregister_notify(&self, task_id: u32, reg_type: String) {
         match reg_type.as_str() {
-            "complete" | "fail" => {
+            "complete" | "fail" | "progress" | "pause" | "remove" => {
                 let key = reg_type.clone() + &String::from("-") + &task_id.to_string();
                 let notify = self.unregistered_notify.lock().unwrap().clone();
-                if !notify.contains_key(&key) {
+                if notify.contains_key(&key) {
                     return;
                 }
                 self.unregistered_notify
@@ -337,6 +337,7 @@ impl RequestAbility {
             .unwrap()
             .clone();
         if reg_obj.contains_key(&key) {
+            debug!(LOG_LABEL, "notify_task_info contain the thy");
             let obj = reg_obj.get(&key).unwrap().clone();
             let mut reply = MsgParcel::new().expect("MsgParcel should success");
             let notify_token: InterfaceToken =
@@ -371,7 +372,7 @@ impl RequestAbility {
             }
             reply.write(&(task_info.progress.common_data.state as u32)).ok();
             reply.write(&(task_info.progress.common_data.index as u32)).ok();
-            reply.write(&(task_info.progress.common_data.total_processed as i64)).ok();
+            reply.write(&(task_info.progress.common_data.total_processed as u64)).ok();
             reply.write(&(task_info.progress.sizes)).ok();
             reply.write(&(task_info.progress.extras.len() as u32)).ok();
             for (k, v) in task_info.progress.extras.iter() {
@@ -382,6 +383,13 @@ impl RequestAbility {
             for (k, v) in task_info.extras.iter() {
                 reply.write(&(k)).ok();
                 reply.write(&(v)).ok();
+            }
+            reply.write(&(task_info.common_data.version as u32)).ok();
+            reply.write(&(task_info.each_file_status.len() as u32)).ok();
+            for item in task_info.each_file_status.iter() {
+                reply.write(&(item.0)).ok();
+                reply.write(&(item.1 as u32)).ok();
+                reply.write(&(item.2)).ok();
             }
             debug!(LOG_LABEL, "send_request");
             let reply = obj.send_request(1, &reply, false).ok();

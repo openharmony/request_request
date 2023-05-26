@@ -537,19 +537,6 @@ impl RequestTask {
         }
     }
 
-    fn update_total_task_count(&self) {
-        let state = self.status.lock().unwrap().state;
-        match state {
-            State::COMPLETED | State::FAILED | State::REMOVED | State::STOPPED => {
-                TaskManager::get_instance().total_task_count.fetch_sub(1, Ordering::SeqCst);
-                if self.conf.version == Version::API10 && self.conf.common_data.mode == Mode::BACKGROUND {
-                    TaskManager::get_instance().api10_background_task_count.fetch_sub(1, Ordering::SeqCst);
-                }
-            },
-            _ => {}
-        }
-    }
-
     pub fn set_status(&self, state: State, reason: Reason) -> bool {
         debug!(LOG_LABEL, "set status");
         {
@@ -578,9 +565,8 @@ impl RequestTask {
                     }
                 }
                 State::FAILED | State::WAITING => {
-                    if current_state == State::COMPLETED
-                        || current_state == State::REMOVED
-                        || current_state == State::STOPPED
+                    if current_state == State::COMPLETED || current_state == State::REMOVED
+                        || current_state == State::STOPPED || current_state == State::FAILED
                     {
                         return false;
                     }
@@ -601,7 +587,6 @@ impl RequestTask {
             current_status.reason = reason;
             debug!(LOG_LABEL, "current state is {:?}, reason is {:?}", @public(state), @public(reason));
         }
-        self.update_total_task_count();
         self.state_change_notify(state);
         true
     }
@@ -665,12 +650,26 @@ impl RequestTask {
             mtime: status.mtime,
             reason: status.reason,
             extras: progress.extras.clone(),
+            each_file_status: {
+                let mut vec = Vec::<(String, Reason, String)>::new();
+                let size = self.conf.file_specs.len();
+                let guard = self.code.lock().unwrap();
+                for i in 0..size {
+                    vec.push((
+                        self.conf.file_specs[i].path.clone(),
+                        guard[i],
+                        guard[i].to_str().into(),
+                    ));
+                }
+                vec
+            },
             common_data: CommonTaskInfo {
                 action: self.conf.common_data.action,
                 mode: self.conf.common_data.mode,
                 gauge: self.conf.common_data.gauge,
                 retry: self.retry.load(Ordering::SeqCst),
                 tries: self.tries.load(Ordering::SeqCst),
+                version: self.conf.version,
             },
         }
     }

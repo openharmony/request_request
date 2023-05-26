@@ -72,6 +72,7 @@ napi_value GetNamedProperty(napi_env env, napi_value object, const std::string &
 std::vector<std::string> GetPropertyNames(napi_env env, napi_value object);
 
 void SetUint32Property(napi_env env, napi_value object, const std::string &name, uint32_t value);
+void SetInt64Property(napi_env env, napi_value object, const std::string &name, int64_t value);
 void SetStringPropertyUtf8(napi_env env, napi_value object, const std::string &name, const std::string &value);
 napi_value CreateObject(napi_env env);
 napi_value GetUndefined(napi_env env);

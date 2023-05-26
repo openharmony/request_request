@@ -55,7 +55,7 @@ napi_status Convert2JSValue(napi_env env, DownloadInfo &in, napi_value &out)
     SetUint32Property(env, out, "status", in.status);
     SetStringPropertyUtf8(env, out, "targetURI", in.url);
     SetStringPropertyUtf8(env, out, "downloadTitle", in.downloadTitle);
-    SetUint32Property(env, out, "downloadTotalBytes", in.downloadTotalBytes);
+    SetInt64Property(env, out, "downloadTotalBytes", in.downloadTotalBytes);
     return napi_ok;
 }
 
@@ -363,6 +363,16 @@ std::vector<std::string> GetPropertyNames(napi_env env, napi_value object)
 
 
 void SetUint32Property(napi_env env, napi_value object, const std::string &name, uint32_t value)
+{
+    napi_value jsValue = Convert2JSValue(env, value);
+    if (GetValueType(env, jsValue) != napi_number) {
+        return;
+    }
+
+    napi_set_named_property(env, object, name.c_str(), jsValue);
+}
+
+void SetInt64Property(napi_env env, napi_value object, const std::string &name, int64_t value)
 {
     napi_value jsValue = Convert2JSValue(env, value);
     if (GetValueType(env, jsValue) != napi_number) {
