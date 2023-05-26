@@ -169,7 +169,6 @@ bool IsOnline()
 
 void RegisterNetworkCallback(NetworkCallback fun)
 {
-    REQUEST_HILOGI("running RegisterNetworkCallback");
     NetworkAdapter::GetInstance().RegOnNetworkChange(fun);
     REQUEST_HILOGI("running RegisterNetworkCallback end");
 }

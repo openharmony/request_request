@@ -52,7 +52,7 @@ sptr<RequestManager> RequestManager::GetInstance()
     return instance_;
 }
 
-int32_t RequestManager::Create(const Config &config, int32_t &tid)
+int32_t RequestManager::Create(const Config &config, int32_t &tid, sptr<NotifyInterface> listener)
 {
     REQUEST_HILOGD("RequestManager Create start.");
 
@@ -61,16 +61,16 @@ int32_t RequestManager::Create(const Config &config, int32_t &tid)
         REQUEST_HILOGE("GetRequestServiceProxy fail.");
         return E_SERVICE_ERROR;
     }
-    int32_t ret = proxy->Create(config, tid);
+    int32_t ret = proxy->Create(config, tid, listener);
     if (ret == E_UNLOADING_SA) {
         REQUEST_HILOGE("Service ability is quitting");
-        return Retry(tid, config, ret);
+        return Retry(tid, config, ret, listener);
     }
     REQUEST_HILOGD("RequestManager Create end.");
     return ret;
 }
 
-int32_t RequestManager::Retry(int32_t &taskId, const Config &config, int32_t errorCode)
+int32_t RequestManager::Retry(int32_t &taskId, const Config &config, int32_t errorCode, sptr<NotifyInterface> listener)
 {
     REQUEST_HILOGD("Retry in");
     int32_t interval = 1;
@@ -92,7 +92,7 @@ int32_t RequestManager::Retry(int32_t &taskId, const Config &config, int32_t err
             REQUEST_HILOGE("proxy is nullptr!");
             continue;
         }
-        errorCode = proxy->Create(config, taskId);
+        errorCode = proxy->Create(config, taskId, listener);
         ++interval;
     }
     if (errorCode != E_OK && config.action == Action::DOWNLOAD) {

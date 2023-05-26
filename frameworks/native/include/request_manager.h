@@ -42,7 +42,7 @@ public:
     RequestManager();
     ~RequestManager();
     REQUEST_API static sptr<RequestManager> GetInstance();
-    REQUEST_API int32_t Create(const Config &config, int32_t &err);
+    REQUEST_API int32_t Create(const Config &config, int32_t &tid, sptr<NotifyInterface> listener);
     REQUEST_API int32_t Start(const std::string &tid);
     REQUEST_API int32_t Stop(const std::string &tid);
     REQUEST_API int32_t Show(const std::string &tid, TaskInfo &info);
@@ -65,7 +65,7 @@ public:
     void LoadServerFail();
 private:
     sptr<RequestServiceInterface> GetRequestServiceProxy();
-    int32_t Retry(int32_t &taskId, const Config &config, int32_t errorCode);
+    int32_t Retry(int32_t &taskId, const Config &config, int32_t errorCode, sptr<NotifyInterface> listener);
     void SetRequestServiceProxy(sptr<RequestServiceInterface> proxy);
 
 private:

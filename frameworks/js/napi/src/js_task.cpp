@@ -120,11 +120,13 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
             context->innerCode_ = E_SERVICE_ERROR;
             return;
         }
-        int32_t ret = RequestManager::GetInstance()->Create(context->task->config_, context->tid);
+        sptr<RequestNotify> listener = new RequestNotify();
+        std::string key = "done" + context->task->GetTid();
+        context->task->AddListener(key, listener);
+        int32_t ret = RequestManager::GetInstance()->Create(context->task->config_, context->tid, listener);
         if (ret != E_OK || context->tid < 0) {
             context->innerCode_ = ret;
         }
-        RequestManager::GetInstance()->On("done", context->task->GetTid(), sptr<RequestNotify>(new RequestNotify()));
     };
     auto output = [context](napi_value *result) -> napi_status {
         if (result == nullptr) {

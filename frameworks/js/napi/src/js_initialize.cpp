@@ -596,6 +596,9 @@ bool JsInitialize::ParseDownloadConfig(napi_env env, napi_value jsConfig, Config
         config.network = Network::ANY;
     }
     config.saveas = NapiUtils::Convert2String(env, jsConfig, PARAM_KEY_FILE_PATH);
+    if (config.saveas.empty()) {
+        InterceptData("/", config.url, config.saveas);
+    }
     config.background = NapiUtils::Convert2Boolean(env, jsConfig, PARAM_KEY_BACKGROUND);
     config.method = "GET";
     return true;

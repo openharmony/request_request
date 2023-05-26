@@ -172,6 +172,8 @@ impl RequestServiceInterface for RequestService {
         let mut task_id: u32 = 0;
         let ret =
             RequestAbility::get_ability_instance().construct(task_config, files, &mut task_id);
+        let remote_object: RemoteObj = data.read::<RemoteObj>()?;
+        RequestAbility::get_ability_instance().on(task_id, "done".to_string(), remote_object);
         reply.write(&(ret as i32))?;
         if ret != ErrorCode::ErrOk {
             return Err(IpcStatusCode::Failed);
@@ -463,7 +465,7 @@ impl RequestServiceInterface for RequestService {
 
                     reply.write(&(tf.progress.common_data.state as u32))?;
                     reply.write(&(tf.progress.common_data.index as u32))?;
-                    reply.write(&(tf.progress.common_data.total_processed as i64))?;
+                    reply.write(&(tf.progress.common_data.total_processed as u64))?;
                     reply.write(&(tf.progress.sizes))?;
 
                     reply.write(&(tf.progress.extras.len() as u32))?;

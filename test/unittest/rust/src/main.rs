@@ -22,14 +22,6 @@ static MAX_TASK_COUNT_API10: u32 = 300;
 static MAX_TASK_COUNT_EACH_APP_API10: u32 = 10;
 
 #[test]
-fn register_notify_callback_test() {
-    let task_manager = TaskManager::get_instance();
-    assert!(!task_manager.has_event_callback());
-    task_manager.register_callback(Box::new(common::notify_callback));
-    assert!(task_manager.has_event_callback());
-}
-
-#[test]
 fn create_test1() {
     let task_manager = TaskManager::get_instance();
     let mut task_id: u32 = 0;

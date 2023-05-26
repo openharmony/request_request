@@ -31,7 +31,7 @@ RequestServiceProxy::RequestServiceProxy(const sptr<IRemoteObject> &object)
 {
 }
 
-int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid)
+int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid, sptr<NotifyInterface> listener)
 {
     REQUEST_HILOGD("Create");
     MessageParcel data, reply;
@@ -60,6 +60,7 @@ int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid)
     data.WriteString(config.description);
     data.WriteString(config.data);
     GetVectorData(config, data);
+    data.WriteRemoteObject(listener->AsObject().GetRefPtr());
     int32_t ret = Remote()->SendRequest(CMD_REQUEST, data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("SendRequest ret : %{public}d", ret);
