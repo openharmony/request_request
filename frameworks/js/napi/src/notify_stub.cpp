@@ -143,6 +143,7 @@ void NotifyStub::GetUploadNotify(const std::string &type, const NotifyData &noti
         notify.header = notifyData.progress.extras;
     }
 }
+
 void NotifyStub::OnDone(MessageParcel &data)
 {
     auto taskInfo = std::make_shared<TaskInfo>();

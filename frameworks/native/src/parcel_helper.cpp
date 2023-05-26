@@ -61,6 +61,15 @@ void ParcelHelper::UnMarshal(MessageParcel &data, TaskInfo &info)
     for (uint32_t i = 0; i < size; i++) {
         info.extras[data.ReadString()] = data.ReadString();
     }
+    info.version = static_cast<Version>(data.ReadUint32());
+    size = data.ReadUint32();
+    for (uint32_t i = 0; i < size; i++) {
+        TaskState taskState;
+        taskState.path = data.ReadString();
+        taskState.responseCode = data.ReadUint32();
+        taskState.message = data.ReadString();
+        info.taskStates.push_back(taskState);
+    }
 }
 } // namespace Request
 } // namespace OHOS

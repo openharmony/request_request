@@ -179,6 +179,7 @@ struct Notify {
 };
 
 struct TaskInfo {
+    Version version;
     std::string uid;
     std::string bundle;
     std::string url;
@@ -201,6 +202,7 @@ struct TaskInfo {
     Reason code;
     std::string reason;
     std::map<std::string, std::string> extras;
+    std::vector<TaskState> taskStates;
 };
 
 struct Filter {

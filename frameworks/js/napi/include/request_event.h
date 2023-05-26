@@ -87,6 +87,7 @@ private:
     static napi_status GetResult(napi_env env, const std::shared_ptr<ExecContext> &context,
         const std::string &execType, napi_value &result);
     static void GetDownloadInfo(const TaskInfo &infoRes, DownloadInfo &info);
+    static NotifyData BuildNotifyData(const std::shared_ptr<TaskInfo> &taskInfo);
 
     static std::mutex taskCacheMutex_;
     static std::map<std::string, std::shared_ptr<TaskInfo>> taskCache_;

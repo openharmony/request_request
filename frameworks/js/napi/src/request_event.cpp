@@ -125,10 +125,24 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
     REQUEST_HILOGD("On event %{public}s + %{public}s", jsParam.type.c_str(), jsParam.task->GetTid().c_str());
     std::string key = jsParam.type + jsParam.task->GetTid();
     jsParam.task->AddListener(key, listener);
+    std::shared_ptr<TaskInfo> taskInfo;
+    if (!GetCache(jsParam.task->GetTid(), taskInfo) && taskInfo != nullptr) {
+        listener->RequestCallBack(jsParam.type, jsParam.task->GetTid(), BuildNotifyData(taskInfo));
+    }
     if (jsParam.task->GetListenerSize(key) == 1) {
         RequestManager::GetInstance()->On(jsParam.type, jsParam.task->GetTid(), listener);
     }
     return nullptr;
+}
+
+NotifyData RequestEvent::BuildNotifyData(const std::shared_ptr<TaskInfo> &taskInfo)
+{
+    NotifyData notifyData;
+    notifyData.progress = taskInfo->progress;
+    notifyData.action = taskInfo->action;
+    notifyData.version = taskInfo->version;
+    notifyData.mode = taskInfo->mode;
+    notifyData.taskStates = taskInfo->taskStates;
 }
 
 napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
@@ -345,11 +359,13 @@ int32_t RequestEvent::ResumeExec(const std::shared_ptr<ExecContext> &context)
     }
     return ret;
 }
+
 void RequestEvent::AddCache(const std::string &taskId, const std::shared_ptr<TaskInfo> &info)
 {
     std::lock_guard<std::mutex> lock(taskCacheMutex_);
     taskCache_[taskId] = info;
 }
+
 bool RequestEvent::GetCache(const std::string &taskId, std::shared_ptr<TaskInfo> &info)
 {
     std::lock_guard<std::mutex> lock(taskCacheMutex_);
@@ -360,6 +376,7 @@ bool RequestEvent::GetCache(const std::string &taskId, std::shared_ptr<TaskInfo>
     }
     return false;
 }
+
 void RequestEvent::RemoveCache(const std::string &taskId)
 {
     std::lock_guard<std::mutex> lock(taskCacheMutex_);

@@ -30,11 +30,11 @@ public:
     REQUEST_API ~NotifyStub() override = default;
     REQUEST_API int32_t OnRemoteRequest(
         uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+    REQUEST_API void RequestCallBack(const std::string &type, const std::string &tid, const NotifyData &notifyData);
 
 private:
     void OnCallBack(MessageParcel &data);
     static void OnDone(MessageParcel &data);
-    void RequestCallBack(const std::string &type, const std::string &tid, const NotifyData &notifyData);
     static void GetDownloadNotify(const std::string &type, const NotifyData &notifyData, Notify &notify);
     static void GetUploadNotify(const std::string &type, const NotifyData &notifyData, Notify &notify);
 };
