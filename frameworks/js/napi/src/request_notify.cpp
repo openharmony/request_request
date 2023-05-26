@@ -51,6 +51,9 @@ void RequestNotify::CallBack(const Notify &notify)
     UvQueue::Call(data_->env, reinterpret_cast<void *>(notifyDataPtr), afterCallback);
 }
 
+void RequestNotify::Done(const TaskInfo &taskInfo)
+{
+}
 void RequestNotify::ConvertCallBackData(const std::shared_ptr<CallbackData> &dataPtr, uint32_t &paramNumber,
     napi_value *value)
 {
@@ -73,7 +76,7 @@ void RequestNotify::GetCallBackData(NotifyDataPtr *notifyDataPtr)
 {
     napi_handle_scope scope = nullptr;
     napi_open_handle_scope(notifyDataPtr->dataPtr->env, &scope);
-    napi_value undefined = 0;
+    napi_value undefined = nullptr;
     napi_get_undefined(notifyDataPtr->dataPtr->env, &undefined);
     napi_value callbackFunc = nullptr;
     napi_get_reference_value(notifyDataPtr->dataPtr->env, notifyDataPtr->dataPtr->ref, &callbackFunc);

@@ -58,6 +58,11 @@ napi_property_descriptor clzDesV9[] = {
     DECLARE_NAPI_FUNCTION(FUNCTION_RESUME, RequestEvent::Resume),
 };
 
+JsTask::~JsTask()
+{
+    ClearListener();
+    RequestEvent::RemoveCache(tid_);
+}
 napi_value JsTask::JsUpload(napi_env env, napi_callback_info info)
 {
     REQUEST_HILOGD("JsUpload in");
@@ -119,6 +124,7 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
         if (ret != E_OK || context->tid < 0) {
             context->innerCode_ = ret;
         }
+        RequestManager::GetInstance()->On("done", context->task->GetTid(), sptr<RequestNotify>(new RequestNotify()));
     };
     auto output = [context](napi_value *result) -> napi_status {
         if (result == nullptr) {
@@ -299,7 +305,7 @@ size_t JsTask::GetListenerSize(const std::string &key)
     if (it == listenerMap_.end()) {
         return 0;
     }
-    REQUEST_HILOGD("listenerMap_ size %{public}d", it->second.size());
+    REQUEST_HILOGD("listenerMap_ size %{public}zu", it->second.size());
     return it->second.size();
 }
 

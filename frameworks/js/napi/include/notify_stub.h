@@ -17,22 +17,23 @@
 #define DOWNLOAD_NOTIFY_STUB_H
 
 #include <memory>
+
 #include "iremote_stub.h"
-#include "notify_interface.h"
 #include "js_common.h"
+#include "notify_interface.h"
 #include "visibility.h"
 
 namespace OHOS::Request {
 class NotifyStub : public IRemoteStub<NotifyInterface> {
 public:
     REQUEST_API NotifyStub() = default;
-    REQUEST_API virtual ~NotifyStub()
-    {
-    }
-    REQUEST_API int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
-                                         MessageOption &option) override;
+    REQUEST_API ~NotifyStub() override = default;
+    REQUEST_API int32_t OnRemoteRequest(
+        uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+
 private:
     void OnCallBack(MessageParcel &data);
+    static void OnDone(MessageParcel &data);
     void RequestCallBack(const std::string &type, const std::string &tid, const NotifyData &notifyData);
     static void GetDownloadNotify(const std::string &type, const NotifyData &notifyData, Notify &notify);
     static void GetUploadNotify(const std::string &type, const NotifyData &notifyData, Notify &notify);

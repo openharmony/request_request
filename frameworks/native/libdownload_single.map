@@ -16,6 +16,7 @@
     *RequestManager*;
     *NotifyStub*;
     *DownloadTask*;
+    *ParcelHelper*;
   local:
     *;
 };

@@ -60,6 +60,8 @@ std::map<Reason, DownloadErrorCode> RequestEvent::failMap_ = {
     {UNSUPPORTED_NETWORK_TYPE, ERROR_UNSUPPORTED_NETWORK_TYPE},
 };
 
+std::mutex RequestEvent::taskCacheMutex_;
+std::map<std::string, std::shared_ptr<TaskInfo>> RequestEvent::taskCache_;
 napi_value RequestEvent::Pause(napi_env env, napi_callback_info info)
 {
     REQUEST_HILOGD("Pause in");
@@ -196,8 +198,8 @@ napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, const std::
         return GetResult(context->env_, context, execType, *result);
     };
     auto exec = [context, execType]() {
-        auto handle = RequestEvent::requestEvent_.find(execType);
-        if (handle != RequestEvent::requestEvent_.end()) {
+        auto handle = requestEvent_.find(execType);
+        if (handle != requestEvent_.end()) {
             context->innerCode_ = handle->second(context);
         }
     };
@@ -265,12 +267,16 @@ int32_t RequestEvent::PauseExec(const std::shared_ptr<ExecContext> &context)
 
 int32_t RequestEvent::QueryExec(const std::shared_ptr<ExecContext> &context)
 {
-    TaskInfo infoRes;
-    int32_t ret = RequestManager::GetInstance()->Query(context->task->GetTid(), infoRes, context->version_);
-    GetDownloadInfo(infoRes, context->infoRes);
+    std::shared_ptr<TaskInfo> infoRes;
+    int32_t ret = E_OK;
+    if (GetCache(context->task->GetTid(), infoRes) || infoRes == nullptr) {
+        infoRes = std::make_shared<TaskInfo>();
+        ret = RequestManager::GetInstance()->Query(context->task->GetTid(), *infoRes, context->version_);
+    }
     if (context->version_ != Version::API10 && ret != E_PERMISSION) {
         return E_OK;
     }
+    GetDownloadInfo(*infoRes, context->infoRes);
     return ret;
 }
 
@@ -338,5 +344,25 @@ int32_t RequestEvent::ResumeExec(const std::shared_ptr<ExecContext> &context)
         context->boolRes = true;
     }
     return ret;
+}
+void RequestEvent::AddCache(const std::string &taskId, const std::shared_ptr<TaskInfo> &info)
+{
+    std::lock_guard<std::mutex> lock(taskCacheMutex_);
+    taskCache_[taskId] = info;
+}
+bool RequestEvent::GetCache(const std::string &taskId, std::shared_ptr<TaskInfo> &info)
+{
+    std::lock_guard<std::mutex> lock(taskCacheMutex_);
+    auto it = taskCache_.find(taskId);
+    if (it != taskCache_.end()) {
+        info = it->second;
+        return true;
+    }
+    return false;
+}
+void RequestEvent::RemoveCache(const std::string &taskId)
+{
+    std::lock_guard<std::mutex> lock(taskCacheMutex_);
+    taskCache_.erase(taskId);
 }
 } // namespace OHOS::Request

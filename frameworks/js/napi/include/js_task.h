@@ -24,6 +24,7 @@
 namespace OHOS::Request {
 class JsTask {
 public:
+    ~JsTask();
     static napi_value JsCreate(napi_env env, napi_callback_info info);
     static napi_value JsUpload(napi_env env, napi_callback_info info);
     static napi_value JsDownload(napi_env env, napi_callback_info info);
