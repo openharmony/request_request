@@ -42,7 +42,7 @@ enum ExceptionErrorCode : int32_t {
     E_TASK_QUEUE = 21900004,
     E_TASK_MODE = 21900005,
     E_TASK_NOT_FOUND = 21900006,
-    E_TASK_STATE = 21900006,
+    E_TASK_STATE = 21900007,
 };
 
 struct ExceptionError {

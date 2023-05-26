@@ -410,33 +410,6 @@ std::string ToLower(const std::string &s)
     return res;
 }
 
-int32_t GetParameterNumber(napi_env env, napi_callback_info info, napi_value *argv, napi_value *this_arg)
-{
-    size_t argc = MAX_ARGC;
-    void *data = nullptr;
-    napi_status status = napi_get_cb_info(env, info, &argc, argv, this_arg, &data);
-    if (status != napi_ok) {
-        return -1;
-    }
-    return static_cast<int32_t>(argc);
-}
-
-
-bool CheckParameterCorrect(napi_env env, napi_callback_info info, const std::string &type, ExceptionError &err)
-{
-    napi_value argv[MAX_ARGC] = { nullptr };
-    int32_t num = GetParameterNumber(env, info, argv, nullptr);
-    if (num < 0) {
-        err = {.code = E_PARAMETER_CHECK, .errInfo = "function ${" + type + "} Wrong number of arguments"};
-        return false;
-    }
-    if (num == ONE_ARG && GetValueType(env, argv[FIRST_ARGV]) != napi_function) {
-        err = {.code = E_PARAMETER_CHECK, .errInfo = "function ${" + type + "} the first parameter must be function"};
-        return false;
-    }
-    return true;
-}
-
 Action GetRequestAction(napi_env env, napi_value configValue)
 {
     if (HasNamedProperty(env, configValue, PARAM_KEY_METHOD) || HasNamedProperty(env, configValue, PARAM_KEY_FILES) ||

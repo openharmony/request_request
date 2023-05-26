@@ -18,6 +18,9 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include "constant.h"
+#include "napi_utils.h"
+#include "js_common.h"
 #include "napi/native_api.h"
 
 namespace OHOS::Request {
@@ -28,7 +31,6 @@ public:
         using InputAction = std::function<napi_status(size_t, napi_value *, napi_value)>;
         using OutputAction = std::function<napi_status(napi_value *)>;
         using ExecAction = std::function<void()>;
-        using ErrorCreator = std::function<napi_value(bool withErrCode, int32_t innerErrCode)>;
         Context() = default;
         virtual ~Context()
         {
@@ -50,16 +52,16 @@ public:
             exec_ = std::move(action);
             return *this;
         }
-        inline Context &SetErrorCreator(ErrorCreator creator)
+        inline napi_value Creator()
         {
-            creator_ = std::move(creator);
-            return *this;
+            ExceptionError error;
+            NapiUtils::ConvertError(innerCode_, error);
+            return NapiUtils::CreateBusinessError(env_, error.code, error.errInfo, withErrCode_);
         }
 
         InputAction input_ = nullptr;
         OutputAction output_ = nullptr;
         ExecAction exec_ = nullptr;
-        ErrorCreator creator_ = nullptr;
 
         napi_env env_;
         napi_ref callbackRef_ = nullptr;
@@ -69,6 +71,7 @@ public:
 
         int32_t innerCode_;
         bool withErrCode_;
+        Version version_;
     };
 
     AsyncCall(napi_env env, napi_callback_info info, const std::shared_ptr<Context> &context);

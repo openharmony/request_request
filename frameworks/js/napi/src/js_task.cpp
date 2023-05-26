@@ -38,23 +38,23 @@ napi_property_descriptor clzDes[] = {
     DECLARE_NAPI_FUNCTION(FUNCTION_ON, RequestEvent::On),
     DECLARE_NAPI_FUNCTION(FUNCTION_OFF, RequestEvent::Off),
     DECLARE_NAPI_FUNCTION(FUNCTION_START, RequestEvent::Start),
-    DECLARE_NAPI_FUNCTION(FUNCTION_PAUSE, RequestEvent::Suspend),
-    DECLARE_NAPI_FUNCTION(FUNCTION_RESUME, RequestEvent::Restore),
+    DECLARE_NAPI_FUNCTION(FUNCTION_PAUSE, RequestEvent::Pause),
+    DECLARE_NAPI_FUNCTION(FUNCTION_RESUME, RequestEvent::Resume),
     DECLARE_NAPI_FUNCTION(FUNCTION_STOP, RequestEvent::Stop),
 };
 
 napi_property_descriptor clzDesV9[] = {
     DECLARE_NAPI_FUNCTION(FUNCTION_ON, RequestEvent::On),
     DECLARE_NAPI_FUNCTION(FUNCTION_OFF, RequestEvent::Off),
-    DECLARE_NAPI_FUNCTION(FUNCTION_SUSPEND, RequestEvent::Suspend),
-    DECLARE_NAPI_FUNCTION(FUNCTION_GET_TASK_INFO, RequestEvent::GetTaskInfo),
-    DECLARE_NAPI_FUNCTION(FUNCTION_GET_TASK_MIME_TYPE, RequestEvent::GetTaskMimeType),
-    DECLARE_NAPI_FUNCTION(FUNCTION_DELETE, RequestEvent::Delete),
-    DECLARE_NAPI_FUNCTION(FUNCTION_RESTORE, RequestEvent::Restore),
+    DECLARE_NAPI_FUNCTION(FUNCTION_SUSPEND, RequestEvent::Pause),
+    DECLARE_NAPI_FUNCTION(FUNCTION_GET_TASK_INFO, RequestEvent::Query),
+    DECLARE_NAPI_FUNCTION(FUNCTION_GET_TASK_MIME_TYPE, RequestEvent::QueryMimeType),
+    DECLARE_NAPI_FUNCTION(FUNCTION_DELETE, RequestEvent::Remove),
+    DECLARE_NAPI_FUNCTION(FUNCTION_RESTORE, RequestEvent::Resume),
     DECLARE_NAPI_FUNCTION(FUNCTION_PAUSE, RequestEvent::Pause),
-    DECLARE_NAPI_FUNCTION(FUNCTION_QUERY, RequestEvent::QueryV8),
+    DECLARE_NAPI_FUNCTION(FUNCTION_QUERY, RequestEvent::Query),
     DECLARE_NAPI_FUNCTION(FUNCTION_QUERY_MIME_TYPE, RequestEvent::QueryMimeType),
-    DECLARE_NAPI_FUNCTION(FUNCTION_REMOVE, RequestEvent::RemoveV8),
+    DECLARE_NAPI_FUNCTION(FUNCTION_REMOVE, RequestEvent::Remove),
     DECLARE_NAPI_FUNCTION(FUNCTION_RESUME, RequestEvent::Resume),
 };
 
@@ -94,11 +94,12 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
 {
     auto context = std::make_shared<ContextInfo>();
     context->withErrCode_ = version != Version::API8;
-    auto input = [context, version](size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        if (version == Version::API10) {
+    context->version_ = version;
+    auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        if (context->version_ == Version::API10) {
             context->jsConfig = argv[1];
         }
-        napi_value ctor = GetCtor(context->env_, version);
+        napi_value ctor = GetCtor(context->env_, context->version_);
         napi_value jsTask = nullptr;
         napi_status status = napi_new_instance(context->env_, ctor, argc, argv, &jsTask);
         if (jsTask == nullptr || status != napi_ok) {
@@ -129,12 +130,7 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
         JsInitialize::CreatProperties(context->env_, *result, context->jsConfig, context->task);
         return status;
     };
-    auto creator = [context](bool withErrCode, int32_t innerErrCode) -> napi_value {
-        ExceptionError error;
-        NapiUtils::ConvertError(innerErrCode, error);
-        return NapiUtils::CreateBusinessError(context->env_, error.code, error.errInfo, withErrCode);
-    };
-    context->SetInput(input).SetOutput(output).SetExec(exec).SetErrorCreator(creator);
+    context->SetInput(input).SetOutput(output).SetExec(exec);
     AsyncCall asyncCall(env, info, context);
     return asyncCall.Call(context, "create");
 }
@@ -237,8 +233,12 @@ napi_value JsTask::Remove(napi_env env, napi_callback_info info)
 
     auto context = std::make_shared<RemoveContext>();
     context->withErrCode_ = true;
+    context->version_ = Version::API10;
     auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        NAPI_ASSERT_BASE(context->env_, argc >= 1, "should 1 parameter!", napi_invalid_arg);
+        if (argc < 1) {
+            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "should 1 parameter!", true);
+            return napi_invalid_arg;
+        }
         context->tid = NapiUtils::Convert2String(context->env_, argv[0]);
         return napi_ok;
     };
@@ -250,14 +250,9 @@ napi_value JsTask::Remove(napi_env env, napi_callback_info info)
         return NapiUtils::Convert2JSValue(context->env_, context->res, *result);
     };
     auto exec = [context]() {
-        context->innerCode_ = RequestManager::GetInstance()->Remove(context->tid);
+        context->innerCode_ = RequestManager::GetInstance()->Remove(context->tid, Version::API10);
     };
-    auto creator = [context](bool withErrCode, int32_t innerErrCode) -> napi_value {
-        ExceptionError error;
-        NapiUtils::ConvertError(innerErrCode, error);
-        return NapiUtils::CreateBusinessError(context->env_, error.code, error.errInfo, withErrCode);
-    };
-    context->SetInput(input).SetOutput(output).SetExec(exec).SetErrorCreator(creator);
+    context->SetInput(input).SetOutput(output).SetExec(exec);
     AsyncCall asyncCall(env, info, context);
     return asyncCall.Call(context, "remove");
 }

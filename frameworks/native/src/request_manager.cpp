@@ -139,7 +139,7 @@ int32_t RequestManager::Show(const std::string &tid, TaskInfo &info)
         return E_SERVICE_ERROR;
     }
 
-    return proxy->Query(tid, info);
+    return proxy->Query(tid, info, Version::API10);
 }
 
 int32_t RequestManager::Touch(const std::string &tid, const std::string &token, TaskInfo &info)
@@ -164,7 +164,7 @@ int32_t RequestManager::Search(const Filter &filter, std::vector<std::string> &t
     return proxy->Search(filter, tids);
 }
 
-int32_t RequestManager::Query(const std::string &tid, TaskInfo &info)
+int32_t RequestManager::Query(const std::string &tid, TaskInfo &info, Version version)
 {
     REQUEST_HILOGD("Query in");
     auto proxy = GetRequestServiceProxy();
@@ -172,7 +172,7 @@ int32_t RequestManager::Query(const std::string &tid, TaskInfo &info)
         return E_SERVICE_ERROR;
     }
 
-    return proxy->Query(tid, info);
+    return proxy->Query(tid, info, version);
 }
 
 int32_t RequestManager::Clear(const std::vector<std::string> &tids, std::vector<std::string> &res)
@@ -186,7 +186,7 @@ int32_t RequestManager::Clear(const std::vector<std::string> &tids, std::vector<
     return proxy->Clear(tids, res);
 }
 
-int32_t RequestManager::Pause(const std::string &tid)
+int32_t RequestManager::Pause(const std::string &tid, Version version)
 {
     REQUEST_HILOGD("Pause in");
     auto proxy = GetRequestServiceProxy();
@@ -194,7 +194,7 @@ int32_t RequestManager::Pause(const std::string &tid)
         return E_SERVICE_ERROR;
     }
 
-    return proxy->Pause(tid);
+    return proxy->Pause(tid, version);
 }
 
 int32_t RequestManager::QueryMimeType(const std::string &tid, std::string &mimeType)
@@ -208,7 +208,7 @@ int32_t RequestManager::QueryMimeType(const std::string &tid, std::string &mimeT
     return proxy->QueryMimeType(tid, mimeType);
 }
 
-int32_t RequestManager::Remove(const std::string &tid)
+int32_t RequestManager::Remove(const std::string &tid, Version version)
 {
     REQUEST_HILOGD("Remove in");
     auto proxy = GetRequestServiceProxy();
@@ -216,7 +216,7 @@ int32_t RequestManager::Remove(const std::string &tid)
         return E_SERVICE_ERROR;
     }
 
-    return proxy->Remove(tid);
+    return proxy->Remove(tid, version);
 }
 
 int32_t RequestManager::Resume(const std::string &tid)

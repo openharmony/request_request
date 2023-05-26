@@ -39,15 +39,10 @@ public:
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);
     static napi_value Pause(napi_env env, napi_callback_info info);
-    static napi_value Suspend(napi_env env, napi_callback_info info);
     static napi_value QueryMimeType(napi_env env, napi_callback_info info);
-    static napi_value GetTaskMimeType(napi_env env, napi_callback_info info);
-    static napi_value QueryV8(napi_env env, napi_callback_info info);
-    static napi_value GetTaskInfo(napi_env env, napi_callback_info info);
-    static napi_value RemoveV8(napi_env env, napi_callback_info info);
-    static napi_value Delete(napi_env env, napi_callback_info info);
+    static napi_value Query(napi_env env, napi_callback_info info);
+    static napi_value Remove(napi_env env, napi_callback_info info);
     static napi_value Resume(napi_env env, napi_callback_info info);
-    static napi_value Restore(napi_env env, napi_callback_info info);
     static napi_value Start(napi_env env, napi_callback_info info);
     static napi_value Stop(napi_env env, napi_callback_info info);
     static std::map<Reason, DownloadErrorCode> failMap_;
@@ -71,7 +66,7 @@ private:
     static std::map<std::string, Event> requestEvent_;
     static std::map<std::string, uint32_t> resMap_;
     static std::map<State, DownloadStatus> stateMap_;
-    static napi_value Exec(napi_env env, napi_callback_info info, bool withErrCode, const std::string &execType);
+    static napi_value Exec(napi_env env, napi_callback_info info, const std::string &execType);
 
     static int32_t StartExec(const std::shared_ptr<ExecContext> &context);
     static int32_t StopExec(const std::shared_ptr<ExecContext> &context);

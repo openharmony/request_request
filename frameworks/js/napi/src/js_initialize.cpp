@@ -40,7 +40,7 @@ napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Versi
     napi_value argv[NapiUtils::MAX_ARGC] = { nullptr };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
     int32_t number = version == Version::API8 ? NapiUtils::ONE_ARG : NapiUtils::TWO_ARG;
-    if (argc < number) {
+    if (static_cast<int32_t>(argc) < number) {
         NapiUtils::ThrowError(env, E_PARAMETER_CHECK, "invalid parameter count", withErrCode);
         return nullptr;
     }
@@ -279,6 +279,7 @@ bool JsInitialize::ParseIndex(napi_env env, napi_value jsConfig, Config &config)
         REQUEST_HILOGE("Index exceeds file list");
         return false;
     }
+    return true;
 }
 
 bool JsInitialize::ParseAction(napi_env env, napi_value jsConfig, Action &action)
@@ -436,6 +437,7 @@ bool JsInitialize::GetFormItems(napi_env env, napi_value jsVal, std::vector<Form
             return false;
         }
     }
+    return true;
 }
 
 bool JsInitialize::Convert2FormItems(napi_env env, napi_value jsValue, std::vector<FormItem> &forms,

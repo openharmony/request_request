@@ -70,7 +70,6 @@ napi_valuetype GetValueType(napi_env env, napi_value value);
 bool HasNamedProperty(napi_env env, napi_value object, const std::string &propertyName);
 napi_value GetNamedProperty(napi_env env, napi_value object, const std::string &propertyName);
 std::vector<std::string> GetPropertyNames(napi_env env, napi_value object);
-int32_t GetParameterNumber(napi_env env, napi_callback_info info, napi_value *argv, napi_value *this_arg);
 
 void SetUint32Property(napi_env env, napi_value object, const std::string &name, uint32_t value);
 void SetStringPropertyUtf8(napi_env env, napi_value object, const std::string &name, const std::string &value);
@@ -78,7 +77,6 @@ napi_value CreateObject(napi_env env);
 napi_value GetUndefined(napi_env env);
 napi_value CallFunction(napi_env env, napi_value recv, napi_value func, size_t argc, const napi_value *argv);
 std::string ToLower(const std::string &s);
-bool CheckParameterCorrect(napi_env env, napi_callback_info info, const std::string &type, ExceptionError &err);
 Action GetRequestAction(napi_env env, napi_value configValue);
 std::vector<FileSpec> Convert2FileVector(napi_env env, napi_value jsFiles, const std::string &version);
 bool Convert2File(napi_env env, napi_value jsFile, FileSpec &file);

@@ -20,6 +20,8 @@
 
 
 namespace OHOS::Request {
+constexpr const std::int32_t DECIMALISM = 10;
+
 std::map<std::string, RequestEvent::Event> RequestEvent::requestEvent_ = {
     {FUNCTION_PAUSE, RequestEvent::PauseExec},
     {FUNCTION_QUERY, RequestEvent::QueryExec},
@@ -57,6 +59,48 @@ std::map<Reason, DownloadErrorCode> RequestEvent::failMap_ = {
     {NETWORK_OFFLINE, ERROR_OFFLINE},
     {UNSUPPORTED_NETWORK_TYPE, ERROR_UNSUPPORTED_NETWORK_TYPE},
 };
+
+napi_value RequestEvent::Pause(napi_env env, napi_callback_info info)
+{
+    REQUEST_HILOGD("Pause in");
+    return Exec(env, info, FUNCTION_PAUSE);
+}
+
+napi_value RequestEvent::Query(napi_env env, napi_callback_info info)
+{
+    REQUEST_HILOGD("QueryV8 in");
+    return Exec(env, info, FUNCTION_QUERY);
+}
+
+napi_value RequestEvent::QueryMimeType(napi_env env, napi_callback_info info)
+{
+    REQUEST_HILOGD("QueryMimeType in");
+    return Exec(env, info, FUNCTION_QUERY_MIME_TYPE);
+}
+
+napi_value RequestEvent::Remove(napi_env env, napi_callback_info info)
+{
+    REQUEST_HILOGD("RemoveV8 in");
+    return Exec(env, info, FUNCTION_REMOVE);
+}
+
+napi_value RequestEvent::Resume(napi_env env, napi_callback_info info)
+{
+    REQUEST_HILOGD("Resume in");
+    return Exec(env, info, FUNCTION_RESUME);
+}
+
+napi_value RequestEvent::Start(napi_env env, napi_callback_info info)
+{
+    REQUEST_HILOGD("Start in");
+    return Exec(env, info, FUNCTION_START);
+}
+
+napi_value RequestEvent::Stop(napi_env env, napi_callback_info info)
+{
+    REQUEST_HILOGD("Stop in");
+    return Exec(env, info, FUNCTION_STOP);
+}
 
 napi_value RequestEvent::On(napi_env env, napi_callback_info info)
 {
@@ -139,17 +183,9 @@ ExceptionError RequestEvent::ParseOnOffParameters(napi_env env, napi_callback_in
     return err;
 }
 
-napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, bool withErrCode, const std::string &execType)
+napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, const std::string &execType)
 {
-    ExceptionError err;
-    if (!NapiUtils::CheckParameterCorrect(env, info, execType, err)) {
-        REQUEST_HILOGE("%{public}s", err.errInfo.c_str());
-        NapiUtils::ThrowError(env, err.code, err.errInfo, withErrCode);
-        return nullptr;
-    }
-
     auto context = std::make_shared<ExecContext>();
-    context->withErrCode_ = withErrCode;
     auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
         return ParseInputParameters(context->env_, argc, self, context);
     };
@@ -165,13 +201,8 @@ napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, bool withEr
             context->innerCode_ = handle->second(context);
         }
     };
-    auto creator = [context](bool withErrCode, uint32_t innerErrCode) -> napi_value {
-        ExceptionError error;
-        NapiUtils::ConvertError(innerErrCode, error);
-        return NapiUtils::CreateBusinessError(context->env_, error.code, error.errInfo, withErrCode);
-    };
 
-    context->SetInput(input).SetOutput(output).SetExec(exec).SetErrorCreator(creator);
+    context->SetInput(input).SetOutput(output).SetExec(exec);
     AsyncCall asyncCall(env, info, context);
     return asyncCall.Call(context, execType);
 }
@@ -182,7 +213,8 @@ napi_status RequestEvent::ParseInputParameters(napi_env env, size_t argc, napi_v
     NAPI_ASSERT_BASE(env, self != nullptr, "self is nullptr", napi_invalid_arg);
     NAPI_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&context->task)), napi_invalid_arg);
     NAPI_ASSERT_BASE(env, context->task != nullptr, "there is no native task", napi_invalid_arg);
-    NAPI_ASSERT_BASE(env, argc == 0, " should 0 parameter!", napi_invalid_arg);
+    context->version_ = context->task->config_.version;
+    context->withErrCode_ = context->version_ != Version::API8;
     return napi_ok;
 }
 
@@ -199,78 +231,6 @@ napi_status RequestEvent::GetResult(napi_env env, const std::shared_ptr<ExecCont
         return NapiUtils::Convert2JSValue(env, context->infoRes, result);
     }
     return napi_generic_failure;
-}
-
-napi_value RequestEvent::Suspend(napi_env env, napi_callback_info info)
-{
-    REQUEST_HILOGD("Suspend in");
-    return Exec(env, info, true, FUNCTION_PAUSE);
-}
-
-napi_value RequestEvent::GetTaskInfo(napi_env env, napi_callback_info info)
-{
-    REQUEST_HILOGD("GetTaskInfo in");
-    return Exec(env, info, true, FUNCTION_QUERY);
-}
-
-napi_value RequestEvent::GetTaskMimeType(napi_env env, napi_callback_info info)
-{
-    REQUEST_HILOGD("GetTaskMimeType in");
-    return Exec(env, info, true, FUNCTION_QUERY_MIME_TYPE);
-}
-
-napi_value RequestEvent::Delete(napi_env env, napi_callback_info info)
-{
-    REQUEST_HILOGD("Delete in");
-    return Exec(env, info, true, FUNCTION_REMOVE);
-}
-
-napi_value RequestEvent::Restore(napi_env env, napi_callback_info info)
-{
-    REQUEST_HILOGD("Restore in");
-    return Exec(env, info, true, FUNCTION_RESUME);
-}
-
-napi_value RequestEvent::Pause(napi_env env, napi_callback_info info)
-{
-    REQUEST_HILOGD("Pause in");
-    return Exec(env, info, false, FUNCTION_PAUSE);
-}
-
-napi_value RequestEvent::QueryV8(napi_env env, napi_callback_info info)
-{
-    REQUEST_HILOGD("QueryV8 in");
-    return Exec(env, info, false, FUNCTION_QUERY);
-}
-
-napi_value RequestEvent::QueryMimeType(napi_env env, napi_callback_info info)
-{
-    REQUEST_HILOGD("QueryMimeType in");
-    return Exec(env, info, false, FUNCTION_QUERY_MIME_TYPE);
-}
-
-napi_value RequestEvent::RemoveV8(napi_env env, napi_callback_info info)
-{
-    REQUEST_HILOGD("RemoveV8 in");
-    return Exec(env, info, false, FUNCTION_REMOVE);
-}
-
-napi_value RequestEvent::Resume(napi_env env, napi_callback_info info)
-{
-    REQUEST_HILOGD("Resume in");
-    return Exec(env, info, false, FUNCTION_RESUME);
-}
-
-napi_value RequestEvent::Start(napi_env env, napi_callback_info info)
-{
-    REQUEST_HILOGD("Start in");
-    return Exec(env, info, false, FUNCTION_START);
-}
-
-napi_value RequestEvent::Stop(napi_env env, napi_callback_info info)
-{
-    REQUEST_HILOGD("Stop in");
-    return Exec(env, info, false, FUNCTION_STOP);
 }
 
 int32_t RequestEvent::StartExec(const std::shared_ptr<ExecContext> &context)
@@ -293,9 +253,12 @@ int32_t RequestEvent::StopExec(const std::shared_ptr<ExecContext> &context)
 
 int32_t RequestEvent::PauseExec(const std::shared_ptr<ExecContext> &context)
 {
-    int32_t ret = RequestManager::GetInstance()->Pause(context->task->GetTid());
+    int32_t ret = RequestManager::GetInstance()->Pause(context->task->GetTid(), context->version_);
     if (ret == E_OK) {
         context->boolRes = true;
+    }
+    if (context->version_ != Version::API10 && ret != E_PERMISSION) {
+        return E_OK;
     }
     return ret;
 }
@@ -303,14 +266,17 @@ int32_t RequestEvent::PauseExec(const std::shared_ptr<ExecContext> &context)
 int32_t RequestEvent::QueryExec(const std::shared_ptr<ExecContext> &context)
 {
     TaskInfo infoRes;
-    int32_t ret = RequestManager::GetInstance()->Query(context->task->GetTid(), infoRes);
+    int32_t ret = RequestManager::GetInstance()->Query(context->task->GetTid(), infoRes, context->version_);
     GetDownloadInfo(infoRes, context->infoRes);
+    if (context->version_ != Version::API10 && ret != E_PERMISSION) {
+        return E_OK;
+    }
     return ret;
 }
 
 void RequestEvent::GetDownloadInfo(const TaskInfo &infoRes, DownloadInfo &info)
 {
-    info.downloadId = std::stoi(infoRes.tid.c_str());
+    info.downloadId = strtoul(infoRes.tid.c_str(), NULL, DECIMALISM);
     if (infoRes.progress.state == State::FAILED) {
         auto it = failMap_.find(infoRes.code);
         if (it != failMap_.end()) {
@@ -352,7 +318,10 @@ int32_t RequestEvent::QueryMimeTypeExec(const std::shared_ptr<ExecContext> &cont
 
 int32_t RequestEvent::RemoveExec(const std::shared_ptr<ExecContext> &context)
 {
-    int32_t ret = RequestManager::GetInstance()->Remove(context->task->GetTid());
+    int32_t ret = RequestManager::GetInstance()->Remove(context->task->GetTid(), context->version_);
+    if (context->version_ != Version::API10 && ret != E_PERMISSION) {
+        ret = E_OK;
+    }
     if (ret == E_OK) {
         context->boolRes = true;
     }
@@ -362,6 +331,9 @@ int32_t RequestEvent::RemoveExec(const std::shared_ptr<ExecContext> &context)
 int32_t RequestEvent::ResumeExec(const std::shared_ptr<ExecContext> &context)
 {
     int32_t ret = RequestManager::GetInstance()->Resume(context->task->GetTid());
+    if (context->version_ != Version::API10 && ret != E_PERMISSION) {
+        ret = E_OK;
+    }
     if (ret == E_OK) {
         context->boolRes = true;
     }

@@ -189,6 +189,7 @@ int32_t RequestServiceProxy::Show(const std::string &tid, TaskInfo &info)
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
+    data.WriteUint32(static_cast<uint32_t>(Version::API10));
     data.WriteString(tid);
     REQUEST_HILOGD("Show");
     int32_t ret = Remote()->SendRequest(CMD_SHOW, data, reply, option);
@@ -275,11 +276,12 @@ int32_t RequestServiceProxy::Clear(const std::vector<std::string> &tids, std::ve
     return ret;
 }
 
-int32_t RequestServiceProxy::Query(const std::string &tid, TaskInfo &info)
+int32_t RequestServiceProxy::Query(const std::string &tid, TaskInfo &info, Version version)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
+    data.WriteUint32(static_cast<uint32_t>(version));
     data.WriteString(tid);
     REQUEST_HILOGD("RequestServiceProxy Query started.");
     int32_t ret = Remote()->SendRequest(CMD_QUERY, data, reply, option);
@@ -295,12 +297,13 @@ int32_t RequestServiceProxy::Query(const std::string &tid, TaskInfo &info)
     return E_OK;
 }
 
-int32_t RequestServiceProxy::Pause(const std::string &tid)
+int32_t RequestServiceProxy::Pause(const std::string &tid, Version version)
 {
     REQUEST_HILOGD("Pause");
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
+    data.WriteUint32(static_cast<uint32_t>(version));
     data.WriteString(tid);
     REQUEST_HILOGD("RequestServiceProxy Pause started.");
     int32_t ret =  Remote()->SendRequest(CMD_PAUSE, data, reply, option);
@@ -331,11 +334,12 @@ int32_t RequestServiceProxy::QueryMimeType(const std::string &tid, std::string &
     return E_OK;
 }
 
-int32_t RequestServiceProxy::Remove(const std::string &tid)
+int32_t RequestServiceProxy::Remove(const std::string &tid, Version version)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
+    data.WriteUint32(static_cast<uint32_t>(version));
     data.WriteString(tid);
     REQUEST_HILOGD("RequestServiceProxy Remove started.");
     int32_t ret = Remote()->SendRequest(CMD_REMOVE, data, reply, option);

@@ -29,16 +29,16 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Download.RequestServiceInterface");
     virtual int32_t Create(const Config &config, int32_t &taskId) = 0;
     virtual int32_t Start(const std::string &tid) = 0;
-    virtual int32_t Pause(const std::string &tid) = 0;
+    virtual int32_t Pause(const std::string &tid, Version version) = 0;
     virtual int32_t QueryMimeType(const std::string &tid, std::string &mimeType) = 0;
-    virtual int32_t Remove(const std::string &tid) = 0;
+    virtual int32_t Remove(const std::string &tid, Version version) = 0;
     virtual int32_t Resume(const std::string &tid) = 0;
 
     virtual int32_t Stop(const std::string &tid) = 0;
     virtual int32_t Show(const std::string &tid, TaskInfo &info) = 0;
     virtual int32_t Touch(const std::string &tid, const std::string &token, TaskInfo &info) = 0;
     virtual int32_t Search(const Filter &filter, std::vector<std::string> &tids) = 0;
-    virtual int32_t Query(const std::string &tid, TaskInfo &info) = 0;
+    virtual int32_t Query(const std::string &tid, TaskInfo &info, Version version) = 0;
     virtual int32_t Clear(const std::vector<std::string> &tids, std::vector<std::string> &res) =0;
 
     virtual int32_t On(const std::string &type, const std::string &tid,

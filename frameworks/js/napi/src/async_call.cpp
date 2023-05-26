@@ -16,8 +16,6 @@
 #include "async_call.h"
 
 #include "log.h"
-#include "napi_utils.h"
-#include "constant.h"
 
 namespace OHOS::Request {
 constexpr uint8_t MAX_ARGC = 10;
@@ -105,12 +103,16 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         return;
     }
     napi_value result[ARG_BUTT] = { nullptr };
-    napi_get_undefined(env, &result[ARG_ERROR]);
+    if (context->version_ == Version::API10) {
+        napi_get_null(env, &result[ARG_ERROR]);
+    } else {
+        napi_get_undefined(env, &result[ARG_ERROR]);
+    }
     napi_get_undefined(env, &result[ARG_DATA]);
     napi_status outputStatus = workData->ctx->output_(&result[ARG_DATA]);
     context->output_ = nullptr;
     if (status != napi_ok || outputStatus != napi_ok) {
-        result[ARG_ERROR] = context->creator_(context->withErrCode_, context->innerCode_);
+        result[ARG_ERROR] = context->Creator();
     }
     if (context->defer_ != nullptr) {
         // promise
