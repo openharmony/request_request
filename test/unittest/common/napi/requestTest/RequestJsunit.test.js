@@ -912,7 +912,7 @@ describe('RequestTest', function () {
                                     console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 data:' + JSON.stringify(data));
                                     expect(typeof data == "string").assertTrue();
                                 } else {
-                                    console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 data error ");
+                                    console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 data error");
                                     expect().assertFail();
                                 }
                             }catch(err){
