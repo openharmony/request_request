@@ -126,8 +126,9 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
     std::string key = jsParam.type + jsParam.task->GetTid();
     jsParam.task->AddListener(key, listener);
     std::shared_ptr<TaskInfo> taskInfo;
-    if (!GetCache(jsParam.task->GetTid(), taskInfo) && taskInfo != nullptr) {
+    if (GetCache(jsParam.task->GetTid(), taskInfo) && taskInfo != nullptr) {
         listener->RequestCallBack(jsParam.type, jsParam.task->GetTid(), BuildNotifyData(taskInfo));
+        return nullptr;
     }
     if (jsParam.task->GetListenerSize(key) == 1) {
         RequestManager::GetInstance()->On(jsParam.type, jsParam.task->GetTid(), listener);
@@ -295,6 +296,21 @@ int32_t RequestEvent::QueryExec(const std::shared_ptr<ExecContext> &context)
     return ret;
 }
 
+int32_t RequestEvent::QueryMimeTypeExec(const std::shared_ptr<ExecContext> &context)
+{
+    std::shared_ptr<TaskInfo> infoRes;
+    int32_t ret = E_OK;
+    if (GetCache(context->task->GetTid(), infoRes) || infoRes != nullptr) {
+        context->strRes = infoRes->mimeType;
+        return ret;
+    }
+    ret = RequestManager::GetInstance()->QueryMimeType(context->task->GetTid(), context->strRes);
+    if (context->version_ != Version::API10 && ret != E_PERMISSION) {
+        ret = E_OK;
+    }
+    return ret;
+}
+
 void RequestEvent::GetDownloadInfo(const TaskInfo &infoRes, DownloadInfo &info)
 {
     info.downloadId = strtoul(infoRes.tid.c_str(), NULL, DECIMALISM);
@@ -330,11 +346,6 @@ void RequestEvent::GetDownloadInfo(const TaskInfo &infoRes, DownloadInfo &info)
     }
     info.description = infoRes.description;
     info.downloadedBytes = infoRes.progress.processed;
-}
-
-int32_t RequestEvent::QueryMimeTypeExec(const std::shared_ptr<ExecContext> &context)
-{
-    return RequestManager::GetInstance()->QueryMimeType(context->task->GetTid(), context->strRes);
 }
 
 int32_t RequestEvent::RemoveExec(const std::shared_ptr<ExecContext> &context)

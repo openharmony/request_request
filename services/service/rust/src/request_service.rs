@@ -464,7 +464,9 @@ impl RequestServiceInterface for RequestService {
                     }
 
                     reply.write(&(tf.progress.common_data.state as u32))?;
-                    reply.write(&(tf.progress.common_data.index as u32))?;
+                    let index = tf.progress.common_data.index;
+                    reply.write(&(index as u32)).ok();
+                    reply.write(&(tf.progress.processed[index] as u64)).ok();
                     reply.write(&(tf.progress.common_data.total_processed as u64))?;
                     reply.write(&(tf.progress.sizes))?;
 
@@ -478,6 +480,13 @@ impl RequestServiceInterface for RequestService {
                     for (k, v) in tf.extras.iter() {
                         reply.write(&(k))?;
                         reply.write(&(v))?;
+                    }
+                    reply.write(&(tf.common_data.version as u32)).ok();
+                    reply.write(&(tf.each_file_status.len() as u32)).ok();
+                    for item in tf.each_file_status.iter() {
+                        reply.write(&(item.0)).ok();
+                        reply.write(&(item.1 as u32)).ok();
+                        reply.write(&(item.2)).ok();
                     }
                     Ok(())
                 }

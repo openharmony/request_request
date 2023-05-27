@@ -967,7 +967,7 @@ describe('RequestTest', function () {
                         downloadTask.queryMimeType().then(data => {
                             if (data) {
                                 console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002 Download task queryMimeType.');
-                                expect(data == true).assertTrue();
+                                expect(typeof data == "string").assertTrue();
                             } else {
                                 console.error('====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002 Failed to queryMimeType the download task.');
                                 expect().assertFail();

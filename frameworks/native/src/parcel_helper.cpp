@@ -52,14 +52,17 @@ void ParcelHelper::UnMarshal(MessageParcel &data, TaskInfo &info)
     info.progress.state = static_cast<State>(data.ReadUint32());
     info.progress.index = data.ReadUint32();
     info.progress.processed = data.ReadUint64();
+    info.progress.totalProcessed = data.ReadUint64();
     data.ReadInt64Vector(&info.progress.sizes);
     size = data.ReadUint32();
     for (uint32_t i = 0; i < size; i++) {
-        info.progress.extras[data.ReadString()] = data.ReadString();
+        std::string key = data.ReadString();
+        info.progress.extras[key] = data.ReadString();
     }
     size = data.ReadUint32();
     for (uint32_t i = 0; i < size; i++) {
-        info.extras[data.ReadString()] = data.ReadString();
+        std::string key = data.ReadString();
+        info.extras[key] = data.ReadString();
     }
     info.version = static_cast<Version>(data.ReadUint32());
     size = data.ReadUint32();

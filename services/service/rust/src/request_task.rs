@@ -637,12 +637,17 @@ impl RequestTask {
             title: self.conf.title.clone(),
             description: self.conf.description.clone(),
             mime_type: {
-                match self.conf.common_data.action {
-                    Action::DOWNLOAD => match self.conf.headers.get("Content-Type") {
-                        None => "".into(),
-                        Some(v) => v.clone(),
-                    },
-                    Action::UPLOAD => "multipart/form-data".into(),
+                match self.conf.version {
+                    Version::API10 => {
+                        match self.conf.common_data.action {
+                            Action::DOWNLOAD => match self.conf.headers.get("Content-Type") {
+                                None => "".into(),
+                                Some(v) => v.clone(),
+                            },
+                            Action::UPLOAD => "multipart/form-data".into(),
+                        }
+                    }
+                    Version::API9 => self.mime_type.lock().unwrap().clone(),
                 }
             },
             progress: progress.clone(),

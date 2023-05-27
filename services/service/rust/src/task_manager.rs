@@ -475,13 +475,14 @@ impl TaskManager {
                 return;
             }
             let app_task = app_task.unwrap();
-            debug!(LOG_LABEL, "Task has been processed, begin remove task from task map");
-            let remove_task = app_task.remove(&task.task_id);
+            info!(LOG_LABEL, "Task has been processed, begin remove task from task map");
+            let remove_task = app_task.get(&task.task_id);
             if let Some(remove_task) = remove_task {
-                let uid = remove_task.uid;
-                self.total_task_count.fetch_sub(1, Ordering::SeqCst);
                 if remove_task.conf.version == Version::API10 {
+                    let uid = remove_task.uid;
+                    self.total_task_count.fetch_sub(1, Ordering::SeqCst);
                     self.api10_background_task_count.fetch_sub(1, Ordering::SeqCst);
+                    app_task.remove(&task.task_id);
                     self.rt.spawn(async move {
                         let task_manager = TaskManager::get_instance();
                         let guard = task_manager.task_map.lock().unwrap();
@@ -490,15 +491,17 @@ impl TaskManager {
                 } else {
                     let task_info = remove_task.show();
                     if self.info_cb.is_some() {
-                        info!(LOG_LABEL, "notify client task info");
+                        debug!(LOG_LABEL, "notify client task info");
                         self.info_cb.as_ref().unwrap()(task_info);
                     }
+                    app_task.remove(&task.task_id);
+                    self.total_task_count.fetch_sub(1, Ordering::SeqCst);
                 }
             }
             if (app_task.len() as u8) == 0 {
                 debug!(LOG_LABEL, "All task of the app has been processed, begin remove app task map");
                 guard.remove(&task.uid);
-            } 
+            }
         }
     }
 

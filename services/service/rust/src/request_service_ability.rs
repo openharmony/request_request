@@ -264,6 +264,11 @@ impl RequestAbility {
             error!(LOG_LABEL, "index out of range");
             return;
         }
+        let common_data = notify_data.progress.common_data;
+        if (common_data.state == State::RUNNING || common_data.state == State::RETRYING) &&
+            common_data.total_processed == 0 {
+            return;
+        }
         debug!(LOG_LABEL, "notify_data {:?}",  @public(notify_data));
         let key = cb_type.clone() + &String::from("-") + &notify_data.task_id.to_string();
         debug!(LOG_LABEL, "key {}",  @public(key));
@@ -337,7 +342,7 @@ impl RequestAbility {
             .unwrap()
             .clone();
         if reg_obj.contains_key(&key) {
-            debug!(LOG_LABEL, "notify_task_info contain the thy");
+            debug!(LOG_LABEL, "notify_task_info contain the key");
             let obj = reg_obj.get(&key).unwrap().clone();
             let mut reply = MsgParcel::new().expect("MsgParcel should success");
             let notify_token: InterfaceToken =
@@ -371,7 +376,9 @@ impl RequestAbility {
                 reply.write(&(task_info.file_specs[i].mime_type)).ok();
             }
             reply.write(&(task_info.progress.common_data.state as u32)).ok();
-            reply.write(&(task_info.progress.common_data.index as u32)).ok();
+            let index = task_info.progress.common_data.index;
+            reply.write(&(index as u32)).ok();
+            reply.write(&(task_info.progress.processed[index] as u64)).ok();
             reply.write(&(task_info.progress.common_data.total_processed as u64)).ok();
             reply.write(&(task_info.progress.sizes)).ok();
             reply.write(&(task_info.progress.extras.len() as u32)).ok();
