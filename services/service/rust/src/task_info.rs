@@ -32,6 +32,7 @@ pub struct TaskInfo {
     pub mtime: u64,
     pub reason: Reason,
     pub extras: HashMap<String, String>,
+    pub each_file_status: Vec<(String, Reason, String)>,
     pub common_data: CommonTaskInfo,
 }
 
@@ -43,4 +44,6 @@ pub struct CommonTaskInfo {
     pub gauge: bool,
     pub retry: bool,
     pub tries: u32,
+    pub version: Version,
 }
+

@@ -60,7 +60,6 @@ ohos_shared_library("download_server") {
     "${core_service_path}/innerkits:tel_core_service_api",
     "${notification_path}/frameworks/ans:ans_innerkits",
     "${request_path}/common:request_common_static",
-    "${request_path}/services/dfx:request_dfx_static",
   ]
 
   defines = [ "NO_SSL_CERTIFICATION=1" ]

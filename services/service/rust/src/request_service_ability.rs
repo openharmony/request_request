@@ -60,7 +60,8 @@ impl RequestAbility {
 
     pub fn init(&mut self) -> i32 {
         debug!(LOG_LABEL, "init");
-        TaskManager::get_instance().register_callback(Box::new(RequestAbility::notify_client));
+        TaskManager::get_instance().register_callback(Box::new(RequestAbility::notify_client),
+                                                      Box::new(RequestAbility::notify_task_info));
         monitor_network();
         monitor_app_state();
         monitor_task();
@@ -139,8 +140,8 @@ impl RequestAbility {
     pub fn on(&self, task_id: u32, on_type: String, obj: RemoteObj) -> ErrorCode {
         let key = on_type.clone() + &String::from("-") + &task_id.to_string();
         debug!(LOG_LABEL, "on key {}", @public(key));
-        RequestAbility::get_ability_instance().do_unregistered_notify(task_id, on_type);
         self.reg_remote_obj.lock().unwrap().insert(key, obj);
+        RequestAbility::get_ability_instance().do_unregistered_notify(task_id, on_type);
         ErrorCode::ErrOk
     }
 
@@ -194,10 +195,10 @@ impl RequestAbility {
 
     pub fn add_unregister_notify(&self, task_id: u32, reg_type: String) {
         match reg_type.as_str() {
-            "complete" | "fail" => {
+            "complete" | "fail" | "progress" | "pause" | "remove" => {
                 let key = reg_type.clone() + &String::from("-") + &task_id.to_string();
                 let notify = self.unregistered_notify.lock().unwrap().clone();
-                if !notify.contains_key(&key) {
+                if notify.contains_key(&key) {
                     return;
                 }
                 self.unregistered_notify
@@ -215,33 +216,26 @@ impl RequestAbility {
                 let key = reg_type.clone() + &String::from("-") + &task_id.to_string();
                 let notify = self.unregistered_notify.lock().unwrap().clone();
                 if notify.contains_key(&key) {
-                    match df.progress.common_data.state {
-                        State::COMPLETED | State::FAILED => {
-                            debug!(LOG_LABEL, "notify taskId: {} event: {}",  @public(task_id),  @public(reg_type));
-                            let mut each_file_status = Vec::<(String, Reason, String)>::new();
-                            for item in df.file_specs.iter() {
-                                each_file_status.push((
-                                    item.path.clone(),
-                                    df.reason,
-                                    String::new(),
-                                ));
-                            }
-                            let notify_data = NotifyData {
-                                progress: df.progress,
-                                action: df.common_data.action,
-                                version: Version::API9,
-                                each_file_status,
-                                task_id: df.task_id,
-                                uid: df.uid,
-                                bundle: df.bundle,
-                            };
-                            RequestAbility::notify_client(reg_type, &notify_data);
-                            self.unregistered_notify.lock().unwrap().remove(&key);
-                        }
-                        _ => {
-                            error!(LOG_LABEL, "not match status");
-                        }
+                    debug!(LOG_LABEL, "notify taskId: {} event: {}",  @public(task_id),  @public(reg_type));
+                    let mut each_file_status = Vec::<(String, Reason, String)>::new();
+                    for item in df.file_specs.iter() {
+                        each_file_status.push((
+                            item.path.clone(),
+                            df.reason,
+                            String::new(),
+                        ));
                     }
+                    let notify_data = NotifyData {
+                        progress: df.progress,
+                        action: df.common_data.action,
+                        version: Version::API9,
+                        each_file_status,
+                        task_id: df.task_id,
+                        uid: df.uid,
+                        bundle: df.bundle,
+                    };
+                    RequestAbility::notify_client(reg_type, &notify_data);
+                    self.unregistered_notify.lock().unwrap().remove(&key);
                 }
             }
             None => {
@@ -268,6 +262,11 @@ impl RequestAbility {
         debug!(LOG_LABEL, "notify_client");
         if notify_data.progress.common_data.index >= notify_data.progress.sizes.len() {
             error!(LOG_LABEL, "index out of range");
+            return;
+        }
+        let common_data = notify_data.progress.common_data;
+        if (common_data.state == State::RUNNING || common_data.state == State::RETRYING) &&
+            common_data.total_processed == 0 {
             return;
         }
         debug!(LOG_LABEL, "notify_data {:?}",  @public(notify_data));
@@ -326,6 +325,83 @@ impl RequestAbility {
         if notify_data.version != Version::API10 {
             RequestAbility::get_ability_instance()
                 .add_unregister_notify(notify_data.task_id, cb_type);
+        }
+    }
+
+    pub fn notify_task_info(task_info: TaskInfo) {
+        debug!(LOG_LABEL, "notify_task_info");
+        if task_info.progress.common_data.index >= task_info.progress.sizes.len() {
+            error!(LOG_LABEL, "index is out of bounds");
+            return ;
+        }
+        let key = String::from("done") + &String::from("-") + &task_info.task_id.to_string();
+        debug!(LOG_LABEL, "key {}",  @public(key));
+        let reg_obj = RequestAbility::get_ability_instance()
+            .reg_remote_obj
+            .lock()
+            .unwrap()
+            .clone();
+        if reg_obj.contains_key(&key) {
+            debug!(LOG_LABEL, "notify_task_info contain the key");
+            let obj = reg_obj.get(&key).unwrap().clone();
+            let mut reply = MsgParcel::new().expect("MsgParcel should success");
+            let notify_token: InterfaceToken =
+                InterfaceToken::new("OHOS.Download.NotifyInterface");
+            reply.write::<InterfaceToken>(&notify_token).ok();
+            reply.write(&(task_info.common_data.gauge)).ok();
+            reply.write(&(task_info.common_data.retry)).ok();
+            reply.write(&(task_info.common_data.action as u32)).ok();
+            reply.write(&(task_info.common_data.mode as u32)).ok();
+            reply.write(&(task_info.reason as u32)).ok();
+            reply.write(&(task_info.common_data.tries)).ok();
+            reply.write(&(task_info.uid.to_string())).ok();
+            reply.write(&(task_info.bundle)).ok();
+            reply.write(&task_info.url).ok();
+            reply.write(&(task_info.task_id.to_string())).ok();
+            reply.write(&task_info.title).ok();
+            reply.write(&task_info.mime_type).ok();
+            reply.write(&(task_info.ctime.to_string())).ok();
+            reply.write(&(task_info.mtime.to_string())).ok();
+            reply.write(&(task_info.data)).ok();
+            reply.write(&(task_info.file_items.len() as u32)).ok();
+            for i in 0..task_info.file_items.len() {
+                reply.write(&(task_info.file_items[i].name)).ok();
+                reply.write(&(task_info.file_items[i].value)).ok();
+            }
+            reply.write(&(task_info.file_specs.len() as u32)).ok();
+            for i in 0..task_info.file_specs.len() {
+                reply.write(&(task_info.file_specs[i].name)).ok();
+                reply.write(&(task_info.file_specs[i].path)).ok();
+                reply.write(&(task_info.file_specs[i].file_name)).ok();
+                reply.write(&(task_info.file_specs[i].mime_type)).ok();
+            }
+            reply.write(&(task_info.progress.common_data.state as u32)).ok();
+            let index = task_info.progress.common_data.index;
+            reply.write(&(index as u32)).ok();
+            reply.write(&(task_info.progress.processed[index] as u64)).ok();
+            reply.write(&(task_info.progress.common_data.total_processed as u64)).ok();
+            reply.write(&(task_info.progress.sizes)).ok();
+            reply.write(&(task_info.progress.extras.len() as u32)).ok();
+            for (k, v) in task_info.progress.extras.iter() {
+                reply.write(&(k)).ok();
+                reply.write(&(v)).ok();
+            }
+            reply.write(&(task_info.extras.len() as u32)).ok();
+            for (k, v) in task_info.extras.iter() {
+                reply.write(&(k)).ok();
+                reply.write(&(v)).ok();
+            }
+            reply.write(&(task_info.common_data.version as u32)).ok();
+            reply.write(&(task_info.each_file_status.len() as u32)).ok();
+            for item in task_info.each_file_status.iter() {
+                reply.write(&(item.0)).ok();
+                reply.write(&(item.1 as u32)).ok();
+                reply.write(&(item.2)).ok();
+            }
+            debug!(LOG_LABEL, "send_request");
+            let reply = obj.send_request(1, &reply, false).ok();
+
+            RequestAbility::get_ability_instance().off(task_info.task_id, String::from("done"));
         }
     }
 }

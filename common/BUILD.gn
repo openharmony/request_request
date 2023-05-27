@@ -31,11 +31,7 @@ config("common_config") {
 }
 
 ohos_static_library("request_common_static") {
-  sources = [
-    "src/download_config.cpp",
-    "src/download_info.cpp",
-    "src/module_init.cpp",
-  ]
+  sources = [ "src/module_init.cpp" ]
 
   public_configs = [ ":common_config" ]
 

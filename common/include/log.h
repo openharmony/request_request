@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,66 +13,66 @@
  * limitations under the License.
  */
 
-#ifndef DOWNLOAD_LOG
-#define DOWNLOAD_LOG
+#ifndef REQUEST_LOG
+#define REQUEST_LOG
 
-#define CONFIG_DOWNLOAD_LOG
-#ifdef CONFIG_DOWNLOAD_LOG
+#define CONFIG_REQUEST_LOG
+#ifdef CONFIG_REQUEST_LOG
 #include "hilog/log.h"
 
-#ifdef DOWNLOAD_HILOGF
-#undef DOWNLOAD_HILOGF
+#ifdef REQUEST_HILOGF
+#undef REQUEST_HILOGF
 #endif
 
-#ifdef DOWNLOAD_HILOGE
-#undef DOWNLOAD_HILOGE
+#ifdef REQUEST_HILOGE
+#undef REQUEST_HILOGE
 #endif
 
-#ifdef DOWNLOAD_HILOGW
-#undef DOWNLOAD_HILOGW
+#ifdef REQUEST_HILOGW
+#undef REQUEST_HILOGW
 #endif
 
-#ifdef DOWNLOAD_HILOGD
-#undef DOWNLOAD_HILOGD
+#ifdef REQUEST_HILOGD
+#undef REQUEST_HILOGD
 #endif
 
-#ifdef DOWNLOAD_HILOGI
-#undef DOWNLOAD_HILOGI
+#ifdef REQUEST_HILOGI
+#undef REQUEST_HILOGI
 #endif
 
-#define DOWNLOAD_LOG_TAG "Downloadkit"
-#define DOWNLOAD_LOG_DOMAIN 0xD001C00
-static constexpr OHOS::HiviewDFX::HiLogLabel DOWNLOAD_LOG_LABEL = {LOG_CORE, DOWNLOAD_LOG_DOMAIN, DOWNLOAD_LOG_TAG};
+#define REQUEST_LOG_TAG "Requestkit"
+#define REQUEST_LOG_DOMAIN 0xD001C00
+static constexpr OHOS::HiviewDFX::HiLogLabel REQUEST_LOG_LABEL = {LOG_CORE, REQUEST_LOG_DOMAIN, REQUEST_LOG_TAG};
 
 #define MAKE_FILE_NAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
 
-#define DOWNLOAD_HILOGF(fmt, ...)                                        								\
-    (void)OHOS::HiviewDFX::HiLog::Fatal(DOWNLOAD_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,	\
+#define REQUEST_HILOGF(fmt, ...)                                        								\
+    (void)OHOS::HiviewDFX::HiLog::Fatal(REQUEST_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,	\
     MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
-#define DOWNLOAD_HILOGE(fmt, ...)                                      									\
-    (void)OHOS::HiviewDFX::HiLog::Error(DOWNLOAD_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,	\
+#define REQUEST_HILOGE(fmt, ...)                                      									\
+    (void)OHOS::HiviewDFX::HiLog::Error(REQUEST_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,	\
     MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
-#define DOWNLOAD_HILOGW(fmt, ...)                                                        				\
-    (void)OHOS::HiviewDFX::HiLog::Warn(DOWNLOAD_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,	\
+#define REQUEST_HILOGW(fmt, ...)                                                        				\
+    (void)OHOS::HiviewDFX::HiLog::Warn(REQUEST_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,	\
     MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
-#define DOWNLOAD_HILOGD(fmt, ...)                                                            			\
-    (void)OHOS::HiviewDFX::HiLog::Debug(DOWNLOAD_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,	\
+#define REQUEST_HILOGD(fmt, ...)                                                            			\
+    (void)OHOS::HiviewDFX::HiLog::Debug(REQUEST_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,	\
     MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
-#define DOWNLOAD_HILOGI(fmt, ...)                                                     					\
-    (void)OHOS::HiviewDFX::HiLog::Info(DOWNLOAD_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,	\
+#define REQUEST_HILOGI(fmt, ...)                                                     					\
+    (void)OHOS::HiviewDFX::HiLog::Info(REQUEST_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,	\
     MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 #else
 
-#define DOWNLOAD_HILOGF(fmt, ...)
-#define DOWNLOAD_HILOGE(fmt, ...)
-#define DOWNLOAD_HILOGW(fmt, ...)
-#define DOWNLOAD_HILOGD(fmt, ...)
-#define DOWNLOAD_HILOGI(fmt, ...)
-#endif // CONFIG_DOWNLOAD_LOG
+#define REQUEST_HILOGF(fmt, ...)
+#define REQUEST_HILOGE(fmt, ...)
+#define REQUEST_HILOGW(fmt, ...)
+#define REQUEST_HILOGD(fmt, ...)
+#define REQUEST_HILOGI(fmt, ...)
+#endif // CONFIG_REQUEST_LOG
 
-#endif /* DOWNLOAD_LOG */
+#endif /* REQUEST_LOG */

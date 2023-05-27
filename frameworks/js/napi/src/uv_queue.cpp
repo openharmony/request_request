@@ -34,7 +34,7 @@ bool UvQueue::Call(napi_env env, void *data, uv_after_work_cb afterCallback)
 
 void UvQueue::DeleteRef(napi_env env, napi_ref ref)
 {
-    CallbackData *callbackData = new (std::nothrow) CallbackData();
+    UvCallbackData *callbackData = new (std::nothrow) UvCallbackData();
     if (callbackData == nullptr) {
         return;
     }
@@ -45,11 +45,11 @@ void UvQueue::DeleteRef(napi_env env, napi_ref ref)
 
 void UvQueue::UvDelete(uv_work_t *work, int status)
 {
-    CallbackData *callbackData = reinterpret_cast<CallbackData *>(work->data);
+    UvCallbackData *callbackData = reinterpret_cast<UvCallbackData *>(work->data);
     if (callbackData != nullptr) {
         napi_delete_reference(callbackData->env, callbackData->ref);
         delete callbackData;
         delete work;
     }
 }
-} // namespace OHOS::Request
+} // namespace OHOS::Request::UploadNapi

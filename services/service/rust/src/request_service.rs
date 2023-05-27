@@ -172,6 +172,8 @@ impl RequestServiceInterface for RequestService {
         let mut task_id: u32 = 0;
         let ret =
             RequestAbility::get_ability_instance().construct(task_config, files, &mut task_id);
+        let remote_object: RemoteObj = data.read::<RemoteObj>()?;
+        RequestAbility::get_ability_instance().on(task_id, "done".to_string(), remote_object);
         reply.write(&(ret as i32))?;
         if ret != ErrorCode::ErrOk {
             return Err(IpcStatusCode::Failed);
@@ -182,12 +184,16 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn pause(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
-            error!(LOG_LABEL, "permission denied");
-            reply.write(&(ErrorCode::Permission as i32));
-            return Err(IpcStatusCode::Failed);
-        }
         debug!(LOG_LABEL, "Pause");
+        let version: u32 = data.read()?;
+        if Version::from(version as u8) == Version::API9 {
+            if !RequestAbility::get_ability_instance().check_permission() {
+                error!(LOG_LABEL, "permission denied");
+                reply.write(&(ErrorCode::Permission as i32));
+                return Err(IpcStatusCode::Failed);
+            }
+        }
+
         let id: String = data.read()?;
         match id.parse::<u32>() {
             Ok(id) => {
@@ -240,12 +246,16 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn remove(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
-            error!(LOG_LABEL, "permission denied");
-            reply.write(&(ErrorCode::Permission as i32));
-            return Err(IpcStatusCode::Failed);
-        }
         debug!(LOG_LABEL, "remove");
+        let version: u32 = data.read()?;
+        if Version::from(version as u8) == Version::API9 {
+            if !RequestAbility::get_ability_instance().check_permission() {
+                error!(LOG_LABEL, "permission denied");
+                reply.write(&(ErrorCode::Permission as i32));
+                return Err(IpcStatusCode::Failed);
+            }
+        }
+
         let id: String = data.read()?;
         debug!(LOG_LABEL, "id {}",  @public(id));
         match id.parse::<u32>() {
@@ -293,11 +303,6 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn on(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
-            error!(LOG_LABEL, "permission denied");
-            reply.write(&(ErrorCode::Permission as i32));
-            return Err(IpcStatusCode::Failed);
-        }
         debug!(LOG_LABEL, "on");
         let on_type: String = data.read()?;
         if on_type.is_empty() {
@@ -326,11 +331,6 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn off(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
-            error!(LOG_LABEL, "permission denied");
-            reply.write(&(ErrorCode::Permission as i32));
-            return Err(IpcStatusCode::Failed);
-        }
         debug!(LOG_LABEL, "off");
         let off_type: String = data.read()?;
         debug!(LOG_LABEL, "off_type: {:?}",  @public(off_type));
@@ -387,11 +387,6 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn stop(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
-            error!(LOG_LABEL, "permission denied");
-            reply.write(&(ErrorCode::Permission as i32));
-            return Err(IpcStatusCode::Failed);
-        }
         debug!(LOG_LABEL, "stop");
         let id: String = data.read()?;
         match id.parse::<u32>() {
@@ -417,12 +412,15 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn show(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
-            error!(LOG_LABEL, "permission denied");
-            reply.write(&(ErrorCode::Permission as i32));
-            return Err(IpcStatusCode::Failed);
-        }
         debug!(LOG_LABEL, "show");
+        let version: u32 = data.read()?;
+        if Version::from(version as u8) == Version::API9 {
+            if !RequestAbility::get_ability_instance().check_permission() {
+                error!(LOG_LABEL, "permission denied");
+                reply.write(&(ErrorCode::Permission as i32));
+                return Err(IpcStatusCode::Failed);
+            }
+        }
         let id: String = data.read()?;
         debug!(LOG_LABEL, "id: {}", @public(id));
         match id.parse::<u32>() {
@@ -466,8 +464,10 @@ impl RequestServiceInterface for RequestService {
                     }
 
                     reply.write(&(tf.progress.common_data.state as u32))?;
-                    reply.write(&(tf.progress.common_data.index as u32))?;
-                    reply.write(&(tf.progress.common_data.total_processed as i64))?;
+                    let index = tf.progress.common_data.index;
+                    reply.write(&(index as u32)).ok();
+                    reply.write(&(tf.progress.processed[index] as u64)).ok();
+                    reply.write(&(tf.progress.common_data.total_processed as u64))?;
                     reply.write(&(tf.progress.sizes))?;
 
                     reply.write(&(tf.progress.extras.len() as u32))?;
@@ -480,6 +480,13 @@ impl RequestServiceInterface for RequestService {
                     for (k, v) in tf.extras.iter() {
                         reply.write(&(k))?;
                         reply.write(&(v))?;
+                    }
+                    reply.write(&(tf.common_data.version as u32)).ok();
+                    reply.write(&(tf.each_file_status.len() as u32)).ok();
+                    for item in tf.each_file_status.iter() {
+                        reply.write(&(item.0)).ok();
+                        reply.write(&(item.1 as u32)).ok();
+                        reply.write(&(item.2)).ok();
                     }
                     Ok(())
                 }

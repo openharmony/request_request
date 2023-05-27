@@ -76,7 +76,3 @@ pub fn remove_files(paths: Vec<String>) {
         std::fs::remove_file(path);
     }
 }
-
-pub fn notify_callback(_event: String, _notify_data: &NotifyData) {
-    println!("notify callback");
-}
