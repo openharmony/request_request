@@ -143,6 +143,7 @@ NotifyData RequestEvent::BuildNotifyData(const std::shared_ptr<TaskInfo> &taskIn
     notifyData.version = taskInfo->version;
     notifyData.mode = taskInfo->mode;
     notifyData.taskStates = taskInfo->taskStates;
+    return notifyData;
 }
 
 napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
