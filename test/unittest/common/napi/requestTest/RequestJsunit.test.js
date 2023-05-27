@@ -912,7 +912,7 @@ describe('RequestTest', function () {
                                     console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 data:' + JSON.stringify(data));
                                     expect(typeof data == "string").assertTrue();
                                 } else {
-                                    console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 error: " + JSON.stringify(err));
+                                    console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 data error ");
                                     expect().assertFail();
                                 }
                             }catch(err){
@@ -928,7 +928,7 @@ describe('RequestTest', function () {
                     done();
                 });
             }catch(err){
-                console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 error: " + JSON.stringify(err));
+                console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 err: " + JSON.stringify(err));
                 done();
             }
         })
