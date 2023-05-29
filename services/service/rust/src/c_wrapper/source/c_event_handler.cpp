@@ -22,7 +22,7 @@
 std::shared_ptr<OHOS::AppExecFwk::EventHandler> serviceHandler_ = nullptr;
 const std::int64_t INIT_INTERVAL = 5000L;
 
-void InitServiceHandler()
+void InitServiceHandler(void)
 {
     REQUEST_HILOGI("InitServiceHandler started.");
     if (serviceHandler_ != nullptr) {
