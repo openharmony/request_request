@@ -173,7 +173,7 @@ void RegisterNetworkCallback(NetworkCallback fun)
     REQUEST_HILOGI("running RegisterNetworkCallback end");
 }
 
-NetworkInfo *GetNetworkInfo()
+NetworkInfo *GetNetworkInfo(void)
 {
     return NetworkAdapter::GetInstance().GetNetworkInfo();
 }

@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-char *GetTopBundleName();
+char *GetTopBundleName(void);
 
 #ifdef __cplusplus
 }

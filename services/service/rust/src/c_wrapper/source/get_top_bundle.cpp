@@ -18,7 +18,7 @@
 #include "ability_manager_client.h"
 #include "log.h"
 
-char *GetTopBundleName()
+char *GetTopBundleName(void)
 {
     REQUEST_HILOGE("GetTopBundleName start");
     OHOS::AppExecFwk::ElementName elementName = OHOS::AAFwk::AbilityManagerClient::GetInstance()->GetTopAbility();

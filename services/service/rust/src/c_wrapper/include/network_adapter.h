@@ -88,10 +88,10 @@ public:
 extern "C" {
 #endif
 
-typedef void (*NetworkCallback)();
+typedef void (*NetworkCallback)(void);
 bool IsOnline();
 void RegisterNetworkCallback(NetworkCallback fun);
-NetworkInfo *GetNetworkInfo();
+NetworkInfo *GetNetworkInfo(void);
 
 #ifdef __cplusplus
 }

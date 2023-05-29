@@ -24,7 +24,7 @@ extern "C" {
 
 using fun = int32_t (*)();
 
-void InitServiceHandler();
+void InitServiceHandler(void);
 void PostTask(fun f);
 
 #ifdef __cplusplus
