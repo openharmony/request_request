@@ -197,14 +197,19 @@ impl AsyncRead for TaskReader {
             }
             let total_upload_bytes = end as u64 - begin + 1;
             let remain_bytes = total_upload_bytes as usize - progress_guard.processed[index];
+            let buf_filled_len = buf.filled().len();
             let mut read_buf = buf.take(remain_bytes);
-            let unfilled_len = read_buf.initialize_unfilled().len();
+            let filled_len = read_buf.filled().len();
             let file = file_guard.get_mut(index).unwrap();
             match Pin::new(file).poll_read(cx, &mut read_buf) {
                 Poll::Ready(Ok(_)) => {
-                    let current_unfilled_len = read_buf.initialize_unfilled().len();
-                    let upload_size = unfilled_len - current_unfilled_len;
-                    buf.set_filled(upload_size);
+                    let current_filled_len = read_buf.filled().len();
+                    let upload_size = current_filled_len - filled_len;
+                    // need update buf.filled and buf.initialized
+                    unsafe {
+                        buf.assume_init(upload_size);
+                    }
+                    buf.set_filled(buf_filled_len + upload_size);
                     progress_guard.processed[index] += upload_size;
                     progress_guard.common_data.total_processed += upload_size;
                     Poll::Ready(Ok(()))
@@ -315,7 +320,6 @@ impl RequestTask {
         let mut client = Client::builder()
             .connect_timeout(Timeout::from_secs(CONNECT_TIMEOUT))
             .request_timeout(Timeout::from_secs(SECONDS_IN_ONE_WEEK))
-            .max_tls_version(TlsVersion::TLS_1_2)
             .min_tls_version(TlsVersion::TLS_1_2);
 
         if self.conf.common_data.redirect {
