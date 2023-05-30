@@ -78,17 +78,17 @@ ExceptionError JsInitialize::InitParam(napi_env env, napi_value* argv,
     std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config)
 {
     REQUEST_HILOGD("InitParam in");
-    ExceptionError err = {.code = E_OK};
+    ExceptionError err = { .code = E_OK };
     int parametersPosition = config.version == Version::API8 ? CONFIG_PARAM_AT_FIRST : CONFIG_PARAM_AT_SECOND;
 
     napi_status getStatus = GetContext(env, argv[0], context);
     if (getStatus != napi_ok) {
         REQUEST_HILOGE("Get context fail");
-        return {.code = E_OTHER, .errInfo = "Get context fail"};
+        return { .code = E_OTHER, .errInfo = "Get context fail" };
     }
 
     if (context->GetApplicationInfo() == nullptr) {
-        return {.code = E_OTHER, .errInfo = "ApplicationInfo is null"};
+        return { .code = E_OTHER, .errInfo = "ApplicationInfo is null" };
     }
     if (!ParseConfig(env, argv[parametersPosition], config, err.errInfo)) {
         err.code = E_PARAMETER_CHECK;
@@ -122,16 +122,16 @@ napi_status JsInitialize::GetContext(napi_env env, napi_value value,
 ExceptionError JsInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
     Config &config)
 {
-    ExceptionError err = {.code = E_OK};
+    ExceptionError err = { .code = E_OK };
     if (config.action == Action::DOWNLOAD) {
-        FileSpec file = {.uri = config.saveas};
+        FileSpec file = { .uri = config.saveas };
         config.files.push_back(file);
     }
 
     for (auto &file : config.files) {
         std::string path;
         if (!GetInternalPath(file.uri, context, config, path)) {
-            return {.code = E_FILE_PATH, .errInfo = "this is fail path"};
+            return { .code = E_FILE_PATH, .errInfo = "this is fail path" };
         }
         file.uri = path;
         if (file.filename.empty()) {
@@ -153,7 +153,7 @@ ExceptionError JsInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRu
 
 ExceptionError JsInitialize::GetFD(const std::string &path, const Config &config, int32_t &fd)
 {
-    ExceptionError error = {.code = E_OK};
+    ExceptionError error = { .code = E_OK };
     fd = config.action == Action::UPLOAD ? open(path.c_str(), O_RDONLY) : open(path.c_str(), O_RDWR);
     if (fd >= 0) {
         REQUEST_HILOGD("File already exists");
@@ -163,14 +163,14 @@ ExceptionError JsInitialize::GetFD(const std::string &path, const Config &config
         if (config.version == Version::API10 && config.overwrite) {
             return error;
         }
-        return {.code = E_FILE_PATH, .errInfo = "Download File already exists"};
+        return { .code = E_FILE_PATH, .errInfo = "Download File already exists" };
     } else {
         if (config.action == Action::UPLOAD) {
-            return {.code = E_FILE_IO, .errInfo = "Failed to open file errno " + std::to_string(errno)};
+            return { .code = E_FILE_IO, .errInfo = "Failed to open file errno " + std::to_string(errno) };
         }
         fd = open(path.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
         if (fd < 0) {
-            return {.code = E_FILE_IO, .errInfo = "Failed to open file errno " + std::to_string(errno)};
+            return { .code = E_FILE_IO, .errInfo = "Failed to open file errno " + std::to_string(errno) };
         }
     }
     return error;

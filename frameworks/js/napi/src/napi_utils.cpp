@@ -42,7 +42,7 @@ static const std::map<ExceptionErrorCode, std::string> ErrorCodeToMsg {
     {E_OTHER, E_OTHER_INFO },
 };
 
-napi_status Convert2JSValue(napi_env env, DownloadInfo &in, napi_value &out)
+napi_status Convert2JSValue(napi_env env, const DownloadInfo &in, napi_value &out)
 {
     napi_create_object(env, &out);
     SetStringPropertyUtf8(env, out, "description", in.description);
