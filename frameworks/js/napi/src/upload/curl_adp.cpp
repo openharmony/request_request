@@ -354,7 +354,7 @@ bool CUrlAdp::CheckCUrlAdp(FileData *fData)
 
 int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
 {
-    FileData *fData = (FileData *)clientp;
+    FileData *fData = static_cast<FileData *>(clientp);
     if (!CheckCUrlAdp(fData)) {
         return UPLOAD_ERRORCODE_UPLOAD_FAIL;
     }
@@ -388,7 +388,7 @@ int CUrlAdp::ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlno
 
 size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *userdata)
 {
-    FileData *fData = (FileData *)userdata;
+    FileData *fData = static_cast<FileData *>(userdata);
     if (!CheckCUrlAdp(fData)) {
         return CURLE_WRITE_ERROR;
     }
@@ -445,7 +445,7 @@ void CUrlAdp::NotifyAPI5(FileData *fData, std::string &headers)
 size_t CUrlAdp::ReadCallback(char *buffer, size_t size, size_t nitems, void *arg)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "size is %{public}zu, nitems is %{public}zu.", size, nitems);
-    FileData *fData = (FileData *)arg;
+    FileData *fData = static_cast<FileData *>(arg);
     if (!CheckCUrlAdp(fData) || ferror(fData->fp)) {
         return CURL_READFUNC_ABORT;
     }

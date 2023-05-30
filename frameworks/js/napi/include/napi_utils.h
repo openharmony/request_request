@@ -41,7 +41,7 @@ static constexpr int32_t MAX_LEN = 4096;
 
 napi_status Convert2JSValue(napi_env env, bool in, napi_value &out);
 napi_status Convert2JSValue(napi_env env, std::string &in, napi_value &out);
-napi_status Convert2JSValue(napi_env env, DownloadInfo &in, napi_value &out);
+napi_status Convert2JSValue(napi_env env, const DownloadInfo &in, napi_value &out);
 napi_value Convert2JSValue(napi_env env, int32_t code);
 napi_value Convert2JSValue(napi_env env, uint32_t code);
 napi_value Convert2JSValue(napi_env env, int64_t code);
