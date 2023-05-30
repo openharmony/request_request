@@ -167,7 +167,6 @@ impl RequestServiceInterface for RequestService {
                 background,
             },
         };
-        debug!(LOG_LABEL, "task_config: {:?}", @public(task_config));
         debug!(LOG_LABEL, "files {:?}", @public(files));
         let mut task_id: u32 = 0;
         let ret =

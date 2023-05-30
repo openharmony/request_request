@@ -543,7 +543,7 @@ bool JsInitialize::ParseConfigV9(napi_env env, napi_value jsConfig, Config &conf
 {
     REQUEST_HILOGD("ParseConfigV9 in");
     config.action = NapiUtils::GetRequestAction(env, jsConfig);
-    config.headers = ParseMap(env, jsConfig, "headers");
+    config.headers = ParseMap(env, jsConfig, "header");
     if (!ParseUrl(env, jsConfig, config.url)) {
         errInfo = "Parse url error";
         return false;
