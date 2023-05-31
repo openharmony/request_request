@@ -23,6 +23,15 @@ namespace Request {
 class ParcelHelper {
 public:
     REQUEST_API static void UnMarshal(MessageParcel &data, TaskInfo &info);
+
+private:
+    static void UnMarshalBase(MessageParcel &data, TaskInfo &info);
+    static bool UnMarshalFormItem(MessageParcel &data, TaskInfo &info);
+    static bool UnMarshalFileSpec(MessageParcel &data, TaskInfo &info);
+    static void UnMarshalProgress(MessageParcel &data, TaskInfo &info);
+    static bool UnMarshalMapProgressExtras(MessageParcel &data, TaskInfo &info);
+    static bool UnMarshalMapExtras(MessageParcel &data, TaskInfo &info);
+    static bool UnMarshalTaskState(MessageParcel &data, TaskInfo &info);
 };
 } // namespace Request
 } // namespace OHOS

@@ -351,7 +351,7 @@ void JsTask::RemoveListener(const std::string &type, const std::string &tid)
     if (it == listenerMap_.end()) {
         return;
     }
-    uint32_t ret = RequestManager::GetInstance()->Off(type, tid);
+    int32_t ret = RequestManager::GetInstance()->Off(type, tid);
     if (ret == E_OK) {
         listenerMap_.erase(it);
     }

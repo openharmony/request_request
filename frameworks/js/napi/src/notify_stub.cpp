@@ -55,12 +55,20 @@ void NotifyStub::OnCallBack(MessageParcel &data)
     notifyData.progress.totalProcessed = data.ReadUint64();
     data.ReadInt64Vector(&notifyData.progress.sizes);
     uint32_t size = data.ReadUint32();
+    if (size > data.GetReadableBytes()) {
+        REQUEST_HILOGE("Size exceeds the upper limit, size = %{public}d", size);
+        return;
+    }
     for (uint32_t i = 0; i < size; i++) {
         notifyData.progress.extras[data.ReadString()] = data.ReadString();
     }
     notifyData.action = static_cast<Action>(data.ReadUint32());
     notifyData.version = static_cast<Version>(data.ReadUint32());
     size = data.ReadUint32();
+    if (size > data.GetReadableBytes()) {
+        REQUEST_HILOGE("Size exceeds the upper limit, size = %{public}d", size);
+        return;
+    }
     for (uint32_t i = 0; i < size; i++) {
         TaskState taskState;
         taskState.path = data.ReadString();
