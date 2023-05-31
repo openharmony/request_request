@@ -100,7 +100,9 @@ bool DownloadServiceTask::Run()
             break;
         }
         if (!GetFileSize(totalSize_)) {
+            SetStatus(SESSION_FAILED, ERROR_HTTP_DATA_ERROR, PAUSED_UNKNOWN);
             DOWNLOAD_HILOGI("get file size fail");
+            return false;
         }
 
         result = ExecHttp();
