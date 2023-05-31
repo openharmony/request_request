@@ -14,9 +14,33 @@
 */
 
 #include "parcel_helper.h"
+
+#include "log.h"
 namespace OHOS {
 namespace Request {
 void ParcelHelper::UnMarshal(MessageParcel &data, TaskInfo &info)
+{
+    UnMarshalBase(data, info);
+    if (!UnMarshalFormItem(data, info)) {
+        return;
+    }
+    if (!UnMarshalFileSpec(data, info)) {
+        return;
+    }
+    UnMarshalProgress(data, info);
+    if (!UnMarshalMapProgressExtras(data, info)) {
+        return;
+    }
+    if (!UnMarshalMapExtras(data, info)) {
+        return;
+    }
+    info.version = static_cast<Version>(data.ReadUint32());
+    if (!UnMarshalTaskState(data, info)) {
+        return;
+    }
+}
+
+void ParcelHelper::UnMarshalBase(MessageParcel &data, TaskInfo &info)
 {
     info.gauge = data.ReadBool();
     info.retry = data.ReadBool();
@@ -33,14 +57,31 @@ void ParcelHelper::UnMarshal(MessageParcel &data, TaskInfo &info)
     info.ctime = data.ReadString();
     info.mtime = data.ReadString();
     info.data = data.ReadString();
+}
+
+bool ParcelHelper::UnMarshalFormItem(MessageParcel &data, TaskInfo &info)
+{
     uint32_t size = data.ReadUint32();
+    if (size > data.GetReadableBytes()) {
+        REQUEST_HILOGE("Size exceeds the upper limit, size = %{public}u", size);
+        return false;
+    }
     for (uint32_t i = 0; i < size; i++) {
         FormItem form;
         form.name = data.ReadString();
         form.value = data.ReadString();
         info.forms.push_back(form);
     }
-    size = data.ReadUint32();
+    return true;
+}
+
+bool ParcelHelper::UnMarshalFileSpec(MessageParcel &data, TaskInfo &info)
+{
+    uint32_t size = data.ReadUint32();
+    if (size > data.GetReadableBytes()) {
+        REQUEST_HILOGE("Size exceeds the upper limit, size = %{public}u", size);
+        return false;
+    }
     for (uint32_t i = 0; i < size; i++) {
         FileSpec file;
         file.name = data.ReadString();
@@ -49,23 +90,53 @@ void ParcelHelper::UnMarshal(MessageParcel &data, TaskInfo &info)
         file.type = data.ReadString();
         info.files.push_back(file);
     }
+    return true;
+}
+
+void ParcelHelper::UnMarshalProgress(MessageParcel &data, TaskInfo &info)
+{
     info.progress.state = static_cast<State>(data.ReadUint32());
     info.progress.index = data.ReadUint32();
     info.progress.processed = data.ReadUint64();
     info.progress.totalProcessed = data.ReadUint64();
     data.ReadInt64Vector(&info.progress.sizes);
-    size = data.ReadUint32();
+}
+
+bool ParcelHelper::UnMarshalMapProgressExtras(MessageParcel &data, TaskInfo &info)
+{
+    uint32_t size = data.ReadUint32();
+    if (size > data.GetReadableBytes()) {
+        REQUEST_HILOGE("Size exceeds the upper limit, size = %{public}u", size);
+        return false;
+    }
     for (uint32_t i = 0; i < size; i++) {
         std::string key = data.ReadString();
         info.progress.extras[key] = data.ReadString();
     }
-    size = data.ReadUint32();
+    return true;
+}
+
+bool ParcelHelper::UnMarshalMapExtras(MessageParcel &data, TaskInfo &info)
+{
+    uint32_t size = data.ReadUint32();
+    if (size > data.GetReadableBytes()) {
+        REQUEST_HILOGE("Size exceeds the upper limit, size = %{public}u", size);
+        return false;
+    }
     for (uint32_t i = 0; i < size; i++) {
         std::string key = data.ReadString();
         info.extras[key] = data.ReadString();
     }
-    info.version = static_cast<Version>(data.ReadUint32());
-    size = data.ReadUint32();
+    return true;
+}
+
+bool ParcelHelper::UnMarshalTaskState(MessageParcel &data, TaskInfo &info)
+{
+    uint32_t size = data.ReadUint32();
+    if (size > data.GetReadableBytes()) {
+        REQUEST_HILOGE("Size exceeds the upper limit, size = %{public}u", size);
+        return false;
+    }
     for (uint32_t i = 0; i < size; i++) {
         TaskState taskState;
         taskState.path = data.ReadString();
@@ -73,6 +144,7 @@ void ParcelHelper::UnMarshal(MessageParcel &data, TaskInfo &info)
         taskState.message = data.ReadString();
         info.taskStates.push_back(taskState);
     }
+    return true;
 }
 } // namespace Request
 } // namespace OHOS
