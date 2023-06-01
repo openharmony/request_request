@@ -31,6 +31,7 @@ static MAX_RUNNING_TASK_COUNT_EACH_APP: u8 = 5;
 static INTERVAL_SECONDS: u64 = 30 * 60;
 static SECONDS_IN_ONE_DAY: u64 = 24 * 60 * 60;
 static SECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60;
+static TOW_SECONDS: u64 = 2;
 static REQUEST_SERVICE_ID: i32 = 3706;
 
 type AppTask = HashMap<u32, Arc<RequestTask>>;
@@ -55,7 +56,7 @@ pub fn monitor_task() {
         loop {
             {
                 let manager = TaskManager::get_instance();
-                let mut task_map_guard = manager.task_map.lock().unwrap();
+                let task_map_guard = manager.task_map.lock().unwrap();
                 for (_, app_task) in task_map_guard.iter() {
                     for (_, task) in app_task.iter() {
                         if task.conf.version == Version::API9 {
@@ -82,7 +83,7 @@ pub fn monitor_task() {
                     }
                 }
                 for task in remove_task.iter() {
-                    TaskManager::get_instance().after_task_processed(task.clone(), &mut task_map_guard);
+                    TaskManager::get_instance().after_task_processed(task);
                 }
                 remove_task.clear();
             }
@@ -147,19 +148,19 @@ impl TaskManager {
         &mut self,
         event_cb: Box<dyn Fn(String, &NotifyData) + Send + Sync + 'static>,
         info_cb: Box<dyn Fn(TaskInfo) + Send + Sync + 'static>,
-
     ) {
         self.event_cb = Some(event_cb);
         self.info_cb = Some(info_cb);
     }
 
     pub fn front_notify(&mut self, event: String, notify_data: &NotifyData) {
-        if self.event_cb.is_none()
-            || !self.is_front_app(notify_data.uid, notify_data.bundle.as_str())
-        {
+        if self.event_cb.is_none() {
             return;
         }
-        debug!(LOG_LABEL, "front notify");
+        if !self.is_front_app(notify_data.uid, notify_data.bundle.as_str()) 
+            && (notify_data.version == Version::API10 || event.eq("progress")) {
+            return;
+        }
         self.front_notify_time = get_current_timestamp();
         self.event_cb.as_ref().unwrap()(event, notify_data);
     }
@@ -369,7 +370,7 @@ impl TaskManager {
             return;
         }
         let state = task.status.lock().unwrap().state;
-        if state != State::INITIALIZED && state != State::WAITING && state!= State::PAUSED {
+        if state != State::INITIALIZED && state != State::WAITING && state != State::PAUSED {
             return;
         }
         let vesion = task.conf.version;
@@ -397,8 +398,7 @@ impl TaskManager {
         let task_id = task.task_id;
         let handle = self.rt.spawn(async move {
             run(task.clone()).await;
-            let mut guard = TaskManager::get_instance().task_map.lock().unwrap();
-            TaskManager::get_instance().after_task_processed(task, &mut guard);
+            TaskManager::get_instance().after_task_processed(&task);
         });
         self.task_handles.lock().unwrap().insert(task_id, handle);
         debug!(LOG_LABEL, "start the task success");
@@ -412,7 +412,7 @@ impl TaskManager {
         guard: &mut MutexGuard<HashMap<u64, AppTask>>,
     ) {
         self.start_common(uid, task.clone(), guard);
-        Self::get_instance().after_task_processed(task, guard);
+        Self::get_instance().after_task_processed(&task);
     }
 
     pub fn start(&mut self, uid: u64, task_id: u32) -> ErrorCode {
@@ -450,96 +450,12 @@ impl TaskManager {
         }
     }
 
-    fn remove_task_from_map(
-        &mut self,
-        task: Arc<RequestTask>,
-        guard: &mut MutexGuard<HashMap<u64, AppTask>>,
-    ) {
-        let state = task.status.lock().unwrap().state;
-        if state == State::COMPLETED
-            || state == State::FAILED
-            || state == State::REMOVED
-            || state == State::STOPPED
-        {
-            debug!(LOG_LABEL, "remove task from map");
-            self.task_handles.lock().unwrap().remove(&task.task_id);
-            if let Some(v) = &self.global_front_task {
-                if task.task_id == v.task_id {
-                    self.global_front_task.take();
-                    self.total_task_count.fetch_sub(1, Ordering::SeqCst);
-                    return;
-                }
-            }
-            let app_task = guard.get_mut(&task.uid);
-            if app_task.is_none() {
-                return;
-            }
-            let app_task = app_task.unwrap();
-            info!(LOG_LABEL, "Task has been processed, begin remove task from task map");
-            let remove_task = app_task.get(&task.task_id);
-            if let Some(remove_task) = remove_task {
-                if remove_task.conf.version == Version::API10 {
-                    let uid = remove_task.uid;
-                    self.total_task_count.fetch_sub(1, Ordering::SeqCst);
-                    self.api10_background_task_count.fetch_sub(1, Ordering::SeqCst);
-                    app_task.remove(&task.task_id);
-                    self.rt.spawn(async move {
-                        let task_manager = TaskManager::get_instance();
-                        let guard = task_manager.task_map.lock().unwrap();
-                        task_manager.process_app_waitting_task(uid, &guard);
-                    });
-                } else {
-                    let task_info = remove_task.show();
-                    if self.info_cb.is_some() {
-                        debug!(LOG_LABEL, "notify client task info");
-                        self.info_cb.as_ref().unwrap()(task_info);
-                    }
-                    app_task.remove(&task.task_id);
-                    self.total_task_count.fetch_sub(1, Ordering::SeqCst);
-                }
-            }
-            if (app_task.len() as u8) == 0 {
-                debug!(LOG_LABEL, "All task of the app has been processed, begin remove app task map");
-                guard.remove(&task.uid);
-            }
-        }
-    }
-
-    fn unload_sa(&self) {
-        debug!(LOG_LABEL, "unload_sa");
-        if self.total_task_count.load(Ordering::SeqCst) != 0 {
-            return;
-        }
+    fn after_task_processed(&mut self, task: &Arc<RequestTask>) {
+        self.rt.spawn(remove_task_from_map(task.clone()));
         static ONCE: Once = Once::new();
         ONCE.call_once(|| {
-            TaskManager::get_instance().rt.spawn(async move {
-                loop {
-                    sleep(Duration::from_secs(60)).await;
-                    let task_manager = TaskManager::get_instance();
-                    match task_manager.task_map.try_lock() {
-                        Ok(_) => {
-                            if task_manager.total_task_count.load(Ordering::SeqCst) != 0 {
-                                continue;
-                            }
-                            task_manager.unloading.store(true, Ordering::SeqCst);
-                            let samgr_proxy = get_systemability_manager();
-                            samgr_proxy.unload_systemability(REQUEST_SERVICE_ID).expect("unload_systemability failed");
-                            return;
-                        }
-                        Err(_) => continue,
-                    }
-                }
-            });
+            self.rt.spawn(unload_sa());
         });
-    }
-
-    fn after_task_processed(
-        &mut self,
-        task: Arc<RequestTask>,
-        guard: &mut MutexGuard<HashMap<u64, AppTask>>,
-    ) {
-        self.remove_task_from_map(task.clone(), guard);
-        self.unload_sa();
     }
 
     pub fn pause(&self, uid: u64, task_id: u32) -> ErrorCode {
@@ -586,14 +502,14 @@ impl TaskManager {
 
     pub fn stop(&mut self, uid: u64, task_id: u32) -> ErrorCode {
         debug!(LOG_LABEL, "Stop a task");
-        let mut task_map_guard = self.task_map.lock().unwrap();
+        let task_map_guard = self.task_map.lock().unwrap();
         let task = self.get_task(uid, task_id, &task_map_guard);
         if let Some(task) = task {
             if !task.set_status(State::STOPPED, Reason::UserOperation) {
                 error!(LOG_LABEL, "can not stop a task which state is not meet the requirements");
                 return ErrorCode::TaskStateErr;
             }
-            Self::get_instance().after_task_processed(task, &mut task_map_guard);
+            Self::get_instance().after_task_processed(&task);
             debug!(LOG_LABEL, "Stopped success");
             return ErrorCode::ErrOk;
         }
@@ -603,11 +519,11 @@ impl TaskManager {
 
     pub fn remove(&mut self, uid: u64, task_id: u32) -> ErrorCode {
         debug!(LOG_LABEL, "Remove a task");
-        let mut task_map_guard = self.task_map.lock().unwrap();
+        let task_map_guard = self.task_map.lock().unwrap();
         let task = self.get_task(uid, task_id, &task_map_guard);
         if let Some(task) = task {
             task.set_status(State::REMOVED, Reason::UserOperation);
-            Self::get_instance().after_task_processed(task, &mut task_map_guard);
+            Self::get_instance().after_task_processed(&task);
             debug!(LOG_LABEL, "remove success");
             return ErrorCode::ErrOk;
         }
@@ -648,6 +564,74 @@ impl TaskManager {
     }
 }
 
+async fn unload_sa() {
+    loop {
+        sleep(Duration::from_secs(60)).await;
+        let task_manager = TaskManager::get_instance();
+        match task_manager.task_map.try_lock() {
+            Ok(_) => {
+                if task_manager.total_task_count.load(Ordering::SeqCst) != 0 {
+                    continue;
+                }
+                task_manager.unloading.store(true, Ordering::SeqCst);
+                info!(LOG_LABEL, "unload SA");
+                let samgr_proxy = get_systemability_manager();
+                samgr_proxy.unload_systemability(REQUEST_SERVICE_ID).expect("unload_systemability failed");
+                return;
+            }
+            Err(_) => continue,
+        }
+    }
+}
+
+async fn remove_task_from_map(task: Arc<RequestTask>) {
+    let state = task.status.lock().unwrap().state;
+    if state != State::COMPLETED && state != State::FAILED
+        && state != State::REMOVED && state != State::STOPPED {
+        return;
+    }
+    debug!(LOG_LABEL, "remove task from map");
+    let task_manager = TaskManager::get_instance();
+    {
+        let _guard = task_manager.task_map.lock().unwrap();
+        task_manager.task_handles.lock().unwrap().remove(&task.task_id);
+        if let Some(v) = &task_manager.global_front_task {
+            if task.task_id == v.task_id {
+                task_manager.global_front_task.take();
+                task_manager.total_task_count.fetch_sub(1, Ordering::SeqCst);
+                return;
+            }
+        }
+    };
+    if task.conf.version == Version::API9 && task_manager.info_cb.is_some() {
+        let task_info = task.show();
+        task_manager.info_cb.as_ref().unwrap()(task_info);
+        sleep(Duration::from_secs(TOW_SECONDS)).await;
+    }
+    let mut guard = task_manager.task_map.lock().unwrap();
+    let app_task = guard.get_mut(&task.uid);
+    if app_task.is_none() {
+        return;
+    }
+    let app_task = app_task.unwrap();
+    let remove_task = app_task.remove(&task.task_id);
+    if remove_task.is_none() {
+        return;
+    }
+    let remove_task = remove_task.unwrap();
+    task_manager.total_task_count.fetch_sub(1, Ordering::SeqCst);
+    if remove_task.conf.version == Version::API10 {
+        task_manager.api10_background_task_count.fetch_sub(1, Ordering::SeqCst);
+    }
+    if app_task.len() == 0 {
+        guard.remove(&remove_task.uid);
+        return;
+    }
+    if remove_task.conf.version == Version::API10 {
+        task_manager.process_app_waitting_task(remove_task.uid, &mut guard);
+    }
+}
+
 pub fn monitor_network() {
     info!(LOG_LABEL, "monitor_network");
     unsafe {
@@ -682,10 +666,7 @@ extern "C" fn net_work_change_callback() {
                         handle.cancel();
                     }
                     handles_guard.remove(task_id);
-                    task_manager.rt.spawn(async move {
-                        let mut guard = TaskManager::get_instance().task_map.lock().unwrap();
-                        TaskManager::get_instance().after_task_processed(task.clone(), &mut guard);
-                    });
+                    TaskManager::get_instance().after_task_processed(&task);
                 }
             } else {
                 if state == State::WAITING && task.is_satisfied_configuration() {

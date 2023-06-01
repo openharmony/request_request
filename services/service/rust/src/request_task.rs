@@ -166,16 +166,12 @@ impl AsyncRead for TaskReader {
         cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<std::io::Result<()>> {
-        let mut progress_guard = self.task.progress.lock().unwrap();
-        let index = progress_guard.common_data.index;
+        let index = self.task.progress.lock().unwrap().common_data.index;
         let mut file_guard = self.task.files.lock().unwrap();
         let file = file_guard.get_mut(index).unwrap();
-        let begin = self.task.conf.common_data.begins;
-        let mut end = self.task.conf.common_data.ends;
-        if end < 0 {
-            end = progress_guard.sizes[index] - 1;
-        }
-        if (index as u32) != self.task.conf.common_data.index || ((end as u64) < begin) {
+        let (is_partial_upload, total_upload_bytes) = self.task.get_upload_info(index);
+        let mut progress_guard = self.task.progress.lock().unwrap();
+        if !is_partial_upload {
             let filled_len = buf.filled().len();
             match Pin::new(file).poll_read(cx, buf) {
                 Poll::Ready(Ok(_)) => {
@@ -189,16 +185,15 @@ impl AsyncRead for TaskReader {
                 Poll::Ready(Err(e)) => Poll::Ready(Err(e)),
             }
         } else {
+            let begins = self.task.conf.common_data.begins;
             if !self.task.seek_flag.load(Ordering::SeqCst) {
-                match Pin::new(file).start_seek(SeekFrom::Start(begin)) {
+                match Pin::new(file).start_seek(SeekFrom::Start(begins)) {
                     Err(e) => { error!(LOG_LABEL, "seek err is {:?}",  @public(e)); },
                     Ok(_) => self.task.seek_flag.store(true, Ordering::SeqCst),
                 }
             }
-            let total_upload_bytes = end as u64 - begin + 1;
-            let remain_bytes = total_upload_bytes as usize - progress_guard.processed[index];
             let buf_filled_len = buf.filled().len();
-            let mut read_buf = buf.take(remain_bytes);
+            let mut read_buf = buf.take(total_upload_bytes as usize);
             let filled_len = read_buf.filled().len();
             let file = file_guard.get_mut(index).unwrap();
             match Pin::new(file).poll_read(cx, &mut read_buf) {
@@ -357,9 +352,23 @@ impl RequestTask {
 
     fn build_request_builder(&self) -> RequestBuilder {
         let url = self.conf.url.clone();
-        let method = Method::try_from(self.conf.method.to_uppercase().as_str()).unwrap();
+        let method = match self.conf.method.to_uppercase().as_str() {
+            "PUT" => "PUT",
+            "POST" => "POST",
+            "GET" => "GET",
+            _ => match self.conf.common_data.action {
+                Action::UPLOAD => {
+                    if self.conf.version == Version::API10 {
+                        "PUT"
+                    } else {
+                        "POST"
+                    }
+                }
+                Action::DOWNLOAD => "GET",
+            },
+        };
+        let method = Method::try_from(method).unwrap();
         let mut request = RequestBuilder::new().method(method).url(url.as_str());
-
         for (key, value) in self.conf.headers.iter() {
             request = request.header(key.as_str(), value.as_str());
         }
@@ -615,7 +624,7 @@ impl RequestTask {
                 State::FAILED => {
                     TaskManager::get_instance().front_notify("fail".into(), &notify_data)
                 }
-                State::PAUSED => {
+                State::PAUSED | State::WAITING => {
                     TaskManager::get_instance().front_notify("pause".into(), &notify_data)
                 }
                 State::REMOVED => {
@@ -739,12 +748,6 @@ impl RequestTask {
         }
     }
 
-    fn calculate_progress(&self) -> u32 {
-        let total_file_size = self.file_total_size.load(Ordering::SeqCst);
-        let total_processed = self.progress.lock().unwrap().common_data.total_processed;
-        (total_processed as u64 * 100 / total_file_size as u64) as u32
-    }
-
     fn background_notify(&self) {
         if self.conf.version == Version::API9 && !self.conf.common_data.background {
             return;
@@ -752,18 +755,19 @@ impl RequestTask {
         if self.conf.version == Version::API10 && self.conf.common_data.mode == Mode::FRONTEND {
             return;
         }
-        if self.file_total_size.load(Ordering::SeqCst) == -1 {
+        let total_file_size = self.file_total_size.load(Ordering::SeqCst);
+        if total_file_size <= 0 {
             return;
         }
-        self.background_notify_time
-            .store(get_current_timestamp(), Ordering::SeqCst);
+        self.background_notify_time.store(get_current_timestamp(), Ordering::SeqCst);
         let index = self.progress.lock().unwrap().common_data.index;
         if index >= self.conf.file_specs.len() {
             return;
         }
         let file_path = self.conf.file_specs[index].path.as_ptr() as *const c_char;
         let file_path_len = self.conf.file_specs[index].path.as_bytes().len() as i32;
-        let percent = self.calculate_progress();
+        let total_processed = self.progress.lock().unwrap().common_data.total_processed as u64;
+        let percent = total_processed * 100 / (total_file_size as u64);
         info!(LOG_LABEL, "background notify");
         let task_msg = RequestTaskMsg {
             taskId: self.task_id,
@@ -779,8 +783,31 @@ impl RequestTask {
             );
         };
     }
-}
 
+    fn get_upload_info(&self, index: usize) -> (bool, u64) {
+        let guard = self.progress.lock().unwrap();
+        let file_size = guard.sizes[index];
+        let mut is_partial_upload = false;
+        let mut upload_file_length: u64 = file_size as u64 - guard.processed[index] as u64;
+        if file_size == 0 {
+            return (is_partial_upload, upload_file_length);
+        }
+        if index as u32 != self.conf.common_data.index {
+            return (is_partial_upload, upload_file_length);
+        }
+        let begins = self.conf.common_data.begins;
+        let mut ends = self.conf.common_data.ends;
+        if ends < 0 || ends >= file_size {
+            ends = file_size - 1;
+        }
+        if begins >= file_size as u64 || begins > ends as u64 {
+            return (is_partial_upload, upload_file_length);
+        }
+        is_partial_upload = true;
+        upload_file_length = ends as u64 - begins + 1 - guard.processed[index] as u64;
+        return (is_partial_upload, upload_file_length);
+    }
+}
 
 pub async fn run(task: Arc<RequestTask>) {
     info!(LOG_LABEL, "run the task which id is {}", @public(task.task_id));
@@ -841,7 +868,7 @@ async fn download(task: Arc<RequestTask>) {
     }
     if task.set_status(State::COMPLETED, Reason::Default) {
         info!(LOG_LABEL, "download success");
-    }   
+    }
 }
 
 fn build_downloader(task: Arc<RequestTask>, response: Response) -> Downloader<TaskOperator> {
@@ -866,6 +893,7 @@ async fn upload(task: Arc<RequestTask>) {
     let index = task.progress.lock().unwrap().common_data.index;
     info!(LOG_LABEL, "index is {}", @public(index));
     for i in index..size {
+        task.progress.lock().unwrap().common_data.index = i;
         let result: bool;
         if task.conf.version == Version::API10 {
             result = upload_one_file(task.clone(), &client, i, build_multipart_request).await;
@@ -895,9 +923,7 @@ async fn upload(task: Arc<RequestTask>) {
         if state != State::RUNNING && state != State::RETRYING {
             return;
         }
-        task.progress.lock().unwrap().common_data.index += 1;
     }
-    task.progress.lock().unwrap().common_data.index -= 1;
     if task.upload_counts.load(Ordering::SeqCst) == size as u32 {
         task.set_status(State::COMPLETED, Reason::Default);
     } else {
@@ -950,12 +976,12 @@ fn build_stream_request(
     if task.conf.headers.get("Content-Type").is_none() {
         request_builder = request_builder.header("Content-Type", "application/octet-stream");
     }
-    let content_length = task.progress.lock().unwrap().sizes[index];
-    info!(LOG_LABEL, "content_length is {}", @public(content_length));
+    let (_, upload_length) = task.get_upload_info(index);
+    info!(LOG_LABEL, "upload length is {}", upload_length);
     let uploader = Uploader::builder()
         .reader(task_reader)
         .operator(task_operator)
-        .total_bytes(Some(content_length as u64))
+        .total_bytes(Some(upload_length as u64))
         .build();
     let request = request_builder.body(uploader);
     build_request_common(&task, index, request)
@@ -965,6 +991,7 @@ fn build_multipart_request(
     task: Arc<RequestTask>,
     index: usize,
 ) -> Option<Request<Uploader<MultiPart, TaskOperator>>> {
+    info!(LOG_LABEL, "build multipart request");
     let task_reader = TaskReader { task: task.clone() };
     let task_operator = TaskOperator { task: task.clone() };
     let mut multi_part = MultiPart::new();
@@ -974,33 +1001,20 @@ fn build_multipart_request(
             .body(item.value.as_str());
         multi_part = multi_part.part(part);
     }
-    let length = {
-        let guard = task.progress.lock().unwrap();
-        let file_size = guard.sizes[index];
-        let begin = task.conf.common_data.begins;
-        let mut end = task.conf.common_data.ends;
-        if end < 0 {
-            end = file_size - 1;
-        }
-        let length: u64;
-        if index as u32 != task.conf.common_data.index || ((end as u64) < begin) {
-            length = file_size as u64 - guard.processed[index] as u64;
-        } else {
-            length = (end as u64) - begin + 1 - guard.processed[index] as u64;
-        }
-        length
-    };
-    info!(LOG_LABEL, "upload length is {}", @public(length));
+    let (_, upload_length) = task.get_upload_info(index);
+    info!(LOG_LABEL, "upload length is {}", upload_length);
     let part = Part::new()
         .name(task.conf.file_specs[index].name.as_str())
         .file_name(task.conf.file_specs[index].file_name.as_str())
-        .length(Some(length))
+        .length(Some(upload_length))
         .stream(task_reader);
+
     multi_part = multi_part.part(part);
     let uploader = Uploader::builder()
         .multipart(multi_part)
         .operator(task_operator)
         .build();
+
     let request_builder = task.build_request_builder();
     let request: Result<Request<Uploader<MultiPart, TaskOperator>>, HttpClientError> =
         request_builder.multipart(uploader);

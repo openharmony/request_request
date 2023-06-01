@@ -195,7 +195,7 @@ impl RequestAbility {
 
     pub fn add_unregister_notify(&self, task_id: u32, reg_type: String) {
         match reg_type.as_str() {
-            "complete" | "fail" | "progress" | "pause" | "remove" => {
+            "complete" | "fail" | "progress" | "remove" => {
                 let key = reg_type.clone() + &String::from("-") + &task_id.to_string();
                 let notify = self.unregistered_notify.lock().unwrap().clone();
                 if notify.contains_key(&key) {
