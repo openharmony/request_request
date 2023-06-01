@@ -14,7 +14,8 @@
     "subsystem": "request",
     "syscap": [
       "SystemCapability.MiscServices.Download",
-      "SystemCapability.MiscServices.Upload"
+      "SystemCapability.MiscServices.Upload",
+      "SystemCapability.Request.FileTransferAgent"
     ],
     "features": [
     ],
@@ -28,30 +29,26 @@
     ],
     "deps": {
       "components": [
-        "common",
-        "jsoncpp",
-        "preference",
         "samgr",
-        "os_account",
         "ipc",
         "netmanager_base",
-        "common_event_service",
-        "utils_base",
-        "time_native",
-        "multimedia_image_framework",
         "eventhandler",
-        "bundle_framework",
         "ability_runtime",
         "safwk",
         "access_token",
         "relational_store",
         "napi",
-        "ril_device_driver_interface",
-        "startup_l2",
         "ability_base",
         "hiviewdfx_hilog_native",
         "core_service",
-        "libuv"
+        "libuv",
+        "curl",
+        "hilog_native",
+        "openssl",
+        "distributed_notification_service",
+        "c_utils",
+        "ylong_runtime",
+        "netstack"
       ],
       "third_party": []
     },
