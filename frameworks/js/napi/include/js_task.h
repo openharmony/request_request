@@ -59,7 +59,7 @@ private:
     struct ContextInfo : public AsyncCall::Context {
         JsTask *task = nullptr;
         napi_ref taskRef = nullptr;
-        napi_value jsConfig = nullptr;
+        napi_ref jsConfig = nullptr;
         Config config{};
         int32_t tid{};
     };

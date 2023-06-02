@@ -275,7 +275,7 @@ bool JsInitialize::ParseIndex(napi_env env, napi_value jsConfig, Config &config)
         return true;
     }
     if (config.files.size() <= config.index) {
-        REQUEST_HILOGE("Index exceeds file list");
+        REQUEST_HILOGE("files.size is %{public}zu, index is %{public}d", config.files.size(), config.index);
         return false;
     }
     return true;
@@ -365,15 +365,20 @@ void JsInitialize::ParseTitle(napi_env env, napi_value jsConfig, Config &config)
 
 void JsInitialize::ParseMethod(napi_env env, napi_value jsConfig, Config &config)
 {
-    config.method = NapiUtils::Convert2String(env, jsConfig, "method");
-    if (config.method.empty()) {
-        if (config.version == Version::API10) {
-            config.method = config.action == Action::UPLOAD ? "PUT" : "GET";
-        } else {
-            config.method = "POST";
-        }
+    if (config.version == Version::API10) {
+        config.method = config.action == Action::UPLOAD ? "PUT" : "GET";
     } else {
-        transform(config.method.begin(), config.method.end(), config.method.begin(), ::toupper);
+        config.method = "POST";
+    }
+    std::string method = NapiUtils::Convert2String(env, jsConfig, "method");
+    if (!method.empty()) {
+        transform(method.begin(), method.end(), method.begin(), ::toupper);
+        if (config.action == Action::UPLOAD && (method == "POST" || method == "PUT")) {
+            config.method = method;
+        }
+        if (config.action == Action::DOWNLOAD && (method == "POST" || method == "GET")) {
+            config.method = method;
+        }
     }
 }
 
@@ -381,14 +386,18 @@ bool JsInitialize::ParseData(napi_env env, napi_value jsConfig, Config &config)
 {
     napi_value value = NapiUtils::GetNamedProperty(env, jsConfig, "data");
     if (value == nullptr) {
-        REQUEST_HILOGE("ParseData err");
         return true;
     }
 
-    if (config.action == Action::UPLOAD) {
+    napi_valuetype valueType = NapiUtils::GetValueType(env, value);
+    if (config.action == Action::UPLOAD && valueType == napi_object) {
         return Convert2FormItems(env, value, config.forms, config.files);
+    } else if (config.action == Action::DOWNLOAD && valueType == napi_string) {
+        config.data = NapiUtils::Convert2String(env, value);
+    } else {
+        REQUEST_HILOGE("data type is error");
+        return false;
     }
-    config.data = NapiUtils::Convert2String(env, value);
     return true;
 }
 
@@ -420,21 +429,26 @@ bool JsInitialize::GetFormItems(napi_env env, napi_value jsVal, std::vector<Form
     }
     bool isArray = false;
     napi_is_array(env, value, &isArray);
-    if (NapiUtils::GetValueType(env, value) == napi_string) {
+    napi_valuetype valueType = NapiUtils::GetValueType(env, value);
+    if (valueType == napi_string) {
         FormItem form;
         form.name = name;
         form.value = NapiUtils::Convert2String(env, value);
         forms.push_back(form);
-    } else if (!isArray) {
+    } else if (valueType == napi_object && !isArray) {
         FileSpec file;
         if (!Convert2FileSpec(env, value, name, file)) {
+            REQUEST_HILOGE("Convert2FileSpec failed");
             return false;
         }
         files.push_back(file);
-    } else {
+    } else if (isArray) {
         if (!Convert2FileSpecs(env, value, name, files)) {
             return false;
         }
+    } else {
+        REQUEST_HILOGE("value type is error");
+        return false;
     }
     return true;
 }
@@ -456,7 +470,10 @@ bool JsInitialize::Convert2FormItems(napi_env env, napi_value jsValue, std::vect
             REQUEST_HILOGE("Get element jsVal failed");
             return false;
         }
-        GetFormItems(env, jsVal, forms, files);
+        if (!GetFormItems(env, jsVal, forms, files)) {
+            REQUEST_HILOGE("Get formItems failed");
+            return false;
+        }
         napi_close_handle_scope(env, scope);
     }
     if (files.empty()) {
@@ -468,6 +485,7 @@ bool JsInitialize::Convert2FormItems(napi_env env, napi_value jsValue, std::vect
 bool JsInitialize::Convert2FileSpecs(napi_env env, napi_value jsValue, const std::string &name,
     std::vector<FileSpec> &files)
 {
+    REQUEST_HILOGD("Convert2FileSpecs in");
     uint32_t length = 0;
     napi_get_array_length(env, jsValue, &length);
     for (uint32_t i = 0; i < length; ++i) {
@@ -501,6 +519,7 @@ void JsInitialize::InterceptData(const std::string &str, const std::string &in, 
 
 bool JsInitialize::Convert2FileSpec(napi_env env, napi_value jsValue, const std::string &name, FileSpec &file)
 {
+    REQUEST_HILOGD("Convert2FileSpec in");
     file.name = name;
     file.uri = NapiUtils::Convert2String(env, jsValue, "path");
     if (file.uri.empty()) {
