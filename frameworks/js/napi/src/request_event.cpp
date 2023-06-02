@@ -21,6 +21,29 @@
 
 namespace OHOS::Request {
 constexpr const std::int32_t DECIMALISM = 10;
+static constexpr const char *EVENT_COMPLETED = "completed";
+static constexpr const char *EVENT_FAILED = "failed";
+static constexpr const char *EVENT_PAUSE = "pause";
+static constexpr const char *EVENT_REMOVE = "remove";
+static constexpr const char *EVENT_PROGRESS = "progress";
+static constexpr const char *EVENT_HEADERRECEIVE = "headerReceive";
+static constexpr const char *EVENT_FAIL = "fail";
+static constexpr const char *EVENT_COMPLETE = "complete";
+
+std::unordered_set<std::string> RequestEvent::supportEventsV9_ = {
+    EVENT_COMPLETE,
+    EVENT_PAUSE,
+    EVENT_REMOVE,
+    EVENT_PROGRESS,
+    EVENT_HEADERRECEIVE,
+    EVENT_FAIL,
+};
+
+std::unordered_set<std::string> RequestEvent::supportEventsV10_ = {
+    EVENT_PROGRESS,
+    EVENT_COMPLETED,
+    EVENT_FAILED,
+};
 
 std::map<std::string, RequestEvent::Event> RequestEvent::requestEvent_ = {
     {FUNCTION_PAUSE, RequestEvent::PauseExec},
@@ -136,17 +159,6 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
-NotifyData RequestEvent::BuildNotifyData(const std::shared_ptr<TaskInfo> &taskInfo)
-{
-    NotifyData notifyData;
-    notifyData.progress = taskInfo->progress;
-    notifyData.action = taskInfo->action;
-    notifyData.version = taskInfo->version;
-    notifyData.mode = taskInfo->mode;
-    notifyData.taskStates = taskInfo->taskStates;
-    return notifyData;
-}
-
 napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
 {
     JsParam jsParam;
@@ -162,6 +174,26 @@ napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
         jsParam.task->RemoveListener(jsParam.type, jsParam.task->GetTid(), jsParam.callback);
     }
     return nullptr;
+}
+
+bool RequestEvent::IsSupportType(const std::string &type, Version version)
+{
+    if (version == Version::API10) {
+        return supportEventsV10_.find(type) != supportEventsV10_.end();
+    } else {
+        return supportEventsV9_.find(type) != supportEventsV9_.end();
+    }
+}
+
+NotifyData RequestEvent::BuildNotifyData(const std::shared_ptr<TaskInfo> &taskInfo)
+{
+    NotifyData notifyData;
+    notifyData.progress = taskInfo->progress;
+    notifyData.action = taskInfo->action;
+    notifyData.version = taskInfo->version;
+    notifyData.mode = taskInfo->mode;
+    notifyData.taskStates = taskInfo->taskStates;
+    return notifyData;
 }
 
 ExceptionError RequestEvent::ParseOnOffParameters(napi_env env, napi_callback_info info, bool IsRequiredParam,
@@ -188,7 +220,10 @@ ExceptionError RequestEvent::ParseOnOffParameters(napi_env env, napi_callback_in
         return { .code = E_PARAMETER_CHECK, .errInfo = "The first parameter is not of string type" };
     }
     jsParam.type = NapiUtils::Convert2String(env, argv[NapiUtils::FIRST_ARGV]);
-
+    if (!IsSupportType(jsParam.type, jsParam.task->config_.version)) {
+        return { .code = E_PARAMETER_CHECK, .errInfo = "First parameter error" };
+    }
+    ConvertType(jsParam.type);
     if (argc == NapiUtils::ONE_ARG) {
         return err;
     }
@@ -199,6 +234,16 @@ ExceptionError RequestEvent::ParseOnOffParameters(napi_env env, napi_callback_in
     }
     jsParam.callback = argv[NapiUtils::SECOND_ARGV];
     return err;
+}
+
+void RequestEvent::ConvertType(std::string &type)
+{
+    if (type == EVENT_COMPLETED) {
+        type = EVENT_COMPLETE;
+    }
+    if (type == EVENT_FAILED) {
+        type = EVENT_FAIL;
+    }
 }
 
 napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, const std::string &execType)
@@ -256,6 +301,9 @@ int32_t RequestEvent::StartExec(const std::shared_ptr<ExecContext> &context)
     int32_t ret = RequestManager::GetInstance()->Start(context->task->GetTid());
     if (ret == E_OK) {
         context->boolRes = true;
+    }
+    if (ret == E_TASK_NOT_FOUND) {
+        ret = E_TASK_STATE;
     }
     return ret;
 }

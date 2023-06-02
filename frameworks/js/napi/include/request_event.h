@@ -17,6 +17,7 @@
 #define DOWNLOAD_EVENT_H
 
 #include <string>
+#include <unordered_set>
 #include "napi/native_api.h"
 #include "napi_utils.h"
 #include "async_call.h"
@@ -67,6 +68,8 @@ private:
     };
 
     using Event = std::function<int32_t(const std::shared_ptr<ExecContext> &)>;
+    static std::unordered_set<std::string> supportEventsV10_;
+    static std::unordered_set<std::string> supportEventsV9_;
     static std::map<std::string, Event> requestEvent_;
     static std::map<std::string, uint32_t> resMap_;
     static std::map<State, DownloadStatus> stateMap_;
@@ -88,6 +91,8 @@ private:
         const std::string &execType, napi_value &result);
     static void GetDownloadInfo(const TaskInfo &infoRes, DownloadInfo &info);
     static NotifyData BuildNotifyData(const std::shared_ptr<TaskInfo> &taskInfo);
+    static bool IsSupportType(const std::string &type, Version version);
+    static void ConvertType(std::string &type);
 
     static std::mutex taskCacheMutex_;
     static std::map<std::string, std::shared_ptr<TaskInfo>> taskCache_;

@@ -102,7 +102,7 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
     context->version_ = version;
     auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
         if (context->version_ == Version::API10) {
-            context->jsConfig = argv[1];
+            napi_create_reference(context->env_, argv[1], 1, &(context->jsConfig));
         }
         napi_value ctor = GetCtor(context->env_, context->version_);
         napi_value jsTask = nullptr;
@@ -135,7 +135,9 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
         napi_status status = napi_get_reference_value(context->env_, context->taskRef, result);
         context->task->SetTid(context->tid);
         JsTask::AddTaskMap(std::to_string(context->tid), context->task);
-        JsInitialize::CreatProperties(context->env_, *result, context->jsConfig, context->task);
+        napi_value config = nullptr;
+        napi_get_reference_value(context->env_, context->jsConfig, &config);
+        JsInitialize::CreatProperties(context->env_, *result, config, context->task);
         return status;
     };
     context->SetInput(input).SetOutput(output).SetExec(exec);
