@@ -363,6 +363,7 @@ impl RequestAbility {
             reply.write(&(task_info.ctime.to_string())).ok();
             reply.write(&(task_info.mtime.to_string())).ok();
             reply.write(&(task_info.data)).ok();
+            reply.write(&(task_info.description)).ok();
             reply.write(&(task_info.file_items.len() as u32)).ok();
             for i in 0..task_info.file_items.len() {
                 reply.write(&(task_info.file_items[i].name)).ok();
