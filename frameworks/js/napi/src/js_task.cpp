@@ -138,6 +138,7 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
         napi_value config = nullptr;
         napi_get_reference_value(context->env_, context->jsConfig, &config);
         JsInitialize::CreatProperties(context->env_, *result, config, context->task);
+        napi_delete_reference(context->env_, context->taskRef);
         return status;
     };
     context->SetInput(input).SetOutput(output).SetExec(exec);

@@ -54,7 +54,6 @@ public:
     static std::map<std::string, JsTask*> taskMap_;
     std::mutex listenerMutex_;
     std::map<std::string, std::vector<sptr<RequestNotify>>> listenerMap_;
-    std::map<std::string, uint32_t> countMap_;
 private:
     struct ContextInfo : public AsyncCall::Context {
         JsTask *task = nullptr;

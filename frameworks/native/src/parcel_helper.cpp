@@ -57,6 +57,7 @@ void ParcelHelper::UnMarshalBase(MessageParcel &data, TaskInfo &info)
     info.ctime = data.ReadString();
     info.mtime = data.ReadString();
     info.data = data.ReadString();
+    info.description = data.ReadString();
 }
 
 bool ParcelHelper::UnMarshalFormItem(MessageParcel &data, TaskInfo &info)

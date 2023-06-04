@@ -447,6 +447,7 @@ impl RequestServiceInterface for RequestService {
                     reply.write(&(tf.ctime.to_string()))?;
                     reply.write(&(tf.mtime.to_string()))?;
                     reply.write(&(tf.data))?;
+                    reply.write(&(tf.description))?;
 
                     reply.write(&(tf.file_items.len() as u32))?;
                     for i in 0..tf.file_items.len() {
