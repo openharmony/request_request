@@ -129,15 +129,40 @@ static void NapiCreateNetwork(napi_env env, napi_value &network)
     NapiUtils::SetUint32Property(env, network, "CELLULAR", static_cast<uint32_t>(Network::CELLULAR));
 }
 
-static napi_value Init(napi_env env, napi_value exports)
+static napi_value InitAgent(napi_env env, napi_value exports)
 {
-    NapiCreateInt32(env);
+    REQUEST_HILOGI("InitAgent in");
     napi_value action = nullptr;
     NapiCreateAction(env, action);
     napi_value mode = nullptr;
     NapiCreateMode(env, mode);
     napi_value network = nullptr;
     NapiCreateNetwork(env, network);
+
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_PROPERTY("Action", action),
+        DECLARE_NAPI_PROPERTY("Mode", mode),
+        DECLARE_NAPI_PROPERTY("Network", network),
+
+        DECLARE_NAPI_METHOD("create", JsTask::JsCreate),
+        DECLARE_NAPI_METHOD("remove", JsTask::Remove),
+        DECLARE_NAPI_METHOD("show", JsTask::Show),
+        DECLARE_NAPI_METHOD("touch", JsTask::Touch),
+        DECLARE_NAPI_METHOD("search", JsTask::Search),
+        DECLARE_NAPI_METHOD("query", JsTask::Query),
+        DECLARE_NAPI_METHOD("clear", JsTask::Clear),
+    };
+    napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
+    REQUEST_HILOGI("InitV10 end %{public}d", status);
+    return exports;
+}
+
+static napi_value Init(napi_env env, napi_value exports)
+{
+    NapiCreateInt32(env);
+    napi_value agent = nullptr;
+    napi_create_object(env, &agent);
+    InitAgent(env, agent);
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_STATIC_PROPERTY("EXCEPTION_PERMISSION", exception_permission),
@@ -170,16 +195,7 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_PENDING", session_pending),
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_PAUSED", session_paused),
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_FAILED", session_failed),
-        DECLARE_NAPI_PROPERTY("Action", action),
-        DECLARE_NAPI_PROPERTY("Mode", mode),
-        DECLARE_NAPI_PROPERTY("Network", network),
-        DECLARE_NAPI_METHOD("create", JsTask::JsCreate),
-        DECLARE_NAPI_METHOD("remove", JsTask::Remove),
-        DECLARE_NAPI_METHOD("show", JsTask::Show),
-        DECLARE_NAPI_METHOD("touch", JsTask::Touch),
-        DECLARE_NAPI_METHOD("search", JsTask::Search),
-        DECLARE_NAPI_METHOD("query", JsTask::Query),
-        DECLARE_NAPI_METHOD("clear", JsTask::Clear),
+        DECLARE_NAPI_PROPERTY("agent", agent),
         DECLARE_NAPI_METHOD("download", JsTask::JsDownload),
         DECLARE_NAPI_METHOD("upload", JsTask::JsUpload),
         DECLARE_NAPI_METHOD("downloadFile", JsTask::JsRequestFile),
@@ -188,7 +204,7 @@ static napi_value Init(napi_env env, napi_value exports)
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
-    REQUEST_HILOGD("init upload %{public}d", status);
+    REQUEST_HILOGD("init request %{public}d", status);
     return exports;
 }
 
