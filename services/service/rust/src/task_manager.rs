@@ -33,7 +33,7 @@ static SECONDS_IN_ONE_DAY: u64 = 24 * 60 * 60;
 static SECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60;
 static TOW_SECONDS: u64 = 2;
 static REQUEST_SERVICE_ID: i32 = 3706;
-
+static WAITTING_RETRY_INTERVAL: u64 = 10;
 type AppTask = HashMap<u32, Arc<RequestTask>>;
 pub struct TaskManager {
     task_map: Arc<Mutex<HashMap<u64, AppTask>>>,
@@ -41,7 +41,7 @@ pub struct TaskManager {
     info_cb: Option<Box<dyn Fn(TaskInfo) + Send + Sync + 'static>>,
     pub global_front_task: Option<Arc<RequestTask>>,
     pub front_app_uid: Option<u64>,
-    rt: Runtime,
+    pub rt: Runtime,
     pub front_notify_time: u64,
     pub unloading: AtomicBool,
     pub total_task_count: AtomicU32,
@@ -59,15 +59,7 @@ pub fn monitor_task() {
                 let task_map_guard = manager.task_map.lock().unwrap();
                 for (_, app_task) in task_map_guard.iter() {
                     for (_, task) in app_task.iter() {
-                        if task.conf.version == Version::API9 {
-                            continue;
-                        }
                         let current_time = get_current_timestamp();
-                        if current_time - task.ctime > SECONDS_IN_ONE_MONTH {
-                            task.set_status(State::STOPPED, Reason::TaskSurvivalOneMonth);
-                            remove_task.push(task.clone());
-                            continue;
-                        }
                         let (state, time) = {
                             let guard = task.status.lock().unwrap();
                             (guard.state, guard.waitting_network_time.clone())
@@ -79,6 +71,14 @@ pub fn monitor_task() {
                                     remove_task.push(task.clone());
                                 }
                             }
+                        }
+                        if task.conf.version == Version::API9 {
+                            continue;
+                        }
+                        if current_time - task.ctime > SECONDS_IN_ONE_MONTH {
+                            task.set_status(State::STOPPED, Reason::TaskSurvivalOneMonth);
+                            remove_task.push(task.clone());
+                            continue;
                         }
                     }
                 }
@@ -157,8 +157,14 @@ impl TaskManager {
         if self.event_cb.is_none() {
             return;
         }
-        if !self.is_front_app(notify_data.uid, notify_data.bundle.as_str()) 
-            && (notify_data.version == Version::API10 || event.eq("progress")) {
+        let total_processed = notify_data.progress.common_data.total_processed;
+        let file_total_size: i64 = notify_data.progress.sizes.iter().sum();
+        if total_processed == 0 && file_total_size < 0 && event.eq("progress") {
+            return;
+        }
+        if !self.is_front_app(notify_data.uid, notify_data.bundle.as_str())
+            && (notify_data.version == Version::API10 || event.eq("progress"))
+        {
             return;
         }
         self.front_notify_time = get_current_timestamp();
@@ -620,6 +626,10 @@ async fn remove_task_from_map(task: Arc<RequestTask>) {
     }
     let remove_task = remove_task.unwrap();
     task_manager.total_task_count.fetch_sub(1, Ordering::SeqCst);
+    if remove_task.conf.version == Version::API9 {
+        let notify_data = remove_task.build_notify_data();
+        TaskManager::get_instance().front_notify("remove".into(), &notify_data);
+    }
     if remove_task.conf.version == Version::API10 {
         task_manager.api10_background_task_count.fetch_sub(1, Ordering::SeqCst);
     }
@@ -650,28 +660,34 @@ extern "C" fn net_work_change_callback() {
             let task = task.clone();
             let state = task.status.lock().unwrap().state;
             if unsafe { !IsOnline() } {
-                if state == State::RETRYING || state == State::RUNNING {
-                    debug!(LOG_LABEL, "begin pause a runing or retrying task because network offine");
-                    if task.conf.common_data.mode == Mode::FRONTEND || !task.conf.common_data.retry
-                    {
+                if state != State::RETRYING && state != State::RUNNING {
+                    continue;
+                }
+                if task.conf.version == Version::API9 {
+                    if task.conf.common_data.action == Action::DOWNLOAD {
+                        task.set_status(State::WAITING, Reason::NetWorkOffline);
+                    } else {
+                        task.set_status(State::FAILED, Reason::NetWorkOffline);
+                    }
+                } else {
+                    if task.conf.common_data.mode == Mode::FRONTEND || !task.conf.common_data.retry {
                         task.set_status(State::FAILED, Reason::NetWorkOffline);
                     } else {
-                        if task.set_status(State::WAITING, Reason::NetWorkOffline) {
-                            task.record_waitting_network_time();
-                        }
+                        task.set_status(State::WAITING, Reason::NetWorkOffline);
                     }
-                    let mut handles_guard = task_manager.task_handles.lock().unwrap();
-                    let handle = handles_guard.get(task_id);
-                    if let Some(handle) = handle {
-                        handle.cancel();
-                    }
-                    handles_guard.remove(task_id);
-                    TaskManager::get_instance().after_task_processed(&task);
                 }
+                let mut handles_guard = task_manager.task_handles.lock().unwrap();
+                let handle = handles_guard.get(task_id);
+                if let Some(handle) = handle {
+                    handle.cancel();
+                }
+                handles_guard.remove(task_id);
+                TaskManager::get_instance().after_task_processed(&task);
             } else {
                 if state == State::WAITING && task.is_satisfied_configuration() {
                     debug!(LOG_LABEL, "Begin try resume task as network condition resume");
                     task_manager.rt.spawn(async move {
+                        sleep(Duration::from_secs(WAITTING_RETRY_INTERVAL)).await;
                         let manager = TaskManager::get_instance();
                         let mut guard = manager.task_map.lock().unwrap();
                         manager.start_inner(uid, task, &mut guard);
