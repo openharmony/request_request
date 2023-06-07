@@ -66,6 +66,7 @@ enum Reason : uint32_t {
     REDIRECT_ERROR,
     PROTOCOL_ERROR,
     IO_ERROR,
+    UNSUPPORT_RANGE_REQUEST,
     OTHERS_ERROR,
 };
 

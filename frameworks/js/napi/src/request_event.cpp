@@ -71,6 +71,7 @@ std::map<State, DownloadStatus> RequestEvent::stateMap_ = {
     {State::RETRYING, SESSION_RUNNING},
     {State::PAUSED, SESSION_PAUSED},
     {State::COMPLETED, SESSION_SUCCESS},
+    {State::STOPPED, SESSION_FAILED},
     {State::FAILED, SESSION_FAILED},
 };
 
@@ -81,6 +82,7 @@ std::map<Reason, DownloadErrorCode> RequestEvent::failMap_ = {
     {OTHERS_ERROR, ERROR_UNKNOWN},
     {NETWORK_OFFLINE, ERROR_OFFLINE},
     {UNSUPPORTED_NETWORK_TYPE, ERROR_UNSUPPORTED_NETWORK_TYPE},
+    {UNSUPPORT_RANGE_REQUEST, ERROR_UNKNOWN},
 };
 
 std::mutex RequestEvent::taskCacheMutex_;

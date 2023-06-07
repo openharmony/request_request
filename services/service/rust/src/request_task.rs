@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-use std::{ffi::CString, ffi::c_char, fs::File, pin::Pin};
+use std::{ffi::CString, ffi::c_char, fs::File, pin::Pin, thread::sleep, time::Duration};
 use super::{
     enumration::*, progress::*, task_info::*, task_config::*, task_manager::*, utils::*, request_binding::*,
     log::LOG_LABEL,
@@ -40,7 +40,7 @@ static LOW_SPEED_LIMIT: u64 = 1;
 static SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
 static FRONT_NOTIFY_INTERVAL: u64 = 1;
 static BACKGROUND_NOTIFY_INTERVAL: u64 = 3;
-
+static RETRY_INTERVAL: u64 = 20;
 #[derive(Clone)]
 pub struct TaskStatus {
     pub waitting_network_time: Option<u64>,
@@ -78,6 +78,10 @@ pub struct RequestTask {
     pub file_total_size: AtomicI64,
     pub files: Mutex<Vec<YlongFile>>,
     seek_flag: AtomicBool,
+    range_request: AtomicBool,
+    range_response: AtomicBool,
+    skip_bytes: AtomicU64,
+    has_skip: AtomicBool,
     upload_counts: AtomicU32,
 }
 
@@ -90,10 +94,10 @@ struct TaskOperator {
 }
 
 impl TaskOperator {
-    fn poll_progress_common(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), HttpClientError>> {
+    fn poll_progress_common(&self, cx: &mut Context<'_>) -> Poll<Result<(), HttpClientError>> {
         let state = self.task.status.lock().unwrap().state;
         if (state != State::RUNNING && state != State::RETRYING)
-            || (!self.task.check_net_work_status())
+            || (self.task.conf.version == Version::API10 && !self.task.check_net_work_status())
         {
             debug!(LOG_LABEL, "pause the task");
             return Poll::Ready(Err(HttpClientError::user_aborted()));
@@ -117,11 +121,9 @@ impl TaskOperator {
         }
         Poll::Ready(Ok(()))
     }
-}
 
-impl DownloadOperator for TaskOperator {
-    fn poll_download(
-        self: Pin<&mut Self>,
+    fn poll_write_file(
+        &self,
         cx: &mut Context<'_>,
         data: &[u8],
     ) -> Poll<Result<usize, HttpClientError>> {
@@ -138,6 +140,34 @@ impl DownloadOperator for TaskOperator {
             Poll::Ready(Err(e)) => Poll::Ready(Err(HttpClientError::other(Some(e)))),
         }
     }
+}
+
+impl DownloadOperator for TaskOperator {
+    fn poll_download(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        data: &[u8],
+    ) -> Poll<Result<usize, HttpClientError>> {
+        if self.task.range_request.load(Ordering::SeqCst)
+            && !self.task.range_response.load(Ordering::SeqCst)
+        {
+            if !self.task.has_skip.load(Ordering::SeqCst) {
+                let data_size = data.len();
+                let skip_size = self.task.skip_bytes.load(Ordering::SeqCst);
+                let processed = self.task.progress.lock().unwrap().processed[0];
+                if skip_size as usize + data_size <= processed {
+                    self.task.skip_bytes.fetch_add(data_size as u64, Ordering::SeqCst);
+                    return Poll::Ready(Ok(data_size));
+                } else {
+                    self.task.has_skip.store(true, Ordering::SeqCst);
+                    let remain_skip_bytes = processed - skip_size as usize;
+                    let data = &data[remain_skip_bytes..];
+                    return self.poll_write_file(cx, data);
+                }
+            }
+        }
+        return self.poll_write_file(cx, data);
+    }
 
     fn poll_progress(
         self: Pin<&mut Self>,
@@ -145,7 +175,7 @@ impl DownloadOperator for TaskOperator {
         downloaded: u64,
         total: Option<u64>,
     ) -> Poll<Result<(), HttpClientError>> {
-        self.get_mut().poll_progress_common(cx)
+        self.poll_progress_common(cx)
     }
 }
 
@@ -156,7 +186,7 @@ impl UploadOperator for TaskOperator {
         uploaded: u64,
         total: Option<u64>,
     ) -> Poll<Result<(), HttpClientError>> {
-        self.get_mut().poll_progress_common(cx)
+        self.poll_progress_common(cx)
     }
 }
 
@@ -251,11 +281,15 @@ impl RequestTask {
             background_notify_time: AtomicU64::new(get_current_timestamp()),
             file_total_size: AtomicI64::new(file_total_size),
             seek_flag: AtomicBool::new(false),
+            range_request: AtomicBool::new(false),
+            range_response: AtomicBool::new(false),
+            skip_bytes: AtomicU64::new(0),
+            has_skip: AtomicBool::new(false),
             upload_counts: AtomicU32::new(0),
         }
     }
 
-    fn build_notify_data(&self) -> NotifyData {
+    pub fn build_notify_data(&self) -> NotifyData {
         let mut vec = Vec::<(String, Reason, String)>::new();
         let size = self.conf.file_specs.len();
         let guard = self.code.lock().unwrap();
@@ -284,12 +318,13 @@ impl RequestTask {
 
     pub fn check_net_work_status(&self) -> bool {
         if !self.is_satisfied_configuration() {
-            if self.conf.common_data.mode == Mode::FRONTEND || !self.conf.common_data.retry {
+            if self.conf.version == Version::API10
+                && self.conf.common_data.mode == Mode::BACKGROUND
+                && self.conf.common_data.retry
+            {
+                self.set_status(State::WAITING, Reason::UnSupportedNetWorkType);
+            } else {
                 self.set_status(State::FAILED, Reason::UnSupportedNetWorkType);
-                return false;
-            }
-            if self.set_status(State::WAITING, Reason::UnSupportedNetWorkType) {
-                self.record_waitting_network_time();
             }
             return false;
         }
@@ -297,14 +332,21 @@ impl RequestTask {
     }
 
     pub fn net_work_online(&self) -> bool {
-        if unsafe { !IsOnline() }  {
-            if self.conf.common_data.mode == Mode::FRONTEND || !self.conf.common_data.retry {
+        if unsafe { !IsOnline() } {
+            if self.conf.version == Version::API10
+                && self.conf.common_data.mode == Mode::BACKGROUND
+                && self.conf.common_data.retry
+            {
+                self.set_status(State::WAITING, Reason::NetWorkOffline);
+            } else {
+                let retry_times = 20;
+                for _ in 0..retry_times {
+                    if unsafe { IsOnline() } {
+                        return true;
+                    }
+                    sleep(Duration::from_millis(RETRY_INTERVAL));
+                }
                 self.set_status(State::FAILED, Reason::NetWorkOffline);
-                return false;
-            }
-
-            if self.set_status(State::WAITING, Reason::NetWorkOffline) {
-                self.record_waitting_network_time();
             }
             return false;
         }
@@ -378,14 +420,22 @@ impl RequestTask {
     fn build_download_request(&self) -> Option<Request<String>> {
         let mut request_builder = self.build_request_builder();
         let mut begins = self.conf.common_data.begins;
-        begins += self.progress.lock().unwrap().processed[0] as u64;
         let ends = self.conf.common_data.ends;
-        let range = if ends < 0 {
-            format!("bytes={begins}-")
+        let processed = self.progress.lock().unwrap().processed[0];
+        if processed > 0 || begins > 0 || ends >= 0 {
+            self.range_request.store(true, Ordering::SeqCst);
+            self.skip_bytes.store(0, Ordering::SeqCst);
+            self.has_skip.store(false, Ordering::SeqCst);
+            begins += processed as u64;
+            let range = if ends < 0 {
+                format!("bytes={begins}-")
+            } else {
+                format!("bytes={begins}-{ends}")
+            };
+            request_builder = request_builder.header("Range", range.as_str());
         } else {
-            format!("bytes={begins}-{ends}")
-        };
-        request_builder = request_builder.header("Range", range.as_str());
+            self.range_request.store(false, Ordering::SeqCst);
+        }
         let result = request_builder.body(self.conf.data.clone());
         match result {
             Ok(value) => {
@@ -443,10 +493,6 @@ impl RequestTask {
         match result {
             Ok(_) => return true,
             Err(err) => {
-                error!(LOG_LABEL, "download err is {:?}", @public(err));
-                if !self.net_work_online() {
-                    return false;
-                }
                 match err.error_kind() {
                     ErrorKind::Timeout => {
                         self.set_status(State::FAILED, Reason::ContinuousTaskTimeOut);
@@ -465,14 +511,16 @@ impl RequestTask {
         let index = self.progress.lock().unwrap().common_data.index;
         match response {
             Ok(r) => {
-                let code = r.status();
-                info!(LOG_LABEL, "the http return code is {}", @public(code));
-                if code.is_server_error() || (code.as_str() != "408" && code.is_client_error()) {
+                let http_response_code = r.status();
+                info!(LOG_LABEL, "the http response code is {}", @public(http_response_code));
+                if http_response_code.is_server_error()
+                    || (http_response_code.as_str() != "408"
+                        && http_response_code.is_client_error())
+                {
                     self.set_code(index, Reason::ProtocolError);
                     return false;
                 }
-
-                if code.as_str() == "408" {
+                if http_response_code.as_str() == "408" {
                     if !self.retry_for_request.load(Ordering::SeqCst) {
                         self.retry_for_request.store(true, Ordering::SeqCst);
                     } else {
@@ -480,13 +528,22 @@ impl RequestTask {
                     }
                     return false;
                 }
+                if self.range_request.load(Ordering::SeqCst) {
+                    let code = http_response_code.as_str();
+                    if code == "206" {
+                        self.range_response.store(true, Ordering::SeqCst);
+                    } else if code == "200" {
+                        self.range_response.store(false, Ordering::SeqCst);
+                        if self.conf.common_data.begins > 0 || self.conf.common_data.ends >= 0 {
+                            self.set_code(index, Reason::UnSupportRangeRequest);
+                            return false;
+                        }
+                    }
+                }
                 return true;
             }
             Err(e) => {
-                error!(LOG_LABEL, "http client err is {:?}",  @public(e));
-                if !self.net_work_online() {
-                    return false;
-                }
+                error!(LOG_LABEL, "http client err is {:?}", @public(e));
                 match e.error_kind() {
                     ErrorKind::UserAborted => self.set_code(index, Reason::UserOperation),
                     ErrorKind::Timeout => self.set_code(index, Reason::ContinuousTaskTimeOut),
@@ -531,9 +588,11 @@ impl RequestTask {
     }
 
     fn set_code(&self, index: usize, code: Reason) {
-        let file_counts = self.conf.file_specs.len();
+        if code == Reason::UploadFileError {
+            return;
+        }
         let mut code_guard = self.code.lock().unwrap();
-        if index < file_counts {
+        if index < code_guard.len() {
             if code_guard[index] == Reason::Default {
                 debug!(LOG_LABEL, "set code");
                 code_guard[index] = code;
@@ -598,7 +657,10 @@ impl RequestTask {
             progress_guard.common_data.state = state;
             current_status.state = state;
             current_status.reason = reason;
-            debug!(LOG_LABEL, "current state is {:?}, reason is {:?}", @public(state), @public(reason));
+            info!(LOG_LABEL, "current state is {:?}, reason is {:?}", @public(state), @public(reason));
+        }
+        if state == State::WAITING {
+            self.record_waitting_network_time();
         }
         self.state_change_notify(state);
         true
@@ -651,15 +713,13 @@ impl RequestTask {
             description: self.conf.description.clone(),
             mime_type: {
                 match self.conf.version {
-                    Version::API10 => {
-                        match self.conf.common_data.action {
-                            Action::DOWNLOAD => match self.conf.headers.get("Content-Type") {
-                                None => "".into(),
-                                Some(v) => v.clone(),
-                            },
-                            Action::UPLOAD => "multipart/form-data".into(),
-                        }
-                    }
+                    Version::API10 => match self.conf.common_data.action {
+                        Action::DOWNLOAD => match self.conf.headers.get("Content-Type") {
+                            None => "".into(),
+                            Some(v) => v.clone(),
+                        },
+                        Action::UPLOAD => "multipart/form-data".into(),
+                    },
                     Version::API9 => self.mime_type.lock().unwrap().clone(),
                 }
             },
@@ -830,6 +890,27 @@ pub async fn run(task: Arc<RequestTask>) {
             }
         },
         Action::UPLOAD => {
+            let state = task.status.lock().unwrap().state;
+            if state == State::RETRYING {
+                let index = {
+                    let mut progress_guard = task.progress.lock().unwrap();
+                    let index = progress_guard.common_data.index;
+                    progress_guard.common_data.total_processed -= progress_guard.processed[index];
+                    progress_guard.processed[index] = 0;
+                    index
+                };
+                let mut file_guard = task.files.lock().unwrap();
+                let file = file_guard.get_mut(index).unwrap();
+                let mut begins = task.conf.common_data.begins;
+                let (is_partial_upload, _) = task.get_upload_info(index);
+                if !is_partial_upload {
+                    begins = 0;
+                }
+                match Pin::new(file).start_seek(SeekFrom::Start(begins)) {
+                    Err(e) => println!("seek err is {:?}", e),
+                    Ok(_) => {}
+                }
+            }
             upload(task.clone()).await;
         }
     }
@@ -977,7 +1058,7 @@ fn build_stream_request(
         request_builder = request_builder.header("Content-Type", "application/octet-stream");
     }
     let (_, upload_length) = task.get_upload_info(index);
-    info!(LOG_LABEL, "upload length is {}", upload_length);
+    info!(LOG_LABEL, "upload length is {}", @public(upload_length));
     let uploader = Uploader::builder()
         .reader(task_reader)
         .operator(task_operator)
@@ -1002,7 +1083,7 @@ fn build_multipart_request(
         multi_part = multi_part.part(part);
     }
     let (_, upload_length) = task.get_upload_info(index);
-    info!(LOG_LABEL, "upload length is {}", upload_length);
+    info!(LOG_LABEL, "upload length is {}", @public(upload_length));
     let part = Part::new()
         .name(task.conf.file_specs[index].name.as_str())
         .file_name(task.conf.file_specs[index].file_name.as_str())

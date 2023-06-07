@@ -155,6 +155,7 @@ pub enum Reason {
     RedirectError,
     ProtocolError,
     IoError,
+    UnSupportRangeRequest,
     OthersError,
 }
 
@@ -180,6 +181,7 @@ impl Reason {
             Reason::RedirectError => "Redirect error",
             Reason::ProtocolError => "Http protocol error",
             Reason::IoError => "Io Error",
+            Reason::UnSupportRangeRequest => "The server is not support range request",
             Reason::OthersError => "Some other error occured",
         }
     }
