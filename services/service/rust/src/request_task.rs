@@ -1058,7 +1058,7 @@ fn build_stream_request(
         request_builder = request_builder.header("Content-Type", "application/octet-stream");
     }
     let (_, upload_length) = task.get_upload_info(index);
-    info!(LOG_LABEL, "upload length is {}", upload_length);
+    info!(LOG_LABEL, "upload length is {}", @public(upload_length));
     let uploader = Uploader::builder()
         .reader(task_reader)
         .operator(task_operator)
@@ -1083,7 +1083,7 @@ fn build_multipart_request(
         multi_part = multi_part.part(part);
     }
     let (_, upload_length) = task.get_upload_info(index);
-    info!(LOG_LABEL, "upload length is {}", upload_length);
+    info!(LOG_LABEL, "upload length is {}", @public(upload_length));
     let part = Part::new()
         .name(task.conf.file_specs[index].name.as_str())
         .file_name(task.conf.file_specs[index].file_name.as_str())

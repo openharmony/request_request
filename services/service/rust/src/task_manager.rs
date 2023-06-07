@@ -31,7 +31,7 @@ static MAX_RUNNING_TASK_COUNT_EACH_APP: u8 = 5;
 static INTERVAL_SECONDS: u64 = 30 * 60;
 static SECONDS_IN_ONE_DAY: u64 = 24 * 60 * 60;
 static SECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60;
-static TOW_SECONDS: u64 = 2;
+static ONE_SECONDS: u64 = 1;
 static REQUEST_SERVICE_ID: i32 = 3706;
 static WAITTING_RETRY_INTERVAL: u64 = 10;
 type AppTask = HashMap<u32, Arc<RequestTask>>;
@@ -612,7 +612,7 @@ async fn remove_task_from_map(task: Arc<RequestTask>) {
     if task.conf.version == Version::API9 && task_manager.info_cb.is_some() {
         let task_info = task.show();
         task_manager.info_cb.as_ref().unwrap()(task_info);
-        sleep(Duration::from_secs(TOW_SECONDS)).await;
+        sleep(Duration::from_secs(ONE_SECONDS)).await;
     }
     let mut guard = task_manager.task_map.lock().unwrap();
     let app_task = guard.get_mut(&task.uid);
@@ -656,7 +656,7 @@ extern "C" fn net_work_change_callback() {
     let guard = task_manager.task_map.lock().unwrap();
     for (uid, app_task) in guard.iter() {
         let uid = *uid;
-        for (task_id, task) in app_task.iter() {
+        for (_, task) in app_task.iter() {
             let task = task.clone();
             let state = task.status.lock().unwrap().state;
             if unsafe { !IsOnline() } {
@@ -676,13 +676,18 @@ extern "C" fn net_work_change_callback() {
                         task.set_status(State::WAITING, Reason::NetWorkOffline);
                     }
                 }
-                let mut handles_guard = task_manager.task_handles.lock().unwrap();
-                let handle = handles_guard.get(task_id);
-                if let Some(handle) = handle {
-                    handle.cancel();
-                }
-                handles_guard.remove(task_id);
-                TaskManager::get_instance().after_task_processed(&task);
+                let task_id = task.task_id;
+                task_manager.rt.spawn(async move {
+                    let handle = {
+                        let mut handles_guard = TaskManager::get_instance().task_handles.lock().unwrap();
+                        handles_guard.remove(&task_id)
+                    };
+                    if let Some(handle) = handle {
+                        sleep(Duration::from_secs(ONE_SECONDS)).await;
+                        handle.cancel();
+                    }
+                    TaskManager::get_instance().after_task_processed(&task);
+                });
             } else {
                 if state == State::WAITING && task.is_satisfied_configuration() {
                     debug!(LOG_LABEL, "Begin try resume task as network condition resume");
