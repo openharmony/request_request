@@ -14,5 +14,8 @@
 group("fuzztest") {
   testonly = true
 
-  deps = [ "downloadbasenotify_fuzzer:fuzztest" ]
+  deps = [
+    "downloadbasenotify_fuzzer:fuzztest",
+    "downloaduploadmanager_fuzzer:fuzztest",
+  ]
 }
