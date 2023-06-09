@@ -31,7 +31,7 @@ void RequestBackgroundNotify(RequestTaskMsg msg, const char *path, int32_t pathL
     REQUEST_HILOGD("Background Notification, percent is %{public}d", percent);
     auto requestTemplate = std::make_shared<NotificationTemplate>();
     std::string filepath(path, pathLen);
-    requestTemplate->SetTemplateName("requestTemplate");
+    requestTemplate->SetTemplateName("downloadTemplate");
     OHOS::AAFwk::WantParams wantParams;
     wantParams.SetParam("progressValue", OHOS::AAFwk::Integer::Box(percent));
     wantParams.SetParam("fileName", OHOS::AAFwk::String::Box(filepath));
