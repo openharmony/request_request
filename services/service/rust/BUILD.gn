@@ -32,13 +32,13 @@ ohos_rust_shared_library("download_server") {
 
   public_configs = [ ":download_service_config" ]
 
-  deps = [
-    ":request",
-    "${foundation_path}/communication/ipc/interfaces/innerkits/rust:ipc_rust",
-    "${foundation_path}/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk_rust",
-  ]
+  deps = [ ":request" ]
 
-  external_deps = [ "hilog_native:hilog_rust" ]
+  external_deps = [
+    "hilog_native:hilog_rust",
+    "ipc:ipc_rust",
+    "safwk:system_ability_fwk_rust",
+  ]
 
   clippy_lints = "none"
   rustflags = [
@@ -72,12 +72,15 @@ ohos_rust_shared_library("request") {
 
   deps = [
     ":request_service_c",
-    "${base_path}/hilog/interfaces/rust:hilog_rust",
-    "${foundation_path}/communication/ipc/interfaces/innerkits/rust:ipc_rust",
     "${foundation_path}/communication/netstack/interfaces/innerkits/rust/ylong_http_client:ylong_http_client",
-    "${foundation_path}/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk_rust",
-    "${foundation_path}/systemabilitymgr/samgr/interfaces/innerkits/rust:rust_samgr",
     "${third_path}/rust/crates/tokio/ylong_runtime:lib",
+  ]
+
+  external_deps = [
+    "hilog_native:hilog_rust",
+    "ipc:ipc_rust",
+    "safwk:system_ability_fwk_rust",
+    "samgr:rust_samgr",
   ]
 
   clippy_lints = "none"
@@ -109,11 +112,6 @@ ohos_shared_library("request_service_c") {
   ]
   cflags_cc = [ "-O2" ]
 
-  deps = [
-    "${core_service_path}/innerkits:tel_core_service_api",
-    "${notification_path}/frameworks/ans:ans_innerkits",
-  ]
-
   external_deps = [
     "ability_base:base",
     "ability_base:want",
@@ -122,6 +120,8 @@ ohos_shared_library("request_service_c") {
     "ability_runtime:app_manager",
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
+    "core_service:tel_core_service_api",
+    "distributed_notification_service:ans_innerkits",
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
     "netmanager_base:net_conn_manager_if",

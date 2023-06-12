@@ -41,16 +41,17 @@
         "ability_base",
         "hiviewdfx_hilog_native",
         "core_service",
-        "libuv",
-        "curl",
         "hilog_native",
-        "openssl",
         "distributed_notification_service",
         "c_utils",
-        "ylong_runtime",
         "netstack"
       ],
-      "third_party": []
+      "third_party": [
+        "curl",
+        "libuv",
+        "openssl",
+        "ylong_runtime"
+      ]
     },
     "build": {
       "group_type": {
