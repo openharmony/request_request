@@ -152,6 +152,9 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
     jsParam.task->AddListener(key, listener);
     std::shared_ptr<TaskInfo> taskInfo;
     if (GetCache(jsParam.task->GetTid(), taskInfo) && taskInfo != nullptr) {
+        if (!NeedNotify(jsParam.type, taskInfo)) {
+            return nullptr;
+        }
         listener->RequestCallBack(jsParam.type, jsParam.task->GetTid(), BuildNotifyData(taskInfo));
         return nullptr;
     }
@@ -159,6 +162,24 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
         RequestManager::GetInstance()->On(jsParam.type, jsParam.task->GetTid(), listener);
     }
     return nullptr;
+}
+
+bool RequestEvent::NeedNotify(const std::string &type, std::shared_ptr<TaskInfo> &taskInfo)
+{
+    if (type == EVENT_FAIL && taskInfo->progress.state != State::FAILED) {
+        return false;
+    }
+    if (type == EVENT_COMPLETE && taskInfo->progress.state != State::COMPLETED) {
+        return false;
+    }
+    if (!taskInfo->progress.sizes.empty()) {
+        uint64_t processed = taskInfo->progress.processed;
+        int64_t totalSise = taskInfo->progress.sizes[0];
+        if (type == EVENT_PROGRESS && processed == 0 && totalSise == -1) {
+            return false;
+        }
+    }
+    return true;
 }
 
 napi_value RequestEvent::Off(napi_env env, napi_callback_info info)

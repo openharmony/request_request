@@ -93,6 +93,7 @@ private:
     static NotifyData BuildNotifyData(const std::shared_ptr<TaskInfo> &taskInfo);
     static bool IsSupportType(const std::string &type, Version version);
     static void ConvertType(std::string &type);
+    static bool NeedNotify(const std::string &type, std::shared_ptr<TaskInfo> &taskInfo);
 
     static std::mutex taskCacheMutex_;
     static std::map<std::string, std::shared_ptr<TaskInfo>> taskCache_;

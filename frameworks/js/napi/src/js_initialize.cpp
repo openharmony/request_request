@@ -30,6 +30,9 @@ static constexpr const char *PARAM_KEY_BACKGROUND = "background";
 static constexpr uint32_t FILE_PERMISSION = 0644;
 static constexpr uint32_t TOKEN_MAX_BYTES = 2048;
 static constexpr uint32_t TOKEN_MIN_BYTES = 8;
+static constexpr uint32_t TITLE_MAXIMUM = 256;
+static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
+static constexpr uint32_t URL_MAXIMUM = 2048;
 namespace OHOS::Request {
 napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Version version)
 {
@@ -249,8 +252,8 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
     config.precise = NapiUtils::Convert2Boolean(env, jsConfig, "precise");
     config.begins = ParseBegins(env, jsConfig);
     config.ends = ParseEnds(env, jsConfig);
+    config.description = ParseDescription(env, jsConfig);
     config.mode = static_cast<Mode>(NapiUtils::Convert2Uint32(env, jsConfig, "mode"));
-    config.description = NapiUtils::Convert2String(env, jsConfig, "description");
     config.headers = ParseMap(env, jsConfig, "headers");
     config.extras = ParseMap(env, jsConfig, "extras");
     return true;
@@ -332,6 +335,15 @@ int64_t JsInitialize::ParseEnds(napi_env env, napi_value jsConfig)
     return NapiUtils::Convert2Int64(env, value);
 }
 
+std::string JsInitialize::ParseDescription(napi_env env, napi_value jsConfig)
+{
+    std::string description = NapiUtils::Convert2String(env, jsConfig, "description");
+    if (description.size() > DESCRIPTION_MAXIMUM) {
+        description = "";
+    }
+    return description;
+}
+
 std::map<std::string, std::string> JsInitialize::ParseMap(napi_env env, napi_value jsConfig,
     const std::string &propertyName)
 {
@@ -353,17 +365,22 @@ std::map<std::string, std::string> JsInitialize::ParseMap(napi_env env, napi_val
 bool JsInitialize::ParseUrl(napi_env env, napi_value jsConfig, std::string &url)
 {
     url = NapiUtils::Convert2String(env, jsConfig, "url");
+    if (url.size() > URL_MAXIMUM) {
+        REQUEST_HILOGE("The URL exceeds the maximum length of 2048");
+        return false;
+    }
     if (!regex_match(url, std::regex("^http(s)?:\\/\\/.+"))) {
         REQUEST_HILOGE("ParseUrl error");
         return false;
     }
+
     return true;
 }
 
 void JsInitialize::ParseTitle(napi_env env, napi_value jsConfig, Config &config)
 {
     config.title = NapiUtils::Convert2String(env, jsConfig, "title");
-    if (config.title.empty()) {
+    if (config.title.empty() || config.title.size() > TITLE_MAXIMUM) {
         config.title = config.action == Action::UPLOAD ? "upload" : "download";
     }
 }
