@@ -635,10 +635,10 @@ bool JsInitialize::ParseDownloadConfig(napi_env env, napi_value jsConfig, Config
     config.roaming = NapiUtils::Convert2Boolean(env, jsConfig, "enableRoaming");
     config.description = NapiUtils::Convert2String(env, jsConfig, PARAM_KEY_DESCRIPTION);
     uint32_t type = NapiUtils::Convert2Uint32(env, jsConfig, PARAM_KEY_NETWORKTYPE);
-    if (type == 0) {
-        config.network = Network::WIFI;
-    } else if (type == 1) {
+    if (type == NETWORK_MOBILE) {
         config.network = Network::CELLULAR;
+    } else if (type == NETWORK_WIFI) {
+        config.network = Network::WIFI;
     } else {
         config.network = Network::ANY;
     }

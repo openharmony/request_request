@@ -69,9 +69,9 @@ export default function requestOperateTaskTest() {
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
-      task.start((err) => {
-        expect(err == null).assertTrue();
-        task.stop();
+      task.start(async (err) => {
+        expect(err === null).assertTrue();
+        await task.stop();
         done()
       })
     })
@@ -90,9 +90,9 @@ export default function requestOperateTaskTest() {
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
-      task.start().then(() => {
+      task.start().then(async () => {
         expect(true).assertTrue();
-        task.stop();
+        await task.stop();
         done();
       }).catch((err) => {
         expect(false).assertTrue();
@@ -114,9 +114,9 @@ export default function requestOperateTaskTest() {
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
-      task.start((err) => {
-        expect(err == null).assertTrue();
-        task.stop();
+      task.start(async (err) => {
+        expect(err === null).assertTrue();
+        await task.stop();
         done();
       })
     })
@@ -135,9 +135,9 @@ export default function requestOperateTaskTest() {
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf)
-      task.start().then(() => {
+      task.start().then(async () => {
         expect(true).assertTrue();
-        task.stop();
+        await task.stop();
         done();
       }).catch((err) => {
         expect(false).assertTrue();
@@ -164,8 +164,8 @@ export default function requestOperateTaskTest() {
         await task.pause();
         await task.start();
       } catch (err) {
-        expect(err.code === 21900007).assertTrue();
-        request.agent.remove(task.tid);
+        expect(err.code).assertEqual(21900007);
+        await request.agent.remove(task.tid);
         done();
       }
     })
@@ -189,8 +189,7 @@ export default function requestOperateTaskTest() {
         await task.stop();
         await task.start();
       } catch (err) {
-        expect(err.code === 21900007).assertTrue();
-        request.agent.remove(task.tid);
+        expect(err.code).assertEqual(21900007);
         done();
       }
     })
@@ -214,8 +213,7 @@ export default function requestOperateTaskTest() {
         await task.stop();
         await task.start();
       } catch (err) {
-        expect(err.code === 21900007).assertTrue();
-        request.agent.remove(task.tid);
+        expect(err.code).assertEqual(21900007);
         done();
       }
     })
@@ -238,7 +236,7 @@ export default function requestOperateTaskTest() {
       task.on('progress', function(progress) {
         if (progress.state === 0x31) {
           expect(true).assertTrue();
-          request.agent.remove(task.tid);
+          task.off('progress');
           done();
         }
       })
@@ -251,9 +249,9 @@ export default function requestOperateTaskTest() {
       }
 
       try {
-        request.agent.create(context, conf1, (err, task1) => {
+        request.agent.create(context, conf1, async (err, task1) => {
           expect(true).assertTrue();
-          request.agent.remove(task1.tid);
+          await request.agent.remove(task1.tid);
           done();
         })
       } catch (err) {
@@ -279,8 +277,8 @@ export default function requestOperateTaskTest() {
         await task.start();
         await task.pause();
       } catch (err) {
-        expect(err.code === 21900005).assertTrue();
-        request.agent.remove(task.tid);
+        expect(err.code).assertEqual(21900005);
+        await request.agent.remove(task.tid);
         done();
       }
     })
@@ -304,8 +302,8 @@ export default function requestOperateTaskTest() {
         await task.pause();
         await task.stop();
       } catch (err) {
-        expect(err.code === 21900007).assertTrue();
-        request.agent.remove(task.tid);
+        expect(err.code).assertEqual(21900007);
+        await request.agent.remove(task.tid);
         done();
       }
     })
@@ -325,9 +323,9 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start();
-      task.pause((err) => {
+      task.pause(async (err) => {
         expect(err === null).assertTrue()
-        request.agent.remove(task.tid);
+        await request.agent.remove(task.tid);
         done()
       })
     })
@@ -347,9 +345,9 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start();
-      task.pause().then(() => {
+      task.pause().then(async () => {
         expect(true).assertTrue();
-        request.agent.remove(task.tid);
+        await request.agent.remove(task.tid);
         done();
       }).catch((err) => {
         expect(false).assertTrue();
@@ -373,16 +371,16 @@ export default function requestOperateTaskTest() {
       let task = await request.agent.create(context, conf);
       await task.start();
       await task.pause();
-      await task.resume().then(() => {
+      task.resume().then(() => {
         expect(true).assertTrue();
         done();
       }).catch((err) => {
         expect(false).assertTrue();
         done();
       })
-      task.pause().then(() => {
+      task.pause().then(async () => {
         expect(true).assertTrue();
-        request.agent.remove(task.tid);
+        await request.agent.remove(task.tid);
         done();
       }).catch((err) => {
         expect(false).assertTrue();
@@ -407,8 +405,8 @@ export default function requestOperateTaskTest() {
       try {
         await task.resume();
       } catch (err) {
-        expect(err.code === 21900005).assertTrue();
-        request.agent.remove(task.tid);
+        expect(err.code).assertEqual(21900005);
+        await request.agent.remove(task.tid);
         done();
       }
     })
@@ -430,9 +428,9 @@ export default function requestOperateTaskTest() {
       let task = await request.agent.create(context, conf);
       await task.start();
       await task.pause();
-      task.resume((err) => {
+      task.resume(async (err) => {
         expect(err === null).assertTrue();
-        request.agent.remove(task.tid);
+        await request.agent.remove(task.tid);
         done();
       })
     })
@@ -455,6 +453,7 @@ export default function requestOperateTaskTest() {
         await task.start();
         task.stop().then(() => {
           expect(true).assertTrue();
+          done();
         }).catch((err) => {
           expect(false).assertTrue();
           done();
@@ -462,7 +461,6 @@ export default function requestOperateTaskTest() {
         await task.resume();
       } catch (err) {
         expect(err.code).assertEqual(21900007);
-        request.agent.remove(task.tid);
         done();
       }
     })
@@ -486,7 +484,7 @@ export default function requestOperateTaskTest() {
         await task.resume();
       } catch (err) {
         expect(err.code).assertEqual(21900007);
-        request.agent.remove(task.tid);
+        await request.agent.remove(task.tid);
         done();
       }
     })
@@ -598,7 +596,10 @@ export default function requestOperateTaskTest() {
       try{
         let task = await request.agent.create(context, conf);
         await task.start();
-        await task.stop();
+        task.stop((err) => {
+          expect(err === null).assertTrue();
+          done();
+        })
         await task.pause();
       } catch (err) {
         expect(err.code).assertEqual(21900007);
@@ -624,7 +625,7 @@ export default function requestOperateTaskTest() {
         task.on('test', function (progress) {})
       } catch (err) {
         expect(err.code).assertEqual(401);
-        request.agent.remove(task.tid);
+        await request.agent.remove(task.tid);
         done();
       }
     })
@@ -647,7 +648,7 @@ export default function requestOperateTaskTest() {
         task.on(123, function (progress) {})
       } catch (err) {
         expect(err.code).assertEqual(401);
-        request.agent.remove(task.tid);
+        await request.agent.remove(task.tid);
         done();
       }
     })
@@ -670,7 +671,7 @@ export default function requestOperateTaskTest() {
         expect(progress.state).assertEqual(0x41);
         done();
       })
-      task.start();
+      await task.start();
     })
 
     /**
@@ -696,7 +697,7 @@ export default function requestOperateTaskTest() {
         expect(progress.state).assertEqual(0x40);
         done();
       })
-      task.start();
+      await task.start();
     })
 
     /**
@@ -716,7 +717,7 @@ export default function requestOperateTaskTest() {
         task.on('progress', function (progress) {});
       } catch (err) {
         expect(err.code).assertEqual(21900005);
-        request.agent.remove(task.tid);
+        await request.agent.remove(task.tid);
         done();
       }
     })
@@ -738,6 +739,7 @@ export default function requestOperateTaskTest() {
       task.on('progress', function (progress) {
         if (progress.state === 0x50) {
           expect(true).assertTrue();
+          task.off('progress');
           done();
         }
       })
@@ -764,7 +766,7 @@ export default function requestOperateTaskTest() {
         task.on('progress', function (progress) {});
         task.on('progress', function (progress) {});
         expect(true).assertTrue();
-        request.agent.remove(task.tid);
+        await request.agent.remove(task.tid);
         done();
       } catch (err) {
         expect(false).assertTrue();
@@ -790,7 +792,7 @@ export default function requestOperateTaskTest() {
         task.off('test', function() {});
       } catch (err) {
         expect(err.code).assertEqual(401);
-        request.agent.remove(task.tid);
+        await request.agent.remove(task.tid);
         done();
       }
     })
@@ -813,7 +815,7 @@ export default function requestOperateTaskTest() {
         task.off(123);
       } catch (err) {
         expect(err.code).assertEqual(401);
-        request.agent.remove(task.tid);
+        await request.agent.remove(task.tid);
         done();
       }
     })
@@ -840,7 +842,6 @@ export default function requestOperateTaskTest() {
       await task.start();
       await sleep(2000);
       expect(true).assertTrue();
-      request.agent.remove(task.tid);
       done();
     })
 
@@ -859,11 +860,15 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       task.on('completed', function (progress) {
-        task.off('completed');
         expect(true).assertTrue();
-        request.agent.remove(task.tid);
         done();
       })
+      function CompletedCallback(progress) {
+        expect(false).assertTrue();
+        done();
+      }
+      task.on('completed', CompletedCallback);
+      task.off('completed', CompletedCallback);
       await task.start();
     })
 
@@ -882,11 +887,19 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       task.on('progress', function (progress) {
-        task.off('progress');
         expect(true).assertTrue();
-        request.agent.remove(task.tid);
         done();
       })
+      task.on('completed', function (progress) {
+        expect(true).assertTrue();
+        done();
+      })
+      function ProgressCallback(progress) {
+        expect(false).assertTrue();
+        done();
+      }
+      task.on('progress', ProgressCallback);
+      task.off('progress', ProgressCallback);
       await task.start();
     })
 
@@ -908,31 +921,7 @@ export default function requestOperateTaskTest() {
         task.off('completed');
         task.off('completed');
         expect(true).assertTrue();
-        request.agent.remove(task.tid);
-        done();
-      } catch (err) {
-        expect(false).assertTrue();
-        done();
-      }
-    })
-
-    /**
-     * @tc.name: testOffTask007
-     * @tc.desc: Test off task
-     * @tc.type: FUNC
-     * @tc.require:
-     */
-    it('testOffTask006', 0, async function (done) {
-      let conf = {
-        action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        mode: request.agent.Mode.FOREGROUND
-      }
-      let task = await request.agent.create(context, conf);
-      try {
-        task.off('progress', function (progress) {});
-        expect(true).assertTrue();
-        request.agent.remove(task.tid);
+        await request.agent.remove(task.tid);
         done();
       } catch (err) {
         expect(false).assertTrue();
@@ -1032,6 +1021,5 @@ export default function requestOperateTaskTest() {
         done();
       }
     })
-
   })
 }

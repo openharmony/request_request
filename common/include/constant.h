@@ -85,6 +85,9 @@ static constexpr const char *PARAM_KEY_METHOD = "method";
 static constexpr const char *PARAM_KEY_FILES = "files";
 static constexpr const char *PARAM_KEY_DATA = "data";
 
+static constexpr uint32_t NETWORK_MOBILE = 0x00000001;
+static constexpr uint32_t NETWORK_WIFI = 0x00010000;
+
 static const std::string tlsVersion = "X-TLS-Version";
 static const std::string cipherList = "X-Cipher-List";
 static const std::string TLS_VERSION = "CURL_SSLVERSION_TLSv1_2";

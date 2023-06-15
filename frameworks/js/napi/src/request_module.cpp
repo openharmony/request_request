@@ -57,13 +57,6 @@ static napi_value session_pending = nullptr;
 static napi_value session_paused = nullptr;
 static napi_value session_failed = nullptr;
 
-enum NetworkType {
-    NETWORK_INVALID = 0x00000000,
-    NETWORK_MOBILE = 0x00000001,
-    NETWORK_WIFI = 0x00010000,
-    NETWORK_MASK = 0x00010001,
-};
-
 static void NapiCreateInt32(napi_env env)
 {
     /* create exception type const */
