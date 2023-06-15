@@ -51,8 +51,8 @@ void NotifyStub::OnCallBack(MessageParcel &data)
     NotifyData notifyData;
     notifyData.progress.state = static_cast<State>(data.ReadUint32());
     notifyData.progress.index = data.ReadUint32();
-    notifyData.progress.processed = data.ReadUint64();
-    notifyData.progress.totalProcessed = data.ReadUint64();
+    notifyData.progress.processed = static_cast<int64_t>(data.ReadUint64());
+    notifyData.progress.totalProcessed = static_cast<int64_t>(data.ReadUint64());
     data.ReadInt64Vector(&notifyData.progress.sizes);
     uint32_t size = data.ReadUint32();
     if (size > data.GetReadableBytes()) {
@@ -60,7 +60,8 @@ void NotifyStub::OnCallBack(MessageParcel &data)
         return;
     }
     for (uint32_t i = 0; i < size; i++) {
-        notifyData.progress.extras[data.ReadString()] = data.ReadString();
+        std::string key = data.ReadString();
+        notifyData.progress.extras[key] = data.ReadString();
     }
     notifyData.action = static_cast<Action>(data.ReadUint32());
     notifyData.version = static_cast<Version>(data.ReadUint32());

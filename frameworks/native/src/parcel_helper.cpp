@@ -98,8 +98,8 @@ void ParcelHelper::UnMarshalProgress(MessageParcel &data, TaskInfo &info)
 {
     info.progress.state = static_cast<State>(data.ReadUint32());
     info.progress.index = data.ReadUint32();
-    info.progress.processed = data.ReadUint64();
-    info.progress.totalProcessed = data.ReadUint64();
+    info.progress.processed = static_cast<int64_t>(data.ReadUint64());
+    info.progress.totalProcessed = static_cast<int64_t>(data.ReadUint64());
     data.ReadInt64Vector(&info.progress.sizes);
 }
 

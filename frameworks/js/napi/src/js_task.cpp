@@ -116,20 +116,15 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
         return napi_ok;
     };
     auto exec = [context]() {
-        if (!RequestManager::GetInstance()->LoadRequestServer()) {
-            context->innerCode_ = E_SERVICE_ERROR;
-            return;
-        }
-        sptr<RequestNotify> listener = new RequestNotify();
-        std::string key = "done" + context->task->GetTid();
-        context->task->AddListener(key, listener);
-        int32_t ret = RequestManager::GetInstance()->Create(context->task->config_, context->tid, listener);
-        if (ret != E_OK || context->tid < 0) {
-            context->innerCode_ = ret;
+        Config config = context->task->config_;
+        context->innerCode_ = CreateExec(context);
+        if (context->innerCode_ == E_SERVICE_ERROR && config.version == Version::API9 &&
+            config.action == Action::UPLOAD) {
+            context->withErrCode_ = false;
         }
     };
     auto output = [context](napi_value *result) -> napi_status {
-        if (result == nullptr) {
+        if (result == nullptr || context->innerCode_ != E_OK) {
             return napi_generic_failure;
         }
         napi_status status = napi_get_reference_value(context->env_, context->taskRef, result);
@@ -144,6 +139,17 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
     context->SetInput(input).SetOutput(output).SetExec(exec);
     AsyncCall asyncCall(env, info, context);
     return asyncCall.Call(context, "create");
+}
+
+int32_t JsTask::CreateExec(const std::shared_ptr<ContextInfo> &context)
+{
+    if (!RequestManager::GetInstance()->LoadRequestServer()) {
+        return E_SERVICE_ERROR;
+    }
+    sptr<RequestNotify> listener = new RequestNotify();
+    std::string key = "done" + context->task->GetTid();
+    context->task->AddListener(key, listener);
+    return RequestManager::GetInstance()->Create(context->task->config_, context->tid, listener);
 }
 
 napi_value JsTask::GetCtor(napi_env env, Version version)
@@ -246,11 +252,11 @@ napi_value JsTask::Remove(napi_env env, napi_callback_info info)
     context->withErrCode_ = true;
     context->version_ = Version::API10;
     auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        if (argc < 1) {
-            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "should 1 parameter!", true);
+        bool ret = ParseRemove(context->env_, argc, argv[0], context->tid);
+        if (!ret) {
+            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Parse remove fail!", true);
             return napi_invalid_arg;
         }
-        context->tid = NapiUtils::Convert2String(context->env_, argv[0]);
         return napi_ok;
     };
     auto output = [context](napi_value *result) -> napi_status {
@@ -266,6 +272,23 @@ napi_value JsTask::Remove(napi_env env, napi_callback_info info)
     context->SetInput(input).SetOutput(output).SetExec(exec);
     AsyncCall asyncCall(env, info, context);
     return asyncCall.Call(context, "remove");
+}
+
+bool JsTask::ParseRemove(napi_env env, size_t argc, napi_value value, std::string &tid)
+{
+    if (argc < 1) {
+        REQUEST_HILOGE("Wrong number of arguments");
+        return false;
+    }
+    if (NapiUtils::GetValueType(env, value) != napi_string) {
+        REQUEST_HILOGE("The first parameter is not of string type");
+        return false;
+    }
+    tid = NapiUtils::Convert2String(env, value);
+    if (tid.empty()) {
+        return false;
+    }
+    return true;
 }
 
 napi_value JsTask::Show(napi_env env, napi_callback_info info)
