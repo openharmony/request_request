@@ -267,7 +267,6 @@ describe('RequestUploadTest', function () {
             uploadTask = data;
             console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0001 uploadTask: " + uploadTask);
             expect(true).assertEqual((uploadTask !== undefined) || (uploadTask !== "") || (uploadTask !== {}));
-
             function HeaderReceiveCallback(header) {
               console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0001 on header: " + header);
               expect(true).assertEqual((header !== undefined) || (header !== "") || (header !== {}));

@@ -252,9 +252,9 @@ napi_value JsTask::Remove(napi_env env, napi_callback_info info)
     context->withErrCode_ = true;
     context->version_ = Version::API10;
     auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        bool ret = ParseRemove(context->env_, argc, argv[0], context->tid);
-        if (!ret) {
-            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Parse remove fail!", true);
+        context->tid = ParseTid(context->env_, argc, argv);
+        if (context->tid.empty()) {
+            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Parse tid fail!", true);
             return napi_invalid_arg;
         }
         return napi_ok;
@@ -274,21 +274,17 @@ napi_value JsTask::Remove(napi_env env, napi_callback_info info)
     return asyncCall.Call(context, "remove");
 }
 
-bool JsTask::ParseRemove(napi_env env, size_t argc, napi_value value, std::string &tid)
+std::string JsTask::ParseTid(napi_env env, size_t argc, napi_value *argv)
 {
     if (argc < 1) {
         REQUEST_HILOGE("Wrong number of arguments");
-        return false;
+        return "";
     }
-    if (NapiUtils::GetValueType(env, value) != napi_string) {
+    if (NapiUtils::GetValueType(env, argv[0]) != napi_string) {
         REQUEST_HILOGE("The first parameter is not of string type");
-        return false;
+        return "";
     }
-    tid = NapiUtils::Convert2String(env, value);
-    if (tid.empty()) {
-        return false;
-    }
-    return true;
+    return NapiUtils::Convert2String(env, argv[0]);
 }
 
 napi_value JsTask::Show(napi_env env, napi_callback_info info)

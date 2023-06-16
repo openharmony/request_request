@@ -27,6 +27,7 @@
 
 namespace OHOS::Request::NapiUtils {
 static constexpr const int MAX_STRING_LENGTH = 65536;
+static constexpr int64_t JS_NUMBER_MAX_VALUE = (1LL << 53) - 1;
 static const std::map<ExceptionErrorCode, std::string> ErrorCodeToMsg {
     {E_OK, E_OK_INFO },
     {E_PERMISSION, E_PERMISSION_INFO },
@@ -98,8 +99,11 @@ napi_value Convert2JSValue(napi_env env, int64_t code)
 
 napi_value Convert2JSValue(napi_env env, uint64_t code)
 {
+    if (code > JS_NUMBER_MAX_VALUE) {
+        return nullptr;
+    }
     napi_value value = nullptr;
-    if (napi_create_bigint_uint64(env, code, &value) != napi_ok) {
+    if (napi_create_int64(env, static_cast<int64_t>(code), &value) != napi_ok) {
         return nullptr;
     }
     return value;

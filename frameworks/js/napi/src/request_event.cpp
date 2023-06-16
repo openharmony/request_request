@@ -174,7 +174,7 @@ bool RequestEvent::NeedNotify(const std::string &type, std::shared_ptr<TaskInfo>
         return false;
     }
     if (!taskInfo->progress.sizes.empty()) {
-        int64_t processed = taskInfo->progress.processed;
+        uint64_t processed = taskInfo->progress.processed;
         int64_t totalSise = taskInfo->progress.sizes[0];
         if (type == EVENT_PROGRESS && processed == 0 && totalSise == -1) {
             return false;
@@ -293,6 +293,7 @@ napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, const std::
         if (handle != requestEvent_.end()) {
             context->innerCode_ = handle->second(context);
         }
+        //Temporary plan
         if (context->innerCode_ == E_TASK_NOT_FOUND) {
             context->innerCode_ = E_TASK_STATE;
         }

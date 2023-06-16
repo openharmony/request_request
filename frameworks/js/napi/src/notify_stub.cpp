@@ -51,8 +51,8 @@ void NotifyStub::OnCallBack(MessageParcel &data)
     NotifyData notifyData;
     notifyData.progress.state = static_cast<State>(data.ReadUint32());
     notifyData.progress.index = data.ReadUint32();
-    notifyData.progress.processed = static_cast<int64_t>(data.ReadUint64());
-    notifyData.progress.totalProcessed = static_cast<int64_t>(data.ReadUint64());
+    notifyData.progress.processed = data.ReadUint64();
+    notifyData.progress.totalProcessed = data.ReadUint64();
     data.ReadInt64Vector(&notifyData.progress.sizes);
     uint32_t size = data.ReadUint32();
     if (size > data.GetReadableBytes()) {

@@ -136,8 +136,8 @@ enum class State : uint32_t {
 struct Progress {
     State state;
     uint32_t index;
-    int64_t processed;
-    int64_t totalProcessed;
+    uint64_t processed;
+    uint64_t totalProcessed;
     std::vector<int64_t> sizes;
     std::map<std::string, std::string> extras;
 };
