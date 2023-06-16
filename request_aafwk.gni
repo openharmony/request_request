@@ -38,3 +38,10 @@ test_path = "//test/testfwk/developer_test/signature"
 c_utils_path = "//commonlibrary/c_utils"
 
 base_path = "//base/hiviewdfx"
+
+declare_args() {
+  request_telephony_core_service = false
+  if (defined(global_parts_info.telephony_core_service)) {
+    request_telephony_core_service = true
+  }
+}

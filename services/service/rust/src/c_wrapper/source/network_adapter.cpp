@@ -23,15 +23,18 @@
 #include <string>
 #include <type_traits>
 
+#ifdef REQUEST_TELEPHONY_CORE_SERVICE
 #include "core_service_client.h"
+#endif
 #include "i_net_conn_callback.h"
 #include "log.h"
 #include "net_conn_client.h"
 #include "net_conn_constants.h"
 #include "net_specifier.h"
+#ifdef REQUEST_TELEPHONY_CORE_SERVICE
 #include "network_state.h"
 #include "telephony_errors.h"
-
+#endif
 using namespace OHOS::NetManagerStandard;
 using namespace OHOS::Telephony;
 namespace OHOS::Request {
@@ -137,6 +140,7 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetBlockStatusChange(sptr<NetHa
 
 void NetworkAdapter::NetConnCallbackObserver::UpdateRoaming()
 {
+#ifdef REQUEST_TELEPHONY_CORE_SERVICE
     int32_t slotId = INVALID_SLOT_ID;
     DelayedRefSingleton<CoreServiceClient>::GetInstance().GetPrimarySlotId(slotId);
     if (slotId <= INVALID_SLOT_ID) {
@@ -151,6 +155,7 @@ void NetworkAdapter::NetConnCallbackObserver::UpdateRoaming()
     }
     REQUEST_HILOGI("Roaming = %{public}d", networkClient->IsRoaming());
     netAdapter_.networkInfo_.isRoaming = networkClient->IsRoaming();
+#endif
 }
 
 NetworkInfo *NetworkAdapter::GetNetworkInfo()

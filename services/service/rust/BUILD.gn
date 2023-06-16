@@ -120,7 +120,6 @@ ohos_shared_library("request_service_c") {
     "ability_runtime:app_manager",
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
-    "core_service:tel_core_service_api",
     "distributed_notification_service:ans_innerkits",
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
@@ -131,6 +130,11 @@ ohos_shared_library("request_service_c") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  defines = []
+  if (request_telephony_core_service) {
+    external_deps += [ "core_service:tel_core_service_api" ]
+    defines += [ "REQUEST_TELEPHONY_CORE_SERVICE" ]
+  }
   output_extension = "so"
   install_images = [ system_base_dir ]
   subsystem_name = "request"
