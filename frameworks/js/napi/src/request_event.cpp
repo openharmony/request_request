@@ -134,7 +134,8 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
     JsParam jsParam;
     ExceptionError err = ParseOnOffParameters(env, info, true, jsParam);
     if (err.code != E_OK) {
-        NapiUtils::ThrowError(env, err.code, err.errInfo, jsParam.task->config_.withErrCode);
+        bool withErrCode = jsParam.task->config_.version == Version::API10;
+        NapiUtils::ThrowError(env, err.code, err.errInfo, withErrCode);
         return nullptr;
     }
 
@@ -187,7 +188,13 @@ napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
     JsParam jsParam;
     ExceptionError err = ParseOnOffParameters(env, info, false, jsParam);
     if (err.code != E_OK) {
-        NapiUtils::ThrowError(env, err.code, err.errInfo, jsParam.task->config_.withErrCode);
+        bool withErrCode = jsParam.task->config_.version == Version::API10;
+        NapiUtils::ThrowError(env, err.code, err.errInfo, withErrCode);
+        return nullptr;
+    }
+
+    if (jsParam.task->config_.version == Version::API10 && jsParam.task->config_.mode != Mode::FOREGROUND) {
+        NapiUtils::ThrowError(env, E_TASK_MODE, "Enable the specified callback for a frontend task", true);
         return nullptr;
     }
 
@@ -286,6 +293,10 @@ napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, const std::
         if (handle != requestEvent_.end()) {
             context->innerCode_ = handle->second(context);
         }
+        //Temporary plan
+        if (context->innerCode_ == E_TASK_NOT_FOUND) {
+            context->innerCode_ = E_TASK_STATE;
+        }
     };
 
     context->SetInput(input).SetOutput(output).SetExec(exec);
@@ -324,9 +335,6 @@ int32_t RequestEvent::StartExec(const std::shared_ptr<ExecContext> &context)
     int32_t ret = RequestManager::GetInstance()->Start(context->task->GetTid());
     if (ret == E_OK) {
         context->boolRes = true;
-    }
-    if (ret == E_TASK_NOT_FOUND) {
-        ret = E_TASK_STATE;
     }
     return ret;
 }

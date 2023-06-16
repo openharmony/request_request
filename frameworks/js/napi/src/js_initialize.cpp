@@ -139,7 +139,7 @@ ExceptionError JsInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRu
     for (auto &file : config.files) {
         std::string path;
         if (!GetInternalPath(file.uri, context, config, path)) {
-            return { .code = E_FILE_PATH, .errInfo = "this is fail path" };
+            return { .code = E_PARAMETER_CHECK, .errInfo = "this is fail path" };
         }
         file.uri = path;
         if (file.filename.empty()) {
@@ -171,10 +171,12 @@ ExceptionError JsInitialize::GetFD(const std::string &path, const Config &config
         if (config.version == Version::API10 && config.overwrite) {
             return error;
         }
-        return { .code = E_FILE_PATH, .errInfo = "Download File already exists" };
+        ExceptionErrorCode code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
+        return { .code = code, .errInfo = "Download File already exists" };
     } else {
         if (config.action == Action::UPLOAD) {
-            return { .code = E_FILE_IO, .errInfo = "Failed to open file errno " + std::to_string(errno) };
+            ExceptionErrorCode code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
+            return { .code = code, .errInfo = "Failed to open file errno " + std::to_string(errno) };
         }
         fd = open(path.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
         if (fd < 0) {
@@ -217,6 +219,10 @@ bool JsInitialize::GetInternalPath(const std::string &fileUri,
 
 bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
 {
+    if (NapiUtils::GetValueType(env, jsConfig) != napi_object) {
+        errInfo = "Wrong conf type, expected object";
+        return false;
+    }
     if (config.version != Version::API10) {
         return ParseConfigV9(env, jsConfig, config, errInfo);
     }
@@ -629,10 +635,10 @@ bool JsInitialize::ParseDownloadConfig(napi_env env, napi_value jsConfig, Config
     config.roaming = NapiUtils::Convert2Boolean(env, jsConfig, "enableRoaming");
     config.description = NapiUtils::Convert2String(env, jsConfig, PARAM_KEY_DESCRIPTION);
     uint32_t type = NapiUtils::Convert2Uint32(env, jsConfig, PARAM_KEY_NETWORKTYPE);
-    if (type == 0) {
-        config.network = Network::WIFI;
-    } else if (type == 1) {
+    if (type == NETWORK_MOBILE) {
         config.network = Network::CELLULAR;
+    } else if (type == NETWORK_WIFI) {
+        config.network = Network::WIFI;
     } else {
         config.network = Network::ANY;
     }

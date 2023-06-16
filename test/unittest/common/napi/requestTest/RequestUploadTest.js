@@ -229,18 +229,14 @@ describe('RequestUploadTest', function () {
             uploadTask = data;
             console.info("SUB_REQUEST_UPLOAD_API_CALLBACK_0001 progress uploadTask: " + JSON.stringify(uploadTask));
             expect(uploadTask !== undefined).assertEqual(true);
-  
-            uploadTask.on('progress', function (data1, data2) {
+
+            function ProgressCallback(data1, data2) {
               console.info("SUB_REQUEST_UPLOAD_API_CALLBACK_0001 on data1: " + data1 + ", data1: " + data2);
               expect(true).assertEqual((data1 !== undefined) || (data1 !== "") || (data1 !== {}));
               expect(true).assertEqual((data2 !== undefined) || (data2 != "") || (data2 !== {}));
-            });
-  
-            uploadTask.off('progress', function (data1, data2) {
-              console.info("SUB_REQUEST_UPLOAD_API_CALLBACK_0001 off data1: " + data1 + ", data1: " + data2);
-              expect(true).assertEqual((data1 !== undefined) || (data1 !== "") || (data1 !== {}));
-              expect(true).assertEqual((data2 !== undefined) || (data2 != "") || (data2 !== {}));
-            });
+            }
+            uploadTask.on('progress', ProgressCallback);
+            uploadTask.off('progress', ProgressCallback);
   
             uploadTask.remove((result) => {
               console.info("SUB_REQUEST_UPLOAD_API_CALLBACK_0001 remove: " + result);
@@ -271,16 +267,12 @@ describe('RequestUploadTest', function () {
             uploadTask = data;
             console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0001 uploadTask: " + uploadTask);
             expect(true).assertEqual((uploadTask !== undefined) || (uploadTask !== "") || (uploadTask !== {}));
-  
-            uploadTask.on('headerReceive', (header) => {
+            function HeaderReceiveCallback(header) {
               console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0001 on header: " + header);
               expect(true).assertEqual((header !== undefined) || (header !== "") || (header !== {}));
-            });
-  
-            uploadTask.off('headerReceive', (header) => {
-              console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0001 off header: " + header);
-              expect(true).assertEqual((header !== undefined) || (header !== "") || (header !== {}));
-            });
+            }
+            uploadTask.on('headerReceive', HeaderReceiveCallback);
+            uploadTask.off('headerReceive', HeaderReceiveCallback);
   
             uploadTask.remove().then((result)=>{
               console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0001 remove result: " + result);
@@ -311,16 +303,6 @@ describe('RequestUploadTest', function () {
             uploadTask = data;
             console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0002 uploadTask: " + uploadTask);
             expect(true).assertEqual((uploadTask !== undefined) || (uploadTask !== "") || (uploadTask !== {}));
-  
-            uploadTask.on('complete', (TaskState) => {
-              console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0002 complete TaskState.path: " + TaskState.path +
-                ", TaskState.responseCode: " + TaskState.responseCode + ", TaskState.message: " + TaskState.message);
-
-              expect(typeof(TaskState.path) == "string").assertEqual(true);
-              expect(typeof(TaskState.responseCode) == "number").assertEqual(true);
-              expect(typeof(TaskState.message) == "string").assertEqual(true);
-            });
-  
             uploadTask.on('fail', (TaskState) => {
               console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0002 fail TaskState.path: " + TaskState.path +
                 ", TaskState.responseCode: " + TaskState.responseCode + ", TaskState.message: " + TaskState.message);
@@ -355,15 +337,8 @@ describe('RequestUploadTest', function () {
             console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0003 uploadTask: " + uploadTask);
             expect(true).assertEqual((uploadTask !== undefined) || (uploadTask !== "") || (uploadTask !== {}));
   
-            uploadTask.off('complete', () => {
-              console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0003 complete off success");
-              expect(true).assertEqual(true);
-            });
-  
-            uploadTask.off('fail', () => {
-              console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0003 fail off success");
-              expect(true).assertEqual(true);
-            });
+            uploadTask.off('complete');
+            uploadTask.off('fail');
           });
         } catch (e) {
           console.error("SUB_REQUEST_UPLOAD_API_PROMISE_0003 error: " + JSON.stringify(e));

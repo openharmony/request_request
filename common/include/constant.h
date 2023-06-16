@@ -60,7 +60,7 @@ static constexpr const char *E_SERVICE_ERROR_INFO = "task service ability error"
 static constexpr const char *E_OTHER_INFO = "other error";
 static constexpr const char *E_TASK_QUEUE_INFO = "application task queue full error";
 static constexpr const char *E_TASK_MODE_INFO = "task mode error";
-static constexpr const char *E_TASK_NOT_FOUND_INFO = "task mode error";
+static constexpr const char *E_TASK_NOT_FOUND_INFO = "task not found error";
 static constexpr const char *E_TASK_STATE_INFO = "task state error";
 
 static constexpr const char *FUNCTION_PAUSE = "pause";
@@ -84,6 +84,9 @@ constexpr const std::uint32_t CONFIG_PARAM_AT_SECOND = 1;
 static constexpr const char *PARAM_KEY_METHOD = "method";
 static constexpr const char *PARAM_KEY_FILES = "files";
 static constexpr const char *PARAM_KEY_DATA = "data";
+
+static constexpr uint32_t NETWORK_MOBILE = 0x00000001;
+static constexpr uint32_t NETWORK_WIFI = 0x00010000;
 
 static const std::string tlsVersion = "X-TLS-Version";
 static const std::string cipherList = "X-Cipher-List";

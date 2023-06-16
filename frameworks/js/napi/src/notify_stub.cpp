@@ -60,7 +60,8 @@ void NotifyStub::OnCallBack(MessageParcel &data)
         return;
     }
     for (uint32_t i = 0; i < size; i++) {
-        notifyData.progress.extras[data.ReadString()] = data.ReadString();
+        std::string key = data.ReadString();
+        notifyData.progress.extras[key] = data.ReadString();
     }
     notifyData.action = static_cast<Action>(data.ReadUint32());
     notifyData.version = static_cast<Version>(data.ReadUint32());

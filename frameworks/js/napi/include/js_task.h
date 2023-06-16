@@ -73,6 +73,8 @@ private:
     static napi_value GetCtorV10(napi_env env);
     static napi_value RequestFile(napi_env env, napi_callback_info info);
     static napi_value RequestFileV8(napi_env env, napi_callback_info info);
+    static int32_t CreateExec(const std::shared_ptr<ContextInfo> &context);
+    static std::string ParseTid(napi_env env, size_t argc, napi_value *argv);
     bool Equals(napi_env env, napi_value value, napi_ref copy);
 
     static std::mutex createMutex_;

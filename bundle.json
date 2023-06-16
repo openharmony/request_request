@@ -71,7 +71,8 @@
       ],
       "test": [
         "//base/request/request/test/fuzztest:fuzztest",
-        "//base/request/request/test/unittest/common/napi/requestTest:unittest"
+        "//base/request/request/test/unittest/common/napi/requestTest:unittest",
+        "//base/request/request/test/unittest/js_test/requestOperateTaskTest:unittest"
       ]
     }
   }
