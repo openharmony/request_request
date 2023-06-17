@@ -360,7 +360,7 @@ impl RequestTask {
             .min_tls_version(TlsVersion::TLS_1_2);
 
         if self.conf.common_data.redirect {
-            client = client.redirect(Redirect::limited(10));
+            client = client.redirect(Redirect::limited(usize::MAX));
         } else {
             client = client.redirect(Redirect::none());
         }
@@ -516,6 +516,7 @@ impl RequestTask {
                 if http_response_code.is_server_error()
                     || (http_response_code.as_str() != "408"
                         && http_response_code.is_client_error())
+                    || http_response_code.is_redirection()
                 {
                     self.set_code(index, Reason::ProtocolError);
                     return false;
@@ -1087,6 +1088,7 @@ fn build_multipart_request(
     let part = Part::new()
         .name(task.conf.file_specs[index].name.as_str())
         .file_name(task.conf.file_specs[index].file_name.as_str())
+        .mime(task.conf.file_specs[index].mime_type.as_str())
         .length(Some(upload_length))
         .stream(task_reader);
 
