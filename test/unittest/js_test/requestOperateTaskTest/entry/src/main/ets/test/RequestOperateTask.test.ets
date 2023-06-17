@@ -69,7 +69,7 @@ export default function requestOperateTaskTest() {
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
-      task.start(async (err) => {
+      await task.start(async (err) => {
         expect(err === null).assertTrue();
         await task.stop();
         done()
@@ -90,7 +90,7 @@ export default function requestOperateTaskTest() {
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
-      task.start().then(async () => {
+      await task.start().then(async () => {
         expect(true).assertTrue();
         await task.stop();
         done();
@@ -114,7 +114,7 @@ export default function requestOperateTaskTest() {
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
-      task.start(async (err) => {
+      await task.start(async (err) => {
         expect(err === null).assertTrue();
         await task.stop();
         done();
@@ -135,7 +135,7 @@ export default function requestOperateTaskTest() {
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf)
-      task.start().then(async () => {
+      await task.start().then(async () => {
         expect(true).assertTrue();
         await task.stop();
         done();
@@ -234,7 +234,7 @@ export default function requestOperateTaskTest() {
       let task = await request.agent.create(context, conf);
       await task.start();
       task.on('progress', function(progress) {
-        if (progress.state === 0x31) {
+        if (progress.state === request.agent.State.STOPPED) {
           expect(true).assertTrue();
           task.off('progress');
           done();
@@ -323,7 +323,7 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start();
-      task.pause(async (err) => {
+      await task.pause(async (err) => {
         expect(err === null).assertTrue()
         await request.agent.remove(task.tid);
         done()
@@ -345,7 +345,7 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start();
-      task.pause().then(async () => {
+      await task.pause().then(async () => {
         expect(true).assertTrue();
         await request.agent.remove(task.tid);
         done();
@@ -371,14 +371,14 @@ export default function requestOperateTaskTest() {
       let task = await request.agent.create(context, conf);
       await task.start();
       await task.pause();
-      task.resume().then(() => {
+      await task.resume().then(() => {
         expect(true).assertTrue();
         done();
       }).catch((err) => {
         expect(false).assertTrue();
         done();
       })
-      task.pause().then(async () => {
+      await task.pause().then(async () => {
         expect(true).assertTrue();
         await request.agent.remove(task.tid);
         done();
@@ -428,7 +428,7 @@ export default function requestOperateTaskTest() {
       let task = await request.agent.create(context, conf);
       await task.start();
       await task.pause();
-      task.resume(async (err) => {
+      await task.resume(async (err) => {
         expect(err === null).assertTrue();
         await request.agent.remove(task.tid);
         done();
@@ -451,7 +451,7 @@ export default function requestOperateTaskTest() {
       let task = await request.agent.create(context, conf);
       try {
         await task.start();
-        task.stop().then(() => {
+        await task.stop().then(() => {
           expect(true).assertTrue();
           done();
         }).catch((err) => {
@@ -504,7 +504,7 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start();
-      task.stop((err) => {
+      await task.stop((err) => {
         expect(err === null).assertTrue()
         done()
       })
@@ -525,7 +525,7 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start();
-      task.stop().then(() => {
+      await task.stop().then(() => {
         expect(true).assertTrue();
         done();
       }).catch((err) => {
@@ -549,7 +549,7 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start();
-      task.stop((err) => {
+      await task.stop((err) => {
         expect(err === null).assertTrue();
         done();
       })
@@ -570,7 +570,7 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start();
-      task.stop().then(() => {
+      await task.stop().then(() => {
         expect(true).assertTrue();
         done();
       }).catch((err) => {
@@ -596,7 +596,7 @@ export default function requestOperateTaskTest() {
       try{
         let task = await request.agent.create(context, conf);
         await task.start();
-        task.stop((err) => {
+        await task.stop((err) => {
           expect(err === null).assertTrue();
           done();
         })
@@ -668,7 +668,7 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       task.on('failed', function (progress) {
-        expect(progress.state).assertEqual(0x41);
+        expect(progress.state).assertEqual(request.agent.State.FAILED);
         done();
       })
       await task.start();
@@ -689,12 +689,12 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       task.on('progress', function (progress) {
-        expect(progress.state).assertEqual(0x20);
+        expect(progress.state).assertEqual(request.agent.State.RUNNING);
         task.off('progress');
         done();
       })
       task.on('completed', function (progress) {
-        expect(progress.state).assertEqual(0x40);
+        expect(progress.state).assertEqual(request.agent.State.COMPLETED);
         done();
       })
       await task.start();
@@ -737,7 +737,7 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       task.on('progress', function (progress) {
-        if (progress.state === 0x50) {
+        if (progress.state === request.agent.State.REMOVED) {
           expect(true).assertTrue();
           task.off('progress');
           done();
@@ -1020,6 +1020,50 @@ export default function requestOperateTaskTest() {
         expect(err.code).assertEqual(21900006);
         done();
       }
+    })
+
+    /**
+     * @tc.name: testRedirect001
+     * @tc.desc: Test redirect enable
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testRedirect001', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        saveas: `test.apk`,
+        mode: request.agent.Mode.FOREGROUND,
+        redirect: true
+      }
+      let task = await request.agent.create(context, conf);
+      task.on("completed", (progress) => {
+        expect(true).assertTrue();
+        done();
+      })
+      await task.start();
+    })
+
+    /**
+     * @tc.name: testRedirect002
+     * @tc.desc: Test redirect disable
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testRedirect002', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        saveas: `test.apk`,
+        mode: request.agent.Mode.FOREGROUND,
+        redirect: false
+      }
+      let task = await request.agent.create(context, conf);
+      task.on("failed", (progress) => {
+        expect(true).assertTrue();
+        done();
+      })
+      await task.start();
     })
   })
 }

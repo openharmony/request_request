@@ -122,6 +122,30 @@ static void NapiCreateNetwork(napi_env env, napi_value &network)
     NapiUtils::SetUint32Property(env, network, "CELLULAR", static_cast<uint32_t>(Network::CELLULAR));
 }
 
+static void NapiCreateState(napi_env env, napi_value &state)
+{
+    napi_create_object(env, &state);
+    NapiUtils::SetUint32Property(env, state, "INITIALIZED", static_cast<uint32_t>(State::INITIALIZED));
+    NapiUtils::SetUint32Property(env, state, "WAITING", static_cast<uint32_t>(State::WAITING));
+    NapiUtils::SetUint32Property(env, state, "RUNNING", static_cast<uint32_t>(State::RUNNING));
+    NapiUtils::SetUint32Property(env, state, "RETRYING", static_cast<uint32_t>(State::RETRYING));
+    NapiUtils::SetUint32Property(env, state, "PAUSED", static_cast<uint32_t>(State::PAUSED));
+    NapiUtils::SetUint32Property(env, state, "STOPPED", static_cast<uint32_t>(State::STOPPED));
+    NapiUtils::SetUint32Property(env, state, "COMPLETED", static_cast<uint32_t>(State::COMPLETED));
+    NapiUtils::SetUint32Property(env, state, "FAILED", static_cast<uint32_t>(State::FAILED));
+    NapiUtils::SetUint32Property(env, state, "REMOVED", static_cast<uint32_t>(State::REMOVED));
+}
+
+static void NapiCreateBroken(napi_env env, napi_value &broken)
+{
+    napi_create_object(env, &broken);
+    NapiUtils::SetUint32Property(env, broken, "OTHERS", static_cast<uint32_t>(Broken::OTHERS));
+    NapiUtils::SetUint32Property(env, broken, "DISCONNECTED", static_cast<uint32_t>(Broken::DISCONNECTED));
+    NapiUtils::SetUint32Property(env, broken, "TIMEOUT", static_cast<uint32_t>(Broken::TIMEOUT));
+    NapiUtils::SetUint32Property(env, broken, "PROTOCOL", static_cast<uint32_t>(Broken::PROTOCOL));
+    NapiUtils::SetUint32Property(env, broken, "FSIO", static_cast<uint32_t>(Broken::FSIO));
+}
+
 static napi_value InitAgent(napi_env env, napi_value exports)
 {
     REQUEST_HILOGI("InitAgent in");
@@ -131,11 +155,17 @@ static napi_value InitAgent(napi_env env, napi_value exports)
     NapiCreateMode(env, mode);
     napi_value network = nullptr;
     NapiCreateNetwork(env, network);
+    napi_value state = nullptr;
+    NapiCreateState(env, state);
+    napi_value broken = nullptr;
+    NapiCreateBroken(env, broken);
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_PROPERTY("Action", action),
         DECLARE_NAPI_PROPERTY("Mode", mode),
         DECLARE_NAPI_PROPERTY("Network", network),
+        DECLARE_NAPI_PROPERTY("State", state),
+        DECLARE_NAPI_PROPERTY("Broken", broken),
 
         DECLARE_NAPI_METHOD("create", JsTask::JsCreate),
         DECLARE_NAPI_METHOD("remove", JsTask::Remove),
