@@ -124,6 +124,7 @@ ohos_shared_library("request_service_c") {
     "distributed_notification_service:ans_innerkits",
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_appdatafwk",
     "relational_store:native_dataability",
