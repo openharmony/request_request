@@ -85,7 +85,6 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetH
     REQUEST_HILOGD("Observe net capabilities change. start");
     if (netAllCap->netCaps_.count(NetCap::NET_CAPABILITY_INTERNET)) {
         netAdapter_.isOnline_ = true;
-        UpdateRoaming();
         if (netAllCap->bearerTypes_.count(NetBearType::BEARER_CELLULAR)) {
             REQUEST_HILOGI("Bearer Cellular");
             netAdapter_.networkInfo_.networkType = Network::CELLULAR;
@@ -99,6 +98,7 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetH
             netAdapter_.callback_();
             REQUEST_HILOGD("NetCapabilitiesChange callback");
         }
+        UpdateRoaming();
     } else {
         netAdapter_.isOnline_ = false;
     }
