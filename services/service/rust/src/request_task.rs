@@ -112,7 +112,7 @@ impl TaskOperator {
             TaskManager::get_instance().front_notify("progress".into(), &notify_data);
         }
         let gauge = self.task.conf.common_data.gauge;
-        if version == Version::API9 || !gauge {
+        if version == Version::API9 || gauge {
             let last_background_notify_time =
                 self.task.background_notify_time.load(Ordering::SeqCst);
             if get_current_timestamp() - last_background_notify_time >= BACKGROUND_NOTIFY_INTERVAL {
@@ -1060,6 +1060,7 @@ fn build_stream_request(
     }
     let (_, upload_length) = task.get_upload_info(index);
     info!(LOG_LABEL, "upload length is {}", @public(upload_length));
+    request_builder = request_builder.header("Content-Length", upload_length.to_string().as_str());
     let uploader = Uploader::builder()
         .reader(task_reader)
         .operator(task_operator)
