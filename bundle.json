@@ -41,6 +41,7 @@
         "ability_base",
         "hiviewdfx_hilog_native",
         "core_service",
+        "cellular_data",
         "hilog_native",
         "distributed_notification_service",
         "c_utils",

@@ -100,6 +100,7 @@ ohos_shared_library("request_service_c") {
     "${request_path}/common/include",
     "${request_path}/services/service/rust/src/c_wrapper/include",
     "${core_service_path}/innerkits/include",
+    "${cellular_data_path}/innerkits/include",
     "${notification_path}/interfaces/inner_api",
   ]
   sources = [
@@ -131,8 +132,11 @@ ohos_shared_library("request_service_c") {
     "samgr:samgr_proxy",
   ]
   defines = []
-  if (request_telephony_core_service) {
-    external_deps += [ "core_service:tel_core_service_api" ]
+  if (request_telephony_core_service && request_telephony_cellular_data) {
+    external_deps += [
+      "cellular_data:tel_cellular_data_api",
+      "core_service:tel_core_service_api",
+    ]
     defines += [ "REQUEST_TELEPHONY_CORE_SERVICE" ]
   }
   output_extension = "so"

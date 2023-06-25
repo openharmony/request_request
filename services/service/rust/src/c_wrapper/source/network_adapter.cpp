@@ -25,6 +25,7 @@
 
 #ifdef REQUEST_TELEPHONY_CORE_SERVICE
 #include "core_service_client.h"
+#include "cellular_data_client.h"
 #endif
 #include "i_net_conn_callback.h"
 #include "log.h"
@@ -36,10 +37,7 @@
 #include "telephony_errors.h"
 #endif
 using namespace OHOS::NetManagerStandard;
-using namespace OHOS::Telephony;
 namespace OHOS::Request {
-constexpr int32_t INVALID_SLOT_ID = -1;
-
 NetworkAdapter &NetworkAdapter::GetInstance()
 {
     static NetworkAdapter adapter;
@@ -141,14 +139,29 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetBlockStatusChange(sptr<NetHa
 void NetworkAdapter::NetConnCallbackObserver::UpdateRoaming()
 {
 #ifdef REQUEST_TELEPHONY_CORE_SERVICE
+    REQUEST_HILOGI("upload roaming");
+    constexpr int32_t INVALID_SLOT_ID = -1;
+    int32_t maxSlotNum = DelayedRefSingleton<OHOS::Telephony::CoreServiceClient>::GetInstance().GetMaxSimCount();
+    bool isSim = false;
+    for (int32_t i = 0; i < maxSlotNum; ++i) {
+        if (DelayedRefSingleton<OHOS::Telephony::CoreServiceClient>::GetInstance().IsSimActive(i)) {
+            isSim = true;
+            break;
+        }
+    }
+    if (!isSim) {
+        REQUEST_HILOGE("no sim");
+        return;
+    }
+
     int32_t slotId = INVALID_SLOT_ID;
-    DelayedRefSingleton<CoreServiceClient>::GetInstance().GetPrimarySlotId(slotId);
+    slotId = DelayedRefSingleton<OHOS::Telephony::CellularDataClient>::GetInstance().GetDefaultCellularDataSlotId();
     if (slotId <= INVALID_SLOT_ID) {
         REQUEST_HILOGE("GetDefaultCellularDataSlotId InValidData");
         return;
     }
-    sptr<NetworkState> networkClient = nullptr;
-    DelayedRefSingleton<CoreServiceClient>::GetInstance().GetNetworkState(slotId, networkClient);
+    sptr<OHOS::Telephony::NetworkState> networkClient = nullptr;
+    DelayedRefSingleton<OHOS::Telephony::CoreServiceClient>::GetInstance().GetNetworkState(slotId, networkClient);
     if (networkClient == nullptr) {
         REQUEST_HILOGE("networkState is nullptr");
         return;

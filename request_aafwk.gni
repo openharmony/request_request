@@ -31,6 +31,8 @@ third_path = "//third_party"
 
 core_service_path = "//base/telephony/core_service/interfaces"
 
+cellular_data_path = "//base/telephony/cellular_data/interfaces"
+
 notification_path = "//base/notification/distributed_notification_service"
 
 test_path = "//test/testfwk/developer_test/signature"
@@ -41,7 +43,16 @@ base_path = "//base/hiviewdfx"
 
 declare_args() {
   request_telephony_core_service = false
-  if (defined(global_parts_info.telephony_core_service)) {
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.telephony_core_service) &&
+      global_parts_info.telephony_core_service) {
     request_telephony_core_service = true
+  }
+
+  request_telephony_cellular_data = false
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.telephony_cellular_data) &&
+      global_parts_info.telephony_cellular_data) {
+    request_telephony_cellular_data = true
   }
 }
