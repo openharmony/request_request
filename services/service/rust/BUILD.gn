@@ -72,13 +72,13 @@ ohos_rust_shared_library("request") {
 
   deps = [
     ":request_service_c",
-    "${foundation_path}/communication/netstack/interfaces/innerkits/rust/ylong_http_client:ylong_http_client",
     "${third_path}/rust/crates/tokio/ylong_runtime:lib",
   ]
 
   external_deps = [
     "hilog_native:hilog_rust",
     "ipc:ipc_rust",
+    "netstack:ylong_http_client",
     "safwk:system_ability_fwk_rust",
     "samgr:rust_samgr",
   ]
