@@ -1644,14 +1644,15 @@ export default function requestCreateTaskTest() {
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         token: 'abcdef'
       }
-      request.agent.create(context, conf).then(async (data) => {
-        expect(data.conf.token).assertEqual('abcdef');
-        await request.agent.remove(data.tid);
+      try {
+        request.agent.create(context, conf).then((data) => {
+          expect(false).assertTrue();
+          done();
+        }).catch((err) => {})
+      } catch (err) {
+        expect(err.code).assertEqual(401);
         done();
-      }).catch((err) => {
-        expect(false).assertTrue();
-        done();
-      })
+      }
     })
 
     /**
@@ -1666,14 +1667,15 @@ export default function requestCreateTaskTest() {
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         token: 'a'.padStart(2049, 'a')
       }
-      request.agent.create(context, conf).then(async (data) => {
-        expect(data.conf.token).assertEqual('a'.padStart(2049, 'a'));
-        await request.agent.remove(data.tid);
+      try {
+        request.agent.create(context, conf).then((data) => {
+          expect(false).assertTrue();
+          done();
+        }).catch((err) => {})
+      } catch (err) {
+        expect(err.code).assertEqual(401);
         done();
-      }).catch((err) => {
-        expect(false).assertTrue();
-        done();
-      })
+      }
     })
 
     /**
