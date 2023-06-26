@@ -41,14 +41,15 @@ private:
     static bool ParseData(napi_env env, napi_value jsConfig, Config &config);
     static bool ParseIndex(napi_env env, napi_value jsConfig, Config &config);
     static bool ParseName(napi_env env, napi_value jsVal, std::string &name);
-    static void ParseTitle(napi_env env, napi_value jsConfig, Config &config);
+    static bool ParseTitle(napi_env env, napi_value jsConfig, Config &config);
     static void ParseNetwork(napi_env env, napi_value jsConfig, Network &network);
     static void ParseMethod(napi_env env, napi_value jsConfig, Config &config);
     static void ParseRedirect(napi_env env, napi_value jsConfig, bool &redirect);
+    static void ParseRoaming(napi_env env, napi_value jsConfig, Config &config);
     static void ParseRetry(napi_env env, napi_value jsConfig, bool &retry);
     static void ParseSaveas(napi_env env, napi_value jsConfig, Config &config);
-    static void ParseToken(napi_env env, napi_value jsConfig, std::string &token);
-    static std::string ParseDescription(napi_env env, napi_value jsConfig);
+    static bool ParseToken(napi_env env, napi_value jsConfig, std::string &token);
+    static bool ParseDescription(napi_env env, napi_value jsConfig, std::string &description);
     static int64_t ParseEnds(napi_env env, napi_value jsConfig);
     static int64_t ParseBegins(napi_env env, napi_value jsConfig);
     static std::map<std::string, std::string> ParseMap(napi_env env, napi_value jsConfig,
