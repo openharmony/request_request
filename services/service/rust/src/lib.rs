@@ -29,6 +29,7 @@ pub mod form_item;
 mod log;
 pub mod progress;
 mod utils;
+mod download_server_ipc_interface_code;
 
 use enumration::ErrorCode;
 use hilog_rust::*;
@@ -45,57 +46,26 @@ use std::{
     option::Option,
 };
 use task_manager::*;
+use download_server_ipc_interface_code::*;
 
-/// Function code of RequestCode
-pub enum RequestCode {
-    /// request construct & api10 create task
-    Construct = 0,
-    /// pause task
-    Pause,
-    /// query task || system api Queries specified task details
-    Query,
-    /// query mime type
-    QueryMimeType,
-    /// remove task || removes specifed task belongs to the caller
-    Remove,
-    /// resume task
-    Resume,
-    /// on task
-    On,
-    /// off task
-    Off,
-    /// ap10 start task
-    Start,
-    /// stop task
-    Stop,
-    ///  Shows specified task details belongs to the caller
-    Show,
-    /// Touches specified task with token.
-    Touch,
-    ///  Searches tasks, for system.
-    Search,
-    ///  system api deletes specifed tasks.
-    Clear,
-}
-
-impl TryFrom<u32> for RequestCode {
+impl TryFrom<u32> for RequestInterfaceCode {
     type Error = IpcStatusCode;
     fn try_from(code: u32) -> IpcResult<Self> {
         match code {
-            _ if code == RequestCode::Construct as u32 => Ok(RequestCode::Construct),
-            _ if code == RequestCode::Pause as u32 => Ok(RequestCode::Pause),
-            _ if code == RequestCode::Query as u32 => Ok(RequestCode::Query),
-            _ if code == RequestCode::QueryMimeType as u32 => Ok(RequestCode::QueryMimeType),
-            _ if code == RequestCode::Remove as u32 => Ok(RequestCode::Remove),
-            _ if code == RequestCode::Resume as u32 => Ok(RequestCode::Resume),
-            _ if code == RequestCode::On as u32 => Ok(RequestCode::On),
-            _ if code == RequestCode::Off as u32 => Ok(RequestCode::Off),
-            _ if code == RequestCode::Start as u32 => Ok(RequestCode::Start),
-            _ if code == RequestCode::Stop as u32 => Ok(RequestCode::Stop),
-            _ if code == RequestCode::Show as u32 => Ok(RequestCode::Show),
-            _ if code == RequestCode::Touch as u32 => Ok(RequestCode::Touch),
-            _ if code == RequestCode::Search as u32 => Ok(RequestCode::Search),
-            _ if code == RequestCode::Clear as u32 => Ok(RequestCode::Clear),
+            _ if code == RequestInterfaceCode::Construct as u32 => Ok(RequestInterfaceCode::Construct),
+            _ if code == RequestInterfaceCode::Pause as u32 => Ok(RequestInterfaceCode::Pause),
+            _ if code == RequestInterfaceCode::Query as u32 => Ok(RequestInterfaceCode::Query),
+            _ if code == RequestInterfaceCode::QueryMimeType as u32 => Ok(RequestInterfaceCode::QueryMimeType),
+            _ if code == RequestInterfaceCode::Remove as u32 => Ok(RequestInterfaceCode::Remove),
+            _ if code == RequestInterfaceCode::Resume as u32 => Ok(RequestInterfaceCode::Resume),
+            _ if code == RequestInterfaceCode::On as u32 => Ok(RequestInterfaceCode::On),
+            _ if code == RequestInterfaceCode::Off as u32 => Ok(RequestInterfaceCode::Off),
+            _ if code == RequestInterfaceCode::Start as u32 => Ok(RequestInterfaceCode::Start),
+            _ if code == RequestInterfaceCode::Stop as u32 => Ok(RequestInterfaceCode::Stop),
+            _ if code == RequestInterfaceCode::Show as u32 => Ok(RequestInterfaceCode::Show),
+            _ if code == RequestInterfaceCode::Touch as u32 => Ok(RequestInterfaceCode::Touch),
+            _ if code == RequestInterfaceCode::Search as u32 => Ok(RequestInterfaceCode::Search),
+            _ if code == RequestInterfaceCode::Clear as u32 => Ok(RequestInterfaceCode::Clear),
             _ => Err(IpcStatusCode::Failed),
         }
     }
@@ -153,20 +123,20 @@ fn on_remote_request(
         return Err(IpcStatusCode::Failed);
     }
     match code.try_into()? {
-        RequestCode::Construct => stub.construct(data, reply),
-        RequestCode::Pause => stub.pause(data, reply),
-        RequestCode::Query => stub.show(data, reply),
-        RequestCode::QueryMimeType => stub.query_mime_type(data, reply),
-        RequestCode::Remove => stub.remove(data, reply),
-        RequestCode::Resume => stub.resume(data, reply),
-        RequestCode::On => stub.on(data, reply),
-        RequestCode::Off => stub.off(data, reply),
-        RequestCode::Start => stub.start(data, reply),
-        RequestCode::Stop => stub.stop(data, reply),
-        RequestCode::Show => stub.show(data, reply),
-        RequestCode::Touch => stub.touch(data, reply),
-        RequestCode::Search => stub.search(data, reply),
-        RequestCode::Clear => stub.clear(data, reply),
+        RequestInterfaceCode::Construct => stub.construct(data, reply),
+        RequestInterfaceCode::Pause => stub.pause(data, reply),
+        RequestInterfaceCode::Query => stub.show(data, reply),
+        RequestInterfaceCode::QueryMimeType => stub.query_mime_type(data, reply),
+        RequestInterfaceCode::Remove => stub.remove(data, reply),
+        RequestInterfaceCode::Resume => stub.resume(data, reply),
+        RequestInterfaceCode::On => stub.on(data, reply),
+        RequestInterfaceCode::Off => stub.off(data, reply),
+        RequestInterfaceCode::Start => stub.start(data, reply),
+        RequestInterfaceCode::Stop => stub.stop(data, reply),
+        RequestInterfaceCode::Show => stub.show(data, reply),
+        RequestInterfaceCode::Touch => stub.touch(data, reply),
+        RequestInterfaceCode::Search => stub.search(data, reply),
+        RequestInterfaceCode::Clear => stub.clear(data, reply),
     }
 }
 

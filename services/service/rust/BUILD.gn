@@ -53,6 +53,7 @@ ohos_rust_shared_library("download_server") {
 
 ohos_rust_shared_library("request") {
   sources = [
+    "src/download_server_ipc_interface_code.rs",
     "src/enumration.rs",
     "src/form_item.rs",
     "src/lib.rs",

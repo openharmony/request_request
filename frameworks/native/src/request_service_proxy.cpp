@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "request_service_proxy.h"
+#include "download_server_ipc_interface_code.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -61,7 +62,7 @@ int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid, sptr<Not
     data.WriteString(config.data);
     GetVectorData(config, data);
     data.WriteRemoteObject(listener->AsObject().GetRefPtr());
-    int32_t ret = Remote()->SendRequest(CMD_REQUEST, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REQUEST), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("SendRequest ret : %{public}d", ret);
         return E_SERVICE_ERROR;
@@ -115,7 +116,7 @@ int32_t RequestServiceProxy::Start(const std::string &tid)
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(tid);
     REQUEST_HILOGD("Start.");
-    int32_t ret = Remote()->SendRequest(CMD_START, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_START), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
@@ -130,7 +131,7 @@ int32_t RequestServiceProxy::Stop(const std::string &tid)
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(tid);
     REQUEST_HILOGD("Stop");
-    int32_t ret = Remote()->SendRequest(CMD_STOP, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_STOP), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
@@ -146,7 +147,7 @@ int32_t RequestServiceProxy::Show(const std::string &tid, TaskInfo &info)
     data.WriteUint32(static_cast<uint32_t>(Version::API10));
     data.WriteString(tid);
     REQUEST_HILOGD("Show");
-    int32_t ret = Remote()->SendRequest(CMD_SHOW, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SHOW), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
@@ -166,7 +167,7 @@ int32_t RequestServiceProxy::Touch(const std::string &tid, const std::string &to
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteString(tid);
     data.WriteString(token);
-    int32_t ret = Remote()->SendRequest(CMD_TOUCH, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_TOUCH), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
@@ -190,7 +191,7 @@ int32_t RequestServiceProxy::Search(const Filter &filter, std::vector<std::strin
     data.WriteUint32(static_cast<uint32_t>(filter.state));
     data.WriteUint32(static_cast<uint32_t>(filter.action));
     data.WriteUint32(static_cast<uint32_t>(filter.mode));
-    int32_t ret = Remote()->SendRequest(CMD_TOUCH, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_TOUCH), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
@@ -214,7 +215,7 @@ int32_t RequestServiceProxy::Clear(const std::vector<std::string> &tids, std::ve
     for (auto tid : tids) {
         data.WriteString(tid);
     }
-    int32_t ret = Remote()->SendRequest(CMD_CLEAR, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_CLEAR), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
@@ -238,7 +239,7 @@ int32_t RequestServiceProxy::Query(const std::string &tid, TaskInfo &info, Versi
     data.WriteUint32(static_cast<uint32_t>(version));
     data.WriteString(tid);
     REQUEST_HILOGD("RequestServiceProxy Query started.");
-    int32_t ret = Remote()->SendRequest(CMD_QUERY, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_QUERY), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
@@ -260,7 +261,7 @@ int32_t RequestServiceProxy::Pause(const std::string &tid, Version version)
     data.WriteUint32(static_cast<uint32_t>(version));
     data.WriteString(tid);
     REQUEST_HILOGD("RequestServiceProxy Pause started.");
-    int32_t ret =  Remote()->SendRequest(CMD_PAUSE, data, reply, option);
+    int32_t ret =  Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_PAUSE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
@@ -275,7 +276,8 @@ int32_t RequestServiceProxy::QueryMimeType(const std::string &tid, std::string &
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteString(tid);
     REQUEST_HILOGD("RequestServiceProxy QueryMimeType started.");
-    int32_t ret = Remote()->SendRequest(CMD_QUERYMIMETYPE, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_QUERYMIMETYPE),
+        data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
@@ -296,7 +298,7 @@ int32_t RequestServiceProxy::Remove(const std::string &tid, Version version)
     data.WriteUint32(static_cast<uint32_t>(version));
     data.WriteString(tid);
     REQUEST_HILOGD("RequestServiceProxy Remove started.");
-    int32_t ret = Remote()->SendRequest(CMD_REMOVE, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REMOVE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
@@ -311,7 +313,7 @@ int32_t RequestServiceProxy::Resume(const std::string &tid)
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteString(tid);
     REQUEST_HILOGD("RequestServiceProxy Resume started.");
-    int32_t ret = Remote()->SendRequest(CMD_RESUME, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_RESUME), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
@@ -329,7 +331,7 @@ int32_t RequestServiceProxy::On(const std::string &type, const std::string &tid,
     data.WriteString(type);
     data.WriteString(tid);
     data.WriteRemoteObject(listener->AsObject().GetRefPtr());
-    int32_t ret = Remote()->SendRequest(CMD_ON, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_ON), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
@@ -345,7 +347,7 @@ int32_t RequestServiceProxy::Off(const std::string &type, const std::string &tid
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(type);
     data.WriteString(tid);
-    int32_t ret = Remote()->SendRequest(CMD_OFF, data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_OFF), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;

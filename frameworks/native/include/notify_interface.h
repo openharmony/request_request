@@ -28,10 +28,5 @@ public:
     virtual void CallBack(const Notify &notify) = 0;
     virtual void Done(const TaskInfo &taskInfo) = 0;
 };
-
-enum {
-    REQUEST_NOTIFY,
-    REQUEST_DONE_NOTIFY,
-};
 } // namespace OHOS::Request
 #endif // DOWNLOAD_NOTIFY_INTERFACE_H

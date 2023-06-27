@@ -18,7 +18,7 @@ extern crate ipc_rust;
 extern crate system_ability_fwk_rust;
 use super::{
     enumration::*, log::LOG_LABEL, progress::*, request_binding, task_config::TaskConfig,
-    task_info::TaskInfo, task_manager::*,
+    task_info::TaskInfo, task_manager::*, download_server_ipc_interface_code::*,
 };
 use hilog_rust::*;
 use ipc_rust::{
@@ -317,7 +317,7 @@ impl RequestAbility {
                     client_data.write(&(item.2)).ok();
                 }
                 debug!(LOG_LABEL, "send_request");
-                let reply = obj.send_request(0, &client_data, false).ok();
+                let reply = obj.send_request(RequestNotifyInterfaceCode::Notify as u32, &client_data, false).ok();
                 return;
             }
             debug!(LOG_LABEL, "key not find");
@@ -400,7 +400,7 @@ impl RequestAbility {
                 reply.write(&(item.2)).ok();
             }
             debug!(LOG_LABEL, "send_request");
-            let reply = obj.send_request(1, &reply, false).ok();
+            let reply = obj.send_request(RequestNotifyInterfaceCode::DoneNotify as u32, &reply, false).ok();
 
             RequestAbility::get_ability_instance().off(task_info.task_id, String::from("done"));
         }

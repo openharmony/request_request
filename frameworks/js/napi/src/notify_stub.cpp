@@ -17,6 +17,7 @@
 #include "request_event.h"
 #include "log.h"
 #include "parcel_helper.h"
+#include "download_server_ipc_interface_code.h"
 
 namespace OHOS::Request {
 int32_t NotifyStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
@@ -25,22 +26,20 @@ int32_t NotifyStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
     auto descriptorToken = data.ReadInterfaceToken();
     if (descriptorToken != GetDescriptor()) {
         REQUEST_HILOGE("Remote descriptor not the same as local descriptor.");
-        return E_SERVICE_ERROR;
+        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     switch (code) {
-        case REQUEST_NOTIFY: {
+        case static_cast<uint32_t>(RequestNotifyInterfaceCode::REQUEST_NOTIFY):
             OnCallBack(data);
             break;
-        }
-        case REQUEST_DONE_NOTIFY: {
+        case static_cast<uint32_t>(RequestNotifyInterfaceCode::REQUEST_DONE_NOTIFY):
             OnDone(data);
             break;
-        }
-        default: {
-            return OHOS::UNKNOWN_TRANSACTION;
-        }
+        default:
+            REQUEST_HILOGE("Default value received, check needed.");
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    return E_OK;
+    return ERR_NONE;
 }
 
 void NotifyStub::OnCallBack(MessageParcel &data)
