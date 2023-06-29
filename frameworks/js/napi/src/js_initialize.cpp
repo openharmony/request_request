@@ -92,7 +92,7 @@ ExceptionError JsInitialize::InitParam(napi_env env, napi_value* argv,
     napi_status getStatus = GetContext(env, argv[0], context);
     if (getStatus != napi_ok) {
         REQUEST_HILOGE("Get context fail");
-        return { .code = E_OTHER, .errInfo = "Get context fail" };
+        return { .code = E_PARAMETER_CHECK, .errInfo = "Get context fail" };
     }
 
     if (context->GetApplicationInfo() == nullptr) {
@@ -243,26 +243,37 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
         errInfo = "Index exceeds file list";
         return false;
     }
-    ParseTitle(env, jsConfig, config);
+    if (!ParseTitle(env, jsConfig, config) || !ParseToken(env, jsConfig, config.token) ||
+        !ParseDescription(env, jsConfig, config.description)) {
+        errInfo = "Exceeding maximum length";
+        return false;
+    }
     ParseMethod(env, jsConfig, config);
     ParseSaveas(env, jsConfig, config);
+    ParseRoaming(env, jsConfig, config);
     ParseRedirect(env, jsConfig, config.redirect);
-    ParseToken(env, jsConfig, config.token);
     ParseNetwork(env, jsConfig, config.network);
     ParseRetry(env, jsConfig, config.retry);
 
     config.overwrite = NapiUtils::Convert2Boolean(env, jsConfig, "overwrite");
     config.metered = NapiUtils::Convert2Boolean(env, jsConfig, "metered");
-    config.roaming = NapiUtils::Convert2Boolean(env, jsConfig, "roaming");
     config.gauge = NapiUtils::Convert2Boolean(env, jsConfig, "gauge");
     config.precise = NapiUtils::Convert2Boolean(env, jsConfig, "precise");
     config.begins = ParseBegins(env, jsConfig);
     config.ends = ParseEnds(env, jsConfig);
-    config.description = ParseDescription(env, jsConfig);
     config.mode = static_cast<Mode>(NapiUtils::Convert2Uint32(env, jsConfig, "mode"));
     config.headers = ParseMap(env, jsConfig, "headers");
     config.extras = ParseMap(env, jsConfig, "extras");
     return true;
+}
+
+void JsInitialize::ParseRoaming(napi_env env, napi_value jsConfig, Config &config)
+{
+    if (!NapiUtils::HasNamedProperty(env, jsConfig, "roaming")) {
+        config.roaming = config.version == Version::API10;
+    } else {
+        config.roaming = NapiUtils::Convert2Boolean(env, jsConfig, "roaming");
+    }
 }
 
 void JsInitialize::ParseNetwork(napi_env env, napi_value jsConfig, Network &network)
@@ -273,12 +284,16 @@ void JsInitialize::ParseNetwork(napi_env env, napi_value jsConfig, Network &netw
     }
 }
 
-void JsInitialize::ParseToken(napi_env env, napi_value jsConfig, std::string &token)
+bool JsInitialize::ParseToken(napi_env env, napi_value jsConfig, std::string &token)
 {
     token = NapiUtils::Convert2String(env, jsConfig, "token");
-    if (token.size() < TOKEN_MIN_BYTES || token.size() > TOKEN_MAX_BYTES) {
-        token = "";
+    if (token.empty()) {
+        return true;
     }
+    if (token.size() < TOKEN_MIN_BYTES || token.size() > TOKEN_MAX_BYTES) {
+        return false;
+    }
+    return true;
 }
 
 bool JsInitialize::ParseIndex(napi_env env, napi_value jsConfig, Config &config)
@@ -341,13 +356,13 @@ int64_t JsInitialize::ParseEnds(napi_env env, napi_value jsConfig)
     return NapiUtils::Convert2Int64(env, value);
 }
 
-std::string JsInitialize::ParseDescription(napi_env env, napi_value jsConfig)
+bool JsInitialize::ParseDescription(napi_env env, napi_value jsConfig, std::string &description)
 {
-    std::string description = NapiUtils::Convert2String(env, jsConfig, "description");
+    description = NapiUtils::Convert2String(env, jsConfig, "description");
     if (description.size() > DESCRIPTION_MAXIMUM) {
-        description = "";
+        return false;
     }
-    return description;
+    return true;
 }
 
 std::map<std::string, std::string> JsInitialize::ParseMap(napi_env env, napi_value jsConfig,
@@ -383,12 +398,16 @@ bool JsInitialize::ParseUrl(napi_env env, napi_value jsConfig, std::string &url)
     return true;
 }
 
-void JsInitialize::ParseTitle(napi_env env, napi_value jsConfig, Config &config)
+bool JsInitialize::ParseTitle(napi_env env, napi_value jsConfig, Config &config)
 {
     config.title = NapiUtils::Convert2String(env, jsConfig, "title");
-    if (config.title.empty() || config.title.size() > TITLE_MAXIMUM) {
+    if (config.version == Version::API10 && config.title.size() > TITLE_MAXIMUM) {
+        return false;
+    }
+    if (config.title.empty()) {
         config.title = config.action == Action::UPLOAD ? "upload" : "download";
     }
+    return true;
 }
 
 void JsInitialize::ParseMethod(napi_env env, napi_value jsConfig, Config &config)

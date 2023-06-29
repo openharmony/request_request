@@ -112,7 +112,7 @@ impl TaskOperator {
             TaskManager::get_instance().front_notify("progress".into(), &notify_data);
         }
         let gauge = self.task.conf.common_data.gauge;
-        if version == Version::API9 || !gauge {
+        if version == Version::API9 || gauge {
             let last_background_notify_time =
                 self.task.background_notify_time.load(Ordering::SeqCst);
             if get_current_timestamp() - last_background_notify_time >= BACKGROUND_NOTIFY_INTERVAL {
@@ -249,21 +249,19 @@ impl AsyncRead for TaskReader {
 impl RequestTask {
     pub fn constructor(conf: Arc<TaskConfig>, uid: u64, task_id: u32, files: Vec<File>) -> Self {
         let mut sizes: Vec<i64> = Vec::<i64>::new();
-        let mut file_total_size: i64 = -1;
         match conf.common_data.action {
             Action::DOWNLOAD => sizes.push(-1),
             Action::UPLOAD => {
-                file_total_size = 0;
                 for f in files.iter() {
                     let file_size = f.metadata().unwrap().len() as i64;
                     debug!(LOG_LABEL, "file size size is {}",  @public(file_size));
                     sizes.push(file_size);
-                    file_total_size += file_size;
                 }
             }
         }
         let file_count = files.len();
-        RequestTask {
+        let action = conf.common_data.action;
+        let task = RequestTask {
             conf,
             uid,
             task_id,
@@ -279,14 +277,18 @@ impl RequestTask {
             retry_for_speed: AtomicBool::new(false),
             code: Mutex::new(vec![Reason::Default; file_count]),
             background_notify_time: AtomicU64::new(get_current_timestamp()),
-            file_total_size: AtomicI64::new(file_total_size),
+            file_total_size: AtomicI64::new(-1),
             seek_flag: AtomicBool::new(false),
             range_request: AtomicBool::new(false),
             range_response: AtomicBool::new(false),
             skip_bytes: AtomicU64::new(0),
             has_skip: AtomicBool::new(false),
             upload_counts: AtomicU32::new(0),
+        };
+        if action == Action::UPLOAD {
+            task.file_total_size.store(task.get_upload_file_total_size() as i64, Ordering::SeqCst);
         }
+        task
     }
 
     pub fn build_notify_data(&self) -> NotifyData {
@@ -816,9 +818,17 @@ impl RequestTask {
         if self.conf.version == Version::API10 && self.conf.common_data.mode == Mode::FRONTEND {
             return;
         }
-        let total_file_size = self.file_total_size.load(Ordering::SeqCst);
-        if total_file_size <= 0 {
+        let mut file_total_size = self.file_total_size.load(Ordering::SeqCst);
+        let total_processed = self.progress.lock().unwrap().common_data.total_processed as u64;
+        if file_total_size <= 0 || total_processed == 0 {
             return;
+        }
+        if self.conf.common_data.action == Action::DOWNLOAD {
+            if self.conf.common_data.ends < 0 {
+                file_total_size -= self.conf.common_data.begins as i64;
+            } else {
+                file_total_size = self.conf.common_data.ends - self.conf.common_data.begins as i64 + 1;
+            }
         }
         self.background_notify_time.store(get_current_timestamp(), Ordering::SeqCst);
         let index = self.progress.lock().unwrap().common_data.index;
@@ -827,8 +837,7 @@ impl RequestTask {
         }
         let file_path = self.conf.file_specs[index].path.as_ptr() as *const c_char;
         let file_path_len = self.conf.file_specs[index].path.as_bytes().len() as i32;
-        let total_processed = self.progress.lock().unwrap().common_data.total_processed as u64;
-        let percent = total_processed * 100 / (total_file_size as u64);
+        let percent = total_processed * 100 / (file_total_size as u64);
         info!(LOG_LABEL, "background notify");
         let task_msg = RequestTaskMsg {
             taskId: self.task_id,
@@ -867,6 +876,15 @@ impl RequestTask {
         is_partial_upload = true;
         upload_file_length = ends as u64 - begins + 1 - guard.processed[index] as u64;
         return (is_partial_upload, upload_file_length);
+    }
+
+    fn get_upload_file_total_size(&self) -> u64 {
+        let mut file_total_size = 0;
+        for i in 0..self.conf.file_specs.len() {
+            let (_, upload_size) = self.get_upload_info(i);
+            file_total_size += upload_size;
+        }
+        file_total_size
     }
 }
 
@@ -1060,6 +1078,7 @@ fn build_stream_request(
     }
     let (_, upload_length) = task.get_upload_info(index);
     info!(LOG_LABEL, "upload length is {}", @public(upload_length));
+    request_builder = request_builder.header("Content-Length", upload_length.to_string().as_str());
     let uploader = Uploader::builder()
         .reader(task_reader)
         .operator(task_operator)
