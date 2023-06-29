@@ -129,6 +129,8 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         napi_call_function(env, nullptr, callback, ARG_BUTT, result, &returnValue);
         napi_delete_reference(env, context->callbackRef_);
     }
+    napi_delete_reference(env, context->self_);
+    napi_delete_async_work(env, context->work_);
     delete workData;
 }
 } // namespace OHOS::Request
