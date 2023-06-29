@@ -48,7 +48,7 @@ ohos_fuzztest("DownloadBaseNotifyFuzzTest") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "input:libmmi-client",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",

@@ -67,7 +67,7 @@ request_external_deps = [
   "ability_runtime:data_ability_helper",
   "ability_runtime:napi_base_context",
   "c_utils:utils",
-  "hiviewdfx_hilog_native:libhilog",
+  "hilog:libhilog",
   "ipc:ipc_single",
   "napi:ace_napi",
 ]
