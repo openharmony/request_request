@@ -39,10 +39,9 @@
         "relational_store",
         "napi",
         "ability_base",
-        "hiviewdfx_hilog_native",
+        "hilog",
         "core_service",
         "cellular_data",
-        "hilog_native",
         "distributed_notification_service",
         "c_utils",
         "netstack"
