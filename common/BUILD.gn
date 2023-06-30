@@ -43,7 +43,7 @@ ohos_static_library("request_common_static") {
     "//third_party/openssl:libssl_shared",
   ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
   subsystem_name = "request"
   part_name = "request"

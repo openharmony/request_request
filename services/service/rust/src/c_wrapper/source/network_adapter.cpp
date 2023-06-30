@@ -154,8 +154,8 @@ void NetworkAdapter::NetConnCallbackObserver::UpdateRoaming()
         return;
     }
 
-    int32_t slotId = INVALID_SLOT_ID;
-    slotId = DelayedRefSingleton<OHOS::Telephony::CellularDataClient>::GetInstance().GetDefaultCellularDataSlotId();
+    int32_t slotId =
+        DelayedRefSingleton<OHOS::Telephony::CellularDataClient>::GetInstance().GetDefaultCellularDataSlotId();
     if (slotId <= INVALID_SLOT_ID) {
         REQUEST_HILOGE("GetDefaultCellularDataSlotId InValidData");
         return;

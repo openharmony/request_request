@@ -55,7 +55,7 @@ ohos_fuzztest("DownloadUploadManagerFuzzTest") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "input:libmmi-client",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",

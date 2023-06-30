@@ -49,7 +49,7 @@ ohos_shared_library("request_native") {
     "ability_runtime:data_ability_helper",
     "ability_runtime:napi_base_context",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_single",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
