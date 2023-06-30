@@ -45,22 +45,5 @@ public:
         const sptr<NotifyInterface> &listener) = 0;
     virtual int32_t Off(const std::string &type, const std::string &tid) = 0;
 };
-
-enum {
-    CMD_REQUEST,
-    CMD_PAUSE,
-    CMD_QUERY,
-    CMD_QUERYMIMETYPE,
-    CMD_REMOVE,
-    CMD_RESUME,
-    CMD_ON,
-    CMD_OFF,
-    CMD_START,
-    CMD_STOP,
-    CMD_SHOW,
-    CMD_TOUCH,
-    CMD_SEARCH,
-    CMD_CLEAR,
-};
 } // namespace OHOS::Request
 #endif // DOWNLOAD_SERVICE_INTERFACE_H
