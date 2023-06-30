@@ -728,11 +728,7 @@ extern "C" fn update_app_state(uid: i32, state: i32) {
         if uid as u64 != task_manager.global_front_task.as_ref().unwrap().uid {
             return;
         }
-        task_manager
-            .global_front_task
-            .take()
-            .unwrap()
-            .set_status(State::STOPPED, Reason::AppBackgroundOrTerminate);
+        task_manager.global_front_task.as_ref().unwrap().set_status(State::STOPPED, Reason::AppBackgroundOrTerminate);
     }
 }
 
