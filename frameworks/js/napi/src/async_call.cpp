@@ -100,6 +100,7 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
     auto context = workData->ctx;
     if (context == nullptr || context->output_ == nullptr) {
         REQUEST_HILOGD("missing output handler");
+        delete workData;
         return;
     }
     napi_value result[ARG_BUTT] = { nullptr };

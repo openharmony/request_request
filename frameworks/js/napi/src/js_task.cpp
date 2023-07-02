@@ -136,7 +136,7 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
         napi_delete_reference(context->env_, context->taskRef);
         return status;
     };
-    context->SetInput(input).SetOutput(output).SetExec(exec);
+    context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
     AsyncCall asyncCall(env, info, context);
     return asyncCall.Call(context, "create");
 }

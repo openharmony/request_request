@@ -87,6 +87,9 @@ private:
 
     struct WorkData {
         std::shared_ptr<Context> ctx = nullptr;
+        ~WorkData() {
+            ctx = nullptr;
+        }
     };
     static void OnExecute(napi_env env, void *data);
     static void OnComplete(napi_env env, napi_status status, void *data);
