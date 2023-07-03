@@ -131,15 +131,15 @@ int32_t RequestManager::Stop(const std::string &tid)
     return proxy->Stop(tid);
 }
 
-int32_t RequestManager::Show(const std::string &tid, TaskInfo &info)
+int32_t RequestManager::Query(const std::string &tid, TaskInfo &info)
 {
-    REQUEST_HILOGD("Show in");
+    REQUEST_HILOGD("Query in");
     auto proxy = GetRequestServiceProxy();
     if (proxy == nullptr) {
         return E_SERVICE_ERROR;
     }
 
-    return proxy->Query(tid, info, Version::API10);
+    return proxy->Query(tid, info);
 }
 
 int32_t RequestManager::Touch(const std::string &tid, const std::string &token, TaskInfo &info)
@@ -164,27 +164,27 @@ int32_t RequestManager::Search(const Filter &filter, std::vector<std::string> &t
     return proxy->Search(filter, tids);
 }
 
-int32_t RequestManager::Query(const std::string &tid, TaskInfo &info, Version version)
+int32_t RequestManager::Show(const std::string &tid, TaskInfo &info)
 {
-    REQUEST_HILOGD("Query in");
+    REQUEST_HILOGD("Show in");
     auto proxy = GetRequestServiceProxy();
     if (proxy == nullptr) {
         return E_SERVICE_ERROR;
     }
 
-    return proxy->Query(tid, info, version);
+    return proxy->Show(tid, info);
 }
 
-int32_t RequestManager::Clear(const std::vector<std::string> &tids, std::vector<std::string> &res)
-{
-    REQUEST_HILOGD("Clear in");
-    auto proxy = GetRequestServiceProxy();
-    if (proxy == nullptr) {
-        return E_SERVICE_ERROR;
-    }
-
-    return proxy->Clear(tids, res);
-}
+// int32_t RequestManager::Clear(const std::vector<std::string> &tids, std::vector<std::string> &res)
+// {
+//     REQUEST_HILOGD("Clear in");
+//     auto proxy = GetRequestServiceProxy();
+//     if (proxy == nullptr) {
+//         return E_SERVICE_ERROR;
+//     }
+//
+//     return proxy->Clear(tids, res);
+// }
 
 int32_t RequestManager::Pause(const std::string &tid, Version version)
 {

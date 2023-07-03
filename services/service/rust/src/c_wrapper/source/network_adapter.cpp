@@ -24,8 +24,8 @@
 #include <type_traits>
 
 #ifdef REQUEST_TELEPHONY_CORE_SERVICE
-#include "core_service_client.h"
 #include "cellular_data_client.h"
+#include "core_service_client.h"
 #endif
 #include "i_net_conn_callback.h"
 #include "log.h"

@@ -15,7 +15,8 @@
 //! rust to C++ interface
 #![allow(unused_variables)]
 // C interface for check permission
-use super::{enumration::NetworkInfo, progress::RequestTaskMsg};
+use super::{enumration::*, progress::RequestTaskMsg, form_item::CFileSpec,
+            form_item::CFormItem, task_info::*, c_string_wrapper::*, filter::*};
 use std::ffi::{c_char, c_void};
 
 type APPSTATECB = extern "C" fn(i32, i32);
@@ -35,5 +36,20 @@ extern "C" {
     pub fn RegisterNetworkCallback(f: NETWORKCB);
     pub fn RegisterAPPStateCallback(f: APPSTATECB);
     pub fn GetNetworkInfo() -> *const NetworkInfo;
-    pub fn GetTopBundleName() -> *const c_char;
+    pub fn GetTopBundleName() -> CStringWrapper;
+    pub fn DeleteCTaskInfo(ptr: *const CTaskInfo);
+    pub fn DeleteChar(ptr: *const c_char);
+    pub fn DeleteCFormItem(ptr: *const CFormItem);
+    pub fn DeleteCFileSpec(ptr: *const CFileSpec);
+    pub fn DeleteCEachFileStatus(ptr: *const CEachFileStatus);
+    pub fn DeleteCVectorWrapper(ptr: *const u32);
+    pub fn HasTaskRecord(taskId: u32) -> bool;
+    pub fn InsertDB(taskInfo: CTaskInfo) -> bool;
+    pub fn UpdateDB(taskId: u32, updateInfo: CUpdateInfo) -> bool;
+    pub fn Touch(taskId: u32, uid: u64, token: CStringWrapper) -> *const CTaskInfo;
+    pub fn Query(taskId: u32, permisson: QueryPermission) -> *const CTaskInfo;
+    pub fn Search(filter: CFilter) -> CVectorWrapper;
+    pub fn IsSystemAPI(tokenId: u64) -> bool;
+    pub fn CheckSessionManagerPermission(tokenId: u64) -> QueryPermission;
+    pub fn GetCallingBundle(tokenId: u64) -> CStringWrapper;
 }

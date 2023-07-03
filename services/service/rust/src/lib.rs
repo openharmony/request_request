@@ -28,8 +28,10 @@ pub mod task_manager;
 pub mod form_item;
 mod log;
 pub mod progress;
-mod utils;
+pub mod utils;
+pub mod c_string_wrapper;
 mod download_server_ipc_interface_code;
+pub mod filter;
 
 use enumration::ErrorCode;
 use hilog_rust::*;
@@ -65,7 +67,6 @@ impl TryFrom<u32> for RequestInterfaceCode {
             _ if code == RequestInterfaceCode::Show as u32 => Ok(RequestInterfaceCode::Show),
             _ if code == RequestInterfaceCode::Touch as u32 => Ok(RequestInterfaceCode::Touch),
             _ if code == RequestInterfaceCode::Search as u32 => Ok(RequestInterfaceCode::Search),
-            _ if code == RequestInterfaceCode::Clear as u32 => Ok(RequestInterfaceCode::Clear),
             _ => Err(IpcStatusCode::Failed),
         }
     }
@@ -101,8 +102,8 @@ pub trait RequestServiceInterface: IRemoteBroker {
     fn touch(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()>;
     /// Searches tasks, for system.
     fn search(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()>;
-    /// Deletes tasks  system api
-    fn clear(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()>;
+    /// Searches tasks
+    fn query(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()>;
 }
 
 fn on_remote_request(
@@ -125,7 +126,7 @@ fn on_remote_request(
     match code.try_into()? {
         RequestInterfaceCode::Construct => stub.construct(data, reply),
         RequestInterfaceCode::Pause => stub.pause(data, reply),
-        RequestInterfaceCode::Query => stub.show(data, reply),
+        RequestInterfaceCode::Query => stub.query(data, reply),
         RequestInterfaceCode::QueryMimeType => stub.query_mime_type(data, reply),
         RequestInterfaceCode::Remove => stub.remove(data, reply),
         RequestInterfaceCode::Resume => stub.resume(data, reply),
@@ -136,7 +137,7 @@ fn on_remote_request(
         RequestInterfaceCode::Show => stub.show(data, reply),
         RequestInterfaceCode::Touch => stub.touch(data, reply),
         RequestInterfaceCode::Search => stub.search(data, reply),
-        RequestInterfaceCode::Clear => stub.clear(data, reply),
+        RequestInterfaceCode::Clear => todo!(),
     }
 }
 
@@ -146,65 +147,6 @@ define_remote_object!(
         proxy: RequestServiceProxy,
     }
 );
-
-// Make RemoteStub<RequestServiceStub> object can call RequestServiceInterface function directly.
-impl RequestServiceInterface for RemoteStub<RequestServiceStub> {
-    fn construct(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        self.0.construct(data, reply)
-    }
-
-    fn pause(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        self.0.pause(data, reply)
-    }
-
-    fn query_mime_type(
-        &self,
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
-        self.0.query_mime_type(data, reply)
-    }
-
-    fn remove(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        self.0.remove(data, reply)
-    }
-
-    fn resume(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        self.0.resume(data, reply)
-    }
-
-    fn on(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        self.0.on(data, reply)
-    }
-
-    fn off(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        self.0.off(data, reply)
-    }
-
-    fn start(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        self.0.start(data, reply)
-    }
-
-    fn stop(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        self.0.stop(data, reply)
-    }
-
-    fn search(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        self.0.search(data, reply)
-    }
-
-    fn show(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        self.0.show(data, reply)
-    }
-
-    fn touch(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        self.0.touch(data, reply)
-    }
-
-    fn clear(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        self.0.clear(data, reply)
-    }
-}
 
 impl RequestServiceInterface for RequestServiceProxy {
     fn construct(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
@@ -259,7 +201,7 @@ impl RequestServiceInterface for RequestServiceProxy {
         Ok(())
     }
 
-    fn clear(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+    fn query(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
         Ok(())
     }
 }

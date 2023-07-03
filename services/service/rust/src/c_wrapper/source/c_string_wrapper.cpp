@@ -13,21 +13,25 @@
 * limitations under the License.
 */
 
-#ifndef REQUEST_C_CHECK_PERMISSION_H
-#define REQUEST_C_CHECK_PERMISSION_H
+#include "c_string_wrapper.h"
 
-#include <stdint.h>
-#include "c_enumration.h"
+#include <cstdint>
+#include <string.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "log.h"
 
-bool CheckPermission(uint64_t tokenId);
-QueryPermission CheckSessionManagerPermission(uint64_t tokenId);
-bool IsSystemAPI(uint64_t tokenId);
-
-#ifdef __cplusplus
+void DeleteChar(char *ptr)
+{
+    delete[] ptr;
 }
-#endif
-#endif // REQUEST_C_CHECK_PERMISSION_H
+
+CStringWrapper WrapperCString(const std::string &str)
+{
+    REQUEST_HILOGE("begin WrapperCString str is %{public}s", str.c_str());
+    CStringWrapper cStringWrapper;
+    cStringWrapper.len = str.length();
+    cStringWrapper.c_str = new char[cStringWrapper.len + 1];
+    memcpy(cStringWrapper.c_str, str.c_str(), cStringWrapper.len);
+    cStringWrapper.c_str[cStringWrapper.len] = '\0';
+    return cStringWrapper;
+}

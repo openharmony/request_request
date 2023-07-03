@@ -13,21 +13,22 @@
 * limitations under the License.
 */
 
-#ifndef REQUEST_C_CHECK_PERMISSION_H
-#define REQUEST_C_CHECK_PERMISSION_H
+#ifndef C_FILTER_H
+#define C_FILTER_H
 
-#include <stdint.h>
-#include "c_enumration.h"
+#include "c_string_wrapper.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+struct CommonFilter {
+    uint64_t before;
+    uint64_t after;
+    uint8_t state;
+    uint8_t action;
+    uint8_t mode;
+};
 
-bool CheckPermission(uint64_t tokenId);
-QueryPermission CheckSessionManagerPermission(uint64_t tokenId);
-bool IsSystemAPI(uint64_t tokenId);
+struct CFilter {
+    CStringWrapper bundle;
+    CommonFilter common_data;
+};
 
-#ifdef __cplusplus
-}
-#endif
-#endif // REQUEST_C_CHECK_PERMISSION_H
+#endif // C_FILTER_H

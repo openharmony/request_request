@@ -36,7 +36,7 @@ public:
     static napi_value Touch(napi_env env, napi_callback_info info);
     static napi_value Search(napi_env env, napi_callback_info info);
     static napi_value Query(napi_env env, napi_callback_info info);
-    static napi_value Clear(napi_env env, napi_callback_info info);
+    // static napi_value Clear(napi_env env, napi_callback_info info);
 
     std::string GetTid();
     void SetTid(int32_t tid);
@@ -75,6 +75,14 @@ private:
     static napi_value RequestFileV8(napi_env env, napi_callback_info info);
     static int32_t CreateExec(const std::shared_ptr<ContextInfo> &context);
     static std::string ParseTid(napi_env env, size_t argc, napi_value *argv);
+    static bool ParseSearch(napi_env env, size_t argc, napi_value *argv, Filter &filter);
+    static std::string ParseBundle(napi_env env, napi_value value);
+    static State ParseState(napi_env env, napi_value value);
+    static Action ParseAction(napi_env env, napi_value value);
+    static Mode ParseMode(napi_env env, napi_value value);
+    static bool ParseTouch(napi_env env, size_t argc, napi_value *argv, std::string &tid, std::string &token);
+    static bool ParseBefore(napi_env env, napi_value value, uint64_t &before);
+    static bool ParseAfter(napi_env env, napi_value value, uint64_t before, uint64_t &after);
     bool Equals(napi_env env, napi_value value, napi_ref copy);
 
     static std::mutex createMutex_;

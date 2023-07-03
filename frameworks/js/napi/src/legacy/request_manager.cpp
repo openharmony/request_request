@@ -303,7 +303,8 @@ napi_value RequestManager::OnDownloadComplete(napi_env env, napi_callback_info i
     auto callback = NapiUtils::GetNamedProperty(env, argv[0], "fail");
     if (callback != nullptr) {
         napi_value result[FAIL_CB_ARGC]{};
-        result[0] = NapiUtils::Convert2JSValue(env, "Download task doesn't exist!");
+        std::string message = "Download task doesn't exist!";
+        result[0] = NapiUtils::Convert2JSValue(env, message);
         result[1] = NapiUtils::Convert2JSValue(env, FAIL_CB_TASK_NOT_EXIST);
         NapiUtils::CallFunction(env, argv[0], callback, FAIL_CB_ARGC, result);
     }

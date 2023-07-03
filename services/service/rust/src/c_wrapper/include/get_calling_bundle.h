@@ -13,21 +13,19 @@
 * limitations under the License.
 */
 
-#ifndef REQUEST_C_CHECK_PERMISSION_H
-#define REQUEST_C_CHECK_PERMISSION_H
+#ifndef REQUEST_GET_CALLING_BUNDLE_H
+#define REQUEST_GET_CALLING_BUNDLE_H
 
-#include <stdint.h>
-#include "c_enumration.h"
+#include "c_string_wrapper.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-bool CheckPermission(uint64_t tokenId);
-QueryPermission CheckSessionManagerPermission(uint64_t tokenId);
-bool IsSystemAPI(uint64_t tokenId);
+CStringWrapper GetCallingBundle(uint64_t tokenId);
 
 #ifdef __cplusplus
 }
 #endif
-#endif // REQUEST_C_CHECK_PERMISSION_H
+
+#endif // REQUEST_GET_CALLING_BUNDLE_H

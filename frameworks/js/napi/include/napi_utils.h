@@ -42,15 +42,19 @@ static constexpr int32_t MAX_LEN = 4096;
 napi_status Convert2JSValue(napi_env env, bool in, napi_value &out);
 napi_status Convert2JSValue(napi_env env, std::string &in, napi_value &out);
 napi_status Convert2JSValue(napi_env env, const DownloadInfo &in, napi_value &out);
+napi_value Convert2JSValue(napi_env env, bool code);
 napi_value Convert2JSValue(napi_env env, int32_t code);
 napi_value Convert2JSValue(napi_env env, uint32_t code);
 napi_value Convert2JSValue(napi_env env, int64_t code);
 napi_value Convert2JSValue(napi_env env, uint64_t code);
 napi_value Convert2JSValue(napi_env env, const std::vector<int64_t> &code);
+napi_value Convert2JSValue(napi_env env, const std::vector<std::string> &code);
 napi_value Convert2JSValue(napi_env env, const std::map<std::string, std::string> &code);
 napi_value Convert2JSValue(napi_env env, const std::string &str);
 napi_value Convert2JSValue(napi_env env, const std::vector<TaskState> &taskStates);
 napi_value Convert2JSValue(napi_env env, const Progress &progress);
+napi_value Convert2JSValue(napi_env env, TaskInfo &taskInfo);
+napi_value Convert2JSValue(napi_env env, const std::vector<FileSpec> &files, const std::vector<FormItem> &forms);
 napi_value Convert2JSHeaders(napi_env env, const std::map<std::string, std::string> &header);
 
 bool Convert2Boolean(napi_env env, napi_value object, const std::string &propertyName);
@@ -83,6 +87,10 @@ std::vector<FileSpec> Convert2FileVector(napi_env env, napi_value jsFiles, const
 bool Convert2File(napi_env env, napi_value jsFile, FileSpec &file);
 std::vector<FormItem> Convert2RequestDataVector(napi_env env, napi_value jsRequestDatas);
 FormItem Convert2RequestData(napi_env env, napi_value jsRequestData);
+std::string Convert2TimeStr(int64_t time);
+std::string Convert2ReasonMsg(Reason code);
+uint32_t Convert2Broken(Reason code);
+std::string GetSaveas(const std::vector<FileSpec> &files, Action action);
 bool IsPathValid(const std::string &filePath);
 } // namespace OHOS::Request::NapiUtils
 #endif /* DOWNLOAD_NAPI_UTILS_H */

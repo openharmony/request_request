@@ -19,7 +19,8 @@
 #include "js_task.h"
 
 namespace OHOS::Request {
-
+static constexpr uint32_t TOKEN_MAX_BYTES = 2048;
+static constexpr uint32_t TOKEN_MIN_BYTES = 8;
 class JsInitialize {
 public:
     JsInitialize() = default;

@@ -14,6 +14,8 @@
  */
 
 #include <mutex>
+#include <ctime>
+#include <regex>
 #include "async_call.h"
 #include "request_event.h"
 #include "request_manager.h"
@@ -289,28 +291,292 @@ std::string JsTask::ParseTid(napi_env env, size_t argc, napi_value *argv)
 
 napi_value JsTask::Show(napi_env env, napi_callback_info info)
 {
-    return nullptr;
+    struct ShowContext : public AsyncCall::Context {
+        std::string tid;
+        TaskInfo taskInfo;
+        std::string token;
+    };
+
+    auto context = std::make_shared<ShowContext>();
+    context->withErrCode_ = true;
+    context->version_ = Version::API10;
+    auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        context->tid = ParseTid(context->env_, argc, argv);
+        if (context->tid.empty()) {
+            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Parse tid fail!", true);
+            return napi_invalid_arg;
+        }
+        return napi_ok;
+    };
+    auto output = [context](napi_value *result) -> napi_status {
+        if (context->innerCode_ != E_OK) {
+            return napi_generic_failure;
+        }
+        *result = NapiUtils::Convert2JSValue(context->env_, context->taskInfo);
+        return napi_ok;
+    };
+    auto exec = [context]() {
+        if (!RequestManager::GetInstance()->LoadRequestServer()) {
+            context->innerCode_ = E_SERVICE_ERROR;
+            return;
+        }
+        context->innerCode_ = RequestManager::GetInstance()->Touch(context->tid, context->token, context->taskInfo);
+    };
+    context->SetInput(input).SetOutput(output).SetExec(exec);
+    AsyncCall asyncCall(env, info, context);
+    return asyncCall.Call(context, "show");
 }
 
 napi_value JsTask::Touch(napi_env env, napi_callback_info info)
 {
-    return nullptr;
+    struct TouchContext : public AsyncCall::Context {
+        std::string tid;
+        std::string token;
+        TaskInfo taskInfo;
+    };
+
+    auto context = std::make_shared<TouchContext>();
+    context->withErrCode_ = true;
+    context->version_ = Version::API10;
+    auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        bool ret = ParseTouch(context->env_, argc, argv, context->tid, context->token);
+        if (!ret) {
+            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Parse tid or token fail!", true);
+            return napi_invalid_arg;
+        }
+        return napi_ok;
+    };
+    auto output = [context](napi_value *result) -> napi_status {
+        if (context->innerCode_ != E_OK) {
+            return napi_generic_failure;
+        }
+        *result = NapiUtils::Convert2JSValue(context->env_, context->taskInfo);
+        return napi_ok;
+    };
+    auto exec = [context]() {
+        if (!RequestManager::GetInstance()->LoadRequestServer()) {
+            context->innerCode_ = E_SERVICE_ERROR;
+            return;
+        }
+        context->innerCode_ = RequestManager::GetInstance()->Touch(context->tid, context->token, context->taskInfo);
+    };
+    context->SetInput(input).SetOutput(output).SetExec(exec);
+    AsyncCall asyncCall(env, info, context);
+    return asyncCall.Call(context, "show");
+}
+
+bool JsTask::ParseTouch(napi_env env, size_t argc, napi_value *argv, std::string &tid, std::string &token)
+{
+    if (argc < 2) {
+        REQUEST_HILOGE("Wrong number of arguments");
+        return false;
+    }
+    if (NapiUtils::GetValueType(env, argv[0]) != napi_string || NapiUtils::GetValueType(env, argv[1]) != napi_string) {
+        REQUEST_HILOGE("The parameter is not of string type");
+        return false;
+    }
+    tid = NapiUtils::Convert2String(env, argv[0]);
+    token = NapiUtils::Convert2String(env, argv[1]);
+    if (tid.empty() || token.empty()) {
+        return false;
+    }
+    if (token.size() < TOKEN_MIN_BYTES || token.size() > TOKEN_MAX_BYTES) {
+        return false;
+    }
+    return true;
+}
+
+bool JsTask::ParseSearch(napi_env env, size_t argc, napi_value *argv, Filter &filter)
+{
+    if (argc < 1) {
+        REQUEST_HILOGE("Wrong number of arguments");
+        return false;
+    }
+    if (NapiUtils::GetValueType(env, argv[0]) != napi_object) {
+        REQUEST_HILOGE("The parameter is not of object type");
+        return false;
+    }
+    filter.bundle = ParseBundle(env, argv[0]);
+    if (!ParseBefore(env, argv[0], filter.before)) {
+        return false;
+    }
+    if (!ParseAfter(env, argv[0], filter.before, filter.after)) {
+        return false;
+    }
+    filter.state = ParseState(env, argv[0]);
+    filter.action = ParseAction(env, argv[0]);
+    filter.mode = ParseMode(env, argv[0]);
+    return true;
+}
+
+std::string JsTask::ParseBundle(napi_env env, napi_value value)
+{
+    if (!NapiUtils::HasNamedProperty(env, value, "bundle")) {
+        return "*";
+    }
+    napi_value value1 = NapiUtils::GetNamedProperty(env, value, "bundle");
+    if (NapiUtils::GetValueType(env, value1) != napi_string) {
+        return "*";
+    }
+    return NapiUtils::Convert2String(env, value1);
+}
+
+State JsTask::ParseState(napi_env env, napi_value value)
+{
+    if (!NapiUtils::HasNamedProperty(env, value, "state")) {
+        return State::ANY;
+    }
+    napi_value value1 = NapiUtils::GetNamedProperty(env, value, "state");
+    if (NapiUtils::GetValueType(env, value1) != napi_number) {
+        return State::ANY;
+    }
+    return static_cast<State>(NapiUtils::Convert2Uint32(env, value1));
+}
+
+Action JsTask::ParseAction(napi_env env, napi_value value)
+{
+    if (!NapiUtils::HasNamedProperty(env, value, "action")) {
+        return Action::ANY;
+    }
+    napi_value value1 = NapiUtils::GetNamedProperty(env, value, "action");
+    if (NapiUtils::GetValueType(env, value1) != napi_number) {
+        return Action::ANY;
+    }
+    return static_cast<Action>(NapiUtils::Convert2Uint32(env, value1));
+}
+
+Mode JsTask::ParseMode(napi_env env, napi_value value)
+{
+    if (!NapiUtils::HasNamedProperty(env, value, "mode")) {
+        return Mode::ANY;
+    }
+    napi_value value1 = NapiUtils::GetNamedProperty(env, value, "mode");
+    if (NapiUtils::GetValueType(env, value1) != napi_number) {
+        return Mode::ANY;
+    }
+    return static_cast<Mode>(NapiUtils::Convert2Uint32(env, value1));
+}
+
+bool JsTask::ParseBefore(napi_env env, napi_value value, uint64_t &before)
+{
+    time_t timeStamp = time(nullptr);
+    std::string beforeStr = NapiUtils::Convert2String(env, value, "before");
+    if (beforeStr.empty()) {
+        before = static_cast<uint64_t>(timeStamp);
+        return true;
+    }
+    std::string regexStr =
+        "(\\d{4})-(0\\d{1}|1[0-2])-(0\\d{1}|[12]\\d{1}|3[01])\\s(0\\d{1}|1\\d{1}|2[0-3]):[0-5]\\d{1}:([0-5]\\d{1})";
+    if (!regex_match(beforeStr, std::regex(regexStr))) {
+        REQUEST_HILOGE("Parse data error");
+        return false;
+    }
+	struct tm timeInfo;
+	strptime(beforeStr.c_str(), "%Y-%m-%d %H:%M:%S", &timeInfo);
+	timeStamp = mktime(&timeInfo);
+    before = static_cast<uint64_t>(timeStamp);
+    return true;
+}
+
+bool JsTask::ParseAfter(napi_env env, napi_value value, uint64_t before, uint64_t &after)
+{
+    std::string afterStr = NapiUtils::Convert2String(env, value, "after");
+    if (afterStr.empty()) {
+        after = before - 24*60*60;
+        return true;
+    }
+    std::string regexStr =
+        "(\\d{4})-(0\\d{1}|1[0-2])-(0\\d{1}|[12]\\d{1}|3[01])\\s(0\\d{1}|1\\d{1}|2[0-3]):[0-5]\\d{1}:([0-5]\\d{1})";
+    if (!regex_match(afterStr, std::regex(regexStr))) {
+        REQUEST_HILOGE("Parse data error");
+        return false;
+    }
+	struct tm timeInfo;
+	strptime(afterStr.c_str(), "%Y-%m-%d %H:%M:%S", &timeInfo);
+	time_t time = mktime(&timeInfo);
+    after = static_cast<uint64_t>(time);
+    return true;
 }
 
 napi_value JsTask::Search(napi_env env, napi_callback_info info)
 {
-    return nullptr;
+    struct SearchContext : public AsyncCall::Context {
+        Filter filter;
+        std::vector<std::string> tids;
+    };
+
+    auto context = std::make_shared<SearchContext>();
+    context->withErrCode_ = true;
+    context->version_ = Version::API10;
+    auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        bool ret = ParseSearch(context->env_, argc, argv, context->filter);
+        if (!ret) {
+            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Parse filter fail!", true);
+            return napi_invalid_arg;
+        }
+        return napi_ok;
+    };
+    auto output = [context](napi_value *result) -> napi_status {
+        if (context->innerCode_ != E_OK) {
+            return napi_generic_failure;
+        }
+        *result = NapiUtils::Convert2JSValue(context->env_, context->tids);
+        return napi_ok;
+    };
+    auto exec = [context]() {
+        if (!RequestManager::GetInstance()->LoadRequestServer()) {
+            context->innerCode_ = E_SERVICE_ERROR;
+            return;
+        }
+        context->innerCode_ = RequestManager::GetInstance()->Search(context->filter, context->tids);
+    };
+    context->SetInput(input).SetOutput(output).SetExec(exec);
+    AsyncCall asyncCall(env, info, context);
+    return asyncCall.Call(context, "show");
 }
 
 napi_value JsTask::Query(napi_env env, napi_callback_info info)
 {
-    return nullptr;
+    struct QueryContext : public AsyncCall::Context {
+        std::string tid;
+        TaskInfo taskInfo;
+    };
+
+    auto context = std::make_shared<QueryContext>();
+    context->withErrCode_ = true;
+    context->version_ = Version::API10;
+    auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        context->tid = ParseTid(context->env_, argc, argv);
+        if (context->tid.empty()) {
+            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Parse tid fail!", true);
+            return napi_invalid_arg;
+        }
+        return napi_ok;
+    };
+    auto output = [context](napi_value *result) -> napi_status {
+        if (context->innerCode_ != E_OK) {
+            return napi_generic_failure;
+        }
+        context->taskInfo.withSystem = true;
+        *result = NapiUtils::Convert2JSValue(context->env_, context->taskInfo);
+        return napi_ok;
+    };
+    auto exec = [context]() {
+        if (!RequestManager::GetInstance()->LoadRequestServer()) {
+            context->innerCode_ = E_SERVICE_ERROR;
+            return;
+        }
+        context->innerCode_ = RequestManager::GetInstance()->Query(context->tid, context->taskInfo);
+    };
+    context->SetInput(input).SetOutput(output).SetExec(exec);
+    AsyncCall asyncCall(env, info, context);
+    return asyncCall.Call(context, "show");
 }
 
-napi_value JsTask::Clear(napi_env env, napi_callback_info info)
-{
-    return nullptr;
-}
+//napi_value JsTask::Clear(napi_env env, napi_callback_info info)
+//{
+//    return nullptr;
+//}
 
 std::string JsTask::GetTid()
 {

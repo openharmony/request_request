@@ -16,11 +16,13 @@
 #ifndef REQUEST_GET_TOP_BUNDLE_H
 #define REQUEST_GET_TOP_BUNDLE_H
 
+#include "c_string_wrapper.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-char *GetTopBundleName(void);
+CStringWrapper GetTopBundleName(void);
 
 #ifdef __cplusplus
 }
