@@ -19,7 +19,7 @@ use std::ffi::{ c_char, CStr };
 
 pub fn get_current_timestamp() -> u64 {
     match SystemTime::now().duration_since(UNIX_EPOCH) {
-        Ok(n) => n.as_secs(),
+        Ok(n) => n.as_millis() as u64,
         Err(_) => panic!("SystemTime before UNIX EPOCH!"),
     }
 }

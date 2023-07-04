@@ -29,6 +29,7 @@ RequestDataBase::RequestDataBase()
     int errCode = OHOS::NativeRdb::E_OK;
     OHOS::NativeRdb::RdbStoreConfig config(DB_NAME);
     config.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
+//    config.SetEncryptStatus(true);
     RequestDBOpenCallback requestDBOpenCallback;
     store_ = OHOS::NativeRdb::RdbHelper::GetRdbStore(config, DATABASE_OPEN_VERSION, requestDBOpenCallback, errCode);
     REQUEST_HILOGI("get request database errcode :%{public}d", errCode);
@@ -158,95 +159,111 @@ bool HasTaskRecord(uint32_t taskId)
     return true;
 }
 
-bool InsertDB(CTaskInfo taskInfo)
+bool WriteRequestTaskInfo(CTaskInfo *taskInfo)
 {
-    REQUEST_HILOGI("insert task info");
+    REQUEST_HILOGI("write to request_task_info");
     if (!OHOS::Request::RequestDataBase::GetInstance()->BeginTransaction()) {
         return false;
     }
     OHOS::NativeRdb::ValuesBucket insertValues;
-    insertValues.PutLong("task_id", taskInfo.common_data.task_id);
-    insertValues.PutLong("uid", taskInfo.common_data.uid);
-    insertValues.PutInt("action", taskInfo.common_data.action);
-    insertValues.PutInt("mode", taskInfo.common_data.mode);
-    insertValues.PutLong("ctime", taskInfo.common_data.ctime);
-    insertValues.PutLong("mtime", taskInfo.common_data.mtime);
-    insertValues.PutInt("reason", taskInfo.common_data.reason);
-    insertValues.PutInt("gauge", taskInfo.common_data.gauge);
-    insertValues.PutInt("retry", taskInfo.common_data.retry);
-    insertValues.PutLong("tries", taskInfo.common_data.tries);
-    insertValues.PutInt("version", taskInfo.common_data.version);
-    insertValues.PutString("bundle", std::string(taskInfo.bundle.c_str, taskInfo.bundle.len));
-    insertValues.PutString("url", std::string(taskInfo.url.c_str, taskInfo.url.len));
-    insertValues.PutString("data", std::string(taskInfo.data.c_str, taskInfo.data.len));
-    insertValues.PutString("token", std::string(taskInfo.token.c_str, taskInfo.token.len));
-    insertValues.PutString("titile", std::string(taskInfo.title.c_str, taskInfo.title.len));
-    insertValues.PutString("description", std::string(taskInfo.description.c_str, taskInfo.description.len));
-    insertValues.PutString("mime_type", std::string(taskInfo.mime_type.c_str, taskInfo.mime_type.len));
-    insertValues.PutInt("state", taskInfo.progress.common_data.state);
-    insertValues.PutLong("idx", taskInfo.progress.common_data.index);
-    insertValues.PutLong("total_processed", taskInfo.progress.common_data.total_processed);
-    insertValues.PutString("sizes", std::string(taskInfo.progress.sizes.c_str, taskInfo.progress.sizes.len));
+    insertValues.PutLong("task_id", taskInfo->common_data.task_id);
+    insertValues.PutLong("uid", taskInfo->common_data.uid);
+    insertValues.PutInt("action", taskInfo->common_data.action);
+    insertValues.PutInt("mode", taskInfo->common_data.mode);
+    insertValues.PutLong("ctime", taskInfo->common_data.ctime);
+    insertValues.PutLong("mtime", taskInfo->common_data.mtime);
+    insertValues.PutInt("reason", taskInfo->common_data.reason);
+    insertValues.PutInt("gauge", taskInfo->common_data.gauge);
+    insertValues.PutInt("retry", taskInfo->common_data.retry);
+    insertValues.PutLong("tries", taskInfo->common_data.tries);
+    insertValues.PutInt("version", taskInfo->common_data.version);
+    insertValues.PutString("bundle", std::string(taskInfo->bundle.c_str, taskInfo->bundle.len));
+    insertValues.PutString("url", std::string(taskInfo->url.c_str, taskInfo->url.len));
+    insertValues.PutString("data", std::string(taskInfo->data.c_str, taskInfo->data.len));
+    insertValues.PutString("token", std::string(taskInfo->token.c_str, taskInfo->token.len));
+    insertValues.PutString("titile", std::string(taskInfo->title.c_str, taskInfo->title.len));
+    insertValues.PutString("description", std::string(taskInfo->description.c_str, taskInfo->description.len));
+    insertValues.PutString("mime_type", std::string(taskInfo->mime_type.c_str, taskInfo->mime_type.len));
+    insertValues.PutInt("state", taskInfo->progress.common_data.state);
+    insertValues.PutLong("idx", taskInfo->progress.common_data.index);
+    insertValues.PutLong("total_processed", taskInfo->progress.common_data.total_processed);
+    insertValues.PutString("sizes", std::string(taskInfo->progress.sizes.c_str, taskInfo->progress.sizes.len));
     insertValues.PutString("processed",
-        std::string(taskInfo.progress.processed.c_str, taskInfo.progress.processed.len));
-    insertValues.PutString("extras", std::string(taskInfo.progress.extras.c_str, taskInfo.progress.extras.len));
-    insertValues.PutLong("form_items_len", taskInfo.form_items_len);
-    insertValues.PutLong("file_specs_len", taskInfo.file_specs_len);
-    uint64_t len = std::max(taskInfo.form_items_len, taskInfo.file_specs_len);
+        std::string(taskInfo->progress.processed.c_str, taskInfo->progress.processed.len));
+    insertValues.PutString("extras", std::string(taskInfo->progress.extras.c_str, taskInfo->progress.extras.len));
+    insertValues.PutLong("form_items_len", taskInfo->form_items_len);
+    insertValues.PutLong("file_specs_len", taskInfo->file_specs_len);
     if (!OHOS::Request::RequestDataBase::GetInstance()->Insert(std::string("request_task_info"), insertValues)) {
-        REQUEST_HILOGE("insert table1 failed");
+        REQUEST_HILOGE("insert to request_task_info failed");
         OHOS::Request::RequestDataBase::GetInstance()->RollBack();
         return false;
     }
+    REQUEST_HILOGI("insert to request_task_info success");
+    return OHOS::Request::RequestDataBase::GetInstance()->Commit();
+}
+
+bool WriteTaskInfoAttachment(CTaskInfo *taskInfo)
+{
+    REQUEST_HILOGI("write to task_info_attachment");
+    if (!OHOS::Request::RequestDataBase::GetInstance()->BeginTransaction()) {
+        return false;
+    }
+    uint64_t len = std::max(taskInfo->form_items_len, taskInfo->file_specs_len);
     for (uint64_t i = 0; i < len; i++) {
-        OHOS::NativeRdb::ValuesBucket insertValues1;
-        insertValues1.PutInt("task_id", taskInfo.common_data.task_id);
-        insertValues1.PutInt("uid", taskInfo.common_data.uid);
-        if (i < taskInfo.form_items_len) {
-            insertValues1.PutString("form_item_name",
-                std::string(taskInfo.form_items_ptr[i].name.c_str, taskInfo.form_items_ptr[i].name.len));
-            insertValues1.PutString("value",
-                std::string(taskInfo.form_items_ptr[i].value.c_str, taskInfo.form_items_ptr[i].value.len));
+        OHOS::NativeRdb::ValuesBucket insertValues;
+        insertValues.PutInt("task_id", taskInfo->common_data.task_id);
+        insertValues.PutInt("uid", taskInfo->common_data.uid);
+        if (i < taskInfo->form_items_len) {
+            insertValues.PutString("form_item_name",
+                std::string(taskInfo->form_items_ptr[i].name.c_str, taskInfo->form_items_ptr[i].name.len));
+            insertValues.PutString("value",
+                std::string(taskInfo->form_items_ptr[i].value.c_str, taskInfo->form_items_ptr[i].value.len));
         }
-        if (i < taskInfo.file_specs_len) {
-            insertValues1.PutString("file_spec_name",
-                std::string(taskInfo.file_specs_ptr[i].name.c_str, taskInfo.file_specs_ptr[i].name.len));
-            insertValues1.PutString("path",
-                std::string(taskInfo.file_specs_ptr[i].path.c_str, taskInfo.file_specs_ptr[i].path.len));
-            insertValues1.PutString("file_name",
-                std::string(taskInfo.file_specs_ptr[i].file_name.c_str, taskInfo.file_specs_ptr[i].file_name.len));
-            insertValues1.PutString("mime_type",
-                std::string(taskInfo.file_specs_ptr[i].mime_type.c_str, taskInfo.file_specs_ptr[i].mime_type.len));
-            insertValues1.PutInt("reason", taskInfo.each_file_status_ptr[i].reason);
-            insertValues1.PutString("message", std::string(taskInfo.each_file_status_ptr[i].message.c_str,
-                                                   taskInfo.each_file_status_ptr[i].message.len));
+        if (i < taskInfo->file_specs_len) {
+            insertValues.PutString("file_spec_name",
+                std::string(taskInfo->file_specs_ptr[i].name.c_str, taskInfo->file_specs_ptr[i].name.len));
+            insertValues.PutString("path",
+                std::string(taskInfo->file_specs_ptr[i].path.c_str, taskInfo->file_specs_ptr[i].path.len));
+            insertValues.PutString("file_name",
+                std::string(taskInfo->file_specs_ptr[i].file_name.c_str, taskInfo->file_specs_ptr[i].file_name.len));
+            insertValues.PutString("mime_type",
+                std::string(taskInfo->file_specs_ptr[i].mime_type.c_str, taskInfo->file_specs_ptr[i].mime_type.len));
+            insertValues.PutInt("reason", taskInfo->each_file_status_ptr[i].reason);
+            insertValues.PutString("message", std::string(taskInfo->each_file_status_ptr[i].message.c_str,
+                                                  taskInfo->each_file_status_ptr[i].message.len));
         }
-        if (!OHOS::Request::RequestDataBase::GetInstance()->Insert(std::string("task_info_attachment"), insertValues1)) {
-            REQUEST_HILOGE("insert table failed");
+        if (!OHOS::Request::RequestDataBase::GetInstance()->Insert(std::string("task_info_attachment"), insertValues)) {
+            REQUEST_HILOGE("insert to task_info_attachment failed");
             OHOS::Request::RequestDataBase::GetInstance()->RollBack();
             return false;
         }
     }
-    REQUEST_HILOGI("insert table success");
+    REQUEST_HILOGI("insert to task_info_attachment success");
     return OHOS::Request::RequestDataBase::GetInstance()->Commit();
 }
 
-bool UpdateDB(uint32_t taskId, CUpdateInfo updateInfo)
+bool RecordTaskInfo(CTaskInfo *taskInfo)
+{
+    return WriteRequestTaskInfo(taskInfo) && WriteTaskInfoAttachment(taskInfo);
+}
+
+bool UpdateTaskInfo(uint32_t taskId, CUpdateInfo *updateInfo)
 {
     REQUEST_HILOGI("update task info");
     if (!OHOS::Request::RequestDataBase::GetInstance()->BeginTransaction()) {
         return false;
     }
     OHOS::NativeRdb::ValuesBucket values;
-    values.PutLong("mtime", updateInfo.mtime);
-    values.PutInt("reason", updateInfo.reason);
-    values.PutLong("tries", updateInfo.tries);
-    values.PutInt("state", updateInfo.progress.common_data.state);
-    values.PutLong("idx", updateInfo.progress.common_data.index);
-    values.PutLong("total_processed", updateInfo.progress.common_data.total_processed);
-    values.PutString("sizes", std::string(updateInfo.progress.sizes.c_str, updateInfo.progress.sizes.len));
-    values.PutString("processed", std::string(updateInfo.progress.processed.c_str, updateInfo.progress.processed.len));
-    values.PutString("extras", std::string(updateInfo.progress.extras.c_str, updateInfo.progress.extras.len));
+    values.PutLong("mtime", updateInfo->mtime);
+    values.PutInt("reason", updateInfo->reason);
+    values.PutLong("tries", updateInfo->tries);
+    values.PutInt("state", updateInfo->progress.common_data.state);
+    values.PutLong("idx", updateInfo->progress.common_data.index);
+    values.PutLong("total_processed", updateInfo->progress.common_data.total_processed);
+    values.PutString("sizes", std::string(updateInfo->progress.sizes.c_str, updateInfo->progress.sizes.len));
+    values.PutString("processed",
+        std::string(updateInfo->progress.processed.c_str, updateInfo->progress.processed.len));
+    values.PutString("extras", std::string(updateInfo->progress.extras.c_str, updateInfo->progress.extras.len));
 
     OHOS::NativeRdb::RdbPredicates rdbPredicates1("request_task_info");
     rdbPredicates1.EqualTo("task_id", std::to_string(taskId));
@@ -255,16 +272,16 @@ bool UpdateDB(uint32_t taskId, CUpdateInfo updateInfo)
         OHOS::Request::RequestDataBase::GetInstance()->RollBack();
         return false;
     }
-    for (uint32_t i = 0; i < updateInfo.each_file_status_len; i++) {
+    for (uint32_t i = 0; i < updateInfo->each_file_status_len; i++) {
         OHOS::NativeRdb::ValuesBucket values1;
-        values1.PutInt("reason", updateInfo.each_file_status_ptr[i].reason);
-        values1.PutString("message", std::string(updateInfo.each_file_status_ptr[i].message.c_str,
-                                         updateInfo.each_file_status_ptr[i].message.len));
+        values1.PutInt("reason", updateInfo->each_file_status_ptr[i].reason);
+        values1.PutString("message", std::string(updateInfo->each_file_status_ptr[i].message.c_str,
+                                         updateInfo->each_file_status_ptr[i].message.len));
         OHOS::NativeRdb::RdbPredicates rdbPredicates2("task_info_attachment");
         rdbPredicates2.EqualTo("task_id", std::to_string(taskId))
             ->And()
-            ->EqualTo("path", std::string(updateInfo.each_file_status_ptr[i].path.c_str,
-                                  updateInfo.each_file_status_ptr[i].path.len));
+            ->EqualTo("path", std::string(updateInfo->each_file_status_ptr[i].path.c_str,
+                                  updateInfo->each_file_status_ptr[i].path.len));
         if (!OHOS::Request::RequestDataBase::GetInstance()->Update(values1, rdbPredicates2)) {
             REQUEST_HILOGE("update table2 failed");
             OHOS::Request::RequestDataBase::GetInstance()->RollBack();
@@ -296,14 +313,12 @@ CTaskInfo *Touch(uint32_t taskId, uint64_t uid, CStringWrapper token)
     return BuildCTaskInfo(taskInfo);
 }
 
-CTaskInfo *Query(uint32_t taskId, QueryPermission permission)
+CTaskInfo *Query(uint32_t taskId, Action queryAction)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates1("request_task_info");
     rdbPredicates1.EqualTo("task_id", std::to_string(taskId));
-    if (permission == QueryPermission::QueryDownLoad) {
-        rdbPredicates1.EqualTo("action", std::to_string(static_cast<uint8_t>(Action::DOWNLOAD)));
-    } else if (permission == QueryPermission::QueryUpload) {
-        rdbPredicates1.EqualTo("action", std::to_string(static_cast<uint8_t>(Action::UPLOAD)));
+    if (queryAction != Action::ANY) {
+        rdbPredicates1.EqualTo("action", std::to_string(static_cast<uint8_t>(queryAction)));
     }
     int64_t form_items_len = 0;
     int64_t file_specs_len = 0;

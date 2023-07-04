@@ -23,7 +23,7 @@ type APPSTATECB = extern "C" fn(i32, i32);
 type NETWORKCB = extern "C" fn();
 
 extern "C" {
-    pub fn CheckPermission(tokenId: u64) -> bool;
+    pub fn CheckPermission(tokenId: u64, permission: CStringWrapper) -> bool;
     pub fn InitServiceHandler();
     pub fn PostTask(f: extern "C" fn());
     pub fn RequestBackgroundNotify(
@@ -44,12 +44,11 @@ extern "C" {
     pub fn DeleteCEachFileStatus(ptr: *const CEachFileStatus);
     pub fn DeleteCVectorWrapper(ptr: *const u32);
     pub fn HasTaskRecord(taskId: u32) -> bool;
-    pub fn InsertDB(taskInfo: CTaskInfo) -> bool;
-    pub fn UpdateDB(taskId: u32, updateInfo: CUpdateInfo) -> bool;
+    pub fn RecordTaskInfo(taskInfo: *const CTaskInfo) -> bool;
+    pub fn UpdateTaskInfo(taskId: u32, updateInfo: *const CUpdateInfo) -> bool;
     pub fn Touch(taskId: u32, uid: u64, token: CStringWrapper) -> *const CTaskInfo;
-    pub fn Query(taskId: u32, permisson: QueryPermission) -> *const CTaskInfo;
+    pub fn Query(taskId: u32, queryAction: Action) -> *const CTaskInfo;
     pub fn Search(filter: CFilter) -> CVectorWrapper;
     pub fn IsSystemAPI(tokenId: u64) -> bool;
-    pub fn CheckSessionManagerPermission(tokenId: u64) -> QueryPermission;
     pub fn GetCallingBundle(tokenId: u64) -> CStringWrapper;
 }

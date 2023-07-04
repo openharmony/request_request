@@ -14,7 +14,7 @@
  */
 
 #include <mutex>
-#include <ctime>
+#include <chrono>
 #include <regex>
 #include "async_call.h"
 #include "request_event.h"
@@ -26,7 +26,9 @@
 #include "napi_utils.h"
 #include "js_initialize.h"
 #include "js_task.h"
+
 namespace OHOS::Request {
+constexpr int64_t MILLISECONDS_IN_ONE_DAY = 24 * 60 * 60 * 1000;
 std::mutex JsTask::createMutex_;
 thread_local napi_ref JsTask::createCtor = nullptr;
 std::mutex JsTask::requestMutex_;
@@ -136,6 +138,9 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
         napi_get_reference_value(context->env_, context->jsConfig, &config);
         JsInitialize::CreatProperties(context->env_, *result, config, context->task);
         napi_delete_reference(context->env_, context->taskRef);
+        if (context->version_ == Version::API10) {
+            napi_delete_reference(context->env_, context->jsConfig);
+        }
         return status;
     };
     context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
@@ -271,7 +276,7 @@ napi_value JsTask::Remove(napi_env env, napi_callback_info info)
     auto exec = [context]() {
         context->innerCode_ = RequestManager::GetInstance()->Remove(context->tid, Version::API10);
     };
-    context->SetInput(input).SetOutput(output).SetExec(exec);
+    context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
     AsyncCall asyncCall(env, info, context);
     return asyncCall.Call(context, "remove");
 }
@@ -291,15 +296,7 @@ std::string JsTask::ParseTid(napi_env env, size_t argc, napi_value *argv)
 
 napi_value JsTask::Show(napi_env env, napi_callback_info info)
 {
-    struct ShowContext : public AsyncCall::Context {
-        std::string tid;
-        TaskInfo taskInfo;
-        std::string token;
-    };
-
-    auto context = std::make_shared<ShowContext>();
-    context->withErrCode_ = true;
-    context->version_ = Version::API10;
+    auto context = std::make_shared<TouchContext>();
     auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
         context->tid = ParseTid(context->env_, argc, argv);
         if (context->tid.empty()) {
@@ -308,36 +305,12 @@ napi_value JsTask::Show(napi_env env, napi_callback_info info)
         }
         return napi_ok;
     };
-    auto output = [context](napi_value *result) -> napi_status {
-        if (context->innerCode_ != E_OK) {
-            return napi_generic_failure;
-        }
-        *result = NapiUtils::Convert2JSValue(context->env_, context->taskInfo);
-        return napi_ok;
-    };
-    auto exec = [context]() {
-        if (!RequestManager::GetInstance()->LoadRequestServer()) {
-            context->innerCode_ = E_SERVICE_ERROR;
-            return;
-        }
-        context->innerCode_ = RequestManager::GetInstance()->Touch(context->tid, context->token, context->taskInfo);
-    };
-    context->SetInput(input).SetOutput(output).SetExec(exec);
-    AsyncCall asyncCall(env, info, context);
-    return asyncCall.Call(context, "show");
+    return TouchInner(env, info, std::move(input), std::move(context));
 }
 
 napi_value JsTask::Touch(napi_env env, napi_callback_info info)
 {
-    struct TouchContext : public AsyncCall::Context {
-        std::string tid;
-        std::string token;
-        TaskInfo taskInfo;
-    };
-
     auto context = std::make_shared<TouchContext>();
-    context->withErrCode_ = true;
-    context->version_ = Version::API10;
     auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
         bool ret = ParseTouch(context->env_, argc, argv, context->tid, context->token);
         if (!ret) {
@@ -346,6 +319,14 @@ napi_value JsTask::Touch(napi_env env, napi_callback_info info)
         }
         return napi_ok;
     };
+    return TouchInner(env, info, std::move(input), std::move(context));
+}
+
+napi_value JsTask::TouchInner(napi_env env, napi_callback_info info, AsyncCall::Context::InputAction input,
+    std::shared_ptr<TouchContext> context)
+{
+    context->withErrCode_ = true;
+    context->version_ = Version::API10;
     auto output = [context](napi_value *result) -> napi_status {
         if (context->innerCode_ != E_OK) {
             return napi_generic_failure;
@@ -360,7 +341,7 @@ napi_value JsTask::Touch(napi_env env, napi_callback_info info)
         }
         context->innerCode_ = RequestManager::GetInstance()->Touch(context->tid, context->token, context->taskInfo);
     };
-    context->SetInput(input).SetOutput(output).SetExec(exec);
+    context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
     AsyncCall asyncCall(env, info, context);
     return asyncCall.Call(context, "show");
 }
@@ -398,7 +379,7 @@ bool JsTask::ParseSearch(napi_env env, size_t argc, napi_value *argv, Filter &fi
     }
     filter.bundle = ParseBundle(env, argv[0]);
     filter.before = ParseBefore(env, argv[0]);
-    filter.after = ParseBefore(env, argv[0]);
+    filter.after = ParseAfter(env, argv[0], filter.before);
     if (filter.before < filter.after) {
         REQUEST_HILOGE("before is small than after");
         return false;
@@ -459,22 +440,23 @@ Mode JsTask::ParseMode(napi_env env, napi_value value)
 
 int64_t JsTask::ParseBefore(napi_env env, napi_value value)
 {
-    time_t timeStamp = time(nullptr);
+    using namespace std::chrono;
+    int64_t now = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
     if (!NapiUtils::HasNamedProperty(env, value, "before")) {
-        return timeStamp;
+        return now;
     }
     napi_value value1 = NapiUtils::GetNamedProperty(env, value, "before");
     if (NapiUtils::GetValueType(env, value1) != napi_number) {
-        return timeStamp;
+        return now;
     }
     int64_t ret = 0;
-    NAPI_CALL_BASE(env, napi_get_value_int64(env, value1, &ret), timeStamp);
+    NAPI_CALL_BASE(env, napi_get_value_int64(env, value1, &ret), now);
     return ret;
 }
 
 int64_t JsTask::ParseAfter(napi_env env, napi_value value, int64_t before)
 {
-    int64_t defaultValue = before - 24 * 60 * 60 * 1000;
+    int64_t defaultValue = before - MILLISECONDS_IN_ONE_DAY;
     if (!NapiUtils::HasNamedProperty(env, value, "after")) {
         return defaultValue;
     }
@@ -519,7 +501,7 @@ napi_value JsTask::Search(napi_env env, napi_callback_info info)
         }
         context->innerCode_ = RequestManager::GetInstance()->Search(context->filter, context->tids);
     };
-    context->SetInput(input).SetOutput(output).SetExec(exec);
+    context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
     AsyncCall asyncCall(env, info, context);
     return asyncCall.Call(context, "show");
 }
@@ -557,7 +539,7 @@ napi_value JsTask::Query(napi_env env, napi_callback_info info)
         }
         context->innerCode_ = RequestManager::GetInstance()->Query(context->tid, context->taskInfo);
     };
-    context->SetInput(input).SetOutput(output).SetExec(exec);
+    context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
     AsyncCall asyncCall(env, info, context);
     return asyncCall.Call(context, "show");
 }

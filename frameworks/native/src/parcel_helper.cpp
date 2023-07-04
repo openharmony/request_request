@@ -92,6 +92,7 @@ bool ParcelHelper::UnMarshalFileSpec(MessageParcel &data, TaskInfo &info)
         FileSpec file;
         file.name = data.ReadString();
         file.uri = data.ReadString();
+        REQUEST_HILOGI("UnMarshalFileSpec path is %{public}s", file.uri.c_str());
         file.filename = data.ReadString();
         file.type = data.ReadString();
         info.files.push_back(file);

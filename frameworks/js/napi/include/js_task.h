@@ -63,6 +63,12 @@ private:
         int32_t tid{};
     };
 
+    struct TouchContext : public AsyncCall::Context {
+        std::string tid;
+        TaskInfo taskInfo;
+        std::string token;
+    };
+
     static napi_value DefineClass(napi_env env, const napi_property_descriptor* desc, size_t count,
         napi_callback cb, napi_ref *ctor);
     static napi_value JsMain(napi_env env, napi_callback_info info, Version version);
@@ -75,6 +81,8 @@ private:
     static napi_value RequestFileV8(napi_env env, napi_callback_info info);
     static int32_t CreateExec(const std::shared_ptr<ContextInfo> &context);
     static std::string ParseTid(napi_env env, size_t argc, napi_value *argv);
+    static napi_value TouchInner(napi_env env, napi_callback_info info, AsyncCall::Context::InputAction action,
+        std::shared_ptr<TouchContext> context);
     static bool ParseSearch(napi_env env, size_t argc, napi_value *argv, Filter &filter);
     static std::string ParseBundle(napi_env env, napi_value value);
     static State ParseState(napi_env env, napi_value value);

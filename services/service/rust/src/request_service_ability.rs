@@ -18,7 +18,7 @@ extern crate ipc_rust;
 extern crate system_ability_fwk_rust;
 use super::{
     enumration::*, log::LOG_LABEL, progress::*, request_binding, task_config::*,
-    task_info::*, task_manager::*, download_server_ipc_interface_code::*, filter::*,
+    task_info::*, task_manager::*, download_server_ipc_interface_code::*, filter::*, c_string_wrapper::*
 };
 use hilog_rust::*;
 use ipc_rust::{
@@ -155,18 +155,36 @@ impl RequestAbility {
         ErrorCode::ErrOk
     }
 
-    pub fn check_permission(&self) -> bool {
+    pub fn check_permission(&self, permission: String) -> bool {
         debug!(LOG_LABEL, "check_permission");
         let token_id = get_calling_token_id();
-        debug!(LOG_LABEL, "token_id {}",  @public(&token_id));
-        unsafe { request_binding::CheckPermission(token_id) }
+        unsafe { request_binding::CheckPermission(token_id, CStringWrapper::from(&permission)) }
     }
 
-    pub fn check_Session_manager_permission(&self) -> QueryPermission {
-        debug!(LOG_LABEL, "check_Session_manager_permission");
+    pub fn get_query_permission(&self) -> QueryPermission {
+        debug!(LOG_LABEL, "get_query_action");
         let token_id = get_calling_token_id();
-        debug!(LOG_LABEL, "token_id {}",  @public(&token_id));
-        unsafe { request_binding::CheckSessionManagerPermission(token_id) }
+        let query_download_permission = "ohos.permission.DOWNLOAD_SESSION_MANAGER".to_string();
+        let query_upload_permission = "ohos.permission.UPLOAD_SESSION_MANAGER".to_string();
+        let query_download = unsafe {
+            request_binding::CheckPermission(token_id, CStringWrapper::from(&query_download_permission))
+        };
+        let query_upload = unsafe {
+            request_binding::CheckPermission(token_id, CStringWrapper::from(&query_upload_permission))
+        };
+        info!(LOG_LABEL, "query download task permission is {}, query upload task permission is {}",
+            @public(query_download), @public(query_upload));
+
+        if query_download && query_download {
+            return QueryPermission::QueryAll;
+        }
+        if query_download {
+            return QueryPermission::QueryDownLoad;
+        }
+        if query_upload {
+            return QueryPermission::QueryUpload;
+        }
+        return QueryPermission::NoPermisson;
     }
 
     pub fn start_task(&self, task_id: u32) -> ErrorCode {
@@ -209,7 +227,12 @@ impl RequestAbility {
     }
     pub fn query_task(&self, task_id: u32, query_permission: QueryPermission) -> Option<TaskInfo> {
         debug!(LOG_LABEL, "touch_task");
-        TaskManager::get_instance().query(task_id, query_permission)
+        match query_permission {
+            QueryPermission::NoPermisson => None,
+            QueryPermission::QueryDownLoad => TaskManager::get_instance().query(task_id, Action::DOWNLOAD),
+            QueryPermission::QueryUpload => TaskManager::get_instance().query(task_id, Action::UPLOAD),
+            QueryPermission::QueryAll => TaskManager::get_instance().query(task_id, Action::ANY),
+        }
     }
 
     pub fn add_unregister_notify(&self, task_id: u32, reg_type: String) {

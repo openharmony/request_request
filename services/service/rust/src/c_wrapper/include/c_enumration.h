@@ -22,13 +22,6 @@ enum class Network : uint8_t {
     CELLULAR,
 };
 
-enum class QueryPermission : uint8_t {
-    NoPermisson = 0,
-    QueryDownLoad,
-    QueryUpload,
-    QueryAll,
-};
-
 enum class Action : uint8_t {
     DOWNLOAD = 0,
     UPLOAD,

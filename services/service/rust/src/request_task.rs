@@ -38,8 +38,8 @@ static CONNECT_TIMEOUT: u64 = 60;
 static LOW_SPEED_TIME: u64 = 60;
 static LOW_SPEED_LIMIT: u64 = 1;
 static SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
-static FRONT_NOTIFY_INTERVAL: u64 = 1;
-static BACKGROUND_NOTIFY_INTERVAL: u64 = 3;
+static FRONT_NOTIFY_INTERVAL: u64 = 1000;
+static BACKGROUND_NOTIFY_INTERVAL: u64 = 3000;
 static RETRY_INTERVAL: u64 = 20;
 #[derive(Clone, Debug)]
 pub struct TaskStatus {
@@ -713,7 +713,7 @@ impl RequestTask {
             let task_info = self.show();
             let info_set = task_info.build_info_set();
             let c_task_info = task_info.to_c_struct(&info_set);
-            let ret = unsafe { InsertDB(c_task_info) };
+            let ret = unsafe { RecordTaskInfo(&c_task_info) };
             info!(LOG_LABEL, "insert database ret is {}", @public(ret));
         } else {
             let update_info = self.get_update_info();
@@ -722,7 +722,7 @@ impl RequestTask {
             let extras = hashmap_to_string(&update_info.progress.extras);
             let each_file_status = update_info.each_file_status.iter().map(|x| x.to_c_struct()).collect();
             let c_update_info = update_info.to_c_struct(&sizes, &processed, &extras, &each_file_status);
-            let ret = unsafe { UpdateDB(self.task_id, c_update_info)};
+            let ret = unsafe { UpdateTaskInfo(self.task_id, &c_update_info)};
             info!(LOG_LABEL, "update database ret is {}", @public(ret));
         }
         TaskManager::get_instance().recording_rdb_num.fetch_sub(1, Ordering::SeqCst);

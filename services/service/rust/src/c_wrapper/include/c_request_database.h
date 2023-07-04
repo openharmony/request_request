@@ -38,49 +38,47 @@ constexpr int DATABASE_NEW_VERSION = 2;
 constexpr int QUERY_ERR = -1;
 constexpr int QUERY_OK = 0;
 
-constexpr const char *CREATE_REQUEST_TABLE1 =
-    "CREATE TABLE IF NOT EXISTS request_task_info "
-    "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-    "task_id INTEGER, "
-    "uid INTEGER, "
-    "action INTEGER, "
-    "mode INTEGER, "
-    "ctime INTEGER, "
-    "mtime INTEGER, "
-    "reason INTEGER, "
-    "gauge INTEGER, "
-    "retry INTEGER, "
-    "tries INTEGER, "
-    "version INTEGER, "
-    "bundle TEXT, "
-    "url TEXT, "
-    "data TEXT, "
-    "token TEXT, "
-    "titile TEXT, "
-    "description TEXT, "
-    "mime_type TEXT, "
-    "state INTEGER, "
-    "idx INTEGER, "
-    "total_processed INTEGER, "
-    "sizes TEXT, "
-    "processed TEXT, "
-    "extras TEXT, "
-    "form_items_len INTEGER, "
-    "file_specs_len INTEGER)";
+constexpr const char *CREATE_REQUEST_TABLE1 = "CREATE TABLE IF NOT EXISTS request_task_info "
+                                              "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                              "task_id INTEGER, "
+                                              "uid INTEGER, "
+                                              "action INTEGER, "
+                                              "mode INTEGER, "
+                                              "ctime INTEGER, "
+                                              "mtime INTEGER, "
+                                              "reason INTEGER, "
+                                              "gauge INTEGER, "
+                                              "retry INTEGER, "
+                                              "tries INTEGER, "
+                                              "version INTEGER, "
+                                              "bundle TEXT, "
+                                              "url TEXT, "
+                                              "data TEXT, "
+                                              "token TEXT, "
+                                              "titile TEXT, "
+                                              "description TEXT, "
+                                              "mime_type TEXT, "
+                                              "state INTEGER, "
+                                              "idx INTEGER, "
+                                              "total_processed INTEGER, "
+                                              "sizes TEXT, "
+                                              "processed TEXT, "
+                                              "extras TEXT, "
+                                              "form_items_len INTEGER, "
+                                              "file_specs_len INTEGER)";
 
-constexpr const char *CREATE_REQUEST_TABLE2 =
-    "CREATE TABLE IF NOT EXISTS task_info_attachment "
-    "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-    "task_id INTEGER, "
-    "uid INTEGER, "
-    "form_item_name TEXT, "
-    "value TEXT, "
-    "file_spec_name TEXT, "
-    "path TEXT, "
-    "file_name TEXT, "
-    "mime_type TEXT, "
-    "reason INTEGER, "
-    "message TEXT)";
+constexpr const char *CREATE_REQUEST_TABLE2 = "CREATE TABLE IF NOT EXISTS task_info_attachment "
+                                              "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                              "task_id INTEGER, "
+                                              "uid INTEGER, "
+                                              "form_item_name TEXT, "
+                                              "value TEXT, "
+                                              "file_spec_name TEXT, "
+                                              "path TEXT, "
+                                              "file_name TEXT, "
+                                              "mime_type TEXT, "
+                                              "reason INTEGER, "
+                                              "message TEXT)";
 
 class RequestDataBase {
 public:
@@ -120,10 +118,10 @@ struct CVectorWrapper {
     uint64_t len;
 };
 bool HasTaskRecord(uint32_t taskId);
-bool InsertDB(CTaskInfo taskInfo);
-bool UpdateDB(uint32_t taskId, CUpdateInfo updateInfo);
+bool RecordTaskInfo(CTaskInfo *taskInfo);
+bool UpdateTaskInfo(uint32_t taskId, CUpdateInfo *updateInfo);
 CTaskInfo *Touch(uint32_t taskId, uint64_t uid, CStringWrapper token);
-CTaskInfo *Query(uint32_t taskId, QueryPermission permission);
+CTaskInfo *Query(uint32_t taskId, Action queryAction);
 CVectorWrapper Search(CFilter filter);
 void DeleteCVectorWrapper(uint32_t *ptr);
 void GetCommonTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskInfo &taskInfo);

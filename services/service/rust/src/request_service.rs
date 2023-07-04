@@ -36,12 +36,13 @@ use super::{
 };
 use hilog_rust::*;
 
+static INTERNET_PERMISSION: &str = "ohos.permission.INTERNET";
 /// RequestService type
 pub struct RequestService;
 
 impl RequestServiceInterface for RequestService {
     fn construct(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
+        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION.to_string()) {
             error!(LOG_LABEL, "permission denied");
             reply.write(&(ErrorCode::Permission as i32));
             return Err(IpcStatusCode::Failed);
@@ -185,7 +186,7 @@ impl RequestServiceInterface for RequestService {
         debug!(LOG_LABEL, "Pause");
         let version: u32 = data.read()?;
         if Version::from(version as u8) == Version::API9 {
-            if !RequestAbility::get_ability_instance().check_permission() {
+            if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION.to_string()) {
                 error!(LOG_LABEL, "permission denied");
                 reply.write(&(ErrorCode::Permission as i32));
                 return Err(IpcStatusCode::Failed);
@@ -216,7 +217,7 @@ impl RequestServiceInterface for RequestService {
         data: &BorrowedMsgParcel,
         reply: &mut BorrowedMsgParcel,
     ) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
+        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION.to_string()) {
             error!(LOG_LABEL, "permission denied");
             reply.write(&(ErrorCode::Permission as i32));
             return Err(IpcStatusCode::Failed);
@@ -242,7 +243,7 @@ impl RequestServiceInterface for RequestService {
         debug!(LOG_LABEL, "remove");
         let version: u32 = data.read()?;
         if Version::from(version as u8) == Version::API9 {
-            if !RequestAbility::get_ability_instance().check_permission() {
+            if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION.to_string()) {
                 error!(LOG_LABEL, "permission denied");
                 reply.write(&(ErrorCode::Permission as i32));
                 return Err(IpcStatusCode::Failed);
@@ -270,7 +271,7 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn resume(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
+        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION.to_string()) {
             error!(LOG_LABEL, "permission denied");
             reply.write(&(ErrorCode::Permission as i32));
             return Err(IpcStatusCode::Failed);
@@ -354,7 +355,7 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn start(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
+        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION.to_string()) {
             error!(LOG_LABEL, "permission denied");
             reply.write(&(ErrorCode::Permission as i32));
             return Err(IpcStatusCode::Failed);
@@ -402,7 +403,7 @@ impl RequestServiceInterface for RequestService {
 
     fn show(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
         debug!(LOG_LABEL, "show");
-        if !RequestAbility::get_ability_instance().check_permission() {
+        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION.to_string()) {
             error!(LOG_LABEL, "permission denied");
             reply.write(&(ErrorCode::Permission as i32));
             return Err(IpcStatusCode::Failed);
@@ -466,12 +467,17 @@ impl RequestServiceInterface for RequestService {
         if !RequestAbility::get_ability_instance().is_system_api() {
             bundle = RequestAbility::get_ability_instance().get_calling_bundle();
         }
-
+        debug!(LOG_LABEL, "search bundle is {}", @public(bundle));
         let before: i64 = data.read()?;
+        debug!(LOG_LABEL, "search before is {}", @public(before));
         let after: i64 = data.read()?;
+        debug!(LOG_LABEL, "search after is {}", @public(after));
         let state: u32 = data.read()?;
+        debug!(LOG_LABEL, "search state is {}", @public(state));
         let action: u32 = data.read()?;
+        debug!(LOG_LABEL, "search action is {}", @public(action));
         let mode: u32 = data.read()?;
+        debug!(LOG_LABEL, "search mode is {}", @public(mode));
         let common_data = CommonFilter {
             before,
             after,
@@ -499,9 +505,9 @@ impl RequestServiceInterface for RequestService {
             reply.write(&(ErrorCode::SystemApi as i32));
             return Err(IpcStatusCode::Failed);
         }
-        let ret = RequestAbility::get_ability_instance().check_Session_manager_permission();
+        let ret = RequestAbility::get_ability_instance().get_query_permission();
         if ret == QueryPermission::NoPermisson {
-            error!(LOG_LABEL, "session manager permission invalid");
+            error!(LOG_LABEL, "no query permission");
             reply.write(&(ErrorCode::Permission as i32));
             return Err(IpcStatusCode::Failed);
         }

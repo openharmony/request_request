@@ -14,6 +14,7 @@
  */
 
 extern crate rust_samgr;
+
 use super::{
     enumration::*, request_task::*, task_config::*, utils::*, task_info::*, progress::*, request_binding::*,
     log::LOG_LABEL, c_string_wrapper::*, filter::*,
@@ -28,13 +29,15 @@ use ylong_runtime::{builder::RuntimeBuilder, executor::Runtime, join_handle::Joi
 static MAX_TASK_COUNT: u32 = 300;
 static MAX_TASK_COUNT_EACH_APP: u8 = 10;
 static MAX_RUNNING_TASK_COUNT_EACH_APP: u8 = 5;
-static INTERVAL_SECONDS: u64 = 30 * 60;
-static SECONDS_IN_ONE_DAY: u64 = 24 * 60 * 60;
-static SECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60;
-static ONE_SECONDS: u64 = 1;
+static INTERVAL_MILLISECONDS: u64 = 30 * 60 * 1000;
+static MILLISECONDS_IN_ONE_DAY: u64 = 24 * 60 * 60 * 1000;
+static MILLISECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
+static MILLISECONDS_IN_ONE_SECONDS: u64 = 1000;
 static REQUEST_SERVICE_ID: i32 = 3706;
 static WAITTING_RETRY_INTERVAL: u64 = 10;
+
 type AppTask = HashMap<u32, Arc<RequestTask>>;
+
 pub struct TaskManager {
     task_map: Arc<Mutex<HashMap<u64, AppTask>>>,
     event_cb: Option<Box<dyn Fn(String, &NotifyData) + Send + Sync + 'static>>,
@@ -67,7 +70,7 @@ pub fn monitor_task() {
                         };
                         if state == State::WAITING {
                             if let Some(t) = time {
-                                if current_time - t > SECONDS_IN_ONE_DAY {
+                                if current_time - t > MILLISECONDS_IN_ONE_DAY {
                                     task.set_status(State::STOPPED, Reason::WaittingNetWorkOneday);
                                     remove_task.push(task.clone());
                                 }
@@ -76,7 +79,7 @@ pub fn monitor_task() {
                         if task.conf.version == Version::API9 {
                             continue;
                         }
-                        if current_time - task.ctime > SECONDS_IN_ONE_MONTH {
+                        if current_time - task.ctime > MILLISECONDS_IN_ONE_MONTH {
                             task.set_status(State::STOPPED, Reason::TaskSurvivalOneMonth);
                             remove_task.push(task.clone());
                             continue;
@@ -88,7 +91,7 @@ pub fn monitor_task() {
                 }
                 remove_task.clear();
             }
-            sleep(Duration::from_secs(INTERVAL_SECONDS)).await;
+            sleep(Duration::from_millis(INTERVAL_MILLISECONDS)).await;
         }
     });
 }
@@ -584,33 +587,35 @@ impl TaskManager {
                 let task_info = TaskInfo::from_c_struct(c_task_info);
                 debug!(LOG_LABEL, "touch task info is {:?}", @public(task_info));
                 unsafe { DeleteCTaskInfo(c_task_info) };
-                return Some(task_info)
+                return Some(task_info);
             }
         }
     }
 
-    pub fn query(&self, task_id: u32, query_permission: QueryPermission) -> Option<TaskInfo> {
+    pub fn query(&self, task_id: u32, query_action: Action) -> Option<TaskInfo> {
         debug!(LOG_LABEL, "query a task");
         let task_map_guard = self.task_map.lock().unwrap();
         for (_, app_task) in task_map_guard.iter() {
             for (tid, task) in app_task.iter() {
                 if *tid == task_id {
-                    if query_permission == QueryPermission::QueryDownLoad && task.conf.common_data.action == Action::DOWNLOAD ||
-                        query_permission == QueryPermission::QueryUpload && task.conf.common_data.action == Action::UPLOAD ||
-                        query_permission == QueryPermission::QueryAll {
+                    if (query_action == Action::DOWNLOAD
+                        && task.conf.common_data.action == Action::DOWNLOAD)
+                        || (query_action == Action::UPLOAD
+                        && task.conf.common_data.action == Action::UPLOAD)
+                        || (query_action == Action::ANY)
+                    {
                         debug!(LOG_LABEL, "query task info by memory");
                         let mut task_info = task.show();
                         task_info.data = "".to_string();
                         task_info.url = "".to_string();
+                        debug!(LOG_LABEL, "query task info is {:?}", @public(task_info));
                         return Some(task_info);
-                    } else {
-                        return None;
                     }
                 }
             }
         }
         debug!(LOG_LABEL, "query task info by database");
-        let c_task_info = unsafe { Query(task_id, query_permission) };
+        let c_task_info = unsafe { Query(task_id, query_action) };
         if c_task_info.is_null() {
             return None;
         }
@@ -718,11 +723,11 @@ async fn remove_task_from_map(task: Arc<RequestTask>) {
             }
         }
     };
-    
+
     if task.conf.version == Version::API9 {
         let task_info = task.show();
         task_manager.info_cb.as_ref().unwrap()(&task_info);
-        sleep(Duration::from_secs(ONE_SECONDS)).await;
+        sleep(Duration::from_millis(MILLISECONDS_IN_ONE_SECONDS)).await;
     }
     let mut guard = task_manager.task_map.lock().unwrap();
     let app_task = guard.get_mut(&task.uid);
@@ -756,7 +761,6 @@ pub fn monitor_network() {
     unsafe {
         RegisterNetworkCallback(net_work_change_callback);
     }
-
 }
 
 extern "C" fn net_work_change_callback() {
