@@ -22,8 +22,8 @@ pub struct Filter {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct CommonFilter {
-    pub before: u64,
-    pub after: u64,
+    pub before: i64,
+    pub after: i64,
     pub state: u8,
     pub action: u8,
     pub mode: u8

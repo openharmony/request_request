@@ -397,10 +397,10 @@ bool JsTask::ParseSearch(napi_env env, size_t argc, napi_value *argv, Filter &fi
         return false;
     }
     filter.bundle = ParseBundle(env, argv[0]);
-    if (!ParseBefore(env, argv[0], filter.before)) {
-        return false;
-    }
-    if (!ParseAfter(env, argv[0], filter.before, filter.after)) {
+    filter.before = ParseBefore(env, argv[0]);
+    filter.after = ParseBefore(env, argv[0]);
+    if (filter.before < filter.after) {
+        REQUEST_HILOGE("before is small than after");
         return false;
     }
     filter.state = ParseState(env, argv[0]);
@@ -457,45 +457,34 @@ Mode JsTask::ParseMode(napi_env env, napi_value value)
     return static_cast<Mode>(NapiUtils::Convert2Uint32(env, value1));
 }
 
-bool JsTask::ParseBefore(napi_env env, napi_value value, uint64_t &before)
+int64_t JsTask::ParseBefore(napi_env env, napi_value value)
 {
     time_t timeStamp = time(nullptr);
-    std::string beforeStr = NapiUtils::Convert2String(env, value, "before");
-    if (beforeStr.empty()) {
-        before = static_cast<uint64_t>(timeStamp);
-        return true;
+    if (!NapiUtils::HasNamedProperty(env, value, "before")) {
+        return timeStamp;
     }
-    std::string regexStr =
-        "(\\d{4})-(0\\d{1}|1[0-2])-(0\\d{1}|[12]\\d{1}|3[01])\\s(0\\d{1}|1\\d{1}|2[0-3]):[0-5]\\d{1}:([0-5]\\d{1})";
-    if (!regex_match(beforeStr, std::regex(regexStr))) {
-        REQUEST_HILOGE("Parse data error");
-        return false;
+    napi_value value1 = NapiUtils::GetNamedProperty(env, value, "before");
+    if (NapiUtils::GetValueType(env, value1) != napi_number) {
+        return timeStamp;
     }
-	struct tm timeInfo;
-	strptime(beforeStr.c_str(), "%Y-%m-%d %H:%M:%S", &timeInfo);
-	timeStamp = mktime(&timeInfo);
-    before = static_cast<uint64_t>(timeStamp);
-    return true;
+    int64_t ret = 0;
+    NAPI_CALL_BASE(env, napi_get_value_int64(env, value1, &ret), timeStamp);
+    return ret;
 }
 
-bool JsTask::ParseAfter(napi_env env, napi_value value, uint64_t before, uint64_t &after)
+int64_t JsTask::ParseAfter(napi_env env, napi_value value, int64_t before)
 {
-    std::string afterStr = NapiUtils::Convert2String(env, value, "after");
-    if (afterStr.empty()) {
-        after = before - 24*60*60;
-        return true;
+    int64_t defaultValue = before - 24 * 60 * 60 * 1000;
+    if (!NapiUtils::HasNamedProperty(env, value, "after")) {
+        return defaultValue;
     }
-    std::string regexStr =
-        "(\\d{4})-(0\\d{1}|1[0-2])-(0\\d{1}|[12]\\d{1}|3[01])\\s(0\\d{1}|1\\d{1}|2[0-3]):[0-5]\\d{1}:([0-5]\\d{1})";
-    if (!regex_match(afterStr, std::regex(regexStr))) {
-        REQUEST_HILOGE("Parse data error");
-        return false;
+    napi_value value1 = NapiUtils::GetNamedProperty(env, value, "after");
+    if (NapiUtils::GetValueType(env, value1) != napi_number) {
+        return defaultValue;
     }
-	struct tm timeInfo;
-	strptime(afterStr.c_str(), "%Y-%m-%d %H:%M:%S", &timeInfo);
-	time_t time = mktime(&timeInfo);
-    after = static_cast<uint64_t>(time);
-    return true;
+    int64_t ret = 0;
+    NAPI_CALL_BASE(env, napi_get_value_int64(env, value1, &ret), defaultValue);
+    return ret;
 }
 
 napi_value JsTask::Search(napi_env env, napi_callback_info info)

@@ -535,12 +535,17 @@ int QueryTaskInfoAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicates,
             return OHOS::Request::QUERY_ERR;
         }
         EachFileStatus eachFileStatus;
-        resultSet->GetString(0, eachFileStatus.path);
+        std::string path;
+        resultSet->GetString(0, path);
+        eachFileStatus.path = path;
         int reason = 0;
         resultSet->GetInt(1, reason);
         eachFileStatus.reason = static_cast<uint8_t>(reason);
         resultSet->GetString(2, eachFileStatus.message);
         taskInfo.eachFileStatus.push_back(std::move(eachFileStatus));
+        FileSpec fileSpec;
+        fileSpec.path = std::move(path);
+        taskInfo.fileSpecs.push_back(std::move(fileSpec));
     }
     resultSet->Close();
     return OHOS::Request::QUERY_OK;

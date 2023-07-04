@@ -344,8 +344,8 @@ napi_value Convert2JSValue(napi_env env, TaskInfo &taskInfo)
     napi_set_named_property(env, value, "mimeType", Convert2JSValue(env, taskInfo.mimeType));
     napi_set_named_property(env, value, "progress", Convert2JSValue(env, taskInfo.progress));
     napi_set_named_property(env, value, "gauge", Convert2JSValue(env, taskInfo.gauge));
-    napi_set_named_property(env, value, "ctime", Convert2JSValue(env, Convert2TimeStr(taskInfo.ctime)));
-    napi_set_named_property(env, value, "mtime", Convert2JSValue(env, Convert2TimeStr(taskInfo.mtime)));
+    napi_set_named_property(env, value, "ctime", Convert2JSValue(env, taskInfo.ctime));
+    napi_set_named_property(env, value, "mtime", Convert2JSValue(env, taskInfo.mtime));
     napi_set_named_property(env, value, "retry", Convert2JSValue(env, taskInfo.retry));
     napi_set_named_property(env, value, "tries", Convert2JSValue(env, taskInfo.tries));
     if (taskInfo.code == Reason::REASON_OK) {
@@ -369,15 +369,6 @@ std::string GetSaveas(const std::vector<FileSpec> &files, Action action)
         return "";
     }
     return files[0].uri;
-}
-
-std::string Convert2TimeStr(int64_t time)
-{
-    std::string ctime;
-    struct tm *timeInfo = localtime(&time);
-    char buffer[80];
-    strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", timeInfo);
-    return ctime.append(&buffer[0], 80);
 }
 
 bool Convert2Boolean(napi_env env, napi_value object, const std::string &propertyName)

@@ -57,7 +57,11 @@ int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid, sptr<Not
     data.WriteString(config.url);
     data.WriteString(config.title);
     data.WriteString(config.method);
-    data.WriteString(config.token);
+    if (config.version == Version::API10) {
+        data.WriteString(ParcelHelper::SHA256(config.token));
+    } else {
+        data.WriteString("");
+    }
     data.WriteString(config.description);
     data.WriteString(config.data);
     GetVectorData(config, data);
@@ -165,7 +169,7 @@ int32_t RequestServiceProxy::Touch(const std::string &tid, const std::string &to
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteString(tid);
-    data.WriteString(token);
+    data.WriteString(ParcelHelper::SHA256(token));
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_TOUCH), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
@@ -185,8 +189,8 @@ int32_t RequestServiceProxy::Search(const Filter &filter, std::vector<std::strin
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(filter.bundle);
-    data.WriteUint64(filter.before);
-    data.WriteUint64(filter.after);
+    data.WriteInt64(filter.before);
+    data.WriteInt64(filter.after);
     data.WriteUint32(static_cast<uint32_t>(filter.state));
     data.WriteUint32(static_cast<uint32_t>(filter.action));
     data.WriteUint32(static_cast<uint32_t>(filter.mode));
@@ -194,10 +198,6 @@ int32_t RequestServiceProxy::Search(const Filter &filter, std::vector<std::strin
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
-    }
-    int32_t errCode = reply.ReadInt32();
-    if (errCode != E_OK) {
-        return errCode;
     }
     uint32_t size = reply.ReadUint32();
     for (uint32_t i = 0; i < size; i++) {

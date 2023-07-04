@@ -212,8 +212,8 @@ struct TaskInfo {
 
 struct Filter {
     std::string bundle;
-    uint64_t before;
-    uint64_t after;
+    int64_t before;
+    int64_t after;
     State state;
     Action action;
     Mode mode;

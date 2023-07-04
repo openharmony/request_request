@@ -119,12 +119,8 @@ impl RequestAbility {
         TaskManager::get_instance().pause(get_calling_uid(), task_id)
     }
 
-    pub fn query_mime_type(&self, task_id: u32, mime: &mut String) -> ErrorCode {
-        *mime = TaskManager::get_instance().query_mime_type(get_calling_uid(), task_id);
-        if mime.is_empty() {
-            return ErrorCode::MimeType_not_found;
-        }
-        ErrorCode::ErrOk
+    pub fn query_mime_type(&self, task_id: u32) -> String {
+        TaskManager::get_instance().query_mime_type(get_calling_uid(), task_id)
     }
 
     pub fn remove(&self, task_id: u32) -> ErrorCode {
@@ -193,13 +189,9 @@ impl RequestAbility {
         TaskManager::get_instance().touch(get_calling_uid(), task_id, token)
     }
 
-    pub fn search_task(&self, filter: Filter) -> Option<Vec<u32>> {
+    pub fn search_task(&self, filter: Filter) -> Vec<u32> {
         debug!(LOG_LABEL, "search_task");
-        let vec = TaskManager::get_instance().search(filter);
-        if vec.is_empty() {
-            return None;
-        }
-        Some(vec)
+        TaskManager::get_instance().search(filter)
     }
 
     pub fn is_system_api(&self) -> bool {

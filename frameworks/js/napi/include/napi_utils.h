@@ -87,7 +87,6 @@ std::vector<FileSpec> Convert2FileVector(napi_env env, napi_value jsFiles, const
 bool Convert2File(napi_env env, napi_value jsFile, FileSpec &file);
 std::vector<FormItem> Convert2RequestDataVector(napi_env env, napi_value jsRequestDatas);
 FormItem Convert2RequestData(napi_env env, napi_value jsRequestData);
-std::string Convert2TimeStr(int64_t time);
 std::string Convert2ReasonMsg(Reason code);
 uint32_t Convert2Broken(Reason code);
 std::string GetSaveas(const std::vector<FileSpec> &files, Action action);

@@ -81,8 +81,8 @@ private:
     static Action ParseAction(napi_env env, napi_value value);
     static Mode ParseMode(napi_env env, napi_value value);
     static bool ParseTouch(napi_env env, size_t argc, napi_value *argv, std::string &tid, std::string &token);
-    static bool ParseBefore(napi_env env, napi_value value, uint64_t &before);
-    static bool ParseAfter(napi_env env, napi_value value, uint64_t before, uint64_t &after);
+    static int64_t ParseBefore(napi_env env, napi_value value);
+    static int64_t ParseAfter(napi_env env, napi_value value, int64_t before);
     bool Equals(napi_env env, napi_value value, napi_ref copy);
 
     static std::mutex createMutex_;

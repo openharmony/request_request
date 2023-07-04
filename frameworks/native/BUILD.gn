@@ -42,7 +42,10 @@ ohos_shared_library("request_native") {
     "src/request_service_proxy.cpp",
     "src/request_sync_load_callback.cpp",
   ]
-  deps = [ "${request_path}/common:request_common_static" ]
+  deps = [
+    "${request_path}/common:request_common_static",
+    "//third_party/openssl:libssl_shared",
+  ]
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:abilitykit_native",

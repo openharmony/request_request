@@ -19,8 +19,8 @@
 #include "c_string_wrapper.h"
 
 struct CommonFilter {
-    uint64_t before;
-    uint64_t after;
+    int64_t before;
+    int64_t after;
     uint8_t state;
     uint8_t action;
     uint8_t mode;

@@ -23,7 +23,7 @@ namespace Request {
 class ParcelHelper {
 public:
     REQUEST_API static void UnMarshal(MessageParcel &data, TaskInfo &info);
-
+    REQUEST_API static std::string SHA256(const std::string &token);
 private:
     static void UnMarshalBase(MessageParcel &data, TaskInfo &info);
     static bool UnMarshalFormItem(MessageParcel &data, TaskInfo &info);
