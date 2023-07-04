@@ -87,7 +87,8 @@ private:
 
     struct WorkData {
         std::shared_ptr<Context> ctx = nullptr;
-        ~WorkData() {
+        ~WorkData()
+        {
             ctx = nullptr;
         }
     };
