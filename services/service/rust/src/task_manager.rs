@@ -440,7 +440,7 @@ impl TaskManager {
             return ErrorCode::ErrOk;
         }
         error!(LOG_LABEL, "task not found");
-        ErrorCode::TaskNotFound
+        ErrorCode::TaskStateErr
     }
 
     fn process_app_waitting_task(&self, uid: u64, guard: &MutexGuard<HashMap<u64, AppTask>>) {
@@ -491,7 +491,7 @@ impl TaskManager {
             return ErrorCode::ErrOk;
         }
         error!(LOG_LABEL, "task not found");
-        ErrorCode::TaskNotFound
+        ErrorCode::TaskStateErr
     }
 
     pub fn resume(&self, uid: u64, task_id: u32) -> ErrorCode {
@@ -513,7 +513,7 @@ impl TaskManager {
             return ErrorCode::ErrOk;
         }
         error!(LOG_LABEL, "task not found");
-        ErrorCode::TaskNotFound
+        ErrorCode::TaskStateErr
     }
 
     pub fn stop(&mut self, uid: u64, task_id: u32) -> ErrorCode {
@@ -531,7 +531,7 @@ impl TaskManager {
             return ErrorCode::ErrOk;
         }
         error!(LOG_LABEL, "Stop failed");
-        ErrorCode::TaskNotFound
+        ErrorCode::TaskStateErr
     }
 
     pub fn remove(&mut self, uid: u64, task_id: u32) -> ErrorCode {

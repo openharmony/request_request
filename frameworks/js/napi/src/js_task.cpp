@@ -544,11 +544,6 @@ napi_value JsTask::Query(napi_env env, napi_callback_info info)
     return asyncCall.Call(context, "show");
 }
 
-//napi_value JsTask::Clear(napi_env env, napi_callback_info info)
-//{
-//    return nullptr;
-//}
-
 std::string JsTask::GetTid()
 {
     return tid_;

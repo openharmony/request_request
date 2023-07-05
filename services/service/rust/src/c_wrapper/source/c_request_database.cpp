@@ -29,7 +29,7 @@ RequestDataBase::RequestDataBase()
     int errCode = OHOS::NativeRdb::E_OK;
     OHOS::NativeRdb::RdbStoreConfig config(DB_NAME);
     config.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
-//    config.SetEncryptStatus(true);
+    config.SetEncryptStatus(true);
     RequestDBOpenCallback requestDBOpenCallback;
     store_ = OHOS::NativeRdb::RdbHelper::GetRdbStore(config, DATABASE_OPEN_VERSION, requestDBOpenCallback, errCode);
     REQUEST_HILOGI("get request database errcode :%{public}d", errCode);

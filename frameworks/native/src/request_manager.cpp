@@ -175,17 +175,6 @@ int32_t RequestManager::Show(const std::string &tid, TaskInfo &info)
     return proxy->Show(tid, info);
 }
 
-// int32_t RequestManager::Clear(const std::vector<std::string> &tids, std::vector<std::string> &res)
-// {
-//     REQUEST_HILOGD("Clear in");
-//     auto proxy = GetRequestServiceProxy();
-//     if (proxy == nullptr) {
-//         return E_SERVICE_ERROR;
-//     }
-//
-//     return proxy->Clear(tids, res);
-// }
-
 int32_t RequestManager::Pause(const std::string &tid, Version version)
 {
     REQUEST_HILOGD("Pause in");

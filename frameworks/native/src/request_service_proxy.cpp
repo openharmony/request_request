@@ -206,30 +206,6 @@ int32_t RequestServiceProxy::Search(const Filter &filter, std::vector<std::strin
     return E_OK;
 }
 
-// int32_t RequestServiceProxy::Clear(const std::vector<std::string> &tids, std::vector<std::string> &res)
-// {
-//     MessageParcel data, reply;
-//     MessageOption option;
-//     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
-//     for (auto tid : tids) {
-//         data.WriteString(tid);
-//     }
-//     int32_t ret = Remote()->SendRequest(CMD_CLEAR, data, reply, option);
-//     if (ret != ERR_NONE) {
-//         REQUEST_HILOGE("send request ret code is %{public}d", ret);
-//         return E_SERVICE_ERROR;
-//     }
-//     int32_t errCode = reply.ReadInt32();
-//     if (errCode != E_OK) {
-//         return errCode;
-//     }
-//
-//     for (uint32_t i = 0; i < reply.ReadUint32(); i++) {
-//         res.push_back(reply.ReadString());
-//     }
-//     return ret;
-// }
-
 int32_t RequestServiceProxy::Show(const std::string &tid, TaskInfo &info)
 {
     MessageParcel data, reply;

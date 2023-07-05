@@ -36,7 +36,6 @@ public:
     static napi_value Touch(napi_env env, napi_callback_info info);
     static napi_value Search(napi_env env, napi_callback_info info);
     static napi_value Query(napi_env env, napi_callback_info info);
-    // static napi_value Clear(napi_env env, napi_callback_info info);
 
     std::string GetTid();
     void SetTid(int32_t tid);

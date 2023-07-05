@@ -49,7 +49,6 @@ public:
     REQUEST_API int32_t Touch(const std::string &tid, const std::string &token, TaskInfo &info);
     REQUEST_API int32_t Search(const Filter &filter, std::vector<std::string> &tids);
     REQUEST_API int32_t Show(const std::string &tid, TaskInfo &info);
-    // REQUEST_API int32_t Clear(const std::vector<std::string> &tids, std::vector<std::string> &res);
     REQUEST_API int32_t Pause(const std::string &tid, Version version);
     REQUEST_API int32_t QueryMimeType(const std::string &tid, std::string &mimeType);
     REQUEST_API int32_t Remove(const std::string &tid, Version version);

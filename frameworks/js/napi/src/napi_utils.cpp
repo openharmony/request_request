@@ -326,8 +326,10 @@ napi_value Convert2JSValue(napi_env env, TaskInfo &taskInfo)
         napi_set_named_property(env, value, "bundle", Convert2JSValue(env, taskInfo.bundle));
         taskInfo.url = "";
         taskInfo.data = "";
-        taskInfo.files.clear();
-        taskInfo.forms.clear();
+        if (taskInfo.action == Action::UPLOAD) {
+            taskInfo.files.clear();
+            taskInfo.forms.clear();
+        }
     }
     napi_set_named_property(env, value, "url", Convert2JSValue(env, taskInfo.url));
     napi_set_named_property(env, value, "saveas", Convert2JSValue(env, GetSaveas(taskInfo.files, taskInfo.action)));

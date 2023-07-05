@@ -173,7 +173,6 @@ static napi_value InitAgent(napi_env env, napi_value exports)
         DECLARE_NAPI_METHOD("touch", JsTask::Touch),
         DECLARE_NAPI_METHOD("search", JsTask::Search),
         DECLARE_NAPI_METHOD("query", JsTask::Query),
-        // DECLARE_NAPI_METHOD("clear", JsTask::Clear),
     };
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
     REQUEST_HILOGI("InitV10 end %{public}d", status);

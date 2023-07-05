@@ -293,10 +293,6 @@ napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, const std::
         if (handle != requestEvent_.end()) {
             context->innerCode_ = handle->second(context);
         }
-        //Temporary plan
-        if (context->innerCode_ == E_TASK_NOT_FOUND) {
-            context->innerCode_ = E_TASK_STATE;
-        }
     };
 
     context->SetInput(input).SetOutput(output).SetExec(exec);
