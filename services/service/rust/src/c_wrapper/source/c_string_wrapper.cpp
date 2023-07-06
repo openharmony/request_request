@@ -16,7 +16,7 @@
 #include "c_string_wrapper.h"
 
 #include <cstdint>
-#include <string.h>
+#include <securec.h>
 
 #include "log.h"
 
@@ -30,8 +30,7 @@ CStringWrapper WrapperCString(const std::string &str)
     REQUEST_HILOGE("begin WrapperCString str is %{public}s", str.c_str());
     CStringWrapper cStringWrapper;
     cStringWrapper.len = str.length();
-    cStringWrapper.c_str = new char[cStringWrapper.len + 1];
-    memcpy(cStringWrapper.c_str, str.c_str(), cStringWrapper.len);
-    cStringWrapper.c_str[cStringWrapper.len] = '\0';
+    cStringWrapper.cStr = new char[cStringWrapper.len];
+    memcpy_s(cStringWrapper.cStr, cStringWrapper.len, str.c_str(), cStringWrapper.len);
     return cStringWrapper;
 }

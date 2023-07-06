@@ -24,8 +24,8 @@
 extern "C" {
 #endif
 
-bool CheckPermission(uint64_t tokenId, CStringWrapper permission);
-bool IsSystemAPI(uint64_t tokenId);
+bool RequestCheckPermission(uint64_t tokenId, CStringWrapper permission);
+bool RequestIsSystemAPI(uint64_t tokenId);
 
 #ifdef __cplusplus
 }

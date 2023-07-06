@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-use std::collections::HashMap;
+use std::{io::Write, collections::HashMap};
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::ffi::{ c_char, CStr };
 
@@ -35,23 +35,14 @@ pub fn generate_task_id() -> u32 {
 }
 
 pub fn hashmap_to_string(map: &HashMap<String, String>) -> String {
-    let len = map.len();
-    if len == 0 {
-        return "".to_string();
-    }
-    let mut index = 0;
-    let mut res = String::new();
-
-    for (k, v) in map.iter() {
-        res.push_str(k);
-        res.push('\t');
-        res.push_str(v);
-        if index < len - 1 {
-            res.push_str("\r\n");
+    let mut res = Vec::new();
+    for (n, (k, v)) in map.iter().enumerate() {
+        if n != 0 {
+            let _ = write!(res, "\r\n");
         }
-        index += 1;
+        let _ = write!(res, "{k}\t{v}");
     }
-    res
+    unsafe { String::from_utf8_unchecked(res) }
 }
 
 pub fn string_to_hashmap(str: &mut String) -> HashMap<String, String> {
@@ -59,10 +50,9 @@ pub fn string_to_hashmap(str: &mut String) -> HashMap<String, String> {
     if str.is_empty() {
         return map;
     }
-    let v: Vec<&str> = str.split("\r\n").collect();
-    for item in v.into_iter() {
-        let x: Vec<&str> = item.split('\t').collect();
-        map.insert(x[0].into(), x[1].into());
+    for item in str.split("\r\n") {
+        let (k, v) = item.split_once('\t').unwrap();
+        map.insert(k.into(), v.into());
     }
     map
 }

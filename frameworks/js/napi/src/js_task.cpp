@@ -13,19 +13,22 @@
  * limitations under the License.
  */
 
-#include <mutex>
+#include "js_task.h"
+
 #include <chrono>
-#include <regex>
+#include <cstring>
+#include <mutex>
+#include <securec.h>
+
 #include "async_call.h"
-#include "request_event.h"
-#include "request_manager.h"
+#include "js_initialize.h"
 #include "legacy/request_manager.h"
 #include "log.h"
 #include "napi_base_context.h"
-#include "upload/upload_task_napiV5.h"
 #include "napi_utils.h"
-#include "js_initialize.h"
-#include "js_task.h"
+#include "request_event.h"
+#include "request_manager.h"
+#include "upload/upload_task_napiV5.h"
 
 namespace OHOS::Request {
 constexpr int64_t MILLISECONDS_IN_ONE_DAY = 24 * 60 * 60 * 1000;
@@ -312,7 +315,7 @@ napi_value JsTask::Touch(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<TouchContext>();
     auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        bool ret = ParseTouch(context->env_, argc, argv, context->tid, context->token);
+        bool ret = ParseTouch(context->env_, argc, argv, context);
         if (!ret) {
             NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Parse tid or token fail!", true);
             return napi_invalid_arg;
@@ -339,14 +342,15 @@ napi_value JsTask::TouchInner(napi_env env, napi_callback_info info, AsyncCall::
             context->innerCode_ = E_SERVICE_ERROR;
             return;
         }
-        context->innerCode_ = RequestManager::GetInstance()->Touch(context->tid, context->token, context->taskInfo);
+        context->innerCode_ =
+            RequestManager::GetInstance()->Touch(context->tid, context->token, context->taskInfo);
     };
     context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
     AsyncCall asyncCall(env, info, context);
-    return asyncCall.Call(context, "show");
+    return asyncCall.Call(context, "touch");
 }
 
-bool JsTask::ParseTouch(napi_env env, size_t argc, napi_value *argv, std::string &tid, std::string &token)
+bool JsTask::ParseTouch(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<TouchContext> context)
 {
     if (argc < 2) {
         REQUEST_HILOGE("Wrong number of arguments");
@@ -356,14 +360,28 @@ bool JsTask::ParseTouch(napi_env env, size_t argc, napi_value *argv, std::string
         REQUEST_HILOGE("The parameter is not of string type");
         return false;
     }
-    tid = NapiUtils::Convert2String(env, argv[0]);
-    token = NapiUtils::Convert2String(env, argv[1]);
-    if (tid.empty() || token.empty()) {
+    context->tid = NapiUtils::Convert2String(env, argv[0]);
+    if (context->tid.empty()) {
+        REQUEST_HILOGE("tid is empty");
         return false;
     }
-    if (token.size() < TOKEN_MIN_BYTES || token.size() > TOKEN_MAX_BYTES) {
+    char *token = new char[TOKEN_MAX_BYTES + 1];
+    size_t len = 0;
+    napi_status status = napi_get_value_string_utf8(env, argv[1], token, TOKEN_MAX_BYTES + 1, &len);
+    if (status != napi_ok) {
+        REQUEST_HILOGE("napi get value string utf8 failed");
+        memset_s(token, TOKEN_MAX_BYTES + 1, 0, TOKEN_MAX_BYTES + 1);
+        delete[] token;
         return false;
     }
+    if (len < TOKEN_MIN_BYTES || len > TOKEN_MAX_BYTES) {
+        memset_s(token, TOKEN_MAX_BYTES + 1, 0, TOKEN_MAX_BYTES + 1);
+        delete[] token;
+        return false;
+    }
+    context->token = NapiUtils::SHA256(token, len);
+    memset_s(token, TOKEN_MAX_BYTES + 1, 0, TOKEN_MAX_BYTES + 1);
+    delete[] token;
     return true;
 }
 
@@ -503,7 +521,7 @@ napi_value JsTask::Search(napi_env env, napi_callback_info info)
     };
     context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
     AsyncCall asyncCall(env, info, context);
-    return asyncCall.Call(context, "show");
+    return asyncCall.Call(context, "search");
 }
 
 napi_value JsTask::Query(napi_env env, napi_callback_info info)
@@ -541,7 +559,7 @@ napi_value JsTask::Query(napi_env env, napi_callback_info info)
     };
     context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
     AsyncCall asyncCall(env, info, context);
-    return asyncCall.Call(context, "show");
+    return asyncCall.Call(context, "query");
 }
 
 std::string JsTask::GetTid()

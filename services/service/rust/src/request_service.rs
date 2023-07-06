@@ -42,7 +42,7 @@ pub struct RequestService;
 
 impl RequestServiceInterface for RequestService {
     fn construct(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION.to_string()) {
+        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION) {
             error!(LOG_LABEL, "permission denied");
             reply.write(&(ErrorCode::Permission as i32));
             return Err(IpcStatusCode::Failed);
@@ -186,7 +186,7 @@ impl RequestServiceInterface for RequestService {
         debug!(LOG_LABEL, "Pause");
         let version: u32 = data.read()?;
         if Version::from(version as u8) == Version::API9 {
-            if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION.to_string()) {
+            if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION) {
                 error!(LOG_LABEL, "permission denied");
                 reply.write(&(ErrorCode::Permission as i32));
                 return Err(IpcStatusCode::Failed);
@@ -217,7 +217,7 @@ impl RequestServiceInterface for RequestService {
         data: &BorrowedMsgParcel,
         reply: &mut BorrowedMsgParcel,
     ) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION.to_string()) {
+        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION) {
             error!(LOG_LABEL, "permission denied");
             reply.write(&(ErrorCode::Permission as i32));
             return Err(IpcStatusCode::Failed);
@@ -243,7 +243,7 @@ impl RequestServiceInterface for RequestService {
         debug!(LOG_LABEL, "remove");
         let version: u32 = data.read()?;
         if Version::from(version as u8) == Version::API9 {
-            if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION.to_string()) {
+            if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION) {
                 error!(LOG_LABEL, "permission denied");
                 reply.write(&(ErrorCode::Permission as i32));
                 return Err(IpcStatusCode::Failed);
@@ -271,7 +271,7 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn resume(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION.to_string()) {
+        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION) {
             error!(LOG_LABEL, "permission denied");
             reply.write(&(ErrorCode::Permission as i32));
             return Err(IpcStatusCode::Failed);
@@ -355,7 +355,7 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn start(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION.to_string()) {
+        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION) {
             error!(LOG_LABEL, "permission denied");
             reply.write(&(ErrorCode::Permission as i32));
             return Err(IpcStatusCode::Failed);
@@ -403,7 +403,7 @@ impl RequestServiceInterface for RequestService {
 
     fn show(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
         debug!(LOG_LABEL, "show");
-        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION.to_string()) {
+        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION) {
             error!(LOG_LABEL, "permission denied");
             reply.write(&(ErrorCode::Permission as i32));
             return Err(IpcStatusCode::Failed);
@@ -415,7 +415,7 @@ impl RequestServiceInterface for RequestService {
                 Some(tf) => {
                     reply.write(&(ErrorCode::ErrOk as i32));
                     debug!(LOG_LABEL, "tf: {:?}",  @public(tf));
-                    RequestAbility::get_ability_instance().serialize_task_info(tf, reply, false)?;
+                    RequestAbility::get_ability_instance().serialize_task_info(tf, reply)?;
                     Ok(())
                 }
                 None => {
@@ -443,7 +443,7 @@ impl RequestServiceInterface for RequestService {
                     Some(tf) => {
                         reply.write(&(ErrorCode::ErrOk as i32));
                         debug!(LOG_LABEL, "tf: {:?}",  @public(tf));
-                        RequestAbility::get_ability_instance().serialize_task_info(tf, reply, false)?;
+                        RequestAbility::get_ability_instance().serialize_task_info(tf, reply)?;
                         return Ok(());
                     }
                     None => {
@@ -518,7 +518,7 @@ impl RequestServiceInterface for RequestService {
                 Some(tf) => {
                     reply.write(&(ErrorCode::ErrOk as i32));
                     debug!(LOG_LABEL, "tf: {:?}",  @public(tf));
-                    RequestAbility::get_ability_instance().serialize_task_info(tf, reply, true)?;
+                    RequestAbility::get_ability_instance().serialize_task_info(tf, reply)?;
                     Ok(())
                 }
                 None => {

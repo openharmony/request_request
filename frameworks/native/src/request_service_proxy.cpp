@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 #include "request_service_proxy.h"
-#include "download_server_ipc_interface_code.h"
 
-#include <fcntl.h>
 #include <ctime>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "download_server_ipc_interface_code.h"
 #include "iremote_broker.h"
 #include "log.h"
 #include "parcel_helper.h"
@@ -57,11 +57,7 @@ int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid, sptr<Not
     data.WriteString(config.url);
     data.WriteString(config.title);
     data.WriteString(config.method);
-    if (config.version == Version::API10) {
-        data.WriteString(ParcelHelper::SHA256(config.token));
-    } else {
-        data.WriteString("");
-    }
+    data.WriteString(config.token);
     data.WriteString(config.description);
     data.WriteString(config.data);
     GetVectorData(config, data);
@@ -169,7 +165,7 @@ int32_t RequestServiceProxy::Touch(const std::string &tid, const std::string &to
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteString(tid);
-    data.WriteString(ParcelHelper::SHA256(token));
+    data.WriteString(token);
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_TOUCH), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);

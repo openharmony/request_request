@@ -14,7 +14,7 @@
  */
 
 #include "napi_utils.h"
-#include <ctime>
+
 #include <cstring>
 #include <initializer_list>
 #include <memory>
@@ -26,12 +26,11 @@
 #include "securec.h"
 
 namespace OHOS::Request::NapiUtils {
-static constexpr const int MAX_STRING_LENGTH = 65536;
 static constexpr int64_t JS_NUMBER_MAX_VALUE = (1LL << 53) - 1;
 static constexpr const char *REASON_OK_INFO = "Task successful";
 static constexpr const char *TASK_SURVIVAL_ONE_MONTH_INFO = "The task has not been completed for a month yet";
-static constexpr const char *WAITTING_NETWORK_ONE_DAY_INFO =
-    "The task waiting for network recovery has not been completed for a day yet";
+static constexpr const char *WAITTING_NETWORK_ONE_DAY_INFO = "The task waiting for network recovery has not been "
+                                                             "completed for a day yet";
 static constexpr const char *STOPPED_NEW_FRONT_TASK_INFO = "Stopped by a new front task";
 static constexpr const char *RUNNING_TASK_MEET_LIMITS_INFO = "Too many task in running state";
 static constexpr const char *USER_OPERATION_INFO = "User operation";
@@ -40,7 +39,8 @@ static constexpr const char *NETWORK_OFFLINE_INFO = "NetWork is offline";
 static constexpr const char *UNSUPPORTED_NETWORK_TYPE_INFO = "NetWork type not meet the task config";
 static constexpr const char *BUILD_CLIENT_FAILED_INFO = "Build client error";
 static constexpr const char *BUILD_REQUEST_FAILED_INFO = "Build request error";
-static constexpr const char *GET_FILESIZE_FAILED_INFO = "Failed because cannot get the file size from the server and the precise is setted true by user";
+static constexpr const char *GET_FILESIZE_FAILED_INFO = "Failed because cannot get the file size from the server and "
+                                                        "the precise is setted true by user";
 static constexpr const char *CONTINUOUS_TASK_TIMEOUT_INFO = "Continuous processing task time out";
 static constexpr const char *CONNECT_ERROR_INFO = "Connect error";
 static constexpr const char *REQUEST_ERROR_INFO = "Request error";
@@ -50,7 +50,8 @@ static constexpr const char *PROTOCOL_ERROR_INFO = "Http protocol error";
 static constexpr const char *IO_ERROR_INFO = "Io Error";
 static constexpr const char *UNSUPPORT_RANGE_REQUEST_INFO = "Range request not supported";
 static constexpr const char *OTHERS_ERROR_INFO = "Some other error occured";
-static constexpr const char *NO_SYSTEM_API = "permission verification failed, application which is not a system application uses system API";
+static constexpr const char *NOT_SYSTEM_APP = "permission verification failed, application which is not a system "
+                                              "application uses system API";
 
 static const std::map<ExceptionErrorCode, std::string> ErrorCodeToMsg {
     {E_OK, E_OK_INFO },
@@ -65,7 +66,7 @@ static const std::map<ExceptionErrorCode, std::string> ErrorCodeToMsg {
     {E_TASK_NOT_FOUND, E_TASK_NOT_FOUND_INFO },
     {E_TASK_STATE, E_TASK_STATE_INFO },
     {E_OTHER, E_OTHER_INFO },
-    {E_NO_SYSTEM_API,NO_SYSTEM_API }
+    {E_NOT_SYSTEM_APP, NOT_SYSTEM_APP }
 };
 
 napi_status Convert2JSValue(napi_env env, const DownloadInfo &in, napi_value &out)
@@ -155,14 +156,13 @@ napi_value Convert2JSValue(napi_env env, const std::vector<int64_t> &code)
     return value;
 }
 
-napi_value Convert2JSValue(napi_env env, const std::vector<std::string> &code)
+napi_value Convert2JSValue(napi_env env, const std::vector<std::string> &ids)
 {
     napi_value value = nullptr;
-    napi_create_array_with_length(env, code.size(), &value);
+    napi_create_array_with_length(env, ids.size(), &value);
     int index = 0;
-    for (const auto &cInt : code) {
-        napi_value jsInt = Convert2JSValue(env, cInt);
-        napi_set_element(env, value, index++, jsInt);
+    for (const auto &id : ids) {
+        napi_set_element(env, value, index++, Convert2JSValue(env, id));
     }
     return value;
 }
@@ -236,26 +236,36 @@ napi_value Convert2JSValue(napi_env env, const Progress &progress)
 napi_value Convert2JSValue(napi_env env, const std::vector<FileSpec> &files, const std::vector<FormItem> &forms)
 {
     napi_value data = nullptr;
-    napi_create_object(env, &data);
-    for (const auto &form : forms) {
-        napi_set_named_property(env, data, "name", Convert2JSValue(env, form.name));
-        napi_set_named_property(env, data, "value", Convert2JSValue(env, form.value));
+    size_t filesLen = files.size();
+    size_t formsLen = forms.size();
+    napi_create_array_with_length(env, filesLen + formsLen, &data);
+    size_t i = 0;
+    for (; i < formsLen; i++) {
+        napi_value object = nullptr;
+        napi_create_object(env, &object);
+        napi_set_named_property(env, object, "name", Convert2JSValue(env, forms[i].name));
+        napi_set_named_property(env, object, "value", Convert2JSValue(env, forms[i].value));
+        napi_set_element(env, data, i, object);
     }
-    for (const auto &file : files) {
-        napi_set_named_property(env, data, "name", Convert2JSValue(env, file.name));
-        napi_value value = nullptr;
-        napi_create_object(env, &value);
-        napi_set_named_property(env, value, "path", Convert2JSValue(env, file.uri));
-        napi_set_named_property(env, value, "mimeType", Convert2JSValue(env, file.type));
-        napi_set_named_property(env, value, "filename", Convert2JSValue(env, file.filename));
-        napi_set_named_property(env, data, "value", value);
+    for (size_t j = 0; j < filesLen; j++) {
+        napi_value fileSpec = nullptr;
+        napi_create_object(env, &fileSpec);
+        napi_set_named_property(env, fileSpec, "path", Convert2JSValue(env, files[j].uri));
+        napi_set_named_property(env, fileSpec, "mimeType", Convert2JSValue(env, files[j].type));
+        napi_set_named_property(env, fileSpec, "filename", Convert2JSValue(env, files[j].filename));
+        napi_value object = nullptr;
+        napi_create_object(env, &object);
+        napi_set_named_property(env, object, "name", Convert2JSValue(env, files[j].name));
+        napi_set_named_property(env, object, "value", fileSpec);
+        napi_set_element(env, data, i, object);
+        i++;
     }
     return data;
 }
 
 uint32_t Convert2Broken(Reason code)
 {
-    std::map<Reason, Faults> InnerCodeToBroken = {
+    static std::map<Reason, Faults> InnerCodeToBroken = {
         { REASON_OK, Faults::OTHERS },
         { TASK_SURVIVAL_ONE_MONTH, Faults::OTHERS },
         { WAITTING_NETWORK_ONE_DAY, Faults::OTHERS },
@@ -277,7 +287,7 @@ uint32_t Convert2Broken(Reason code)
         { IO_ERROR, Faults::FSIO },
         { UNSUPPORT_RANGE_REQUEST, Faults::PROTOCOL },
         { OTHERS_ERROR, Faults::OTHERS },
-    };  
+    };
     auto iter = InnerCodeToBroken.find(code);
     if (iter != InnerCodeToBroken.end()) {
         return static_cast<uint32_t>(iter->second);
@@ -287,7 +297,7 @@ uint32_t Convert2Broken(Reason code)
 
 std::string Convert2ReasonMsg(Reason code)
 {
-    std::map<Reason, std::string> ReasonMsg = {
+    static std::map<Reason, std::string> ReasonMsg = {
         { REASON_OK, REASON_OK_INFO },
         { TASK_SURVIVAL_ONE_MONTH, TASK_SURVIVAL_ONE_MONTH_INFO },
         { WAITTING_NETWORK_ONE_DAY, WAITTING_NETWORK_ONE_DAY_INFO },
@@ -485,7 +495,6 @@ void ConvertError(int32_t errorCode, ExceptionError &err)
 napi_value CreateBusinessError(napi_env env, ExceptionErrorCode errorCode,
     const std::string &errorMessage, bool withErrCode)
 {
-    REQUEST_HILOGE("CreateBusinessError");
     napi_value error = nullptr;
     napi_value msg = nullptr;
     auto iter = ErrorCodeToMsg.find(errorCode);
@@ -493,13 +502,11 @@ napi_value CreateBusinessError(napi_env env, ExceptionErrorCode errorCode,
     NAPI_CALL(env, napi_create_string_utf8(env, strMsg.c_str(), strMsg.length(), &msg));
     NAPI_CALL(env, napi_create_error(env, nullptr, msg, &error));
     if (!withErrCode) {
-        REQUEST_HILOGE("without err code");
         return error;
     }
     napi_value code = nullptr;
     NAPI_CALL(env, napi_create_uint32(env, static_cast<uint32_t>(errorCode), &code));
     napi_set_named_property(env, error, "code", code);
-    REQUEST_HILOGI("CreateBusinessError with err code");
     return error;
 }
 
@@ -722,5 +729,19 @@ bool IsPathValid(const std::string &filePath)
         return false;
     }
     return true;
+}
+
+std::string SHA256(const char *str, size_t len)
+{
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, str, len);
+    SHA256_Final(hash, &sha256);
+    std::stringstream ss;
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(hash[i]);
+    }
+    return ss.str();
 }
 } // namespace OHOS::Request::NapiUtils

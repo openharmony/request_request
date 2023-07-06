@@ -22,22 +22,22 @@
 std::shared_ptr<OHOS::AppExecFwk::EventHandler> serviceHandler_ = nullptr;
 const std::int64_t INIT_INTERVAL = 5000L;
 
-void InitServiceHandler(void)
+void RequestInitServiceHandler(void)
 {
-    REQUEST_HILOGI("InitServiceHandler started.");
+    REQUEST_HILOGI("RequestInitServiceHandler started.");
     if (serviceHandler_ != nullptr) {
-        REQUEST_HILOGI("InitServiceHandler already init.");
+        REQUEST_HILOGI("RequestInitServiceHandler already init.");
         return;
     }
-    std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::Create("DownloadServiceAbil"
-                                                                                                  "ity");
+    std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner =
+        OHOS::AppExecFwk::EventRunner::Create("DownloadServiceAbility");
     serviceHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
-    REQUEST_HILOGI("InitServiceHandler succeeded.");
+    REQUEST_HILOGI("RequestInitServiceHandler succeeded.");
 }
 
-void PostTask(fun f)
+void RequestPostTask(fun f)
 {
-    REQUEST_HILOGD("PostTask");
+    REQUEST_HILOGD("RequestPostTask");
     if (serviceHandler_ == nullptr) {
         REQUEST_HILOGE("serviceHandler_ is null");
         return;

@@ -463,15 +463,7 @@ impl TaskManager {
 
     fn after_task_processed(&mut self, task: &Arc<RequestTask>) {
         self.rt.spawn(remove_task_from_map(task.clone()));
-    }
 
-    fn abort_async_work(&self, task: Arc<RequestTask>) {
-        let _progress_guard = task.progress.lock().unwrap();
-        let mut task_handle_guard = self.task_handles.lock().unwrap();
-        let task_handle = task_handle_guard.remove(&task.task_id);
-        if let Some(handle) = task_handle {
-            handle.cancel();
-        }
     }
 
     pub fn pause(&self, uid: u64, task_id: u32) -> ErrorCode {
@@ -525,7 +517,6 @@ impl TaskManager {
                 error!(LOG_LABEL, "can not stop a task which state is not meet the requirements");
                 return ErrorCode::TaskStateErr;
             }
-            self.abort_async_work(task.clone());
             Self::get_instance().after_task_processed(&task);
             debug!(LOG_LABEL, "Stopped success");
             return ErrorCode::ErrOk;
@@ -540,7 +531,6 @@ impl TaskManager {
         let task = self.get_task(uid, task_id, &task_map_guard);
         if let Some(task) = task {
             task.set_status(State::REMOVED, Reason::UserOperation);
-            self.abort_async_work(task.clone());
             Self::get_instance().after_task_processed(&task);
             debug!(LOG_LABEL, "remove success");
             return ErrorCode::ErrOk;
@@ -789,8 +779,18 @@ extern "C" fn net_work_change_callback() {
                         task.set_status(State::WAITING, Reason::NetWorkOffline);
                     }
                 }
-                TaskManager::get_instance().abort_async_work(task.clone());
-                TaskManager::get_instance().after_task_processed(&task);
+                let task_id = task.task_id;
+                task_manager.rt.spawn(async move {
+                    let handle = {
+                        let mut handles_guard = TaskManager::get_instance().task_handles.lock().unwrap();
+                        handles_guard.remove(&task_id)
+                    };
+                    if let Some(handle) = handle {
+                        sleep(Duration::from_millis(MILLISECONDS_IN_ONE_SECONDS)).await;
+                        handle.cancel();
+                    }
+                    TaskManager::get_instance().after_task_processed(&task);
+                });
             } else {
                 if state == State::WAITING && task.is_satisfied_configuration() {
                     debug!(LOG_LABEL, "Begin try resume task as network condition resume");
@@ -798,7 +798,7 @@ extern "C" fn net_work_change_callback() {
                         sleep(Duration::from_secs(WAITTING_RETRY_INTERVAL)).await;
                         let manager = TaskManager::get_instance();
                         let mut guard = manager.task_map.lock().unwrap();
-                        manager.start_inner(uid, task.clone(), &mut guard);
+                        manager.start_inner(uid, task, &mut guard);
                     });
                 }
             }
@@ -832,8 +832,6 @@ extern "C" fn update_app_state(uid: i32, state: i32) {
             return;
         }
         task_manager.global_front_task.as_ref().unwrap().set_status(State::STOPPED, Reason::AppBackgroundOrTerminate);
-        TaskManager::get_instance().abort_async_work(task_manager.global_front_task.as_ref().unwrap().clone());
-        TaskManager::get_instance().after_task_processed(task_manager.global_front_task.as_ref().unwrap());
     }
 }
 

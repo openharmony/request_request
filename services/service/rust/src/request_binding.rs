@@ -23,9 +23,9 @@ type APPSTATECB = extern "C" fn(i32, i32);
 type NETWORKCB = extern "C" fn();
 
 extern "C" {
-    pub fn CheckPermission(tokenId: u64, permission: CStringWrapper) -> bool;
-    pub fn InitServiceHandler();
-    pub fn PostTask(f: extern "C" fn());
+    pub fn RequestCheckPermission(tokenId: u64, permission: CStringWrapper) -> bool;
+    pub fn RequestInitServiceHandler();
+    pub fn RequestPostTask(f: extern "C" fn());
     pub fn RequestBackgroundNotify(
         msg: RequestTaskMsg,
         path: *const c_char,
@@ -43,12 +43,12 @@ extern "C" {
     pub fn DeleteCFileSpec(ptr: *const CFileSpec);
     pub fn DeleteCEachFileStatus(ptr: *const CEachFileStatus);
     pub fn DeleteCVectorWrapper(ptr: *const u32);
-    pub fn HasTaskRecord(taskId: u32) -> bool;
-    pub fn RecordTaskInfo(taskInfo: *const CTaskInfo) -> bool;
-    pub fn UpdateTaskInfo(taskId: u32, updateInfo: *const CUpdateInfo) -> bool;
+    pub fn HasRequestTaskRecord(taskId: u32) -> bool;
+    pub fn RecordRequestTaskInfo(taskInfo: *const CTaskInfo) -> bool;
+    pub fn UpdateRequestTaskInfo(taskId: u32, updateInfo: *const CUpdateInfo) -> bool;
     pub fn Touch(taskId: u32, uid: u64, token: CStringWrapper) -> *const CTaskInfo;
     pub fn Query(taskId: u32, queryAction: Action) -> *const CTaskInfo;
     pub fn Search(filter: CFilter) -> CVectorWrapper;
-    pub fn IsSystemAPI(tokenId: u64) -> bool;
+    pub fn RequestIsSystemAPI(tokenId: u64) -> bool;
     pub fn GetCallingBundle(tokenId: u64) -> CStringWrapper;
 }

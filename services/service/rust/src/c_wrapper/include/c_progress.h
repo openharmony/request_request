@@ -25,11 +25,11 @@
 struct CommonProgress {
     uint8_t state;
     uintptr_t index;
-    uintptr_t total_processed;
+    uintptr_t totalProcessed;
 };
 
 struct CProgress {
-    CommonProgress common_data;
+    CommonProgress commonData;
     CStringWrapper sizes;
     CStringWrapper processed;
     CStringWrapper extras;

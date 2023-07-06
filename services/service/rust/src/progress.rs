@@ -67,26 +67,9 @@ impl Progress {
     pub fn from_c_struct(c_struct: &CProgress) -> Self {
         Progress {
             common_data: c_struct.common_data,
-            sizes: {
-                let mut str = c_struct.sizes.to_string();
-                let mut v = Vec::new();
-                for s in split_string(&mut str) {
-                    v.push(s.parse::<i64>().unwrap());
-                }
-                v
-            },
-            processed: {
-                let mut str = c_struct.processed.to_string();
-                let mut v = Vec::new();
-                for s in split_string(&mut str) {
-                    v.push(s.parse::<usize>().unwrap());
-                }
-                v
-            },
-            extras: {
-                let mut str = c_struct.extras.to_string();
-                string_to_hashmap(&mut str)
-            },
+            sizes: split_string(&mut c_struct.sizes.to_string()).map(|s| s.parse::<i64>().unwrap()).collect(),
+            processed: split_string(&mut c_struct.processed.to_string()).map(|s| s.parse::<usize>().unwrap()).collect(),
+            extras: string_to_hashmap(&mut c_struct.extras.to_string()),
         }
     }
 }

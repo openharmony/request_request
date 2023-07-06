@@ -708,12 +708,12 @@ impl RequestTask {
 
     fn record_task_info(&self) {
         TaskManager::get_instance().recording_rdb_num.fetch_add(1, Ordering::SeqCst);
-        let has_record = unsafe { HasTaskRecord(self.task_id) };
+        let has_record = unsafe { HasRequestTaskRecord(self.task_id) };
         if !has_record {
             let task_info = self.show();
             let info_set = task_info.build_info_set();
             let c_task_info = task_info.to_c_struct(&info_set);
-            let ret = unsafe { RecordTaskInfo(&c_task_info) };
+            let ret = unsafe { RecordRequestTaskInfo(&c_task_info) };
             info!(LOG_LABEL, "insert database ret is {}", @public(ret));
         } else {
             let update_info = self.get_update_info();
@@ -722,7 +722,7 @@ impl RequestTask {
             let extras = hashmap_to_string(&update_info.progress.extras);
             let each_file_status = update_info.each_file_status.iter().map(|x| x.to_c_struct()).collect();
             let c_update_info = update_info.to_c_struct(&sizes, &processed, &extras, &each_file_status);
-            let ret = unsafe { UpdateTaskInfo(self.task_id, &c_update_info)};
+            let ret = unsafe { UpdateRequestTaskInfo(self.task_id, &c_update_info)};
             info!(LOG_LABEL, "update database ret is {}", @public(ret));
         }
         TaskManager::get_instance().recording_rdb_num.fetch_sub(1, Ordering::SeqCst);
@@ -791,7 +791,10 @@ impl RequestTask {
                 mtime: status.mtime,
                 reason: status.reason as u8,
                 gauge: self.conf.common_data.gauge,
-                retry: self.retry.load(Ordering::SeqCst),
+                retry: match self.conf.common_data.mode {
+                    Mode::FRONTEND => false,
+                    _ => self.conf.common_data.retry,
+                },
                 tries: self.tries.load(Ordering::SeqCst),
                 version: self.conf.version as u8,
             },

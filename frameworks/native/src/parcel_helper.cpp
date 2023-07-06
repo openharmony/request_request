@@ -15,11 +15,7 @@
 
 #include "parcel_helper.h"
 
-#include <iomanip>
-#include <sstream>
-
 #include "log.h"
-#include "openssl/sha.h"
 
 namespace OHOS {
 namespace Request {
@@ -92,7 +88,6 @@ bool ParcelHelper::UnMarshalFileSpec(MessageParcel &data, TaskInfo &info)
         FileSpec file;
         file.name = data.ReadString();
         file.uri = data.ReadString();
-        REQUEST_HILOGI("UnMarshalFileSpec path is %{public}s", file.uri.c_str());
         file.filename = data.ReadString();
         file.type = data.ReadString();
         info.files.push_back(file);
@@ -152,20 +147,6 @@ bool ParcelHelper::UnMarshalTaskState(MessageParcel &data, TaskInfo &info)
         info.taskStates.push_back(taskState);
     }
     return true;
-}
-
-std::string ParcelHelper::SHA256(const std::string &token)
-{
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, token.c_str(), token.size());
-    SHA256_Final(hash, &sha256);
-    std::stringstream ss;
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(hash[i]);
-    }
-    return ss.str();
 }
 } // namespace Request
 } // namespace OHOS

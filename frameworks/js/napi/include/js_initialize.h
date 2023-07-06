@@ -16,7 +16,9 @@
 #ifndef JS_INITIALIZE_H
 #define JS_INITIALIZE_H
 
+#include "ability.h"
 #include "js_task.h"
+#include "napi_base_context.h"
 
 namespace OHOS::Request {
 static constexpr uint32_t TOKEN_MAX_BYTES = 2048;
@@ -49,7 +51,7 @@ private:
     static void ParseRoaming(napi_env env, napi_value jsConfig, Config &config);
     static void ParseRetry(napi_env env, napi_value jsConfig, bool &retry);
     static void ParseSaveas(napi_env env, napi_value jsConfig, Config &config);
-    static bool ParseToken(napi_env env, napi_value jsConfig, std::string &token);
+    static bool ParseToken(napi_env env, napi_value jsConfig, Config &config);
     static bool ParseDescription(napi_env env, napi_value jsConfig, std::string &description);
     static int64_t ParseEnds(napi_env env, napi_value jsConfig);
     static int64_t ParseBegins(napi_env env, napi_value jsConfig);

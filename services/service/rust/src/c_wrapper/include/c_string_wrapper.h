@@ -20,7 +20,7 @@
 #include <string>
 
 struct CStringWrapper {
-    char *c_str;
+    char *cStr;
     uint32_t len;
 };
 

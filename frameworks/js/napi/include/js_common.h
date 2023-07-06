@@ -113,7 +113,7 @@ struct Config {
     std::string title;
     std::string saveas;
     std::string method;
-    std::string token;
+    std::string token = "null";
     std::string description;
     std::string data;
     std::map<std::string, std::string> headers;

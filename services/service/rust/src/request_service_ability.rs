@@ -76,7 +76,7 @@ impl RequestAbility {
             return;
         }
         unsafe {
-            request_binding::InitServiceHandler();
+            request_binding::RequestInitServiceHandler();
         }
         let ret = self.init();
         if ret != 0 {
@@ -84,7 +84,7 @@ impl RequestAbility {
                 extern "C" fn ability_init() {
                     RequestAbility::get_ability_instance().init();
                 }
-                request_binding::PostTask(ability_init);
+                request_binding::RequestPostTask(ability_init);
             }
         }
         self.server_state = ServerRunState::Running;
@@ -155,10 +155,10 @@ impl RequestAbility {
         ErrorCode::ErrOk
     }
 
-    pub fn check_permission(&self, permission: String) -> bool {
+    pub fn check_permission(&self, permission: &str) -> bool {
         debug!(LOG_LABEL, "check_permission");
         let token_id = get_calling_token_id();
-        unsafe { request_binding::CheckPermission(token_id, CStringWrapper::from(&permission)) }
+        unsafe { request_binding::RequestCheckPermission(token_id, CStringWrapper::from(permission)) }
     }
 
     pub fn get_query_permission(&self) -> QueryPermission {
@@ -167,10 +167,10 @@ impl RequestAbility {
         let query_download_permission = "ohos.permission.DOWNLOAD_SESSION_MANAGER".to_string();
         let query_upload_permission = "ohos.permission.UPLOAD_SESSION_MANAGER".to_string();
         let query_download = unsafe {
-            request_binding::CheckPermission(token_id, CStringWrapper::from(&query_download_permission))
+            request_binding::RequestCheckPermission(token_id, CStringWrapper::from(&query_download_permission))
         };
         let query_upload = unsafe {
-            request_binding::CheckPermission(token_id, CStringWrapper::from(&query_upload_permission))
+            request_binding::RequestCheckPermission(token_id, CStringWrapper::from(&query_upload_permission))
         };
         info!(LOG_LABEL, "query download task permission is {}, query upload task permission is {}",
             @public(query_download), @public(query_upload));
@@ -216,7 +216,7 @@ impl RequestAbility {
         debug!(LOG_LABEL, "is_system_api");
         let token_id = get_calling_token_id();
         debug!(LOG_LABEL, "token_id {}",  @public(&token_id));
-        unsafe { request_binding::IsSystemAPI(token_id) }
+        unsafe { request_binding::RequestIsSystemAPI(token_id) }
     }
 
     pub fn get_calling_bundle(&self) -> String {
@@ -343,7 +343,7 @@ impl RequestAbility {
                     client_data.write(&(item.message)).ok();
                 }
                 debug!(LOG_LABEL, "send_request");
-                let reply = obj.send_request(0, &client_data, false).ok();
+                let reply = obj.send_request(RequestNotifyInterfaceCode::Notify as u32, &client_data, false).ok();
                 return;
             }
             debug!(LOG_LABEL, "key not find");
@@ -432,7 +432,7 @@ impl RequestAbility {
         }
     }
 
-    pub fn serialize_task_info(&self, tf: TaskInfo, reply: &mut BorrowedMsgParcel, is_system_api: bool) -> IpcResult<()> {
+    pub fn serialize_task_info(&self, tf: TaskInfo, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
         reply.write(&(tf.common_data.gauge))?;
         reply.write(&(tf.common_data.retry))?;
         reply.write(&(tf.common_data.action as u32))?;

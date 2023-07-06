@@ -262,7 +262,7 @@ export default function requestCreateTaskTest() {
         title: 'download test.txt'
       }
       let task = await request.agent.create(context, conf);
-      expect(task.conf.title).assertEqual('download test.txt');
+      expect(task.config.title).assertEqual('download test.txt');
       await request.agent.remove(task.tid);
       done();
     })
@@ -280,7 +280,7 @@ export default function requestCreateTaskTest() {
         title: 123
       }
       let task = await request.agent.create(context, conf);
-      expect(task.conf.title).assertEqual(123);
+      expect(task.config.title).assertEqual(123);
       await request.agent.remove(task.tid);
       done();
     })
@@ -298,7 +298,7 @@ export default function requestCreateTaskTest() {
         description: 'test upload'
       }
       let task = await request.agent.create(context, conf);
-      expect(task.conf.description).assertEqual('test upload')
+      expect(task.config.description).assertEqual('test upload')
       await request.agent.remove(task.tid);
       done()
     })
@@ -316,7 +316,7 @@ export default function requestCreateTaskTest() {
         description: 123
       }
       request.agent.create(context, conf, async (err, data) => {
-        expect(data.conf.description).assertEqual(123);
+        expect(data.config.description).assertEqual(123);
         await request.agent.remove(data.tid);
         done();
       })
@@ -499,7 +499,7 @@ export default function requestCreateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start().then(async () => {
-        expect(task.conf.overwrite).assertEqual("true");
+        expect(task.config.overwrite).assertEqual("true");
         await request.agent.remove(task.tid);
         done();
       }).catch((err) => {
@@ -575,7 +575,7 @@ export default function requestCreateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start().then(async () => {
-        expect(task.conf.method).assertEqual(123);
+        expect(task.config.method).assertEqual(123);
         await request.agent.remove(task.tid);
         done();
       }).catch((err) => {
@@ -598,7 +598,7 @@ export default function requestCreateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start().then(async () => {
-        expect(task.conf.method).assertEqual('');
+        expect(task.config.method).assertEqual('');
         await request.agent.remove(task.tid);
         done();
       }).catch((err) => {
@@ -1212,7 +1212,7 @@ export default function requestCreateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       task.start().then(() => {
-        expect(typeof task.conf.headers).assertEqual('undefined');
+        expect(typeof task.config.headers).assertEqual('undefined');
         done();
       }).catch((err) => {
         expect(false).assertTrue();
@@ -1233,7 +1233,7 @@ export default function requestCreateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start().then(async () => {
-        expect(typeof task.conf.headers).assertEqual('undefined');
+        expect(typeof task.config.headers).assertEqual('undefined');
         await request.agent.remove(task.tid);
         done();
       }).catch((err) => {
@@ -1691,7 +1691,7 @@ export default function requestCreateTaskTest() {
         token: 666
       }
       request.agent.create(context, conf).then(async (data) => {
-        expect(data.conf.token).assertEqual(666);
+        expect(data.config.token).assertEqual(666);
         await request.agent.remove(data.tid);
         done();
       }).catch((err) => {
@@ -1761,6 +1761,11 @@ export default function requestCreateTaskTest() {
         expect(request.agent.State.COMPLETED).assertEqual(0x40);
         expect(request.agent.State.FAILED).assertEqual(0x41);
         expect(request.agent.State.REMOVED).assertEqual(0x50);
+        expect(request.agent.Faults.OTHERS).assertEqual(0xFF);
+        expect(request.agent.Faults.DISCONNECTED).assertEqual(0x00);
+        expect(request.agent.Faults.TIMEOUT).assertEqual(0x10);
+        expect(request.agent.Faults.PROTOCOL).assertEqual(0x20);
+        expect(request.agent.Faults.FSIO).assertEqual(0x40);
         done();
       } catch (err) {
         expect(false).assertTrue();

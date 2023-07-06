@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -82,8 +82,9 @@ constexpr const char *CREATE_REQUEST_TABLE2 = "CREATE TABLE IF NOT EXISTS task_i
 
 class RequestDataBase {
 public:
-    static std::shared_ptr<RequestDataBase> GetInstance();
-    static std::shared_ptr<OHOS::NativeRdb::RdbStore> store_;
+    static RequestDataBase &GetInstance();
+    RequestDataBase(const RequestDataBase &) = delete;
+    RequestDataBase &operator=(const RequestDataBase &) = delete;
     bool Insert(const std::string &table, const OHOS::NativeRdb::ValuesBucket &insertValues);
     bool Update(const OHOS::NativeRdb::ValuesBucket values, const OHOS::NativeRdb::AbsRdbPredicates &predicates);
     std::shared_ptr<OHOS::NativeRdb::ResultSet> Query(const OHOS::NativeRdb::AbsRdbPredicates &predicates,
@@ -94,11 +95,9 @@ public:
 
 private:
     RequestDataBase();
-    RequestDataBase(const RequestDataBase &);
-    const RequestDataBase &operator=(const RequestDataBase &);
 
 private:
-    static std::shared_ptr<RequestDataBase> instance_;
+    std::shared_ptr<OHOS::NativeRdb::RdbStore> store_;
 };
 
 class RequestDBOpenCallback : public OHOS::NativeRdb::RdbOpenCallback {
@@ -117,22 +116,22 @@ struct CVectorWrapper {
     uint32_t *ptr;
     uint64_t len;
 };
-bool HasTaskRecord(uint32_t taskId);
-bool RecordTaskInfo(CTaskInfo *taskInfo);
-bool UpdateTaskInfo(uint32_t taskId, CUpdateInfo *updateInfo);
+bool HasRequestTaskRecord(uint32_t taskId);
+bool RecordRequestTaskInfo(CTaskInfo *taskInfo);
+bool UpdateRequestTaskInfo(uint32_t taskId, CUpdateInfo *updateInfo);
 CTaskInfo *Touch(uint32_t taskId, uint64_t uid, CStringWrapper token);
 CTaskInfo *Query(uint32_t taskId, Action queryAction);
 CVectorWrapper Search(CFilter filter);
 void DeleteCVectorWrapper(uint32_t *ptr);
 void GetCommonTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskInfo &taskInfo);
 int TouchRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo,
-    int64_t &form_items_len, int64_t &file_specs_len);
+    int64_t &formItemsLen, int64_t &fileSpecsLen);
 int QueryRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo,
-    int64_t &form_items_len, int64_t &file_specs_len);
+    int64_t &formItemsLen, int64_t &fileSpecsLen);
 int TouchTaskInfoAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo,
-    int64_t form_items_len, int64_t file_specs_len);
+    int64_t formItemsLen, int64_t fileSpecsLen);
 int QueryTaskInfoAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo,
-    int64_t file_specs_len);
+    int64_t fileSpecsLen);
 CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo);
 CProgress BuildCProgress(const Progress &progress);
 

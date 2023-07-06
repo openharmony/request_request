@@ -28,7 +28,7 @@ struct CommonFilter {
 
 struct CFilter {
     CStringWrapper bundle;
-    CommonFilter common_data;
+    CommonFilter commonData;
 };
 
 #endif // C_FILTER_H

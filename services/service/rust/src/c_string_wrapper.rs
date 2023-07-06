@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-use std::ffi::{c_char, CStr};
+
+use std::{slice, ffi::c_char};
 use super::request_binding::*;
 #[repr(C)]
 pub struct CStringWrapper {
@@ -22,19 +22,19 @@ pub struct CStringWrapper {
 }
 
 impl CStringWrapper {
-    pub fn from(s: &String) -> Self {
+    pub fn from(s: &str) -> Self {
         let c_str = s.as_ptr() as *const c_char;
-        let len = s.as_bytes().len() as u32;
+        let len = s.len() as u32;
         CStringWrapper { c_str, len }
     }
 
     pub fn to_string(&self) -> String {
         if self.c_str.is_null() || self.len == 0 {
+            unsafe { DeleteChar(self.c_str) };
             return String::new();
         }
-        let c_str = unsafe { CStr::from_ptr(self.c_str) };
-        let str_slice = c_str.to_str().unwrap();
-        let str = str_slice.to_string();
+        let bytes = unsafe { slice::from_raw_parts(self.c_str as *const u8, self.len as usize) };
+        let str = unsafe { String::from_utf8_unchecked(bytes.to_vec()) };
         unsafe { DeleteChar(self.c_str) };
         str
     }

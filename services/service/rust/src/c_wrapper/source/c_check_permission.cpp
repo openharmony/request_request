@@ -21,14 +21,14 @@
 
 using namespace OHOS::Security::AccessToken;
 
-bool CheckPermission(uint64_t tokenId, CStringWrapper permission)
+bool RequestCheckPermission(uint64_t tokenId, CStringWrapper permission)
 {
     TypeATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(static_cast<AccessTokenID>(tokenId));
     if (tokenType == TOKEN_INVALID) {
         REQUEST_HILOGE("invalid token id");
         return false;
     }
-    int result = AccessTokenKit::VerifyAccessToken(tokenId, std::string(permission.c_str, permission.len));
+    int result = AccessTokenKit::VerifyAccessToken(tokenId, std::string(permission.cStr, permission.len));
     if (result != PERMISSION_GRANTED) {
         REQUEST_HILOGE("check permission failed");
         return false;
@@ -37,7 +37,7 @@ bool CheckPermission(uint64_t tokenId, CStringWrapper permission)
     return true;
 }
 
-bool IsSystemAPI(uint64_t tokenId)
+bool RequestIsSystemAPI(uint64_t tokenId)
 {
     return TokenIdKit::IsSystemAppByFullTokenID(tokenId);
 }

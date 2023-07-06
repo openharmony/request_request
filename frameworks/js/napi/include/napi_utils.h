@@ -16,14 +16,17 @@
 #ifndef DOWNLOAD_NAPI_UTILS_H
 #define DOWNLOAD_NAPI_UTILS_H
 
+#include <iomanip>
+#include <map>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <map>
 
+#include "constant.h"
 #include "js_common.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
-#include "constant.h"
+#include "openssl/sha.h"
 
 namespace OHOS::Request::NapiUtils {
 static constexpr int32_t MAX_ARGC = 6;
@@ -38,6 +41,7 @@ static constexpr int32_t THIRD_ARGV = 2;
 
 static constexpr int32_t MAX_NUMBER_BYTES = 8;
 static constexpr int32_t MAX_LEN = 4096;
+static constexpr int32_t MAX_STRING_LENGTH = 65536;
 
 napi_status Convert2JSValue(napi_env env, bool in, napi_value &out);
 napi_status Convert2JSValue(napi_env env, std::string &in, napi_value &out);
@@ -48,7 +52,7 @@ napi_value Convert2JSValue(napi_env env, uint32_t code);
 napi_value Convert2JSValue(napi_env env, int64_t code);
 napi_value Convert2JSValue(napi_env env, uint64_t code);
 napi_value Convert2JSValue(napi_env env, const std::vector<int64_t> &code);
-napi_value Convert2JSValue(napi_env env, const std::vector<std::string> &code);
+napi_value Convert2JSValue(napi_env env, const std::vector<std::string> &ids);
 napi_value Convert2JSValue(napi_env env, const std::map<std::string, std::string> &code);
 napi_value Convert2JSValue(napi_env env, const std::string &str);
 napi_value Convert2JSValue(napi_env env, const std::vector<TaskState> &taskStates);
@@ -91,5 +95,6 @@ std::string Convert2ReasonMsg(Reason code);
 uint32_t Convert2Broken(Reason code);
 std::string GetSaveas(const std::vector<FileSpec> &files, Action action);
 bool IsPathValid(const std::string &filePath);
+std::string SHA256(const char *str, size_t len);
 } // namespace OHOS::Request::NapiUtils
 #endif /* DOWNLOAD_NAPI_UTILS_H */

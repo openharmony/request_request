@@ -26,7 +26,7 @@
 #include "c_string_wrapper.h"
 
 struct CommonTaskInfo {
-    uint32_t task_id;
+    uint32_t taskId;
     uint64_t uid;
     uint8_t action;
     uint8_t mode;
@@ -56,17 +56,17 @@ struct CTaskInfo {
     CStringWrapper url;
     CStringWrapper data;
     CStringWrapper token;
-    CFormItem *form_items_ptr;
-    uint32_t form_items_len;
-    CFileSpec *file_specs_ptr;
-    uint32_t file_specs_len;
+    CFormItem *formItemsPtr;
+    uint32_t formItemsLen;
+    CFileSpec *fileSpecsPtr;
+    uint32_t fileSpecsLen;
     CStringWrapper title;
     CStringWrapper description;
-    CStringWrapper mime_type;
+    CStringWrapper mimeType;
     CProgress progress;
-    CEachFileStatus *each_file_status_ptr;
-    uint32_t each_file_status_len;
-    CommonTaskInfo common_data;
+    CEachFileStatus *eachFileStatusPtr;
+    uint32_t eachFileStatusLen;
+    CommonTaskInfo commonData;
 };
 
 struct TaskInfo {
@@ -89,8 +89,8 @@ struct CUpdateInfo {
     uint8_t reason;
     uint32_t tries;
     CProgress progress;
-    CEachFileStatus *each_file_status_ptr;
-    uint32_t each_file_status_len;
+    CEachFileStatus *eachFileStatusPtr;
+    uint32_t eachFileStatusLen;
 };
 #ifdef __cplusplus
 extern "C" {

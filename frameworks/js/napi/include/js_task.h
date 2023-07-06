@@ -16,9 +16,8 @@
 #ifndef REQUEST_TASK_NAPI
 #define REQUEST_TASK_NAPI
 
-
-#include "js_common.h"
 #include "async_call.h"
+#include "js_common.h"
 #include "request_notify.h"
 
 namespace OHOS::Request {
@@ -64,8 +63,8 @@ private:
 
     struct TouchContext : public AsyncCall::Context {
         std::string tid;
+        std::string token = "null";
         TaskInfo taskInfo;
-        std::string token;
     };
 
     static napi_value DefineClass(napi_env env, const napi_property_descriptor* desc, size_t count,
@@ -87,7 +86,7 @@ private:
     static State ParseState(napi_env env, napi_value value);
     static Action ParseAction(napi_env env, napi_value value);
     static Mode ParseMode(napi_env env, napi_value value);
-    static bool ParseTouch(napi_env env, size_t argc, napi_value *argv, std::string &tid, std::string &token);
+    static bool ParseTouch(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<TouchContext> context);
     static int64_t ParseBefore(napi_env env, napi_value value);
     static int64_t ParseAfter(napi_env env, napi_value value, int64_t before);
     bool Equals(napi_env env, napi_value value, napi_ref copy);

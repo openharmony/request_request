@@ -23,8 +23,8 @@
 struct CFileSpec {
     CStringWrapper name;
     CStringWrapper path;
-    CStringWrapper file_name;
-    CStringWrapper mime_type;
+    CStringWrapper fileName;
+    CStringWrapper mimeType;
 };
 
 struct FileSpec {
