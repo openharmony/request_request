@@ -13,23 +13,22 @@
  * limitations under the License.
  */
 
-
-#include <regex>
-#include "ability.h"
-#include "request_manager.h"
-#include "log.h"
-#include "napi_base_context.h"
-#include "js_common.h"
-#include "napi_utils.h"
 #include "js_initialize.h"
+
+#include <cstring>
+#include <regex>
+#include <securec.h>
+
+#include "js_common.h"
+#include "log.h"
+#include "napi_utils.h"
+#include "request_manager.h"
 
 static constexpr const char *PARAM_KEY_DESCRIPTION = "description";
 static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";
 static constexpr const char *PARAM_KEY_FILE_PATH = "filePath";
 static constexpr const char *PARAM_KEY_BACKGROUND = "background";
 static constexpr uint32_t FILE_PERMISSION = 0644;
-static constexpr uint32_t TOKEN_MAX_BYTES = 2048;
-static constexpr uint32_t TOKEN_MIN_BYTES = 8;
 static constexpr uint32_t TITLE_MAXIMUM = 256;
 static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
 static constexpr uint32_t URL_MAXIMUM = 2048;
@@ -243,7 +242,7 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
         errInfo = "Index exceeds file list";
         return false;
     }
-    if (!ParseTitle(env, jsConfig, config) || !ParseToken(env, jsConfig, config.token) ||
+    if (!ParseTitle(env, jsConfig, config) || !ParseToken(env, jsConfig, config) ||
         !ParseDescription(env, jsConfig, config.description)) {
         errInfo = "Exceeding maximum length";
         return false;
@@ -284,15 +283,33 @@ void JsInitialize::ParseNetwork(napi_env env, napi_value jsConfig, Network &netw
     }
 }
 
-bool JsInitialize::ParseToken(napi_env env, napi_value jsConfig, std::string &token)
+bool JsInitialize::ParseToken(napi_env env, napi_value jsConfig, Config &config)
 {
-    token = NapiUtils::Convert2String(env, jsConfig, "token");
-    if (token.empty()) {
+    char *token = nullptr;
+    size_t len = 0;
+    if (!NapiUtils::HasNamedProperty(env, jsConfig, "token")) {
         return true;
     }
-    if (token.size() < TOKEN_MIN_BYTES || token.size() > TOKEN_MAX_BYTES) {
+    napi_value value = NapiUtils::GetNamedProperty(env, jsConfig, "token");
+    if (NapiUtils::GetValueType(env, value) != napi_string) {
+        return true;
+    }
+    token = new char[TOKEN_MAX_BYTES + 1];
+    napi_status status = napi_get_value_string_utf8(env, value, token, TOKEN_MAX_BYTES + 1, &len);
+    if (status != napi_ok) {
+        REQUEST_HILOGE("napi get value string utf8 failed");
+        memset_s(token, TOKEN_MAX_BYTES + 1, 0, TOKEN_MAX_BYTES + 1);
+        delete[] token;
         return false;
     }
+    if (len < TOKEN_MIN_BYTES || len > TOKEN_MAX_BYTES) {
+        memset_s(token, TOKEN_MAX_BYTES + 1, 0, TOKEN_MAX_BYTES + 1);
+        delete[] token;
+        return false;
+    }
+    config.token = NapiUtils::SHA256(token, len);
+    memset_s(token, TOKEN_MAX_BYTES + 1, 0, TOKEN_MAX_BYTES + 1);
+    delete[] token;
     return true;
 }
 

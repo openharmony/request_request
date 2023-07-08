@@ -13,21 +13,25 @@
 * limitations under the License.
 */
 
-#ifndef REQUEST_C_CHECK_PERMISSION_H
-#define REQUEST_C_CHECK_PERMISSION_H
+#ifndef C_STRING_WRAPPER_H
+#define C_STRING_WRAPPER_H
 
-#include <stdint.h>
-#include "c_enumration.h"
-#include "c_string_wrapper.h"
+#include <cstdint>
+#include <string>
+
+struct CStringWrapper {
+    char *cStr;
+    uint32_t len;
+};
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-bool RequestCheckPermission(uint64_t tokenId, CStringWrapper permission);
-bool RequestIsSystemAPI(uint64_t tokenId);
+void DeleteChar(char *ptr);
+CStringWrapper WrapperCString(const std::string &str);
 
 #ifdef __cplusplus
 }
 #endif
-#endif // REQUEST_C_CHECK_PERMISSION_H
+#endif // C_STRING_WRAPPER_H

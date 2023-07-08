@@ -14,9 +14,10 @@
  */
 
 extern crate rust_samgr;
+
 use super::{
     enumration::*, request_task::*, task_config::*, utils::*, task_info::*, progress::*, request_binding::*,
-    log::LOG_LABEL,
+    log::LOG_LABEL, c_string_wrapper::*, filter::*,
 };
 use hilog_rust::*;
 use std::{collections::HashMap, ffi::CString, ffi::c_char, fs::File, time::Duration};
@@ -28,17 +29,19 @@ use ylong_runtime::{builder::RuntimeBuilder, executor::Runtime, join_handle::Joi
 static MAX_TASK_COUNT: u32 = 300;
 static MAX_TASK_COUNT_EACH_APP: u8 = 10;
 static MAX_RUNNING_TASK_COUNT_EACH_APP: u8 = 5;
-static INTERVAL_SECONDS: u64 = 30 * 60;
-static SECONDS_IN_ONE_DAY: u64 = 24 * 60 * 60;
-static SECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60;
-static ONE_SECONDS: u64 = 1;
+static INTERVAL_MILLISECONDS: u64 = 30 * 60 * 1000;
+static MILLISECONDS_IN_ONE_DAY: u64 = 24 * 60 * 60 * 1000;
+static MILLISECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
+static MILLISECONDS_IN_ONE_SECONDS: u64 = 1000;
 static REQUEST_SERVICE_ID: i32 = 3706;
 static WAITTING_RETRY_INTERVAL: u64 = 10;
+
 type AppTask = HashMap<u32, Arc<RequestTask>>;
+
 pub struct TaskManager {
     task_map: Arc<Mutex<HashMap<u64, AppTask>>>,
     event_cb: Option<Box<dyn Fn(String, &NotifyData) + Send + Sync + 'static>>,
-    info_cb: Option<Box<dyn Fn(TaskInfo) + Send + Sync + 'static>>,
+    info_cb: Option<Box<dyn Fn(&TaskInfo) + Send + Sync + 'static>>,
     pub global_front_task: Option<Arc<RequestTask>>,
     pub front_app_uid: Option<u64>,
     pub rt: Runtime,
@@ -46,6 +49,7 @@ pub struct TaskManager {
     pub unloading: AtomicBool,
     pub total_task_count: AtomicU32,
     pub api10_background_task_count: AtomicU32,
+    pub recording_rdb_num: AtomicU32,
     task_handles: Mutex<HashMap<u32, JoinHandle<()>>>,
 }
 
@@ -66,7 +70,7 @@ pub fn monitor_task() {
                         };
                         if state == State::WAITING {
                             if let Some(t) = time {
-                                if current_time - t > SECONDS_IN_ONE_DAY {
+                                if current_time - t > MILLISECONDS_IN_ONE_DAY {
                                     task.set_status(State::STOPPED, Reason::WaittingNetWorkOneday);
                                     remove_task.push(task.clone());
                                 }
@@ -75,7 +79,7 @@ pub fn monitor_task() {
                         if task.conf.version == Version::API9 {
                             continue;
                         }
-                        if current_time - task.ctime > SECONDS_IN_ONE_MONTH {
+                        if current_time - task.ctime > MILLISECONDS_IN_ONE_MONTH {
                             task.set_status(State::STOPPED, Reason::TaskSurvivalOneMonth);
                             remove_task.push(task.clone());
                             continue;
@@ -87,7 +91,7 @@ pub fn monitor_task() {
                 }
                 remove_task.clear();
             }
-            sleep(Duration::from_secs(INTERVAL_SECONDS)).await;
+            sleep(Duration::from_millis(INTERVAL_MILLISECONDS)).await;
         }
     });
 }
@@ -108,6 +112,7 @@ impl TaskManager {
             unloading: AtomicBool::new(false),
             total_task_count: AtomicU32::new(0),
             api10_background_task_count: AtomicU32::new(0),
+            recording_rdb_num: AtomicU32::new(0),
             task_handles: Mutex::new(HashMap::<u32, JoinHandle<()>>::new()),
         }
     }
@@ -147,7 +152,7 @@ impl TaskManager {
     pub fn register_callback(
         &mut self,
         event_cb: Box<dyn Fn(String, &NotifyData) + Send + Sync + 'static>,
-        info_cb: Box<dyn Fn(TaskInfo) + Send + Sync + 'static>,
+        info_cb: Box<dyn Fn(&TaskInfo) + Send + Sync + 'static>,
     ) {
         self.event_cb = Some(event_cb);
         self.info_cb = Some(info_cb);
@@ -174,7 +179,7 @@ impl TaskManager {
     fn is_front_app(&self, uid: u64, bundle: &str) -> bool {
         if self.front_app_uid.is_none() {
             let top_bundle = unsafe { GetTopBundleName() };
-            let top_bundle = convert_to_string(top_bundle);
+            let top_bundle = top_bundle.to_string();
             debug!(LOG_LABEL, "top_bundle {}", @public(top_bundle));
             if !top_bundle.eq(bundle) {
                 return false;
@@ -435,7 +440,7 @@ impl TaskManager {
             return ErrorCode::ErrOk;
         }
         error!(LOG_LABEL, "task not found");
-        ErrorCode::TaskNotFound
+        ErrorCode::TaskStateErr
     }
 
     fn process_app_waitting_task(&self, uid: u64, guard: &MutexGuard<HashMap<u64, AppTask>>) {
@@ -458,10 +463,7 @@ impl TaskManager {
 
     fn after_task_processed(&mut self, task: &Arc<RequestTask>) {
         self.rt.spawn(remove_task_from_map(task.clone()));
-        static ONCE: Once = Once::new();
-        ONCE.call_once(|| {
-            self.rt.spawn(unload_sa());
-        });
+
     }
 
     pub fn pause(&self, uid: u64, task_id: u32) -> ErrorCode {
@@ -481,7 +483,7 @@ impl TaskManager {
             return ErrorCode::ErrOk;
         }
         error!(LOG_LABEL, "task not found");
-        ErrorCode::TaskNotFound
+        ErrorCode::TaskStateErr
     }
 
     pub fn resume(&self, uid: u64, task_id: u32) -> ErrorCode {
@@ -503,7 +505,7 @@ impl TaskManager {
             return ErrorCode::ErrOk;
         }
         error!(LOG_LABEL, "task not found");
-        ErrorCode::TaskNotFound
+        ErrorCode::TaskStateErr
     }
 
     pub fn stop(&mut self, uid: u64, task_id: u32) -> ErrorCode {
@@ -520,7 +522,7 @@ impl TaskManager {
             return ErrorCode::ErrOk;
         }
         error!(LOG_LABEL, "Stop failed");
-        ErrorCode::TaskNotFound
+        ErrorCode::TaskStateErr
     }
 
     pub fn remove(&mut self, uid: u64, task_id: u32) -> ErrorCode {
@@ -543,14 +545,92 @@ impl TaskManager {
         let task = self.get_task(uid, task_id, &task_map_guard);
         match task {
             Some(value) => {
-                debug!(LOG_LABEL, "query task info by memory");
+                debug!(LOG_LABEL, "show task info by memory");
                 let task_info = value.show();
                 return Some(task_info);
             }
-            None => {
+            None => return None,
+        }
+    }
+
+    pub fn touch(&self, uid: u64, task_id: u32, token: String) -> Option<TaskInfo> {
+        debug!(LOG_LABEL, "touch a task");
+        let task_map_guard = self.task_map.lock().unwrap();
+        let task = self.get_task(uid, task_id, &task_map_guard);
+        match task {
+            Some(value) => {
+                debug!(LOG_LABEL, "touch task info by memory");
+                if value.conf.token.eq(token.as_str()) {
+                    let mut task_info = value.show();
+                    task_info.bundle = "".to_string();
+                    return Some(task_info);
+                }
                 return None;
             }
+            None => {
+                debug!(LOG_LABEL, "touch task info by database");
+                let c_task_info = unsafe { Touch(task_id, uid, CStringWrapper::from(&token)) };
+                if c_task_info.is_null() {
+                    return None;
+                }
+                let c_task_info = unsafe { &*c_task_info };
+                let task_info = TaskInfo::from_c_struct(c_task_info);
+                debug!(LOG_LABEL, "touch task info is {:?}", @public(task_info));
+                unsafe { DeleteCTaskInfo(c_task_info) };
+                return Some(task_info);
+            }
         }
+    }
+
+    pub fn query(&self, task_id: u32, query_action: Action) -> Option<TaskInfo> {
+        debug!(LOG_LABEL, "query a task");
+        let task_map_guard = self.task_map.lock().unwrap();
+        for (_, app_task) in task_map_guard.iter() {
+            for (tid, task) in app_task.iter() {
+                if *tid == task_id {
+                    if (query_action == Action::DOWNLOAD
+                        && task.conf.common_data.action == Action::DOWNLOAD)
+                        || (query_action == Action::UPLOAD
+                        && task.conf.common_data.action == Action::UPLOAD)
+                        || (query_action == Action::ANY)
+                    {
+                        debug!(LOG_LABEL, "query task info by memory");
+                        let mut task_info = task.show();
+                        task_info.data = "".to_string();
+                        task_info.url = "".to_string();
+                        debug!(LOG_LABEL, "query task info is {:?}", @public(task_info));
+                        return Some(task_info);
+                    }
+                }
+            }
+        }
+        debug!(LOG_LABEL, "query task info by database");
+        let c_task_info = unsafe { Query(task_id, query_action) };
+        if c_task_info.is_null() {
+            return None;
+        }
+        let c_task_info = unsafe { &*c_task_info };
+        let task_info = TaskInfo::from_c_struct(c_task_info);
+        debug!(LOG_LABEL, "query task info is {:?}", @public(task_info));
+        unsafe { DeleteCTaskInfo(c_task_info) };
+        Some(task_info)
+    }
+
+    pub fn search(&self, filter: Filter) -> Vec<u32> {
+        let mut vec = Vec::<u32>::new();
+        let task_map_guard = self.task_map.lock().unwrap();
+        let c_vector_wrapper = unsafe { Search(filter.to_c_struct()) };
+        if c_vector_wrapper.ptr.is_null() || c_vector_wrapper.len == 0 {
+            error!(LOG_LABEL, "c_vector_wrapper is null");
+            return vec;
+        }
+        let slice = unsafe { std::slice::from_raw_parts(c_vector_wrapper.ptr, c_vector_wrapper.len as usize) };
+        for item in slice.iter() {
+            vec.push(*item);
+        }
+        debug!(LOG_LABEL, "c_vector_wrapper is not null");
+        unsafe { DeleteCVectorWrapper(c_vector_wrapper.ptr) };
+        vec
     }
 
     pub fn query_mime_type(&self, uid: u64, task_id: u32) -> String {
@@ -568,15 +648,39 @@ impl TaskManager {
             }
         }
     }
+
+    pub fn query_one_task(&self, task_id: u32) -> Option<Arc<RequestTask>> {
+        let guard = self.task_map.lock().unwrap();
+        for (_, app_task) in guard.iter() {
+            for (id, task) in app_task.iter() {
+                if task_id == *id {
+                    return Some(task.clone());
+                }
+            }
+        }
+        None
+    }
+
+    pub fn query_all_task(&self) -> Vec<Arc<RequestTask>> {
+        let mut vec: Vec<Arc<RequestTask>> = Vec::new();
+        let guard = self.task_map.lock().unwrap();
+        for (_, app_task) in guard.iter() {
+            for (_, task) in app_task.iter() {
+                vec.push(task.clone());
+            }
+        }
+        vec
+    }
 }
 
-async fn unload_sa() {
+pub async fn unload_sa() {
     loop {
         sleep(Duration::from_secs(60)).await;
         let task_manager = TaskManager::get_instance();
         match task_manager.task_map.try_lock() {
             Ok(_) => {
-                if task_manager.total_task_count.load(Ordering::SeqCst) != 0 {
+                if task_manager.total_task_count.load(Ordering::SeqCst) != 0
+                    || task_manager.recording_rdb_num.load(Ordering::SeqCst) != 0 {
                     continue;
                 }
                 task_manager.unloading.store(true, Ordering::SeqCst);
@@ -609,10 +713,11 @@ async fn remove_task_from_map(task: Arc<RequestTask>) {
             }
         }
     };
-    if task.conf.version == Version::API9 && task_manager.info_cb.is_some() {
+
+    if task.conf.version == Version::API9 {
         let task_info = task.show();
-        task_manager.info_cb.as_ref().unwrap()(task_info);
-        sleep(Duration::from_secs(ONE_SECONDS)).await;
+        task_manager.info_cb.as_ref().unwrap()(&task_info);
+        sleep(Duration::from_millis(MILLISECONDS_IN_ONE_SECONDS)).await;
     }
     let mut guard = task_manager.task_map.lock().unwrap();
     let app_task = guard.get_mut(&task.uid);
@@ -629,8 +734,7 @@ async fn remove_task_from_map(task: Arc<RequestTask>) {
     if remove_task.conf.version == Version::API9 {
         let notify_data = remove_task.build_notify_data();
         TaskManager::get_instance().front_notify("remove".into(), &notify_data);
-    }
-    if remove_task.conf.version == Version::API10 {
+    } else {
         task_manager.api10_background_task_count.fetch_sub(1, Ordering::SeqCst);
     }
     if app_task.len() == 0 {
@@ -647,7 +751,6 @@ pub fn monitor_network() {
     unsafe {
         RegisterNetworkCallback(net_work_change_callback);
     }
-
 }
 
 extern "C" fn net_work_change_callback() {
@@ -683,7 +786,7 @@ extern "C" fn net_work_change_callback() {
                         handles_guard.remove(&task_id)
                     };
                     if let Some(handle) = handle {
-                        sleep(Duration::from_secs(ONE_SECONDS)).await;
+                        sleep(Duration::from_millis(MILLISECONDS_IN_ONE_SECONDS)).await;
                         handle.cancel();
                     }
                     TaskManager::get_instance().after_task_processed(&task);

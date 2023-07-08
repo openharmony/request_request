@@ -25,29 +25,31 @@
 namespace OHOS::Request {
 
 enum class Action : uint32_t {
-    DOWNLOAD,
+    DOWNLOAD = 0,
     UPLOAD,
+    ANY,
 };
 
 enum class Mode : uint32_t {
-    BACKGROUND,
+    BACKGROUND = 0,
     FOREGROUND,
+    ANY,
 };
 
 enum class Network : uint32_t {
-    ANY,
+    ANY = 0,
     WIFI,
     CELLULAR,
 };
 
 enum class Version : uint32_t {
-    API8,
+    API8 = 0,
     API9,
     API10,
 };
 
 enum Reason : uint32_t {
-    REASON_OK,
+    REASON_OK = 0,
     TASK_SURVIVAL_ONE_MONTH,
     WAITTING_NETWORK_ONE_DAY,
     STOPPED_NEW_FRONT_TASK,
@@ -111,7 +113,7 @@ struct Config {
     std::string title;
     std::string saveas;
     std::string method;
-    std::string token;
+    std::string token = "null";
     std::string description;
     std::string data;
     std::map<std::string, std::string> headers;
@@ -131,6 +133,7 @@ enum class State : uint32_t {
     FAILED = 0x41,
     REMOVED = 0x50,
     DEFAULT = 0x60,
+    ANY = 0x61,
 };
 
 struct Progress {
@@ -142,7 +145,7 @@ struct Progress {
     std::map<std::string, std::string> extras;
 };
 
-enum class Broken : uint32_t {
+enum class Faults : uint32_t {
     OTHERS = 0xFF,
     DISCONNECTED = 0x00,
     TIMEOUT = 0x10,
@@ -195,21 +198,22 @@ struct TaskInfo {
     std::string mimeType;
     Progress progress;
     bool gauge;
-    std::string ctime;
-    std::string mtime;
+    uint64_t ctime;
+    uint64_t mtime;
     bool retry;
     uint32_t tries;
-    Broken broken;
+    Faults faults;
     Reason code;
     std::string reason;
+    bool withSystem = false;
     std::map<std::string, std::string> extras;
     std::vector<TaskState> taskStates;
 };
 
 struct Filter {
     std::string bundle;
-    std::string before;
-    std::string after;
+    int64_t before;
+    int64_t after;
     State state;
     Action action;
     Mode mode;

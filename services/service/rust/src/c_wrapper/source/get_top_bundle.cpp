@@ -18,10 +18,10 @@
 #include "ability_manager_client.h"
 #include "log.h"
 
-char *GetTopBundleName(void)
+CStringWrapper GetTopBundleName(void)
 {
     REQUEST_HILOGE("GetTopBundleName start");
     OHOS::AppExecFwk::ElementName elementName = OHOS::AAFwk::AbilityManagerClient::GetInstance()->GetTopAbility();
-    static std::string bundleName = elementName.GetBundleName();
-    return const_cast<char *>(bundleName.c_str());
+    std::string bundleName = elementName.GetBundleName();
+    return WrapperCString(bundleName);
 }

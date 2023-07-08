@@ -61,14 +61,14 @@ static void NapiCreateState(napi_env env, napi_value &state)
     NapiUtils::SetUint32Property(env, state, "REMOVED", static_cast<uint32_t>(State::REMOVED));
 }
 
-static void NapiCreateBroken(napi_env env, napi_value &broken)
+static void NapiCreateFaults(napi_env env, napi_value &faults)
 {
-    napi_create_object(env, &broken);
-    NapiUtils::SetUint32Property(env, broken, "OTHERS", static_cast<uint32_t>(Broken::OTHERS));
-    NapiUtils::SetUint32Property(env, broken, "DISCONNECTED", static_cast<uint32_t>(Broken::DISCONNECTED));
-    NapiUtils::SetUint32Property(env, broken, "TIMEOUT", static_cast<uint32_t>(Broken::TIMEOUT));
-    NapiUtils::SetUint32Property(env, broken, "PROTOCOL", static_cast<uint32_t>(Broken::PROTOCOL));
-    NapiUtils::SetUint32Property(env, broken, "FSIO", static_cast<uint32_t>(Broken::FSIO));
+    napi_create_object(env, &faults);
+    NapiUtils::SetUint32Property(env, faults, "OTHERS", static_cast<uint32_t>(Faults::OTHERS));
+    NapiUtils::SetUint32Property(env, faults, "DISCONNECTED", static_cast<uint32_t>(Faults::DISCONNECTED));
+    NapiUtils::SetUint32Property(env, faults, "TIMEOUT", static_cast<uint32_t>(Faults::TIMEOUT));
+    NapiUtils::SetUint32Property(env, faults, "PROTOCOL", static_cast<uint32_t>(Faults::PROTOCOL));
+    NapiUtils::SetUint32Property(env, faults, "FSIO", static_cast<uint32_t>(Faults::FSIO));
 }
 
 static napi_value InitAgent(napi_env env, napi_value exports)
@@ -82,15 +82,15 @@ static napi_value InitAgent(napi_env env, napi_value exports)
     NapiCreateNetwork(env, network);
     napi_value state = nullptr;
     NapiCreateState(env, state);
-    napi_value broken = nullptr;
-    NapiCreateBroken(env, broken);
+    napi_value faults = nullptr;
+    NapiCreateFaults(env, faults);
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_PROPERTY("Action", action),
         DECLARE_NAPI_PROPERTY("Mode", mode),
         DECLARE_NAPI_PROPERTY("Network", network),
         DECLARE_NAPI_PROPERTY("State", state),
-        DECLARE_NAPI_PROPERTY("Broken", broken),
+        DECLARE_NAPI_PROPERTY("Faults", faults),
 
         DECLARE_NAPI_METHOD("create", JsTask::JsCreate),
         DECLARE_NAPI_METHOD("remove", JsTask::Remove),
@@ -98,7 +98,6 @@ static napi_value InitAgent(napi_env env, napi_value exports)
         DECLARE_NAPI_METHOD("touch", JsTask::Touch),
         DECLARE_NAPI_METHOD("search", JsTask::Search),
         DECLARE_NAPI_METHOD("query", JsTask::Query),
-        DECLARE_NAPI_METHOD("clear", JsTask::Clear),
     };
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
     REQUEST_HILOGI("InitV10 end %{public}d", status);

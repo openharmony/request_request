@@ -38,10 +38,10 @@ static CONNECT_TIMEOUT: u64 = 60;
 static LOW_SPEED_TIME: u64 = 60;
 static LOW_SPEED_LIMIT: u64 = 1;
 static SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
-static FRONT_NOTIFY_INTERVAL: u64 = 1;
-static BACKGROUND_NOTIFY_INTERVAL: u64 = 3;
+static FRONT_NOTIFY_INTERVAL: u64 = 1000;
+static BACKGROUND_NOTIFY_INTERVAL: u64 = 3000;
 static RETRY_INTERVAL: u64 = 20;
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TaskStatus {
     pub waitting_network_time: Option<u64>,
     pub mtime: u64,
@@ -128,12 +128,12 @@ impl TaskOperator {
         data: &[u8],
     ) -> Poll<Result<usize, HttpClientError>> {
         let mut file_guard = self.task.files.lock().unwrap();
+        let mut progress_guard = self.task.progress.lock().unwrap();
         let file = file_guard.get_mut(0).unwrap();
         match Pin::new(file).poll_write(cx, data) {
             Poll::Ready(Ok(size)) => {
-                let mut guard = self.task.progress.lock().unwrap();
-                guard.processed[0] += size;
-                guard.common_data.total_processed += size;
+                progress_guard.processed[0] += size;
+                progress_guard.common_data.total_processed += size;
                 Poll::Ready(Ok(size))
             }
             Poll::Pending => Poll::Pending,
@@ -258,6 +258,7 @@ impl RequestTask {
                     sizes.push(file_size);
                 }
             }
+            _ => {},
         }
         let file_count = files.len();
         let action = conf.common_data.action;
@@ -292,15 +293,15 @@ impl RequestTask {
     }
 
     pub fn build_notify_data(&self) -> NotifyData {
-        let mut vec = Vec::<(String, Reason, String)>::new();
+        let mut vec = Vec::new();
         let size = self.conf.file_specs.len();
         let guard = self.code.lock().unwrap();
         for i in 0..size {
-            vec.push((
-                self.conf.file_specs[i].path.clone(),
-                guard[i],
-                guard[i].to_str().into(),
-            ));
+            vec.push(EachFileStatus{
+                path: self.conf.file_specs[i].path.clone(),
+                reason: guard[i],
+                message: guard[i].to_str().into(),
+            });
         }
         NotifyData {
             progress: self.progress.lock().unwrap().clone(),
@@ -409,6 +410,7 @@ impl RequestTask {
                     }
                 }
                 Action::DOWNLOAD => "GET",
+                _ => "",
             },
         };
         let method = Method::try_from(method).unwrap();
@@ -657,13 +659,16 @@ impl RequestTask {
                 _ => {}
             }
             current_status.mtime = get_current_timestamp();
-            progress_guard.common_data.state = state;
+            progress_guard.common_data.state = state as u8;
             current_status.state = state;
             current_status.reason = reason;
             info!(LOG_LABEL, "current state is {:?}, reason is {:?}", @public(state), @public(reason));
         }
         if state == State::WAITING {
             self.record_waitting_network_time();
+        }
+        if self.conf.version == Version::API10 {
+            self.record_task_info();
         }
         self.state_change_notify(state);
         true
@@ -701,17 +706,64 @@ impl RequestTask {
         self.background_notify();
     }
 
+    fn record_task_info(&self) {
+        TaskManager::get_instance().recording_rdb_num.fetch_add(1, Ordering::SeqCst);
+        let has_record = unsafe { HasRequestTaskRecord(self.task_id) };
+        if !has_record {
+            let task_info = self.show();
+            let info_set = task_info.build_info_set();
+            let c_task_info = task_info.to_c_struct(&info_set);
+            let ret = unsafe { RecordRequestTaskInfo(&c_task_info) };
+            info!(LOG_LABEL, "insert database ret is {}", @public(ret));
+        } else {
+            let update_info = self.get_update_info();
+            let sizes: String = format!("{:?}", update_info.progress.sizes);
+            let processed: String = format!("{:?}", update_info.progress.processed);
+            let extras = hashmap_to_string(&update_info.progress.extras);
+            let each_file_status = update_info.each_file_status.iter().map(|x| x.to_c_struct()).collect();
+            let c_update_info = update_info.to_c_struct(&sizes, &processed, &extras, &each_file_status);
+            let ret = unsafe { UpdateRequestTaskInfo(self.task_id, &c_update_info)};
+            info!(LOG_LABEL, "update database ret is {}", @public(ret));
+        }
+        TaskManager::get_instance().recording_rdb_num.fetch_sub(1, Ordering::SeqCst);
+    }
+
+    fn get_each_file_status(&self) -> Vec<EachFileStatus> {
+        let mut vec = Vec::new();
+        let size = self.conf.file_specs.len();
+        let guard = self.code.lock().unwrap();
+        for i in 0..size {
+            vec.push(EachFileStatus {
+                path: self.conf.file_specs[i].path.clone(),
+                reason: guard[i],
+                message: guard[i].to_str().into(),
+            });
+        }
+        vec
+    }
+
+    fn get_update_info(&self) -> UpdateInfo{
+        let status = self.status.lock().unwrap();
+        let progress = self.progress.lock().unwrap();
+        UpdateInfo {
+            mtime: status.mtime,
+            reason: status.reason as u8,
+            tries: self.tries.load(Ordering::SeqCst),
+            progress: progress.clone(),
+            each_file_status: self.get_each_file_status(),
+        }
+    }
+
     pub fn show(&self) -> TaskInfo {
         let status = self.status.lock().unwrap();
         let progress = self.progress.lock().unwrap();
         TaskInfo {
-            uid: self.uid,
             bundle: self.conf.bundle.clone(),
             url: self.conf.url.clone(),
             data: self.conf.data.clone(),
-            file_items: self.conf.form_items.clone(),
+            token: self.conf.token.clone(),
+            form_items: self.conf.form_items.clone(),
             file_specs: self.conf.file_specs.clone(),
-            task_id: self.task_id,
             title: self.conf.title.clone(),
             description: self.conf.description.clone(),
             mime_type: {
@@ -722,35 +774,29 @@ impl RequestTask {
                             Some(v) => v.clone(),
                         },
                         Action::UPLOAD => "multipart/form-data".into(),
+                        _ => "".into(),
                     },
                     Version::API9 => self.mime_type.lock().unwrap().clone(),
                 }
             },
             progress: progress.clone(),
-            ctime: self.ctime,
-            mtime: status.mtime,
-            reason: status.reason,
             extras: progress.extras.clone(),
-            each_file_status: {
-                let mut vec = Vec::<(String, Reason, String)>::new();
-                let size = self.conf.file_specs.len();
-                let guard = self.code.lock().unwrap();
-                for i in 0..size {
-                    vec.push((
-                        self.conf.file_specs[i].path.clone(),
-                        guard[i],
-                        guard[i].to_str().into(),
-                    ));
-                }
-                vec
-            },
+            each_file_status: self.get_each_file_status(),
             common_data: CommonTaskInfo {
-                action: self.conf.common_data.action,
-                mode: self.conf.common_data.mode,
+                task_id: self.task_id,
+                uid: self.uid,
+                action: self.conf.common_data.action as u8,
+                mode: self.conf.common_data.mode as u8,
+                ctime: self.ctime,
+                mtime: status.mtime,
+                reason: status.reason as u8,
                 gauge: self.conf.common_data.gauge,
-                retry: self.retry.load(Ordering::SeqCst),
+                retry: match self.conf.common_data.mode {
+                    Mode::FRONTEND => false,
+                    _ => self.conf.common_data.retry,
+                },
                 tries: self.tries.load(Ordering::SeqCst),
-                version: self.conf.version,
+                version: self.conf.version as u8,
             },
         }
     }
@@ -766,49 +812,20 @@ impl RequestTask {
         }
         unsafe {
             let network_info = GetNetworkInfo();
-            debug!(LOG_LABEL, "network info is {:?}", @public(*network_info));
             if (!self.conf.common_data.roaming && (*network_info).isRoaming) {
-                debug!(LOG_LABEL, "not allow roaming");
+                error!(LOG_LABEL, "not allow roaming");
                 return false;
             }
             if (!self.conf.common_data.metered && (*network_info).isMetered) {
-                debug!(LOG_LABEL, "not allow metered");
+                error!(LOG_LABEL, "not allow metered");
                 return false;
             }
             if ((*network_info).networkType != self.conf.common_data.network) {
-                debug!(LOG_LABEL, "dismatch network type");
+                error!(LOG_LABEL, "dismatch network type");
                 return false;
             }
         };
         true
-    }
-
-    fn dump_state(&self) {
-        let state = self.status.lock().unwrap().state;
-        match state {
-            State::INITIALIZED => { info!(LOG_LABEL, "task in initialized state"); },
-            State::WAITING => { info!(LOG_LABEL, "task in waitting state"); },
-            State::RUNNING => { info!(LOG_LABEL, "task in running state"); },
-            State::RETRYING => { info!(LOG_LABEL, "task in retrying state"); },
-            State::PAUSED => { info!(LOG_LABEL, "task in paused state"); },
-            State::STOPPED => { info!(LOG_LABEL, "task in stopped state"); },
-            State::COMPLETED => { info!(LOG_LABEL, "task in completed state"); },
-            State::FAILED => { info!(LOG_LABEL, "task in failed state"); },
-            State::REMOVED => { info!(LOG_LABEL, "task in removed state"); },
-            _ => {}
-        }
-    }
-
-    fn dump_reason(&self) {
-        info!(LOG_LABEL, "reason is {}", @public(self.status.lock().unwrap().reason.to_str()));
-        let code_guard = self.code.lock().unwrap();
-        for i in 0..code_guard.len() {
-            info!(LOG_LABEL,
-                "the reason of the {} file is {}",
-                @public(i),
-                @public(code_guard[i].to_str())
-            );
-        }
     }
 
     fn background_notify(&self) {
@@ -932,9 +949,8 @@ pub async fn run(task: Arc<RequestTask>) {
             }
             upload(task.clone()).await;
         }
+        _ => {},
     }
-    task.dump_state();
-    task.dump_reason();
     info!(LOG_LABEL, "run end");
 }
 

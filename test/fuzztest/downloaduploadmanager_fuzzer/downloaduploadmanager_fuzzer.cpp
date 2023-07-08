@@ -117,28 +117,6 @@ void SearchRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Search(filter, tids);
 }
 
-void QueryRequestFuzzTest(const uint8_t *data, size_t size)
-{
-    TaskInfo info;
-    Version version = static_cast<Version>(ConvertToUint32(data, size));
-    std::string tid(reinterpret_cast<const char *>(data), size);
-    GrantNativePermission();
-    RequestManager::GetInstance()->Query(tid, info, version);
-}
-
-void ClearRequestFuzzTest(const uint8_t *data, size_t size)
-{
-    Filter filter;
-    std::vector<std::string> tids;
-    std::string tids_str(reinterpret_cast<const char *>(data), size);
-    tids.push_back(tids_str);
-    std::vector<std::string> res;
-    std::string res_str(data, data + size);
-    res.push_back(res_str);
-    GrantNativePermission();
-    RequestManager::GetInstance()->Clear(tids, res);
-}
-
 void PauseRequestFuzzTest(const uint8_t *data, size_t size)
 {
     Version version = static_cast<Version>(ConvertToUint32(data, size));
@@ -208,8 +186,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::ShowRequestFuzzTest(data, size);
     OHOS::TouchRequestFuzzTest(data, size);
     OHOS::SearchRequestFuzzTest(data, size);
-    OHOS::QueryRequestFuzzTest(data, size);
-    OHOS::ClearRequestFuzzTest(data, size);
     OHOS::PauseRequestFuzzTest(data, size);
     OHOS::QueryMimeTypeRequestFuzzTest(data, size);
     OHOS::RemoveRequestFuzzTest(data, size);

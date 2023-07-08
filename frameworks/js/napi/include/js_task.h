@@ -16,9 +16,8 @@
 #ifndef REQUEST_TASK_NAPI
 #define REQUEST_TASK_NAPI
 
-
-#include "js_common.h"
 #include "async_call.h"
+#include "js_common.h"
 #include "request_notify.h"
 
 namespace OHOS::Request {
@@ -36,7 +35,6 @@ public:
     static napi_value Touch(napi_env env, napi_callback_info info);
     static napi_value Search(napi_env env, napi_callback_info info);
     static napi_value Query(napi_env env, napi_callback_info info);
-    static napi_value Clear(napi_env env, napi_callback_info info);
 
     std::string GetTid();
     void SetTid(int32_t tid);
@@ -63,6 +61,12 @@ private:
         int32_t tid{};
     };
 
+    struct TouchContext : public AsyncCall::Context {
+        std::string tid;
+        std::string token = "null";
+        TaskInfo taskInfo;
+    };
+
     static napi_value DefineClass(napi_env env, const napi_property_descriptor* desc, size_t count,
         napi_callback cb, napi_ref *ctor);
     static napi_value JsMain(napi_env env, napi_callback_info info, Version version);
@@ -75,6 +79,16 @@ private:
     static napi_value RequestFileV8(napi_env env, napi_callback_info info);
     static int32_t CreateExec(const std::shared_ptr<ContextInfo> &context);
     static std::string ParseTid(napi_env env, size_t argc, napi_value *argv);
+    static napi_value TouchInner(napi_env env, napi_callback_info info, AsyncCall::Context::InputAction action,
+        std::shared_ptr<TouchContext> context);
+    static bool ParseSearch(napi_env env, size_t argc, napi_value *argv, Filter &filter);
+    static std::string ParseBundle(napi_env env, napi_value value);
+    static State ParseState(napi_env env, napi_value value);
+    static Action ParseAction(napi_env env, napi_value value);
+    static Mode ParseMode(napi_env env, napi_value value);
+    static bool ParseTouch(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<TouchContext> context);
+    static int64_t ParseBefore(napi_env env, napi_value value);
+    static int64_t ParseAfter(napi_env env, napi_value value, int64_t before);
     bool Equals(napi_env env, napi_value value, napi_ref copy);
 
     static std::mutex createMutex_;

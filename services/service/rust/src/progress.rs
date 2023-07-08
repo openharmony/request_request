@@ -13,15 +13,17 @@
  * limitations under the License.
  */
 
-use super::enumration::*;
+use super::{c_string_wrapper::*, enumration::*, utils::*};
 use std::collections::HashMap;
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct CommonProgress {
-    pub state: State,
+    pub state: u8,
     pub index: usize,
     pub total_processed: usize,
 }
+
 #[derive(Debug)]
 pub struct Progress {
     pub common_data: CommonProgress,
@@ -30,18 +32,44 @@ pub struct Progress {
     pub extras: HashMap<String, String>,
 }
 
+#[repr(C)]
+pub struct CProgress {
+    pub common_data: CommonProgress,
+    pub sizes: CStringWrapper,
+    pub processed: CStringWrapper,
+    pub extras: CStringWrapper,
+}
+
 impl Progress {
     pub fn new(sizes: Vec<i64>) -> Self {
         let len = sizes.len();
         Progress {
             common_data: CommonProgress {
-                state: State::INITIALIZED,
+                state: State::CREATED as u8,
                 index: 0,
                 total_processed: 0,
             },
             sizes,
             processed: vec![0; len],
             extras: HashMap::<String, String>::new(),
+        }
+    }
+
+    pub fn to_c_struct(&self, sizes: &String, processed: &String, extras: &String) -> CProgress {
+        CProgress {
+            common_data: self.common_data,
+            sizes: CStringWrapper::from(sizes),
+            processed: CStringWrapper::from(processed),
+            extras: CStringWrapper::from(extras),
+        }
+    }
+
+    pub fn from_c_struct(c_struct: &CProgress) -> Self {
+        Progress {
+            common_data: c_struct.common_data,
+            sizes: split_string(&mut c_struct.sizes.to_string()).map(|s| s.parse::<i64>().unwrap()).collect(),
+            processed: split_string(&mut c_struct.processed.to_string()).map(|s| s.parse::<usize>().unwrap()).collect(),
+            extras: string_to_hashmap(&mut c_struct.extras.to_string()),
         }
     }
 }
@@ -55,16 +83,6 @@ impl Clone for Progress {
             extras: self.extras.clone(),
         }
     }
-}
-#[derive(Debug)]
-pub struct NotifyData {
-    pub progress: Progress,
-    pub action: Action,
-    pub version: Version,
-    pub each_file_status: Vec<(String, Reason, String)>, // (path, each_file_state, reason)
-    pub task_id: u32,
-    pub uid: u64,
-    pub bundle: String,
 }
 
 #[repr(C)]

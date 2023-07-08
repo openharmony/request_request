@@ -36,11 +36,10 @@ public:
     int32_t Resume(const std::string &tid) override;
 
     int32_t Stop(const std::string &tid) override;
-    int32_t Show(const std::string &tid, TaskInfo &info) override;
+    int32_t Query(const std::string &tid, TaskInfo &info) override;
     int32_t Touch(const std::string &tid, const std::string &token, TaskInfo &info) override;
     int32_t Search(const Filter &filter, std::vector<std::string> &tids) override;
-    int32_t Query(const std::string &tid, TaskInfo &info, Version version) override;
-    int32_t Clear(const std::vector<std::string> &tids, std::vector<std::string> &res) override;
+    int32_t Show(const std::string &tid, TaskInfo &info) override;
 
     int32_t On(const std::string &type, const std::string &tid, const sptr<NotifyInterface> &listener) override;
     int32_t Off(const std::string &type, const std::string &tid) override;

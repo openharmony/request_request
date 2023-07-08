@@ -18,13 +18,15 @@
 pub enum Action {
     DOWNLOAD = 0,
     UPLOAD,
+    ANY,
 }
 
 impl From<u8> for Action {
     fn from(value: u8) -> Self {
         match value {
             0 => Action::DOWNLOAD,
-            _ => Action::UPLOAD,
+            1 => Action::UPLOAD,
+            _ => Action::ANY,
         }
     }
 }
@@ -34,13 +36,15 @@ impl From<u8> for Action {
 pub enum Mode {
     BACKGROUND = 0,
     FRONTEND,
+    ANY,
 }
 
 impl From<u8> for Mode {
     fn from(value: u8) -> Self {
         match value {
             0 => Mode::BACKGROUND,
-            _ => Mode::FRONTEND,
+            1 => Mode::FRONTEND,
+            _ => Mode::ANY,
         }
     }
 }
@@ -84,6 +88,7 @@ pub enum State {
     FAILED = 0x41,
     REMOVED = 0x50,
     CREATED = 0x60,
+    ANY = 0x61,
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -107,6 +112,7 @@ pub enum ErrorCode {
     MimeType_not_found = 3,
     Task_index_too_large = 4,
     Permission = 201,
+    SystemApi = 202,
     Parameter_check = 401,
     FileOperationErr = 13400001,
     ServiceAbilityErr = 13400003,
@@ -159,6 +165,34 @@ pub enum Reason {
     OthersError,
 }
 
+impl From<u8> for Reason {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => Reason::Default,
+            1 => Reason::TaskSurvivalOneMonth,
+            2 => Reason::WaittingNetWorkOneday,
+            3 => Reason::StoppedByNewFrontTask,
+            4 => Reason::RunningTaskMeetLimits,
+            5 => Reason::UserOperation,
+            6 => Reason::AppBackgroundOrTerminate,
+            7 => Reason::NetWorkOffline,
+            8 => Reason::UnSupportedNetWorkType,
+            9 => Reason::BuildClientFailed,
+            10 => Reason::BuildRequestFailed,
+            11 => Reason::GetFileSizeFailed,
+            12 => Reason::ContinuousTaskTimeOut,
+            13 => Reason::ConnectError,
+            14 => Reason::RequestError,
+            15 => Reason::UploadFileError,
+            16 => Reason::RedirectError,
+            17 => Reason::ProtocolError,
+            18 => Reason::IoError,
+            19 => Reason::UnSupportRangeRequest,
+            _ => Reason::OthersError,
+        }
+    }
+}
+
 impl Reason {
     pub fn to_str(&self) -> &'static str {
         match self {
@@ -185,4 +219,13 @@ impl Reason {
             Reason::OthersError => "Some other error occured",
         }
     }
+}
+
+#[derive(PartialEq)]
+#[repr(u8, C)]
+pub enum QueryPermission {
+    NoPermisson = 0,
+    QueryDownLoad,
+    QueryUpload,
+    QueryAll,
 }

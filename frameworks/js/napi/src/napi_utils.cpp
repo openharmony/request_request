@@ -26,8 +26,33 @@
 #include "securec.h"
 
 namespace OHOS::Request::NapiUtils {
-static constexpr const int MAX_STRING_LENGTH = 65536;
 static constexpr int64_t JS_NUMBER_MAX_VALUE = (1LL << 53) - 1;
+static constexpr const char *REASON_OK_INFO = "Task successful";
+static constexpr const char *TASK_SURVIVAL_ONE_MONTH_INFO = "The task has not been completed for a month yet";
+static constexpr const char *WAITTING_NETWORK_ONE_DAY_INFO = "The task waiting for network recovery has not been "
+                                                             "completed for a day yet";
+static constexpr const char *STOPPED_NEW_FRONT_TASK_INFO = "Stopped by a new front task";
+static constexpr const char *RUNNING_TASK_MEET_LIMITS_INFO = "Too many task in running state";
+static constexpr const char *USER_OPERATION_INFO = "User operation";
+static constexpr const char *APP_BACKGROUND_OR_TERMINATE_INFO = "The app is background or terminate";
+static constexpr const char *NETWORK_OFFLINE_INFO = "NetWork is offline";
+static constexpr const char *UNSUPPORTED_NETWORK_TYPE_INFO = "NetWork type not meet the task config";
+static constexpr const char *BUILD_CLIENT_FAILED_INFO = "Build client error";
+static constexpr const char *BUILD_REQUEST_FAILED_INFO = "Build request error";
+static constexpr const char *GET_FILESIZE_FAILED_INFO = "Failed because cannot get the file size from the server and "
+                                                        "the precise is setted true by user";
+static constexpr const char *CONTINUOUS_TASK_TIMEOUT_INFO = "Continuous processing task time out";
+static constexpr const char *CONNECT_ERROR_INFO = "Connect error";
+static constexpr const char *REQUEST_ERROR_INFO = "Request error";
+static constexpr const char *UPLOAD_FILE_ERROR_INFO = "There are some files upload failed";
+static constexpr const char *REDIRECT_ERROR_INFO = "Redirect error";
+static constexpr const char *PROTOCOL_ERROR_INFO = "Http protocol error";
+static constexpr const char *IO_ERROR_INFO = "Io Error";
+static constexpr const char *UNSUPPORT_RANGE_REQUEST_INFO = "Range request not supported";
+static constexpr const char *OTHERS_ERROR_INFO = "Some other error occured";
+static constexpr const char *NOT_SYSTEM_APP = "permission verification failed, application which is not a system "
+                                              "application uses system API";
+
 static const std::map<ExceptionErrorCode, std::string> ErrorCodeToMsg {
     {E_OK, E_OK_INFO },
     {E_PERMISSION, E_PERMISSION_INFO },
@@ -41,6 +66,7 @@ static const std::map<ExceptionErrorCode, std::string> ErrorCodeToMsg {
     {E_TASK_NOT_FOUND, E_TASK_NOT_FOUND_INFO },
     {E_TASK_STATE, E_TASK_STATE_INFO },
     {E_OTHER, E_OTHER_INFO },
+    {E_NOT_SYSTEM_APP, NOT_SYSTEM_APP }
 };
 
 napi_status Convert2JSValue(napi_env env, const DownloadInfo &in, napi_value &out)
@@ -68,6 +94,15 @@ napi_status Convert2JSValue(napi_env env, std::string &in, napi_value &out)
 napi_status Convert2JSValue(napi_env env, bool in, napi_value &out)
 {
     return napi_get_boolean(env, in, &out);
+}
+
+napi_value Convert2JSValue(napi_env env, bool code)
+{
+    napi_value value = nullptr;
+    if (napi_get_boolean(env, code, &value) != napi_ok) {
+        return nullptr;
+    }
+    return value;
 }
 
 napi_value Convert2JSValue(napi_env env, int32_t code)
@@ -109,7 +144,6 @@ napi_value Convert2JSValue(napi_env env, uint64_t code)
     return value;
 }
 
-
 napi_value Convert2JSValue(napi_env env, const std::vector<int64_t> &code)
 {
     napi_value value = nullptr;
@@ -118,6 +152,17 @@ napi_value Convert2JSValue(napi_env env, const std::vector<int64_t> &code)
     for (const auto &cInt : code) {
         napi_value jsInt = Convert2JSValue(env, cInt);
         napi_set_element(env, value, index++, jsInt);
+    }
+    return value;
+}
+
+napi_value Convert2JSValue(napi_env env, const std::vector<std::string> &ids)
+{
+    napi_value value = nullptr;
+    napi_create_array_with_length(env, ids.size(), &value);
+    int index = 0;
+    for (const auto &id : ids) {
+        napi_set_element(env, value, index++, Convert2JSValue(env, id));
     }
     return value;
 }
@@ -186,6 +231,156 @@ napi_value Convert2JSValue(napi_env env, const Progress &progress)
     napi_set_named_property(env, value, "sizes", Convert2JSValue(env, progress.sizes));
     napi_set_named_property(env, value, "extras", Convert2JSValue(env, progress.extras));
     return value;
+}
+
+napi_value Convert2JSValue(napi_env env, const std::vector<FileSpec> &files, const std::vector<FormItem> &forms)
+{
+    napi_value data = nullptr;
+    size_t filesLen = files.size();
+    size_t formsLen = forms.size();
+    napi_create_array_with_length(env, filesLen + formsLen, &data);
+    size_t i = 0;
+    for (; i < formsLen; i++) {
+        napi_value object = nullptr;
+        napi_create_object(env, &object);
+        napi_set_named_property(env, object, "name", Convert2JSValue(env, forms[i].name));
+        napi_set_named_property(env, object, "value", Convert2JSValue(env, forms[i].value));
+        napi_set_element(env, data, i, object);
+    }
+    for (size_t j = 0; j < filesLen; j++) {
+        napi_value fileSpec = nullptr;
+        napi_create_object(env, &fileSpec);
+        napi_set_named_property(env, fileSpec, "path", Convert2JSValue(env, files[j].uri));
+        napi_set_named_property(env, fileSpec, "mimeType", Convert2JSValue(env, files[j].type));
+        napi_set_named_property(env, fileSpec, "filename", Convert2JSValue(env, files[j].filename));
+        napi_value object = nullptr;
+        napi_create_object(env, &object);
+        napi_set_named_property(env, object, "name", Convert2JSValue(env, files[j].name));
+        napi_set_named_property(env, object, "value", fileSpec);
+        napi_set_element(env, data, i, object);
+        i++;
+    }
+    return data;
+}
+
+uint32_t Convert2Broken(Reason code)
+{
+    static std::map<Reason, Faults> InnerCodeToBroken = {
+        { REASON_OK, Faults::OTHERS },
+        { TASK_SURVIVAL_ONE_MONTH, Faults::OTHERS },
+        { WAITTING_NETWORK_ONE_DAY, Faults::OTHERS },
+        { STOPPED_NEW_FRONT_TASK, Faults::OTHERS },
+        { RUNNING_TASK_MEET_LIMITS, Faults::OTHERS },
+        { USER_OPERATION, Faults::OTHERS },
+        { APP_BACKGROUND_OR_TERMINATE, Faults::OTHERS },
+        { NETWORK_OFFLINE, Faults::DISCONNECTED },
+        { UNSUPPORTED_NETWORK_TYPE, Faults::OTHERS },
+        { BUILD_CLIENT_FAILED, Faults::OTHERS },
+        { BUILD_REQUEST_FAILED, Faults::OTHERS },
+        { GET_FILESIZE_FAILED, Faults::FSIO },
+        { CONTINUOUS_TASK_TIMEOUT, Faults::TIMEOUT },
+        { CONNECT_ERROR, Faults::PROTOCOL },
+        { REQUEST_ERROR, Faults::PROTOCOL },
+        { UPLOAD_FILE_ERROR, Faults::OTHERS },
+        { REDIRECT_ERROR, Faults::PROTOCOL },
+        { PROTOCOL_ERROR, Faults::PROTOCOL },
+        { IO_ERROR, Faults::FSIO },
+        { UNSUPPORT_RANGE_REQUEST, Faults::PROTOCOL },
+        { OTHERS_ERROR, Faults::OTHERS },
+    };
+    auto iter = InnerCodeToBroken.find(code);
+    if (iter != InnerCodeToBroken.end()) {
+        return static_cast<uint32_t>(iter->second);
+    }
+    return 0;
+}
+
+std::string Convert2ReasonMsg(Reason code)
+{
+    static std::map<Reason, std::string> ReasonMsg = {
+        { REASON_OK, REASON_OK_INFO },
+        { TASK_SURVIVAL_ONE_MONTH, TASK_SURVIVAL_ONE_MONTH_INFO },
+        { WAITTING_NETWORK_ONE_DAY, WAITTING_NETWORK_ONE_DAY_INFO },
+        { STOPPED_NEW_FRONT_TASK, STOPPED_NEW_FRONT_TASK_INFO },
+        { RUNNING_TASK_MEET_LIMITS, RUNNING_TASK_MEET_LIMITS_INFO },
+        { USER_OPERATION, USER_OPERATION_INFO },
+        { APP_BACKGROUND_OR_TERMINATE, APP_BACKGROUND_OR_TERMINATE_INFO },
+        { NETWORK_OFFLINE, NETWORK_OFFLINE_INFO },
+        { UNSUPPORTED_NETWORK_TYPE, UNSUPPORTED_NETWORK_TYPE_INFO },
+        { BUILD_CLIENT_FAILED, BUILD_CLIENT_FAILED_INFO },
+        { BUILD_REQUEST_FAILED, BUILD_REQUEST_FAILED_INFO },
+        { GET_FILESIZE_FAILED, GET_FILESIZE_FAILED_INFO },
+        { CONTINUOUS_TASK_TIMEOUT, CONTINUOUS_TASK_TIMEOUT_INFO },
+        { CONNECT_ERROR, CONNECT_ERROR_INFO },
+        { REQUEST_ERROR, REQUEST_ERROR_INFO },
+        { UPLOAD_FILE_ERROR, UPLOAD_FILE_ERROR_INFO },
+        { REDIRECT_ERROR, REDIRECT_ERROR_INFO },
+        { PROTOCOL_ERROR, PROTOCOL_ERROR_INFO },
+        { IO_ERROR, IO_ERROR_INFO },
+        { UNSUPPORT_RANGE_REQUEST, UNSUPPORT_RANGE_REQUEST_INFO },
+        { OTHERS_ERROR, OTHERS_ERROR_INFO },
+    };
+    auto iter = ReasonMsg.find(code);
+    if (iter != ReasonMsg.end()) {
+        return iter->second;
+    }
+    return "unknown";
+}
+
+napi_value Convert2JSValue(napi_env env, TaskInfo &taskInfo)
+{
+    napi_value value = nullptr;
+    napi_create_object(env, &value);
+    if (taskInfo.withSystem) {
+        napi_set_named_property(env, value, "uid", Convert2JSValue(env, taskInfo.uid));
+        napi_set_named_property(env, value, "bundle", Convert2JSValue(env, taskInfo.bundle));
+        taskInfo.url = "";
+        taskInfo.data = "";
+        if (taskInfo.action == Action::UPLOAD) {
+            taskInfo.files.clear();
+            taskInfo.forms.clear();
+        }
+    }
+    napi_set_named_property(env, value, "url", Convert2JSValue(env, taskInfo.url));
+    napi_set_named_property(env, value, "saveas", Convert2JSValue(env, GetSaveas(taskInfo.files, taskInfo.action)));
+    if (taskInfo.action == Action::DOWNLOAD) {
+        napi_set_named_property(env, value, "data", Convert2JSValue(env, taskInfo.data));
+    } else {
+        napi_set_named_property(env, value, "data", Convert2JSValue(env, taskInfo.files, taskInfo.forms));
+    }
+    napi_set_named_property(env, value, "tid", Convert2JSValue(env, taskInfo.tid));
+    napi_set_named_property(env, value, "title", Convert2JSValue(env, taskInfo.title));
+    napi_set_named_property(env, value, "description", Convert2JSValue(env, taskInfo.description));
+    napi_set_named_property(env, value, "action", Convert2JSValue(env, static_cast<uint32_t>(taskInfo.action)));
+    napi_set_named_property(env, value, "mode", Convert2JSValue(env, static_cast<uint32_t>(taskInfo.mode)));
+    napi_set_named_property(env, value, "mimeType", Convert2JSValue(env, taskInfo.mimeType));
+    napi_set_named_property(env, value, "progress", Convert2JSValue(env, taskInfo.progress));
+    napi_set_named_property(env, value, "gauge", Convert2JSValue(env, taskInfo.gauge));
+    napi_set_named_property(env, value, "ctime", Convert2JSValue(env, taskInfo.ctime));
+    napi_set_named_property(env, value, "mtime", Convert2JSValue(env, taskInfo.mtime));
+    napi_set_named_property(env, value, "retry", Convert2JSValue(env, taskInfo.retry));
+    napi_set_named_property(env, value, "tries", Convert2JSValue(env, taskInfo.tries));
+    if (taskInfo.code == Reason::REASON_OK) {
+        napi_value value1 = nullptr;
+        napi_get_null(env, &value1);
+        napi_set_named_property(env, value, "faults", value1);
+    } else {
+        napi_set_named_property(env, value, "faults", Convert2JSValue(env, Convert2Broken(taskInfo.code)));
+    }
+    napi_set_named_property(env, value, "reason", Convert2JSValue(env, Convert2ReasonMsg(taskInfo.code)));
+    napi_set_named_property(env, value, "extras", Convert2JSValue(env, taskInfo.extras));
+    return value;
+}
+
+std::string GetSaveas(const std::vector<FileSpec> &files, Action action)
+{
+    if (action == Action::UPLOAD) {
+        return "";
+    }
+    if (files.empty()) {
+        return "";
+    }
+    return files[0].uri;
 }
 
 bool Convert2Boolean(napi_env env, napi_value object, const std::string &propertyName)
@@ -534,5 +729,19 @@ bool IsPathValid(const std::string &filePath)
         return false;
     }
     return true;
+}
+
+std::string SHA256(const char *str, size_t len)
+{
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, str, len);
+    SHA256_Final(hash, &sha256);
+    std::stringstream ss;
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(hash[i]);
+    }
+    return ss.str();
 }
 } // namespace OHOS::Request::NapiUtils

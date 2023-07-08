@@ -59,6 +59,7 @@ request_deps = [
   "${request_path}/common:request_common_static",
   "${request_path}/frameworks/native:request_native",
   "//third_party/libuv:uv",
+  "//third_party/openssl:libssl_shared",
 ]
 
 request_external_deps = [

@@ -13,21 +13,24 @@
 * limitations under the License.
 */
 
-#ifndef REQUEST_C_CHECK_PERMISSION_H
-#define REQUEST_C_CHECK_PERMISSION_H
+#include "c_task_info.h"
 
-#include <stdint.h>
-#include "c_enumration.h"
-#include "c_string_wrapper.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-bool RequestCheckPermission(uint64_t tokenId, CStringWrapper permission);
-bool RequestIsSystemAPI(uint64_t tokenId);
-
-#ifdef __cplusplus
+void DeleteCFormItem(CFormItem *ptr)
+{
+    delete[] ptr;
 }
-#endif
-#endif // REQUEST_C_CHECK_PERMISSION_H
+
+void DeleteCFileSpec(CFileSpec *ptr)
+{
+    delete[] ptr;
+}
+
+void DeleteCEachFileStatus(CEachFileStatus *ptr)
+{
+    delete[] ptr;
+}
+
+void DeleteCTaskInfo(CTaskInfo *ptr)
+{
+    delete[] ptr;
+}

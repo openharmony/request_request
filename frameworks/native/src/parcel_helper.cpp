@@ -16,6 +16,7 @@
 #include "parcel_helper.h"
 
 #include "log.h"
+
 namespace OHOS {
 namespace Request {
 void ParcelHelper::UnMarshal(MessageParcel &data, TaskInfo &info)
@@ -54,8 +55,8 @@ void ParcelHelper::UnMarshalBase(MessageParcel &data, TaskInfo &info)
     info.tid = data.ReadString();
     info.title = data.ReadString();
     info.mimeType = data.ReadString();
-    info.ctime = data.ReadString();
-    info.mtime = data.ReadString();
+    info.ctime = data.ReadUint64();
+    info.mtime = data.ReadUint64();
     info.data = data.ReadString();
     info.description = data.ReadString();
 }

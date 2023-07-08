@@ -31,17 +31,18 @@ use std::{
 };
 
 use super::{
-    enumration::*, form_item::*, log::LOG_LABEL, request_service_ability::RequestAbility,
-    request_service_ability::ServerRunState, task_config::*, task_info::*, RequestServiceInterface,
+    enumration::*, form_item::*, log::LOG_LABEL, request_service_ability::*,
+    task_config::*, task_info::*, RequestServiceInterface, filter::*, request_binding,
 };
 use hilog_rust::*;
 
+static INTERNET_PERMISSION: &str = "ohos.permission.INTERNET";
 /// RequestService type
 pub struct RequestService;
 
 impl RequestServiceInterface for RequestService {
     fn construct(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
+        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION) {
             error!(LOG_LABEL, "permission denied");
             reply.write(&(ErrorCode::Permission as i32));
             return Err(IpcStatusCode::Failed);
@@ -67,7 +68,6 @@ impl RequestServiceInterface for RequestService {
         let gauge: bool = data.read()?;
         let precise: bool = data.read()?;
         let url: String = data.read()?;
-        let bundle: String = data.read()?;
         let title: String = data.read()?;
         let method: String = data.read()?;
         let token: String = data.read()?;
@@ -136,7 +136,7 @@ impl RequestServiceInterface for RequestService {
             let value: String = data.read()?;
             extras.insert(key, value);
         }
-
+        let bundle = RequestAbility::get_ability_instance().get_calling_bundle();
         let task_config = TaskConfig {
             bundle,
             url,
@@ -186,7 +186,7 @@ impl RequestServiceInterface for RequestService {
         debug!(LOG_LABEL, "Pause");
         let version: u32 = data.read()?;
         if Version::from(version as u8) == Version::API9 {
-            if !RequestAbility::get_ability_instance().check_permission() {
+            if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION) {
                 error!(LOG_LABEL, "permission denied");
                 reply.write(&(ErrorCode::Permission as i32));
                 return Err(IpcStatusCode::Failed);
@@ -217,23 +217,18 @@ impl RequestServiceInterface for RequestService {
         data: &BorrowedMsgParcel,
         reply: &mut BorrowedMsgParcel,
     ) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
+        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION) {
             error!(LOG_LABEL, "permission denied");
             reply.write(&(ErrorCode::Permission as i32));
             return Err(IpcStatusCode::Failed);
         }
         debug!(LOG_LABEL, "QueryMimeType");
-        let mut mime: String = String::new();
         let id: String = data.read()?;
         match id.parse::<u32>() {
             Ok(id) => {
-                let ret = RequestAbility::get_ability_instance().query_mime_type(id, &mut mime);
-                reply.write(&(ret as i32))?;
+                let mime = RequestAbility::get_ability_instance().query_mime_type(id);
+                reply.write(&(ErrorCode::ErrOk as i32))?;
                 reply.write(&mime)?;
-                if ret != ErrorCode::ErrOk {
-                    error!(LOG_LABEL, "QueryMimeType fail ret {}",  @public(ret as u32));
-                    return Err(IpcStatusCode::Failed);
-                }
                 Ok(())
             }
             _ => {
@@ -248,7 +243,7 @@ impl RequestServiceInterface for RequestService {
         debug!(LOG_LABEL, "remove");
         let version: u32 = data.read()?;
         if Version::from(version as u8) == Version::API9 {
-            if !RequestAbility::get_ability_instance().check_permission() {
+            if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION) {
                 error!(LOG_LABEL, "permission denied");
                 reply.write(&(ErrorCode::Permission as i32));
                 return Err(IpcStatusCode::Failed);
@@ -276,7 +271,7 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn resume(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
+        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION) {
             error!(LOG_LABEL, "permission denied");
             reply.write(&(ErrorCode::Permission as i32));
             return Err(IpcStatusCode::Failed);
@@ -360,7 +355,7 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn start(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        if !RequestAbility::get_ability_instance().check_permission() {
+        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION) {
             error!(LOG_LABEL, "permission denied");
             reply.write(&(ErrorCode::Permission as i32));
             return Err(IpcStatusCode::Failed);
@@ -406,88 +401,21 @@ impl RequestServiceInterface for RequestService {
         }
     }
 
-    fn search(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        Ok(())
-    }
-
     fn show(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
         debug!(LOG_LABEL, "show");
-        let version: u32 = data.read()?;
-        if Version::from(version as u8) == Version::API9 {
-            if !RequestAbility::get_ability_instance().check_permission() {
-                error!(LOG_LABEL, "permission denied");
-                reply.write(&(ErrorCode::Permission as i32));
-                return Err(IpcStatusCode::Failed);
-            }
+        if !RequestAbility::get_ability_instance().check_permission(INTERNET_PERMISSION) {
+            error!(LOG_LABEL, "permission denied");
+            reply.write(&(ErrorCode::Permission as i32));
+            return Err(IpcStatusCode::Failed);
         }
         let id: String = data.read()?;
         debug!(LOG_LABEL, "id: {}", @public(id));
         match id.parse::<u32>() {
             Ok(id) => match RequestAbility::get_ability_instance().show_task(id) {
                 Some(tf) => {
-                    if tf.progress.common_data.index >= tf.progress.sizes.len() {
-                        error!(LOG_LABEL, "query index is out of bounds");
-                        reply.write(&(ErrorCode::Task_index_too_large as i32));
-                        return Err(IpcStatusCode::Failed);
-                    }
                     reply.write(&(ErrorCode::ErrOk as i32));
                     debug!(LOG_LABEL, "tf: {:?}",  @public(tf));
-                    reply.write(&(tf.common_data.gauge))?;
-                    reply.write(&(tf.common_data.retry))?;
-                    reply.write(&(tf.common_data.action as u32))?;
-                    reply.write(&(tf.common_data.mode as u32))?;
-                    reply.write(&(tf.reason as u32))?;
-                    reply.write(&(tf.common_data.tries))?;
-                    reply.write(&(tf.uid.to_string()))?;
-                    reply.write(&(tf.bundle))?;
-                    reply.write(&tf.url)?;
-                    reply.write(&(tf.task_id.to_string()))?;
-                    reply.write(&tf.title)?;
-                    reply.write(&tf.mime_type)?;
-                    reply.write(&(tf.ctime.to_string()))?;
-                    reply.write(&(tf.mtime.to_string()))?;
-                    reply.write(&(tf.data))?;
-                    reply.write(&(tf.description))?;
-
-                    reply.write(&(tf.file_items.len() as u32))?;
-                    for i in 0..tf.file_items.len() {
-                        reply.write(&(tf.file_items[i].name))?;
-                        reply.write(&(tf.file_items[i].value))?;
-                    }
-
-                    reply.write(&(tf.file_specs.len() as u32))?;
-                    for i in 0..tf.file_specs.len() {
-                        reply.write(&(tf.file_specs[i].name))?;
-                        reply.write(&(tf.file_specs[i].path))?;
-                        reply.write(&(tf.file_specs[i].file_name))?;
-                        reply.write(&(tf.file_specs[i].mime_type))?;
-                    }
-
-                    reply.write(&(tf.progress.common_data.state as u32))?;
-                    let index = tf.progress.common_data.index;
-                    reply.write(&(index as u32)).ok();
-                    reply.write(&(tf.progress.processed[index] as u64)).ok();
-                    reply.write(&(tf.progress.common_data.total_processed as u64))?;
-                    reply.write(&(tf.progress.sizes))?;
-
-                    reply.write(&(tf.progress.extras.len() as u32))?;
-                    for (k, v) in tf.progress.extras.iter() {
-                        reply.write(&(k))?;
-                        reply.write(&(v))?;
-                    }
-
-                    reply.write(&(tf.extras.len() as u32))?;
-                    for (k, v) in tf.extras.iter() {
-                        reply.write(&(k))?;
-                        reply.write(&(v))?;
-                    }
-                    reply.write(&(tf.common_data.version as u32)).ok();
-                    reply.write(&(tf.each_file_status.len() as u32)).ok();
-                    for item in tf.each_file_status.iter() {
-                        reply.write(&(item.0)).ok();
-                        reply.write(&(item.1 as u32)).ok();
-                        reply.write(&(item.2)).ok();
-                    }
+                    RequestAbility::get_ability_instance().serialize_task_info(tf, reply)?;
                     Ok(())
                 }
                 None => {
@@ -505,11 +433,106 @@ impl RequestServiceInterface for RequestService {
     }
 
     fn touch(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+        debug!(LOG_LABEL, "touch");
+        let id: String = data.read()?;
+        debug!(LOG_LABEL, "id: {}", @public(id));
+        match id.parse::<u32>() {
+            Ok(id) => {
+                let token: String = data.read()?;
+                match RequestAbility::get_ability_instance().touch_task(id, token) {
+                    Some(tf) => {
+                        reply.write(&(ErrorCode::ErrOk as i32));
+                        debug!(LOG_LABEL, "tf: {:?}",  @public(tf));
+                        RequestAbility::get_ability_instance().serialize_task_info(tf, reply)?;
+                        return Ok(());
+                    }
+                    None => {
+                        error!(LOG_LABEL, "id is not a valid");
+                        reply.write(&(ErrorCode::TaskNotFound as i32));
+                        Err(IpcStatusCode::Failed)
+                    }
+                }
+            },
+            _ => {
+                error!(LOG_LABEL, "id or token is not a valid");
+                reply.write(&(ErrorCode::TaskNotFound as i32))?;
+                return Err(IpcStatusCode::Failed);
+            }
+        }
+    }
+
+    fn search(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+        debug!(LOG_LABEL, "search");
+        let mut bundle: String = data.read()?;
+        if !RequestAbility::get_ability_instance().is_system_api() {
+            bundle = RequestAbility::get_ability_instance().get_calling_bundle();
+        }
+        debug!(LOG_LABEL, "search bundle is {}", @public(bundle));
+        let before: i64 = data.read()?;
+        debug!(LOG_LABEL, "search before is {}", @public(before));
+        let after: i64 = data.read()?;
+        debug!(LOG_LABEL, "search after is {}", @public(after));
+        let state: u32 = data.read()?;
+        debug!(LOG_LABEL, "search state is {}", @public(state));
+        let action: u32 = data.read()?;
+        debug!(LOG_LABEL, "search action is {}", @public(action));
+        let mode: u32 = data.read()?;
+        debug!(LOG_LABEL, "search mode is {}", @public(mode));
+        let common_data = CommonFilter {
+            before,
+            after,
+            state: state as u8,
+            action: action as u8,
+            mode: mode as u8,
+        };
+        let filter = Filter {
+            bundle,
+            common_data,
+        };
+        let ids = RequestAbility::get_ability_instance().search_task(filter);
+        debug!(LOG_LABEL, "search task ids is {:?}", @public(ids));
+        reply.write(&(ids.len() as u32));
+        for it in ids.iter() {
+            reply.write(&(it.to_string()))?;
+        }
         Ok(())
     }
 
-    fn clear(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        Ok(())
+    fn query(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+        debug!(LOG_LABEL, "query");
+        if !RequestAbility::get_ability_instance().is_system_api() {
+            error!(LOG_LABEL, "not system api");
+            reply.write(&(ErrorCode::SystemApi as i32));
+            return Err(IpcStatusCode::Failed);
+        }
+        let ret = RequestAbility::get_ability_instance().get_query_permission();
+        if ret == QueryPermission::NoPermisson {
+            error!(LOG_LABEL, "no query permission");
+            reply.write(&(ErrorCode::Permission as i32));
+            return Err(IpcStatusCode::Failed);
+        }
+        let id: String = data.read()?;
+        debug!(LOG_LABEL, "id: {}", @public(id));
+        match id.parse::<u32>() {
+            Ok(id) => match RequestAbility::get_ability_instance().query_task(id, ret) {
+                Some(tf) => {
+                    reply.write(&(ErrorCode::ErrOk as i32));
+                    debug!(LOG_LABEL, "tf: {:?}",  @public(tf));
+                    RequestAbility::get_ability_instance().serialize_task_info(tf, reply)?;
+                    Ok(())
+                }
+                None => {
+                    error!(LOG_LABEL, "id is not a valid");
+                    reply.write(&(ErrorCode::TaskNotFound as i32));
+                    Err(IpcStatusCode::Failed)
+                }
+            },
+            _ => {
+                error!(LOG_LABEL, "id is not a valid");
+                reply.write(&(ErrorCode::TaskNotFound as i32));
+                Err(IpcStatusCode::Failed)
+            }
+        }
     }
 }
 

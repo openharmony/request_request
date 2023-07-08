@@ -12,7 +12,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#include "c_check_permission.h"
+
+#include "get_calling_bundle.h"
 
 #include "access_token.h"
 #include "accesstoken_kit.h"
@@ -21,23 +22,18 @@
 
 using namespace OHOS::Security::AccessToken;
 
-bool RequestCheckPermission(uint64_t tokenId, CStringWrapper permission)
+CStringWrapper GetCallingBundle(uint64_t tokenId)
 {
-    TypeATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(static_cast<AccessTokenID>(tokenId));
-    if (tokenType == TOKEN_INVALID) {
-        REQUEST_HILOGE("invalid token id");
-        return false;
+    auto tokenType = AccessTokenKit::GetTokenTypeFlag(static_cast<uint32_t>(tokenId));
+    if (tokenType != TOKEN_HAP) {
+        REQUEST_HILOGE("invalid token");
+        return WrapperCString("");
     }
-    int result = AccessTokenKit::VerifyAccessToken(tokenId, std::string(permission.cStr, permission.len));
-    if (result != PERMISSION_GRANTED) {
-        REQUEST_HILOGE("check permission failed");
-        return false;
+    HapTokenInfo info;
+    int ret = AccessTokenKit::GetHapTokenInfo(tokenId, info);
+    if (ret != 0) {
+        REQUEST_HILOGE("failed to get hap info, ret: %{public}d", ret);
+        return WrapperCString("");
     }
-    REQUEST_HILOGI("check permission success");
-    return true;
-}
-
-bool RequestIsSystemAPI(uint64_t tokenId)
-{
-    return TokenIdKit::IsSystemAppByFullTokenID(tokenId);
+    return WrapperCString(info.bundleName);
 }

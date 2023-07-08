@@ -17,13 +17,13 @@
 extern crate ipc_rust;
 extern crate system_ability_fwk_rust;
 use super::{
-    enumration::*, log::LOG_LABEL, progress::*, request_binding, task_config::TaskConfig,
-    task_info::TaskInfo, task_manager::*, download_server_ipc_interface_code::*,
+    enumration::*, log::LOG_LABEL, progress::*, request_binding, task_config::*,
+    task_info::*, task_manager::*, download_server_ipc_interface_code::*, filter::*, c_string_wrapper::*
 };
 use hilog_rust::*;
 use ipc_rust::{
     get_calling_token_id, get_calling_uid, FileDesc, IRemoteBroker, IRemoteObj, InterfaceToken,
-    IpcResult, IpcStatusCode, MsgParcel, RemoteObj,
+    IpcResult, IpcStatusCode, MsgParcel, RemoteObj, BorrowedMsgParcel, get_self_token_id,
 };
 use std::ffi::{c_char, CString};
 use std::{
@@ -65,6 +65,7 @@ impl RequestAbility {
         monitor_network();
         monitor_app_state();
         monitor_task();
+        TaskManager::get_instance().rt.spawn(unload_sa());
         0
     }
 
@@ -75,7 +76,7 @@ impl RequestAbility {
             return;
         }
         unsafe {
-            request_binding::InitServiceHandler();
+            request_binding::RequestInitServiceHandler();
         }
         let ret = self.init();
         if ret != 0 {
@@ -83,7 +84,7 @@ impl RequestAbility {
                 extern "C" fn ability_init() {
                     RequestAbility::get_ability_instance().init();
                 }
-                request_binding::PostTask(ability_init);
+                request_binding::RequestPostTask(ability_init);
             }
         }
         self.server_state = ServerRunState::Running;
@@ -100,7 +101,6 @@ impl RequestAbility {
     pub fn construct(&self, config: TaskConfig, files: Vec<File>, task_id: &mut u32) -> ErrorCode {
         debug!(LOG_LABEL, "construct");
         let uid = get_calling_uid();
-        let bundle = config.bundle.clone();
         let version = config.version.clone();
         let error = TaskManager::get_instance().construct_task(
             Arc::new(config),
@@ -119,12 +119,8 @@ impl RequestAbility {
         TaskManager::get_instance().pause(get_calling_uid(), task_id)
     }
 
-    pub fn query_mime_type(&self, task_id: u32, mime: &mut String) -> ErrorCode {
-        *mime = TaskManager::get_instance().query_mime_type(get_calling_uid(), task_id);
-        if mime.is_empty() {
-            return ErrorCode::MimeType_not_found;
-        }
-        ErrorCode::ErrOk
+    pub fn query_mime_type(&self, task_id: u32) -> String {
+        TaskManager::get_instance().query_mime_type(get_calling_uid(), task_id)
     }
 
     pub fn remove(&self, task_id: u32) -> ErrorCode {
@@ -159,11 +155,36 @@ impl RequestAbility {
         ErrorCode::ErrOk
     }
 
-    pub fn check_permission(&self) -> bool {
+    pub fn check_permission(&self, permission: &str) -> bool {
         debug!(LOG_LABEL, "check_permission");
         let token_id = get_calling_token_id();
-        debug!(LOG_LABEL, "token_id {}",  @public(&token_id));
-        unsafe { request_binding::CheckPermission(token_id) }
+        unsafe { request_binding::RequestCheckPermission(token_id, CStringWrapper::from(permission)) }
+    }
+
+    pub fn get_query_permission(&self) -> QueryPermission {
+        debug!(LOG_LABEL, "get_query_action");
+        let token_id = get_calling_token_id();
+        let query_download_permission = "ohos.permission.DOWNLOAD_SESSION_MANAGER".to_string();
+        let query_upload_permission = "ohos.permission.UPLOAD_SESSION_MANAGER".to_string();
+        let query_download = unsafe {
+            request_binding::RequestCheckPermission(token_id, CStringWrapper::from(&query_download_permission))
+        };
+        let query_upload = unsafe {
+            request_binding::RequestCheckPermission(token_id, CStringWrapper::from(&query_upload_permission))
+        };
+        info!(LOG_LABEL, "query download task permission is {}, query upload task permission is {}",
+            @public(query_download), @public(query_upload));
+
+        if query_download && query_download {
+            return QueryPermission::QueryAll;
+        }
+        if query_download {
+            return QueryPermission::QueryDownLoad;
+        }
+        if query_upload {
+            return QueryPermission::QueryUpload;
+        }
+        return QueryPermission::NoPermisson;
     }
 
     pub fn start_task(&self, task_id: u32) -> ErrorCode {
@@ -176,21 +197,42 @@ impl RequestAbility {
         TaskManager::get_instance().stop(get_calling_uid(), task_id)
     }
 
-    pub fn search_task(&self, task_id: u32) -> bool {
-        true
-    }
-
     pub fn show_task(&self, task_id: u32) -> Option<TaskInfo> {
         debug!(LOG_LABEL, "show_task");
         TaskManager::get_instance().show(get_calling_uid(), task_id)
     }
 
-    pub fn touch_task(&self, task_id: u32) -> bool {
-        true
+    pub fn touch_task(&self, task_id: u32, token: String) -> Option<TaskInfo> {
+        debug!(LOG_LABEL, "touch_task");
+        TaskManager::get_instance().touch(get_calling_uid(), task_id, token)
     }
 
-    pub fn clear_task(&self, task_id: u32) -> bool {
-        true
+    pub fn search_task(&self, filter: Filter) -> Vec<u32> {
+        debug!(LOG_LABEL, "search_task");
+        TaskManager::get_instance().search(filter)
+    }
+
+    pub fn is_system_api(&self) -> bool {
+        debug!(LOG_LABEL, "is_system_api");
+        let token_id = get_calling_token_id();
+        debug!(LOG_LABEL, "token_id {}",  @public(&token_id));
+        unsafe { request_binding::RequestIsSystemAPI(token_id) }
+    }
+
+    pub fn get_calling_bundle(&self) -> String {
+        debug!(LOG_LABEL, "get_calling_bundle");
+        let token_id = get_calling_token_id();
+        debug!(LOG_LABEL, "token_id {}",  @public(&token_id));
+        unsafe { request_binding::GetCallingBundle(token_id).to_string() }
+    }
+    pub fn query_task(&self, task_id: u32, query_permission: QueryPermission) -> Option<TaskInfo> {
+        debug!(LOG_LABEL, "touch_task");
+        match query_permission {
+            QueryPermission::NoPermisson => None,
+            QueryPermission::QueryDownLoad => TaskManager::get_instance().query(task_id, Action::DOWNLOAD),
+            QueryPermission::QueryUpload => TaskManager::get_instance().query(task_id, Action::UPLOAD),
+            QueryPermission::QueryAll => TaskManager::get_instance().query(task_id, Action::ANY),
+        }
     }
 
     pub fn add_unregister_notify(&self, task_id: u32, reg_type: String) {
@@ -211,35 +253,19 @@ impl RequestAbility {
     }
 
     fn do_unregistered_notify(&self, task_id: u32, reg_type: String) {
-        match self.show_task(task_id) {
-            Some(df) => {
+        match TaskManager::get_instance().query_one_task(task_id) {
+            Some(task) => {
                 let key = reg_type.clone() + &String::from("-") + &task_id.to_string();
                 let notify = self.unregistered_notify.lock().unwrap().clone();
                 if notify.contains_key(&key) {
                     debug!(LOG_LABEL, "notify taskId: {} event: {}",  @public(task_id),  @public(reg_type));
-                    let mut each_file_status = Vec::<(String, Reason, String)>::new();
-                    for item in df.file_specs.iter() {
-                        each_file_status.push((
-                            item.path.clone(),
-                            df.reason,
-                            String::new(),
-                        ));
-                    }
-                    let notify_data = NotifyData {
-                        progress: df.progress,
-                        action: df.common_data.action,
-                        version: Version::API9,
-                        each_file_status,
-                        task_id: df.task_id,
-                        uid: df.uid,
-                        bundle: df.bundle,
-                    };
+                    let notify_data = task.build_notify_data();
                     RequestAbility::notify_client(reg_type, &notify_data);
                     self.unregistered_notify.lock().unwrap().remove(&key);
                 }
             }
             None => {
-                error!(LOG_LABEL, "not find task Api9 complete or fail event");
+                error!(LOG_LABEL, "the task has been removed from the map");
             }
         }
     }
@@ -265,7 +291,7 @@ impl RequestAbility {
             return;
         }
         let common_data = notify_data.progress.common_data;
-        if (common_data.state == State::RUNNING || common_data.state == State::RETRYING) &&
+        if (common_data.state == State::RUNNING as u8 || common_data.state == State::RETRYING as u8) &&
             common_data.total_processed == 0 {
             return;
         }
@@ -312,9 +338,9 @@ impl RequestAbility {
                     .write(&(notify_data.each_file_status.len() as u32))
                     .ok();
                 for item in notify_data.each_file_status.iter() {
-                    client_data.write(&(item.0)).ok();
-                    client_data.write(&(item.1 as u32)).ok();
-                    client_data.write(&(item.2)).ok();
+                    client_data.write(&(item.path)).ok();
+                    client_data.write(&(item.reason as u32)).ok();
+                    client_data.write(&(item.message)).ok();
                 }
                 debug!(LOG_LABEL, "send_request");
                 let reply = obj.send_request(RequestNotifyInterfaceCode::Notify as u32, &client_data, false).ok();
@@ -328,13 +354,13 @@ impl RequestAbility {
         }
     }
 
-    pub fn notify_task_info(task_info: TaskInfo) {
+    pub fn notify_task_info(task_info: &TaskInfo) {
         debug!(LOG_LABEL, "notify_task_info");
         if task_info.progress.common_data.index >= task_info.progress.sizes.len() {
             error!(LOG_LABEL, "index is out of bounds");
             return ;
         }
-        let key = String::from("done") + &String::from("-") + &task_info.task_id.to_string();
+        let key = String::from("done") + &String::from("-") + &task_info.common_data.task_id.to_string();
         debug!(LOG_LABEL, "key {}",  @public(key));
         let reg_obj = RequestAbility::get_ability_instance()
             .reg_remote_obj
@@ -352,22 +378,22 @@ impl RequestAbility {
             reply.write(&(task_info.common_data.retry)).ok();
             reply.write(&(task_info.common_data.action as u32)).ok();
             reply.write(&(task_info.common_data.mode as u32)).ok();
-            reply.write(&(task_info.reason as u32)).ok();
+            reply.write(&(task_info.common_data.reason as u32)).ok();
             reply.write(&(task_info.common_data.tries)).ok();
-            reply.write(&(task_info.uid.to_string())).ok();
+            reply.write(&(task_info.common_data.uid.to_string())).ok();
             reply.write(&(task_info.bundle)).ok();
             reply.write(&task_info.url).ok();
-            reply.write(&(task_info.task_id.to_string())).ok();
+            reply.write(&(task_info.common_data.task_id.to_string())).ok();
             reply.write(&task_info.title).ok();
             reply.write(&task_info.mime_type).ok();
-            reply.write(&(task_info.ctime.to_string())).ok();
-            reply.write(&(task_info.mtime.to_string())).ok();
+            reply.write(&(task_info.common_data.ctime)).ok();
+            reply.write(&(task_info.common_data.mtime)).ok();
             reply.write(&(task_info.data)).ok();
             reply.write(&(task_info.description)).ok();
-            reply.write(&(task_info.file_items.len() as u32)).ok();
-            for i in 0..task_info.file_items.len() {
-                reply.write(&(task_info.file_items[i].name)).ok();
-                reply.write(&(task_info.file_items[i].value)).ok();
+            reply.write(&(task_info.form_items.len() as u32)).ok();
+            for i in 0..task_info.form_items.len() {
+                reply.write(&(task_info.form_items[i].name)).ok();
+                reply.write(&(task_info.form_items[i].value)).ok();
             }
             reply.write(&(task_info.file_specs.len() as u32)).ok();
             for i in 0..task_info.file_specs.len() {
@@ -395,14 +421,74 @@ impl RequestAbility {
             reply.write(&(task_info.common_data.version as u32)).ok();
             reply.write(&(task_info.each_file_status.len() as u32)).ok();
             for item in task_info.each_file_status.iter() {
-                reply.write(&(item.0)).ok();
-                reply.write(&(item.1 as u32)).ok();
-                reply.write(&(item.2)).ok();
+                reply.write(&(item.path)).ok();
+                reply.write(&(item.reason as u32)).ok();
+                reply.write(&(item.message)).ok();
             }
             debug!(LOG_LABEL, "send_request");
             let reply = obj.send_request(RequestNotifyInterfaceCode::DoneNotify as u32, &reply, false).ok();
 
-            RequestAbility::get_ability_instance().off(task_info.task_id, String::from("done"));
+            RequestAbility::get_ability_instance().off(task_info.common_data.task_id, String::from("done"));
         }
+    }
+
+    pub fn serialize_task_info(&self, tf: TaskInfo, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+        reply.write(&(tf.common_data.gauge))?;
+        reply.write(&(tf.common_data.retry))?;
+        reply.write(&(tf.common_data.action as u32))?;
+        reply.write(&(tf.common_data.mode as u32))?;
+        reply.write(&(tf.common_data.reason as u32))?;
+        reply.write(&(tf.common_data.tries))?;
+        reply.write(&(tf.common_data.uid.to_string()))?;
+        reply.write(&(tf.bundle))?;
+        reply.write(&(tf.url))?;
+        reply.write(&(tf.common_data.task_id.to_string()))?;
+        reply.write(&tf.title)?;
+        reply.write(&tf.mime_type)?;
+        reply.write(&(tf.common_data.ctime))?;
+        reply.write(&(tf.common_data.mtime))?;
+        reply.write(&(tf.data))?;
+        reply.write(&(tf.description))?;
+
+        reply.write(&(tf.form_items.len() as u32))?;
+        for i in 0..tf.form_items.len() {
+            reply.write(&(tf.form_items[i].name))?;
+            reply.write(&(tf.form_items[i].value))?;
+        }
+
+        reply.write(&(tf.file_specs.len() as u32))?;
+        for i in 0..tf.file_specs.len() {
+            reply.write(&(tf.file_specs[i].name))?;
+            reply.write(&(tf.file_specs[i].path))?;
+            reply.write(&(tf.file_specs[i].file_name))?;
+            reply.write(&(tf.file_specs[i].mime_type))?;
+        }
+
+        reply.write(&(tf.progress.common_data.state as u32))?;
+        let index = tf.progress.common_data.index;
+        reply.write(&(index as u32))?;
+        reply.write(&(tf.progress.processed[index] as u64))?;
+        reply.write(&(tf.progress.common_data.total_processed as u64))?;
+        reply.write(&(tf.progress.sizes))?;
+
+        reply.write(&(tf.progress.extras.len() as u32))?;
+        for (k, v) in tf.progress.extras.iter() {
+            reply.write(&(k))?;
+            reply.write(&(v))?;
+        }
+
+        reply.write(&(tf.extras.len() as u32))?;
+        for (k, v) in tf.extras.iter() {
+            reply.write(&(k))?;
+            reply.write(&(v))?;
+        }
+        reply.write(&(tf.common_data.version as u32))?;
+        reply.write(&(tf.each_file_status.len() as u32))?;
+        for item in tf.each_file_status.iter() {
+            reply.write(&(item.path))?;
+            reply.write(&(item.reason as u32))?;
+            reply.write(&(item.message))?;
+        }
+        Ok(())
     }
 }

@@ -293,10 +293,6 @@ napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, const std::
         if (handle != requestEvent_.end()) {
             context->innerCode_ = handle->second(context);
         }
-        //Temporary plan
-        if (context->innerCode_ == E_TASK_NOT_FOUND) {
-            context->innerCode_ = E_TASK_STATE;
-        }
     };
 
     context->SetInput(input).SetOutput(output).SetExec(exec);
@@ -366,7 +362,7 @@ int32_t RequestEvent::QueryExec(const std::shared_ptr<ExecContext> &context)
     int32_t ret = E_OK;
     if (!GetCache(context->task->GetTid(), infoRes) || infoRes == nullptr) {
         infoRes = std::make_shared<TaskInfo>();
-        ret = RequestManager::GetInstance()->Query(context->task->GetTid(), *infoRes, context->version_);
+        ret = RequestManager::GetInstance()->Show(context->task->GetTid(), *infoRes);
     }
     if (context->version_ != Version::API10 && ret != E_PERMISSION) {
         ret = E_OK;

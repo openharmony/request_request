@@ -20,17 +20,12 @@
 #include <mutex>
 #include <stdint.h>
 
+#include "c_enumration.h"
 #include "net_all_capabilities.h"
 #include "net_conn_callback_stub.h"
 #include "net_handle.h"
 #include "net_link_info.h"
 #include "refbase.h"
-
-enum Network {
-    ANY = 0,
-    WIFI = 1,
-    CELLULAR = 2,
-};
 
 struct NetworkInfo {
     Network networkType = Network::ANY;

@@ -13,21 +13,35 @@
 * limitations under the License.
 */
 
-#ifndef REQUEST_C_CHECK_PERMISSION_H
-#define REQUEST_C_CHECK_PERMISSION_H
+#ifndef C_FORM_ITEM_H
+#define C_FORM_ITEM_H
 
-#include <stdint.h>
-#include "c_enumration.h"
+#include <string>
+
 #include "c_string_wrapper.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+struct CFileSpec {
+    CStringWrapper name;
+    CStringWrapper path;
+    CStringWrapper fileName;
+    CStringWrapper mimeType;
+};
 
-bool RequestCheckPermission(uint64_t tokenId, CStringWrapper permission);
-bool RequestIsSystemAPI(uint64_t tokenId);
+struct FileSpec {
+    std::string name;
+    std::string path;
+    std::string fileName;
+    std::string mimeType;
+};
 
-#ifdef __cplusplus
-}
-#endif
-#endif // REQUEST_C_CHECK_PERMISSION_H
+struct CFormItem {
+    CStringWrapper name;
+    CStringWrapper value;
+};
+
+struct FormItem {
+    std::string name;
+    std::string value;
+};
+
+#endif // C_FORM_ITEM_H

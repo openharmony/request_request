@@ -13,21 +13,33 @@
 * limitations under the License.
 */
 
-#ifndef REQUEST_C_CHECK_PERMISSION_H
-#define REQUEST_C_CHECK_PERMISSION_H
+#ifndef C_PROGRESS_H
+#define C_PROGRESS_H
 
+#include <cstdint>
 #include <stdint.h>
-#include "c_enumration.h"
+#include <string>
+
 #include "c_string_wrapper.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+struct CommonProgress {
+    uint8_t state;
+    uintptr_t index;
+    uintptr_t totalProcessed;
+};
 
-bool RequestCheckPermission(uint64_t tokenId, CStringWrapper permission);
-bool RequestIsSystemAPI(uint64_t tokenId);
+struct CProgress {
+    CommonProgress commonData;
+    CStringWrapper sizes;
+    CStringWrapper processed;
+    CStringWrapper extras;
+};
 
-#ifdef __cplusplus
-}
-#endif
-#endif // REQUEST_C_CHECK_PERMISSION_H
+struct Progress {
+    CommonProgress commonData;
+    std::string sizes;
+    std::string processed;
+    std::string extras;
+};
+
+#endif // C_PROGRESS_H
