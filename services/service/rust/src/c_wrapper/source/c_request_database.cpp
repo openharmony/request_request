@@ -494,7 +494,7 @@ int TouchTaskInfoAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicates,
     int64_t len = std::max(formItemsLen, fileSpecsLen);
     for (int64_t i = 0; i < len; i++) {
         if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
-            REQUEST_HILOGE("result set go to %{public}llu row failed", i);
+            REQUEST_HILOGE("result set go to %{public}" PRId64 "row failed", i);
             return OHOS::Request::QUERY_ERR;
         }
         if (i < formItemsLen) {
@@ -536,7 +536,7 @@ int QueryTaskInfoAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicates,
     }
     for (int64_t i = 0; i < fileSpecsLen; i++) {
         if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
-            REQUEST_HILOGE("result set go to %{public}llu row failed", i);
+            REQUEST_HILOGE("result set go to %{public}" PRId64 "row failed", i);
             return OHOS::Request::QUERY_ERR;
         }
         EachFileStatus eachFileStatus;
