@@ -61,7 +61,7 @@ bool NetworkAdapter::RegOnNetworkChange(RegCallBack &&callback)
         REQUEST_HILOGE("new operator error.observer is nullptr");
         return false;
     }
-    int nRet = DelayedSingleton<NetConnClient>::GetInstance()->RegisterNetConnCallback(specifier, observer, 0);
+    int nRet = NetConnClient::GetInstance().RegisterNetConnCallback(specifier, observer, 0);
     if (nRet == NETMANAGER_SUCCESS) {
         REQUEST_HILOGD("RegisterNetConnCallback successfully registered");
         return true;
