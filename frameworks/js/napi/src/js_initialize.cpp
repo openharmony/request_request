@@ -294,21 +294,22 @@ bool JsInitialize::ParseToken(napi_env env, napi_value jsConfig, Config &config)
     if (NapiUtils::GetValueType(env, value) != napi_string) {
         return true;
     }
-    token = new char[TOKEN_MAX_BYTES + 1];
-    napi_status status = napi_get_value_string_utf8(env, value, token, TOKEN_MAX_BYTES + 1, &len);
+    uint32_t bufferLen = TOKEN_MAX_BYTES + 2;
+    token = new char[bufferLen];
+    napi_status status = napi_get_value_string_utf8(env, value, token, bufferLen, &len);
     if (status != napi_ok) {
         REQUEST_HILOGE("napi get value string utf8 failed");
-        memset_s(token, TOKEN_MAX_BYTES + 1, 0, TOKEN_MAX_BYTES + 1);
+        memset_s(token, bufferLen, 0, bufferLen);
         delete[] token;
         return false;
     }
     if (len < TOKEN_MIN_BYTES || len > TOKEN_MAX_BYTES) {
-        memset_s(token, TOKEN_MAX_BYTES + 1, 0, TOKEN_MAX_BYTES + 1);
+        memset_s(token, bufferLen, 0, bufferLen);
         delete[] token;
         return false;
     }
     config.token = NapiUtils::SHA256(token, len);
-    memset_s(token, TOKEN_MAX_BYTES + 1, 0, TOKEN_MAX_BYTES + 1);
+    memset_s(token, bufferLen, 0, bufferLen);
     delete[] token;
     return true;
 }
@@ -691,7 +692,7 @@ void JsInitialize::CreatProperties(napi_env env, napi_value &self, napi_value co
 {
     if (task->config_.version == Version::API10) {
         NapiUtils::SetStringPropertyUtf8(env, self, "tid", task->GetTid());
-        napi_set_named_property(env, self, "conf", config);
+        napi_set_named_property(env, self, "config", config);
     }
 }
 } // namespace OHOS::Request

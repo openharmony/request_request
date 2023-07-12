@@ -365,22 +365,23 @@ bool JsTask::ParseTouch(napi_env env, size_t argc, napi_value *argv, std::shared
         REQUEST_HILOGE("tid is empty");
         return false;
     }
-    char *token = new char[TOKEN_MAX_BYTES + 1];
+    uint32_t bufferLen = TOKEN_MAX_BYTES + 2;
+    char *token = new char[bufferLen];
     size_t len = 0;
-    napi_status status = napi_get_value_string_utf8(env, argv[1], token, TOKEN_MAX_BYTES + 1, &len);
+    napi_status status = napi_get_value_string_utf8(env, argv[1], token, bufferLen, &len);
     if (status != napi_ok) {
         REQUEST_HILOGE("napi get value string utf8 failed");
-        memset_s(token, TOKEN_MAX_BYTES + 1, 0, TOKEN_MAX_BYTES + 1);
+        memset_s(token, bufferLen, 0, bufferLen);
         delete[] token;
         return false;
     }
     if (len < TOKEN_MIN_BYTES || len > TOKEN_MAX_BYTES) {
-        memset_s(token, TOKEN_MAX_BYTES + 1, 0, TOKEN_MAX_BYTES + 1);
+        memset_s(token, bufferLen, 0, bufferLen);
         delete[] token;
         return false;
     }
     context->token = NapiUtils::SHA256(token, len);
-    memset_s(token, TOKEN_MAX_BYTES + 1, 0, TOKEN_MAX_BYTES + 1);
+    memset_s(token, bufferLen, 0, bufferLen);
     delete[] token;
     return true;
 }
