@@ -740,6 +740,7 @@ std::string SHA256(const char *str, size_t len)
     SHA256_Final(hash, &sha256);
     std::stringstream ss;
     for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        // 2 means setting the width of the output.
         ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(hash[i]);
     }
     return ss.str();
