@@ -148,6 +148,7 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
     };
     context->SetInput(input).SetOutput(output).SetExec(exec);
     AsyncCall asyncCall(env, info, context);
+    asyncCall.SetQosLevel(napi_qos_utility);
     return asyncCall.Call(context, "create");
 }
 

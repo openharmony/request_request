@@ -78,6 +78,11 @@ public:
     ~AsyncCall();
     napi_value Call(const std::shared_ptr<Context> &context, const std::string &resourceName = "AsyncCall");
 
+    inline void SetQosLevel(napi_qos_t napiQosLevel)
+    {
+        napiQosLevel_ = napiQosLevel;
+    }
+
 private:
     enum {
         ARG_ERROR,
@@ -94,6 +99,7 @@ private:
     };
     static void OnExecute(napi_env env, void *data);
     static void OnComplete(napi_env env, napi_status status, void *data);
+    napi_qos_t napiQosLevel_ = napi_qos_default;
 };
 } // namespace OHOS::Request
 #endif // ASYNC_CALL_H

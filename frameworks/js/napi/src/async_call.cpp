@@ -79,11 +79,7 @@ napi_value AsyncCall::Call(const std::shared_ptr<Context>& context, const std::s
     workData->ctx = context;
     napi_create_async_work(context->env_, nullptr, resource,
         AsyncCall::OnExecute, AsyncCall::OnComplete, workData, &context->work_);
-    if (resourceName == "create") {
-        napi_queue_async_work_with_qos(context->env_, context->work_, napi_qos_utility);
-    } else {
-        napi_queue_async_work(context->env_, context->work_);
-    }
+    napi_queue_async_work_with_qos(context->env_, context->work_, napiQosLevel_);
     REQUEST_HILOGD("async call exec");
     return ret;
 }
