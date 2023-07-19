@@ -356,7 +356,7 @@ CVectorWrapper Search(CFilter filter)
     int rowCount = 0;
     resultSet->GetRowCount(rowCount);
     cVectorWrapper.ptr = new uint32_t[rowCount];
-    cVectorWrapper.len = rowCount;
+    cVectorWrapper.len = static_cast<uint64_t>(rowCount);
     for (int i = 0; i < rowCount; i++) {
         if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
             REQUEST_HILOGE("result set go to %{public}d row failed", i);
