@@ -20,7 +20,7 @@ import fs from '@ohos.file.fs';
 
 const TAG = "UPLOAD_TEST";
 
-describe('RequestUploadTest', function () {
+describe('RequestUploadTest', async function () {
     beforeAll(function () {
         console.info('beforeAll called')
     })
@@ -34,16 +34,14 @@ describe('RequestUploadTest', function () {
     })
 
     afterEach(function () {
-        console.info('afterEach called')
+        console.info('afterEach called');
+        if (fs.accessSync(cacheDir + '/test.txt')) {
+          fs.unlinkSync(cacheDir + '/test.txt');
+        }
     })
     console.log(TAG + "*************Unit Test Begin*************");
 
-    let context = featureAbility.getContext();
-    context.getCacheDir().then((data) => {
-      let pathDir = data;
-      let file = fs.openSync(pathDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-      fs.closeSync(file);
-    })
+    let cacheDir = await featureAbility.getContext().getCacheDir();
 
     let uploadTask;
     let RequestData = {
@@ -222,6 +220,8 @@ describe('RequestUploadTest', function () {
      * @tc.level     : Level 1
      */
     it('SUB_REQUEST_UPLOAD_API_CALLBACK_0001', 0, async function (done) {
+        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+        fs.closeSync(file);
         console.info("-----------------------SUB_REQUEST_UPLOAD_API_CALLBACK_0001 is starting-----------------------");
         try {
           console.info("SUB_REQUEST_UPLOAD_API_CALLBACK_0001 uploadConfig: " + JSON.stringify(uploadConfig1));
@@ -260,6 +260,8 @@ describe('RequestUploadTest', function () {
      * @tc.level     : Level 1
      */
     it('SUB_REQUEST_UPLOAD_API_PROMISE_0001', 0, async function (done) {
+        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+        fs.closeSync(file);
         console.info("-----------------------SUB_REQUEST_UPLOAD_API_PROMISE_0001 is starting-----------------------");
         try {
           console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0001 UploadConfig: " + JSON.stringify(uploadConfig1));
@@ -296,6 +298,8 @@ describe('RequestUploadTest', function () {
      * @tc.level     : Level 1
      */
     it('SUB_REQUEST_UPLOAD_API_PROMISE_0002', 0, async function (done) {
+        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+        fs.closeSync(file);
         console.info("-----------------------SUB_REQUEST_UPLOAD_API_PROMISE_0002 is starting-----------------------");
         try {
           console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0002 UploadConfig: " + JSON.stringify(uploadConfig));
@@ -329,6 +333,8 @@ describe('RequestUploadTest', function () {
      * @tc.level     : Level 1
     */
     it('SUB_REQUEST_UPLOAD_API_PROMISE_0003', 0, async function (done) {
+        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+        fs.closeSync(file);
         console.info("-----------------------SUB_REQUEST_UPLOAD_API_PROMISE_0003 is starting-----------------------");
         try {
           console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0003 UploadConfig: " + JSON.stringify(uploadConfig));
