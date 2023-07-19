@@ -27,10 +27,14 @@ RequestNotify::RequestNotify(napi_env env, napi_value callback) : NotifyStub()
     env_ = env;
     napi_create_reference(env, callback, 1, &ref_);
     data_ = std::make_shared<CallbackData>();
+    valid_.store(true);
 }
 
 RequestNotify::~RequestNotify()
 {
+    if (data_ != nullptr) {
+        data_->valid = valid_.load();
+    }
     REQUEST_HILOGI("~RequestNotify()");
 }
 
@@ -95,5 +99,14 @@ void RequestNotify::GetDataPtrParam(const std::shared_ptr<CallbackData> &dataPtr
     dataPtr->env = env_;
     dataPtr->ref = ref_;
     dataPtr->notify = notify;
+    dataPtr->valid = true;
+}
+
+void RequestNotify::DeleteCallbackRef()
+{
+    if (data_ != nullptr && data_->env != nullptr && data_->ref != nullptr) {
+        valid_.store(false);
+        napi_delete_reference(data_->env, data_->ref);
+    }
 }
 } // namespace OHOS::Request::Download
