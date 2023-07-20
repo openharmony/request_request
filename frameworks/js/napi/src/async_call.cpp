@@ -46,6 +46,11 @@ AsyncCall::AsyncCall(napi_env env, napi_callback_info info, const std::shared_pt
     context->input_ = nullptr;
     if (status != napi_ok) {
         context->innerCode_ = E_PARAMETER_CHECK;
+        context->exec_ = nullptr;
+        context->output_ = nullptr;
+        if (context->callbackRef_ != nullptr) {
+            napi_delete_reference(env, context->callbackRef_);
+        }
         REQUEST_HILOGE("input_ status fail");
         return;
     }
