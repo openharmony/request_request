@@ -42,10 +42,6 @@ bool FuzzDownloadBaseNotify(const uint8_t *rawData, size_t size)
     uint32_t code = ConvertToUint32(rawData);
     rawData = rawData + OFFSET;
     size = size - OFFSET;
-
-    napi_value value;
-    struct CallbackData notifyData;
-    napi_get_reference_value(notifyData.env, notifyData.ref, &value);
     
     MessageParcel data;
     data.WriteInterfaceToken(DOWNLDBN_INTERFACE_TOKEN);
@@ -54,7 +50,9 @@ bool FuzzDownloadBaseNotify(const uint8_t *rawData, size_t size)
     MessageParcel reply;
     MessageOption option;
 
-    sptr<RequestNotify> download = new RequestNotify(notifyData.env, value);
+    napi_env env = nullptr;
+    napi_value value = nullptr;
+    sptr<RequestNotify> download = new RequestNotify(env, value);
     download->OnRemoteRequest(code, data, reply, option);
 
     return true;
