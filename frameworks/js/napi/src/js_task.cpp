@@ -352,6 +352,7 @@ napi_value JsTask::TouchInner(napi_env env, napi_callback_info info, AsyncCall::
 
 bool JsTask::ParseTouch(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<TouchContext> context)
 {
+    // 2 means least param num.
     if (argc < 2) {
         REQUEST_HILOGE("Wrong number of arguments");
         return false;
@@ -633,6 +634,13 @@ void JsTask::RemoveListener(const std::string &type, const std::string &tid)
 void JsTask::ClearListener()
 {
     std::lock_guard<std::mutex> autoLock(listenerMutex_);
+    for (const auto &listener : listenerMap_) {
+        for (const auto &iter : listener.second) {
+            if (iter != nullptr) {
+                iter->DeleteCallbackRef();
+            }
+        }
+    }
     listenerMap_.clear();
 }
 
