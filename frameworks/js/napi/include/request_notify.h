@@ -16,6 +16,7 @@
 #ifndef REQUEST_NOTIFY_H
 #define REQUEST_NOTIFY_H
 
+#include <atomic>
 #include <string>
 #include <mutex>
 #include "uv.h"
@@ -34,9 +35,12 @@ struct CallbackData {
     napi_ref ref;
     std::mutex mutex;
     Notify notify;
+    bool valid;
     ~CallbackData()
     {
-        UvQueue::DeleteRef(env, ref);
+        if (valid == true) {
+            UvQueue::DeleteRef(env, ref);
+        }
     }
 };
 
@@ -52,6 +56,7 @@ public:
     void CallBack(const Notify &notify) override;
     void Done(const TaskInfo &taskInfo) override;
     void GetDataPtrParam(const std::shared_ptr<CallbackData> &dataPtr, const Notify &notify);
+    void DeleteCallbackRef();
     static void GetCallBackData(NotifyDataPtr *notifyDataPtr);
     static void ConvertCallBackData(const std::shared_ptr<CallbackData> &dataPtr, uint32_t &paramNumber,
         napi_value *value);
@@ -59,6 +64,7 @@ public:
     napi_ref ref_;
 private:
     std::shared_ptr<CallbackData> data_;
+    std::atomic<bool> valid_;
 };
 } // namespace OHOS::Request
 
