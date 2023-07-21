@@ -20,93 +20,112 @@
 #include "log.h"
 #include "napi_utils.h"
 #include "uv_queue.h"
+#include "js_task.h"
 
 namespace OHOS::Request {
 RequestNotify::RequestNotify(napi_env env, napi_value callback) : NotifyStub()
 {
+    std::lock_guard<std::mutex> lock(envMutex_);
     env_ = env;
     napi_create_reference(env, callback, 1, &ref_);
-    data_ = std::make_shared<CallbackData>();
-    valid_.store(true);
+    valid_ = true;
 }
 
 RequestNotify::~RequestNotify()
 {
-    if (data_ != nullptr) {
-        data_->valid = valid_.load();
+    std::lock_guard<std::mutex> lock(envMutex_);
+    if (valid_ && env_ != nullptr && ref_ != nullptr) {
+        UvQueue::DeleteRef(env_, ref_);
     }
     REQUEST_HILOGI("~RequestNotify()");
 }
 
-void RequestNotify::CallBack(const Notify &notify)
+void RequestNotify::CallBack(const std::string &type, const std::string &tid, const Notify &notify)
 {
     REQUEST_HILOGI("RequestNotify CallBack in");
-    GetDataPtrParam(data_, notify);
-    NotifyDataPtr *notifyDataPtr = new (std::nothrow) NotifyDataPtr;
-    notifyDataPtr->dataPtr = data_;
+    auto item = JsTask::taskMap_.find(tid);
+    if (item == JsTask::taskMap_.end()) {
+        REQUEST_HILOGE("Task ID not found");
+        return;
+    }
+    auto task = item->second;
+    std::string key = type + tid;
+    auto it = task->listenerMap_.find(key);
+    if (it == task->listenerMap_.end()) {
+        REQUEST_HILOGE("Unregistered %{public}s callback", type.c_str());
+        return;
+    }
+    SetNotify(notify);
+    NotifyDataPtr *dataPtr = new NotifyDataPtr;
+    dataPtr->callbacks = it->second;
     uv_after_work_cb afterCallback = [](uv_work_t *work, int status) {
-        NotifyDataPtr *notifyDataPtr = static_cast<NotifyDataPtr *>(work->data);
-        if (notifyDataPtr != nullptr) {
-            GetCallBackData(notifyDataPtr);
-            delete notifyDataPtr;
-            delete work;
+        if (work == nullptr) {
+            return;
         }
+        NotifyDataPtr *dataPtr = static_cast<NotifyDataPtr *>(work->data);
+        if (dataPtr != nullptr) {
+            for (const auto &callback : dataPtr->callbacks) {
+                callback->ExecCallBack();
+            }
+            delete dataPtr;
+        }
+        delete work;
     };
-    UvQueue::Call(data_->env, reinterpret_cast<void *>(notifyDataPtr), afterCallback);
+    UvQueue::Call(env_, reinterpret_cast<void *>(dataPtr), afterCallback);
 }
 
 void RequestNotify::Done(const TaskInfo &taskInfo)
 {
 }
-void RequestNotify::ConvertCallBackData(const std::shared_ptr<CallbackData> &dataPtr, uint32_t &paramNumber,
-    napi_value *value)
-{
-    std::lock_guard<std::mutex> lock(dataPtr->mutex);
-    if (dataPtr->notify.type == DATA_CALLBACK) {
-        paramNumber = dataPtr->notify.data.size();
-        for (uint32_t i = 0; i < dataPtr->notify.data.size(); i++) {
-            value[i] = NapiUtils::Convert2JSValue(dataPtr->env, dataPtr->notify.data[i]);
-        }
-    } else if (dataPtr->notify.type == HEADER_CALLBACK) {
-        value[0] = NapiUtils::Convert2JSHeaders(dataPtr->env, dataPtr->notify.header);
-    } else if (dataPtr->notify.type == TASK_STATE_CALLBACK) {
-        value[0] = NapiUtils::Convert2JSValue(dataPtr->env, dataPtr->notify.taskStates);
-    } else if (dataPtr->notify.type == PROGRESS_CALLBACK) {
-        value[0] = NapiUtils::Convert2JSValue(dataPtr->env, dataPtr->notify.progress);
-    }
-}
 
-void RequestNotify::GetCallBackData(NotifyDataPtr *notifyDataPtr)
+void RequestNotify::ExecCallBack()
 {
+    REQUEST_HILOGI("ExecCallBack in");
+    std::lock_guard<std::mutex> lock(envMutex_);
     napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(notifyDataPtr->dataPtr->env, &scope);
-    napi_value undefined = nullptr;
-    napi_get_undefined(notifyDataPtr->dataPtr->env, &undefined);
+    napi_open_handle_scope(env_, &scope);
     napi_value callbackFunc = nullptr;
-    napi_get_reference_value(notifyDataPtr->dataPtr->env, notifyDataPtr->dataPtr->ref, &callbackFunc);
+    napi_get_reference_value(env_, ref_, &callbackFunc);
     napi_value callbackResult = nullptr;
     uint32_t paramNumber = 1;
     napi_value callbackValues[NapiUtils::TWO_ARG] = { nullptr };
-    ConvertCallBackData(notifyDataPtr->dataPtr, paramNumber, callbackValues);
-    napi_call_function(notifyDataPtr->dataPtr->env, nullptr, callbackFunc, paramNumber, callbackValues,
-        &callbackResult);
-    napi_close_handle_scope(notifyDataPtr->dataPtr->env, scope);
+    ConvertCallBackData(paramNumber, callbackValues, NapiUtils::TWO_ARG);
+    napi_call_function(env_, nullptr, callbackFunc, paramNumber, callbackValues, &callbackResult);
+    napi_close_handle_scope(env_, scope);
 }
 
-void RequestNotify::GetDataPtrParam(const std::shared_ptr<CallbackData> &dataPtr, const Notify &notify)
+void RequestNotify::ConvertCallBackData(uint32_t &paramNumber, napi_value *value, uint32_t valueSize)
 {
-    std::lock_guard<std::mutex> lock(dataPtr->mutex);
-    dataPtr->env = env_;
-    dataPtr->ref = ref_;
-    dataPtr->notify = notify;
-    dataPtr->valid = true;
+    std::lock_guard<std::mutex> lock(notifyMutex_);
+    if (notify_.type == DATA_CALLBACK) {
+        paramNumber = notify_.data.size();
+        if (paramNumber > valueSize) {
+            return;
+        }
+        for (uint32_t i = 0; i < paramNumber; i++) {
+            value[i] = NapiUtils::Convert2JSValue(env_, notify_.data[i]);
+        }
+    } else if (notify_.type == HEADER_CALLBACK) {
+        value[0] = NapiUtils::Convert2JSHeaders(env_, notify_.header);
+    } else if (notify_.type == TASK_STATE_CALLBACK) {
+        value[0] = NapiUtils::Convert2JSValue(env_, notify_.taskStates);
+    } else if (notify_.type == PROGRESS_CALLBACK) {
+        value[0] = NapiUtils::Convert2JSValue(env_, notify_.progress);
+    }
+}
+
+void RequestNotify::SetNotify(const Notify &notify)
+{
+    std::lock_guard<std::mutex> lock(notifyMutex_);
+    notify_ = notify;
 }
 
 void RequestNotify::DeleteCallbackRef()
 {
-    if (data_ != nullptr && data_->env != nullptr && data_->ref != nullptr) {
-        valid_.store(false);
-        napi_delete_reference(data_->env, data_->ref);
+    std::lock_guard<std::mutex> lock(envMutex_);
+    if (env_ != nullptr && ref_ != nullptr) {
+        valid_ = false;
+        napi_delete_reference(env_, ref_);
     }
 }
 } // namespace OHOS::Request::Download

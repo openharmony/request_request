@@ -16,7 +16,6 @@
 #ifndef REQUEST_NOTIFY_H
 #define REQUEST_NOTIFY_H
 
-#include <atomic>
 #include <string>
 #include <mutex>
 #include "uv.h"
@@ -30,41 +29,28 @@
 
 
 namespace OHOS::Request {
-struct CallbackData {
-    napi_env env;
-    napi_ref ref;
-    std::mutex mutex;
-    Notify notify;
-    bool valid;
-    ~CallbackData()
-    {
-        if (valid == true) {
-            UvQueue::DeleteRef(env, ref);
-        }
-    }
-};
-
-struct NotifyDataPtr {
-    std::shared_ptr<CallbackData> dataPtr;
-};
-
 class RequestNotify : public NotifyStub {
 public:
     REQUEST_API explicit RequestNotify(napi_env env, napi_value callback);
     REQUEST_API explicit RequestNotify() = default;
     virtual ~RequestNotify();
-    void CallBack(const Notify &notify) override;
+    void CallBack(const std::string &type, const std::string &tid, const Notify &notify) override;
     void Done(const TaskInfo &taskInfo) override;
-    void GetDataPtrParam(const std::shared_ptr<CallbackData> &dataPtr, const Notify &notify);
+    void SetNotify(const Notify &notify);
     void DeleteCallbackRef();
-    static void GetCallBackData(NotifyDataPtr *notifyDataPtr);
-    static void ConvertCallBackData(const std::shared_ptr<CallbackData> &dataPtr, uint32_t &paramNumber,
-        napi_value *value);
+    void ConvertCallBackData(uint32_t &paramNumber, napi_value *value, uint32_t valueSize);
+    void ExecCallBack();
+
+    bool valid_;
     napi_env env_;
+    std::mutex envMutex_;
     napi_ref ref_;
-private:
-    std::shared_ptr<CallbackData> data_;
-    std::atomic<bool> valid_;
+    Notify notify_;
+    std::mutex notifyMutex_;
+};
+
+struct NotifyDataPtr {
+    std::vector<sptr<RequestNotify>> callbacks;
 };
 } // namespace OHOS::Request
 
