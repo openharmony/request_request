@@ -156,9 +156,6 @@ bool HasRequestTaskRecord(uint32_t taskId)
 bool WriteRequestTaskInfo(CTaskInfo *taskInfo)
 {
     REQUEST_HILOGI("write to request_task_info");
-    if (!OHOS::Request::RequestDataBase::GetInstance().BeginTransaction()) {
-        return false;
-    }
     OHOS::NativeRdb::ValuesBucket insertValues;
     insertValues.PutLong("task_id", taskInfo->commonData.taskId);
     insertValues.PutLong("uid", taskInfo->commonData.uid);
@@ -189,19 +186,15 @@ bool WriteRequestTaskInfo(CTaskInfo *taskInfo)
     insertValues.PutLong("file_specs_len", taskInfo->fileSpecsLen);
     if (!OHOS::Request::RequestDataBase::GetInstance().Insert(std::string("request_task_info"), insertValues)) {
         REQUEST_HILOGE("insert to request_task_info failed");
-        OHOS::Request::RequestDataBase::GetInstance().RollBack();
         return false;
     }
     REQUEST_HILOGI("insert to request_task_info success");
-    return OHOS::Request::RequestDataBase::GetInstance().Commit();
+    return true;
 }
 
 bool WriteTaskInfoAttachment(CTaskInfo *taskInfo)
 {
     REQUEST_HILOGI("write to task_info_attachment");
-    if (!OHOS::Request::RequestDataBase::GetInstance().BeginTransaction()) {
-        return false;
-    }
     uint64_t len = std::max(taskInfo->formItemsLen, taskInfo->fileSpecsLen);
     for (uint64_t i = 0; i < len; i++) {
         OHOS::NativeRdb::ValuesBucket insertValues;
@@ -228,12 +221,11 @@ bool WriteTaskInfoAttachment(CTaskInfo *taskInfo)
         }
         if (!OHOS::Request::RequestDataBase::GetInstance().Insert(std::string("task_info_attachment"), insertValues)) {
             REQUEST_HILOGE("insert to task_info_attachment failed");
-            OHOS::Request::RequestDataBase::GetInstance().RollBack();
             return false;
         }
     }
     REQUEST_HILOGI("insert to task_info_attachment success");
-    return OHOS::Request::RequestDataBase::GetInstance().Commit();
+    return true;
 }
 
 bool RecordRequestTaskInfo(CTaskInfo *taskInfo)
@@ -244,9 +236,6 @@ bool RecordRequestTaskInfo(CTaskInfo *taskInfo)
 bool UpdateRequestTaskInfo(uint32_t taskId, CUpdateInfo *updateInfo)
 {
     REQUEST_HILOGI("update task info");
-    if (!OHOS::Request::RequestDataBase::GetInstance().BeginTransaction()) {
-        return false;
-    }
     OHOS::NativeRdb::ValuesBucket values;
     values.PutLong("mtime", updateInfo->mtime);
     values.PutInt("reason", updateInfo->reason);
@@ -263,7 +252,6 @@ bool UpdateRequestTaskInfo(uint32_t taskId, CUpdateInfo *updateInfo)
     rdbPredicates1.EqualTo("task_id", std::to_string(taskId));
     if (!OHOS::Request::RequestDataBase::GetInstance().Update(values, rdbPredicates1)) {
         REQUEST_HILOGE("update table1 failed");
-        OHOS::Request::RequestDataBase::GetInstance().RollBack();
         return false;
     }
     for (uint32_t i = 0; i < updateInfo->eachFileStatusLen; i++) {
@@ -278,11 +266,10 @@ bool UpdateRequestTaskInfo(uint32_t taskId, CUpdateInfo *updateInfo)
                 updateInfo->eachFileStatusPtr[i].path.len));
         if (!OHOS::Request::RequestDataBase::GetInstance().Update(values1, rdbPredicates2)) {
             REQUEST_HILOGE("update table2 failed");
-            OHOS::Request::RequestDataBase::GetInstance().RollBack();
             return false;
         }
     }
-    return OHOS::Request::RequestDataBase::GetInstance().Commit();
+    return true;
 }
 
 CTaskInfo *Touch(uint32_t taskId, uint64_t uid, CStringWrapper token)
