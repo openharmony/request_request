@@ -25,7 +25,7 @@ namespace OHOS::Request {
 class NotifyInterface : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Download.NotifyInterface");
-    virtual void CallBack(const Notify &notify) = 0;
+    virtual void CallBack(const std::string &type, const std::string &tid, const Notify &notify) = 0;
     virtual void Done(const TaskInfo &taskInfo) = 0;
 };
 } // namespace OHOS::Request

@@ -66,11 +66,9 @@ void CreateRequestFuzzTest(const uint8_t *data, size_t size)
     Config config;
     auto tid = static_cast<int32_t>(size);
 
-    napi_value value;
-    struct CallbackData notifyData;
-    napi_get_reference_value(notifyData.env, notifyData.ref, &value);
-
-    sptr<RequestNotify> listener_ = new RequestNotify(notifyData.env, value);
+    napi_env env = nullptr;
+    napi_value value = nullptr;
+    sptr<RequestNotify> listener_ = new RequestNotify(env, value);
 
     GrantNativePermission();
     RequestManager::GetInstance()->Create(config, tid, listener_);
@@ -153,11 +151,9 @@ void OnRequestFuzzTest(const uint8_t *data, size_t size)
     std::string tid(reinterpret_cast<const char *>(data), size);
     std::string type(data, data + size);
 
-    napi_value value;
-    struct CallbackData notifyData;
-    napi_get_reference_value(notifyData.env, notifyData.ref, &value);
-
-    sptr<RequestNotify> listener_ = new RequestNotify(notifyData.env, value);
+    napi_env env = nullptr;
+    napi_value value = nullptr;
+    sptr<RequestNotify> listener_ = new RequestNotify(env, value);
 
     GrantNativePermission();
     RequestManager::GetInstance()->On(type, tid, listener_);
