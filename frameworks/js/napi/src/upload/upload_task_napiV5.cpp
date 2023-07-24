@@ -45,8 +45,8 @@ UploadTaskNapiV5::~UploadTaskNapiV5()
             napi_delete_reference(callbackDataPtr->env, callbackDataPtr->failRef);
             napi_delete_reference(callbackDataPtr->env, callbackDataPtr->completeRef);
             delete callbackDataPtr;
-            delete work;
         }
+        delete work;
     };
     UvQueue::Call(env_, reinterpret_cast<void *>(callbackData), afterCallback);
 }
