@@ -131,6 +131,7 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         napi_value returnValue;
         napi_call_function(env, nullptr, callback, ARG_BUTT, result, &returnValue);
         napi_delete_reference(env, context->callbackRef_);
+        context->callbackRef_ = nullptr;
     }
     delete workData;
 }
