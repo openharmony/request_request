@@ -634,14 +634,12 @@ void JsTask::RemoveListener(const std::string &type, const std::string &tid)
 void JsTask::ClearListener()
 {
     std::lock_guard<std::mutex> autoLock(listenerMutex_);
-    for (auto &listener : listenerMap_) {
+    for (const auto &listener : listenerMap_) {
         for (const auto &iter : listener.second) {
             if (iter != nullptr) {
                 iter->DeleteCallbackRef();
             }
         }
-        listener.second.clear();
-        listener.second.shrink_to_fit();
     }
     listenerMap_.clear();
 }
