@@ -35,6 +35,7 @@ static MILLISECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
 static MILLISECONDS_IN_ONE_SECONDS: u64 = 1000;
 static REQUEST_SERVICE_ID: i32 = 3706;
 static WAITTING_RETRY_INTERVAL: u64 = 10;
+static DUMP_INTERVAL: u64 = 5 * 60;
 
 type AppTask = HashMap<u32, Arc<RequestTask>>;
 
@@ -125,6 +126,34 @@ impl TaskManager {
         });
 
         unsafe { TASK_MANAGER.as_mut().unwrap() }
+    }
+
+    pub fn dump_all_task_info(&self) {
+        self.rt.spawn(async {
+            loop {
+                {
+                    let guard = TaskManager::get_instance().task_map.lock().unwrap();
+                    for (_, app_task) in guard.iter() {
+                        for (task_id, task) in app_task.iter() {
+                            let task_status = task.status.lock().unwrap();
+                            info!(LOG_LABEL,
+                            "dump task message, task_id:{}, bundle name:{}, task_status:{:?}",
+                            @public(task_id), @public(task.conf.bundle), @public(*task_status));
+                        }
+                    }
+
+                    let front_task = TaskManager::get_instance().global_front_task.as_ref();
+                    if let Some(task) = front_task {
+                        let status_guard = task.status.lock().unwrap();
+                        info!(LOG_LABEL,
+                        "front task message, task_id:{}, bundle name:{}, task_status:{:?}",
+                        @public(task.task_id), @public(task.conf.bundle), @public(*status_guard));
+
+                    }
+                }
+                sleep(Duration::from_secs(DUMP_INTERVAL)).await;
+            }
+        });
     }
 
     pub fn clear_all_task(&mut self) {
