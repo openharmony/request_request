@@ -36,6 +36,9 @@ public:
         {
             napi_delete_async_work(env_, work_);
             napi_delete_reference(env_, self_);
+            if (callbackRef_ != nullptr) {
+                napi_delete_reference(env_, callbackRef_);
+            }
         };
         inline Context &SetInput(InputAction action)
         {

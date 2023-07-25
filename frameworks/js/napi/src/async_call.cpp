@@ -46,6 +46,8 @@ AsyncCall::AsyncCall(napi_env env, napi_callback_info info, const std::shared_pt
     context->input_ = nullptr;
     if (status != napi_ok) {
         context->innerCode_ = E_PARAMETER_CHECK;
+        context->exec_ = nullptr;
+        context->output_ = nullptr;
         REQUEST_HILOGE("input_ status fail");
         return;
     }
@@ -129,6 +131,7 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         napi_value returnValue;
         napi_call_function(env, nullptr, callback, ARG_BUTT, result, &returnValue);
         napi_delete_reference(env, context->callbackRef_);
+        context->callbackRef_ = nullptr;
     }
     delete workData;
 }
