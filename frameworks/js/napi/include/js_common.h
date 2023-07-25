@@ -167,15 +167,16 @@ struct NotifyData {
     std::vector<TaskState> taskStates;
 };
 
-enum EventType : uint32_t {
-    DATA_CALLBACK,
+enum class EventType : uint32_t {
+    DATA_CALLBACK = 0,
     HEADER_CALLBACK,
     TASK_STATE_CALLBACK,
     PROGRESS_CALLBACK,
+    BUTT,
 };
 
 struct Notify {
-    EventType type;
+    EventType type = EventType::BUTT;
     std::vector<int64_t> data;
     std::map<std::string, std::string> header;
     std::vector<TaskState> taskStates;
