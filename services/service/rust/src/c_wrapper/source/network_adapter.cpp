@@ -83,7 +83,7 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetAvailable(sptr<NetHandle> &n
 int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandle,
     const sptr<NetAllCapabilities> &netAllCap)
 {
-    REQUEST_HILOGD("Observe net capabilities change. start");
+    REQUEST_HILOGI("Observe net capabilities change. start");
     if (netAllCap->netCaps_.count(NetCap::NET_CAPABILITY_INTERNET)) {
         netAdapter_.isOnline_ = true;
         if (netAllCap->bearerTypes_.count(NetBearType::BEARER_CELLULAR)) {
@@ -103,7 +103,7 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetH
     } else {
         netAdapter_.isOnline_ = false;
     }
-    REQUEST_HILOGD("Observe net capabilities change. end");
+    REQUEST_HILOGI("Observe net capabilities change end, isOline is %{public}d", netAdapter_.isOnline_);
     return 0;
 }
 
@@ -115,7 +115,7 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetConnectionPropertiesChange(s
 
 int32_t NetworkAdapter::NetConnCallbackObserver::NetLost(sptr<NetHandle> &netHandle)
 {
-    REQUEST_HILOGD("Observe bearer cellular lost");
+    REQUEST_HILOGE("Observe bearer cellular lost");
     netAdapter_.networkInfo_.networkType = Network::ANY;
     netAdapter_.networkInfo_.isMetered = false;
     netAdapter_.isOnline_ = false;
