@@ -131,23 +131,34 @@ impl TaskManager {
     pub fn dump_all_task_info(&self) {
         self.rt.spawn(async {
             loop {
+                let task_manager = TaskManager::get_instance();
+                let total_task_count = task_manager.total_task_count.load(Ordering::SeqCst);
+                let api10_background_task_count = task_manager.api10_background_task_count.load(Ordering::SeqCst);
+                let recording_rdb_num = task_manager.recording_rdb_num.load(Ordering::SeqCst);
+                let unloading = task_manager.unloading.load(Ordering::SeqCst);
+                info!(LOG_LABEL, "dump all task info, total_task_count:{}, api10_background_task_count:{},
+                    recording_rdb_num:{}, unloading flag:{}", @public(total_task_count),
+                    @public(api10_background_task_count), @public(recording_rdb_num),
+                    @public(unloading));
                 {
-                    let guard = TaskManager::get_instance().task_map.lock().unwrap();
+                    let guard = task_manager.task_map.lock().unwrap();
                     for (_, app_task) in guard.iter() {
                         for (task_id, task) in app_task.iter() {
                             let task_status = task.status.lock().unwrap();
                             info!(LOG_LABEL,
-                            "dump task message, task_id:{}, bundle name:{}, task_status:{:?}",
-                            @public(task_id), @public(task.conf.bundle), @public(*task_status));
+                            "dump task message, task_id:{}, action:{}, bundle name:{}, task_status:{:?}",
+                            @public(task_id), @public(task.conf.common_data.action as u8),
+                            @public(task.conf.bundle), @public(*task_status));
                         }
                     }
 
-                    let front_task = TaskManager::get_instance().global_front_task.as_ref();
+                    let front_task = task_manager.global_front_task.as_ref();
                     if let Some(task) = front_task {
                         let status_guard = task.status.lock().unwrap();
                         info!(LOG_LABEL,
-                        "front task message, task_id:{}, bundle name:{}, task_status:{:?}",
-                        @public(task.task_id), @public(task.conf.bundle), @public(*status_guard));
+                            "dump task message, task_id:{}, action:{}, bundle name:{}, task_status:{:?}",
+                            @public(task.task_id), @public(task.conf.common_data.action as u8),
+                            @public(task.conf.bundle), @public(*status_guard));
 
                     }
                 }
@@ -417,7 +428,7 @@ impl TaskManager {
         if vesion == Version::API10 && task.conf.common_data.mode == Mode::BACKGROUND {
             let running_task_count = self.get_running_background_task_count(uid, guard);
             if running_task_count >= MAX_RUNNING_TASK_COUNT_EACH_APP {
-                debug!(LOG_LABEL, "too many task in running state");
+                info!(LOG_LABEL, "too many task in running state");
                 task.set_status(State::WAITING, Reason::RunningTaskMeetLimits);
                 return;
             }
@@ -441,7 +452,7 @@ impl TaskManager {
             TaskManager::get_instance().after_task_processed(&task);
         });
         self.task_handles.lock().unwrap().insert(task_id, handle);
-        debug!(LOG_LABEL, "start the task success");
+        info!(LOG_LABEL, "task {} start success", @public(task_id));
         return;
     }
 
@@ -456,7 +467,7 @@ impl TaskManager {
     }
 
     pub fn start(&mut self, uid: u64, task_id: u32) -> ErrorCode {
-        debug!(LOG_LABEL, "start a task");
+        info!(LOG_LABEL, "start a task, which task id is {}", @public(task_id));
         let mut task_map_guard = self.task_map.lock().unwrap();
         let task = self.get_task(uid, task_id, &task_map_guard);
         if let Some(task) = task {
@@ -706,16 +717,24 @@ pub async fn unload_sa() {
     loop {
         sleep(Duration::from_secs(60)).await;
         let task_manager = TaskManager::get_instance();
+        info!(LOG_LABEL, "unload SA end sleep");
         match task_manager.task_map.try_lock() {
             Ok(_) => {
-                if task_manager.total_task_count.load(Ordering::SeqCst) != 0
-                    || task_manager.recording_rdb_num.load(Ordering::SeqCst) != 0 {
+                let total_task_count = task_manager.total_task_count.load(Ordering::SeqCst);
+                let recording_rdb_num = task_manager.recording_rdb_num.load(Ordering::SeqCst);
+                if total_task_count != 0 || recording_rdb_num != 0 {
+                    info!(LOG_LABEL, "total_task_count is {}, recording_rdb_num is {}",
+                        @public(total_task_count), @public(recording_rdb_num));
                     continue;
                 }
                 task_manager.unloading.store(true, Ordering::SeqCst);
                 info!(LOG_LABEL, "unload SA");
                 let samgr_proxy = get_systemability_manager();
-                samgr_proxy.unload_systemability(REQUEST_SERVICE_ID).expect("unload_systemability failed");
+                let res = samgr_proxy.unload_systemability(REQUEST_SERVICE_ID);
+                match res {
+                    Err(e) => { error!(LOG_LABEL, "unload SA failed, err is {:?}", e); },
+                    _ => {},
+                }
                 return;
             }
             Err(_) => continue,
@@ -822,7 +841,7 @@ extern "C" fn net_work_change_callback() {
                 });
             } else {
                 if state == State::WAITING && task.is_satisfied_configuration() {
-                    debug!(LOG_LABEL, "Begin try resume task as network condition resume");
+                    info!(LOG_LABEL, "Begin try resume task as network condition resume");
                     task_manager.rt.spawn(async move {
                         sleep(Duration::from_secs(WAITTING_RETRY_INTERVAL)).await;
                         let manager = TaskManager::get_instance();
