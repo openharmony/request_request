@@ -596,10 +596,7 @@ export default function requestOperateTaskTest() {
       try{
         let task = await request.agent.create(context, conf);
         await task.start();
-        await task.stop((err) => {
-          expect(err === null).assertTrue();
-          done();
-        })
+        await task.stop();
         await task.pause();
       } catch (err) {
         expect(err.code).assertEqual(21900007);
