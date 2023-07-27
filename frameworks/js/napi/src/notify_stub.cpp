@@ -87,7 +87,7 @@ void NotifyStub::RequestCallBack(const std::string &type, const std::string &tid
         func(type, notifyData, notify);
     } else {
         REQUEST_HILOGD("Receive API10 callback");
-        notify.type = PROGRESS_CALLBACK;
+        notify.type = EventType::PROGRESS_CALLBACK;
         notify.progress = notifyData.progress;
     }
     CallBack(type, tid, notify);
@@ -96,7 +96,7 @@ void NotifyStub::RequestCallBack(const std::string &type, const std::string &tid
 void NotifyStub::GetDownloadNotify(const std::string &type, const NotifyData &notifyData, Notify &notify)
 {
     REQUEST_HILOGD("Get download notify data");
-    notify.type = DATA_CALLBACK;
+    notify.type = EventType::DATA_CALLBACK;
     if (type == "progress") {
         notify.data.push_back(notifyData.progress.processed);
         if (!notifyData.progress.sizes.empty()) {
@@ -121,10 +121,10 @@ void NotifyStub::GetUploadNotify(const std::string &type, const NotifyData &noti
 {
     REQUEST_HILOGD("Get upload notify data");
     if (type == "complete" || type == "fail") {
-        notify.type = TASK_STATE_CALLBACK;
+        notify.type = EventType::TASK_STATE_CALLBACK;
         notify.taskStates = notifyData.taskStates;
     } else if (type == "progress") {
-        notify.type = DATA_CALLBACK;
+        notify.type = EventType::DATA_CALLBACK;
         int64_t size = 0;
         for (const auto &i : notifyData.progress.sizes) {
             size += i;
@@ -132,7 +132,7 @@ void NotifyStub::GetUploadNotify(const std::string &type, const NotifyData &noti
         notify.data.push_back(notifyData.progress.totalProcessed);
         notify.data.push_back(size);
     } else {
-        notify.type = HEADER_CALLBACK;
+        notify.type = EventType::HEADER_CALLBACK;
         notify.header = notifyData.progress.extras;
     }
 }

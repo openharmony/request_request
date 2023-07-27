@@ -55,9 +55,11 @@ void RequestNotify::CallBack(const std::string &type, const std::string &tid, co
         REQUEST_HILOGE("Unregistered %{public}s callback", type.c_str());
         return;
     }
-    SetNotify(notify);
     NotifyDataPtr *dataPtr = new NotifyDataPtr;
     dataPtr->callbacks = it->second;
+    for (const auto &callback : dataPtr->callbacks) {
+        callback->SetNotify(notify);
+    }
     uv_after_work_cb afterCallback = [](uv_work_t *work, int status) {
         if (work == nullptr) {
             return;
@@ -97,7 +99,7 @@ void RequestNotify::ExecCallBack()
 void RequestNotify::ConvertCallBackData(uint32_t &paramNumber, napi_value *value, uint32_t valueSize)
 {
     std::lock_guard<std::mutex> lock(notifyMutex_);
-    if (notify_.type == DATA_CALLBACK) {
+    if (notify_.type == EventType::DATA_CALLBACK) {
         paramNumber = notify_.data.size();
         if (paramNumber > valueSize) {
             return;
@@ -105,11 +107,11 @@ void RequestNotify::ConvertCallBackData(uint32_t &paramNumber, napi_value *value
         for (uint32_t i = 0; i < paramNumber; i++) {
             value[i] = NapiUtils::Convert2JSValue(env_, notify_.data[i]);
         }
-    } else if (notify_.type == HEADER_CALLBACK) {
+    } else if (notify_.type == EventType::HEADER_CALLBACK) {
         value[0] = NapiUtils::Convert2JSHeaders(env_, notify_.header);
-    } else if (notify_.type == TASK_STATE_CALLBACK) {
+    } else if (notify_.type == EventType::TASK_STATE_CALLBACK) {
         value[0] = NapiUtils::Convert2JSValue(env_, notify_.taskStates);
-    } else if (notify_.type == PROGRESS_CALLBACK) {
+    } else if (notify_.type == EventType::PROGRESS_CALLBACK) {
         value[0] = NapiUtils::Convert2JSValue(env_, notify_.progress);
     }
 }
