@@ -142,6 +142,12 @@ void NotifyStub::OnDone(MessageParcel &data)
     auto taskInfo = std::make_shared<TaskInfo>();
     ParcelHelper::UnMarshal(data, *taskInfo);
     REQUEST_HILOGI("task %{public}s done", taskInfo->tid.c_str());
+    std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
+    auto item = JsTask::taskMap_.find(taskInfo->tid);
+    if (item == JsTask::taskMap_.end()) {
+        REQUEST_HILOGW("Task ID not found");
+        return;
+    }
     RequestEvent::AddCache(taskInfo->tid, taskInfo);
 }
 } // namespace OHOS::Request
