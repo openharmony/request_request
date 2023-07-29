@@ -1,0 +1,47 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+
+want_output_path = "request/requestQueryTaskTest"
+
+ohos_js_stage_unittest("RequestQueryTaskTest") {
+  hap_profile = "entry/src/main/module.json"
+  deps = [
+    ":actbmsstageetstest_js_assets",
+    ":actbmsstageetstest_resources",
+  ]
+  ets2abc = true
+  certificate_profile = "signature/openharmony_sx.p7b"
+  hap_name = "RequestQueryTaskTest"
+  subsystem_name = "request"
+  part_name = "request"
+  module_out_path = want_output_path
+}
+ohos_app_scope("actbmsstageetstest_app_profile") {
+  app_profile = "AppScope/app.json"
+  sources = [ "AppScope/resources" ]
+}
+ohos_js_assets("actbmsstageetstest_js_assets") {
+  source_dir = "entry/src/main/ets"
+}
+ohos_resources("actbmsstageetstest_resources") {
+  sources = [ "entry/src/main/resources" ]
+  deps = [ ":actbmsstageetstest_app_profile" ]
+  hap_profile = "entry/src/main/module.json"
+}
+group("unittest") {
+  testonly = true
+  deps = []
+  deps += [ ":RequestQueryTaskTest" ]
+}
