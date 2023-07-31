@@ -1,0 +1,21 @@
+{
+    "app":{
+        "bundleName":"com.acts.request",
+        "vendor":"huawei",
+        "versionCode":1000000,
+        "versionName":"1.0.0",
+        "debug":false,
+        "icon":"$media:icon",
+        "label":"$string:app_name",
+        "description":"$string:description_application",
+        "distributedNotificationEnabled":true,
+        "keepAlive":true,
+        "singleUser":true,
+        "minAPIVersion":8,
+        "targetAPIVersion":8,
+        "car":{
+            "apiCompatibleVersion":8,
+            "singleUser":false
+        }
+    }
+}
