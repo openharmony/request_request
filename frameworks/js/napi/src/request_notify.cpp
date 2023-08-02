@@ -23,6 +23,9 @@
 #include "js_task.h"
 
 namespace OHOS::Request {
+constexpr int32_t MAX_WAIT_TIME = 5000;
+BlockQueue<EditorEventInfo> RequestNotify::editorQueue_{ MAX_WAIT_TIME };
+
 RequestNotify::RequestNotify(napi_env env, napi_value callback) : NotifyStub()
 {
     std::lock_guard<std::mutex> lock(envMutex_);
@@ -40,35 +43,24 @@ RequestNotify::~RequestNotify()
     REQUEST_HILOGI("~RequestNotify()");
 }
 
-void RequestNotify::CallBack(const std::string &type, const std::string &tid, const Notify &notify)
+void RequestNotify::CallBack(const Notify &notify)
 {
     REQUEST_HILOGI("RequestNotify CallBack in");
-    auto item = JsTask::taskMap_.find(tid);
-    if (item == JsTask::taskMap_.end()) {
-        REQUEST_HILOGE("Task ID not found");
-        return;
-    }
-    auto task = item->second;
-    std::string key = type + tid;
-    auto it = task->listenerMap_.find(key);
-    if (it == task->listenerMap_.end()) {
-        REQUEST_HILOGE("Unregistered %{public}s callback", type.c_str());
-        return;
-    }
+    SetNotify(notify);
+    info_.timestamp = std::chrono::system_clock::now();
+    editorQueue_.Push(info_);
     NotifyDataPtr *dataPtr = new NotifyDataPtr;
-    dataPtr->callbacks = it->second;
-    for (const auto &callback : dataPtr->callbacks) {
-        callback->SetNotify(notify);
-    }
+    dataPtr->callback = this;
+
     uv_after_work_cb afterCallback = [](uv_work_t *work, int status) {
         if (work == nullptr) {
             return;
         }
         NotifyDataPtr *dataPtr = static_cast<NotifyDataPtr *>(work->data);
         if (dataPtr != nullptr) {
-            for (const auto &callback : dataPtr->callbacks) {
-                callback->ExecCallBack();
-            }
+            editorQueue_.Wait(dataPtr->callback->info_);
+            dataPtr->callback->ExecCallBack();
+            editorQueue_.Pop();
             delete dataPtr;
         }
         delete work;
