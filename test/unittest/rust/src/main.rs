@@ -48,10 +48,6 @@ fn create_test1() {
     );
     assert_eq!(code, ErrorCode::TaskEnqueueErr);
     assert_eq!(
-        task_manager.get_total_task_count(),
-        MAX_TASK_COUNT_EACH_APP_API10
-    );
-    assert_eq!(
         task_manager.get_api10_background_task_count(),
         MAX_TASK_COUNT_EACH_APP_API10
     );
@@ -62,7 +58,6 @@ fn create_test1() {
 fn create_test2() {
     let task_manager = TaskManager::get_instance();
     task_manager.clear_all_task();
-    assert_eq!(task_manager.get_total_task_count(), 0);
     assert_eq!(task_manager.get_api10_background_task_count(), 0);
     let mut task_id: u32 = 0;
     let mut paths: Vec<String> = Vec::new();
@@ -78,7 +73,6 @@ fn create_test2() {
         paths.push(file_name);
         assert_eq!(code, ErrorCode::ErrOk);
     }
-    assert_eq!(task_manager.get_total_task_count(), MAX_TASK_COUNT_API10);
     assert_eq!(
         task_manager.get_api10_background_task_count(),
         MAX_TASK_COUNT_API10
@@ -91,7 +85,6 @@ fn create_test2() {
         Version::API10,
     );
     assert_eq!(code, ErrorCode::TaskEnqueueErr);
-    assert_eq!(task_manager.get_total_task_count(), MAX_TASK_COUNT_API10);
     assert_eq!(
         task_manager.get_api10_background_task_count(),
         MAX_TASK_COUNT_API10
@@ -118,7 +111,6 @@ fn create_test3() {
         paths.push(file_name);
         assert_eq!(code, ErrorCode::ErrOk);
     }
-    assert_eq!(task_manager.get_total_task_count(), 10);
     assert_eq!(
         task_manager.get_api10_background_task_count(),
         MAX_TASK_COUNT_EACH_APP_API10
@@ -131,7 +123,6 @@ fn create_test3() {
         Version::API10,
     );
     assert_eq!(code, ErrorCode::TaskModeErr);
-    assert_eq!(task_manager.get_total_task_count(), 10);
     assert_eq!(
         task_manager.get_api10_background_task_count(),
         MAX_TASK_COUNT_EACH_APP_API10
@@ -144,7 +135,6 @@ fn create_test3() {
         Version::API9,
     );
     assert_eq!(code, ErrorCode::ErrOk);
-    assert_eq!(task_manager.get_total_task_count(), 11);
     assert_eq!(
         task_manager.get_api10_background_task_count(),
         MAX_TASK_COUNT_EACH_APP_API10
@@ -166,7 +156,6 @@ fn start_test1() {
         Version::API10,
     );
     assert_eq!(code, ErrorCode::ErrOk);
-    assert_eq!(task_manager.get_total_task_count(), 1);
     assert_eq!(task_manager.get_api10_background_task_count(), 1);
     code = task_manager.start(uid, task_id);
     assert_eq!(code, ErrorCode::ErrOk);
@@ -240,7 +229,6 @@ fn stop_test() {
     task_manager.start(uid, task_id);
     code = task_manager.stop(uid, task_id);
     assert_eq!(code, ErrorCode::ErrOk);
-    assert_eq!(task_manager.get_total_task_count(), 0);
     assert_eq!(task_manager.get_api10_background_task_count(), 0);
     code = common::construct_download_task(
         &mut task_id,
@@ -250,11 +238,9 @@ fn stop_test() {
         Version::API9,
     );
     assert_eq!(code, ErrorCode::ErrOk);
-    assert_eq!(task_manager.get_total_task_count(), 1);
     assert_eq!(task_manager.get_api10_background_task_count(), 0);
     task_manager.start(uid, task_id);
     code = task_manager.stop(uid, task_id);
-    assert_eq!(task_manager.get_total_task_count(), 0);
     assert_eq!(task_manager.get_api10_background_task_count(), 0);
 }
 
@@ -281,12 +267,9 @@ fn remove_test() {
         Version::API9,
     );
     assert_eq!(code, ErrorCode::ErrOk);
-    assert_eq!(task_manager.get_total_task_count(), 2);
     assert_eq!(task_manager.get_api10_background_task_count(), 1);
     code = task_manager.remove(uid, task_id1);
-    assert_eq!(task_manager.get_total_task_count(), 1);
     assert_eq!(task_manager.get_api10_background_task_count(), 0);
     code = task_manager.remove(uid, task_id2);
-    assert_eq!(task_manager.get_total_task_count(), 0);
     assert_eq!(task_manager.get_api10_background_task_count(), 0);
 }

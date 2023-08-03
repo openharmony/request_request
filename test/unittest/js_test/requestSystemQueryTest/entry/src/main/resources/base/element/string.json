@@ -1,0 +1,44 @@
+{
+    "string":  [
+        {
+            "name": "testModule_entry_dsc",
+            "value": "i am an entry for testModule"
+        },
+        {
+            "name": "testModule_entry_main",
+            "value": "the testModule entry ability"
+        },
+        {
+            "name": "entry_label",
+            "value": "ActsContextTest"
+        },
+        {
+            "name": "form_description",
+            "value": "my form"
+        },
+        {
+            "name": "serviceability_description",
+            "value": "my whether"
+        },
+        {
+            "name": "description_application",
+            "value": "demo for test"
+        },
+        {
+            "name": "app_name",
+            "value": "Demo"
+        },
+        {
+            "name": "form_FormAbility_desc",
+            "value": "form_description"
+        },
+        {
+            "name": "form_FormAbility_label",
+            "value": "form_label"
+        },
+        {
+            "name": "permission_reason",
+            "value": "Need permission"
+        }
+    ]
+}
