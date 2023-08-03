@@ -47,25 +47,42 @@ void RequestNotify::CallBack(const Notify &notify)
 {
     REQUEST_HILOGI("RequestNotify CallBack in");
     SetNotify(notify);
-    info_.timestamp = std::chrono::system_clock::now();
+    info_.timestamp = std::chrono::system_clock::now().time_since_epoch().count();
     editorQueue_.Push(info_);
     NotifyDataPtr *dataPtr = new NotifyDataPtr;
     dataPtr->callback = this;
 
-    uv_after_work_cb afterCallback = [](uv_work_t *work, int status) {
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    if (loop == nullptr) {
+        return;
+    }
+    uv_work_t *work = new (std::nothrow) uv_work_t;
+    if (work == nullptr) {
+        return;
+    }
+    work->data = reinterpret_cast<void *>(dataPtr);
+    uv_queue_work(loop, work, [](uv_work_t *work) {
         if (work == nullptr) {
             return;
         }
         NotifyDataPtr *dataPtr = static_cast<NotifyDataPtr *>(work->data);
         if (dataPtr != nullptr) {
             editorQueue_.Wait(dataPtr->callback->info_);
-            dataPtr->callback->ExecCallBack();
+            REQUEST_HILOGI("timestamp is %{public}lld", dataPtr->callback->info_.timestamp);
             editorQueue_.Pop();
+        }
+    }, [](uv_work_t *work, int status) {
+        if (work == nullptr) {
+            return;
+        }
+        NotifyDataPtr *dataPtr = static_cast<NotifyDataPtr *>(work->data);
+        if (dataPtr != nullptr) {
+            dataPtr->callback->ExecCallBack();
             delete dataPtr;
         }
         delete work;
-    };
-    UvQueue::Call(env_, reinterpret_cast<void *>(dataPtr), afterCallback);
+    });
 }
 
 void RequestNotify::Done(const TaskInfo &taskInfo)

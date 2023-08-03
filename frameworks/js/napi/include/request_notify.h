@@ -32,7 +32,7 @@
 
 namespace OHOS::Request {
 struct EditorEventInfo {
-    std::chrono::system_clock::time_point timestamp{};
+    int64_t timestamp{};
     bool operator==(const EditorEventInfo &info) const
     {
         return (timestamp == info.timestamp);
