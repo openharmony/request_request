@@ -49,7 +49,7 @@ void RequestNotify::CallBack(const Notify &notify)
     SetNotify(notify);
     info_.timestamp = std::chrono::system_clock::now().time_since_epoch().count();
     editorQueue_.Push(info_);
-    NotifyDataPtr *dataPtr = new NotifyDataPtr;
+    NotifyDataPtr *dataPtr = new NotifyDataPtr();
     dataPtr->callback = this;
 
     uv_loop_s *loop = nullptr;
@@ -69,8 +69,7 @@ void RequestNotify::CallBack(const Notify &notify)
         NotifyDataPtr *dataPtr = static_cast<NotifyDataPtr *>(work->data);
         if (dataPtr != nullptr) {
             editorQueue_.Wait(dataPtr->callback->info_);
-            REQUEST_HILOGI("timestamp is %{public}lld", dataPtr->callback->info_.timestamp);
-            editorQueue_.Pop();
+            REQUEST_HILOGI("timestamp is %{public}" PRId64, dataPtr->callback->info_.timestamp);
         }
     }, [](uv_work_t *work, int status) {
         if (work == nullptr) {
@@ -81,6 +80,7 @@ void RequestNotify::CallBack(const Notify &notify)
             dataPtr->callback->ExecCallBack();
             delete dataPtr;
         }
+        editorQueue_.Pop();
         delete work;
     });
 }
