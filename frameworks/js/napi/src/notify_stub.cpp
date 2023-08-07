@@ -81,6 +81,7 @@ void NotifyStub::OnCallBack(MessageParcel &data)
 
 void NotifyStub::RequestCallBack(const std::string &type, const std::string &tid, const NotifyData &notifyData)
 {
+    REQUEST_HILOGI("RequestCallBack type is %{public}s, tid is %{public}s", type.c_str(), tid.c_str());
     Notify notify;
     if (notifyData.version != Version::API10) {
         auto func = notifyData.action == Action::DOWNLOAD ? GetDownloadNotify : GetUploadNotify;
@@ -90,7 +91,21 @@ void NotifyStub::RequestCallBack(const std::string &type, const std::string &tid
         notify.type = EventType::PROGRESS_CALLBACK;
         notify.progress = notifyData.progress;
     }
-    CallBack(type, tid, notify);
+    auto item = JsTask::taskMap_.find(tid);
+    if (item == JsTask::taskMap_.end()) {
+        REQUEST_HILOGE("Task ID not found");
+        return;
+    }
+    auto task = item->second;
+    std::string key = type + tid;
+    auto it = task->listenerMap_.find(key);
+    if (it == task->listenerMap_.end()) {
+        REQUEST_HILOGE("Unregistered %{public}s callback", type.c_str());
+        return;
+    }
+    for (const auto &callback : it->second) {
+        callback->CallBack(notify);
+    }
 }
 
 void NotifyStub::GetDownloadNotify(const std::string &type, const NotifyData &notifyData, Notify &notify)

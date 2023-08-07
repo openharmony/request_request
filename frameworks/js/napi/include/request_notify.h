@@ -17,6 +17,7 @@
 #define REQUEST_NOTIFY_H
 
 #include <string>
+#include <chrono>
 #include <mutex>
 #include "uv.h"
 #include "constant.h"
@@ -26,15 +27,24 @@
 #include "uv_queue.h"
 #include "napi/native_api.h"
 #include "noncopyable.h"
+#include "block_queue.h"
 
 
 namespace OHOS::Request {
+struct EditorEventInfo {
+    int64_t timestamp{};
+    bool operator==(const EditorEventInfo &info) const
+    {
+        return (timestamp == info.timestamp);
+    }
+};
+
 class RequestNotify : public NotifyStub {
 public:
     REQUEST_API explicit RequestNotify(napi_env env, napi_value callback);
     REQUEST_API explicit RequestNotify() = default;
     virtual ~RequestNotify();
-    void CallBack(const std::string &type, const std::string &tid, const Notify &notify) override;
+    void CallBack(const Notify &notify) override;
     void Done(const TaskInfo &taskInfo) override;
     void SetNotify(const Notify &notify);
     void DeleteCallbackRef();
@@ -47,10 +57,12 @@ public:
     napi_ref ref_;
     Notify notify_;
     std::mutex notifyMutex_;
+    EditorEventInfo info_;
+    static BlockQueue<EditorEventInfo> editorQueue_;
 };
 
 struct NotifyDataPtr {
-    std::vector<sptr<RequestNotify>> callbacks;
+    sptr<RequestNotify> callback = nullptr;
 };
 } // namespace OHOS::Request
 
