@@ -33,7 +33,7 @@ static MAX_RUNNING_TASK_COUNT_API9: u32 = 4;
 static INTERVAL_MILLISECONDS: u64 = 30 * 60 * 1000;
 static MILLISECONDS_IN_ONE_DAY: u64 = 24 * 60 * 60 * 1000;
 static MILLISECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
-static MILLISECONDS_IN_ONE_SECONDS: u64 = 1000;
+static MILLISECONDS_IN_HALF_SECONDS: u64 = 500;
 static REQUEST_SERVICE_ID: i32 = 3706;
 static WAITTING_RETRY_INTERVAL: u64 = 10;
 static DUMP_INTERVAL: u64 = 5 * 60;
@@ -776,7 +776,7 @@ async fn remove_task_from_map(task: Arc<RequestTask>) {
     if task.conf.version == Version::API9 {
         let task_info = task.show();
         task_manager.info_cb.as_ref().unwrap()(&task_info);
-        sleep(Duration::from_millis(MILLISECONDS_IN_ONE_SECONDS)).await;
+        sleep(Duration::from_millis(MILLISECONDS_IN_HALF_SECONDS)).await;
     }
     let mut guard = task_manager.task_map.lock().unwrap();
     let app_task = guard.get_mut(&task.uid);
@@ -841,7 +841,7 @@ extern "C" fn net_work_change_callback() {
                         handles_guard.remove(&task_id)
                     };
                     if let Some(handle) = handle {
-                        sleep(Duration::from_millis(MILLISECONDS_IN_ONE_SECONDS)).await;
+                        sleep(Duration::from_millis(MILLISECONDS_IN_HALF_SECONDS)).await;
                         handle.cancel();
                     }
                     TaskManager::get_instance().after_task_processed(&task);

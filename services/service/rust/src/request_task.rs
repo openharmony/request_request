@@ -501,7 +501,12 @@ impl RequestTask {
                     ErrorKind::Timeout => {
                         self.set_status(State::FAILED, Reason::ContinuousTaskTimeOut);
                     }
-                    ErrorKind::UserAborted => {}
+                    // user triggered
+                    ErrorKind::UserAborted => return true,
+                    ErrorKind::BodyTransfer => {
+                        sleep(Duration::from_millis(1000));
+                        self.set_status(State::FAILED, Reason::OthersError);
+                    },
                     _ => {
                         self.set_status(State::FAILED, Reason::OthersError);
                     }
@@ -556,6 +561,10 @@ impl RequestTask {
                     ErrorKind::Redirect => self.set_code(index, Reason::RedirectError),
                     ErrorKind::Connect => self.set_code(index, Reason::ConnectError),
                     ErrorKind::ConnectionUpgrade => self.set_code(index, Reason::ConnectError),
+                    ErrorKind::BodyTransfer => {
+                        sleep(Duration::from_millis(1000));
+                        self.set_code(index, Reason::OthersError);
+                    },
                     _ => self.set_code(index, Reason::OthersError),
                 }
                 return false;

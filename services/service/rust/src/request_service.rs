@@ -37,6 +37,11 @@ use super::{
 use hilog_rust::*;
 
 static INTERNET_PERMISSION: &str = "ohos.permission.INTERNET";
+static HELP_MSG: &str = "usage:\n\
+                         -h                    help text for the tool\n\
+                         -t [taskid]           with no taskid: display all task summary info; \
+                         taskid: display one task detail info\n";
+
 /// RequestService type
 pub struct RequestService;
 
@@ -546,4 +551,37 @@ pub fn stop() {
     RequestAbility::get_ability_instance().stop();
 }
 
-impl IRemoteBroker for RequestService {}
+impl IRemoteBroker for RequestService {
+    fn dump(&self, file: &FileDesc, args: &mut Vec<String16>) -> i32 {
+        info!(LOG_LABEL, "begin dump");
+        let len = args.len();
+        if len == 0 || args[0].eq("-h") {
+            file.as_ref().write(HELP_MSG.as_bytes());
+            return IpcStatusCode::Ok as i32;
+        }
+
+        if !args[0].eq("-t") {
+            file.as_ref().write("invalid args".as_bytes());
+            return IpcStatusCode::Ok as i32;
+        }
+
+        if len > 2 {
+            file.as_ref().write("too many args, -t accept no arg or one arg".as_bytes());
+            return IpcStatusCode::Ok as i32;
+        }
+
+        if len == 1 {
+            RequestAbility::get_ability_instance().dump_all_task_info(file);
+            return IpcStatusCode::Ok as i32;
+        }
+
+        if len == 2 {
+            let task_id = args[1].parse::<u32>();
+            match task_id {
+                Ok(id) => RequestAbility::get_ability_instance().dump_one_task_info(file, id),
+                Err(_) => { file.as_ref().write("-t accept a number".as_bytes()); }
+            }
+        }
+        IpcStatusCode::Ok as i32
+    }
+}
