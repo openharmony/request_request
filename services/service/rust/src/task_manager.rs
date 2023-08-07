@@ -33,7 +33,7 @@ static MAX_RUNNING_TASK_COUNT_API9: u32 = 4;
 static INTERVAL_MILLISECONDS: u64 = 30 * 60 * 1000;
 static MILLISECONDS_IN_ONE_DAY: u64 = 24 * 60 * 60 * 1000;
 static MILLISECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
-static MILLISECONDS_IN_HALF_SECONDS: u64 = 500;
+static MILLISECONDS_IN_ONE_SECONDS: u64 = 1000;
 static REQUEST_SERVICE_ID: i32 = 3706;
 static WAITTING_RETRY_INTERVAL: u64 = 10;
 static DUMP_INTERVAL: u64 = 5 * 60;
@@ -531,6 +531,7 @@ impl TaskManager {
                 error!(LOG_LABEL, "can not pause a task which state is not meet the requirements");
                 return ErrorCode::TaskStateErr;
             }
+            task.resume.store(false, Ordering::SeqCst);
             error!(LOG_LABEL, "pause the task success");
             return ErrorCode::ErrOk;
         }
@@ -553,6 +554,7 @@ impl TaskManager {
                 return ErrorCode::TaskStateErr;
             }
             error!(LOG_LABEL, "resume the task success");
+            task.resume.store(true, Ordering::SeqCst);
             self.start_inner(uid, task.clone(), task_map_guard);
             return ErrorCode::ErrOk;
         }
@@ -571,6 +573,7 @@ impl TaskManager {
             }
             Self::get_instance().after_task_processed(&task);
             debug!(LOG_LABEL, "Stopped success");
+            task.resume.store(false, Ordering::SeqCst);
             return ErrorCode::ErrOk;
         }
         error!(LOG_LABEL, "Stop failed");
@@ -703,6 +706,11 @@ impl TaskManager {
 
     pub fn query_one_task(&self, task_id: u32) -> Option<Arc<RequestTask>> {
         let guard = self.task_map.lock().unwrap();
+        if let Some(front_task) = self.global_front_task.as_ref() {
+            if front_task.task_id == task_id {
+                return Some(front_task.clone());
+            }
+        }
         for (_, app_task) in guard.iter() {
             for (id, task) in app_task.iter() {
                 if task_id == *id {
@@ -716,6 +724,9 @@ impl TaskManager {
     pub fn query_all_task(&self) -> Vec<Arc<RequestTask>> {
         let mut vec: Vec<Arc<RequestTask>> = Vec::new();
         let guard = self.task_map.lock().unwrap();
+        if let Some(front_task) = self.global_front_task.as_ref() {
+            vec.push(front_task.clone());
+        }
         for (_, app_task) in guard.iter() {
             for (_, task) in app_task.iter() {
                 vec.push(task.clone());
@@ -776,7 +787,7 @@ async fn remove_task_from_map(task: Arc<RequestTask>) {
     if task.conf.version == Version::API9 {
         let task_info = task.show();
         task_manager.info_cb.as_ref().unwrap()(&task_info);
-        sleep(Duration::from_millis(MILLISECONDS_IN_HALF_SECONDS)).await;
+        sleep(Duration::from_millis(MILLISECONDS_IN_ONE_SECONDS)).await;
     }
     let mut guard = task_manager.task_map.lock().unwrap();
     let app_task = guard.get_mut(&task.uid);
@@ -818,6 +829,7 @@ extern "C" fn net_work_change_callback() {
             let task = task.clone();
             let state = task.status.lock().unwrap().state;
             if unsafe { !IsOnline() } {
+                task.resume.store(false, Ordering::SeqCst);
                 if state != State::RETRYING && state != State::RUNNING {
                     continue;
                 }
@@ -841,7 +853,7 @@ extern "C" fn net_work_change_callback() {
                         handles_guard.remove(&task_id)
                     };
                     if let Some(handle) = handle {
-                        sleep(Duration::from_millis(MILLISECONDS_IN_HALF_SECONDS)).await;
+                        sleep(Duration::from_millis(MILLISECONDS_IN_ONE_SECONDS)).await;
                         handle.cancel();
                     }
                     TaskManager::get_instance().after_task_processed(&task);
@@ -849,6 +861,7 @@ extern "C" fn net_work_change_callback() {
             } else {
                 if state == State::WAITING && task.is_satisfied_configuration() {
                     info!(LOG_LABEL, "Begin try resume task as network condition resume");
+                    task.resume.store(true, Ordering::SeqCst);
                     task_manager.rt.spawn(async move {
                         sleep(Duration::from_secs(WAITTING_RETRY_INTERVAL)).await;
                         let manager = TaskManager::get_instance();

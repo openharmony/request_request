@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-use std::{ffi::CString, ffi::c_char, fs::File, pin::Pin, thread::sleep, time::Duration};
+use std::{ffi::CString, ffi::c_char, fs::File, pin::Pin, thread::sleep, time::Duration, cell::UnsafeCell};
 use super::{
     enumration::*, progress::*, task_info::*, task_config::*, task_manager::*, utils::*, request_binding::*,
     log::LOG_LABEL,
@@ -60,6 +60,10 @@ impl Default for TaskStatus {
     }
 }
 
+struct Files(UnsafeCell<Vec<YlongFile>>);
+unsafe impl Sync for Files {}
+unsafe impl Send for Files {}
+
 pub struct RequestTask {
     pub conf: Arc<TaskConfig>,
     pub uid: u64,
@@ -76,13 +80,14 @@ pub struct RequestTask {
     pub code: Mutex<Vec<Reason>>,
     pub background_notify_time: AtomicU64,
     pub file_total_size: AtomicI64,
-    pub files: Mutex<Vec<YlongFile>>,
+    pub resume: AtomicBool,
+    files: Files,
     seek_flag: AtomicBool,
     range_request: AtomicBool,
     range_response: AtomicBool,
     skip_bytes: AtomicU64,
-    has_skip: AtomicBool,
     upload_counts: AtomicU32,
+    client: Option<Client>,
 }
 
 struct TaskReader {
@@ -94,7 +99,7 @@ struct TaskOperator {
 }
 
 impl TaskOperator {
-    fn poll_progress_common(&self, cx: &mut Context<'_>) -> Poll<Result<(), HttpClientError>> {
+    fn poll_progress_common(&self, _cx: &mut Context<'_>) -> Poll<Result<(), HttpClientError>> {
         let state = self.task.status.lock().unwrap().state;
         if (state != State::RUNNING && state != State::RETRYING)
             || (self.task.conf.version == Version::API10 && !self.task.check_net_work_status())
@@ -122,19 +127,49 @@ impl TaskOperator {
         Poll::Ready(Ok(()))
     }
 
+    fn poll_write_partial_file(
+        &self,
+        cx: &mut Context<'_>,
+        data: &[u8],
+        begins: u64,
+        ends: i64,
+    ) -> Poll<Result<usize, HttpClientError>> {
+        let data_size = data.len();
+        let skip_size = self.task.skip_bytes.load(Ordering::SeqCst);
+        if skip_size + data_size as u64 <= begins {
+            self.task.skip_bytes.fetch_add(data_size as u64, Ordering::SeqCst);
+            return Poll::Ready(Ok(data_size));
+        }
+        let remain_skip_bytes = (begins - skip_size) as usize;
+        let mut data = &data[remain_skip_bytes..];
+        self.task.skip_bytes.store(begins, Ordering::SeqCst);
+        if ends >= 0 {
+            let total_bytes = ends as u64 - begins + 1;
+            let written_bytes = self.task.progress.lock().unwrap().processed[0] as u64;
+            if written_bytes == total_bytes {
+                return Poll::Ready(Err(HttpClientError::user_aborted()));
+            }
+            if data.len() as u64 + written_bytes >= total_bytes {
+                let remain_bytes = (total_bytes - written_bytes) as usize;
+                data = &data[..remain_bytes];
+            }
+        }
+        self.poll_write_file(cx, data, remain_skip_bytes)
+    }
+
     fn poll_write_file(
         &self,
         cx: &mut Context<'_>,
         data: &[u8],
+        skip_size: usize,
     ) -> Poll<Result<usize, HttpClientError>> {
-        let mut file_guard = self.task.files.lock().unwrap();
+        let file = unsafe { &mut *self.task.files.0.get() }.get_mut(0).unwrap();
         let mut progress_guard = self.task.progress.lock().unwrap();
-        let file = file_guard.get_mut(0).unwrap();
         match Pin::new(file).poll_write(cx, data) {
             Poll::Ready(Ok(size)) => {
                 progress_guard.processed[0] += size;
                 progress_guard.common_data.total_processed += size;
-                Poll::Ready(Ok(size))
+                Poll::Ready(Ok(size + skip_size))
             }
             Poll::Pending => Poll::Pending,
             Poll::Ready(Err(e)) => Poll::Ready(Err(HttpClientError::other(Some(e)))),
@@ -148,32 +183,23 @@ impl DownloadOperator for TaskOperator {
         cx: &mut Context<'_>,
         data: &[u8],
     ) -> Poll<Result<usize, HttpClientError>> {
-        if self.task.range_request.load(Ordering::SeqCst)
-            && !self.task.range_response.load(Ordering::SeqCst)
-        {
-            if !self.task.has_skip.load(Ordering::SeqCst) {
-                let data_size = data.len();
-                let skip_size = self.task.skip_bytes.load(Ordering::SeqCst);
-                let processed = self.task.progress.lock().unwrap().processed[0];
-                if skip_size as usize + data_size <= processed {
-                    self.task.skip_bytes.fetch_add(data_size as u64, Ordering::SeqCst);
-                    return Poll::Ready(Ok(data_size));
-                } else {
-                    self.task.has_skip.store(true, Ordering::SeqCst);
-                    let remain_skip_bytes = processed - skip_size as usize;
-                    let data = &data[remain_skip_bytes..];
-                    return self.poll_write_file(cx, data);
-                }
+        if self.task.range_request.load(Ordering::SeqCst) {
+            if self.task.range_response.load(Ordering::SeqCst) {
+                return self.poll_write_file(cx, data, 0);
             }
+            // write partial response data
+            let begins = self.task.conf.common_data.begins;
+            let ends = self.task.conf.common_data.ends;
+            return self.poll_write_partial_file(cx, data, begins, ends);
         }
-        return self.poll_write_file(cx, data);
+        return self.poll_write_file(cx, data, 0);
     }
 
     fn poll_progress(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
-        downloaded: u64,
-        total: Option<u64>,
+        _downloaded: u64,
+        _total: Option<u64>,
     ) -> Poll<Result<(), HttpClientError>> {
         self.poll_progress_common(cx)
     }
@@ -183,8 +209,8 @@ impl UploadOperator for TaskOperator {
     fn poll_progress(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
-        uploaded: u64,
-        total: Option<u64>,
+        _uploaded: u64,
+        _total: Option<u64>,
     ) -> Poll<Result<(), HttpClientError>> {
         self.poll_progress_common(cx)
     }
@@ -197,8 +223,9 @@ impl AsyncRead for TaskReader {
         buf: &mut ReadBuf<'_>,
     ) -> Poll<std::io::Result<()>> {
         let index = self.task.progress.lock().unwrap().common_data.index;
-        let mut file_guard = self.task.files.lock().unwrap();
-        let file = file_guard.get_mut(index).unwrap();
+        let file = unsafe { &mut *self.task.files.0.get() }
+            .get_mut(index)
+            .unwrap();
         let (is_partial_upload, total_upload_bytes) = self.task.get_upload_info(index);
         let mut progress_guard = self.task.progress.lock().unwrap();
         if !is_partial_upload {
@@ -218,14 +245,19 @@ impl AsyncRead for TaskReader {
             let begins = self.task.conf.common_data.begins;
             if !self.task.seek_flag.load(Ordering::SeqCst) {
                 match Pin::new(file).start_seek(SeekFrom::Start(begins)) {
-                    Err(e) => { error!(LOG_LABEL, "seek err is {:?}",  @public(e)); },
+                    Err(e) => {
+                        error!(LOG_LABEL, "seek err is {:?}", e);
+                        return Poll::Ready(Err(e));
+                    }
                     Ok(_) => self.task.seek_flag.store(true, Ordering::SeqCst),
                 }
             }
             let buf_filled_len = buf.filled().len();
             let mut read_buf = buf.take(total_upload_bytes as usize);
             let filled_len = read_buf.filled().len();
-            let file = file_guard.get_mut(index).unwrap();
+            let file = unsafe { &mut *self.task.files.0.get() }
+                .get_mut(index)
+                .unwrap();
             match Pin::new(file).poll_read(cx, &mut read_buf) {
                 Poll::Ready(Ok(_)) => {
                     let current_filled_len = read_buf.filled().len();
@@ -262,12 +294,14 @@ impl RequestTask {
         }
         let file_count = files.len();
         let action = conf.common_data.action;
-        let task = RequestTask {
+        let mut task = RequestTask {
             conf,
             uid,
             task_id,
             ctime: get_current_timestamp(),
-            files: Mutex::new(files.into_iter().map(|f| YlongFile::new(f)).collect()),
+            files: Files(UnsafeCell::new(
+                files.into_iter().map(|f| YlongFile::new(f)).collect(),
+            )),
             mime_type: Mutex::new(String::new()),
             progress: Mutex::new(Progress::new(sizes)),
             tries: AtomicU32::new(0),
@@ -279,13 +313,15 @@ impl RequestTask {
             code: Mutex::new(vec![Reason::Default; file_count]),
             background_notify_time: AtomicU64::new(get_current_timestamp()),
             file_total_size: AtomicI64::new(-1),
+            resume: AtomicBool::new(false),
             seek_flag: AtomicBool::new(false),
             range_request: AtomicBool::new(false),
             range_response: AtomicBool::new(false),
             skip_bytes: AtomicU64::new(0),
-            has_skip: AtomicBool::new(false),
             upload_counts: AtomicU32::new(0),
+            client: None,
         };
+        task.client = task.build_client();
         if action == Action::UPLOAD {
             task.file_total_size.store(task.get_upload_file_total_size() as i64, Ordering::SeqCst);
         }
@@ -297,7 +333,7 @@ impl RequestTask {
         let size = self.conf.file_specs.len();
         let guard = self.code.lock().unwrap();
         for i in 0..size {
-            vec.push(EachFileStatus{
+            vec.push(EachFileStatus {
                 path: self.conf.file_specs[i].path.clone(),
                 reason: guard[i],
                 message: guard[i].to_str().into(),
@@ -421,22 +457,77 @@ impl RequestTask {
         request
     }
 
-    fn build_download_request(&self) -> Option<Request<String>> {
+    async fn clear_downloaded_file(&self) -> bool {
+        let file = unsafe { &mut *self.files.0.get() }.get_mut(0).unwrap();
+        let res = file.set_len(0).await;
+        match res {
+            Err(e) => {
+                error!(LOG_LABEL, "clear download file error: {:?}", e);
+                self.set_status(State::FAILED, Reason::IoError);
+                false
+            }
+            _ => {
+                info!(LOG_LABEL, "set len success");
+                match Pin::new(file).start_seek(SeekFrom::Start(0)) {
+                    Err(e) => {
+                        error!(LOG_LABEL, "seek err is {:?}", e);
+                        self.set_status(State::FAILED, Reason::IoError);
+                        false
+                    }
+                    Ok(_) => {
+                        info!(LOG_LABEL, "seek success");
+                        let mut progress_guard = self.progress.lock().unwrap();
+                        progress_guard.common_data.total_processed = 0;
+                        progress_guard.processed[0] = 0;
+                        true
+                    }
+                }
+            }
+        } 
+    }
+
+    async fn build_download_request(&self) -> Option<Request<String>> {
         let mut request_builder = self.build_request_builder();
         let mut begins = self.conf.common_data.begins;
         let ends = self.conf.common_data.ends;
-        let processed = self.progress.lock().unwrap().processed[0];
-        if processed > 0 || begins > 0 || ends >= 0 {
+        self.range_response.store(false, Ordering::SeqCst);
+        if self.resume.load(Ordering::SeqCst) || begins > 0 || ends >= 0 {
             self.range_request.store(true, Ordering::SeqCst);
             self.skip_bytes.store(0, Ordering::SeqCst);
-            self.has_skip.store(false, Ordering::SeqCst);
-            begins += processed as u64;
-            let range = if ends < 0 {
-                format!("bytes={begins}-")
-            } else {
-                format!("bytes={begins}-{ends}")
-            };
-            request_builder = request_builder.header("Range", range.as_str());
+            if self.resume.load(Ordering::SeqCst) {
+                let if_range = {
+                    let progress_guard = self.progress.lock().unwrap();
+                    let etag = progress_guard.extras.get("etag");
+                    let last_modified = progress_guard.extras.get("last-modified");
+                    if etag.is_some() {
+                        request_builder = request_builder.header("If-Range", etag.unwrap().as_str());
+                        true
+                    } else if last_modified.is_some() {
+                        request_builder = request_builder.header("If-Range", last_modified.unwrap().as_str());
+                        true
+                    } else {
+                        false
+                    }
+                };
+                if !if_range {
+                    // unable to verify file consistency, need download again
+                    if begins == 0 && ends < 0 {
+                        self.range_request.store(false, Ordering::SeqCst);
+                    }
+                    if !self.clear_downloaded_file().await {
+                        return None;
+                    }
+                }
+            }
+            begins += self.progress.lock().unwrap().processed[0] as u64;
+            if self.range_request.load(Ordering::SeqCst) {
+                let range = if ends < 0 {
+                    format!("bytes={begins}-")
+                } else {
+                    format!("bytes={begins}-{ends}")
+                };
+                request_builder = request_builder.header("Range", range.as_str());
+            }
         } else {
             self.range_request.store(false, Ordering::SeqCst);
         }
@@ -503,10 +594,6 @@ impl RequestTask {
                     }
                     // user triggered
                     ErrorKind::UserAborted => return true,
-                    ErrorKind::BodyTransfer => {
-                        sleep(Duration::from_millis(1000));
-                        self.set_status(State::FAILED, Reason::OthersError);
-                    },
                     _ => {
                         self.set_status(State::FAILED, Reason::OthersError);
                     }
@@ -516,21 +603,21 @@ impl RequestTask {
         }
     }
 
-    fn handle_response_error(&self, response: &Result<Response, HttpClientError>) -> bool {
+    async fn handle_response_error(&self, response: &Result<Response, HttpClientError>) -> bool {
         let index = self.progress.lock().unwrap().common_data.index;
         match response {
             Ok(r) => {
                 let http_response_code = r.status();
                 info!(LOG_LABEL, "the http response code is {}", @public(http_response_code));
                 if http_response_code.is_server_error()
-                    || (http_response_code.as_str() != "408"
+                    || (http_response_code.as_u16() != 408
                         && http_response_code.is_client_error())
                     || http_response_code.is_redirection()
                 {
                     self.set_code(index, Reason::ProtocolError);
                     return false;
                 }
-                if http_response_code.as_str() == "408" {
+                if http_response_code.as_u16() == 408 {
                     if !self.retry_for_request.load(Ordering::SeqCst) {
                         self.retry_for_request.store(true, Ordering::SeqCst);
                     } else {
@@ -539,15 +626,20 @@ impl RequestTask {
                     return false;
                 }
                 if self.range_request.load(Ordering::SeqCst) {
-                    let code = http_response_code.as_str();
-                    if code == "206" {
-                        self.range_response.store(true, Ordering::SeqCst);
-                    } else if code == "200" {
-                        self.range_response.store(false, Ordering::SeqCst);
-                        if self.conf.common_data.begins > 0 || self.conf.common_data.ends >= 0 {
-                            self.set_code(index, Reason::UnSupportRangeRequest);
-                            return false;
-                        }
+                    match http_response_code.as_u16() {
+                        206 => { self.range_response.store(true, Ordering::SeqCst); },
+                        200 => {
+                            self.range_response.store(false, Ordering::SeqCst);
+                            if self.resume.load(Ordering::SeqCst) {
+                                if !self.clear_downloaded_file().await {
+                                    return false;
+                                }
+                            } else {
+                                self.set_code(index, Reason::UnSupportRangeRequest);
+                                return false;
+                            }
+                        },
+                        _ => {},
                     }
                 }
                 return true;
@@ -561,10 +653,6 @@ impl RequestTask {
                     ErrorKind::Redirect => self.set_code(index, Reason::RedirectError),
                     ErrorKind::Connect => self.set_code(index, Reason::ConnectError),
                     ErrorKind::ConnectionUpgrade => self.set_code(index, Reason::ConnectError),
-                    ErrorKind::BodyTransfer => {
-                        sleep(Duration::from_millis(1000));
-                        self.set_code(index, Reason::OthersError);
-                    },
                     _ => self.set_code(index, Reason::OthersError),
                 }
                 return false;
@@ -578,7 +666,7 @@ impl RequestTask {
             guard.extras.clear();
             for (k, v) in r.headers() {
                 if let Ok(value) = v.to_str() {
-                    guard.extras.insert(k.to_string(), value.into());
+                    guard.extras.insert(k.to_string().to_lowercase(), value.into());
                 }
             }
         }
@@ -944,15 +1032,17 @@ pub async fn run(task: Arc<RequestTask>) {
                     progress_guard.processed[index] = 0;
                     index
                 };
-                let mut file_guard = task.files.lock().unwrap();
-                let file = file_guard.get_mut(index).unwrap();
+                let file = unsafe { &mut *task.files.0.get() }.get_mut(index).unwrap();
                 let mut begins = task.conf.common_data.begins;
                 let (is_partial_upload, _) = task.get_upload_info(index);
                 if !is_partial_upload {
                     begins = 0;
                 }
                 match Pin::new(file).start_seek(SeekFrom::Start(begins)) {
-                    Err(e) => println!("seek err is {:?}", e),
+                    Err(e) => {
+                        task.set_code(index, Reason::IoError);
+                        error!(LOG_LABEL, "seek err is {:?}", e);
+                    }
                     Ok(_) => {}
                 }
             }
@@ -965,19 +1055,17 @@ pub async fn run(task: Arc<RequestTask>) {
 
 async fn download(task: Arc<RequestTask>) {
     info!(LOG_LABEL, "begin download");
-    let client = task.build_client();
-    if client.is_none() {
+    if task.client.is_none() {
         return;
     }
-    let client = client.unwrap();
-    let request = task.build_download_request();
+    let request = task.build_download_request().await;
     if request.is_none() {
         return;
     }
     let request = request.unwrap();
-    let response = client.request(request).await;
+    let response = task.client.as_ref().unwrap().request(request).await;
     task.record_response_header(&response);
-    if !task.handle_response_error(&response) {
+    if !task.handle_response_error(&response).await {
         error!(LOG_LABEL, "response error");
         return;
     }
@@ -991,9 +1079,7 @@ async fn download(task: Arc<RequestTask>) {
         error!(LOG_LABEL, "handle_download_error");
         return;
     }
-    if task.set_status(State::COMPLETED, Reason::Default) {
-        info!(LOG_LABEL, "download success");
-    }
+    task.set_status(State::COMPLETED, Reason::Default);
 }
 
 fn build_downloader(task: Arc<RequestTask>, response: Response) -> Downloader<TaskOperator> {
@@ -1010,32 +1096,30 @@ fn build_downloader(task: Arc<RequestTask>, response: Response) -> Downloader<Ta
 async fn upload(task: Arc<RequestTask>) {
     info!(LOG_LABEL, "begin upload");
     let size = task.conf.file_specs.len();
-    let client = task.build_client();
-    if client.is_none() {
+    if task.client.is_none() {
         return;
     }
-    let client = client.unwrap();
     let index = task.progress.lock().unwrap().common_data.index;
     info!(LOG_LABEL, "index is {}", @public(index));
     for i in index..size {
         task.progress.lock().unwrap().common_data.index = i;
         let result: bool;
         if task.conf.version == Version::API10 {
-            result = upload_one_file(task.clone(), &client, i, build_multipart_request).await;
+            result = upload_one_file(task.clone(), i, build_multipart_request).await;
         } else {
             match task.conf.headers.get("Content-Type") {
                 None => {
                     if task.conf.method.to_uppercase().eq("POST") {
-                        result = upload_one_file(task.clone(), &client, i, build_multipart_request).await;
+                        result = upload_one_file(task.clone(), i, build_multipart_request).await;
                     } else {
-                        result = upload_one_file(task.clone(), &client, i, build_stream_request).await;
+                        result = upload_one_file(task.clone(), i, build_stream_request).await;
                     }
                 }
                 Some(v) => {
                     if v == "multipart/form-data" {
-                        result = upload_one_file(task.clone(), &client, i, build_multipart_request).await;
+                        result = upload_one_file(task.clone(), i, build_multipart_request).await;
                     } else {
-                        result = upload_one_file(task.clone(), &client, i, build_stream_request).await;
+                        result = upload_one_file(task.clone(), i, build_stream_request).await;
                     }
                 }
             }
@@ -1060,7 +1144,6 @@ async fn upload(task: Arc<RequestTask>) {
 
 async fn upload_one_file<F, T>(
     task: Arc<RequestTask>,
-    client: &Client,
     index: usize,
     build_upload_request: F,
 ) -> bool
@@ -1075,8 +1158,8 @@ where
         if request.is_none() {
             return false;
         }
-        let response = client.request(request.unwrap()).await;
-        if task.handle_response_error(&response) {
+        let response = task.client.as_ref().unwrap().request(request.unwrap()).await;
+        if task.handle_response_error(&response).await {
             task.code.lock().unwrap()[index] = Reason::Default;
             task.record_upload_response(response).await;
             return true;
