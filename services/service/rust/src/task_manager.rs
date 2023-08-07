@@ -531,6 +531,7 @@ impl TaskManager {
                 error!(LOG_LABEL, "can not pause a task which state is not meet the requirements");
                 return ErrorCode::TaskStateErr;
             }
+            task.resume.store(false, Ordering::SeqCst);
             error!(LOG_LABEL, "pause the task success");
             return ErrorCode::ErrOk;
         }
@@ -553,6 +554,7 @@ impl TaskManager {
                 return ErrorCode::TaskStateErr;
             }
             error!(LOG_LABEL, "resume the task success");
+            task.resume.store(true, Ordering::SeqCst);
             self.start_inner(uid, task.clone(), task_map_guard);
             return ErrorCode::ErrOk;
         }
@@ -571,6 +573,7 @@ impl TaskManager {
             }
             Self::get_instance().after_task_processed(&task);
             debug!(LOG_LABEL, "Stopped success");
+            task.resume.store(false, Ordering::SeqCst);
             return ErrorCode::ErrOk;
         }
         error!(LOG_LABEL, "Stop failed");
@@ -818,6 +821,7 @@ extern "C" fn net_work_change_callback() {
             let task = task.clone();
             let state = task.status.lock().unwrap().state;
             if unsafe { !IsOnline() } {
+                task.resume.store(false, Ordering::SeqCst);
                 if state != State::RETRYING && state != State::RUNNING {
                     continue;
                 }
@@ -849,6 +853,7 @@ extern "C" fn net_work_change_callback() {
             } else {
                 if state == State::WAITING && task.is_satisfied_configuration() {
                     info!(LOG_LABEL, "Begin try resume task as network condition resume");
+                    task.resume.store(true, Ordering::SeqCst);
                     task_manager.rt.spawn(async move {
                         sleep(Duration::from_secs(WAITTING_RETRY_INTERVAL)).await;
                         let manager = TaskManager::get_instance();
