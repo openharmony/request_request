@@ -584,16 +584,43 @@ impl RequestTask {
         true
     }
 
+    fn handle_body_transfer_error(&self) {
+        if unsafe { !IsOnline() } {
+            match self.conf.version {
+                Version::API9 => {
+                    if self.conf.common_data.action == Action::DOWNLOAD {
+                        self.set_status(State::WAITING, Reason::NetWorkOffline);
+                    } else {
+                        self.set_status(State::FAILED, Reason::NetWorkOffline);
+                    }
+                }
+                Version::API10 => {
+                    if self.conf.common_data.mode == Mode::FRONTEND || !self.conf.common_data.retry
+                    {
+                        self.set_status(State::FAILED, Reason::NetWorkOffline);
+                    } else {
+                        self.set_status(State::WAITING, Reason::NetWorkOffline);
+                    }
+                }
+            }
+        } else {
+            let index = self.progress.lock().unwrap().common_data.index;
+            self.set_code(index, Reason::OthersError);
+        }
+    }
+
     fn handle_download_error(&self, result: &Result<(), HttpClientError>) -> bool {
         match result {
             Ok(_) => return true,
             Err(err) => {
+                error!(LOG_LABEL, "download err is {:?}", @public(err));
                 match err.error_kind() {
                     ErrorKind::Timeout => {
                         self.set_status(State::FAILED, Reason::ContinuousTaskTimeOut);
                     }
                     // user triggered
                     ErrorKind::UserAborted => return true,
+                    ErrorKind::BodyTransfer => self.handle_body_transfer_error(),
                     _ => {
                         self.set_status(State::FAILED, Reason::OthersError);
                     }
@@ -651,8 +678,8 @@ impl RequestTask {
                     ErrorKind::Timeout => self.set_code(index, Reason::ContinuousTaskTimeOut),
                     ErrorKind::Request => self.set_code(index, Reason::RequestError),
                     ErrorKind::Redirect => self.set_code(index, Reason::RedirectError),
-                    ErrorKind::Connect => self.set_code(index, Reason::ConnectError),
-                    ErrorKind::ConnectionUpgrade => self.set_code(index, Reason::ConnectError),
+                    ErrorKind::Connect | ErrorKind::ConnectionUpgrade => self.set_code(index, Reason::ConnectError),
+                    ErrorKind::BodyTransfer => self.handle_body_transfer_error(),
                     _ => self.set_code(index, Reason::OthersError),
                 }
                 return false;
@@ -1168,6 +1195,10 @@ where
         let code = task.code.lock().unwrap()[index];
         if code != Reason::Default {
             error!(LOG_LABEL, "upload {} file fail, which reason is {}", @public(index), @public(code as u32));
+            return false;
+        }
+        let state = task.status.lock().unwrap().state;
+        if state != State::RUNNING && state != State::RETRYING {
             return false;
         }
     }

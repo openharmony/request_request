@@ -22,6 +22,7 @@
 #include <singleton.h>
 #include <string>
 #include <type_traits>
+#include "net_conn_client.h"
 
 #ifdef REQUEST_TELEPHONY_CORE_SERVICE
 #include "cellular_data_client.h"
@@ -178,11 +179,29 @@ NetworkInfo *NetworkAdapter::GetNetworkInfo()
 } // namespace OHOS::Request
 
 using namespace OHOS::Request;
+using namespace OHOS::NetManagerStandard;
 bool IsOnline()
 {
-    bool ret = NetworkAdapter::GetInstance().IsOnline();
-    REQUEST_HILOGI("IsOnline result is %{public}d", ret);
-    return ret;
+    NetHandle handle;
+    int32_t ret = NetConnClient::GetInstance().GetDefaultNet(handle);
+    if (ret != NETMANAGER_SUCCESS) {
+        REQUEST_HILOGE("get default net failed");
+        return false;
+    }
+    NetAllCapabilities capabilities;
+    ret = NetConnClient::GetInstance().GetNetCapabilities(handle, capabilities);
+    if (ret != NETMANAGER_SUCCESS) {
+        REQUEST_HILOGE("get net capabilities failed");
+        return false;
+    }
+    if (capabilities.netCaps_.find(NET_CAPABILITY_INTERNET) != capabilities.netCaps_.end() &&
+        capabilities.netCaps_.find(NET_CAPABILITY_VALIDATED) != capabilities.netCaps_.end()) {
+        REQUEST_HILOGI("is online");
+        return true;
+    }
+    REQUEST_HILOGI("is offline");
+
+    return false;
 }
 
 void RegisterNetworkCallback(NetworkCallback fun)
