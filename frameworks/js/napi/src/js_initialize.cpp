@@ -161,7 +161,7 @@ ExceptionError JsInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRu
 ExceptionError JsInitialize::GetFD(const std::string &path, const Config &config, int32_t &fd)
 {
     ExceptionError error = { .code = E_OK };
-    fd = config.action == Action::UPLOAD ? open(path.c_str(), O_RDONLY) : open(path.c_str(), O_RDWR);
+    fd = config.action == Action::UPLOAD ? open(path.c_str(), O_RDONLY) : open(path.c_str(), O_TRUNC | O_RDWR);
     if (fd >= 0) {
         REQUEST_HILOGD("File already exists");
         if (config.action == Action::UPLOAD) {
