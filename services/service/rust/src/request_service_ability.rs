@@ -33,8 +33,9 @@ use std::{
     mem::MaybeUninit,
     result::Result,
     string::String,
-    sync::{Arc, Mutex, Once},
+    sync::{Arc, Mutex, Once, atomic::Ordering},
     thread,
+    io::Write,
 };
 
 #[derive(PartialEq, Debug)]
@@ -491,5 +492,38 @@ impl RequestAbility {
             reply.write(&(item.message))?;
         }
         Ok(())
+    }
+
+    pub fn dump_all_task_info(&self, file: &FileDesc) {
+        let vec = TaskManager::get_instance().query_all_task();
+        let len = vec.len();
+        let mut file = file.as_ref();
+        file.write(format!("task num: {}\n", len).as_bytes());
+        if len > 0 {
+            file.write(format!("{:<20}{:<12}{:<12}{:<12}\n", "id", "action", "state", "reason").as_bytes());
+            for task in vec.iter() {
+                let guard = task.status.lock().unwrap();
+                file.write(format!("{:<20}{:<12}{:<12}{:<12}\n",
+                                   task.task_id, task.conf.common_data.action as u8,
+                                   guard.state as u8, guard.reason as u8).as_bytes());
+            }
+        }
+    }
+
+    pub fn dump_one_task_info(&self, file: &FileDesc, task_id: u32) {
+        let task = TaskManager::get_instance().query_one_task(task_id);
+        let mut file = file.as_ref();
+        if task.is_none() {
+            file.write(format!("invalid task id {}", task_id).as_bytes());
+            return;
+        }
+        let task = task.unwrap();
+        file.write(format!("{:<20}{:<12}{:<12}{:<12}{:<12}{:<12}{}\n",
+                           "id", "action", "state", "reason", "total_size", "tran_size", "url").as_bytes());
+        let guard = task.status.lock().unwrap();
+        file.write(format!("{:<20}{:<12}{:<12}{:<12}{:<12}{:<12}{}\n",
+                           task.task_id, task.conf.common_data.action as u8, guard.state as u8, guard.reason as u8,
+                           task.file_total_size.load(Ordering::SeqCst),
+                           task.progress.lock().unwrap().common_data.total_processed, task.conf.url).as_bytes());
     }
 }

@@ -706,6 +706,11 @@ impl TaskManager {
 
     pub fn query_one_task(&self, task_id: u32) -> Option<Arc<RequestTask>> {
         let guard = self.task_map.lock().unwrap();
+        if let Some(front_task) = self.global_front_task.as_ref() {
+            if front_task.task_id == task_id {
+                return Some(front_task.clone());
+            }
+        }
         for (_, app_task) in guard.iter() {
             for (id, task) in app_task.iter() {
                 if task_id == *id {
@@ -719,6 +724,9 @@ impl TaskManager {
     pub fn query_all_task(&self) -> Vec<Arc<RequestTask>> {
         let mut vec: Vec<Arc<RequestTask>> = Vec::new();
         let guard = self.task_map.lock().unwrap();
+        if let Some(front_task) = self.global_front_task.as_ref() {
+            vec.push(front_task.clone());
+        }
         for (_, app_task) in guard.iter() {
             for (_, task) in app_task.iter() {
                 vec.push(task.clone());
