@@ -828,37 +828,7 @@ extern "C" fn net_work_change_callback() {
         for (_, task) in app_task.iter() {
             let task = task.clone();
             let state = task.status.lock().unwrap().state;
-            if unsafe { !IsOnline() } {
-                task.resume.store(false, Ordering::SeqCst);
-                if state != State::RETRYING && state != State::RUNNING {
-                    continue;
-                }
-                if task.conf.version == Version::API9 {
-                    if task.conf.common_data.action == Action::DOWNLOAD {
-                        task.set_status(State::WAITING, Reason::NetWorkOffline);
-                    } else {
-                        task.set_status(State::FAILED, Reason::NetWorkOffline);
-                    }
-                } else {
-                    if task.conf.common_data.mode == Mode::FRONTEND || !task.conf.common_data.retry {
-                        task.set_status(State::FAILED, Reason::NetWorkOffline);
-                    } else {
-                        task.set_status(State::WAITING, Reason::NetWorkOffline);
-                    }
-                }
-                let task_id = task.task_id;
-                task_manager.rt.spawn(async move {
-                    let handle = {
-                        let mut handles_guard = TaskManager::get_instance().task_handles.lock().unwrap();
-                        handles_guard.remove(&task_id)
-                    };
-                    if let Some(handle) = handle {
-                        sleep(Duration::from_millis(MILLISECONDS_IN_ONE_SECONDS)).await;
-                        handle.cancel();
-                    }
-                    TaskManager::get_instance().after_task_processed(&task);
-                });
-            } else {
+            if unsafe { IsOnline() } {
                 if state == State::WAITING && task.is_satisfied_configuration() {
                     info!(LOG_LABEL, "Begin try resume task as network condition resume");
                     task.resume.store(true, Ordering::SeqCst);
