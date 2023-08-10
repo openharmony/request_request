@@ -57,13 +57,10 @@ bool UploadTaskNapiV5::ParseCallback(napi_env env, napi_callback_info info)
     size_t argc = JSUtil::MAX_ARGC;
     napi_value argv[JSUtil::MAX_ARGC] = { nullptr };
     NAPI_CALL_BASE(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr), false);
-    if ((JSUtil::ParseFunction(env, argv[FIRST_ARGV], "success", success_)) ||
-        (JSUtil::ParseFunction(env, argv[FIRST_ARGV], "fail", fail_)) ||
-        (JSUtil::ParseFunction(env, argv[FIRST_ARGV], "complete", complete_))) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "Parse CallbackFunction Success. UploadTask API Version is 5");
-        return true;
-    }
-    return false;
+    bool successCb = JSUtil::ParseFunction(env, argv[FIRST_ARGV], "success", success_);
+    bool failCb = JSUtil::ParseFunction(env, argv[FIRST_ARGV], "fail", fail_);
+    bool completeCb = JSUtil::ParseFunction(env, argv[FIRST_ARGV], "complete", complete_);
+    return successCb || failCb || completeCb;
 }
 
 void UploadTaskNapiV5::AddCallbackToConfig(napi_env env, std::shared_ptr<UploadConfig> &config)
