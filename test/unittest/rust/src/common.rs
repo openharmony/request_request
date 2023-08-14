@@ -16,8 +16,8 @@
 #![allow(unused_must_use)]
 extern crate request;
 
-use request::{enumration::*, progress::NotifyData, task_config::*, task_manager::*, form_item::*};
-use std::{fs::File, sync::Arc, collections::HashMap};
+use request::{enumration::*, form_item::*, task_config::*, task_manager::*};
+use std::{collections::HashMap, fs::File, sync::Arc};
 
 pub fn construct_download_task(
     task_id: &mut u32,

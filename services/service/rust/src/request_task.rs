@@ -32,7 +32,7 @@ use ylong_http_client::{
     Response, SpeedLimit, Timeout, TlsVersion,
 };
 use ylong_runtime::fs::File as YlongFile;
-use ylong_runtime::io::{AsyncRead, AsyncSeek, AsyncWrite, ReadBuf};
+use ylong_runtime::io::{AsyncRead, AsyncSeek, AsyncWrite, ReadBuf,AsyncSeekExt};
 
 static CONNECT_TIMEOUT: u64 = 60;
 static LOW_SPEED_TIME: u64 = 60;
@@ -244,12 +244,12 @@ impl AsyncRead for TaskReader {
         } else {
             let begins = self.task.conf.common_data.begins;
             if !self.task.seek_flag.load(Ordering::SeqCst) {
-                match Pin::new(file).start_seek(SeekFrom::Start(begins)) {
-                    Err(e) => {
+                match Pin::new(file).poll_seek(cx,SeekFrom::Start(begins)) {
+                    Poll::Ready(Err(e)) => {
                         error!(LOG_LABEL, "seek err is {:?}", e);
                         return Poll::Ready(Err(e));
                     }
-                    Ok(_) => self.task.seek_flag.store(true, Ordering::SeqCst),
+                    _ => self.task.seek_flag.store(true, Ordering::SeqCst),
                 }
             }
             let buf_filled_len = buf.filled().len();
@@ -468,7 +468,7 @@ impl RequestTask {
             }
             _ => {
                 info!(LOG_LABEL, "set len success");
-                match Pin::new(file).start_seek(SeekFrom::Start(0)) {
+                match file.seek(SeekFrom::Start(0)).await{
                     Err(e) => {
                         error!(LOG_LABEL, "seek err is {:?}", e);
                         self.set_status(State::FAILED, Reason::IoError);
@@ -1065,7 +1065,7 @@ pub async fn run(task: Arc<RequestTask>) {
                 if !is_partial_upload {
                     begins = 0;
                 }
-                match Pin::new(file).start_seek(SeekFrom::Start(begins)) {
+                match file.seek(SeekFrom::Start(begins)).await {
                     Err(e) => {
                         task.set_code(index, Reason::IoError);
                         error!(LOG_LABEL, "seek err is {:?}", e);

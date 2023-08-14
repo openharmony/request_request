@@ -24,7 +24,7 @@ use std::{collections::HashMap, ffi::CString, ffi::c_char, fs::File, time::Durat
 use std::sync::atomic::{AtomicU32, Ordering, AtomicBool};
 use std::sync::{Arc, Mutex, MutexGuard, Once};
 use rust_samgr::get_systemability_manager;
-use ylong_runtime::{builder::RuntimeBuilder, executor::Runtime, join_handle::JoinHandle, timer::sleep::sleep};
+use ylong_runtime::{builder::RuntimeBuilder, executor::Runtime, task::JoinHandle, time::sleep};
 
 static MAX_TASK_COUNT: u32 = 300;
 static MAX_TASK_COUNT_EACH_APP: u8 = 10;
@@ -46,7 +46,6 @@ pub struct TaskManager {
     info_cb: Option<Box<dyn Fn(&TaskInfo) + Send + Sync + 'static>>,
     pub global_front_task: Option<Arc<RequestTask>>,
     pub front_app_uid: Option<u64>,
-    pub rt: Runtime,
     pub front_notify_time: u64,
     pub unloading: AtomicBool,
     pub api10_background_task_count: AtomicU32,
@@ -56,7 +55,7 @@ pub struct TaskManager {
 
 pub fn monitor_task() {
     let task_manager = TaskManager::get_instance();
-    task_manager.rt.spawn(async {
+    ylong_runtime::spawn(async {
         let mut remove_task = Vec::<Arc<RequestTask>>::new();
         loop {
             {
@@ -99,16 +98,13 @@ pub fn monitor_task() {
 
 impl TaskManager {
     fn new() -> Self {
+        ylong_runtime::builder::RuntimeBuilder::new_multi_thread().worker_num(4).build_global().unwrap();
         TaskManager {
             task_map: Arc::new(Mutex::new(HashMap::<u64, AppTask>::new())),
             event_cb: None,
             info_cb: None,
             global_front_task: None,
             front_app_uid: None,
-            rt: RuntimeBuilder::new_multi_thread()
-                .thread_number(4)
-                .build()
-                .unwrap(),
             front_notify_time: get_current_timestamp(),
             unloading: AtomicBool::new(false),
             api10_background_task_count: AtomicU32::new(0),
@@ -128,7 +124,7 @@ impl TaskManager {
     }
 
     pub fn dump_all_task_info(&self) {
-        self.rt.spawn(async {
+        ylong_runtime::spawn(async {
             loop {
                 let task_manager = TaskManager::get_instance();
                 let api10_background_task_count = task_manager.api10_background_task_count.load(Ordering::SeqCst);
@@ -453,7 +449,7 @@ impl TaskManager {
             task.set_status(State::RUNNING, Reason::Default);
         }
         let task_id = task.task_id;
-        let handle = self.rt.spawn(async move {
+        let handle = ylong_runtime::spawn(async move {
             run(task.clone()).await;
             TaskManager::get_instance().after_task_processed(&task);
         });
@@ -502,7 +498,7 @@ impl TaskManager {
                 if state == State::WAITING {
                     debug!(LOG_LABEL, "begin process the task which in waitting state");
                     let task = task.clone();
-                    self.rt.spawn(async move {
+                    ylong_runtime::spawn(async move {
                         let manager = TaskManager::get_instance();
                         let task_map_guard = manager.task_map.lock().unwrap();
                         manager.start_inner(uid, task, task_map_guard);
@@ -514,7 +510,7 @@ impl TaskManager {
     }
 
     fn after_task_processed(&mut self, task: &Arc<RequestTask>) {
-        self.rt.spawn(remove_task_from_map(task.clone()));
+        ylong_runtime::spawn(remove_task_from_map(task.clone()));
 
     }
 
@@ -832,7 +828,7 @@ extern "C" fn net_work_change_callback() {
                 if state == State::WAITING && task.is_satisfied_configuration() {
                     info!(LOG_LABEL, "Begin try resume task as network condition resume");
                     task.resume.store(true, Ordering::SeqCst);
-                    task_manager.rt.spawn(async move {
+                    ylong_runtime::spawn(async move {
                         sleep(Duration::from_secs(WAITTING_RETRY_INTERVAL)).await;
                         let manager = TaskManager::get_instance();
                         let guard = manager.task_map.lock().unwrap();
