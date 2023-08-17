@@ -194,8 +194,7 @@ bool IsOnline()
         REQUEST_HILOGE("get net capabilities failed");
         return false;
     }
-    if (capabilities.netCaps_.find(NET_CAPABILITY_INTERNET) != capabilities.netCaps_.end() &&
-        capabilities.netCaps_.find(NET_CAPABILITY_VALIDATED) != capabilities.netCaps_.end()) {
+    if (capabilities.netCaps_.find(NET_CAPABILITY_INTERNET) != capabilities.netCaps_.end()) {
         REQUEST_HILOGI("is online");
         return true;
     }
