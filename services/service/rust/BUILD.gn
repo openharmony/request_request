@@ -36,6 +36,7 @@ ohos_rust_shared_library("download_server") {
 
   external_deps = [
     "hilog:hilog_rust",
+    "hisysevent:hisysevent_rust",
     "ipc:ipc_rust",
     "safwk:system_ability_fwk_rust",
   ]
@@ -80,6 +81,8 @@ ohos_rust_shared_library("request") {
 
   external_deps = [
     "hilog:hilog_rust",
+    "hisysevent:hisysevent_rust",
+    "hitrace:hitrace_meter_rust",
     "ipc:ipc_rust",
     "netstack:ylong_http_client",
     "safwk:system_ability_fwk_rust",
