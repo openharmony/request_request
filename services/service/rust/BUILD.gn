@@ -74,10 +74,7 @@ ohos_rust_shared_library("request") {
 
   public_configs = [ ":download_service_config" ]
 
-  deps = [
-    ":request_service_c",
-    "${third_path}/rust/crates/tokio/ylong_runtime:lib",
-  ]
+  deps = [ ":request_service_c" ]
 
   external_deps = [
     "hilog:hilog_rust",
@@ -87,6 +84,7 @@ ohos_rust_shared_library("request") {
     "netstack:ylong_http_client",
     "safwk:system_ability_fwk_rust",
     "samgr:rust_samgr",
+    "ylong_runtime:ylong_runtime",
   ]
 
   clippy_lints = "none"

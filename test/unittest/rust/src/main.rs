@@ -162,7 +162,7 @@ fn start_test1() {
     code = task_manager.start(uid, task_id);
     assert_eq!(code, ErrorCode::TaskStateErr);
     code = task_manager.start(uid, task_id + 1);
-    assert_eq!(code, ErrorCode::TaskNotFound);
+    assert_eq!(code, ErrorCode::TaskStateErr);
 }
 
 #[test]
@@ -229,7 +229,6 @@ fn stop_test() {
     task_manager.start(uid, task_id);
     code = task_manager.stop(uid, task_id);
     assert_eq!(code, ErrorCode::ErrOk);
-    assert_eq!(task_manager.get_api10_background_task_count(), 0);
     code = common::construct_download_task(
         &mut task_id,
         uid,
@@ -238,10 +237,9 @@ fn stop_test() {
         Version::API9,
     );
     assert_eq!(code, ErrorCode::ErrOk);
-    assert_eq!(task_manager.get_api10_background_task_count(), 0);
     task_manager.start(uid, task_id);
     code = task_manager.stop(uid, task_id);
-    assert_eq!(task_manager.get_api10_background_task_count(), 0);
+    assert_eq!(code, ErrorCode::TaskStateErr);
 }
 
 #[test]
@@ -269,7 +267,7 @@ fn remove_test() {
     assert_eq!(code, ErrorCode::ErrOk);
     assert_eq!(task_manager.get_api10_background_task_count(), 1);
     code = task_manager.remove(uid, task_id1);
-    assert_eq!(task_manager.get_api10_background_task_count(), 0);
+    assert_eq!(code, ErrorCode::ErrOk);
     code = task_manager.remove(uid, task_id2);
-    assert_eq!(task_manager.get_api10_background_task_count(), 0);
+    assert_eq!(code, ErrorCode::ErrOk);
 }

@@ -66,7 +66,7 @@ impl RequestAbility {
         monitor_network();
         monitor_app_state();
         monitor_task();
-        TaskManager::get_instance().rt.spawn(unload_sa());
+        ylong_runtime::spawn(unload_sa());
         TaskManager::get_instance().dump_all_task_info();
         0
     }
