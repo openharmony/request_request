@@ -22,6 +22,7 @@
 #include <singleton.h>
 #include <string>
 #include <type_traits>
+
 #include "net_conn_client.h"
 
 #ifdef REQUEST_TELEPHONY_CORE_SERVICE
@@ -81,30 +82,60 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetAvailable(sptr<NetHandle> &n
     return 0;
 }
 
+bool NetworkAdapter::GetNetAllCapabilities(NetManagerStandard::NetAllCapabilities &capabilities)
+{
+    NetHandle handle;
+    int32_t ret = NetConnClient::GetInstance().GetDefaultNet(handle);
+    if (ret != NETMANAGER_SUCCESS) {
+        REQUEST_HILOGE("get default net failed");
+        return false;
+    }
+    ret = NetConnClient::GetInstance().GetNetCapabilities(handle, capabilities);
+    if (ret != NETMANAGER_SUCCESS) {
+        REQUEST_HILOGE("get net capabilities failed");
+        return false;
+    }
+    return true;
+}
+
+void NetworkAdapter::UpdateNetworkInfo()
+{
+    NetAllCapabilities capabilities;
+    if (!GetNetAllCapabilities(capabilities)) {
+        isOnline_ = false;
+        return;
+    }
+    UpdateNetworkInfoInner(capabilities);
+}
+
+void NetworkAdapter::UpdateNetworkInfoInner(const NetManagerStandard::NetAllCapabilities &capabilities)
+{
+    if (capabilities.netCaps_.find(NET_CAPABILITY_INTERNET) != capabilities.netCaps_.end()) {
+        isOnline_ = true;
+        if (capabilities.bearerTypes_.find(NetBearType::BEARER_CELLULAR) != capabilities.bearerTypes_.end()) {
+            REQUEST_HILOGI("Bearer Cellular");
+            networkInfo_.networkType = Network::CELLULAR;
+            networkInfo_.isMetered = true;
+        } else if (capabilities.bearerTypes_.find(NetBearType::BEARER_WIFI) != capabilities.bearerTypes_.end()) {
+            REQUEST_HILOGI("Bearer Wifi");
+            networkInfo_.networkType = Network::WIFI;
+            networkInfo_.isMetered = false;
+        }
+        UpdateRoaming();
+    } else {
+        isOnline_ = false;
+    }
+}
+
 int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandle,
     const sptr<NetAllCapabilities> &netAllCap)
 {
     REQUEST_HILOGI("Observe net capabilities change. start");
-    if (netAllCap->netCaps_.count(NetCap::NET_CAPABILITY_INTERNET)) {
-        netAdapter_.isOnline_ = true;
-        if (netAllCap->bearerTypes_.count(NetBearType::BEARER_CELLULAR)) {
-            REQUEST_HILOGI("Bearer Cellular");
-            netAdapter_.networkInfo_.networkType = Network::CELLULAR;
-            netAdapter_.networkInfo_.isMetered = true;
-        } else if (netAllCap->bearerTypes_.count(NetBearType::BEARER_WIFI)) {
-            REQUEST_HILOGI("Bearer Wifi");
-            netAdapter_.networkInfo_.networkType = Network::WIFI;
-            netAdapter_.networkInfo_.isMetered = false;
-        }
-        if (netAdapter_.callback_ != nullptr) {
-            netAdapter_.callback_();
-            REQUEST_HILOGD("NetCapabilitiesChange callback");
-        }
-        UpdateRoaming();
-    } else {
-        netAdapter_.isOnline_ = false;
+    netAdapter_.UpdateNetworkInfoInner(*netAllCap);
+    if (netAdapter_.callback_ != nullptr) {
+        netAdapter_.callback_();
+        REQUEST_HILOGD("NetCapabilitiesChange callback");
     }
-    REQUEST_HILOGI("Observe net capabilities change end, isOline is %{public}d", netAdapter_.isOnline_);
     return 0;
 }
 
@@ -137,7 +168,7 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetBlockStatusChange(sptr<NetHa
     return 0;
 }
 
-void NetworkAdapter::NetConnCallbackObserver::UpdateRoaming()
+void NetworkAdapter::UpdateRoaming()
 {
 #ifdef REQUEST_TELEPHONY_CORE_SERVICE
     REQUEST_HILOGI("upload roaming");
@@ -168,7 +199,7 @@ void NetworkAdapter::NetConnCallbackObserver::UpdateRoaming()
         return;
     }
     REQUEST_HILOGI("Roaming = %{public}d", networkClient->IsRoaming());
-    netAdapter_.networkInfo_.isRoaming = networkClient->IsRoaming();
+    networkInfo_.isRoaming = networkClient->IsRoaming();
 #endif
 }
 
@@ -179,28 +210,10 @@ NetworkInfo *NetworkAdapter::GetNetworkInfo()
 } // namespace OHOS::Request
 
 using namespace OHOS::Request;
-using namespace OHOS::NetManagerStandard;
 bool IsOnline()
 {
-    NetHandle handle;
-    int32_t ret = NetConnClient::GetInstance().GetDefaultNet(handle);
-    if (ret != NETMANAGER_SUCCESS) {
-        REQUEST_HILOGE("get default net failed");
-        return false;
-    }
-    NetAllCapabilities capabilities;
-    ret = NetConnClient::GetInstance().GetNetCapabilities(handle, capabilities);
-    if (ret != NETMANAGER_SUCCESS) {
-        REQUEST_HILOGE("get net capabilities failed");
-        return false;
-    }
-    if (capabilities.netCaps_.find(NET_CAPABILITY_INTERNET) != capabilities.netCaps_.end()) {
-        REQUEST_HILOGI("is online");
-        return true;
-    }
-    REQUEST_HILOGI("is offline");
-
-    return false;
+    NetworkAdapter::GetInstance().UpdateNetworkInfo();
+    return NetworkAdapter::GetInstance().IsOnline();
 }
 
 void RegisterNetworkCallback(NetworkCallback fun)

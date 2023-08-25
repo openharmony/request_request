@@ -43,6 +43,8 @@ public:
     static NetworkAdapter &GetInstance();
     friend class NetConnCallbackObserver;
     NetworkInfo *GetNetworkInfo();
+    void UpdateNetworkInfo();
+    void UpdateNetworkInfoInner(const NetManagerStandard::NetAllCapabilities &capabilities);
 
 public:
     class NetConnCallbackObserver : public NetManagerStandard::NetConnCallbackStub {
@@ -66,12 +68,12 @@ public:
         int32_t NetBlockStatusChange(sptr<NetManagerStandard::NetHandle> &netHandle, bool blocked) override;
 
     private:
-        void UpdateRoaming();
-
-    private:
         NetworkAdapter &netAdapter_;
     };
 
+private:
+    bool GetNetAllCapabilities(NetManagerStandard::NetAllCapabilities &capabilities);
+    void UpdateRoaming();
     RegCallBack callback_ = nullptr;
     bool isOnline_ = false;
     std::mutex mutex_;
