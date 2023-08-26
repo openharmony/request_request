@@ -39,8 +39,6 @@
         "napi",
         "ability_base",
         "hilog",
-        "hitrace",
-        "hisysevent",
         "core_service",
         "cellular_data",
         "distributed_notification_service",

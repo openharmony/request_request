@@ -33,9 +33,6 @@ pub mod c_string_wrapper;
 mod download_server_ipc_interface_code;
 pub mod filter;
 
-pub(crate) mod trace;
-pub(crate) mod sys_event;
-
 use enumration::ErrorCode;
 use hilog_rust::*;
 use ipc_rust::{
