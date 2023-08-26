@@ -27,8 +27,7 @@ bool UvQueue::Call(napi_env env, void *data, uv_after_work_cb afterCallback)
         return false;
     }
     work->data = data;
-    uv_queue_work(
-        loop, work, [](uv_work_t *work) {}, afterCallback);
+    uv_queue_work(loop, work, [](uv_work_t *work) {}, afterCallback);
     return true;
 }
 
@@ -49,7 +48,7 @@ void UvQueue::UvDelete(uv_work_t *work, int status)
     if (callbackData != nullptr) {
         napi_delete_reference(callbackData->env, callbackData->ref);
         delete callbackData;
-        delete work;
     }
+    delete work;
 }
 } // namespace OHOS::Request::UploadNapi
