@@ -23,8 +23,8 @@
 #include "js_task.h"
 
 namespace OHOS::Request {
-constexpr int32_t MAX_WAIT_TIME = 5000;
-BlockQueue<EditorEventInfo> RequestNotify::editorQueue_{ MAX_WAIT_TIME };
+constexpr int32_t MAX_WAIT_TIME = 3000;
+BlockQueue<NotifyEventInfo> RequestNotify::notifyQueue_{ MAX_WAIT_TIME };
 
 RequestNotify::RequestNotify(napi_env env, napi_value callback) : NotifyStub()
 {
@@ -36,11 +36,11 @@ RequestNotify::RequestNotify(napi_env env, napi_value callback) : NotifyStub()
 
 RequestNotify::~RequestNotify()
 {
+    REQUEST_HILOGI("~RequestNotify()");
     std::lock_guard<std::mutex> lock(envMutex_);
     if (valid_ && env_ != nullptr && ref_ != nullptr) {
         UvQueue::DeleteRef(env_, ref_);
     }
-    REQUEST_HILOGI("~RequestNotify()");
 }
 
 void RequestNotify::CallBack(const Notify &notify)
@@ -48,7 +48,7 @@ void RequestNotify::CallBack(const Notify &notify)
     REQUEST_HILOGI("RequestNotify CallBack in");
     SetNotify(notify);
     info_.timestamp = std::chrono::system_clock::now().time_since_epoch().count();
-    editorQueue_.Push(info_);
+    notifyQueue_.Push(info_);
     NotifyDataPtr *dataPtr = new NotifyDataPtr();
     dataPtr->callback = this;
 
@@ -68,8 +68,8 @@ void RequestNotify::CallBack(const Notify &notify)
         }
         NotifyDataPtr *dataPtr = static_cast<NotifyDataPtr *>(work->data);
         if (dataPtr != nullptr) {
-            editorQueue_.Wait(dataPtr->callback->info_);
             REQUEST_HILOGI("timestamp is %{public}" PRId64, dataPtr->callback->info_.timestamp);
+            notifyQueue_.Wait(dataPtr->callback->info_);
         }
     }, [](uv_work_t *work, int status) {
         if (work == nullptr) {
@@ -80,7 +80,7 @@ void RequestNotify::CallBack(const Notify &notify)
             dataPtr->callback->ExecCallBack();
             delete dataPtr;
         }
-        editorQueue_.Pop();
+        notifyQueue_.Pop();
         delete work;
     });
 }
@@ -93,6 +93,10 @@ void RequestNotify::ExecCallBack()
 {
     REQUEST_HILOGI("ExecCallBack in");
     std::lock_guard<std::mutex> lock(envMutex_);
+    if (!valid_ || env_ == nullptr || ref_ == nullptr) {
+        REQUEST_HILOGE("ref is null");
+        return;
+    }
     napi_handle_scope scope = nullptr;
     napi_open_handle_scope(env_, &scope);
     napi_value callbackFunc = nullptr;
