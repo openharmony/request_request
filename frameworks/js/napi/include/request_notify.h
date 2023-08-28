@@ -53,7 +53,7 @@ public:
 
     bool valid_;
     napi_env env_;
-    std::mutex envMutex_;
+    std::mutex validMutex_;
     napi_ref ref_;
     Notify notify_;
     std::mutex notifyMutex_;
