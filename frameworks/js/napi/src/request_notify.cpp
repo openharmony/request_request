@@ -28,7 +28,7 @@ BlockQueue<NotifyEventInfo> RequestNotify::notifyQueue_{ MAX_WAIT_TIME };
 
 RequestNotify::RequestNotify(napi_env env, napi_value callback) : NotifyStub()
 {
-    std::lock_guard<std::mutex> lock(envMutex_);
+    std::lock_guard<std::mutex> lock(validMutex_);
     env_ = env;
     napi_create_reference(env, callback, 1, &ref_);
     valid_ = true;
@@ -37,7 +37,7 @@ RequestNotify::RequestNotify(napi_env env, napi_value callback) : NotifyStub()
 RequestNotify::~RequestNotify()
 {
     REQUEST_HILOGI("~RequestNotify()");
-    std::lock_guard<std::mutex> lock(envMutex_);
+    std::lock_guard<std::mutex> lock(validMutex_);
     if (valid_ && env_ != nullptr && ref_ != nullptr) {
         UvQueue::DeleteRef(env_, ref_);
     }
@@ -92,9 +92,8 @@ void RequestNotify::Done(const TaskInfo &taskInfo)
 void RequestNotify::ExecCallBack()
 {
     REQUEST_HILOGI("ExecCallBack in");
-    std::lock_guard<std::mutex> lock(envMutex_);
-    if (!valid_ || env_ == nullptr || ref_ == nullptr) {
-        REQUEST_HILOGE("ref is null");
+    if (!valid_) {
+        REQUEST_HILOGE("valid is false");
         return;
     }
     napi_handle_scope scope = nullptr;
@@ -137,10 +136,11 @@ void RequestNotify::SetNotify(const Notify &notify)
 
 void RequestNotify::DeleteCallbackRef()
 {
-    std::lock_guard<std::mutex> lock(envMutex_);
+    std::lock_guard<std::mutex> lock(validMutex_);
     if (env_ != nullptr && ref_ != nullptr) {
         valid_ = false;
         napi_delete_reference(env_, ref_);
+        ref_ = nullptr;
     }
 }
 } // namespace OHOS::Request::Download
