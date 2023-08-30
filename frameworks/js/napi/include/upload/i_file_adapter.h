@@ -25,7 +25,7 @@ namespace OHOS::Request::Upload {
 class IFileAdapter {
 public:
     virtual ~IFileAdapter() {};
-    virtual int32_t DataAbilityOpenFile(std::string &fileUri,
+    virtual int32_t DataAbilityOpenFile(const std::string &fileUri,
                                          std::shared_ptr<OHOS::AbilityRuntime::Context> &context) = 0;
     virtual std::string InternalGetFilePath(std::shared_ptr<OHOS::AbilityRuntime::Context> &context) = 0;
 };

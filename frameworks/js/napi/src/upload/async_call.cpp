@@ -33,12 +33,12 @@ AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Cont
         argc = argc - 1;
     }
     napi_status status = (*context)(env, argc, argv, self);
-    if (status == napi_ok) {
-        context_->ctx = std::move(context);
-        napi_create_reference(env, self, 1, &context_->self);
-    } else {
-        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "context fail");
+    if (status != napi_ok) {
+        UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "input fail");
+        return;
     }
+    context_->ctx = std::move(context);
+    napi_create_reference(env, self, 1, &context_->self);
 }
 
 AsyncCall::~AsyncCall()

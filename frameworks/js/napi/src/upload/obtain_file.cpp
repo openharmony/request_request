@@ -29,7 +29,7 @@ ObtainFile::~ObtainFile()
 {
 }
 
-uint32_t ObtainFile::GetFile(FILE **file, std::string &fileUri, unsigned int &fileSize,
+uint32_t ObtainFile::GetFile(FILE **file, const std::string &fileUri, unsigned int &fileSize,
     std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     uint32_t ret = UPLOAD_OK;
@@ -50,11 +50,11 @@ uint32_t ObtainFile::GetFile(FILE **file, std::string &fileUri, unsigned int &fi
         fileSize = 0;
     }
 
-    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "get file ret : %{public}d, size : %{public}u", ret, fileSize);
+    UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "get file ret : %{public}u, size : %{public}u", ret, fileSize);
     return ret;
 }
 
-uint32_t ObtainFile::GetDataAbilityFile(FILE **file, std::string &fileUri, uint32_t &fileSize,
+uint32_t ObtainFile::GetDataAbilityFile(FILE **file, const std::string &fileUri, uint32_t &fileSize,
     std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     uint32_t ret = UPLOAD_OK;
