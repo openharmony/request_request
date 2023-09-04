@@ -40,6 +40,7 @@ RequestNotify::~RequestNotify()
     std::lock_guard<std::mutex> lock(validMutex_);
     if (valid_ && env_ != nullptr && ref_ != nullptr) {
         UvQueue::DeleteRef(env_, ref_);
+        ref_ = nullptr;
     }
 }
 
@@ -92,7 +93,7 @@ void RequestNotify::Done(const TaskInfo &taskInfo)
 void RequestNotify::ExecCallBack()
 {
     REQUEST_HILOGI("ExecCallBack in");
-    if (!valid_) {
+    if (!valid_ || ref_ == nullptr) {
         REQUEST_HILOGE("valid is false");
         return;
     }
