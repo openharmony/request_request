@@ -796,10 +796,7 @@ async fn remove_task_from_map(task: Arc<RequestTask>) {
         return;
     }
     let remove_task = remove_task.unwrap();
-    if remove_task.conf.version == Version::API9 {
-        let notify_data = remove_task.build_notify_data();
-        TaskManager::get_instance().front_notify("remove".into(), &notify_data);
-    } else {
+    if remove_task.conf.version == Version::API10 {
         task_manager.api10_background_task_count.fetch_sub(1, Ordering::SeqCst);
     }
     if app_task.len() == 0 {
