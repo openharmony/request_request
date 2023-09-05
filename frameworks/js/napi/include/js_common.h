@@ -215,9 +215,9 @@ struct Filter {
     std::string bundle;
     int64_t before;
     int64_t after;
-    State state;
-    Action action;
-    Mode mode;
+    State state = State::ANY;
+    Action action = Action::ANY;
+    Mode mode = Mode::ANY;
 };
 
 enum DownloadErrorCode {

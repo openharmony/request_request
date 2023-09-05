@@ -457,12 +457,16 @@ export default function requestQueryTest() {
      * @tc.require:
      */
     it('testSearchTask001', 0, async function (done) {
-      try {
-        await request.agent.search();
-      } catch (err) {
-        expect(err.code).assertEqual(401);
-        done();
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
       }
+      let task = await request.agent.create(context, conf);
+      request.agent.search(async (err, tids) => {
+        expect(tids.length > 0).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      })
     })
 
     /**
@@ -788,6 +792,69 @@ export default function requestQueryTest() {
         done();
       }).catch((err) => {
         expect(false).assertTrue();
+        done();
+      })
+    })
+
+    /**
+     * @tc.name: testSearchTask016
+     * @tc.desc: Test search task for filter is empty
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testSearchTask016', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+      }
+      let task = await request.agent.create(context, conf);
+      request.agent.search().then(async (tids) => {
+        expect(tids.length > 0).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })
+
+    /**
+     * @tc.name: testSearchTask017
+     * @tc.desc: Test search task for filter is undefined
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testSearchTask017', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+      }
+      let task = await request.agent.create(context, conf);
+      request.agent.search(undefined).then(async (tids) => {
+        expect(tids.length > 0).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })
+
+    /**
+     * @tc.name: testSearchTask018
+     * @tc.desc: Test search task for filter is null
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('testSearchTask018', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+      }
+      let task = await request.agent.create(context, conf);
+      request.agent.search(null, async (err, tids) => {
+        expect(tids.length > 0).assertTrue();
+        await request.agent.remove(task.tid);
         done();
       })
     })
