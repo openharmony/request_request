@@ -1167,23 +1167,19 @@ async fn upload(task: Arc<RequestTask>) {
     for i in index..size {
         task.progress.lock().unwrap().common_data.index = i;
         let result: bool;
-        if task.conf.version == Version::API10 {
-            result = upload_one_file(task.clone(), i, build_multipart_request).await;
-        } else {
-            match task.conf.headers.get("Content-Type") {
-                None => {
-                    if task.conf.method.to_uppercase().eq("POST") {
-                        result = upload_one_file(task.clone(), i, build_multipart_request).await;
-                    } else {
-                        result = upload_one_file(task.clone(), i, build_stream_request).await;
-                    }
+        match task.conf.headers.get("Content-Type") {
+            None => {
+                if task.conf.method.to_uppercase().eq("POST") {
+                    result = upload_one_file(task.clone(), i, build_multipart_request).await;
+                } else {
+                    result = upload_one_file(task.clone(), i, build_stream_request).await;
                 }
-                Some(v) => {
-                    if v == "multipart/form-data" {
-                        result = upload_one_file(task.clone(), i, build_multipart_request).await;
-                    } else {
-                        result = upload_one_file(task.clone(), i, build_stream_request).await;
-                    }
+            }
+            Some(v) => {
+                if v == "multipart/form-data" {
+                    result = upload_one_file(task.clone(), i, build_multipart_request).await;
+                } else {
+                    result = upload_one_file(task.clone(), i, build_stream_request).await;
                 }
             }
         }
