@@ -391,11 +391,18 @@ bool JsTask::ParseTouch(napi_env env, size_t argc, napi_value *argv, std::shared
 
 bool JsTask::ParseSearch(napi_env env, size_t argc, napi_value *argv, Filter &filter)
 {
+    using namespace std::chrono;
+    filter.bundle = "*";
+    filter.before = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    filter.after = filter.before - MILLISECONDS_IN_ONE_DAY;
     if (argc < 1) {
-        REQUEST_HILOGE("Wrong number of arguments");
-        return false;
+        return true;
     }
-    if (NapiUtils::GetValueType(env, argv[0]) != napi_object) {
+    napi_valuetype valueType = NapiUtils::GetValueType(env, argv[0]);
+    if (valueType == napi_null || valueType == napi_undefined) {
+        return true;
+    }
+    if (valueType != napi_object) {
         REQUEST_HILOGE("The parameter is not of object type");
         return false;
     }
