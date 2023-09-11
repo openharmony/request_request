@@ -662,6 +662,14 @@ bool JsInitialize::ParseUploadConfig(napi_env env, napi_value jsConfig, Config &
         return false;
     }
     config.forms = NapiUtils::Convert2RequestDataVector(env, jsData);
+
+    if (!ParseIndex(env, jsConfig, config)) {
+        errInfo = "Index exceeds file list";
+        return false;
+    }
+
+    config.begins = ParseBegins(env, jsConfig);
+    config.ends = ParseEnds(env, jsConfig);
     return true;
 }
 
