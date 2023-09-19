@@ -31,9 +31,9 @@
 
 
 namespace OHOS::Request {
-struct EditorEventInfo {
+struct NotifyEventInfo {
     int64_t timestamp{};
-    bool operator==(const EditorEventInfo &info) const
+    bool operator==(const NotifyEventInfo &info) const
     {
         return (timestamp == info.timestamp);
     }
@@ -53,12 +53,12 @@ public:
 
     bool valid_;
     napi_env env_;
-    std::mutex envMutex_;
+    std::mutex validMutex_;
     napi_ref ref_;
     Notify notify_;
     std::mutex notifyMutex_;
-    EditorEventInfo info_;
-    static BlockQueue<EditorEventInfo> editorQueue_;
+    NotifyEventInfo info_;
+    static BlockQueue<NotifyEventInfo> notifyQueue_;
 };
 
 struct NotifyDataPtr {

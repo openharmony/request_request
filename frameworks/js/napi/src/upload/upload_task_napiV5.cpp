@@ -176,9 +176,11 @@ void UploadTaskNapiV5::OnSystemComplete(napi_env env, napi_ref ref)
         napi_value global = nullptr;
         napi_value result = nullptr;
 
-        napi_get_reference_value(completeCallback->env, completeCallback->ref, &callback);
-        napi_get_global(completeCallback->env, &global);
-        napi_call_function(completeCallback->env, global, callback, PARAM_COUNT_ZERO, nullptr, &result);
+        napi_status ret = napi_get_reference_value(completeCallback->env, completeCallback->ref, &callback);
+        if (ret == napi_ok) {
+            napi_get_global(completeCallback->env, &global);
+            napi_call_function(completeCallback->env, global, callback, PARAM_COUNT_ZERO, nullptr, &result);
+        }
         napi_close_handle_scope(completeCallback->env, scope);
         delete completeCallback;
         delete work;

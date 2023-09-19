@@ -18,6 +18,8 @@ use super::{
     enumration::*, progress::*, task_info::*, task_config::*, task_manager::*, utils::*, request_binding::*,
     log::LOG_LABEL,
 };
+use crate::trace::TraceScope;
+use crate::sys_event::{SysEvent, build_number_param, build_str_param};
 use hilog_rust::*;
 use std::io::{Read, SeekFrom};
 use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, Ordering};
@@ -32,7 +34,7 @@ use ylong_http_client::{
     Response, SpeedLimit, Timeout, TlsVersion,
 };
 use ylong_runtime::fs::File as YlongFile;
-use ylong_runtime::io::{AsyncRead, AsyncSeek, AsyncWrite, ReadBuf};
+use ylong_runtime::io::{AsyncRead, AsyncSeek, AsyncWrite, ReadBuf,AsyncSeekExt};
 
 static CONNECT_TIMEOUT: u64 = 60;
 static LOW_SPEED_TIME: u64 = 60;
@@ -244,12 +246,12 @@ impl AsyncRead for TaskReader {
         } else {
             let begins = self.task.conf.common_data.begins;
             if !self.task.seek_flag.load(Ordering::SeqCst) {
-                match Pin::new(file).start_seek(SeekFrom::Start(begins)) {
-                    Err(e) => {
+                match Pin::new(file).poll_seek(cx,SeekFrom::Start(begins)) {
+                    Poll::Ready(Err(e)) => {
                         error!(LOG_LABEL, "seek err is {:?}", e);
                         return Poll::Ready(Err(e));
                     }
-                    Ok(_) => self.task.seek_flag.store(true, Ordering::SeqCst),
+                    _ => self.task.seek_flag.store(true, Ordering::SeqCst),
                 }
             }
             let buf_filled_len = buf.filled().len();
@@ -468,7 +470,7 @@ impl RequestTask {
             }
             _ => {
                 info!(LOG_LABEL, "set len success");
-                match Pin::new(file).start_seek(SeekFrom::Start(0)) {
+                match file.seek(SeekFrom::Start(0)).await{
                     Err(e) => {
                         error!(LOG_LABEL, "seek err is {:?}", e);
                         self.set_status(State::FAILED, Reason::IoError);
@@ -1065,7 +1067,7 @@ pub async fn run(task: Arc<RequestTask>) {
                 if !is_partial_upload {
                     begins = 0;
                 }
-                match Pin::new(file).start_seek(SeekFrom::Start(begins)) {
+                match file.seek(SeekFrom::Start(begins)).await {
                     Err(e) => {
                         task.set_code(index, Reason::IoError);
                         error!(LOG_LABEL, "seek err is {:?}", e);
@@ -1081,7 +1083,27 @@ pub async fn run(task: Arc<RequestTask>) {
 }
 
 async fn download(task: Arc<RequestTask>) {
+    download_inner(task.clone()).await;
+
+    // If `Reason` is not `Default`, records this sys event.
+    let reason = task.code.lock().unwrap()[0];
+    if reason != Reason::Default {
+        SysEvent::task_fault()
+            .param(build_str_param!(SysEvent::TASKS_TYPE, "DOWNLOAD"))
+            .param(build_number_param!(SysEvent::TOTAL_FILE_NUM, 1))
+            .param(build_number_param!(SysEvent::FAIL_FILE_NUM, 1))
+            .param(build_number_param!(SysEvent::SUCCESS_FILE_NUM, 0))
+            .param(build_number_param!(SysEvent::ERROR_INFO, reason as i32))
+            .write();
+    }
+}
+
+async fn download_inner(task: Arc<RequestTask>) {
     info!(LOG_LABEL, "begin download");
+
+    // Ensures `_trace` can only be freed when this function exits.
+    let _trace = TraceScope::trace("download file");
+
     if task.client.is_none() {
         return;
     }
@@ -1090,6 +1112,14 @@ async fn download(task: Arc<RequestTask>) {
         return;
     }
     let request = request.unwrap();
+
+    let name = task.conf.file_specs[0].path.as_str();
+    let download = task.progress.lock().unwrap().processed[0];
+    // Ensures `_trace` can only be freed when this function exits.
+    let _trace = TraceScope::trace(
+        &format!("download file name: {name} downloaded size: {download}")
+    );
+
     let response = task.client.as_ref().unwrap().request(request).await;
     task.record_response_header(&response);
     if !task.handle_response_error(&response).await {
@@ -1122,6 +1152,12 @@ fn build_downloader(task: Arc<RequestTask>, response: Response) -> Downloader<Ta
 
 async fn upload(task: Arc<RequestTask>) {
     info!(LOG_LABEL, "begin upload");
+
+    let url = task.conf.url.as_str();
+    let num = task.conf.file_specs.len();
+    // Ensures `_trace` can only be freed when this function exits.
+    let _trace = TraceScope::trace(&format!("exec upload task url: {url} file num: {num}"));
+
     let size = task.conf.file_specs.len();
     if task.client.is_none() {
         return;
@@ -1131,23 +1167,19 @@ async fn upload(task: Arc<RequestTask>) {
     for i in index..size {
         task.progress.lock().unwrap().common_data.index = i;
         let result: bool;
-        if task.conf.version == Version::API10 {
-            result = upload_one_file(task.clone(), i, build_multipart_request).await;
-        } else {
-            match task.conf.headers.get("Content-Type") {
-                None => {
-                    if task.conf.method.to_uppercase().eq("POST") {
-                        result = upload_one_file(task.clone(), i, build_multipart_request).await;
-                    } else {
-                        result = upload_one_file(task.clone(), i, build_stream_request).await;
-                    }
+        match task.conf.headers.get("Content-Type") {
+            None => {
+                if task.conf.method.to_uppercase().eq("POST") {
+                    result = upload_one_file(task.clone(), i, build_multipart_request).await;
+                } else {
+                    result = upload_one_file(task.clone(), i, build_stream_request).await;
                 }
-                Some(v) => {
-                    if v == "multipart/form-data" {
-                        result = upload_one_file(task.clone(), i, build_multipart_request).await;
-                    } else {
-                        result = upload_one_file(task.clone(), i, build_stream_request).await;
-                    }
+            }
+            Some(v) => {
+                if v == "multipart/form-data" {
+                    result = upload_one_file(task.clone(), i, build_multipart_request).await;
+                } else {
+                    result = upload_one_file(task.clone(), i, build_stream_request).await;
                 }
             }
         }
@@ -1160,10 +1192,21 @@ async fn upload(task: Arc<RequestTask>) {
             return;
         }
     }
-    if task.upload_counts.load(Ordering::SeqCst) == size as u32 {
+
+    let uploaded = task.upload_counts.load(Ordering::SeqCst);
+    if uploaded == size as u32 {
         task.set_status(State::COMPLETED, Reason::Default);
     } else {
         task.set_status(State::FAILED, Reason::UploadFileError);
+
+        // Records sys event.
+        SysEvent::task_fault()
+            .param(build_str_param!(SysEvent::TASKS_TYPE, "UPLOAD"))
+            .param(build_number_param!(SysEvent::TOTAL_FILE_NUM, size))
+            .param(build_number_param!(SysEvent::FAIL_FILE_NUM, size as u32 - uploaded))
+            .param(build_number_param!(SysEvent::SUCCESS_FILE_NUM, uploaded))
+            .param(build_number_param!(SysEvent::ERROR_INFO, Reason::UploadFileError as i32))
+            .write();
     }
 
     info!(LOG_LABEL, "upload end");
@@ -1179,6 +1222,12 @@ where
     T: Body,
 {
     info!(LOG_LABEL, "begin upload one file");
+
+    let (_, size) = task.get_upload_info(index);
+    let name = task.conf.file_specs[index].file_name.as_str();
+    // Ensures `_trace` can only be freed when this function exits.
+    let _trace = TraceScope::trace(&format!("upload file name:{name} index:{index} size:{size}"));
+
     loop {
         task.reset_code(index);
         let request = build_upload_request(task.clone(), index);

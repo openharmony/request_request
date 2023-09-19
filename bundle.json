@@ -17,8 +17,7 @@
       "SystemCapability.MiscServices.Upload",
       "SystemCapability.Request.FileTransferAgent"
     ],
-    "features": [
-    ],
+    "features": [],
     "adapted_system_type": [
       "standard"
     ],
@@ -40,17 +39,19 @@
         "napi",
         "ability_base",
         "hilog",
+        "hitrace",
+        "hisysevent",
         "core_service",
         "cellular_data",
         "distributed_notification_service",
         "c_utils",
-        "netstack"
+        "netstack",
+        "ylong_runtime"
       ],
       "third_party": [
         "curl",
         "libuv",
-        "openssl",
-        "ylong_runtime"
+        "openssl"
       ]
     },
     "build": {
@@ -67,14 +68,14 @@
           "//base/request/request/services/service/rust:download_server"
         ]
       },
-      "inner_kits": [
-      ],
+      "inner_kits": [],
       "test": [
         "//base/request/request/test/fuzztest:fuzztest",
         "//base/request/request/test/unittest/common/napi/requestTest:unittest",
         "//base/request/request/test/unittest/js_test/requestAgentTaskTest:unittest",
         "//base/request/request/test/unittest/js_test/requestQueryTaskTest:unittest",
-        "//base/request/request/test/unittest/js_test/requestSystemQueryTest:unittest"
+        "//base/request/request/test/unittest/js_test/requestSystemQueryTest:unittest",
+        "//base/request/request/test/unittest/rust:rust_request_test_ut"
       ]
     }
   }

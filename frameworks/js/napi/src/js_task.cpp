@@ -67,6 +67,7 @@ napi_property_descriptor clzDesV9[] = {
 
 JsTask::~JsTask()
 {
+    REQUEST_HILOGD("~JsTask()");
     ClearListener();
     RequestEvent::RemoveCache(tid_);
 }

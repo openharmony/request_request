@@ -17,8 +17,10 @@
 extern crate ipc_rust;
 extern crate request;
 extern crate system_ability_fwk_rust;
+extern crate hisysevent;
 
 use hilog_rust::*;
+use hisysevent::{EventType, write, build_number_param};
 use ipc_rust::{IRemoteBroker, RemoteObj};
 pub use request::{start, stop, RequestService, RequestServiceStub, LOG_LABEL};
 use std::ffi::{c_char, CString};
@@ -29,18 +31,43 @@ pub const REQUEST_SERVICE_ID: i32 = 3706;
 
 fn on_start<T: ISystemAbility + IMethod>(ability: &T) {
     info!(LOG_LABEL, "on_start");
-    let service =
-        RequestServiceStub::new_remote_stub(RequestService).expect("create RequestService failed");
-    ability.publish(
-        &service.as_object().expect("get request service failed"),
-        REQUEST_SERVICE_ID,
-    );
+    let service = match RequestServiceStub::new_remote_stub(RequestService) {
+        Some(service) => service,
+        None => {
+            service_start_fault();
+            panic!("create RequestService failed");
+        }
+    };
+
+    let object = match service.as_object() {
+        Some(object) => object,
+        None => {
+            service_start_fault();
+            panic!("get request service failed");
+        }
+    };
+
+    ability.publish(&object, REQUEST_SERVICE_ID);
     start();
 }
 
 fn on_stop<T: ISystemAbility + IMethod>(ability: &T) {
     info!(LOG_LABEL, "on_stop");
     stop();
+}
+
+fn service_start_fault() {
+    const DOMAIN: &str = "REQUEST";
+    const SERVICE_START_FAULT: &str = "SERVICE_START_FAULT";
+    const ERROR_INFO: &str = "ERROR_INFO";
+    const DOWNLOAD_PUBLISH_FAIL: i32 = -1;
+
+    write(
+        DOMAIN,
+        SERVICE_START_FAULT,
+        EventType::Fault,
+        &[build_number_param!(ERROR_INFO, DOWNLOAD_PUBLISH_FAIL)]
+    );
 }
 
 define_system_ability!(sa: SystemAbility(on_start, on_stop),);

@@ -33,13 +33,9 @@
 namespace OHOS::Request::Upload {
 static constexpr const char *HTTP_DEFAULT_CA_PATH = "/etc/ssl/certs/cacert.pem";
 CUrlAdp::CUrlAdp(std::vector<FileData> &fileDatas, std::shared_ptr<UploadConfig> &config)
-    : fileDatas_(fileDatas), timer_("uploadTimer")
+    : timerId_(0), fileDatas_(fileDatas), config_(config), isCurlGlobalInit_(false),
+    curlMulti_(nullptr), isReadAbort_(false), timer_("uploadTimer")
 {
-    config_ = config;
-    isCurlGlobalInit_ = false;
-    isReadAbort_ = false;
-    curlMulti_ = nullptr;
-    timerId_ = 0;
 }
 
 CUrlAdp::~CUrlAdp()
@@ -84,9 +80,6 @@ uint32_t CUrlAdp::DoUpload(std::shared_ptr<IUploadTask> task)
 
 bool CUrlAdp::IsSuccess(const uint32_t count, const uint32_t size)
 {
-    if (count == 0) {
-        return false;
-    }
     return (count == size);
 }
 

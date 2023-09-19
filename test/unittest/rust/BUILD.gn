@@ -18,13 +18,13 @@ import("//build/test.gni")
 
 module_output_path = "request/request"
 
-ohos_rust_unittest("request_rust_test") {
+ohos_rust_unittest("rust_request_test_ut") {
   module_out_path = module_output_path
   sources = [
     "src/common.rs",
     "src/main.rs",
   ]
-  deps = [ "${request_path}/services/service:request" ]
+  deps = [ "${request_path}/services/service/rust:request" ]
   subsystem_name = "request"
   part_name = "request"
 }
