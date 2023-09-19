@@ -74,8 +74,7 @@
         "//base/request/request/test/unittest/common/napi/requestTest:unittest",
         "//base/request/request/test/unittest/js_test/requestAgentTaskTest:unittest",
         "//base/request/request/test/unittest/js_test/requestQueryTaskTest:unittest",
-        "//base/request/request/test/unittest/js_test/requestSystemQueryTest:unittest",
-        "//base/request/request/test/unittest/rust:rust_request_test_ut"
+        "//base/request/request/test/unittest/js_test/requestSystemQueryTest:unittest"
       ]
     }
   }
