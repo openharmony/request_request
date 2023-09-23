@@ -62,6 +62,7 @@ void NotifyStub::OnCallBack(MessageParcel &data)
         std::string key = data.ReadString();
         notifyData.progress.extras[key] = data.ReadString();
     }
+
     notifyData.action = static_cast<Action>(data.ReadUint32());
     notifyData.version = static_cast<Version>(data.ReadUint32());
     size = data.ReadUint32();
@@ -97,6 +98,13 @@ void NotifyStub::RequestCallBack(const std::string &type, const std::string &tid
         return;
     }
     auto task = item->second;
+    uint32_t index = notifyData.progress.index;
+    std::string fileName;
+    if (index < task->config_.bodyFileNames.size()) {
+        fileName = task->config_.bodyFileNames[index];
+        GetResponseBody(fileName, type, notifyData, notify);
+    }
+
     std::string key = type + tid;
     auto it = task->listenerMap_.find(key);
     if (it == task->listenerMap_.end()) {
@@ -105,6 +113,35 @@ void NotifyStub::RequestCallBack(const std::string &type, const std::string &tid
     }
     for (const auto &callback : it->second) {
         callback->CallBack(notify);
+    }
+}
+
+void NotifyStub::GetResponseBody(std::string &fileName, const std::string &type,
+    const NotifyData &notifyData, Notify &notify)
+{
+    // Check response body.
+    if (notifyData.version == Version::API9 && notifyData.action == Action::UPLOAD && type == "headerReceive") {
+        GetBodyFromFileToMap(fileName, notify.header);
+    } else if (notify.progress.state == State::COMPLETED && notifyData.version == Version::API10
+        && notifyData.action == Action::UPLOAD && (type == "progress" || type == "complete")) {
+        GetBodyFromFileToMap(fileName, notify.progress.extras);
+    }
+    return;
+}
+
+void NotifyStub::GetBodyFromFileToMap(std::string &fileName, std::map<std::string, std::string> &map)
+{
+    std::ifstream ifs(fileName.c_str());
+    if (ifs.is_open()) {
+        std::ostringstream strStream;
+        strStream << ifs.rdbuf();
+        std::string buf = strStream.str();
+        REQUEST_HILOGD("Response body to file end: %{public}zu", buf.size());
+        std::string key = "body";
+        map[key] = buf;
+        ifs.close();
+        // Delete file.
+        std::remove(fileName.c_str());
     }
 }
 

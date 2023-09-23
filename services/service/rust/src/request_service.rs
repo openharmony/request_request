@@ -117,6 +117,14 @@ impl RequestServiceInterface for RequestService {
             });
         }
 
+        // Response Bodys fd.
+        let body_file_size: u32 = data.read()?;
+        let mut body_files = Vec::new();
+        for i in 0..body_file_size {
+            let fd = data.read::<FileDesc>()?;
+            body_files.push(File::from(fd));
+        }
+
         let header_size: u32 = data.read()?;
         if header_size > data.get_readable_bytes() {
             error!(LOG_LABEL, "size is too large");
@@ -176,7 +184,7 @@ impl RequestServiceInterface for RequestService {
         debug!(LOG_LABEL, "files {:?}", @public(files));
         let mut task_id: u32 = 0;
         let ret =
-            RequestAbility::get_ability_instance().construct(task_config, files, &mut task_id);
+            RequestAbility::get_ability_instance().construct(task_config, files, body_files, &mut task_id);
         let remote_object: RemoteObj = data.read::<RemoteObj>()?;
         RequestAbility::get_ability_instance().on(task_id, "done".to_string(), remote_object);
         reply.write(&(ret as i32))?;

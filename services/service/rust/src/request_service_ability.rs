@@ -100,7 +100,7 @@ impl RequestAbility {
         self.server_state = ServerRunState::NoStart;
     }
 
-    pub fn construct(&self, config: TaskConfig, files: Vec<File>, task_id: &mut u32) -> ErrorCode {
+    pub fn construct(&self, config: TaskConfig, files: Vec<File>, body_files: Vec<File>, task_id: &mut u32) -> ErrorCode {
         debug!(LOG_LABEL, "construct");
         let uid = get_calling_uid();
         let version = config.version.clone();
@@ -109,6 +109,7 @@ impl RequestAbility {
             get_calling_uid(),
             task_id,
             files,
+            body_files,
         );
         if version != Version::API10 {
             TaskManager::get_instance().start(get_calling_uid(), *task_id);
@@ -286,6 +287,7 @@ impl RequestAbility {
         }
     }
 
+    // Send to "OHOS.Download.NotifyInterface" CallBack().
     pub fn notify_client(cb_type: String, notify_data: &NotifyData) {
         debug!(LOG_LABEL, "notify_client");
         if notify_data.progress.common_data.index >= notify_data.progress.sizes.len() {
@@ -356,6 +358,7 @@ impl RequestAbility {
         }
     }
 
+    // Send to "OHOS.Download.NotifyInterface" Down().
     pub fn notify_task_info(task_info: &TaskInfo) {
         debug!(LOG_LABEL, "notify_task_info");
         if task_info.progress.common_data.index >= task_info.progress.sizes.len() {

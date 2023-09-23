@@ -155,7 +155,43 @@ ExceptionError JsInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRu
             return err;
         }
     }
+    
+    if (config.action == Action::UPLOAD) {
+        std::string filePath = context->GetCacheDir();
+        err = CheckUploadBodyFiles(config, filePath);
+    }
+    
     return err;
+}
+
+ExceptionError JsInitialize::CheckUploadBodyFiles(Config &config, const std::string &filePath)
+{
+    ExceptionError error = { .code = E_OK };
+    size_t len = config.files.size();
+
+    for (size_t i = 0; i < len; i++) {
+        if (filePath.empty()) {
+            REQUEST_HILOGE("internal to cache error");
+            return { .code = E_PARAMETER_CHECK, .errInfo = "IsPathValid error empty path" };
+        }
+        time_t timestamp = time(NULL);
+        std::string fileName = filePath + "/tmp_body_" + std::to_string(i) + "_" + std::to_string(timestamp);
+        if (!NapiUtils::IsPathValid(fileName)) {
+            REQUEST_HILOGE("IsPathValid error %{public}s", fileName.c_str());
+            return { .code = E_PARAMETER_CHECK, .errInfo = "IsPathValid error fail path" };
+        }
+
+        int32_t fd = open(fileName.c_str(), O_TRUNC | O_RDWR);
+        if (fd < 0) {
+            fd = open(fileName.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
+            if (fd < 0) {
+                return { .code = E_FILE_IO, .errInfo = "Failed to open file errno " + std::to_string(errno) };
+            }
+        }
+        config.bodyFds.push_back(fd);
+        config.bodyFileNames.push_back(fileName);
+    }
+    return error;
 }
 
 ExceptionError JsInitialize::GetFD(const std::string &path, const Config &config, int32_t &fd)

@@ -119,6 +119,8 @@ struct Config {
     std::map<std::string, std::string> headers;
     std::vector<FormItem> forms;
     std::vector<FileSpec> files;
+    std::vector<int32_t> bodyFds;
+    std::vector<std::string> bodyFileNames;
     std::map<std::string, std::string> extras;
 };
 
