@@ -69,6 +69,7 @@ private:
         const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, std::string &filePath);
 
     static ExceptionError CheckFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
+    static ExceptionError CheckUploadBodyFiles(Config &config, const std::string &filePath);
     static ExceptionError GetFD(const std::string &path, const Config &config, int32_t &fd);
     static void InterceptData(const std::string &str, const std::string &in, std::string &out);
     static bool IsStageMode(napi_env env, napi_value value);

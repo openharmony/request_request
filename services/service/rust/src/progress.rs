@@ -87,7 +87,7 @@ impl Clone for Progress {
 
 #[repr(C)]
 pub struct RequestTaskMsg {
-    pub taskId: u32,
+    pub task_id: u32,
     pub uid: i32,
     pub action: u8,
 }

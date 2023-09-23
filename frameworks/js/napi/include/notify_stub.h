@@ -16,7 +16,9 @@
 #ifndef DOWNLOAD_NOTIFY_STUB_H
 #define DOWNLOAD_NOTIFY_STUB_H
 
+#include <fstream>
 #include <memory>
+#include <unistd.h>
 
 #include "iremote_stub.h"
 #include "js_common.h"
@@ -35,6 +37,9 @@ public:
 private:
     void OnCallBack(MessageParcel &data);
     static void OnDone(MessageParcel &data);
+    static void GetBodyFromFileToMap(std::string &fileName, std::map<std::string, std::string> &map);
+    static void GetResponseBody(
+        std::string &fname, const std::string &type, const NotifyData &notifyData, Notify &notify);
     static void GetDownloadNotify(const std::string &type, const NotifyData &notifyData, Notify &notify);
     static void GetUploadNotify(const std::string &type, const NotifyData &notifyData, Notify &notify);
 };

@@ -34,7 +34,7 @@ use ylong_http_client::{
     Response, SpeedLimit, Timeout, TlsVersion,
 };
 use ylong_runtime::fs::File as YlongFile;
-use ylong_runtime::io::{AsyncRead, AsyncSeek, AsyncWrite, ReadBuf,AsyncSeekExt};
+use ylong_runtime::io::{AsyncRead, AsyncSeek, AsyncWrite, ReadBuf, AsyncWriteExt, AsyncSeekExt};
 
 static CONNECT_TIMEOUT: u64 = 60;
 static LOW_SPEED_TIME: u64 = 60;
@@ -66,6 +66,11 @@ struct Files(UnsafeCell<Vec<YlongFile>>);
 unsafe impl Sync for Files {}
 unsafe impl Send for Files {}
 
+// Need to release file timely.
+struct BodyFiles(UnsafeCell<Vec<Option<YlongFile>>>);
+unsafe impl Sync for BodyFiles {}
+unsafe impl Send for BodyFiles {}
+
 pub struct RequestTask {
     pub conf: Arc<TaskConfig>,
     pub uid: u64,
@@ -84,6 +89,7 @@ pub struct RequestTask {
     pub file_total_size: AtomicI64,
     pub resume: AtomicBool,
     files: Files,
+    body_files: BodyFiles,
     seek_flag: AtomicBool,
     range_request: AtomicBool,
     range_response: AtomicBool,
@@ -281,7 +287,7 @@ impl AsyncRead for TaskReader {
 }
 
 impl RequestTask {
-    pub fn constructor(conf: Arc<TaskConfig>, uid: u64, task_id: u32, files: Vec<File>) -> Self {
+    pub fn constructor(conf: Arc<TaskConfig>, uid: u64, task_id: u32, files: Vec<File>, body_files: Vec<File>) -> Self {
         let mut sizes: Vec<i64> = Vec::<i64>::new();
         match conf.common_data.action {
             Action::DOWNLOAD => sizes.push(-1),
@@ -303,6 +309,9 @@ impl RequestTask {
             ctime: get_current_timestamp(),
             files: Files(UnsafeCell::new(
                 files.into_iter().map(|f| YlongFile::new(f)).collect(),
+            )),
+            body_files: BodyFiles(UnsafeCell::new(
+                body_files.into_iter().map(|f| Some(YlongFile::new(f))).collect(),
             )),
             mime_type: Mutex::new(String::new()),
             progress: Mutex::new(Progress::new(sizes)),
@@ -701,15 +710,34 @@ impl RequestTask {
         }
     }
 
-    async fn record_upload_response(&self, response: Result<Response, HttpClientError>) {
+    async fn record_upload_response(
+        &self,
+        index: usize,
+        response: Result<Response, HttpClientError>,
+    ) {
         self.record_response_header(&response);
-        if let Ok(r) = response {
-            if let Ok(body) = r.text().await {
-                self.progress
-                    .lock()
-                    .unwrap()
-                    .extras
-                    .insert("body".into(), body);
+        if let Ok(mut r) = response {
+            let mut yfile = match unsafe { &mut *self.body_files.0.get() }.get_mut(index) {
+                Some(yfile) => match yfile.take() {
+                    Some(yf) => yf,
+                    None => return,
+                },
+                None => return,
+            };
+
+            loop {
+                let mut buf = [0u8; 1024];
+                let size = r.body_mut().data(&mut buf).await;
+                let size = match size {
+                    Ok(size) => size,
+                    Err(_e) => break,
+                };
+
+                if size == 0 {
+                    break;
+                }
+                let r = yfile.write_all(&buf[..size]).await;
+                error!(LOG_LABEL, "Res writeall {:?}", @public(r));
             }
         }
         if self.conf.version == Version::API9 && self.conf.common_data.action == Action::UPLOAD {
@@ -983,7 +1011,7 @@ impl RequestTask {
         let percent = total_processed * 100 / (file_total_size as u64);
         info!(LOG_LABEL, "background notify");
         let task_msg = RequestTaskMsg {
-            taskId: self.task_id,
+            task_id: self.task_id,
             uid: self.uid as i32,
             action: self.conf.common_data.action as u8,
         };
@@ -1237,10 +1265,10 @@ where
         let response = task.client.as_ref().unwrap().request(request.unwrap()).await;
         if task.handle_response_error(&response).await {
             task.code.lock().unwrap()[index] = Reason::Default;
-            task.record_upload_response(response).await;
+            task.record_upload_response(index, response).await;
             return true;
         }
-        task.record_upload_response(response).await;
+        task.record_upload_response(index, response).await;
         let code = task.code.lock().unwrap()[index];
         if code != Reason::Default {
             error!(LOG_LABEL, "upload {} file fail, which reason is {}", @public(index), @public(code as u32));

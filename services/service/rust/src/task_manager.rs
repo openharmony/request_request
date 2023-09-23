@@ -237,6 +237,7 @@ impl TaskManager {
         uid: u64,
         task_id: &mut u32,
         files: Vec<File>,
+        body_files: Vec<File>,
     ) -> ErrorCode {
         debug!(LOG_LABEL, "begin construct a task");
         if files.len() == 0 {
@@ -244,7 +245,7 @@ impl TaskManager {
         }
         *task_id = generate_task_id();
         let bundle = conf.bundle.clone();
-        let task = RequestTask::constructor(conf, uid, *task_id, files);
+        let task = RequestTask::constructor(conf, uid, *task_id, files, body_files);
         let mut task_map_guard = self.task_map.lock().unwrap();
         if self.unloading.load(Ordering::SeqCst) {
             return ErrorCode::UnloadingSA;

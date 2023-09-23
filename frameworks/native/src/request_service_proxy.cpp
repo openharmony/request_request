@@ -97,6 +97,16 @@ void RequestServiceProxy::GetVectorData(const Config &config, MessageParcel &dat
             close(file.fd);
         }
     }
+    
+    // Response Bodys fds.
+    data.WriteUint32(config.bodyFds.size());
+    for (const auto &fd : config.bodyFds) {
+        data.WriteFileDescriptor(fd);
+        if (fd > 0) {
+            close(fd);
+        }
+    }
+
     data.WriteUint32(config.headers.size());
     for (const auto &header : config.headers) {
         data.WriteString(header.first);
