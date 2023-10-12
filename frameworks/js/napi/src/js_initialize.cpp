@@ -393,11 +393,7 @@ void JsInitialize::ParseSaveas(napi_env env, napi_value jsConfig, Config &config
 
 int64_t JsInitialize::ParseBegins(napi_env env, napi_value jsConfig)
 {
-    if (!NapiUtils::HasNamedProperty(env, jsConfig, "begins")) {
-        return 0;
-    }
-    napi_value value = NapiUtils::GetNamedProperty(env, jsConfig, "begins");
-    int64_t size = NapiUtils::Convert2Int64(env, value);
+    int64_t size = NapiUtils::Convert2Int64(env, jsConfig, "begins");
     return size >= 0 ? size : 0;
 }
 
@@ -406,8 +402,7 @@ int64_t JsInitialize::ParseEnds(napi_env env, napi_value jsConfig)
     if (!NapiUtils::HasNamedProperty(env, jsConfig, "ends")) {
         return -1;
     }
-    napi_value value = NapiUtils::GetNamedProperty(env, jsConfig, "ends");
-    return NapiUtils::Convert2Int64(env, value);
+    return NapiUtils::Convert2Int64(env, jsConfig, "ends");
 }
 
 bool JsInitialize::ParseDescription(napi_env env, napi_value jsConfig, std::string &description)
