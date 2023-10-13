@@ -56,6 +56,20 @@ describe('RequestUploadTest', async function () {
       type: 'txt'
     }
 
+    let File1 = {
+      filename: 'test1',
+      name: 'test',
+      uri: 'internal://cache/test1.txt',
+      type: 'txt'
+    }
+
+    let File2 = {
+      filename: 'test2',
+      name: 'test',
+      uri: 'internal://cache/test2.txt',
+      type: 'txt'
+    }
+
     let uploadConfig = {
       url: 'http://127.0.0.1',
       header: {
@@ -74,6 +88,45 @@ describe('RequestUploadTest', async function () {
         method: 'PUT',
         files: [File],
         data: [RequestData]
+    };
+
+    let uploadConfig2 = {
+      url:  'http://127.0.0.1',
+      header: {
+        headers: 'http'
+      },
+      index: 1,
+      begins: 50,
+      ends: 100,
+      method: 'POST',
+      files: [File1, File2],
+      data: [RequestData]
+    };
+
+    let uploadConfig3 = {
+      url:  'http://127.0.0.1',
+      header: {
+        headers: 'http'
+      },
+      index: 1,
+      begins: "50",
+      ends: 100,
+      method: 'POST',
+      files: [File1, File2],
+      data: [RequestData]
+    };
+
+    let uploadConfig4 = {
+      url:  'http://127.0.0.1',
+      header: {
+        headers: 'http'
+      },
+      index: 1,
+      begins: undefined,
+      ends: 100,
+      method: 'POST',
+      files: [File1, File2],
+      data: [RequestData]
     };
 
     /**
@@ -352,6 +405,132 @@ describe('RequestUploadTest', async function () {
         }
         console.info("-----------------------SUB_REQUEST_UPLOAD_API_PROMISE_0003 end-----------------------");
         done();
+    });
+
+    /**
+     * @tc.number    SUB_REQUEST_UPLOADFILE_API_PARTIAL_0001
+     * @tc.name      Test function of partial upload.
+     * @tc.desc      Test if the partial upload success or fail.
+     * @tc.size      : MEDIUM
+     * @tc.type      : Function
+     * @tc.level     : Level 0
+     */
+    it('SUB_REQUEST_UPLOADFILE_API_PARTIAL_0001', 0, async function (done) {
+      console.info("====>-----------------------SUB_REQUEST_UPLOADFILE_API_PARTIAL_0001 is starting-----------------------");
+      try {
+        console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0001 UploadConfig2 = " + JSON.stringify(uploadConfig2));
+        // @ts-ignore
+        await request.uploadFile(globalThis.abilityContext, uploadConfig2).then((uploadTask) => {
+          console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0001 uploadTask = " + uploadTask);
+          expect(true).assertEqual((uploadTask != undefined));
+          let complete_callback = async (tasks) => {
+            try {
+              uploadTask.off('complete');
+              console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0001 tasks0 = " + JSON.stringify(tasks[0])
+              + ", path = " + tasks[0].path + ", responseCode" + tasks[0].responseCode + ", message = " + tasks[0].message);
+              let bool = await uploadTask.delete();
+              console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0001 remove result = " + bool);
+              done();
+            } catch (err) {
+              console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0001 fail = " + JSON.stringify(err));
+              done();
+            }
+          }
+
+          console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0001 headerReceive success");
+          uploadTask.on('complete', complete_callback);
+
+        }).catch((err) => {
+          console.error("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0001 catch err: " + JSON.stringify(err));
+        });
+      } catch (err) {
+        console.error("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0001 fail error: " + JSON.stringify(err));
+        done();
+      }
+    });
+
+    /**
+     * @tc.number    SUB_REQUEST_UPLOADFILE_API_PARTIAL_0002
+     * @tc.name      Test function of partial upload.
+     * @tc.desc      Test if the partial upload with abnormal input success or fail.
+     * @tc.size      : MEDIUM
+     * @tc.type      : Function
+     * @tc.level     : Level 0
+     */
+    it('SUB_REQUEST_UPLOADFILE_API_PARTIAL_0002', 0, async function (done) {
+      console.info("====>-----------------------SUB_REQUEST_UPLOADFILE_API_PARTIAL_0002 is starting-----------------------");	  
+      try {
+        console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0002 UploadConfig3 = " + JSON.stringify(UploadConfig3));
+        // @ts-ignore
+        await request.uploadFile(globalThis.abilityContext, UploadConfig3).then((uploadTask) => {
+          console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0002 uploadTask = " + uploadTask);
+          expect(true).assertEqual((uploadTask != undefined));
+          let complete_callback = async (tasks) => {
+            try {
+              uploadTask.off('complete');
+              console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0001 tasks0 = " + JSON.stringify(tasks[0])
+              + ", path = " + tasks[0].path + ", responseCode" + tasks[0].responseCode + ", message = " + tasks[0].message);
+              let bool = await uploadTask.delete();
+              console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0002 remove result = " + bool);
+              done();
+            } catch (err) {
+              console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0002 fail = " + JSON.stringify(err));
+              done();
+            }
+          }
+
+          console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0002 headerReceive success");
+          uploadTask.on('complete', complete_callback);
+
+        }).catch((err) => {
+          console.error("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0002 catch err: " + JSON.stringify(err));
+        });
+      } catch (err) {
+        console.error("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0002 fail error: " + JSON.stringify(err));
+        done();
+      }
+    });
+
+    /**
+     * @tc.number    SUB_REQUEST_UPLOADFILE_API_PARTIAL_0003
+     * @tc.name      Test function of partial upload.
+     * @tc.desc      Test if the partial upload with abnormal input success or fail.
+     * @tc.size      : MEDIUM
+     * @tc.type      : Function
+     * @tc.level     : Level 0
+     */
+    it('SUB_REQUEST_UPLOADFILE_API_PARTIAL_0003', 0, async function (done) {
+      console.info("====>-----------------------SUB_REQUEST_UPLOADFILE_API_PARTIAL_0003 is starting-----------------------");	  
+      try {
+        console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0003 UploadConfig4 = " + JSON.stringify(UploadConfig4));
+        // @ts-ignore
+        await request.uploadFile(globalThis.abilityContext, UploadConfig4).then((uploadTask) => {
+          console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0003 uploadTask = " + uploadTask);
+          expect(true).assertEqual((uploadTask != undefined));
+          let complete_callback = async (tasks) => {
+            try {
+              uploadTask.off('complete');
+              console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0001 tasks0 = " + JSON.stringify(tasks[0])
+              + ", path = " + tasks[0].path + ", responseCode" + tasks[0].responseCode + ", message = " + tasks[0].message);
+              let bool = await uploadTask.delete();
+              console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0003 remove result = " + bool);
+              done();
+            } catch (err) {
+              console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0003 fail = " + JSON.stringify(err));
+              done();
+            }
+          }
+
+          console.info("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0003 headerReceive success");
+          uploadTask.on('complete', complete_callback);
+
+        }).catch((err) => {
+          console.error("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0003 catch err: " + JSON.stringify(err));
+        });
+      } catch (err) {
+        console.error("====>SUB_REQUEST_UPLOADFILE_API_PARTIAL_0003 fail error: " + JSON.stringify(err));
+        done();
+      }
     });
 
     console.log(TAG + "*************Unit Test End*************");
