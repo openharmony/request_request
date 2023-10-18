@@ -51,4 +51,5 @@ extern "C" {
     pub fn Search(filter: CFilter) -> CVectorWrapper;
     pub fn RequestIsSystemAPI(tokenId: u64) -> bool;
     pub fn GetCallingBundle(tokenId: u64) -> CStringWrapper;
+    pub fn PublishStateChangeEvents(bundleName: *const c_char, bundleNameLen: u32, taskId: u32, state: i32);
 }
