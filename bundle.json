@@ -30,6 +30,7 @@
       "components": [
         "samgr",
         "ipc",
+        "common_event_service",
         "netmanager_base",
         "eventhandler",
         "ability_runtime",

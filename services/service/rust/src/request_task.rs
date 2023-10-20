@@ -840,12 +840,15 @@ impl RequestTask {
         let mode = self.conf.common_data.mode;
         if version == Version::API9 || mode == Mode::FRONTEND {
             let notify_data = self.build_notify_data();
+            let bundle = self.conf.bundle.clone();
             TaskManager::get_instance().front_notify("progress".into(), &notify_data);
             match state {
                 State::COMPLETED => {
+                    unsafe { PublishStateChangeEvents(CString::new(bundle.as_str()).unwrap().as_ptr(), bundle.len() as u32, self.task_id, State::COMPLETED as i32); }
                     TaskManager::get_instance().front_notify("complete".into(), &notify_data)
                 }
                 State::FAILED => {
+                    unsafe { PublishStateChangeEvents(CString::new(bundle.as_str()).unwrap().as_ptr(), bundle.len() as u32, self.task_id, State::FAILED as i32); }
                     TaskManager::get_instance().front_notify("fail".into(), &notify_data)
                 }
                 State::PAUSED | State::WAITING => {
