@@ -707,16 +707,20 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        saveas: `test.apk`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
-      try {
-        task.on('progress', function (progress) {});
-      } catch (err) {
-        expect(err.code).assertEqual(21900005);
-        await request.agent.remove(task.tid);
+      task.on('progress', function (progress) {
+        expect(progress.state).assertEqual(request.agent.State.RUNNING);
+        task.off('progress');
         done();
-      }
+      })
+      task.on('completed', function (progress) {
+        expect(progress.state).assertEqual(request.agent.State.COMPLETED);
+        done();
+      })
+      await task.start();
     })
 
     /**
