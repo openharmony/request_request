@@ -24,6 +24,7 @@ constexpr const std::int32_t DECIMALISM = 10;
 static constexpr const char *EVENT_COMPLETED = "completed";
 static constexpr const char *EVENT_FAILED = "failed";
 static constexpr const char *EVENT_PAUSE = "pause";
+static constexpr const char *EVENT_RESUME = "resume";
 static constexpr const char *EVENT_REMOVE = "remove";
 static constexpr const char *EVENT_PROGRESS = "progress";
 static constexpr const char *EVENT_HEADERRECEIVE = "headerReceive";
@@ -43,6 +44,9 @@ std::unordered_set<std::string> RequestEvent::supportEventsV10_ = {
     EVENT_PROGRESS,
     EVENT_COMPLETED,
     EVENT_FAILED,
+    EVENT_PAUSE,
+    EVENT_RESUME,
+    EVENT_REMOVE,
 };
 
 std::map<std::string, RequestEvent::Event> RequestEvent::requestEvent_ = {
@@ -139,10 +143,6 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    if (jsParam.task->config_.version == Version::API10 && jsParam.task->config_.mode != Mode::FOREGROUND) {
-        NapiUtils::ThrowError(env, E_TASK_MODE, "Enable the specified callback for a frontend task", true);
-        return nullptr;
-    }
     sptr<RequestNotify> listener = new (std::nothrow) RequestNotify(env, jsParam.callback);
     if (listener == nullptr) {
         REQUEST_HILOGE("Create callback object fail");
@@ -175,8 +175,8 @@ bool RequestEvent::NeedNotify(const std::string &type, std::shared_ptr<TaskInfo>
     }
     if (!taskInfo->progress.sizes.empty()) {
         uint64_t processed = taskInfo->progress.processed;
-        int64_t totalSise = taskInfo->progress.sizes[0];
-        if (type == EVENT_PROGRESS && processed == 0 && totalSise == -1) {
+        int64_t totalSize = taskInfo->progress.sizes[0];
+        if (type == EVENT_PROGRESS && processed == 0 && totalSize == -1) {
             return false;
         }
     }
@@ -190,11 +190,6 @@ napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
     if (err.code != E_OK) {
         bool withErrCode = jsParam.task->config_.version == Version::API10;
         NapiUtils::ThrowError(env, err.code, err.errInfo, withErrCode);
-        return nullptr;
-    }
-
-    if (jsParam.task->config_.version == Version::API10 && jsParam.task->config_.mode != Mode::FOREGROUND) {
-        NapiUtils::ThrowError(env, E_TASK_MODE, "Enable the specified callback for a frontend task", true);
         return nullptr;
     }
 

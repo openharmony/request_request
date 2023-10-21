@@ -553,6 +553,8 @@ impl TaskManager {
             error!(LOG_LABEL, "resume the task success");
             task.resume.store(true, Ordering::SeqCst);
             self.start_inner(uid, task.clone(), task_map_guard);
+            let notify_data = task.build_notify_data();
+            TaskManager::get_instance().front_notify("resume".into(), &notify_data);
             return ErrorCode::ErrOk;
         }
         error!(LOG_LABEL, "task not found");
@@ -830,7 +832,9 @@ extern "C" fn net_work_change_callback() {
                         sleep(Duration::from_secs(WAITTING_RETRY_INTERVAL)).await;
                         let manager = TaskManager::get_instance();
                         let guard = manager.task_map.lock().unwrap();
-                        manager.start_inner(uid, task, guard);
+                        manager.start_inner(uid, task.clone(), guard);
+                        let notify_data = task.build_notify_data();
+                        TaskManager::get_instance().front_notify("resume".into(), &notify_data);
                     });
                 }
             }
