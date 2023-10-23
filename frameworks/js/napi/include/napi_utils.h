@@ -59,7 +59,8 @@ napi_value Convert2JSValue(napi_env env, const std::vector<TaskState> &taskState
 napi_value Convert2JSValue(napi_env env, const Progress &progress);
 napi_value Convert2JSValue(napi_env env, TaskInfo &taskInfo);
 napi_value Convert2JSValue(napi_env env, const std::vector<FileSpec> &files, const std::vector<FormItem> &forms);
-napi_value Convert2JSHeaders(napi_env env, const std::map<std::string, std::string> &header);
+napi_value Convert2JSHeadersAndBody(napi_env env, const std::map<std::string, std::string> &header,
+    const std::vector<uint8_t> &bodyBytes, bool isSeparate);
 
 bool Convert2Boolean(napi_env env, napi_value object, const std::string &propertyName);
 uint32_t Convert2Uint32(napi_env env, napi_value value);
@@ -96,5 +97,7 @@ uint32_t Convert2Broken(Reason code);
 std::string GetSaveas(const std::vector<FileSpec> &files, Action action);
 bool IsPathValid(const std::string &filePath);
 std::string SHA256(const char *str, size_t len);
+void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileData);
+bool IsTextUTF8(const std::vector<uint8_t> &bytes);
 } // namespace OHOS::Request::NapiUtils
 #endif /* DOWNLOAD_NAPI_UTILS_H */

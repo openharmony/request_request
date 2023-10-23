@@ -735,7 +735,6 @@ impl RequestTask {
                     break;
                 }
                 let r = yfile.write_all(&buf[..size]).await;
-                error!(LOG_LABEL, "Res writeall {:?}", @public(r));
             }
         }
         if self.conf.version == Version::API9 && self.conf.common_data.action == Action::UPLOAD {

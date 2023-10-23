@@ -145,6 +145,7 @@ struct Progress {
     uint64_t totalProcessed;
     std::vector<int64_t> sizes;
     std::map<std::string, std::string> extras;
+    std::vector<uint8_t> bodyBytes;
 };
 
 enum class Faults : uint32_t {
@@ -180,7 +181,6 @@ enum class EventType : uint32_t {
 struct Notify {
     EventType type = EventType::BUTT;
     std::vector<int64_t> data;
-    std::map<std::string, std::string> header;
     std::vector<TaskState> taskStates;
     Progress progress;
 };

@@ -99,12 +99,12 @@ void NotifyStub::RequestCallBack(const std::string &type, const std::string &tid
     }
     auto task = item->second;
     uint32_t index = notifyData.progress.index;
-    std::string fileName;
-    if (index < task->config_.bodyFileNames.size()) {
-        fileName = task->config_.bodyFileNames[index];
-        GetResponseBody(fileName, type, notifyData, notify);
+    if (index < task->config_.bodyFileNames.size() && IsHeaderReceive(type, notifyData)) {
+        std::string &filePath = task->config_.bodyFileNames[index];
+        NapiUtils::ReadBytesFromFile(filePath, notify.progress.bodyBytes);
+        // Delete file.
+        std::remove(filePath.c_str());
     }
-
     std::string key = type + tid;
     auto it = task->listenerMap_.find(key);
     if (it == task->listenerMap_.end()) {
@@ -116,33 +116,15 @@ void NotifyStub::RequestCallBack(const std::string &type, const std::string &tid
     }
 }
 
-void NotifyStub::GetResponseBody(std::string &fileName, const std::string &type,
-    const NotifyData &notifyData, Notify &notify)
+bool NotifyStub::IsHeaderReceive(const std::string &type, const NotifyData &notifyData)
 {
-    // Check response body.
     if (notifyData.version == Version::API9 && notifyData.action == Action::UPLOAD && type == "headerReceive") {
-        GetBodyFromFileToMap(fileName, notify.header);
-    } else if (notify.progress.state == State::COMPLETED && notifyData.version == Version::API10
-        && notifyData.action == Action::UPLOAD && (type == "progress" || type == "complete")) {
-        GetBodyFromFileToMap(fileName, notify.progress.extras);
+        return true;
+    } else if (notifyData.version == Version::API10 && notifyData.action == Action::UPLOAD
+        && notifyData.progress.state == State::COMPLETED && (type == "progress" || type == "complete")) {
+        return true;
     }
-    return;
-}
-
-void NotifyStub::GetBodyFromFileToMap(std::string &fileName, std::map<std::string, std::string> &map)
-{
-    std::ifstream ifs(fileName.c_str());
-    if (ifs.is_open()) {
-        std::ostringstream strStream;
-        strStream << ifs.rdbuf();
-        std::string buf = strStream.str();
-        REQUEST_HILOGD("Response body to file end: %{public}zu", buf.size());
-        std::string key = "body";
-        map[key] = buf;
-        ifs.close();
-        // Delete file.
-        std::remove(fileName.c_str());
-    }
+    return false;
 }
 
 void NotifyStub::GetDownloadNotify(const std::string &type, const NotifyData &notifyData, Notify &notify)
@@ -185,7 +167,7 @@ void NotifyStub::GetUploadNotify(const std::string &type, const NotifyData &noti
         notify.data.push_back(size);
     } else {
         notify.type = EventType::HEADER_CALLBACK;
-        notify.header = notifyData.progress.extras;
+        notify.progress.extras = notifyData.progress.extras;
     }
 }
 
