@@ -40,6 +40,8 @@ std::mutex JsTask::requestFileMutex_;
 thread_local napi_ref JsTask::requestFileCtor = nullptr;
 std::mutex JsTask::taskMutex_;
 std::map<std::string, JsTask*> JsTask::taskMap_;
+std::mutex JsTask::taskContextMutex_;
+std::map<std::string, std::shared_ptr<JsTask::ContextInfo>> JsTask::taskContextMap_;
 
 napi_property_descriptor clzDes[] = {
     DECLARE_NAPI_FUNCTION(FUNCTION_ON, RequestEvent::On),
@@ -138,13 +140,11 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
         napi_status status = napi_get_reference_value(context->env_, context->taskRef, result);
         context->task->SetTid(context->tid);
         JsTask::AddTaskMap(std::to_string(context->tid), context->task);
+        JsTask::AddTaskContextMap(std::to_string(context->tid), context);
         napi_value config = nullptr;
         napi_get_reference_value(context->env_, context->jsConfig, &config);
         JsInitialize::CreatProperties(context->env_, *result, config, context->task);
-        napi_delete_reference(context->env_, context->taskRef);
-        if (context->version_ == Version::API10) {
-            napi_delete_reference(context->env_, context->jsConfig);
-        }
+        REQUEST_HILOGD("JsMain output");
         return status;
     };
     context->SetInput(input).SetOutput(output).SetExec(exec);
@@ -280,6 +280,8 @@ napi_value JsTask::Remove(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() {
         context->innerCode_ = RequestManager::GetInstance()->Remove(context->tid, Version::API10);
+        // Removed Task can not return notify, so unref in this.
+        JsTask::ClearTaskContext(context->tid);
     };
     context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
     AsyncCall asyncCall(env, info, context);
@@ -600,6 +602,12 @@ void JsTask::AddTaskMap(const std::string &key, JsTask* task)
     JsTask::taskMap_[key] = task;
 }
 
+void JsTask::AddTaskContextMap(const std::string &key, std::shared_ptr<ContextInfo> context)
+{
+    std::lock_guard<std::mutex> lockGuard(JsTask::taskContextMutex_);
+    JsTask::taskContextMap_[key] = context;
+}
+
 void JsTask::AddListener(const std::string &key, const sptr<RequestNotify> &listener)
 {
     REQUEST_HILOGD("AddListener key %{public}s", key.c_str());
@@ -661,6 +669,44 @@ void JsTask::ClearTaskMap(const std::string &key)
         return;
     }
     taskMap_.erase(it);
+}
+
+void JsTask::ClearTaskContext(const std::string &key)
+{
+    std::lock_guard<std::mutex> lockGuard(JsTask::taskContextMutex_);
+    auto it = taskContextMap_.find(key);
+    if (it == taskContextMap_.end()) {
+        REQUEST_HILOGD("Clear task context, not in ContextMap");
+        return;
+    }
+    auto context = it->second;
+    Config config = context->task->config_;
+    for (auto &filePath : config.bodyFileNames) {
+        // Delete file.
+        std::remove(filePath.c_str());
+    }
+    UnrefTaskContextMap(context);
+}
+
+void JsTask::UnrefTaskContextMap(std::shared_ptr<ContextInfo> context)
+{
+    u_int32_t taskRefCount = 0;
+    napi_reference_unref(context->env_, context->taskRef, &taskRefCount);
+    REQUEST_HILOGD("Unref task ref, count is %{public}d", taskRefCount);
+    if (taskRefCount == 0) {
+        napi_delete_reference(context->env_, context->taskRef);
+        REQUEST_HILOGD("Delete task ref");
+    }
+    if (context->version_ == Version::API10) {
+        u_int32_t configRefCount = 0;
+        napi_reference_unref(context->env_, context->jsConfig, &configRefCount);
+        REQUEST_HILOGD("Unref task config ref, count is %{public}d", configRefCount);
+        if (configRefCount == 0) {
+            napi_delete_reference(context->env_, context->jsConfig);
+            REQUEST_HILOGD("Delete config ref");
+        }
+    }
+    return;
 }
 
 bool JsTask::Equals(napi_env env, napi_value value, napi_ref copy)
