@@ -424,10 +424,8 @@ std::map<std::string, std::string> JsInitialize::ParseMap(napi_env env, napi_val
     }
     auto names = NapiUtils::GetPropertyNames(env, jsValue);
     for (auto iter = names.begin(); iter != names.end(); ++iter) {
-        auto value = NapiUtils::Convert2String(env, jsValue, *iter);
-        if (!value.empty()) {
-            result[*iter] = value;
-        }
+        // The value of `Header` or `extra` can be empty.
+        result[*iter] = NapiUtils::Convert2String(env, jsValue, *iter);
     }
     return result;
 }
