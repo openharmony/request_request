@@ -46,6 +46,7 @@ public:
 
     static void ClearTaskMap(const std::string &key);
     static void AddTaskMap(const std::string &key, JsTask* task);
+    static void ClearTaskContext(const std::string &key);
 
     Config config_;
     static std::mutex taskMutex_;
@@ -89,6 +90,8 @@ private:
     static bool ParseTouch(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<TouchContext> context);
     static int64_t ParseBefore(napi_env env, napi_value value);
     static int64_t ParseAfter(napi_env env, napi_value value, int64_t before);
+    static void AddTaskContextMap(const std::string &key, std::shared_ptr<ContextInfo> context);
+    static void UnrefTaskContextMap(std::shared_ptr<ContextInfo> context);
     bool Equals(napi_env env, napi_value value, napi_ref copy);
 
     static std::mutex createMutex_;
@@ -97,6 +100,8 @@ private:
     static thread_local napi_ref requestFileCtor;
     static std::mutex requestFileMutex_;
     static thread_local napi_ref createCtor;
+    static std::mutex taskContextMutex_;
+    static std::map<std::string, std::shared_ptr<ContextInfo>> taskContextMap_;
     std::string tid_;
 };
 } // namespace OHOS::Request

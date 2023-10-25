@@ -78,6 +78,9 @@ void NotifyStub::OnCallBack(MessageParcel &data)
         notifyData.taskStates.push_back(taskState);
     }
     RequestCallBack(type, tid, notifyData);
+    if (notifyData.version == Version::API10 && (type == "complete" || type == "fail")) {
+        JsTask::ClearTaskContext(tid);
+    }
 }
 
 void NotifyStub::RequestCallBack(const std::string &type, const std::string &tid, const NotifyData &notifyData)
@@ -201,5 +204,6 @@ void NotifyStub::OnDone(MessageParcel &data)
         return;
     }
     RequestEvent::AddCache(taskInfo->tid, taskInfo);
+    JsTask::ClearTaskContext(taskInfo->tid);
 }
 } // namespace OHOS::Request
