@@ -37,9 +37,7 @@ public:
 private:
     void OnCallBack(MessageParcel &data);
     static void OnDone(MessageParcel &data);
-    static void GetBodyFromFileToMap(std::string &fileName, std::map<std::string, std::string> &map);
-    static void GetResponseBody(
-        std::string &fname, const std::string &type, const NotifyData &notifyData, Notify &notify);
+    bool IsHeaderReceive(const std::string &type, const NotifyData &notifyData);
     static void GetDownloadNotify(const std::string &type, const NotifyData &notifyData, Notify &notify);
     static void GetUploadNotify(const std::string &type, const NotifyData &notifyData, Notify &notify);
 };

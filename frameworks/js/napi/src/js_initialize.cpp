@@ -160,7 +160,6 @@ ExceptionError JsInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRu
         std::string filePath = context->GetCacheDir();
         err = CheckUploadBodyFiles(config, filePath);
     }
-    
     return err;
 }
 
@@ -181,14 +180,14 @@ ExceptionError JsInitialize::CheckUploadBodyFiles(Config &config, const std::str
             return { .code = E_PARAMETER_CHECK, .errInfo = "IsPathValid error fail path" };
         }
 
-        int32_t fd = open(fileName.c_str(), O_TRUNC | O_RDWR);
-        if (fd < 0) {
-            fd = open(fileName.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
-            if (fd < 0) {
+        int32_t bodyFd = open(fileName.c_str(), O_TRUNC | O_RDWR);
+        if (bodyFd < 0) {
+            bodyFd = open(fileName.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
+            if (bodyFd < 0) {
                 return { .code = E_FILE_IO, .errInfo = "Failed to open file errno " + std::to_string(errno) };
             }
         }
-        config.bodyFds.push_back(fd);
+        config.bodyFds.push_back(bodyFd);
         config.bodyFileNames.push_back(fileName);
     }
     return error;

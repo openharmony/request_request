@@ -27,6 +27,7 @@
 
 namespace OHOS::Request::NapiUtils {
 static constexpr int64_t JS_NUMBER_MAX_VALUE = (1LL << 53) - 1;
+static constexpr size_t UTF8_MULTIBYTE_MIN_LEN = 2;
 static constexpr const char *REASON_OK_INFO = "Task successful";
 static constexpr const char *TASK_SURVIVAL_ONE_MONTH_INFO = "The task has not been completed for a month yet";
 static constexpr const char *WAITTING_NETWORK_ONE_DAY_INFO = "The task waiting for network recovery has not been "
@@ -167,23 +168,33 @@ napi_value Convert2JSValue(napi_env env, const std::vector<std::string> &ids)
     return value;
 }
 
-napi_value Convert2JSHeaders(napi_env env, const std::map<std::string, std::string> &header)
+napi_value Convert2JSHeadersAndBody(napi_env env, const std::map<std::string, std::string> &header,
+    const std::vector<uint8_t> &bodyBytes, bool isSeparate)
 {
     napi_value headers = nullptr;
     napi_create_object(env, &headers);
-    napi_value body = nullptr;
     for (const auto &cInt : header) {
-        if (cInt.first == "body") {
-            body = Convert2JSValue(env, cInt.second);
-        } else {
-            napi_set_named_property(env, headers, cInt.first.c_str(), Convert2JSValue(env, cInt.second));
-        }
+        napi_set_named_property(env, headers, cInt.first.c_str(), Convert2JSValue(env, cInt.second));
     }
-    napi_value object = nullptr;
-    napi_create_object(env, &object);
-    napi_set_named_property(env, object, "headers", headers);
-    napi_set_named_property(env, object, "body", body);
-    return object;
+    napi_value body = nullptr;
+    if (IsTextUTF8(bodyBytes)) {
+        napi_create_string_utf8(env, reinterpret_cast<const char *>(bodyBytes.data()), bodyBytes.size(), &body);
+    } else {
+        uint8_t *data = nullptr;
+        napi_create_arraybuffer(env, bodyBytes.size(), reinterpret_cast<void **>(&data), &body);
+        memcpy_s(data, bodyBytes.size(), bodyBytes.data(), bodyBytes.size());
+    }
+    
+    if (isSeparate) {
+        napi_value object = nullptr;
+        napi_create_object(env, &object);
+        napi_set_named_property(env, object, "headers", headers);
+        napi_set_named_property(env, object, "body", body);
+        return object;
+    } else {
+        napi_set_named_property(env, headers, "body", body);
+        return headers;
+    }
 }
 
 napi_value Convert2JSValue(napi_env env, const std::map<std::string, std::string> &code)
@@ -229,7 +240,8 @@ napi_value Convert2JSValue(napi_env env, const Progress &progress)
     napi_set_named_property(env, value, "index", Convert2JSValue(env, progress.index));
     napi_set_named_property(env, value, "processed", Convert2JSValue(env, progress.processed));
     napi_set_named_property(env, value, "sizes", Convert2JSValue(env, progress.sizes));
-    napi_set_named_property(env, value, "extras", Convert2JSValue(env, progress.extras));
+    napi_set_named_property(env, value, "extras",
+        Convert2JSHeadersAndBody(env, progress.extras, progress.bodyBytes, false));
     return value;
 }
 
@@ -744,5 +756,70 @@ std::string SHA256(const char *str, size_t len)
         ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(hash[i]);
     }
     return ss.str();
+}
+
+void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileData)
+{
+    std::ifstream inputFile(filePath.c_str(), std::ios::binary);
+    if (inputFile.is_open()) {
+        inputFile.seekg(0, std::ios::end);
+        fileData.resize(inputFile.tellg());
+        inputFile.seekg(0);
+        inputFile.read(reinterpret_cast<char *>(fileData.data()), fileData.size());
+        inputFile.close();
+    } else {
+        REQUEST_HILOGW("Read bytes from file, invalid file path!");
+    }
+    return;
+}
+
+bool IsTextUTF8(const std::vector<uint8_t> &bytes)
+{
+    if (bytes.size() == 0) {
+        return false;
+    }
+    auto getMultibyteLength = [](uint8_t chr) -> size_t {
+        size_t num = 0;
+        uint8_t mask = 0x80;
+        for (size_t i = 0; i < 8; i++) {
+            if ((chr & mask) == mask) {
+                mask = mask >> 1;
+                num++;
+            } else {
+                break;
+            }
+        }
+        return num;
+    };
+
+    auto checkLength = [](const size_t count, const std::vector<uint8_t> &bytes, size_t &index) -> bool {
+        for (size_t j = 0; j < count - 1; j++) {
+            // 10xxxxxx
+            if ((bytes[index] & 0xc0) != 0x80) {
+                return false;
+            }
+            index++;
+        }
+        return true;
+    };
+
+    int count = 0;
+    size_t i = 0;
+    while (i < bytes.size()) {
+        // 0xxxxxxx
+        if ((bytes[i] & 0x80) == 0x00) {
+            i++;
+            continue;
+        } else if ((count = getMultibyteLength(bytes[i])) > UTF8_MULTIBYTE_MIN_LEN) {
+            i++;
+            bool isLengthOk = checkLength(count, bytes, i);
+            if (!isLengthOk) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+    return true;
 }
 } // namespace OHOS::Request::NapiUtils

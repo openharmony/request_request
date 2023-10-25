@@ -121,7 +121,7 @@ void RequestNotify::ConvertCallBackData(uint32_t &paramNumber, napi_value *value
             value[i] = NapiUtils::Convert2JSValue(env_, notify_.data[i]);
         }
     } else if (notify_.type == EventType::HEADER_CALLBACK) {
-        value[0] = NapiUtils::Convert2JSHeaders(env_, notify_.header);
+        value[0] = NapiUtils::Convert2JSHeadersAndBody(env_, notify_.progress.extras, notify_.progress.bodyBytes, true);
     } else if (notify_.type == EventType::TASK_STATE_CALLBACK) {
         value[0] = NapiUtils::Convert2JSValue(env_, notify_.taskStates);
     } else if (notify_.type == EventType::PROGRESS_CALLBACK) {
