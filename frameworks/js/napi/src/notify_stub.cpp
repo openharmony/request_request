@@ -99,11 +99,15 @@ void NotifyStub::RequestCallBack(const std::string &type, const std::string &tid
     }
     auto task = item->second;
     uint32_t index = notifyData.progress.index;
-    if (index < task->config_.bodyFileNames.size() && IsHeaderReceive(type, notifyData)) {
+    size_t len = task->config_.bodyFileNames.size();
+    if (index < len && IsHeaderReceive(type, notifyData)) {
         std::string &filePath = task->config_.bodyFileNames[index];
         NapiUtils::ReadBytesFromFile(filePath, notify.progress.bodyBytes);
-        // Delete file.
-        std::remove(filePath.c_str());
+        // Waiting for "complete" to read and delete.
+        if (!(notifyData.version == Version::API10 && index == len - 1 && type == "progress")) {
+            // Delete file.
+            std::remove(filePath.c_str());
+        }
     }
     std::string key = type + tid;
     auto it = task->listenerMap_.find(key);

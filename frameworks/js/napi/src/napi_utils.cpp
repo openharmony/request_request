@@ -176,7 +176,6 @@ napi_value Convert2JSHeadersAndBody(napi_env env, const std::map<std::string, st
     for (const auto &cInt : header) {
         napi_set_named_property(env, headers, cInt.first.c_str(), Convert2JSValue(env, cInt.second));
     }
-
     napi_value body = nullptr;
     if (IsTextUTF8(bodyBytes)) {
         napi_create_string_utf8(env, reinterpret_cast<const char *>(bodyBytes.data()), bodyBytes.size(), &body);
@@ -762,11 +761,15 @@ std::string SHA256(const char *str, size_t len)
 void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileData)
 {
     std::ifstream inputFile(filePath.c_str(), std::ios::binary);
-    inputFile.seekg(0, std::ios::end);
-    fileData.resize(inputFile.tellg());
-    inputFile.seekg(0);
-    inputFile.read(reinterpret_cast<char *>(fileData.data()), fileData.size());
-    inputFile.close();
+    if (inputFile.is_open()) {
+        inputFile.seekg(0, std::ios::end);
+        fileData.resize(inputFile.tellg());
+        inputFile.seekg(0);
+        inputFile.read(reinterpret_cast<char *>(fileData.data()), fileData.size());
+        inputFile.close();
+    } else {
+        REQUEST_HILOGW("Read bytes from file, invalid file path!");
+    }
     return;
 }
 
