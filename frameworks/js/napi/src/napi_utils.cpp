@@ -182,7 +182,9 @@ napi_value Convert2JSHeadersAndBody(napi_env env, const std::map<std::string, st
     } else {
         uint8_t *data = nullptr;
         napi_create_arraybuffer(env, bodyBytes.size(), reinterpret_cast<void **>(&data), &body);
-        memcpy_s(data, bodyBytes.size(), bodyBytes.data(), bodyBytes.size());
+        if (memcpy_s(data, bodyBytes.size(), bodyBytes.data(), bodyBytes.size()) != EOK) {
+            REQUEST_HILOGW("Body data memcpy_s error");
+        }
     }
     
     if (isSeparate) {
@@ -760,6 +762,7 @@ std::string SHA256(const char *str, size_t len)
 
 void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileData)
 {
+    // Ensure filePath validity.
     std::ifstream inputFile(filePath.c_str(), std::ios::binary);
     if (inputFile.is_open()) {
         inputFile.seekg(0, std::ios::end);
@@ -803,7 +806,7 @@ bool IsTextUTF8(const std::vector<uint8_t> &bytes)
         return true;
     };
 
-    int count = 0;
+    size_t count = 0;
     size_t i = 0;
     while (i < bytes.size()) {
         // 0xxxxxxx

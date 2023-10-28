@@ -39,7 +39,7 @@ thread_local napi_ref JsTask::requestCtor = nullptr;
 std::mutex JsTask::requestFileMutex_;
 thread_local napi_ref JsTask::requestFileCtor = nullptr;
 std::mutex JsTask::taskMutex_;
-std::map<std::string, JsTask*> JsTask::taskMap_;
+std::map<std::string, JsTask *> JsTask::taskMap_;
 std::mutex JsTask::taskContextMutex_;
 std::map<std::string, std::shared_ptr<JsTask::ContextInfo>> JsTask::taskContextMap_;
 
@@ -128,8 +128,8 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
     auto exec = [context]() {
         Config config = context->task->config_;
         context->innerCode_ = CreateExec(context);
-        if (context->innerCode_ == E_SERVICE_ERROR && config.version == Version::API9 &&
-            config.action == Action::UPLOAD) {
+        if (context->innerCode_ == E_SERVICE_ERROR && config.version == Version::API9
+            && config.action == Action::UPLOAD) {
             context->withErrCode_ = false;
         }
     };
@@ -218,8 +218,8 @@ napi_value JsTask::GetCtorV8(napi_env env)
     return DefineClass(env, clzDesV9, count, RequestFileV8, &requestCtor);
 }
 
-napi_value JsTask::DefineClass(napi_env env, const napi_property_descriptor* desc, size_t count,
-    napi_callback cb, napi_ref *ctor)
+napi_value JsTask::DefineClass(
+    napi_env env, const napi_property_descriptor *desc, size_t count, napi_callback cb, napi_ref *ctor)
 {
     napi_value cons = nullptr;
     napi_status status = napi_define_class(env, "Request", NAPI_AUTO_LENGTH, cb, nullptr, count, desc, &cons);
@@ -346,8 +346,7 @@ napi_value JsTask::TouchInner(napi_env env, napi_callback_info info, AsyncCall::
             context->innerCode_ = E_SERVICE_ERROR;
             return;
         }
-        context->innerCode_ =
-            RequestManager::GetInstance()->Touch(context->tid, context->token, context->taskInfo);
+        context->innerCode_ = RequestManager::GetInstance()->Touch(context->tid, context->token, context->taskInfo);
     };
     context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
     AsyncCall asyncCall(env, info, context);
@@ -596,7 +595,7 @@ size_t JsTask::GetListenerSize(const std::string &key)
     return it->second.size();
 }
 
-void JsTask::AddTaskMap(const std::string &key, JsTask* task)
+void JsTask::AddTaskMap(const std::string &key, JsTask *task)
 {
     std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
     JsTask::taskMap_[key] = task;
@@ -680,32 +679,60 @@ void JsTask::ClearTaskContext(const std::string &key)
         return;
     }
     auto context = it->second;
+    UnrefTaskContextMap(context);
     Config config = context->task->config_;
     for (auto &filePath : config.bodyFileNames) {
         // Delete file.
         std::remove(filePath.c_str());
     }
-    UnrefTaskContextMap(context);
+    taskContextMap_.erase(it);
 }
 
 void JsTask::UnrefTaskContextMap(std::shared_ptr<ContextInfo> context)
 {
+    ContextCallbackData *data = new ContextCallbackData();
+    if (data == nullptr) {
+        return;
+    }
+    data->context = context;
+    UvQueue::Call(data->context->env_, static_cast<void *>(data), UvUnrefTaskContext);
+    return;
+}
+
+void JsTask::UvUnrefTaskContext(uv_work_t *work, int status)
+{
+    ContextCallbackData *data = static_cast<ContextCallbackData *>(work->data);
+    if (data == nullptr) {
+        // Ensure that the `work` is not nullptr.
+        delete work;
+        return;
+    }
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(data->context->env_, &scope);
+    if (scope == nullptr) {
+        delete data;
+        delete work;
+        return;
+    }
     u_int32_t taskRefCount = 0;
-    napi_reference_unref(context->env_, context->taskRef, &taskRefCount);
+    napi_reference_unref(data->context->env_, data->context->taskRef, &taskRefCount);
     REQUEST_HILOGD("Unref task ref, count is %{public}d", taskRefCount);
     if (taskRefCount == 0) {
-        napi_delete_reference(context->env_, context->taskRef);
+        napi_delete_reference(data->context->env_, data->context->taskRef);
         REQUEST_HILOGD("Delete task ref");
     }
-    if (context->version_ == Version::API10) {
+    if (data->context->version_ == Version::API10) {
         u_int32_t configRefCount = 0;
-        napi_reference_unref(context->env_, context->jsConfig, &configRefCount);
+        napi_reference_unref(data->context->env_, data->context->jsConfig, &configRefCount);
         REQUEST_HILOGD("Unref task config ref, count is %{public}d", configRefCount);
         if (configRefCount == 0) {
-            napi_delete_reference(context->env_, context->jsConfig);
+            napi_delete_reference(data->context->env_, data->context->jsConfig);
             REQUEST_HILOGD("Delete config ref");
         }
     }
+    napi_close_handle_scope(data->context->env_, scope);
+    delete data;
+    delete work;
     return;
 }
 
@@ -722,4 +749,4 @@ bool JsTask::Equals(napi_env env, napi_value value, napi_ref copy)
     napi_strict_equals(env, value, copyValue, &isEquals);
     return isEquals;
 }
-}
+} // namespace OHOS::Request
