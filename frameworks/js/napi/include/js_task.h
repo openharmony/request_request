@@ -62,6 +62,10 @@ private:
         int32_t tid{};
     };
 
+    struct ContextCallbackData {
+        std::shared_ptr<ContextInfo> context = nullptr;
+    };
+
     struct TouchContext : public AsyncCall::Context {
         std::string tid;
         std::string token = "null";
@@ -92,6 +96,7 @@ private:
     static int64_t ParseAfter(napi_env env, napi_value value, int64_t before);
     static void AddTaskContextMap(const std::string &key, std::shared_ptr<ContextInfo> context);
     static void UnrefTaskContextMap(std::shared_ptr<ContextInfo> context);
+    static void UvUnrefTaskContext(uv_work_t *work, int status);
     bool Equals(napi_env env, napi_value value, napi_ref copy);
 
     static std::mutex createMutex_;
