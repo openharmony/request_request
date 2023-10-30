@@ -76,7 +76,8 @@ static void NapiCreateFaults(napi_env env, napi_value &faults)
 static void NapiCreateBroadcastEvent(napi_env env, napi_value &broadcastEvent)
 {
     napi_create_object(env, &broadcastEvent);
-    NapiUtils::SetStringPropertyUtf8(env, broadcastEvent, "COMPLETE", static_cast<std::string>(BROADCAST_EVENT_COMPLETE));
+    NapiUtils::SetStringPropertyUtf8(env, broadcastEvent, "COMPLETE",
+        static_cast<std::string>(BROADCAST_EVENT_COMPLETE));
 }
 
 static napi_value InitAgent(napi_env env, napi_value exports)
