@@ -18,6 +18,7 @@
 #include "log.h"
 #include "parcel_helper.h"
 #include "download_server_ipc_interface_code.h"
+#include <thread>
 
 namespace OHOS::Request {
 int32_t NotifyStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
@@ -108,8 +109,10 @@ void NotifyStub::RequestCallBack(const std::string &type, const std::string &tid
         NapiUtils::ReadBytesFromFile(filePath, notify.progress.bodyBytes);
         // Waiting for "complete" to read and delete.
         if (!(notifyData.version == Version::API10 && index == len - 1 && type == "progress")) {
-            // Delete file.
-            std::remove(filePath.c_str());
+            std::thread([filePath]() {
+                // Delete file.
+                std::remove(filePath.c_str());
+            }).detach();
         }
     }
     std::string key = type + tid;

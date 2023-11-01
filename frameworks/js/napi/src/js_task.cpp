@@ -679,13 +679,15 @@ void JsTask::ClearTaskContext(const std::string &key)
         return;
     }
     auto context = it->second;
-    UnrefTaskContextMap(context);
-    Config config = context->task->config_;
-    for (auto &filePath : config.bodyFileNames) {
-        // Delete file.
-        std::remove(filePath.c_str());
-    }
+    auto bodyFileNames = context->task->config_.bodyFileNames;
+    std::thread([bodyFileNames]() {
+        for (auto &filePath : bodyFileNames) {
+            // Delete file.
+            std::remove(filePath.c_str());
+        }
+    }).detach();
     taskContextMap_.erase(it);
+    UnrefTaskContextMap(context);
 }
 
 void JsTask::UnrefTaskContextMap(std::shared_ptr<ContextInfo> context)
