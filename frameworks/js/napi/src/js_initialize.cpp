@@ -173,8 +173,10 @@ ExceptionError JsInitialize::CheckUploadBodyFiles(Config &config, const std::str
             REQUEST_HILOGE("internal to cache error");
             return { .code = E_PARAMETER_CHECK, .errInfo = "IsPathValid error empty path" };
         }
-        time_t timestamp = time(NULL);
+        auto now = std::chrono::high_resolution_clock::now();
+        auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
         std::string fileName = filePath + "/tmp_body_" + std::to_string(i) + "_" + std::to_string(timestamp);
+        REQUEST_HILOGD("Create upload body file, %{public}s", fileName.c_str());
         if (!NapiUtils::IsPathValid(fileName)) {
             REQUEST_HILOGE("IsPathValid error %{public}s", fileName.c_str());
             return { .code = E_PARAMETER_CHECK, .errInfo = "IsPathValid error fail path" };

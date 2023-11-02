@@ -21,6 +21,7 @@
 #include "constant.h"
 #include "napi_utils.h"
 #include "js_common.h"
+#include "log.h"
 #include "napi/native_api.h"
 
 namespace OHOS::Request {
@@ -34,6 +35,7 @@ public:
         Context() = default;
         virtual ~Context()
         {
+            REQUEST_HILOGD("Context Drop");
             napi_delete_async_work(env_, work_);
             napi_delete_reference(env_, self_);
             if (callbackRef_ != nullptr) {
