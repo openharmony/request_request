@@ -14,15 +14,14 @@
  */
 
 #include "notify_stub.h"
-#include "request_event.h"
+#include <thread>
+#include "download_server_ipc_interface_code.h"
 #include "log.h"
 #include "parcel_helper.h"
-#include "download_server_ipc_interface_code.h"
-#include <thread>
+#include "request_event.h"
 
 namespace OHOS::Request {
-int32_t NotifyStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
-    MessageOption &option)
+int32_t NotifyStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     auto descriptorToken = data.ReadInterfaceToken();
     if (descriptorToken != GetDescriptor()) {
@@ -96,12 +95,18 @@ void NotifyStub::RequestCallBack(const std::string &type, const std::string &tid
         notify.type = EventType::PROGRESS_CALLBACK;
         notify.progress = notifyData.progress;
     }
-    auto item = JsTask::taskMap_.find(tid);
-    if (item == JsTask::taskMap_.end()) {
-        REQUEST_HILOGE("Task ID not found");
-        return;
+
+    JsTask *task = nullptr;
+    {
+        std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
+        auto item = JsTask::taskMap_.find(tid);
+        if (item == JsTask::taskMap_.end()) {
+            REQUEST_HILOGE("Task ID not found");
+            return;
+        }
+        task = item->second;
     }
-    auto task = item->second;
+
     uint32_t index = notifyData.progress.index;
     size_t len = task->config_.bodyFileNames.size();
     if (index < len && IsHeaderReceive(type, notifyData)) {
@@ -115,7 +120,9 @@ void NotifyStub::RequestCallBack(const std::string &type, const std::string &tid
             }).detach();
         }
     }
+
     std::string key = type + tid;
+    std::lock_guard<std::mutex> autoLock(task->listenerMutex_);
     auto it = task->listenerMap_.find(key);
     if (it == task->listenerMap_.end()) {
         REQUEST_HILOGE("Unregistered %{public}s callback", type.c_str());
@@ -131,7 +138,7 @@ bool NotifyStub::IsHeaderReceive(const std::string &type, const NotifyData &noti
     if (notifyData.version == Version::API9 && notifyData.action == Action::UPLOAD && type == "headerReceive") {
         return true;
     } else if (notifyData.version == Version::API10 && notifyData.action == Action::UPLOAD
-        && notifyData.progress.state == State::COMPLETED && (type == "progress" || type == "complete")) {
+               && notifyData.progress.state == State::COMPLETED && (type == "progress" || type == "complete")) {
         return true;
     }
     return false;
