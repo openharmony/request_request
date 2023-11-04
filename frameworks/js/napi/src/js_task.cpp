@@ -718,18 +718,16 @@ void JsTask::UvUnrefTaskContext(uv_work_t *work, int status)
     }
     u_int32_t taskRefCount = 0;
     napi_reference_unref(data->context->env_, data->context->taskRef, &taskRefCount);
-    REQUEST_HILOGD("Unref task ref, count is %{public}d", taskRefCount);
+    REQUEST_HILOGI("Unref task ref, count is %{public}d", taskRefCount);
     if (taskRefCount == 0) {
         napi_delete_reference(data->context->env_, data->context->taskRef);
-        REQUEST_HILOGD("Delete task ref");
     }
     if (data->context->version_ == Version::API10) {
         u_int32_t configRefCount = 0;
         napi_reference_unref(data->context->env_, data->context->jsConfig, &configRefCount);
-        REQUEST_HILOGD("Unref task config ref, count is %{public}d", configRefCount);
+        REQUEST_HILOGI("Unref task config ref, count is %{public}d", configRefCount);
         if (configRefCount == 0) {
             napi_delete_reference(data->context->env_, data->context->jsConfig);
-            REQUEST_HILOGD("Delete config ref");
         }
     }
     napi_close_handle_scope(data->context->env_, scope);
