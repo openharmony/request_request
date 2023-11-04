@@ -18,11 +18,13 @@
 #include <functional>
 #include <memory>
 #include <string>
+
 #include "constant.h"
-#include "napi_utils.h"
 #include "js_common.h"
 #include "log.h"
 #include "napi/native_api.h"
+#include "napi_utils.h"
+#include "uv_queue.h"
 
 namespace OHOS::Request {
 class AsyncCall final {
@@ -35,12 +37,28 @@ public:
         Context() = default;
         virtual ~Context()
         {
-            REQUEST_HILOGD("Context Drop");
-            napi_delete_async_work(env_, work_);
-            napi_delete_reference(env_, self_);
-            if (callbackRef_ != nullptr) {
-                napi_delete_reference(env_, callbackRef_);
-            }
+            REQUEST_HILOGI("Context Drop");
+            ContextNapiHolder *holder =
+                new ContextNapiHolder{ .env = env_, .callbackRef = callbackRef_, .self = self_, .work = work_ };
+            UvQueue::Call(env_, static_cast<void *>(holder), [](uv_work_t *work, int status) {
+                // Can ensure that the `holder` is not nullptr.
+                ContextNapiHolder *holder = static_cast<ContextNapiHolder *>(work->data);
+                napi_handle_scope scope = nullptr;
+                napi_open_handle_scope(holder->env, &scope);
+                if (scope == nullptr || holder->env == nullptr || holder->work == nullptr || holder->self == nullptr) {
+                    delete holder;
+                    delete work;
+                    return;
+                }
+                napi_delete_async_work(holder->env, holder->work);
+                napi_delete_reference(holder->env, holder->self);
+                if (holder->callbackRef != nullptr) {
+                    napi_delete_reference(holder->env, holder->callbackRef);
+                }
+                napi_close_handle_scope(holder->env, scope);
+                delete holder;
+                delete work;
+            });
         };
         inline Context &SetInput(InputAction action)
         {
@@ -101,6 +119,13 @@ private:
         {
             ctx = nullptr;
         }
+    };
+
+    struct ContextNapiHolder {
+        napi_env env;
+        napi_ref callbackRef;
+        napi_ref self;
+        napi_async_work work;
     };
     static void OnExecute(napi_env env, void *data);
     static void OnComplete(napi_env env, napi_status status, void *data);
