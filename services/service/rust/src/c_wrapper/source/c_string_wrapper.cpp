@@ -27,7 +27,6 @@ void DeleteChar(char *ptr)
 
 CStringWrapper WrapperCString(const std::string &str)
 {
-    REQUEST_HILOGE("begin WrapperCString str is %{public}s", str.c_str());
     CStringWrapper cStringWrapper;
     cStringWrapper.len = str.length();
     cStringWrapper.cStr = new char[cStringWrapper.len];

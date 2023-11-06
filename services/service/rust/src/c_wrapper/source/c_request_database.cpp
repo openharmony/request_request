@@ -155,7 +155,7 @@ bool HasRequestTaskRecord(uint32_t taskId)
 
 bool WriteRequestTaskInfo(CTaskInfo *taskInfo)
 {
-    REQUEST_HILOGI("write to request_task_info");
+    REQUEST_HILOGD("write to request_task_info");
     OHOS::NativeRdb::ValuesBucket insertValues;
     insertValues.PutLong("task_id", taskInfo->commonData.taskId);
     insertValues.PutLong("uid", taskInfo->commonData.uid);
@@ -188,13 +188,13 @@ bool WriteRequestTaskInfo(CTaskInfo *taskInfo)
         REQUEST_HILOGE("insert to request_task_info failed");
         return false;
     }
-    REQUEST_HILOGI("insert to request_task_info success");
+    REQUEST_HILOGD("insert to request_task_info success");
     return true;
 }
 
 bool WriteTaskInfoAttachment(CTaskInfo *taskInfo)
 {
-    REQUEST_HILOGI("write to task_info_attachment");
+    REQUEST_HILOGD("write to task_info_attachment");
     uint64_t len = std::max(taskInfo->formItemsLen, taskInfo->fileSpecsLen);
     for (uint64_t i = 0; i < len; i++) {
         OHOS::NativeRdb::ValuesBucket insertValues;
@@ -224,7 +224,7 @@ bool WriteTaskInfoAttachment(CTaskInfo *taskInfo)
             return false;
         }
     }
-    REQUEST_HILOGI("insert to task_info_attachment success");
+    REQUEST_HILOGD("insert to task_info_attachment success");
     return true;
 }
 
@@ -235,7 +235,7 @@ bool RecordRequestTaskInfo(CTaskInfo *taskInfo)
 
 bool UpdateRequestTaskInfo(uint32_t taskId, CUpdateInfo *updateInfo)
 {
-    REQUEST_HILOGI("update task info");
+    REQUEST_HILOGD("update task info");
     OHOS::NativeRdb::ValuesBucket values;
     values.PutLong("mtime", updateInfo->mtime);
     values.PutInt("reason", updateInfo->reason);

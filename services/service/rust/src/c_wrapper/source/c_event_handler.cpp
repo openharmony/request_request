@@ -24,15 +24,15 @@ const std::int64_t INIT_INTERVAL = 5000L;
 
 void RequestInitServiceHandler(void)
 {
-    REQUEST_HILOGI("RequestInitServiceHandler started.");
+    REQUEST_HILOGD("RequestInitServiceHandler started.");
     if (serviceHandler_ != nullptr) {
-        REQUEST_HILOGI("RequestInitServiceHandler already init.");
+        REQUEST_HILOGE("RequestInitServiceHandler already init.");
         return;
     }
     std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner =
         OHOS::AppExecFwk::EventRunner::Create("DownloadServiceAbility");
     serviceHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
-    REQUEST_HILOGI("RequestInitServiceHandler succeeded.");
+    REQUEST_HILOGD("RequestInitServiceHandler succeeded.");
 }
 
 void RequestPostTask(fun f)

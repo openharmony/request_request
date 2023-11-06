@@ -33,7 +33,7 @@ bool RequestCheckPermission(uint64_t tokenId, CStringWrapper permission)
         REQUEST_HILOGE("check permission failed");
         return false;
     }
-    REQUEST_HILOGI("check permission success");
+    REQUEST_HILOGD("check permission success");
     return true;
 }
 
