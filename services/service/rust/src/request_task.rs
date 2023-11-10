@@ -63,6 +63,13 @@ impl Default for TaskStatus {
 }
 
 struct Files(UnsafeCell<Vec<YlongFile>>);
+
+impl Files {
+    fn get(&self, index: usize) -> Option<&YlongFile> {
+        unsafe { &*self.0.get() }.get(index)
+    }
+}
+
 unsafe impl Sync for Files {}
 unsafe impl Send for Files {}
 
@@ -736,6 +743,8 @@ impl RequestTask {
                 }
                 let r = yfile.write_all(&buf[..size]).await;
             }
+            // Makes sure all the data has been written to the target file.
+            let _ = yfile.sync_all().await;
         }
         if self.conf.version == Version::API9 && self.conf.common_data.action == Action::UPLOAD {
             let notify_data = self.build_notify_data();
@@ -1161,6 +1170,10 @@ async fn download_inner(task: Arc<RequestTask>) {
     if !task.handle_download_error(&result) {
         error!(LOG_LABEL, "handle_download_error");
         return;
+    }
+    // Makes sure all the data has been written to the target file.
+    if let Some(file) = task.files.get(0) {
+        let _ = file.sync_all().await;
     }
     task.set_status(State::COMPLETED, Reason::Default);
 }
