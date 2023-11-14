@@ -46,11 +46,15 @@ public:
 
     static void ClearTaskMap(const std::string &key);
     static void AddTaskMap(const std::string &key, JsTask* task);
+    static bool SetPathPermission(const std::string &filepath);
+    static void RemovePathMap(const std::string &filepath);
     static void ClearTaskContext(const std::string &key);
 
     Config config_;
     static std::mutex taskMutex_;
     static std::map<std::string, JsTask*> taskMap_;
+    static std::mutex pathMutex_;
+    static std::map<std::string, int32_t> pathMap_;
     std::mutex listenerMutex_;
     std::map<std::string, std::vector<sptr<RequestNotify>>> listenerMap_;
 private:
@@ -94,6 +98,8 @@ private:
     static bool ParseTouch(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<TouchContext> context);
     static int64_t ParseBefore(napi_env env, napi_value value);
     static int64_t ParseAfter(napi_env env, napi_value value, int64_t before);
+    static void AddPathMap(const std::string &filepath, const std::string &baseDir);
+    static void ResetDirAccess(const std::string &filepath);
     static void AddTaskContextMap(const std::string &key, std::shared_ptr<ContextInfo> context);
     static void UnrefTaskContextMap(std::shared_ptr<ContextInfo> context);
     static void UvUnrefTaskContext(uv_work_t *work, int status);

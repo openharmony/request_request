@@ -23,6 +23,10 @@
 namespace OHOS::Request {
 static constexpr uint32_t TOKEN_MAX_BYTES = 2048;
 static constexpr uint32_t TOKEN_MIN_BYTES = 8;
+static constexpr int ACL_SUCC = 0;
+static const std::string SA_PERMISSION_RWX = "g:3815:rwx";
+static const std::string SA_PERMISSION_X = "g:3815:x";
+static const std::string SA_PERMISSION_CLEAN = "g:3815:---";
 class JsInitialize {
 public:
     JsInitialize() = default;
@@ -32,6 +36,7 @@ public:
     static void CreatProperties(napi_env env, napi_value &self, napi_value config, JsTask *task);
     static napi_status GetContext(napi_env env, napi_value value,
             std::shared_ptr<OHOS::AbilityRuntime::Context>& context);
+    static bool GetBaseDir(std::string &baseDir);
 private:
     static ExceptionError InitParam(napi_env env, napi_value* argv,
         std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);

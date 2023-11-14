@@ -16,7 +16,7 @@
 use std::{ffi::CString, ffi::c_char, fs::File, pin::Pin, thread::sleep, time::Duration, cell::UnsafeCell};
 use super::{
     enumration::*, progress::*, task_info::*, task_config::*, task_manager::*, utils::*, request_binding::*,
-    log::LOG_LABEL,
+    log::LOG_LABEL, request_service_ability::*,
 };
 use crate::trace::TraceScope;
 use crate::sys_event::{SysEvent, build_number_param, build_str_param};
@@ -100,6 +100,7 @@ pub struct RequestTask {
     seek_flag: AtomicBool,
     range_request: AtomicBool,
     range_response: AtomicBool,
+    restored: AtomicBool,
     skip_bytes: AtomicU64,
     upload_counts: AtomicU32,
     client: Option<Client>,
@@ -333,6 +334,7 @@ impl RequestTask {
             seek_flag: AtomicBool::new(false),
             range_request: AtomicBool::new(false),
             range_response: AtomicBool::new(false),
+            restored: AtomicBool::new(false),
             skip_bytes: AtomicU64::new(0),
             upload_counts: AtomicU32::new(0),
             client: None,
@@ -342,6 +344,80 @@ impl RequestTask {
             task.file_total_size.store(task.get_upload_file_total_size() as i64, Ordering::SeqCst);
         }
         task
+    }
+
+    pub fn restore_task(conf: Arc<TaskConfig>, info: TaskInfo) -> Self {
+        let progress_index = info.progress.common_data.index;
+        let uid = info.common_data.uid;
+        let action = conf.common_data.action;
+        let mut files: Vec<File> = Vec::new();
+        let mut body_files: Vec<File> = Vec::new();
+        for fs in &conf.file_specs {
+            if action == Action::UPLOAD {
+                match RequestAbility::open_file_readonly(uid, &conf.bundle, &fs.path) {
+                    Ok(file) => { files.push(file); },
+                    Err(e) => { error!(LOG_LABEL, "open file RO failed, err is {:?}", e); },
+                }
+            } else {
+                match RequestAbility::open_file_readwrite(uid, &conf.bundle, &fs.path) {
+                    Ok(file) => { files.push(file); },
+                    Err(e) => { error!(LOG_LABEL, "open file RW failed, err is {:?}", e); },
+                }
+            }
+        }
+        for name in &conf.body_file_names {
+            match RequestAbility::open_file_readwrite(uid, &conf.bundle, &name) {
+                Ok(body_file) => { body_files.push(body_file); },
+                Err(e) => { error!(LOG_LABEL, "open body_file failed, err is {:?}", e); },
+            }
+        }
+        let file_count = files.len();
+        let mut task = RequestTask {
+            conf,
+            uid,
+            task_id: info.common_data.task_id,
+            ctime: info.common_data.ctime,
+            files: Files(UnsafeCell::new(
+                files.into_iter().map(|f| YlongFile::new(f)).collect(),
+            )),
+            body_files: BodyFiles(UnsafeCell::new(
+                body_files.into_iter().map(|f| Some(YlongFile::new(f))).collect(),
+            )),
+            mime_type: Mutex::new(info.mime_type),
+            progress:  Mutex::new(info.progress.clone()),
+            tries: AtomicU32::new(info.common_data.tries),
+            status: Mutex::new(TaskStatus {
+                waitting_network_time: None,
+                mtime: get_current_timestamp(),
+                state: State::from(info.progress.common_data.state),
+                reason: Reason::from(info.common_data.reason),
+            }),
+            retry: AtomicBool::new(info.common_data.retry),
+            get_file_info: AtomicBool::new(false),
+            retry_for_request: AtomicBool::new(false),
+            retry_for_speed: AtomicBool::new(false),
+            code: Mutex::new(vec![Reason::Default; file_count]),
+            background_notify_time: AtomicU64::new(get_current_timestamp()),
+            file_total_size: AtomicI64::new(-1),
+            resume: AtomicBool::new(false),
+            seek_flag: AtomicBool::new(false),
+            range_request: AtomicBool::new(false),
+            range_response: AtomicBool::new(false),
+            restored: AtomicBool::new(true),
+            skip_bytes: AtomicU64::new(0),
+            upload_counts: AtomicU32::new(progress_index as u32),
+            client: None,
+        };
+        task.client = task.build_client();
+        match action {
+            Action::UPLOAD =>
+                task.file_total_size.store(task.get_upload_file_total_size() as i64, Ordering::SeqCst),
+            Action::DOWNLOAD =>
+                task.file_total_size.store(info.progress.sizes[progress_index] as i64, Ordering::SeqCst),
+            _ => {}
+        }
+        task
+
     }
 
     pub fn build_notify_data(&self) -> NotifyData {
@@ -581,7 +657,9 @@ impl RequestTask {
                     match len {
                         Ok(v) => {
                             let mut guard = self.progress.lock().unwrap();
-                            guard.sizes[0] = v;
+                            if !self.restored.load(Ordering::SeqCst) {
+                                guard.sizes[0] = v;
+                            }
                             self.file_total_size.store(v, Ordering::SeqCst);
                             debug!(LOG_LABEL, "the download task content-length is {}",  @public(v));
                         }
@@ -827,9 +905,7 @@ impl RequestTask {
         if state == State::WAITING {
             self.record_waitting_network_time();
         }
-        if self.conf.version == Version::API10 {
-            self.record_task_info();
-        }
+        self.record_task_info();
         self.state_change_notify(state);
         true
     }
@@ -925,6 +1001,7 @@ impl RequestTask {
             token: self.conf.token.clone(),
             form_items: self.conf.form_items.clone(),
             file_specs: self.conf.file_specs.clone(),
+            body_file_names: self.conf.body_file_names.clone(),
             title: self.conf.title.clone(),
             description: self.conf.description.clone(),
             mime_type: {

@@ -23,6 +23,7 @@
 #include "c_filter.h"
 #include "c_progress.h"
 #include "c_task_info.h"
+#include "c_task_config.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -65,7 +66,8 @@ constexpr const char *CREATE_REQUEST_TABLE1 = "CREATE TABLE IF NOT EXISTS reques
                                               "processed TEXT, "
                                               "extras TEXT, "
                                               "form_items_len INTEGER, "
-                                              "file_specs_len INTEGER)";
+                                              "file_specs_len INTEGER, "
+                                              "body_file_names_len INTEGER)";
 
 constexpr const char *CREATE_REQUEST_TABLE2 = "CREATE TABLE IF NOT EXISTS task_info_attachment "
                                               "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -78,7 +80,40 @@ constexpr const char *CREATE_REQUEST_TABLE2 = "CREATE TABLE IF NOT EXISTS task_i
                                               "file_name TEXT, "
                                               "mime_type TEXT, "
                                               "reason INTEGER, "
-                                              "message TEXT)";
+                                              "message TEXT, "
+                                              "body_file_name TEXT)";
+
+constexpr const char *CREATE_REQUEST_TABLE3 = "CREATE TABLE IF NOT EXISTS request_task_config "
+                                              "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                              "task_id INTEGER, "
+                                              "uid INTEGER, "
+                                              "action INTEGER, "
+                                              "mode INTEGER, "
+                                              "cover INTEGER, "
+                                              "network INTEGER, "
+                                              "meterd INTEGER, "
+                                              "roaming INTEGER, "
+                                              "retry INTEGER, "
+                                              "redirect INTEGER, "
+                                              "idx INTEGER, "
+                                              "begins INTEGER, "
+                                              "ends INTEGER, "
+                                              "gauge INTEGER, "
+                                              "precise INTEGER, "
+                                              "background INTEGER, "
+                                              "bundle TEXT, "
+                                              "url TEXT, "
+                                              "titile TEXT, "
+                                              "description TEXT, "
+                                              "method TEXT, "
+                                              "headers TEXT, "
+                                              "data TEXT, "
+                                              "token TEXT, "
+                                              "extras TEXT, "
+                                              "version INTEGER, "
+                                              "form_items_len INTEGER, "
+                                              "file_specs_len INTEGER, "
+                                              "body_file_names_len INTEGER)";
 
 class RequestDataBase {
 public:
@@ -89,6 +124,7 @@ public:
     bool Update(const OHOS::NativeRdb::ValuesBucket values, const OHOS::NativeRdb::AbsRdbPredicates &predicates);
     std::shared_ptr<OHOS::NativeRdb::ResultSet> Query(const OHOS::NativeRdb::AbsRdbPredicates &predicates,
         const std::vector<std::string> &columns);
+    bool Delete(const OHOS::NativeRdb::AbsRdbPredicates &predicates);
     bool BeginTransaction();
     bool Commit();
     bool RollBack();
@@ -134,6 +170,17 @@ int QueryTaskInfoAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicates,
     int64_t fileSpecsLen);
 CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo);
 CProgress BuildCProgress(const Progress &progress);
+bool HasTaskConfigRecord(uint32_t taskId);
+bool RecordRequestTaskConfig(CTaskConfig *taskConfig);
+void GetCommonTaskConfig(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskConfig &taskConfig);
+CTaskConfig **QueryAllTaskConfig();
+int QueryTaskConfigLen();
+int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, std::vector<TaskConfig> &taskConfigs);
+int QueryTaskConfigAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskConfig &taskConfig,
+    int64_t formItemsLen, int64_t fileSpecsLen, int64_t bodyFileNamesLen);
+CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs);
+bool CleanTaskConfigTable(uint32_t taskId, uint64_t uid);
+void DeleteCTaskConfigs(CTaskConfig **ptr);
 
 #ifdef __cplusplus
 }

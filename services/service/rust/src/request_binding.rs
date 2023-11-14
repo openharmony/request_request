@@ -16,7 +16,7 @@
 #![allow(unused_variables)]
 // C interface for check permission
 use super::{enumration::*, progress::RequestTaskMsg, form_item::CFileSpec,
-            form_item::CFormItem, task_info::*, c_string_wrapper::*, filter::*};
+            form_item::CFormItem, task_info::*, task_config::*, c_string_wrapper::*, filter::*};
 use std::ffi::{c_char, c_void};
 
 type APPSTATECB = extern "C" fn(i32, i32);
@@ -38,6 +38,9 @@ extern "C" {
     pub fn GetNetworkInfo() -> *const NetworkInfo;
     pub fn GetTopBundleName() -> CStringWrapper;
     pub fn DeleteCTaskInfo(ptr: *const CTaskInfo);
+    pub fn DeleteCTaskConfig(ptr: *const CTaskConfig);
+    pub fn DeleteCTaskConfigs(ptr: *const*const CTaskConfig);
+    pub fn DeleteCStringPtr(ptr: *const CStringWrapper);
     pub fn DeleteChar(ptr: *const c_char);
     pub fn DeleteCFormItem(ptr: *const CFormItem);
     pub fn DeleteCFileSpec(ptr: *const CFileSpec);
@@ -49,6 +52,11 @@ extern "C" {
     pub fn Touch(taskId: u32, uid: u64, token: CStringWrapper) -> *const CTaskInfo;
     pub fn Query(taskId: u32, queryAction: Action) -> *const CTaskInfo;
     pub fn Search(filter: CFilter) -> CVectorWrapper;
+    pub fn HasTaskConfigRecord(taskId: u32) -> bool;
+    pub fn RecordRequestTaskConfig(taskConfig: *const CTaskConfig) -> bool;
+    pub fn QueryAllTaskConfig() -> *const*const CTaskConfig;
+    pub fn QueryTaskConfigLen() -> i32;
+    pub fn CleanTaskConfigTable(taskId: u32, uid: u64) -> bool;
     pub fn RequestIsSystemAPI(tokenId: u64) -> bool;
     pub fn GetCallingBundle(tokenId: u64) -> CStringWrapper;
     pub fn PublishStateChangeEvents(bundleName: *const c_char, bundleNameLen: u32, taskId: u32, state: i32);

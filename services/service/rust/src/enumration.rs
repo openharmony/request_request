@@ -91,6 +91,24 @@ pub enum State {
     ANY = 0x61,
 }
 
+impl From<u8> for State {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => State::INITIALIZED,
+            16 => State::WAITING,
+            32 => State::RUNNING,
+            33 => State::RETRYING,
+            48 => State::PAUSED,
+            49 => State::STOPPED,
+            64 => State::COMPLETED,
+            65 => State::FAILED,
+            80 => State::REMOVED,
+            96 => State::CREATED,
+            _ => State::ANY,
+        }
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Debug)]
 #[repr(i32)]
 pub enum ApplicationState {

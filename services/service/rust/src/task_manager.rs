@@ -36,6 +36,7 @@ static MILLISECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
 static MILLISECONDS_IN_ONE_SECONDS: u64 = 1000;
 static REQUEST_SERVICE_ID: i32 = 3706;
 static WAITTING_RETRY_INTERVAL: u64 = 10;
+static WAITTING_RESTORE_INTERVAL: u64 = 7;
 static DUMP_INTERVAL: u64 = 5 * 60;
 
 type AppTask = HashMap<u32, Arc<RequestTask>>;
@@ -48,6 +49,7 @@ pub struct TaskManager {
     pub front_app_uid: Option<u64>,
     pub front_notify_time: u64,
     pub unloading: AtomicBool,
+    pub restoring: AtomicBool,
     pub api10_background_task_count: AtomicU32,
     pub recording_rdb_num: AtomicU32,
     task_handles: Mutex<HashMap<u32, JoinHandle<()>>>,
@@ -107,6 +109,7 @@ impl TaskManager {
             front_app_uid: None,
             front_notify_time: get_current_timestamp(),
             unloading: AtomicBool::new(false),
+            restoring: AtomicBool::new(false),
             api10_background_task_count: AtomicU32::new(0),
             recording_rdb_num: AtomicU32::new(0),
             task_handles: Mutex::new(HashMap::<u32, JoinHandle<()>>::new()),
@@ -733,6 +736,97 @@ impl TaskManager {
         }
         vec
     }
+
+    pub fn network_check_unload_sa(&self, guard: &MutexGuard<HashMap<u64, AppTask>>) -> bool {
+        let mut need_unload = false;
+        for (_, app_task) in guard.iter() {
+            for (_, task) in app_task.iter() {
+                let state = task.status.lock().unwrap().state;
+                if state == State::COMPLETED || state == State::FAILED
+                    || state == State::REMOVED || state == State::STOPPED {
+                    need_unload = true;
+                } else if (state == State::WAITING || state == State::PAUSED)
+                    && (!task.is_satisfied_configuration() || unsafe { !IsOnline() }) {
+                    need_unload = true;
+                } else {
+                    return false;
+                }
+            }
+        }
+        return need_unload;
+    }
+
+    pub fn record_all_task_config(&self, guard: &MutexGuard<HashMap<u64, AppTask>>) {
+        debug!(LOG_LABEL, "record all task config into database");
+        self.recording_rdb_num.fetch_add(1, Ordering::SeqCst);
+        for (_, app_task) in guard.iter() {
+            for (_, task) in app_task.iter() {
+                if unsafe { HasTaskConfigRecord(task.task_id) } {
+                    continue;
+                }
+                let state = task.status.lock().unwrap().state;
+                if state != State::WAITING && state != State::PAUSED {
+                    continue;
+                }
+                let task_config = task.conf.as_ref().clone();
+                let c_task_config = task_config.to_c_struct(task.task_id, task.uid);
+                let ret = unsafe { RecordRequestTaskConfig(&c_task_config) };
+                info!(LOG_LABEL, "insert taskConfig DB ret is {}", @public(ret));
+            }
+        }
+        self.recording_rdb_num.fetch_sub(1, Ordering::SeqCst);
+    }
+
+    pub fn query_all_task_config(&self) -> Option<Vec<Arc<TaskConfig>>> {
+        debug!(LOG_LABEL, "query all task config in database");
+        let mut task_config_list: Vec<Arc<TaskConfig>> = Vec::new();
+        let c_config_list_len = unsafe { QueryTaskConfigLen() };
+        if c_config_list_len <= 0 {
+            debug!(LOG_LABEL, "no task config in database");
+            return None;
+        }
+        let c_task_config_list = unsafe { QueryAllTaskConfig() };
+        if c_task_config_list.is_null() {
+            return None;
+        }
+        let c_task_config_ptrs = unsafe { std::slice::from_raw_parts(c_task_config_list, c_config_list_len as usize) };
+        for c_task_config in c_task_config_ptrs.iter() {
+            let task_config = TaskConfig::from_c_struct(unsafe { &**c_task_config });
+            task_config_list.push(Arc::new(task_config));
+            unsafe { DeleteCTaskConfig(*c_task_config) };
+        }
+        unsafe { DeleteCTaskConfigs(c_task_config_list) };
+        Some(task_config_list)
+    }
+
+    pub fn restore_task(&mut self, task: Arc<RequestTask>) {
+        if task.conf.common_data.mode == Mode::FRONTEND {
+            self.global_front_task = Some(task);
+            return;
+        }
+        if task.conf.version == Version::API10 {
+            self.api10_background_task_count.fetch_add(1, Ordering::SeqCst);
+        }
+        let mut guard = self.task_map.lock().unwrap();
+        let uid = task.uid;
+        let task_id = task.task_id;
+        if self.get_task(uid, task_id, &guard).is_some() {
+            return;
+        }
+        let app_task = guard.get_mut(&uid);
+        match app_task {
+            Some(map) => {
+                map.insert(task_id, task);
+                debug!(LOG_LABEL, "restore task into exist app_map success");
+            }
+            None => {
+                let mut app_task = AppTask::new();
+                app_task.insert(task_id, task);
+                guard.insert(uid, app_task);
+                debug!(LOG_LABEL, "restore task into new app_map success");
+            }
+        }
+    }
 }
 
 pub async fn unload_sa() {
@@ -744,12 +838,16 @@ pub async fn unload_sa() {
             Ok(guard) => {
                 let total_task_count = task_manager.get_total_task_count(&guard);
                 let recording_rdb_num = task_manager.recording_rdb_num.load(Ordering::SeqCst);
-                if total_task_count != 0 || recording_rdb_num != 0 {
+                let only_network_unsat = task_manager.network_check_unload_sa(&guard);
+                if (total_task_count != 0 && !only_network_unsat) || recording_rdb_num != 0 {
                     info!(LOG_LABEL, "total_task_count is {}, recording_rdb_num is {}",
                         @public(total_task_count), @public(recording_rdb_num));
                     continue;
                 }
                 task_manager.unloading.store(true, Ordering::SeqCst);
+                if total_task_count != 0 {
+                    task_manager.record_all_task_config(&guard);
+                }
                 info!(LOG_LABEL, "unload SA");
                 let samgr_proxy = get_systemability_manager();
                 let res = samgr_proxy.unload_systemability(REQUEST_SERVICE_ID);
@@ -808,6 +906,37 @@ async fn remove_task_from_map(task: Arc<RequestTask>) {
     task_manager.process_waitting_task(remove_task.uid, remove_task.conf.version, &guard);
 }
 
+pub async fn restore_all_tasks() {
+    let task_manager = TaskManager::get_instance();
+    if task_manager.restoring.load(Ordering::SeqCst) {
+        return;
+    }
+    task_manager.restoring.store(true, Ordering::SeqCst);
+    if let Some(config_list) = task_manager.query_all_task_config() {
+        info!(LOG_LABEL, "RSA query task config list len: {} in database", @public(config_list.len()));
+        for config in config_list.iter() {
+            debug!(LOG_LABEL, "RSA query task config is {:?}", @public(config));
+            let uid = config.common_data.uid;
+            let task_id = config.common_data.task_id;
+            let token = config.token.clone();
+            if let Some(task_info) = task_manager.touch(uid, task_id, token) {
+                let state = State::from(task_info.progress.common_data.state);
+                if state != State::WAITING && state != State::PAUSED {
+                    continue;
+                }
+                let request_task = RequestTask::restore_task(config.clone(), task_info);
+                let task = Arc::new(request_task);
+                task_manager.restore_task(task.clone());
+                if unsafe { IsOnline() } {
+                    resume_waiting_task(task.clone(), uid, WAITTING_RESTORE_INTERVAL);
+                }
+            }
+            unsafe { CleanTaskConfigTable(task_id, uid) };
+        }
+    }
+    task_manager.restoring.store(false, Ordering::SeqCst);
+}
+
 pub fn monitor_network() {
     debug!(LOG_LABEL, "monitor_network");
     unsafe {
@@ -822,23 +951,26 @@ extern "C" fn net_work_change_callback() {
     for (uid, app_task) in guard.iter() {
         let uid = *uid;
         for (_, task) in app_task.iter() {
-            let task = task.clone();
-            let state = task.status.lock().unwrap().state;
             if unsafe { IsOnline() } {
-                if state == State::WAITING && task.is_satisfied_configuration() {
-                    info!(LOG_LABEL, "Begin try resume task as network condition resume");
-                    task.resume.store(true, Ordering::SeqCst);
-                    ylong_runtime::spawn(async move {
-                        sleep(Duration::from_secs(WAITTING_RETRY_INTERVAL)).await;
-                        let manager = TaskManager::get_instance();
-                        let guard = manager.task_map.lock().unwrap();
-                        let notify_data = task.build_notify_data();
-                        TaskManager::get_instance().front_notify("resume".into(), &notify_data);
-                        manager.start_inner(uid, task.clone(), guard);
-                    });
-                }
+                resume_waiting_task(task.clone(), uid, WAITTING_RETRY_INTERVAL);
             }
         }
+    }
+}
+
+pub fn resume_waiting_task(task: Arc<RequestTask>, uid: u64, interval: u64) {
+    let state = task.status.lock().unwrap().state;
+    if state == State::WAITING && task.is_satisfied_configuration() {
+        info!(LOG_LABEL, "Begin try resume task as network condition resume");
+        task.resume.store(true, Ordering::SeqCst);
+        ylong_runtime::spawn(async move {
+            sleep(Duration::from_secs(interval)).await;
+            let manager = TaskManager::get_instance();
+            let guard = manager.task_map.lock().unwrap();
+            let notify_data = task.build_notify_data();
+            TaskManager::get_instance().front_notify("resume".into(), &notify_data);
+            manager.start_inner(uid, task.clone(), guard);
+        });
     }
 }
 

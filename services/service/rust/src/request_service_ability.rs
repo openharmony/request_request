@@ -30,6 +30,7 @@ use std::{
     collections::HashMap,
     fmt::Debug,
     fs::File,
+    fs::OpenOptions,
     mem::MaybeUninit,
     result::Result,
     string::String,
@@ -66,6 +67,7 @@ impl RequestAbility {
         monitor_network();
         monitor_app_state();
         monitor_task();
+        ylong_runtime::spawn(restore_all_tasks());
         ylong_runtime::spawn(unload_sa());
         TaskManager::get_instance().dump_all_task_info();
         0
@@ -106,13 +108,13 @@ impl RequestAbility {
         let version = config.version.clone();
         let error = TaskManager::get_instance().construct_task(
             Arc::new(config),
-            get_calling_uid(),
+            uid,
             task_id,
             files,
             body_files,
         );
         if version != Version::API10 {
-            TaskManager::get_instance().start(get_calling_uid(), *task_id);
+            TaskManager::get_instance().start(uid, *task_id);
         }
         error
     }
@@ -282,6 +284,7 @@ impl RequestAbility {
                     ServerRunState::NoStart,
                     Mutex::new(HashMap::new()),
                 ));
+                REQUESTABILITY.as_mut().unwrap().start();
             });
             REQUESTABILITY.as_mut().unwrap()
         }
@@ -528,5 +531,33 @@ impl RequestAbility {
                            task.task_id, task.conf.common_data.action as u8, guard.state as u8, guard.reason as u8,
                            task.file_total_size.load(Ordering::SeqCst),
                            task.progress.lock().unwrap().common_data.total_processed, task.conf.url).as_bytes());
+    }
+
+    pub fn convert_path(&self, uid: u64, bundle: &str, path: &str) -> String {
+        let uuid = uid / 200000;
+        let base = "/data/storage/el2/base/";
+        format!("/data/app/el2/{}/base/{}/{}", uuid, bundle, path.replace(base, ""))
+    }
+
+    pub fn open_file_readwrite(uid: u64, bundle: &String, path: &String) -> IpcResult<File> {
+        match OpenOptions::new().read(true).write(true).truncate(true)
+                                .open(RequestAbility::get_ability_instance().convert_path(uid, &bundle, &path)) {
+            Ok(file) => { Ok(file) },
+            Err(e) => {
+                error!(LOG_LABEL, "open_file_readwrite failed, err is {:?}", e);
+                Err(IpcStatusCode::Failed)
+            },
+        }
+    }
+
+    pub fn open_file_readonly(uid: u64, bundle: &String, path: &String) -> IpcResult<File> {
+        match OpenOptions::new().read(true)
+            .open(RequestAbility::get_ability_instance().convert_path(uid, &bundle, &path)) {
+            Ok(file) => { Ok(file) },
+            Err(e) => {
+                error!(LOG_LABEL, "open_file_readonly failed, err is {:?}", e);
+                Err(IpcStatusCode::Failed)
+            },
+        }
     }
 }

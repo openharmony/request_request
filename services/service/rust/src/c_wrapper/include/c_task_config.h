@@ -13,99 +13,86 @@
 * limitations under the License.
 */
 
-#ifndef C_TASK_INFO_H
-#define C_TASK_INFO_H
+#ifndef C_TASK_CONFIG_H
+#define C_TASK_CONFIG_H
 
 #include <cstdint>
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "c_form_item.h"
-#include "c_progress.h"
 #include "c_string_wrapper.h"
 
-struct CommonTaskInfo {
+struct CommonTaskConfig {
     uint32_t taskId;
     uint64_t uid;
     uint8_t action;
     uint8_t mode;
-    uint64_t ctime;
-    uint64_t mtime;
-    uint8_t reason;
-    bool gauge;
+    bool cover;
+    uint8_t network;
+    bool meterd;
+    bool roaming;
     bool retry;
-    uint32_t tries;
-    uint8_t version;
+    bool redirect;
+    uint32_t index;
+    uint64_t begins;
+    int64_t ends;
+    bool gauge;
+    bool precise;
+    bool background;
 };
 
-struct CEachFileStatus {
-    CStringWrapper path;
-    uint8_t reason;
-    CStringWrapper message;
+struct CStringMap {
+    CStringWrapper key;
+    CStringWrapper value;
 };
 
-struct EachFileStatus {
-    std::string path;
-    uint8_t reason;
-    std::string message;
-};
-
-struct CTaskInfo {
+struct CTaskConfig {
     CStringWrapper bundle;
     CStringWrapper url;
+    CStringWrapper title;
+    CStringWrapper description;
+    CStringWrapper method;
+    CStringWrapper headers;
     CStringWrapper data;
     CStringWrapper token;
+    CStringWrapper extras;
+    uint8_t version;
     CFormItem *formItemsPtr;
     uint32_t formItemsLen;
     CFileSpec *fileSpecsPtr;
     uint32_t fileSpecsLen;
     CStringWrapper *bodyFileNamesPtr;
     uint32_t bodyFileNamesLen;
-    CStringWrapper title;
-    CStringWrapper description;
-    CStringWrapper mimeType;
-    CProgress progress;
-    CEachFileStatus *eachFileStatusPtr;
-    uint32_t eachFileStatusLen;
-    CommonTaskInfo commonData;
+    CommonTaskConfig commonData;
 };
 
-struct TaskInfo {
+struct TaskConfig {
     std::string bundle;
     std::string url;
+    std::string title;
+    std::string description;
+    std::string method;
+    std::string headers;
     std::string data;
     std::string token;
+    std::string extras;
+    uint8_t version;
     std::vector<FormItem> formItems;
     std::vector<FileSpec> fileSpecs;
     std::vector<std::string> bodyFileNames;
-    std::string title;
-    std::string description;
-    std::string mimeType;
-    Progress progress;
-    std::vector<EachFileStatus> eachFileStatus;
-    CommonTaskInfo commonData;
+    CommonTaskConfig commonData;
 };
 
-struct CUpdateInfo {
-    uint64_t mtime;
-    uint8_t reason;
-    uint32_t tries;
-    CProgress progress;
-    CEachFileStatus *eachFileStatusPtr;
-    uint32_t eachFileStatusLen;
-};
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void DeleteCFormItem(CFormItem *ptr);
-void DeleteCFileSpec(CFileSpec *ptr);
-void DeleteCStringPtr(CStringWrapper *ptr);
-void DeleteCEachFileStatus(CEachFileStatus *ptr);
-void DeleteCTaskInfo(CTaskInfo *ptr);
+void DeleteCTaskConfig(CTaskConfig *ptr);
 
 #ifdef __cplusplus
 }
 #endif
-#endif // C_TASK_INFO_H
+#endif // C_TASK_CONFIG_H

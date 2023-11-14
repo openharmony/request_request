@@ -114,6 +114,7 @@ ohos_shared_library("request_service_c") {
     "${request_path}/services/service/rust/src/c_wrapper/source/c_event_handler.cpp",
     "${request_path}/services/service/rust/src/c_wrapper/source/c_request_database.cpp",
     "${request_path}/services/service/rust/src/c_wrapper/source/c_string_wrapper.cpp",
+    "${request_path}/services/service/rust/src/c_wrapper/source/c_task_config.cpp",
     "${request_path}/services/service/rust/src/c_wrapper/source/c_task_info.cpp",
     "${request_path}/services/service/rust/src/c_wrapper/source/common_event_notify.cpp",
     "${request_path}/services/service/rust/src/c_wrapper/source/get_calling_bundle.cpp",

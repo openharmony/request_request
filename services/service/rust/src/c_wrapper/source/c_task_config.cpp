@@ -13,29 +13,9 @@
 * limitations under the License.
 */
 
-#include "c_task_info.h"
+#include "c_task_config.h"
 
-void DeleteCFormItem(CFormItem *ptr)
-{
-    delete[] ptr;
-}
-
-void DeleteCFileSpec(CFileSpec *ptr)
-{
-    delete[] ptr;
-}
-
-void DeleteCStringPtr(CStringWrapper *ptr)
-{
-    delete[] ptr;
-}
-
-void DeleteCEachFileStatus(CEachFileStatus *ptr)
-{
-    delete[] ptr;
-}
-
-void DeleteCTaskInfo(CTaskInfo *ptr)
+void DeleteCTaskConfig(CTaskConfig *ptr)
 {
     delete[] ptr;
 }

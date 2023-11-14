@@ -19,6 +19,7 @@
 #include <cstring>
 #include <mutex>
 #include <securec.h>
+#include <sys/stat.h>
 
 #include "async_call.h"
 #include "js_initialize.h"
@@ -29,6 +30,8 @@
 #include "request_event.h"
 #include "request_manager.h"
 #include "upload/upload_task_napiV5.h"
+#include "storage_acl.h"
+using namespace OHOS::StorageDaemon;
 
 namespace OHOS::Request {
 constexpr int64_t MILLISECONDS_IN_ONE_DAY = 24 * 60 * 60 * 1000;
@@ -40,6 +43,8 @@ std::mutex JsTask::requestFileMutex_;
 thread_local napi_ref JsTask::requestFileCtor = nullptr;
 std::mutex JsTask::taskMutex_;
 std::map<std::string, JsTask *> JsTask::taskMap_;
+std::mutex JsTask::pathMutex_;
+std::map<std::string, int32_t> JsTask::pathMap_;
 std::mutex JsTask::taskContextMutex_;
 std::map<std::string, std::shared_ptr<JsTask::ContextInfo>> JsTask::taskContextMap_;
 
@@ -668,6 +673,88 @@ void JsTask::ClearTaskMap(const std::string &key)
         return;
     }
     taskMap_.erase(it);
+}
+
+bool JsTask::SetPathPermission(const std::string &filepath)
+{
+    std::string baseDir;
+    if (!JsInitialize::GetBaseDir(baseDir) || filepath.find(baseDir) == std::string::npos) {
+        REQUEST_HILOGE("File dir not found.");
+        return false;
+    }
+
+    AddPathMap(filepath, baseDir);
+    for (auto it : pathMap_) {
+        if (it.second <= 0) {
+            continue;
+        }
+        if (AclSetAccess(it.first, SA_PERMISSION_X) != ACL_SUCC) {
+            REQUEST_HILOGE("AclSetAccess Parent Dir Failed.");
+            return false;
+        }
+    }
+    
+    std::string childDir = filepath.substr(0, filepath.rfind("/"));
+    if (AclSetAccess(childDir, SA_PERMISSION_RWX) != ACL_SUCC) {
+        REQUEST_HILOGE("AclSetAccess Child Dir Failed.");
+        return false;
+    }
+    return true;
+}
+
+void JsTask::AddPathMap(const std::string &filepath, const std::string &baseDir)
+{
+    std::string childDir(filepath);
+    std::string parentDir;
+    while (childDir.length() > baseDir.length()) {
+        parentDir = childDir.substr(0, childDir.rfind("/"));
+        std::lock_guard<std::mutex> lockGuard(JsTask::pathMutex_);
+        auto it = pathMap_.find(parentDir);
+        if (it == pathMap_.end()) {
+            pathMap_[parentDir] = 1;
+        } else {
+            pathMap_[parentDir] += 1;
+        }
+        childDir = parentDir;
+    }
+}
+
+void JsTask::ResetDirAccess(const std::string &filepath)
+{
+    int ret = AclSetAccess(filepath, SA_PERMISSION_CLEAN);
+    if (ret != ACL_SUCC) {
+        REQUEST_HILOGE("AclSetAccess Reset Dir Failed.");
+    }
+}
+
+void JsTask::RemovePathMap(const std::string &filepath)
+{
+    std::string baseDir;
+    if (!JsInitialize::GetBaseDir(baseDir) || filepath.find(baseDir) == std::string::npos) {
+        REQUEST_HILOGE("File dir not found.");
+        return;
+    }
+
+    if (chmod(filepath.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) != 0) {
+        REQUEST_HILOGE("File remove WOTH access Failed.");
+    }
+
+    std::string childDir(filepath);
+    std::string parentDir;
+    while (childDir.length() > baseDir.length()) {
+        parentDir = childDir.substr(0, childDir.rfind("/"));
+        std::lock_guard<std::mutex> lockGuard(JsTask::pathMutex_);
+        auto it = pathMap_.find(parentDir);
+        if (it != pathMap_.end()) {
+            if (pathMap_[parentDir] <= 1) {
+                pathMap_.erase(parentDir);
+                ResetDirAccess(parentDir);
+            } else {
+                pathMap_[parentDir] -= 1;
+            }
+        }
+        childDir = parentDir;
+    }
 }
 
 void JsTask::ClearTaskContext(const std::string &key)
