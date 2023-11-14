@@ -43,7 +43,7 @@ ApplicationStateObserver &ApplicationStateObserver::GetInstance()
 
 bool ApplicationStateObserver::RegisterAppStateChanged(RegCallBack &&callback)
 {
-    REQUEST_HILOGI("RegisterAppState In");
+    REQUEST_HILOGD("RegisterAppState In");
     sptr<AppProcessState> appProcessState = new (std::nothrow) AppProcessState(*this);
     if (appProcessState == nullptr) {
         REQUEST_HILOGE("create AppProcessState fail, not enough memory");
@@ -70,7 +70,7 @@ bool ApplicationStateObserver::RegisterAppStateChanged(RegCallBack &&callback)
         REQUEST_HILOGE("register fail, ret = %{public}d", ret);
         return false;
     }
-    REQUEST_HILOGI("RegisterAppState Out");
+    REQUEST_HILOGD("RegisterAppState Out");
     return false;
 }
 
@@ -105,12 +105,11 @@ void ApplicationStateObserver::AppProcessState::OnProcessDied(const AppExecFwk::
 
 void ApplicationStateObserver::AppProcessState::RunCallback(int32_t uid, int32_t state)
 {
-    REQUEST_HILOGI("running callback function in");
-    if (appStateObserver_.callback_ != nullptr) {
-        REQUEST_HILOGI("appStateObserver_.callback_ != nullptr");
-        appStateObserver_.callback_(uid, state);
+    if (appStateObserver_.callback_ == nullptr) {
+        REQUEST_HILOGE("appStateObserver callback is nullptr");
+        return;
     }
-    REQUEST_HILOGI("running callback function end");
+    appStateObserver_.callback_(uid, state);
 }
 } // namespace OHOS::Request
 

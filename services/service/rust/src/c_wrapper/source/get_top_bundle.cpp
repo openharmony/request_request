@@ -20,8 +20,8 @@
 
 CStringWrapper GetTopBundleName(void)
 {
-    REQUEST_HILOGE("GetTopBundleName start");
     OHOS::AppExecFwk::ElementName elementName = OHOS::AAFwk::AbilityManagerClient::GetInstance()->GetTopAbility();
     std::string bundleName = elementName.GetBundleName();
+    REQUEST_HILOGD("top bundle name is %{public}s", bundleName.c_str());
     return WrapperCString(bundleName);
 }

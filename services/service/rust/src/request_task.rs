@@ -483,7 +483,7 @@ impl RequestTask {
                 false
             }
             _ => {
-                info!(LOG_LABEL, "set len success");
+                debug!(LOG_LABEL, "set len success");
                 match file.seek(SeekFrom::Start(0)).await{
                     Err(e) => {
                         error!(LOG_LABEL, "seek err is {:?}", e);
@@ -491,7 +491,7 @@ impl RequestTask {
                         false
                     }
                     Ok(_) => {
-                        info!(LOG_LABEL, "seek success");
+                        debug!(LOG_LABEL, "seek success");
                         let mut progress_guard = self.progress.lock().unwrap();
                         progress_guard.common_data.total_processed = 0;
                         progress_guard.processed[0] = 0;
@@ -1016,7 +1016,7 @@ impl RequestTask {
         let file_path = self.conf.file_specs[index].path.as_ptr() as *const c_char;
         let file_path_len = self.conf.file_specs[index].path.as_bytes().len() as i32;
         let percent = total_processed * 100 / (file_total_size as u64);
-        info!(LOG_LABEL, "background notify");
+        debug!(LOG_LABEL, "background notify");
         let task_msg = RequestTaskMsg {
             task_id: self.task_id,
             uid: self.uid as i32,

@@ -809,7 +809,7 @@ async fn remove_task_from_map(task: Arc<RequestTask>) {
 }
 
 pub fn monitor_network() {
-    info!(LOG_LABEL, "monitor_network");
+    debug!(LOG_LABEL, "monitor_network");
     unsafe {
         RegisterNetworkCallback(net_work_change_callback);
     }
@@ -843,14 +843,14 @@ extern "C" fn net_work_change_callback() {
 }
 
 pub fn monitor_app_state() {
-    info!(LOG_LABEL, "monitor_app_state");
+    debug!(LOG_LABEL, "monitor_app_state");
     unsafe {
         RegisterAPPStateCallback(update_app_state);
     }
 }
 
 extern "C" fn update_app_state(uid: i32, state: i32) {
-    info!(LOG_LABEL, "update app state, uid = {}, state = {}", @public(uid), @public(state));
+    debug!(LOG_LABEL, "update app state, uid = {}, state = {}", @public(uid), @public(state));
     let task_manager = TaskManager::get_instance();
     if is_foreground(state) {
         debug!(LOG_LABEL, "save front app uid");

@@ -30,7 +30,7 @@ use system_ability_fwk_rust::{define_system_ability, IMethod, ISystemAbility, RS
 pub const REQUEST_SERVICE_ID: i32 = 3706;
 
 fn on_start<T: ISystemAbility + IMethod>(ability: &T) {
-    info!(LOG_LABEL, "on_start");
+    debug!(LOG_LABEL, "on_start");
     let service = match RequestServiceStub::new_remote_stub(RequestService) {
         Some(service) => service,
         None => {
@@ -52,7 +52,7 @@ fn on_start<T: ISystemAbility + IMethod>(ability: &T) {
 }
 
 fn on_stop<T: ISystemAbility + IMethod>(ability: &T) {
-    info!(LOG_LABEL, "on_stop");
+    debug!(LOG_LABEL, "on_stop");
     stop();
 }
 
@@ -76,7 +76,7 @@ define_system_ability!(sa: SystemAbility(on_start, on_stop),);
 #[link_section = ".init_array"]
 static A: extern "C" fn() = {
     extern "C" fn init() {
-        info!(LOG_LABEL, "request service init");
+        debug!(LOG_LABEL, "request service init");
         let system_ability = SystemAbility::new_system_ability(REQUEST_SERVICE_ID, false)
             .expect("create service failed");
         system_ability.register();
