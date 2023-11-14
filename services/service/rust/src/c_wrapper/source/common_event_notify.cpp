@@ -26,7 +26,7 @@ using namespace OHOS::EventFwk;
 void PublishStateChangeEvents(const char* bundleName, uint32_t len, uint32_t taskId, int32_t state)
 {
     REQUEST_HILOGD("PublishStateChangeEvents in.");
-    static std::string eventAction = "ohos.request.event.COMPLETE";
+    static constexpr const char *eventAction = "ohos.request.event.COMPLETE";
 
     std::string bundle (bundleName, len);
     Want want;

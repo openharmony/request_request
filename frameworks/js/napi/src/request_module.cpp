@@ -25,7 +25,7 @@
 using namespace OHOS::Request;
 #define DECLARE_NAPI_METHOD(name, func) { name, 0, func, 0, 0, 0, napi_default, 0 }
 
-const std::string BROADCAST_EVENT_COMPLETE = "ohos.request.event.COMPLETE";
+static constexpr const char *BROADCAST_EVENT_COMPLETE = "ohos.request.event.COMPLETE";
 
 static void NapiCreateAction(napi_env env, napi_value &action)
 {
