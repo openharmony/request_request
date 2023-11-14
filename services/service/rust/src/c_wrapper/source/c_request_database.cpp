@@ -213,7 +213,7 @@ bool WriteRequestTaskInfo(CTaskInfo *taskInfo)
 
 bool WriteTaskInfoAttachment(CTaskInfo *taskInfo)
 {
-    REQUEST_HILOGI("write to task_info_attachment");
+    REQUEST_HILOGD("write to task_info_attachment");
     uint64_t len = std::max({taskInfo->formItemsLen, taskInfo->fileSpecsLen, taskInfo->bodyFileNamesLen});
     for (uint64_t i = 0; i < len; i++) {
         OHOS::NativeRdb::ValuesBucket insertValues;
@@ -827,7 +827,7 @@ int QueryTaskConfigAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicate
     }
     int64_t len = std::max({formItemsLen, fileSpecsLen, bodyFileNamesLen});
     if (rowCount != len) {
-        REQUEST_HILOGI("query task_config_attachment row count %{public}d != max len %{public}lld", rowCount, len);
+        REQUEST_HILOGI("query task_config_attachment row count != max len");
         return OHOS::Request::QUERY_ERR;
     }
     for (int64_t i = 0; i < len; i++) {
