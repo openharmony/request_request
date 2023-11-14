@@ -18,6 +18,8 @@
 #include <cstring>
 #include <regex>
 #include <securec.h>
+#include <fstream>
+#include <sys/stat.h>
 
 #include "js_common.h"
 #include "log.h"
@@ -28,7 +30,6 @@ static constexpr const char *PARAM_KEY_DESCRIPTION = "description";
 static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";
 static constexpr const char *PARAM_KEY_FILE_PATH = "filePath";
 static constexpr const char *PARAM_KEY_BACKGROUND = "background";
-static constexpr uint32_t FILE_PERMISSION = 0644;
 static constexpr uint32_t TITLE_MAXIMUM = 256;
 static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
 static constexpr uint32_t URL_MAXIMUM = 2048;
@@ -126,6 +127,21 @@ napi_status JsInitialize::GetContext(napi_env env, napi_value value,
     return napi_ok;
 }
 
+bool JsInitialize::GetBaseDir(std::string &baseDir)
+{
+    auto context = AbilityRuntime::Context::GetApplicationContext();
+    if (context == nullptr) {
+        REQUEST_HILOGE("AppContext is null.");
+        return false;
+    }
+    baseDir = context->GetBaseDir();
+    if (baseDir.empty()) {
+        REQUEST_HILOGE("Base dir not found.");
+        return false;
+    }
+    return true;
+}
+
 ExceptionError JsInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
     Config &config)
 {
@@ -149,6 +165,9 @@ ExceptionError JsInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRu
         }
         if (file.name.empty()) {
             file.name = "file";
+        }
+        if (!JsTask::SetPathPermission(file.uri)) {
+            return { .code = E_FILE_IO, .errInfo = "set path permission fail" };
         }
         err = GetFD(path, config, file.fd);
         if (err.code != E_OK) {
@@ -184,11 +203,16 @@ ExceptionError JsInitialize::CheckUploadBodyFiles(Config &config, const std::str
 
         int32_t bodyFd = open(fileName.c_str(), O_TRUNC | O_RDWR);
         if (bodyFd < 0) {
-            bodyFd = open(fileName.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
+            bodyFd = open(fileName.c_str(), O_CREAT | O_RDWR);
             if (bodyFd < 0) {
                 return { .code = E_FILE_IO, .errInfo = "Failed to open file errno " + std::to_string(errno) };
             }
         }
+
+        if (bodyFd >= 0) {
+            chmod(fileName.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
+        }
+
         config.bodyFds.push_back(bodyFd);
         config.bodyFileNames.push_back(fileName);
     }
@@ -202,8 +226,12 @@ ExceptionError JsInitialize::GetFD(const std::string &path, const Config &config
     if (fd >= 0) {
         REQUEST_HILOGD("File already exists");
         if (config.action == Action::UPLOAD) {
+            chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
             return error;
+        } else {
+            chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
         }
+
         if (config.version == Version::API10 && config.overwrite) {
             return error;
         }
@@ -214,10 +242,11 @@ ExceptionError JsInitialize::GetFD(const std::string &path, const Config &config
             ExceptionErrorCode code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
             return { .code = code, .errInfo = "Failed to open file errno " + std::to_string(errno) };
         }
-        fd = open(path.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
+        fd = open(path.c_str(), O_CREAT | O_RDWR);
         if (fd < 0) {
             return { .code = E_FILE_IO, .errInfo = "Failed to open file errno " + std::to_string(errno) };
         }
+        chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
     }
     return error;
 }

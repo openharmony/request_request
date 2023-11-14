@@ -23,6 +23,7 @@ pub struct TaskInfo {
     pub token: String,
     pub form_items: Vec<FormItem>,
     pub file_specs: Vec<FileSpec>,
+    pub body_file_names: Vec<String>,
     pub title: String,
     pub description: String,
     pub mime_type: String,
@@ -101,6 +102,8 @@ pub struct CTaskInfo {
     pub form_items_len: u32,
     pub file_specs_ptr: *const CFileSpec,
     pub file_specs_len: u32,
+    pub body_file_names_ptr: *const CStringWrapper,
+    pub body_file_names_len: u32,
     pub title: CStringWrapper,
     pub description: CStringWrapper,
     pub mime_type: CStringWrapper,
@@ -113,6 +116,7 @@ pub struct CTaskInfo {
 pub struct InfoSet {
     pub form_items: Vec<CFormItem>,
     pub file_specs: Vec<CFileSpec>,
+    pub body_file_names: Vec<CStringWrapper>,
     pub sizes: String,
     pub processed: String,
     pub extras: String,
@@ -124,6 +128,7 @@ impl TaskInfo {
         InfoSet {
             form_items: self.form_items.iter().map(|x| x.to_c_struct()).collect(),
             file_specs: self.file_specs.iter().map(|x| x.to_c_struct()).collect(),
+            body_file_names: self.body_file_names.iter().map(|x| CStringWrapper::from(x)).collect(),
             sizes: format!("{:?}", self.progress.sizes),
             processed: format!("{:?}", self.progress.processed),
             extras: hashmap_to_string(&self.extras),
@@ -156,6 +161,8 @@ impl TaskInfo {
             form_items_len: info.form_items.len() as u32,
             file_specs_ptr: info.file_specs.as_ptr() as *const CFileSpec,
             file_specs_len: info.file_specs.len() as u32,
+            body_file_names_ptr: info.body_file_names.as_ptr() as *const CStringWrapper,
+            body_file_names_len: info.body_file_names.len() as u32,
             title: CStringWrapper::from(&self.title),
             description: CStringWrapper::from(&self.description),
             mime_type: CStringWrapper::from(&self.mime_type),
@@ -184,6 +191,11 @@ impl TaskInfo {
                 c_struct.file_specs_len as usize,
                 FileSpec::from_c_struct,
             ),
+            body_file_names: Self::build_vec(
+                c_struct.body_file_names_ptr,
+                c_struct.body_file_names_len as usize,
+                CStringWrapper::to_string,
+            ),
             title: c_struct.title.to_string(),
             description: c_struct.description.to_string(),
             mime_type: c_struct.mime_type.to_string(),
@@ -197,6 +209,7 @@ impl TaskInfo {
         };
         unsafe { DeleteCFormItem(c_struct.form_items_ptr) };
         unsafe { DeleteCFileSpec(c_struct.file_specs_ptr) };
+        unsafe { DeleteCStringPtr(c_struct.body_file_names_ptr) };
         unsafe { DeleteCEachFileStatus(c_struct.each_file_status_ptr) };
         task_info
     }

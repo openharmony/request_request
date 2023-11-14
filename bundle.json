@@ -47,7 +47,8 @@
         "distributed_notification_service",
         "c_utils",
         "netstack",
-        "ylong_runtime"
+        "ylong_runtime",
+        "storage_service"
       ],
       "third_party": [
         "curl",

@@ -80,6 +80,10 @@ impl RequestServiceInterface for RequestService {
         let description: String = data.read()?;
         let data_base: String = data.read()?;
 
+        let bundle = RequestAbility::get_ability_instance().get_calling_bundle();
+        let mut task_id: u32 = 0;
+        let uid: u64 = get_calling_uid();
+
         let mut form_items = Vec::<FormItem>::new();
         let form_size: u32 = data.read()?;
         if form_size > data.get_readable_bytes() {
@@ -106,8 +110,13 @@ impl RequestServiceInterface for RequestService {
             let path: String = data.read()?;
             let file_name: String = data.read()?;
             let mime_type: String = data.read()?;
-            let fd = data.read::<FileDesc>()?;
-            files.push(File::from(fd));
+            if action == Action::UPLOAD{
+                let file = RequestAbility::open_file_readonly(uid, &bundle, &path)?;
+                files.push(file);
+            } else {
+                let file = RequestAbility::open_file_readwrite(uid, &bundle, &path)?;
+                files.push(file);
+            }
             let fd_error: i32 = data.read()?;
             file_specs.push(FileSpec {
                 name,
@@ -120,9 +129,12 @@ impl RequestServiceInterface for RequestService {
         // Response Bodys fd.
         let body_file_size: u32 = data.read()?;
         let mut body_files = Vec::new();
+        let mut body_file_names: Vec<String> = Vec::new();
         for i in 0..body_file_size {
-            let fd = data.read::<FileDesc>()?;
-            body_files.push(File::from(fd));
+            let file_name: String = data.read()?;
+            let body_file = RequestAbility::open_file_readwrite(uid, &bundle, &file_name)?;
+            body_file_names.push(file_name);
+            body_files.push(body_file);
         }
 
         let header_size: u32 = data.read()?;
@@ -150,7 +162,7 @@ impl RequestServiceInterface for RequestService {
             let value: String = data.read()?;
             extras.insert(key, value);
         }
-        let bundle = RequestAbility::get_ability_instance().get_calling_bundle();
+
         let task_config = TaskConfig {
             bundle,
             url,
@@ -164,7 +176,10 @@ impl RequestServiceInterface for RequestService {
             version,
             form_items,
             file_specs,
+            body_file_names,
             common_data: CommonTaskConfig {
+                task_id ,
+                uid ,
                 action,
                 mode,
                 cover,
@@ -182,7 +197,6 @@ impl RequestServiceInterface for RequestService {
             },
         };
         debug!(LOG_LABEL, "files {:?}", @public(files));
-        let mut task_id: u32 = 0;
         let ret =
             RequestAbility::get_ability_instance().construct(task_config, files, body_files, &mut task_id);
         let remote_object: RemoteObj = data.read::<RemoteObj>()?;
@@ -552,7 +566,7 @@ impl RequestServiceInterface for RequestService {
 
 /// start
 pub fn start() {
-    RequestAbility::get_ability_instance().start();
+    RequestAbility::get_ability_instance();
 }
 
 /// stop

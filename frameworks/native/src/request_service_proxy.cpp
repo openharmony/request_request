@@ -88,7 +88,6 @@ void RequestServiceProxy::GetVectorData(const Config &config, MessageParcel &dat
         data.WriteString(file.uri);
         data.WriteString(file.filename);
         data.WriteString(file.type);
-        data.WriteFileDescriptor(file.fd);
         data.WriteInt32(static_cast<int32_t>(errno));
     }
 
@@ -97,14 +96,15 @@ void RequestServiceProxy::GetVectorData(const Config &config, MessageParcel &dat
             close(file.fd);
         }
     }
-    
     // Response Bodys fds.
     data.WriteUint32(config.bodyFds.size());
     for (const auto &fd : config.bodyFds) {
-        data.WriteFileDescriptor(fd);
         if (fd > 0) {
             close(fd);
         }
+    }
+    for (const auto &name : config.bodyFileNames) {
+        data.WriteString(name);
     }
 
     data.WriteUint32(config.headers.size());
