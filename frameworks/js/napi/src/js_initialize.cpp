@@ -329,6 +329,9 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
     config.mode = static_cast<Mode>(NapiUtils::Convert2Uint32(env, jsConfig, "mode"));
     config.headers = ParseMap(env, jsConfig, "headers");
     config.extras = ParseMap(env, jsConfig, "extras");
+    if (config.mode == Mode::BACKGROUND) {
+        config.background = true;
+    }
     return true;
 }
 
