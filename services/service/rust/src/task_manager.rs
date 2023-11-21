@@ -964,19 +964,20 @@ fn is_terminated(state: i32) -> bool {
 
 fn update_foreground_app(
     uid: u64,
-    app_task: &HashMap<u32, Arc<RequestTask>>) {
+    app_task: &HashMap<u32, Arc<RequestTask>>,
+) {
     for (_, task) in app_task.iter() {
-        let task = task.clone();
         if task.conf.common_data.mode != Mode::FRONTEND {
             continue;
         }
+        let task = task.clone();
         let state = task.status.lock().unwrap().state;
         let reason = task.status.lock().unwrap().reason;
         if state == State::PAUSED && reason == Reason::AppBackgroundOrTerminate {
-            debug!(LOG_LABEL, "front app resume ==PAUSED==");
+            info!(LOG_LABEL, "Begin try resume task as app switch to background");
             task.resume.store(true, Ordering::SeqCst);
             ylong_runtime::spawn(async move {
-                sleep(Duration::from_secs(MILLISECONDS_IN_ONE_SECONDS)).await;
+                sleep(Duration::from_millis(MILLISECONDS_IN_ONE_SECONDS)).await;
                 let manager = TaskManager::get_instance();
                 let guard = manager.task_map.lock().unwrap();
                 let notify_data = task.build_notify_data();
@@ -987,8 +988,7 @@ fn update_foreground_app(
     }
 }
 
-fn update_background_app(
-    uid: u64) {
+fn update_background_app(uid: u64) {
     ylong_runtime::spawn(async move {
         loop{
             sleep(Duration::from_millis(MILLISECONDS_IN_ONE_SECONDS)).await;
@@ -1003,8 +1003,9 @@ fn update_background_app(
                     if switch_time.is_none() {
                         break;
                     }
-                    if get_current_timestamp() - switch_time.unwrap() < MILLISECONDS_IN_ONE_MINUTE {
-                        debug!(LOG_LABEL, "interval time = {}", @public(get_current_timestamp() - switch_time.unwrap()));
+                    let interval_time = get_current_timestamp() - switch_time.unwrap();
+                    if interval_time < MILLISECONDS_IN_ONE_MINUTE {
+                        debug!(LOG_LABEL, "interval time: {}", @public(interval_time));
                         continue;
                     }
                 }
@@ -1013,7 +1014,8 @@ fn update_background_app(
                         continue;
                     }
                     if task.conf.common_data.action == Action::UPLOAD {
-                        task_manager.stop_task(task.clone(), Reason::AppBackgroundOrTerminate);
+                        task.set_status(State::FAILED, Reason::AppBackgroundOrTerminate);
+                        TaskManager::get_instance().after_task_processed(&task);
                     } else if task.conf.common_data.action == Action::DOWNLOAD {
                         task_manager.pause_task(task.clone(), Reason::AppBackgroundOrTerminate);
                     }
@@ -1026,11 +1028,13 @@ fn update_background_app(
 
 fn update_terminated_app(
     uid: u64,
-    app_task: &HashMap<u32, Arc<RequestTask>>) {
+    app_task: &HashMap<u32, Arc<RequestTask>>,
+) {
     for (_, task) in app_task.iter() {
         if task.conf.common_data.mode != Mode::FRONTEND {
             continue;
         }
         task.set_status(State::FAILED, Reason::AppBackgroundOrTerminate);
+        TaskManager::get_instance().after_task_processed(&task);
     }
 }
