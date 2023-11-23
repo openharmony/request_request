@@ -540,11 +540,11 @@ impl RequestAbility {
     }
 
     pub fn open_file_readwrite(uid: u64, bundle: &String, path: &String) -> IpcResult<File> {
-        match OpenOptions::new().read(true).write(true).truncate(true)
+        match OpenOptions::new().read(true).write(true).append(true)
                                 .open(RequestAbility::get_ability_instance().convert_path(uid, &bundle, &path)) {
             Ok(file) => { Ok(file) },
             Err(e) => {
-                error!(LOG_LABEL, "open_file_readwrite failed, err is {:?}", e);
+                error!(LOG_LABEL, "open_file_readwrite failed, err is {:?}", @public(e));
                 Err(IpcStatusCode::Failed)
             },
         }
@@ -555,7 +555,7 @@ impl RequestAbility {
             .open(RequestAbility::get_ability_instance().convert_path(uid, &bundle, &path)) {
             Ok(file) => { Ok(file) },
             Err(e) => {
-                error!(LOG_LABEL, "open_file_readonly failed, err is {:?}", e);
+                error!(LOG_LABEL, "open_file_readonly failed, err is {:?}", @public(e));
                 Err(IpcStatusCode::Failed)
             },
         }

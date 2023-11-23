@@ -180,7 +180,6 @@ int QueryTaskConfigAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicate
     int64_t formItemsLen, int64_t fileSpecsLen, int64_t bodyFileNamesLen);
 CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs);
 bool CleanTaskConfigTable(uint32_t taskId, uint64_t uid);
-void DeleteCTaskConfigs(CTaskConfig **ptr);
 
 #ifdef __cplusplus
 }
