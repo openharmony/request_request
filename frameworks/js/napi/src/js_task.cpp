@@ -723,7 +723,7 @@ void JsTask::ResetDirAccess(const std::string &filepath)
 {
     int ret = AclSetAccess(filepath, SA_PERMISSION_CLEAN);
     if (ret != ACL_SUCC) {
-        REQUEST_HILOGE("AclSetAccess Reset Dir Failed.");
+        REQUEST_HILOGE("AclSetAccess Reset Dir Failed: %{public}s", filepath.c_str());
     }
 }
 
@@ -773,6 +773,10 @@ void JsTask::ClearTaskContext(const std::string &key)
             std::remove(filePath.c_str());
         }
     }).detach();
+    // Reset Acl permission
+    for (auto &file : context->task->config_.files) {
+        RemovePathMap(file.uri);
+    }
     taskContextMap_.erase(it);
     UnrefTaskContextMap(context);
 }

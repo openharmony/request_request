@@ -828,11 +828,13 @@ int QueryTaskConfigAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicate
     int64_t len = std::max({formItemsLen, fileSpecsLen, bodyFileNamesLen});
     if (rowCount != len) {
         REQUEST_HILOGI("query task_config_attachment row count != max len");
+        resultSet->Close();
         return OHOS::Request::QUERY_ERR;
     }
     for (int64_t i = 0; i < len; i++) {
         if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
             REQUEST_HILOGE("ConfigAttach result set go to %{public}" PRId64 "row failed", i);
+            resultSet->Close();
             return OHOS::Request::QUERY_ERR;
         }
         if (i < formItemsLen) {
@@ -864,7 +866,7 @@ CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs)
     CTaskConfig **cTaskConfigs = new CTaskConfig *[taskConfigs.size()];
     for (unsigned int i = 0; i < taskConfigs.size(); i++) {
         CTaskConfig *cTaskConfig = new CTaskConfig;
-        TaskConfig taskConfig = taskConfigs[i];
+        const TaskConfig &taskConfig = taskConfigs[i];
         cTaskConfig->bundle = WrapperCString(taskConfig.bundle);
         cTaskConfig->url = WrapperCString(taskConfig.url);
         cTaskConfig->title = WrapperCString(taskConfig.title);
@@ -917,9 +919,4 @@ bool CleanTaskConfigTable(uint32_t taskId, uint64_t uid)
         return true;
     }
     return false;
-}
-
-void DeleteCTaskConfigs(CTaskConfig **ptr)
-{
-    delete[] ptr;
 }

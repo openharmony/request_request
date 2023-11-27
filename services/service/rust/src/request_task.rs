@@ -350,27 +350,8 @@ impl RequestTask {
         let progress_index = info.progress.common_data.index;
         let uid = info.common_data.uid;
         let action = conf.common_data.action;
-        let mut files: Vec<File> = Vec::new();
-        let mut body_files: Vec<File> = Vec::new();
-        for fs in &conf.file_specs {
-            if action == Action::UPLOAD {
-                match RequestAbility::open_file_readonly(uid, &conf.bundle, &fs.path) {
-                    Ok(file) => { files.push(file); },
-                    Err(e) => { error!(LOG_LABEL, "open file RO failed, err is {:?}", e); },
-                }
-            } else {
-                match RequestAbility::open_file_readwrite(uid, &conf.bundle, &fs.path) {
-                    Ok(file) => { files.push(file); },
-                    Err(e) => { error!(LOG_LABEL, "open file RW failed, err is {:?}", e); },
-                }
-            }
-        }
-        for name in &conf.body_file_names {
-            match RequestAbility::open_file_readwrite(uid, &conf.bundle, &name) {
-                Ok(body_file) => { body_files.push(body_file); },
-                Err(e) => { error!(LOG_LABEL, "open body_file failed, err is {:?}", e); },
-            }
-        }
+        let files = get_restore_files(&conf, uid);
+        let body_files = get_restore_body_files(&conf, uid);
         let file_count = files.len();
         let mut task = RequestTask {
             conf,
@@ -417,7 +398,6 @@ impl RequestTask {
             _ => {}
         }
         task
-
     }
 
     pub fn build_notify_data(&self) -> NotifyData {
@@ -1449,4 +1429,39 @@ fn build_request_common<T: Body>(
             return None;
         }
     }
+}
+
+fn get_restore_files(conf: &Arc<TaskConfig>, uid: u64) -> Vec<File> {
+    let mut files: Vec<File> = Vec::new();
+    for fs in &conf.file_specs {
+        if conf.common_data.action == Action::UPLOAD {
+            match RequestAbility::open_file_readonly(uid, &conf.bundle, &fs.path) {
+                Ok(file) => files.push(file),
+                Err(e) => {
+                    error!(LOG_LABEL, "open file RO failed, err is {:?}", @public(e));
+                },
+            }
+        } else {
+            match RequestAbility::open_file_readwrite(uid, &conf.bundle, &fs.path) {
+                Ok(file) => files.push(file),
+                Err(e) => {
+                    error!(LOG_LABEL, "open file RW failed, err is {:?}", @public(e));
+                },
+            }
+        }
+    }
+    files
+}
+
+fn get_restore_body_files(conf: &Arc<TaskConfig>, uid: u64) -> Vec<File> {
+    let mut body_files: Vec<File> = Vec::new();
+    for name in &conf.body_file_names {
+        match RequestAbility::open_file_readwrite(uid, &conf.bundle, &name) {
+            Ok(body_file) => body_files.push(body_file),
+            Err(e) => {
+                error!(LOG_LABEL, "open body_file failed, err is {:?}", @public(e));
+            },
+        }
+    }
+    body_files
 }

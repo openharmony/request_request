@@ -200,9 +200,6 @@ void NotifyStub::OnDone(MessageParcel &data)
         return;
     }
     RequestEvent::AddCache(taskInfo->tid, taskInfo);
-    for (auto &file : taskInfo->files) {
-        JsTask::RemovePathMap(file.uri);
-    }
     JsTask::ClearTaskContext(taskInfo->tid);
 }
 } // namespace OHOS::Request

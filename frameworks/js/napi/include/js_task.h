@@ -47,7 +47,6 @@ public:
     static void ClearTaskMap(const std::string &key);
     static void AddTaskMap(const std::string &key, JsTask* task);
     static bool SetPathPermission(const std::string &filepath);
-    static void RemovePathMap(const std::string &filepath);
     static void ClearTaskContext(const std::string &key);
 
     Config config_;
@@ -100,6 +99,7 @@ private:
     static int64_t ParseAfter(napi_env env, napi_value value, int64_t before);
     static void AddPathMap(const std::string &filepath, const std::string &baseDir);
     static void ResetDirAccess(const std::string &filepath);
+    static void RemovePathMap(const std::string &filepath);
     static void AddTaskContextMap(const std::string &key, std::shared_ptr<ContextInfo> context);
     static void UnrefTaskContextMap(std::shared_ptr<ContextInfo> context);
     static void UvUnrefTaskContext(uv_work_t *work, int status);
