@@ -735,8 +735,8 @@ void JsTask::RemovePathMap(const std::string &filepath)
         return;
     }
 
-    if (chmod(filepath.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) != 0) {
-        REQUEST_HILOGE("File remove WOTH access Failed.");
+    if (chmod(filepath.c_str(), S_IRUSR | S_IWUSR | S_IRGRP) != 0) {
+        REQUEST_HILOGE("File remove OTH access Failed.");
     }
 
     std::string childDir(filepath);
