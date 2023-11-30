@@ -89,8 +89,6 @@ std::map<Reason, DownloadErrorCode> RequestEvent::failMap_ = {
     {UNSUPPORT_RANGE_REQUEST, ERROR_UNKNOWN},
 };
 
-std::mutex RequestEvent::taskCacheMutex_;
-std::map<std::string, std::shared_ptr<TaskInfo>> RequestEvent::taskCache_;
 napi_value RequestEvent::Pause(napi_env env, napi_callback_info info)
 {
     REQUEST_HILOGD("Pause in");
@@ -151,36 +149,10 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
     REQUEST_HILOGD("On event %{public}s + %{public}s", jsParam.type.c_str(), jsParam.task->GetTid().c_str());
     std::string key = jsParam.type + jsParam.task->GetTid();
     jsParam.task->AddListener(key, listener);
-    std::shared_ptr<TaskInfo> taskInfo;
-    if (GetCache(jsParam.task->GetTid(), taskInfo) && taskInfo != nullptr) {
-        if (!NeedNotify(jsParam.type, taskInfo)) {
-            return nullptr;
-        }
-        listener->RequestCallBack(jsParam.type, jsParam.task->GetTid(), BuildNotifyData(taskInfo));
-        return nullptr;
-    }
     if (jsParam.task->GetListenerSize(key) == 1) {
         RequestManager::GetInstance()->On(jsParam.type, jsParam.task->GetTid(), listener);
     }
     return nullptr;
-}
-
-bool RequestEvent::NeedNotify(const std::string &type, std::shared_ptr<TaskInfo> &taskInfo)
-{
-    if (type == EVENT_FAIL && taskInfo->progress.state != State::FAILED) {
-        return false;
-    }
-    if (type == EVENT_COMPLETE && taskInfo->progress.state != State::COMPLETED) {
-        return false;
-    }
-    if (!taskInfo->progress.sizes.empty()) {
-        uint64_t processed = taskInfo->progress.processed;
-        int64_t totalSize = taskInfo->progress.sizes[0];
-        if (type == EVENT_PROGRESS && processed == 0 && totalSize == -1) {
-            return false;
-        }
-    }
-    return true;
 }
 
 napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
@@ -353,16 +325,17 @@ int32_t RequestEvent::PauseExec(const std::shared_ptr<ExecContext> &context)
 
 int32_t RequestEvent::QueryExec(const std::shared_ptr<ExecContext> &context)
 {
-    std::shared_ptr<TaskInfo> infoRes;
+    TaskInfo infoRes;
     int32_t ret = E_OK;
-    if (!GetCache(context->task->GetTid(), infoRes) || infoRes == nullptr) {
-        infoRes = std::make_shared<TaskInfo>();
-        ret = RequestManager::GetInstance()->Show(context->task->GetTid(), *infoRes);
+    if (!RequestManager::GetInstance()->LoadRequestServer()) {
+        ret = E_SERVICE_ERROR;
+        return ret;
     }
+    ret = RequestManager::GetInstance()->Show(context->task->GetTid(), infoRes);
     if (context->version_ != Version::API10 && ret != E_PERMISSION) {
         ret = E_OK;
     }
-    GetDownloadInfo(*infoRes, context->infoRes);
+    GetDownloadInfo(infoRes, context->infoRes);
     return ret;
 }
 
@@ -370,8 +343,8 @@ int32_t RequestEvent::QueryMimeTypeExec(const std::shared_ptr<ExecContext> &cont
 {
     std::shared_ptr<TaskInfo> infoRes;
     int32_t ret = E_OK;
-    if (GetCache(context->task->GetTid(), infoRes) || infoRes != nullptr) {
-        context->strRes = infoRes->mimeType;
+    if (!RequestManager::GetInstance()->LoadRequestServer()) {
+        ret = E_SERVICE_ERROR;
         return ret;
     }
     ret = RequestManager::GetInstance()->QueryMimeType(context->task->GetTid(), context->strRes);
@@ -440,31 +413,5 @@ int32_t RequestEvent::ResumeExec(const std::shared_ptr<ExecContext> &context)
         context->boolRes = true;
     }
     return ret;
-}
-
-void RequestEvent::AddCache(const std::string &taskId, const std::shared_ptr<TaskInfo> &info)
-{
-    REQUEST_HILOGI("AddCache in, task id is %{public}s", taskId.c_str());
-    std::lock_guard<std::mutex> lock(taskCacheMutex_);
-    taskCache_[taskId] = info;
-}
-
-bool RequestEvent::GetCache(const std::string &taskId, std::shared_ptr<TaskInfo> &info)
-{
-    REQUEST_HILOGI("GetCache in, task id is %{public}s", taskId.c_str());
-    std::lock_guard<std::mutex> lock(taskCacheMutex_);
-    auto it = taskCache_.find(taskId);
-    if (it != taskCache_.end()) {
-        info = it->second;
-        return true;
-    }
-    return false;
-}
-
-void RequestEvent::RemoveCache(const std::string &taskId)
-{
-    std::lock_guard<std::mutex> lock(taskCacheMutex_);
-    REQUEST_HILOGI("RemoveCache in, task id is %{public}s", taskId.c_str());
-    taskCache_.erase(taskId);
 }
 } // namespace OHOS::Request

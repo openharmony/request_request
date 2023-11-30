@@ -36,7 +36,6 @@ public:
 
 private:
     void OnCallBack(MessageParcel &data);
-    static void OnDone(MessageParcel &data);
     bool IsHeaderReceive(const std::string &type, const NotifyData &notifyData);
     static void GetDownloadNotify(const std::string &type, const NotifyData &notifyData, Notify &notify);
     static void GetUploadNotify(const std::string &type, const NotifyData &notifyData, Notify &notify);

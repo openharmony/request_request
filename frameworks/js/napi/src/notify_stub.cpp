@@ -33,7 +33,6 @@ int32_t NotifyStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
             OnCallBack(data);
             break;
         case static_cast<uint32_t>(RequestNotifyInterfaceCode::REQUEST_DONE_NOTIFY):
-            OnDone(data);
             break;
         default:
             REQUEST_HILOGE("Default value received, check needed.");
@@ -78,7 +77,8 @@ void NotifyStub::OnCallBack(MessageParcel &data)
         notifyData.taskStates.push_back(taskState);
     }
     RequestCallBack(type, tid, notifyData);
-    if (notifyData.version == Version::API10 && (type == "complete" || type == "fail")) {
+
+    if (type == "complete" || type == "fail") {
         JsTask::ClearTaskContext(tid);
     }
 }
@@ -186,20 +186,5 @@ void NotifyStub::GetUploadNotify(const std::string &type, const NotifyData &noti
         notify.type = EventType::HEADER_CALLBACK;
         notify.progress.extras = notifyData.progress.extras;
     }
-}
-
-void NotifyStub::OnDone(MessageParcel &data)
-{
-    auto taskInfo = std::make_shared<TaskInfo>();
-    ParcelHelper::UnMarshal(data, *taskInfo);
-    REQUEST_HILOGI("task %{public}s done", taskInfo->tid.c_str());
-    std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
-    auto item = JsTask::taskMap_.find(taskInfo->tid);
-    if (item == JsTask::taskMap_.end()) {
-        REQUEST_HILOGW("Task ID not found");
-        return;
-    }
-    RequestEvent::AddCache(taskInfo->tid, taskInfo);
-    JsTask::ClearTaskContext(taskInfo->tid);
 }
 } // namespace OHOS::Request

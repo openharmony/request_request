@@ -101,6 +101,7 @@ struct Config {
     uint32_t index = 0;
     int64_t begins = 0;
     int64_t ends = -1;
+    uint32_t priority = 0;
     bool overwrite = false;
     bool metered = false;
     bool roaming = false;
@@ -209,6 +210,7 @@ struct TaskInfo {
     Reason code;
     std::string reason;
     bool withSystem = false;
+    uint32_t priority;
     std::map<std::string, std::string> extras;
     std::vector<TaskState> taskStates;
 };

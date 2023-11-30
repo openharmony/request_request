@@ -1,25 +1,24 @@
-/*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright (C) 2023 Huawei Device Co., Ltd.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #![allow(unused_assignments)]
 mod common;
 extern crate request;
-use request::{enumration::*, task_manager::*};
+use request::enumration::*;
+use request::task_manager::*;
 
-static MAX_TASK_COUNT_API10: u32 = 300;
-static MAX_TASK_COUNT_EACH_APP_API10: u32 = 10;
+const MAX_TASK_COUNT_API10: u32 = 300;
+const MAX_TASK_COUNT_EACH_APP_API10: u32 = 10;
 
 #[test]
 fn create_test1() {
@@ -77,13 +76,8 @@ fn create_test2() {
         task_manager.get_api10_background_task_count(),
         MAX_TASK_COUNT_API10
     );
-    let code = common::construct_download_task(
-        &mut task_id,
-        11,
-        "test",
-        Mode::BACKGROUND,
-        Version::API10,
-    );
+    let code =
+        common::construct_download_task(&mut task_id, 11, "test", Mode::BACKGROUND, Version::API10);
     assert_eq!(code, ErrorCode::TaskEnqueueErr);
     assert_eq!(
         task_manager.get_api10_background_task_count(),
@@ -115,25 +109,15 @@ fn create_test3() {
         task_manager.get_api10_background_task_count(),
         MAX_TASK_COUNT_EACH_APP_API10
     );
-    let mut code = common::construct_download_task(
-        &mut task_id,
-        uid,
-        "test",
-        Mode::FRONTEND,
-        Version::API10,
-    );
+    let mut code =
+        common::construct_download_task(&mut task_id, uid, "test", Mode::FRONTEND, Version::API10);
     assert_eq!(code, ErrorCode::TaskModeErr);
     assert_eq!(
         task_manager.get_api10_background_task_count(),
         MAX_TASK_COUNT_EACH_APP_API10
     );
-    code = common::construct_download_task(
-        &mut task_id,
-        uid,
-        "test",
-        Mode::BACKGROUND,
-        Version::API9,
-    );
+    code =
+        common::construct_download_task(&mut task_id, uid, "test", Mode::BACKGROUND, Version::API9);
     assert_eq!(code, ErrorCode::ErrOk);
     assert_eq!(
         task_manager.get_api10_background_task_count(),

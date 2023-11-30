@@ -54,6 +54,7 @@ int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid, sptr<Not
     data.WriteInt64(config.ends);
     data.WriteBool(config.gauge);
     data.WriteBool(config.precise);
+    data.WriteUint32(config.priority);
     data.WriteString(config.url);
     data.WriteString(config.title);
     data.WriteString(config.method);
@@ -283,7 +284,13 @@ int32_t RequestServiceProxy::Remove(const std::string &tid, Version version)
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
     }
-    return reply.ReadInt32();
+
+    // API9 or lower will not return E_TASK_NOT_FOUND.
+    int32_t result = reply.ReadInt32();
+    if (version == Version::API9) {
+        result = E_OK;
+    }
+    return result;
 }
 
 int32_t RequestServiceProxy::Resume(const std::string &tid)

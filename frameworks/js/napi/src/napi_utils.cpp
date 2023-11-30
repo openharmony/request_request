@@ -370,6 +370,7 @@ napi_value Convert2JSValue(napi_env env, TaskInfo &taskInfo)
     napi_set_named_property(env, value, "mimeType", Convert2JSValue(env, taskInfo.mimeType));
     napi_set_named_property(env, value, "progress", Convert2JSValue(env, taskInfo.progress));
     napi_set_named_property(env, value, "gauge", Convert2JSValue(env, taskInfo.gauge));
+    napi_set_named_property(env, value, "priority", Convert2JSValue(env, taskInfo.priority));
     napi_set_named_property(env, value, "ctime", Convert2JSValue(env, taskInfo.ctime));
     napi_set_named_property(env, value, "mtime", Convert2JSValue(env, taskInfo.mtime));
     napi_set_named_property(env, value, "retry", Convert2JSValue(env, taskInfo.retry));
