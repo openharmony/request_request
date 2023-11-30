@@ -60,8 +60,6 @@ struct CTaskInfo {
     uint32_t formItemsLen;
     CFileSpec *fileSpecsPtr;
     uint32_t fileSpecsLen;
-    CStringWrapper *bodyFileNamesPtr;
-    uint32_t bodyFileNamesLen;
     CStringWrapper title;
     CStringWrapper description;
     CStringWrapper mimeType;
@@ -78,7 +76,6 @@ struct TaskInfo {
     std::string token;
     std::vector<FormItem> formItems;
     std::vector<FileSpec> fileSpecs;
-    std::vector<std::string> bodyFileNames;
     std::string title;
     std::string description;
     std::string mimeType;

@@ -981,7 +981,6 @@ impl RequestTask {
             token: self.conf.token.clone(),
             form_items: self.conf.form_items.clone(),
             file_specs: self.conf.file_specs.clone(),
-            body_file_names: self.conf.body_file_names.clone(),
             title: self.conf.title.clone(),
             description: self.conf.description.clone(),
             mime_type: {

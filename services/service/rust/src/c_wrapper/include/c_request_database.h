@@ -66,8 +66,7 @@ constexpr const char *CREATE_REQUEST_TABLE1 = "CREATE TABLE IF NOT EXISTS reques
                                               "processed TEXT, "
                                               "extras TEXT, "
                                               "form_items_len INTEGER, "
-                                              "file_specs_len INTEGER, "
-                                              "body_file_names_len INTEGER)";
+                                              "file_specs_len INTEGER)";
 
 constexpr const char *CREATE_REQUEST_TABLE2 = "CREATE TABLE IF NOT EXISTS task_info_attachment "
                                               "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -80,8 +79,7 @@ constexpr const char *CREATE_REQUEST_TABLE2 = "CREATE TABLE IF NOT EXISTS task_i
                                               "file_name TEXT, "
                                               "mime_type TEXT, "
                                               "reason INTEGER, "
-                                              "message TEXT, "
-                                              "body_file_name TEXT)";
+                                              "message TEXT)";
 
 constexpr const char *CREATE_REQUEST_TABLE3 = "CREATE TABLE IF NOT EXISTS request_task_config "
                                               "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -115,6 +113,18 @@ constexpr const char *CREATE_REQUEST_TABLE3 = "CREATE TABLE IF NOT EXISTS reques
                                               "file_specs_len INTEGER, "
                                               "body_file_names_len INTEGER)";
 
+constexpr const char *CREATE_REQUEST_TABLE4 = "CREATE TABLE IF NOT EXISTS task_config_attachment "
+                                              "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                              "task_id INTEGER, "
+                                              "uid INTEGER, "
+                                              "form_item_name TEXT, "
+                                              "value TEXT, "
+                                              "file_spec_name TEXT, "
+                                              "path TEXT, "
+                                              "file_name TEXT, "
+                                              "mime_type TEXT, "
+                                              "body_file_name TEXT)";
+
 class RequestDataBase {
 public:
     static RequestDataBase &GetInstance();
@@ -139,6 +149,7 @@ private:
 class RequestDBOpenCallback : public OHOS::NativeRdb::RdbOpenCallback {
 public:
     int OnCreate(OHOS::NativeRdb::RdbStore &rdbStore) override;
+    int OnOpen(OHOS::NativeRdb::RdbStore &rdbStore) override;
     int OnUpgrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion) override;
     int OnDowngrade(OHOS::NativeRdb::RdbStore &rdbStore, int currentVersion, int targetVersion) override;
 };
