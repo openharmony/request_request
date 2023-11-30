@@ -133,12 +133,23 @@ int RequestDBOpenCallback::OnCreate(OHOS::NativeRdb::RdbStore &store)
         REQUEST_HILOGE("create table2 error, ret = %{public}d", ret);
         return ret;
     }
-    ret = store.ExecuteSql(CREATE_REQUEST_TABLE3);
+    REQUEST_HILOGI("create table success");
+    return OHOS::NativeRdb::E_OK;
+}
+
+int RequestDBOpenCallback::OnOpen(OHOS::NativeRdb::RdbStore &store)
+{
+    int ret = store.ExecuteSql(CREATE_REQUEST_TABLE3);
     if (ret != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("create table3 error, ret = %{public}d", ret);
         return ret;
     }
-    REQUEST_HILOGI("create table success");
+    ret = store.ExecuteSql(CREATE_REQUEST_TABLE4);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("create table4 error, ret = %{public}d", ret);
+        return ret;
+    }
+    REQUEST_HILOGI("create config table success");
     return OHOS::NativeRdb::E_OK;
 }
 
@@ -202,7 +213,6 @@ bool WriteRequestTaskInfo(CTaskInfo *taskInfo)
     insertValues.PutString("extras", std::string(taskInfo->progress.extras.cStr, taskInfo->progress.extras.len));
     insertValues.PutLong("form_items_len", taskInfo->formItemsLen);
     insertValues.PutLong("file_specs_len", taskInfo->fileSpecsLen);
-    insertValues.PutLong("body_file_names_len", taskInfo->bodyFileNamesLen);
     if (!OHOS::Request::RequestDataBase::GetInstance().Insert(std::string("request_task_info"), insertValues)) {
         REQUEST_HILOGE("insert to request_task_info failed");
         return false;
@@ -214,7 +224,7 @@ bool WriteRequestTaskInfo(CTaskInfo *taskInfo)
 bool WriteTaskInfoAttachment(CTaskInfo *taskInfo)
 {
     REQUEST_HILOGD("write to task_info_attachment");
-    uint64_t len = std::max({taskInfo->formItemsLen, taskInfo->fileSpecsLen, taskInfo->bodyFileNamesLen});
+    uint64_t len = std::max(taskInfo->formItemsLen, taskInfo->fileSpecsLen);
     for (uint64_t i = 0; i < len; i++) {
         OHOS::NativeRdb::ValuesBucket insertValues;
         insertValues.PutInt("task_id", taskInfo->commonData.taskId);
@@ -237,10 +247,6 @@ bool WriteTaskInfoAttachment(CTaskInfo *taskInfo)
             insertValues.PutInt("reason", taskInfo->eachFileStatusPtr[i].reason);
             insertValues.PutString("message", std::string(taskInfo->eachFileStatusPtr[i].message.cStr,
                 taskInfo->eachFileStatusPtr[i].message.len));
-        }
-        if (i < taskInfo->bodyFileNamesLen) {
-            insertValues.PutString("body_file_name",
-                std::string(taskInfo->bodyFileNamesPtr[i].cStr, taskInfo->bodyFileNamesPtr[i].len));
         }
         if (!OHOS::Request::RequestDataBase::GetInstance().Insert(std::string("task_info_attachment"), insertValues)) {
             REQUEST_HILOGE("insert to task_info_attachment failed");
@@ -588,12 +594,6 @@ CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo)
         eachFileStatusPtr[i].message = WrapperCString(taskInfo.eachFileStatus[i].message);
     }
 
-    uint32_t bodyFileNamesLen = taskInfo.bodyFileNames.size();
-    CStringWrapper *bodyFileNamesPtr = new CStringWrapper[bodyFileNamesLen];
-    for (uint32_t i = 0; i < bodyFileNamesLen; i++) {
-        bodyFileNamesPtr[i] = WrapperCString(taskInfo.bodyFileNames[i]);
-    }
-
     CTaskInfo *cTaskInfo = new CTaskInfo;
     cTaskInfo->bundle = WrapperCString(taskInfo.bundle);
     cTaskInfo->url = WrapperCString(taskInfo.url);
@@ -603,8 +603,6 @@ CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo)
     cTaskInfo->formItemsLen = formItemsLen;
     cTaskInfo->fileSpecsPtr = fileSpecsPtr;
     cTaskInfo->fileSpecsLen = fileSpecsLen;
-    cTaskInfo->bodyFileNamesPtr = bodyFileNamesPtr;
-    cTaskInfo->bodyFileNamesLen = bodyFileNamesLen;
     cTaskInfo->title = WrapperCString(taskInfo.title);
     cTaskInfo->description = WrapperCString(taskInfo.description);
     cTaskInfo->mimeType = WrapperCString(taskInfo.mimeType);
@@ -646,7 +644,7 @@ bool HasTaskConfigRecord(uint32_t taskId)
     return true;
 }
 
-bool RecordRequestTaskConfig(CTaskConfig *taskConfig)
+bool WriteRequestTaskConfig(CTaskConfig *taskConfig)
 {
     REQUEST_HILOGI("write to request_task_config");
     OHOS::NativeRdb::ValuesBucket insertValues;
@@ -685,6 +683,49 @@ bool RecordRequestTaskConfig(CTaskConfig *taskConfig)
     }
     REQUEST_HILOGI("insert to request_task_config success");
     return true;
+}
+
+bool WriteTaskConfigAttachment(CTaskConfig *taskConfig)
+{
+    REQUEST_HILOGD("write to task_config_attachment");
+    uint64_t len = std::max({taskConfig->formItemsLen, taskConfig->fileSpecsLen, taskConfig->bodyFileNamesLen});
+    for (uint64_t i = 0; i < len; i++) {
+        OHOS::NativeRdb::ValuesBucket insertValues;
+        insertValues.PutInt("task_id", taskConfig->commonData.taskId);
+        insertValues.PutInt("uid", taskConfig->commonData.uid);
+        if (i < taskConfig->formItemsLen) {
+            insertValues.PutString("form_item_name",
+                std::string(taskConfig->formItemsPtr[i].name.cStr, taskConfig->formItemsPtr[i].name.len));
+            insertValues.PutString("value",
+                std::string(taskConfig->formItemsPtr[i].value.cStr, taskConfig->formItemsPtr[i].value.len));
+        }
+        if (i < taskConfig->fileSpecsLen) {
+            insertValues.PutString("file_spec_name",
+                std::string(taskConfig->fileSpecsPtr[i].name.cStr, taskConfig->fileSpecsPtr[i].name.len));
+            insertValues.PutString("path",
+                std::string(taskConfig->fileSpecsPtr[i].path.cStr, taskConfig->fileSpecsPtr[i].path.len));
+            insertValues.PutString("file_name",
+                std::string(taskConfig->fileSpecsPtr[i].fileName.cStr, taskConfig->fileSpecsPtr[i].fileName.len));
+            insertValues.PutString("mime_type",
+                std::string(taskConfig->fileSpecsPtr[i].mimeType.cStr, taskConfig->fileSpecsPtr[i].mimeType.len));
+        }
+        if (i < taskConfig->bodyFileNamesLen) {
+            insertValues.PutString("body_file_name",
+                std::string(taskConfig->bodyFileNamesPtr[i].cStr, taskConfig->bodyFileNamesPtr[i].len));
+        }
+        if (!OHOS::Request::RequestDataBase::GetInstance().Insert(std::string("task_config_attachment"),
+            insertValues)) {
+            REQUEST_HILOGE("insert to task_config_attachment failed");
+            return false;
+        }
+    }
+    REQUEST_HILOGD("insert to task_config_attachment success");
+    return true;
+}
+
+bool RecordRequestTaskConfig(CTaskConfig *taskConfig)
+{
+    return WriteRequestTaskConfig(taskConfig) && WriteTaskConfigAttachment(taskConfig);
 }
 
 void GetCommonTaskConfig(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskConfig &taskConfig)
@@ -799,10 +840,10 @@ int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, 
         resultSet->GetLong(26, formItemsLen);
         resultSet->GetLong(27, fileSpecsLen);
         resultSet->GetLong(28, bodyFileNamesLen);
-        OHOS::NativeRdb::RdbPredicates rdbPredicates("task_info_attachment");
-        rdbPredicates.EqualTo("task_id", std::to_string(taskConfig.commonData.taskId))
+        OHOS::NativeRdb::RdbPredicates attachPredicates("task_config_attachment");
+        attachPredicates.EqualTo("task_id", std::to_string(taskConfig.commonData.taskId))
             ->And()->EqualTo("uid", std::to_string(taskConfig.commonData.uid));
-        if (QueryTaskConfigAttachment(rdbPredicates, taskConfig, formItemsLen, fileSpecsLen, bodyFileNamesLen)
+        if (QueryTaskConfigAttachment(attachPredicates, taskConfig, formItemsLen, fileSpecsLen, bodyFileNamesLen)
             == OHOS::Request::QUERY_ERR) {
             return OHOS::Request::QUERY_ERR;
         }
@@ -912,9 +953,12 @@ CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs)
 
 bool CleanTaskConfigTable(uint32_t taskId, uint64_t uid)
 {
-    OHOS::NativeRdb::RdbPredicates predicates("request_task_config");
-    predicates.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
-    if (OHOS::Request::RequestDataBase::GetInstance().Delete(predicates)) {
+    OHOS::NativeRdb::RdbPredicates predicates1("request_task_config");
+    OHOS::NativeRdb::RdbPredicates predicates2("task_config_attachment");
+    predicates1.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
+    predicates2.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
+    if (OHOS::Request::RequestDataBase::GetInstance().Delete(predicates1) &&
+        OHOS::Request::RequestDataBase::GetInstance().Delete(predicates2)) {
         REQUEST_HILOGE("task_config table deleted task_id: %{public}u", taskId);
         return true;
     }
