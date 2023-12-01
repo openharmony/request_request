@@ -89,6 +89,7 @@ struct CUpdateInfo {
     uint64_t mtime;
     uint8_t reason;
     uint32_t tries;
+    CStringWrapper mimeType;
     CProgress progress;
     CEachFileStatus *eachFileStatusPtr;
     uint32_t eachFileStatusLen;
