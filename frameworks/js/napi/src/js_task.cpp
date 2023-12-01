@@ -76,7 +76,6 @@ JsTask::~JsTask()
 {
     REQUEST_HILOGD("~JsTask()");
     ClearListener();
-    RequestEvent::RemoveCache(tid_);
 }
 napi_value JsTask::JsUpload(napi_env env, napi_callback_info info)
 {

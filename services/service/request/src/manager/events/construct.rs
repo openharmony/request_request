@@ -1,0 +1,160 @@
+// Copyright (C) 2023 Huawei Device Co., Ltd.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+use std::collections::HashSet;
+use std::fs::File;
+use std::sync::atomic::AtomicBool;
+use std::sync::Arc;
+
+use crate::error::ErrorCode;
+use crate::manager::TaskManager;
+use crate::task::config::{TaskConfig, Version};
+use crate::task::info::State;
+use crate::task::reason::Reason;
+use crate::task::RequestTask;
+
+const MAX_TASK_COUNT: u32 = 300;
+const MAX_TASK_COUNT_EACH_APP: u8 = 10;
+
+impl TaskManager {
+    pub(crate) fn construct_task(
+        &mut self,
+        config: TaskConfig,
+        files: Vec<File>,
+        body_files: Vec<File>,
+    ) -> ErrorCode {
+        if files.is_empty() {
+            return ErrorCode::FileOperationErr;
+        }
+
+        let uid = config.common_data.uid;
+        let task_id = config.common_data.task_id;
+        let version = config.version;
+
+        debug!(
+            "TaskManager Construct, uid:{}, task_id:{}, version:{:?}",
+            uid, task_id, version
+        );
+
+        let app_state = self.app_state(uid, &config.bundle);
+
+        let task = RequestTask::constructor(
+            config,
+            files,
+            body_files,
+            self.recording_rdb_num.clone(),
+            AtomicBool::new(false),
+            app_state,
+        );
+
+        match task.conf.version {
+            Version::API10 => {
+                if !self.add_task_api10(Arc::new(task)) {
+                    return ErrorCode::TaskEnqueueErr;
+                }
+                self.api10_background_task_count += 1;
+            }
+            Version::API9 => {
+                self.add_task_api9(Arc::new(task));
+            }
+        }
+
+        if let Some(handle) = self.unload_handle.take() {
+            debug!("TaskManager close sa timing abort");
+            handle.cancel();
+        }
+
+        ErrorCode::ErrOk
+    }
+
+    pub(crate) fn add_task_api9(&mut self, task: Arc<RequestTask>) {
+        task.set_status(State::Initialized, Reason::Default);
+
+        let task_id = task.conf.common_data.task_id;
+        let uid = task.conf.common_data.uid;
+
+        self.tasks.insert(task_id, task);
+
+        match self.app_task_map.get_mut(&uid) {
+            Some(set) => {
+                set.insert(task_id);
+
+                debug!(
+                    "TaskManager app {} task count:{}, all task count {}",
+                    uid,
+                    set.len(),
+                    self.tasks.len()
+                );
+            }
+            None => {
+                let mut set = HashSet::new();
+                set.insert(task_id);
+                self.app_task_map.insert(uid, set);
+                debug!(
+                    "TaskManager app {} task count:{}, all task count {}",
+                    uid,
+                    1,
+                    self.tasks.len()
+                );
+            }
+        }
+    }
+
+    pub(crate) fn add_task_api10(&mut self, task: Arc<RequestTask>) -> bool {
+        let task_id = task.conf.common_data.task_id;
+        let uid = task.conf.common_data.uid;
+
+        if self.api10_background_task_count >= MAX_TASK_COUNT {
+            error!("TaskManager add v10 task failed, the number of tasks has reached the limit in the system");
+            return false;
+        }
+
+        match self.app_task_map.get_mut(&uid) {
+            Some(set) => {
+                if (set.len() as u8) == MAX_TASK_COUNT_EACH_APP {
+                    error!(
+                        "TaskManager add v10 task failed, the maximum value for each application processing task has been reached");
+                    return false;
+                }
+                set.insert(task_id);
+
+                task.set_status(State::Initialized, Reason::Default);
+                self.tasks.insert(task_id, task);
+
+                debug!(
+                    "TaskManager app {} task count:{}, all task count {}",
+                    uid,
+                    set.len(),
+                    self.tasks.len()
+                );
+                true
+            }
+            None => {
+                let mut set = HashSet::new();
+                set.insert(task_id);
+                self.app_task_map.insert(uid, set);
+
+                task.set_status(State::Initialized, Reason::Default);
+                self.tasks.insert(task_id, task);
+
+                debug!(
+                    "TaskManager app {} task count:{}, all task count {}",
+                    uid,
+                    1,
+                    self.tasks.len()
+                );
+                true
+            }
+        }
+    }
+}
