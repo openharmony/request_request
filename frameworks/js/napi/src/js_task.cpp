@@ -640,14 +640,23 @@ void JsTask::RemoveListener(const std::string &type, const std::string &tid, nap
 
 void JsTask::RemoveListener(const std::string &type, const std::string &tid)
 {
-    std::lock_guard<std::mutex> autoLock(listenerMutex_);
-    auto it = listenerMap_.find(type + tid);
-    if (it == listenerMap_.end()) {
-        return;
+    {
+        std::lock_guard<std::mutex> autoLock(listenerMutex_);
+        auto it = listenerMap_.find(type + tid);
+        if (it == listenerMap_.end()) {
+            return;
+        }
     }
     int32_t ret = RequestManager::GetInstance()->Off(type, tid);
-    if (ret == E_OK) {
-        listenerMap_.erase(it);
+    {
+        std::lock_guard<std::mutex> autoLock(listenerMutex_);
+        auto it = listenerMap_.find(type + tid);
+        if (it == listenerMap_.end()) {
+            return;
+        }
+        if (ret == E_OK) {
+            listenerMap_.erase(it);
+        }
     }
 }
 
