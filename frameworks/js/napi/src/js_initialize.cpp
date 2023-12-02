@@ -325,6 +325,7 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
     config.metered = NapiUtils::Convert2Boolean(env, jsConfig, "metered");
     config.gauge = NapiUtils::Convert2Boolean(env, jsConfig, "gauge");
     config.precise = NapiUtils::Convert2Boolean(env, jsConfig, "precise");
+    config.priority = ParsePriority(env, jsConfig);
     config.begins = ParseBegins(env, jsConfig);
     config.ends = ParseEnds(env, jsConfig);
     config.mode = static_cast<Mode>(NapiUtils::Convert2Uint32(env, jsConfig, "mode"));
@@ -437,6 +438,14 @@ int64_t JsInitialize::ParseEnds(napi_env env, napi_value jsConfig)
         return -1;
     }
     return NapiUtils::Convert2Int64(env, jsConfig, "ends");
+}
+
+uint32_t JsInitialize::ParsePriority(napi_env env, napi_value jsConfig)
+{
+    if (!NapiUtils::HasNamedProperty(env, jsConfig, "priority")) {
+        return 0;
+    }
+    return NapiUtils::Convert2Uint32(env, jsConfig, "priority");
 }
 
 bool JsInitialize::ParseDescription(napi_env env, napi_value jsConfig, std::string &description)
