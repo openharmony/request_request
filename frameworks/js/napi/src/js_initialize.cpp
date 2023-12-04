@@ -104,7 +104,7 @@ ExceptionError JsInitialize::InitParam(napi_env env, napi_value* argv,
         return err;
     }
     config.bundleName = context->GetBundleName();
-    REQUEST_HILOGD("config.bundleName is %{public}s", config.bundleName.c_str());
+    REQUEST_HILOGI("config.bundleName is %{public}s", config.bundleName.c_str());
     return CheckFilePath(context, config);
 }
 

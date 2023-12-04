@@ -44,8 +44,7 @@ public:
     };
 
     struct SystemCompleteCallback {
-        napi_env env;
-        napi_ref ref;
+        std::shared_ptr<Upload::UploadTaskNapiV5> proxy;
     };
 
     struct RecycleRef {
@@ -59,7 +58,7 @@ public:
     ~UploadTaskNapiV5();
     static void OnSystemSuccess(napi_env env, napi_ref ref, Upload::UploadResponse &response);
     static void OnSystemFail(napi_env env, napi_ref ref, std::string &response, int32_t &code);
-    static void OnSystemComplete(napi_env env, napi_ref ref);
+    static void OnSystemComplete(std::shared_ptr<Upload::UploadTaskNapiV5> proxy);
     napi_value JsUpload(napi_env env, napi_callback_info info);
     bool ParseCallback(napi_env env, napi_callback_info info);
     void AddCallbackToConfig(napi_env env, std::shared_ptr<UploadConfig> &config);
