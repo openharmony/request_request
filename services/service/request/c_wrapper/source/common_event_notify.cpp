@@ -35,8 +35,10 @@ void PublishStateChangeEvents(const char* bundleName, uint32_t len, uint32_t tas
 
     std::string data = std::to_string(taskId);
     CommonEventData commonData (want, state, data);
+    CommonEventPublishInfo publishInfo;
+    publishInfo.SetBundleName(bundle);
     
-    bool res = CommonEventManager::PublishCommonEvent(commonData);
+    bool res = CommonEventManager::PublishCommonEvent(commonData, publishInfo);
     if (!res) {
         REQUEST_HILOGE("PublishStateChangeEvents failed!");
     }
