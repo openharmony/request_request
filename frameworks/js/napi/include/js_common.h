@@ -94,6 +94,7 @@ struct FileSpec {
 struct Config {
     Action action;
     std::string url;
+    std::vector<std::string> certsPath;
     Version version;
     std::string bundleName;
     Mode mode = Mode::BACKGROUND;

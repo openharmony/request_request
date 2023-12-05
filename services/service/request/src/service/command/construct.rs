@@ -94,6 +94,18 @@ impl Construct {
         let task_id = generate_task_id();
         let uid = get_calling_uid();
 
+        let mut certs_path = Vec::new();
+        let certs_path_size: u32 = data.read()?;
+        if certs_path_size > data.get_readable_bytes() {
+            error!("Service construct: certs_path_size too large");
+            reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
+            return Err(IpcStatusCode::Failed);
+        }
+        for _ in 0..certs_path_size {
+            let cert_path: String = data.read()?;
+            certs_path.push(cert_path);
+        }
+
         let mut form_items = Vec::new();
         let form_size: u32 = data.read()?;
         if form_size > data.get_readable_bytes() {
@@ -192,6 +204,7 @@ impl Construct {
             form_items,
             file_specs,
             body_file_names,
+            certs_path,
             common_data: CommonTaskConfig {
                 task_id,
                 uid,

@@ -67,6 +67,8 @@ struct CTaskConfig {
     uint32_t fileSpecsLen;
     CStringWrapper *bodyFileNamesPtr;
     uint32_t bodyFileNamesLen;
+    CStringWrapper *certsPathPtr;
+    uint32_t certsPathLen;
     CommonTaskConfig commonData;
 };
 
@@ -84,6 +86,7 @@ struct TaskConfig {
     std::vector<FormItem> formItems;
     std::vector<FileSpec> fileSpecs;
     std::vector<std::string> bodyFileNames;
+    std::vector<std::string> certsPath;
     CommonTaskConfig commonData;
 };
 

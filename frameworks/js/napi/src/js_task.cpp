@@ -20,6 +20,7 @@
 #include <mutex>
 #include <securec.h>
 #include <sys/stat.h>
+#include <filesystem>
 
 #include "async_call.h"
 #include "js_initialize.h"
@@ -31,8 +32,9 @@
 #include "request_manager.h"
 #include "upload/upload_task_napiV5.h"
 #include "storage_acl.h"
-using namespace OHOS::StorageDaemon;
 
+using namespace OHOS::StorageDaemon;
+namespace fs = std::filesystem;
 namespace OHOS::Request {
 constexpr int64_t MILLISECONDS_IN_ONE_DAY = 24 * 60 * 60 * 1000;
 std::mutex JsTask::createMutex_;
@@ -683,6 +685,31 @@ void JsTask::ClearTaskMap(const std::string &key)
     taskMap_.erase(it);
 }
 
+bool JsTask::SetDirsPermission(const std::vector<std::string> &dirs)
+{
+    for (auto &folderPath : dirs) {
+        fs::path folder = folderPath;
+        if (!(fs::exists(folder) && fs::is_directory(folder))) {
+            REQUEST_HILOGE("Invalid folder path.");
+            return false;
+        }
+
+        for (const auto& entry : fs::directory_iterator(folder)) {
+            fs::path path = entry.path();
+            if (!fs::is_regular_file(path)) {
+                REQUEST_HILOGE("File path is illegal.");
+                return false;
+            }
+            std::string filePath = folder.string() + "/" + path.filename().string();
+            if (!JsTask::SetPathPermission(filePath)) {
+                REQUEST_HILOGE("Set path permission fail.");
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 bool JsTask::SetPathPermission(const std::string &filepath)
 {
     std::string baseDir;
@@ -765,6 +792,18 @@ void JsTask::RemovePathMap(const std::string &filepath)
     }
 }
 
+void JsTask::RemoveDirsPermission(const std::vector<std::string> &dirs)
+{
+    for (auto &folderPath : dirs) {
+        fs::path folder = folderPath;
+        for (const auto& entry : fs::directory_iterator(folder)) {
+            fs::path path = entry.path();
+            std::string filePath = folder.string() + "/" + path.filename().string();
+            RemovePathMap(filePath);
+        }
+    }
+}
+
 void JsTask::ClearTaskContext(const std::string &key)
 {
     std::lock_guard<std::mutex> lockGuard(JsTask::taskContextMutex_);
@@ -785,6 +824,8 @@ void JsTask::ClearTaskContext(const std::string &key)
     for (auto &file : context->task->config_.files) {
         RemovePathMap(file.uri);
     }
+    RemoveDirsPermission(context->task->config_.certsPath);
+    
     taskContextMap_.erase(it);
     UnrefTaskContextMap(context);
 }

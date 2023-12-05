@@ -77,6 +77,7 @@ pub(crate) struct TaskConfig {
     pub(crate) form_items: Vec<FormItem>,
     pub(crate) file_specs: Vec<FileSpec>,
     pub(crate) body_file_names: Vec<String>,
+    pub(crate) certs_path: Vec<String>,
     pub(crate) common_data: CommonTaskConfig,
 }
 
