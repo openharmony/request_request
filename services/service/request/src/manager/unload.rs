@@ -28,7 +28,7 @@ impl TaskManager {
             return false;
         }
 
-        if !self.tasks.is_empty() && self.network_check_unload_sa() {
+        if !self.tasks.is_empty() && !self.network_check_unload_sa() {
             return false;
         }
 
@@ -72,12 +72,6 @@ impl TaskManager {
     }
 
     pub(crate) fn restore_all_tasks(&mut self, recording_rdb_num: Arc<AtomicU32>) {
-        if self.restoring {
-            return;
-        }
-
-        self.restoring = true;
-
         if let Some(config_list) = self.query_all_task_config() {
             info!(
                 "RSA query task config list len: {} in database",
@@ -102,17 +96,25 @@ impl TaskManager {
                         app_state,
                     );
                     let task = Arc::new(request_task);
-                    self.restore_task(task.clone());
-                    if unsafe { IsOnline() } {
-                        self.resume_waiting_task(task.clone());
-                    }
+                    self.restoring_tasks.push(task);
                 }
-                unsafe { CleanTaskConfigTable(task_id, uid) };
             }
         } else {
             self.schedule_unload_sa();
         }
-        self.restoring = false;
+    }
+
+    pub(crate) fn insert_restore_tasks(&mut self) {
+        debug!("TaskManager inserts restore tasks");
+        for task in std::mem::take(&mut self.restoring_tasks) {
+            let task_id = task.conf.common_data.task_id;
+            let uid = task.conf.common_data.uid;
+            self.restore_task(task.clone());
+            if unsafe { IsOnline() } {
+                self.resume_waiting_task(task);
+            }
+            unsafe { CleanTaskConfigTable(task_id, uid) };
+        }
     }
 
     fn record_all_task_config(&mut self) {

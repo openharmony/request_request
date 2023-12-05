@@ -31,6 +31,8 @@ const CLEAR_INTERVAL: u64 = 30 * 60;
 const LOG_INTERVAL: u64 = 5 * 60;
 const UNLOAD_WAITING: u64 = 60;
 const BACKGROUND_TASK_STOP_INTERVAL: u64 = 60;
+const RESTORE_ALL_TASKS_INTERVAL: u64 = 10;
+
 // monitor tasks, tasks in waiting state turn to stop after one day, tasks in
 // other state turn to stop after one month.
 pub(crate) async fn clear_timeout_tasks(tx: UnboundedSender<EventMessage>) {
@@ -57,6 +59,11 @@ pub(crate) async fn update_background_app(uid: u64, tx: UnboundedSender<EventMes
     let _ = tx.send(EventMessage::Scheduled(
         ScheduledMessage::UpdateBackgroundApp(uid),
     ));
+}
+
+pub(crate) async fn restore_all_tasks(tx: UnboundedSender<EventMessage>) {
+    ylong_runtime::time::sleep(Duration::from_secs(RESTORE_ALL_TASKS_INTERVAL)).await;
+    let _ = tx.send(EventMessage::Scheduled(ScheduledMessage::RestoreAllTasks));
 }
 
 impl TaskManager {

@@ -15,7 +15,7 @@ pub(crate) mod task_manager;
 pub(crate) use task_manager::TaskManager;
 
 pub(crate) mod monitor;
-mod unload;
+pub(crate) mod unload;
 
 pub(crate) mod events;
 pub(crate) mod qos;

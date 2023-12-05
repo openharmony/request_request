@@ -37,16 +37,11 @@ cfg_oh! {
 pub(crate) struct TaskManager {
     pub(crate) tasks: HashMap<u32, Arc<RequestTask>>,
     pub(crate) qos: QosQueue,
-
     pub(crate) app_task_map: HashMap<u64, HashSet<u32>>,
-
     pub(crate) app_state_map: HashMap<u64, Arc<AtomicU8>>,
-
-    pub(crate) restoring: bool,
+    pub(crate) restoring_tasks: Vec<Arc<RequestTask>>,
     pub(crate) api10_background_task_count: u32,
-
     pub(crate) unload_handle: Option<JoinHandle<()>>,
-
     pub(crate) recording_rdb_num: Arc<AtomicU32>,
     pub(crate) tx: UnboundedSender<EventMessage>,
     pub(crate) rx: UnboundedReceiver<EventMessage>,
@@ -87,6 +82,7 @@ impl TaskManager {
         // Considers update invalid task in database to FAILED state here?.
 
         task_manager.restore_all_tasks(task_manager.recording_rdb_num.clone());
+        ylong_runtime::spawn(scheduled::restore_all_tasks(task_manager.tx.clone()));
 
         ylong_runtime::spawn(scheduled::clear_timeout_tasks(task_manager.tx.clone()));
 
@@ -103,9 +99,8 @@ impl TaskManager {
             tasks: HashMap::new(),
             app_task_map: HashMap::new(),
             app_state_map: HashMap::new(),
-
             unload_handle: None,
-            restoring: false,
+            restoring_tasks: Vec::new(),
             api10_background_task_count: 0,
             recording_rdb_num: Arc::new(AtomicU32::new(0)),
             rx,
@@ -162,6 +157,7 @@ impl TaskManager {
             ScheduledMessage::LogTasks => self.log_all_task_info(),
             ScheduledMessage::Unload => return self.unload_sa(),
             ScheduledMessage::UpdateBackgroundApp(uid) => self.update_background_app(uid),
+            ScheduledMessage::RestoreAllTasks => self.insert_restore_tasks(),
         }
         false
     }
