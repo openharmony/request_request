@@ -16,16 +16,19 @@
 #include "js_initialize.h"
 
 #include <cstring>
+#include <algorithm>
 #include <regex>
 #include <securec.h>
 #include <fstream>
 #include <sys/stat.h>
+#include <filesystem>
 
 #include "js_common.h"
 #include "log.h"
 #include "napi_utils.h"
 #include "request_manager.h"
 
+namespace fs = std::filesystem;
 static constexpr const char *PARAM_KEY_DESCRIPTION = "description";
 static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";
 static constexpr const char *PARAM_KEY_FILE_PATH = "filePath";
@@ -175,7 +178,11 @@ ExceptionError JsInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRu
             return err;
         }
     }
-    
+
+    if (!JsTask::SetDirsPermission(config.certsPath)) {
+        return { .code = E_FILE_IO, .errInfo = "set files of directors permission fail" };
+    }
+
     if (config.action == Action::UPLOAD) {
         std::string filePath = context->GetCacheDir();
         err = CheckUploadBodyFiles(config, filePath);
@@ -283,7 +290,8 @@ bool JsInitialize::GetInternalPath(const std::string &fileUri,
     return true;
 }
 
-bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
+bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig,
+    Config &config, std::string &errInfo)
 {
     if (NapiUtils::GetValueType(env, jsConfig) != napi_object) {
         errInfo = "Wrong conf type, expected object";
@@ -299,6 +307,10 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
     }
     if (!ParseUrl(env, jsConfig, config.url)) {
         errInfo = "parse url error";
+        return false;
+    }
+    if (!ParseCertsPath(env, jsConfig, config.certsPath)) {
+        errInfo = "parse certs path error";
         return false;
     }
     if (!ParseData(env, jsConfig, config)) {
@@ -484,6 +496,49 @@ bool JsInitialize::ParseUrl(napi_env env, napi_value jsConfig, std::string &url)
         REQUEST_HILOGE("ParseUrl error");
         return false;
     }
+
+    return true;
+}
+
+bool JsInitialize::ParseCertsPath(napi_env env, napi_value jsConfig, std::vector<std::string> &certsPath)
+{
+    std::string url = NapiUtils::Convert2String(env, jsConfig, "url");
+    if (url.size() > URL_MAXIMUM) {
+        REQUEST_HILOGE("The URL exceeds the maximum length of 2048");
+        return false;
+    }
+    if (!regex_match(url, std::regex("^http(s)?:\\/\\/.+"))) {
+        REQUEST_HILOGE("ParseUrl error");
+        return false;
+    }
+
+    typedef std::string::const_iterator iter_t;
+
+    iter_t urlEnd = url.end();
+    iter_t protocolStart = url.cbegin();
+    iter_t protocolEnd = std::find(protocolStart, urlEnd, ':');
+    if (protocolEnd != urlEnd) {
+        std::string afterProtocol = &*(protocolEnd);
+        // 3 is the num of ://
+        if ((afterProtocol.length() > 3) && (afterProtocol.substr(0, 3) == "://")) {
+            // 3 means go beyound :// in protocolEnd
+            protocolEnd += 3;
+        } else {
+            protocolEnd = url.cbegin();
+        }
+    } else {
+        protocolEnd = url.cbegin();
+    }
+
+    iter_t hostStart = protocolEnd;
+    iter_t pathStart = std::find(hostStart, urlEnd, '/');
+
+    iter_t queryStart = std::find(url.cbegin(), urlEnd, '?');
+    iter_t hostEnd = std::find(protocolEnd, (pathStart != urlEnd) ? pathStart : queryStart, ':');
+
+    std::string hostname = std::string(hostStart, hostEnd);
+    std::vector<std::string> paths;
+    certsPath = paths;
 
     return true;
 }

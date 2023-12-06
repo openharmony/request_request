@@ -41,6 +41,8 @@ pub(crate) struct CTaskConfig {
     pub(crate) file_specs_len: u32,
     pub(crate) body_file_names_ptr: *const CStringWrapper,
     pub(crate) body_file_names_len: u32,
+    pub(crate) certs_path_ptr: *const CStringWrapper,
+    pub(crate) certs_path_len: u32,
     pub(crate) common_data: CommonCTaskConfig,
 }
 
@@ -265,6 +267,12 @@ impl TaskConfig {
             .iter()
             .map(CStringWrapper::from)
             .collect();
+        let certs_path: Vec<CStringWrapper> = self
+        .certs_path
+        .iter()
+        .map(CStringWrapper::from)
+        .collect();
+
         CTaskConfig {
             bundle: CStringWrapper::from(&self.bundle),
             url: CStringWrapper::from(&self.url),
@@ -282,6 +290,8 @@ impl TaskConfig {
             file_specs_len: file_specs.len() as u32,
             body_file_names_ptr: body_file_names.as_ptr() as *const CStringWrapper,
             body_file_names_len: body_file_names.len() as u32,
+            certs_path_ptr: certs_path.as_ptr() as *const CStringWrapper,
+            certs_path_len: certs_path.len() as u32,
             common_data: CommonCTaskConfig {
                 task_id,
                 uid,
@@ -305,7 +315,7 @@ impl TaskConfig {
     }
 
     pub(crate) fn from_c_struct(c_struct: &CTaskConfig) -> Self {
-        let task_config = TaskConfig {
+        let task_config: TaskConfig = TaskConfig {
             bundle: c_struct.bundle.to_string(),
             url: c_struct.url.to_string(),
             title: c_struct.title.to_string(),
@@ -331,6 +341,11 @@ impl TaskConfig {
                 c_struct.body_file_names_len as usize,
                 CStringWrapper::to_string,
             ),
+            certs_path: build_vec(
+                c_struct.certs_path_ptr,
+                c_struct.certs_path_len as usize,
+                CStringWrapper::to_string,
+            ),
             common_data: CommonTaskConfig {
                 task_id: c_struct.common_data.task_id,
                 uid: c_struct.common_data.uid,
@@ -354,6 +369,7 @@ impl TaskConfig {
         unsafe { DeleteCFormItem(c_struct.form_items_ptr) };
         unsafe { DeleteCFileSpec(c_struct.file_specs_ptr) };
         unsafe { DeleteCStringPtr(c_struct.body_file_names_ptr) };
+        unsafe { DeleteCStringPtr(c_struct.certs_path_ptr) };
         task_config
     }
 }

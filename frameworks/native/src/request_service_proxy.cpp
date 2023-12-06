@@ -78,6 +78,11 @@ int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid, sptr<Not
 
 void RequestServiceProxy::GetVectorData(const Config &config, MessageParcel &data)
 {
+    data.WriteUint32(config.certsPath.size());
+    for (const auto &cert : config.certsPath) {
+        data.WriteString(cert);
+    }
+
     data.WriteUint32(config.forms.size());
     for (const auto &form : config.forms) {
         data.WriteString(form.name);

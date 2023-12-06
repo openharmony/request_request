@@ -113,6 +113,7 @@ constexpr const char *CREATE_REQUEST_TABLE3 = "CREATE TABLE IF NOT EXISTS reques
                                               "form_items_len INTEGER, "
                                               "file_specs_len INTEGER, "
                                               "body_file_names_len INTEGER, "
+                                              "certs_path_len INTEGER"
                                               "priority INTEGER)";
 
 constexpr const char *CREATE_REQUEST_TABLE4 = "CREATE TABLE IF NOT EXISTS task_config_attachment "
@@ -125,7 +126,8 @@ constexpr const char *CREATE_REQUEST_TABLE4 = "CREATE TABLE IF NOT EXISTS task_c
                                               "path TEXT, "
                                               "file_name TEXT, "
                                               "mime_type TEXT, "
-                                              "body_file_name TEXT)";
+                                              "body_file_name TEXT, "
+                                              "certs_path TEXT)";
 
 class RequestDataBase {
 public:
@@ -192,7 +194,7 @@ int QueryTaskConfigLen();
 void QuerySingleTaskConfig(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskConfig &taskConfig);
 int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, std::vector<TaskConfig> &taskConfigs);
 int QueryTaskConfigAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskConfig &taskConfig,
-    int64_t formItemsLen, int64_t fileSpecsLen, int64_t bodyFileNamesLen);
+    int64_t formItemsLen, int64_t fileSpecsLen, int64_t bodyFileNamesLen, int64_t certsPathLen);
 CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs);
 bool CleanTaskConfigTable(uint32_t taskId, uint64_t uid);
 
