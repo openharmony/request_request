@@ -32,7 +32,7 @@ public:
     JsInitialize() = default;
     ~JsInitialize() = default;
 
-    static napi_value Initialize(napi_env env, napi_callback_info info, Version version);
+    static napi_value Initialize(napi_env env, napi_callback_info info, Version version, bool firstInit = true);
     static void CreatProperties(napi_env env, napi_value &self, napi_value config, JsTask *task);
     static napi_status GetContext(napi_env env, napi_value value,
             std::shared_ptr<OHOS::AbilityRuntime::Context>& context);

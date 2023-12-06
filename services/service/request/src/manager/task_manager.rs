@@ -238,6 +238,10 @@ impl TaskManager {
                 let s = self.query_mime_type(uid, task_id);
                 let _ = tx.send(s);
             }
+            ServiceMessage::GetTask(uid, task_id, token, tx) => {
+                let task_config = self.get_task_api(uid, task_id, token);
+                let _ = tx.send(task_config);
+            }
         }
     }
 

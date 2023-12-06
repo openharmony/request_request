@@ -43,6 +43,8 @@ std::mutex JsTask::requestMutex_;
 thread_local napi_ref JsTask::requestCtor = nullptr;
 std::mutex JsTask::requestFileMutex_;
 thread_local napi_ref JsTask::requestFileCtor = nullptr;
+std::mutex JsTask::getTaskCreateMutex_;
+thread_local napi_ref JsTask::getTaskCreateCtor = nullptr;
 std::mutex JsTask::taskMutex_;
 std::map<std::string, JsTask *> JsTask::taskMap_;
 std::mutex JsTask::pathMutex_;
@@ -257,6 +259,154 @@ napi_value JsTask::RequestFileV8(napi_env env, napi_callback_info info)
 {
     REQUEST_HILOGD("Request API8");
     return JsInitialize::Initialize(env, info, Version::API8);
+}
+
+napi_value JsTask::GetTaskCtor(napi_env env)
+{
+    REQUEST_HILOGD("GetTaskCtor in");
+    std::lock_guard<std::mutex> lock(getTaskCreateMutex_);
+    napi_value cons;
+    if (getTaskCreateCtor != nullptr) {
+        NAPI_CALL(env, napi_get_reference_value(env, getTaskCreateCtor, &cons));
+        return cons;
+    }
+    size_t count = sizeof(clzDes) / sizeof(napi_property_descriptor);
+    return DefineClass(env, clzDes, count, GetTaskCreate, &getTaskCreateCtor);
+}
+
+napi_value JsTask::GetTaskCreate(napi_env env, napi_callback_info info)
+{
+    REQUEST_HILOGD("GetTask Create");
+    return JsInitialize::Initialize(env, info, Version::API10, false);
+}
+
+napi_value JsTask::GetTask(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<ContextInfo>();
+    context->withErrCode_ = true;
+    context->version_ = Version::API10;
+    auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        if (!ParseGetTask(context->env_, argc, argv, context)) {
+            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Parse tid or token fail!", true);
+            return napi_invalid_arg;
+        }
+        napi_create_reference(context->env_, argv[0], 1, &(context->baseContext));
+        return napi_ok;
+    };
+    auto output = [context](napi_value *result) -> napi_status {
+        if (context->innerCode_ != E_OK) {
+            return napi_generic_failure;
+        }
+        if (!GetTaskOutput(context)) {
+            return napi_generic_failure;
+        }
+        napi_status res = napi_get_reference_value(context->env_, context->taskRef, result);
+        context->task->SetTid(context->tid);
+        napi_value conf = nullptr;
+        napi_get_reference_value(context->env_, context->jsConfig, &conf);
+        JsInitialize::CreatProperties(context->env_, *result, conf, context->task);
+        return res;
+    };
+    auto exec = [context]() {
+        if (!RequestManager::GetInstance()->LoadRequestServer()) {
+            context->innerCode_ = E_SERVICE_ERROR;
+            return;
+        }
+        GetTaskExecution(context);
+    };
+    context->SetInput(input).SetOutput(output).SetExec(exec);
+    AsyncCall asyncCall(env, info, context);
+    return asyncCall.Call(context, "getTask");
+}
+
+void JsTask::GetTaskExecution(std::shared_ptr<ContextInfo> context)
+{
+    std::string tid = std::to_string(context->tid);
+        if (taskContextMap_.find(tid) != taskContextMap_.end()) {
+            REQUEST_HILOGD("Find in taskContextMap_");
+            if (taskContextMap_[tid]->task->config_.version != Version::API10 ||
+                taskContextMap_[tid]->task->config_.token != context->token) {
+                context->innerCode_ = E_TASK_NOT_FOUND;
+                return;
+            }
+            context->task = taskContextMap_[tid]->task;
+            context->taskRef = taskContextMap_[tid]->taskRef;
+            context->jsConfig = taskContextMap_[tid]->jsConfig;
+            context->innerCode_ = E_OK;
+            return;
+        } else {
+            context->innerCode_ =
+                RequestManager::GetInstance()->GetTask(tid, context->token, context->config);
+        }
+        if (context->config.version != Version::API10) {
+            context->innerCode_ = E_TASK_NOT_FOUND;
+        }
+}
+
+bool JsTask::GetTaskOutput(std::shared_ptr<ContextInfo> context)
+{
+    std::string tid = std::to_string(context->tid);
+    if (taskMap_.find(tid) == taskMap_.end()) {
+        napi_value config = NapiUtils::Convert2JSValue(context->env_, context->config);
+        napi_create_reference(context->env_, config, 1, &(context->jsConfig));
+        napi_value ctor = GetTaskCtor(context->env_);
+        napi_value jsTask = nullptr;
+        napi_value baseCtx = nullptr;
+        napi_get_reference_value(context->env_, context->baseContext, &baseCtx);
+        napi_value args[2] = {baseCtx, config};
+        napi_status status = napi_new_instance(context->env_, ctor, 2, args, &jsTask);
+        if (jsTask == nullptr || status != napi_ok) {
+            REQUEST_HILOGE("Get task failed");
+            return false;
+        }
+        napi_unwrap(context->env_, jsTask, reinterpret_cast<void **>(&context->task));
+        napi_create_reference(context->env_, jsTask, 1, &(context->taskRef));
+        JsTask::AddTaskMap(tid, context->task);
+        JsTask::AddTaskContextMap(tid, context);
+    }
+    return true;
+}
+
+bool JsTask::ParseGetTask(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<ContextInfo> context)
+{
+    // need at least 2 params.
+    if (argc < 2) {
+        REQUEST_HILOGE("Wrong number of arguments");
+        return false;
+    }
+    if (NapiUtils::GetValueType(env, argv[1]) != napi_string) {
+        REQUEST_HILOGE("The parameter is not of string type");
+        return false;
+    }
+    std::string tid = NapiUtils::Convert2String(env, argv[1]);
+    if (tid.empty()) {
+        REQUEST_HILOGE("tid is empty");
+        return false;
+    }
+    context->tid = std::stoi(tid);
+    // handle 3rd param TOKEN
+    if (argc == 3) {
+        if (NapiUtils::GetValueType(env, argv[2]) != napi_string) {     // argv[2] is the 3rd param
+            REQUEST_HILOGE("The parameter is not of string type");
+            return false;
+        }
+        uint32_t bufferLen = TOKEN_MAX_BYTES + 2;
+        std::unique_ptr<char[]> token = std::make_unique<char[]>(bufferLen);
+        size_t len = 0;
+        napi_status status = napi_get_value_string_utf8(env, argv[2], token.get(), bufferLen, &len);
+        if (status != napi_ok) {
+            REQUEST_HILOGE("napi get value string utf8 failed");
+            memset_s(token.get(), bufferLen, 0, bufferLen);
+            return false;
+        }
+        if (len < TOKEN_MIN_BYTES || len > TOKEN_MAX_BYTES) {
+            memset_s(token.get(), bufferLen, 0, bufferLen);
+            return false;
+        }
+        context->token = NapiUtils::SHA256(token.get(), len);
+        memset_s(token.get(), bufferLen, 0, bufferLen);
+    }
+    return true;
 }
 
 napi_value JsTask::Remove(napi_env env, napi_callback_info info)
@@ -673,6 +823,25 @@ void JsTask::ClearListener()
         }
     }
     listenerMap_.clear();
+}
+
+void JsTask::ReloadListener()
+{
+    REQUEST_HILOGD("ReloadListener in");
+    std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
+    for (const auto &it : taskMap_) {
+        std::string tid = it.first;
+        for (auto itListener : it.second->listenerMap_) {
+            std::string key = itListener.first;
+            if (key.find(tid) == std::string::npos) {
+                continue;
+            }
+            std::string type = key.substr(0, key.find(tid));
+            for (const auto &listener : itListener.second) {
+                RequestManager::GetInstance()->On(type, tid, listener, it.second->config_.version);
+            }
+        }
+    }
 }
 
 void JsTask::ClearTaskMap(const std::string &key)

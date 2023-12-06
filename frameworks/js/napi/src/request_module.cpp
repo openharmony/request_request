@@ -105,6 +105,7 @@ static napi_value InitAgent(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("BroadcastEvent", broadcastEvent),
 
         DECLARE_NAPI_METHOD("create", JsTask::JsCreate),
+        DECLARE_NAPI_METHOD("getTask", JsTask::GetTask),
         DECLARE_NAPI_METHOD("remove", JsTask::Remove),
         DECLARE_NAPI_METHOD("show", JsTask::Show),
         DECLARE_NAPI_METHOD("touch", JsTask::Touch),

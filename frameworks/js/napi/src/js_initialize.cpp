@@ -38,7 +38,7 @@ static constexpr uint32_t TITLE_MAXIMUM = 256;
 static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
 static constexpr uint32_t URL_MAXIMUM = 2048;
 namespace OHOS::Request {
-napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Version version)
+napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Version version, bool firstInit)
 {
     REQUEST_HILOGD("constructor request task!");
     bool withErrCode = version != Version::API8;
@@ -55,6 +55,7 @@ napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Versi
     Config config;
     config.version = version;
     config.withErrCode = withErrCode;
+    config.firstInit = firstInit;
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
     ExceptionError err = InitParam(env, argv, context, config);
     if (err.code != E_OK) {
@@ -68,6 +69,7 @@ napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Versi
         return nullptr;
     }
     task->config_ = config;
+    RequestManager::GetInstance()->RestoreListener(JsTask::ReloadListener);
     auto finalize = [](napi_env env, void *data, void *hint) {
         REQUEST_HILOGD("destructed task");
         JsTask *task = reinterpret_cast<JsTask *>(data);
@@ -241,6 +243,10 @@ ExceptionError JsInitialize::GetFD(const std::string &path, const Config &config
         }
 
         if (config.version == Version::API10 && config.overwrite) {
+            return error;
+        }
+        if (!config.firstInit) {
+            REQUEST_HILOGD("Task config is not firstInit");
             return error;
         }
         ExceptionErrorCode code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;

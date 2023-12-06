@@ -113,7 +113,7 @@ constexpr const char *CREATE_REQUEST_TABLE3 = "CREATE TABLE IF NOT EXISTS reques
                                               "form_items_len INTEGER, "
                                               "file_specs_len INTEGER, "
                                               "body_file_names_len INTEGER, "
-                                              "certs_path_len INTEGER"
+                                              "certs_path_len INTEGER, "
                                               "priority INTEGER)";
 
 constexpr const char *CREATE_REQUEST_TABLE4 = "CREATE TABLE IF NOT EXISTS task_config_attachment "

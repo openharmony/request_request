@@ -33,6 +33,7 @@ enum class RequestInterfaceCode {
     CMD_SHOW,
     CMD_TOUCH,
     CMD_SEARCH,
+    CMD_GETTASK,
     CMD_CLEAR,
 };
 

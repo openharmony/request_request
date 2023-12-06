@@ -61,7 +61,7 @@ pub(crate) struct CommonTaskConfig {
     pub(crate) background: bool,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(crate) struct TaskConfig {
     pub(crate) bundle: String,
     pub(crate) url: String,

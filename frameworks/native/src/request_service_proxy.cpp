@@ -125,6 +125,27 @@ void RequestServiceProxy::GetVectorData(const Config &config, MessageParcel &dat
     }
 }
 
+int32_t RequestServiceProxy::GetTask(const std::string &tid, const std::string &token, Config &config)
+{
+    REQUEST_HILOGD("GetTask");
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(tid);
+    data.WriteString(token);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_GETTASK), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        return E_SERVICE_ERROR;
+    }
+    int32_t errCode = reply.ReadInt32();
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    ParcelHelper::UnMarshalConfig(reply, config);
+    return E_OK;
+}
+
 int32_t RequestServiceProxy::Start(const std::string &tid)
 {
     MessageParcel data, reply;
