@@ -297,4 +297,5 @@ pub(crate) enum ScheduledMessage {
     LogTasks,
     Unload,
     UpdateBackgroundApp(u64),
+    RestoreAllTasks,
 }
