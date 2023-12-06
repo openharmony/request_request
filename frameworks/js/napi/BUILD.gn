@@ -32,6 +32,7 @@ request_include = [
   "${ability_runtime_napi_path}/inner/napi_common",
   "${request_path}/frameworks/native/include",
   "//third_party/libuv/include",
+  "${arkui_path}/ace_engine/frameworks",
 ]
 
 request_src = [
@@ -72,6 +73,7 @@ request_external_deps = [
   "hilog:libhilog",
   "ipc:ipc_single",
   "napi:ace_napi",
+  "netmanager_base:net_conn_manager_if",
   "storage_service:storage_manager_acl",
 ]
 

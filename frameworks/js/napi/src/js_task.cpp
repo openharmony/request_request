@@ -687,25 +687,8 @@ void JsTask::ClearTaskMap(const std::string &key)
 
 bool JsTask::SetDirsPermission(const std::vector<std::string> &dirs)
 {
-    for (auto &folderPath : dirs) {
-        fs::path folder = folderPath;
-        if (!(fs::exists(folder) && fs::is_directory(folder))) {
-            REQUEST_HILOGE("Invalid folder path.");
-            return false;
-        }
-
-        for (const auto& entry : fs::directory_iterator(folder)) {
-            fs::path path = entry.path();
-            if (!fs::is_regular_file(path)) {
-                REQUEST_HILOGE("File path is illegal.");
-                return false;
-            }
-            std::string filePath = folder.string() + "/" + path.filename().string();
-            if (!JsTask::SetPathPermission(filePath)) {
-                REQUEST_HILOGE("Set path permission fail.");
-                return false;
-            }
-        }
+    if (fs::create_directories("/data/storage/el2/base/.ohos/.request/.certs")) {
+        REQUEST_HILOGD("Creat folder path succss.");
     }
     return true;
 }
@@ -824,8 +807,6 @@ void JsTask::ClearTaskContext(const std::string &key)
     for (auto &file : context->task->config_.files) {
         RemovePathMap(file.uri);
     }
-    RemoveDirsPermission(context->task->config_.certsPath);
-    
     taskContextMap_.erase(it);
     UnrefTaskContextMap(context);
 }

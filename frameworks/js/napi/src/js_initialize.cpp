@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <filesystem>
 
+#include "net_conn_client.h"
 #include "js_common.h"
 #include "log.h"
 #include "napi_utils.h"
@@ -529,17 +530,17 @@ bool JsInitialize::ParseCertsPath(napi_env env, napi_value jsConfig, std::vector
     } else {
         protocolEnd = url.cbegin();
     }
-
     iter_t hostStart = protocolEnd;
     iter_t pathStart = std::find(hostStart, urlEnd, '/');
-
     iter_t queryStart = std::find(url.cbegin(), urlEnd, '?');
     iter_t hostEnd = std::find(protocolEnd, (pathStart != urlEnd) ? pathStart : queryStart, ':');
-
     std::string hostname = std::string(hostStart, hostEnd);
-    std::vector<std::string> paths;
-    certsPath = paths;
-
+    REQUEST_HILOGD("hostname is %{public}s", hostname.c_str());
+    // 0 means succsses
+    if (NetManagerStandard::NetConnClient::GetInstance().GetTrustAnchorsForHostName(hostname, certsPath) != 0) {
+        REQUEST_HILOGE("Get certs path error");
+        return false;
+    }
     return true;
 }
 
