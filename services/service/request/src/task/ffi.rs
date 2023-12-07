@@ -267,11 +267,8 @@ impl TaskConfig {
             .iter()
             .map(CStringWrapper::from)
             .collect();
-        let certs_path: Vec<CStringWrapper> = self
-        .certs_path
-        .iter()
-        .map(CStringWrapper::from)
-        .collect();
+        let certs_path: Vec<CStringWrapper> =
+            self.certs_path.iter().map(CStringWrapper::from).collect();
 
         CTaskConfig {
             bundle: CStringWrapper::from(&self.bundle),
@@ -288,9 +285,9 @@ impl TaskConfig {
             form_items_len: form_items.len() as u32,
             file_specs_ptr: file_specs.as_ptr(),
             file_specs_len: file_specs.len() as u32,
-            body_file_names_ptr: body_file_names.as_ptr() as *const CStringWrapper,
+            body_file_names_ptr: body_file_names.as_ptr(),
             body_file_names_len: body_file_names.len() as u32,
-            certs_path_ptr: certs_path.as_ptr() as *const CStringWrapper,
+            certs_path_ptr: certs_path.as_ptr(),
             certs_path_len: certs_path.len() as u32,
             common_data: CommonCTaskConfig {
                 task_id,

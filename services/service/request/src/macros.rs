@@ -19,3 +19,12 @@ macro_rules! cfg_oh {
         )*
     }
 }
+
+macro_rules! cfg_not_oh {
+    ($($item:item)*) => {
+        $(
+            #[cfg(not(feature = "oh"))]
+            $item
+        )*
+    }
+}

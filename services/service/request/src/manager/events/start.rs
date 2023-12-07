@@ -17,13 +17,10 @@ use std::sync::Arc;
 use crate::error::ErrorCode;
 use crate::manager::events::{EventMessage, TaskMessage};
 use crate::manager::TaskManager;
-use crate::task::config::Version;
 use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
 use crate::task::request_task::run;
 use crate::task::RequestTask;
-const MAX_RUNNING_TASK_COUNT_EACH_APP: u32 = 5; // api10
-const MAX_RUNNING_TASK_COUNT_API9: u32 = 4;
 
 impl TaskManager {
     pub(crate) fn start(&mut self, uid: u64, task_id: u32) -> ErrorCode {
@@ -58,13 +55,6 @@ impl TaskManager {
         }
         let state = task.status.lock().unwrap().state;
         if state != State::Initialized && state != State::Waiting && state != State::Paused {
-            self.after_task_processed(&task);
-            return;
-        }
-
-        if self.reach_maximum_running_limit(task.conf.common_data.uid, task.conf.version) {
-            info!("too many task in running state");
-            task.set_status(State::Waiting, Reason::RunningTaskMeetLimits);
             self.after_task_processed(&task);
             return;
         }
@@ -104,50 +94,5 @@ impl TaskManager {
         });
 
         info!("task {} start success", task_id);
-    }
-
-    fn reach_maximum_running_limit(&self, uid: u64, version: Version) -> bool {
-        match version {
-            Version::API10 => {
-                let mut count = 0;
-                let tasks = match self.app_task_map.get(&uid) {
-                    Some(v) => v,
-                    None => return false,
-                };
-                for task in tasks {
-                    let request_task = match self.tasks.get(task) {
-                        Some(task) => task,
-                        None => {
-                            error!("TaskManager reach_maximum_running_limit task_id:{} not found in uid:{}", task, uid);
-                            continue;
-                        }
-                    };
-                    if request_task.conf.version == Version::API10 {
-                        let state = request_task.status.lock().unwrap().state;
-                        if state == State::Retrying || state == State::Running {
-                            count += 1;
-                        }
-                        if count >= MAX_RUNNING_TASK_COUNT_EACH_APP {
-                            return true;
-                        }
-                    }
-                }
-            }
-            Version::API9 => {
-                let mut count = 0;
-                for request_task in self.tasks.values() {
-                    if request_task.conf.version == Version::API9 {
-                        let state = request_task.status.lock().unwrap().state;
-                        if state == State::Retrying || state == State::Running {
-                            count += 1;
-                        }
-                        if count >= MAX_RUNNING_TASK_COUNT_API9 {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        false
     }
 }

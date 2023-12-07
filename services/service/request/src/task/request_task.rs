@@ -349,8 +349,8 @@ impl RequestTask {
             }
             let path_list = self.conf.certs_path.clone();
             for path in path_list.into_iter() {
-                client = client.add_root_certificate(Certificate::from_path(&path).unwrap()); 
-            }        
+                client = client.add_root_certificate(Certificate::from_path(&path).unwrap());
+            }
         }
         let result = client.build();
         match result {

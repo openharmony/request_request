@@ -21,7 +21,7 @@ macro_rules! debug {
 
         let log = format!($($args)*);
 
-        hilog_rust::info!(LOG_LABEL,"{}",@public(log));
+        hilog_rust::debug!(LOG_LABEL,"{}",@public(log));
     }}
 }
 
