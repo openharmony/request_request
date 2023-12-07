@@ -16,6 +16,8 @@ use ipc_rust::{BorrowedMsgParcel, IpcResult, IpcStatusCode};
 use crate::error::ErrorCode;
 use crate::service::ability::RequestAbility;
 use crate::service::notify::{Event, NotifyEvent};
+use crate::service::permission::PermissionChecker;
+use crate::task::config::Version;
 
 pub(crate) struct Off;
 
@@ -25,6 +27,12 @@ impl Off {
         reply: &mut BorrowedMsgParcel,
     ) -> IpcResult<()> {
         info!("Service off");
+        let version: u32 = data.read()?;
+        if Version::from(version as u8) == Version::API9 && !PermissionChecker::check_internet() {
+            error!("Service off: no INTERNET permission");
+            reply.write(&(ErrorCode::Permission as i32))?;
+            return Err(IpcStatusCode::Failed);
+        }
         let off_type: String = data.read()?;
         debug!("Service off: off_type {:?}", off_type);
 

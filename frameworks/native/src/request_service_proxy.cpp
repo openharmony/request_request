@@ -314,12 +314,13 @@ int32_t RequestServiceProxy::Resume(const std::string &tid)
 }
 
 int32_t RequestServiceProxy::On(const std::string &type, const std::string &tid,
-    const sptr<NotifyInterface> &listener)
+    const sptr<NotifyInterface> &listener, Version version)
 {
     REQUEST_HILOGD("On");
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
+    data.WriteUint32(static_cast<uint32_t>(version));
     data.WriteString(type);
     data.WriteString(tid);
     data.WriteRemoteObject(listener->AsObject().GetRefPtr());
@@ -331,12 +332,13 @@ int32_t RequestServiceProxy::On(const std::string &type, const std::string &tid,
     return E_OK;
 }
 
-int32_t RequestServiceProxy::Off(const std::string &type, const std::string &tid)
+int32_t RequestServiceProxy::Off(const std::string &type, const std::string &tid, Version version)
 {
     REQUEST_HILOGD("Off");
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
+    data.WriteUint32(static_cast<uint32_t>(version));
     data.WriteString(type);
     data.WriteString(tid);
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_OFF), data, reply, option);

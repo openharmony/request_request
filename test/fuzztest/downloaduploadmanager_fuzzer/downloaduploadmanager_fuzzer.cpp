@@ -148,6 +148,7 @@ void ResumeRequestFuzzTest(const uint8_t *data, size_t size)
 
 void OnRequestFuzzTest(const uint8_t *data, size_t size)
 {
+    Version version = static_cast<Version>(ConvertToUint32(data, size));
     std::string tid(reinterpret_cast<const char *>(data), size);
     std::string type(data, data + size);
 
@@ -156,15 +157,16 @@ void OnRequestFuzzTest(const uint8_t *data, size_t size)
     sptr<RequestNotify> listener_ = new RequestNotify(env, value);
 
     GrantNativePermission();
-    RequestManager::GetInstance()->On(type, tid, listener_);
+    RequestManager::GetInstance()->On(type, tid, listener_, version);
 }
 
 void OffRequestFuzzTest(const uint8_t *data, size_t size)
 {
+    Version version = static_cast<Version>(ConvertToUint32(data, size));
     std::string tid(reinterpret_cast<const char *>(data), size);
     std::string type(data, data + size);
     GrantNativePermission();
-    RequestManager::GetInstance()->Off(type, tid);
+    RequestManager::GetInstance()->Off(type, tid, version);
 }
 } // namespace OHOS
 

@@ -620,7 +620,7 @@ void JsTask::AddListener(const std::string &key, const sptr<RequestNotify> &list
     listenerMap_[key].push_back(listener);
 }
 
-void JsTask::RemoveListener(const std::string &type, const std::string &tid, napi_value callback)
+void JsTask::RemoveListener(const std::string &type, const std::string &tid, napi_value callback, Version version)
 {
     std::string key = type + tid;
     std::lock_guard<std::mutex> autoLock(listenerMutex_);
@@ -635,12 +635,12 @@ void JsTask::RemoveListener(const std::string &type, const std::string &tid, nap
         }
     }
     if (listenerMap_[key].empty()) {
-        RequestManager::GetInstance()->Off(type, tid);
+        RequestManager::GetInstance()->Off(type, tid, version);
         listenerMap_.erase(key);
     }
 }
 
-void JsTask::RemoveListener(const std::string &type, const std::string &tid)
+void JsTask::RemoveListener(const std::string &type, const std::string &tid, Version version)
 {
     {
         std::lock_guard<std::mutex> autoLock(listenerMutex_);
@@ -649,7 +649,7 @@ void JsTask::RemoveListener(const std::string &type, const std::string &tid)
             return;
         }
     }
-    int32_t ret = RequestManager::GetInstance()->Off(type, tid);
+    int32_t ret = RequestManager::GetInstance()->Off(type, tid, version);
     {
         std::lock_guard<std::mutex> autoLock(listenerMutex_);
         auto it = listenerMap_.find(type + tid);

@@ -41,8 +41,8 @@ public:
     virtual int32_t Show(const std::string &tid, TaskInfo &info) = 0;
 
     virtual int32_t On(const std::string &type, const std::string &tid,
-        const sptr<NotifyInterface> &listener) = 0;
-    virtual int32_t Off(const std::string &type, const std::string &tid) = 0;
+        const sptr<NotifyInterface> &listener, Version version) = 0;
+    virtual int32_t Off(const std::string &type, const std::string &tid, Version version) = 0;
 };
 } // namespace OHOS::Request
 #endif // DOWNLOAD_SERVICE_INTERFACE_H
