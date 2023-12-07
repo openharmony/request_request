@@ -140,6 +140,16 @@ impl TaskManager {
     pub(crate) fn update_background_app(&mut self, uid: u64) {
         debug!("TaskManager begin update_background_app uid:{}", uid);
 
+        if ApplicationState::from(self.app_state_map.get(&uid).unwrap().load(Ordering::SeqCst))
+            == ApplicationState::Foreground
+        {
+            debug!(
+                "TaskManager abort update_background_app uid:{} that has changed to Foreground",
+                uid
+            );
+            return;
+        }
+
         if self.app_task_map.get(&uid).is_none() {
             return;
         }

@@ -189,9 +189,9 @@ impl Notifier {
         }
 
         debug!("During notify: send request");
-        if let Err(e) = self
-            .obj
-            .send_request(RequestNotifyInterfaceCode::Notify as u32, &parcel, false)
+        if let Err(e) =
+            self.obj
+                .send_request(RequestNotifyInterfaceCode::Notify as u32, &parcel, false)
         {
             error!("During notify: send request failed {:?}", e);
         }

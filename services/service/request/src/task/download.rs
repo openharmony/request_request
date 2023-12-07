@@ -41,14 +41,22 @@ impl DownloadOperator for TaskOperator {
         data: &[u8],
     ) -> Poll<Result<usize, HttpClientError>> {
         let me = self.get_mut();
-        if me.task.rate_limiting.load(Ordering::SeqCst) {
+
+        // Repeated queue entry can affect performance, pay attention.
+        // need more test and research.
+
+        if me.task.rate_limiting.load(Ordering::Relaxed) {
             if me.check_point.take().is_none() {
                 Clock::get_instance().register(cx);
                 me.check_point = Some(());
                 return Poll::Pending;
             }
         } else {
-            Clock::get_instance().tick();
+            me.tick_waiting += 1;
+            if me.tick_waiting == 10 {
+                me.tick_waiting = 0;
+                Clock::get_instance().tick();
+            }
         }
 
         if me.task.range_request.load(Ordering::SeqCst) {

@@ -52,6 +52,8 @@ impl AsyncRead for TaskReader {
         cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<std::io::Result<()>> {
+        // Repeated queue entry can affect performance, pay attention.
+        // need more test and research.
         if self.task.rate_limiting.load(Ordering::SeqCst) {
             if self.check_point.take().is_none() {
                 Clock::get_instance().register(cx);

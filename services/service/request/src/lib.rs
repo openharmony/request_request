@@ -34,9 +34,6 @@ mod manager;
 mod task;
 mod utils;
 
-#[cfg(test)]
-mod tests;
-
 cfg_oh! {
     mod trace;
     mod sys_event;
@@ -64,4 +61,18 @@ cfg_oh! {
         info!("Download Ability stopped");
     }
 
+}
+
+cfg_not_oh! {
+    fn test_set_up() {
+        use std::sync::Once;
+        static INIT: Once = Once::new();
+        INIT.call_once(|| {
+            env_logger::builder()
+            .is_test(true)
+            .filter_level(log::LevelFilter::Debug)
+            .write_style(env_logger::WriteStyle::Always)
+            .init();;
+        })
+    }
 }

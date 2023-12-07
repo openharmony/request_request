@@ -15,7 +15,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
 use std::task::{Context, Waker};
 
-const WAITING_TICK: usize = 10;
+const WAITING_TICK: usize = 20;
 
 pub(crate) struct Clock {
     registers: Mutex<Vec<Waker>>,
@@ -24,14 +24,18 @@ pub(crate) struct Clock {
 
 impl Clock {
     pub(crate) fn tick(&mut self) {
-        let tick = self.tick.fetch_add(1, Ordering::Relaxed);
+        let tick = self.tick.fetch_add(1, Ordering::SeqCst);
 
         if tick >= WAITING_TICK {
-            self.tick.store(0, Ordering::Relaxed);
-            let mut registers = Clock::get_instance().registers.lock().unwrap();
-            while let Some(waker) = registers.pop() {
-                waker.wake()
-            }
+            self.tick.store(0, Ordering::SeqCst);
+            self.wake_all();
+        }
+    }
+
+    pub(crate) fn wake_all(&mut self) {
+        let mut registers = self.registers.lock().unwrap();
+        while let Some(waker) = registers.pop() {
+            waker.wake()
         }
     }
 

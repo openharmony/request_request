@@ -21,13 +21,14 @@ use ylong_runtime::task::JoinHandle;
 use super::events::{
     ConstructMessage, EventMessage, ScheduledMessage, ServiceMessage, StateMessage, TaskMessage,
 };
-use super::qos::{Qos, QosQueue};
+use super::qos::{Qos, QosChange, QosQueue};
 use super::scheduled;
 use crate::error::ErrorCode;
 use crate::task::config::Version;
 use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
+use crate::task::tick::Clock;
 use crate::utils::c_wrapper::CStringWrapper;
 
 cfg_oh! {
@@ -94,8 +95,10 @@ impl TaskManager {
     }
 
     fn new(tx: UnboundedSender<EventMessage>, rx: UnboundedReceiver<EventMessage>) -> Self {
+        const HIGH_QOS_MAX: usize = 10;
+
         TaskManager {
-            qos: QosQueue::new(),
+            qos: QosQueue::new(HIGH_QOS_MAX),
             tasks: HashMap::new(),
             app_task_map: HashMap::new(),
             app_state_map: HashMap::new(),
@@ -425,16 +428,17 @@ impl TaskManager {
                 notify_data,
                 &self.app_state(task.conf.common_data.uid, &task.conf.bundle),
             );
-            self.start_inner(task.clone());
+            self.start_inner(task);
         }
     }
 
-    pub(crate) fn change_qos(&mut self, new_qos: Vec<(u32, Qos)>) {
-        for (task_id, qos) in new_qos.iter() {
+    pub(crate) fn change_qos(&mut self, new_qos: Vec<QosChange>) {
+        for QosChange { task_id, new_qos } in new_qos.iter() {
             if let Some(task) = self.tasks.get(task_id) {
-                match qos {
+                match new_qos {
                     Qos::High => {
                         info!("Qos task_id:{} set to High Qos", task_id);
+                        Clock::get_instance().wake_all();
                         task.rate_limiting.store(false, Ordering::SeqCst);
                     }
                     Qos::Low => {

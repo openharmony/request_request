@@ -20,5 +20,5 @@ pub(crate) mod request_task;
 pub(crate) use request_task::RequestTask;
 mod download;
 mod operator;
-mod tick;
+pub(crate) mod tick;
 mod upload;
