@@ -220,7 +220,7 @@ int32_t RequestManager::Resume(const std::string &tid)
 }
 
 int32_t RequestManager::On(const std::string &type, const std::string &tid,
-    const sptr<NotifyInterface> &listener)
+    const sptr<NotifyInterface> &listener, Version version)
 {
     REQUEST_HILOGD("On in");
     auto proxy = GetRequestServiceProxy();
@@ -228,10 +228,10 @@ int32_t RequestManager::On(const std::string &type, const std::string &tid,
         return false;
     }
 
-    return proxy->On(type, tid, listener);
+    return proxy->On(type, tid, listener, version);
 }
 
-int32_t RequestManager::Off(const std::string &type, const std::string &tid)
+int32_t RequestManager::Off(const std::string &type, const std::string &tid, Version version)
 {
     REQUEST_HILOGD("Off in");
     auto proxy = GetRequestServiceProxy();
@@ -239,7 +239,7 @@ int32_t RequestManager::Off(const std::string &type, const std::string &tid)
         return false;
     }
 
-    return proxy->Off(type, tid);
+    return proxy->Off(type, tid, version);
 }
 
 sptr<RequestServiceInterface> RequestManager::GetRequestServiceProxy()

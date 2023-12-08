@@ -39,8 +39,8 @@ public:
     std::string GetTid();
     void SetTid(int32_t tid);
     void AddListener(const std::string &key, const sptr<RequestNotify> &listener);
-    void RemoveListener(const std::string &type, const std::string &tid, napi_value callback);
-    void RemoveListener(const std::string &type, const std::string &tid);
+    void RemoveListener(const std::string &type, const std::string &tid, napi_value callback, Version version);
+    void RemoveListener(const std::string &type, const std::string &tid, Version version);
     size_t GetListenerSize(const std::string &key);
     void ClearListener();
 

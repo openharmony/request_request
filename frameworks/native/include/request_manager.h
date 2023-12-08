@@ -55,8 +55,8 @@ public:
     REQUEST_API int32_t Resume(const std::string &tid);
 
     REQUEST_API int32_t On(const std::string &type, const std::string &tid,
-        const sptr<NotifyInterface> &listener);
-    REQUEST_API int32_t Off(const std::string &type, const std::string &tid);
+        const sptr<NotifyInterface> &listener, Version version);
+    REQUEST_API int32_t Off(const std::string &type, const std::string &tid, Version version);
     
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
     REQUEST_API bool LoadRequestServer();

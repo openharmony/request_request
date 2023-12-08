@@ -16,6 +16,8 @@ use ipc_rust::{BorrowedMsgParcel, IpcResult, IpcStatusCode, RemoteObj};
 use crate::error::ErrorCode;
 use crate::service::ability::RequestAbility;
 use crate::service::notify::{Event, NotifyEvent};
+use crate::service::permission::PermissionChecker;
+use crate::task::config::Version;
 
 pub(crate) struct On;
 
@@ -25,6 +27,12 @@ impl On {
         reply: &mut BorrowedMsgParcel,
     ) -> IpcResult<()> {
         info!("Service on");
+        let version: u32 = data.read()?;
+        if Version::from(version as u8) == Version::API9 && !PermissionChecker::check_internet() {
+            error!("Service on: no INTERNET permission");
+            reply.write(&(ErrorCode::Permission as i32))?;
+            return Err(IpcStatusCode::Failed);
+        }
         let on_type: String = data.read()?;
         debug!("Service on: on_type is {:?}", on_type);
 

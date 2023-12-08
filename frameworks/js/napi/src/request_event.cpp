@@ -150,7 +150,8 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
     std::string key = jsParam.type + jsParam.task->GetTid();
     jsParam.task->AddListener(key, listener);
     if (jsParam.task->GetListenerSize(key) == 1) {
-        RequestManager::GetInstance()->On(jsParam.type, jsParam.task->GetTid(), listener);
+        RequestManager::GetInstance()->On(
+            jsParam.type, jsParam.task->GetTid(), listener, jsParam.task->config_.version);
     }
     return nullptr;
 }
@@ -166,9 +167,10 @@ napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
     }
 
     if (jsParam.callback == nullptr) {
-        jsParam.task->RemoveListener(jsParam.type, jsParam.task->GetTid());
+        jsParam.task->RemoveListener(jsParam.type, jsParam.task->GetTid(), jsParam.task->config_.version);
     } else {
-        jsParam.task->RemoveListener(jsParam.type, jsParam.task->GetTid(), jsParam.callback);
+        jsParam.task->RemoveListener(
+            jsParam.type, jsParam.task->GetTid(), jsParam.callback, jsParam.task->config_.version);
     }
     return nullptr;
 }
