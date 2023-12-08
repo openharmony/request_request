@@ -157,6 +157,17 @@ napi_value Convert2JSValue(napi_env env, const std::vector<int64_t> &code)
     return value;
 }
 
+napi_value Convert2JSValue(napi_env env, const std::vector<int32_t> &code)
+{
+    napi_value value = nullptr;
+    napi_create_array_with_length(env, code.size(), &value);
+    int index = 0;
+    for (const auto &cInt : code) {
+        napi_set_element(env, value, index++, Convert2JSValue(env, cInt));
+    }
+    return value;
+}
+
 napi_value Convert2JSValue(napi_env env, const std::vector<std::string> &ids)
 {
     napi_value value = nullptr;
@@ -387,6 +398,42 @@ napi_value Convert2JSValue(napi_env env, TaskInfo &taskInfo)
     return value;
 }
 
+napi_value Convert2JSValue(napi_env env, Config &config)
+{
+    napi_value value = nullptr;
+    napi_create_object(env, &value);
+    napi_set_named_property(env, value, "action", Convert2JSValue(env, static_cast<uint32_t>(config.action)));
+    napi_set_named_property(env, value, "url", Convert2JSValue(env, config.url));
+    napi_set_named_property(env, value, "title", Convert2JSValue(env, config.title));
+    napi_set_named_property(env, value, "description", Convert2JSValue(env, config.description));
+    napi_set_named_property(env, value, "mode", Convert2JSValue(env, static_cast<uint32_t>(config.mode)));
+    napi_set_named_property(env, value, "overwrite", Convert2JSValue(env, config.overwrite));
+    napi_set_named_property(env, value, "method", Convert2JSValue(env, config.method));
+    napi_set_named_property(env, value, "headers", Convert2JSValue(env, config.headers));
+    if (config.action == Action::DOWNLOAD) {
+        napi_set_named_property(env, value, "data", Convert2JSValue(env, config.data));
+    } else {
+        napi_set_named_property(env, value, "data", Convert2JSValue(env, config.files, config.forms));
+    }
+    napi_set_named_property(env, value, "saveas", Convert2JSValue(env, std::string{}));
+    napi_set_named_property(env, value, "network", Convert2JSValue(env, static_cast<uint32_t>(config.network)));
+    napi_set_named_property(env, value, "metered", Convert2JSValue(env, config.metered));
+    napi_set_named_property(env, value, "roaming", Convert2JSValue(env, config.roaming));
+    napi_set_named_property(env, value, "retry", Convert2JSValue(env, config.retry));
+    napi_set_named_property(env, value, "redirect", Convert2JSValue(env, config.redirect));
+    napi_set_named_property(env, value, "index", Convert2JSValue(env, config.index));
+    napi_set_named_property(env, value, "begins", Convert2JSValue(env, config.begins));
+    napi_set_named_property(env, value, "ends", Convert2JSValue(env, config.ends));
+    napi_set_named_property(env, value, "priority", Convert2JSValue(env, config.priority));
+    napi_set_named_property(env, value, "gauge", Convert2JSValue(env, config.gauge));
+    napi_set_named_property(env, value, "precise", Convert2JSValue(env, config.precise));
+    if (config.token != "null") {
+        napi_set_named_property(env, value, "token", Convert2JSValue(env, config.token));
+    }
+    napi_set_named_property(env, value, "extras", Convert2JSValue(env, config.extras));
+    return value;
+}
+
 std::string GetSaveas(const std::vector<FileSpec> &files, Action action)
 {
     if (action == Action::UPLOAD) {
@@ -429,6 +476,13 @@ uint32_t Convert2Uint32(napi_env env, napi_value object, const std::string &prop
         return 0;
     }
     return Convert2Uint32(env, value);
+}
+
+int32_t Convert2Int32(napi_env env, napi_value value)
+{
+    int32_t ret = 0;
+    NAPI_CALL_BASE(env, napi_get_value_int32(env, value, &ret), 0);
+    return ret;
 }
 
 int64_t Convert2Int64(napi_env env, napi_value value)

@@ -30,6 +30,7 @@ use ipc_rust::{
 };
 
 use crate::task::info::TaskInfo;
+use crate::task::config::TaskConfig;
 use crate::utils::c_wrapper::CStringWrapper;
 
 define_remote_object!(
@@ -69,6 +70,7 @@ fn on_remote_request(
         RequestInterfaceCode::Show => stub.show(data, reply),
         RequestInterfaceCode::Touch => stub.touch(data, reply),
         RequestInterfaceCode::Search => stub.search(data, reply),
+        RequestInterfaceCode::GetTask => stub.get_task(data, reply),
         RequestInterfaceCode::Clear => Ok(()),
     }
 }
@@ -91,6 +93,7 @@ impl TryFrom<u32> for RequestInterfaceCode {
             _ if code == Self::Show as u32 => Ok(Self::Show),
             _ if code == Self::Touch as u32 => Ok(Self::Touch),
             _ if code == Self::Search as u32 => Ok(Self::Search),
+            _ if code == Self::GetTask as u32 => Ok(Self::GetTask),
             _ if code == Self::Clear as u32 => Ok(Self::Clear),
             _ => Err(IpcStatusCode::Failed),
         }
@@ -171,6 +174,11 @@ pub trait RequestServiceInterface: IRemoteBroker {
     fn search(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
         Ok(())
     }
+
+    /// Get a task of this system.
+    fn get_task(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+        Ok(())
+    }
 }
 
 impl RequestServiceInterface for RequestServiceProxy {}
@@ -240,6 +248,10 @@ impl RequestServiceInterface for RequestService {
     fn search(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
         command::Search::execute(data, reply)
     }
+
+    fn get_task(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+        command::GetTask::execute(data, reply)
+    }
 }
 
 pub(crate) fn serialize_task_info(tf: TaskInfo, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
@@ -299,6 +311,64 @@ pub(crate) fn serialize_task_info(tf: TaskInfo, reply: &mut BorrowedMsgParcel) -
         reply.write(&(item.path))?;
         reply.write(&(item.reason as u32))?;
         reply.write(&(item.message))?;
+    }
+    Ok(())
+}
+
+pub(crate) fn serialize_task_config(config: TaskConfig, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+    reply.write(&(config.common_data.action as u32))?;
+    reply.write(&(config.common_data.mode as u32))?;
+    reply.write(&(config.common_data.cover))?;
+    reply.write(&(config.common_data.network as u32))?;
+    reply.write(&(config.common_data.metered))?;
+    reply.write(&(config.common_data.roaming))?;
+    reply.write(&(config.common_data.retry))?;
+    reply.write(&(config.common_data.redirect))?;
+    reply.write(&(config.common_data.index))?;
+    reply.write(&(config.common_data.begins))?;
+    reply.write(&(config.common_data.ends))?;
+    reply.write(&(config.common_data.gauge))?;
+    reply.write(&(config.common_data.precise))?;
+    reply.write(&(config.common_data.priority))?;
+    reply.write(&(config.common_data.background))?;
+    reply.write(&(config.bundle))?;
+    reply.write(&(config.url))?;
+    reply.write(&(config.title))?;
+    reply.write(&(config.description))?;
+    reply.write(&(config.method))?;
+    // write config.headers
+    reply.write(&(config.headers.len() as u32))?;
+    for (k, v) in config.headers.iter() {
+        reply.write(&(k))?;
+        reply.write(&(v))?;
+    }
+    reply.write(&(config.data))?;
+    reply.write(&(config.token))?;
+    // write config.extras
+    reply.write(&(config.extras.len() as u32))?;
+    for (k, v) in config.extras.iter() {
+        reply.write(&(k))?;
+        reply.write(&(v))?;
+    }
+    reply.write(&(config.version as u32))?;
+    // write config.form_items
+    reply.write(&(config.form_items.len() as u32))?;
+    for i in 0..config.form_items.len() {
+        reply.write(&(config.form_items[i].name))?;
+        reply.write(&(config.form_items[i].value))?;
+    }
+    // write config.file_specs
+    reply.write(&(config.file_specs.len() as u32))?;
+    for i in 0..config.file_specs.len() {
+        reply.write(&(config.file_specs[i].name))?;
+        reply.write(&(config.file_specs[i].path))?;
+        reply.write(&(config.file_specs[i].file_name))?;
+        reply.write(&(config.file_specs[i].mime_type))?;
+    }
+    // write config.body_file_names
+    reply.write(&(config.body_file_names.len() as u32))?;
+    for i in 0..config.body_file_names.len() {
+        reply.write(&(config.body_file_names[i]))?;
     }
     Ok(())
 }

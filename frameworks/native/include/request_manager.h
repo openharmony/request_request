@@ -28,6 +28,7 @@
 #include "notify_stub.h"
 #include "request_service_interface.h"
 #include "js_common.h"
+#include "system_ability_status_change_stub.h"
 
 namespace OHOS::Request {
 class RequestSaDeathRecipient : public IRemoteObject::DeathRecipient {
@@ -43,6 +44,7 @@ public:
     ~RequestManager();
     REQUEST_API static sptr<RequestManager> GetInstance();
     REQUEST_API int32_t Create(const Config &config, int32_t &tid, sptr<NotifyInterface> listener);
+    REQUEST_API int32_t GetTask(const std::string &tid, const std::string &token, Config &config);
     REQUEST_API int32_t Start(const std::string &tid);
     REQUEST_API int32_t Stop(const std::string &tid);
     REQUEST_API int32_t Query(const std::string &tid, TaskInfo &info);
@@ -58,6 +60,7 @@ public:
         const sptr<NotifyInterface> &listener, Version version);
     REQUEST_API int32_t Off(const std::string &type, const std::string &tid, Version version);
     
+    REQUEST_API void RestoreListener(void (*callback)());
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
     REQUEST_API bool LoadRequestServer();
     void LoadServerSuccess();
@@ -79,6 +82,16 @@ private:
     std::condition_variable syncCon_;
     bool ready_ = false;
     static constexpr int LOAD_SA_TIMEOUT_MS = 15000;
+    void (*callback_)() = nullptr;
+
+private:
+    class SystemAbilityStatusChangeListener : public OHOS::SystemAbilityStatusChangeStub {
+    public:
+        SystemAbilityStatusChangeListener();
+        ~SystemAbilityStatusChangeListener() = default;
+        virtual void OnAddSystemAbility(int32_t saId, const std::string& deviceId) override;
+        virtual void OnRemoveSystemAbility(int32_t asId, const std::string& deviceId) override;
+    };
 };
 } // namespace OHOS::Request
 #endif // DOWNLOAD_MANAGER_H

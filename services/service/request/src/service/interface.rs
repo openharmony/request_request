@@ -40,6 +40,8 @@ pub(crate) enum RequestInterfaceCode {
     Touch,
     ///  Searches tasks, for system
     Search,
+    ///  get task
+    GetTask,
     ///  system api deletes specifed tasks
     Clear,
 }

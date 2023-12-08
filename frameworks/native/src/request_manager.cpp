@@ -109,6 +109,17 @@ void RequestManager::SetRequestServiceProxy(sptr<RequestServiceInterface> proxy)
     requestServiceProxy_ = proxy;
 }
 
+int32_t RequestManager::GetTask(const std::string &tid, const std::string &token, Config &config)
+{
+    REQUEST_HILOGD("GetTask in");
+    auto proxy = GetRequestServiceProxy();
+    if (proxy == nullptr) {
+        return E_SERVICE_ERROR;
+    }
+
+    return proxy->GetTask(tid, token, config);
+}
+
 int32_t RequestManager::Start(const std::string &tid)
 {
     REQUEST_HILOGD("Start in");
@@ -255,8 +266,13 @@ sptr<RequestServiceInterface> RequestManager::GetRequestServiceProxy()
         return nullptr;
     }
     auto systemAbility = systemAbilityManager->GetSystemAbility(DOWNLOAD_SERVICE_ID, "");
-    if (systemAbility == nullptr) {
-        REQUEST_HILOGE("Get SystemAbility failed.");
+    auto saChangeListener = new (std::nothrow) SystemAbilityStatusChangeListener();
+    if (systemAbility == nullptr || saChangeListener == nullptr) {
+        REQUEST_HILOGE("Get SystemAbility or saChangeListener failed.");
+        return nullptr;
+    }
+    if (systemAbilityManager->SubscribeSystemAbility(DOWNLOAD_SERVICE_ID, saChangeListener) != E_OK) {
+        REQUEST_HILOGE("SubscribeSystemAbility failed.");
         return nullptr;
     }
     deathRecipient_ = new RequestSaDeathRecipient();
@@ -267,6 +283,34 @@ sptr<RequestServiceInterface> RequestManager::GetRequestServiceProxy()
         return nullptr;
     }
     return requestServiceProxy_;
+}
+
+void RequestManager::RestoreListener(void (*callback)())
+{
+    callback_ = callback;
+}
+
+RequestManager::SystemAbilityStatusChangeListener::SystemAbilityStatusChangeListener()
+{
+}
+
+void RequestManager::SystemAbilityStatusChangeListener::OnAddSystemAbility(int32_t saId, const std::string& deviceId)
+{
+    if (saId != DOWNLOAD_SERVICE_ID) {
+        REQUEST_HILOGE("SA ID is not DOWNLOAD_SERVICE_ID.");
+    }
+    REQUEST_HILOGD("SystemAbility Add.");
+    if (RequestManager::GetInstance()->callback_ != nullptr) {
+        RequestManager::GetInstance()->callback_();
+    }
+}
+
+void RequestManager::SystemAbilityStatusChangeListener::OnRemoveSystemAbility(int32_t saId, const std::string& deviceId)
+{
+    if (saId != DOWNLOAD_SERVICE_ID) {
+        REQUEST_HILOGE("SA ID is not DOWNLOAD_SERVICE_ID.");
+    }
+    REQUEST_HILOGD("SystemAbility Remove.");
 }
 
 void RequestManager::OnRemoteSaDied(const wptr<IRemoteObject> &remote)

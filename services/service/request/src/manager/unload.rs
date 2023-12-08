@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Arc;
 
@@ -72,12 +72,12 @@ impl TaskManager {
     }
 
     pub(crate) fn restore_all_tasks(&mut self, recording_rdb_num: Arc<AtomicU32>) {
-        if let Some(config_list) = self.query_all_task_config() {
+        if let Some(config_map) = self.query_all_task_config() {
             info!(
                 "RSA query task config list len: {} in database",
-                config_list.len()
+                config_map.len()
             );
-            for config in config_list.into_iter() {
+            for (_, config) in config_map.into_iter() {
                 debug!("RSA query task config is {:?}", config);
                 let uid = config.common_data.uid;
                 let task_id = config.common_data.task_id;
@@ -183,9 +183,9 @@ impl TaskManager {
         need_unload
     }
 
-    pub(crate) fn query_all_task_config(&self) -> Option<Vec<TaskConfig>> {
+    pub(crate) fn query_all_task_config(&self) -> Option<HashMap<u32, TaskConfig>> {
         debug!("query all task config in database");
-        let mut task_config_list: Vec<TaskConfig> = Vec::new();
+        let mut task_config_map: HashMap<u32, TaskConfig> = HashMap::new();
         let c_config_list_len = unsafe { QueryTaskConfigLen() };
         if c_config_list_len <= 0 {
             debug!("no task config in database");
@@ -199,11 +199,11 @@ impl TaskManager {
             unsafe { std::slice::from_raw_parts(c_task_config_list, c_config_list_len as usize) };
         for c_task_config in c_task_config_ptrs.iter() {
             let task_config = TaskConfig::from_c_struct(unsafe { &**c_task_config });
-            task_config_list.push(task_config);
+            task_config_map.insert(task_config.common_data.task_id, task_config);
             unsafe { DeleteCTaskConfig(*c_task_config) };
         }
         unsafe { DeleteCTaskConfigs(c_task_config_list) };
-        Some(task_config_list)
+        Some(task_config_map)
     }
 }
 

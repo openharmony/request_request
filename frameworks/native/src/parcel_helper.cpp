@@ -149,5 +149,129 @@ bool ParcelHelper::UnMarshalTaskState(MessageParcel &data, TaskInfo &info)
     }
     return true;
 }
+
+void ParcelHelper::UnMarshalConfig(MessageParcel &data, Config &config)
+{
+    config.action = static_cast<Action>(data.ReadUint32());
+    config.mode = static_cast<Mode>(data.ReadUint32());
+    config.overwrite = data.ReadBool();
+    config.network = static_cast<Network>(data.ReadUint32());
+    config.metered = data.ReadBool();
+    config.roaming = data.ReadBool();
+    config.retry = data.ReadBool();
+    config.redirect = data.ReadBool();
+    config.index = data.ReadUint32();
+    config.begins = data.ReadInt64();
+    config.ends = data.ReadInt64();
+    config.gauge = data.ReadBool();
+    config.precise = data.ReadBool();
+    config.priority = data.ReadUint32();
+    config.background = data.ReadBool();
+    config.bundleName = data.ReadString();
+    config.url = data.ReadString();
+    config.title = data.ReadString();
+    config.description = data.ReadString();
+    config.method = data.ReadString();
+    // read headers
+    if (!UnMarshalConfigHeaders(data, config)) {
+        return;
+    }
+    config.data = data.ReadString();
+    config.token = data.ReadString();
+    // read extras
+    if (!UnMarshalConfigExtras(data, config)) {
+        return;
+    }
+    config.version = static_cast<Version>(data.ReadUint32());
+    // read form_items
+    if (!UnMarshalConfigFormItem(data, config)) {
+        return;
+    }
+    // read file_specs
+    if (!UnMarshalConfigFileSpec(data, config)) {
+        return;
+    }
+    // read body_file_names
+    if (!UnMarshalConfigBodyFileName(data, config)) {
+        return;
+    }
+}
+
+bool ParcelHelper::UnMarshalConfigHeaders(MessageParcel &data, Config &config)
+{
+    uint32_t headerLen = data.ReadUint32();
+    if (headerLen > data.GetReadableBytes()) {
+        REQUEST_HILOGE("Size exceeds the upper limit, size = %{public}u", headerLen);
+        return false;
+    }
+    for (uint32_t i = 0; i < headerLen; i++) {
+        std::string key = data.ReadString();
+        config.headers[key] = data.ReadString();
+    }
+    return true;
+}
+
+bool ParcelHelper::UnMarshalConfigExtras(MessageParcel &data, Config &config)
+{
+    uint32_t extraLen = data.ReadUint32();
+    if (extraLen > data.GetReadableBytes()) {
+        REQUEST_HILOGE("Size exceeds the upper limit, size = %{public}u", extraLen);
+        return false;
+    }
+    for (uint32_t i = 0; i < extraLen; i++) {
+        std::string key = data.ReadString();
+        config.extras[key] = data.ReadString();
+    }
+    return true;
+}
+
+bool ParcelHelper::UnMarshalConfigFormItem(MessageParcel &data, Config &config)
+{
+    uint32_t size = data.ReadUint32();
+    if (size > data.GetReadableBytes()) {
+        REQUEST_HILOGE("Size exceeds the upper limit, size = %{public}u", size);
+        return false;
+    }
+    for (uint32_t i = 0; i < size; i++) {
+        FormItem form;
+        form.name = data.ReadString();
+        form.value = data.ReadString();
+        config.forms.push_back(form);
+    }
+    return true;
+}
+
+bool ParcelHelper::UnMarshalConfigFileSpec(MessageParcel &data, Config &config)
+{
+    uint32_t size = data.ReadUint32();
+    if (size > data.GetReadableBytes()) {
+        REQUEST_HILOGE("Size exceeds the upper limit, size = %{public}u", size);
+        return false;
+    }
+    for (uint32_t i = 0; i < size; i++) {
+        FileSpec file;
+        file.name = data.ReadString();
+        file.uri = data.ReadString();
+        file.filename = data.ReadString();
+        file.type = data.ReadString();
+        config.files.push_back(file);
+    }
+    return true;
+}
+
+bool ParcelHelper::UnMarshalConfigBodyFileName(MessageParcel &data, Config &config)
+{
+    uint32_t size = data.ReadUint32();
+    if (size > data.GetReadableBytes()) {
+        REQUEST_HILOGE("Size exceeds the upper limit, size = %{public}u", size);
+        return false;
+    }
+    for (uint32_t i = 0; i < size; i++) {
+        std::string name = data.ReadString();
+        config.bodyFds.push_back(0);
+        config.bodyFileNames.push_back(name);
+    }
+    return true;
+}
 } // namespace Request
 } // namespace OHOS

@@ -13,6 +13,7 @@
 
 mod construct;
 mod dump;
+mod get_task;
 mod off;
 mod on;
 mod pause;
@@ -28,6 +29,7 @@ mod touch;
 
 pub(crate) use construct::Construct;
 pub(crate) use dump::Dump;
+pub(crate) use get_task::GetTask;
 pub(crate) use off::Off;
 pub(crate) use on::On;
 pub(crate) use pause::Pause;

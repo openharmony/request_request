@@ -112,6 +112,7 @@ struct Config {
     bool precise = false;
     bool background = false;
     bool withErrCode = true;
+    bool firstInit = true;
     std::string title;
     std::string saveas;
     std::string method;

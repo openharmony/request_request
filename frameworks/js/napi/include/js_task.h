@@ -30,6 +30,7 @@ public:
     static napi_value JsRequest(napi_env env, napi_callback_info info);
     static napi_value JsRequestFile(napi_env env, napi_callback_info info);
 
+    static napi_value GetTask(napi_env env, napi_callback_info info);
     static napi_value Remove(napi_env env, napi_callback_info info);
     static napi_value Show(napi_env env, napi_callback_info info);
     static napi_value Touch(napi_env env, napi_callback_info info);
@@ -44,6 +45,7 @@ public:
     size_t GetListenerSize(const std::string &key);
     void ClearListener();
 
+    static void ReloadListener();
     static void ClearTaskMap(const std::string &key);
     static void AddTaskMap(const std::string &key, JsTask* task);
     static bool SetDirsPermission(const std::vector<std::string> &dirs);
@@ -63,8 +65,10 @@ private:
         JsTask *task = nullptr;
         napi_ref taskRef = nullptr;
         napi_ref jsConfig = nullptr;
+        napi_ref baseContext = nullptr;
         Config config{};
         int32_t tid{};
+        std::string token = "null";
     };
 
     struct ContextCallbackData {
@@ -88,6 +92,11 @@ private:
     static napi_value RequestFile(napi_env env, napi_callback_info info);
     static napi_value RequestFileV8(napi_env env, napi_callback_info info);
     static int32_t CreateExec(const std::shared_ptr<ContextInfo> &context);
+    static napi_value GetTaskCtor(napi_env env);
+    static napi_value GetTaskCreate(napi_env env, napi_callback_info info);
+    static void GetTaskExecution(std::shared_ptr<ContextInfo> context);
+    static bool GetTaskOutput(std::shared_ptr<ContextInfo> context);
+    static bool ParseGetTask(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<ContextInfo> context);
     static std::string ParseTid(napi_env env, size_t argc, napi_value *argv);
     static napi_value TouchInner(napi_env env, napi_callback_info info, AsyncCall::Context::InputAction action,
         std::shared_ptr<TouchContext> context);
@@ -113,6 +122,8 @@ private:
     static thread_local napi_ref requestFileCtor;
     static std::mutex requestFileMutex_;
     static thread_local napi_ref createCtor;
+    static std::mutex getTaskCreateMutex_;
+    static thread_local napi_ref getTaskCreateCtor;
     static std::mutex taskContextMutex_;
     static std::map<std::string, std::shared_ptr<ContextInfo>> taskContextMap_;
     std::string tid_;

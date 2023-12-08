@@ -18,6 +18,7 @@ use ylong_runtime::sync::oneshot::{channel, Sender};
 
 mod construct;
 mod dump;
+mod get_task;
 mod pause;
 mod query;
 mod query_mime_type;
@@ -127,6 +128,14 @@ impl EventMessage {
         )
     }
 
+    pub(crate) fn get_task(uid: u64, task_id: u32, token: String) -> (Self, Recv<Option<TaskConfig>>) {
+        let (tx, rx) = channel::<Option<TaskConfig>>();
+        (
+            Self::Service(ServiceMessage::GetTask(uid, task_id, token, tx)),
+            Recv::new(rx),
+        )
+    }
+
     pub(crate) fn remove(uid: u64, task_id: u32) -> (Self, Recv<ErrorCode>) {
         let (tx, rx) = channel::<ErrorCode>();
         (
@@ -176,6 +185,7 @@ pub(crate) enum ServiceMessage {
     Resume(u64, u32, Sender<ErrorCode>),
     Touch(u64, u32, String, Sender<Option<TaskInfo>>),
     Query(u32, Action, Sender<Option<TaskInfo>>),
+    GetTask(u64, u32, String, Sender<Option<TaskConfig>>),
     DumpOne(u32, Sender<Option<DumpOneInfo>>),
     Search(Filter, Sender<Vec<u32>>),
     DumpAll(Sender<DumpAllInfo>),
@@ -257,6 +267,12 @@ impl Debug for ServiceMessage {
                 .debug_struct("Query")
                 .field("task_id", task_id)
                 .field("action", action)
+                .finish(),
+            Self::GetTask(uid, task_id, token, _) => f
+                .debug_struct("GetTask")
+                .field("uid", uid)
+                .field("task_id", task_id)
+                .field("token", token)
                 .finish(),
             Self::DumpOne(task_id, _) => {
                 f.debug_struct("DumpOne").field("task_id", task_id).finish()

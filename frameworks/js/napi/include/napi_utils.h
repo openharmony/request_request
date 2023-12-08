@@ -52,12 +52,14 @@ napi_value Convert2JSValue(napi_env env, uint32_t code);
 napi_value Convert2JSValue(napi_env env, int64_t code);
 napi_value Convert2JSValue(napi_env env, uint64_t code);
 napi_value Convert2JSValue(napi_env env, const std::vector<int64_t> &code);
+napi_value Convert2JSValue(napi_env env, const std::vector<int32_t> &code);
 napi_value Convert2JSValue(napi_env env, const std::vector<std::string> &ids);
 napi_value Convert2JSValue(napi_env env, const std::map<std::string, std::string> &code);
 napi_value Convert2JSValue(napi_env env, const std::string &str);
 napi_value Convert2JSValue(napi_env env, const std::vector<TaskState> &taskStates);
 napi_value Convert2JSValue(napi_env env, const Progress &progress);
 napi_value Convert2JSValue(napi_env env, TaskInfo &taskInfo);
+napi_value Convert2JSValue(napi_env env, Config &config);
 napi_value Convert2JSValue(napi_env env, const std::vector<FileSpec> &files, const std::vector<FormItem> &forms);
 napi_value Convert2JSHeadersAndBody(napi_env env, const std::map<std::string, std::string> &header,
     const std::vector<uint8_t> &bodyBytes, bool isSeparate);
@@ -65,6 +67,7 @@ napi_value Convert2JSHeadersAndBody(napi_env env, const std::map<std::string, st
 bool Convert2Boolean(napi_env env, napi_value object, const std::string &propertyName);
 uint32_t Convert2Uint32(napi_env env, napi_value value);
 uint32_t Convert2Uint32(napi_env env, napi_value object, const std::string &propertyName);
+int32_t Convert2Int32(napi_env env, napi_value value);
 int64_t Convert2Int64(napi_env env, napi_value value);
 int64_t Convert2Int64(napi_env env, napi_value object, const std::string &propertyName);
 std::string Convert2String(napi_env env, napi_value value);
