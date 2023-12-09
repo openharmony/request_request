@@ -333,23 +333,36 @@ impl RequestTask {
         }
 
         if self.conf.url.contains("https") {
-            let mut buf = Vec::new();
-            let file = File::open("/etc/ssl/certs/cacert.pem");
-            match file {
-                Ok(mut f) => {
-                    f.read_to_end(&mut buf).unwrap();
-                    let cert = Certificate::from_pem(&buf).unwrap();
-                    client = client.add_root_certificate(cert);
-                }
-                Err(e) => {
-                    error!("open cacert.pem failed, error is {:?}", e);
-                    self.set_status(State::Failed, Reason::IoError);
-                    return None;
-                }
-            }
             let path_list = self.conf.certs_path.clone();
-            for path in path_list.into_iter() {
-                client = client.add_root_certificate(Certificate::from_path(&path).unwrap());
+            if path_list.is_empty() {
+                let mut buf = Vec::new();
+                let file = File::open("/etc/ssl/certs/cacert.pem");
+                match file {
+                    Ok(mut f) => {
+                        f.read_to_end(&mut buf).unwrap();
+                        let cert = Certificate::from_pem(&buf).unwrap();
+                        client = client.add_root_certificate(cert);
+                    }
+                    Err(e) => {
+                        error!("open cacert.pem failed, error is {:?}", e);
+                        self.set_status(State::Failed, Reason::IoError);
+                        return None;
+                    }
+                }
+            } else {
+                for path in path_list.into_iter() {
+                    let file = Certificate::from_path(&path);
+                    match file {
+                        Ok(c) => {
+                            client = client.add_root_certificate(c);
+                        }
+                        Err(e) => {
+                            debug!("open {:?} failed, reason is {:?}", path, e);
+                            self.set_status(State::Failed, Reason::IoError);
+                            return None;
+                        }
+                    }
+                }
             }
         }
         let result = client.build();
