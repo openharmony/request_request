@@ -35,7 +35,9 @@
 #include "net_conn_constants.h"
 #include "net_specifier.h"
 #ifdef REQUEST_TELEPHONY_CORE_SERVICE
+#include "iservice_registry.h"
 #include "network_state.h"
+#include "system_ability_definition.h"
 #include "telephony_errors.h"
 #endif
 using namespace OHOS::NetManagerStandard;
@@ -172,6 +174,25 @@ void NetworkAdapter::UpdateRoaming()
 {
 #ifdef REQUEST_TELEPHONY_CORE_SERVICE
     REQUEST_HILOGI("upload roaming");
+
+    // Check telephony SA.
+    {
+        std::lock_guard<std::mutex> lock(roamingMutex_);
+
+        auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (sm == nullptr) {
+            networkInfo_.isRoaming = false;
+            REQUEST_HILOGE("GetSystemAbilityManager return null");
+            return;
+        }
+        auto systemAbility = sm->CheckSystemAbility(TELEPHONY_CORE_SERVICE_SYS_ABILITY_ID);
+        if (systemAbility == nullptr) {
+            networkInfo_.isRoaming = false;
+            REQUEST_HILOGE("Telephony SA not found");
+            return;
+        }
+    }
+
     constexpr int32_t INVALID_SLOT_ID = -1;
     int32_t maxSlotNum = DelayedRefSingleton<OHOS::Telephony::CoreServiceClient>::GetInstance().GetMaxSimCount();
     bool isSim = false;

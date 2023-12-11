@@ -77,6 +77,7 @@ private:
     RegCallBack callback_ = nullptr;
     bool isOnline_ = false;
     std::mutex mutex_;
+    std::mutex roamingMutex_;
     NetworkInfo networkInfo_;
 };
 } // namespace OHOS::Request
