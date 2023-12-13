@@ -25,7 +25,7 @@ impl PermissionChecker {
     pub(crate) fn check_internet() -> bool {
         debug!("Checks INTERNET permission");
         unsafe {
-            RequestCheckPermission(
+            DownloadServerCheckPermission(
                 get_calling_token_id(),
                 CStringWrapper::from(INTERNET_PERMISSION),
             )
@@ -36,9 +36,9 @@ impl PermissionChecker {
         debug!("Checks QUERY permission");
         let id = get_calling_token_id();
         let query_download =
-            unsafe { RequestCheckPermission(id, CStringWrapper::from(QUERY_DOWNLOAD)) };
+            unsafe { DownloadServerCheckPermission(id, CStringWrapper::from(QUERY_DOWNLOAD)) };
         let query_upload =
-            unsafe { RequestCheckPermission(id, CStringWrapper::from(QUERY_UPLOAD)) };
+            unsafe { DownloadServerCheckPermission(id, CStringWrapper::from(QUERY_UPLOAD)) };
         info!(
             "Checks query_download permission is {}, query_upload permission is {}",
             query_download, query_upload
@@ -61,5 +61,5 @@ pub(crate) enum QueryPermission {
 }
 
 extern "C" {
-    pub(crate) fn RequestCheckPermission(token_id: u64, permission: CStringWrapper) -> bool;
+    pub(crate) fn DownloadServerCheckPermission(token_id: u64, permission: CStringWrapper) -> bool;
 }

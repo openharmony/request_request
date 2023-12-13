@@ -21,7 +21,7 @@
 
 using namespace OHOS::Security::AccessToken;
 
-bool RequestCheckPermission(uint64_t tokenId, CStringWrapper permission)
+bool DownloadServerCheckPermission(uint64_t tokenId, CStringWrapper permission)
 {
     TypeATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(static_cast<AccessTokenID>(tokenId));
     if (tokenType == TOKEN_INVALID) {
