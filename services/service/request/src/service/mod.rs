@@ -417,13 +417,12 @@ pub(crate) fn open_file_readonly(uid: u64, bundle: &str, path: &str) -> IpcResul
 
 fn convert_path(uid: u64, bundle: &str, path: &str) -> String {
     let uuid = uid / 200000;
-    let base = "/data/storage/el2/base/";
-    format!(
-        "/data/app/el2/{}/base/{}/{}",
-        uuid,
-        bundle,
-        path.replace(base, "")
-    )
+    let base_replace = format!("{}/base/{}", uuid, bundle);
+    let real_path = path
+        .replacen("storage", "app", 1)
+        .replacen("base", &base_replace, 1);
+    debug!("convert to real_path: {}", real_path);
+    real_path
 }
 
 extern "C" {
