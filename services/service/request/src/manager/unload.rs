@@ -132,8 +132,9 @@ impl TaskManager {
 
             let task_config = &task.conf;
 
+            let config_set = task_config.build_config_set();
             let c_task_config =
-                task_config.to_c_struct(task.conf.common_data.task_id, task.conf.common_data.uid);
+                task_config.to_c_struct(task.conf.common_data.task_id, task.conf.common_data.uid, &config_set);
             let ret = unsafe { RecordRequestTaskConfig(&c_task_config) };
             info!("insert taskConfig DB ret is {}", ret);
         }

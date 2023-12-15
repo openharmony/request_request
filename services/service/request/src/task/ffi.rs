@@ -13,7 +13,7 @@
 
 use std::ffi::c_char;
 
-use super::config::{Action, CommonTaskConfig, Network, TaskConfig, Version};
+use super::config::{Action, CommonTaskConfig, Network, TaskConfig, Version, ConfigSet};
 use super::info::{CommonTaskInfo, InfoSet, Mode, TaskInfo, UpdateInfo};
 use super::notify::{CommonProgress, EachFileStatus, Progress};
 use super::reason::Reason;
@@ -21,7 +21,7 @@ use crate::utils::c_wrapper::{
     CFileSpec, CFormItem, CStringWrapper, DeleteCFileSpec, DeleteCFormItem, DeleteCStringPtr,
 };
 use crate::utils::form_item::{FileSpec, FormItem};
-use crate::utils::{build_vec, hashmap_to_string, split_string, string_to_hashmap};
+use crate::utils::{build_vec, split_string, string_to_hashmap};
 
 #[repr(C)]
 pub(crate) struct CTaskConfig {
@@ -259,36 +259,26 @@ pub(crate) struct NetworkInfo {
 }
 
 impl TaskConfig {
-    pub(crate) fn to_c_struct(&self, task_id: u32, uid: u64) -> CTaskConfig {
-        let form_items: Vec<CFormItem> = self.form_items.iter().map(|x| x.to_c_struct()).collect();
-        let file_specs: Vec<CFileSpec> = self.file_specs.iter().map(|x| x.to_c_struct()).collect();
-        let body_file_names: Vec<CStringWrapper> = self
-            .body_file_names
-            .iter()
-            .map(CStringWrapper::from)
-            .collect();
-        let certs_path: Vec<CStringWrapper> =
-            self.certs_path.iter().map(CStringWrapper::from).collect();
-
+    pub(crate) fn to_c_struct(&self, task_id: u32, uid: u64, set: &ConfigSet) -> CTaskConfig {
         CTaskConfig {
             bundle: CStringWrapper::from(&self.bundle),
             url: CStringWrapper::from(&self.url),
             title: CStringWrapper::from(&self.title),
             description: CStringWrapper::from(&self.description),
             method: CStringWrapper::from(&self.method),
-            headers: CStringWrapper::from(&hashmap_to_string(&self.headers)),
+            headers: CStringWrapper::from(&set.headers),
             data: CStringWrapper::from(&self.data),
             token: CStringWrapper::from(&self.token),
-            extras: CStringWrapper::from(&hashmap_to_string(&self.extras)),
+            extras: CStringWrapper::from(&set.extras),
             version: self.version as u8,
-            form_items_ptr: form_items.as_ptr(),
-            form_items_len: form_items.len() as u32,
-            file_specs_ptr: file_specs.as_ptr(),
-            file_specs_len: file_specs.len() as u32,
-            body_file_names_ptr: body_file_names.as_ptr(),
-            body_file_names_len: body_file_names.len() as u32,
-            certs_path_ptr: certs_path.as_ptr(),
-            certs_path_len: certs_path.len() as u32,
+            form_items_ptr: set.form_items.as_ptr(),
+            form_items_len: set.form_items.len() as u32,
+            file_specs_ptr: set.file_specs.as_ptr(),
+            file_specs_len: set.file_specs.len() as u32,
+            body_file_names_ptr: set.body_file_names.as_ptr(),
+            body_file_names_len: set.body_file_names.len() as u32,
+            certs_path_ptr: set.certs_path.as_ptr(),
+            certs_path_len: set.certs_path.len() as u32,
             common_data: CommonCTaskConfig {
                 task_id,
                 uid,
