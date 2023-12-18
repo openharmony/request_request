@@ -48,7 +48,7 @@ public:
     static void ReloadListener();
     static void ClearTaskMap(const std::string &key);
     static void AddTaskMap(const std::string &key, JsTask* task);
-    static bool SetDirsPermission(const std::vector<std::string> &dirs);
+    static bool SetDirsPermission(std::vector<std::string> &dirs);
     static bool SetPathPermission(const std::string &filepath);
     static void ClearTaskContext(const std::string &key);
     static void RemoveDirsPermission(const std::vector<std::string> &dirs);

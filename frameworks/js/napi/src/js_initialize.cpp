@@ -541,12 +541,8 @@ bool JsInitialize::ParseCertsPath(napi_env env, napi_value jsConfig, std::vector
     iter_t queryStart = std::find(url.cbegin(), urlEnd, '?');
     iter_t hostEnd = std::find(protocolEnd, (pathStart != urlEnd) ? pathStart : queryStart, ':');
     std::string hostname = std::string(hostStart, hostEnd);
-    REQUEST_HILOGD("hostname is %{public}s", hostname.c_str());
-    // 0 means succsses
-    if (NetManagerStandard::NetConnClient::GetInstance().GetTrustAnchorsForHostName(hostname, certsPath) != 0) {
-        REQUEST_HILOGE("Get certs path error");
-        return false;
-    }
+    REQUEST_HILOGD("Hostname is %{public}s", hostname.c_str());
+    NetManagerStandard::NetConnClient::GetInstance().GetTrustAnchorsForHostName(hostname, certsPath);
     return true;
 }
 
