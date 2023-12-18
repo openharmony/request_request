@@ -415,7 +415,7 @@ pub(crate) fn open_file_readonly(uid: u64, bundle: &str, path: &str) -> IpcResul
     }
 }
 
-fn convert_path(uid: u64, bundle: &str, path: &str) -> String {
+pub(crate) fn convert_path(uid: u64, bundle: &str, path: &str) -> String {
     let uuid = uid / 200000;
     let base_replace = format!("{}/base/{}", uuid, bundle);
     let real_path = path

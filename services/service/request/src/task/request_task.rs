@@ -44,7 +44,7 @@ use crate::task::ffi::{
 use crate::utils::{get_current_timestamp, hashmap_to_string};
 
 cfg_oh! {
-    use crate::service::{open_file_readonly, open_file_readwrite};
+    use crate::service::{open_file_readonly, open_file_readwrite, convert_path};
     use crate::manager::Notifier;
 }
 
@@ -351,7 +351,8 @@ impl RequestTask {
                 }
             } else {
                 for path in path_list.into_iter() {
-                    let file = Certificate::from_path(&path);
+                    let real_path = convert_path(self.conf.common_data.uid, &self.conf.bundle, &path);
+                    let file = Certificate::from_path(&real_path);
                     match file {
                         Ok(c) => {
                             client = client.add_root_certificate(c);

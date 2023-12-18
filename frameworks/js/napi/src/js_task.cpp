@@ -854,10 +854,39 @@ void JsTask::ClearTaskMap(const std::string &key)
     taskMap_.erase(it);
 }
 
-bool JsTask::SetDirsPermission(const std::vector<std::string> &dirs)
+bool JsTask::SetDirsPermission(std::vector<std::string> &dirs)
 {
-    if (fs::create_directories("/data/storage/el2/base/.ohos/.request/.certs")) {
-        REQUEST_HILOGD("Creat folder path succss.");
+    std::string newPath = "/data/storage/el2/base/.ohos/.request/.certs";
+    if (!fs::exists(newPath)) {
+        if (fs::create_directories(newPath)) {
+            REQUEST_HILOGD("Creat folder path succss.");
+        }
+    }
+    for (auto &folderPath : dirs) {
+        fs::path folder = folderPath;
+        if (!(fs::exists(folder) && fs::is_directory(folder))) {
+            return false;
+        }
+        for (const auto& entry : fs::directory_iterator(folder)) {
+            fs::path path = entry.path();
+            std::string existfilePath = folder.string() + "/" + path.filename().string();
+            std::string newfilePath = newPath + "/" + path.filename().string();
+            if (!fs::exists(newfilePath)) {
+                fs::copy(existfilePath, newfilePath);
+            }
+            if (chmod(newfilePath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0) {
+                REQUEST_HILOGD("File add OTH access Failed.");
+            }
+            REQUEST_HILOGD("current filePath is %{public}s", newfilePath.c_str());
+            if (!JsTask::SetPathPermission(newfilePath)) {
+                REQUEST_HILOGE("Set path permission fail.");
+                return false;
+            }
+        }
+    }
+    if (!dirs.empty()) {
+        dirs.clear();
+        dirs.push_back(newPath);
     }
     return true;
 }
@@ -975,6 +1004,7 @@ void JsTask::ClearTaskContext(const std::string &key)
     for (auto &file : context->task->config_.files) {
         RemovePathMap(file.uri);
     }
+    RemoveDirsPermission(context->task->config_.certsPath);
     taskContextMap_.erase(it);
     UnrefTaskContextMap(context);
 }
