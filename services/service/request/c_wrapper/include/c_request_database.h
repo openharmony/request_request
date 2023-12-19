@@ -66,8 +66,7 @@ constexpr const char *CREATE_REQUEST_TABLE1 = "CREATE TABLE IF NOT EXISTS reques
                                               "processed TEXT, "
                                               "extras TEXT, "
                                               "form_items_len INTEGER, "
-                                              "file_specs_len INTEGER, "
-                                              "priority INTEGER)";
+                                              "file_specs_len INTEGER)";
 
 constexpr const char *CREATE_REQUEST_TABLE2 = "CREATE TABLE IF NOT EXISTS task_info_attachment "
                                               "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -112,9 +111,7 @@ constexpr const char *CREATE_REQUEST_TABLE3 = "CREATE TABLE IF NOT EXISTS reques
                                               "version INTEGER, "
                                               "form_items_len INTEGER, "
                                               "file_specs_len INTEGER, "
-                                              "body_file_names_len INTEGER, "
-                                              "certs_path_len INTEGER, "
-                                              "priority INTEGER)";
+                                              "body_file_names_len INTEGER)";
 
 constexpr const char *CREATE_REQUEST_TABLE4 = "CREATE TABLE IF NOT EXISTS task_config_attachment "
                                               "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -126,8 +123,19 @@ constexpr const char *CREATE_REQUEST_TABLE4 = "CREATE TABLE IF NOT EXISTS task_c
                                               "path TEXT, "
                                               "file_name TEXT, "
                                               "mime_type TEXT, "
-                                              "body_file_name TEXT, "
-                                              "certs_path TEXT)";
+                                              "body_file_name TEXT)";
+
+constexpr const char *CREATE_PRIORITY_TABLE = "CREATE TABLE IF NOT EXISTS priority_table "
+                                          "(id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                                          "task_id INTEGER, "
+                                          "uid INTEGER, "
+                                          "priority INTEGER)";
+
+constexpr const char *CREATE_CERTS_TABLE = "CREATE TABLE IF NOT EXISTS certs_table "
+                                          "(id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                                          "task_id INTEGER, "
+                                          "uid INTEGER, "
+                                          "cert_path INTEGER)";
 
 class RequestDataBase {
 public:
@@ -176,6 +184,8 @@ CTaskInfo *Query(uint32_t taskId, Action queryAction);
 CVectorWrapper Search(CFilter filter);
 void DeleteCVectorWrapper(uint32_t *ptr);
 void GetCommonTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskInfo &taskInfo);
+int GetPriority(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, uint32_t &priority);
+int GetCertsPath(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskConfig &config);
 int TouchRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo,
     int64_t &formItemsLen, int64_t &fileSpecsLen);
 int QueryRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo,
@@ -194,7 +204,7 @@ int QueryTaskConfigLen();
 void QuerySingleTaskConfig(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskConfig &taskConfig);
 int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, std::vector<TaskConfig> &taskConfigs);
 int QueryTaskConfigAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskConfig &taskConfig,
-    int64_t formItemsLen, int64_t fileSpecsLen, int64_t bodyFileNamesLen, int64_t certsPathLen);
+    int64_t formItemsLen, int64_t fileSpecsLen, int64_t bodyFileNamesLen);
 CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs);
 bool CleanTaskConfigTable(uint32_t taskId, uint64_t uid);
 
