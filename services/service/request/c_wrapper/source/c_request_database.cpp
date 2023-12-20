@@ -80,7 +80,6 @@ bool RequestDataBase::Insert(const std::string &table, const OHOS::NativeRdb::Va
     }
 
     int ret = store_->Insert(outRowId, table, insertValues);
-    REQUEST_HILOGI("request database insert ret is %{public}d", ret);
     return ret == OHOS::NativeRdb::E_OK;
 }
 
@@ -94,7 +93,6 @@ bool RequestDataBase::Update(const OHOS::NativeRdb::ValuesBucket values,
     }
 
     int ret = store_->Update(changedRows, values, predicates);
-    REQUEST_HILOGI("request database update ret is %{public}d changedRows %{public}d", ret, changedRows);
     return ret == OHOS::NativeRdb::E_OK;
 }
 
@@ -188,7 +186,7 @@ bool HasRequestTaskRecord(uint32_t taskId)
     if (rowCount == 0) {
         return false;
     }
-    REQUEST_HILOGI("has the task record in database");
+    REQUEST_HILOGD("has the task record in database");
     return true;
 }
 
