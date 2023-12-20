@@ -36,7 +36,6 @@ RequestNotify::RequestNotify(napi_env env, napi_value callback) : NotifyStub()
 
 RequestNotify::~RequestNotify()
 {
-    REQUEST_HILOGI("~RequestNotify()");
     std::lock_guard<std::mutex> lock(validMutex_);
     if (valid_ && env_ != nullptr && ref_ != nullptr) {
         UvQueue::DeleteRef(env_, ref_);

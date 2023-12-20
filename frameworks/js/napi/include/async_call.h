@@ -37,7 +37,6 @@ public:
         Context() = default;
         virtual ~Context()
         {
-            REQUEST_HILOGI("Context Drop");
             ContextNapiHolder *holder =
                 new ContextNapiHolder{ .env = env_, .callbackRef = callbackRef_, .self = self_, .work = work_ };
             UvQueue::Call(env_, static_cast<void *>(holder), [](uv_work_t *work, int status) {

@@ -853,7 +853,7 @@ impl RequestTask {
                 update_info.to_c_struct(&sizes, &processed, &extras, &each_file_status);
             let ret =
                 unsafe { UpdateRequestTaskInfo(self.conf.common_data.task_id, &c_update_info) };
-            info!("update database ret is {}", ret);
+            debug!("update database ret is {}", ret);
         }
 
         self.recording_rdb_num.fetch_sub(1, Ordering::SeqCst);

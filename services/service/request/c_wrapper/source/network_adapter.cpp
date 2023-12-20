@@ -115,11 +115,11 @@ void NetworkAdapter::UpdateNetworkInfoInner(const NetManagerStandard::NetAllCapa
     if (capabilities.netCaps_.find(NET_CAPABILITY_INTERNET) != capabilities.netCaps_.end()) {
         isOnline_ = true;
         if (capabilities.bearerTypes_.find(NetBearType::BEARER_CELLULAR) != capabilities.bearerTypes_.end()) {
-            REQUEST_HILOGI("Bearer Cellular");
+            REQUEST_HILOGD("Bearer Cellular");
             networkInfo_.networkType = Network::CELLULAR;
             networkInfo_.isMetered = true;
         } else if (capabilities.bearerTypes_.find(NetBearType::BEARER_WIFI) != capabilities.bearerTypes_.end()) {
-            REQUEST_HILOGI("Bearer Wifi");
+            REQUEST_HILOGD("Bearer Wifi");
             networkInfo_.networkType = Network::WIFI;
             networkInfo_.isMetered = false;
         }
@@ -173,7 +173,7 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetBlockStatusChange(sptr<NetHa
 void NetworkAdapter::UpdateRoaming()
 {
 #ifdef REQUEST_TELEPHONY_CORE_SERVICE
-    REQUEST_HILOGI("upload roaming");
+    REQUEST_HILOGD("upload roaming");
 
     // Check telephony SA.
     {
