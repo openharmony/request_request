@@ -48,7 +48,7 @@ fn on_remote_request(
 ) -> IpcResult<()> {
     const SERVICE_TOKEN: &str = "OHOS.Download.RequestServiceInterface";
 
-    info!("Processes on_remote_request, code: {}", code);
+    debug!("Processes on_remote_request, code: {}", code);
     match data.read::<InterfaceToken>().map(|token| token.get_token()) {
         Ok(token) if token == SERVICE_TOKEN => {}
         _ => {

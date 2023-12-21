@@ -132,7 +132,7 @@ void NetworkAdapter::UpdateNetworkInfoInner(const NetManagerStandard::NetAllCapa
 int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandle,
     const sptr<NetAllCapabilities> &netAllCap)
 {
-    REQUEST_HILOGI("Observe net capabilities change. start");
+    REQUEST_HILOGD("Observe net capabilities change. start");
     netAdapter_.UpdateNetworkInfoInner(*netAllCap);
     if (netAdapter_.callback_ != nullptr) {
         netAdapter_.callback_();
@@ -155,7 +155,7 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetLost(sptr<NetHandle> &netHan
     netAdapter_.isOnline_ = false;
     if (netAdapter_.callback_ != nullptr) {
         netAdapter_.callback_();
-        REQUEST_HILOGI("NetCapabilitiesChange callback");
+        REQUEST_HILOGD("NetCapabilitiesChange callback");
     }
     return 0;
 }
@@ -203,7 +203,7 @@ void NetworkAdapter::UpdateRoaming()
         }
     }
     if (!isSim) {
-        REQUEST_HILOGE("no sim");
+        REQUEST_HILOGD("no sim");
         return;
     }
 

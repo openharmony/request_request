@@ -110,7 +110,7 @@ ExceptionError JsInitialize::InitParam(napi_env env, napi_value* argv,
         return err;
     }
     config.bundleName = context->GetBundleName();
-    REQUEST_HILOGI("config.bundleName is %{public}s", config.bundleName.c_str());
+    REQUEST_HILOGD("config.bundleName is %{public}s", config.bundleName.c_str());
     return CheckFilePath(context, config);
 }
 
@@ -524,6 +524,11 @@ bool JsInitialize::ParseCertsPath(napi_env env, napi_value jsConfig, std::vector
     iter_t urlEnd = url.end();
     iter_t protocolStart = url.cbegin();
     iter_t protocolEnd = std::find(protocolStart, urlEnd, ':');
+    std::string protocol = std::string(protocolStart, protocolEnd);
+    if (protocol != "https") {
+        REQUEST_HILOGD("Using Http");
+        return true;
+    }
     if (protocolEnd != urlEnd) {
         std::string afterProtocol = &*(protocolEnd);
         // 3 is the num of ://
@@ -543,6 +548,7 @@ bool JsInitialize::ParseCertsPath(napi_env env, napi_value jsConfig, std::vector
     std::string hostname = std::string(hostStart, hostEnd);
     REQUEST_HILOGD("Hostname is %{public}s", hostname.c_str());
     NetManagerStandard::NetConnClient::GetInstance().GetTrustAnchorsForHostName(hostname, certsPath);
+
     return true;
 }
 

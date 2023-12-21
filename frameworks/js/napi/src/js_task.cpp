@@ -1037,7 +1037,7 @@ void JsTask::UvUnrefTaskContext(uv_work_t *work, int status)
     }
     u_int32_t taskRefCount = 0;
     napi_reference_unref(data->context->env_, data->context->taskRef, &taskRefCount);
-    REQUEST_HILOGI("Unref task ref, count is %{public}d", taskRefCount);
+    REQUEST_HILOGD("Unref task ref, count is %{public}d", taskRefCount);
     if (taskRefCount == 0) {
         napi_delete_reference(data->context->env_, data->context->taskRef);
     }

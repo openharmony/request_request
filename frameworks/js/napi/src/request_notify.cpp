@@ -45,7 +45,7 @@ RequestNotify::~RequestNotify()
 
 void RequestNotify::CallBack(const Notify &notify)
 {
-    REQUEST_HILOGI("RequestNotify CallBack in");
+    REQUEST_HILOGD("RequestNotify CallBack in");
     SetNotify(notify);
     info_.timestamp = std::chrono::system_clock::now().time_since_epoch().count();
     notifyQueue_.Push(info_);
@@ -91,7 +91,7 @@ void RequestNotify::Done(const TaskInfo &taskInfo)
 
 void RequestNotify::ExecCallBack()
 {
-    REQUEST_HILOGI("ExecCallBack in");
+    REQUEST_HILOGD("ExecCallBack in");
     if (!valid_ || ref_ == nullptr) {
         REQUEST_HILOGE("valid is false");
         return;
