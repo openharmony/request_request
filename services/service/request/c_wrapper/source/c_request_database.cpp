@@ -978,11 +978,16 @@ int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, 
 int GetCertsPath(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskConfig &config)
 {
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "cert_path" });
-    if (resultSet == nullptr) {
-        REQUEST_HILOGE("result set is nullptr");
+    int rowCount = 0;
+    if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("GetCertsPath result set is nullptr or get row count failed");
         return OHOS::Request::QUERY_ERR;
     }
-    while (resultSet->GoToNextRow()) {
+    for (auto i = 0; i < rowCount; i++) {
+        if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
+            REQUEST_HILOGE("GetCertsPath result set goes to %{public}d row failed", i);
+            return OHOS::Request::QUERY_ERR;
+        }
         std::string path;
         resultSet->GetString(0, path); // Line 0 here is 'path'
         config.certsPath.push_back(std::move(path));
