@@ -138,6 +138,10 @@ impl TaskManager {
     }
 
     pub(crate) fn update_background_app(&mut self, uid: u64) {
+        if !self.app_state_map.contains_key(&uid) {
+            return;
+        }
+        
         debug!("TaskManager begin update_background_app uid:{}", uid);
 
         if ApplicationState::from(self.app_state_map.get(&uid).unwrap().load(Ordering::SeqCst))
