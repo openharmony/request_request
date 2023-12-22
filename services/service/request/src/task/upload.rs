@@ -132,7 +132,7 @@ fn build_stream_request(
     task: Arc<RequestTask>,
     index: usize,
 ) -> Option<Request<Uploader<TaskReader, TaskOperator>>> {
-    info!("build stream request");
+    debug!("build stream request");
     let task_reader = TaskReader::new(task.clone());
     let task_operator = TaskOperator::new(task.clone());
     let mut request_builder = task.build_request_builder();
@@ -140,7 +140,7 @@ fn build_stream_request(
         request_builder = request_builder.header("Content-Type", "application/octet-stream");
     }
     let (_, upload_length) = task.get_upload_info(index);
-    info!("upload length is {}", upload_length);
+    debug!("upload length is {}", upload_length);
     request_builder = request_builder.header("Content-Length", upload_length.to_string().as_str());
     let uploader = Uploader::builder()
         .reader(task_reader)
@@ -166,7 +166,7 @@ fn build_multipart_request(
         multi_part = multi_part.part(part);
     }
     let (_, upload_length) = task.get_upload_info(index);
-    info!("upload length is {}", upload_length);
+    debug!("upload length is {}", upload_length);
     let part = Part::new()
         .name(task.conf.file_specs[index].name.as_str())
         .file_name(task.conf.file_specs[index].file_name.as_str())
@@ -224,7 +224,7 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
         return;
     }
     let index = task.progress.lock().unwrap().common_data.index;
-    info!("index is {}", index);
+    debug!("index is {}", index);
     for i in index..size {
         task.progress.lock().unwrap().common_data.index = i;
         let result: bool;

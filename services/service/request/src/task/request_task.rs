@@ -333,35 +333,33 @@ impl RequestTask {
         }
 
         if self.conf.url.contains("https") {
+            let mut buf = Vec::new();
+            let file = File::open("/etc/ssl/certs/cacert.pem");
+            match file {
+                Ok(mut f) => {
+                    f.read_to_end(&mut buf).unwrap();
+                    let cert = Certificate::from_pem(&buf).unwrap();
+                    client = client.add_root_certificate(cert);
+                }
+                Err(e) => {
+                    error!("open cacert.pem failed, error is {:?}", e);
+                    self.set_status(State::Failed, Reason::IoError);
+                    return None;
+                }
+            }
+
             let path_list = self.conf.certs_path.clone();
-            if path_list.is_empty() {
-                let mut buf = Vec::new();
-                let file = File::open("/etc/ssl/certs/cacert.pem");
+            for path in path_list.into_iter() {
+                let real_path = convert_path(self.conf.common_data.uid, &self.conf.bundle, &path);
+                let file = Certificate::from_path(&real_path);
                 match file {
-                    Ok(mut f) => {
-                        f.read_to_end(&mut buf).unwrap();
-                        let cert = Certificate::from_pem(&buf).unwrap();
-                        client = client.add_root_certificate(cert);
+                    Ok(c) => {
+                        client = client.add_root_certificate(c);
                     }
                     Err(e) => {
-                        error!("open cacert.pem failed, error is {:?}", e);
+                        debug!("open {:?} failed, reason is {:?}", path, e);
                         self.set_status(State::Failed, Reason::IoError);
                         return None;
-                    }
-                }
-            } else {
-                for path in path_list.into_iter() {
-                    let real_path = convert_path(self.conf.common_data.uid, &self.conf.bundle, &path);
-                    let file = Certificate::from_path(&real_path);
-                    match file {
-                        Ok(c) => {
-                            client = client.add_root_certificate(c);
-                        }
-                        Err(e) => {
-                            debug!("open {:?} failed, reason is {:?}", path, e);
-                            self.set_status(State::Failed, Reason::IoError);
-                            return None;
-                        }
                     }
                 }
             }
@@ -766,7 +764,7 @@ impl RequestTask {
             progress_guard.common_data.state = state as u8;
             current_status.state = state;
             current_status.reason = reason;
-            info!("current state is {:?}, reason is {:?}", state, reason);
+            debug!("current state is {:?}, reason is {:?}", state, reason);
         }
         if state == State::Waiting {
             self.record_waitting_network_time();
@@ -838,7 +836,7 @@ impl RequestTask {
             let info_set = task_info.build_info_set();
             let c_task_info = task_info.to_c_struct(&info_set);
             let ret = unsafe { RecordRequestTaskInfo(&c_task_info) };
-            info!("insert database ret is {}", ret);
+            debug!("insert database ret is {}", ret);
         } else {
             let update_info = self.get_update_info();
             let sizes: String = format!("{:?}", update_info.progress.sizes);

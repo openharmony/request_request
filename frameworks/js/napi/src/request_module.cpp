@@ -82,7 +82,6 @@ static void NapiCreateBroadcastEvent(napi_env env, napi_value &broadcastEvent)
 
 static napi_value InitAgent(napi_env env, napi_value exports)
 {
-    REQUEST_HILOGI("InitAgent in");
     napi_value action = nullptr;
     NapiCreateAction(env, action);
     napi_value mode = nullptr;
