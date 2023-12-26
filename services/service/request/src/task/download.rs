@@ -21,7 +21,7 @@ use ylong_http_client::{HttpClientError, Response, SpeedLimit, Timeout};
 
 use super::operator::TaskOperator;
 use super::reason::Reason;
-use super::tick::Clock;
+use super::tick::{Clock, WAITING_TO_TICK, WAITING_TO_WAKE};
 use crate::task::info::State;
 use crate::task::RequestTask;
 
@@ -36,39 +36,36 @@ const LOW_SPEED_LIMIT: u64 = 1;
 
 impl DownloadOperator for TaskOperator {
     fn poll_download(
-        self: Pin<&mut Self>,
+        mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,
         data: &[u8],
     ) -> Poll<Result<usize, HttpClientError>> {
-        let me = self.get_mut();
-
-        // Repeated queue entry can affect performance, pay attention.
-        // need more test and research.
-
-        if me.task.rate_limiting.load(Ordering::Relaxed) {
-            if me.check_point.take().is_none() {
-                Clock::get_instance().register(cx);
-                me.check_point = Some(());
+        if self.task.rate_limiting.load(Ordering::Acquire) {
+            if self.waiting == WAITING_TO_WAKE {
+                self.waiting = 0;
+            } else {
+                self.waiting += 1;
+                Clock::get_instance().register(self.task.conf.common_data.task_id, cx);
                 return Poll::Pending;
             }
         } else {
-            me.tick_waiting += 1;
-            if me.tick_waiting == 10 {
-                me.tick_waiting = 0;
+            self.tick_waiting += 1;
+            if self.tick_waiting == WAITING_TO_TICK {
+                self.tick_waiting = 0;
                 Clock::get_instance().tick();
             }
         }
 
-        if me.task.range_request.load(Ordering::SeqCst) {
-            if me.task.range_response.load(Ordering::SeqCst) {
-                return me.poll_write_file(cx, data, 0);
+        if self.task.range_request.load(Ordering::SeqCst) {
+            if self.task.range_response.load(Ordering::SeqCst) {
+                return self.poll_write_file(cx, data, 0);
             }
             // write partial response data
-            let begins = me.task.conf.common_data.begins;
-            let ends = me.task.conf.common_data.ends;
-            return me.poll_write_partial_file(cx, data, begins, ends);
+            let begins = self.task.conf.common_data.begins;
+            let ends = self.task.conf.common_data.ends;
+            return self.poll_write_partial_file(cx, data, begins, ends);
         }
-        me.poll_write_file(cx, data, 0)
+        self.poll_write_file(cx, data, 0)
     }
 
     fn poll_progress(

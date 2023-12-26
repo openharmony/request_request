@@ -82,9 +82,8 @@ impl TaskManager {
                     }
                 }
 
-                let qos_changes = self.qos.change_state(uid, state);
+                let qos_changes = self.qos.change_state(uid, ApplicationState::Background);
                 self.change_qos(qos_changes);
-
                 self.update_terminated_app(uid);
             }
         }
@@ -141,7 +140,7 @@ impl TaskManager {
         if !self.app_state_map.contains_key(&uid) {
             return;
         }
-        
+
         debug!("TaskManager begin update_background_app uid:{}", uid);
 
         if ApplicationState::from(self.app_state_map.get(&uid).unwrap().load(Ordering::SeqCst))

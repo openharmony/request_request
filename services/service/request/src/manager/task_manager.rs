@@ -442,12 +442,12 @@ impl TaskManager {
                 match new_qos {
                     Qos::High => {
                         info!("Qos task_id:{} set to High Qos", task_id);
-                        Clock::get_instance().wake_all();
-                        task.rate_limiting.store(false, Ordering::SeqCst);
+                        task.rate_limiting.store(false, Ordering::Release);
+                        Clock::get_instance().wake_one(task.conf.common_data.task_id);
                     }
                     Qos::Low => {
                         info!("Qos task_id:{} set to Low Qos", task_id);
-                        task.rate_limiting.store(true, Ordering::SeqCst);
+                        task.rate_limiting.store(true, Ordering::Release);
                     }
                 }
             }
