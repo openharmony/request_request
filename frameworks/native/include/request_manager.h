@@ -21,6 +21,7 @@
 #include <condition_variable>
 
 #include "data_ability_helper.h"
+#include "iservice_registry.h"
 #include "iremote_object.h"
 #include "refbase.h"
 #include "visibility.h"
@@ -69,6 +70,7 @@ private:
     sptr<RequestServiceInterface> GetRequestServiceProxy();
     int32_t Retry(int32_t &taskId, const Config &config, int32_t errorCode, sptr<NotifyInterface> listener);
     void SetRequestServiceProxy(sptr<RequestServiceInterface> proxy);
+    bool SubscribeSA(sptr<ISystemAbilityManager> systemAbilityManager);
 
 private:
     static std::mutex instanceLock_;
@@ -79,6 +81,7 @@ private:
 
     sptr<RequestServiceInterface> requestServiceProxy_;
     sptr<RequestSaDeathRecipient> deathRecipient_;
+    sptr<ISystemAbilityStatusChange> saChangeListener_;
     std::condition_variable syncCon_;
     bool ready_ = false;
     static constexpr int LOAD_SA_TIMEOUT_MS = 15000;
