@@ -369,7 +369,7 @@ void RequestEvent::GetDownloadInfo(const TaskInfo &infoRes, DownloadInfo &info)
     }
     if (infoRes.progress.state == State::WAITING &&
         (infoRes.code == NETWORK_OFFLINE || infoRes.code == UNSUPPORTED_NETWORK_TYPE)) {
-        info.pausedReason = PAUSED_WAITING_TO_RETRY;
+        info.pausedReason = PAUSED_WAITING_FOR_NETWORK;
     }
     if (infoRes.progress.state == State::PAUSED) {
         if (infoRes.code == USER_OPERATION) {
