@@ -214,7 +214,7 @@ ExceptionError JsInitialize::CheckUploadBodyFiles(Config &config, const std::str
 
         int32_t bodyFd = open(fileName.c_str(), O_TRUNC | O_RDWR);
         if (bodyFd < 0) {
-            bodyFd = open(fileName.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
+            bodyFd = open(fileName.c_str(), O_CREAT, FILE_PERMISSION);
             if (bodyFd < 0) {
                 return { .code = E_FILE_IO, .errInfo = "Failed to open file errno " + std::to_string(errno) };
             }
@@ -257,7 +257,7 @@ ExceptionError JsInitialize::GetFD(const std::string &path, const Config &config
             ExceptionErrorCode code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
             return { .code = code, .errInfo = "Failed to open file errno " + std::to_string(errno) };
         }
-        fd = open(path.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
+        fd = open(path.c_str(), O_CREAT, FILE_PERMISSION);
         if (fd < 0) {
             return { .code = E_FILE_IO, .errInfo = "Failed to open file errno " + std::to_string(errno) };
         }

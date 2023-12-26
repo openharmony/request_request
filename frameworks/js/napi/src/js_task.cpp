@@ -862,7 +862,7 @@ bool JsTask::SetDirsPermission(std::vector<std::string> &dirs)
             REQUEST_HILOGD("Creat folder path succss.");
         }
     }
-    for (auto &folderPath : dirs) {
+    for (const auto &folderPath : dirs) {
         fs::path folder = folderPath;
         if (!(fs::exists(folder) && fs::is_directory(folder))) {
             return false;
@@ -974,7 +974,7 @@ void JsTask::RemovePathMap(const std::string &filepath)
 
 void JsTask::RemoveDirsPermission(const std::vector<std::string> &dirs)
 {
-    for (auto &folderPath : dirs) {
+    for (const auto &folderPath : dirs) {
         fs::path folder = folderPath;
         for (const auto& entry : fs::directory_iterator(folder)) {
             fs::path path = entry.path();
