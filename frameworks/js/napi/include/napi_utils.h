@@ -27,6 +27,7 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "openssl/sha.h"
+#include "utf8_utils.h"
 
 namespace OHOS::Request::NapiUtils {
 static constexpr int32_t MAX_ARGC = 6;
@@ -101,6 +102,5 @@ std::string GetSaveas(const std::vector<FileSpec> &files, Action action);
 bool IsPathValid(const std::string &filePath);
 std::string SHA256(const char *str, size_t len);
 void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileData);
-bool IsTextUTF8(const std::vector<uint8_t> &bytes);
 } // namespace OHOS::Request::NapiUtils
 #endif /* DOWNLOAD_NAPI_UTILS_H */

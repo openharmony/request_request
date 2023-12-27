@@ -27,7 +27,6 @@
 
 namespace OHOS::Request::NapiUtils {
 static constexpr int64_t JS_NUMBER_MAX_VALUE = (1LL << 53) - 1;
-static constexpr size_t UTF8_MULTIBYTE_MIN_LEN = 2;
 static constexpr const char *REASON_OK_INFO = "Task successful";
 static constexpr const char *TASK_SURVIVAL_ONE_MONTH_INFO = "The task has not been completed for a month yet";
 static constexpr const char *WAITTING_NETWORK_ONE_DAY_INFO = "The task waiting for network recovery has not been "
@@ -188,13 +187,15 @@ napi_value Convert2JSHeadersAndBody(napi_env env, const std::map<std::string, st
         napi_set_named_property(env, headers, cInt.first.c_str(), Convert2JSValue(env, cInt.second));
     }
     napi_value body = nullptr;
-    if (IsTextUTF8(bodyBytes)) {
+    if (Utf8Utils::RunUtf8Validation(bodyBytes)) {
         napi_create_string_utf8(env, reinterpret_cast<const char *>(bodyBytes.data()), bodyBytes.size(), &body);
     } else {
         uint8_t *data = nullptr;
         napi_create_arraybuffer(env, bodyBytes.size(), reinterpret_cast<void **>(&data), &body);
         if (memcpy_s(data, bodyBytes.size(), bodyBytes.data(), bodyBytes.size()) != EOK) {
-            REQUEST_HILOGW("Body data memcpy_s error");
+            if (bodyBytes.size() > 0) {
+                REQUEST_HILOGW("Body data memcpy_s error");
+            }
         }
     }
     
@@ -829,55 +830,5 @@ void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileDa
         REQUEST_HILOGW("Read bytes from file, invalid file path!");
     }
     return;
-}
-
-bool IsTextUTF8(const std::vector<uint8_t> &bytes)
-{
-    if (bytes.size() == 0) {
-        return false;
-    }
-    auto getMultibyteLength = [](uint8_t chr) -> size_t {
-        size_t num = 0;
-        uint8_t mask = 0x80;
-        for (size_t i = 0; i < 8; i++) {
-            if ((chr & mask) == mask) {
-                mask = mask >> 1;
-                num++;
-            } else {
-                break;
-            }
-        }
-        return num;
-    };
-
-    auto checkLength = [](const size_t count, const std::vector<uint8_t> &bytes, size_t &index) -> bool {
-        for (size_t j = 0; j < count - 1; j++) {
-            // 10xxxxxx
-            if ((bytes[index] & 0xc0) != 0x80) {
-                return false;
-            }
-            index++;
-        }
-        return true;
-    };
-
-    size_t count = 0;
-    size_t i = 0;
-    while (i < bytes.size()) {
-        // 0xxxxxxx
-        if ((bytes[i] & 0x80) == 0x00) {
-            i++;
-            continue;
-        } else if ((count = getMultibyteLength(bytes[i])) > UTF8_MULTIBYTE_MIN_LEN) {
-            i++;
-            bool isLengthOk = checkLength(count, bytes, i);
-            if (!isLengthOk) {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-    return true;
 }
 } // namespace OHOS::Request::NapiUtils
