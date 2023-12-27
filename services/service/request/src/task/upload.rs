@@ -22,7 +22,7 @@ use ylong_runtime::io::{AsyncRead, AsyncSeek, ReadBuf};
 
 use super::operator::TaskOperator;
 use super::reason::Reason;
-use super::tick::Clock;
+use super::tick::{Clock, WAITING_TO_TICK, WAITING_TO_WAKE};
 use crate::task::info::State;
 use crate::task::RequestTask;
 
@@ -32,7 +32,8 @@ cfg_oh! {
 
 struct TaskReader {
     task: Arc<RequestTask>,
-    check_point: Option<()>,
+    waiting: usize,
+    tick_waiting: usize,
 }
 
 use std::sync::atomic::Ordering;
@@ -41,7 +42,8 @@ impl TaskReader {
     pub(crate) fn new(task: Arc<RequestTask>) -> Self {
         Self {
             task,
-            check_point: None,
+            waiting: 0,
+            tick_waiting: 0,
         }
     }
 }
@@ -52,16 +54,20 @@ impl AsyncRead for TaskReader {
         cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<std::io::Result<()>> {
-        // Repeated queue entry can affect performance, pay attention.
-        // need more test and research.
-        if self.task.rate_limiting.load(Ordering::SeqCst) {
-            if self.check_point.take().is_none() {
-                Clock::get_instance().register(cx);
-                self.as_mut().check_point = Some(());
+        if self.task.rate_limiting.load(Ordering::Acquire) {
+            if self.waiting == WAITING_TO_WAKE {
+                self.waiting = 0;
+            } else {
+                self.waiting += 1;
+                Clock::get_instance().register(self.task.conf.common_data.task_id, cx);
                 return Poll::Pending;
             }
         } else {
-            Clock::get_instance().tick();
+            self.tick_waiting += 1;
+            if self.tick_waiting == WAITING_TO_TICK {
+                self.tick_waiting = 0;
+                Clock::get_instance().tick();
+            }
         }
 
         let index = self.task.progress.lock().unwrap().common_data.index;

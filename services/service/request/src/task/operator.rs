@@ -31,7 +31,7 @@ const BACKGROUND_NOTIFY_INTERVAL: u64 = 3000;
 
 pub(crate) struct TaskOperator {
     pub(crate) task: Arc<RequestTask>,
-    pub(crate) check_point: Option<()>,
+    pub(crate) waiting: usize,
     pub(crate) tick_waiting: usize,
 }
 
@@ -39,7 +39,7 @@ impl TaskOperator {
     pub(crate) fn new(task: Arc<RequestTask>) -> Self {
         Self {
             task,
-            check_point: None,
+            waiting: 0,
             tick_waiting: 0,
         }
     }

@@ -11,19 +11,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::collections::HashMap;
+use std::mem::MaybeUninit;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Mutex;
+use std::sync::{Mutex, Once};
 use std::task::{Context, Waker};
 
 const WAITING_TICK: usize = 20;
-
+pub(crate) const WAITING_TO_WAKE: usize = 3;
+pub(crate) const WAITING_TO_TICK: usize = 10;
 pub(crate) struct Clock {
-    registers: Mutex<Vec<Waker>>,
+    registers: Mutex<HashMap<u32, Waker>>,
     tick: AtomicUsize,
 }
 
 impl Clock {
-    pub(crate) fn tick(&mut self) {
+    pub(crate) fn tick(&self) {
         let tick = self.tick.fetch_add(1, Ordering::SeqCst);
 
         if tick >= WAITING_TICK {
@@ -32,22 +35,36 @@ impl Clock {
         }
     }
 
-    pub(crate) fn wake_all(&mut self) {
+    pub(crate) fn wake_all(&self) {
         let mut registers = self.registers.lock().unwrap();
-        while let Some(waker) = registers.pop() {
+        for (_, waker) in registers.drain() {
             waker.wake()
         }
     }
 
-    pub(crate) fn get_instance() -> &'static mut Self {
-        static mut CLOCK: Clock = Clock {
-            registers: Mutex::new(Vec::new()),
-            tick: AtomicUsize::new(0),
-        };
-        unsafe { &mut CLOCK }
+    pub(crate) fn wake_one(&self, task_id: u32) {
+        let mut registers = self.registers.lock().unwrap();
+        if let Some(waker) = registers.remove(&task_id) {
+            waker.wake()
+        }
     }
-    pub(crate) fn register(&mut self, cx: &mut Context<'_>) {
-        self.registers.lock().unwrap().push(cx.waker().clone());
+
+    pub(crate) fn get_instance() -> &'static Self {
+        static mut CLOCK: MaybeUninit<Clock> = MaybeUninit::uninit();
+        static INIT: Once = Once::new();
+        INIT.call_once(|| unsafe {
+            CLOCK.write(Clock {
+                registers: Mutex::new(HashMap::new()),
+                tick: AtomicUsize::new(0),
+            });
+        });
+        unsafe { CLOCK.as_ptr().as_ref().unwrap() }
+    }
+    pub(crate) fn register(&self, task_id: u32, cx: &mut Context<'_>) {
+        self.registers
+            .lock()
+            .unwrap()
+            .insert(task_id, cx.waker().clone());
     }
 }
 
@@ -64,7 +81,7 @@ mod test {
         fn poll(self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
             let me = self.get_mut();
             if me.0.take().is_none() {
-                Clock::get_instance().register(cx);
+                Clock::get_instance().register(0, cx);
                 me.0 = Some(());
                 println!("hello");
                 Poll::Pending
