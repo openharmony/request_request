@@ -747,12 +747,9 @@ export default function requestOperateTaskTest() {
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
-      task.on('progress', function (progress) {
-        if (progress.state === request.agent.State.REMOVED) {
-          expect(true).assertTrue();
-          task.off('progress');
-          done();
-        }
+      task.on('remove', function (progress) {
+        expect(progress.state).assertEqual(request.agent.State.REMOVED);
+        done();
       })
       await task.start();
       await sleep(2000);

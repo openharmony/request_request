@@ -78,8 +78,9 @@ void NotifyStub::OnCallBack(MessageParcel &data)
     }
     RequestCallBack(type, tid, notifyData);
 
-    if (type == "complete" || type == "fail") {
+    if (type == "complete" || type == "fail" || type == "remove") {
         JsTask::ClearTaskContext(tid);
+        JsTask::ClearTaskMap(tid);
     }
 }
 

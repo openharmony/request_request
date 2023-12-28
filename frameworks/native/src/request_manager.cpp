@@ -17,7 +17,6 @@
 
 #include "data_ability_predicates.h"
 #include "request_sync_load_callback.h"
-#include "iservice_registry.h"
 #include "log.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -33,7 +32,7 @@ sptr<RequestManager> RequestManager::instance_ = nullptr;
 constexpr const int32_t RETRY_INTERVAL = 500 * 1000;
 constexpr const int32_t RETRY_MAX_TIMES = 5;
 
-RequestManager::RequestManager() : requestServiceProxy_(nullptr), deathRecipient_(nullptr)
+RequestManager::RequestManager() : requestServiceProxy_(nullptr), deathRecipient_(nullptr), saChangeListener_(nullptr)
 {
 }
 
@@ -266,13 +265,12 @@ sptr<RequestServiceInterface> RequestManager::GetRequestServiceProxy()
         return nullptr;
     }
     auto systemAbility = systemAbilityManager->GetSystemAbility(DOWNLOAD_SERVICE_ID, "");
-    auto saChangeListener = new (std::nothrow) SystemAbilityStatusChangeListener();
-    if (systemAbility == nullptr || saChangeListener == nullptr) {
-        REQUEST_HILOGE("Get SystemAbility or saChangeListener failed.");
+    if (systemAbility == nullptr) {
+        REQUEST_HILOGE("Get SystemAbility failed.");
         return nullptr;
     }
-    if (systemAbilityManager->SubscribeSystemAbility(DOWNLOAD_SERVICE_ID, saChangeListener) != E_OK) {
-        REQUEST_HILOGE("SubscribeSystemAbility failed.");
+    if (!SubscribeSA(systemAbilityManager)) {
+        REQUEST_HILOGE("Subscribe SystemAbility failed.");
         return nullptr;
     }
     deathRecipient_ = new RequestSaDeathRecipient();
@@ -283,6 +281,24 @@ sptr<RequestServiceInterface> RequestManager::GetRequestServiceProxy()
         return nullptr;
     }
     return requestServiceProxy_;
+}
+
+// Subscribe SA status changes only once
+bool RequestManager::SubscribeSA(sptr<ISystemAbilityManager> systemAbilityManager)
+{
+    if (saChangeListener_ != nullptr) {
+        return true;
+    }
+    saChangeListener_ = new (std::nothrow) SystemAbilityStatusChangeListener();
+    if (saChangeListener_ == nullptr) {
+        REQUEST_HILOGE("Get saChangeListener_ failed.");
+        return false;
+    }
+    if (systemAbilityManager->SubscribeSystemAbility(DOWNLOAD_SERVICE_ID, saChangeListener_) != E_OK) {
+        REQUEST_HILOGE("SubscribeSystemAbility failed.");
+        return false;
+    }
+    return true;
 }
 
 void RequestManager::RestoreListener(void (*callback)())
