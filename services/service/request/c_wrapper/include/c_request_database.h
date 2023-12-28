@@ -205,6 +205,8 @@ void QuerySingleTaskConfig(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet
 int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, std::vector<TaskConfig> &taskConfigs);
 int QueryTaskConfigAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskConfig &taskConfig,
     int64_t formItemsLen, int64_t fileSpecsLen, int64_t bodyFileNamesLen);
+void SetFormItemsPtr(const TaskConfig &taskConfig, uint32_t formItemsLen, CFormItem *formItemsPtr);
+void SetFileSpecsPtr(const TaskConfig &taskConfig, uint32_t fileSpecsLen, CFileSpec *fileSpecsPtr);
 CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs);
 bool CleanTaskConfigTable(uint32_t taskId, uint64_t uid);
 

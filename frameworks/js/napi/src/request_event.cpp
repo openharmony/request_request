@@ -343,7 +343,6 @@ int32_t RequestEvent::QueryExec(const std::shared_ptr<ExecContext> &context)
 
 int32_t RequestEvent::QueryMimeTypeExec(const std::shared_ptr<ExecContext> &context)
 {
-    std::shared_ptr<TaskInfo> infoRes;
     int32_t ret = E_OK;
     if (!RequestManager::GetInstance()->LoadRequestServer()) {
         ret = E_SERVICE_ERROR;

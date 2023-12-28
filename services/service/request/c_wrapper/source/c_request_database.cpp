@@ -917,6 +917,9 @@ void QuerySingleTaskConfig(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet
     resultSet->GetString(22, taskConfig.data); // Line 22 here is 'data'
     resultSet->GetString(23, taskConfig.token); // Line 23 here is 'token'
     resultSet->GetString(24, taskConfig.extras); // Line 24 here is 'extras'
+    int version = 0;
+    resultSet->GetInt(25, version); // Line 25 here is 'version'
+    taskConfig.version = static_cast<uint8_t>(version);
 }
 
 int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, std::vector<TaskConfig> &taskConfigs)
@@ -937,14 +940,11 @@ int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, 
             return OHOS::Request::QUERY_ERR;
         }
         TaskConfig taskConfig;
-        int version = 0;
         int64_t formItemsLen = 0;
         int64_t fileSpecsLen = 0;
         int64_t bodyFileNamesLen = 0;
         GetCommonTaskConfig(resultSet, taskConfig);
         QuerySingleTaskConfig(resultSet, taskConfig);
-        resultSet->GetInt(25, version); // Line 25 here is 'version'
-        taskConfig.version = static_cast<uint8_t>(version);
         resultSet->GetLong(26, formItemsLen); // Line 26 here is 'formItemsLen'
         resultSet->GetLong(27, fileSpecsLen); // Line 27 here is 'fileSpecsLen'
         resultSet->GetLong(28, bodyFileNamesLen); // Line 28 here is 'bodyFileNamesLen'
@@ -955,14 +955,12 @@ int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, 
             fileSpecsLen, bodyFileNamesLen) == OHOS::Request::QUERY_ERR) {
             return OHOS::Request::QUERY_ERR;
         }
-
         OHOS::NativeRdb::RdbPredicates attachPredicates2("priority_table");
         attachPredicates2.EqualTo("task_id", std::to_string(taskConfig.commonData.taskId))
                 ->And()->EqualTo("uid", std::to_string(taskConfig.commonData.uid));
         if (GetPriority(attachPredicates, taskConfig.commonData.priority) == OHOS::Request::QUERY_ERR) {
             return OHOS::Request::QUERY_ERR;
         }
-
         OHOS::NativeRdb::RdbPredicates attachPredicates3("certs_table");
         attachPredicates3.EqualTo("task_id", std::to_string(taskConfig.commonData.taskId))
                 ->And()->EqualTo("uid", std::to_string(taskConfig.commonData.uid));
@@ -1048,8 +1046,25 @@ int QueryTaskConfigAttachment(
     return OHOS::Request::QUERY_OK;
 }
 
-CTaskConfig **BuildCTaskConfigs(
-    const std::vector<TaskConfig> &taskConfigs)
+void SetFormItemsPtr(const TaskConfig &taskConfig, uint32_t formItemsLen, CFormItem *formItemsPtr)
+{
+    for (uint32_t i = 0; i < formItemsLen; i++) {
+        formItemsPtr[i].name = WrapperCString(taskConfig.formItems[i].name);
+        formItemsPtr[i].value = WrapperCString(taskConfig.formItems[i].value);
+    }
+}
+
+void SetFileSpecsPtr(const TaskConfig &taskConfig, uint32_t fileSpecsLen, CFileSpec *fileSpecsPtr)
+{
+    for (uint32_t i = 0; i < fileSpecsLen; i++) {
+        fileSpecsPtr[i].name = WrapperCString(taskConfig.fileSpecs[i].name);
+        fileSpecsPtr[i].path = WrapperCString(taskConfig.fileSpecs[i].path);
+        fileSpecsPtr[i].fileName = WrapperCString(taskConfig.fileSpecs[i].fileName);
+        fileSpecsPtr[i].mimeType = WrapperCString(taskConfig.fileSpecs[i].mimeType);
+    }
+}
+
+CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs)
 {
     CTaskConfig **cTaskConfigs = new CTaskConfig *[taskConfigs.size()];
     for (unsigned int i = 0; i < taskConfigs.size(); i++) {
@@ -1065,33 +1080,22 @@ CTaskConfig **BuildCTaskConfigs(
         cTaskConfig->token = WrapperCString(taskConfig.token);
         cTaskConfig->extras = WrapperCString(taskConfig.extras);
         cTaskConfig->version = taskConfig.version;
-
         uint32_t formItemsLen = taskConfig.formItems.size();
         CFormItem *formItemsPtr = new CFormItem[formItemsLen];
-        for (uint32_t j = 0; j < formItemsLen; j++) {
-            formItemsPtr[j].name = WrapperCString(taskConfig.formItems[j].name);
-            formItemsPtr[j].value = WrapperCString(taskConfig.formItems[j].value);
-        }
+        SetFormItemsPtr(taskConfig, formItemsLen, formItemsPtr);
         uint32_t fileSpecsLen = taskConfig.fileSpecs.size();
         CFileSpec *fileSpecsPtr = new CFileSpec[fileSpecsLen];
-        for (uint32_t j = 0; j < fileSpecsLen; j++) {
-            fileSpecsPtr[j].name = WrapperCString(taskConfig.fileSpecs[j].name);
-            fileSpecsPtr[j].path = WrapperCString(taskConfig.fileSpecs[j].path);
-            fileSpecsPtr[j].fileName = WrapperCString(taskConfig.fileSpecs[j].fileName);
-            fileSpecsPtr[j].mimeType = WrapperCString(taskConfig.fileSpecs[j].mimeType);
-        }
+        SetFileSpecsPtr(taskConfig, fileSpecsLen, fileSpecsPtr);
         uint32_t bodyFileNamesLen = taskConfig.bodyFileNames.size();
         CStringWrapper *bodyFileNamesPtr = new CStringWrapper[bodyFileNamesLen];
         for (uint32_t j = 0; j < bodyFileNamesLen; j++) {
             bodyFileNamesPtr[j] = WrapperCString(taskConfig.bodyFileNames[j]);
         }
-
         uint32_t certsPathLen = taskConfig.certsPath.size();
         CStringWrapper *certsPathPtr = new CStringWrapper[certsPathLen];
         for (uint32_t j = 0; j < certsPathLen; j++) {
             certsPathPtr[j] = WrapperCString(taskConfig.certsPath[j]);
         }
-
         cTaskConfig->formItemsPtr = formItemsPtr;
         cTaskConfig->formItemsLen = formItemsLen;
         cTaskConfig->fileSpecsPtr = fileSpecsPtr;
