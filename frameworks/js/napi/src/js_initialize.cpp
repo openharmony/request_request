@@ -297,6 +297,23 @@ bool JsInitialize::GetInternalPath(const std::string &fileUri,
     return true;
 }
 
+void JsInitialize::SetParseConfig(napi_env env, napi_value jsConfig, Config &config)
+{
+    config.overwrite = NapiUtils::Convert2Boolean(env, jsConfig, "overwrite");
+    config.metered = NapiUtils::Convert2Boolean(env, jsConfig, "metered");
+    config.gauge = NapiUtils::Convert2Boolean(env, jsConfig, "gauge");
+    config.precise = NapiUtils::Convert2Boolean(env, jsConfig, "precise");
+    config.priority = ParsePriority(env, jsConfig);
+    config.begins = ParseBegins(env, jsConfig);
+    config.ends = ParseEnds(env, jsConfig);
+    config.mode = static_cast<Mode>(NapiUtils::Convert2Uint32(env, jsConfig, "mode"));
+    config.headers = ParseMap(env, jsConfig, "headers");
+    config.extras = ParseMap(env, jsConfig, "extras");
+    if (config.mode == Mode::BACKGROUND) {
+        config.background = true;
+    }
+}
+
 bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig,
     Config &config, std::string &errInfo)
 {
@@ -339,20 +356,7 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig,
     ParseRedirect(env, jsConfig, config.redirect);
     ParseNetwork(env, jsConfig, config.network);
     ParseRetry(env, jsConfig, config.retry);
-
-    config.overwrite = NapiUtils::Convert2Boolean(env, jsConfig, "overwrite");
-    config.metered = NapiUtils::Convert2Boolean(env, jsConfig, "metered");
-    config.gauge = NapiUtils::Convert2Boolean(env, jsConfig, "gauge");
-    config.precise = NapiUtils::Convert2Boolean(env, jsConfig, "precise");
-    config.priority = ParsePriority(env, jsConfig);
-    config.begins = ParseBegins(env, jsConfig);
-    config.ends = ParseEnds(env, jsConfig);
-    config.mode = static_cast<Mode>(NapiUtils::Convert2Uint32(env, jsConfig, "mode"));
-    config.headers = ParseMap(env, jsConfig, "headers");
-    config.extras = ParseMap(env, jsConfig, "extras");
-    if (config.mode == Mode::BACKGROUND) {
-        config.background = true;
-    }
+    SetParseConfig(env, jsConfig, config);
     return true;
 }
 

@@ -42,6 +42,7 @@ private:
         std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
     static bool ParseConfig(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static bool ParseConfigV9(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
+    static void SetParseConfig(napi_env env, napi_value jsConfig, Config &config);
     static bool ParseUploadConfig(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static bool ParseDownloadConfig(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static bool ParseAction(napi_env env, napi_value jsConfig, Action &action);
