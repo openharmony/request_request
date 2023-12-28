@@ -46,6 +46,7 @@ request_src = [
   "src/napi_utils.cpp",
   "src/request_module.cpp",
   "src/request_notify.cpp",
+  "src/utf8_utils.cpp",
   "src/uv_queue.cpp",
   "src/upload/js_util.cpp",
   "src/upload/async_call.cpp",
