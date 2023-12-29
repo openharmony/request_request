@@ -34,7 +34,7 @@ static constexpr const char *PARAM_KEY_DESCRIPTION = "description";
 static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";
 static constexpr const char *PARAM_KEY_FILE_PATH = "filePath";
 static constexpr const char *PARAM_KEY_BACKGROUND = "background";
-static constexpr uint32_t FILE_PERMISSION = 0646;
+static constexpr uint32_t FILE_PERMISSION = 0644;
 static constexpr uint32_t TITLE_MAXIMUM = 256;
 static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
 static constexpr uint32_t URL_MAXIMUM = 2048;
@@ -214,7 +214,7 @@ ExceptionError JsInitialize::CheckUploadBodyFiles(Config &config, const std::str
 
         int32_t bodyFd = open(fileName.c_str(), O_TRUNC | O_RDWR);
         if (bodyFd < 0) {
-            bodyFd = open(fileName.c_str(), O_CREAT, FILE_PERMISSION);
+            bodyFd = open(fileName.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
             if (bodyFd < 0) {
                 return { .code = E_FILE_IO, .errInfo = "Failed to open file errno " + std::to_string(errno) };
             }
@@ -257,7 +257,7 @@ ExceptionError JsInitialize::GetFD(const std::string &path, const Config &config
             ExceptionErrorCode code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
             return { .code = code, .errInfo = "Failed to open file errno " + std::to_string(errno) };
         }
-        fd = open(path.c_str(), O_CREAT, FILE_PERMISSION);
+        fd = open(path.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
         if (fd < 0) {
             return { .code = E_FILE_IO, .errInfo = "Failed to open file errno " + std::to_string(errno) };
         }
