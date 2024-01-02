@@ -28,11 +28,12 @@
 struct CommonTaskConfig {
     uint32_t taskId;
     uint64_t uid;
+    uint64_t tokenId;
     uint8_t action;
     uint8_t mode;
     bool cover;
     uint8_t network;
-    bool meterd;
+    bool metered;
     bool roaming;
     bool retry;
     bool redirect;

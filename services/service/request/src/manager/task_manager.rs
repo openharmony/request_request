@@ -380,8 +380,7 @@ impl TaskManager {
             Notifier::remove_notify(&remove_task);
         }
 
-        // Notifies NotifyManager to remove RemoteObj when task has been removed.
-
+        // Notifies NotifyManager to remove `RemoteObj` when task has been removed.
         #[cfg(feature = "oh")]
         Notifier::clear_notify(&remove_task);
 

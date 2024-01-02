@@ -18,7 +18,7 @@ use crate::task::reason::Reason;
 
 impl TaskManager {
     pub(crate) fn remove(&mut self, uid: u64, task_id: u32) -> ErrorCode {
-        if let Some(task) = self.get_task(uid, task_id) {
+        let result = if let Some(task) = self.get_task(uid, task_id) {
             task.set_status(State::Removed, Reason::UserOperation);
             self.after_task_processed(&task);
             debug!(
@@ -36,6 +36,14 @@ impl TaskManager {
                 );
             }
             ErrorCode::TaskNotFound
+        };
+        unsafe {
+            RemoveRequestTask(task_id, uid);
         }
+        result
     }
+}
+
+extern "C" {
+    pub(crate) fn RemoveRequestTask(task_id: u32, uid: u64) -> bool;
 }

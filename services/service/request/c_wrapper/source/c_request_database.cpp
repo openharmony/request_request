@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <securec.h>
 
 #include "log.h"
 
@@ -29,7 +30,7 @@ RequestDataBase::RequestDataBase()
     config.SetEncryptStatus(true);
     RequestDBOpenCallback requestDBOpenCallback;
     store_ = OHOS::NativeRdb::RdbHelper::GetRdbStore(config, DATABASE_OPEN_VERSION, requestDBOpenCallback, errCode);
-    REQUEST_HILOGI("get request database errcode :%{public}d", errCode);
+    REQUEST_HILOGI("Gets request database, ret: %{public}d", errCode);
 }
 
 RequestDataBase &RequestDataBase::GetInstance()
@@ -38,61 +39,30 @@ RequestDataBase &RequestDataBase::GetInstance()
     return requestDataBase;
 }
 
-bool RequestDataBase::BeginTransaction()
-{
-    if (store_ == nullptr) {
-        REQUEST_HILOGE("store_ is nullptr");
-        return false;
-    }
-    int ret = store_->BeginTransaction();
-    REQUEST_HILOGI("request database begin transaction ret :%{public}d", ret);
-    return ret == OHOS::NativeRdb::E_OK;
-}
-
-bool RequestDataBase::Commit()
-{
-    if (store_ == nullptr) {
-        REQUEST_HILOGE("store_ is nullptr");
-        return false;
-    }
-    int ret = store_->Commit();
-    REQUEST_HILOGI("request database commit ret :%{public}d", ret);
-    return ret == OHOS::NativeRdb::E_OK;
-}
-
-bool RequestDataBase::RollBack()
-{
-    if (store_ == nullptr) {
-        REQUEST_HILOGE("store_ is nullptr");
-        return false;
-    }
-    int ret = store_->RollBack();
-    REQUEST_HILOGI("request database rollback ret :%{public}d", ret);
-    return ret == OHOS::NativeRdb::E_OK;
-}
-
 bool RequestDataBase::Insert(const std::string &table, const OHOS::NativeRdb::ValuesBucket &insertValues)
 {
-    int64_t outRowId = 0;
     if (store_ == nullptr) {
         REQUEST_HILOGE("store_ is nullptr");
         return false;
     }
 
+    int64_t outRowId = 0;
     int ret = store_->Insert(outRowId, table, insertValues);
+    REQUEST_HILOGD("Request databases insert values, ret: %{public}d", ret);
     return ret == OHOS::NativeRdb::E_OK;
 }
 
 bool RequestDataBase::Update(const OHOS::NativeRdb::ValuesBucket values,
     const OHOS::NativeRdb::AbsRdbPredicates &predicates)
 {
-    int changedRows = 0;
     if (store_ == nullptr) {
         REQUEST_HILOGE("store_ is nullptr");
         return false;
     }
 
+    int changedRows = 0;
     int ret = store_->Update(changedRows, values, predicates);
+    REQUEST_HILOGD("Request databases update, changedRows: %{public}d, ret: %{public}d", changedRows, ret);
     return ret == OHOS::NativeRdb::E_OK;
 }
 
@@ -100,7 +70,7 @@ std::shared_ptr<OHOS::NativeRdb::ResultSet> RequestDataBase::Query(const OHOS::N
     const std::vector<std::string> &columns)
 {
     if (store_ == nullptr) {
-        REQUEST_HILOGE("store_ is  nullptr");
+        REQUEST_HILOGE("store_ is nullptr");
         return nullptr;
     }
     return store_->Query(predicates, columns);
@@ -115,50 +85,177 @@ bool RequestDataBase::Delete(const OHOS::NativeRdb::AbsRdbPredicates &predicates
 
     int deletedRows = 0;
     int ret = store_->Delete(deletedRows, predicates);
-    REQUEST_HILOGI("request database delete ret is %{public}d, rows: %{public}d", ret, deletedRows);
+    REQUEST_HILOGD("Request databases delete rows, rows: %{public}d, ret: %{public}d", ret, deletedRows);
     return ret == OHOS::NativeRdb::E_OK;
 }
 
 int RequestDBOpenCallback::OnCreate(OHOS::NativeRdb::RdbStore &store)
 {
-    int ret = store.ExecuteSql(CREATE_REQUEST_TABLE1);
-    if (ret != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("create table1 error, ret = %{public}d", ret);
-        return ret;
-    }
-    ret = store.ExecuteSql(CREATE_REQUEST_TABLE2);
-    if (ret != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("create table2 error, ret = %{public}d", ret);
-        return ret;
-    }
-    REQUEST_HILOGI("create table success");
     return OHOS::NativeRdb::E_OK;
+}
+
+void RequestDBInitVersionTable(OHOS::NativeRdb::RdbStore &store)
+{
+    REQUEST_HILOGD("Inits version_table");
+    // Clears `request_version` table first.
+    int ret = store.ExecuteSql("DELETE FROM request_version");
+    if (ret != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("Clears request_version table failed");
+        return;
+    }
+
+    int64_t outRowId = 0;
+    OHOS::NativeRdb::ValuesBucket insertValues;
+    insertValues.PutString("version", std::string(REQUEST_DATABASE_VERSION));
+    insertValues.PutString("task_table", std::string(REQUEST_TASK_TABLE_NAME));
+    ret = store.Insert(outRowId, std::string("request_version"), insertValues);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("Inits request_version table failed");
+        return;
+    }
+    REQUEST_HILOGD("Inits version_table success");
+    return;
+}
+
+int RequestDBDropTable(OHOS::NativeRdb::RdbStore &store, const char *name)
+{
+    return store.ExecuteSql(std::string("DROP TABLE IF EXISTS ") + name);
+}
+
+void RequestDBRemoveOldTables(OHOS::NativeRdb::RdbStore &store)
+{
+    REQUEST_HILOGD("Begins removing old tables");
+
+    // These two tables followed was defined in 4.0-release.
+    if (RequestDBDropTable(store, "request_task_info") != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("Removes request_task_info table failed");
+    }
+
+    if (RequestDBDropTable(store, "task_info_attachment") != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("Removes task_info_attachment table failed");
+    }
+
+    // These four tables followed was defined in 4.1-beta.
+    if (RequestDBDropTable(store, "request_task_config") != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("Removes request_task_config table failed");
+    }
+
+    if (RequestDBDropTable(store, "task_config_attachment") != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("Removes task_config_attachment table failed");
+    }
+
+    if (RequestDBDropTable(store, "priority_table") != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("Removes priority_table table failed");
+    }
+
+    if (RequestDBDropTable(store, "certs_table") != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("Removes certs_table table failed");
+    }
+
+    REQUEST_HILOGD("Removes old tables end");
+}
+
+void RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
+{
+    REQUEST_HILOGD("Begins upgrading database");
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_version");
+    auto resultSet = store.Query(rdbPredicates, { "version", "task_table" });
+    if (resultSet == nullptr) {
+        REQUEST_HILOGE("ResultSet is nullptr");
+        return;
+    }
+
+    int rowCount = 0;
+    if (resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("Gets rowCount failed");
+        return;
+    }
+
+    // `rowCount` is 0 indicates that the table has just been created.
+    // `rowCount` is greater than 1, indicates that the historical data is incorrect.
+    if (rowCount == 0 || rowCount > 1) {
+        REQUEST_HILOGD("RowCount is 0 or more than 1, upgrades version_table");
+        RequestDBRemoveOldTables(store);
+        RequestDBInitVersionTable(store);
+        return;
+    }
+
+    if (resultSet->GoToRow(0) != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("ResultSet goes to first row failed");
+        return;
+    }
+
+    std::string version = "";
+    if (resultSet->GetString(0, version) != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("ResultSet gets version failed");
+        return;
+    }
+
+    REQUEST_HILOGI("request database version: %{public}s", version.c_str());
+
+    // If `version` is invalid, upgrades all tables.
+    if (version != REQUEST_DATABASE_VERSION) {
+        REQUEST_HILOGD("RowCount is 1, upgrades from invalid situation");
+        RequestDBRemoveOldTables(store);
+        RequestDBInitVersionTable(store);
+        return;
+    }
+
+    REQUEST_HILOGI("Updates request database success");
+    return;
+}
+
+void RequestDBUpdateInvalidRecords(OHOS::NativeRdb::RdbStore &store)
+{
+    REQUEST_HILOGI("Updates all invalid task to failed");
+
+    OHOS::NativeRdb::ValuesBucket values;
+    values.PutInt("state", static_cast<uint8_t>(State::FAILED));
+
+    // Tasks in `WAITING` and `PAUSED` states need to be resumed,
+    // so they are not processed.
+    int changedRows = 0;
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
+    rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::INITIALIZED))
+            ->Or()
+            ->EqualTo("state", static_cast<uint8_t>(State::RUNNING))
+            ->Or()
+            ->EqualTo("state", static_cast<uint8_t>(State::RETRYING))
+            ->Or()
+            ->EqualTo("state", static_cast<uint8_t>(State::DEFAULT));
+
+    if (store.Update(changedRows, values, rdbPredicates) != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("Updates all invalid task to `FAILED` state failed");
+        return;
+    }
+    REQUEST_HILOGI("Updates all invalid task to `FAILED` state success");
+    return;
 }
 
 int RequestDBOpenCallback::OnOpen(OHOS::NativeRdb::RdbStore &store)
 {
-    int ret = store.ExecuteSql(CREATE_REQUEST_TABLE3);
+    int ret = OHOS::NativeRdb::E_OK;
+
+    // Creates request_version table first.
+    ret = store.ExecuteSql(CREATE_REQUEST_VERSION_TABLE);
     if (ret != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("create table3 error, ret = %{public}d", ret);
+        REQUEST_HILOGE("Creates request_version table failed, ret: %{public}d", ret);
         return ret;
     }
-    ret = store.ExecuteSql(CREATE_REQUEST_TABLE4);
+    REQUEST_HILOGI("Creates request_version table success");
+
+    // ..then creates request_task table.
+    ret = store.ExecuteSql(CREATE_REQUEST_TASK_TABLE);
     if (ret != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("create table4 error, ret = %{public}d", ret);
+        REQUEST_HILOGE("Creates request_task table failed, ret: %{public}d", ret);
         return ret;
     }
-    ret = store.ExecuteSql(CREATE_PRIORITY_TABLE);
-    if (ret != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("create priority table error, ret = %{public}d", ret);
-        return ret;
-    }
-    ret = store.ExecuteSql(CREATE_CERTS_TABLE);
-    if (ret != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("create certs table error, ret = %{public}d", ret);
-        return ret;
-    }
-    REQUEST_HILOGI("create config table success");
-    return OHOS::NativeRdb::E_OK;
+    REQUEST_HILOGI("Creates request_task table success");
+
+    RequestDBUpgrade(store);
+    RequestDBUpdateInvalidRecords(store);
+
+    return ret;
 }
 
 int RequestDBOpenCallback::OnUpgrade(OHOS::NativeRdb::RdbStore &store, int oldVersion, int newVersion)
@@ -172,9 +269,196 @@ int RequestDBOpenCallback::OnDowngrade(OHOS::NativeRdb::RdbStore &store, int old
 }
 } // namespace OHOS::Request
 
+std::vector<uint8_t> CFormItemToBlob(const CFormItem* cpointer, uint32_t length)
+{
+    std::vector<uint8_t> blob;
+    for (uint32_t i = 0; i < length; ++i) {
+        const CFormItem &obj = cpointer[i];
+        const uint8_t *objBytes = reinterpret_cast<const uint8_t*>(&obj);
+        blob.insert(blob.end(), objBytes, objBytes + sizeof(CFormItem));
+        blob.insert(blob.end(), obj.name.cStr, obj.name.cStr + obj.name.len);
+        blob.insert(blob.end(), obj.value.cStr, obj.value.cStr + obj.value.len);
+    }
+    return blob;
+}
+
+std::vector<CFormItem> BlobToCFormItem(const std::vector<uint8_t>& blob)
+{
+    std::vector<CFormItem> vec;
+    size_t position = 0;
+    while (position < blob.size()) {
+        CFormItem obj;
+        memcpy_s(&obj, sizeof(CFormItem), blob.data() + position, sizeof(CFormItem));
+        position += sizeof(CFormItem);
+
+        obj.name.cStr = new char[obj.name.len];
+        memcpy_s(obj.name.cStr, obj.name.len, blob.data() + position, obj.name.len);
+        position += obj.name.len;
+
+        obj.value.cStr = new char[obj.value.len];
+        memcpy_s(obj.value.cStr, obj.value.len, blob.data() + position, obj.value.len);
+        position += obj.value.len;
+
+        vec.push_back(obj);
+    }
+    return vec;
+}
+
+std::vector<uint8_t> CFileSpecToBlob(const CFileSpec* cpointer, uint32_t length)
+{
+    std::vector<uint8_t> blob;
+    for (uint32_t i = 0; i < length; ++i) {
+        const CFileSpec &obj = cpointer[i];
+        const uint8_t *objBytes = reinterpret_cast<const uint8_t*>(&obj);
+        blob.insert(blob.end(), objBytes, objBytes + sizeof(CFileSpec));
+        blob.insert(blob.end(), obj.name.cStr, obj.name.cStr + obj.name.len);
+        blob.insert(blob.end(), obj.path.cStr, obj.path.cStr + obj.path.len);
+        blob.insert(blob.end(), obj.fileName.cStr, obj.fileName.cStr + obj.fileName.len);
+        blob.insert(blob.end(), obj.mimeType.cStr, obj.mimeType.cStr + obj.mimeType.len);
+    }
+    return blob;
+}
+
+std::vector<CFileSpec> BlobToCFileSpec(const std::vector<uint8_t>& blob)
+{
+    std::vector<CFileSpec> vec;
+    size_t position = 0;
+    while (position < blob.size()) {
+        CFileSpec obj;
+        memcpy_s(&obj, sizeof(CFileSpec), blob.data() + position, sizeof(CFileSpec));
+        position += sizeof(CFileSpec);
+
+        obj.name.cStr = new char[obj.name.len];
+        memcpy_s(obj.name.cStr, obj.name.len, blob.data() + position, obj.name.len);
+        position += obj.name.len;
+
+        obj.path.cStr = new char[obj.path.len];
+        memcpy_s(obj.path.cStr, obj.path.len, blob.data() + position, obj.path.len);
+        position += obj.path.len;
+
+        obj.fileName.cStr = new char[obj.fileName.len];
+        memcpy_s(obj.fileName.cStr, obj.fileName.len, blob.data() + position, obj.fileName.len);
+        position += obj.fileName.len;
+
+        obj.mimeType.cStr = new char[obj.mimeType.len];
+        memcpy_s(obj.mimeType.cStr, obj.mimeType.len, blob.data() + position, obj.mimeType.len);
+        position += obj.mimeType.len;
+
+        vec.push_back(obj);
+    }
+    return vec;
+}
+
+std::vector<uint8_t> CEachFileStatusToBlob(const CEachFileStatus* cpointer, uint32_t length)
+{
+    std::vector<uint8_t> blob;
+    for (uint32_t i = 0; i < length; ++i) {
+        const CEachFileStatus &obj = cpointer[i];
+        const uint8_t *objBytes = reinterpret_cast<const uint8_t*>(&obj);
+        blob.insert(blob.end(), objBytes, objBytes + sizeof(CEachFileStatus));
+        blob.insert(blob.end(), obj.path.cStr, obj.path.cStr + obj.path.len);
+        blob.insert(blob.end(), &obj.reason, &obj.reason + sizeof(uint8_t));
+        blob.insert(blob.end(), obj.message.cStr, obj.message.cStr + obj.message.len);
+    }
+    return blob;
+}
+
+std::vector<CEachFileStatus> BlobToCEachFileStatus(const std::vector<uint8_t>& blob)
+{
+    std::vector<CEachFileStatus> vec;
+    size_t position = 0;
+    while (position < blob.size()) {
+        CEachFileStatus obj;
+        memcpy_s(&obj, sizeof(CEachFileStatus), blob.data() + position, sizeof(CEachFileStatus));
+        position += sizeof(CEachFileStatus);
+
+        obj.path.cStr = new char[obj.path.len];
+        memcpy_s(obj.path.cStr, obj.path.len, blob.data() + position, obj.path.len);
+        position += obj.path.len;
+
+        memcpy_s(&obj.reason, sizeof(uint8_t), blob.data() + position, sizeof(uint8_t));
+        position += sizeof(uint8_t);
+
+        obj.message.cStr = new char[obj.message.len];
+        memcpy_s(obj.message.cStr, obj.message.len, blob.data() + position, obj.message.len);
+        position += obj.message.len;
+
+        vec.push_back(obj);
+    }
+    return vec;
+}
+
+std::vector<uint8_t> CStringToBlob(const CStringWrapper* cpointer, uint32_t length)
+{
+    std::vector<uint8_t> blob;
+    for (uint32_t i = 0; i < length; ++i) {
+        const CStringWrapper &obj = cpointer[i];
+        blob.push_back(static_cast<uint8_t>(obj.len));
+        blob.insert(blob.end(), obj.cStr, obj.cStr + obj.len);
+    }
+    return blob;
+}
+
+std::vector<std::string> BlobToStringVec(const std::vector<uint8_t>& blob)
+{
+    std::vector<std::string> vec;
+    uint32_t position = 0;
+    while (position < blob.size()) {
+        uint32_t len = static_cast<uint32_t>(blob[position++]);
+        std::string str(blob.begin() + position, blob.begin() + position + len);
+        position += len;
+
+        vec.push_back(std::move(str));
+    }
+
+    return vec;
+}
+
+// convert vector<CFormItem> to vector<FormItem>
+std::vector<FormItem> VecToFormItem(const std::vector<CFormItem> &cvec)
+{
+    std::vector<FormItem> vec;
+    for (const CFormItem &obj : cvec) {
+        FormItem formItem;
+        formItem.name = std::string(obj.name.cStr, obj.name.len);
+        formItem.value = std::string(obj.value.cStr, obj.value.len);
+        vec.push_back(std::move(formItem));
+    }
+    return vec;
+}
+
+// convert vector<CFileSpec> to vector<FileSpec>
+std::vector<FileSpec> VecToFileSpec(const std::vector<CFileSpec> &cvec)
+{
+    std::vector<FileSpec> vec;
+    for (const CFileSpec &obj : cvec) {
+        FileSpec fileSpec;
+        fileSpec.name = std::string(obj.name.cStr, obj.name.len);
+        fileSpec.path = std::string(obj.path.cStr, obj.path.len);
+        fileSpec.fileName = std::string(obj.fileName.cStr, obj.fileName.len);
+        fileSpec.mimeType = std::string(obj.mimeType.cStr, obj.mimeType.len);
+        vec.push_back(std::move(fileSpec));
+    }
+    return vec;
+}
+
+// convert vector<CEachFileStatus> to vector<EachFileStatus>
+std::vector<EachFileStatus> VecToEachFileStatus(const std::vector<CEachFileStatus> &cvec)
+{
+    std::vector<EachFileStatus> vec;
+    for (const CEachFileStatus &obj : cvec) {
+        EachFileStatus eachFileStatus;
+        eachFileStatus.path = std::string(obj.path.cStr, obj.path.len);
+        eachFileStatus.reason = obj.reason;
+        eachFileStatus.message = std::string(obj.message.cStr, obj.message.len);
+        vec.push_back(std::move(eachFileStatus));
+    }
+    return vec;
+}
+
 bool HasRequestTaskRecord(uint32_t taskId)
 {
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task_info");
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "task_id" });
     if (resultSet == nullptr) {
@@ -190,159 +474,130 @@ bool HasRequestTaskRecord(uint32_t taskId)
     return true;
 }
 
-bool WriteRequestTaskInfo(CTaskInfo *taskInfo)
+template<typename T>
+bool WriteUpdateData(OHOS::NativeRdb::ValuesBucket &insertValues, T *info)
 {
-    REQUEST_HILOGD("write to request_task_info");
-    OHOS::NativeRdb::ValuesBucket insertValues;
-    insertValues.PutLong("task_id", taskInfo->commonData.taskId);
-    insertValues.PutLong("uid", taskInfo->commonData.uid);
-    insertValues.PutInt("action", taskInfo->commonData.action);
-    insertValues.PutInt("mode", taskInfo->commonData.mode);
-    insertValues.PutLong("ctime", taskInfo->commonData.ctime);
+    std::vector<uint8_t> eachFileStatusBlob = CEachFileStatusToBlob(info->eachFileStatusPtr, info->eachFileStatusLen);
+    // write to insertValues
+    insertValues.PutString("mime_type", std::string(info->mimeType.cStr, info->mimeType.len));
+    insertValues.PutInt("state", info->progress.commonData.state);
+    insertValues.PutLong("idx", info->progress.commonData.index);
+    insertValues.PutLong("total_processed", info->progress.commonData.totalProcessed);
+    insertValues.PutString("sizes", std::string(info->progress.sizes.cStr, info->progress.sizes.len));
+    insertValues.PutString("processed", std::string(info->progress.processed.cStr, info->progress.processed.len));
+    insertValues.PutString("extras", std::string(info->progress.extras.cStr, info->progress.extras.len));
+    insertValues.PutBlob("each_file_status", eachFileStatusBlob);
+    return true;
+}
+
+bool WriteMutableData(OHOS::NativeRdb::ValuesBucket &insertValues, CTaskInfo *taskInfo, CTaskConfig *taskConfig)
+{
     insertValues.PutLong("mtime", taskInfo->commonData.mtime);
     insertValues.PutInt("reason", taskInfo->commonData.reason);
-    insertValues.PutInt("gauge", taskInfo->commonData.gauge);
-    insertValues.PutInt("retry", taskInfo->commonData.retry);
     insertValues.PutLong("tries", taskInfo->commonData.tries);
-    insertValues.PutInt("version", taskInfo->commonData.version);
-    insertValues.PutString("bundle", std::string(taskInfo->bundle.cStr, taskInfo->bundle.len));
-    insertValues.PutString("url", std::string(taskInfo->url.cStr, taskInfo->url.len));
-    insertValues.PutString("data", std::string(taskInfo->data.cStr, taskInfo->data.len));
-    insertValues.PutString("token", std::string(taskInfo->token.cStr, taskInfo->token.len));
-    insertValues.PutString("titile", std::string(taskInfo->title.cStr, taskInfo->title.len));
-    insertValues.PutString("description", std::string(taskInfo->description.cStr, taskInfo->description.len));
-    insertValues.PutString("mime_type", std::string(taskInfo->mimeType.cStr, taskInfo->mimeType.len));
-    insertValues.PutInt("state", taskInfo->progress.commonData.state);
-    insertValues.PutLong("idx", taskInfo->progress.commonData.index);
-    insertValues.PutLong("total_processed", taskInfo->progress.commonData.totalProcessed);
-    insertValues.PutString("sizes", std::string(taskInfo->progress.sizes.cStr, taskInfo->progress.sizes.len));
-    insertValues.PutString("processed",
-        std::string(taskInfo->progress.processed.cStr, taskInfo->progress.processed.len));
-    insertValues.PutString("extras", std::string(taskInfo->progress.extras.cStr, taskInfo->progress.extras.len));
-    insertValues.PutLong("form_items_len", taskInfo->formItemsLen);
-    insertValues.PutLong("file_specs_len", taskInfo->fileSpecsLen);
-    if (!OHOS::Request::RequestDataBase::GetInstance().Insert(std::string("request_task_info"), insertValues)) {
-        REQUEST_HILOGE("insert to request_task_info failed");
+    if (!WriteUpdateData(insertValues, taskInfo)) {
         return false;
     }
-
-    // Inserts temp_table.
-    OHOS::NativeRdb::ValuesBucket insertValues2;
-    insertValues2.PutLong("task_id", taskInfo->commonData.taskId);
-    insertValues2.PutLong("uid", taskInfo->commonData.uid);
-    insertValues2.PutLong("priority", taskInfo->commonData.priority);
-    if (!OHOS::Request::RequestDataBase::GetInstance().Insert(std::string("priority_table"), insertValues2)) {
-        REQUEST_HILOGE("insert to priority_table failed");
-        return false;
-    }
-
-    REQUEST_HILOGD("insert to request_task_info success");
+    // write vectors
+    insertValues.PutBlob("form_items", CFormItemToBlob(taskConfig->formItemsPtr, taskConfig->formItemsLen));
+    insertValues.PutBlob("file_specs", CFileSpecToBlob(taskConfig->fileSpecsPtr, taskConfig->fileSpecsLen));
+    insertValues.PutBlob("body_file_names", CStringToBlob(taskConfig->bodyFileNamesPtr, taskConfig->bodyFileNamesLen));
+    insertValues.PutBlob("certs_paths", CStringToBlob(taskConfig->certsPathPtr, taskConfig->certsPathLen));
     return true;
 }
 
-bool WriteTaskInfoAttachment(CTaskInfo *taskInfo)
+bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
 {
-    REQUEST_HILOGD("write to task_info_attachment");
-    uint64_t len = std::max(taskInfo->formItemsLen, taskInfo->fileSpecsLen);
-    for (uint64_t i = 0; i < len; i++) {
-        OHOS::NativeRdb::ValuesBucket insertValues;
-        insertValues.PutInt("task_id", taskInfo->commonData.taskId);
-        insertValues.PutInt("uid", taskInfo->commonData.uid);
-        if (i < taskInfo->formItemsLen) {
-            insertValues.PutString("form_item_name",
-                std::string(taskInfo->formItemsPtr[i].name.cStr, taskInfo->formItemsPtr[i].name.len));
-            insertValues.PutString("value",
-                std::string(taskInfo->formItemsPtr[i].value.cStr, taskInfo->formItemsPtr[i].value.len));
-        }
-        if (i < taskInfo->fileSpecsLen) {
-            insertValues.PutString("file_spec_name",
-                std::string(taskInfo->fileSpecsPtr[i].name.cStr, taskInfo->fileSpecsPtr[i].name.len));
-            insertValues.PutString("path",
-                std::string(taskInfo->fileSpecsPtr[i].path.cStr, taskInfo->fileSpecsPtr[i].path.len));
-            insertValues.PutString("file_name",
-                std::string(taskInfo->fileSpecsPtr[i].fileName.cStr, taskInfo->fileSpecsPtr[i].fileName.len));
-            insertValues.PutString("mime_type",
-                std::string(taskInfo->fileSpecsPtr[i].mimeType.cStr, taskInfo->fileSpecsPtr[i].mimeType.len));
-            insertValues.PutInt("reason", taskInfo->eachFileStatusPtr[i].reason);
-            insertValues.PutString("message", std::string(taskInfo->eachFileStatusPtr[i].message.cStr,
-                taskInfo->eachFileStatusPtr[i].message.len));
-        }
-        if (!OHOS::Request::RequestDataBase::GetInstance().Insert(std::string("task_info_attachment"), insertValues)) {
-            REQUEST_HILOGE("insert to task_info_attachment failed");
-            return false;
-        }
+    REQUEST_HILOGD("write to request_task");
+    OHOS::NativeRdb::ValuesBucket insertValues;
+    insertValues.PutLong("task_id", taskConfig->commonData.taskId);
+    insertValues.PutLong("uid", taskConfig->commonData.uid);
+    insertValues.PutLong("token_id", taskConfig->commonData.tokenId);
+    insertValues.PutInt("action", taskConfig->commonData.action);
+    insertValues.PutInt("mode", taskConfig->commonData.mode);
+    insertValues.PutInt("cover", taskConfig->commonData.cover);
+    insertValues.PutInt("network", taskConfig->commonData.network);
+    insertValues.PutInt("metered", taskConfig->commonData.metered);
+    insertValues.PutInt("roaming", taskConfig->commonData.roaming);
+    insertValues.PutLong("ctime", taskInfo->commonData.ctime);
+    insertValues.PutInt("gauge", taskConfig->commonData.gauge);
+    insertValues.PutInt("retry", taskConfig->commonData.retry);
+    insertValues.PutInt("redirect", taskConfig->commonData.redirect);
+    insertValues.PutInt("version", taskConfig->version);
+    insertValues.PutLong("config_idx", taskConfig->commonData.index);
+    insertValues.PutLong("begins", taskConfig->commonData.begins);
+    insertValues.PutLong("ends", taskConfig->commonData.ends);
+    insertValues.PutInt("precise", taskConfig->commonData.precise);
+    insertValues.PutLong("priority", taskConfig->commonData.priority);
+    insertValues.PutInt("background", taskConfig->commonData.background);
+    insertValues.PutString("bundle", std::string(taskConfig->bundle.cStr, taskConfig->bundle.len));
+    insertValues.PutString("url", std::string(taskConfig->url.cStr, taskConfig->url.len));
+    insertValues.PutString("data", std::string(taskConfig->data.cStr, taskConfig->data.len));
+    insertValues.PutString("token", std::string(taskConfig->token.cStr, taskConfig->token.len));
+    insertValues.PutString("title", std::string(taskConfig->title.cStr, taskConfig->title.len));
+    insertValues.PutString("description", std::string(taskConfig->description.cStr, taskConfig->description.len));
+    insertValues.PutString("method", std::string(taskConfig->method.cStr, taskConfig->method.len));
+    insertValues.PutString("headers", std::string(taskConfig->headers.cStr, taskConfig->headers.len));
+    insertValues.PutString("config_extras", std::string(taskConfig->extras.cStr, taskConfig->extras.len));
+    if (!WriteMutableData(insertValues, taskInfo, taskConfig)) {
+        REQUEST_HILOGE("write blob data failed");
+        return false;
     }
-    REQUEST_HILOGD("insert to task_info_attachment success");
+    if (!OHOS::Request::RequestDataBase::GetInstance().Insert(std::string("request_task"), insertValues)) {
+        REQUEST_HILOGE("insert to request_task failed");
+        return false;
+    }
+    REQUEST_HILOGD("insert to request_task success");
     return true;
 }
 
-bool RecordRequestTaskInfo(CTaskInfo *taskInfo)
+bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo)
 {
-    return WriteRequestTaskInfo(taskInfo) && WriteTaskInfoAttachment(taskInfo);
-}
-
-bool UpdateRequestTaskInfo(uint32_t taskId, CUpdateInfo *updateInfo)
-{
-    REQUEST_HILOGD("update task info");
+    REQUEST_HILOGD("update request_task");
     OHOS::NativeRdb::ValuesBucket values;
     values.PutLong("mtime", updateInfo->mtime);
     values.PutInt("reason", updateInfo->reason);
     values.PutLong("tries", updateInfo->tries);
-    values.PutInt("state", updateInfo->progress.commonData.state);
-    values.PutLong("idx", updateInfo->progress.commonData.index);
-    values.PutLong("total_processed", updateInfo->progress.commonData.totalProcessed);
-    values.PutString("sizes", std::string(updateInfo->progress.sizes.cStr, updateInfo->progress.sizes.len));
-    values.PutString("mime_type", std::string(updateInfo->mimeType.cStr, updateInfo->mimeType.len));
-    values.PutString("processed",
-        std::string(updateInfo->progress.processed.cStr, updateInfo->progress.processed.len));
-    values.PutString("extras", std::string(updateInfo->progress.extras.cStr, updateInfo->progress.extras.len));
+    if (!WriteUpdateData(values, updateInfo)) {
+        REQUEST_HILOGE("update blob data failed");
+        return false;
+    }
 
-    OHOS::NativeRdb::RdbPredicates rdbPredicates1("request_task_info");
-    rdbPredicates1.EqualTo("task_id", std::to_string(taskId));
-    if (!OHOS::Request::RequestDataBase::GetInstance().Update(values, rdbPredicates1)) {
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
+    rdbPredicates.EqualTo("task_id", std::to_string(taskId));
+    if (!OHOS::Request::RequestDataBase::GetInstance().Update(values, rdbPredicates)) {
         REQUEST_HILOGE("update table1 failed");
         return false;
     }
-    for (uint32_t i = 0; i < updateInfo->eachFileStatusLen; i++) {
-        OHOS::NativeRdb::ValuesBucket values1;
-        values1.PutInt("reason", updateInfo->eachFileStatusPtr[i].reason);
-        values1.PutString("message", std::string(updateInfo->eachFileStatusPtr[i].message.cStr,
-            updateInfo->eachFileStatusPtr[i].message.len));
-        OHOS::NativeRdb::RdbPredicates rdbPredicates2("task_info_attachment");
-        rdbPredicates2.EqualTo("task_id", std::to_string(taskId))
+    return true;
+}
+
+bool RemoveRequestTask(uint32_t taskId, uint64_t uid)
+{
+    REQUEST_HILOGI("Removes request_task");
+
+    OHOS::NativeRdb::ValuesBucket values;
+    values.PutInt("state", static_cast<uint8_t>(State::REMOVED));
+
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
+    rdbPredicates.EqualTo("task_id", std::to_string(taskId))
             ->And()
-            ->EqualTo("path", std::string(updateInfo->eachFileStatusPtr[i].path.cStr,
-                updateInfo->eachFileStatusPtr[i].path.len));
-        if (!OHOS::Request::RequestDataBase::GetInstance().Update(values1, rdbPredicates2)) {
-            REQUEST_HILOGE("update table2 failed");
-            return false;
-        }
+            ->EqualTo("uid", std::to_string(uid));
+    if (!OHOS::Request::RequestDataBase::GetInstance().Update(values, rdbPredicates)) {
+        REQUEST_HILOGE("Removes request_task failed");
+        return false;
     }
     return true;
 }
 
 CTaskInfo *Show(uint32_t taskId, uint64_t uid)
 {
-    OHOS::NativeRdb::RdbPredicates rdbPredicates1("request_task_info");
+    OHOS::NativeRdb::RdbPredicates rdbPredicates1("request_task");
     rdbPredicates1.EqualTo("task_id", std::to_string(taskId))
             ->And()
             ->EqualTo("uid", std::to_string(uid));
-    int64_t formItemsLen = 0;
-    int64_t fileSpecsLen = 0;
     TaskInfo taskInfo;
-    if (TouchRequestTaskInfo(rdbPredicates1, taskInfo, formItemsLen, fileSpecsLen) == OHOS::Request::QUERY_ERR) {
-        return nullptr;
-    }
-
-    OHOS::NativeRdb::RdbPredicates rdbPredicates2("task_info_attachment");
-    rdbPredicates2.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
-    if (TouchTaskInfoAttachment(rdbPredicates2, taskInfo, formItemsLen, fileSpecsLen) == OHOS::Request::QUERY_ERR) {
-        return nullptr;
-    }
-
-    OHOS::NativeRdb::RdbPredicates rdbPredicates3("priority_table");
-    rdbPredicates2.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
-    if (GetPriority(rdbPredicates3, taskInfo.commonData.priority) == OHOS::Request::QUERY_ERR) {
+    if (TouchRequestTaskInfo(rdbPredicates1, taskInfo) == OHOS::Request::QUERY_ERR) {
         return nullptr;
     }
 
@@ -351,28 +606,14 @@ CTaskInfo *Show(uint32_t taskId, uint64_t uid)
 
 CTaskInfo *Touch(uint32_t taskId, uint64_t uid, CStringWrapper token)
 {
-    OHOS::NativeRdb::RdbPredicates rdbPredicates1("request_task_info");
+    OHOS::NativeRdb::RdbPredicates rdbPredicates1("request_task");
     rdbPredicates1.EqualTo("task_id", std::to_string(taskId))
         ->And()
         ->EqualTo("uid", std::to_string(uid))
         ->And()
         ->EqualTo("token", std::string(token.cStr, token.len));
-    int64_t formItemsLen = 0;
-    int64_t fileSpecsLen = 0;
     TaskInfo taskInfo;
-    if (TouchRequestTaskInfo(rdbPredicates1, taskInfo, formItemsLen, fileSpecsLen) == OHOS::Request::QUERY_ERR) {
-        return nullptr;
-    }
-
-    OHOS::NativeRdb::RdbPredicates rdbPredicates2("task_info_attachment");
-    rdbPredicates2.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
-    if (TouchTaskInfoAttachment(rdbPredicates2, taskInfo, formItemsLen, fileSpecsLen) == OHOS::Request::QUERY_ERR) {
-        return nullptr;
-    }
-
-    OHOS::NativeRdb::RdbPredicates rdbPredicates3("priority_table");
-    rdbPredicates3.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
-    if (GetPriority(rdbPredicates3, taskInfo.commonData.priority) == OHOS::Request::QUERY_ERR) {
+    if (TouchRequestTaskInfo(rdbPredicates1, taskInfo) == OHOS::Request::QUERY_ERR) {
         return nullptr;
     }
 
@@ -381,26 +622,13 @@ CTaskInfo *Touch(uint32_t taskId, uint64_t uid, CStringWrapper token)
 
 CTaskInfo *Query(uint32_t taskId, Action queryAction)
 {
-    OHOS::NativeRdb::RdbPredicates rdbPredicates1("request_task_info");
+    OHOS::NativeRdb::RdbPredicates rdbPredicates1("request_task");
     rdbPredicates1.EqualTo("task_id", std::to_string(taskId));
     if (queryAction != Action::ANY) {
         rdbPredicates1.EqualTo("action", std::to_string(static_cast<uint8_t>(queryAction)));
     }
-    int64_t formItemsLen = 0;
-    int64_t fileSpecsLen = 0;
     TaskInfo taskInfo;
-    if (QueryRequestTaskInfo(rdbPredicates1, taskInfo, formItemsLen, fileSpecsLen) == OHOS::Request::QUERY_ERR) {
-        return nullptr;
-    }
-    OHOS::NativeRdb::RdbPredicates rdbPredicates2("task_info_attachment");
-    rdbPredicates2.EqualTo("task_id", std::to_string(taskId));
-    if (QueryTaskInfoAttachment(rdbPredicates2, taskInfo, fileSpecsLen) == OHOS::Request::QUERY_ERR) {
-        return nullptr;
-    }
-
-    OHOS::NativeRdb::RdbPredicates rdbPredicates3("priority_table");
-    rdbPredicates3.EqualTo("task_id", std::to_string(taskId));
-    if (GetPriority(rdbPredicates3, taskInfo.commonData.priority) == OHOS::Request::QUERY_ERR) {
+    if (QueryRequestTaskInfo(rdbPredicates1, taskInfo) == OHOS::Request::QUERY_ERR) {
         return nullptr;
     }
 
@@ -412,7 +640,7 @@ CVectorWrapper Search(CFilter filter)
     CVectorWrapper cVectorWrapper;
     cVectorWrapper.ptr = nullptr;
     cVectorWrapper.len = 0;
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task_info");
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     std::string bundle = std::string(filter.bundle.cStr, filter.bundle.len);
     rdbPredicates.Between("ctime", std::to_string(filter.commonData.after), std::to_string(filter.commonData.before));
     if (filter.commonData.state != static_cast<uint8_t>(State::ANY)) {
@@ -454,197 +682,126 @@ void DeleteCVectorWrapper(uint32_t *ptr)
     delete[] ptr;
 }
 
-void GetCommonTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskInfo &taskInfo)
+inline int64_t GetLong(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, int line)
 {
-    int64_t taskId = 0;
-    int64_t uid = 0;
-    int action = 0;
-    int mode = 0;
-    int64_t ctime = 0;
-    int64_t mtime = 0;
-    int reason = 0;
-    int gauge = 0;
-    int retry = 0;
-    int64_t tries = 0;
-    int version = 0;
-
-    resultSet->GetLong(0, taskId); // Line 0 here is 'task_id'
-    taskInfo.commonData.taskId = static_cast<uint32_t>(taskId);
-    resultSet->GetLong(1, uid); // Line 1 here is 'uid'
-    taskInfo.commonData.uid = static_cast<uint64_t>(uid);
-    resultSet->GetInt(2, action); // Line 2 here is 'action'
-    taskInfo.commonData.action = static_cast<uint8_t>(action);
-    resultSet->GetInt(3, mode); // Line 3 here is 'mode'
-    taskInfo.commonData.mode = static_cast<uint8_t>(mode);
-    resultSet->GetLong(4, ctime); // Line 4 here is 'ctime'
-    taskInfo.commonData.ctime = static_cast<uint64_t>(ctime);
-    resultSet->GetLong(5, mtime); // Line 5 here is 'mtime'
-    taskInfo.commonData.mtime = static_cast<uint64_t>(mtime);
-    resultSet->GetInt(6, reason); // Line 6 here is 'reason'
-    taskInfo.commonData.reason = static_cast<uint8_t>(reason);
-    resultSet->GetInt(7, gauge); // Line 7 here is 'gauge'
-    taskInfo.commonData.gauge = static_cast<bool>(gauge);
-    resultSet->GetInt(8, retry); // Line 8 here is 'retry'
-    taskInfo.commonData.retry = static_cast<bool>(retry);
-    resultSet->GetLong(9, tries); // Line 9 here is 'tries'
-    taskInfo.commonData.tries = static_cast<uint32_t>(tries);
-    resultSet->GetInt(10, version); // Line 10 here is 'version'
-    taskInfo.commonData.version = static_cast<uint8_t>(version);
+    int64_t value = 0;
+    resultSet->GetLong(line, value);
+    return value;
 }
 
-int TouchRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo,
-    int64_t &formItemsLen, int64_t &fileSpecsLen)
+inline int GetInt(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, int line)
+{
+    int value = 0;
+    resultSet->GetInt(line, value);
+    return value;
+}
+
+void GetCommonTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskInfo &info)
+{
+    info.commonData.taskId = static_cast<uint32_t>(GetLong(set, 0)); // Line 0 is 'task_id'
+    info.commonData.uid = static_cast<uint64_t>(GetLong(set, 1)); // Line 1 is 'uid'
+    info.commonData.ctime = static_cast<uint64_t>(GetLong(set, 4)); // Line 4 is 'ctime'
+    info.commonData.mtime = static_cast<uint64_t>(GetLong(set, 5)); // Line 5 is 'mtime'
+    info.commonData.tries = static_cast<uint64_t>(GetLong(set, 9)); // Line 9 is 'tries'
+    info.commonData.version = static_cast<uint8_t>(GetLong(set, 10)); // Line 10 is 'version'
+
+    info.commonData.action = static_cast<uint8_t>(GetInt(set, 2)); // Line 2 is 'action'
+    info.commonData.mode = static_cast<uint8_t>(GetInt(set, 3)); // Line 3 is 'mode'
+    info.commonData.reason = static_cast<uint8_t>(GetInt(set, 6)); // Line 6 is 'reason'
+    info.commonData.gauge = static_cast<bool>(GetInt(set, 7)); // Line 7 is 'gauge'
+    info.commonData.retry = static_cast<bool>(GetInt(set, 8)); // Line 8 is 'retry'
+}
+
+void GetRequestTaskInfoByTouch(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskInfo &info)
+{
+    info.commonData.priority = static_cast<uint32_t>(GetLong(set, 11)); // Line 11 is 'priority'
+    info.progress.commonData.state = static_cast<uint8_t>(GetInt(set, 17)); // Line 17 here is 'state'
+    info.progress.commonData.index = static_cast<uint8_t>(GetLong(set, 18)); // Line 18 here is 'idx'
+    uintptr_t totalProcessed = static_cast<uintptr_t>(GetLong(set, 19)); // Line 19 is 'totalProcessed'
+    info.progress.commonData.totalProcessed = totalProcessed;
+
+    set->GetString(12, info.url); // Line 12 is 'url'
+    set->GetString(13, info.data); // Line 13 is 'data'
+    set->GetString(14, info.title); // Line 14 is 'title'
+    set->GetString(15, info.description); // Line 15 is 'description'
+    set->GetString(16, info.mimeType); // Line 16 is 'mime_type'
+    set->GetString(20, info.progress.sizes); // Line 20 here is 'sizes'
+    set->GetString(21, info.progress.processed); // Line 21 here is 'processed'
+    set->GetString(22, info.progress.extras); // Line 22 here is 'extras'
+
+    std::vector<uint8_t> formItemsBlob;
+    std::vector<uint8_t> formSpecsBlob;
+    std::vector<uint8_t> eachFileStatusBlob;
+
+    set->GetBlob(23, formItemsBlob); // Line 23 is 'form_items'
+    info.formItems = VecToFormItem(BlobToCFormItem(formItemsBlob));
+    set->GetBlob(24, formSpecsBlob); // Line 24 is 'file_specs'
+    info.fileSpecs = VecToFileSpec(BlobToCFileSpec(formSpecsBlob));
+    set->GetBlob(25, eachFileStatusBlob); // Line 25 is 'each_file_status'
+    info.eachFileStatus = VecToEachFileStatus(BlobToCEachFileStatus(eachFileStatusBlob));
+}
+
+void GetRequestTaskInfoByQuery(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskInfo &info)
+{
+    info.progress.commonData.state = static_cast<uint8_t>(GetInt(set, 15)); // Line 15 is 'state'
+    info.progress.commonData.index = static_cast<uint8_t>(GetLong(set, 16)); // Line 16 is 'idx'
+    uintptr_t totalProcessed = static_cast<uintptr_t>(GetLong(set, 17)); // Line 17 is 'totalProcessed'
+    info.progress.commonData.totalProcessed = totalProcessed;
+
+    set->GetString(11, info.bundle); // Line 11 is 'bundle'
+    set->GetString(12, info.title); // Line 12 is 'title'
+    set->GetString(13, info.description); // Line 13 is 'description'
+    set->GetString(14, info.mimeType); // Line 14 is 'mime_type'
+
+    set->GetString(18, info.progress.sizes); // Line 18 is 'sizes'
+    set->GetString(19, info.progress.processed); // Line 19 is 'processed'
+    set->GetString(20, info.progress.extras); // Line 20 is 'extras'
+
+    std::vector<uint8_t> formItemsBlob;
+    std::vector<uint8_t> formSpecsBlob;
+    std::vector<uint8_t> eachFileStatusBlob;
+
+    set->GetBlob(21, formItemsBlob); // Line 21 is 'form_items'
+    info.formItems = VecToFormItem(BlobToCFormItem(formItemsBlob));
+    set->GetBlob(22, formSpecsBlob); // Line 22 is 'file_specs'
+    info.fileSpecs = VecToFileSpec(BlobToCFileSpec(formSpecsBlob));
+    set->GetBlob(23, eachFileStatusBlob); // Line 23 is 'each_file_status'
+    info.eachFileStatus = VecToEachFileStatus(BlobToCEachFileStatus(eachFileStatusBlob));
+}
+
+int TouchRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo)
 {
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates,
-        { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry", "tries", "version", "url",
-            "data", "titile", "description", "mime_type", "state", "idx", "total_processed", "sizes", "processed",
-            "extras", "form_items_len", "file_specs_len" });
+        { "task_id", "uid", "action", "mode", "ctime",
+          "mtime", "reason", "gauge", "retry", "tries",
+          "version", "priority", "url", "data", "title",
+          "description", "mime_type", "state", "idx", "total_processed",
+          "sizes", "processed", "extras", "form_items", "file_specs",
+          "each_file_status" });
     if (resultSet == nullptr || resultSet->GoToFirstRow() != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("result set is nullptr or go to first row failed");
         return OHOS::Request::QUERY_ERR;
     }
-    int state = 0;
-    int64_t idx = 0;
-    int64_t totalProcessed = 0;
     GetCommonTaskInfo(resultSet, taskInfo);
-    resultSet->GetString(11, taskInfo.url); // Line 11 here is 'url'
-    resultSet->GetString(12, taskInfo.data); // Line 12 here is 'data'
-    resultSet->GetString(13, taskInfo.title); // Line 13 here is 'title'
-    resultSet->GetString(14, taskInfo.description); // Line 14 here is 'description'
-    resultSet->GetString(15, taskInfo.mimeType); // Line 15 here is 'mimeType'
-    resultSet->GetInt(16, state); // Line 16 here is 'state'
-    taskInfo.progress.commonData.state = static_cast<uint8_t>(state);
-    resultSet->GetLong(17, idx); // Line 17 here is 'idx'
-    taskInfo.progress.commonData.index = static_cast<uintptr_t>(idx);
-    resultSet->GetLong(18, totalProcessed); // Line 18 here is 'totalProcessed'
-    taskInfo.progress.commonData.totalProcessed = static_cast<uintptr_t>(totalProcessed);
-    resultSet->GetString(19, taskInfo.progress.sizes); // Line 19 here is 'sizes'
-    resultSet->GetString(20, taskInfo.progress.processed); // Line 20 here is 'processed'
-    resultSet->GetString(21, taskInfo.progress.extras); // Line 21 here is 'extras'
-    resultSet->GetLong(22, formItemsLen); // Line 22 here is 'formItemsLen'
-    resultSet->GetLong(23, fileSpecsLen); // Line 23 here is 'fileSpecsLen'
+    GetRequestTaskInfoByTouch(resultSet, taskInfo);
     resultSet->Close();
     return OHOS::Request::QUERY_OK;
 }
 
-int QueryRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo,
-    int64_t &formItemsLen, int64_t &fileSpecsLen)
+int QueryRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo)
 {
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates,
-        { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry", "tries", "version",
-            "bundle", "titile", "description", "mime_type", "state", "idx", "total_processed", "sizes", "processed",
-            "extras", "form_items_len", "file_specs_len" });
+        { "task_id", "uid", "action", "mode", "ctime",
+          "mtime", "reason", "gauge", "retry", "tries",
+          "version", "bundle", "title", "description", "mime_type",
+          "state", "idx", "total_processed", "sizes", "processed",
+          "extras", "form_items", "file_specs", "each_file_status" });
     if (resultSet == nullptr || resultSet->GoToFirstRow() != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("result set is nullptr or go to first row failed");
         return OHOS::Request::QUERY_ERR;
     }
-    int state = 0;
-    int64_t idx = 0;
-    int64_t totalProcessed = 0;
     GetCommonTaskInfo(resultSet, taskInfo);
-    resultSet->GetString(11, taskInfo.bundle); // Line 11 here is 'bundle'
-    resultSet->GetString(12, taskInfo.title); // Line 12 here is 'title'
-    resultSet->GetString(13, taskInfo.description); // Line 13 here is 'description'
-    resultSet->GetString(14, taskInfo.mimeType); // Line 14 here is 'mimeType'
-    resultSet->GetInt(15, state); // Line 15 here is 'state'
-    taskInfo.progress.commonData.state = static_cast<uint8_t>(state);
-    resultSet->GetLong(16, idx); // Line 16 here is 'idx'
-    taskInfo.progress.commonData.index = static_cast<uintptr_t>(idx);
-    resultSet->GetLong(17, totalProcessed); // Line 17 here is 'totalProcessed'
-    taskInfo.progress.commonData.totalProcessed = static_cast<uintptr_t>(totalProcessed);
-    resultSet->GetString(18, taskInfo.progress.sizes); // Line 18 here is 'sizes'
-    resultSet->GetString(19, taskInfo.progress.processed); // Line 19 here is 'processed'
-    resultSet->GetString(20, taskInfo.progress.extras); // Line 20 here is 'extras'
-    resultSet->GetLong(21, formItemsLen); // Line 21 here is 'formItemsLen'
-    resultSet->GetLong(22, fileSpecsLen); // Line 22 here is 'fileSpecsLen'
-    resultSet->Close();
-    return OHOS::Request::QUERY_OK;
-}
-
-int TouchTaskInfoAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo,
-    int64_t formItemsLen, int64_t fileSpecsLen)
-{
-    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates,
-        { "form_item_name", "value", "file_spec_name", "path", "file_name", "mime_type", "reason", "message" });
-    if (resultSet == nullptr) {
-        REQUEST_HILOGE("result set is nullptr");
-        return OHOS::Request::QUERY_ERR;
-    }
-    int64_t len = std::max(formItemsLen, fileSpecsLen);
-    for (int64_t i = 0; i < len; i++) {
-        if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
-            REQUEST_HILOGE("result set go to %{public}" PRId64 "row failed", i);
-            return OHOS::Request::QUERY_ERR;
-        }
-        if (i < formItemsLen) {
-            FormItem formItem;
-            resultSet->GetString(0, formItem.name); // Line 0 here is 'name'
-            resultSet->GetString(1, formItem.value); // Line 1 here is 'value'
-            taskInfo.formItems.push_back(std::move(formItem));
-        }
-        if (i < fileSpecsLen) {
-            FileSpec fileSpec;
-            std::string path;
-            resultSet->GetString(2, fileSpec.name); // Line 2 here is 'name'
-            resultSet->GetString(3, path); // Line 3 here is 'path'
-            resultSet->GetString(4, fileSpec.fileName); // Line 4 here is 'fileName'
-            resultSet->GetString(5, fileSpec.mimeType); // Line 5 here is 'mimeType'
-            fileSpec.path = path;
-            taskInfo.fileSpecs.push_back(std::move(fileSpec));
-            EachFileStatus eachFileStatus;
-            eachFileStatus.path = std::move(path);
-            int reason = 0;
-            resultSet->GetInt(6, reason); // Line 6 here is 'reason'
-            eachFileStatus.reason = static_cast<uint8_t>(reason);
-            resultSet->GetString(7, eachFileStatus.message); // Line 7 here is 'message'
-            taskInfo.eachFileStatus.push_back(std::move(eachFileStatus));
-        }
-    }
-    resultSet->Close();
-    return OHOS::Request::QUERY_OK;
-}
-
-int QueryTaskInfoAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo,
-    int64_t fileSpecsLen)
-{
-    auto resultSet =
-        OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "path", "reason", "message" });
-    if (resultSet == nullptr) {
-        REQUEST_HILOGE("result set is nullptr");
-        return OHOS::Request::QUERY_ERR;
-    }
-    for (int64_t i = 0; i < fileSpecsLen; i++) {
-        if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
-            REQUEST_HILOGE("result set go to %{public}" PRId64 "row failed", i);
-            return OHOS::Request::QUERY_ERR;
-        }
-        EachFileStatus eachFileStatus;
-        std::string path;
-        resultSet->GetString(0, path);
-        eachFileStatus.path = path;
-        int reason = 0;
-        resultSet->GetInt(1, reason); // Line 1 here is 'reason'
-        eachFileStatus.reason = static_cast<uint8_t>(reason);
-        resultSet->GetString(2, eachFileStatus.message); // Line 2 here is 'message'
-        taskInfo.eachFileStatus.push_back(std::move(eachFileStatus));
-        FileSpec fileSpec;
-        fileSpec.path = std::move(path);
-        taskInfo.fileSpecs.push_back(std::move(fileSpec));
-    }
-    resultSet->Close();
-    return OHOS::Request::QUERY_OK;
-}
-
-int GetPriority(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, uint32_t &priority)
-{
-    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "priority" });
-    if (resultSet == nullptr) {
-        REQUEST_HILOGE("result set is nullptr");
-        return OHOS::Request::QUERY_ERR;
-    }
-    int64_t pri = 0;
-    resultSet->GetLong(0, pri); // Line 0 here is 'priority'
-    priority = static_cast<uint32_t>(pri);
+    GetRequestTaskInfoByQuery(resultSet, taskInfo);
     resultSet->Close();
     return OHOS::Request::QUERY_OK;
 }
@@ -692,7 +849,7 @@ CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo)
 
 CProgress BuildCProgress(const Progress &progress)
 {
-    return CProgress{
+    return CProgress {
         .commonData = progress.commonData,
         .sizes = WrapperCString(progress.sizes),
         .processed = WrapperCString(progress.processed),
@@ -702,7 +859,7 @@ CProgress BuildCProgress(const Progress &progress)
 
 bool HasTaskConfigRecord(uint32_t taskId)
 {
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task_config");
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "task_id" });
     if (resultSet == nullptr) {
@@ -717,176 +874,16 @@ bool HasTaskConfigRecord(uint32_t taskId)
     if (rowCount == 0) {
         return false;
     }
-    REQUEST_HILOGI("has the task record in task_config database");
+    REQUEST_HILOGI("has the task record in request_task database");
     return true;
-}
-
-bool WriteRequestTaskConfig(CTaskConfig *taskConfig)
-{
-    REQUEST_HILOGI("write to request_task_config");
-    OHOS::NativeRdb::ValuesBucket insertValues;
-    insertValues.PutLong("task_id", taskConfig->commonData.taskId);
-    insertValues.PutLong("uid", taskConfig->commonData.uid);
-    insertValues.PutInt("action", taskConfig->commonData.action);
-    insertValues.PutInt("mode", taskConfig->commonData.mode);
-    insertValues.PutInt("cover", taskConfig->commonData.cover);
-    insertValues.PutInt("network", taskConfig->commonData.network);
-    insertValues.PutInt("meterd", taskConfig->commonData.meterd);
-    insertValues.PutInt("roaming", taskConfig->commonData.roaming);
-    insertValues.PutInt("retry", taskConfig->commonData.retry);
-    insertValues.PutInt("redirect", taskConfig->commonData.redirect);
-    insertValues.PutLong("idx", taskConfig->commonData.index);
-    insertValues.PutLong("begins", taskConfig->commonData.begins);
-    insertValues.PutLong("ends", taskConfig->commonData.ends);
-    insertValues.PutInt("gauge", taskConfig->commonData.gauge);
-    insertValues.PutInt("precise", taskConfig->commonData.precise);
-    insertValues.PutInt("background", taskConfig->commonData.background);
-    insertValues.PutString("bundle", std::string(taskConfig->bundle.cStr, taskConfig->bundle.len));
-    insertValues.PutString("url", std::string(taskConfig->url.cStr, taskConfig->url.len));
-    insertValues.PutString("titile", std::string(taskConfig->title.cStr, taskConfig->title.len));
-    insertValues.PutString("description", std::string(taskConfig->description.cStr, taskConfig->description.len));
-    insertValues.PutString("method", std::string(taskConfig->method.cStr, taskConfig->method.len));
-    insertValues.PutString("headers", std::string(taskConfig->headers.cStr, taskConfig->headers.len));
-    insertValues.PutString("data", std::string(taskConfig->data.cStr, taskConfig->data.len));
-    insertValues.PutString("token", std::string(taskConfig->token.cStr, taskConfig->token.len));
-    insertValues.PutString("extras", std::string(taskConfig->extras.cStr, taskConfig->extras.len));
-    insertValues.PutInt("version", taskConfig->version);
-    insertValues.PutLong("form_items_len", taskConfig->formItemsLen);
-    insertValues.PutLong("file_specs_len", taskConfig->fileSpecsLen);
-    insertValues.PutLong("body_file_names_len", taskConfig->bodyFileNamesLen);
-
-    if (!OHOS::Request::RequestDataBase::GetInstance().Insert(std::string("request_task_config"), insertValues)) {
-        REQUEST_HILOGE("insert to request_task_config failed");
-        return false;
-    }
-
-    // Inserts temp_table.
-    OHOS::NativeRdb::ValuesBucket insertValues2;
-    insertValues2.PutLong("task_id", taskConfig->commonData.taskId);
-    insertValues2.PutLong("uid", taskConfig->commonData.uid);
-    insertValues2.PutLong("priority", taskConfig->commonData.priority);
-    if (!OHOS::Request::RequestDataBase::GetInstance().Insert(std::string("priority_table"), insertValues2)) {
-        REQUEST_HILOGE("insert to priority_table failed");
-        return false;
-    }
-
-    REQUEST_HILOGI("insert to request_task_config success");
-    return true;
-}
-
-bool WriteTaskConfigAttachment(CTaskConfig *taskConfig)
-{
-    REQUEST_HILOGD("write to task_config_attachment");
-    uint64_t len = std::max({taskConfig->formItemsLen, taskConfig->fileSpecsLen,
-        taskConfig->bodyFileNamesLen});
-    for (uint64_t i = 0; i < len; i++) {
-        OHOS::NativeRdb::ValuesBucket insertValues;
-        insertValues.PutInt("task_id", taskConfig->commonData.taskId);
-        insertValues.PutInt("uid", taskConfig->commonData.uid);
-        if (i < taskConfig->formItemsLen) {
-            insertValues.PutString("form_item_name",
-                std::string(taskConfig->formItemsPtr[i].name.cStr, taskConfig->formItemsPtr[i].name.len));
-            insertValues.PutString("value",
-                std::string(taskConfig->formItemsPtr[i].value.cStr, taskConfig->formItemsPtr[i].value.len));
-        }
-        if (i < taskConfig->fileSpecsLen) {
-            insertValues.PutString("file_spec_name",
-                std::string(taskConfig->fileSpecsPtr[i].name.cStr, taskConfig->fileSpecsPtr[i].name.len));
-            insertValues.PutString("path",
-                std::string(taskConfig->fileSpecsPtr[i].path.cStr, taskConfig->fileSpecsPtr[i].path.len));
-            insertValues.PutString("file_name",
-                std::string(taskConfig->fileSpecsPtr[i].fileName.cStr, taskConfig->fileSpecsPtr[i].fileName.len));
-            insertValues.PutString("mime_type",
-                std::string(taskConfig->fileSpecsPtr[i].mimeType.cStr, taskConfig->fileSpecsPtr[i].mimeType.len));
-        }
-        if (i < taskConfig->bodyFileNamesLen) {
-            insertValues.PutString("body_file_name",
-                std::string(taskConfig->bodyFileNamesPtr[i].cStr, taskConfig->bodyFileNamesPtr[i].len));
-        }
-        if (!OHOS::Request::RequestDataBase::GetInstance().Insert(std::string("task_config_attachment"),
-            insertValues)) {
-            REQUEST_HILOGE("insert to task_config_attachment failed");
-            return false;
-        }
-    }
-
-    for (uint64_t i = 0; i < taskConfig->certsPathLen; i++) {
-        OHOS::NativeRdb::ValuesBucket insertValues;
-        insertValues.PutInt("task_id", taskConfig->commonData.taskId);
-        insertValues.PutInt("uid", taskConfig->commonData.uid);
-        insertValues.PutString("cert_path",
-            std::string(taskConfig->certsPathPtr[i].cStr, taskConfig->certsPathPtr[i].len));
-        if (!OHOS::Request::RequestDataBase::GetInstance().Insert(std::string("certs_table"),
-            insertValues)) {
-            REQUEST_HILOGE("insert to certs_table failed");
-            return false;
-        }
-    }
-    REQUEST_HILOGD("insert to task_config_attachment success");
-    return true;
-}
-
-bool RecordRequestTaskConfig(CTaskConfig *taskConfig)
-{
-    return WriteRequestTaskConfig(taskConfig) && WriteTaskConfigAttachment(taskConfig);
-}
-
-void GetCommonTaskConfig(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskConfig &taskConfig)
-{
-    int64_t taskId = 0;
-    int64_t uid = 0;
-    int action = 0;
-    int mode = 0;
-    int cover = 0;
-    int network = 0;
-    int meterd = 0;
-    int roaming = 0;
-    int retry = 0;
-    int redirect = 0;
-    int64_t index = 0;
-    int64_t begins = 0;
-    int64_t ends = 0;
-    int gauge = 0;
-    int precise = 0;
-    int background = 0;
-
-    resultSet->GetLong(0, taskId); // Line 0 here is 'taskId'
-    taskConfig.commonData.taskId = static_cast<uint32_t>(taskId);
-    resultSet->GetLong(1, uid); // Line 1 here is 'uid'
-    taskConfig.commonData.uid = static_cast<uint64_t>(uid);
-    resultSet->GetInt(2, action); // Line 2 here is 'action'
-    taskConfig.commonData.action = static_cast<uint8_t>(action);
-    resultSet->GetInt(3, mode); // Line 3 here is 'mode'
-    taskConfig.commonData.mode = static_cast<uint8_t>(mode);
-    resultSet->GetInt(4, cover); // Line 4 here is 'cover'
-    taskConfig.commonData.cover = static_cast<bool>(cover);
-    resultSet->GetInt(5, network); // Line 5 here is 'network'
-    taskConfig.commonData.network = static_cast<uint8_t>(network);
-    resultSet->GetInt(6, meterd); // Line 6 here is 'meterd'
-    taskConfig.commonData.meterd = static_cast<bool>(meterd);
-    resultSet->GetInt(7, roaming); // Line 7 here is 'roaming'
-    taskConfig.commonData.roaming = static_cast<bool>(roaming);
-    resultSet->GetInt(8, retry); // Line 8 here is 'retry'
-    taskConfig.commonData.retry = static_cast<bool>(retry);
-    resultSet->GetInt(9, redirect); // Line 9 here is 'redirect'
-    taskConfig.commonData.redirect = static_cast<bool>(redirect);
-    resultSet->GetLong(10, index); // Line 10 here is 'index'
-    taskConfig.commonData.index = static_cast<uint32_t>(index);
-    resultSet->GetLong(11, begins); // Line 11 here is 'begins'
-    taskConfig.commonData.begins = static_cast<uint64_t>(begins);
-    resultSet->GetLong(12, ends); // Line 12 here is 'ends'
-    taskConfig.commonData.ends = static_cast<int64_t>(ends);
-    resultSet->GetInt(13, gauge); // Line 13 here is 'gauge'
-    taskConfig.commonData.gauge = static_cast<bool>(gauge);
-    resultSet->GetInt(14, precise); // Line 14 here is 'precise'
-    taskConfig.commonData.precise = static_cast<bool>(precise);
-    resultSet->GetInt(15, background); // Line 15 here is 'background'
-    taskConfig.commonData.background = static_cast<bool>(background);
 }
 
 CTaskConfig **QueryAllTaskConfig()
 {
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task_config");
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
+    rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
+            ->Or()
+            ->EqualTo("state", static_cast<uint8_t>(State::PAUSED));
     std::vector<TaskConfig> taskConfigs;
     if (QueryRequestTaskConfig(rdbPredicates, taskConfigs) == OHOS::Request::QUERY_ERR) {
         return nullptr;
@@ -896,7 +893,10 @@ CTaskConfig **QueryAllTaskConfig()
 
 int QueryTaskConfigLen()
 {
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task_config");
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
+    rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
+            ->Or()
+            ->EqualTo("state", static_cast<uint8_t>(State::PAUSED));
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "task_id", "uid" });
     int len = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(len) != OHOS::NativeRdb::E_OK) {
@@ -906,29 +906,83 @@ int QueryTaskConfigLen()
     return len;
 }
 
-void QuerySingleTaskConfig(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskConfig &taskConfig)
+void BuildRequestTaskConfigWithLong(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
 {
-    resultSet->GetString(16, taskConfig.bundle); // Line 16 here is 'bundle'
-    resultSet->GetString(17, taskConfig.url); // Line 17 here is 'url'
-    resultSet->GetString(18, taskConfig.title); // Line 18 here is 'title'
-    resultSet->GetString(19, taskConfig.description); // Line 19 here is 'description'
-    resultSet->GetString(20, taskConfig.method); // Line 20 here is 'method'
-    resultSet->GetString(21, taskConfig.headers); // Line 21 here is 'headers'
-    resultSet->GetString(22, taskConfig.data); // Line 22 here is 'data'
-    resultSet->GetString(23, taskConfig.token); // Line 23 here is 'token'
-    resultSet->GetString(24, taskConfig.extras); // Line 24 here is 'extras'
-    int version = 0;
-    resultSet->GetInt(25, version); // Line 25 here is 'version'
-    taskConfig.version = static_cast<uint8_t>(version);
+    config.commonData.taskId = static_cast<uint32_t>(GetLong(set, 0)); // Line 0 is 'task_id'
+    config.commonData.uid = static_cast<uint64_t>(GetLong(set, 1)); // Line 1 is 'uid'
+    config.commonData.tokenId = static_cast<uint64_t>(GetLong(set, 2)); // Line 2 is 'token_id'
+    config.commonData.index = static_cast<uint32_t>(GetLong(set, 11)); // Line 11 is 'config_idx'
+    config.commonData.begins = static_cast<uint64_t>(GetLong(set, 12)); // Line 12 is 'begins'
+    config.commonData.ends = static_cast<int64_t>(GetLong(set, 13)); // Line 13 is 'ends'
+    config.commonData.priority = static_cast<uint32_t>(GetLong(set, 16)); // Line 16 is 'priority'
+}
+
+void BuildRequestTaskConfigWithInt(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
+{
+    config.commonData.action = static_cast<uint8_t>(GetInt(set, 3)); // Line 3 is 'action'
+    config.commonData.mode = static_cast<uint8_t>(GetInt(set, 4)); // Line 4 is 'mode'
+    config.commonData.cover = static_cast<bool>(GetInt(set, 5)); // Line 5 is 'cover'
+    config.commonData.network = static_cast<uint8_t>(GetInt(set, 6)); // Line 6 is 'network'
+    config.commonData.metered = static_cast<bool>(GetInt(set, 7)); // Line 7 is 'metered'
+    config.commonData.roaming = static_cast<bool>(GetInt(set, 8)); // Line 8 is 'roaming'
+    config.commonData.retry = static_cast<bool>(GetInt(set, 9)); // Line 9 is 'retry'
+    config.commonData.redirect = static_cast<bool>(GetInt(set, 10)); // Line 10 is 'redirect'
+    config.commonData.gauge = static_cast<bool>(GetInt(set, 14)); // Line 14 is 'gauge'
+    config.commonData.precise = static_cast<bool>(GetInt(set, 15)); // Line 15 is 'precise'
+    config.commonData.background = static_cast<bool>(GetInt(set, 17)); // Line 17 is 'background'
+    config.version = static_cast<uint8_t>(GetInt(set, 27)); // Line 27 here is 'version'
+}
+
+void BuildRequestTaskConfigWithString(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
+{
+    set->GetString(18, config.bundle); // Line 18 is 'bundle'
+    set->GetString(19, config.url); // Line 19 is 'url'
+    set->GetString(20, config.title); // Line 20 is 'title'
+    set->GetString(21, config.description); // Line 21 is 'description'
+    set->GetString(22, config.method); // Line 22 is 'method'
+    set->GetString(23, config.headers); // Line 23 is 'headers'
+    set->GetString(24, config.data); // Line 24 is 'data'
+    set->GetString(25, config.token); // Line 25 is 'token'
+    set->GetString(26, config.extras); // Line 26 is 'config_extras'
+}
+
+void BuildRequestTaskConfigWithBlob(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
+{
+    std::vector<uint8_t> formItemsBlob;
+    std::vector<uint8_t> formSpecsBlob;
+    std::vector<uint8_t> bodyFileNamesBlob;
+    std::vector<uint8_t> certsPathsBlob;
+
+    set->GetBlob(28, formItemsBlob); // Line 28 is 'form_items'
+    config.formItems = VecToFormItem(BlobToCFormItem(formItemsBlob));
+    set->GetBlob(29, formSpecsBlob); // Line 29 is 'file_specs'
+    config.fileSpecs = VecToFileSpec(BlobToCFileSpec(formSpecsBlob));
+    set->GetBlob(30, bodyFileNamesBlob); // Line 30 is 'body_file_names'
+    config.bodyFileNames = BlobToStringVec(bodyFileNamesBlob);
+    set->GetBlob(31, certsPathsBlob); // Line 31 is 'certs_paths'
+    config.certsPath = BlobToStringVec(certsPathsBlob);
+}
+
+TaskConfig BuildRequestTaskConfig(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
+{
+    TaskConfig taskConfig;
+    BuildRequestTaskConfigWithLong(resultSet, taskConfig);
+    BuildRequestTaskConfigWithInt(resultSet, taskConfig);
+    BuildRequestTaskConfigWithString(resultSet, taskConfig);
+    BuildRequestTaskConfigWithBlob(resultSet, taskConfig);
+    return taskConfig;
 }
 
 int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, std::vector<TaskConfig> &taskConfigs)
 {
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates,
-        { "task_id", "uid", "action", "mode", "cover", "network", "meterd", "roaming", "retry", "redirect", "idx",
-            "begins", "ends", "gauge", "precise", "background", "bundle", "url", "titile", "description", "method",
-            "headers", "data", "token", "extras", "version",
-            "form_items_len", "file_specs_len", "body_file_names_len" });
+        { "task_id", "uid", "token_id", "action", "mode",
+          "cover", "network", "metered", "roaming", "retry",
+          "redirect", "config_idx", "begins", "ends", "gauge",
+          "precise", "priority", "background", "bundle", "url",
+          "title", "description", "method", "headers", "data",
+          "token", "config_extras", "version", "form_items", "file_specs",
+          "body_file_names", "certs_paths" });
     int rowCount = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("TaskConfig result set is nullptr or get row count failed");
@@ -939,172 +993,71 @@ int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, 
             REQUEST_HILOGE("TaskConfig result set go to %{public}d row failed", i);
             return OHOS::Request::QUERY_ERR;
         }
-        TaskConfig taskConfig;
-        int64_t formItemsLen = 0;
-        int64_t fileSpecsLen = 0;
-        int64_t bodyFileNamesLen = 0;
-        GetCommonTaskConfig(resultSet, taskConfig);
-        QuerySingleTaskConfig(resultSet, taskConfig);
-        resultSet->GetLong(26, formItemsLen); // Line 26 here is 'formItemsLen'
-        resultSet->GetLong(27, fileSpecsLen); // Line 27 here is 'fileSpecsLen'
-        resultSet->GetLong(28, bodyFileNamesLen); // Line 28 here is 'bodyFileNamesLen'
-        OHOS::NativeRdb::RdbPredicates attachPredicates("task_config_attachment");
-        attachPredicates.EqualTo("task_id", std::to_string(taskConfig.commonData.taskId))
-            ->And()->EqualTo("uid", std::to_string(taskConfig.commonData.uid));
-        if (QueryTaskConfigAttachment(attachPredicates, taskConfig, formItemsLen,
-            fileSpecsLen, bodyFileNamesLen) == OHOS::Request::QUERY_ERR) {
-            return OHOS::Request::QUERY_ERR;
-        }
-        OHOS::NativeRdb::RdbPredicates attachPredicates2("priority_table");
-        attachPredicates2.EqualTo("task_id", std::to_string(taskConfig.commonData.taskId))
-                ->And()->EqualTo("uid", std::to_string(taskConfig.commonData.uid));
-        if (GetPriority(attachPredicates, taskConfig.commonData.priority) == OHOS::Request::QUERY_ERR) {
-            return OHOS::Request::QUERY_ERR;
-        }
-        OHOS::NativeRdb::RdbPredicates attachPredicates3("certs_table");
-        attachPredicates3.EqualTo("task_id", std::to_string(taskConfig.commonData.taskId))
-                ->And()->EqualTo("uid", std::to_string(taskConfig.commonData.uid));
-        if (GetCertsPath(attachPredicates, taskConfig) == OHOS::Request::QUERY_ERR) {
-            return OHOS::Request::QUERY_ERR;
-        }
+        TaskConfig taskConfig = BuildRequestTaskConfig(resultSet);
         taskConfigs.push_back(std::move(taskConfig));
     }
     resultSet->Close();
     return OHOS::Request::QUERY_OK;
 }
 
-int GetCertsPath(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskConfig &config)
+void BuildCTaskConfig(CTaskConfig *cTaskConfig, const TaskConfig &taskConfig)
 {
-    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "cert_path" });
-    int rowCount = 0;
-    if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("GetCertsPath result set is nullptr or get row count failed");
-        return OHOS::Request::QUERY_ERR;
+    cTaskConfig->bundle = WrapperCString(taskConfig.bundle);
+    cTaskConfig->url = WrapperCString(taskConfig.url);
+    cTaskConfig->title = WrapperCString(taskConfig.title);
+    cTaskConfig->description = WrapperCString(taskConfig.description);
+    cTaskConfig->method = WrapperCString(taskConfig.method);
+    cTaskConfig->headers = WrapperCString(taskConfig.headers);
+    cTaskConfig->data = WrapperCString(taskConfig.data);
+    cTaskConfig->token = WrapperCString(taskConfig.token);
+    cTaskConfig->extras = WrapperCString(taskConfig.extras);
+    cTaskConfig->version = taskConfig.version;
+
+    uint32_t formItemsLen = taskConfig.formItems.size();
+    CFormItem *formItemsPtr = new CFormItem[formItemsLen];
+    for (uint32_t j = 0; j < formItemsLen; j++) {
+        formItemsPtr[j].name = WrapperCString(taskConfig.formItems[j].name);
+        formItemsPtr[j].value = WrapperCString(taskConfig.formItems[j].value);
     }
-    for (auto i = 0; i < rowCount; i++) {
-        if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
-            REQUEST_HILOGE("GetCertsPath result set goes to %{public}d row failed", i);
-            return OHOS::Request::QUERY_ERR;
-        }
-        std::string path;
-        resultSet->GetString(0, path); // Line 0 here is 'path'
-        config.certsPath.push_back(std::move(path));
+    uint32_t fileSpecsLen = taskConfig.fileSpecs.size();
+    CFileSpec *fileSpecsPtr = new CFileSpec[fileSpecsLen];
+    for (uint32_t j = 0; j < fileSpecsLen; j++) {
+        fileSpecsPtr[j].name = WrapperCString(taskConfig.fileSpecs[j].name);
+        fileSpecsPtr[j].path = WrapperCString(taskConfig.fileSpecs[j].path);
+        fileSpecsPtr[j].fileName = WrapperCString(taskConfig.fileSpecs[j].fileName);
+        fileSpecsPtr[j].mimeType = WrapperCString(taskConfig.fileSpecs[j].mimeType);
     }
-    resultSet->Close();
-    return OHOS::Request::QUERY_OK;
+    uint32_t bodyFileNamesLen = taskConfig.bodyFileNames.size();
+    CStringWrapper *bodyFileNamesPtr = new CStringWrapper[bodyFileNamesLen];
+    for (uint32_t j = 0; j < bodyFileNamesLen; j++) {
+        bodyFileNamesPtr[j] = WrapperCString(taskConfig.bodyFileNames[j]);
+    }
+
+    uint32_t certsPathLen = taskConfig.certsPath.size();
+    CStringWrapper *certsPathPtr = new CStringWrapper[certsPathLen];
+    for (uint32_t j = 0; j < certsPathLen; j++) {
+        certsPathPtr[j] = WrapperCString(taskConfig.certsPath[j]);
+    }
+
+    cTaskConfig->formItemsPtr = formItemsPtr;
+    cTaskConfig->formItemsLen = formItemsLen;
+    cTaskConfig->fileSpecsPtr = fileSpecsPtr;
+    cTaskConfig->fileSpecsLen = fileSpecsLen;
+    cTaskConfig->bodyFileNamesPtr = bodyFileNamesPtr;
+    cTaskConfig->bodyFileNamesLen = bodyFileNamesLen;
+    cTaskConfig->certsPathPtr = certsPathPtr;
+    cTaskConfig->certsPathLen = certsPathLen;
+    cTaskConfig->commonData = taskConfig.commonData;
 }
 
-int QueryTaskConfigAttachment(
-    const OHOS::NativeRdb::RdbPredicates &rdbPredicates,
-    TaskConfig &taskConfig, int64_t formItemsLen, int64_t fileSpecsLen,
-    int64_t bodyFileNamesLen)
-{
-    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates,
-        { "form_item_name", "value", "file_spec_name", "path", "file_name", "mime_type",
-		"body_file_name" });
-    if (resultSet == nullptr) {
-        REQUEST_HILOGE("ConfigAttach result set is nullptr");
-        return OHOS::Request::QUERY_ERR;
-    }
-    int rowCount = 0;
-    if (resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGI("query task_config_attachment get row count failed");
-    }
-    int64_t len = std::max({formItemsLen, fileSpecsLen, bodyFileNamesLen});
-    if (rowCount != len) {
-        REQUEST_HILOGI("query task_config_attachment row count != max len");
-        resultSet->Close();
-        return OHOS::Request::QUERY_ERR;
-    }
-    for (int64_t i = 0; i < len; i++) {
-        if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
-            REQUEST_HILOGE("ConfigAttach result set go to %{public}" PRId64 "row failed", i);
-            resultSet->Close();
-            return OHOS::Request::QUERY_ERR;
-        }
-        if (i < formItemsLen) {
-            FormItem formItem;
-            resultSet->GetString(0, formItem.name); // Line 0 here is 'name'
-            resultSet->GetString(1, formItem.value); // Line 1 here is 'value'
-            taskConfig.formItems.push_back(std::move(formItem));
-        }
-        if (i < fileSpecsLen) {
-            FileSpec fileSpec;
-            resultSet->GetString(2, fileSpec.name); // Line 2 here is 'name'
-            resultSet->GetString(3, fileSpec.path); // Line 3 here is 'path'
-            resultSet->GetString(4, fileSpec.fileName); // Line 4 here is 'fileName'
-            resultSet->GetString(5, fileSpec.mimeType); // Line 5 here is 'mimeType'
-            taskConfig.fileSpecs.push_back(std::move(fileSpec));
-        }
-        if (i < bodyFileNamesLen) {
-            std::string bodyFileName;
-            resultSet->GetString(6, bodyFileName);
-            taskConfig.bodyFileNames.push_back(std::move(bodyFileName));
-        }
-    }
-    resultSet->Close();
-    return OHOS::Request::QUERY_OK;
-}
-
-void SetFormItemsPtr(const TaskConfig &taskConfig, uint32_t formItemsLen, CFormItem *formItemsPtr)
-{
-    for (uint32_t i = 0; i < formItemsLen; i++) {
-        formItemsPtr[i].name = WrapperCString(taskConfig.formItems[i].name);
-        formItemsPtr[i].value = WrapperCString(taskConfig.formItems[i].value);
-    }
-}
-
-void SetFileSpecsPtr(const TaskConfig &taskConfig, uint32_t fileSpecsLen, CFileSpec *fileSpecsPtr)
-{
-    for (uint32_t i = 0; i < fileSpecsLen; i++) {
-        fileSpecsPtr[i].name = WrapperCString(taskConfig.fileSpecs[i].name);
-        fileSpecsPtr[i].path = WrapperCString(taskConfig.fileSpecs[i].path);
-        fileSpecsPtr[i].fileName = WrapperCString(taskConfig.fileSpecs[i].fileName);
-        fileSpecsPtr[i].mimeType = WrapperCString(taskConfig.fileSpecs[i].mimeType);
-    }
-}
-
-CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs)
+CTaskConfig **BuildCTaskConfigs(
+    const std::vector<TaskConfig> &taskConfigs)
 {
     CTaskConfig **cTaskConfigs = new CTaskConfig *[taskConfigs.size()];
     for (unsigned int i = 0; i < taskConfigs.size(); i++) {
         CTaskConfig *cTaskConfig = new CTaskConfig;
         const TaskConfig &taskConfig = taskConfigs[i];
-        cTaskConfig->bundle = WrapperCString(taskConfig.bundle);
-        cTaskConfig->url = WrapperCString(taskConfig.url);
-        cTaskConfig->title = WrapperCString(taskConfig.title);
-        cTaskConfig->description = WrapperCString(taskConfig.description);
-        cTaskConfig->method = WrapperCString(taskConfig.method);
-        cTaskConfig->headers = WrapperCString(taskConfig.headers);
-        cTaskConfig->data = WrapperCString(taskConfig.data);
-        cTaskConfig->token = WrapperCString(taskConfig.token);
-        cTaskConfig->extras = WrapperCString(taskConfig.extras);
-        cTaskConfig->version = taskConfig.version;
-        uint32_t formItemsLen = taskConfig.formItems.size();
-        CFormItem *formItemsPtr = new CFormItem[formItemsLen];
-        SetFormItemsPtr(taskConfig, formItemsLen, formItemsPtr);
-        uint32_t fileSpecsLen = taskConfig.fileSpecs.size();
-        CFileSpec *fileSpecsPtr = new CFileSpec[fileSpecsLen];
-        SetFileSpecsPtr(taskConfig, fileSpecsLen, fileSpecsPtr);
-        uint32_t bodyFileNamesLen = taskConfig.bodyFileNames.size();
-        CStringWrapper *bodyFileNamesPtr = new CStringWrapper[bodyFileNamesLen];
-        for (uint32_t j = 0; j < bodyFileNamesLen; j++) {
-            bodyFileNamesPtr[j] = WrapperCString(taskConfig.bodyFileNames[j]);
-        }
-        uint32_t certsPathLen = taskConfig.certsPath.size();
-        CStringWrapper *certsPathPtr = new CStringWrapper[certsPathLen];
-        for (uint32_t j = 0; j < certsPathLen; j++) {
-            certsPathPtr[j] = WrapperCString(taskConfig.certsPath[j]);
-        }
-        cTaskConfig->formItemsPtr = formItemsPtr;
-        cTaskConfig->formItemsLen = formItemsLen;
-        cTaskConfig->fileSpecsPtr = fileSpecsPtr;
-        cTaskConfig->fileSpecsLen = fileSpecsLen;
-        cTaskConfig->bodyFileNamesPtr = bodyFileNamesPtr;
-        cTaskConfig->bodyFileNamesLen = bodyFileNamesLen;
-        cTaskConfig->certsPathPtr = certsPathPtr;
-        cTaskConfig->certsPathLen = certsPathLen;
-        cTaskConfig->commonData = taskConfig.commonData;
+        BuildCTaskConfig(cTaskConfig, taskConfig);
         cTaskConfigs[i] = std::move(cTaskConfig);
     }
     return cTaskConfigs;
@@ -1112,17 +1065,25 @@ CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs)
 
 bool CleanTaskConfigTable(uint32_t taskId, uint64_t uid)
 {
-    OHOS::NativeRdb::RdbPredicates predicates1("request_task_config");
-    OHOS::NativeRdb::RdbPredicates predicates2("task_config_attachment");
-    OHOS::NativeRdb::RdbPredicates predicates3("certs_table");
-    predicates1.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
-    predicates2.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
-    predicates3.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
-    if (OHOS::Request::RequestDataBase::GetInstance().Delete(predicates1) &&
-        OHOS::Request::RequestDataBase::GetInstance().Delete(predicates2) &&
-        OHOS::Request::RequestDataBase::GetInstance().Delete(predicates3)) {
-        REQUEST_HILOGE("task_config table deleted task_id: %{public}u", taskId);
+    OHOS::NativeRdb::RdbPredicates predicates("request_task");
+    predicates.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
+    if (OHOS::Request::RequestDataBase::GetInstance().Delete(predicates)) {
+        REQUEST_HILOGI("request_task table deletes task success, task_id: %{public}u", taskId);
         return true;
     }
+    REQUEST_HILOGE("request_task table deleted task failed, task_id: %{public}u", taskId);
     return false;
+}
+
+void RequestDBRemoveRecordsFromTime(uint64_t time)
+{
+    OHOS::NativeRdb::RdbPredicates predicates("request_task");
+    predicates.LessThan("mtime", std::to_string(time));
+
+    if (OHOS::Request::RequestDataBase::GetInstance().Delete(predicates)) {
+        REQUEST_HILOGI("request_task table deletes records before one week success");
+        return;
+    }
+    REQUEST_HILOGE("request_task table deletes records before one week failed");
+    return;
 }

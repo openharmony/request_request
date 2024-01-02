@@ -13,7 +13,7 @@
 
 use std::ffi::c_char;
 
-use super::config::{Action, CommonTaskConfig, Network, TaskConfig, Version, ConfigSet};
+use super::config::{Action, CommonTaskConfig, ConfigSet, Network, TaskConfig, Version};
 use super::info::{CommonTaskInfo, InfoSet, Mode, TaskInfo, UpdateInfo};
 use super::notify::{CommonProgress, EachFileStatus, Progress};
 use super::reason::Reason;
@@ -50,6 +50,7 @@ pub(crate) struct CTaskConfig {
 pub(crate) struct CommonCTaskConfig {
     pub(crate) task_id: u32,
     pub(crate) uid: u64,
+    pub(crate) token_id: u64,
     pub(crate) action: u8,
     pub(crate) mode: u8,
     pub(crate) cover: bool,
@@ -282,6 +283,7 @@ impl TaskConfig {
             common_data: CommonCTaskConfig {
                 task_id,
                 uid,
+                token_id: self.common_data.token_id,
                 action: self.common_data.action as u8,
                 mode: self.common_data.mode as u8,
                 cover: self.common_data.cover,
@@ -336,6 +338,7 @@ impl TaskConfig {
             common_data: CommonTaskConfig {
                 task_id: c_struct.common_data.task_id,
                 uid: c_struct.common_data.uid,
+                token_id: c_struct.common_data.token_id,
                 action: Action::from(c_struct.common_data.action),
                 mode: Mode::from(c_struct.common_data.mode),
                 cover: c_struct.common_data.cover,
@@ -364,9 +367,8 @@ impl TaskConfig {
 extern "C" {
     pub(crate) fn GetNetworkInfo() -> *const NetworkInfo;
     pub(crate) fn DeleteCTaskInfo(ptr: *const CTaskInfo);
-    pub(crate) fn RecordRequestTaskInfo(taskInfo: *const CTaskInfo) -> bool;
     pub(crate) fn DeleteCEachFileStatus(ptr: *const CEachFileStatus);
-    pub(crate) fn UpdateRequestTaskInfo(taskId: u32, updateInfo: *const CUpdateInfo) -> bool;
+    pub(crate) fn UpdateRequestTask(taskId: u32, updateInfo: *const CUpdateInfo) -> bool;
     pub(crate) fn HasRequestTaskRecord(taskId: u32) -> bool;
     pub(crate) fn PublishStateChangeEvents(
         bundleName: *const c_char,

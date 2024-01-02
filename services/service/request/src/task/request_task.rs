@@ -38,8 +38,7 @@ use super::upload::upload;
 use crate::manager::monitor::IsOnline;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::ffi::{
-    GetNetworkInfo, RecordRequestTaskInfo, RequestBackgroundNotify, RequestTaskMsg,
-    UpdateRequestTaskInfo,
+    GetNetworkInfo, RequestBackgroundNotify, RequestTaskMsg, UpdateRequestTask,
 };
 use crate::utils::{get_current_timestamp, hashmap_to_string};
 
@@ -831,13 +830,7 @@ impl RequestTask {
         self.recording_rdb_num.fetch_add(1, Ordering::SeqCst);
 
         let has_record = unsafe { HasRequestTaskRecord(self.conf.common_data.task_id) };
-        if !has_record {
-            let task_info = self.show();
-            let info_set = task_info.build_info_set();
-            let c_task_info = task_info.to_c_struct(&info_set);
-            let ret = unsafe { RecordRequestTaskInfo(&c_task_info) };
-            debug!("insert database ret is {}", ret);
-        } else {
+        if has_record {
             let update_info = self.get_update_info();
             let sizes: String = format!("{:?}", update_info.progress.sizes);
             let processed: String = format!("{:?}", update_info.progress.processed);
@@ -849,8 +842,7 @@ impl RequestTask {
                 .collect();
             let c_update_info =
                 update_info.to_c_struct(&sizes, &processed, &extras, &each_file_status);
-            let ret =
-                unsafe { UpdateRequestTaskInfo(self.conf.common_data.task_id, &c_update_info) };
+            let ret = unsafe { UpdateRequestTask(self.conf.common_data.task_id, &c_update_info) };
             debug!("update database ret is {}", ret);
         }
 

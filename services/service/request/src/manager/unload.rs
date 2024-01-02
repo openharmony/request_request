@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Arc;
 
@@ -46,6 +46,9 @@ impl TaskManager {
         #[cfg(feature = "oh")]
         const REQUEST_SERVICE_ID: i32 = 3706;
 
+        // Removes task records from a week ago before unloading.
+        self.delete_early_records();
+
         if !self.check_unload_sa() {
             debug!("Triggers unload sa, but cannot unload now");
             return false;
@@ -54,10 +57,6 @@ impl TaskManager {
         self.rx.close();
 
         info!("unload SA");
-
-        if !self.tasks.is_empty() {
-            self.record_all_task_config();
-        }
 
         #[cfg(feature = "oh")]
         let samgr_proxy = rust_samgr::get_systemability_manager();
@@ -107,38 +106,11 @@ impl TaskManager {
     pub(crate) fn insert_restore_tasks(&mut self) {
         debug!("TaskManager inserts restore tasks");
         for task in std::mem::take(&mut self.restoring_tasks) {
-            let task_id = task.conf.common_data.task_id;
-            let uid = task.conf.common_data.uid;
             self.restore_task(task.clone());
             if unsafe { IsOnline() } {
                 self.resume_waiting_task(task);
             }
-            unsafe { CleanTaskConfigTable(task_id, uid) };
         }
-    }
-
-    fn record_all_task_config(&mut self) {
-        debug!("record all task config into database");
-        self.recording_rdb_num.fetch_add(1, Ordering::SeqCst);
-        for task in self.tasks.values() {
-            if unsafe { HasTaskConfigRecord(task.conf.common_data.task_id) } {
-                continue;
-            }
-            let state = task.status.lock().unwrap().state;
-
-            if state != State::Waiting && state != State::Paused {
-                continue;
-            }
-
-            let task_config = &task.conf;
-
-            let config_set = task_config.build_config_set();
-            let c_task_config =
-                task_config.to_c_struct(task.conf.common_data.task_id, task.conf.common_data.uid, &config_set);
-            let ret = unsafe { RecordRequestTaskConfig(&c_task_config) };
-            info!("insert taskConfig DB ret is {}", ret);
-        }
-        self.recording_rdb_num.fetch_sub(1, Ordering::SeqCst);
     }
 
     fn restore_task(&mut self, task: Arc<RequestTask>) {
@@ -206,15 +178,28 @@ impl TaskManager {
         unsafe { DeleteCTaskConfigs(c_task_config_list) };
         Some(task_config_map)
     }
+
+    pub(crate) fn delete_early_records(&self) {
+        use std::time::{SystemTime, UNIX_EPOCH};
+
+        const MILLIS_IN_A_WEEK: u64 = 7 * 24 * 60 * 60 * 1000;
+
+        debug!("Starts to delete early records");
+
+        if let Ok(time) = SystemTime::now().duration_since(UNIX_EPOCH) {
+            unsafe {
+                RequestDBRemoveRecordsFromTime(time.as_millis() as u64 - MILLIS_IN_A_WEEK);
+            }
+        }
+
+        debug!("Deletes early records end");
+    }
 }
 
 extern "C" {
     pub(crate) fn DeleteCTaskConfigs(ptr: *const *const CTaskConfig);
     pub(crate) fn QueryAllTaskConfig() -> *const *const CTaskConfig;
     pub(crate) fn QueryTaskConfigLen() -> i32;
-
     pub(crate) fn DeleteCTaskConfig(ptr: *const CTaskConfig);
-    pub(crate) fn RecordRequestTaskConfig(taskConfig: *const CTaskConfig) -> bool;
-    pub(crate) fn CleanTaskConfigTable(taskId: u32, uid: u64) -> bool;
-    pub(crate) fn HasTaskConfigRecord(taskId: u32) -> bool;
+    pub(crate) fn RequestDBRemoveRecordsFromTime(time: u64);
 }

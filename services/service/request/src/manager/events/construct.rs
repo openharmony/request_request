@@ -13,12 +13,13 @@
 
 use std::collections::HashSet;
 use std::fs::File;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use crate::error::ErrorCode;
 use crate::manager::TaskManager;
 use crate::task::config::{TaskConfig, Version};
+use crate::task::ffi::{CTaskConfig, CTaskInfo};
 use crate::task::info::State;
 use crate::task::reason::Reason;
 use crate::task::RequestTask;
@@ -48,26 +49,28 @@ impl TaskManager {
 
         let app_state = self.app_state(uid, &config.bundle);
 
-        let task = RequestTask::constructor(
+        let task = Arc::new(RequestTask::constructor(
             config,
             files,
             body_files,
             self.recording_rdb_num.clone(),
             AtomicBool::new(false),
             app_state,
-        );
+        ));
 
-        match task.conf.version {
+        match version {
             Version::API10 => {
-                if !self.add_task_api10(Arc::new(task)) {
+                if !self.add_task_api10(task.clone()) {
                     return ErrorCode::TaskEnqueueErr;
                 }
                 self.api10_background_task_count += 1;
             }
             Version::API9 => {
-                self.add_task_api9(Arc::new(task));
+                self.add_task_api9(task.clone());
             }
         }
+
+        self.record_request_task(task.as_ref());
 
         if let Some(handle) = self.unload_handle.take() {
             debug!("TaskManager close sa timing abort");
@@ -157,4 +160,33 @@ impl TaskManager {
             }
         }
     }
+
+    pub(crate) fn record_request_task(&mut self, task: &RequestTask) {
+        debug!("record request task into database");
+        self.recording_rdb_num.fetch_add(1, Ordering::SeqCst);
+        if unsafe { HasRequestTaskRecord(task.conf.common_data.task_id) } {
+            return;
+        }
+        let task_config = &task.conf;
+        let config_set = task_config.build_config_set();
+        let c_task_config = task_config.to_c_struct(
+            task.conf.common_data.task_id,
+            task.conf.common_data.uid,
+            &config_set,
+        );
+        let task_info = &task.show();
+        let info_set = task_info.build_info_set();
+        let c_task_info = task_info.to_c_struct(&info_set);
+        let ret = unsafe { RecordRequestTask(&c_task_info, &c_task_config) };
+        info!("insert request_task DB ret is {}", ret);
+        self.recording_rdb_num.fetch_sub(1, Ordering::SeqCst);
+    }
+}
+
+extern "C" {
+    pub(crate) fn HasRequestTaskRecord(taskId: u32) -> bool;
+    pub(crate) fn RecordRequestTask(
+        taskInfo: *const CTaskInfo,
+        taskConfig: *const CTaskConfig,
+    ) -> bool;
 }

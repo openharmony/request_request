@@ -128,7 +128,11 @@ impl EventMessage {
         )
     }
 
-    pub(crate) fn get_task(uid: u64, task_id: u32, token: String) -> (Self, Recv<Option<TaskConfig>>) {
+    pub(crate) fn get_task(
+        uid: u64,
+        task_id: u32,
+        token: String,
+    ) -> (Self, Recv<Option<TaskConfig>>) {
         let (tx, rx) = channel::<Option<TaskConfig>>();
         (
             Self::Service(ServiceMessage::GetTask(uid, task_id, token, tx)),
