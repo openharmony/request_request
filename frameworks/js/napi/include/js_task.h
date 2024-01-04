@@ -108,6 +108,7 @@ private:
     static bool ParseTouch(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<TouchContext> context);
     static int64_t ParseBefore(napi_env env, napi_value value);
     static int64_t ParseAfter(napi_env env, napi_value value, int64_t before);
+    static bool CheckPathBaseDir(const std::string &filepath, std::string &baseDir);
     static void AddPathMap(const std::string &filepath, const std::string &baseDir);
     static void ResetDirAccess(const std::string &filepath);
     static void RemovePathMap(const std::string &filepath);
