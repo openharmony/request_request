@@ -332,35 +332,34 @@ impl RequestTask {
             client = client.redirect(Redirect::none());
         }
 
-        if self.conf.url.contains("https") {
-            let mut buf = Vec::new();
-            let file = File::open("/etc/ssl/certs/cacert.pem");
+        // http links that contain redirects also require a certificate when redirected to https.
+        let mut buf = Vec::new();
+        let file = File::open("/etc/ssl/certs/cacert.pem");
+        match file {
+            Ok(mut f) => {
+                f.read_to_end(&mut buf).unwrap();
+                let cert = Certificate::from_pem(&buf).unwrap();
+                client = client.add_root_certificate(cert);
+            }
+            Err(e) => {
+                error!("open cacert.pem failed, error is {:?}", e);
+                self.set_status(State::Failed, Reason::IoError);
+                return None;
+            }
+        }
+
+        let path_list = self.conf.certs_path.clone();
+        for path in path_list.into_iter() {
+            let real_path = convert_path(self.conf.common_data.uid, &self.conf.bundle, &path);
+            let file = Certificate::from_path(&real_path);
             match file {
-                Ok(mut f) => {
-                    f.read_to_end(&mut buf).unwrap();
-                    let cert = Certificate::from_pem(&buf).unwrap();
-                    client = client.add_root_certificate(cert);
+                Ok(c) => {
+                    client = client.add_root_certificate(c);
                 }
                 Err(e) => {
-                    error!("open cacert.pem failed, error is {:?}", e);
+                    debug!("open {:?} failed, reason is {:?}", path, e);
                     self.set_status(State::Failed, Reason::IoError);
                     return None;
-                }
-            }
-
-            let path_list = self.conf.certs_path.clone();
-            for path in path_list.into_iter() {
-                let real_path = convert_path(self.conf.common_data.uid, &self.conf.bundle, &path);
-                let file = Certificate::from_path(&real_path);
-                match file {
-                    Ok(c) => {
-                        client = client.add_root_certificate(c);
-                    }
-                    Err(e) => {
-                        debug!("open {:?} failed, reason is {:?}", path, e);
-                        self.set_status(State::Failed, Reason::IoError);
-                        return None;
-                    }
                 }
             }
         }
