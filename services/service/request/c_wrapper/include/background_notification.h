@@ -18,6 +18,8 @@
 #include <stdint.h>
 #include <sys/types.h>
 
+#include "c_string_wrapper.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -28,7 +30,8 @@ struct RequestTaskMsg {
     uint8_t action;
 };
 
-void RequestBackgroundNotify(RequestTaskMsg msg, const char *path, int32_t pathLen, uint32_t percent);
+void RequestBackgroundNotify(
+    RequestTaskMsg msg, CStringWrapper wrappedPath, CStringWrapper wrappedFileName, uint32_t percent);
 
 #ifdef __cplusplus
 }

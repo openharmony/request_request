@@ -13,7 +13,7 @@
 
 use std::ffi::c_char;
 
-use super::config::{Action, CommonTaskConfig, Network, TaskConfig, Version, ConfigSet};
+use super::config::{Action, CommonTaskConfig, ConfigSet, Network, TaskConfig, Version};
 use super::info::{CommonTaskInfo, InfoSet, Mode, TaskInfo, UpdateInfo};
 use super::notify::{CommonProgress, EachFileStatus, Progress};
 use super::reason::Reason;
@@ -377,8 +377,8 @@ extern "C" {
 
     pub(crate) fn RequestBackgroundNotify(
         msg: RequestTaskMsg,
-        path: *const c_char,
-        pathLen: i32,
+        wrappedPath: CStringWrapper,
+        wrappedFileName: CStringWrapper,
         percent: u32,
     );
 
