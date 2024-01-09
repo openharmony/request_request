@@ -41,7 +41,7 @@
 #endif
 
 #define REQUEST_LOG_TAG "Requestkit"
-#define REQUEST_LOG_DOMAIN 0xD001C00
+#define REQUEST_LOG_DOMAIN 0xD001C50
 static constexpr OHOS::HiviewDFX::HiLogLabel REQUEST_LOG_LABEL = {LOG_CORE, REQUEST_LOG_DOMAIN, REQUEST_LOG_TAG};
 
 #define MAKE_FILE_NAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
