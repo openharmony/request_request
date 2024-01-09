@@ -43,7 +43,7 @@ cfg_oh! {
     /// hilog label
     pub const LOG_LABEL: hilog_rust::HiLogLabel = hilog_rust::HiLogLabel {
         log_type: hilog_rust::LogType::LogCore,
-        domain: 0xD001C00,
+        domain: 0xD001C50,
         tag: "RequestService",
     };
 

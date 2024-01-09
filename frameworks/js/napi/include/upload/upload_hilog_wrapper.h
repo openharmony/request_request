@@ -29,8 +29,8 @@ enum UploadSubModule {
     UPLOAD_MODULE_BUTT,
 };
 
-// 0xD001C00: subsystem:miscservices module:upload_native, 8 bits reserved.
-static constexpr unsigned int BASE_UPLOAD_DOMAIN_ID = 0xD001C00;
+// 0xD001C50: subsystem:miscservices module:upload_native, 8 bits reserved.
+static constexpr unsigned int BASE_UPLOAD_DOMAIN_ID = 0xD001C50;
 
 enum UploadDomainId {
     UPLOAD_INNERKIT_DOMAIN = BASE_UPLOAD_DOMAIN_ID + UPLOAD_MODULE_INNERKIT,
