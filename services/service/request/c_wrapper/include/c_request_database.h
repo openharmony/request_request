@@ -34,108 +34,64 @@
 
 namespace OHOS::Request {
 constexpr const char *DB_NAME = "/data/service/el1/public/database/request/request.db";
+constexpr const char *REQUEST_DATABASE_VERSION = "API11_4.1-release";
+constexpr const char *REQUEST_TASK_TABLE_NAME = "request_task";
 constexpr int DATABASE_OPEN_VERSION = 1;
 constexpr int DATABASE_NEW_VERSION = 2;
 constexpr int QUERY_ERR = -1;
 constexpr int QUERY_OK = 0;
 
-constexpr const char *CREATE_REQUEST_TABLE1 = "CREATE TABLE IF NOT EXISTS request_task_info "
-                                              "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                              "task_id INTEGER, "
-                                              "uid INTEGER, "
-                                              "action INTEGER, "
-                                              "mode INTEGER, "
-                                              "ctime INTEGER, "
-                                              "mtime INTEGER, "
-                                              "reason INTEGER, "
-                                              "gauge INTEGER, "
-                                              "retry INTEGER, "
-                                              "tries INTEGER, "
-                                              "version INTEGER, "
-                                              "bundle TEXT, "
-                                              "url TEXT, "
-                                              "data TEXT, "
-                                              "token TEXT, "
-                                              "titile TEXT, "
-                                              "description TEXT, "
-                                              "mime_type TEXT, "
-                                              "state INTEGER, "
-                                              "idx INTEGER, "
-                                              "total_processed INTEGER, "
-                                              "sizes TEXT, "
-                                              "processed TEXT, "
-                                              "extras TEXT, "
-                                              "form_items_len INTEGER, "
-                                              "file_specs_len INTEGER)";
+constexpr const char *CREATE_REQUEST_VERSION_TABLE = "CREATE TABLE IF NOT EXISTS request_version "
+                                                     "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                     "version TEXT, "
+                                                     "task_table TEXT)";
 
-constexpr const char *CREATE_REQUEST_TABLE2 = "CREATE TABLE IF NOT EXISTS task_info_attachment "
-                                              "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                              "task_id INTEGER, "
-                                              "uid INTEGER, "
-                                              "form_item_name TEXT, "
-                                              "value TEXT, "
-                                              "file_spec_name TEXT, "
-                                              "path TEXT, "
-                                              "file_name TEXT, "
-                                              "mime_type TEXT, "
-                                              "reason INTEGER, "
-                                              "message TEXT)";
-
-constexpr const char *CREATE_REQUEST_TABLE3 = "CREATE TABLE IF NOT EXISTS request_task_config "
-                                              "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                              "task_id INTEGER, "
-                                              "uid INTEGER, "
-                                              "action INTEGER, "
-                                              "mode INTEGER, "
-                                              "cover INTEGER, "
-                                              "network INTEGER, "
-                                              "meterd INTEGER, "
-                                              "roaming INTEGER, "
-                                              "retry INTEGER, "
-                                              "redirect INTEGER, "
-                                              "idx INTEGER, "
-                                              "begins INTEGER, "
-                                              "ends INTEGER, "
-                                              "gauge INTEGER, "
-                                              "precise INTEGER, "
-                                              "background INTEGER, "
-                                              "bundle TEXT, "
-                                              "url TEXT, "
-                                              "titile TEXT, "
-                                              "description TEXT, "
-                                              "method TEXT, "
-                                              "headers TEXT, "
-                                              "data TEXT, "
-                                              "token TEXT, "
-                                              "extras TEXT, "
-                                              "version INTEGER, "
-                                              "form_items_len INTEGER, "
-                                              "file_specs_len INTEGER, "
-                                              "body_file_names_len INTEGER)";
-
-constexpr const char *CREATE_REQUEST_TABLE4 = "CREATE TABLE IF NOT EXISTS task_config_attachment "
-                                              "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                              "task_id INTEGER, "
-                                              "uid INTEGER, "
-                                              "form_item_name TEXT, "
-                                              "value TEXT, "
-                                              "file_spec_name TEXT, "
-                                              "path TEXT, "
-                                              "file_name TEXT, "
-                                              "mime_type TEXT, "
-                                              "body_file_name TEXT)";
-
-constexpr const char *CREATE_PRIORITY_TABLE = "CREATE TABLE IF NOT EXISTS priority_table "
-                                          "(id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                                          "task_id INTEGER, "
-                                          "uid INTEGER, "
-                                          "priority INTEGER)";
-
-constexpr const char *CREATE_CERTS_TABLE = "CREATE TABLE IF NOT EXISTS certs_table "
-                                          "(id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                                          "task_id INTEGER, "
-                                          "uid INTEGER, "
-                                          "cert_path INTEGER)";
+constexpr const char *CREATE_REQUEST_TASK_TABLE = "CREATE TABLE IF NOT EXISTS request_task "
+                                                  "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                  "task_id INTEGER, "
+                                                  "uid INTEGER, "
+                                                  "token_id INTEGER, "
+                                                  "action INTEGER, "
+                                                  "mode INTEGER, "
+                                                  "cover INTEGER, "
+                                                  "network INTEGER, "
+                                                  "metered INTEGER, "
+                                                  "roaming INTEGER, "
+                                                  "ctime INTEGER, "
+                                                  "mtime INTEGER, "
+                                                  "reason INTEGER, "
+                                                  "gauge INTEGER, "
+                                                  "retry INTEGER, "
+                                                  "redirect INTEGER, "
+                                                  "tries INTEGER, "
+                                                  "version INTEGER, "
+                                                  "config_idx INTEGER, "
+                                                  "begins INTEGER, "
+                                                  "ends INTEGER, "
+                                                  "precise INTEGER, "
+                                                  "priority INTEGER, "
+                                                  "background INTEGER, "
+                                                  "bundle TEXT, "
+                                                  "url TEXT, "
+                                                  "data TEXT, "
+                                                  "token TEXT, "
+                                                  "title TEXT, "
+                                                  "description TEXT, "
+                                                  "method TEXT, "
+                                                  "headers TEXT, "
+                                                  "config_extras TEXT, "
+                                                  "mime_type TEXT, "
+                                                  "state INTEGER, "
+                                                  "idx INTEGER, "
+                                                  "total_processed INTEGER, "
+                                                  "sizes TEXT, "
+                                                  "processed TEXT, "
+                                                  "extras TEXT, "
+                                                  "form_items BLOB, "
+                                                  "file_specs BLOB, "
+                                                  "each_file_status BLOB, "
+                                                  "body_file_names BLOB, "
+                                                  "certs_paths BLOB)";
 
 class RequestDataBase {
 public:
@@ -147,9 +103,6 @@ public:
     std::shared_ptr<OHOS::NativeRdb::ResultSet> Query(const OHOS::NativeRdb::AbsRdbPredicates &predicates,
         const std::vector<std::string> &columns);
     bool Delete(const OHOS::NativeRdb::AbsRdbPredicates &predicates);
-    bool BeginTransaction();
-    bool Commit();
-    bool RollBack();
 
 private:
     RequestDataBase();
@@ -175,40 +128,29 @@ struct CVectorWrapper {
     uint32_t *ptr;
     uint64_t len;
 };
+
+// Request Database Modify.
 bool HasRequestTaskRecord(uint32_t taskId);
-bool RecordRequestTaskInfo(CTaskInfo *taskInfo);
-bool UpdateRequestTaskInfo(uint32_t taskId, CUpdateInfo *updateInfo);
+bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig);
+bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo);
+bool RemoveRequestTask(uint32_t taskId, uint64_t uid);
 CTaskInfo *Show(uint32_t taskId, uint64_t uid);
 CTaskInfo *Touch(uint32_t taskId, uint64_t uid, CStringWrapper token);
 CTaskInfo *Query(uint32_t taskId, Action queryAction);
 CVectorWrapper Search(CFilter filter);
 void DeleteCVectorWrapper(uint32_t *ptr);
 void GetCommonTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskInfo &taskInfo);
-int GetPriority(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, uint32_t &priority);
-int GetCertsPath(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskConfig &config);
-int TouchRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo,
-    int64_t &formItemsLen, int64_t &fileSpecsLen);
-int QueryRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo,
-    int64_t &formItemsLen, int64_t &fileSpecsLen);
-int TouchTaskInfoAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo,
-    int64_t formItemsLen, int64_t fileSpecsLen);
-int QueryTaskInfoAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo,
-    int64_t fileSpecsLen);
+int TouchRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo);
+int QueryRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo);
 CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo);
 CProgress BuildCProgress(const Progress &progress);
 bool HasTaskConfigRecord(uint32_t taskId);
-bool RecordRequestTaskConfig(CTaskConfig *taskConfig);
-void GetCommonTaskConfig(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskConfig &taskConfig);
 CTaskConfig **QueryAllTaskConfig();
 int QueryTaskConfigLen();
-void QuerySingleTaskConfig(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskConfig &taskConfig);
 int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, std::vector<TaskConfig> &taskConfigs);
-int QueryTaskConfigAttachment(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskConfig &taskConfig,
-    int64_t formItemsLen, int64_t fileSpecsLen, int64_t bodyFileNamesLen);
-void SetFormItemsPtr(const TaskConfig &taskConfig, uint32_t formItemsLen, CFormItem *formItemsPtr);
-void SetFileSpecsPtr(const TaskConfig &taskConfig, uint32_t fileSpecsLen, CFileSpec *fileSpecsPtr);
 CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs);
 bool CleanTaskConfigTable(uint32_t taskId, uint64_t uid);
+void RequestDBRemoveRecordsFromTime(uint64_t time);
 
 #ifdef __cplusplus
 }

@@ -46,6 +46,7 @@ pub(crate) enum Network {
 pub(crate) struct CommonTaskConfig {
     pub(crate) task_id: u32,
     pub(crate) uid: u64,
+    pub(crate) token_id: u64,
     pub(crate) action: Action,
     pub(crate) mode: Mode,
     pub(crate) cover: bool,
@@ -128,7 +129,11 @@ impl TaskConfig {
             extras: hashmap_to_string(&self.extras),
             form_items: self.form_items.iter().map(|x| x.to_c_struct()).collect(),
             file_specs: self.file_specs.iter().map(|x| x.to_c_struct()).collect(),
-            body_file_names: self.body_file_names.iter().map(CStringWrapper::from).collect(),
+            body_file_names: self
+                .body_file_names
+                .iter()
+                .map(CStringWrapper::from)
+                .collect(),
             certs_path: self.certs_path.iter().map(CStringWrapper::from).collect(),
         }
     }

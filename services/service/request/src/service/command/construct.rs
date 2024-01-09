@@ -14,7 +14,7 @@
 use std::collections::HashMap;
 use std::fs::File;
 
-use ipc_rust::{get_calling_uid, BorrowedMsgParcel, IMsgParcel, IpcResult, IpcStatusCode};
+use ipc_rust::{get_calling_uid, BorrowedMsgParcel, IMsgParcel, IpcResult, IpcStatusCode, get_calling_token_id};
 
 use crate::error::ErrorCode;
 use crate::manager::events::EventMessage;
@@ -93,6 +93,7 @@ impl Construct {
         // Creates task_id here, move it to task_manager later?
         let task_id = generate_task_id();
         let uid = get_calling_uid();
+        let token_id = get_calling_token_id();
 
         let mut certs_path = Vec::new();
         let certs_path_size: u32 = data.read()?;
@@ -208,6 +209,7 @@ impl Construct {
             common_data: CommonTaskConfig {
                 task_id,
                 uid,
+                token_id,
                 action,
                 mode,
                 cover,
