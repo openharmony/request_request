@@ -12,7 +12,7 @@
 // limitations under the License.
 
 use std::cell::UnsafeCell;
-use std::ffi::{c_char, CString};
+use std::ffi::CString;
 use std::fs::File;
 use std::io::{Read, SeekFrom};
 use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicU8, Ordering};
@@ -40,6 +40,7 @@ use crate::task::config::{Action, TaskConfig};
 use crate::task::ffi::{
     GetNetworkInfo, RequestBackgroundNotify, RequestTaskMsg, UpdateRequestTask,
 };
+use crate::utils::c_wrapper::CStringWrapper;
 use crate::utils::{get_current_timestamp, hashmap_to_string};
 
 cfg_oh! {
@@ -976,8 +977,6 @@ impl RequestTask {
         if index >= self.conf.file_specs.len() {
             return;
         }
-        let file_path = self.conf.file_specs[index].path.as_ptr() as *const c_char;
-        let file_path_len = self.conf.file_specs[index].path.as_bytes().len() as i32;
         let percent = total_processed * 100 / (file_total_size as u64);
         debug!("background notify");
         let task_msg = RequestTaskMsg {
@@ -986,7 +985,9 @@ impl RequestTask {
             action: self.conf.common_data.action as u8,
         };
         unsafe {
-            RequestBackgroundNotify(task_msg, file_path, file_path_len, percent as u32);
+            let c_path = CStringWrapper::from(self.conf.file_specs[index].path.as_str());
+            let c_file_name = CStringWrapper::from(self.conf.file_specs[index].file_name.as_str());
+            RequestBackgroundNotify(task_msg, c_path, c_file_name, percent as u32);
         };
     }
 

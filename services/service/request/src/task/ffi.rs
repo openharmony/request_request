@@ -379,8 +379,8 @@ extern "C" {
 
     pub(crate) fn RequestBackgroundNotify(
         msg: RequestTaskMsg,
-        path: *const c_char,
-        pathLen: i32,
+        wrappedPath: CStringWrapper,
+        wrappedFileName: CStringWrapper,
         percent: u32,
     );
 
