@@ -40,6 +40,9 @@ export default function requestOperateTaskTest() {
       if (fs.accessSync(cacheDir + '/test.apk')) {
         fs.unlinkSync(cacheDir + '/test.apk');
       }
+      if (fs.accessSync(cacheDir + '/README.md')) {
+        fs.unlinkSync(cacheDir + '/README.md');
+      }
     })
 
     function sleep(ms) {
@@ -60,7 +63,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testStartTask001
      * @tc.name: testStartTask001
      * @tc.desc: Test start FOREGROUND task for callback
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testStartTask001', 0, async function (done) {
@@ -81,7 +86,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testStartTask002
      * @tc.name: testStartTask002
      * @tc.desc: Test start FOREGROUND task for promise
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testStartTask002', 0, async function (done) {
@@ -106,7 +113,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testStartTask003
      * @tc.name: testStartTask003
      * @tc.desc: Test start background task for callback
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testStartTask003', 0, async function (done) {
@@ -128,7 +137,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testStartTask004
      * @tc.name: testStartTask004
      * @tc.desc: Test start background task for promise
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testStartTask004', 0, async function (done) {
@@ -153,7 +164,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testStartTask005
      * @tc.name: testStartTask005
      * @tc.desc: Test start pause start background task
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testStartTask005', 0, async function (done) {
@@ -179,7 +192,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testStartTask006
      * @tc.name: testStartTask006
      * @tc.desc: Test start stop start background task
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testStartTask006', 0, async function (done) {
@@ -204,7 +219,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testStartTask007
      * @tc.name: testStartTask007
      * @tc.desc: Test start stop start FOREGROUND
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testStartTask007', 0, async function (done) {
@@ -229,23 +246,46 @@ export default function requestOperateTaskTest() {
      * @tc.number: testStartTask008
      * @tc.name: testStartTask008
      * @tc.desc: Test start two FOREGROUND task
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testStartTask008', 0, async function (done) {
-      let conf1 = {
-        action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test2.apk`,
-        mode: request.agent.Mode.FOREGROUND
-      }
-
       try {
+        let conf = {
+          action: request.agent.Action.DOWNLOAD,
+          url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+          saveas: `test.apk`,
+          mode: request.agent.Mode.FOREGROUND
+        }
+        let task = await request.agent.create(context, conf);
+        await task.start();
+        await sleep(2000);
+
+        let conf1 = {
+          action: request.agent.Action.DOWNLOAD,
+          url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+          saveas: `test2.apk`,
+          mode: request.agent.Mode.FOREGROUND
+        }
         request.agent.create(context, conf1, async (err, task1) => {
           expect(true).assertTrue();
           await request.agent.remove(task1.tid);
-          done();
         })
+        await sleep(1000);
+        task.on('progress', async function(progress) {
+          if (progress.state === request.agent.State.RUNNING) {
+            expect(true).assertTrue();
+            task.off('progress');
+            await request.agent.remove(task.tid);
+            done();
+          } else {
+            expect(false).assertTrue();
+            done();
+          }
+        })
+
       } catch (err) {
         expect(false).assertTrue();
         done();
@@ -256,7 +296,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testPauseTask001
      * @tc.name: testPauseTask001
      * @tc.desc: Test pause FOREGROUND task
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testPauseTask001', 0, async function (done) {
@@ -278,7 +320,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testPauseTask002
      * @tc.name: testPauseTask002
      * @tc.desc: Test pause stop background task
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testPauseTask002', 0, async function (done) {
@@ -304,7 +348,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testPauseTask003
      * @tc.name: testPauseTask003
      * @tc.desc: Test pause background task for callback
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testPauseTask003', 0, async function (done) {
@@ -327,7 +373,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testPauseTask004
      * @tc.name: testPauseTask004
      * @tc.desc: Test pause background task for promise
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testPauseTask004', 0, async function (done) {
@@ -353,7 +401,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testPauseTask005
      * @tc.name: testPauseTask005
      * @tc.desc: Test pause resume pause background task
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testPauseTask005', 0, async function (done) {
@@ -386,8 +436,10 @@ export default function requestOperateTaskTest() {
     /**
      * @tc.number: testResumeTask001
      * @tc.name: testResumeTask001
-     * @tc.desc: Test resume FOREGROUND task
-     * @tc.type: FUNC
+     * @tc.desc: Test start resume FOREGROUND task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testResumeTask001', 0, async function (done) {
@@ -411,7 +463,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testResumeTask002
      * @tc.name: testResumeTask002
      * @tc.desc: Test pause resume background task
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testResumeTask002', 0, async function (done) {
@@ -436,7 +490,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testResumeTask003
      * @tc.name: testResumeTask003
      * @tc.desc: Test stop resume background task
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testResumeTask003', 0, async function (done) {
@@ -467,7 +523,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testResumeTask004
      * @tc.name: testResumeTask004
      * @tc.desc: Test start resume background task
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testResumeTask004', 0, async function (done) {
@@ -489,10 +547,75 @@ export default function requestOperateTaskTest() {
     })
 
     /**
+     * @tc.number: testResumeTask005
+     * @tc.name: testResumeTask005
+     * @tc.desc: Test pause resume FOREGROUND task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testResumeTask005', 0, async function (done) {
+      try {
+        let conf = {
+          action: request.agent.Action.DOWNLOAD,
+          url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+          saveas: `README.md`,
+          mode: request.agent.Mode.FOREGROUND
+        }
+        let task = await request.agent.create(context, conf);
+        await task.start();
+        await task.pause();
+        await task.resume(async (err) => {
+          expect(err === null).assertTrue();
+          await request.agent.remove(task.tid);
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testResumeTask006
+     * @tc.name: testResumeTask006
+     * @tc.desc: Test stop resume FOREGROUND task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testResumeTask006', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+        saveas: `README.md`,
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      try {
+        await task.start();
+        await task.stop().then(() => {
+          expect(true).assertTrue();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+        await task.resume();
+      } catch (err) {
+        expect(err.code).assertEqual(21900007);
+        done();
+      }
+    })
+
+    /**
      * @tc.number: testStopTask001
      * @tc.name: testStopTask001
      * @tc.desc: Test stop FOREGROUND task for callback
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testStopTask001', 0, async function (done) {
@@ -514,7 +637,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testStopTask002
      * @tc.name: testStopTask002
      * @tc.desc: Test stop FOREGROUND task for promise
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testStopTask002', 0, async function (done) {
@@ -539,7 +664,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testStopTask003
      * @tc.name: testStopTask003
      * @tc.desc: Test stop background task for callback
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testStopTask003', 0, async function (done) {
@@ -561,7 +688,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testStopTask004
      * @tc.name: testStopTask004
      * @tc.desc: Test stop background task for promise
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testStopTask004', 0, async function (done) {
@@ -586,7 +715,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testStopTask005
      * @tc.name: testStopTask005
      * @tc.desc: Test stop pause background task for promise
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testStopTask005', 0, async function (done) {
@@ -609,10 +740,40 @@ export default function requestOperateTaskTest() {
     })
 
     /**
+     * @tc.number: testStopTask006
+     * @tc.name: testStopTask006
+     * @tc.desc: Test stop pause background task for promise
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testStopTask006', 0, async function (done) {
+      await sleep(2000);
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+        saveas: `README.md`,
+        mode: request.agent.Mode.FOREGROUND
+      }
+      try{
+        let task = await request.agent.create(context, conf);
+        await task.start();
+        await task.stop();
+        await task.pause();
+      } catch (err) {
+        expect(err.code).assertEqual(21900007);
+        done();
+      }
+    })
+
+    /**
      * @tc.number: testOnTask001
      * @tc.name: testOnTask001
      * @tc.desc: Test on task for 'test'
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testOnTask001', 0, async function (done) {
@@ -636,7 +797,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testOnTask002
      * @tc.name: testOnTask002
      * @tc.desc: Test on task for number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testOnTask002', 0, async function (done) {
@@ -660,7 +823,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testOnTask003
      * @tc.name: testOnTask003
      * @tc.desc: Test on task for failed
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testOnTask003', 0, async function (done) {
@@ -682,7 +847,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testOnTask004
      * @tc.name: testOnTask004
      * @tc.desc: Test on task for completed
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testOnTask004', 0, async function (done) {
@@ -709,7 +876,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testOnTask005
      * @tc.name: testOnTask005
      * @tc.desc: Test on task background task
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testOnTask005', 0, async function (done) {
@@ -736,7 +905,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testOnTask006
      * @tc.name: testOnTask006
      * @tc.desc: Test on task for progress state REMOVED
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testOnTask006', 0, async function (done) {
@@ -760,7 +931,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testOnTask007
      * @tc.name: testOnTask007
      * @tc.desc: Test on task for progress twice
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testOnTask007', 0, async function (done) {
@@ -787,7 +960,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testOffTask001
      * @tc.name: testOffTask001
      * @tc.desc: Test off task for 'test'
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testOffTask001', 0, async function (done) {
@@ -811,7 +986,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testOffTask002
      * @tc.name: testOffTask002
      * @tc.desc: Test off task for number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testOffTask002', 0, async function (done) {
@@ -835,7 +1012,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testOffTask003
      * @tc.name: testOffTask003
      * @tc.desc: Test off task for failed
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testOffTask003', 0, async function (done) {
@@ -861,7 +1040,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testOffTask004
      * @tc.name: testOffTask004
      * @tc.desc: Test off task for completed
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testOffTask004', 0, async function (done) {
@@ -889,7 +1070,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testOffTask005
      * @tc.name: testOffTask005
      * @tc.desc: Test off task for progress
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testOffTask005', 0, async function (done) {
@@ -921,7 +1104,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testOffTask006
      * @tc.name: testOffTask006
      * @tc.desc: Test off task twice
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testOffTask006', 0, async function (done) {
@@ -948,7 +1133,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testRemove001
      * @tc.name: testRemove001
      * @tc.desc: Test remove for parameter error
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testRemove001', 0, async function (done) {
@@ -964,7 +1151,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testRemove002
      * @tc.name: testRemove002
      * @tc.desc: Test remove for parameter error
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testRemove002', 0, async function (done) {
@@ -980,7 +1169,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testRemove003
      * @tc.name: testRemove003
      * @tc.desc: Test remove for promise
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testRemove003', 0, async function (done) {
@@ -1003,7 +1194,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testRemove004
      * @tc.name: testRemove004
      * @tc.desc: Test remove for callback
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testRemove004', 0, async function (done) {
@@ -1023,7 +1216,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testRemove005
      * @tc.name: testRemove005
      * @tc.desc: Test remove for callback
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testRemove005', 0, async function (done) {
@@ -1046,7 +1241,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testRedirect001
      * @tc.name: testRedirect001
      * @tc.desc: Test redirect enable
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testRedirect001', 0, async function (done) {
@@ -1069,7 +1266,9 @@ export default function requestOperateTaskTest() {
      * @tc.number: testRedirect002
      * @tc.name: testRedirect002
      * @tc.desc: Test redirect disable
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testRedirect002', 0, async function (done) {
