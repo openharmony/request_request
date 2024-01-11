@@ -406,7 +406,12 @@ int32_t RequestEvent::RemoveExec(const std::shared_ptr<ExecContext> &context)
 
 int32_t RequestEvent::ResumeExec(const std::shared_ptr<ExecContext> &context)
 {
-    int32_t ret = RequestManager::GetInstance()->Resume(context->task->GetTid());
+    int32_t ret = E_OK;
+    if (!RequestManager::GetInstance()->LoadRequestServer()) {
+        ret = E_SERVICE_ERROR;
+        return ret;
+    }
+    ret = RequestManager::GetInstance()->Resume(context->task->GetTid());
     if (context->version_ != Version::API10 && ret != E_PERMISSION) {
         ret = E_OK;
     }

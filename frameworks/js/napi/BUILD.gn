@@ -36,6 +36,7 @@ request_include = [
 ]
 
 request_src = [
+  "src/app_state_callback.cpp",
   "src/async_call.cpp",
   "src/request_event.cpp",
   "src/legacy/request_manager.cpp",
