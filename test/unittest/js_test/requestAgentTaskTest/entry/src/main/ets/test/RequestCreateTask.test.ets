@@ -40,6 +40,9 @@ export default function requestCreateTaskTest() {
       if (fs.accessSync(cacheDir + '/test.apk')) {
         fs.unlinkSync(cacheDir + '/test.apk');
       }
+      if (fs.accessSync(cacheDir + '/README.md')) {
+        fs.unlinkSync(cacheDir + '/README.md');
+      }
     })
 
     function sleep(ms) {
@@ -57,9 +60,12 @@ export default function requestCreateTaskTest() {
     }
 
     /**
+     * @tc.number: testTaskAction001
      * @tc.name: testTaskAction001
      * @tc.desc: Test create task when lack action
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskAction001', 0, function (done)  {
@@ -78,9 +84,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskAction002
      * @tc.name: testTaskAction002
      * @tc.desc: Test create task when action is string
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskAction002', 0, async function (done)  {
@@ -100,9 +109,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskAction003
      * @tc.name: testTaskAction003
      * @tc.desc: Test create task when action is 2
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskAction003', 0, function (done)  {
@@ -122,9 +134,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskAction004
      * @tc.name: testTaskAction004
      * @tc.desc: Test create task when action is UPLOAD
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskAction004', 0, function (done)  {
@@ -143,9 +158,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskAction005
      * @tc.name: testTaskAction005
      * @tc.desc: Test create task when action is DOWNLOAD
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskAction005', 0, function (done)  {
@@ -168,9 +186,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskUrl001
      * @tc.name: testTaskUrl001
      * @tc.desc: Test create task when lack url
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskUrl001', 0, function (done)  {
@@ -189,9 +210,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskUrl002
      * @tc.name: testTaskUrl002
      * @tc.desc: Test create task when url is empty
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskUrl002', 0, function (done)  {
@@ -211,9 +235,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskUrl003
      * @tc.name: testTaskUrl003
      * @tc.desc: Test create task when url is not support download
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskUrl003', 0, function (done)  {
@@ -229,9 +256,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskUrl004
      * @tc.name: testTaskUrl004
      * @tc.desc: Test create task when url is not support upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskUrl004', 0, function (done)  {
@@ -250,9 +280,63 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskUrl005
+     * @tc.name: testTaskUrl005
+     * @tc.desc: Test create task when url is not http/https scheme.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskUrl005', 0, function (done)  {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'admin://127.0.0.1',
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskUrl006
+     * @tc.name: testTaskUrl006
+     * @tc.desc: Test create task when url length exceeds 2048.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskUrl006', 0, function (done)  {
+
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'http://127.0.0.1/' + 'a'.repeat(2048),
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskTitle001
      * @tc.name: testTaskTitle001
      * @tc.desc: Test create task when title is given
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskTitle001', 0, async function (done) {
@@ -268,9 +352,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskTitle002
      * @tc.name: testTaskTitle002
      * @tc.desc: Test create task when title is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskTitle002', 0, async function (done) {
@@ -286,9 +373,38 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskTitle003
+     * @tc.name: testTaskTitle003
+     * @tc.desc: Test create task when title length exceeds 256
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskTitle003', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/chenzhixue/downloadTest/raw/v1.0/README.md',
+        title: 'a'.repeat(257)
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskDescription001
      * @tc.name: testTaskDescription001
      * @tc.desc: Test create task when description is given
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskDescription001', 0, async function (done) {
@@ -304,9 +420,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskDescription002
      * @tc.name: testTaskDescription002
      * @tc.desc: Test create task when description is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskDescription002', 0, async function (done) {
@@ -323,9 +442,38 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskDescription003
+     * @tc.name: testTaskDescription003
+     * @tc.desc: Test create task when description length exceeds 1024
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskDescription003', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/chenzhixue/downloadTest/raw/v1.0/README.md',
+        description: 'a'.repeat(1025)
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskMode001
      * @tc.name: testTaskMode001
      * @tc.desc: Test create task when mode is FOREGROUND
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMode001', 0, async function (done) {
@@ -345,9 +493,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskMode002
      * @tc.name: testTaskMode002
      * @tc.desc: Test create task when mode is BACKGROUND
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMode002', 0, async function (done) {
@@ -367,9 +518,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskMode002
      * @tc.name: testTaskMode003
      * @tc.desc: Test create task when mode is string
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMode003', 0, async function (done) {
@@ -390,9 +544,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskOverwrite001
      * @tc.name: testTaskOverwrite001
      * @tc.desc: Test create task when overwrite is true and file exists
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskOverwrite001', 0, async function (done) {
@@ -415,9 +572,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskOverwrite002
      * @tc.name: testTaskOverwrite002
      * @tc.desc: Test create task when overwrite is true and file not exists
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskOverwrite002', 0, async function (done) {
@@ -438,9 +598,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskOverwrite003
      * @tc.name: testTaskOverwrite003
      * @tc.desc: Test create task when overwrite is false and file exists
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskOverwrite003', 0, async function (done) {
@@ -463,9 +626,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskOverwrite004
      * @tc.name: testTaskOverwrite004
      * @tc.desc: Test create task when overwrite is false and file not exists
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskOverwrite004', 0, async function (done) {
@@ -486,9 +652,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskOverwrite005
      * @tc.name: testTaskOverwrite005
-     * @tc.desc: Test create task when overwrite is string
-     * @tc.type: FUNC
+     * @tc.desc: Test create task when overwrite is string and file not exists
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskOverwrite005', 0, async function (done) {
@@ -509,9 +678,97 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskOverwrite006
+     * @tc.name: testTaskOverwrite006
+     * @tc.desc: Test create task when overwrite is string and file exists
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskOverwrite006', 0, async function (done) {
+      let file = fs.openSync(cacheDir + '/README.md', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/chenzhixue/downloadTest/raw/v1.0/README.md',
+        overwrite: "true"
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(13400001)
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskOverwrite007
+     * @tc.name: testTaskOverwrite007
+     * @tc.desc: Test create task when overwrite is not given and file not exists
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskOverwrite007', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/chenzhixue/downloadTest/raw/v1.0/README.md'
+      }
+      try {
+        let task = await request.agent.create(context, conf);
+        await task.start().then(async () => {
+          expect(true).assertTrue();
+          await request.agent.remove(task.tid);
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(13400001)
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskOverwrite008
+     * @tc.name: testTaskOverwrite008
+     * @tc.desc: Test create task when overwrite is not given and file exists
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskOverwrite008', 0, async function (done) {
+      let file = fs.openSync(cacheDir + '/README.md', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/chenzhixue/downloadTest/raw/v1.0/README.md'
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(13400001)
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskMethod001
      * @tc.name: testTaskMethod001
      * @tc.desc: Test create task when method is POST for upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMethod001', 0, async function (done) {
@@ -539,9 +796,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskMethod002
      * @tc.name: testTaskMethod002
      * @tc.desc: Test create task when method is POST for download
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMethod002', 0, async function (done) {
@@ -562,9 +822,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskMethod003
      * @tc.name: testTaskMethod003
      * @tc.desc: Test create task when method is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMethod003', 0, async function (done) {
@@ -585,9 +848,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskMethod004
      * @tc.name: testTaskMethod004
      * @tc.desc: Test create task when method is empty
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMethod004', 0, async function (done) {
@@ -608,9 +874,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskMethod005
      * @tc.name: testTaskMethod005
      * @tc.desc: Test create task when method is GET for upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMethod005', 0, async function (done) {
@@ -638,9 +907,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskMethod006
      * @tc.name: testTaskMethod006
      * @tc.desc: Test create task when method is PUT for download
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMethod006', 0, async function (done) {
@@ -661,11 +933,13 @@ export default function requestCreateTaskTest() {
       })
     })
 
-
     /**
+     * @tc.number: testTaskSaveas001
      * @tc.name: testTaskSaveas001
-     * @tc.desc: Test create task when lack saveas is number for download
-     * @tc.type: FUNC
+     * @tc.desc: Test create task when saveas is number for download
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskSaveas001', 0, async function (done) {
@@ -686,9 +960,45 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskSaveas002
+     * @tc.name: testTaskSaveas002
+     * @tc.desc: Test create task when lack saveas for download
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskSaveas002', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        mode: request.agent.Mode.FOREGROUND
+      }
+      try {
+        let task = await request.agent.create(context, conf);
+        task.on('completed', function() {
+          if (fs.accessSync(`${cacheDir}/test.apk`)) {
+            expect(true).assertTrue();
+            done();
+          } else {
+            expect(false).assertTrue();
+            done();
+          }
+        })
+        await task.start();
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskData001
      * @tc.name: testTaskData001
      * @tc.desc: Test create task when data lack name
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskData001', 0, function (done)  {
@@ -715,9 +1025,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskData002
      * @tc.name: testTaskData002
      * @tc.desc: Test create task when data name is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskData002', 0, function (done)  {
@@ -745,9 +1058,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskData003
      * @tc.name: testTaskData003
      * @tc.desc: Test create task when data lack value
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskData003', 0, function (done)  {
@@ -772,9 +1088,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskData004
      * @tc.name: testTaskData004
      * @tc.desc: Test create task when data value is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskData004', 0, function (done)  {
@@ -800,9 +1119,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskData005
      * @tc.name: testTaskData005
      * @tc.desc: Test create task when data path is '', path is not exits
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskData005', 0, function (done)  {
@@ -830,9 +1152,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskData006
      * @tc.name: testTaskData006
      * @tc.desc: Test create task when data path is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskData006', 0, function (done)  {
@@ -860,9 +1185,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskData007
      * @tc.name: testTaskData007
      * @tc.desc: Test create task when data path is not absolute path
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskData007', 0, function (done)  {
@@ -890,9 +1218,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskData008
      * @tc.name: testTaskData008
      * @tc.desc: Test create task when data filename is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskData008', 0, function (done)  {
@@ -917,9 +1248,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskData009
      * @tc.name: testTaskData009
      * @tc.desc: Test create task when data mimeType is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskData009', 0, function (done)  {
@@ -944,9 +1278,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskData010
      * @tc.name: testTaskData010
      * @tc.desc: Test create task when data path and filename is different
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskData010', 0, function (done)  {
@@ -971,9 +1308,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskData011
      * @tc.name: testTaskData011
      * @tc.desc: Test create task when data two files for upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskData011', 0, function (done)  {
@@ -1002,9 +1342,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskData012
      * @tc.name: testTaskData012
      * @tc.desc: Test create task when data value is string
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskData012', 0, function (done)  {
@@ -1031,9 +1374,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskData013
      * @tc.name: testTaskData013
      * @tc.desc: Test create task when data path and filename is same
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskData013', 0, function (done)  {
@@ -1058,9 +1404,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskNetwork001
      * @tc.name: testTaskNetwork001
      * @tc.desc: Test create task when network is 3
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskNetwork001', 0, async function (done) {
@@ -1088,9 +1437,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskNetwork002
      * @tc.name: testTaskNetwork002
      * @tc.desc: Test create task when network is string
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskNetwork002', 0, async function (done) {
@@ -1110,9 +1462,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskNetwork003
      * @tc.name: testTaskNetwork003
      * @tc.desc: Test create task when network is WIFI for DOWNLOAD
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskNetwork003', 0, async function (done) {
@@ -1132,9 +1487,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskNetwork004
      * @tc.name: testTaskNetwork004
      * @tc.desc: Test create task when network is any for UPLOAD
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskNetwork004', 0, async function (done) {
@@ -1162,9 +1520,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskHeaders001
      * @tc.name: testTaskHeaders001
      * @tc.desc: Test create task when headers content-type is application/json but data is file for upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskHeaders001', 0, async function (done) {
@@ -1192,9 +1553,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskHeaders002
      * @tc.name: testTaskHeaders002
      * @tc.desc: Test create task when lack headers for upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskHeaders002', 0, async function (done) {
@@ -1221,9 +1585,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskHeaders003
      * @tc.name: testTaskHeaders003
      * @tc.desc: Test create task when lack headers for download
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskHeaders003', 0, async function (done) {
@@ -1243,9 +1610,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskRetry001
      * @tc.name: testTaskRetry001
      * @tc.desc: Test create task when retry is true for FOREGROUND
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskRetry001', 0, async function (done) {
@@ -1267,9 +1637,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskRetry002
      * @tc.name: testTaskRetry002
      * @tc.desc: Test create task when retry is true for background
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskRetry002', 0, async function (done) {
@@ -1292,9 +1665,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskRetry003
      * @tc.name: testTaskRetry003
      * @tc.desc: Test create task when retry is string
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskRetry003', 0, async function (done) {
@@ -1314,9 +1690,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskRetry004
      * @tc.name: testTaskRetry004
      * @tc.desc: Test create task when retry is false for FOREGROUND
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskRetry004', 0, async function (done) {
@@ -1335,9 +1714,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskRetry005
      * @tc.name: testTaskRetry005
      * @tc.desc: Test create task when retry is false for background
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskRetry005', 0, async function (done) {
@@ -1357,9 +1739,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskIndex001
      * @tc.name: testTaskIndex001
      * @tc.desc: Test create task when index is string
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskIndex001', 0, async function (done) {
@@ -1378,9 +1763,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskIndex002
      * @tc.name: testTaskIndex002
      * @tc.desc: Test create task when index is 0 and begins greater than ends
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskIndex002', 0, async function (done) {
@@ -1403,9 +1791,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskIndex003
      * @tc.name: testTaskIndex003
      * @tc.desc: Test create task when index is 1 but only one file for upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskIndex003', 0, async function (done) {
@@ -1432,9 +1823,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskIndex004
      * @tc.name: testTaskIndex004
      * @tc.desc: Test create task when index is 0 and begins is 5 and ends is 10 for download
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskIndex004', 0, async function (done) {
@@ -1458,9 +1852,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskIndex005
      * @tc.name: testTaskIndex005
      * @tc.desc: Test create task when index is 0 and begins is 5 and ends is 10 for upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskIndex005', 0, async function (done) {
@@ -1489,9 +1886,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskIndex006
      * @tc.name: testTaskIndex006
      * @tc.desc: Test create task when unsupport range request
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskIndex006', 0, async function (done) {
@@ -1511,9 +1911,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskIndex007
      * @tc.name: testTaskIndex007
      * @tc.desc: Test create task when index is 0 and begins is 5 and ends is not exists for upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskIndex007', 0, async function (done) {
@@ -1541,9 +1944,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskIndex008
      * @tc.name: testTaskIndex008
      * @tc.desc: Test create task when index is 0 and begins is not exists and ends is 10 for download
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskIndex008', 0, async function (done) {
@@ -1564,9 +1970,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskIndex009
      * @tc.name: testTaskIndex009
      * @tc.desc: Test create task when index is 0 and begins is 5 and ends is not exists for upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskIndex009', 0, async function (done) {
@@ -1594,9 +2003,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskIndex010
      * @tc.name: testTaskIndex010
      * @tc.desc: Test create task when index is 1 but have two files for upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskIndex010', 0, async function (done) {
@@ -1633,9 +2045,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskToken001
      * @tc.name: testTaskToken001
      * @tc.desc: Test create task when token is 7 bytes
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskToken001', 0, async function (done) {
@@ -1656,9 +2071,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskToken002
      * @tc.name: testTaskToken002
      * @tc.desc: Test create task when token is 2049 bytes
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskToken002', 0, async function (done) {
@@ -1679,9 +2097,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskToken003
      * @tc.name: testTaskToken003
      * @tc.desc: Test create task when token is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskToken003', 0, async function (done) {
@@ -1701,9 +2122,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskToken004
      * @tc.name: testTaskToken004
      * @tc.desc: Test create task when token is 2048 bytes
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskToken004', 0, async function (done) {
@@ -1723,9 +2147,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testCreate001
      * @tc.name: testCreate001
      * @tc.desc: Test create for conf is string type
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testCreate001', 0, async function (done) {
@@ -1738,9 +2165,12 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testCreate002
      * @tc.name: testCreate002
      * @tc.desc: Test create
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testCreate002', 0, async function (done) {
