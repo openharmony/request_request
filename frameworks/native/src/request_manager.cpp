@@ -15,14 +15,16 @@
 
 #include "request_manager.h"
 
+#include <atomic>
+
 #include "data_ability_predicates.h"
-#include "request_sync_load_callback.h"
 #include "log.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_predicates.h"
 #include "rdb_store.h"
+#include "request_sync_load_callback.h"
 #include "result_set.h"
 #include "system_ability_definition.h"
 
@@ -229,8 +231,8 @@ int32_t RequestManager::Resume(const std::string &tid)
     return proxy->Resume(tid);
 }
 
-int32_t RequestManager::On(const std::string &type, const std::string &tid,
-    const sptr<NotifyInterface> &listener, Version version)
+int32_t RequestManager::On(
+    const std::string &type, const std::string &tid, const sptr<NotifyInterface> &listener, Version version)
 {
     REQUEST_HILOGD("On in");
     auto proxy = GetRequestServiceProxy();
@@ -310,7 +312,7 @@ RequestManager::SystemAbilityStatusChangeListener::SystemAbilityStatusChangeList
 {
 }
 
-void RequestManager::SystemAbilityStatusChangeListener::OnAddSystemAbility(int32_t saId, const std::string& deviceId)
+void RequestManager::SystemAbilityStatusChangeListener::OnAddSystemAbility(int32_t saId, const std::string &deviceId)
 {
     if (saId != DOWNLOAD_SERVICE_ID) {
         REQUEST_HILOGE("SA ID is not DOWNLOAD_SERVICE_ID.");
@@ -321,7 +323,7 @@ void RequestManager::SystemAbilityStatusChangeListener::OnAddSystemAbility(int32
     }
 }
 
-void RequestManager::SystemAbilityStatusChangeListener::OnRemoveSystemAbility(int32_t saId, const std::string& deviceId)
+void RequestManager::SystemAbilityStatusChangeListener::OnRemoveSystemAbility(int32_t saId, const std::string &deviceId)
 {
     if (saId != DOWNLOAD_SERVICE_ID) {
         REQUEST_HILOGE("SA ID is not DOWNLOAD_SERVICE_ID.");
@@ -332,7 +334,7 @@ void RequestManager::SystemAbilityStatusChangeListener::OnRemoveSystemAbility(in
 void RequestManager::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
 {
     REQUEST_HILOGD(" RequestManager::OnRemoteSaDied");
-    ready_ = false;
+    ready_.store(false);
     SetRequestServiceProxy(nullptr);
 }
 
@@ -349,12 +351,12 @@ void RequestSaDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 bool RequestManager::LoadRequestServer()
 {
     REQUEST_HILOGD("Begin load request server");
-    if (ready_) {
+    if (ready_.load()) {
         REQUEST_HILOGD("GetSystemAbilityManager ready_ true");
         return true;
     }
     std::lock_guard<std::mutex> lock(downloadMutex_);
-    if (ready_) {
+    if (ready_.load()) {
         REQUEST_HILOGD("GetSystemAbilityManager ready_ is true");
         return true;
     }
@@ -383,8 +385,8 @@ bool RequestManager::LoadRequestServer()
 
     {
         std::unique_lock<std::mutex> conditionLock(conditionMutex_);
-        auto waitStatus = syncCon_.wait_for(conditionLock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
-            [this]() { return ready_; });
+        auto waitStatus = syncCon_.wait_for(
+            conditionLock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS), [this]() { return ready_.load(); });
         if (!waitStatus) {
             REQUEST_HILOGE("download server load sa timeout");
             return false;
@@ -393,17 +395,22 @@ bool RequestManager::LoadRequestServer()
     return true;
 }
 
+bool RequestManager::IsSaReady()
+{
+    return ready_.load();
+}
+
 void RequestManager::LoadServerSuccess()
 {
     std::unique_lock<std::mutex> lock(conditionMutex_);
-    ready_ = true;
+    ready_.store(true);
     syncCon_.notify_one();
     REQUEST_HILOGE("load download server success");
 }
 
 void RequestManager::LoadServerFail()
 {
-    ready_ = false;
+    ready_.store(false);
     REQUEST_HILOGE("load download server fail");
 }
 } // namespace OHOS::Request

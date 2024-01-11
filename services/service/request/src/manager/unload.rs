@@ -15,20 +15,17 @@ use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Arc;
 
+use super::task_manager::GetTopBundleName;
 use super::TaskManager;
 use crate::manager::monitor::IsOnline;
 use crate::task::config::{TaskConfig, Version};
 use crate::task::ffi::CTaskConfig;
-use crate::task::info::State;
+use crate::task::info::{ApplicationState, State};
 use crate::task::RequestTask;
 
 impl TaskManager {
     pub(crate) fn check_unload_sa(&self) -> bool {
-        if !self.rx.is_empty() {
-            return false;
-        }
-
-        if !self.tasks.is_empty() && !self.network_check_unload_sa() {
+        if !self.tasks.is_empty() && !self.pause_check_unload_sa() {
             return false;
         }
 
@@ -36,9 +33,6 @@ impl TaskManager {
             return false;
         }
 
-        if !self.rx.is_empty() {
-            return false;
-        }
         true
     }
 
@@ -46,11 +40,20 @@ impl TaskManager {
         #[cfg(feature = "oh")]
         const REQUEST_SERVICE_ID: i32 = 3706;
 
-        // Removes task records from a week ago before unloading.
-        self.delete_early_records();
+        if !self.rx.is_empty() {
+            self.schedule_unload_sa();
+            return false;
+        }
 
         if !self.check_unload_sa() {
-            debug!("Triggers unload sa, but cannot unload now");
+            return false;
+        }
+
+        self.delete_early_records();
+
+        // check rx again for there may be new message arrive.
+        if !self.rx.is_empty() {
+            self.schedule_unload_sa();
             return false;
         }
 
@@ -105,8 +108,14 @@ impl TaskManager {
 
     pub(crate) fn insert_restore_tasks(&mut self) {
         debug!("TaskManager inserts restore tasks");
+        let top_bundle = unsafe { GetTopBundleName() }.to_string();
         for task in std::mem::take(&mut self.restoring_tasks) {
             self.restore_task(task.clone());
+
+            if task.conf.bundle == top_bundle {
+                self.update_app_state(task.conf.common_data.uid, ApplicationState::Foreground);
+            }
+
             if unsafe { IsOnline() } {
                 self.resume_waiting_task(task);
             }
@@ -137,7 +146,7 @@ impl TaskManager {
         }
     }
 
-    fn network_check_unload_sa(&self) -> bool {
+    fn pause_check_unload_sa(&self) -> bool {
         let mut need_unload = false;
         for task in self.tasks.values() {
             let state = task.status.lock().unwrap().state;
@@ -145,8 +154,8 @@ impl TaskManager {
                 || state == State::Failed
                 || state == State::Removed
                 || state == State::Stopped
-                || ((state == State::Waiting || state == State::Paused)
-                    && (!task.is_satisfied_configuration() || unsafe { !IsOnline() }))
+                || state == State::Waiting
+                || state == State::Paused
             {
                 need_unload = true;
             } else {
@@ -179,6 +188,7 @@ impl TaskManager {
         Some(task_config_map)
     }
 
+    /// Removes task records from a week ago before unloading.
     pub(crate) fn delete_early_records(&self) {
         use std::time::{SystemTime, UNIX_EPOCH};
 

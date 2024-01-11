@@ -14,6 +14,7 @@
  */
 
 #include "js_task.h"
+#include "app_state_callback.h"
 
 #include <chrono>
 #include <cstring>
@@ -47,6 +48,7 @@ std::mutex JsTask::getTaskCreateMutex_;
 thread_local napi_ref JsTask::getTaskCreateCtor = nullptr;
 std::mutex JsTask::taskMutex_;
 std::map<std::string, JsTask *> JsTask::taskMap_;
+bool JsTask::register_ = false;
 std::mutex JsTask::pathMutex_;
 std::map<std::string, int32_t> JsTask::pathMap_;
 std::mutex JsTask::taskContextMutex_;
@@ -165,6 +167,9 @@ int32_t JsTask::CreateExec(const std::shared_ptr<ContextInfo> &context)
 {
     if (!RequestManager::GetInstance()->LoadRequestServer()) {
         return E_SERVICE_ERROR;
+    }
+    if (context ->task->config_.mode == Mode::FOREGROUND) {
+        RegisterForegroundResume();
     }
     sptr<RequestNotify> listener = new RequestNotify();
     std::string key = "done" + context->task->GetTid();
@@ -1095,5 +1100,20 @@ bool JsTask::Equals(napi_env env, napi_value value, napi_ref copy)
     bool isEquals = false;
     napi_strict_equals(env, value, copyValue, &isEquals);
     return isEquals;
+}
+
+void JsTask::RegisterForegroundResume()
+{
+    if (register_) {
+        return;
+    }
+    register_ = true;
+    auto context = AbilityRuntime::ApplicationContext::GetInstance();
+    if (context == nullptr) {
+        REQUEST_HILOGE("Get ApplicationContext failed");
+        return;
+    }
+    context -> RegisterAbilityLifecycleCallback(std::make_shared<AppStateCallback>());
+    REQUEST_HILOGD("Register foreground resume callback success");
 }
 } // namespace OHOS::Request

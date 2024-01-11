@@ -54,6 +54,7 @@ public:
     static void RemoveDirsPermission(const std::vector<std::string> &dirs);
 
     Config config_;
+    static bool register_ ;
     static std::mutex taskMutex_;
     static std::map<std::string, JsTask*> taskMap_;
     static std::mutex pathMutex_;
@@ -115,8 +116,9 @@ private:
     static void AddTaskContextMap(const std::string &key, std::shared_ptr<ContextInfo> context);
     static void UnrefTaskContextMap(std::shared_ptr<ContextInfo> context);
     static void UvUnrefTaskContext(uv_work_t *work, int status);
+    static void RegisterForegroundResume();
     bool Equals(napi_env env, napi_value value, napi_ref copy);
-
+    
     static std::mutex createMutex_;
     static thread_local napi_ref requestCtor;
     static std::mutex requestMutex_;

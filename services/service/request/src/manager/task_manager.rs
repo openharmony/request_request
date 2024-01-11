@@ -397,7 +397,7 @@ impl TaskManager {
         }
     }
 
-    pub(crate) fn pause_task(&self, task: Arc<RequestTask>, reason: Reason) -> ErrorCode {
+    pub(crate) fn pause_task(&mut self, task: Arc<RequestTask>, reason: Reason) -> ErrorCode {
         let uid = task.conf.common_data.uid;
         let task_id = task.conf.common_data.task_id;
 
@@ -414,6 +414,9 @@ impl TaskManager {
                 "TaskManager pause a task, uid:{}, task_id:{} success",
                 uid, task_id
             );
+            if self.check_unload_sa() {
+                self.schedule_unload_sa();
+            }
             ErrorCode::ErrOk
         }
     }

@@ -16,20 +16,21 @@
 #ifndef DOWNLOAD_MANAGER_H
 #define DOWNLOAD_MANAGER_H
 
+#include <atomic>
+#include <condition_variable>
 #include <map>
 #include <mutex>
-#include <condition_variable>
 
-#include "data_ability_helper.h"
-#include "iservice_registry.h"
-#include "iremote_object.h"
-#include "refbase.h"
-#include "visibility.h"
 #include "constant.h"
-#include "notify_stub.h"
-#include "request_service_interface.h"
+#include "data_ability_helper.h"
+#include "iremote_object.h"
+#include "iservice_registry.h"
 #include "js_common.h"
+#include "notify_stub.h"
+#include "refbase.h"
+#include "request_service_interface.h"
 #include "system_ability_status_change_stub.h"
+#include "visibility.h"
 
 namespace OHOS::Request {
 class RequestSaDeathRecipient : public IRemoteObject::DeathRecipient {
@@ -57,15 +58,18 @@ public:
     REQUEST_API int32_t Remove(const std::string &tid, Version version);
     REQUEST_API int32_t Resume(const std::string &tid);
 
-    REQUEST_API int32_t On(const std::string &type, const std::string &tid,
-        const sptr<NotifyInterface> &listener, Version version);
+    REQUEST_API int32_t On(
+        const std::string &type, const std::string &tid, const sptr<NotifyInterface> &listener, Version version);
     REQUEST_API int32_t Off(const std::string &type, const std::string &tid, Version version);
-    
+
     REQUEST_API void RestoreListener(void (*callback)());
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
     REQUEST_API bool LoadRequestServer();
+
+    REQUEST_API bool IsSaReady();
     void LoadServerSuccess();
     void LoadServerFail();
+
 private:
     sptr<RequestServiceInterface> GetRequestServiceProxy();
     int32_t Retry(int32_t &taskId, const Config &config, int32_t errorCode, sptr<NotifyInterface> listener);
@@ -83,7 +87,7 @@ private:
     sptr<RequestSaDeathRecipient> deathRecipient_;
     sptr<ISystemAbilityStatusChange> saChangeListener_;
     std::condition_variable syncCon_;
-    bool ready_ = false;
+    std::atomic<bool> ready_ = false;
     static constexpr int LOAD_SA_TIMEOUT_MS = 15000;
     void (*callback_)() = nullptr;
 
@@ -92,8 +96,8 @@ private:
     public:
         SystemAbilityStatusChangeListener();
         ~SystemAbilityStatusChangeListener() = default;
-        virtual void OnAddSystemAbility(int32_t saId, const std::string& deviceId) override;
-        virtual void OnRemoveSystemAbility(int32_t asId, const std::string& deviceId) override;
+        virtual void OnAddSystemAbility(int32_t saId, const std::string &deviceId) override;
+        virtual void OnRemoveSystemAbility(int32_t asId, const std::string &deviceId) override;
     };
 };
 } // namespace OHOS::Request
