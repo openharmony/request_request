@@ -28,6 +28,14 @@ config("download_service_config") {
 }
 
 ohos_rust_shared_library("download_server") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    debug = false
+  }
+
   sources = [ "src/lib.rs" ]
 
   public_configs = [ ":download_service_config" ]
