@@ -33,6 +33,7 @@ ohos_rust_shared_library("download_server") {
     ubsan = true
     boundary_sanitize = true
     cfi = true
+    cfi_cross_dso = true
     debug = false
   }
 
