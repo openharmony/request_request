@@ -28,6 +28,14 @@ config("download_service_config") {
 }
 
 ohos_rust_shared_library("request") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    debug = false
+  }
+
   sources = [ "src/lib.rs" ]
 
   public_configs = [ ":download_service_config" ]
@@ -52,6 +60,15 @@ ohos_rust_shared_library("request") {
 }
 
 ohos_shared_library("request_service_c") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    debug = false
+  }
+  stack_protector_ret = true
+
   include_dirs = [
     "${request_path}/common/include",
     "${request_path}/services/service/request/c_wrapper/include",

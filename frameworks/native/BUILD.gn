@@ -25,7 +25,19 @@ config("download_interfaces_kits_napi_config") {
     "-fvisibility=hidden",
   ]
 }
+
+request_deps = [ "${request_path}/common:request_common_static" ]
+
 ohos_shared_library("request_native") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    debug = false
+  }
+  stack_protector_ret = true
+
   include_dirs = [
     "//third_party/node/src",
     "//utils/system/safwk/native/include",
@@ -42,7 +54,7 @@ ohos_shared_library("request_native") {
     "src/request_service_proxy.cpp",
     "src/request_sync_load_callback.cpp",
   ]
-  deps = [ "${request_path}/common:request_common_static" ]
+  deps = request_deps
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:abilitykit_native",

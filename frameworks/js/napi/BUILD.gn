@@ -79,6 +79,15 @@ request_external_deps = [
 ]
 
 ohos_shared_library("request") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    debug = false
+  }
+  stack_protector_ret = true
+
   include_dirs = request_include
   configs = [ "//build/config/gcc:symbol_visibility_hidden" ]
   public_configs = [ ":upload_public_config" ]
