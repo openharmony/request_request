@@ -1,0 +1,79 @@
+# Copyright (C) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/request/request/request_aafwk.gni")
+import("//build/ohos.gni")
+import("//build/test.gni")
+module_output_path = "request/request"
+
+ohos_unittest("saTest") {
+  module_out_path = module_output_path
+
+  include_dirs = [
+    "${request_path}/frameworks/js/napi/include",
+    "${request_path}/services/service/request/c_wrapper/include",
+    "${request_path}/test/unittest/cpp_test/saTest/include",
+    "//third_party/googletest/googlemock/include",
+  ]
+
+  sources = [
+    "${request_path}/services/service/request/c_wrapper/source/background_notification.cpp",
+    "${request_path}/services/service/request/c_wrapper/source/c_check_permission.cpp",
+    "${request_path}/services/service/request/c_wrapper/source/c_event_handler.cpp",
+    "${request_path}/services/service/request/c_wrapper/source/c_string_wrapper.cpp",
+    "${request_path}/services/service/request/c_wrapper/source/common_event_notify.cpp",
+    "${request_path}/services/service/request/c_wrapper/source/get_calling_bundle.cpp",
+    "${request_path}/services/service/request/c_wrapper/source/get_top_bundle.cpp",
+    "${request_path}/services/service/request/c_wrapper/source/network_adapter.cpp",
+    "${request_path}/test/unittest/cpp_test/saTest/src/background_notification_test.cpp",
+    "${request_path}/test/unittest/cpp_test/saTest/src/c_check_permission_test.cpp",
+    "${request_path}/test/unittest/cpp_test/saTest/src/c_event_handler_test.cpp",
+    "${request_path}/test/unittest/cpp_test/saTest/src/c_string_wrapper_test.cpp",
+    "${request_path}/test/unittest/cpp_test/saTest/src/common_event_notify_test.cpp",
+    "${request_path}/test/unittest/cpp_test/saTest/src/get_bundle_test.cpp",
+    "${request_path}/test/unittest/cpp_test/saTest/src/network_adapter_test.cpp",
+  ]
+
+  deps = [
+    "${request_path}/common:request_common_static",
+    "//third_party/googletest:gmock_main",
+  ]
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:app_manager",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "distributed_notification_service:ans_innerkits",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "netmanager_base:net_conn_manager_if",
+    "relational_store:native_appdatafwk",
+    "relational_store:native_dataability",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+}
+
+group("unittest") {
+  testonly = true
+  deps = [ ":saTest" ]
+  deps += []
+}
