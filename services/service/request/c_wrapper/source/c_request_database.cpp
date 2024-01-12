@@ -234,10 +234,8 @@ void RequestDBUpdateInvalidRecords(OHOS::NativeRdb::RdbStore &store)
 
 int RequestDBOpenCallback::OnOpen(OHOS::NativeRdb::RdbStore &store)
 {
-    int ret = OHOS::NativeRdb::E_OK;
-
     // Creates request_version table first.
-    ret = store.ExecuteSql(CREATE_REQUEST_VERSION_TABLE);
+    int ret = store.ExecuteSql(CREATE_REQUEST_VERSION_TABLE);
     if (ret != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("Creates request_version table failed, ret: %{public}d", ret);
         return ret;
