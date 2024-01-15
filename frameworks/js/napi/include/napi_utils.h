@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "constant.h"
+#include "ffrt.h"
 #include "js_common.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -102,5 +103,6 @@ std::string GetSaveas(const std::vector<FileSpec> &files, Action action);
 bool IsPathValid(const std::string &filePath);
 std::string SHA256(const char *str, size_t len);
 void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileData);
+void RemoveFile(const std::string &filePath);
 } // namespace OHOS::Request::NapiUtils
 #endif /* DOWNLOAD_NAPI_UTILS_H */

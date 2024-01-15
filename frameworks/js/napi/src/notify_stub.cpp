@@ -115,10 +115,7 @@ void NotifyStub::RequestCallBack(const std::string &type, const std::string &tid
         NapiUtils::ReadBytesFromFile(filePath, notify.progress.bodyBytes);
         // Waiting for "complete" to read and delete.
         if (!(notifyData.version == Version::API10 && index == len - 1 && type == "progress")) {
-            std::thread([filePath]() {
-                // Delete file.
-                std::remove(filePath.c_str());
-            }).detach();
+            NapiUtils::RemoveFile(filePath);
         }
     }
 

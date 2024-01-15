@@ -48,7 +48,8 @@
         "c_utils",
         "netstack",
         "ylong_runtime",
-        "storage_service"
+        "storage_service",
+        "ffrt"
       ],
       "third_party": [
         "curl",
