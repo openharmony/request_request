@@ -89,6 +89,7 @@ ohos_shared_library("request_service_c") {
     "${request_path}/services/service/request/c_wrapper/source/c_task_info.cpp",
     "${request_path}/services/service/request/c_wrapper/source/common_event_notify.cpp",
     "${request_path}/services/service/request/c_wrapper/source/get_calling_bundle.cpp",
+    "${request_path}/services/service/request/c_wrapper/source/get_proxy.cpp",
     "${request_path}/services/service/request/c_wrapper/source/get_top_bundle.cpp",
     "${request_path}/services/service/request/c_wrapper/source/network_adapter.cpp",
   ]

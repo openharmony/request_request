@@ -96,6 +96,7 @@ impl TaskManager {
                         recording_rdb_num.clone(),
                         AtomicBool::new(false),
                         app_state,
+			self.sys_proxy.clone(),
                     ) {
                         Some(task) => self.restoring_tasks.push(Arc::new(task)),
                         None => {
