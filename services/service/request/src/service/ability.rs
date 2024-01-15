@@ -115,6 +115,8 @@ impl RequestAbility {
     }
 }
 
+#[cfg(feature = "oh")]
+#[link(name = "request_service_c")]
 extern "C" {
     pub(crate) fn RequestInitServiceHandler();
 }

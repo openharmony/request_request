@@ -46,6 +46,8 @@ extern "C" fn app_state_change_callback(uid: i32, state: i32) {
     RequestAbility::task_manager().send_event(EventMessage::app_state_change(uid as u64, state));
 }
 
+#[cfg(feature = "oh")]
+#[link(name = "request_service_c")]
 extern "C" {
     fn RegisterAPPStateCallback(f: extern "C" fn(i32, i32));
 }

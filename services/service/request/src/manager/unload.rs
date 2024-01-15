@@ -206,6 +206,8 @@ impl TaskManager {
     }
 }
 
+#[cfg(feature = "oh")]
+#[link(name = "request_service_c")]
 extern "C" {
     pub(crate) fn DeleteCTaskConfigs(ptr: *const *const CTaskConfig);
     pub(crate) fn QueryAllTaskConfig() -> *const *const CTaskConfig;

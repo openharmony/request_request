@@ -425,6 +425,8 @@ pub(crate) fn convert_path(uid: u64, bundle: &str, path: &str) -> String {
     real_path
 }
 
+#[cfg(feature = "oh")]
+#[link(name = "request_service_c")]
 extern "C" {
     pub(crate) fn GetCallingBundle(token_id: u64) -> CStringWrapper;
     pub(crate) fn RequestIsSystemAPI(token_id: u64) -> bool;
