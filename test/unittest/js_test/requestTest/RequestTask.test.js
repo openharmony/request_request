@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index';
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index';
 import { agent } from '@ohos.request';
 import featureAbility from '@ohos.ability.featureAbility'
 import fs from '@ohos.file.fs';
@@ -58,93 +58,144 @@ describe('RequestTaskTest', function () {
     let formItem = [{
         name: 'test',
         type: `${cacheDir}`,
-        value: [ fileSpec ]
+        value: [fileSpec]
     }]
 
-    /**
-     * @tc.name: testTaskAction001
-     * @tc.desc: Test create task when lack action
-     * @tc.type: FUNC
-     * @tc.require:
-     */
-    it('testTaskAction001', function (done)  {
-        let conf = {
-            url: 'http://127.0.0.1',
-        }
-        try {
-            agent.create(conf, (err) => {
-                if (err) {
-                    expect(err.code).assertEqual(401)
-                    done()
-                } else {
-                    expect(false).assertTrue();
-                    done()
-                }
-            })
-        } catch (err) {
-            expect(err.code).assertEqual(401)
-            done()
-        }
-    })
-
-    /**
-     * @tc.name: testTaskAction002
-     * @tc.desc: Test create task when action is string
-     * @tc.type: FUNC
-     * @tc.require:
-     */
-    it('testTaskAction002', async function (done)  {
-        let conf = {
-            action: 'UPLOAD',
-            url: 'http://127.0.0.1'
-        }
-        try {
-            agent.create(conf, (err) => {
-                if (err) {
-                    expect(err.code).assertEqual(401)
-                    done()
-                } else {
-                    expect(false).assertTrue();
-                    done()
-                }
-            })
-        } catch (err) {
-            expect(err.code).assertEqual(401)
-            done()
-        }
-    })
-
-    /**
-     * @tc.name: testTaskAction003
-     * @tc.desc: Test create task when action is 2
-     * @tc.type: FUNC
-     * @tc.require:
-     */
-    it('testTaskAction003', function (done)  {
-        let conf = {
-            action: 2,
-            url: 'http://127.0.0.1'
-        }
+    function errorParamCreate(conf, code) {
         agent.create(conf, (err) => {
             if (err) {
-                expect(true).assertTrue()
+                expect(err.code).assertEqual(code)
                 done()
             } else {
                 expect(false).assertTrue();
                 done()
             }
         })
+    }
+
+    function createLamdaApi10(conf, isError, isNotError) {
+        agent.create(conf, (err) => {
+            if (err) {
+                expect(isError).assertTrue()
+                done()
+            } else {
+                expect(isNotError).assertTrue();
+                done()
+            }
+        })
+    }
+
+    async function createApi10Task(conf) {
+        task = await agent.create(conf);
+        task.start().then(() => {
+            expect(true).assertTrue()
+            done()
+        }).catch((err) => {
+            expect(false).assertTrue()
+            done()
+        })
+    }
+
+    async function createApi10GetTask(conf) {
+        task = await agent.create(conf);
+        task.start().then(() => {
+            expect(task.conf.method).assertEqual('GET')
+            done()
+        }).catch((err) => {
+            expect(false).assertTrue()
+            done()
+        })
+    }
+
+    function wrapTryCatch(conf, code) {
+        try {
+            errorParamCreate(conf, code)
+        } catch (err) {
+            expect(err.code).assertEqual(code)
+            done()
+        }
+    }
+
+    let globalConf = {
+        action: agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: {
+            name: 'test',
+            value: {
+                path: `${cacheDir}/test.txt`
+            },
+        }
+    }
+
+    function openSyncFile(fileName) {
+        let file = fs.openSync(cacheDir + '/' + fileName, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+        fs.closeSync(file);
+    }
+
+    /**
+     * @tc.number: testTaskAction001
+     * @tc.name: testTaskAction001
+     * @tc.desc: Test create task when lack action
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskAction001', function (done) {
+        let conf = {
+            url: 'http://127.0.0.1',
+        }
+        expect(true).assertTrue();
+        wrapTryCatch(conf, 401);
     })
 
     /**
-     * @tc.name: testTaskAction004
-     * @tc.desc: Test create task when action is UPLOAD
-     * @tc.type: FUNC
+     * @tc.number: testTaskAction002
+     * @tc.name: testTaskAction002
+     * @tc.desc: Test create task when action is string
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskAction004',  function (done)  {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
+    it('testTaskAction002', async function (done) {
+        let conf = {
+            action: 'UPLOAD',
+            url: 'http://127.0.0.1'
+        }
+        expect(true).assertTrue();
+        wrapTryCatch(conf, 401);
+    })
+
+    /**
+     * @tc.number: testTaskAction003
+     * @tc.name: testTaskAction003
+     * @tc.desc: Test create task when action is 2
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskAction003', function (done) {
+        let conf = {
+            action: 2,
+            url: 'http://127.0.0.1'
+        }
+        expect(true).assertTrue();
+        createLamdaApi10(conf, true, false)
+    })
+
+    /**
+     * @tc.number: testTaskAction004
+     * @tc.name: testTaskAction004
+     * @tc.desc: Test create task when action is UPLOAD
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskAction004', function (done) {
+        openSyncFile('test.txt');
         let conf = {
             action: agent.Action.UPLOAD,
             url: 'http://127.0.0.1',
@@ -161,15 +212,18 @@ describe('RequestTaskTest', function () {
     })
 
     /**
+     * @tc.number: testTaskAction005
      * @tc.name: testTaskAction005
      * @tc.desc: Test create task when action is DOWNLOAD
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskAction005', function (done)  {
+    it('testTaskAction005', function (done) {
         let conf = {
             action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
             saveas: `${cacheDir}`
         }
         agent.create(conf, async (err, data) => {
@@ -178,7 +232,7 @@ describe('RequestTaskTest', function () {
                 done()
             }
             data.on('completed', function (progress) {
-                if (fs.accessSync(`${cacheDir}/test.apk`)) {
+                if (fs.accessSync(`${cacheDir}/test.txt`)) {
                     expect(true).assertTrue()
                     done()
                 }
@@ -187,201 +241,156 @@ describe('RequestTaskTest', function () {
     })
 
     /**
+     * @tc.number: testTaskUrl001
      * @tc.name: testTaskUrl001
      * @tc.desc: Test create task when lack url
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskUrl001', function (done)  {
+    it('testTaskUrl001', function (done) {
         let conf = {
             action: agent.Action.DOWNLOAD,
         }
-        try {
-            agent.create(conf, (err) => {
-                if (err) {
-                    expect(err.code).assertEqual(401)
-                    done()
-                } else {
-                    expect(false).assertTrue();
-                    done()
-                }
-            })
-        } catch (err) {
-            expect(err.code).assertEqual(401)
-            done()
-        }
+        expect(true).assertTrue();
+        wrapTryCatch(conf, 401);
     })
 
     /**
+     * @tc.number: testTaskUrl002
      * @tc.name: testTaskUrl002
      * @tc.desc: Test create task when url is empty
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskUrl002', function (done)  {
+    it('testTaskUrl002', function (done) {
         let conf = {
             action: agent.Action.DOWNLOAD,
             url: '',
-        }
-        agent.create(conf, (err) => {
-            if (err) {
-                expect(true).assertTrue()
-                done()
-            } else {
-                expect(false).assertTrue();
-                done()
-            }
-        })
+        };
+        expect(true).assertTrue();
+        createLamdaApi10(conf, true, false);
     })
 
     /**
+     * @tc.number: testTaskUrl003
      * @tc.name: testTaskUrl003
      * @tc.desc: Test create task when url is not support download
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskUrl003', function (done)  {
+    it('testTaskUrl003', function (done) {
         let conf = {
             action: agent.Action.DOWNLOAD,
             url: 'https://gitee.com/openharmony/request_request',
         }
-        agent.create(conf, (err) => {
-            if (err) {
-                expect(err.code).assertEqual(13400003)
-                done()
-            } else {
-                expect(false).assertTrue();
-                done()
-            }
-        })
+        expect(true).assertTrue();
+        errorParamCreate(conf, 13400003)
     })
 
     /**
+     * @tc.number: testTaskUrl004
      * @tc.name: testTaskUrl004
      * @tc.desc: Test create task when url is not support upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskUrl004', function (done)  {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
+    it('testTaskUrl004', function (done) {
+        openSyncFile('test.txt');
         let conf = {
             action: agent.Action.UPLOAD,
             url: 'https://gitee.com/openharmony/request_request',
             data: formItem
         }
-        agent.create(conf, (err) => {
-            if (err) {
-                expect(err.code).assertEqual(13400003)
-                done()
-            } else {
-                expect(false).assertTrue();
-                done()
-            }
-        })
+        expect(true).assertTrue();
+        errorParamCreate(conf, 13400003)
     })
 
     /**
+     * @tc.number: testTaskTitle001
      * @tc.name: testTaskTitle001
      * @tc.desc: Test create task when title is given
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskTitle001', async function (done) {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`
-                },
-            },
-            title: 'upload test.txt'
-        }
-        task = await agent.create(conf);
+        openSyncFile('test.txt')
+        let tmpConf = JSON.parse(JSON.stringify(globalConf));
+        tmpConf.title = 'upload test.txt';
+        task = await agent.create(tmpConf);
         expect(task.title).assertEqual('upload test.txt')
         done()
     })
 
     /**
+     * @tc.number: testTaskTitle002
      * @tc.name: testTaskTitle002
      * @tc.desc: Test create task when title is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskTitle002', async function (done) {
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`
-                },
-            },
-            title: 123
-        }
-        task = await agent.create(conf);
+        let tmpConf = JSON.parse(JSON.stringify(globalConf));
+        tmpConf.title = 123;
+        task = await agent.create(tmpConf);
         expect(task.title).assertEqual("")
         done()
     })
 
     /**
+     * @tc.number: testTaskDescription001
      * @tc.name: testTaskDescription001
      * @tc.desc: Test create task when description is given
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskDescription001', async function (done) {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`
-                },
-            },
-            description: 'test upload'
-        }
-        task = await agent.create(conf);
+        openSyncFile('test.txt')
+        let tmpConf = JSON.parse(JSON.stringify(globalConf));
+        tmpConf.description = 'test upload'
+        task = await agent.create(tmpConf);
         expect(task.description).assertEqual('test upload')
         expect(task.conf.mode).assertEqual(agent.Mode.BACKGROUND)
         done()
     })
 
     /**
+     * @tc.number: testTaskDescription002
      * @tc.name: testTaskDescription002
      * @tc.desc: Test create task when description is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskDescription002', async function (done) {
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`
-                },
-            },
-            title: 123
-        }
-        task = await agent.create(conf);
+        let tmpConf = JSON.parse(JSON.stringify(globalConf));
+        tmpConf.title = 123;
+        task = await agent.create(tmpConf);
         expect(task.description).assertEqual("")
         done()
     })
 
     /**
+     * @tc.number: testTaskMode001
      * @tc.name: testTaskMode001
      * @tc.desc: Test create task when mode is FRONTEND
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMode001', async function (done) {
@@ -408,37 +417,28 @@ describe('RequestTaskTest', function () {
     })
 
     /**
+     * @tc.number: testTaskMode002
      * @tc.name: testTaskMode002
      * @tc.desc: Test create task when mode is BACKGROUND
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMode002', async function (done) {
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`
-                },
-            },
-            mode: agent.Mode.BACKGROUND
-        }
-        task = await agent.create(conf);
-        task.start().then(() => {
-            expect(true).assertTrue()
-            done()
-        }).catch((err) => {
-            expect(false).assertTrue()
-            done()
-        })
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.mode = agent.Mode.BACKGROUND;
+        expect(true).assertTrue();
+        await createApi10Task(conf);
     })
 
     /**
+     * @tc.number: testTaskMode003
      * @tc.name: testTaskMode003
      * @tc.desc: Test create task when mode is string
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMode003', async function (done) {
@@ -464,135 +464,96 @@ describe('RequestTaskTest', function () {
     })
 
     /**
+     * @tc.number: testTaskCover001
      * @tc.name: testTaskCover001
      * @tc.desc: Test create task when cover is true and file exists
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskCover001', async function (done) {
-        let file = fs.openSync(cacheDir + '/test.apk', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.apk`
-                },
-            },
-            cover: true
-        }
-        task = await agent.create(conf);
-        task.start().then(() => {
-            expect(true).assertTrue()
-            done()
-        }).catch((err) => {
-            expect(false).assertTrue()
-            done()
-        })
+        openSyncFile('test.txt')
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.url = 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt';
+        conf.action = agent.Action.DOWNLOAD;
+        conf.cover = true;
+        expect(true).assertTrue()
+        await createApi10Task(conf);
     })
 
     /**
+     * @tc.number: testTaskCover002
      * @tc.name: testTaskCover002
      * @tc.desc: Test create task when cover is true and file not exists
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskCover002', async function (done) {
-        let conf = {
-            action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.apk`
-                },
-            },
-            cover: true
-        }
-        task = await agent.create(conf);
-        task.start().then(() => {
-            expect(true).assertTrue()
-            done()
-        }).catch((err) => {
-            expect(false).assertTrue()
-            done()
-        })
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.url = 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt';
+        conf.action = agent.Action.DOWNLOAD;
+        conf.cover = true;
+        expect(true).assertTrue()
+        await createApi10Task(conf);
     })
 
     /**
+     * @tc.number: testTaskCover003
      * @tc.name: testTaskCover003
      * @tc.desc: Test create task when cover is false and file exists
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskCover003', async function (done) {
-        let file = fs.openSync(cacheDir + '/test.apk', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.apk`
-                },
-            },
-            cover: false
-        }
-        task = await agent.create(conf);
-        task.start().then(() => {
-            expect(true).assertTrue()
-            done()
-        }).catch((err) => {
-            expect(false).assertTrue()
-            done()
-        })
+        openSyncFile('test.txt')
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.url = 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt';
+        conf.action = agent.Action.DOWNLOAD;
+        conf.cover = false;
+        expect(true).assertTrue()
+        await createApi10Task(conf);
     })
 
     /**
+     * @tc.number: testTaskCover004
      * @tc.name: testTaskCover004
      * @tc.desc: Test create task when cover is false and file not exists
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskCover004', async function (done) {
-        let conf = {
-            action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.apk`
-                },
-            },
-            cover: false
-        }
-        task = await agent.create(conf);
-        task.start().then(() => {
-            expect(true).assertTrue()
-            done()
-        }).catch((err) => {
-            expect(false).assertTrue()
-            done()
-        })
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.url = 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt';
+        conf.action = agent.Action.DOWNLOAD;
+        conf.cover = false;
+        expect(true).assertTrue()
+        await createApi10Task(conf);
     })
 
     /**
+     * @tc.number: testTaskCover005
      * @tc.name: testTaskCover005
      * @tc.desc: Test create task when cover is string
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskCover005', async function (done) {
         let conf = {
             action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
             data: {
                 name: 'test',
                 value: {
-                    path: `${cacheDir}/test.apk`
+                    path: `${cacheDir}/test.txt`
                 },
             },
             cover: "true"
@@ -608,207 +569,149 @@ describe('RequestTaskTest', function () {
     })
 
     /**
+     * @tc.number: testTaskMethod001
      * @tc.name: testTaskMethod001
      * @tc.desc: Test create task when method is POST for upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMethod001', async function (done) {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`
-                },
-            },
-            method: 'POST'
-        }
-        task = await agent.create(conf);
-        task.start().then(() => {
-            expect(true).assertTrue()
-            done()
-        }).catch((err) => {
-            expect(false).assertTrue()
-            done()
-        })
+        openSyncFile('test.txt');
+        let tmpConf = JSON.parse(JSON.stringify(globalConf));
+        tmpConf.method = 'POST';
+        expect(true).assertTrue()
+        await createApi10Task(conf);
     })
 
     /**
+     * @tc.number: testTaskMethod002
      * @tc.name: testTaskMethod002
      * @tc.desc: Test create task when method is POST for download
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMethod002', async function (done) {
         let conf = {
             action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
             saveas: `${cacheDir}`,
             method: 'POST'
         }
-        task = await agent.create(conf);
-        task.start().then(() => {
-            expect(true).assertTrue()
-            done()
-        }).catch((err) => {
-            expect(false).assertTrue()
-            done()
-        })
+        expect(true).assertTrue()
+        await createApi10Task(conf);
     })
 
     /**
+     * @tc.number: testTaskMethod003
      * @tc.name: testTaskMethod003
      * @tc.desc: Test create task when method is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMethod003', async function (done) {
         let conf = {
             action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
             saveas: `${cacheDir}`,
             method: 123
         }
-        task = await agent.create(conf);
-        task.start().then(() => {
-            expect(task.conf.method).assertEqual('GET')
-            done()
-        }).catch((err) => {
-            expect(false).assertTrue()
-            done()
-        })
+        expect(true).assertTrue()
+        await createApi10GetTask(conf)
     })
 
     /**
+     * @tc.number: testTaskMethod004
      * @tc.name: testTaskMethod004
      * @tc.desc: Test create task when method is empty
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMethod004', async function (done) {
         let conf = {
             action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
             saveas: `${cacheDir}`,
             method: ''
         }
-        task = await agent.create(conf);
-        task.start().then(() => {
-            expect(task.conf.method).assertEqual('GET')
-            done()
-        }).catch((err) => {
-            expect(false).assertTrue()
-            done()
-        })
+        expect(true).assertTrue()
+        await createApi10GetTask(conf)
     })
 
     /**
+     * @tc.number: testTaskMethod005
      * @tc.name: testTaskMethod005
      * @tc.desc: Test create task when method is GET for upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMethod005', async function (done) {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`
-                },
-            },
-            method: 'GET'
-        }
-        task = await agent.create(conf);
-        task.start().then(() => {
-            expect(true).assertTrue()
-            done()
-        }).catch((err) => {
-            expect(false).assertTrue()
-            done()
-        })
+        openSyncFile('test.txt');
+        let tmpConf = JSON.parse(JSON.stringify(globalConf));
+        tmpConf.method = 'GET';
+        expect(true).assertTrue()
+        await createApi10Task(conf);
     })
 
     /**
+     * @tc.number: testTaskMethod006
      * @tc.name: testTaskMethod006
      * @tc.desc: Test create task when method is PUT for download
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskMethod006', async function (done) {
         let conf = {
             action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
             saveas: `${cacheDir}`,
             method: 'PUT'
         }
-        task = await agent.create(conf);
-        task.start().then(() => {
-            expect(true).assertTrue()
-            done()
-        }).catch((err) => {
-            expect(false).assertTrue()
-            done()
-        })
+        expect(true).assertTrue()
+        await createApi10Task(conf);
     })
 
     /**
+     * @tc.number: testTaskHeaders001
      * @tc.name: testTaskHeaders001
      * @tc.desc: Test create task when headers content-type is application/json but data is file for upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskHeaders001', async function (done) {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`
-                },
-            },
-            headers: JSON.stringify({'content-type': 'application/json'}),
-        }
-        task = await agent.create(conf);
-        task.start().then(() => {
-            expect(true).assertTrue()
-            done()
-        }).catch((err) => {
-            expect(false).assertTrue()
-            done()
-        })
+        openSyncFile('test.txt');
+        let tmpConf = JSON.parse(JSON.stringify(globalConf));
+        tmpConf.headers = JSON.stringify({ 'content-type': 'application/json' });
+        expect(true).assertTrue()
+        await createApi10Task(conf);
     })
 
     /**
+     * @tc.number: testTaskHeaders002
      * @tc.name: testTaskHeaders002
      * @tc.desc: Test create task when lack headers for upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskHeaders002', async function (done) {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`
-                },
-            },
-        }
-        task = await agent.create(conf);
+        openSyncFile('test.txt');
+        let tmpConf = JSON.parse(JSON.stringify(globalConf));
+        task = await agent.create(tmpConf);
         task.start().then(() => {
             expect(task.conf.headers).assertEqual('multipart/form-data')
             done()
@@ -819,15 +722,18 @@ describe('RequestTaskTest', function () {
     })
 
     /**
+     * @tc.number: testTaskHeaders003
      * @tc.name: testTaskHeaders003
      * @tc.desc: Test create task when lack headers for download
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskHeaders003', async function (done) {
         let conf = {
             action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         }
         task = await agent.create(conf);
         task.start().then(() => {
@@ -840,20 +746,23 @@ describe('RequestTaskTest', function () {
     })
 
     /**
+     * @tc.number: testTaskSaveas001
      * @tc.name: testTaskSaveas001
      * @tc.desc: Test create task when lack saveas is number for download
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskSaveas001', async function (done) {
         let conf = {
             action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
             saveas: 123
         }
         task = await agent.create(conf);
-        task.on('completed', function() {
-            if (fs.accessSync(`${cacheDir}/test.apk`)) {
+        task.on('completed', function () {
+            if (fs.accessSync(`${cacheDir}/test.txt`)) {
                 expect(true).assertTrue()
                 done()
             }
@@ -862,83 +771,54 @@ describe('RequestTaskTest', function () {
     })
 
     /**
+     * @tc.number: testTaskData001
      * @tc.name: testTaskData001
      * @tc.desc: Test create task when data lack name
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData001', function (done)  {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                value: {
-                    path: `${cacheDir}/test.txt`
-                },
-            }
-        }
-        try {
-            agent.create(conf, (err) => {
-                if (err) {
-                    expect(err.code).assertEqual(401)
-                    done()
-                } else {
-                    expect(false).assertTrue();
-                    done()
-                }
-            })
-        } catch (err) {
-            expect(err.code).assertEqual(401)
-            done()
-        }
+    it('testTaskData001', function (done) {
+        openSyncFile('test.txt');
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.data = {
+            value: {
+                path: `${cacheDir}/test.txt`
+            },
+        };
+        expect(true).assertTrue()
+        wrapTryCatch(conf, 401);
     })
 
     /**
+     * @tc.number: testTaskData002
      * @tc.name: testTaskData002
      * @tc.desc: Test create task when data name is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData002', function (done)  {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 123,
-                value: {
-                    path: `${cacheDir}/test.txt`
-                },
-            }
-        }
-        try {
-            agent.create(conf, (err) => {
-                if (err) {
-                    expect(err.code).assertEqual(401)
-                    done()
-                } else {
-                    expect(false).assertTrue();
-                    done()
-                }
-            })
-        } catch (err) {
-            expect(err.code).assertEqual(401)
-            done()
-        }
+    it('testTaskData002', function (done) {
+        openSyncFile('test.txt');
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.data.name = 123;
+        expect(true).assertTrue()
+        wrapTryCatch(conf, 401);
     })
 
     /**
+     * @tc.number: testTaskData003
      * @tc.name: testTaskData003
      * @tc.desc: Test create task when data lack value
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData003', function (done)  {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
+    it('testTaskData003', function (done) {
+        openSyncFile('test.txt');
         let conf = {
             action: agent.Action.UPLOAD,
             url: 'http://127.0.0.1',
@@ -946,31 +826,21 @@ describe('RequestTaskTest', function () {
                 name: 'test'
             }
         }
-        try {
-            agent.create(conf, (err) => {
-                if (err) {
-                    expect(err.code).assertEqual(401)
-                    done()
-                } else {
-                    expect(false).assertTrue();
-                    done()
-                }
-            })
-        } catch (err) {
-            expect(err.code).assertEqual(401)
-            done()
-        }
+        expect(true).assertTrue()
+        wrapTryCatch(conf, 401);
     })
 
     /**
+     * @tc.number: testTaskData004
      * @tc.name: testTaskData004
      * @tc.desc: Test create task when data value is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData004', function (done)  {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
+    it('testTaskData004', function (done) {
+        openSyncFile('test.txt');
         let conf = {
             action: agent.Action.UPLOAD,
             url: 'http://127.0.0.1',
@@ -979,31 +849,21 @@ describe('RequestTaskTest', function () {
                 value: 123
             }
         }
-        try {
-            agent.create(conf, (err) => {
-                if (err) {
-                    expect(err.code).assertEqual(401)
-                    done()
-                } else {
-                    expect(false).assertTrue();
-                    done()
-                }
-            })
-        } catch (err) {
-            expect(err.code).assertEqual(401)
-            done()
-        }
+        expect(true).assertTrue()
+        wrapTryCatch(conf, 401);
     })
 
     /**
+     * @tc.number: testTaskData005
      * @tc.name: testTaskData005
      * @tc.desc: Test create task when data path is '', path is not exits
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData005', function (done)  {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
+    it('testTaskData005', function (done) {
+        openSyncFile('test.txt');
         let conf = {
             action: agent.Action.UPLOAD,
             url: 'http://127.0.0.1',
@@ -1014,31 +874,21 @@ describe('RequestTaskTest', function () {
                 }
             }
         }
-        try {
-            agent.create(conf, (err) => {
-                if (err) {
-                    expect(err.code).assertEqual(401)
-                    done()
-                } else {
-                    expect(false).assertTrue();
-                    done()
-                }
-            })
-        } catch (err) {
-            expect(err.code).assertEqual(401)
-            done()
-        }
+        expect(true).assertTrue()
+        wrapTryCatch(conf, 401);
     })
 
     /**
+     * @tc.number: testTaskData006
      * @tc.name: testTaskData006
      * @tc.desc: Test create task when data path is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData006', function (done)  {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
+    it('testTaskData006', function (done) {
+        openSyncFile('test.txt');
         let conf = {
             action: agent.Action.UPLOAD,
             url: 'http://127.0.0.1',
@@ -1049,32 +899,22 @@ describe('RequestTaskTest', function () {
                 }
             }
         }
-        try {
-            agent.create(conf, (err) => {
-                if (err) {
-                    expect(err.code).assertEqual(401)
-                    done()
-                } else {
-                    expect(false).assertTrue();
-                    done()
-                }
-            })
-        } catch (err) {
-            expect(err.code).assertEqual(401)
-            done()
-        }
+        expect(true).assertTrue()
+        wrapTryCatch(conf, 401);
     })
 
 
     /**
+     * @tc.number: testTaskData007
      * @tc.name: testTaskData007
      * @tc.desc: Test create task when data path is not access permission
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData007', function (done)  {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
+    it('testTaskData007', function (done) {
+        openSyncFile('test.txt');
         let conf = {
             action: agent.Action.UPLOAD,
             url: 'http://127.0.0.1',
@@ -1085,225 +925,133 @@ describe('RequestTaskTest', function () {
                 }
             }
         }
-        agent.create(conf, (err) => {
-            if (err) {
-                expect(err.code).assertEqual(13400001)
-                done()
-            } else {
-                expect(false).assertTrue();
-                done()
-            }
-        })
+        expect(true).assertTrue()
+        errorParamCreate(conf, 13400001);
     })
 
     /**
+     * @tc.number: testTaskData008
      * @tc.name: testTaskData008
      * @tc.desc: Test create task when data filename is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData008', function (done)  {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`,
-                    filename: 123
-                }
-            }
-        }
-        agent.create(conf, (err) => {
-            if (err) {
-                expect(false).assertTrue()
-                done()
-            } else {
-                expect(true).assertTrue();
-                done()
-            }
-        })
+    it('testTaskData008', function (done) {
+        openSyncFile('test.txt');
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.data.value.fileName = 123;
+        expect(true).assertTrue()
+        createLamdaApi10(conf, false, true)
     })
 
 
     /**
+     * @tc.number: testTaskData009
      * @tc.name: testTaskData009
      * @tc.desc: Test create task when data mimetype is number
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData009', function (done)  {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`,
-                    mimetype: 123
-                }
-            }
-        }
-        agent.create(conf, (err) => {
-            if (err) {
-                expect(false).assertTrue()
-                done()
-            } else {
-                expect(true).assertTrue();
-                done()
-            }
-        })
+    it('testTaskData009', function (done) {
+        openSyncFile('test.txt');
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.data.value.mimetype = 123;
+        expect(true).assertTrue()
+        createLamdaApi10(conf, false, true)
     })
 
     /**
+     * @tc.number: testTaskData010
      * @tc.name: testTaskData010
      * @tc.desc: Test create task when data path and filename is different
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData010', function (done)  {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`,
-                    filename: 'a.txt'
-                }
-            }
-        }
-        agent.create(conf, (err) => {
-            if (err) {
-                expect(false).assertTrue()
-                done()
-            } else {
-                expect(true).assertTrue();
-                done()
-            }
-        })
+    it('testTaskData010', function (done) {
+        openSyncFile('test.txt');
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.data.value.fileName = 'a.txt';
+        expect(true).assertTrue()
+        createLamdaApi10(conf, false, true)
     })
 
     /**
+     * @tc.number: testTaskData011
      * @tc.name: testTaskData011
      * @tc.desc: Test create task when data two files for upload
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData011', function (done)  {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: [
-                    {
-                        path: `${cacheDir}/test.txt`,
-                    },
-                    {
-                        path: `${cacheDir}/test.txt`,
-                    },
-                ]
-            }
-        }
-        agent.create(conf, (err) => {
-            if (err) {
-                expect(false).assertTrue()
-                done()
-            } else {
-                expect(true).assertTrue();
-                done()
-            }
-        })
+    it('testTaskData011', function (done) {
+        openSyncFile('test.txt');
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.data.value = [
+            {
+                path: `${cacheDir}/test.txt`,
+            },
+            {
+                path: `${cacheDir}/test.txt`,
+            },
+        ];
+        expect(true).assertTrue()
+        createLamdaApi10(conf, false, true)
     })
 
     /**
+     * @tc.number: testTaskData012
      * @tc.name: testTaskData012
      * @tc.desc: Test create task when data value is string
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData012', function (done)  {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: 'test'
-            }
-        }
-        agent.create(conf, (err) => {
-            if (err) {
-                expect(false).assertTrue()
-                done()
-            } else {
-                expect(true).assertTrue();
-                done()
-            }
-        })
+    it('testTaskData012', function (done) {
+        openSyncFile('test.txt');
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.data.value = 'test';
+        expect(true).assertTrue()
+        createLamdaApi10(conf, false, true)
     })
 
     /**
+     * @tc.number: testTaskData013
      * @tc.name: testTaskData013
      * @tc.desc: Test create task when data path and filename is same
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData013', function (done)  {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`,
-                    filename: 'test.txt'
-                }
-            }
-        }
-        agent.create(conf, (err) => {
-            if (err) {
-                expect(false).assertTrue()
-                done()
-            } else {
-                expect(true).assertTrue();
-                done()
-            }
-        })
+    it('testTaskData013', function (done) {
+        openSyncFile('test.txt');
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.data.value.fileName = 'test.txt';
+        expect(true).assertTrue()
+        createLamdaApi10(conf, false, true)
     })
 
     /**
+     * @tc.number: testTaskNetwork001
      * @tc.name: testTaskNetwork001
      * @tc.desc: Test create task when network is 3
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskNetwork001', async function (done) {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`,
-                }
-            },
-            network: 3
-        }
+        openSyncFile('test.txt');
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.network = 3;
         task.create(context, conf).then(() => {
             expect(true).assertTrue()
             done()
@@ -1314,25 +1062,17 @@ describe('RequestTaskTest', function () {
     })
 
     /**
+     * @tc.number: testTaskNetwork002
      * @tc.name: testTaskNetwork002
      * @tc.desc: Test create task when network is string
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskNetwork002', async function (done) {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`,
-                }
-            },
-            network: "ANY"
-        }
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.network = "ANY";
         task.create(context, conf).then(() => {
             expect(true).assertTrue()
             done()
@@ -1343,15 +1083,18 @@ describe('RequestTaskTest', function () {
     })
 
     /**
+     * @tc.number: testTaskNetwork003
      * @tc.name: testTaskNetwork003
      * @tc.desc: Test create task when network is WIFI for DOWNLOAD
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskNetwork003', async function (done) {
         let conf = {
             action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
             network: agent.NetWork.WIFI
         }
         task.create(context, conf).then(() => {
@@ -1364,40 +1107,28 @@ describe('RequestTaskTest', function () {
     })
 
     /**
+     * @tc.number: testTaskNetwork004
      * @tc.name: testTaskNetwork004
-     * @tc.desc: Test create task when network is any for UPLOAD
-     * @tc.type: FUNC
+     * @tc.desc: Test create task when network is WIFI for UPLOAD
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskNetwork004', async function (done) {
-        let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-        fs.closeSync(file);
-        let conf = {
-            action: agent.Action.UPLOAD,
-            url: 'http://127.0.0.1',
-            data: {
-                name: 'test',
-                value: {
-                    path: `${cacheDir}/test.txt`,
-                }
-            },
-            network: agent.NetWork.WIFI
-        }
-
-        task = await agent.create(conf);
-        task.start().then(() => {
-            expect(true).assertTrue()
-            done()
-        }).catch((err) => {
-            expect(false).assertTrue()
-            done()
-        })
+        let conf = JSON.parse(JSON.stringify(globalConf));
+        conf.network = agent.NetWork.WIFI;
+        expect(true).assertTrue()
+        await createApi10Task(conf);
     })
 
     /**
+     * @tc.number: testTaskRetry001
      * @tc.name: testTaskRetry001
      * @tc.desc: Test create task when retry is true for frontend
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskRetry001', async function (done) {
@@ -1416,15 +1147,18 @@ describe('RequestTaskTest', function () {
     })
 
     /**
+     * @tc.number: testTaskRetry002
      * @tc.name: testTaskRetry002
      * @tc.desc: Test create task when retry is true for background
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskRetry002', async function (done) {
         let conf = {
             action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+            url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
             mode: agent.Mode.BACKGROUND,
             retry: true
         }
@@ -1439,9 +1173,12 @@ describe('RequestTaskTest', function () {
     })
 
     /**
+     * @tc.number: testTaskRetry003
      * @tc.name: testTaskRetry003
      * @tc.desc: Test create task when retry is string
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskRetry003', async function (done) {
@@ -1460,15 +1197,18 @@ describe('RequestTaskTest', function () {
     })
 
     /**
+     * @tc.number: testTaskRetry004
      * @tc.name: testTaskRetry004
      * @tc.desc: Test create task when retry is false for frontend
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskRetry004', async function (done) {
         let conf = {
             action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.apk',
+            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.txt',
             mode: agent.Mode.FRONTEND,
             retry: false
         }
@@ -1481,15 +1221,18 @@ describe('RequestTaskTest', function () {
     })
 
     /**
+     * @tc.number: testTaskRetry005
      * @tc.name: testTaskRetry005
      * @tc.desc: Test create task when retry is false for background
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskRetry005', async function (done) {
         let conf = {
             action: agent.Action.DOWNLOAD,
-            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.apk',
+            url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.txt',
             mode: agent.Mode.FRONTEND,
             retry: false
         }
