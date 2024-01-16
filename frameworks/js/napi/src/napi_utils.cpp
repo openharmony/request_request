@@ -831,4 +831,13 @@ void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileDa
     }
     return;
 }
+
+void RemoveFile(const std::string &filePath)
+{
+    auto removeFile = [filePath]() -> void {
+        std::remove(filePath.c_str());
+        return;
+    };
+    ffrt::submit(removeFile, {}, {}, ffrt::task_attr().name("Os_Request_Rm").qos(ffrt::qos_default));
+}
 } // namespace OHOS::Request::NapiUtils

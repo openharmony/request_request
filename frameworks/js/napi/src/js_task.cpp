@@ -1027,12 +1027,9 @@ void JsTask::ClearTaskContext(const std::string &key)
     }
     auto context = it->second;
     auto bodyFileNames = context->task->config_.bodyFileNames;
-    std::thread([bodyFileNames]() {
-        for (auto &filePath : bodyFileNames) {
-            // Delete file.
-            std::remove(filePath.c_str());
-        }
-    }).detach();
+    for (auto &filePath : bodyFileNames) {
+        NapiUtils::RemoveFile(filePath);
+    }
     // Reset Acl permission
     for (auto &file : context->task->config_.files) {
         RemovePathMap(file.uri);
