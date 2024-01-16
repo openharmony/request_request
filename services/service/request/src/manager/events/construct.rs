@@ -183,6 +183,8 @@ impl TaskManager {
     }
 }
 
+#[cfg(feature = "oh")]
+#[link(name = "request_service_c")]
 extern "C" {
     pub(crate) fn HasRequestTaskRecord(taskId: u32) -> bool;
     pub(crate) fn RecordRequestTask(

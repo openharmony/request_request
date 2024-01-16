@@ -121,6 +121,8 @@ impl FormItem {
     }
 }
 
+#[cfg(feature = "oh")]
+#[link(name = "request_service_c")]
 extern "C" {
     pub(crate) fn DeleteChar(ptr: *const c_char);
     pub(crate) fn DeleteCFormItem(ptr: *const CFormItem);

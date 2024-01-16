@@ -364,6 +364,8 @@ impl TaskConfig {
     }
 }
 
+#[cfg(feature = "oh")]
+#[link(name = "request_service_c")]
 extern "C" {
     pub(crate) fn GetNetworkInfo() -> *const NetworkInfo;
     pub(crate) fn DeleteCTaskInfo(ptr: *const CTaskInfo);

@@ -37,6 +37,8 @@ extern "C" fn network_change_callback() {
     RequestAbility::task_manager().send_event(EventMessage::network_change());
 }
 
+#[cfg(feature = "oh")]
+#[link(name = "request_service_c")]
 extern "C" {
     fn RegisterNetworkCallback(f: extern "C" fn());
 }

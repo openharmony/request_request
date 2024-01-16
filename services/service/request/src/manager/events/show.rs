@@ -40,6 +40,8 @@ impl TaskManager {
     }
 }
 
+#[cfg(feature = "oh")]
+#[link(name = "request_service_c")]
 extern "C" {
     pub(crate) fn Show(task_id: u32, uid: u64) -> *const CTaskInfo;
 }

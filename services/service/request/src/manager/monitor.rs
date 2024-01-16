@@ -235,6 +235,8 @@ impl TaskManager {
     }
 }
 
+#[cfg(feature = "oh")]
+#[link(name = "request_service_c")]
 extern "C" {
     pub(crate) fn IsOnline() -> bool;
 }
