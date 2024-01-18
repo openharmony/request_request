@@ -23,6 +23,7 @@ group("request_packages") {
       "services/sa_profile:download_sa_profiles",
       "services/service/rust:download_server",
       "test/unittest/common/napi/requestTest:unittest",
+      "test/unittest/cpp_test/saTest:unittest",
       "test/unittest/js_test/requestAgentTaskTest:unittest",
       "test/unittest/js_test/requestQueryTaskTest:unittest",
       "test/unittest/js_test/requestSystemQueryTest:unittest",
