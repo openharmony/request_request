@@ -37,12 +37,6 @@ export default function requestCreateTaskTest() {
       if (fs.accessSync(cacheDir + '/test.txt')) {
         fs.unlinkSync(cacheDir + '/test.txt');
       }
-      if (fs.accessSync(cacheDir + '/test.apk')) {
-        fs.unlinkSync(cacheDir + '/test.apk');
-      }
-      if (fs.accessSync(cacheDir + '/README.md')) {
-        fs.unlinkSync(cacheDir + '/README.md');
-      }
     })
 
     function sleep(ms) {
@@ -169,12 +163,12 @@ export default function requestCreateTaskTest() {
     it('testTaskAction005', 0, function (done)  {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: `./`,
         gauge: true
       }
       request.agent.create(context, conf).then(async (data) => {
-        if (fs.accessSync(`${cacheDir}/test.apk`)) {
+        if (fs.accessSync(`${cacheDir}/test.txt`)) {
           expect(true).assertTrue();
           await request.agent.remove(data.tid);
           done();
@@ -342,7 +336,7 @@ export default function requestCreateTaskTest() {
     it('testTaskTitle001', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         title: 'download test.txt'
       }
       let task = await request.agent.create(context, conf);
@@ -363,7 +357,7 @@ export default function requestCreateTaskTest() {
     it('testTaskTitle002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         title: 123
       }
       let task = await request.agent.create(context, conf);
@@ -384,7 +378,7 @@ export default function requestCreateTaskTest() {
     it('testTaskTitle003', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/raw/v1.0/README.md',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         title: 'a'.repeat(257)
       }
       try {
@@ -410,7 +404,7 @@ export default function requestCreateTaskTest() {
     it('testTaskDescription001', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         description: 'test upload'
       }
       let task = await request.agent.create(context, conf);
@@ -431,7 +425,7 @@ export default function requestCreateTaskTest() {
     it('testTaskDescription002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         description: 123
       }
       request.agent.create(context, conf, async (err, data) => {
@@ -453,7 +447,7 @@ export default function requestCreateTaskTest() {
     it('testTaskDescription003', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/raw/v1.0/README.md',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         description: 'a'.repeat(1025)
       }
       try {
@@ -479,7 +473,7 @@ export default function requestCreateTaskTest() {
     it('testTaskMode001', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       request.agent.create(context, conf).then(async (data) => {
@@ -504,7 +498,7 @@ export default function requestCreateTaskTest() {
     it('testTaskMode002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       request.agent.create(context, conf).then(async (data) => {
@@ -529,11 +523,11 @@ export default function requestCreateTaskTest() {
     it('testTaskMode003', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         mode: "BACKGROUND"
       }
       let task = await request.agent.create(context, conf);
-      await task.start().then(async () => {
+      task.start().then(async () => {
         expect(true).assertTrue();
         await request.agent.remove(task.tid);
         done();
@@ -553,15 +547,15 @@ export default function requestCreateTaskTest() {
      * @tc.require:
      */
     it('testTaskOverwrite001', 0, async function (done) {
-      let file = fs.openSync(cacheDir + '/test.apk', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         overwrite: true
       }
       let task = await request.agent.create(context, conf);
-      await task.start().then(async () => {
+      task.start().then(async () => {
         expect(true).assertTrue();
         await request.agent.remove(task.tid);
         done();
@@ -583,11 +577,11 @@ export default function requestCreateTaskTest() {
     it('testTaskOverwrite002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         overwrite: true
       }
       let task = await request.agent.create(context, conf);
-      await task.start().then(async () => {
+      task.start().then(async () => {
         expect(true).assertTrue();
         await request.agent.remove(task.tid);
         done();
@@ -607,11 +601,11 @@ export default function requestCreateTaskTest() {
      * @tc.require:
      */
     it('testTaskOverwrite003', 0, async function (done) {
-      let file = fs.openSync(cacheDir + '/test.apk', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         overwrite: false
       }
       try {
@@ -637,11 +631,11 @@ export default function requestCreateTaskTest() {
     it('testTaskOverwrite004', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         overwrite: false
       }
       let task = await request.agent.create(context, conf);
-      await task.start().then(async () => {
+      task.start().then(async () => {
         expect(true).assertTrue();
         await request.agent.remove(task.tid);
         done();
@@ -663,11 +657,11 @@ export default function requestCreateTaskTest() {
     it('testTaskOverwrite005', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         overwrite: "true"
       }
       let task = await request.agent.create(context, conf);
-      await task.start().then(async () => {
+      task.start().then(async () => {
         expect(task.config.overwrite).assertEqual("true");
         await request.agent.remove(task.tid);
         done();
@@ -687,11 +681,11 @@ export default function requestCreateTaskTest() {
      * @tc.require:
      */
     it('testTaskOverwrite006', 0, async function (done) {
-      let file = fs.openSync(cacheDir + '/README.md', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/raw/v1.0/README.md',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         overwrite: "true"
       }
       try {
@@ -717,11 +711,11 @@ export default function requestCreateTaskTest() {
     it('testTaskOverwrite007', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/raw/v1.0/README.md'
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt'
       }
       try {
         let task = await request.agent.create(context, conf);
-        await task.start().then(async () => {
+        task.start().then(async () => {
           expect(true).assertTrue();
           await request.agent.remove(task.tid);
           done();
@@ -745,11 +739,11 @@ export default function requestCreateTaskTest() {
      * @tc.require:
      */
     it('testTaskOverwrite008', 0, async function (done) {
-      let file = fs.openSync(cacheDir + '/README.md', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/raw/v1.0/README.md'
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt'
       }
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -786,7 +780,7 @@ export default function requestCreateTaskTest() {
         method: 'POST'
       }
       let task = await request.agent.create(context, conf);
-      await task.start().then(() => {
+      task.start().then(() => {
         expect(true).assertTrue();
         done();
       }).catch((err) => {
@@ -807,11 +801,11 @@ export default function requestCreateTaskTest() {
     it('testTaskMethod002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         method: 'POST'
       }
       let task = await request.agent.create(context, conf);
-      await task.start().then(async () => {
+      task.start().then(async () => {
         expect(true).assertTrue();
         await request.agent.remove(task.tid);
         done();
@@ -833,11 +827,11 @@ export default function requestCreateTaskTest() {
     it('testTaskMethod003', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         method: 123
       }
       let task = await request.agent.create(context, conf);
-      await task.start().then(async () => {
+      task.start().then(async () => {
         expect(task.config.method).assertEqual(123);
         await request.agent.remove(task.tid);
         done();
@@ -859,11 +853,11 @@ export default function requestCreateTaskTest() {
     it('testTaskMethod004', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         method: ''
       }
       let task = await request.agent.create(context, conf);
-      await task.start().then(async () => {
+      task.start().then(async () => {
         expect(task.config.method).assertEqual('');
         await request.agent.remove(task.tid);
         done();
@@ -897,7 +891,7 @@ export default function requestCreateTaskTest() {
         method: 'GET'
       }
       let task = await request.agent.create(context, conf);
-      await task.start().then(() => {
+      task.start().then(() => {
         expect(true).assertTrue();
         done();
       }).catch((err) => {
@@ -919,11 +913,11 @@ export default function requestCreateTaskTest() {
       await sleep(2000);
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         method: 'PUT'
       }
       let task = await request.agent.create(context, conf);
-      await task.start().then(async () => {
+      task.start().then(async () => {
         expect(true).assertTrue();
         await request.agent.remove(task.tid);
         done();
@@ -945,13 +939,13 @@ export default function requestCreateTaskTest() {
     it('testTaskSaveas001', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         mode: request.agent.Mode.FOREGROUND,
         saveas: 123
       }
       let task = await request.agent.create(context, conf);
       task.on('completed', function() {
-        if (fs.accessSync(`${cacheDir}/test.apk`)) {
+        if (fs.accessSync(`${cacheDir}/test.txt`)) {
           expect(true).assertTrue();
           done();
         }
@@ -971,13 +965,13 @@ export default function requestCreateTaskTest() {
     it('testTaskSaveas002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       try {
         let task = await request.agent.create(context, conf);
         task.on('completed', function() {
-          if (fs.accessSync(`${cacheDir}/test.apk`)) {
+          if (fs.accessSync(`${cacheDir}/test.txt`)) {
             expect(true).assertTrue();
             done();
           } else {
@@ -1448,7 +1442,7 @@ export default function requestCreateTaskTest() {
     it('testTaskNetwork002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         network: "ANY"
       }
       request.agent.create(context, conf).then(async (data) => {
@@ -1473,7 +1467,7 @@ export default function requestCreateTaskTest() {
     it('testTaskNetwork003', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         network: request.agent.Network.WIFI
       }
       request.agent.create(context, conf).then(async (data) => {
@@ -1596,10 +1590,10 @@ export default function requestCreateTaskTest() {
     it('testTaskHeaders003', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
       }
       let task = await request.agent.create(context, conf);
-      await task.start().then(async () => {
+      task.start().then(async () => {
         expect(typeof task.config.headers).assertEqual('undefined');
         await request.agent.remove(task.tid);
         done();
@@ -1626,7 +1620,7 @@ export default function requestCreateTaskTest() {
         retry: true
       }
       let task = await request.agent.create(context, conf);
-      await task.start().then(async () => {
+      task.start().then(async () => {
         expect(true).assertTrue();
         await request.agent.remove(task.tid);
         done();
@@ -1648,13 +1642,13 @@ export default function requestCreateTaskTest() {
     it('testTaskRetry002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         mode: request.agent.Mode.BACKGROUND,
         retry: true,
         gauge: true
       }
       let task = await request.agent.create(context, conf);
-      await task.start().then(async () => {
+      task.start().then(async () => {
         expect(true).assertTrue();
         await request.agent.remove(task.tid);
         done();
@@ -1701,7 +1695,7 @@ export default function requestCreateTaskTest() {
     it('testTaskRetry004', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.apk',
+        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.txt',
         mode: request.agent.Mode.FOREGROUND,
         retry: false
       }
@@ -1725,7 +1719,7 @@ export default function requestCreateTaskTest() {
     it('testTaskRetry005', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.apk',
+        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.txt',
         mode: request.agent.Mode.FOREGROUND,
         retry: false,
         overwrite: true
@@ -1750,7 +1744,7 @@ export default function requestCreateTaskTest() {
     it('testTaskIndex001', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         index: '0',
         mode: request.agent.Mode.FOREGROUND
       }
@@ -1774,13 +1768,13 @@ export default function requestCreateTaskTest() {
     it('testTaskIndex002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         index: 0,
         begins: 10,
         ends: 5
       }
       let task = await request.agent.create(context, conf);
-      await task.start().then(async () => {
+      task.start().then(async () => {
         expect(true).assertTrue();
         await request.agent.remove(task.tid);
         done();
@@ -1897,7 +1891,7 @@ export default function requestCreateTaskTest() {
     it('testTaskIndex006', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         mode: request.agent.Mode.FOREGROUND,
         begins: 5,
         gauge: true
@@ -2056,7 +2050,7 @@ export default function requestCreateTaskTest() {
     it('testTaskToken001', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         token: 'abcdef'
       }
       try {
@@ -2082,7 +2076,7 @@ export default function requestCreateTaskTest() {
     it('testTaskToken002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         token: 'a'.padStart(2049, 'a')
       }
       try {
@@ -2108,7 +2102,7 @@ export default function requestCreateTaskTest() {
     it('testTaskToken003', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         token: 666
       }
       request.agent.create(context, conf).then(async (data) => {
@@ -2133,7 +2127,7 @@ export default function requestCreateTaskTest() {
     it('testTaskToken004', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         token: 'a'.padStart(2048, 'a')
       }
       request.agent.create(context, conf).then(async (data) => {

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index';
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index';
 import request from '@ohos.request';
 
 const TAG = "REQUEST_TEST";
@@ -39,52 +39,54 @@ describe('RequestTest', function () {
 
     let downloadTask;
     let downloadConfig;
+    let globalDownloadConf = {
+        url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
+        header: {
+            headers: 'http'
+        },
+        enableMetered: false,
+        enableRoaming: false,
+        description: 'XTS download test!',
+        networkType: request.NETWORK_WIFI,
+        filePath: `/data/storage/el2/base/haps/entry/files/`,
+        title: 'XTS download test!',
+        background: false
+    };
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0001
-     * @tc.desc      alled when the current download session is in process.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0001
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0001
+     * @tc.desc      : alled when the current download session is in process.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0001', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0001 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0001.txt'
-        request.download(downloadConfig, (err, data)=>{
-            try{
+        request.download(downloadConfig, (err, data) => {
+            try {
                 downloadTask = data;
-                console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0001 downloadTask: " + JSON.stringify(downloadTask) );
+                console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0001 downloadTask: " + JSON.stringify(downloadTask));
                 expect(true).assertEqual(downloadTask != undefined);
                 downloadTask.on('progress', (data1, data2) => {
-                    try{
+                    try {
                         console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0001 on data1 =" + data1);
                         console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0001 on data2 =" + data2);
                         expect(true).assertEqual(data1 != undefined);
                         expect(true).assertEqual(data2 != undefined);
-                        if (data1 == data2){
+                        if (data1 == data2) {
                             expect(true).assertTrue();
                             downloadTask.remove()
                             done();
                         }
-                    }catch(err){
+                    } catch (err) {
                         console.error("====>SUB_REQUEST_DOWNLOAD_API_PROMISE_0001 throw_error: " + err);
                         done();
                     }
                 });
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_PROMISE_0001 error: " + err);
                 done();
             }
@@ -92,43 +94,32 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0002
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0002
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0002
      * @tc.desc       Called when the current download session complete、pause or remove.
-     * @tc.size      : MEDIUM
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0002', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0002 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0002.txt'
-        request.download(downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0002 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(true).assertEqual(downloadTask != undefined);
                 downloadTask.on('complete', () => {
-                    try{
+                    try {
                         console.info('====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0002 task completed.')
                         expect(true).assertTrue();
-                    }catch(err){
+                    } catch (err) {
                         console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0002 throw_error: " + err);
                     }
                     done();
                 });
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0002 error: " + err);
                 done();
             }
@@ -136,49 +127,39 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003
-     * @tc.desc       Called when the current download session complete、pause or remove.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003
+     * @tc.desc      : Called when the current download session complete、pause or remove.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
+        downloadConfig.url = 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe';
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003.txt'
-        request.download(downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(true).assertEqual(downloadTask != undefined);
                 downloadTask.on('pause', () => {
-                    try{
+                    try {
                         console.info('====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003 task completed.')
                         expect(true).assertTrue();
-                    }catch(err){
+                    } catch (err) {
                         console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003 throw_error: " + err);
                     }
                     downloadTask.remove()
                     done();
                 });
                 downloadTask.on('progress', (data1, data2) => {
-                    if(data1 > 0){
+                    if (data1 > 0) {
                         downloadTask.pause()
                     }
                 });
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003 error: " + err);
                 done();
             }
@@ -186,48 +167,37 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0004
-     * @tc.desc       Called when the current download session complete、pause or remove.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0004
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0004
+     * @tc.desc      : Called when the current download session complete、pause or remove.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0004', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0004 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0004.txt'
-        request.download(downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0004 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(downloadTask != undefined).assertEqual(true);
                 downloadTask.on('remove', () => {
-                    try{
+                    try {
                         console.info('====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0004 remove completed')
                         expect(true).assertTrue();
-                    }catch(err){
+                    } catch (err) {
                         console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0004 throw_error: " + err);
                     }
                     done();
                 });
                 downloadTask.on('progress', (data1, data2) => {
-                    if(data1 > 0){
+                    if (data1 > 0) {
                         downloadTask.remove()
                     }
                 });
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0004 error: " + err);
                 done();
             }
@@ -235,44 +205,34 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005
-     * @tc.desc      Called when the current download session fails.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005
+     * @tc.desc      : Called when the current download session fails.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.pngkfkew',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
+        downloadConfig.url = 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.pngkfkew';
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005.txt'
         downloadConfig.url += '123456'
-        request.download(downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(downloadTask != undefined).assertEqual(true);
-                downloadTask.on('fail',(err)=>{
-                    try{
+                downloadTask.on('fail', (err) => {
+                    try {
                         console.info('====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005 fail completed')
                         expect(true).assertTrue();
-                    }catch(err){
+                    } catch (err) {
                         console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005 throw_error: " + err);
                     }
                     done();
                 })
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005 error: " + err);
                 done();
             }
@@ -280,37 +240,26 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001
-     * @tc.desc      alled when the current download session is in process.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001
+     * @tc.desc      : alled when the current download session is in process.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001.txt'
-        request.download(downloadConfig, (err, data)=>{
-            try{
+        request.download(downloadConfig, (err, data) => {
+            try {
                 downloadTask = data;
                 console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001 downloadTask: " + downloadTask);
                 expect(downloadTask != undefined).assertEqual(true);
-                downloadTask.on('progress', async (data1, data2) => {});
+                downloadTask.on('progress', async (data1, data2) => { });
                 downloadTask.off('progress');
                 done();
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001 error: " + err);
                 done();
             }
@@ -318,37 +267,26 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002
-     * @tc.desc      alled when the current download session complete、pause or remove.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002
+     * @tc.desc      : alled when the current download session complete、pause or remove.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002.txt'
-        request.download(downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(downloadTask != undefined).assertEqual(true);
-                downloadTask.on('complete', () => {});
+                downloadTask.on('complete', () => { });
                 downloadTask.off('complete');
                 done();
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002 error: " + err);
                 done();
             }
@@ -356,38 +294,27 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003
-     * @tc.desc      alled when the current download session complete、pause or remove.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003
+     * @tc.desc      : alled when the current download session complete、pause or remove.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003.txt'
-        request.download( downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(downloadTask != undefined).assertEqual(true);
-                function PauseCallback() {}
+                function PauseCallback() { }
                 downloadTask.on('pause', PauseCallback);
                 downloadTask.off('pause', PauseCallback);
                 done();
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003 error: " + err);
                 done();
             }
@@ -395,38 +322,27 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0004
-     * @tc.desc      alled when the current download session complete、pause or remove.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0004
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0004
+     * @tc.desc      : alled when the current download session complete、pause or remove.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0004', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0004 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0004.txt'
-        request.download( downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0004 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(downloadTask != undefined).assertEqual(true);
-                function RemoveCallback() {}
+                function RemoveCallback() { }
                 downloadTask.on('remove', RemoveCallback);
                 downloadTask.off('remove', RemoveCallback);
                 done();
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0004 error: " + err);
                 done();
             }
@@ -434,38 +350,27 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005
-     * @tc.desc      Called when the current download session fails.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005
+     * @tc.desc      : Called when the current download session fails.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005.txt'
-        request.download( downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(downloadTask != undefined).assertEqual(true);
-                function FailCallback(data) {}
+                function FailCallback(data) { }
                 downloadTask.on('fail', FailCallback);
                 downloadTask.off('fail', FailCallback);
                 done();
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 error: " + err);
                 done();
             }
@@ -473,36 +378,25 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_REMOVE_0001
-     * @tc.desc      Deletes a download session and the downloaded files.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_REMOVE_0001
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_REMOVE_0001
+     * @tc.desc      : Deletes a download session and the downloaded files.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_REMOVE_0001', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_REMOVE_0001 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_REMOVE_0001.txt'
-        request.download( downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_REMOVE_0001 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(downloadTask != undefined).assertEqual(true);
-                downloadTask.remove((err, data)=>{
-                    try{
-                        if(err) {
+                downloadTask.remove((err, data) => {
+                    try {
+                        if (err) {
                             console.error('====>SUB_REQUEST_DOWNLOAD_API_REMOVE_0001 Failed to remove the download task.');
                             expect().assertFail();
                         }
@@ -513,12 +407,12 @@ describe('RequestTest', function () {
                             console.error('====>SUB_REQUEST_DOWNLOAD_API_REMOVE_0001 Failed to remove the download task.');
                             expect().assertFail();
                         }
-                    }catch(err){
+                    } catch (err) {
                         console.info('====>SUB_REQUEST_DOWNLOAD_API_REMOVE_0001 remove_throw_err:' + JSON.stringify(err))
                     }
                     done();
                 });
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_REMOVE_0001 error: " + err);
                 done();
             }
@@ -526,32 +420,21 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_REMOVE_0002
-     * @tc.desc      Deletes a download session and the downloaded files.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_REMOVE_0002
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_REMOVE_0002
+     * @tc.desc      : Deletes a download session and the downloaded files.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_REMOVE_0002', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_REMOVE_0002 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_REMOVE_0002.txt'
-        request.download( downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_REMOVE_0002 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(downloadTask != undefined).assertEqual(true);
                 downloadTask.remove().then(data => {
                     if (data) {
@@ -566,7 +449,7 @@ describe('RequestTest', function () {
                     console.error('====>SUB_REQUEST_DOWNLOAD_API_REMOVE_0002 Failed to remove the download task.');
                     done();
                 })
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_REMOVE_0002 error: " + err);
                 done();
             }
@@ -574,43 +457,32 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_PAUSE_0001
-     * @tc.desc      Pause a download session.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_PAUSE_0001
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_PAUSE_0001
+     * @tc.desc      : Pause a download session.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_PAUSE_0001', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_PAUSE_0001 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_PAUSE_0001.txt'
-        request.download( downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_PAUSE_0001 downloadTask: " + downloadTask);
             expect(downloadTask != undefined).assertEqual(true);
-            try{
-                downloadTask.pause(()=>{
-                    try{
+            try {
+                downloadTask.pause(() => {
+                    try {
                         console.info('====>SUB_REQUEST_DOWNLOAD_API_PAUSE_0001 Download task pause success.');
                         expect(true).assertTrue();
-                    }catch(err){
+                    } catch (err) {
                         console.info('====>SUB_REQUEST_DOWNLOAD_API_PAUSE_0001 pause_throw_err:' + JSON.stringify(err))
                     }
                     done();
                 })
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_PAUSE_0001 error: " + JSON.stringify(err));
                 done();
             }
@@ -618,32 +490,21 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_PAUSE_0002
-     * @tc.desc      Pause a download session.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_PAUSE_0002
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_PAUSE_0002
+     * @tc.desc      : Pause a download session.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_PAUSE_0002', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_PAUSE_0002 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_PAUSE_0002.txt'
-        request.download( downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_PAUSE_0002 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(downloadTask != undefined).assertEqual(true);
                 downloadTask.pause().then(() => {
                     console.info('====>SUB_REQUEST_DOWNLOAD_API_PAUSE_0002 Download task pause success.');
@@ -653,7 +514,7 @@ describe('RequestTest', function () {
                     console.error("====>SUB_REQUEST_DOWNLOAD_API_PAUSE_0002 throw_error: " + JSON.stringify(err));
                     done();
                 })
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_PAUSE_0002 error: " + JSON.stringify(err));
                 done();
             }
@@ -661,44 +522,33 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_REMUSE_0001
-     * @tc.desc      Resume a paused download session.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_REMUSE_0001
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_REMUSE_0001
+     * @tc.desc      : Resume a paused download session.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_REMUSE_0001', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_REMUSE_0001 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_REMUSE_0001.txt'
-        request.download( downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_REMUSE_0001 downloadTask: " + downloadTask);
             expect(downloadTask != undefined).assertEqual(true);
-            try{
-                downloadTask.resume(()=>{
-                    try{
+            try {
+                downloadTask.resume(() => {
+                    try {
                         console.info('====>SUB_REQUEST_DOWNLOAD_API_REMUSE_0001 Download task resume success.');
                         expect(true).assertTrue();
-                    }catch(err){
+                    } catch (err) {
                         console.info('====>SUB_REQUEST_DOWNLOAD_API_REMUSE_0001 pause_throw_err:' + JSON.stringify(err))
                     }
                     downloadTask.remove()
                     done();
                 })
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_REMUSE_0001 error: " + JSON.stringify(err));
                 done();
             }
@@ -706,32 +556,21 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_REMUSE_0002
-     * @tc.desc      Resume a paused download session.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_REMUSE_0002
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_REMUSE_0002
+     * @tc.desc      : Resume a paused download session.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_REMUSE_0002', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_REMUSE_0002 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_REMUSE_0002.txt'
-        request.download( downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_REMUSE_0002 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(downloadTask != undefined).assertEqual(true);
                 downloadTask.resume().then(() => {
                     console.info('====>SUB_REQUEST_DOWNLOAD_API_REMUSE_0002 Download task resume success.');
@@ -742,7 +581,7 @@ describe('RequestTest', function () {
                     console.error("====>SUB_REQUEST_DOWNLOAD_API_REMUSE_0002 throw_error: " + JSON.stringify(err));
                     done();
                 })
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_REMUSE_0002 error: " + JSON.stringify(err));
                 done();
             }
@@ -750,58 +589,47 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_QUERY_0001
-     * @tc.desc      Queries download information of a session, which is defined in DownloadSession.DownloadInfo.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_QUERY_0001
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_QUERY_0001
+     * @tc.desc      : Queries download information of a session, which is defined in DownloadSession.DownloadInfo.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_QUERY_0001', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_QUERY_0001 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_QUERY_0001.txt'
-        request.download( downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(downloadTask != undefined).assertEqual(true);
-                downloadTask.query((err, downloadInfo)=>{
-                    try{
-                        if(err) {
+                downloadTask.query((err, downloadInfo) => {
+                    try {
+                        if (err) {
                             console.error('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 Failed to query: ' + JSON.stringify(err));
                             expect().assertFail();
                         } else {
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: '+ downloadInfo.description);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: '+ downloadInfo.downloadedBytes);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: '+ downloadInfo.downloadId);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: '+ downloadInfo.failedReason);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: '+ downloadInfo.fileName);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: '+ downloadInfo.filePath);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: '+ downloadInfo.pausedReason);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: '+ downloadInfo.status);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: '+ downloadInfo.targetURI);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: '+ downloadInfo.downloadTitle);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: '+ downloadInfo.downloadTotalBytes);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: ' + downloadInfo.description);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: ' + downloadInfo.downloadedBytes);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: ' + downloadInfo.downloadId);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: ' + downloadInfo.failedReason);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: ' + downloadInfo.fileName);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: ' + downloadInfo.filePath);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: ' + downloadInfo.pausedReason);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: ' + downloadInfo.status);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: ' + downloadInfo.targetURI);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: ' + downloadInfo.downloadTitle);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 query info: ' + downloadInfo.downloadTotalBytes);
                             expect(true).assertTrue();
                         }
-                    }catch(err){
+                    } catch (err) {
                         console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 throw_error: " + JSON.stringify(err));
                     }
                     done();
                 })
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 error: " + JSON.stringify(err));
                 done();
             }
@@ -809,63 +637,52 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_QUERY_0002
-     * @tc.desc      Queries download information of a session, which is defined in DownloadSession.DownloadInfo.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_QUERY_0002
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_QUERY_0002
+     * @tc.desc      : Queries download information of a session, which is defined in DownloadSession.DownloadInfo.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_QUERY_0002', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_QUERY_0002 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_QUERY_0002.txt'
-        request.download( downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(downloadTask != undefined).assertEqual(true);
-                downloadTask.query().then((downloadInfo)=>{
-                    try{
-                        if(err) {
+                downloadTask.query().then((downloadInfo) => {
+                    try {
+                        if (err) {
                             console.error('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 Failed to query: ' + JSON.stringify(err));
                             expect().assertFail();
                         } else {
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: '+ downloadInfo.description);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: '+ downloadInfo.downloadedBytes);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: '+ downloadInfo.downloadId);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: '+ downloadInfo.failedReason);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: '+ downloadInfo.fileName);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: '+ downloadInfo.filePath);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: '+ downloadInfo.pausedReason);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: '+ downloadInfo.status);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: '+ downloadInfo.targetURI);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: '+ downloadInfo.downloadTitle);
-                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: '+ downloadInfo.downloadTotalBytes);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: ' + downloadInfo.description);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: ' + downloadInfo.downloadedBytes);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: ' + downloadInfo.downloadId);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: ' + downloadInfo.failedReason);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: ' + downloadInfo.fileName);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: ' + downloadInfo.filePath);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: ' + downloadInfo.pausedReason);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: ' + downloadInfo.status);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: ' + downloadInfo.targetURI);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: ' + downloadInfo.downloadTitle);
+                            console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 query info: ' + downloadInfo.downloadTotalBytes);
                             expect(true).assertTrue();
                         }
                         done();
-                    }catch(err){
+                    } catch (err) {
                         console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 error: " + JSON.stringify(err));
                         done();
                     }
-                }).catch((err)=>{
+                }).catch((err) => {
                     console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002  catch_error: " + JSON.stringify(err));
                     expect().assertFail();
                     done();
                 })
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 error: " + JSON.stringify(err));
                 done();
             }
@@ -873,38 +690,27 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001
-     * @tc.desc      Queries the MIME type of the download file.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001
+     * @tc.desc      : Queries the MIME type of the download file.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>---------------------SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 is starting---------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001.txt'
-        request.download( downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(downloadTask != undefined).assertEqual(true);
                 downloadTask.on('complete', () => {
-                    try{
-                        downloadTask.queryMimeType((err, data)=>{
-                            try{
-                                if(err) {
+                    try {
+                        downloadTask.queryMimeType((err, data) => {
+                            try {
+                                if (err) {
                                     console.error('====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 Failed to queryMimeType the download task.');
                                     expect().assertFail();
                                 }
@@ -915,19 +721,19 @@ describe('RequestTest', function () {
                                     console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 data error");
                                     expect().assertFail();
                                 }
-                            }catch(err){
+                            } catch (err) {
                                 console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 throw_error: " + JSON.stringify(err));
                             }
                             done();
                         });
                         console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 task completed.')
                         expect(true).assertTrue();
-                    }catch(err){
+                    } catch (err) {
                         console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 throw_error: " + err);
                     }
                     done();
                 });
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 err: " + JSON.stringify(err));
                 done();
             }
@@ -935,35 +741,24 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002
-     * @tc.desc      Queries the MIME type of the download file.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002
+     * @tc.desc      : Queries the MIME type of the download file.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002', 0, async function (done) {
-        downloadConfig = {
-            url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-            header: {
-                headers: 'http'
-            },
-            enableMetered: false,
-            enableRoaming: false,
-            description: 'XTS download test!',
-            networkType: request.NETWORK_WIFI,
-            filePath: `/data/storage/el2/base/haps/entry/files/`,
-            title: 'XTS download test!',
-            background: false
-        }
+        downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
         console.info("====>-------------------SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002 is starting----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002.txt'
-        request.download( downloadConfig, (err, data)=>{
+        request.download(downloadConfig, (err, data) => {
             downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002 downloadTask: " + downloadTask);
-            try{
+            try {
                 expect(downloadTask != undefined).assertEqual(true);
                 downloadTask.on('complete', () => {
-                    try{
+                    try {
                         downloadTask.queryMimeType().then(data => {
                             if (data) {
                                 console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002 Download task queryMimeType.');
@@ -980,12 +775,12 @@ describe('RequestTest', function () {
                         })
                         console.info('====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002 task completed.')
                         expect(true).assertTrue();
-                    }catch(err){
+                    } catch (err) {
                         console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002 throw_error: " + err);
                     }
                     done();
                 });
-            }catch(err){
+            } catch (err) {
                 console.error("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002 error: " + JSON.stringify(err));
                 done();
             }

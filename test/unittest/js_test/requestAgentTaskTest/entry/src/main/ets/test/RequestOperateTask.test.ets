@@ -37,9 +37,6 @@ export default function requestOperateTaskTest() {
       if (fs.accessSync(cacheDir + '/test.txt')) {
         fs.unlinkSync(cacheDir + '/test.txt');
       }
-      if (fs.accessSync(cacheDir + '/test.apk')) {
-        fs.unlinkSync(cacheDir + '/test.apk');
-      }
       if (fs.accessSync(cacheDir + '/README.md')) {
         fs.unlinkSync(cacheDir + '/README.md');
       }
@@ -71,7 +68,7 @@ export default function requestOperateTaskTest() {
     it('testStartTask001', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -94,8 +91,8 @@ export default function requestOperateTaskTest() {
     it('testStartTask002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -121,8 +118,8 @@ export default function requestOperateTaskTest() {
     it('testStartTask003', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -145,8 +142,8 @@ export default function requestOperateTaskTest() {
     it('testStartTask004', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf)
@@ -172,8 +169,8 @@ export default function requestOperateTaskTest() {
     it('testStartTask005', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -200,8 +197,8 @@ export default function requestOperateTaskTest() {
     it('testStartTask006', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -227,8 +224,8 @@ export default function requestOperateTaskTest() {
     it('testStartTask007', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -256,7 +253,7 @@ export default function requestOperateTaskTest() {
         let conf = {
           action: request.agent.Action.DOWNLOAD,
           url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
-          saveas: `test.apk`,
+          saveas: `test.txt`,
           mode: request.agent.Mode.FOREGROUND
         }
         let task = await request.agent.create(context, conf);
@@ -265,8 +262,8 @@ export default function requestOperateTaskTest() {
 
         let conf1 = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-          saveas: `test2.apk`,
+          url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+          saveas: `README.md`,
           mode: request.agent.Mode.FOREGROUND
         }
         request.agent.create(context, conf1, async (err, task1) => {
@@ -304,7 +301,7 @@ export default function requestOperateTaskTest() {
     it('testPauseTask001', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -328,8 +325,8 @@ export default function requestOperateTaskTest() {
     it('testPauseTask002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -356,8 +353,8 @@ export default function requestOperateTaskTest() {
     it('testPauseTask003', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -381,8 +378,8 @@ export default function requestOperateTaskTest() {
     it('testPauseTask004', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -410,7 +407,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
-        saveas: `test.apk`,
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -445,8 +442,8 @@ export default function requestOperateTaskTest() {
     it('testResumeTask001', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -471,8 +468,8 @@ export default function requestOperateTaskTest() {
     it('testResumeTask002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
 
@@ -498,8 +495,8 @@ export default function requestOperateTaskTest() {
     it('testResumeTask003', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -531,8 +528,8 @@ export default function requestOperateTaskTest() {
     it('testResumeTask004', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -560,7 +557,7 @@ export default function requestOperateTaskTest() {
         let conf = {
           action: request.agent.Action.DOWNLOAD,
           url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
-          saveas: `README.md`,
+          saveas: `test.txt`,
           mode: request.agent.Mode.FOREGROUND
         }
         let task = await request.agent.create(context, conf);
@@ -590,7 +587,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
-        saveas: `README.md`,
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -621,8 +618,8 @@ export default function requestOperateTaskTest() {
     it('testStopTask001', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -645,8 +642,8 @@ export default function requestOperateTaskTest() {
     it('testStopTask002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -672,8 +669,8 @@ export default function requestOperateTaskTest() {
     it('testStopTask003', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -696,8 +693,8 @@ export default function requestOperateTaskTest() {
     it('testStopTask004', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -724,8 +721,8 @@ export default function requestOperateTaskTest() {
       await sleep(2000);
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       try{
@@ -753,7 +750,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
-        saveas: `README.md`,
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       try{
@@ -779,8 +776,8 @@ export default function requestOperateTaskTest() {
     it('testOnTask001', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -805,8 +802,8 @@ export default function requestOperateTaskTest() {
     it('testOnTask002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -831,8 +828,8 @@ export default function requestOperateTaskTest() {
     it('testOnTask003', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -855,8 +852,8 @@ export default function requestOperateTaskTest() {
     it('testOnTask004', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -884,8 +881,8 @@ export default function requestOperateTaskTest() {
     it('testOnTask005', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -914,7 +911,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
-        saveas: `test.apk`,
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -939,8 +936,8 @@ export default function requestOperateTaskTest() {
     it('testOnTask007', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -968,8 +965,8 @@ export default function requestOperateTaskTest() {
     it('testOffTask001', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -994,8 +991,8 @@ export default function requestOperateTaskTest() {
     it('testOffTask002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1020,8 +1017,8 @@ export default function requestOperateTaskTest() {
     it('testOffTask003', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1048,8 +1045,8 @@ export default function requestOperateTaskTest() {
     it('testOffTask004', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1078,8 +1075,8 @@ export default function requestOperateTaskTest() {
     it('testOffTask005', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1112,8 +1109,8 @@ export default function requestOperateTaskTest() {
     it('testOffTask006', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1177,7 +1174,7 @@ export default function requestOperateTaskTest() {
     it('testRemove003', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1202,7 +1199,7 @@ export default function requestOperateTaskTest() {
     it('testRemove004', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1224,7 +1221,7 @@ export default function requestOperateTaskTest() {
     it('testRemove005', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1249,8 +1246,8 @@ export default function requestOperateTaskTest() {
     it('testRedirect001', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND,
         redirect: true
       }
@@ -1274,8 +1271,8 @@ export default function requestOperateTaskTest() {
     it('testRedirect002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND,
         redirect: false
       }
