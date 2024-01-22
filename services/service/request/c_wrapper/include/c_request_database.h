@@ -47,8 +47,7 @@ constexpr const char *CREATE_REQUEST_VERSION_TABLE = "CREATE TABLE IF NOT EXISTS
                                                      "task_table TEXT)";
 
 constexpr const char *CREATE_REQUEST_TASK_TABLE = "CREATE TABLE IF NOT EXISTS request_task "
-                                                  "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                  "task_id INTEGER, "
+                                                  "(task_id INTEGER PRIMARY KEY, "
                                                   "uid INTEGER, "
                                                   "token_id INTEGER, "
                                                   "action INTEGER, "
