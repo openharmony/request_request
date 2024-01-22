@@ -252,7 +252,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+          url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
           saveas: `test.txt`,
           mode: request.agent.Mode.FOREGROUND
         }
@@ -406,7 +406,7 @@ export default function requestOperateTaskTest() {
     it('testPauseTask005', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
         saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
@@ -556,7 +556,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+          url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
           saveas: `test.txt`,
           mode: request.agent.Mode.FOREGROUND
         }
@@ -586,7 +586,7 @@ export default function requestOperateTaskTest() {
     it('testResumeTask006', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
         saveas: `test.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
@@ -749,7 +749,7 @@ export default function requestOperateTaskTest() {
       await sleep(2000);
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
         saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }
@@ -910,7 +910,7 @@ export default function requestOperateTaskTest() {
     it('testOnTask006', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
         saveas: `test.txt`,
         mode: request.agent.Mode.FOREGROUND
       }

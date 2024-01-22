@@ -1828,7 +1828,7 @@ export default function requestCreateTaskTest() {
     it('testTaskIndex004', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/47273f95/Feishu-win32_ia32-7.9.7-signed.exe',
         mode: request.agent.Mode.FOREGROUND,
         begins: 5,
         ends: 10,
@@ -1949,7 +1949,7 @@ export default function requestCreateTaskTest() {
     it('testTaskIndex008', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/47273f95/Feishu-win32_ia32-7.9.7-signed.exe',
         mode: request.agent.Mode.FOREGROUND,
         ends: 10,
         gauge: true,

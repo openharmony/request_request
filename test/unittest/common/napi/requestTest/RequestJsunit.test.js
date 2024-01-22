@@ -136,7 +136,7 @@ describe('RequestTest', function () {
      */
     it('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003', 0, async function (done) {
         downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
-        downloadConfig.url = 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe';
+        downloadConfig.url = 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip';
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003.txt'
         request.download(downloadConfig, (err, data) => {
