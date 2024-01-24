@@ -31,6 +31,8 @@ use crate::task::request_task::RequestTask;
 use crate::task::tick::Clock;
 use crate::utils::c_wrapper::CStringWrapper;
 
+static mut TASKMANAGER_PANIC_INFO: Option<String> = None;
+
 cfg_oh! {
     use crate::manager::Notifier;
 }
@@ -60,7 +62,13 @@ impl TaskManagerEntry {
 
     pub(crate) fn send_event(&self, event: EventMessage) -> bool {
         if self.tx.send(event).is_err() {
-            error!("Sends TaskManager event failed, or TaskManager is unloading");
+            unsafe {
+                if let Some(e) = TASKMANAGER_PANIC_INFO.as_ref() {
+                    error!("Sends TaskManager event failed {}", e);
+                } else {
+                    info!("TaskManager is unloading")
+                }
+            }
             return false;
         }
         true
@@ -70,6 +78,13 @@ impl TaskManagerEntry {
 impl TaskManager {
     pub(crate) fn init() -> TaskManagerEntry {
         debug!("TaskManager init");
+
+        std::panic::set_hook(Box::new(|info| {
+            error!("{}", info.to_string());
+            unsafe {
+                TASKMANAGER_PANIC_INFO = Some(info.to_string());
+            }
+        }));
 
         ylong_runtime::builder::RuntimeBuilder::new_multi_thread()
             .worker_num(4)
@@ -342,7 +357,13 @@ impl TaskManager {
             task.conf.common_data.task_id
         );
 
-        let remove_task = self.tasks.remove(&task.conf.common_data.task_id).unwrap();
+        let remove_task = match self.tasks.remove(&task.conf.common_data.task_id) {
+            Some(task) => task,
+            None => {
+                error!("TaskManager remove task failed");
+                return;
+            }
+        };
 
         let uid = &task.conf.common_data.uid;
         match self.app_task_map.get_mut(uid) {

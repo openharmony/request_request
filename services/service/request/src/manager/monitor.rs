@@ -143,9 +143,15 @@ impl TaskManager {
 
         debug!("TaskManager begin update_background_app uid:{}", uid);
 
-        if ApplicationState::from(self.app_state_map.get(&uid).unwrap().load(Ordering::SeqCst))
-            == ApplicationState::Foreground
-        {
+        let app_state = match self.app_state_map.get(&uid) {
+            Some(state) => ApplicationState::from(state.load(Ordering::SeqCst)),
+            None => {
+                error!("TaskManager get application state failed");
+                return;
+            }
+        };
+
+        if app_state == ApplicationState::Foreground {
             debug!(
                 "TaskManager abort update_background_app uid:{} that has changed to Foreground",
                 uid
