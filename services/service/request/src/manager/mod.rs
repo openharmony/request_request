@@ -13,6 +13,7 @@
 
 pub(crate) mod task_manager;
 pub(crate) use task_manager::TaskManager;
+pub(crate) use task_manager::SystemProxyManager;
 
 pub(crate) mod monitor;
 pub(crate) mod unload;
