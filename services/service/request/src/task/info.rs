@@ -107,7 +107,7 @@ pub(crate) enum State {
     Failed = 0x41,
     Removed = 0x50,
     Created = 0x60,
-    Any,
+    Any = 0x61,
 }
 
 pub(crate) struct UpdateInfo {

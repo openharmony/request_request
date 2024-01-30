@@ -13,6 +13,7 @@
 
 use crate::error::ErrorCode;
 use crate::manager::TaskManager;
+use crate::task::ffi::ChangeRequestTaskState;
 use crate::task::info::State;
 use crate::task::reason::Reason;
 
@@ -38,14 +39,8 @@ impl TaskManager {
             ErrorCode::TaskNotFound
         };
         unsafe {
-            RemoveRequestTask(task_id, uid);
+            ChangeRequestTaskState(task_id, uid, State::Removed);
         }
         result
     }
-}
-
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
-extern "C" {
-    pub(crate) fn RemoveRequestTask(task_id: u32, uid: u64) -> bool;
 }

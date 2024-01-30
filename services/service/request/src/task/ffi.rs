@@ -14,7 +14,7 @@
 use std::ffi::c_char;
 
 use super::config::{Action, CommonTaskConfig, ConfigSet, Network, TaskConfig, Version};
-use super::info::{CommonTaskInfo, InfoSet, Mode, TaskInfo, UpdateInfo};
+use super::info::{CommonTaskInfo, InfoSet, Mode, State, TaskInfo, UpdateInfo};
 use super::notify::{CommonProgress, EachFileStatus, Progress};
 use super::reason::Reason;
 use crate::utils::c_wrapper::{
@@ -379,6 +379,7 @@ extern "C" {
         state: i32,
     );
 
+    pub(crate) fn ChangeRequestTaskState(task_id: u32, uid: u64, state: State) -> bool;
     pub(crate) fn RequestBackgroundNotify(
         msg: RequestTaskMsg,
         wrappedPath: CStringWrapper,

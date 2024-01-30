@@ -19,7 +19,7 @@ use super::task_manager::GetTopBundleName;
 use super::TaskManager;
 use crate::manager::monitor::IsOnline;
 use crate::task::config::{TaskConfig, Version};
-use crate::task::ffi::CTaskConfig;
+use crate::task::ffi::{CTaskConfig, ChangeRequestTaskState};
 use crate::task::info::{ApplicationState, State};
 use crate::task::RequestTask;
 
@@ -90,15 +90,18 @@ impl TaskManager {
                         continue;
                     }
                     let app_state = self.app_state(uid, &config.bundle);
-                    let request_task = RequestTask::restore_task(
+                    match RequestTask::restore_task(
                         config,
                         task_info,
                         recording_rdb_num.clone(),
                         AtomicBool::new(false),
                         app_state,
-                    );
-                    let task = Arc::new(request_task);
-                    self.restoring_tasks.push(task);
+                    ) {
+                        Some(task) => self.restoring_tasks.push(Arc::new(task)),
+                        None => {
+                            unsafe { ChangeRequestTaskState(task_id, uid, State::Failed) };
+                        }
+                    }
                 }
             }
         } else {

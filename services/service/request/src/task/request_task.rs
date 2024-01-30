@@ -188,18 +188,19 @@ impl RequestTask {
         task
     }
 
+    // When we refactor, we'll use result here instead of
     pub(crate) fn restore_task(
         conf: TaskConfig,
         info: TaskInfo,
         recording_rdb_num: Arc<AtomicU32>,
         rate_limiting: AtomicBool,
         app_state: Arc<AtomicU8>,
-    ) -> Self {
+    ) -> Option<Self> {
         let progress_index = info.progress.common_data.index;
         let uid = info.common_data.uid;
         let action = conf.common_data.action;
-        let files = get_restore_files(&conf, uid);
-        let body_files = get_restore_body_files(&conf, uid);
+        let files = get_restore_files(&conf, uid)?;
+        let body_files = get_restore_body_files(&conf, uid)?;
         let file_count = files.len();
 
         let mut task = RequestTask {
@@ -253,7 +254,7 @@ impl RequestTask {
                 .store(info.progress.sizes[progress_index], Ordering::SeqCst),
             _ => {}
         }
-        task
+        Some(task)
     }
 
     pub(crate) fn build_notify_data(&self) -> NotifyData {
@@ -332,7 +333,8 @@ impl RequestTask {
             client = client.redirect(Redirect::none());
         }
 
-        // http links that contain redirects also require a certificate when redirected to https.
+        // http links that contain redirects also require a certificate when redirected
+        // to https.
         let mut buf = Vec::new();
         let file = File::open("/etc/ssl/certs/cacert.pem");
         match file {
@@ -1074,8 +1076,8 @@ pub(crate) async fn run(task: Arc<RequestTask>) {
     }
     info!("run end");
 }
-
-fn get_restore_files(conf: &TaskConfig, uid: u64) -> Vec<File> {
+// When we refactor, we'll use result here instead of
+fn get_restore_files(conf: &TaskConfig, uid: u64) -> Option<Vec<File>> {
     let mut files: Vec<File> = Vec::new();
 
     #[cfg(feature = "oh")]
@@ -1085,6 +1087,7 @@ fn get_restore_files(conf: &TaskConfig, uid: u64) -> Vec<File> {
                 Ok(file) => files.push(file),
                 Err(e) => {
                     error!("open file RO failed, err is {:?}", e);
+                    return None;
                 }
             }
         } else {
@@ -1092,14 +1095,16 @@ fn get_restore_files(conf: &TaskConfig, uid: u64) -> Vec<File> {
                 Ok(file) => files.push(file),
                 Err(e) => {
                     error!("open file RW failed, err is {:?}", e);
+                    return None;
                 }
             }
         }
     }
-    files
+    Some(files)
 }
 
-fn get_restore_body_files(conf: &TaskConfig, uid: u64) -> Vec<File> {
+// When we refactor, we'll use result here instead of
+fn get_restore_body_files(conf: &TaskConfig, uid: u64) -> Option<Vec<File>> {
     let mut body_files: Vec<File> = Vec::new();
 
     #[cfg(feature = "oh")]
@@ -1108,8 +1113,9 @@ fn get_restore_body_files(conf: &TaskConfig, uid: u64) -> Vec<File> {
             Ok(body_file) => body_files.push(body_file),
             Err(e) => {
                 error!("open body_file failed, err is {:?}", e);
+                return None;
             }
         }
     }
-    body_files
+    Some(body_files)
 }
