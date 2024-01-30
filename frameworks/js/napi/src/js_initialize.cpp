@@ -709,12 +709,12 @@ bool JsInitialize::Convert2FileSpecs(napi_env env, napi_value jsValue, const std
 
 void JsInitialize::InterceptData(const std::string &str, const std::string &in, std::string &out)
 {
-    std::size_t position = in.find_last_of(str);
-    if (position == std::string::npos) {
+    std::string tmpStr = std::string(in, 0, in.find_last_not_of(' ') + 1);
+    std::size_t position = tmpStr.find_last_of(str);
+    if (position == std::string::npos || position >= tmpStr.size() - 1) {
         return;
     }
-    out = std::string(in, position + 1);
-    out.erase(out.find_last_not_of(' ') + 1);
+    out = std::string(tmpStr, position + 1);
 }
 
 bool JsInitialize::Convert2FileSpec(napi_env env, napi_value jsValue, const std::string &name, FileSpec &file)
