@@ -710,19 +710,19 @@ bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo)
     return true;
 }
 
-bool RemoveRequestTask(uint32_t taskId, uint64_t uid)
-{
-    REQUEST_HILOGI("Removes request_task");
+bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state) {
+    REQUEST_HILOGI("Change Request Task State");
 
     OHOS::NativeRdb::ValuesBucket values;
-    values.PutInt("state", static_cast<uint8_t>(State::REMOVED));
+    values.PutInt("state", static_cast<uint8_t>(state));
 
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId))
-            ->And()
-            ->EqualTo("uid", std::to_string(uid));
-    if (!OHOS::Request::RequestDataBase::GetInstance().Update(values, rdbPredicates)) {
-        REQUEST_HILOGE("Removes request_task failed");
+        ->And()
+        ->EqualTo("uid", std::to_string(uid));
+    if (!OHOS::Request::RequestDataBase::GetInstance().Update(values,
+                                                              rdbPredicates)) {
+        REQUEST_HILOGE("Change request_task state failed");
         return false;
     }
     return true;

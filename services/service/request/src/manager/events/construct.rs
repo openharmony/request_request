@@ -18,6 +18,7 @@ use std::sync::Arc;
 
 use crate::error::ErrorCode;
 use crate::manager::TaskManager;
+use crate::manager::SystemProxyManager;
 use crate::task::config::{TaskConfig, Version};
 use crate::task::ffi::{CTaskConfig, CTaskInfo};
 use crate::task::info::State;
@@ -33,6 +34,7 @@ impl TaskManager {
         config: TaskConfig,
         files: Vec<File>,
         body_files: Vec<File>,
+        proxy_task: SystemProxyManager,
     ) -> ErrorCode {
         if files.is_empty() {
             return ErrorCode::FileOperationErr;
@@ -56,6 +58,7 @@ impl TaskManager {
             self.recording_rdb_num.clone(),
             AtomicBool::new(false),
             app_state,
+            proxy_task,
         ));
 
         match version {

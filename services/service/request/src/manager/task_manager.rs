@@ -37,8 +37,10 @@ cfg_oh! {
     use crate::manager::Notifier;
 }
 
+
 pub(crate) struct TaskManager {
     pub(crate) tasks: HashMap<u32, Arc<RequestTask>>,
+    pub(crate) sys_proxy: SystemProxyManager,
     pub(crate) qos: QosQueue,
     pub(crate) app_task_map: HashMap<u64, HashSet<u32>>,
     pub(crate) app_state_map: HashMap<u64, Arc<AtomicU8>>,
@@ -48,6 +50,34 @@ pub(crate) struct TaskManager {
     pub(crate) recording_rdb_num: Arc<AtomicU32>,
     pub(crate) tx: UnboundedSender<EventMessage>,
     pub(crate) rx: UnboundedReceiver<EventMessage>,
+}
+
+#[derive(Clone)]
+pub(crate) struct SystemProxyManager;
+
+impl SystemProxyManager {
+    pub(crate) fn init() -> Self {
+        unsafe {
+            RegisterProxySubscriber();
+        }
+        Self
+    }
+
+    pub(crate) fn host(&self) -> CStringWrapper {
+        unsafe {
+            GetHost()
+        }
+    }
+    pub(crate) fn port(&self) -> CStringWrapper {
+        unsafe {
+            GetPort()
+        }
+    }
+    pub(crate) fn exlist(&self) -> CStringWrapper {
+        unsafe {
+            GetExclusionList()
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -92,7 +122,6 @@ impl TaskManager {
             .unwrap();
 
         let (tx, rx) = unbounded_channel();
-
         let mut task_manager = Self::new(tx.clone(), rx);
 
         // Considers update invalid task in database to FAILED state here?.
@@ -114,6 +143,7 @@ impl TaskManager {
 
         TaskManager {
             qos: QosQueue::new(HIGH_QOS_MAX),
+            sys_proxy: SystemProxyManager::init(),
             tasks: HashMap::new(),
             app_task_map: HashMap::new(),
             app_state_map: HashMap::new(),
@@ -203,7 +233,7 @@ impl TaskManager {
                     files,
                     body_files,
                 } = *construct_message;
-                let error_code = self.construct_task(config, files, body_files);
+                let error_code = self.construct_task(config, files, body_files, self.sys_proxy.clone());
                 let _ = tx.send(error_code);
             }
             ServiceMessage::Pause(uid, task_id, tx) => {
@@ -482,4 +512,8 @@ impl TaskManager {
 #[link(name = "request_service_c")]
 extern "C" {
     pub(crate) fn GetTopBundleName() -> CStringWrapper;
+    pub(crate) fn RegisterProxySubscriber();
+    pub(crate) fn GetHost() -> CStringWrapper;
+    pub(crate) fn GetPort() -> CStringWrapper;
+    pub(crate) fn GetExclusionList() -> CStringWrapper;
 }

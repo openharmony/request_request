@@ -27,6 +27,7 @@ use ylong_http_client::{
 };
 use ylong_runtime::fs::File as YlongFile;
 use ylong_runtime::io::{AsyncSeekExt, AsyncWriteExt};
+use ylong_http_client::Proxy;
 
 use super::config::{Network, Version};
 use super::download::download;
@@ -40,6 +41,7 @@ use crate::task::config::{Action, TaskConfig};
 use crate::task::ffi::{
     GetNetworkInfo, RequestBackgroundNotify, RequestTaskMsg, UpdateRequestTask,
 };
+use crate::manager::SystemProxyManager;
 use crate::utils::c_wrapper::CStringWrapper;
 use crate::utils::{get_current_timestamp, hashmap_to_string};
 
@@ -90,6 +92,7 @@ unsafe impl Send for BodyFiles {}
 
 pub(crate) struct RequestTask {
     pub(crate) conf: TaskConfig,
+    pub(crate) proxy_task: SystemProxyManager,
     pub(crate) ctime: u64,
     pub(crate) mime_type: Mutex<String>,
     pub(crate) progress: Mutex<Progress>,
@@ -127,6 +130,7 @@ impl RequestTask {
         recording_rdb_num: Arc<AtomicU32>,
         rate_limiting: AtomicBool,
         app_state: Arc<AtomicU8>,
+        proxy_task: SystemProxyManager,
     ) -> Self {
         let mut sizes = Vec::new();
         match conf.common_data.action {
@@ -145,6 +149,7 @@ impl RequestTask {
 
         let mut task = RequestTask {
             conf,
+            proxy_task,
             ctime: get_current_timestamp(),
             files: Files(UnsafeCell::new(
                 files.into_iter().map(YlongFile::new).collect(),
@@ -188,22 +193,25 @@ impl RequestTask {
         task
     }
 
+    // When we refactor, we'll use result here instead of
     pub(crate) fn restore_task(
         conf: TaskConfig,
         info: TaskInfo,
         recording_rdb_num: Arc<AtomicU32>,
         rate_limiting: AtomicBool,
         app_state: Arc<AtomicU8>,
-    ) -> Self {
+	proxy_task: SystemProxyManager,
+    ) -> Option<Self> {
         let progress_index = info.progress.common_data.index;
         let uid = info.common_data.uid;
         let action = conf.common_data.action;
-        let files = get_restore_files(&conf, uid);
-        let body_files = get_restore_body_files(&conf, uid);
+        let files = get_restore_files(&conf, uid)?;
+        let body_files = get_restore_body_files(&conf, uid)?;
         let file_count = files.len();
 
         let mut task = RequestTask {
             conf,
+            proxy_task,
             ctime: info.common_data.ctime,
             files: Files(UnsafeCell::new(
                 files.into_iter().map(YlongFile::new).collect(),
@@ -253,7 +261,7 @@ impl RequestTask {
                 .store(info.progress.sizes[progress_index], Ordering::SeqCst),
             _ => {}
         }
-        task
+        Some(task)
     }
 
     pub(crate) fn build_notify_data(&self) -> NotifyData {
@@ -330,6 +338,27 @@ impl RequestTask {
             client = client.redirect(Redirect::limited(usize::MAX));
         } else {
             client = client.redirect(Redirect::none());
+        }
+
+        let mut proxy_host = self.proxy_task.host().to_string();
+        let proxy_port = self.proxy_task.port().to_string();
+        if !proxy_host.is_empty() {
+            if !proxy_port.is_empty() {
+                proxy_host.push(':');
+                proxy_host += &proxy_port;
+            }
+            let proxy_exculsion = self.proxy_task.exlist().to_string();
+            let proxy_res = Proxy::all(&proxy_host).no_proxy(&proxy_exculsion).build();
+            match proxy_res {
+                Ok(p) => {
+                    client = client.proxy(p);
+                }
+                Err(e) => {
+		    error!("Set proxy failed, error is {:?}", e);
+                    self.set_status(State::Failed, Reason::IoError);
+                    return None;
+                }
+            }
         }
 
         // http links that contain redirects also require a certificate when redirected to https.
@@ -1074,8 +1103,8 @@ pub(crate) async fn run(task: Arc<RequestTask>) {
     }
     info!("run end");
 }
-
-fn get_restore_files(conf: &TaskConfig, uid: u64) -> Vec<File> {
+// When we refactor, we'll use result here instead of
+fn get_restore_files(conf: &TaskConfig, uid: u64) -> Option<Vec<File>> {
     let mut files: Vec<File> = Vec::new();
 
     #[cfg(feature = "oh")]
@@ -1085,6 +1114,7 @@ fn get_restore_files(conf: &TaskConfig, uid: u64) -> Vec<File> {
                 Ok(file) => files.push(file),
                 Err(e) => {
                     error!("open file RO failed, err is {:?}", e);
+                    return None;
                 }
             }
         } else {
@@ -1092,14 +1122,16 @@ fn get_restore_files(conf: &TaskConfig, uid: u64) -> Vec<File> {
                 Ok(file) => files.push(file),
                 Err(e) => {
                     error!("open file RW failed, err is {:?}", e);
+                    return None;
                 }
             }
         }
     }
-    files
+    Some(files)
 }
 
-fn get_restore_body_files(conf: &TaskConfig, uid: u64) -> Vec<File> {
+// When we refactor, we'll use result here instead of
+fn get_restore_body_files(conf: &TaskConfig, uid: u64) -> Option<Vec<File>> {
     let mut body_files: Vec<File> = Vec::new();
 
     #[cfg(feature = "oh")]
@@ -1108,8 +1140,9 @@ fn get_restore_body_files(conf: &TaskConfig, uid: u64) -> Vec<File> {
             Ok(body_file) => body_files.push(body_file),
             Err(e) => {
                 error!("open body_file failed, err is {:?}", e);
+                return None;
             }
         }
     }
-    body_files
+    Some(body_files)
 }

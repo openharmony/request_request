@@ -15,6 +15,7 @@
 
 #ifndef REQUEST_C_ENUMRATION_H
 #define REQUEST_C_ENUMRATION_H
+#include <cstdint>
 
 enum class Network : uint8_t {
     ANY,

@@ -132,7 +132,7 @@ struct CVectorWrapper {
 bool HasRequestTaskRecord(uint32_t taskId);
 bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig);
 bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo);
-bool RemoveRequestTask(uint32_t taskId, uint64_t uid);
+bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state);
 CTaskInfo *Show(uint32_t taskId, uint64_t uid);
 CTaskInfo *Touch(uint32_t taskId, uint64_t uid, CStringWrapper token);
 CTaskInfo *Query(uint32_t taskId, Action queryAction);
