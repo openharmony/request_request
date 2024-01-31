@@ -16,9 +16,10 @@
 #ifndef DOWNLOAD_NOTIFY_STUB_H
 #define DOWNLOAD_NOTIFY_STUB_H
 
+#include <unistd.h>
+
 #include <fstream>
 #include <memory>
-#include <unistd.h>
 
 #include "iremote_stub.h"
 #include "js_common.h"

@@ -16,8 +16,9 @@
 #ifndef C_PROGRESS_H
 #define C_PROGRESS_H
 
-#include <cstdint>
 #include <stdint.h>
+
+#include <cstdint>
 #include <string>
 
 #include "c_string_wrapper.h"

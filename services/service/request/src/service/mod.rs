@@ -29,8 +29,8 @@ use ipc_rust::{
     InterfaceToken, IpcResult, IpcStatusCode, RemoteObj, RemoteStub, String16,
 };
 
-use crate::task::info::TaskInfo;
 use crate::task::config::TaskConfig;
+use crate::task::info::TaskInfo;
 use crate::utils::c_wrapper::CStringWrapper;
 
 define_remote_object!(
@@ -315,7 +315,10 @@ pub(crate) fn serialize_task_info(tf: TaskInfo, reply: &mut BorrowedMsgParcel) -
     Ok(())
 }
 
-pub(crate) fn serialize_task_config(config: TaskConfig, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+pub(crate) fn serialize_task_config(
+    config: TaskConfig,
+    reply: &mut BorrowedMsgParcel,
+) -> IpcResult<()> {
     reply.write(&(config.common_data.action as u32))?;
     reply.write(&(config.common_data.mode as u32))?;
     reply.write(&(config.common_data.cover))?;

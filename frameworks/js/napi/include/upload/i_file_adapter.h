@@ -17,17 +17,18 @@
 #define OHOS_REQUEST_UPLOAD_I_FILE_ADAPTER
 
 #include <stdio.h>
-#include "context.h"
+
 #include "ability_context.h"
+#include "context.h"
 #include "data_ability_helper.h"
 
 namespace OHOS::Request::Upload {
 class IFileAdapter {
 public:
-    virtual ~IFileAdapter() {};
-    virtual int32_t DataAbilityOpenFile(const std::string &fileUri,
-                                         std::shared_ptr<OHOS::AbilityRuntime::Context> &context) = 0;
+    virtual ~IFileAdapter(){};
+    virtual int32_t DataAbilityOpenFile(
+        const std::string &fileUri, std::shared_ptr<OHOS::AbilityRuntime::Context> &context) = 0;
     virtual std::string InternalGetFilePath(std::shared_ptr<OHOS::AbilityRuntime::Context> &context) = 0;
 };
-} // end of OHOS::Request::Upload
+} // namespace OHOS::Request::Upload
 #endif

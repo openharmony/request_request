@@ -17,6 +17,7 @@
 #define REQUEST_C_CHECK_PERMISSION_H
 
 #include <stdint.h>
+
 #include "c_enumration.h"
 #include "c_string_wrapper.h"
 

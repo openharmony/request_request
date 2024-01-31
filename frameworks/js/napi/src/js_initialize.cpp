@@ -15,21 +15,21 @@
 
 #include "js_initialize.h"
 
-#include <cstring>
-#include <algorithm>
-#include <regex>
 #include <securec.h>
-#include <fstream>
 #include <sys/stat.h>
-#include <filesystem>
 
-#include "net_conn_client.h"
+#include <algorithm>
+#include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <regex>
+
 #include "js_common.h"
 #include "log.h"
 #include "napi_utils.h"
+#include "net_conn_client.h"
 #include "request_manager.h"
 
-namespace fs = std::filesystem;
 static constexpr const char *PARAM_KEY_DESCRIPTION = "description";
 static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";
 static constexpr const char *PARAM_KEY_FILE_PATH = "filePath";
@@ -84,8 +84,8 @@ napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Versi
     return self;
 }
 
-ExceptionError JsInitialize::InitParam(napi_env env, napi_value* argv,
-    std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config)
+ExceptionError JsInitialize::InitParam(
+    napi_env env, napi_value *argv, std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config)
 {
     REQUEST_HILOGD("InitParam in");
     ExceptionError err = { .code = E_OK };
@@ -109,8 +109,8 @@ ExceptionError JsInitialize::InitParam(napi_env env, napi_value* argv,
     return CheckFilePath(context, config);
 }
 
-napi_status JsInitialize::GetContext(napi_env env, napi_value value,
-    std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
+napi_status JsInitialize::GetContext(
+    napi_env env, napi_value value, std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     if (!IsStageMode(env, value)) {
         auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
@@ -144,8 +144,8 @@ bool JsInitialize::GetBaseDir(std::string &baseDir)
     return true;
 }
 
-ExceptionError JsInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
-    Config &config)
+ExceptionError JsInitialize::CheckFilePath(
+    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config)
 {
     ExceptionError err = { .code = E_OK };
     if (config.action == Action::DOWNLOAD) {
@@ -309,8 +309,7 @@ void JsInitialize::SetParseConfig(napi_env env, napi_value jsConfig, Config &con
     }
 }
 
-bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig,
-    Config &config, std::string &errInfo)
+bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
 {
     if (NapiUtils::GetValueType(env, jsConfig) != napi_object) {
         errInfo = "Wrong conf type, expected object";
@@ -340,8 +339,8 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig,
         errInfo = "Index exceeds file list";
         return false;
     }
-    if (!ParseTitle(env, jsConfig, config) || !ParseToken(env, jsConfig, config) ||
-        !ParseDescription(env, jsConfig, config.description)) {
+    if (!ParseTitle(env, jsConfig, config) || !ParseToken(env, jsConfig, config)
+        || !ParseDescription(env, jsConfig, config.description)) {
         errInfo = "Exceeding maximum length";
         return false;
     }
@@ -475,8 +474,8 @@ bool JsInitialize::ParseDescription(napi_env env, napi_value jsConfig, std::stri
     return true;
 }
 
-std::map<std::string, std::string> JsInitialize::ParseMap(napi_env env, napi_value jsConfig,
-    const std::string &propertyName)
+std::map<std::string, std::string> JsInitialize::ParseMap(
+    napi_env env, napi_value jsConfig, const std::string &propertyName)
 {
     std::map<std::string, std::string> result;
     napi_value jsValue = NapiUtils::GetNamedProperty(env, jsConfig, propertyName);
@@ -611,13 +610,13 @@ bool JsInitialize::ParseName(napi_env env, napi_value jsVal, std::string &name)
     return true;
 }
 
-bool JsInitialize::GetFormItems(napi_env env, napi_value jsVal, std::vector<FormItem> &forms,
-    std::vector<FileSpec> &files)
+bool JsInitialize::GetFormItems(
+    napi_env env, napi_value jsVal, std::vector<FormItem> &forms, std::vector<FileSpec> &files)
 {
     if (!NapiUtils::HasNamedProperty(env, jsVal, "name") || !NapiUtils::HasNamedProperty(env, jsVal, "value")) {
         return false;
     }
-    
+
     std::string name;
     if (!ParseName(env, jsVal, name)) {
         return false;
@@ -653,8 +652,8 @@ bool JsInitialize::GetFormItems(napi_env env, napi_value jsVal, std::vector<Form
     return true;
 }
 
-bool JsInitialize::Convert2FormItems(napi_env env, napi_value jsValue, std::vector<FormItem> &forms,
-    std::vector<FileSpec> &files)
+bool JsInitialize::Convert2FormItems(
+    napi_env env, napi_value jsValue, std::vector<FormItem> &forms, std::vector<FileSpec> &files)
 {
     bool isArray = false;
     napi_is_array(env, jsValue, &isArray);
@@ -682,8 +681,8 @@ bool JsInitialize::Convert2FormItems(napi_env env, napi_value jsValue, std::vect
     return true;
 }
 
-bool JsInitialize::Convert2FileSpecs(napi_env env, napi_value jsValue, const std::string &name,
-    std::vector<FileSpec> &files)
+bool JsInitialize::Convert2FileSpecs(
+    napi_env env, napi_value jsValue, const std::string &name, std::vector<FileSpec> &files)
 {
     REQUEST_HILOGD("Convert2FileSpecs in");
     uint32_t length = 0;

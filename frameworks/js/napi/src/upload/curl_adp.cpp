@@ -15,26 +15,27 @@
 
 #include "upload/curl_adp.h"
 
+#include <fcntl.h>
+#include <unistd.h>
+
 #include <cinttypes>
 #include <climits>
 #include <cstdio>
-#include <fcntl.h>
-#include <string>
-#include <unistd.h>
-#include <vector>
 #include <fstream>
 #include <ios>
-#include "constant.h"
+#include <string>
+#include <vector>
 
 #include "common_timer_errors.h"
+#include "constant.h"
 #include "upload/upload_hilog_wrapper.h"
 #include "upload/upload_task.h"
 
 namespace OHOS::Request::Upload {
 static constexpr const char *HTTP_DEFAULT_CA_PATH = "/etc/ssl/certs/cacert.pem";
 CUrlAdp::CUrlAdp(std::vector<FileData> &fileDatas, std::shared_ptr<UploadConfig> &config)
-    : timerId_(0), fileDatas_(fileDatas), config_(config), isCurlGlobalInit_(false),
-    curlMulti_(nullptr), isReadAbort_(false), timer_("uploadTimer")
+    : timerId_(0), fileDatas_(fileDatas), config_(config), isCurlGlobalInit_(false), curlMulti_(nullptr),
+      isReadAbort_(false), timer_("uploadTimer")
 {
 }
 
@@ -99,8 +100,8 @@ bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL *> &curlArray)
 void CUrlAdp::SetHeadData(CURL *curl)
 {
     std::vector<std::string> vec;
-    std::for_each(config_->header.begin(), config_->header.end(),
-        [&vec](const std::pair<std::string, std::string> &header) {
+    std::for_each(
+        config_->header.begin(), config_->header.end(), [&vec](const std::pair<std::string, std::string> &header) {
             vec.emplace_back(header.first + ":" + header.second);
         });
     bool hasContentType = false;
@@ -156,9 +157,9 @@ void CUrlAdp::SetSslOpt(CURL *curl)
         UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "Read certinfo failed");
         return;
     }
-    struct curl_blob blob {.data = const_cast<char *>(certInfo.c_str()),
-                           .len = certInfo.size(),
-                           .flags = CURL_BLOB_COPY};
+    struct curl_blob blob {
+        .data = const_cast<char *>(certInfo.c_str()), .len = certInfo.size(), .flags = CURL_BLOB_COPY
+    };
     std::string version = "CURL_SSLVERSION_TLSv1_2";
     if (config_->header.find(tlsVersion) != config_->header.end()) {
         version = config_->header[tlsVersion];
@@ -393,8 +394,8 @@ size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *u
 
     if (url->uploadTask_ && fData->headSendFlag == COLLECT_END_FLAG) {
         std::string headers = std::accumulate(fData->responseHead.begin(), fData->responseHead.end(), std::string(""));
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "report head len: %{public}zu, content: %{public}s",
-            headers.length(), headers.c_str());
+        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "report head len: %{public}zu, content: %{public}s", headers.length(),
+            headers.c_str());
         NotifyAPI5(fData, headers);
         fData->responseHead.clear();
         fData->httpCode = 0;
@@ -402,7 +403,7 @@ size_t CUrlAdp::HeaderCallback(char *buffer, size_t size, size_t nitems, void *u
     return size * nitems;
 }
 
-void CUrlAdp::SplitHttpMessage(const std::string &stmp, FileData* &fData)
+void CUrlAdp::SplitHttpMessage(const std::string &stmp, FileData *&fData)
 {
     const std::string headEndFlag = "\r\n";
     if (std::string::npos != stmp.find("HTTP")) {

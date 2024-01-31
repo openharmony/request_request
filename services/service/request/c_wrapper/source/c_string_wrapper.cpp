@@ -15,8 +15,9 @@
 
 #include "c_string_wrapper.h"
 
-#include <cstdint>
 #include <securec.h>
+
+#include <cstdint>
 
 #include "log.h"
 

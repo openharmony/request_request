@@ -22,12 +22,11 @@ use std::time::Duration;
 
 use ylong_http_client::async_impl::Client;
 use ylong_http_client::{
-    Body, Certificate, ErrorKind, HttpClientError, Method, Redirect, Request, RequestBuilder,
-    Response, Timeout, TlsVersion,
+    Body, Certificate, ErrorKind, HttpClientError, Method, Proxy, Redirect, Request,
+    RequestBuilder, Response, Timeout, TlsVersion,
 };
 use ylong_runtime::fs::File as YlongFile;
 use ylong_runtime::io::{AsyncSeekExt, AsyncWriteExt};
-use ylong_http_client::Proxy;
 
 use super::config::{Network, Version};
 use super::download::download;
@@ -37,11 +36,11 @@ use super::notify::{EachFileStatus, NotifyData, Progress};
 use super::reason::Reason;
 use super::upload::upload;
 use crate::manager::monitor::IsOnline;
+use crate::manager::SystemProxyManager;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::ffi::{
     GetNetworkInfo, RequestBackgroundNotify, RequestTaskMsg, UpdateRequestTask,
 };
-use crate::manager::SystemProxyManager;
 use crate::utils::c_wrapper::CStringWrapper;
 use crate::utils::{get_current_timestamp, hashmap_to_string};
 
@@ -200,7 +199,7 @@ impl RequestTask {
         recording_rdb_num: Arc<AtomicU32>,
         rate_limiting: AtomicBool,
         app_state: Arc<AtomicU8>,
-	proxy_task: SystemProxyManager,
+        proxy_task: SystemProxyManager,
     ) -> Option<Self> {
         let progress_index = info.progress.common_data.index;
         let uid = info.common_data.uid;
@@ -354,14 +353,15 @@ impl RequestTask {
                     client = client.proxy(p);
                 }
                 Err(e) => {
-		    error!("Set proxy failed, error is {:?}", e);
+                    error!("Set proxy failed, error is {:?}", e);
                     self.set_status(State::Failed, Reason::IoError);
                     return None;
                 }
             }
         }
 
-        // http links that contain redirects also require a certificate when redirected to https.
+        // http links that contain redirects also require a certificate when redirected
+        // to https.
         let mut buf = Vec::new();
         let file = File::open("/etc/ssl/certs/cacert.pem");
         match file {

@@ -16,9 +16,10 @@
 #ifndef REQUEST_NETWORK_ADAPTER_H
 #define REQUEST_NETWORK_ADAPTER_H
 
+#include <stdint.h>
+
 #include <functional>
 #include <mutex>
-#include <stdint.h>
 
 #include "c_enumration.h"
 #include "net_all_capabilities.h"

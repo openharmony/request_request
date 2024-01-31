@@ -36,12 +36,13 @@ public:
 
     static napi_value Initialize(napi_env env, napi_callback_info info, Version version, bool firstInit = true);
     static void CreatProperties(napi_env env, napi_value &self, napi_value config, JsTask *task);
-    static napi_status GetContext(napi_env env, napi_value value,
-            std::shared_ptr<OHOS::AbilityRuntime::Context>& context);
+    static napi_status GetContext(
+        napi_env env, napi_value value, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
     static bool GetBaseDir(std::string &baseDir);
+
 private:
-    static ExceptionError InitParam(napi_env env, napi_value* argv,
-        std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
+    static ExceptionError InitParam(
+        napi_env env, napi_value *argv, std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
     static bool ParseConfig(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static bool ParseConfigV9(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static void SetParseConfig(napi_env env, napi_value jsConfig, Config &config);
@@ -65,15 +66,15 @@ private:
     static int64_t ParseEnds(napi_env env, napi_value jsConfig);
     static int64_t ParseBegins(napi_env env, napi_value jsConfig);
     static uint32_t ParsePriority(napi_env env, napi_value jsConfig);
-    static std::map<std::string, std::string> ParseMap(napi_env env, napi_value jsConfig,
-        const std::string &propertyName);
+    static std::map<std::string, std::string> ParseMap(
+        napi_env env, napi_value jsConfig, const std::string &propertyName);
 
-    static bool GetFormItems(napi_env env, napi_value jsVal, std::vector<FormItem> &forms,
-        std::vector<FileSpec> &files);
-    static bool Convert2FormItems(napi_env env, napi_value jsValue, std::vector<FormItem> &forms,
-        std::vector<FileSpec> &files);
-    static bool Convert2FileSpecs(napi_env env, napi_value jsValue, const std::string &name,
-        std::vector<FileSpec> &files);
+    static bool GetFormItems(
+        napi_env env, napi_value jsVal, std::vector<FormItem> &forms, std::vector<FileSpec> &files);
+    static bool Convert2FormItems(
+        napi_env env, napi_value jsValue, std::vector<FormItem> &forms, std::vector<FileSpec> &files);
+    static bool Convert2FileSpecs(
+        napi_env env, napi_value jsValue, const std::string &name, std::vector<FileSpec> &files);
     static bool Convert2FileSpec(napi_env env, napi_value jsValue, const std::string &name, FileSpec &file);
     static bool GetInternalPath(const std::string &fileUri,
         const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, std::string &filePath);

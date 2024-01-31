@@ -21,9 +21,9 @@
 namespace OHOS::Request::Upload {
 class FileAdapter : public IFileAdapter {
 public:
-    int32_t DataAbilityOpenFile(const std::string &fileUri,
-                                 std::shared_ptr<OHOS::AbilityRuntime::Context> &context) override;
+    int32_t DataAbilityOpenFile(
+        const std::string &fileUri, std::shared_ptr<OHOS::AbilityRuntime::Context> &context) override;
     std::string InternalGetFilePath(std::shared_ptr<OHOS::AbilityRuntime::Context> &context) override;
 };
-} // end of OHOS::Request::Upload
+} // namespace OHOS::Request::Upload
 #endif

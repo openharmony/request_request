@@ -16,9 +16,9 @@
 #ifndef DOWNLOAD_NOTIFY_INTERFACE_H
 #define DOWNLOAD_NOTIFY_INTERFACE_H
 
+#include "constant.h"
 #include "iremote_broker.h"
 #include "iremote_object.h"
-#include "constant.h"
 #include "js_common.h"
 
 namespace OHOS::Request {

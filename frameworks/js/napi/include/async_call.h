@@ -106,11 +106,7 @@ public:
     }
 
 private:
-    enum {
-        ARG_ERROR,
-        ARG_DATA,
-        ARG_BUTT
-    };
+    enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
 
     struct WorkData {
         std::shared_ptr<Context> ctx = nullptr;

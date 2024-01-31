@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
 #include "c_check_permission.h"
+
+#include <gtest/gtest.h>
 using namespace testing::ext;
 
 class CheckPermissionTest : public testing::Test {

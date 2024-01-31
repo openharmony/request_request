@@ -17,10 +17,11 @@
 
 #include <functional>
 #include <memory>
-#include "upload/js_util.h"
-#include "napi/native_common.h"
+
 #include "napi/native_api.h"
+#include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "upload/js_util.h"
 
 namespace OHOS::Request::UploadNapi {
 class AsyncCall final {
@@ -30,8 +31,8 @@ public:
         using InputAction = std::function<napi_status(napi_env, size_t, napi_value *, napi_value)>;
         using OutputAction = std::function<napi_status(napi_env, napi_value *)>;
         using ExecAction = std::function<void(Context *)>;
-        Context(InputAction input, OutputAction output): input_(std::move(input)), output_(std::move(output))  {};
-        virtual ~Context() {};
+        Context(InputAction input, OutputAction output) : input_(std::move(input)), output_(std::move(output)){};
+        virtual ~Context(){};
         void SetAction(InputAction input, OutputAction output = nullptr)
         {
             input_ = input;
@@ -72,6 +73,7 @@ public:
             exec_(this);
             exec_ = nullptr;
         };
+
     protected:
         friend class AsyncCall;
         InputAction input_ = nullptr;
@@ -83,12 +85,9 @@ public:
     ~AsyncCall();
     napi_value Call(napi_env env, Context::ExecAction exec = nullptr);
     napi_value SyncCall(napi_env env, Context::ExecAction exec = nullptr);
+
 private:
-    enum {
-        ARG_ERROR,
-        ARG_DATA,
-        ARG_BUTT
-    };
+    enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
     static void OnExecute(napi_env env, void *data);
     static void OnComplete(napi_env env, napi_status status, void *data);
     struct AsyncContext {
@@ -103,6 +102,6 @@ private:
     AsyncContext *context_ = nullptr;
     napi_env env_ = nullptr;
 };
-}
+} // namespace OHOS::Request::UploadNapi
 
 #endif // REQUEST_ASYNC_CALL_H

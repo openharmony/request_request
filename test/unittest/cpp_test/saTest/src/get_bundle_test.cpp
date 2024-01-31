@@ -14,6 +14,7 @@
  */
 
 #include <gtest/gtest.h>
+
 #include "get_calling_bundle.h"
 #include "get_top_bundle.h"
 using namespace testing::ext;

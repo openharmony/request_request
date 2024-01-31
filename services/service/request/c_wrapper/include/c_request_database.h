@@ -22,8 +22,8 @@
 #include "c_enumration.h"
 #include "c_filter.h"
 #include "c_progress.h"
-#include "c_task_info.h"
 #include "c_task_config.h"
+#include "c_task_info.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -99,8 +99,8 @@ public:
     RequestDataBase &operator=(const RequestDataBase &) = delete;
     bool Insert(const std::string &table, const OHOS::NativeRdb::ValuesBucket &insertValues);
     bool Update(const OHOS::NativeRdb::ValuesBucket values, const OHOS::NativeRdb::AbsRdbPredicates &predicates);
-    std::shared_ptr<OHOS::NativeRdb::ResultSet> Query(const OHOS::NativeRdb::AbsRdbPredicates &predicates,
-        const std::vector<std::string> &columns);
+    std::shared_ptr<OHOS::NativeRdb::ResultSet> Query(
+        const OHOS::NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
     bool Delete(const OHOS::NativeRdb::AbsRdbPredicates &predicates);
 
 private:

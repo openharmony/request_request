@@ -14,11 +14,12 @@
  */
 #include "request_service_proxy.h"
 
-#include <ctime>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include <ctime>
 
 #include "download_server_ipc_interface_code.h"
 #include "iremote_broker.h"
@@ -268,7 +269,7 @@ int32_t RequestServiceProxy::Pause(const std::string &tid, Version version)
     data.WriteUint32(static_cast<uint32_t>(version));
     data.WriteString(tid);
     REQUEST_HILOGD("RequestServiceProxy Pause started.");
-    int32_t ret =  Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_PAUSE), data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_PAUSE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
@@ -283,8 +284,8 @@ int32_t RequestServiceProxy::QueryMimeType(const std::string &tid, std::string &
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteString(tid);
     REQUEST_HILOGD("RequestServiceProxy QueryMimeType started.");
-    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_QUERYMIMETYPE),
-        data, reply, option);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_QUERYMIMETYPE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
@@ -334,8 +335,8 @@ int32_t RequestServiceProxy::Resume(const std::string &tid)
     return reply.ReadInt32();
 }
 
-int32_t RequestServiceProxy::On(const std::string &type, const std::string &tid,
-    const sptr<NotifyInterface> &listener, Version version)
+int32_t RequestServiceProxy::On(
+    const std::string &type, const std::string &tid, const sptr<NotifyInterface> &listener, Version version)
 {
     REQUEST_HILOGD("On");
     MessageParcel data, reply;

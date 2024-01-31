@@ -16,11 +16,12 @@
 #ifndef C_TASK_CONFIG_H
 #define C_TASK_CONFIG_H
 
-#include <cstdint>
 #include <stdint.h>
+
+#include <cstdint>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 #include "c_form_item.h"
 #include "c_string_wrapper.h"

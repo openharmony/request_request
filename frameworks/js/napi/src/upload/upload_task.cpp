@@ -15,8 +15,9 @@
 
 #include "upload/upload_task.h"
 
-#include <thread>
 #include <pthread.h>
+
+#include <thread>
 
 #include "curl/curl.h"
 #include "curl/easy.h"

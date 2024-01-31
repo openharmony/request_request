@@ -47,20 +47,21 @@ public:
 
     static void ReloadListener();
     static void ClearTaskMap(const std::string &key);
-    static void AddTaskMap(const std::string &key, JsTask* task);
+    static void AddTaskMap(const std::string &key, JsTask *task);
     static bool SetDirsPermission(std::vector<std::string> &dirs);
     static bool SetPathPermission(const std::string &filepath);
     static void ClearTaskContext(const std::string &key);
     static void RemoveDirsPermission(const std::vector<std::string> &dirs);
 
     Config config_;
-    static bool register_ ;
+    static bool register_;
     static std::mutex taskMutex_;
-    static std::map<std::string, JsTask*> taskMap_;
+    static std::map<std::string, JsTask *> taskMap_;
     static std::mutex pathMutex_;
     static std::map<std::string, int32_t> pathMap_;
     std::mutex listenerMutex_;
     std::map<std::string, std::vector<sptr<RequestNotify>>> listenerMap_;
+
 private:
     struct ContextInfo : public AsyncCall::Context {
         JsTask *task = nullptr;
@@ -82,8 +83,8 @@ private:
         TaskInfo taskInfo;
     };
 
-    static napi_value DefineClass(napi_env env, const napi_property_descriptor* desc, size_t count,
-        napi_callback cb, napi_ref *ctor);
+    static napi_value DefineClass(
+        napi_env env, const napi_property_descriptor *desc, size_t count, napi_callback cb, napi_ref *ctor);
     static napi_value JsMain(napi_env env, napi_callback_info info, Version version);
     static napi_value Create(napi_env env, napi_callback_info info);
     static napi_value GetCtor(napi_env env, Version version);
@@ -118,7 +119,7 @@ private:
     static void UvUnrefTaskContext(uv_work_t *work, int status);
     static void RegisterForegroundResume();
     bool Equals(napi_env env, napi_value value, napi_ref copy);
-    
+
     static std::mutex createMutex_;
     static thread_local napi_ref requestCtor;
     static std::mutex requestMutex_;

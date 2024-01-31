@@ -20,6 +20,7 @@
 #include <functional>
 #include <thread>
 #include <vector>
+
 #include "curl/curl.h"
 
 namespace OHOS::Request::Legacy {
@@ -32,7 +33,7 @@ public:
         std::vector<std::string> header_;
     };
 
-    using DoneFunc = std::function<void(const std::string&, bool, const std::string&)>;
+    using DoneFunc = std::function<void(const std::string &, bool, const std::string &)>;
     DownloadTask(const std::string &token, const DownloadOption &option, const DoneFunc &callback);
 
     ~DownloadTask();
@@ -44,6 +45,7 @@ public:
     bool DoDownload();
 
     void SetResumeFromLarge(CURL *curl, uint64_t pos);
+
 private:
     FILE *OpenDownloadFile() const;
 
@@ -51,20 +53,20 @@ private:
 
     bool SetOption(CURL *handle, curl_slist *&headers);
 
-    void NotifyDone(bool successful, const std::string& errMsg = "");
+    void NotifyDone(bool successful, const std::string &errMsg = "");
 
     bool GetFileSize(uint32_t &result);
 
     std::string taskId_;
     DownloadOption option_;
     DoneFunc callback_;
-    std::thread *thread_ {};
-    FILE *filp_ {};
-    char *errorBuffer_ {};
+    std::thread *thread_{};
+    FILE *filp_{};
+    char *errorBuffer_{};
     static bool isCurlGlobalInited_;
 
     uint32_t totalSize_;
     bool hasFileSize_;
 };
-}
+} // namespace OHOS::Request::Legacy
 #endif // LEGACY_DOWNLOAD_TASK_H
