@@ -17,7 +17,7 @@
 #define OH_DOWNLOAD_VISIBILITY_H
 
 #ifndef REQUEST_API
-#define REQUEST_API __attribute__ ((visibility ("default")))
+#define REQUEST_API __attribute__((visibility("default")))
 #endif
 
 #endif // OH_DOWNLOAD_VISIBILITY_H

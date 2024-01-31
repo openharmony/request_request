@@ -37,7 +37,6 @@ cfg_oh! {
     use crate::manager::Notifier;
 }
 
-
 pub(crate) struct TaskManager {
     pub(crate) tasks: HashMap<u32, Arc<RequestTask>>,
     pub(crate) sys_proxy: SystemProxyManager,
@@ -64,19 +63,13 @@ impl SystemProxyManager {
     }
 
     pub(crate) fn host(&self) -> CStringWrapper {
-        unsafe {
-            GetHost()
-        }
+        unsafe { GetHost() }
     }
     pub(crate) fn port(&self) -> CStringWrapper {
-        unsafe {
-            GetPort()
-        }
+        unsafe { GetPort() }
     }
     pub(crate) fn exlist(&self) -> CStringWrapper {
-        unsafe {
-            GetExclusionList()
-        }
+        unsafe { GetExclusionList() }
     }
 }
 
@@ -233,7 +226,8 @@ impl TaskManager {
                     files,
                     body_files,
                 } = *construct_message;
-                let error_code = self.construct_task(config, files, body_files, self.sys_proxy.clone());
+                let error_code =
+                    self.construct_task(config, files, body_files, self.sys_proxy.clone());
                 let _ = tx.send(error_code);
             }
             ServiceMessage::Pause(uid, task_id, tx) => {

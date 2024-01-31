@@ -13,17 +13,20 @@
  * limitations under the License.
  */
 
+#include "constant.h"
+#include "js_task.h"
+#include "legacy/request_manager.h"
+#include "log.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-#include "legacy/request_manager.h"
-#include "js_task.h"
 #include "napi_utils.h"
 #include "request_event.h"
-#include "constant.h"
-#include "log.h"
 
 using namespace OHOS::Request;
-#define DECLARE_NAPI_METHOD(name, func) { name, 0, func, 0, 0, 0, napi_default, 0 }
+#define DECLARE_NAPI_METHOD(name, func)         \
+    {                                           \
+        name, 0, func, 0, 0, 0, napi_default, 0 \
+    }
 
 static constexpr const char *BROADCAST_EVENT_COMPLETE = "ohos.request.event.COMPLETE";
 
@@ -76,8 +79,8 @@ static void NapiCreateFaults(napi_env env, napi_value &faults)
 static void NapiCreateBroadcastEvent(napi_env env, napi_value &broadcastEvent)
 {
     napi_create_object(env, &broadcastEvent);
-    NapiUtils::SetStringPropertyUtf8(env, broadcastEvent, "COMPLETE",
-        static_cast<std::string>(BROADCAST_EVENT_COMPLETE));
+    NapiUtils::SetStringPropertyUtf8(
+        env, broadcastEvent, "COMPLETE", static_cast<std::string>(BROADCAST_EVENT_COMPLETE));
 }
 
 static napi_value InitAgent(napi_env env, napi_value exports)
@@ -235,15 +238,13 @@ static napi_value Init(napi_env env, napi_value exports)
 
 static __attribute__((constructor)) void RegisterModule()
 {
-    static napi_module module = {
-        .nm_version = 1,
+    static napi_module module = { .nm_version = 1,
         .nm_flags = 0,
         .nm_filename = nullptr,
         .nm_register_func = Init,
         .nm_modname = "request",
         .nm_priv = ((void *)0),
-        .reserved = { 0 }
-    };
+        .reserved = { 0 } };
     napi_module_register(&module);
     REQUEST_HILOGD("module register request");
 }

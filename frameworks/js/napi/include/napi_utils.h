@@ -77,8 +77,8 @@ std::string Convert2String(napi_env env, napi_value object, const std::string &p
 
 void ThrowError(napi_env env, ExceptionErrorCode code, const std::string &msg, bool withErrCode);
 void ConvertError(int32_t errorCode, ExceptionError &err);
-napi_value CreateBusinessError(napi_env env, ExceptionErrorCode errorCode,
-    const std::string &errorMessage, bool withErrCode);
+napi_value CreateBusinessError(
+    napi_env env, ExceptionErrorCode errorCode, const std::string &errorMessage, bool withErrCode);
 
 napi_valuetype GetValueType(napi_env env, napi_value value);
 bool HasNamedProperty(napi_env env, napi_value object, const std::string &propertyName);

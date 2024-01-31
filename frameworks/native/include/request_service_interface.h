@@ -18,10 +18,10 @@
 
 #include <string>
 
-#include "notify_interface.h"
-#include "iremote_broker.h"
 #include "constant.h"
+#include "iremote_broker.h"
 #include "js_common.h"
+#include "notify_interface.h"
 
 namespace OHOS::Request {
 class RequestServiceInterface : public IRemoteBroker {
@@ -41,8 +41,8 @@ public:
     virtual int32_t Search(const Filter &filter, std::vector<std::string> &tids) = 0;
     virtual int32_t Show(const std::string &tid, TaskInfo &info) = 0;
 
-    virtual int32_t On(const std::string &type, const std::string &tid,
-        const sptr<NotifyInterface> &listener, Version version) = 0;
+    virtual int32_t On(
+        const std::string &type, const std::string &tid, const sptr<NotifyInterface> &listener, Version version) = 0;
     virtual int32_t Off(const std::string &type, const std::string &tid, Version version) = 0;
 };
 } // namespace OHOS::Request

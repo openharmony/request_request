@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 constexpr const char *EVENT_NAME_COMPLETE = "ohos.request.event.COMPLETE";
-void PublishStateChangeEvents(const char* bundleName, uint32_t len, uint32_t taskId, int32_t state);
+void PublishStateChangeEvents(const char *bundleName, uint32_t len, uint32_t taskId, int32_t state);
 
 #ifdef __cplusplus
 }

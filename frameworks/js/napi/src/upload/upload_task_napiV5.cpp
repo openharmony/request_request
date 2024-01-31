@@ -14,11 +14,13 @@
  */
 
 #include "upload/upload_task_napiV5.h"
+
 #include <uv.h>
+
 #include "ability.h"
-#include "upload/js_util.h"
-#include "napi_base_context.h"
 #include "js_initialize.h"
+#include "napi_base_context.h"
+#include "upload/js_util.h"
 #include "uv_queue.h"
 
 namespace OHOS::Request::Upload {
@@ -33,7 +35,7 @@ UploadTaskNapiV5::~UploadTaskNapiV5()
     }
 
     RecycleRef *callbackData = new (std::nothrow)
-        RecycleRef{.env = env_, .successRef = success_, .failRef = fail_, .completeRef = complete_};
+        RecycleRef{ .env = env_, .successRef = success_, .failRef = fail_, .completeRef = complete_ };
     if (callbackData == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create callbackData");
         return;
@@ -135,7 +137,7 @@ void UploadTaskNapiV5::OnSystemFail(napi_env env, napi_ref ref, std::string &dat
 {
     UPLOAD_HILOGI(UPLOAD_MODULE_JS_NAPI, "OnSystemFail enter");
     SystemFailCallback *failCallback = new (std::nothrow)
-        SystemFailCallback{.data = data, .code = code, .env = env, .ref = ref};
+        SystemFailCallback{ .data = data, .code = code, .env = env, .ref = ref };
     if (failCallback == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create failCallback");
         return;

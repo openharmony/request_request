@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
 #include "common_event_notify.h"
+
+#include <gtest/gtest.h>
 using namespace testing::ext;
 
 class CommonEventNotifyTest : public testing::Test {
@@ -53,7 +54,7 @@ void CommonEventNotifyTest::TearDown(void)
  */
 HWTEST_F(CommonEventNotifyTest, PublishStateChangeEventsTest_001, TestSize.Level1)
 {
-    const char* bundleName = "com.example.myapplication";
+    const char *bundleName = "com.example.myapplication";
     uint32_t len = strlen(bundleName);
     uint32_t taskId = 123456;
     int32_t state = 0x40; // State::Completed

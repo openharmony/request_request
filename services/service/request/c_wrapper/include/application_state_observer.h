@@ -16,9 +16,10 @@
 #ifndef REQUEST_APPLICATION_STATE_OBSERVER_H
 #define REQUEST_APPLICATION_STATE_OBSERVER_H
 
+#include <stdint.h>
+
 #include <functional>
 #include <map>
-#include <stdint.h>
 #include <string>
 
 #include "application_state_observer_stub.h"

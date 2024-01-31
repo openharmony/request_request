@@ -26,7 +26,7 @@ AsyncCall::AsyncCall(napi_env env, napi_callback_info info, const std::shared_pt
     }
     context->env_ = env;
     size_t argc = MAX_ARGC;
-    napi_value argv[MAX_ARGC] = {nullptr};
+    napi_value argv[MAX_ARGC] = { nullptr };
     napi_value self = nullptr;
     napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
     napi_valuetype valueType = napi_undefined;
@@ -58,7 +58,7 @@ AsyncCall::~AsyncCall()
 {
 }
 
-napi_value AsyncCall::Call(const std::shared_ptr<Context>& context, const std::string &resourceName)
+napi_value AsyncCall::Call(const std::shared_ptr<Context> &context, const std::string &resourceName)
 {
     if (context == nullptr) {
         REQUEST_HILOGE("Context is null");
@@ -77,10 +77,10 @@ napi_value AsyncCall::Call(const std::shared_ptr<Context>& context, const std::s
     napi_value resource = nullptr;
     std::string name = "REQUEST_" + resourceName;
     napi_create_string_utf8(context->env_, name.c_str(), NAPI_AUTO_LENGTH, &resource);
-    WorkData *workData = new WorkData{.ctx = context};
+    WorkData *workData = new WorkData{ .ctx = context };
     workData->ctx = context;
-    napi_create_async_work(context->env_, nullptr, resource,
-        AsyncCall::OnExecute, AsyncCall::OnComplete, workData, &context->work_);
+    napi_create_async_work(
+        context->env_, nullptr, resource, AsyncCall::OnExecute, AsyncCall::OnComplete, workData, &context->work_);
     napi_queue_async_work_with_qos(context->env_, context->work_, napiQosLevel_);
     REQUEST_HILOGD("async call exec");
     return ret;

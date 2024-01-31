@@ -20,11 +20,12 @@
 #include <functional>
 #include <map>
 #include <mutex>
-#include "visibility.h"
+
 #include "js_common.h"
+#include "legacy/download_task.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
-#include "legacy/download_task.h"
+#include "visibility.h"
 
 namespace OHOS::Request::Legacy {
 class RequestManager {
@@ -41,17 +42,17 @@ private:
     using ArgsGenerator = std::function<void(napi_env env, napi_ref *recv, int &argc, napi_value *argv)>;
 
     struct DownloadDescriptor {
-        DownloadTask *task_ {};
+        DownloadTask *task_{};
         std::string filename_;
-        napi_env env_ {};
-        napi_ref this_ {};
-        napi_ref successCb_ {};
-        napi_ref failCb_ {};
+        napi_env env_{};
+        napi_ref this_{};
+        napi_ref successCb_{};
+        napi_ref failCb_{};
     };
 
     struct CallFunctionData {
-        napi_env env_ {};
-        napi_ref func_ {};
+        napi_env env_{};
+        napi_ref func_{};
         ArgsGenerator generator_;
     };
 
@@ -61,17 +62,17 @@ private:
 
     static std::string GetFilenameFromUrl(std::string &url);
 
-    static bool IsPathValid(const std::string& dir, const std::string& filename);
+    static bool IsPathValid(const std::string &dir, const std::string &filename);
 
-    static bool HasSameFilename(const std::string& filename);
+    static bool HasSameFilename(const std::string &filename);
 
     static std::vector<std::string> ParseHeader(napi_env env, napi_value option);
 
     static DownloadTask::DownloadOption ParseOption(napi_env env, napi_value option);
 
-    static void CallFailCallback(napi_env env, napi_value object, const std::string& msg);
+    static void CallFailCallback(napi_env env, napi_value object, const std::string &msg);
 
-    static void CallSuccessCallback(napi_env env, napi_value object, const std::string& token);
+    static void CallSuccessCallback(napi_env env, napi_value object, const std::string &token);
 
     static void CallFunctionAsync(napi_env env, napi_ref func, const ArgsGenerator &generator);
 
@@ -88,5 +89,5 @@ private:
 
     static inline const std::string URI_PREFIX = "internal://cache/";
 };
-}
+} // namespace OHOS::Request::Legacy
 #endif // LEGACY_DOWNLOAD_MANAGER_H

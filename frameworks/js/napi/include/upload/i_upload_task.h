@@ -22,5 +22,5 @@ class IUploadTask {
 public:
     virtual ~IUploadTask() = default;
 };
-} // end of OHOS::Request::Upload
+} // namespace OHOS::Request::Upload
 #endif

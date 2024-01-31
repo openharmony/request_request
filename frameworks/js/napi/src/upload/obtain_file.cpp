@@ -94,8 +94,8 @@ uint32_t ObtainFile::GetDataAbilityFile(FILE **file, const std::string &fileUri,
 bool ObtainFile::IsValidPath(const std::string &filePath)
 {
     char resolvedPath[PATH_MAX + 1] = { 0 };
-    if (filePath.length() > PATH_MAX || realpath(filePath.c_str(), resolvedPath) == nullptr ||
-        strncmp(resolvedPath, filePath.c_str(), filePath.length()) != 0) {
+    if (filePath.length() > PATH_MAX || realpath(filePath.c_str(), resolvedPath) == nullptr
+        || strncmp(resolvedPath, filePath.c_str(), filePath.length()) != 0) {
         UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "filePath error");
         return false;
     }

@@ -14,15 +14,16 @@
  */
 
 #include "js_task.h"
-#include "app_state_callback.h"
+
+#include <securec.h>
+#include <sys/stat.h>
 
 #include <chrono>
 #include <cstring>
-#include <mutex>
-#include <securec.h>
-#include <sys/stat.h>
 #include <filesystem>
+#include <mutex>
 
+#include "app_state_callback.h"
 #include "async_call.h"
 #include "js_initialize.h"
 #include "legacy/request_manager.h"
@@ -31,8 +32,8 @@
 #include "napi_utils.h"
 #include "request_event.h"
 #include "request_manager.h"
-#include "upload/upload_task_napiV5.h"
 #include "storage_acl.h"
+#include "upload/upload_task_napiV5.h"
 
 using namespace OHOS::StorageDaemon;
 namespace fs = std::filesystem;
@@ -168,7 +169,7 @@ int32_t JsTask::CreateExec(const std::shared_ptr<ContextInfo> &context)
     if (!RequestManager::GetInstance()->LoadRequestServer()) {
         return E_SERVICE_ERROR;
     }
-    if (context ->task->config_.mode == Mode::FOREGROUND) {
+    if (context->task->config_.mode == Mode::FOREGROUND) {
         RegisterForegroundResume();
     }
     sptr<RequestNotify> listener = new RequestNotify();
@@ -327,25 +328,24 @@ napi_value JsTask::GetTask(napi_env env, napi_callback_info info)
 void JsTask::GetTaskExecution(std::shared_ptr<ContextInfo> context)
 {
     std::string tid = std::to_string(context->tid);
-        if (taskContextMap_.find(tid) != taskContextMap_.end()) {
-            REQUEST_HILOGD("Find in taskContextMap_");
-            if (taskContextMap_[tid]->task->config_.version != Version::API10 ||
-                taskContextMap_[tid]->task->config_.token != context->token) {
-                context->innerCode_ = E_TASK_NOT_FOUND;
-                return;
-            }
-            context->task = taskContextMap_[tid]->task;
-            context->taskRef = taskContextMap_[tid]->taskRef;
-            context->jsConfig = taskContextMap_[tid]->jsConfig;
-            context->innerCode_ = E_OK;
-            return;
-        } else {
-            context->innerCode_ =
-                RequestManager::GetInstance()->GetTask(tid, context->token, context->config);
-        }
-        if (context->config.version != Version::API10) {
+    if (taskContextMap_.find(tid) != taskContextMap_.end()) {
+        REQUEST_HILOGD("Find in taskContextMap_");
+        if (taskContextMap_[tid]->task->config_.version != Version::API10
+            || taskContextMap_[tid]->task->config_.token != context->token) {
             context->innerCode_ = E_TASK_NOT_FOUND;
+            return;
         }
+        context->task = taskContextMap_[tid]->task;
+        context->taskRef = taskContextMap_[tid]->taskRef;
+        context->jsConfig = taskContextMap_[tid]->jsConfig;
+        context->innerCode_ = E_OK;
+        return;
+    } else {
+        context->innerCode_ = RequestManager::GetInstance()->GetTask(tid, context->token, context->config);
+    }
+    if (context->config.version != Version::API10) {
+        context->innerCode_ = E_TASK_NOT_FOUND;
+    }
 }
 
 bool JsTask::GetTaskOutput(std::shared_ptr<ContextInfo> context)
@@ -358,7 +358,7 @@ bool JsTask::GetTaskOutput(std::shared_ptr<ContextInfo> context)
         napi_value jsTask = nullptr;
         napi_value baseCtx = nullptr;
         napi_get_reference_value(context->env_, context->baseContext, &baseCtx);
-        napi_value args[2] = {baseCtx, config};
+        napi_value args[2] = { baseCtx, config };
         napi_status status = napi_new_instance(context->env_, ctor, 2, args, &jsTask);
         if (jsTask == nullptr || status != napi_ok) {
             REQUEST_HILOGE("Get task failed");
@@ -391,7 +391,7 @@ bool JsTask::ParseGetTask(napi_env env, size_t argc, napi_value *argv, std::shar
     context->tid = std::stoi(tid);
     // handle 3rd param TOKEN
     if (argc == 3) {
-        if (NapiUtils::GetValueType(env, argv[2]) != napi_string) {     // argv[2] is the 3rd param
+        if (NapiUtils::GetValueType(env, argv[2]) != napi_string) { // argv[2] is the 3rd param
             REQUEST_HILOGE("The parameter is not of string type");
             return false;
         }
@@ -872,7 +872,7 @@ bool JsTask::SetDirsPermission(std::vector<std::string> &dirs)
         if (!(fs::exists(folder) && fs::is_directory(folder))) {
             return false;
         }
-        for (const auto& entry : fs::directory_iterator(folder)) {
+        for (const auto &entry : fs::directory_iterator(folder)) {
             fs::path path = entry.path();
             std::string existfilePath = folder.string() + "/" + path.filename().string();
             std::string newfilePath = newPath + "/" + path.filename().string();
@@ -912,7 +912,7 @@ bool JsTask::SetPathPermission(const std::string &filepath)
             REQUEST_HILOGD("AclSetAccess Parent Dir Failed: %{public}s", it.first.c_str());
         }
     }
-    
+
     std::string childDir = filepath.substr(0, filepath.rfind("/"));
     if (AclSetAccess(childDir, SA_PERMISSION_RWX) != ACL_SUCC) {
         REQUEST_HILOGE("AclSetAccess Child Dir Failed: %{public}s", childDir.c_str());
@@ -1009,7 +1009,7 @@ void JsTask::RemoveDirsPermission(const std::vector<std::string> &dirs)
 {
     for (const auto &folderPath : dirs) {
         fs::path folder = folderPath;
-        for (const auto& entry : fs::directory_iterator(folder)) {
+        for (const auto &entry : fs::directory_iterator(folder)) {
             fs::path path = entry.path();
             std::string filePath = folder.string() + "/" + path.filename().string();
             RemovePathMap(filePath);
@@ -1110,7 +1110,7 @@ void JsTask::RegisterForegroundResume()
         REQUEST_HILOGE("Get ApplicationContext failed");
         return;
     }
-    context -> RegisterAbilityLifecycleCallback(std::make_shared<AppStateCallback>());
+    context->RegisterAbilityLifecycleCallback(std::make_shared<AppStateCallback>());
     REQUEST_HILOGD("Register foreground resume callback success");
 }
 } // namespace OHOS::Request

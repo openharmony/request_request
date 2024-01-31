@@ -14,17 +14,17 @@
  */
 
 #include "upload/async_call.h"
+
 #include "constant.h"
 
 using namespace OHOS::Request::Upload;
 namespace OHOS::Request::UploadNapi {
-AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context)
-    : env_(env)
+AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context) : env_(env)
 {
     context_ = new AsyncContext();
     size_t argc = JSUtil::MAX_ARGC;
     napi_value self = nullptr;
-    napi_value argv[JSUtil::MAX_ARGC] = {nullptr};
+    napi_value argv[JSUtil::MAX_ARGC] = { nullptr };
     NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, argv[argc - 1], &valueType);
@@ -144,4 +144,4 @@ void AsyncCall::DeleteContext(napi_env env, AsyncContext *context)
     }
     delete context;
 }
-}
+} // namespace OHOS::Request::UploadNapi

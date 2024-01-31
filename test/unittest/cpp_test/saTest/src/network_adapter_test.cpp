@@ -78,7 +78,7 @@ HWTEST_F(NetworkAdapterTest, RegisterNetworkCallbackTest_001, TestSize.Level1)
  */
 HWTEST_F(NetworkAdapterTest, GetNetworkInfoTest_001, TestSize.Level1)
 {
-    NetworkInfo* netWorkInfo = GetNetworkInfo();
+    NetworkInfo *netWorkInfo = GetNetworkInfo();
     EXPECT_EQ(netWorkInfo->networkType, Network::ANY);
     EXPECT_FALSE(netWorkInfo->isMetered);
     EXPECT_FALSE(netWorkInfo->isRoaming);
@@ -95,4 +95,3 @@ HWTEST_F(NetworkAdapterTest, NetworkAdapterCoverTest_001, TestSize.Level1)
     NetworkAdapter::GetInstance().UpdateNetworkInfo();
     NetworkAdapter::GetInstance().UpdateRoaming();
 }
-

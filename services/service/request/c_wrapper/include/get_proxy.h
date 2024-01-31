@@ -17,19 +17,23 @@
 #define REQUEST_GET_PROXY_H
 
 #include <string>
+
 #include "c_string_wrapper.h"
 #include "common_event_manager.h"
 #include "common_event_subscriber.h"
 #include "common_event_support.h"
+#include "log.h"
 #include "matching_skills.h"
 #include "want.h"
-#include "log.h"
 
 class SysNetProxySubscriber : public OHOS::EventFwk::CommonEventSubscriber {
 public:
-    SysNetProxySubscriber(OHOS::EventFwk::CommonEventSubscribeInfo &subscriberInfo) : CommonEventSubscriber(subscriberInfo) {}
+    SysNetProxySubscriber(OHOS::EventFwk::CommonEventSubscribeInfo &subscriberInfo)
+        : CommonEventSubscriber(subscriberInfo)
+    {
+    }
     ~SysNetProxySubscriber() = default;
-    void OnReceiveEvent(const OHOS::EventFwk::CommonEventData& data) override;
+    void OnReceiveEvent(const OHOS::EventFwk::CommonEventData &data) override;
 };
 
 class SysNetProxyManager {
@@ -41,7 +45,7 @@ public:
     CStringWrapper GetExclusionList();
 
     void GetHttpProxy(const std::string proxyContent, std::string &host, std::string &port, std::string &exclusionList);
-    void InitProxy(std::string& host, std::string& port, std::string& exclusion);
+    void InitProxy(std::string &host, std::string &port, std::string &exclusion);
     void SetHttpProxy(std::string host, std::string port, std::string list)
     {
         REQUEST_HILOGD("SysNetProxyManager SetHttpProxy host is %{public}s", host.c_str());

@@ -15,11 +15,12 @@
 
 #include "network_adapter.h"
 
+#include <singleton.h>
+
 #include <functional>
 #include <memory>
 #include <new>
 #include <set>
-#include <singleton.h>
 #include <string>
 #include <type_traits>
 
@@ -129,8 +130,8 @@ void NetworkAdapter::UpdateNetworkInfoInner(const NetManagerStandard::NetAllCapa
     }
 }
 
-int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandle,
-    const sptr<NetAllCapabilities> &netAllCap)
+int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(
+    sptr<NetHandle> &netHandle, const sptr<NetAllCapabilities> &netAllCap)
 {
     REQUEST_HILOGD("Observe net capabilities change. start");
     netAdapter_.UpdateNetworkInfoInner(*netAllCap);
@@ -141,8 +142,8 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetH
     return 0;
 }
 
-int32_t NetworkAdapter::NetConnCallbackObserver::NetConnectionPropertiesChange(sptr<NetHandle> &netHandle,
-    const sptr<NetLinkInfo> &info)
+int32_t NetworkAdapter::NetConnCallbackObserver::NetConnectionPropertiesChange(
+    sptr<NetHandle> &netHandle, const sptr<NetLinkInfo> &info)
 {
     return 0;
 }

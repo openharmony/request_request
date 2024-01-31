@@ -17,9 +17,10 @@
 #define JS_COMMON_H
 
 #include <cstdint>
-#include <string>
 #include <map>
+#include <string>
 #include <vector>
+
 #include "constant.h"
 
 namespace OHOS::Request {
@@ -161,7 +162,7 @@ enum class Faults : uint32_t {
 
 struct TaskState {
     std::string path;
-    uint32_t responseCode {REASON_OK};
+    uint32_t responseCode{ REASON_OK };
     std::string message;
 };
 
@@ -262,5 +263,5 @@ struct DownloadInfo {
     std::string description;
     int64_t downloadedBytes;
 };
-}
+} // namespace OHOS::Request
 #endif //JS_COMMON_H

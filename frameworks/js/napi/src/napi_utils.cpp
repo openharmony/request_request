@@ -15,14 +15,15 @@
 
 #include "napi_utils.h"
 
+#include <fcntl.h>
+
 #include <cstring>
 #include <initializer_list>
 #include <memory>
 #include <regex>
-#include <fcntl.h>
 
-#include "request_manager.h"
 #include "log.h"
+#include "request_manager.h"
 #include "securec.h"
 
 namespace OHOS::Request::NapiUtils {
@@ -53,21 +54,12 @@ static constexpr const char *OTHERS_ERROR_INFO = "Some other error occured";
 static constexpr const char *NOT_SYSTEM_APP = "permission verification failed, application which is not a system "
                                               "application uses system API";
 
-static const std::map<ExceptionErrorCode, std::string> ErrorCodeToMsg {
-    {E_OK, E_OK_INFO },
-    {E_PERMISSION, E_PERMISSION_INFO },
-    {E_PARAMETER_CHECK, E_PARAMETER_CHECK_INFO },
-    {E_UNSUPPORTED, E_UNSUPPORTED_INFO },
-    {E_FILE_IO, E_FILE_IO_INFO },
-    {E_FILE_PATH, E_FILE_PATH_INFO },
-    {E_SERVICE_ERROR, E_SERVICE_ERROR_INFO },
-    {E_TASK_QUEUE, E_TASK_QUEUE_INFO },
-    {E_TASK_MODE, E_TASK_MODE_INFO },
-    {E_TASK_NOT_FOUND, E_TASK_NOT_FOUND_INFO },
-    {E_TASK_STATE, E_TASK_STATE_INFO },
-    {E_OTHER, E_OTHER_INFO },
-    {E_NOT_SYSTEM_APP, NOT_SYSTEM_APP }
-};
+static const std::map<ExceptionErrorCode, std::string> ErrorCodeToMsg{ { E_OK, E_OK_INFO },
+    { E_PERMISSION, E_PERMISSION_INFO }, { E_PARAMETER_CHECK, E_PARAMETER_CHECK_INFO },
+    { E_UNSUPPORTED, E_UNSUPPORTED_INFO }, { E_FILE_IO, E_FILE_IO_INFO }, { E_FILE_PATH, E_FILE_PATH_INFO },
+    { E_SERVICE_ERROR, E_SERVICE_ERROR_INFO }, { E_TASK_QUEUE, E_TASK_QUEUE_INFO }, { E_TASK_MODE, E_TASK_MODE_INFO },
+    { E_TASK_NOT_FOUND, E_TASK_NOT_FOUND_INFO }, { E_TASK_STATE, E_TASK_STATE_INFO }, { E_OTHER, E_OTHER_INFO },
+    { E_NOT_SYSTEM_APP, NOT_SYSTEM_APP } };
 
 napi_status Convert2JSValue(napi_env env, const DownloadInfo &in, napi_value &out)
 {
@@ -198,7 +190,7 @@ napi_value Convert2JSHeadersAndBody(napi_env env, const std::map<std::string, st
             }
         }
     }
-    
+
     if (isSeparate) {
         napi_value object = nullptr;
         napi_create_object(env, &object);
@@ -254,8 +246,8 @@ napi_value Convert2JSValue(napi_env env, const Progress &progress)
     napi_set_named_property(env, value, "index", Convert2JSValue(env, progress.index));
     napi_set_named_property(env, value, "processed", Convert2JSValue(env, progress.processed));
     napi_set_named_property(env, value, "sizes", Convert2JSValue(env, progress.sizes));
-    napi_set_named_property(env, value, "extras",
-        Convert2JSHeadersAndBody(env, progress.extras, progress.bodyBytes, false));
+    napi_set_named_property(
+        env, value, "extras", Convert2JSHeadersAndBody(env, progress.extras, progress.bodyBytes, false));
     return value;
 }
 
@@ -562,13 +554,13 @@ void ConvertError(int32_t errorCode, ExceptionError &err)
     }
 }
 
-napi_value CreateBusinessError(napi_env env, ExceptionErrorCode errorCode,
-    const std::string &errorMessage, bool withErrCode)
+napi_value CreateBusinessError(
+    napi_env env, ExceptionErrorCode errorCode, const std::string &errorMessage, bool withErrCode)
 {
     napi_value error = nullptr;
     napi_value msg = nullptr;
     auto iter = ErrorCodeToMsg.find(errorCode);
-    std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + "   "+ errorMessage;
+    std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + "   " + errorMessage;
     NAPI_CALL(env, napi_create_string_utf8(env, strMsg.c_str(), strMsg.length(), &msg));
     NAPI_CALL(env, napi_create_error(env, nullptr, msg, &error));
     if (!withErrCode) {
@@ -630,7 +622,6 @@ std::vector<std::string> GetPropertyNames(napi_env env, napi_value object)
     return ret;
 }
 
-
 void SetUint32Property(napi_env env, napi_value object, const std::string &name, uint32_t value)
 {
     napi_value jsValue = Convert2JSValue(env, value);
@@ -681,7 +672,6 @@ napi_value CallFunction(napi_env env, napi_value recv, napi_value func, size_t a
     return res;
 }
 
-
 std::string ToLower(const std::string &s)
 {
     std::string res = s;
@@ -691,19 +681,18 @@ std::string ToLower(const std::string &s)
 
 Action GetRequestAction(napi_env env, napi_value configValue)
 {
-    if (HasNamedProperty(env, configValue, PARAM_KEY_METHOD) || HasNamedProperty(env, configValue, PARAM_KEY_FILES) ||
-        HasNamedProperty(env, configValue, PARAM_KEY_DATA)) {
+    if (HasNamedProperty(env, configValue, PARAM_KEY_METHOD) || HasNamedProperty(env, configValue, PARAM_KEY_FILES)
+        || HasNamedProperty(env, configValue, PARAM_KEY_DATA)) {
         return Action::UPLOAD;
     }
     return Action::DOWNLOAD;
 }
 
-
 std::vector<FileSpec> Convert2FileVector(napi_env env, napi_value jsFiles, const std::string &version)
 {
     bool isArray = false;
     napi_is_array(env, jsFiles, &isArray);
-    NAPI_ASSERT_BASE(env, isArray, "not array", { });
+    NAPI_ASSERT_BASE(env, isArray, "not array", {});
     uint32_t length = 0;
     napi_get_array_length(env, jsFiles, &length);
     std::vector<FileSpec> files;
@@ -758,7 +747,7 @@ std::vector<FormItem> Convert2RequestDataVector(napi_env env, napi_value jsReque
 {
     bool isArray = false;
     napi_is_array(env, jsRequestDatas, &isArray);
-    NAPI_ASSERT_BASE(env, isArray, "not array", { });
+    NAPI_ASSERT_BASE(env, isArray, "not array", {});
     uint32_t length = 0;
     napi_get_array_length(env, jsRequestDatas, &length);
     std::vector<FormItem> requestDatas;
@@ -793,8 +782,8 @@ bool IsPathValid(const std::string &filePath)
 {
     auto path = filePath.substr(0, filePath.rfind('/'));
     char resolvedPath[PATH_MAX + 1] = { 0 };
-    if (path.length() > PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr ||
-        strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
+    if (path.length() > PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr
+        || strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
         REQUEST_HILOGE("invalid file path!");
         return false;
     }

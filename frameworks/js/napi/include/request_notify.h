@@ -16,19 +16,19 @@
 #ifndef REQUEST_NOTIFY_H
 #define REQUEST_NOTIFY_H
 
-#include <string>
 #include <chrono>
 #include <mutex>
-#include "uv.h"
+#include <string>
+
+#include "block_queue.h"
 #include "constant.h"
-#include "visibility.h"
 #include "js_common.h"
-#include "notify_stub.h"
-#include "uv_queue.h"
 #include "napi/native_api.h"
 #include "noncopyable.h"
-#include "block_queue.h"
-
+#include "notify_stub.h"
+#include "uv.h"
+#include "uv_queue.h"
+#include "visibility.h"
 
 namespace OHOS::Request {
 struct NotifyEventInfo {

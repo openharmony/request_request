@@ -18,8 +18,8 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "request_notify.h"
 #include "message_parcel.h"
+#include "request_notify.h"
 
 using namespace OHOS::Request;
 
@@ -42,7 +42,7 @@ bool FuzzDownloadBaseNotify(const uint8_t *rawData, size_t size)
     uint32_t code = ConvertToUint32(rawData);
     rawData = rawData + OFFSET;
     size = size - OFFSET;
-    
+
     MessageParcel data;
     data.WriteInterfaceToken(DOWNLDBN_INTERFACE_TOKEN);
     data.WriteBuffer(rawData, size);

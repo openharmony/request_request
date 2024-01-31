@@ -17,8 +17,9 @@
 #define OBTAIN_FILE_
 
 #include <stdio.h>
-#include "context.h"
+
 #include "ability_context.h"
+#include "context.h"
 #include "data_ability_helper.h"
 #include "i_file_adapter.h"
 
@@ -32,17 +33,19 @@ class ObtainFile {
 public:
     ObtainFile();
     ~ObtainFile();
-    uint32_t GetFile(FILE **file, const std::string &fileUri,
-        uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
+    uint32_t GetFile(FILE **file, const std::string &fileUri, uint32_t &fileSize,
+        std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
+
 protected:
-    uint32_t GetDataAbilityFile(FILE **file, const std::string& fileUri,
-        uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
-    uint32_t GetInternalFile(FILE **file, const std::string& fileUri,
-        uint32_t& fileSize, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
+    uint32_t GetDataAbilityFile(FILE **file, const std::string &fileUri, uint32_t &fileSize,
+        std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
+    uint32_t GetInternalFile(FILE **file, const std::string &fileUri, uint32_t &fileSize,
+        std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
     bool SplitPath(const std::string &fileUri, std::string &fileName);
     bool IsValidPath(const std::string &filePath);
+
 private:
     std::shared_ptr<IFileAdapter> fileAdapter_;
 };
-} // end of OHOS::Request::Upload
+} // namespace OHOS::Request::Upload
 #endif

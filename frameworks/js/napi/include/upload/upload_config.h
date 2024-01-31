@@ -16,9 +16,10 @@
 #ifndef UPLOAD_CONFIG
 #define UPLOAD_CONFIG
 
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
+
 #include "curl/curl.h"
 
 namespace OHOS::Request::Upload {
@@ -67,5 +68,5 @@ struct FileData {
     int32_t httpCode;
     uint32_t result;
 };
-} // end of OHOS::Request::Upload
+} // namespace OHOS::Request::Upload
 #endif

@@ -14,7 +14,9 @@
 use std::collections::HashMap;
 use std::fs::File;
 
-use ipc_rust::{get_calling_uid, BorrowedMsgParcel, IMsgParcel, IpcResult, IpcStatusCode, get_calling_token_id};
+use ipc_rust::{
+    get_calling_token_id, get_calling_uid, BorrowedMsgParcel, IMsgParcel, IpcResult, IpcStatusCode,
+};
 
 use crate::error::ErrorCode;
 use crate::manager::events::EventMessage;

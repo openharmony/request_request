@@ -17,10 +17,10 @@
 
 #include <uv.h>
 
+#include "js_task.h"
 #include "log.h"
 #include "napi_utils.h"
 #include "uv_queue.h"
-#include "js_task.h"
 
 namespace OHOS::Request {
 constexpr int32_t MAX_WAIT_TIME = 3000;
@@ -62,27 +62,30 @@ void RequestNotify::CallBack(const Notify &notify)
         return;
     }
     work->data = reinterpret_cast<void *>(dataPtr);
-    uv_queue_work(loop, work, [](uv_work_t *work) {
-        if (work == nullptr) {
-            return;
-        }
-        NotifyDataPtr *dataPtr = static_cast<NotifyDataPtr *>(work->data);
-        if (dataPtr != nullptr) {
-            REQUEST_HILOGI("timestamp is %{public}" PRId64, dataPtr->callback->info_.timestamp);
-            notifyQueue_.Wait(dataPtr->callback->info_);
-        }
-    }, [](uv_work_t *work, int status) {
-        if (work == nullptr) {
-            return;
-        }
-        NotifyDataPtr *dataPtr = static_cast<NotifyDataPtr *>(work->data);
-        if (dataPtr != nullptr) {
-            dataPtr->callback->ExecCallBack();
-            delete dataPtr;
-        }
-        notifyQueue_.Pop();
-        delete work;
-    });
+    uv_queue_work(
+        loop, work,
+        [](uv_work_t *work) {
+            if (work == nullptr) {
+                return;
+            }
+            NotifyDataPtr *dataPtr = static_cast<NotifyDataPtr *>(work->data);
+            if (dataPtr != nullptr) {
+                REQUEST_HILOGI("timestamp is %{public}" PRId64, dataPtr->callback->info_.timestamp);
+                notifyQueue_.Wait(dataPtr->callback->info_);
+            }
+        },
+        [](uv_work_t *work, int status) {
+            if (work == nullptr) {
+                return;
+            }
+            NotifyDataPtr *dataPtr = static_cast<NotifyDataPtr *>(work->data);
+            if (dataPtr != nullptr) {
+                dataPtr->callback->ExecCallBack();
+                delete dataPtr;
+            }
+            notifyQueue_.Pop();
+            delete work;
+        });
 }
 
 void RequestNotify::Done(const TaskInfo &taskInfo)
@@ -143,4 +146,4 @@ void RequestNotify::DeleteCallbackRef()
         ref_ = nullptr;
     }
 }
-} // namespace OHOS::Request::Download
+} // namespace OHOS::Request

@@ -15,15 +15,15 @@
 
 #include "request_sync_load_callback.h"
 
-#include "request_manager.h"
 #include "iservice_registry.h"
 #include "isystem_ability_load_callback.h"
 #include "log.h"
+#include "request_manager.h"
 #include "system_ability_definition.h"
 
 namespace OHOS::Request {
-void RequestSyncLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
-    const sptr<IRemoteObject> &remoteObject)
+void RequestSyncLoadCallback::OnLoadSystemAbilitySuccess(
+    int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject)
 {
     if (systemAbilityId != DOWNLOAD_SERVICE_ID) {
         REQUEST_HILOGE("start systemAbilityId is not download server");
