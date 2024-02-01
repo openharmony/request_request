@@ -13,9 +13,12 @@
  * limitations under the License.
  */
 
-#include <cstdint>
-#include <gtest/gtest.h>
 #include "background_notification.h"
+
+#include <gtest/gtest.h>
+
+#include <cstdint>
+
 #include "c_string_wrapper.h"
 #include "js_common.h"
 
@@ -58,9 +61,9 @@ void BackgroundNotificationTest::TearDown(void)
  */
 HWTEST_F(BackgroundNotificationTest, BackGroundNotifyTest_001, TestSize.Level1)
 {
-    RequestTaskMsg msg = RequestTaskMsg {
-        123, // uint32_t taskId
-        123456, // pid_t uid
+    RequestTaskMsg msg = RequestTaskMsg{
+        123,                                   // uint32_t taskId
+        123456,                                // pid_t uid
         static_cast<uint8_t>(Action::DOWNLOAD) // uint8_t action
     };
 

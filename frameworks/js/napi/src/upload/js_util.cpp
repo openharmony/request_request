@@ -13,23 +13,26 @@
  * limitations under the License.
  */
 
+#include "upload/js_util.h"
+
 #include <securec.h>
+
 #include <regex>
 #include <string>
+
 #include "napi_utils.h"
-#include "upload/js_util.h"
 
 namespace OHOS::Request::Upload {
 
-static const std::map<ExceptionErrorCode, std::string> ErrorCodeToMsg {
-    {E_OK, E_OK_INFO },
-    {E_PERMISSION, E_PERMISSION_INFO },
-    {E_PARAMETER_CHECK, E_PARAMETER_CHECK_INFO },
-    {E_UNSUPPORTED, E_UNSUPPORTED_INFO },
-    {E_FILE_IO, E_FILE_IO_INFO },
-    {E_FILE_PATH, E_FILE_PATH_INFO },
-    {E_SERVICE_ERROR, E_SERVICE_ERROR_INFO },
-    {E_OTHER, E_OTHER_INFO },
+static const std::map<ExceptionErrorCode, std::string> ErrorCodeToMsg{
+    { E_OK, E_OK_INFO },
+    { E_PERMISSION, E_PERMISSION_INFO },
+    { E_PARAMETER_CHECK, E_PARAMETER_CHECK_INFO },
+    { E_UNSUPPORTED, E_UNSUPPORTED_INFO },
+    { E_FILE_IO, E_FILE_IO_INFO },
+    { E_FILE_PATH, E_FILE_PATH_INFO },
+    { E_SERVICE_ERROR, E_SERVICE_ERROR_INFO },
+    { E_OTHER, E_OTHER_INFO },
 };
 
 std::string JSUtil::Convert2String(napi_env env, napi_value jsString)
@@ -100,8 +103,7 @@ bool JSUtil::ParseFunction(napi_env env, napi_value &object, const char *name, n
     return true;
 }
 
-std::shared_ptr<UploadConfig> JSUtil::ParseUploadConfig(napi_env env, napi_value jsConfig,
-    const std::string &version)
+std::shared_ptr<UploadConfig> JSUtil::ParseUploadConfig(napi_env env, napi_value jsConfig, const std::string &version)
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "ParseUploadConfig in");
     UploadConfig config;
@@ -228,7 +230,6 @@ bool JSUtil::ParseHeader(napi_env env, napi_value configValue, std::map<std::str
     return true;
 }
 
-
 bool JSUtil::SetMandatoryParam(napi_env env, napi_value jsValue, const std::string &str, std::string &out)
 {
     napi_value value = GetNamedProperty(env, jsValue, str);
@@ -277,7 +278,7 @@ std::vector<Upload::File> JSUtil::Convert2FileVector(napi_env env, napi_value js
 {
     bool isArray = false;
     napi_is_array(env, jsFiles, &isArray);
-    NAPI_ASSERT_BASE(env, isArray, "not array", { });
+    NAPI_ASSERT_BASE(env, isArray, "not array", {});
     uint32_t length = 0;
     napi_get_array_length(env, jsFiles, &length);
     std::vector<Upload::File> files;
@@ -321,7 +322,7 @@ std::vector<Upload::RequestData> JSUtil::Convert2RequestDataVector(napi_env env,
 {
     bool isArray = false;
     napi_is_array(env, jsRequestDatas, &isArray);
-    NAPI_ASSERT_BASE(env, isArray, "not array", { });
+    NAPI_ASSERT_BASE(env, isArray, "not array", {});
     uint32_t length = 0;
     napi_get_array_length(env, jsRequestDatas, &length);
     std::vector<Upload::RequestData> requestDatas;
@@ -336,14 +337,14 @@ std::vector<Upload::RequestData> JSUtil::Convert2RequestDataVector(napi_env env,
     return requestDatas;
 }
 
-napi_value JSUtil::CreateBusinessError(napi_env env, const
-    ExceptionErrorCode &errorCode, const std::string &errorMessage)
+napi_value JSUtil::CreateBusinessError(
+    napi_env env, const ExceptionErrorCode &errorCode, const std::string &errorMessage)
 {
     napi_value error = nullptr;
     napi_value code = nullptr;
     napi_value msg = nullptr;
     auto iter = ErrorCodeToMsg.find(errorCode);
-    std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + "   "+ errorMessage;
+    std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + "   " + errorMessage;
     NAPI_CALL(env, napi_create_string_utf8(env, strMsg.c_str(), strMsg.length(), &msg));
     NAPI_CALL(env, napi_create_uint32(env, errorCode, &code));
     NAPI_CALL(env, napi_create_error(env, nullptr, msg, &error));
@@ -351,4 +352,4 @@ napi_value JSUtil::CreateBusinessError(napi_env env, const
     return error;
 }
 
-} // namespace OHOS::Request::UploadNapi
+} // namespace OHOS::Request::Upload

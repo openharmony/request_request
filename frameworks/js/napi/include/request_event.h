@@ -18,14 +18,15 @@
 
 #include <string>
 #include <unordered_set>
-#include "napi/native_api.h"
-#include "napi_utils.h"
+
 #include "async_call.h"
 #include "js_common.h"
 #include "js_task.h"
+#include "napi/native_api.h"
+#include "napi_utils.h"
+#include "noncopyable.h"
 #include "notify_interface.h"
 #include "request_notify.h"
-#include "noncopyable.h"
 
 namespace OHOS::Request {
 class RequestEvent final {
@@ -79,12 +80,12 @@ private:
     static int32_t RemoveExec(const std::shared_ptr<ExecContext> &context);
     static int32_t ResumeExec(const std::shared_ptr<ExecContext> &context);
 
-    static napi_status ParseInputParameters(napi_env env, size_t argc, napi_value self,
-        const std::shared_ptr<ExecContext> &context);
-    static ExceptionError ParseOnOffParameters(napi_env env, napi_callback_info info, bool IsRequiredParam,
-        JsParam &jsParam);
-    static napi_status GetResult(napi_env env, const std::shared_ptr<ExecContext> &context,
-        const std::string &execType, napi_value &result);
+    static napi_status ParseInputParameters(
+        napi_env env, size_t argc, napi_value self, const std::shared_ptr<ExecContext> &context);
+    static ExceptionError ParseOnOffParameters(
+        napi_env env, napi_callback_info info, bool IsRequiredParam, JsParam &jsParam);
+    static napi_status GetResult(
+        napi_env env, const std::shared_ptr<ExecContext> &context, const std::string &execType, napi_value &result);
     static void GetDownloadInfo(const TaskInfo &infoRes, DownloadInfo &info);
     static NotifyData BuildNotifyData(const std::shared_ptr<TaskInfo> &taskInfo);
     static bool IsSupportType(const std::string &type, Version version);

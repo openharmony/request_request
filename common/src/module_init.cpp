@@ -15,9 +15,11 @@
 
 #define USE_OPENSSL
 
-#include <cstddef>
 #include <curl/curl.h>
 #include <pthread.h>
+
+#include <cstddef>
+
 #include "log.h"
 
 static pthread_mutex_t *g_lockArray = nullptr;

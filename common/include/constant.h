@@ -15,6 +15,8 @@
 
 #ifndef CONSTANT_H
 #define CONSTANT_H
+#include <cstdint>
+#include <string>
 
 namespace OHOS::Request {
 

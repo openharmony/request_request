@@ -14,10 +14,9 @@
  */
 
 #include "request_event.h"
-#include "request_manager.h"
 
 #include "log.h"
-
+#include "request_manager.h"
 
 namespace OHOS::Request {
 constexpr const std::int32_t DECIMALISM = 10;
@@ -50,43 +49,43 @@ std::unordered_set<std::string> RequestEvent::supportEventsV10_ = {
 };
 
 std::map<std::string, RequestEvent::Event> RequestEvent::requestEvent_ = {
-    {FUNCTION_PAUSE, RequestEvent::PauseExec},
-    {FUNCTION_QUERY, RequestEvent::QueryExec},
-    {FUNCTION_QUERY_MIME_TYPE, RequestEvent::QueryMimeTypeExec},
-    {FUNCTION_REMOVE, RequestEvent::RemoveExec},
-    {FUNCTION_RESUME, RequestEvent::ResumeExec},
-    {FUNCTION_START, RequestEvent::StartExec},
-    {FUNCTION_STOP, RequestEvent::StopExec},
+    { FUNCTION_PAUSE, RequestEvent::PauseExec },
+    { FUNCTION_QUERY, RequestEvent::QueryExec },
+    { FUNCTION_QUERY_MIME_TYPE, RequestEvent::QueryMimeTypeExec },
+    { FUNCTION_REMOVE, RequestEvent::RemoveExec },
+    { FUNCTION_RESUME, RequestEvent::ResumeExec },
+    { FUNCTION_START, RequestEvent::StartExec },
+    { FUNCTION_STOP, RequestEvent::StopExec },
 };
 
 std::map<std::string, uint32_t> RequestEvent::resMap_ = {
-    {FUNCTION_PAUSE, BOOL_RES},
-    {FUNCTION_QUERY, INFO_RES},
-    {FUNCTION_QUERY_MIME_TYPE, STR_RES},
-    {FUNCTION_REMOVE, BOOL_RES},
-    {FUNCTION_RESUME, BOOL_RES},
-    {FUNCTION_START, BOOL_RES},
+    { FUNCTION_PAUSE, BOOL_RES },
+    { FUNCTION_QUERY, INFO_RES },
+    { FUNCTION_QUERY_MIME_TYPE, STR_RES },
+    { FUNCTION_REMOVE, BOOL_RES },
+    { FUNCTION_RESUME, BOOL_RES },
+    { FUNCTION_START, BOOL_RES },
 };
 
 std::map<State, DownloadStatus> RequestEvent::stateMap_ = {
-    {State::INITIALIZED, SESSION_PENDING},
-    {State::WAITING, SESSION_PAUSED},
-    {State::RUNNING, SESSION_RUNNING},
-    {State::RETRYING, SESSION_RUNNING},
-    {State::PAUSED, SESSION_PAUSED},
-    {State::COMPLETED, SESSION_SUCCESS},
-    {State::STOPPED, SESSION_FAILED},
-    {State::FAILED, SESSION_FAILED},
+    { State::INITIALIZED, SESSION_PENDING },
+    { State::WAITING, SESSION_PAUSED },
+    { State::RUNNING, SESSION_RUNNING },
+    { State::RETRYING, SESSION_RUNNING },
+    { State::PAUSED, SESSION_PAUSED },
+    { State::COMPLETED, SESSION_SUCCESS },
+    { State::STOPPED, SESSION_FAILED },
+    { State::FAILED, SESSION_FAILED },
 };
 
 std::map<Reason, DownloadErrorCode> RequestEvent::failMap_ = {
-    {REASON_OK, ERROR_FILE_ALREADY_EXISTS},
-    {IO_ERROR, ERROR_FILE_ERROR},
-    {REDIRECT_ERROR, ERROR_TOO_MANY_REDIRECTS},
-    {OTHERS_ERROR, ERROR_UNKNOWN},
-    {NETWORK_OFFLINE, ERROR_OFFLINE},
-    {UNSUPPORTED_NETWORK_TYPE, ERROR_UNSUPPORTED_NETWORK_TYPE},
-    {UNSUPPORT_RANGE_REQUEST, ERROR_UNKNOWN},
+    { REASON_OK, ERROR_FILE_ALREADY_EXISTS },
+    { IO_ERROR, ERROR_FILE_ERROR },
+    { REDIRECT_ERROR, ERROR_TOO_MANY_REDIRECTS },
+    { OTHERS_ERROR, ERROR_UNKNOWN },
+    { NETWORK_OFFLINE, ERROR_OFFLINE },
+    { UNSUPPORTED_NETWORK_TYPE, ERROR_UNSUPPORTED_NETWORK_TYPE },
+    { UNSUPPORT_RANGE_REQUEST, ERROR_UNKNOWN },
 };
 
 napi_value RequestEvent::Pause(napi_env env, napi_callback_info info)
@@ -195,8 +194,8 @@ NotifyData RequestEvent::BuildNotifyData(const std::shared_ptr<TaskInfo> &taskIn
     return notifyData;
 }
 
-ExceptionError RequestEvent::ParseOnOffParameters(napi_env env, napi_callback_info info, bool IsRequiredParam,
-    JsParam &jsParam)
+ExceptionError RequestEvent::ParseOnOffParameters(
+    napi_env env, napi_callback_info info, bool IsRequiredParam, JsParam &jsParam)
 {
     ExceptionError err = { .code = E_OK };
     size_t argc = NapiUtils::MAX_ARGC;
@@ -269,8 +268,8 @@ napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, const std::
     return asyncCall.Call(context, execType);
 }
 
-napi_status RequestEvent::ParseInputParameters(napi_env env, size_t argc, napi_value self,
-    const std::shared_ptr<ExecContext> &context)
+napi_status RequestEvent::ParseInputParameters(
+    napi_env env, size_t argc, napi_value self, const std::shared_ptr<ExecContext> &context)
 {
     NAPI_ASSERT_BASE(env, self != nullptr, "self is nullptr", napi_invalid_arg);
     NAPI_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&context->task)), napi_invalid_arg);
@@ -280,8 +279,8 @@ napi_status RequestEvent::ParseInputParameters(napi_env env, size_t argc, napi_v
     return napi_ok;
 }
 
-napi_status RequestEvent::GetResult(napi_env env, const std::shared_ptr<ExecContext> &context,
-    const std::string &execType, napi_value &result)
+napi_status RequestEvent::GetResult(
+    napi_env env, const std::shared_ptr<ExecContext> &context, const std::string &execType, napi_value &result)
 {
     if (resMap_[execType] == BOOL_RES) {
         return NapiUtils::Convert2JSValue(env, context->boolRes, result);
@@ -366,8 +365,8 @@ void RequestEvent::GetDownloadInfo(const TaskInfo &infoRes, DownloadInfo &info)
             info.failedReason = ERROR_UNKNOWN;
         }
     }
-    if (infoRes.progress.state == State::WAITING &&
-        (infoRes.code == NETWORK_OFFLINE || infoRes.code == UNSUPPORTED_NETWORK_TYPE)) {
+    if (infoRes.progress.state == State::WAITING
+        && (infoRes.code == NETWORK_OFFLINE || infoRes.code == UNSUPPORTED_NETWORK_TYPE)) {
         info.pausedReason = PAUSED_WAITING_FOR_NETWORK;
     }
     if (infoRes.progress.state == State::PAUSED) {

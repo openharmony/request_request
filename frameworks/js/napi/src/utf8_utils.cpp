@@ -141,4 +141,4 @@ bool RunUtf8Validation(const std::vector<uint8_t> &v)
     }
     return true;
 }
-}
+} // namespace OHOS::Request::Utf8Utils

@@ -18,16 +18,20 @@
 #include <cstdint>
 #include <map>
 #include <vector>
-#include "context.h"
-#include "constant.h"
-#include "upload/upload_common.h"
-#include "upload_config.h"
-#include "upload/upload_hilog_wrapper.h"
-#include "napi/native_common.h"
-#include "napi/native_api.h"
-#include "napi/native_node_api.h"
 
-#define DECLARE_NAPI_METHOD(name, func) { name, 0, func, 0, 0, 0, napi_default, 0 }
+#include "constant.h"
+#include "context.h"
+#include "napi/native_api.h"
+#include "napi/native_common.h"
+#include "napi/native_node_api.h"
+#include "upload/upload_common.h"
+#include "upload/upload_hilog_wrapper.h"
+#include "upload_config.h"
+
+#define DECLARE_NAPI_METHOD(name, func)         \
+    {                                           \
+        name, 0, func, 0, 0, 0, napi_default, 0 \
+    }
 namespace OHOS::Request::Upload {
 class JSUtil {
 public:
@@ -41,8 +45,8 @@ public:
     static napi_value Convert2JSValue(napi_env env, int32_t value);
     static napi_value Convert2JSUploadResponse(napi_env env, const Upload::UploadResponse &response);
     static bool ParseFunction(napi_env env, napi_value &object, const char *name, napi_ref &output);
-    static std::shared_ptr<Upload::UploadConfig> ParseUploadConfig(napi_env env, napi_value jsConfig,
-        const std::string &version);
+    static std::shared_ptr<Upload::UploadConfig> ParseUploadConfig(
+        napi_env env, napi_value jsConfig, const std::string &version);
 
     static std::vector<Upload::File> Convert2FileVector(napi_env env, napi_value jsFiles, const std::string &version);
 
@@ -61,8 +65,8 @@ public:
     static bool SetMandatoryParam(napi_env env, napi_value jsValue, const std::string &str, std::string &out);
     static bool SetOptionalParam(napi_env env, napi_value jsValue, const std::string &str, std::string &out);
     static bool ParseHeader(napi_env env, napi_value configValue, std::map<std::string, std::string> &header);
-    static napi_value CreateBusinessError(napi_env env, const
-        ExceptionErrorCode &errorCode, const std::string &errorMessage);
+    static napi_value CreateBusinessError(
+        napi_env env, const ExceptionErrorCode &errorCode, const std::string &errorMessage);
 };
-}
+} // namespace OHOS::Request::Upload
 #endif // REQUEST_JS_UTIL_H

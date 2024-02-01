@@ -29,7 +29,7 @@
 namespace OHOS::Request::Upload {
 class CUrlAdp : public std::enable_shared_from_this<CUrlAdp> {
 public:
-    CUrlAdp(std::vector<FileData>& fileArray, std::shared_ptr<UploadConfig>& config);
+    CUrlAdp(std::vector<FileData> &fileArray, std::shared_ptr<UploadConfig> &config);
     virtual ~CUrlAdp();
     uint32_t DoUpload(std::shared_ptr<IUploadTask> task);
     bool Remove();
@@ -41,8 +41,8 @@ public:
 protected:
     bool ClearCurlResource();
     void SplitHttpMessage(const std::string &stmp, FileData *&fData);
-    static int ProgressCallback(void *clientp,
-        curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
+    static int ProgressCallback(
+        void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
     static size_t HeaderCallback(char *buffer, size_t size, size_t nitems, void *userdata);
     static size_t ReadCallback(char *buffer, size_t size, size_t nitems, void *arg);
     static void NotifyAPI5(FileData *fData, std::string &headers);
@@ -50,7 +50,7 @@ protected:
 
 private:
     int CheckUploadStatus(CURLM *curlMulti);
-    bool MultiAddHandle(CURLM *curlMulti, std::vector<CURL*>& curlArray);
+    bool MultiAddHandle(CURLM *curlMulti, std::vector<CURL *> &curlArray);
     int32_t UploadOneFile();
     bool IsSuccess(const uint32_t count, const uint32_t size);
     void SetCurlOpt(CURL *curl);
@@ -72,7 +72,7 @@ private:
     uint32_t timerId_;
     std::shared_ptr<IUploadTask> uploadTask_;
     std::vector<FileData> &fileDatas_;
-    FileData  mfileData_;
+    FileData mfileData_;
     std::shared_ptr<UploadConfig> config_;
     static constexpr int32_t HTTP_SUCCESS = 200;
     std::mutex mutex_;
@@ -80,7 +80,7 @@ private:
     std::mutex globalMutex_;
     bool isCurlGlobalInit_;
     CURLM *curlMulti_;
-    std::vector<CURL*> curlArray_;
+    std::vector<CURL *> curlArray_;
     bool isReadAbort_;
     Utils::Timer timer_;
 
@@ -91,5 +91,5 @@ private:
     static constexpr int COLLECT_DO_FLAG = 1;
     static constexpr int COLLECT_END_FLAG = 2;
 };
-} // end of OHOS::Request::Upload
+} // namespace OHOS::Request::Upload
 #endif

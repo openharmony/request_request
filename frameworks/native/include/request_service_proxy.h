@@ -18,7 +18,6 @@
 
 #include "iremote_proxy.h"
 #include "js_common.h"
-
 #include "notify_interface.h"
 #include "request_service_interface.h"
 

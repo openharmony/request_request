@@ -56,7 +56,7 @@ impl GetTask {
                         Err(IpcStatusCode::Failed)
                     }
                 }
-            },
+            }
             _ => {
                 error!("Service getTask: task_id or token not valid");
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;

@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
 #include "c_string_wrapper.h"
+
+#include <gtest/gtest.h>
 using namespace testing::ext;
 
 class StringWrapperTest : public testing::Test {

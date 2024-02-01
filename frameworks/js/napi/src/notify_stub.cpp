@@ -14,7 +14,9 @@
  */
 
 #include "notify_stub.h"
+
 #include <thread>
+
 #include "download_server_ipc_interface_code.h"
 #include "log.h"
 #include "parcel_helper.h"

@@ -15,9 +15,10 @@
 
 #include "c_request_database.h"
 
+#include <securec.h>
+
 #include <algorithm>
 #include <cstdint>
-#include <securec.h>
 
 #include "log.h"
 
@@ -52,8 +53,8 @@ bool RequestDataBase::Insert(const std::string &table, const OHOS::NativeRdb::Va
     return ret == OHOS::NativeRdb::E_OK;
 }
 
-bool RequestDataBase::Update(const OHOS::NativeRdb::ValuesBucket values,
-    const OHOS::NativeRdb::AbsRdbPredicates &predicates)
+bool RequestDataBase::Update(
+    const OHOS::NativeRdb::ValuesBucket values, const OHOS::NativeRdb::AbsRdbPredicates &predicates)
 {
     if (store_ == nullptr) {
         REQUEST_HILOGE("store_ is nullptr");
@@ -66,8 +67,8 @@ bool RequestDataBase::Update(const OHOS::NativeRdb::ValuesBucket values,
     return ret == OHOS::NativeRdb::E_OK;
 }
 
-std::shared_ptr<OHOS::NativeRdb::ResultSet> RequestDataBase::Query(const OHOS::NativeRdb::AbsRdbPredicates &predicates,
-    const std::vector<std::string> &columns)
+std::shared_ptr<OHOS::NativeRdb::ResultSet> RequestDataBase::Query(
+    const OHOS::NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
     if (store_ == nullptr) {
         REQUEST_HILOGE("store_ is nullptr");
@@ -217,12 +218,12 @@ void RequestDBUpdateInvalidRecords(OHOS::NativeRdb::RdbStore &store)
     int changedRows = 0;
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::INITIALIZED))
-            ->Or()
-            ->EqualTo("state", static_cast<uint8_t>(State::RUNNING))
-            ->Or()
-            ->EqualTo("state", static_cast<uint8_t>(State::RETRYING))
-            ->Or()
-            ->EqualTo("state", static_cast<uint8_t>(State::DEFAULT));
+        ->Or()
+        ->EqualTo("state", static_cast<uint8_t>(State::RUNNING))
+        ->Or()
+        ->EqualTo("state", static_cast<uint8_t>(State::RETRYING))
+        ->Or()
+        ->EqualTo("state", static_cast<uint8_t>(State::DEFAULT));
 
     if (store.Update(changedRows, values, rdbPredicates) != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("Updates all invalid task to `FAILED` state failed");
@@ -268,12 +269,12 @@ int RequestDBOpenCallback::OnDowngrade(OHOS::NativeRdb::RdbStore &store, int old
 } // namespace OHOS::Request
 
 namespace {
-std::vector<uint8_t> CFormItemToBlob(const CFormItem* cpointer, uint32_t length)
+std::vector<uint8_t> CFormItemToBlob(const CFormItem *cpointer, uint32_t length)
 {
     std::vector<uint8_t> blob;
     for (uint32_t i = 0; i < length; ++i) {
         const CFormItem &obj = cpointer[i];
-        const uint8_t *objBytes = reinterpret_cast<const uint8_t*>(&obj);
+        const uint8_t *objBytes = reinterpret_cast<const uint8_t *>(&obj);
         blob.insert(blob.end(), objBytes, objBytes + sizeof(CFormItem));
         blob.insert(blob.end(), obj.name.cStr, obj.name.cStr + obj.name.len);
         blob.insert(blob.end(), obj.value.cStr, obj.value.cStr + obj.value.len);
@@ -281,7 +282,7 @@ std::vector<uint8_t> CFormItemToBlob(const CFormItem* cpointer, uint32_t length)
     return blob;
 }
 
-std::vector<CFormItem> BlobToCFormItem(const std::vector<uint8_t>& blob)
+std::vector<CFormItem> BlobToCFormItem(const std::vector<uint8_t> &blob)
 {
     std::vector<CFormItem> vec;
     size_t position = 0;
@@ -303,12 +304,12 @@ std::vector<CFormItem> BlobToCFormItem(const std::vector<uint8_t>& blob)
     return vec;
 }
 
-std::vector<uint8_t> CFileSpecToBlob(const CFileSpec* cpointer, uint32_t length)
+std::vector<uint8_t> CFileSpecToBlob(const CFileSpec *cpointer, uint32_t length)
 {
     std::vector<uint8_t> blob;
     for (uint32_t i = 0; i < length; ++i) {
         const CFileSpec &obj = cpointer[i];
-        const uint8_t *objBytes = reinterpret_cast<const uint8_t*>(&obj);
+        const uint8_t *objBytes = reinterpret_cast<const uint8_t *>(&obj);
         blob.insert(blob.end(), objBytes, objBytes + sizeof(CFileSpec));
         blob.insert(blob.end(), obj.name.cStr, obj.name.cStr + obj.name.len);
         blob.insert(blob.end(), obj.path.cStr, obj.path.cStr + obj.path.len);
@@ -318,7 +319,7 @@ std::vector<uint8_t> CFileSpecToBlob(const CFileSpec* cpointer, uint32_t length)
     return blob;
 }
 
-std::vector<CFileSpec> BlobToCFileSpec(const std::vector<uint8_t>& blob)
+std::vector<CFileSpec> BlobToCFileSpec(const std::vector<uint8_t> &blob)
 {
     std::vector<CFileSpec> vec;
     size_t position = 0;
@@ -348,12 +349,12 @@ std::vector<CFileSpec> BlobToCFileSpec(const std::vector<uint8_t>& blob)
     return vec;
 }
 
-std::vector<uint8_t> CEachFileStatusToBlob(const CEachFileStatus* cpointer, uint32_t length)
+std::vector<uint8_t> CEachFileStatusToBlob(const CEachFileStatus *cpointer, uint32_t length)
 {
     std::vector<uint8_t> blob;
     for (uint32_t i = 0; i < length; ++i) {
         const CEachFileStatus &obj = cpointer[i];
-        const uint8_t *objBytes = reinterpret_cast<const uint8_t*>(&obj);
+        const uint8_t *objBytes = reinterpret_cast<const uint8_t *>(&obj);
         blob.insert(blob.end(), objBytes, objBytes + sizeof(CEachFileStatus));
         blob.insert(blob.end(), obj.path.cStr, obj.path.cStr + obj.path.len);
         blob.insert(blob.end(), &obj.reason, &obj.reason + sizeof(uint8_t));
@@ -362,7 +363,7 @@ std::vector<uint8_t> CEachFileStatusToBlob(const CEachFileStatus* cpointer, uint
     return blob;
 }
 
-std::vector<CEachFileStatus> BlobToCEachFileStatus(const std::vector<uint8_t>& blob)
+std::vector<CEachFileStatus> BlobToCEachFileStatus(const std::vector<uint8_t> &blob)
 {
     std::vector<CEachFileStatus> vec;
     size_t position = 0;
@@ -387,7 +388,7 @@ std::vector<CEachFileStatus> BlobToCEachFileStatus(const std::vector<uint8_t>& b
     return vec;
 }
 
-std::vector<uint8_t> CStringToBlob(const CStringWrapper* cpointer, uint32_t length)
+std::vector<uint8_t> CStringToBlob(const CStringWrapper *cpointer, uint32_t length)
 {
     std::vector<uint8_t> blob;
     for (uint32_t i = 0; i < length; ++i) {
@@ -398,7 +399,7 @@ std::vector<uint8_t> CStringToBlob(const CStringWrapper* cpointer, uint32_t leng
     return blob;
 }
 
-std::vector<std::string> BlobToStringVec(const std::vector<uint8_t>& blob)
+std::vector<std::string> BlobToStringVec(const std::vector<uint8_t> &blob)
 {
     std::vector<std::string> vec;
     uint32_t position = 0;
@@ -455,8 +456,7 @@ std::vector<EachFileStatus> VecToEachFileStatus(const std::vector<CEachFileStatu
     return vec;
 }
 
-template<typename T>
-bool WriteUpdateData(OHOS::NativeRdb::ValuesBucket &insertValues, T *info)
+template<typename T> bool WriteUpdateData(OHOS::NativeRdb::ValuesBucket &insertValues, T *info)
 {
     std::vector<uint8_t> eachFileStatusBlob = CEachFileStatusToBlob(info->eachFileStatusPtr, info->eachFileStatusLen);
     // write to insertValues
@@ -503,20 +503,20 @@ inline int GetInt(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, int lin
 
 void GetRequestTaskInfoByTouch(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskInfo &info)
 {
-    info.commonData.priority = static_cast<uint32_t>(GetLong(set, 11)); // Line 11 is 'priority'
-    info.progress.commonData.state = static_cast<uint8_t>(GetInt(set, 17)); // Line 17 here is 'state'
+    info.commonData.priority = static_cast<uint32_t>(GetLong(set, 11));      // Line 11 is 'priority'
+    info.progress.commonData.state = static_cast<uint8_t>(GetInt(set, 17));  // Line 17 here is 'state'
     info.progress.commonData.index = static_cast<uint8_t>(GetLong(set, 18)); // Line 18 here is 'idx'
-    uintptr_t totalProcessed = static_cast<uintptr_t>(GetLong(set, 19)); // Line 19 is 'totalProcessed'
+    uintptr_t totalProcessed = static_cast<uintptr_t>(GetLong(set, 19));     // Line 19 is 'totalProcessed'
     info.progress.commonData.totalProcessed = totalProcessed;
 
-    set->GetString(12, info.url); // Line 12 is 'url'
-    set->GetString(13, info.data); // Line 13 is 'data'
-    set->GetString(14, info.title); // Line 14 is 'title'
-    set->GetString(15, info.description); // Line 15 is 'description'
-    set->GetString(16, info.mimeType); // Line 16 is 'mime_type'
-    set->GetString(20, info.progress.sizes); // Line 20 here is 'sizes'
+    set->GetString(12, info.url);                // Line 12 is 'url'
+    set->GetString(13, info.data);               // Line 13 is 'data'
+    set->GetString(14, info.title);              // Line 14 is 'title'
+    set->GetString(15, info.description);        // Line 15 is 'description'
+    set->GetString(16, info.mimeType);           // Line 16 is 'mime_type'
+    set->GetString(20, info.progress.sizes);     // Line 20 here is 'sizes'
     set->GetString(21, info.progress.processed); // Line 21 here is 'processed'
-    set->GetString(22, info.progress.extras); // Line 22 here is 'extras'
+    set->GetString(22, info.progress.extras);    // Line 22 here is 'extras'
 
     std::vector<uint8_t> formItemsBlob;
     std::vector<uint8_t> formSpecsBlob;
@@ -532,19 +532,19 @@ void GetRequestTaskInfoByTouch(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, 
 
 void GetRequestTaskInfoByQuery(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskInfo &info)
 {
-    info.progress.commonData.state = static_cast<uint8_t>(GetInt(set, 15)); // Line 15 is 'state'
+    info.progress.commonData.state = static_cast<uint8_t>(GetInt(set, 15));  // Line 15 is 'state'
     info.progress.commonData.index = static_cast<uint8_t>(GetLong(set, 16)); // Line 16 is 'idx'
-    uintptr_t totalProcessed = static_cast<uintptr_t>(GetLong(set, 17)); // Line 17 is 'totalProcessed'
+    uintptr_t totalProcessed = static_cast<uintptr_t>(GetLong(set, 17));     // Line 17 is 'totalProcessed'
     info.progress.commonData.totalProcessed = totalProcessed;
 
-    set->GetString(11, info.bundle); // Line 11 is 'bundle'
-    set->GetString(12, info.title); // Line 12 is 'title'
+    set->GetString(11, info.bundle);      // Line 11 is 'bundle'
+    set->GetString(12, info.title);       // Line 12 is 'title'
     set->GetString(13, info.description); // Line 13 is 'description'
-    set->GetString(14, info.mimeType); // Line 14 is 'mime_type'
+    set->GetString(14, info.mimeType);    // Line 14 is 'mime_type'
 
-    set->GetString(18, info.progress.sizes); // Line 18 is 'sizes'
+    set->GetString(18, info.progress.sizes);     // Line 18 is 'sizes'
     set->GetString(19, info.progress.processed); // Line 19 is 'processed'
-    set->GetString(20, info.progress.extras); // Line 20 is 'extras'
+    set->GetString(20, info.progress.extras);    // Line 20 is 'extras'
 
     std::vector<uint8_t> formItemsBlob;
     std::vector<uint8_t> formSpecsBlob;
@@ -560,42 +560,42 @@ void GetRequestTaskInfoByQuery(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, 
 
 void BuildRequestTaskConfigWithLong(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
 {
-    config.commonData.taskId = static_cast<uint32_t>(GetLong(set, 0)); // Line 0 is 'task_id'
-    config.commonData.uid = static_cast<uint64_t>(GetLong(set, 1)); // Line 1 is 'uid'
-    config.commonData.tokenId = static_cast<uint64_t>(GetLong(set, 2)); // Line 2 is 'token_id'
-    config.commonData.index = static_cast<uint32_t>(GetLong(set, 11)); // Line 11 is 'config_idx'
-    config.commonData.begins = static_cast<uint64_t>(GetLong(set, 12)); // Line 12 is 'begins'
-    config.commonData.ends = static_cast<int64_t>(GetLong(set, 13)); // Line 13 is 'ends'
+    config.commonData.taskId = static_cast<uint32_t>(GetLong(set, 0));    // Line 0 is 'task_id'
+    config.commonData.uid = static_cast<uint64_t>(GetLong(set, 1));       // Line 1 is 'uid'
+    config.commonData.tokenId = static_cast<uint64_t>(GetLong(set, 2));   // Line 2 is 'token_id'
+    config.commonData.index = static_cast<uint32_t>(GetLong(set, 11));    // Line 11 is 'config_idx'
+    config.commonData.begins = static_cast<uint64_t>(GetLong(set, 12));   // Line 12 is 'begins'
+    config.commonData.ends = static_cast<int64_t>(GetLong(set, 13));      // Line 13 is 'ends'
     config.commonData.priority = static_cast<uint32_t>(GetLong(set, 16)); // Line 16 is 'priority'
 }
 
 void BuildRequestTaskConfigWithInt(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
 {
-    config.commonData.action = static_cast<uint8_t>(GetInt(set, 3)); // Line 3 is 'action'
-    config.commonData.mode = static_cast<uint8_t>(GetInt(set, 4)); // Line 4 is 'mode'
-    config.commonData.cover = static_cast<bool>(GetInt(set, 5)); // Line 5 is 'cover'
-    config.commonData.network = static_cast<uint8_t>(GetInt(set, 6)); // Line 6 is 'network'
-    config.commonData.metered = static_cast<bool>(GetInt(set, 7)); // Line 7 is 'metered'
-    config.commonData.roaming = static_cast<bool>(GetInt(set, 8)); // Line 8 is 'roaming'
-    config.commonData.retry = static_cast<bool>(GetInt(set, 9)); // Line 9 is 'retry'
-    config.commonData.redirect = static_cast<bool>(GetInt(set, 10)); // Line 10 is 'redirect'
-    config.commonData.gauge = static_cast<bool>(GetInt(set, 14)); // Line 14 is 'gauge'
-    config.commonData.precise = static_cast<bool>(GetInt(set, 15)); // Line 15 is 'precise'
+    config.commonData.action = static_cast<uint8_t>(GetInt(set, 3));   // Line 3 is 'action'
+    config.commonData.mode = static_cast<uint8_t>(GetInt(set, 4));     // Line 4 is 'mode'
+    config.commonData.cover = static_cast<bool>(GetInt(set, 5));       // Line 5 is 'cover'
+    config.commonData.network = static_cast<uint8_t>(GetInt(set, 6));  // Line 6 is 'network'
+    config.commonData.metered = static_cast<bool>(GetInt(set, 7));     // Line 7 is 'metered'
+    config.commonData.roaming = static_cast<bool>(GetInt(set, 8));     // Line 8 is 'roaming'
+    config.commonData.retry = static_cast<bool>(GetInt(set, 9));       // Line 9 is 'retry'
+    config.commonData.redirect = static_cast<bool>(GetInt(set, 10));   // Line 10 is 'redirect'
+    config.commonData.gauge = static_cast<bool>(GetInt(set, 14));      // Line 14 is 'gauge'
+    config.commonData.precise = static_cast<bool>(GetInt(set, 15));    // Line 15 is 'precise'
     config.commonData.background = static_cast<bool>(GetInt(set, 17)); // Line 17 is 'background'
-    config.version = static_cast<uint8_t>(GetInt(set, 27)); // Line 27 here is 'version'
+    config.version = static_cast<uint8_t>(GetInt(set, 27));            // Line 27 here is 'version'
 }
 
 void BuildRequestTaskConfigWithString(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
 {
-    set->GetString(18, config.bundle); // Line 18 is 'bundle'
-    set->GetString(19, config.url); // Line 19 is 'url'
-    set->GetString(20, config.title); // Line 20 is 'title'
+    set->GetString(18, config.bundle);      // Line 18 is 'bundle'
+    set->GetString(19, config.url);         // Line 19 is 'url'
+    set->GetString(20, config.title);       // Line 20 is 'title'
     set->GetString(21, config.description); // Line 21 is 'description'
-    set->GetString(22, config.method); // Line 22 is 'method'
-    set->GetString(23, config.headers); // Line 23 is 'headers'
-    set->GetString(24, config.data); // Line 24 is 'data'
-    set->GetString(25, config.token); // Line 25 is 'token'
-    set->GetString(26, config.extras); // Line 26 is 'config_extras'
+    set->GetString(22, config.method);      // Line 22 is 'method'
+    set->GetString(23, config.headers);     // Line 23 is 'headers'
+    set->GetString(24, config.data);        // Line 24 is 'data'
+    set->GetString(25, config.token);       // Line 25 is 'token'
+    set->GetString(26, config.extras);      // Line 26 is 'config_extras'
 }
 
 void BuildRequestTaskConfigWithBlob(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
@@ -710,18 +710,16 @@ bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo)
     return true;
 }
 
-bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state) {
+bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state)
+{
     REQUEST_HILOGI("Change Request Task State");
 
     OHOS::NativeRdb::ValuesBucket values;
     values.PutInt("state", static_cast<uint8_t>(state));
 
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.EqualTo("task_id", std::to_string(taskId))
-        ->And()
-        ->EqualTo("uid", std::to_string(uid));
-    if (!OHOS::Request::RequestDataBase::GetInstance().Update(values,
-                                                              rdbPredicates)) {
+    rdbPredicates.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
+    if (!OHOS::Request::RequestDataBase::GetInstance().Update(values, rdbPredicates)) {
         REQUEST_HILOGE("Change request_task state failed");
         return false;
     }
@@ -731,9 +729,7 @@ bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state) {
 CTaskInfo *Show(uint32_t taskId, uint64_t uid)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates1("request_task");
-    rdbPredicates1.EqualTo("task_id", std::to_string(taskId))
-            ->And()
-            ->EqualTo("uid", std::to_string(uid));
+    rdbPredicates1.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
     TaskInfo taskInfo;
     if (TouchRequestTaskInfo(rdbPredicates1, taskInfo) == OHOS::Request::QUERY_ERR) {
         return nullptr;
@@ -822,29 +818,26 @@ void DeleteCVectorWrapper(uint32_t *ptr)
 
 void GetCommonTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskInfo &info)
 {
-    info.commonData.taskId = static_cast<uint32_t>(GetLong(set, 0)); // Line 0 is 'task_id'
-    info.commonData.uid = static_cast<uint64_t>(GetLong(set, 1)); // Line 1 is 'uid'
-    info.commonData.ctime = static_cast<uint64_t>(GetLong(set, 4)); // Line 4 is 'ctime'
-    info.commonData.mtime = static_cast<uint64_t>(GetLong(set, 5)); // Line 5 is 'mtime'
-    info.commonData.tries = static_cast<uint64_t>(GetLong(set, 9)); // Line 9 is 'tries'
+    info.commonData.taskId = static_cast<uint32_t>(GetLong(set, 0));  // Line 0 is 'task_id'
+    info.commonData.uid = static_cast<uint64_t>(GetLong(set, 1));     // Line 1 is 'uid'
+    info.commonData.ctime = static_cast<uint64_t>(GetLong(set, 4));   // Line 4 is 'ctime'
+    info.commonData.mtime = static_cast<uint64_t>(GetLong(set, 5));   // Line 5 is 'mtime'
+    info.commonData.tries = static_cast<uint64_t>(GetLong(set, 9));   // Line 9 is 'tries'
     info.commonData.version = static_cast<uint8_t>(GetLong(set, 10)); // Line 10 is 'version'
 
     info.commonData.action = static_cast<uint8_t>(GetInt(set, 2)); // Line 2 is 'action'
-    info.commonData.mode = static_cast<uint8_t>(GetInt(set, 3)); // Line 3 is 'mode'
+    info.commonData.mode = static_cast<uint8_t>(GetInt(set, 3));   // Line 3 is 'mode'
     info.commonData.reason = static_cast<uint8_t>(GetInt(set, 6)); // Line 6 is 'reason'
-    info.commonData.gauge = static_cast<bool>(GetInt(set, 7)); // Line 7 is 'gauge'
-    info.commonData.retry = static_cast<bool>(GetInt(set, 8)); // Line 8 is 'retry'
+    info.commonData.gauge = static_cast<bool>(GetInt(set, 7));     // Line 7 is 'gauge'
+    info.commonData.retry = static_cast<bool>(GetInt(set, 8));     // Line 8 is 'retry'
 }
 
 int TouchRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo)
 {
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates,
-        { "task_id", "uid", "action", "mode", "ctime",
-          "mtime", "reason", "gauge", "retry", "tries",
-          "version", "priority", "url", "data", "title",
-          "description", "mime_type", "state", "idx", "total_processed",
-          "sizes", "processed", "extras", "form_items", "file_specs",
-          "each_file_status" });
+        { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry", "tries", "version",
+            "priority", "url", "data", "title", "description", "mime_type", "state", "idx", "total_processed", "sizes",
+            "processed", "extras", "form_items", "file_specs", "each_file_status" });
     if (resultSet == nullptr || resultSet->GoToFirstRow() != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("result set is nullptr or go to first row failed");
         return OHOS::Request::QUERY_ERR;
@@ -857,12 +850,10 @@ int TouchRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, Ta
 
 int QueryRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo)
 {
-    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates,
-        { "task_id", "uid", "action", "mode", "ctime",
-          "mtime", "reason", "gauge", "retry", "tries",
-          "version", "bundle", "title", "description", "mime_type",
-          "state", "idx", "total_processed", "sizes", "processed",
-          "extras", "form_items", "file_specs", "each_file_status" });
+    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(
+        rdbPredicates, { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry", "tries",
+                           "version", "bundle", "title", "description", "mime_type", "state", "idx", "total_processed",
+                           "sizes", "processed", "extras", "form_items", "file_specs", "each_file_status" });
     if (resultSet == nullptr || resultSet->GoToFirstRow() != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("result set is nullptr or go to first row failed");
         return OHOS::Request::QUERY_ERR;
@@ -916,7 +907,7 @@ CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo)
 
 CProgress BuildCProgress(const Progress &progress)
 {
-    return CProgress {
+    return CProgress{
         .commonData = progress.commonData,
         .sizes = WrapperCString(progress.sizes),
         .processed = WrapperCString(progress.processed),
@@ -949,8 +940,8 @@ CTaskConfig **QueryAllTaskConfig()
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
-            ->Or()
-            ->EqualTo("state", static_cast<uint8_t>(State::PAUSED));
+        ->Or()
+        ->EqualTo("state", static_cast<uint8_t>(State::PAUSED));
     std::vector<TaskConfig> taskConfigs;
     if (QueryRequestTaskConfig(rdbPredicates, taskConfigs) == OHOS::Request::QUERY_ERR) {
         return nullptr;
@@ -962,8 +953,8 @@ int QueryTaskConfigLen()
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
-            ->Or()
-            ->EqualTo("state", static_cast<uint8_t>(State::PAUSED));
+        ->Or()
+        ->EqualTo("state", static_cast<uint8_t>(State::PAUSED));
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "task_id", "uid" });
     int len = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(len) != OHOS::NativeRdb::E_OK) {
@@ -975,14 +966,11 @@ int QueryTaskConfigLen()
 
 int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, std::vector<TaskConfig> &taskConfigs)
 {
-    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates,
-        { "task_id", "uid", "token_id", "action", "mode",
-          "cover", "network", "metered", "roaming", "retry",
-          "redirect", "config_idx", "begins", "ends", "gauge",
-          "precise", "priority", "background", "bundle", "url",
-          "title", "description", "method", "headers", "data",
-          "token", "config_extras", "version", "form_items", "file_specs",
-          "body_file_names", "certs_paths" });
+    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(
+        rdbPredicates, { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming",
+                           "retry", "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority",
+                           "background", "bundle", "url", "title", "description", "method", "headers", "data", "token",
+                           "config_extras", "version", "form_items", "file_specs", "body_file_names", "certs_paths" });
     int rowCount = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("TaskConfig result set is nullptr or get row count failed");

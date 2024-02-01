@@ -21,11 +21,10 @@
 
 #include "context.h"
 #include "data_ability_helper.h"
-#include "upload_config.h"
-#include "upload/upload_task.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
-
+#include "upload/upload_task.h"
+#include "upload_config.h"
 
 namespace OHOS::Request::Upload {
 class UploadTaskNapiV5 : public std::enable_shared_from_this<UploadTaskNapiV5> {

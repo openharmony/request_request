@@ -21,8 +21,8 @@
 namespace OHOS::Request {
 class RequestSyncLoadCallback : public SystemAbilityLoadCallbackStub {
 public:
-    void OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject>& remoteObject) override;
+    void OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject) override;
     void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
 };
-} // // namespace OHOS::Request
+} // namespace OHOS::Request
 #endif // DOWNLOAD_SYNC_LOAD_CALLBACK_H

@@ -29,8 +29,8 @@ void RequestInitServiceHandler(void)
         REQUEST_HILOGE("RequestInitServiceHandler already init.");
         return;
     }
-    std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner =
-        OHOS::AppExecFwk::EventRunner::Create("DownloadServiceAbility");
+    std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::Create("DownloadServiceAbil"
+                                                                                                  "ity");
     serviceHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
     REQUEST_HILOGD("RequestInitServiceHandler succeeded.");
 }

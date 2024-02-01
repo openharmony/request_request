@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
 #include "c_event_handler.h"
+
+#include <gtest/gtest.h>
 using namespace testing::ext;
 
 #define PARAM_FUNC_RET 123

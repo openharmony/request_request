@@ -13,20 +13,22 @@
  * limitations under the License.
  */
 #include "get_proxy.h"
+
 #include <want.h>
+
 #include <mutex>
 
 #include "common_event_data.h"
 #include "common_event_manager.h"
 #include "common_event_notify.h"
 #include "common_event_publish_info.h"
-#include "net_conn_client.h"
 #include "log.h"
+#include "net_conn_client.h"
 
-std::mutex proxy_mutex;
+std::mutex g_proxyMutex;
 using namespace OHOS::EventFwk;
-static constexpr const char* DEFAULT_HTTP_PROXY_HOST = "NONE";
-static constexpr const char* DEFAULT_HTTP_PROXY_EXCLUSION_LIST = "NONE";
+static constexpr const char *DEFAULT_HTTP_PROXY_HOST = "NONE";
+static constexpr const char *DEFAULT_HTTP_PROXY_EXCLUSION_LIST = "NONE";
 
 SysNetProxyManager &SysNetProxyManager::GetInstance()
 {
@@ -57,9 +59,9 @@ void SysNetProxyManager::SubscriberEvent()
         REQUEST_HILOGE("Common Event is already subscribered.");
         return;
     }
-    proxy_mutex.lock();
+    g_proxyMutex.lock();
     InitProxy(host_, port_, exclusionList_);
-    proxy_mutex.unlock();
+    g_proxyMutex.unlock();
     OHOS::EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_HTTP_PROXY_CHANGE);
     OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
@@ -72,13 +74,13 @@ void SysNetProxyManager::SubscriberEvent()
     }
 }
 
-void SysNetProxyManager::InitProxy(std::string& host, std::string& port, std::string& exclusion)
+void SysNetProxyManager::InitProxy(std::string &host, std::string &port, std::string &exclusion)
 {
     OHOS::NetManagerStandard::HttpProxy httpProxy;
     int32_t ret = OHOS::NetManagerStandard::NetConnClient::GetInstance().GetDefaultHttpProxy(httpProxy);
     if (ret != OHOS::NetManagerStandard::NET_CONN_SUCCESS) {
         REQUEST_HILOGE("Netproxy config change, get default http proxy from OH network failed");
-        return; 
+        return;
     }
     std::string host_res = httpProxy.GetHost();
     host = host_res;
@@ -86,7 +88,7 @@ void SysNetProxyManager::InitProxy(std::string& host, std::string& port, std::st
         host = std::string();
     }
     std::string httpProxyExclusions;
-    for (const auto& s : httpProxy.GetExclusionList()) {
+    for (const auto &s : httpProxy.GetExclusionList()) {
         httpProxyExclusions.append(s + ",");
     }
     if (!httpProxyExclusions.empty()) {
@@ -101,7 +103,7 @@ void SysNetProxyManager::InitProxy(std::string& host, std::string& port, std::st
     port = port_res;
 }
 
-void SysNetProxySubscriber::OnReceiveEvent(const OHOS::EventFwk::CommonEventData& data)
+void SysNetProxySubscriber::OnReceiveEvent(const OHOS::EventFwk::CommonEventData &data)
 {
     const std::string action = data.GetWant().GetAction();
     REQUEST_HILOGD("Receive system proxy change action: %{public}s", action.c_str());
@@ -114,12 +116,14 @@ void SysNetProxySubscriber::OnReceiveEvent(const OHOS::EventFwk::CommonEventData
     std::string exclusionList;
     const std::string proxyContent = data.GetWant().GetStringParam("HttpProxy");
     SysNetProxyManager::GetInstance().GetHttpProxy(proxyContent, host, port, exclusionList);
-    proxy_mutex.lock();
+    g_proxyMutex.lock();
     SysNetProxyManager::GetInstance().SetHttpProxy(host, port, exclusionList);
-    proxy_mutex.unlock();
+    g_proxyMutex.unlock();
 }
 
-void SysNetProxyManager::GetHttpProxy(const std::string proxyContent, std::string &host, std::string &port, std::string &exclusionList){
+void SysNetProxyManager::GetHttpProxy(
+    const std::string proxyContent, std::string &host, std::string &port, std::string &exclusionList)
+{
     typedef std::string::const_iterator iter_t;
     iter_t proxyContentEnd = proxyContent.end();
     iter_t hostStart = proxyContent.cbegin();
@@ -139,18 +143,22 @@ void SysNetProxyManager::GetHttpProxy(const std::string proxyContent, std::strin
     }
 }
 
-void RegisterProxySubscriber(){
+void RegisterProxySubscriber()
+{
     SysNetProxyManager::GetInstance().SubscriberEvent();
 }
 
-CStringWrapper GetHost(){
+CStringWrapper GetHost()
+{
     return SysNetProxyManager::GetInstance().GetHost();
 }
 
-CStringWrapper GetPort(){
+CStringWrapper GetPort()
+{
     return SysNetProxyManager::GetInstance().GetPort();
 }
 
-CStringWrapper GetExclusionList(){
+CStringWrapper GetExclusionList()
+{
     return SysNetProxyManager::GetInstance().GetExclusionList();
 }
