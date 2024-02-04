@@ -10,37 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-ability_runtime_path = "//foundation/ability/ability_runtime"
-
-ability_runtime_inner_api_path = "${ability_runtime_path}/interfaces/inner_api"
-
-ability_runtime_kits_path = "${ability_runtime_path}/frameworks/kits"
-
-ability_runtime_napi_path = "${ability_runtime_path}/frameworks/js/napi"
-
-ability_runtime_services_path = "${ability_runtime_path}/services"
-
-arkui_path = "//foundation/arkui"
-
-request_path = "//base/request/request"
-
-foundation_path = "//foundation"
-
-third_path = "//third_party"
-
-core_service_path = "//base/telephony/core_service/interfaces"
-
-cellular_data_path = "//base/telephony/cellular_data/interfaces"
-
-notification_path = "//base/notification/distributed_notification_service"
-
 test_path = "//test/testfwk/developer_test/signature"
-
-c_utils_path = "//commonlibrary/c_utils"
-
-base_path = "//base/hiviewdfx"
-
 declare_args() {
   request_telephony_core_service = false
   if (defined(global_parts_info) &&

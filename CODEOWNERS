@@ -14,5 +14,5 @@
 # any change to frameworks/native/include/download_server_ipc_interface_code.h needs to be reviewed by @leonchan5
 frameworks/native/include/download_server_ipc_interface_code.h @leonchan5
 
-# any change to services/service/request/src/service/interface.rs needs to be reviewed by @leonchan5
-services/service/request/src/service/interface.rs @leonchan5
+# any change to services/src/service/interface.rs needs to be reviewed by @leonchan5
+services/src/service/interface.rs @leonchan5

@@ -20,32 +20,31 @@ ohos_unittest("saTest") {
   module_out_path = module_output_path
 
   include_dirs = [
-    "${request_path}/frameworks/js/napi/include",
-    "${request_path}/services/service/request/c_wrapper/include",
-    "${request_path}/test/unittest/cpp_test/saTest/include",
-    "//third_party/googletest/googlemock/include",
+    "include",
+    "../../../../frameworks/js/napi/include",
+    "../../../../services/c_wrapper/include",
   ]
 
   sources = [
-    "${request_path}/services/service/request/c_wrapper/source/background_notification.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/c_check_permission.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/c_event_handler.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/c_string_wrapper.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/common_event_notify.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/get_calling_bundle.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/get_top_bundle.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/network_adapter.cpp",
-    "${request_path}/test/unittest/cpp_test/saTest/src/background_notification_test.cpp",
-    "${request_path}/test/unittest/cpp_test/saTest/src/c_check_permission_test.cpp",
-    "${request_path}/test/unittest/cpp_test/saTest/src/c_event_handler_test.cpp",
-    "${request_path}/test/unittest/cpp_test/saTest/src/c_string_wrapper_test.cpp",
-    "${request_path}/test/unittest/cpp_test/saTest/src/common_event_notify_test.cpp",
-    "${request_path}/test/unittest/cpp_test/saTest/src/get_bundle_test.cpp",
-    "${request_path}/test/unittest/cpp_test/saTest/src/network_adapter_test.cpp",
+    "../../../../services/c_wrapper/source/background_notification.cpp",
+    "../../../../services/c_wrapper/source/c_check_permission.cpp",
+    "../../../../services/c_wrapper/source/c_event_handler.cpp",
+    "../../../../services/c_wrapper/source/c_string_wrapper.cpp",
+    "../../../../services/c_wrapper/source/common_event_notify.cpp",
+    "../../../../services/c_wrapper/source/get_calling_bundle.cpp",
+    "../../../../services/c_wrapper/source/get_top_bundle.cpp",
+    "../../../../services/c_wrapper/source/network_adapter.cpp",
+    "src/background_notification_test.cpp",
+    "src/c_check_permission_test.cpp",
+    "src/c_event_handler_test.cpp",
+    "src/c_string_wrapper_test.cpp",
+    "src/common_event_notify_test.cpp",
+    "src/get_bundle_test.cpp",
+    "src/network_adapter_test.cpp",
   ]
 
   deps = [
-    "${request_path}/common:request_common_static",
+    "../../../../common:request_common_static",
     "//third_party/googletest:gmock_main",
   ]
 

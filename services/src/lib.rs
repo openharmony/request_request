@@ -35,6 +35,7 @@ mod task;
 mod utils;
 
 cfg_oh! {
+    mod init;
     mod trace;
     mod sys_event;
     mod service;
