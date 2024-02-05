@@ -12,13 +12,13 @@
 # limitations under the License.
 
 [package]
-name = "request"
+name = "download_server"
 version = "1.0.0"
 edition = "2021"
 license = "Apache-2.0"
 
 [features]
-default = []
+default = ["oh"]
 
 oh = ["hilog_rust", "hisysevent", "hitrace_meter_rust", "rust_samgr", "ipc_rust"]
 
@@ -34,7 +34,7 @@ ylong_http_client = { git = "https://gitee.com/openharmony/commonlibrary_rust_yl
 hilog_rust = { git = "https://gitee.com/openharmony/hiviewdfx_hilog.git", optional = true }
 hisysevent = { git = "https://gitee.com/openharmony/hiviewdfx_hisysevent.git", optional = true }
 hitrace_meter_rust = { git = "https://gitee.com/openharmony/hiviewdfx_hitrace.git", optional = true }
-
+system_ability_fwk_rust = { git = "https://gitee.com/openharmony/systemabilitymgr_safwk" }
 rust_samgr = { git = "https://gitee.com/openharmony/systemabilitymgr_samgr.git", optional = true }
 ipc_rust = { git = "https://gitee.com/openharmony/communication_ipc.git", optional = true }
 

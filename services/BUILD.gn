@@ -27,7 +27,7 @@ config("download_service_config") {
   ]
 }
 
-ohos_rust_shared_library("request") {
+ohos_rust_shared_library("download_server") {
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -51,16 +51,17 @@ ohos_rust_shared_library("request") {
     "hitrace:hitrace_meter_rust",
     "ipc:ipc_rust",
     "netstack:ylong_http_client",
+    "safwk:system_ability_fwk_rust",
     "samgr:rust_samgr",
     "ylong_runtime:ylong_runtime",
   ]
 
-  crate_name = "request"
+  crate_name = "download_server"
   subsystem_name = "request"
   part_name = "request"
 }
 
-ohos_shared_library("request_service_c") {
+ohos_static_library("request_service_c") {
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -72,26 +73,23 @@ ohos_shared_library("request_service_c") {
   stack_protector_ret = true
 
   include_dirs = [
-    "${request_path}/common/include",
-    "${request_path}/services/service/request/c_wrapper/include",
-    "${core_service_path}/innerkits/include",
-    "${cellular_data_path}/innerkits/include",
-    "${notification_path}/interfaces/inner_api",
+    "../common/include",
+    "c_wrapper/include",
   ]
   sources = [
-    "${request_path}/services/service/request/c_wrapper/source/application_state_observer.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/background_notification.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/c_check_permission.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/c_event_handler.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/c_request_database.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/c_string_wrapper.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/c_task_config.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/c_task_info.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/common_event_notify.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/get_calling_bundle.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/get_proxy.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/get_top_bundle.cpp",
-    "${request_path}/services/service/request/c_wrapper/source/network_adapter.cpp",
+    "c_wrapper/source/application_state_observer.cpp",
+    "c_wrapper/source/background_notification.cpp",
+    "c_wrapper/source/c_check_permission.cpp",
+    "c_wrapper/source/c_event_handler.cpp",
+    "c_wrapper/source/c_request_database.cpp",
+    "c_wrapper/source/c_string_wrapper.cpp",
+    "c_wrapper/source/c_task_config.cpp",
+    "c_wrapper/source/c_task_info.cpp",
+    "c_wrapper/source/common_event_notify.cpp",
+    "c_wrapper/source/get_calling_bundle.cpp",
+    "c_wrapper/source/get_proxy.cpp",
+    "c_wrapper/source/get_top_bundle.cpp",
+    "c_wrapper/source/network_adapter.cpp",
   ]
   cflags_cc = [ "-O2" ]
 
@@ -125,7 +123,6 @@ ohos_shared_library("request_service_c") {
     defines += [ "REQUEST_TELEPHONY_CORE_SERVICE" ]
   }
   output_extension = "so"
-  install_images = [ system_base_dir ]
   subsystem_name = "request"
   part_name = "request"
 }

@@ -24,7 +24,7 @@ ohos_rust_unittest("rust_request_test_ut") {
     "src/common.rs",
     "src/main.rs",
   ]
-  deps = [ "${request_path}/services/service/rust:request" ]
+  deps = [ "../../../services/service/rust:request" ]
   subsystem_name = "request"
   part_name = "request"
 }

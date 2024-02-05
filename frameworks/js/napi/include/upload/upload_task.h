@@ -42,7 +42,9 @@ enum UploadTaskState {
     STATE_FAILURE,
 };
 class UploadTaskNapiV5;
-class UploadTask : public IUploadTask, public std::enable_shared_from_this<UploadTask> {
+class UploadTask
+    : public IUploadTask
+    , public std::enable_shared_from_this<UploadTask> {
 public:
     UPLOAD_API UploadTask(std::shared_ptr<UploadConfig> &uploadConfig);
     UPLOAD_API ~UploadTask();

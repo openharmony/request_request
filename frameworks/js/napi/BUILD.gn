@@ -26,60 +26,6 @@ config("upload_public_config") {
   ]
 }
 
-request_include = [
-  "${arkui_path}/ace_engine/frameworks/base/utils",
-  "${ability_runtime_napi_path}/featureAbility",
-  "${ability_runtime_napi_path}/inner/napi_common",
-  "${request_path}/frameworks/native/include",
-  "//third_party/libuv/include",
-  "${arkui_path}/ace_engine/frameworks",
-]
-
-request_src = [
-  "src/app_state_callback.cpp",
-  "src/async_call.cpp",
-  "src/request_event.cpp",
-  "src/legacy/request_manager.cpp",
-  "src/legacy/download_task.cpp",
-  "src/notify_stub.cpp",
-  "src/js_initialize.cpp",
-  "src/js_task.cpp",
-  "src/napi_utils.cpp",
-  "src/request_module.cpp",
-  "src/request_notify.cpp",
-  "src/utf8_utils.cpp",
-  "src/uv_queue.cpp",
-  "src/upload/js_util.cpp",
-  "src/upload/async_call.cpp",
-  "src/upload/upload_task_napiV5.cpp",
-  "src/upload/curl_adp.cpp",
-  "src/upload/file_adapter.cpp",
-  "src/upload/obtain_file.cpp",
-  "src/upload/upload_task.cpp",
-]
-
-request_deps = [
-  "${request_path}/common:request_common_static",
-  "${request_path}/frameworks/native:request_native",
-  "//third_party/libuv:uv",
-  "//third_party/openssl:libssl_shared",
-]
-
-request_external_deps = [
-  "ability_base:zuri",
-  "ability_runtime:abilitykit_native",
-  "ability_runtime:app_context",
-  "ability_runtime:data_ability_helper",
-  "ability_runtime:napi_base_context",
-  "c_utils:utils",
-  "ffrt:libffrt",
-  "hilog:libhilog",
-  "ipc:ipc_single",
-  "napi:ace_napi",
-  "netmanager_base:net_conn_manager_if",
-  "storage_service:storage_manager_acl",
-]
-
 ohos_shared_library("request") {
   sanitize = {
     integer_overflow = true
@@ -91,13 +37,57 @@ ohos_shared_library("request") {
   }
   stack_protector_ret = true
 
-  include_dirs = request_include
-  configs = [ "//build/config/gcc:symbol_visibility_hidden" ]
-  public_configs = [ ":upload_public_config" ]
-  sources = request_src
+  include_dirs = [
+    "include",
+    "../../native/include",
+  ]
 
-  deps = request_deps
-  external_deps = request_external_deps
+  public_configs = [ ":upload_public_config" ]
+
+  sources = [
+    "src/app_state_callback.cpp",
+    "src/async_call.cpp",
+    "src/js_initialize.cpp",
+    "src/js_task.cpp",
+    "src/legacy/download_task.cpp",
+    "src/legacy/request_manager.cpp",
+    "src/napi_utils.cpp",
+    "src/notify_stub.cpp",
+    "src/request_event.cpp",
+    "src/request_module.cpp",
+    "src/request_notify.cpp",
+    "src/upload/async_call.cpp",
+    "src/upload/curl_adp.cpp",
+    "src/upload/file_adapter.cpp",
+    "src/upload/js_util.cpp",
+    "src/upload/obtain_file.cpp",
+    "src/upload/upload_task.cpp",
+    "src/upload/upload_task_napiV5.cpp",
+    "src/utf8_utils.cpp",
+    "src/uv_queue.cpp",
+  ]
+
+  deps = [
+    "../../../common:request_common_static",
+    "../../native:request_native",
+    "//third_party/libuv:uv",
+    "//third_party/openssl:libssl_shared",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:data_ability_helper",
+    "ability_runtime:napi_base_context",
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "napi:ace_napi",
+    "netmanager_base:net_conn_manager_if",
+    "storage_service:storage_manager_acl",
+  ]
 
   relative_install_dir = "module"
   subsystem_name = "request"
@@ -105,13 +95,57 @@ ohos_shared_library("request") {
 }
 
 ohos_static_library("request_static") {
-  include_dirs = request_include
-  configs = [ "//build/config/gcc:symbol_visibility_hidden" ]
-  public_configs = [ ":upload_public_config" ]
-  sources = request_src
+  include_dirs = [
+    "include",
+    "../../native/include",
+  ]
 
-  deps = request_deps
-  external_deps = request_external_deps
+  public_configs = [ ":upload_public_config" ]
+
+  sources = [
+    "src/app_state_callback.cpp",
+    "src/async_call.cpp",
+    "src/js_initialize.cpp",
+    "src/js_task.cpp",
+    "src/legacy/download_task.cpp",
+    "src/legacy/request_manager.cpp",
+    "src/napi_utils.cpp",
+    "src/notify_stub.cpp",
+    "src/request_event.cpp",
+    "src/request_module.cpp",
+    "src/request_notify.cpp",
+    "src/upload/async_call.cpp",
+    "src/upload/curl_adp.cpp",
+    "src/upload/file_adapter.cpp",
+    "src/upload/js_util.cpp",
+    "src/upload/obtain_file.cpp",
+    "src/upload/upload_task.cpp",
+    "src/upload/upload_task_napiV5.cpp",
+    "src/utf8_utils.cpp",
+    "src/uv_queue.cpp",
+  ]
+
+  deps = [
+    "../../../common:request_common_static",
+    "../../native:request_native",
+    "//third_party/libuv:uv",
+    "//third_party/openssl:libssl_shared",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:data_ability_helper",
+    "ability_runtime:napi_base_context",
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "napi:ace_napi",
+    "netmanager_base:net_conn_manager_if",
+    "storage_service:storage_manager_acl",
+  ]
 
   subsystem_name = "request"
   part_name = "request"

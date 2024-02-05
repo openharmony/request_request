@@ -21,10 +21,10 @@
 
 #include <ctime>
 
-#include "download_server_ipc_interface_code.h"
 #include "iremote_broker.h"
 #include "log.h"
 #include "parcel_helper.h"
+#include "download_server_ipc_interface_code.h"
 
 namespace OHOS::Request {
 using namespace OHOS::HiviewDFX;

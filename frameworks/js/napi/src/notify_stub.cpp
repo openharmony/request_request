@@ -17,9 +17,9 @@
 
 #include <thread>
 
-#include "download_server_ipc_interface_code.h"
 #include "log.h"
 #include "parcel_helper.h"
+#include "download_server_ipc_interface_code.h"
 #include "request_event.h"
 
 namespace OHOS::Request {

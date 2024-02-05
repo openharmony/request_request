@@ -24,7 +24,6 @@
 #include "constant.h"
 #include "js_common.h"
 #include "napi/native_api.h"
-#include "noncopyable.h"
 #include "notify_stub.h"
 #include "uv.h"
 #include "uv_queue.h"
