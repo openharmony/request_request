@@ -62,16 +62,8 @@ int32_t ParamFunc()
  */
 HWTEST_F(EventHandlerTest, InitServiceHandlerTest_001, TestSize.Level1)
 {
+    RequestPostTask(ParamFunc);
     RequestInitServiceHandler();
-}
-
-/**
- * @tc.name: PostTaskTest_001
- * @tc.desc: Test RequestPostTask interface base function
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(EventHandlerTest, PostTaskTest_001, TestSize.Level1)
-{
+    RequestInitServiceHandler();
     RequestPostTask(ParamFunc);
 }
