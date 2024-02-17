@@ -58,4 +58,7 @@ HWTEST_F(StringWrapperTest, WrapperCStringTest_001, TestSize.Level1)
     CStringWrapper ret = WrapperCString(str);
     EXPECT_EQ(ret.len, str.length());
     EXPECT_EQ(strcmp(ret.cStr, str.c_str()), 0);
+
+    char *str1 = new char[10];
+    DeleteChar(str1);
 }
