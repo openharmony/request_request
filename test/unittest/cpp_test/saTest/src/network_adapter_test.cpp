@@ -17,7 +17,9 @@
 
 #define private public
 #define protected public
+
 #include "network_adapter.h"
+#include "net_all_capabilities.h"
 
 using namespace testing::ext;
 using namespace OHOS::Request;
@@ -94,4 +96,19 @@ HWTEST_F(NetworkAdapterTest, NetworkAdapterCoverTest_001, TestSize.Level1)
 {
     NetworkAdapter::GetInstance().UpdateNetworkInfo();
     NetworkAdapter::GetInstance().UpdateRoaming();
+}
+
+/**
+ * @tc.name: NetworkAdapterIsOnlineTest_001
+ * @tc.desc: Cover some functions return void
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(NetworkAdapterTest, NetworkAdapterIsOnlineTest_001, TestSize.Level1)
+{
+    IsOnline();
+    NetworkAdapter::GetInstance().IsOnline();
+
+    OHOS::NetManagerStandard::NetAllCapabilities capabilities;
+    NetworkAdapter::GetInstance().UpdateNetworkInfoInner(capabilities);
 }

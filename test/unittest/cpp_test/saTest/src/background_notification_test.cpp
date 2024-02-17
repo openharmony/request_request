@@ -55,16 +55,36 @@ void BackgroundNotificationTest::TearDown(void)
 
 /**
  * @tc.name: BackGroundNotifyTest_001
- * @tc.desc: Test RequestBackgroundNotify interface base function
+ * @tc.desc: Test RequestBackgroundNotify interface base function - download
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
 HWTEST_F(BackgroundNotificationTest, BackGroundNotifyTest_001, TestSize.Level1)
 {
-    RequestTaskMsg msg = RequestTaskMsg{
+    RequestTaskMsg msg = RequestTaskMsg {
         123,                                   // uint32_t taskId
         123456,                                // pid_t uid
         static_cast<uint8_t>(Action::DOWNLOAD) // uint8_t action
+    };
+
+    CStringWrapper wrappedPath = WrapperCString("../BUILD.gn");
+    CStringWrapper wrappedFileName = WrapperCString("BUILD.gn");
+    uint32_t percent = 50;
+    RequestBackgroundNotify(msg, wrappedPath, wrappedFileName, percent);
+}
+
+/**
+ * @tc.name: BackGroundNotifyTest_002
+ * @tc.desc: Test RequestBackgroundNotify interface base function - upload
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(BackgroundNotificationTest, BackGroundNotifyTest_002, TestSize.Level1)
+{
+    RequestTaskMsg msg = RequestTaskMsg {
+        123,                                   // uint32_t taskId
+        123456,                                // pid_t uid
+        static_cast<uint8_t>(Action::UPLOAD)   // uint8_t action
     };
 
     CStringWrapper wrappedPath = WrapperCString("../BUILD.gn");
