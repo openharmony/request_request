@@ -899,7 +899,7 @@ bool JsTask::SetDirsPermission(std::vector<std::string> &dirs)
 bool JsTask::SetPathPermission(const std::string &filepath)
 {
     std::string baseDir;
-    if (!CheckPathBaseDir(filepath, baseDir)) {
+    if (!JsInitialize::CheckPathBaseDir(filepath, baseDir)) {
         return false;
     }
 
@@ -919,36 +919,6 @@ bool JsTask::SetPathPermission(const std::string &filepath)
         return false;
     }
     return true;
-}
-
-bool JsTask::CheckPathBaseDir(const std::string &filepath, std::string &baseDir)
-{
-    if (!JsInitialize::GetBaseDir(baseDir)) {
-        return false;
-    }
-
-    if (filepath.find(baseDir) != std::string::npos) {
-        return true;
-    }
-    // check baseDir replaced with el2
-    if (baseDir.find(AREA1) != std::string::npos) {
-        baseDir = baseDir.replace(baseDir.find(AREA1), AREA1.length(), AREA2);
-        if (filepath.find(baseDir) == std::string::npos) {
-            REQUEST_HILOGE("File dir not include base dir: %{public}s", baseDir.c_str());
-            return false;
-        }
-        return true;
-    }
-    // check baseDir replaced with el1
-    if (baseDir.find(AREA2) != std::string::npos) {
-        baseDir = baseDir.replace(baseDir.find(AREA2), AREA2.length(), AREA1);
-        if (filepath.find(baseDir) == std::string::npos) {
-            REQUEST_HILOGE("File dir not include base dir: %{public}s", baseDir.c_str());
-            return false;
-        }
-        return true;
-    }
-    return false;
 }
 
 void JsTask::AddPathMap(const std::string &filepath, const std::string &baseDir)
@@ -979,7 +949,7 @@ void JsTask::ResetDirAccess(const std::string &filepath)
 void JsTask::RemovePathMap(const std::string &filepath)
 {
     std::string baseDir;
-    if (!CheckPathBaseDir(filepath, baseDir)) {
+    if (!JsInitialize::CheckPathBaseDir(filepath, baseDir)) {
         return;
     }
 

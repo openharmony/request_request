@@ -115,7 +115,7 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
     napi_status outputStatus = workData->ctx->output_(&result[ARG_DATA]);
     context->output_ = nullptr;
     if (status != napi_ok || outputStatus != napi_ok) {
-        result[ARG_ERROR] = context->Creator();
+        result[ARG_ERROR] = context->CreateErr();
     }
     if (context->defer_ != nullptr) {
         // promise

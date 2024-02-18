@@ -17,6 +17,7 @@
 #define JS_INITIALIZE_H
 
 #include "ability.h"
+#include "directory_ex.h"
 #include "js_task.h"
 #include "napi_base_context.h"
 
@@ -39,6 +40,7 @@ public:
     static napi_status GetContext(
         napi_env env, napi_value value, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
     static bool GetBaseDir(std::string &baseDir);
+    static bool CheckPathBaseDir(const std::string &filepath, std::string &baseDir);
 
 private:
     static ExceptionError InitParam(
@@ -60,7 +62,7 @@ private:
     static void ParseRedirect(napi_env env, napi_value jsConfig, bool &redirect);
     static void ParseRoaming(napi_env env, napi_value jsConfig, Config &config);
     static void ParseRetry(napi_env env, napi_value jsConfig, bool &retry);
-    static void ParseSaveas(napi_env env, napi_value jsConfig, Config &config);
+    static bool ParseSaveas(napi_env env, napi_value jsConfig, Config &config);
     static bool ParseToken(napi_env env, napi_value jsConfig, Config &config);
     static bool ParseDescription(napi_env env, napi_value jsConfig, std::string &description);
     static int64_t ParseEnds(napi_env env, napi_value jsConfig);
@@ -82,8 +84,17 @@ private:
     static ExceptionError CheckFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
     static ExceptionError CheckUploadBodyFiles(Config &config, const std::string &filePath);
     static ExceptionError GetFD(const std::string &path, const Config &config, int32_t &fd);
-    static void InterceptData(const std::string &str, const std::string &in, std::string &out);
+    static bool InterceptData(const std::string &str, const std::string &in, std::string &out);
     static bool IsStageMode(napi_env env, napi_value value);
+    static bool CheckDownloadFilePath(
+        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, std::string &errInfo);
+    static bool StandardizePath(
+        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path);
+    static bool CacheToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, std::string &path);
+    static bool FileToWhole(
+        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path);
+    static bool WholeToNormal(const std::string &wholePath, std::string &normalPath);
+    static void StringSplit(const std::string &str, const char delim, std::vector<std::string> &elems);
 };
 } // namespace OHOS::Request
 #endif // JS_INITIALIZE_H
