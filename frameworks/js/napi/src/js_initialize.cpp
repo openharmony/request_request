@@ -38,6 +38,7 @@ static constexpr uint32_t FILE_PERMISSION = 0644;
 static constexpr uint32_t TITLE_MAXIMUM = 256;
 static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
 static constexpr uint32_t URL_MAXIMUM = 2048;
+
 namespace OHOS::Request {
 napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Version version, bool firstInit)
 {
@@ -149,10 +150,17 @@ ExceptionError JsInitialize::CheckFilePath(
 {
     ExceptionError err = { .code = E_OK };
     if (config.action == Action::DOWNLOAD) {
+        if (config.version == Version::API10) {
+            if (!CheckDownloadFilePath(context, config, err.errInfo)) {
+                err.code = E_PARAMETER_CHECK;
+                return err;
+            }
+        }
         FileSpec file = { .uri = config.saveas };
         config.files.push_back(file);
     }
 
+    // need reconstruction.
     for (auto &file : config.files) {
         std::string path;
         if (!GetInternalPath(file.uri, context, config, path)) {
@@ -264,7 +272,7 @@ ExceptionError JsInitialize::GetFD(const std::string &path, const Config &config
 bool JsInitialize::GetInternalPath(const std::string &fileUri,
     const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, std::string &filePath)
 {
-    if (config.action == Action::DOWNLOAD && config.version != Version::API10 && fileUri.find('/') == 0) {
+    if (config.action == Action::DOWNLOAD && fileUri.find('/') == 0) {
         filePath = fileUri;
         return true;
     }
@@ -344,8 +352,11 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
         errInfo = "Exceeding maximum length";
         return false;
     }
+    if (!ParseSaveas(env, jsConfig, config)) {
+        errInfo = "parse saveas error";
+        return false;
+    }
     ParseMethod(env, jsConfig, config);
-    ParseSaveas(env, jsConfig, config);
     ParseRoaming(env, jsConfig, config);
     ParseRedirect(env, jsConfig, config.redirect);
     ParseNetwork(env, jsConfig, config.network);
@@ -435,12 +446,23 @@ bool JsInitialize::ParseAction(napi_env env, napi_value jsConfig, Action &action
     return true;
 }
 
-void JsInitialize::ParseSaveas(napi_env env, napi_value jsConfig, Config &config)
+// Only use for Action::DOWNLOAD.
+bool JsInitialize::ParseSaveas(napi_env env, napi_value jsConfig, Config &config)
 {
-    config.saveas = NapiUtils::Convert2String(env, jsConfig, "saveas");
-    if (config.saveas.empty() || config.saveas == "./") {
-        InterceptData("/", config.url, config.saveas);
+    if (config.action != Action::DOWNLOAD) {
+        config.saveas = "";
+        return true;
     }
+    std::string temp = NapiUtils::Convert2String(env, jsConfig, "saveas");
+    if (temp.empty() || temp == "./") {
+        return InterceptData("/", config.url, config.saveas);
+    }
+    temp = std::string(temp, 0, temp.find_last_not_of(' ') + 1);
+    if (temp[temp.size() - 1] == '/') {
+        return false;
+    }
+    config.saveas = temp;
+    return true;
 }
 
 int64_t JsInitialize::ParseBegins(napi_env env, napi_value jsConfig)
@@ -706,14 +728,16 @@ bool JsInitialize::Convert2FileSpecs(
     return true;
 }
 
-void JsInitialize::InterceptData(const std::string &str, const std::string &in, std::string &out)
+bool JsInitialize::InterceptData(const std::string &str, const std::string &in, std::string &out)
 {
     std::string tmpStr = std::string(in, 0, in.find_last_not_of(' ') + 1);
     std::size_t position = tmpStr.find_last_of(str);
+    // when the str at last index, will error.
     if (position == std::string::npos || position >= tmpStr.size() - 1) {
-        return;
+        return false;
     }
     out = std::string(tmpStr, position + 1);
+    return true;
 }
 
 bool JsInitialize::Convert2FileSpec(napi_env env, napi_value jsValue, const std::string &name, FileSpec &file)
@@ -754,7 +778,7 @@ bool JsInitialize::IsStageMode(napi_env env, napi_value value)
     if (status != napi_ok || !stageMode) {
         return false;
     }
-    return stageMode;
+    return true;
 }
 
 bool JsInitialize::ParseConfigV9(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
@@ -836,5 +860,152 @@ void JsInitialize::CreatProperties(napi_env env, napi_value &self, napi_value co
         NapiUtils::SetStringPropertyUtf8(env, self, "tid", task->GetTid());
         napi_set_named_property(env, self, "config", config);
     }
+}
+
+bool JsInitialize::CheckDownloadFilePath(
+    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, std::string &errInfo)
+{
+    std::string path = config.saveas;
+    if (!StandardizePath(context, config, path)) {
+        REQUEST_HILOGE("StandardizePath Err: %{public}s", path.c_str());
+        errInfo = "this is fail saveas path";
+        return false;
+    };
+    std::string normalPath;
+    if (!WholeToNormal(path, normalPath)) {
+        REQUEST_HILOGE("WholeToNormal Err: %{public}s", path.c_str());
+        errInfo = "this is fail saveas path";
+        return false;
+    };
+    std::string baseDir;
+    if (!CheckPathBaseDir(normalPath, baseDir)) {
+        REQUEST_HILOGE("CheckPathBaseDir Err: %{public}s", normalPath.c_str());
+        errInfo = "this is fail saveas path";
+        return false;
+    };
+    std::string childDir = normalPath.substr(0, normalPath.rfind("/"));
+    if (!std::filesystem::exists(childDir)) {
+        if (!std::filesystem::create_directories(childDir)) {
+            REQUEST_HILOGE("Create Dir Err: %{public}s", normalPath.c_str());
+            errInfo = "create dir error";
+            return false;
+        }
+    }
+    config.saveas = normalPath;
+    return true;
+}
+
+bool JsInitialize::StandardizePath(
+    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path)
+{
+    std::string WHOLE_PREFIX = "/";
+    std::string FILE_PREFIX = "file://";
+    std::string INTERNAL_PREFIX = "internal://cache/";
+    std::string CURRENT_PREFIX = "./";
+
+    if (path.find(WHOLE_PREFIX) == 0) {
+        return true;
+    }
+    if (path.find(FILE_PREFIX) == 0) {
+        path.erase(0, FILE_PREFIX.size());
+        return FileToWhole(context, config, path);
+    }
+    if (path.find(INTERNAL_PREFIX) == 0) {
+        path.erase(0, INTERNAL_PREFIX.size());
+        return CacheToWhole(context, path);
+    }
+    if (path.find(CURRENT_PREFIX) == 0) {
+        path.erase(0, CURRENT_PREFIX.size());
+        return CacheToWhole(context, path);
+    }
+    return CacheToWhole(context, path);
+}
+
+bool JsInitialize::CacheToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, std::string &path)
+{
+    std::string cache = context->GetCacheDir();
+    if (cache.empty()) {
+        REQUEST_HILOGE("GetCacheDir error.");
+        return false;
+    }
+    path = cache + "/" + path;
+    return true;
+}
+
+bool JsInitialize::FileToWhole(
+    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path)
+{
+    std::string bundleName = path.substr(0, path.find("/"));
+    if (bundleName != config.bundleName) {
+        REQUEST_HILOGE("path bundleName error.");
+        return false;
+    }
+    path.erase(0, bundleName.size());
+    return true;
+}
+
+bool JsInitialize::WholeToNormal(const std::string &wholePath, std::string &normalPath)
+{
+    std::vector<std::string> elems;
+    StringSplit(wholePath, '/', elems);
+    std::vector<std::string> outs;
+    for (auto elem : elems) {
+        if (elem == "..") {
+            if (outs.size() > 0) {
+                outs.pop_back();
+            } else {
+                return false;
+            }
+
+        } else {
+            outs.push_back(elem);
+        }
+    }
+
+    for (auto elem : outs) {
+        normalPath += "/" + elem;
+    }
+    return true;
+}
+
+void JsInitialize::StringSplit(const std::string &str, const char delim, std::vector<std::string> &elems)
+{
+    std::stringstream stream(str);
+    std::string item;
+    while (std::getline(stream, item, delim)) {
+        if (!item.empty()) {
+            elems.push_back(item);
+        }
+    }
+    return;
+}
+
+bool JsInitialize::CheckPathBaseDir(const std::string &filepath, std::string &baseDir)
+{
+    if (!JsInitialize::GetBaseDir(baseDir)) {
+        return false;
+    }
+    if (filepath.find(baseDir) == 0) {
+        return true;
+    }
+    // check baseDir replaced with el2
+    if (baseDir.find(AREA1) != std::string::npos) {
+        baseDir = baseDir.replace(baseDir.find(AREA1), AREA1.length(), AREA2);
+        if (filepath.find(baseDir) == 0) {
+            return true;
+        }
+        REQUEST_HILOGE("File dir not include base dir: %{public}s", baseDir.c_str());
+        return false;
+    }
+    // check baseDir replaced with el1
+    if (baseDir.find(AREA2) != std::string::npos) {
+        baseDir = baseDir.replace(baseDir.find(AREA2), AREA2.length(), AREA1);
+        if (filepath.find(baseDir) == 0) {
+            return true;
+        }
+        REQUEST_HILOGE("File dir not include base dir: %{public}s", baseDir.c_str());
+        return false;
+    }
+    return false;
 }
 } // namespace OHOS::Request

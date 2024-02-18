@@ -74,7 +74,7 @@ public:
             exec_ = std::move(action);
             return *this;
         }
-        inline napi_value Creator()
+        inline napi_value CreateErr()
         {
             ExceptionError error;
             NapiUtils::ConvertError(innerCode_, error);
