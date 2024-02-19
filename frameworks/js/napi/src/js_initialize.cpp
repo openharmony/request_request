@@ -150,11 +150,9 @@ ExceptionError JsInitialize::CheckFilePath(
 {
     ExceptionError err = { .code = E_OK };
     if (config.action == Action::DOWNLOAD) {
-        if (config.version == Version::API10) {
-            if (!CheckDownloadFilePath(context, config, err.errInfo)) {
-                err.code = E_PARAMETER_CHECK;
-                return err;
-            }
+        if (config.version == Version::API10 && !CheckDownloadFilePath(context, config, err.errInfo)) {
+            err.code = E_PARAMETER_CHECK;
+            return err;
         }
         FileSpec file = { .uri = config.saveas };
         config.files.push_back(file);
@@ -568,7 +566,6 @@ bool JsInitialize::ParseCertsPath(napi_env env, napi_value jsConfig, std::vector
     std::string hostname = std::string(hostStart, hostEnd);
     REQUEST_HILOGD("Hostname is %{public}s", hostname.c_str());
     NetManagerStandard::NetConnClient::GetInstance().GetTrustAnchorsForHostName(hostname, certsPath);
-
     return true;
 }
 
@@ -872,7 +869,8 @@ bool JsInitialize::CheckDownloadFilePath(
         return false;
     };
     std::string normalPath;
-    if (!WholeToNormal(path, normalPath)) {
+    std::vector<std::string> pathVec;
+    if (!WholeToNormal(path, normalPath, pathVec) || pathVec.empty()) {
         REQUEST_HILOGE("WholeToNormal Err: %{public}s", path.c_str());
         errInfo = "this is fail saveas path";
         return false;
@@ -883,15 +881,33 @@ bool JsInitialize::CheckDownloadFilePath(
         errInfo = "this is fail saveas path";
         return false;
     };
-    std::string childDir = normalPath.substr(0, normalPath.rfind("/"));
-    if (!std::filesystem::exists(childDir)) {
-        if (!std::filesystem::create_directories(childDir)) {
-            REQUEST_HILOGE("Create Dir Err: %{public}s", normalPath.c_str());
-            errInfo = "create dir error";
+    // pop filename.
+    pathVec.pop_back();
+    if (!CreateDirs(pathVec)) {
+        REQUEST_HILOGE("CreateDirs Err: %{public}s", normalPath.c_str());
+        errInfo = "this is fail saveas path";
+        return false;
+    }
+    config.saveas = normalPath;
+    return true;
+}
+
+bool JsInitialize::CreateDirs(const std::vector<std::string> &pathDirs)
+{
+    std::string path;
+    for (auto elem : pathDirs) {
+        path += "/" + elem;
+        std::error_code err;
+        if (std::filesystem::exists(path, err)) {
+            continue;
+        }
+        err.clear();
+        // create_directory noexcept.
+        if (!std::filesystem::create_directory(path, err)) {
+            REQUEST_HILOGE("Create Dir Err: %{public}d, %{public}s", err.value(), err.message().c_str());
             return false;
         }
     }
-    config.saveas = normalPath;
     return true;
 }
 
@@ -944,26 +960,31 @@ bool JsInitialize::FileToWhole(
     return true;
 }
 
-bool JsInitialize::WholeToNormal(const std::string &wholePath, std::string &normalPath)
+bool JsInitialize::WholeToNormal(const std::string &wholePath, std::string &normalPath, std::vector<std::string> &out)
 {
     std::vector<std::string> elems;
     StringSplit(wholePath, '/', elems);
-    std::vector<std::string> outs;
-    for (auto elem : elems) {
+    if (!PathVecToNormal(elems, out)) {
+        return false;
+    }
+    for (auto elem : out) {
+        normalPath += "/" + elem;
+    }
+    return true;
+}
+
+bool JsInitialize::PathVecToNormal(const std::vector<std::string> &in, std::vector<std::string> &out)
+{
+    for (auto elem : in) {
         if (elem == "..") {
-            if (outs.size() > 0) {
-                outs.pop_back();
+            if (out.size() > 0) {
+                out.pop_back();
             } else {
                 return false;
             }
-
         } else {
-            outs.push_back(elem);
+            out.push_back(elem);
         }
-    }
-
-    for (auto elem : outs) {
-        normalPath += "/" + elem;
     }
     return true;
 }

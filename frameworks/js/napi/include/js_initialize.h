@@ -41,6 +41,8 @@ public:
         napi_env env, napi_value value, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
     static bool GetBaseDir(std::string &baseDir);
     static bool CheckPathBaseDir(const std::string &filepath, std::string &baseDir);
+    static void StringSplit(const std::string &str, const char delim, std::vector<std::string> &elems);
+    static bool CreateDirs(const std::vector<std::string> &pathDirs);
 
 private:
     static ExceptionError InitParam(
@@ -93,8 +95,8 @@ private:
     static bool CacheToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, std::string &path);
     static bool FileToWhole(
         const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path);
-    static bool WholeToNormal(const std::string &wholePath, std::string &normalPath);
-    static void StringSplit(const std::string &str, const char delim, std::vector<std::string> &elems);
+    static bool WholeToNormal(const std::string &wholePath, std::string &normalPath, std::vector<std::string> &out);
+    static bool PathVecToNormal(const std::vector<std::string> &in, std::vector<std::string> &out);
 };
 } // namespace OHOS::Request
 #endif // JS_INITIALIZE_H

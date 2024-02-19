@@ -344,7 +344,7 @@ RequestSaDeathRecipient::RequestSaDeathRecipient()
 
 void RequestSaDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
-    REQUEST_HILOGE("RequestSaDeathRecipient on remote systemAbility died.");
+    REQUEST_HILOGI("RequestSaDeathRecipient on remote systemAbility died.");
     RequestManager::GetInstance()->OnRemoteSaDied(object);
 }
 
@@ -368,7 +368,7 @@ bool RequestManager::LoadRequestServer()
     }
     auto systemAbility = sm->CheckSystemAbility(DOWNLOAD_SERVICE_ID);
     if (systemAbility != nullptr) {
-        REQUEST_HILOGE("service already exists");
+        REQUEST_HILOGI("service already exists");
         return true;
     }
     sptr<RequestSyncLoadCallback> loadCallback_ = new (std::nothrow) RequestSyncLoadCallback();
@@ -405,7 +405,7 @@ void RequestManager::LoadServerSuccess()
     std::unique_lock<std::mutex> lock(conditionMutex_);
     ready_.store(true);
     syncCon_.notify_one();
-    REQUEST_HILOGE("load download server success");
+    REQUEST_HILOGI("load download server success");
 }
 
 void RequestManager::LoadServerFail()
