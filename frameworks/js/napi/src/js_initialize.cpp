@@ -837,4 +837,35 @@ void JsInitialize::CreatProperties(napi_env env, napi_value &self, napi_value co
         napi_set_named_property(env, self, "config", config);
     }
 }
+
+bool JsInitialize::CreateDirs(const std::vector<std::string> &pathDirs)
+{
+    std::string path;
+    for (auto elem : pathDirs) {
+        path += "/" + elem;
+        std::error_code err;
+        if (std::filesystem::exists(path, err)) {
+            continue;
+        }
+        err.clear();
+        // create_directory noexcept.
+        if (!std::filesystem::create_directory(path, err)) {
+            REQUEST_HILOGE("Create Dir Err: %{public}d, %{public}s", err.value(), err.message().c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
+void JsInitialize::StringSplit(const std::string &str, const char delim, std::vector<std::string> &elems)
+{
+    std::stringstream stream(str);
+    std::string item;
+    while (std::getline(stream, item, delim)) {
+        if (!item.empty()) {
+            elems.push_back(item);
+        }
+    }
+    return;
+}
 } // namespace OHOS::Request
