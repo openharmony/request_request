@@ -39,6 +39,8 @@ public:
     static napi_status GetContext(
         napi_env env, napi_value value, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
     static bool GetBaseDir(std::string &baseDir);
+    static void StringSplit(const std::string &str, const char delim, std::vector<std::string> &elems);
+    static bool CreateDirs(const std::vector<std::string> &pathDirs);
 
 private:
     static ExceptionError InitParam(

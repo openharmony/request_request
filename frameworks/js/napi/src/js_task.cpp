@@ -861,12 +861,17 @@ void JsTask::ClearTaskMap(const std::string &key)
 
 bool JsTask::SetDirsPermission(std::vector<std::string> &dirs)
 {
-    std::string newPath = "/data/storage/el2/base/.ohos/.request/.certs";
-    if (!fs::exists(newPath)) {
-        if (fs::create_directories(newPath)) {
-            REQUEST_HILOGD("Creat folder path succss.");
-        }
+    if (dirs.empty()) {
+        return true;
     }
+    std::string newPath = "/data/storage/el2/base/.ohos/.request/.certs";
+    std::vector<std::string> dirElems;
+    JsInitialize::StringSplit(newPath, '/', dirElems);
+    if (!JsInitialize::CreateDirs(dirElems)) {
+        REQUEST_HILOGE("CreateDirs Err: %{public}s", newPath.c_str());
+        return false;
+    }
+
     for (const auto &folderPath : dirs) {
         fs::path folder = folderPath;
         if (!(fs::exists(folder) && fs::is_directory(folder))) {
