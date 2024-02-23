@@ -263,5 +263,13 @@ struct DownloadInfo {
     std::string description;
     int64_t downloadedBytes;
 };
+
+struct Response {
+    std::string taskId;
+    std::string version;
+    int32_t statusCode;
+    std::string reason;
+    std::map<std::string, std::vector<std::string>> headers;
+};
 } // namespace OHOS::Request
 #endif //JS_COMMON_H

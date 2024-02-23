@@ -29,6 +29,7 @@ static constexpr const char *EVENT_PROGRESS = "progress";
 static constexpr const char *EVENT_HEADERRECEIVE = "headerReceive";
 static constexpr const char *EVENT_FAIL = "fail";
 static constexpr const char *EVENT_COMPLETE = "complete";
+static constexpr const char *EVENT_RESPONSE = "response";
 
 std::unordered_set<std::string> RequestEvent::supportEventsV9_ = {
     EVENT_COMPLETE,
@@ -46,6 +47,7 @@ std::unordered_set<std::string> RequestEvent::supportEventsV10_ = {
     EVENT_PAUSE,
     EVENT_RESUME,
     EVENT_REMOVE,
+    EVENT_RESPONSE,
 };
 
 std::map<std::string, RequestEvent::Event> RequestEvent::requestEvent_ = {
@@ -140,6 +142,16 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
+    /* on response */
+    if (jsParam.type.compare(EVENT_RESPONSE) == 0) {
+        napi_status ret = jsParam.task->responseListener_->AddListener(jsParam.callback);
+        if (ret != napi_ok) {
+            REQUEST_HILOGE("AddListener fail");
+        }
+        REQUEST_HILOGD("On event %{public}s + %{public}s", jsParam.type.c_str(), jsParam.task->GetTid().c_str());
+        return nullptr;
+    }
+
     sptr<RequestNotify> listener = new (std::nothrow) RequestNotify(env, jsParam.callback);
     if (listener == nullptr) {
         REQUEST_HILOGE("Create callback object fail");
@@ -162,6 +174,15 @@ napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
     if (err.code != E_OK) {
         bool withErrCode = jsParam.task->config_.version == Version::API10;
         NapiUtils::ThrowError(env, err.code, err.errInfo, withErrCode);
+        return nullptr;
+    }
+
+    /* off response */
+    if (jsParam.type.compare(EVENT_RESPONSE) == 0) {
+        napi_status ret = jsParam.task->responseListener_->RemoveListener(jsParam.callback);
+        if (ret != napi_ok) {
+            REQUEST_HILOGE("RemoveListener fail");
+        }
         return nullptr;
     }
 

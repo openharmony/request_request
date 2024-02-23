@@ -48,8 +48,10 @@ ohos_shared_library("request_native") {
   sources = [
     "src/parcel_helper.cpp",
     "src/request_manager.cpp",
+    "src/request_manager_impl.cpp",
     "src/request_service_proxy.cpp",
     "src/request_sync_load_callback.cpp",
+    "src/response_message_receiver.cpp",
   ]
   deps = [ "../../common:request_common_static" ]
 
@@ -59,6 +61,7 @@ ohos_shared_library("request_native") {
     "ability_runtime:data_ability_helper",
     "ability_runtime:napi_base_context",
     "c_utils:utils",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "ipc:ipc_single",
     "relational_store:native_dataability",

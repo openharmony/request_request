@@ -35,8 +35,9 @@ use super::info::{CommonTaskInfo, Mode, State, TaskInfo, UpdateInfo};
 use super::notify::{EachFileStatus, NotifyData, Progress};
 use super::reason::Reason;
 use super::upload::upload;
-use crate::manager::monitor::IsOnline;
-use crate::manager::SystemProxyManager;
+use crate::manage::monitor::IsOnline;
+use crate::manage::SystemProxyManager;
+use crate::service::ability::RequestAbility;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::ffi::{
     GetNetworkInfo, RequestBackgroundNotify, RequestTaskMsg, UpdateRequestTask,
@@ -46,7 +47,7 @@ use crate::utils::{get_current_timestamp, hashmap_to_string};
 
 cfg_oh! {
     use crate::service::{open_file_readonly, open_file_readwrite, convert_path};
-    use crate::manager::Notifier;
+    use crate::manage::Notifier;
 }
 
 const SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
@@ -670,8 +671,31 @@ impl RequestTask {
         }
     }
 
+    pub(crate) fn notify_response(&self, response: &Response) {
+        let tid = self.conf.common_data.task_id;
+        let version: String = response.version().as_str().into();
+        let status_code: u32 = response.status().as_u16() as u32;
+        let status_message: String;
+        if let Some(reason) = response.status().reason() {
+            status_message = reason.into();
+        } else {
+            error!("bad status_message {:?}", status_code);
+            return;
+        }
+        let headers = response.headers().clone();
+        debug!("notify_response");
+        RequestAbility::client_manager().send_response(
+            tid,
+            version,
+            status_code,
+            status_message,
+            headers,
+        )
+    }
+
     pub(crate) fn record_response_header(&self, response: &Result<Response, HttpClientError>) {
         if let Ok(r) = response {
+            self.notify_response(r);
             let mut guard = self.progress.lock().unwrap();
             guard.extras.clear();
             for (k, v) in r.headers() {

@@ -45,6 +45,10 @@ public:
         Version version) override;
     int32_t Off(const std::string &type, const std::string &tid, Version version) override;
 
+    int32_t OpenChannel(int32_t &sockFd) override;
+    int32_t Subscribe(const std::string &taskId, int32_t cbType) override;
+    int32_t Unsubscribe(const std::string &taskId, int32_t cbType) override;
+
 private:
     static void GetVectorData(const Config &config, MessageParcel &data);
     static inline BrokerDelegator<RequestServiceProxy> delegator_;

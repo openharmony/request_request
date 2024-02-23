@@ -15,8 +15,9 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
 use crate::error::ErrorCode;
-use crate::manager::events::{EventMessage, TaskMessage};
-use crate::manager::TaskManager;
+use crate::manage::events::{EventMessage, TaskMessage};
+use crate::manage::TaskManager;
+use crate::service::ability::RequestAbility;
 use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
 use crate::task::request_task::run;
@@ -88,6 +89,7 @@ impl TaskManager {
 
         ylong_runtime::spawn(async move {
             run(task.clone()).await;
+            RequestAbility::client_manager().notify_task_finished(task_id);
             tx.send(EventMessage::Task(TaskMessage::Finished(
                 task.conf.common_data.task_id,
             )))

@@ -18,7 +18,7 @@ use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedS
 use ylong_runtime::sync::oneshot::Sender;
 
 use crate::error::ErrorCode;
-use crate::service::notify::{Event, NotifyData, NotifyEvent};
+use crate::notify::{Event, NotifyData, NotifyEvent};
 use crate::service::RequestNotifyInterfaceCode;
 use crate::task::info::State;
 

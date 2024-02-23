@@ -427,6 +427,63 @@ napi_value Convert2JSValue(napi_env env, Config &config)
     return value;
 }
 
+napi_value Convert2JSValue(napi_env env, const std::shared_ptr<Response> &response)
+{
+    napi_value value = nullptr;
+    napi_create_object(env, &value);
+    napi_set_named_property(env, value, "version", Convert2JSValue(env, response->version));
+    napi_set_named_property(env, value, "statusCode", Convert2JSValue(env, response->statusCode));
+    napi_set_named_property(env, value, "reason", Convert2JSValue(env, response->reason));
+    napi_set_named_property(env, value, "headers", Convert2JSHeaders(env, response->headers));
+    return value;
+}
+
+napi_value Convert2JSHeaders(napi_env env, const std::map<std::string, std::vector<std::string>> &headers)
+{
+    napi_value value = nullptr;
+    napi_value value2 = nullptr;
+    napi_value global = nullptr;
+    napi_value mapConstructor = nullptr;
+    napi_value mapSet = nullptr;
+    const uint32_t paramNumber = 2;
+    napi_value args[paramNumber] = { 0 };
+
+    napi_status status = napi_get_global(env, &global);
+    if (status != napi_ok) {
+        REQUEST_HILOGE("response napi_get_global failed");
+        return nullptr;
+    }
+
+    status = napi_get_named_property(env, global, "Map", &mapConstructor);
+    if (status != napi_ok) {
+        REQUEST_HILOGE("response map failed");
+        return nullptr;
+    }
+
+    status = napi_new_instance(env, mapConstructor, 0, nullptr, &value);
+    if (status != napi_ok) {
+        REQUEST_HILOGE("response napi_new_instance failed");
+        return nullptr;
+    }
+
+    status = napi_get_named_property(env, value, "set", &mapSet);
+    if (status != napi_ok) {
+        REQUEST_HILOGE("response set failed");
+        return nullptr;
+    }
+
+    for (const auto &it : headers) {
+        args[0] = Convert2JSValue(env, it.first);
+        args[1] = Convert2JSValue(env, it.second);
+        status = napi_call_function(env, value, mapSet, paramNumber, args, &value2);
+        if (status != napi_ok) {
+            REQUEST_HILOGE("response napi_call_function failed, %{public}d", status);
+            return nullptr;
+        }
+    }
+    return value;
+}
+
 std::string GetSaveas(const std::vector<FileSpec> &files, Action action)
 {
     if (action == Action::UPLOAD) {

@@ -44,6 +44,12 @@ pub(crate) enum RequestInterfaceCode {
     GetTask,
     ///  system api deletes specifed tasks
     Clear,
+    ///  open the channel for ipc
+    OpenChannel,
+    ///  subscribe response
+    Subscribe,
+    ///  unsubscribe response
+    Unsubscribe,
 }
 
 /// Function code of RequestNotifyInterfaceCode

@@ -11,37 +11,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::manager::TaskManager;
-use crate::task::ffi::{CTaskInfo, DeleteCTaskInfo};
+use super::show::Show;
+use crate::manage::TaskManager;
+use crate::task::ffi::DeleteCTaskInfo;
 use crate::task::info::TaskInfo;
 
 impl TaskManager {
-    pub(crate) fn show(&self, uid: u64, task_id: u32) -> Option<TaskInfo> {
-        match self.get_task(uid, task_id) {
+    pub(crate) fn query_mime_type(&self, uid: u64, task_id: u32) -> String {
+        debug!(
+            "TaskManager query mime type, uid:{}, task_id:{}",
+            uid, task_id
+        );
+
+        let task = self.get_task(uid, task_id);
+        match task {
             Some(value) => {
-                debug!("TaskManager show, uid:{}, task_id:{} success", uid, task_id);
-                let task_info = value.show();
-                Some(task_info)
+                debug!("TaskManager query mime type by memory");
+                value.query_mime_type()
             }
             None => {
-                debug!("TaskManager show: show task info from database");
+                debug!("TaskManager query mime type: show mime type from database");
                 let c_task_info = unsafe { Show(task_id, uid) };
                 if c_task_info.is_null() {
-                    info!("TaskManger show: no task found in database");
-                    return None;
+                    info!("TaskManger query mime type: no task found in database");
+                    return "".into();
                 }
                 let c_task_info = unsafe { &*c_task_info };
                 let task_info = TaskInfo::from_c_struct(c_task_info);
-                debug!("TaskManager show: task info is {:?}", task_info);
+                let mime_type = task_info.mime_type;
+                debug!("TaskManager query mime type: mime type is {:?}", mime_type);
                 unsafe { DeleteCTaskInfo(c_task_info) };
-                Some(task_info)
+                mime_type
             }
         }
     }
-}
-
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
-extern "C" {
-    pub(crate) fn Show(task_id: u32, uid: u64) -> *const CTaskInfo;
 }

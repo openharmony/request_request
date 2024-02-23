@@ -44,6 +44,10 @@ public:
     virtual int32_t On(
         const std::string &type, const std::string &tid, const sptr<NotifyInterface> &listener, Version version) = 0;
     virtual int32_t Off(const std::string &type, const std::string &tid, Version version) = 0;
+
+    virtual int32_t OpenChannel(int32_t &sockFd) = 0;
+    virtual int32_t Subscribe(const std::string &taskId, int32_t cbType) = 0;
+    virtual int32_t Unsubscribe(const std::string &taskId, int32_t cbType) = 0;
 };
 } // namespace OHOS::Request
 #endif // DOWNLOAD_SERVICE_INTERFACE_H

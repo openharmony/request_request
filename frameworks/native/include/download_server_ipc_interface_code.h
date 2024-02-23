@@ -35,6 +35,9 @@ enum class RequestInterfaceCode {
     CMD_SEARCH,
     CMD_GETTASK,
     CMD_CLEAR,
+    CMD_OPENCHANNEL,
+    CMD_SUBSCRIBE,
+    CMD_UNSUBSCRIBE,
 };
 
 enum class RequestNotifyInterfaceCode {

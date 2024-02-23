@@ -14,11 +14,11 @@
 use std::sync::atomic::Ordering;
 
 use crate::error::ErrorCode;
-use crate::manager::TaskManager;
+use crate::manage::TaskManager;
 use crate::task::info::State;
 
 cfg_oh! {
-    use crate::manager::Notifier;
+    use crate::manage::Notifier;
 }
 
 impl TaskManager {

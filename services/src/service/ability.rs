@@ -30,19 +30,23 @@ use std::hint;
 use std::mem::MaybeUninit;
 use std::sync::atomic::{AtomicU8, Ordering};
 
-use crate::manager::task_manager::TaskManagerEntry;
-use crate::manager::TaskManager;
+use crate::manage::task_manager::TaskManagerEntry;
+use crate::manage::TaskManager;
+use crate::notify::{NotifyEntry, NotifyManager};
+use crate::service::client::{ClientManager, ClientManagerEntry};
 use crate::service::listener::{AppStateListener, NetworkChangeListener};
-use crate::service::notify::{NotifyEntry, NotifyManager};
 
 static mut REQUEST_ABILITY: MaybeUninit<RequestAbility> = MaybeUninit::uninit();
 static STATE: AtomicU8 = AtomicU8::new(RequestAbility::NOT_INITED);
+
+pub(crate) static mut PANIC_INFO: Option<String> = None;
 
 pub(crate) struct RequestAbility {
     manager: TaskManagerEntry,
     notify: NotifyEntry,
     app: AppStateListener,
     network: NetworkChangeListener,
+    client_manager: ClientManagerEntry,
 }
 
 impl RequestAbility {
@@ -63,6 +67,14 @@ impl RequestAbility {
     }
 
     pub(crate) fn init() {
+        std::panic::set_hook(Box::new(|info| unsafe {
+            let trace = std::backtrace::Backtrace::force_capture();
+            let mut info = info.to_string();
+            info.push_str(trace.to_string().as_str());
+            error!("{}", info);
+            PANIC_INFO = Some(info);
+        }));
+
         if STATE
             .compare_exchange(
                 Self::NOT_INITED,
@@ -78,6 +90,7 @@ impl RequestAbility {
                     notify: NotifyManager::init(),
                     app: AppStateListener::init(),
                     network: NetworkChangeListener::init(),
+                    client_manager: ClientManager::init(),
                 });
                 RequestInitServiceHandler();
             };
@@ -112,6 +125,10 @@ impl RequestAbility {
 
     pub(crate) fn task_manager() -> TaskManagerEntry {
         Self::get_instance().manager.clone()
+    }
+
+    pub(crate) fn client_manager() -> ClientManagerEntry {
+        Self::get_instance().client_manager.clone()
     }
 }
 

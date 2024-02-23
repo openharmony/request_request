@@ -147,18 +147,15 @@ async fn download_inner(task: Arc<RequestTask>) {
             return;
         }
     };
-
     task.record_response_header(&response);
     if !task.handle_response_error(&response).await {
         error!("response error");
         return;
     }
     let response = response.unwrap();
-
     if !task.get_file_info(&response) {
         return;
     }
-
     let mut downloader = build_downloader(task.clone(), response);
 
     let result = downloader.download().await;

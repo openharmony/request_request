@@ -24,6 +24,7 @@ use super::events::{
 use super::qos::{Qos, QosChange, QosQueue};
 use super::scheduled;
 use crate::error::ErrorCode;
+use crate::service::ability::PANIC_INFO;
 use crate::task::config::Version;
 use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
@@ -31,10 +32,8 @@ use crate::task::request_task::RequestTask;
 use crate::task::tick::Clock;
 use crate::utils::c_wrapper::CStringWrapper;
 
-static mut TASKMANAGER_PANIC_INFO: Option<String> = None;
-
 cfg_oh! {
-    use crate::manager::Notifier;
+    use crate::manage::Notifier;
 }
 
 pub(crate) struct TaskManager {
@@ -86,7 +85,7 @@ impl TaskManagerEntry {
     pub(crate) fn send_event(&self, event: EventMessage) -> bool {
         if self.tx.send(event).is_err() {
             unsafe {
-                if let Some(e) = TASKMANAGER_PANIC_INFO.as_ref() {
+                if let Some(e) = PANIC_INFO.as_ref() {
                     error!("Sends TaskManager event failed {}", e);
                 } else {
                     info!("TaskManager is unloading")
@@ -101,13 +100,6 @@ impl TaskManagerEntry {
 impl TaskManager {
     pub(crate) fn init() -> TaskManagerEntry {
         debug!("TaskManager init");
-
-        std::panic::set_hook(Box::new(|info| {
-            error!("{}", info.to_string());
-            unsafe {
-                TASKMANAGER_PANIC_INFO = Some(info.to_string());
-            }
-        }));
 
         ylong_runtime::builder::RuntimeBuilder::new_multi_thread()
             .worker_num(4)
@@ -186,6 +178,27 @@ impl TaskManager {
                     None => return,
                 };
                 self.after_task_processed(&task);
+            }
+            TaskMessage::Subscribe(task_id, token_id, tx) => {
+                if let Some(task) = self.tasks.get(&task_id) {
+                    if task.conf.common_data.token_id == token_id {
+                        let _ = tx.send(ErrorCode::ErrOk);
+                    } else {
+                        let _ = tx.send(ErrorCode::Permission);
+                    }
+                    return;
+                }
+                for task in &self.restoring_tasks {
+                    if task.conf.common_data.task_id == task_id {
+                        if task.conf.common_data.token_id == token_id {
+                            let _ = tx.send(ErrorCode::ErrOk);
+                        } else {
+                            let _ = tx.send(ErrorCode::Permission);
+                        }
+                        return;
+                    }
+                }
+                let _ = tx.send(ErrorCode::TaskNotFound);
             }
         }
     }

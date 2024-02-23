@@ -176,6 +176,14 @@ impl EventMessage {
     pub(crate) fn network_change() -> Self {
         Self::State(StateMessage::NetworkChange)
     }
+
+    pub(crate) fn subscribe(task_id: u32, token_id: u64) -> (Self, Recv<ErrorCode>) {
+        let (tx, rx) = channel::<ErrorCode>();
+        (
+            Self::Task(TaskMessage::Subscribe(task_id, token_id, tx)),
+            Recv::new(rx),
+        )
+    }
 }
 
 pub(crate) enum ServiceMessage {
@@ -197,6 +205,7 @@ pub(crate) enum ServiceMessage {
 
 pub(crate) enum TaskMessage {
     Finished(u32),
+    Subscribe(u32, u64, Sender<ErrorCode>),
 }
 
 pub(crate) enum StateMessage {
@@ -293,6 +302,11 @@ impl Debug for TaskMessage {
             Self::Finished(task_id) => f
                 .debug_struct("Finished")
                 .field("task_id", task_id)
+                .finish(),
+            Self::Subscribe(task_id, token_id, _) => f
+                .debug_struct("Subscribe")
+                .field("task_id", task_id)
+                .field("token_id", token_id)
                 .finish(),
         }
     }

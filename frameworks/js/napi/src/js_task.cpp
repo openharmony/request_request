@@ -150,6 +150,8 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
         }
         napi_status status = napi_get_reference_value(context->env_, context->taskRef, result);
         context->task->SetTid(context->tid);
+        context->task->responseListener_ =
+            std::make_shared<JSResponseListener>(context->env_, std::to_string(context->tid));
         JsTask::AddTaskMap(std::to_string(context->tid), context->task);
         JsTask::AddTaskContextMap(std::to_string(context->tid), context);
         napi_value config = nullptr;
@@ -366,6 +368,7 @@ bool JsTask::GetTaskOutput(std::shared_ptr<ContextInfo> context)
         }
         napi_unwrap(context->env_, jsTask, reinterpret_cast<void **>(&context->task));
         napi_create_reference(context->env_, jsTask, 1, &(context->taskRef));
+        context->task->responseListener_ = std::make_shared<JSResponseListener>(context->env_, tid);
         JsTask::AddTaskMap(tid, context->task);
         JsTask::AddTaskContextMap(tid, context);
     }
@@ -834,8 +837,13 @@ void JsTask::ReloadListener()
 {
     REQUEST_HILOGD("ReloadListener in");
     std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
+    RequestManager::GetInstance()->ReopenChannel();
     for (const auto &it : taskMap_) {
         std::string tid = it.first;
+        if (it.second->responseListener_->HasListener()) {
+            RequestManager::GetInstance()->Unsubscribe(tid, it.second->responseListener_);
+            RequestManager::GetInstance()->Subscribe(tid, it.second->responseListener_);
+        }
         for (auto itListener : it.second->listenerMap_) {
             std::string key = itListener.first;
             if (key.find(tid) == std::string::npos) {

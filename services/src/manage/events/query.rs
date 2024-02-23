@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::manager::TaskManager;
+use crate::manage::TaskManager;
 use crate::task::config::Action;
 use crate::task::ffi::{CTaskInfo, DeleteCTaskInfo};
 use crate::task::info::TaskInfo;

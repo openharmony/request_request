@@ -20,7 +20,7 @@ use ylong_http_client::HttpClientError;
 use ylong_runtime::io::AsyncWrite;
 
 #[cfg(feature = "oh")]
-use crate::manager::Notifier;
+use crate::manage::Notifier;
 use crate::task::config::Version;
 use crate::task::info::State;
 use crate::task::RequestTask;

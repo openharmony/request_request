@@ -19,6 +19,7 @@
 #include "isystem_ability_load_callback.h"
 #include "log.h"
 #include "request_manager.h"
+#include "request_manager_impl.h"
 #include "system_ability_definition.h"
 
 namespace OHOS::Request {
@@ -29,7 +30,7 @@ void RequestSyncLoadCallback::OnLoadSystemAbilitySuccess(
         REQUEST_HILOGE("start systemAbilityId is not download server");
         return;
     }
-    RequestManager::GetInstance()->LoadServerSuccess();
+    RequestManagerImpl::GetInstance()->LoadServerSuccess();
 }
 
 void RequestSyncLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
@@ -38,6 +39,6 @@ void RequestSyncLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
         REQUEST_HILOGE("start systemAbilityId is not download server");
         return;
     }
-    RequestManager::GetInstance()->LoadServerFail();
+    RequestManagerImpl::GetInstance()->LoadServerFail();
 }
 } // namespace OHOS::Request

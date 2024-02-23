@@ -17,7 +17,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use crate::error::ErrorCode;
-use crate::manager::{SystemProxyManager, TaskManager};
+use crate::manage::{SystemProxyManager, TaskManager};
 use crate::task::config::{TaskConfig, Version};
 use crate::task::ffi::{CTaskConfig, CTaskInfo};
 use crate::task::info::State;
