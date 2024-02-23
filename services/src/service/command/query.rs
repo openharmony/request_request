@@ -14,7 +14,7 @@
 use ipc_rust::{BorrowedMsgParcel, IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::manager::events::EventMessage;
+use crate::manage::events::EventMessage;
 use crate::service::ability::RequestAbility;
 use crate::service::permission::{PermissionChecker, QueryPermission};
 use crate::service::{is_system_api, serialize_task_info};

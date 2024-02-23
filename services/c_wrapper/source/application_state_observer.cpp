@@ -84,7 +84,7 @@ void ApplicationStateObserver::AppProcessState::OnAbilityStateChanged(
 {
     REQUEST_HILOGD("OnAbilityStateChanged uid=%{public}d,  bundleName=%{public}s,state=%{public}d",
         abilityStateData.uid, abilityStateData.bundleName.c_str(), abilityStateData.abilityState);
-    RunCallback(abilityStateData.uid, abilityStateData.abilityState);
+    RunCallback(abilityStateData.uid, abilityStateData.abilityState, abilityStateData.pid);
 }
 
 void ApplicationStateObserver::AppProcessState::OnExtensionStateChanged(
@@ -98,18 +98,18 @@ void ApplicationStateObserver::AppProcessState::OnProcessCreated(const AppExecFw
 
 void ApplicationStateObserver::AppProcessState::OnProcessDied(const AppExecFwk::ProcessData &processData)
 {
-    REQUEST_HILOGD("OnProcessDied uid=%{public}d,  bundleName=%{public}s, state=%{public}d", processData.uid,
-        processData.bundleName.c_str(), static_cast<int32_t>(processData.state));
-    RunCallback(processData.uid, static_cast<int32_t>(processData.state));
+    REQUEST_HILOGD("OnProcessDied uid=%{public}d,  bundleName=%{public}s, state=%{public}d, pid=%{public}d",
+        processData.uid, processData.bundleName.c_str(), static_cast<int32_t>(processData.state), processData.pid);
+    RunCallback(processData.uid, static_cast<int32_t>(processData.state), processData.pid);
 }
 
-void ApplicationStateObserver::AppProcessState::RunCallback(int32_t uid, int32_t state)
+void ApplicationStateObserver::AppProcessState::RunCallback(int32_t uid, int32_t state, int32_t pid)
 {
     if (appStateObserver_.callback_ == nullptr) {
         REQUEST_HILOGE("appStateObserver callback is nullptr");
         return;
     }
-    appStateObserver_.callback_(uid, state);
+    appStateObserver_.callback_(uid, state, pid);
 }
 } // namespace OHOS::Request
 

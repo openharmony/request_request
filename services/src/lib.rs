@@ -30,12 +30,13 @@ extern crate log;
 mod hilog;
 
 mod error;
-mod manager;
+mod manage;
 mod task;
 mod utils;
 
 cfg_oh! {
     mod init;
+    mod notify;
     mod trace;
     mod sys_event;
     mod service;

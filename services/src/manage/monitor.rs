@@ -15,13 +15,13 @@ use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Arc;
 
 use super::TaskManager;
-use crate::manager::scheduled;
+use crate::manage::scheduled;
 use crate::task::config::Action;
 use crate::task::info::{ApplicationState, Mode, State};
 use crate::task::reason::Reason;
 
 cfg_oh! {
-    use crate::manager::Notifier;
+    use crate::manage::Notifier;
 }
 
 impl TaskManager {

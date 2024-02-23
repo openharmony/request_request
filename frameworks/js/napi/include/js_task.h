@@ -18,6 +18,7 @@
 
 #include "async_call.h"
 #include "js_common.h"
+#include "js_response_listener.h"
 #include "request_notify.h"
 
 namespace OHOS::Request {
@@ -61,6 +62,7 @@ public:
     static std::map<std::string, int32_t> pathMap_;
     std::mutex listenerMutex_;
     std::map<std::string, std::vector<sptr<RequestNotify>>> listenerMap_;
+    std::shared_ptr<JSResponseListener> responseListener_;
 
 private:
     struct ContextInfo : public AsyncCall::Context {

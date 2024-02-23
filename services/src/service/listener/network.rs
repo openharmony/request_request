@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::manager::events::EventMessage;
+use crate::manage::events::EventMessage;
 use crate::service::ability::RequestAbility;
 
 pub(crate) struct NetworkChangeListener;

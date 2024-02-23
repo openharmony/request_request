@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::manager::events::EventMessage;
+use crate::manage::events::EventMessage;
 use crate::service::ability::RequestAbility;
 use crate::task::info::ApplicationState;
 
@@ -33,13 +33,15 @@ impl AppStateListener {
     }
 }
 
-extern "C" fn app_state_change_callback(uid: i32, state: i32) {
+extern "C" fn app_state_change_callback(uid: i32, state: i32, pid: i32) {
     info!("Receives app state change callback");
-
     let state = match state {
         2 => ApplicationState::Foreground,
         4 => ApplicationState::Background,
-        5 => ApplicationState::Terminated,
+        5 => {
+            RequestAbility::client_manager().notify_process_terminate(pid as u64);
+            ApplicationState::Terminated
+        }
         _ => return,
     };
 
@@ -49,5 +51,5 @@ extern "C" fn app_state_change_callback(uid: i32, state: i32) {
 #[cfg(feature = "oh")]
 #[link(name = "request_service_c")]
 extern "C" {
-    fn RegisterAPPStateCallback(f: extern "C" fn(i32, i32));
+    fn RegisterAPPStateCallback(f: extern "C" fn(i32, i32, i32));
 }

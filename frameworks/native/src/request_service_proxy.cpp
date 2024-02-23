@@ -21,10 +21,10 @@
 
 #include <ctime>
 
+#include "download_server_ipc_interface_code.h"
 #include "iremote_broker.h"
 #include "log.h"
 #include "parcel_helper.h"
-#include "download_server_ipc_interface_code.h"
 
 namespace OHOS::Request {
 using namespace OHOS::HiviewDFX;
@@ -370,4 +370,60 @@ int32_t RequestServiceProxy::Off(const std::string &type, const std::string &tid
     }
     return E_OK;
 }
+
+int32_t RequestServiceProxy::OpenChannel(int32_t &sockFd)
+{
+    REQUEST_HILOGD("OpenChannel");
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_OPENCHANNEL), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        return E_SERVICE_ERROR;
+    }
+    int32_t errCode = reply.ReadInt32();
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    sockFd = reply.ReadFileDescriptor();
+    REQUEST_HILOGD("OpenChannel sockFd: %{public}d", sockFd);
+    return E_OK;
+}
+
+int32_t RequestServiceProxy::Subscribe(const std::string &taskId, int32_t cbType)
+{
+    REQUEST_HILOGD("Subscribe");
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(taskId);
+    data.WriteInt32(cbType);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SUBSCRIBE), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        return E_SERVICE_ERROR;
+    }
+    return E_OK;
+}
+
+int32_t RequestServiceProxy::Unsubscribe(const std::string &taskId, int32_t cbType)
+{
+    REQUEST_HILOGD("Unsubscribe");
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(taskId);
+    data.WriteInt32(cbType);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_UNSUBSCRIBE), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        return E_SERVICE_ERROR;
+    }
+    return E_OK;
+}
+
 } // namespace OHOS::Request

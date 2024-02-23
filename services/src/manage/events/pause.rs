@@ -12,7 +12,7 @@
 // limitations under the License.
 
 use crate::error::ErrorCode;
-use crate::manager::TaskManager;
+use crate::manage::TaskManager;
 use crate::task::reason::Reason;
 
 impl TaskManager {

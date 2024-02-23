@@ -1283,5 +1283,152 @@ export default function requestOperateTaskTest() {
       })
       await task.start();
     })
+
+    /**
+     * @tc.number: testOnResponse001
+     * @tc.name: testOnResponse001
+     * @tc.desc: Test on response
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testOnResponse001', 0, async function (done) {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
+        mode: request.agent.Mode.FOREGROUND,
+        overwrite: true,
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('response', (response: request.agent.HttpResponse) => {
+        expect(response.statusCode).assertEqual(200);
+		    expect(response.version).assertEqual("HTTP/1.1");
+		    expect(response.reason).assertEqual("OK");
+        done();
+      })
+      await task.start();
+    })
+
+    /**
+     * @tc.number: testOnResponse002
+     * @tc.name: testOnResponse002
+     * @tc.desc: Test off response
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testOnResponse002', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
+        mode: request.agent.Mode.FOREGROUND,
+        overwrite: true,
+      }
+	    let callback = (response: request.agent.HttpResponse) => {
+        expect(false).assertTrue();
+        done();
+      };
+      let task = await request.agent.create(context, conf);
+      task.on('response', callback)
+	    task.off('response', callback);
+      task.on('completed', function (progress) {
+        expect(progress.state).assertEqual(request.agent.State.COMPLETED);
+        done();
+      })
+      await task.start();
+    })
+
+    /**
+     * @tc.number: testOnResponse003
+     * @tc.name: testOnResponse003
+     * @tc.desc: Test off all response
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testOnResponse003', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
+        mode: request.agent.Mode.FOREGROUND,
+        overwrite: true,
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('response', function (response: request.agent.HttpResponse) {
+        expect(false).assertTrue();
+        done();
+      })
+	    task.on('response', function (response: request.agent.HttpResponse) {
+		    expect(response.statusCode).assertEqual(200);
+        expect(false).assertTrue();
+        done();
+      })
+	    task.off('response');
+      task.on('completed', function (progress) {
+        expect(progress.state).assertEqual(request.agent.State.COMPLETED);
+        done();
+      })
+      await task.start();
+    })
+
+    /**
+     * @tc.number: testOnResponse004
+     * @tc.name: testOnResponse004
+     * @tc.desc: Test off with no response
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testOnResponse004', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test.txt`,
+        mode: request.agent.Mode.FOREGROUND,
+        overwrite: true,
+      }
+      let task = await request.agent.create(context, conf);
+	    task.off('response');
+      task.on('completed', function (progress) {
+        expect(progress.state).assertEqual(request.agent.State.COMPLETED);
+        done();
+      })
+      await task.start();
+    })
+
+    /**
+     * @tc.number: testOnResponse005
+     * @tc.name: testOnResponse005
+     * @tc.desc: Test on response with a bad request
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testOnResponse005', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.jpg',
+        saveas: `test.txt`,
+        mode: request.agent.Mode.FOREGROUND,
+        overwrite: true,
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('response', function (response: request.agent.HttpResponse) {
+        expect(response.statusCode).assertEqual(404);
+		    expect(response.version).assertEqual("HTTP/1.1");
+		    expect(response.reason).assertEqual("Not Found");
+        task.off('response');
+        done();
+      })
+      await task.start();
+    })
   })
 }

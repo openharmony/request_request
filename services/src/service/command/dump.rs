@@ -15,7 +15,7 @@ use std::io::Write;
 
 use ipc_rust::{FileDesc, IpcStatusCode, String16};
 
-use crate::manager::events::EventMessage;
+use crate::manage::events::EventMessage;
 use crate::service::ability::RequestAbility;
 
 const HELP_MSG: &str = "usage:\n\

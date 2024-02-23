@@ -14,8 +14,8 @@
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Arc;
 
+use crate::notify::{Event, NotifyEvent};
 use crate::service::ability::RequestAbility;
-use crate::service::notify::{Event, NotifyEvent};
 use crate::task::config::Version;
 use crate::task::info::ApplicationState;
 use crate::task::notify::NotifyData;

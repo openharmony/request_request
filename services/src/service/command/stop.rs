@@ -14,7 +14,7 @@
 use ipc_rust::{get_calling_uid, BorrowedMsgParcel, IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::manager::events::EventMessage;
+use crate::manage::events::EventMessage;
 use crate::service::ability::RequestAbility;
 
 pub(crate) struct Stop;

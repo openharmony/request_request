@@ -17,7 +17,7 @@ use std::sync::Arc;
 
 use super::task_manager::GetTopBundleName;
 use super::TaskManager;
-use crate::manager::monitor::IsOnline;
+use crate::manage::monitor::IsOnline;
 use crate::task::config::{TaskConfig, Version};
 use crate::task::ffi::{CTaskConfig, ChangeRequestTaskState};
 use crate::task::info::{ApplicationState, State};

@@ -11,36 +11,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::sync::atomic::Ordering;
+
 use crate::error::ErrorCode;
-use crate::manager::TaskManager;
-use crate::task::ffi::ChangeRequestTaskState;
+use crate::manage::TaskManager;
 use crate::task::info::State;
 use crate::task::reason::Reason;
 
 impl TaskManager {
-    pub(crate) fn remove(&mut self, uid: u64, task_id: u32) -> ErrorCode {
-        let result = if let Some(task) = self.get_task(uid, task_id) {
-            task.set_status(State::Removed, Reason::UserOperation);
+    pub(crate) fn stop(&mut self, uid: u64, task_id: u32) -> ErrorCode {
+        if let Some(task) = self.get_task(uid, task_id) {
+            if !task.set_status(State::Stopped, Reason::UserOperation) {
+                let state = task.status.lock().unwrap().state;
+                error!(
+                    "TaskManager can not stop task_id: {} that state is {:?}",
+                    task_id, state
+                );
+                return ErrorCode::TaskStateErr;
+            }
             self.after_task_processed(&task);
             debug!(
-                "TaskManager remove a task, uid:{}, task_id:{} success",
+                "TaskManager stop a task, uid: {}, task_id:{} success",
                 uid, task_id
             );
+            task.resume.store(false, Ordering::SeqCst);
             ErrorCode::ErrOk
         } else {
             if self.tasks.contains_key(&task_id) {
-                error!("TaskManager remove a task, task_id:{} exist, but not found in app_task_map, uid:{}", task_id, uid);
+                error!("TaskManager stop a task, task_id:{} exist, but not found in app_task_map, uid:{}", task_id, uid);
             } else {
                 error!(
-                    "TaskManager remove a task, uid:{}, task_id:{} not exist",
+                    "TaskManager stop a task, uid:{}, task_id:{} not exist",
                     uid, task_id
                 );
             }
-            ErrorCode::TaskNotFound
-        };
-        unsafe {
-            ChangeRequestTaskState(task_id, uid, State::Removed);
+            ErrorCode::TaskStateErr
         }
-        result
     }
 }

@@ -14,11 +14,11 @@
 //! This crate implement the request server service.
 
 pub(crate) mod ability;
+pub(crate) mod client;
 pub(crate) mod command;
 #[allow(unused)]
 pub(crate) mod interface;
 pub(crate) mod listener;
-pub(crate) mod notify;
 pub(crate) mod permission;
 
 use std::fs::{File, OpenOptions};
@@ -72,6 +72,9 @@ fn on_remote_request(
         RequestInterfaceCode::Search => stub.search(data, reply),
         RequestInterfaceCode::GetTask => stub.get_task(data, reply),
         RequestInterfaceCode::Clear => Ok(()),
+        RequestInterfaceCode::OpenChannel => stub.open_channel(data, reply),
+        RequestInterfaceCode::Subscribe => stub.subscribe(data, reply),
+        RequestInterfaceCode::Unsubscribe => stub.unsubscribe(data, reply),
     }
 }
 
@@ -95,6 +98,9 @@ impl TryFrom<u32> for RequestInterfaceCode {
             _ if code == Self::Search as u32 => Ok(Self::Search),
             _ if code == Self::GetTask as u32 => Ok(Self::GetTask),
             _ if code == Self::Clear as u32 => Ok(Self::Clear),
+            _ if code == Self::OpenChannel as u32 => Ok(Self::OpenChannel),
+            _ if code == Self::Subscribe as u32 => Ok(Self::Subscribe),
+            _ if code == Self::Unsubscribe as u32 => Ok(Self::Unsubscribe),
             _ => Err(IpcStatusCode::Failed),
         }
     }
@@ -179,6 +185,33 @@ pub trait RequestServiceInterface: IRemoteBroker {
     fn get_task(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
         Ok(())
     }
+
+    ///  open the channel for ipc
+    fn open_channel(
+        &self,
+        _data: &BorrowedMsgParcel,
+        _reply: &mut BorrowedMsgParcel,
+    ) -> IpcResult<()> {
+        Ok(())
+    }
+
+    ///  subscribe response
+    fn subscribe(
+        &self,
+        _data: &BorrowedMsgParcel,
+        _reply: &mut BorrowedMsgParcel,
+    ) -> IpcResult<()> {
+        Ok(())
+    }
+
+    ///  unsubscribe response
+    fn unsubscribe(
+        &self,
+        _data: &BorrowedMsgParcel,
+        _reply: &mut BorrowedMsgParcel,
+    ) -> IpcResult<()> {
+        Ok(())
+    }
 }
 
 impl RequestServiceInterface for RequestServiceProxy {}
@@ -251,6 +284,26 @@ impl RequestServiceInterface for RequestService {
 
     fn get_task(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
         command::GetTask::execute(data, reply)
+    }
+
+    fn open_channel(
+        &self,
+        data: &BorrowedMsgParcel,
+        reply: &mut BorrowedMsgParcel,
+    ) -> IpcResult<()> {
+        command::OpenChannel::execute(data, reply)
+    }
+
+    fn subscribe(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+        command::Subscribe::execute(data, reply)
+    }
+
+    fn unsubscribe(
+        &self,
+        data: &BorrowedMsgParcel,
+        reply: &mut BorrowedMsgParcel,
+    ) -> IpcResult<()> {
+        command::Unsubscribe::execute(data, reply)
     }
 }
 

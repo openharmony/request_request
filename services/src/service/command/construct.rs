@@ -19,7 +19,7 @@ use ipc_rust::{
 };
 
 use crate::error::ErrorCode;
-use crate::manager::events::EventMessage;
+use crate::manage::events::EventMessage;
 use crate::service::ability::RequestAbility;
 use crate::service::permission::PermissionChecker;
 use crate::service::{get_calling_bundle, open_file_readonly, open_file_readwrite};

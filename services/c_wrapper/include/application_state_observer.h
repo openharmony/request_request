@@ -28,7 +28,7 @@ namespace OHOS::Request {
 class ApplicationStateObserver {
 public:
     ~ApplicationStateObserver();
-    using RegCallBack = std::function<void(int32_t uid, int32_t state)>;
+    using RegCallBack = std::function<void(int32_t uid, int32_t state, int32_t pid)>;
     static ApplicationStateObserver &GetInstance();
     bool RegisterAppStateChanged(RegCallBack &&callback);
 
@@ -46,7 +46,7 @@ public:
         void OnProcessDied(const AppExecFwk::ProcessData &processData) override;
 
     public:
-        void RunCallback(int32_t uid, int32_t state);
+        void RunCallback(int32_t uid, int32_t state, int32_t pid);
         ApplicationStateObserver &appStateObserver_;
     };
     ApplicationStateObserver();
@@ -58,7 +58,7 @@ public:
 extern "C" {
 #endif
 
-typedef void (*APPStateCallback)(int32_t, int32_t);
+typedef void (*APPStateCallback)(int32_t, int32_t, int32_t);
 void RegisterAPPStateCallback(APPStateCallback fun);
 
 #ifdef __cplusplus

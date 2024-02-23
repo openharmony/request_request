@@ -13,7 +13,7 @@
 
 use ipc_rust::{BorrowedMsgParcel, IpcResult, IpcStatusCode};
 
-use crate::manager::events::EventMessage;
+use crate::manage::events::EventMessage;
 use crate::service::ability::RequestAbility;
 use crate::service::{get_calling_bundle, is_system_api};
 use crate::utils::filter::{CommonFilter, Filter};
