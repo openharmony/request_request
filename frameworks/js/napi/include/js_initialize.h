@@ -43,6 +43,7 @@ public:
     static bool CheckPathBaseDir(const std::string &filepath, std::string &baseDir);
     static void StringSplit(const std::string &str, const char delim, std::vector<std::string> &elems);
     static bool CreateDirs(const std::vector<std::string> &pathDirs);
+    static bool FindDir(const std::string &pathDir);
 
 private:
     static ExceptionError InitParam(

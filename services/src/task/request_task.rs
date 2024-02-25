@@ -493,7 +493,14 @@ impl RequestTask {
                     }
                 }
             }
-            begins += self.progress.lock().unwrap().processed[0] as u64;
+            let file = unsafe { &mut *self.files.0.get() }.get_mut(0).unwrap();
+            let current_len = file.metadata().await.unwrap().len();
+            begins += current_len;
+            // Modifys the progress to the current file size.
+            // It will be recorded to the database later during download.
+            let mut progress_guard = self.progress.lock().unwrap();
+            progress_guard.processed[0] = current_len as usize;
+            progress_guard.common_data.total_processed = current_len as usize;
             if self.range_request.load(Ordering::SeqCst) {
                 let range = if ends < 0 {
                     format!("bytes={begins}-")
@@ -797,7 +804,6 @@ impl RequestTask {
                     if current_state == State::Completed
                         || current_state == State::Removed
                         || current_state == State::Stopped
-                        || current_state == State::Failed
                     {
                         return false;
                     }

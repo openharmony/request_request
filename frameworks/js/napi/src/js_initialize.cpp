@@ -911,6 +911,12 @@ bool JsInitialize::CreateDirs(const std::vector<std::string> &pathDirs)
     return true;
 }
 
+bool JsInitialize::FindDir(const std::string &pathDir)
+{
+    std::error_code err;
+    return std::filesystem::exists(pathDir, err);
+}
+
 bool JsInitialize::StandardizePath(
     const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path)
 {

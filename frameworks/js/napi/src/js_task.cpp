@@ -857,6 +857,29 @@ void JsTask::ReloadListener()
     }
 }
 
+void JsTask::ReloadListenerByTaskId(const std::string &id)
+{
+    REQUEST_HILOGD("ReloadListenerByTaskId in");
+    std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
+    RequestManager::GetInstance()->ReopenChannel();
+    const auto it = taskMap_.find(id);
+    std::string tid = it->first;
+    if (it->second->responseListener_->HasListener()) {
+        RequestManager::GetInstance()->Unsubscribe(tid, it->second->responseListener_);
+        RequestManager::GetInstance()->Subscribe(tid, it->second->responseListener_);
+    }
+    for (auto itListener : it->second->listenerMap_) {
+        std::string key = itListener.first;
+        if (key.find(tid) == std::string::npos) {
+            continue;
+        }
+        std::string type = key.substr(0, key.find(tid));
+        for (const auto &listener : itListener.second) {
+            RequestManager::GetInstance()->On(type, tid, listener, it->second->config_.version);
+        }
+    }
+}
+
 void JsTask::ClearTaskMap(const std::string &key)
 {
     std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);

@@ -95,14 +95,14 @@ int RequestDBOpenCallback::OnCreate(OHOS::NativeRdb::RdbStore &store)
     return OHOS::NativeRdb::E_OK;
 }
 
-void RequestDBInitVersionTable(OHOS::NativeRdb::RdbStore &store)
+int RequestDBInitVersionTable(OHOS::NativeRdb::RdbStore &store)
 {
     REQUEST_HILOGD("Inits version_table");
     // Clears `request_version` table first.
     int ret = store.ExecuteSql("DELETE FROM request_version");
     if (ret != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("Clears request_version table failed");
-        return;
+        return ret;
     }
 
     int64_t outRowId = 0;
@@ -112,10 +112,10 @@ void RequestDBInitVersionTable(OHOS::NativeRdb::RdbStore &store)
     ret = store.Insert(outRowId, std::string("request_version"), insertValues);
     if (ret != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("Inits request_version table failed");
-        return;
+        return ret;
     }
     REQUEST_HILOGD("Inits version_table success");
-    return;
+    return ret;
 }
 
 int RequestDBDropTable(OHOS::NativeRdb::RdbStore &store, const char *name)
@@ -156,54 +156,115 @@ void RequestDBRemoveOldTables(OHOS::NativeRdb::RdbStore &store)
     REQUEST_HILOGD("Removes old tables end");
 }
 
-void RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
+int RequestDBCheckVersion(OHOS::NativeRdb::RdbStore &store)
 {
-    REQUEST_HILOGD("Begins upgrading database");
+    REQUEST_HILOGD("RequestDBCheckVersion in");
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_version");
     auto resultSet = store.Query(rdbPredicates, { "version", "task_table" });
+
     if (resultSet == nullptr) {
-        REQUEST_HILOGE("ResultSet is nullptr");
-        return;
+        return WITHOUT_VERSION_TABLE;
     }
 
     int rowCount = 0;
-    if (resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("Gets rowCount failed");
-        return;
+    int ret = resultSet->GetRowCount(rowCount);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("Gets rowCount failed, GetRowCount ret: %{public}d", ret);
+        return CHECK_VERSION_FAILED;
     }
 
-    // `rowCount` is 0 indicates that the table has just been created.
-    // `rowCount` is greater than 1, indicates that the historical data is incorrect.
     if (rowCount == 0 || rowCount > 1) {
-        REQUEST_HILOGD("RowCount is 0 or more than 1, upgrades version_table");
-        RequestDBRemoveOldTables(store);
-        RequestDBInitVersionTable(store);
-        return;
+        return INVALID_VERSION;
     }
 
-    if (resultSet->GoToRow(0) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("ResultSet goes to first row failed");
-        return;
+    ret = resultSet->GoToRow(0);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("ResultSet goes to first row failed, GoToRow ret: %{public}d", ret);
+        return CHECK_VERSION_FAILED;
     }
 
     std::string version = "";
-    if (resultSet->GetString(0, version) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("ResultSet gets version failed");
-        return;
+    ret = resultSet->GetString(0, version);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("ResultSet gets version failed, GetString ret: %{public}d", ret);
+        return CHECK_VERSION_FAILED;
     }
 
     REQUEST_HILOGI("request database version: %{public}s", version.c_str());
 
-    // If `version` is invalid, upgrades all tables.
-    if (version != REQUEST_DATABASE_VERSION) {
-        REQUEST_HILOGD("RowCount is 1, upgrades from invalid situation");
-        RequestDBRemoveOldTables(store);
-        RequestDBInitVersionTable(store);
-        return;
+    if (version == REQUEST_DATABASE_VERSION_4_1_RELEASE) {
+        return API11_4_1_RELEASE;
+    }
+    if (version == REQUEST_DATABASE_VERSION) {
+        return API12_5_0_RELEASE;
     }
 
-    REQUEST_HILOGI("Updates request database success");
-    return;
+    return INVALID_VERSION;
+}
+
+int RequestDBCreateTables(OHOS::NativeRdb::RdbStore &store)
+{
+    // Creates request_version table first.
+    int ret = store.ExecuteSql(CREATE_REQUEST_VERSION_TABLE);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("Creates request_version table failed, ret: %{public}d", ret);
+        return ret;
+    }
+    REQUEST_HILOGI("Creates request_version table success");
+
+    // ..then creates request_task table.
+    ret = store.ExecuteSql(CREATE_REQUEST_TASK_TABLE);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("Creates request_task table failed, ret: %{public}d", ret);
+        return ret;
+    }
+    REQUEST_HILOGI("Creates request_task table success");
+    return ret;
+}
+
+// Keeps this function for possible extensions later
+int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store) {
+    return RequestDBInitVersionTable(store);
+}
+
+int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
+{
+    REQUEST_HILOGD("Begins upgrading database");
+
+    int ret = RequestDBCreateTables(store);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        return ret;
+    }
+
+    int version = RequestDBCheckVersion(store);
+    switch(version) {
+        case WITHOUT_VERSION_TABLE: {
+            REQUEST_HILOGI("Begins upgrading database from 4.0 or earlier");
+            return OHOS::NativeRdb::E_OK;
+        }
+
+        case INVALID_VERSION: {
+            REQUEST_HILOGI("Begins upgrading database from invaliad version");
+            RequestDBRemoveOldTables(store);
+            int ret = RequestDBInitVersionTable(store);
+            return ret;
+        }           
+
+        case API11_4_1_RELEASE: {
+            REQUEST_HILOGI("Begins upgrading database from 4.1-Release");
+            int ret = RequestDBUpgradeFrom41(store);
+            return ret;
+        }           
+
+        case API12_5_0_RELEASE: {
+            REQUEST_HILOGI("Version is 5.0-release, no need to update database.");
+            return OHOS::NativeRdb::E_OK;
+        }
+
+        default:
+            REQUEST_HILOGI("Checks version failed, cannot update request database.");
+            return OHOS::NativeRdb::E_ERROR;
+    }
 }
 
 void RequestDBUpdateInvalidRecords(OHOS::NativeRdb::RdbStore &store)
@@ -235,25 +296,8 @@ void RequestDBUpdateInvalidRecords(OHOS::NativeRdb::RdbStore &store)
 
 int RequestDBOpenCallback::OnOpen(OHOS::NativeRdb::RdbStore &store)
 {
-    // Creates request_version table first.
-    int ret = store.ExecuteSql(CREATE_REQUEST_VERSION_TABLE);
-    if (ret != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("Creates request_version table failed, ret: %{public}d", ret);
-        return ret;
-    }
-    REQUEST_HILOGI("Creates request_version table success");
-
-    // ..then creates request_task table.
-    ret = store.ExecuteSql(CREATE_REQUEST_TASK_TABLE);
-    if (ret != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("Creates request_task table failed, ret: %{public}d", ret);
-        return ret;
-    }
-    REQUEST_HILOGI("Creates request_task table success");
-
-    RequestDBUpgrade(store);
+    int ret = RequestDBUpgrade(store);
     RequestDBUpdateInvalidRecords(store);
-
     return ret;
 }
 
@@ -1048,6 +1092,43 @@ CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs)
         cTaskConfigs[i] = std::move(cTaskConfig);
     }
     return cTaskConfigs;
+}
+
+CTaskConfig *QuerySingleFailedTaskConfig(uint32_t taskId)
+{
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
+    rdbPredicates.EqualTo("task_id", std::to_string(taskId))
+        ->And()
+        ->EqualTo("state", static_cast<uint8_t>(State::FAILED));
+    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(
+        rdbPredicates, { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming",
+                           "retry", "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority",
+                           "background", "bundle", "url", "title", "description", "method", "headers", "data", "token",
+                           "config_extras", "version", "form_items", "file_specs", "body_file_names", "certs_paths" });
+    int rowCount = 0;
+    if (resultSet == nullptr) {
+        REQUEST_HILOGE("result set is nullptr");
+        return nullptr;
+    }
+    if (resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("TaskConfig result count row failed");
+        return nullptr;
+    }
+    if (rowCount == 0) {
+        REQUEST_HILOGE("TaskConfig result count row is 0");
+        return nullptr;
+    }
+    if (resultSet->GoToRow(0) != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("TaskConfig result set go to 0 row failed");
+        return nullptr;
+    }
+
+    TaskConfig taskConfig = BuildRequestTaskConfig(resultSet);
+    REQUEST_HILOGI("QuerySingleFailedTaskConfig in, after BuildRequestTaskConfig, task_id: %{public}u", 
+        taskConfig.commonData.taskId);
+    CTaskConfig *cTaskConfig = new CTaskConfig;
+    BuildCTaskConfig(cTaskConfig, taskConfig);
+    return cTaskConfig;
 }
 
 bool CleanTaskConfigTable(uint32_t taskId, uint64_t uid)

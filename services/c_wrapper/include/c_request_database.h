@@ -34,12 +34,18 @@
 
 namespace OHOS::Request {
 constexpr const char *DB_NAME = "/data/service/el1/public/database/request/request.db";
-constexpr const char *REQUEST_DATABASE_VERSION = "API11_4.1-release";
+constexpr const char *REQUEST_DATABASE_VERSION_4_1_RELEASE = "API11_4.1-release";
+constexpr const char *REQUEST_DATABASE_VERSION = "API12_5.0-release";
 constexpr const char *REQUEST_TASK_TABLE_NAME = "request_task";
 constexpr int DATABASE_OPEN_VERSION = 1;
 constexpr int DATABASE_NEW_VERSION = 2;
 constexpr int QUERY_ERR = -1;
 constexpr int QUERY_OK = 0;
+constexpr int WITHOUT_VERSION_TABLE = 40;
+constexpr int API11_4_1_RELEASE = 41;
+constexpr int API12_5_0_RELEASE = 50;
+constexpr int INVALID_VERSION = -50;
+constexpr int CHECK_VERSION_FAILED = -1;
 
 constexpr const char *CREATE_REQUEST_VERSION_TABLE = "CREATE TABLE IF NOT EXISTS request_version "
                                                      "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -145,6 +151,7 @@ CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo);
 CProgress BuildCProgress(const Progress &progress);
 bool HasTaskConfigRecord(uint32_t taskId);
 CTaskConfig **QueryAllTaskConfig();
+CTaskConfig *QuerySingleFailedTaskConfig(uint32_t taskId);
 int QueryTaskConfigLen();
 int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, std::vector<TaskConfig> &taskConfigs);
 CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs);
