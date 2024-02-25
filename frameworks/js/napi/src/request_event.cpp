@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "js_initialize.h"
 #include "request_event.h"
 
 #include "log.h"
@@ -134,6 +135,7 @@ napi_value RequestEvent::Stop(napi_env env, napi_callback_info info)
 
 napi_value RequestEvent::On(napi_env env, napi_callback_info info)
 {
+    REQUEST_HILOGD("RequestEvent::On in");
     JsParam jsParam;
     ExceptionError err = ParseOnOffParameters(env, info, true, jsParam);
     if (err.code != E_OK) {
@@ -317,7 +319,29 @@ napi_status RequestEvent::GetResult(
 
 int32_t RequestEvent::StartExec(const std::shared_ptr<ExecContext> &context)
 {
-    int32_t ret = RequestManager::GetInstance()->Start(context->task->GetTid());
+    REQUEST_HILOGD("RequestEvent::StartExec in");
+    JsTask* task = context->task;
+    Config config = task->config_;
+
+    // Rechecks file path.
+    if (config.files.size() == 0) {
+        return E_FILE_IO;
+    }
+    FileSpec file = config.files[0];
+    if (JsInitialize::FindDir(file.uri) && config.action == Action::DOWNLOAD) {
+        REQUEST_HILOGD("Found the downloaded file: %{public}s.", file.uri.c_str());
+        if (chmod(file.uri.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH) != 0) {
+            REQUEST_HILOGD("File add OTH access Failed.");
+        }
+        if (!JsTask::SetPathPermission(file.uri)) {
+            REQUEST_HILOGE("Set path permission fail.");
+            return E_FILE_IO;
+        }
+    }
+    std::string tid = context->task->GetTid();
+    JsTask::ReloadListenerByTaskId(tid);
+
+    int32_t ret = RequestManager::GetInstance()->Start(tid);
     if (ret == E_OK) {
         context->boolRes = true;
     }

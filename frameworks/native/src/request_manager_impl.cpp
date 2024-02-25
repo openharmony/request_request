@@ -115,8 +115,11 @@ int32_t RequestManagerImpl::Start(const std::string &tid)
 {
     REQUEST_HILOGD("Start in");
     auto proxy = GetRequestServiceProxy();
-    if (proxy == nullptr) {
-        return E_SERVICE_ERROR;
+    if (proxy == nullptr ) {
+        if (!RequestManager::GetInstance()->LoadRequestServer()) {
+            return E_SERVICE_ERROR;
+        }
+        proxy = GetRequestServiceProxy();
     }
 
     return proxy->Start(tid);

@@ -35,9 +35,13 @@ impl TaskManager {
             }
             self.start_inner(task);
             ErrorCode::ErrOk
+        } else if self.has_task_config_record(task_id) {
+            info!("Has found a failed task in database, task_id:{}, try to continue download", task_id);
+            self.continue_single_failed_task(self.recording_rdb_num.clone(), task_id);
+            ErrorCode::ErrOk
         } else {
             if self.tasks.contains_key(&task_id) {
-                error!("TaskManager start a task, task_id:{} exist, but not found in app_task_map, uid:{}", task_id, uid);
+                info!("TaskManager start a task, task_id:{} exist, but not found in app_task_map, uid:{}", task_id, uid);
             } else {
                 error!(
                     "TaskManager start a task, uid:{}, task_id:{} not exist",

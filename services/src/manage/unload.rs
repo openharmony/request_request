@@ -21,6 +21,7 @@ use crate::manage::monitor::IsOnline;
 use crate::task::config::{TaskConfig, Version};
 use crate::task::ffi::{CTaskConfig, ChangeRequestTaskState};
 use crate::task::info::{ApplicationState, State};
+use crate::task::reason::Reason;
 use crate::task::RequestTask;
 
 impl TaskManager {
@@ -110,23 +111,66 @@ impl TaskManager {
         }
     }
 
-    pub(crate) fn insert_restore_tasks(&mut self) {
-        debug!("TaskManager inserts restore tasks");
-        let top_bundle = unsafe { GetTopBundleName() }.to_string();
-        for task in std::mem::take(&mut self.restoring_tasks) {
-            self.restore_task(task.clone());
+    pub(crate) fn has_task_config_record(&self, task_id: u32) -> bool {
+        unsafe{ HasTaskConfigRecord(task_id) }
+    }
 
-            if task.conf.bundle == top_bundle {
-                self.update_app_state(task.conf.common_data.uid, ApplicationState::Foreground);
-            }
-
-            if unsafe { IsOnline() } {
-                self.resume_waiting_task(task);
+    pub(crate) fn continue_single_failed_task(&mut self, recording_rdb_num: Arc<AtomicU32>, task_id: u32) {
+        if let Some(config) = self.query_single_failed_task_config(task_id) {
+            debug!("RSA query single failed task config is {:?}", config);
+            let uid = config.common_data.uid;
+            let task_id = config.common_data.task_id;
+            let token = config.token.clone();
+            if let Some(task_info) = self.touch(uid, task_id, token) {
+                let state = State::from(task_info.progress.common_data.state);
+                if state != State::Failed {
+                    error!("state of continue task is not Failed");
+                    return;
+                }
+                let app_state = self.app_state(uid, &config.bundle);
+                match RequestTask::restore_task(
+                    config,
+                    task_info,
+                    recording_rdb_num,
+                    AtomicBool::new(false),
+                    app_state,
+                    self.sys_proxy.clone(),
+                ) {
+                    Some(task) => {
+                        task.set_status(State::Waiting, Reason::Default);
+                        unsafe { ChangeRequestTaskState(task_id, uid, State::Waiting) };
+                        let arc_task = Arc::new(task);
+                        self.restoring_tasks.push(arc_task);
+                        // Adds tasks to task map and inits it.
+                        self.insert_restore_tasks();
+                    }
+                    None => error!("continue task failed"),
+                }
             }
         }
     }
 
-    fn restore_task(&mut self, task: Arc<RequestTask>) {
+    pub(crate) fn insert_restore_tasks(&mut self) {
+        debug!("TaskManager inserts restore tasks");
+        let top_bundle = unsafe { GetTopBundleName() }.to_string();
+        for task in std::mem::take(&mut self.restoring_tasks) {
+            self.restore_task(task, &top_bundle);
+        }
+    }
+
+    fn restore_task(&mut self, task: Arc<RequestTask>, top_bundle: &str) {
+        self.restore_task_inner(task.clone());
+
+        if task.conf.bundle == top_bundle {
+            self.update_app_state(task.conf.common_data.uid, ApplicationState::Foreground);
+        }
+
+        if unsafe { IsOnline() } {
+            self.resume_waiting_task(task);
+        }
+    }
+
+    fn restore_task_inner(&mut self, task: Arc<RequestTask>) {
         if task.conf.version == Version::API10 {
             self.api10_background_task_count += 1;
         }
@@ -192,6 +236,19 @@ impl TaskManager {
         Some(task_config_map)
     }
 
+    pub(crate) fn query_single_failed_task_config(&self, task_id: u32) -> Option<TaskConfig> {
+        debug!("query single failed task config in database");
+        let c_task_config = unsafe {QuerySingleFailedTaskConfig(task_id)};
+        if c_task_config.is_null() {
+            debug!("can not find the failed task in database, which task id is {}", task_id);
+            None
+        } else {
+            let task_config = TaskConfig::from_c_struct(unsafe { &*c_task_config });
+            unsafe { DeleteCTaskConfig(c_task_config) };
+            Some(task_config)
+        }
+    }
+
     /// Removes task records from a week ago before unloading.
     pub(crate) fn delete_early_records(&self) {
         use std::time::{SystemTime, UNIX_EPOCH};
@@ -213,9 +270,11 @@ impl TaskManager {
 #[cfg(feature = "oh")]
 #[link(name = "request_service_c")]
 extern "C" {
+    pub(crate) fn HasTaskConfigRecord(task_id: u32) -> bool;
     pub(crate) fn DeleteCTaskConfigs(ptr: *const *const CTaskConfig);
     pub(crate) fn QueryAllTaskConfig() -> *const *const CTaskConfig;
     pub(crate) fn QueryTaskConfigLen() -> i32;
+    pub(crate) fn QuerySingleFailedTaskConfig(taskId: u32) -> *const CTaskConfig;
     pub(crate) fn DeleteCTaskConfig(ptr: *const CTaskConfig);
     pub(crate) fn RequestDBRemoveRecordsFromTime(time: u64);
 }
