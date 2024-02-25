@@ -205,7 +205,7 @@ export default function requestOperateTaskTest() {
       try {
         await task.start();
         await task.stop();
-        await task.start();
+        await task.pause();
       } catch (err) {
         expect(err.code).assertEqual(21900007);
         done();
@@ -232,7 +232,7 @@ export default function requestOperateTaskTest() {
       try {
         await task.start();
         await task.stop();
-        await task.start();
+        await task.pause();
       } catch (err) {
         expect(err.code).assertEqual(21900007);
         done();

@@ -161,7 +161,6 @@ int RequestDBCheckVersion(OHOS::NativeRdb::RdbStore &store)
     REQUEST_HILOGD("RequestDBCheckVersion in");
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_version");
     auto resultSet = store.Query(rdbPredicates, { "version", "task_table" });
-
     if (resultSet == nullptr) {
         return WITHOUT_VERSION_TABLE;
     }
@@ -223,7 +222,8 @@ int RequestDBCreateTables(OHOS::NativeRdb::RdbStore &store)
 }
 
 // Keeps this function for possible extensions later
-int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store) {
+int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store)
+{
     return RequestDBInitVersionTable(store);
 }
 
@@ -231,13 +231,13 @@ int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
 {
     REQUEST_HILOGD("Begins upgrading database");
 
-    int ret = RequestDBCreateTables(store);
-    if (ret != OHOS::NativeRdb::E_OK) {
-        return ret;
+    int res = RequestDBCreateTables(store);
+    if (res != OHOS::NativeRdb::E_OK) {
+        return res;
     }
 
     int version = RequestDBCheckVersion(store);
-    switch(version) {
+    switch (version) {
         case WITHOUT_VERSION_TABLE: {
             REQUEST_HILOGI("Begins upgrading database from 4.0 or earlier");
             return OHOS::NativeRdb::E_OK;
@@ -248,13 +248,13 @@ int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
             RequestDBRemoveOldTables(store);
             int ret = RequestDBInitVersionTable(store);
             return ret;
-        }           
+        }
 
         case API11_4_1_RELEASE: {
             REQUEST_HILOGI("Begins upgrading database from 4.1-Release");
             int ret = RequestDBUpgradeFrom41(store);
             return ret;
-        }           
+        }
 
         case API12_5_0_RELEASE: {
             REQUEST_HILOGI("Version is 5.0-release, no need to update database.");
@@ -1124,7 +1124,7 @@ CTaskConfig *QuerySingleFailedTaskConfig(uint32_t taskId)
     }
 
     TaskConfig taskConfig = BuildRequestTaskConfig(resultSet);
-    REQUEST_HILOGI("QuerySingleFailedTaskConfig in, after BuildRequestTaskConfig, task_id: %{public}u", 
+    REQUEST_HILOGI("QuerySingleFailedTaskConfig in, after BuildRequestTaskConfig, task_id: %{public}u",
         taskConfig.commonData.taskId);
     CTaskConfig *cTaskConfig = new CTaskConfig;
     BuildCTaskConfig(cTaskConfig, taskConfig);
