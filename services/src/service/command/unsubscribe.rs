@@ -23,7 +23,7 @@ impl Unsubscribe {
         data: &BorrowedMsgParcel,
         reply: &mut BorrowedMsgParcel,
     ) -> IpcResult<()> {
-        info!("subscribe");
+        info!("unsubscribe");
         let tid: String = data.read()?;
         debug!("Service unsubscribe: task_id is {}", tid);
         match tid.parse::<u32>() {
@@ -32,8 +32,8 @@ impl Unsubscribe {
                     reply.write(&(ErrorCode::ErrOk as i32))?;
                     Ok(())
                 } else {
-                    error!("unsubscribe failed");
-                    reply.write(&(ErrorCode::TaskNotFound as i32))?; // 错误码待统一处理
+                    debug!("unsubscribe failed");
+                    reply.write(&(ErrorCode::TaskNotFound as i32))?;
                     Err(IpcStatusCode::Failed)
                 }
             }

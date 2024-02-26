@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "js_initialize.h"
 #include "request_event.h"
 
+#include "js_initialize.h"
 #include "log.h"
 #include "request_manager.h"
 
@@ -320,7 +320,7 @@ napi_status RequestEvent::GetResult(
 int32_t RequestEvent::StartExec(const std::shared_ptr<ExecContext> &context)
 {
     REQUEST_HILOGD("RequestEvent::StartExec in");
-    JsTask* task = context->task;
+    JsTask *task = context->task;
     Config config = task->config_;
 
     // Rechecks file path.

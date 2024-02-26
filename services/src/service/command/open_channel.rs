@@ -29,21 +29,21 @@ impl OpenChannel {
         _data: &BorrowedMsgParcel,
         reply: &mut BorrowedMsgParcel,
     ) -> IpcResult<()> {
-        info!("open channnel");
+        info!("open channel");
         let pid = get_calling_pid();
         let uid = get_calling_uid();
         let token_id = get_calling_token_id();
         match RequestAbility::client_manager().open_channel(pid, uid, token_id) {
             Ok(fd) => {
+                debug!("open channel ok, fd is {}", fd);
                 let file = unsafe { File::from_raw_fd(fd) };
                 let file = FileDesc::new(file);
                 reply.write(&(ErrorCode::ErrOk as i32))?;
                 reply.write(&file)?;
-                info!("open channnel ok ");
                 Ok(())
             }
             Err(_) => {
-                error!("open_channel failed");
+                error!("open channel fail");
                 reply.write(&(ErrorCode::ParameterCheck as i32))?;
                 Err(IpcStatusCode::Failed)
             }

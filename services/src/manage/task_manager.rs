@@ -26,6 +26,7 @@ use super::scheduled;
 use crate::error::ErrorCode;
 use crate::service::ability::PANIC_INFO;
 use crate::task::config::Version;
+use crate::task::ffi::HasRequestTaskRecord;
 use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
@@ -188,15 +189,15 @@ impl TaskManager {
                     }
                     return;
                 }
-                for task in &self.restoring_tasks {
-                    if task.conf.common_data.task_id == task_id {
-                        if task.conf.common_data.token_id == token_id {
-                            let _ = tx.send(ErrorCode::ErrOk);
-                        } else {
-                            let _ = tx.send(ErrorCode::Permission);
-                        }
-                        return;
+
+                // get token_id from db
+                if unsafe { HasRequestTaskRecord(task_id) } {
+                    if unsafe { QueryTaskTokenId(task_id) } == token_id {
+                        let _ = tx.send(ErrorCode::ErrOk);
+                    } else {
+                        let _ = tx.send(ErrorCode::Permission);
                     }
+                    return;
                 }
                 let _ = tx.send(ErrorCode::TaskNotFound);
             }
@@ -523,4 +524,5 @@ extern "C" {
     pub(crate) fn GetHost() -> CStringWrapper;
     pub(crate) fn GetPort() -> CStringWrapper;
     pub(crate) fn GetExclusionList() -> CStringWrapper;
+    pub(crate) fn QueryTaskTokenId(task_id: u32) -> u64;
 }

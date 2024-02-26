@@ -112,10 +112,14 @@ impl TaskManager {
     }
 
     pub(crate) fn has_task_config_record(&self, task_id: u32) -> bool {
-        unsafe{ HasTaskConfigRecord(task_id) }
+        unsafe { HasTaskConfigRecord(task_id) }
     }
 
-    pub(crate) fn continue_single_failed_task(&mut self, recording_rdb_num: Arc<AtomicU32>, task_id: u32) {
+    pub(crate) fn continue_single_failed_task(
+        &mut self,
+        recording_rdb_num: Arc<AtomicU32>,
+        task_id: u32,
+    ) {
         if let Some(config) = self.query_single_failed_task_config(task_id) {
             debug!("RSA query single failed task config is {:?}", config);
             let uid = config.common_data.uid;
@@ -238,9 +242,12 @@ impl TaskManager {
 
     pub(crate) fn query_single_failed_task_config(&self, task_id: u32) -> Option<TaskConfig> {
         debug!("query single failed task config in database");
-        let c_task_config = unsafe {QuerySingleFailedTaskConfig(task_id)};
+        let c_task_config = unsafe { QuerySingleFailedTaskConfig(task_id) };
         if c_task_config.is_null() {
-            debug!("can not find the failed task in database, which task id is {}", task_id);
+            debug!(
+                "can not find the failed task in database, which task id is {}",
+                task_id
+            );
             None
         } else {
             let task_config = TaskConfig::from_c_struct(unsafe { &*c_task_config });

@@ -861,7 +861,7 @@ void JsTask::ReloadListenerByTaskId(const std::string &id)
 {
     REQUEST_HILOGD("ReloadListenerByTaskId in");
     std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
-    RequestManager::GetInstance()->ReopenChannel();
+
     const auto it = taskMap_.find(id);
     std::string tid = it->first;
     if (it->second->responseListener_->HasListener()) {

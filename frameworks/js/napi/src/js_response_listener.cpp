@@ -21,6 +21,7 @@ namespace OHOS::Request {
 
 napi_status JSResponseListener::AddListener(napi_value cb)
 {
+    std::lock_guard<std::recursive_mutex> lock(allCbMutex_);
     if (this->IsListenerAdded(cb)) {
         return napi_ok;
     }
@@ -31,8 +32,9 @@ napi_status JSResponseListener::AddListener(napi_value cb)
         return status;
     }
 
-    this->allCb_.push_back(ref);
-    if (this->allCb_.size() == 1) {
+    this->allCb_.push_back(std::make_pair(true, ref));
+    ++this->validCbNum;
+    if (this->validCbNum == 1) {
         RequestManager::GetInstance()->Subscribe(this->taskId_, shared_from_this());
     }
 
@@ -41,34 +43,36 @@ napi_status JSResponseListener::AddListener(napi_value cb)
 
 napi_status JSResponseListener::RemoveListener(napi_value cb)
 {
-    if (this->allCb_.empty()) {
+    std::lock_guard<std::recursive_mutex> lock(allCbMutex_);
+    if (this->validCbNum == 0) {
         return napi_ok;
     }
 
     if (cb == nullptr) {
         RequestManager::GetInstance()->Unsubscribe(this->taskId_, shared_from_this());
-        while (!this->allCb_.empty()) {
-            napi_ref ref = this->allCb_.front();
-            napi_delete_reference(this->env_, ref);
-            this->allCb_.pop_front();
+        for (auto it = this->allCb_.begin(); it != this->allCb_.end(); it++) {
+            it->first = false;
         }
+        this->validCbNum = 0;
         return napi_ok;
     }
 
     for (auto it = this->allCb_.begin(); it != this->allCb_.end(); it++) {
         napi_value copyValue = nullptr;
-        napi_get_reference_value(this->env_, *it, &copyValue);
+        napi_get_reference_value(this->env_, it->second, &copyValue);
 
         bool isEquals = false;
         napi_strict_equals(this->env_, cb, copyValue, &isEquals);
         if (isEquals) {
-            napi_delete_reference(this->env_, *it);
-            this->allCb_.erase(it);
+            if (it->first == true) {
+                it->first = false;
+                --this->validCbNum;
+            }
             break;
         }
     }
 
-    if (this->allCb_.empty()) {
+    if (this->validCbNum == 0) {
         RequestManager::GetInstance()->Unsubscribe(this->taskId_, shared_from_this());
     }
 
@@ -77,17 +81,24 @@ napi_status JSResponseListener::RemoveListener(napi_value cb)
 
 void JSResponseListener::OnResponseReceive(const std::shared_ptr<Response> &response)
 {
+    std::lock_guard<std::recursive_mutex> lock(allCbMutex_);
     napi_value value = NapiUtils::Convert2JSValue(this->env_, response);
-    for (auto it = this->allCb_.begin(); it != this->allCb_.end(); it++) {
+    for (auto it = this->allCb_.begin(); it != this->allCb_.end();) {
+        if (it->first == false) {
+            napi_delete_reference(this->env_, it->second);
+            it = this->allCb_.erase(it);
+            continue;
+        }
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(this->env_, &scope);
         napi_value callbackFunc = nullptr;
-        napi_get_reference_value(this->env_, *it, &callbackFunc);
+        napi_get_reference_value(this->env_, it->second, &callbackFunc);
 
         napi_value callbackResult = nullptr;
         uint32_t paramNumber = 1;
         napi_call_function(this->env_, nullptr, callbackFunc, paramNumber, &value, &callbackResult);
         napi_close_handle_scope(this->env_, scope);
+        it++;
     }
 }
 
@@ -98,12 +109,12 @@ bool JSResponseListener::IsListenerAdded(napi_value cb)
     }
     for (auto it = this->allCb_.begin(); it != this->allCb_.end(); it++) {
         napi_value copyValue = nullptr;
-        napi_get_reference_value(this->env_, *it, &copyValue);
+        napi_get_reference_value(this->env_, it->second, &copyValue);
 
         bool isEquals = false;
         napi_strict_equals(this->env_, cb, copyValue, &isEquals);
         if (isEquals) {
-            return true;
+            return it->first;
         }
     }
 
@@ -112,6 +123,7 @@ bool JSResponseListener::IsListenerAdded(napi_value cb)
 
 bool JSResponseListener::HasListener()
 {
-    return !this->allCb_.empty();
+    return this->validCbNum != 0;
 }
+
 } // namespace OHOS::Request
