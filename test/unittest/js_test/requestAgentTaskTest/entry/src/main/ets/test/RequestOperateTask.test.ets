@@ -1430,5 +1430,319 @@ export default function requestOperateTaskTest() {
       })
       await task.start();
     })
+
+    /**
+     * @tc.number: testDownloadTaskSaveas001
+     * @tc.name: testDownloadTaskSaveas001
+     * @tc.desc: Test when saveas is undefined
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskSaveas001', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      await request.agent.create(context, conf).then(async () => {
+        expect(true).assertTrue();
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })
+
+    /**
+     * @tc.number: testDownloadTaskSaveas002
+     * @tc.name: testDownloadTaskSaveas002
+     * @tc.desc: Test when saveas is ./
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskSaveas002', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        saveas: './'
+      }
+      await request.agent.create(context, conf).then(async () => {
+        expect(true).assertTrue();
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })
+
+    /**
+     * @tc.number: testDownloadTaskSaveas003
+     * @tc.name: testDownloadTaskSaveas003
+     * @tc.desc: Test when saveas is ./filename
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskSaveas003', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        saveas: './test_saveas_003'
+      }
+      await request.agent.create(context, conf).then(async () => {
+        expect(true).assertTrue();
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })
+
+    /**
+     * @tc.number: testDownloadTaskSaveas004
+     * @tc.name: testDownloadTaskSaveas004
+     * @tc.desc: Test when saveas is filename
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskSaveas004', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        saveas: 'test_saveas_004'
+      }
+      await request.agent.create(context, conf).then(async () => {
+        expect(true).assertTrue();
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })
+
+    /**
+     * @tc.number: testDownloadTaskSaveas005
+     * @tc.name: testDownloadTaskSaveas005
+     * @tc.desc: Test when saveas is pathname/filename
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskSaveas005', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        saveas: 'a/b/test_saveas_005'
+      }
+      await request.agent.create(context, conf).then(async () => {
+        expect(true).assertTrue();
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })
+
+    /**
+     * @tc.number: testDownloadTaskSaveas006
+     * @tc.name: testDownloadTaskSaveas006
+     * @tc.desc: Test when saveas is internal://cache/filename
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskSaveas006', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        saveas: 'internal://cache/test_saveas_006'
+      }
+      await request.agent.create(context, conf).then(async () => {
+        expect(true).assertTrue();
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })
+
+    /**
+     * @tc.number: testDownloadTaskSaveas007
+     * @tc.name: testDownloadTaskSaveas007
+     * @tc.desc: Test when saveas is whole path in base
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskSaveas007', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        saveas: '/data/storage/el1/base/test_saveas_007'
+      }
+      await request.agent.create(context, conf).then(async () => {
+        expect(true).assertTrue();
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })
+
+    /**
+     * @tc.number: testDownloadTaskSaveas008
+     * @tc.name: testDownloadTaskSaveas008
+     * @tc.desc: Test when saveas is whole path but not in base
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskSaveas008', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        saveas: '/data/storage/test_saveas_008'
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          expect(false).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(true).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testDownloadTaskSaveas009
+     * @tc.name: testDownloadTaskSaveas009
+     * @tc.desc: Test when saveas is whole path which contains ..
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskSaveas009', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        saveas: '/data/storage/../../data/storage/el1/../el2/base/test_saveas_009'
+      }
+      await request.agent.create(context, conf).then(async () => {
+        expect(true).assertTrue();
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })
+
+    /**
+     * @tc.number: testDownloadTaskSaveas010
+     * @tc.name: testDownloadTaskSaveas010
+     * @tc.desc: Test when saveas is whole path which contains error ..
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskSaveas010', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        saveas: '/data/storage/../../el2/base/test_saveas_010'
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          expect(false).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(true).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testDownloadTaskSaveas011
+     * @tc.name: testDownloadTaskSaveas011
+     * @tc.desc: Test when saveas is file:// with correct package name
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskSaveas011', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        saveas: 'file://com.acts.request/data/storage/el2/base/test_saveas_011'
+      }
+      await request.agent.create(context, conf).then(async () => {
+        expect(true).assertTrue();
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })
+
+    /**
+     * @tc.number: testDownloadTaskSaveas012
+     * @tc.name: testDownloadTaskSaveas012
+     * @tc.desc: Test when saveas is file:// with error package name
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskSaveas012', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        saveas: 'file://com.acts.request1111/data/storage/el2/base/test_saveas_012'
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          expect(false).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(true).assertTrue();
+        done();
+      }
+    })
   })
 }
