@@ -157,6 +157,7 @@ int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, 
 CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs);
 bool CleanTaskConfigTable(uint32_t taskId, uint64_t uid);
 void RequestDBRemoveRecordsFromTime(uint64_t time);
+uint64_t QueryTaskTokenId(uint32_t taskId);
 
 #ifdef __cplusplus
 }

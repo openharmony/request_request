@@ -115,7 +115,7 @@ int32_t RequestManagerImpl::Start(const std::string &tid)
 {
     REQUEST_HILOGD("Start in");
     auto proxy = GetRequestServiceProxy();
-    if (proxy == nullptr ) {
+    if (proxy == nullptr) {
         if (!RequestManager::GetInstance()->LoadRequestServer()) {
             return E_SERVICE_ERROR;
         }
@@ -317,7 +317,6 @@ std::shared_ptr<Request> RequestManagerImpl::GetTask(const std::string &taskId)
     }
 
     auto retPair = this->tasks_.emplace(taskId, std::make_shared<Request>(Request(taskId)));
-
     if (retPair.second) {
         return retPair.first->second;
     }

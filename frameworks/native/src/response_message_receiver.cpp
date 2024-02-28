@@ -15,9 +15,9 @@
 
 #include "response_message_receiver.h"
 
-#include <stdlib.h>
 #include <unistd.h>
 
+#include <cstdlib>
 #include <sstream>
 #include <string>
 #include <vector>

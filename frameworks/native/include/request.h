@@ -70,7 +70,11 @@ public:
 
     void OnResponseReceive(const std::shared_ptr<Response> &response)
     {
+        std::vector<std::shared_ptr<IResponseListener>> responseListenerVec;
         for (auto responseListener : responseListeners_) {
+            responseListenerVec.push_back(responseListener);
+        }
+        for (auto responseListener : responseListenerVec) {
             responseListener->OnResponseReceive(response);
         }
     }

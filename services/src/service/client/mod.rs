@@ -43,7 +43,7 @@ impl ClientManagerEntry {
         match rx.get() {
             Some(ret) => ret,
             None => {
-                error!("open_channel failed");
+                error!("open channel fail");
                 Err(ErrorCode::Other)
             }
         }

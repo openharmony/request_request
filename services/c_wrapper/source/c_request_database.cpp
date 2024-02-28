@@ -1155,3 +1155,28 @@ void RequestDBRemoveRecordsFromTime(uint64_t time)
     REQUEST_HILOGE("request_task table deletes records before one week failed");
     return;
 }
+
+uint64_t QueryTaskTokenId(uint32_t taskId)
+{
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
+    rdbPredicates.EqualTo("task_id", std::to_string(taskId));
+    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "token_id" });
+    int rowCount = 0;
+    if (resultSet == nullptr) {
+        REQUEST_HILOGE("result set is nullptr");
+        return -1;
+    }
+    if (resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("TaskConfig result count row failed");
+        return -1;
+    }
+    if (rowCount == 0) {
+        REQUEST_HILOGE("TaskConfig result count row is 0");
+        return -1;
+    }
+    if (resultSet->GoToRow(0) != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("TaskConfig result set go to 0 row failed");
+        return -1;
+    }
+    return (GetLong(resultSet, 0));
+}

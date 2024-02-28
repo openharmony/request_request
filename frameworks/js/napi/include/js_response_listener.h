@@ -17,6 +17,7 @@
 #define OHOS_REQUEST_JS_RESPONSE_LISTENER_H
 
 #include <list>
+#include <mutex>
 #include <string>
 
 #include "i_response_listener.h"
@@ -42,7 +43,9 @@ private:
 private:
     const napi_env env_;
     const std::string taskId_;
-    std::list<napi_ref> allCb_;
+    std::list<std::pair<bool, napi_ref>> allCb_;
+    std::recursive_mutex allCbMutex_;
+    std::atomic<uint32_t> validCbNum{ 0 };
 };
 
 } // namespace OHOS::Request
