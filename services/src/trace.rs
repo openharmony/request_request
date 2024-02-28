@@ -24,10 +24,15 @@ impl Trace {
     const HITRACE_TAG_MISC: u64 = 1u64 << 41;
 
     /// Starts tracing.
-    pub(crate) fn start(value: &str) {
+    pub(crate) fn new(value: &str) -> Self {
         start_trace(Self::HITRACE_TAG_MISC, value);
+        Self
     }
-    pub(crate) fn finish() {
+}
+
+impl Drop for Trace {
+    /// Stops tracing.
+    fn drop(&mut self) {
         finish_trace(Self::HITRACE_TAG_MISC);
     }
 }

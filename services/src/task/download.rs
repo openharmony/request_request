@@ -123,7 +123,7 @@ async fn download_inner(task: Arc<RequestTask>) {
 
     // Ensures `_trace` can only be freed when this function exits.
     #[cfg(feature = "oh")]
-    Trace::start("download file");
+    let _trace = Trace::new("download file");
 
     let response = match task.client.as_ref() {
         Some(client) => {
@@ -134,13 +134,13 @@ async fn download_inner(task: Arc<RequestTask>) {
 
             let name = task.conf.file_specs[0].path.as_str();
             let download = task.progress.lock().unwrap().processed[0];
+
             // Ensures `_trace` can only be freed when this function exits.
             #[cfg(feature = "oh")]
-            Trace::start(&format!(
+            let _trace = Trace::new(&format!(
                 "download file name: {name} downloaded size: {download}"
             ));
-            #[cfg(feature = "oh")]
-            Trace::finish();
+
             client.request(request).await
         }
         None => {
@@ -170,6 +170,4 @@ async fn download_inner(task: Arc<RequestTask>) {
         let _ = file.sync_all().await;
     }
     task.set_status(State::Completed, Reason::Default);
-    #[cfg(feature = "oh")]
-    Trace::finish();
 }

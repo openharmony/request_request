@@ -12,7 +12,7 @@
 // limitations under the License.
 
 use std::collections::{HashMap, HashSet};
-use std::sync::atomic::{AtomicU32, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Arc;
 
 use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
@@ -27,6 +27,7 @@ use crate::error::ErrorCode;
 use crate::service::ability::PANIC_INFO;
 use crate::task::config::Version;
 use crate::task::ffi::HasRequestTaskRecord;
+use crate::task::flag::RdbRecording;
 use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
@@ -46,7 +47,7 @@ pub(crate) struct TaskManager {
     pub(crate) restoring_tasks: Vec<Arc<RequestTask>>,
     pub(crate) api10_background_task_count: u32,
     pub(crate) unload_handle: Option<JoinHandle<()>>,
-    pub(crate) recording_rdb_num: Arc<AtomicU32>,
+    pub(crate) recording_rdb_num: RdbRecording,
     pub(crate) tx: UnboundedSender<EventMessage>,
     pub(crate) rx: UnboundedReceiver<EventMessage>,
 }
@@ -136,7 +137,7 @@ impl TaskManager {
             unload_handle: None,
             restoring_tasks: Vec::new(),
             api10_background_task_count: 0,
-            recording_rdb_num: Arc::new(AtomicU32::new(0)),
+            recording_rdb_num: RdbRecording::new(),
             rx,
             tx,
         }

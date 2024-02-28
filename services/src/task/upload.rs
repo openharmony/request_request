@@ -223,7 +223,7 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
     let num = task.conf.file_specs.len();
     // Ensures `_trace` can only be freed when this function exits.
     #[cfg(feature = "oh")]
-    Trace::start(&format!("exec upload task url: {url} file num: {num}"));
+    let _trace = Trace::new(&format!("exec upload task url: {url} file num: {num}"));
 
     let size = task.conf.file_specs.len();
     if task.client.is_none() {
@@ -292,8 +292,6 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
     }
 
     info!("upload end");
-    #[cfg(feature = "oh")]
-    Trace::finish()
 }
 
 async fn upload_one_file<F, T>(
@@ -309,9 +307,10 @@ where
 
     let (_, size) = task.get_upload_info(index);
     let name = task.conf.file_specs[index].file_name.as_str();
+
     // Ensures `_trace` can only be freed when this function exits.
     #[cfg(feature = "oh")]
-    Trace::start(&format!(
+    let _trace = Trace::new(&format!(
         "upload file name:{name} index:{index} size:{size}"
     ));
 
@@ -319,8 +318,6 @@ where
         task.reset_code(index);
         let request = build_upload_request(task.clone(), index);
         if request.is_none() {
-            #[cfg(feature = "oh")]
-            Trace::finish();
             return false;
         }
         let response = task
@@ -332,8 +329,6 @@ where
         if task.handle_response_error(&response).await {
             task.code.lock().unwrap()[index] = Reason::Default;
             task.record_upload_response(index, response).await;
-            #[cfg(feature = "oh")]
-            Trace::finish();
             return true;
         }
         task.record_upload_response(index, response).await;
@@ -343,14 +338,10 @@ where
                 "upload {} file fail, which reason is {}",
                 index, code as u32
             );
-            #[cfg(feature = "oh")]
-            Trace::finish();
             return false;
         }
         let state = task.status.lock().unwrap().state;
         if state != State::Running && state != State::Retrying {
-            #[cfg(feature = "oh")]
-            Trace::finish();
             return false;
         }
     }
