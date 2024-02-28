@@ -42,6 +42,7 @@ use crate::task::config::{Action, TaskConfig};
 use crate::task::ffi::{
     GetNetworkInfo, RequestBackgroundNotify, RequestTaskMsg, UpdateRequestTask,
 };
+use crate::task::flag::RdbRecording;
 use crate::utils::c_wrapper::CStringWrapper;
 use crate::utils::{get_current_timestamp, hashmap_to_string};
 
@@ -116,7 +117,7 @@ pub(crate) struct RequestTask {
     pub(crate) skip_bytes: AtomicU64,
     pub(crate) upload_counts: AtomicU32,
     pub(crate) client: Option<Client>,
-    pub(crate) recording_rdb_num: Arc<AtomicU32>,
+    pub(crate) recording_rdb_num: RdbRecording,
     pub(crate) rate_limiting: AtomicBool,
     pub(crate) app_state: Arc<AtomicU8>,
     pub(crate) last_notify: AtomicU64,
@@ -127,7 +128,7 @@ impl RequestTask {
         conf: TaskConfig,
         files: Vec<File>,
         body_files: Vec<File>,
-        recording_rdb_num: Arc<AtomicU32>,
+        recording_rdb_num: RdbRecording,
         rate_limiting: AtomicBool,
         app_state: Arc<AtomicU8>,
         proxy_task: SystemProxyManager,
@@ -197,7 +198,7 @@ impl RequestTask {
     pub(crate) fn restore_task(
         conf: TaskConfig,
         info: TaskInfo,
-        recording_rdb_num: Arc<AtomicU32>,
+        recording_rdb_num: RdbRecording,
         rate_limiting: AtomicBool,
         app_state: Arc<AtomicU8>,
         proxy_task: SystemProxyManager,
@@ -886,7 +887,9 @@ impl RequestTask {
             self.conf.common_data.task_id
         );
 
-        self.recording_rdb_num.fetch_add(1, Ordering::SeqCst);
+        // This flag will be automatically dropped at the end of the function,
+        // decrementing the count.
+        let _flag = self.recording_rdb_num.clone();
 
         let has_record = unsafe { HasRequestTaskRecord(self.conf.common_data.task_id) };
         if has_record {
@@ -904,8 +907,6 @@ impl RequestTask {
             let ret = unsafe { UpdateRequestTask(self.conf.common_data.task_id, &c_update_info) };
             debug!("update database ret is {}", ret);
         }
-
-        self.recording_rdb_num.fetch_sub(1, Ordering::SeqCst);
     }
 
     fn get_each_file_status(&self) -> Vec<EachFileStatus> {

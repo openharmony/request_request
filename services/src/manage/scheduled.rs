@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -101,7 +100,7 @@ impl TaskManager {
 
     pub(crate) fn log_all_task_info(&self) {
         let api10_background_task_count = self.api10_background_task_count;
-        let recording_rdb_num = self.recording_rdb_num.load(Ordering::SeqCst);
+        let recording_rdb_num = self.recording_rdb_num.count();
         info!(
             "dump all task info, api10_background_task_count:{}, recording_rdb_num:{}",
             api10_background_task_count, recording_rdb_num

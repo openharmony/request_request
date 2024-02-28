@@ -12,7 +12,7 @@
 // limitations under the License.
 
 use std::collections::{HashMap, HashSet};
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use super::task_manager::GetTopBundleName;
@@ -20,6 +20,7 @@ use super::TaskManager;
 use crate::manage::monitor::IsOnline;
 use crate::task::config::{TaskConfig, Version};
 use crate::task::ffi::{CTaskConfig, ChangeRequestTaskState};
+use crate::task::flag::RdbRecording;
 use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
 use crate::task::RequestTask;
@@ -30,7 +31,7 @@ impl TaskManager {
             return false;
         }
 
-        if self.recording_rdb_num.load(Ordering::SeqCst) != 0 {
+        if self.recording_rdb_num.is_recording() {
             return false;
         }
 
@@ -74,7 +75,7 @@ impl TaskManager {
         true
     }
 
-    pub(crate) fn restore_all_tasks(&mut self, recording_rdb_num: Arc<AtomicU32>) {
+    pub(crate) fn restore_all_tasks(&mut self, recording_rdb_num: RdbRecording) {
         if let Some(config_map) = self.query_all_task_config() {
             info!(
                 "RSA query task config list len: {} in database",
@@ -117,7 +118,7 @@ impl TaskManager {
 
     pub(crate) fn continue_single_failed_task(
         &mut self,
-        recording_rdb_num: Arc<AtomicU32>,
+        recording_rdb_num: RdbRecording,
         task_id: u32,
     ) {
         if let Some(config) = self.query_single_failed_task_config(task_id) {

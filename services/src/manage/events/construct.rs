@@ -13,7 +13,7 @@
 
 use std::collections::HashSet;
 use std::fs::File;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use crate::error::ErrorCode;
@@ -165,7 +165,11 @@ impl TaskManager {
 
     pub(crate) fn record_request_task(&mut self, task: &RequestTask) {
         debug!("record request task into database");
-        self.recording_rdb_num.fetch_add(1, Ordering::SeqCst);
+
+        // This flag will be automatically dropped at the end of the function,
+        // decrementing the count.
+        let _flag = self.recording_rdb_num.clone();
+
         if unsafe { HasRequestTaskRecord(task.conf.common_data.task_id) } {
             return;
         }
@@ -181,7 +185,6 @@ impl TaskManager {
         let c_task_info = task_info.to_c_struct(&info_set);
         let ret = unsafe { RecordRequestTask(&c_task_info, &c_task_config) };
         info!("insert request_task DB ret is {}", ret);
-        self.recording_rdb_num.fetch_sub(1, Ordering::SeqCst);
     }
 }
 
