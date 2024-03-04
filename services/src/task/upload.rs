@@ -16,8 +16,8 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
-use ylong_http_client::async_impl::{MultiPart, Part, UploadOperator, Uploader};
-use ylong_http_client::{Body, HttpClientError, Request};
+use ylong_http_client::async_impl::{Body, MultiPart, Part, Request, UploadOperator, Uploader};
+use ylong_http_client::HttpClientError;
 use ylong_runtime::io::{AsyncRead, AsyncSeek, ReadBuf};
 
 use super::operator::TaskOperator;
@@ -134,10 +134,7 @@ impl UploadOperator for TaskOperator {
         self.poll_progress_common(cx)
     }
 }
-fn build_stream_request(
-    task: Arc<RequestTask>,
-    index: usize,
-) -> Option<Request<Uploader<TaskReader, TaskOperator>>> {
+fn build_stream_request(task: Arc<RequestTask>, index: usize) -> Option<Request> {
     debug!("build stream request");
     let task_reader = TaskReader::new(task.clone());
     let task_operator = TaskOperator::new(task.clone());
@@ -153,14 +150,11 @@ fn build_stream_request(
         .operator(task_operator)
         .total_bytes(Some(upload_length))
         .build();
-    let request = request_builder.body(uploader);
+    let request = request_builder.body(Body::stream(uploader));
     build_request_common(&task, index, request)
 }
 
-fn build_multipart_request(
-    task: Arc<RequestTask>,
-    index: usize,
-) -> Option<Request<Uploader<MultiPart, TaskOperator>>> {
+fn build_multipart_request(task: Arc<RequestTask>, index: usize) -> Option<Request> {
     info!("build multipart request");
     let task_reader = TaskReader::new(task.clone());
     let task_operator = TaskOperator::new(task.clone());
@@ -187,16 +181,15 @@ fn build_multipart_request(
         .build();
 
     let request_builder = task.build_request_builder();
-    let request: Result<Request<Uploader<MultiPart, TaskOperator>>, HttpClientError> =
-        request_builder.multipart(uploader);
+    let request: Result<Request, HttpClientError> = request_builder.body(Body::stream(uploader));
     build_request_common(&task, index, request)
 }
 
-fn build_request_common<T: Body>(
+fn build_request_common(
     task: &Arc<RequestTask>,
     index: usize,
-    request: Result<Request<T>, HttpClientError>,
-) -> Option<Request<T>> {
+    request: Result<Request, HttpClientError>,
+) -> Option<Request> {
     match request {
         Ok(value) => {
             info!("build upload request success");
@@ -294,14 +287,9 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
     info!("upload end");
 }
 
-async fn upload_one_file<F, T>(
-    task: Arc<RequestTask>,
-    index: usize,
-    build_upload_request: F,
-) -> bool
+async fn upload_one_file<F>(task: Arc<RequestTask>, index: usize, build_upload_request: F) -> bool
 where
-    F: Fn(Arc<RequestTask>, usize) -> Option<Request<T>>,
-    T: Body,
+    F: Fn(Arc<RequestTask>, usize) -> Option<Request>,
 {
     info!("begin upload one file");
 

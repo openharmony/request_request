@@ -125,7 +125,7 @@ impl TaskOperator {
                 Poll::Ready(Ok(size + skip_size))
             }
             Poll::Pending => Poll::Pending,
-            Poll::Ready(Err(e)) => Poll::Ready(Err(HttpClientError::other(Some(e)))),
+            Poll::Ready(Err(e)) => Poll::Ready(Err(HttpClientError::other(e))),
         }
     }
 }
