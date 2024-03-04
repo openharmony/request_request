@@ -2195,6 +2195,32 @@ export default function requestCreateTaskTest() {
         expect(false).assertTrue();
         done();
       }
+    })
+
+    /**
+     * @tc.number: testTaskProxy001
+     * @tc.name: testTaskProxy001
+     * @tc.desc: Test create task when proxy format error
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskProxy001', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        proxy: 'https://127.0.0.1:8080'
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
     });
   })
 }

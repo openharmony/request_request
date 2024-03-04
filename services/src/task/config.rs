@@ -74,6 +74,7 @@ pub(crate) struct TaskConfig {
     pub(crate) headers: HashMap<String, String>,
     pub(crate) data: String,
     pub(crate) token: String,
+    pub(crate) proxy: String,
     #[allow(unused)]
     pub(crate) extras: HashMap<String, String>,
     pub(crate) version: Version,

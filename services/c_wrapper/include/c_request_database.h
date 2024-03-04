@@ -16,9 +16,6 @@
 #ifndef C_REQUEST_DATABASE_H
 #define C_REQUEST_DATABASE_H
 
-#include <cstdint>
-#include <vector>
-
 #include "c_enumration.h"
 #include "c_filter.h"
 #include "c_progress.h"
@@ -31,6 +28,8 @@
 #include "rdb_store.h"
 #include "result_set.h"
 #include "value_object.h"
+#include <cstdint>
+#include <vector>
 
 namespace OHOS::Request {
 constexpr const char *DB_NAME = "/data/service/el1/public/database/request/request.db";
@@ -46,6 +45,9 @@ constexpr int API11_4_1_RELEASE = 41;
 constexpr int API12_5_0_RELEASE = 50;
 constexpr int INVALID_VERSION = -50;
 constexpr int CHECK_VERSION_FAILED = -1;
+
+constexpr const char *CHECK_REQUEST_VERSION = "SELECT name FROM sqlite_master WHERE type='table' AND "
+                                              "name='request_version'";
 
 constexpr const char *CREATE_REQUEST_VERSION_TABLE = "CREATE TABLE IF NOT EXISTS request_version "
                                                      "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -97,6 +99,8 @@ constexpr const char *CREATE_REQUEST_TASK_TABLE = "CREATE TABLE IF NOT EXISTS re
                                                   "each_file_status BLOB, "
                                                   "body_file_names BLOB, "
                                                   "certs_paths BLOB)";
+
+constexpr const char *REQUEST_TASK_TABLE_ADD_PROXY = "ALTER TABLE request_task ADD COLUMN proxy TEXT";
 
 class RequestDataBase {
 public:

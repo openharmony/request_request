@@ -340,23 +340,38 @@ impl RequestTask {
             client = client.redirect(Redirect::none());
         }
 
-        let mut proxy_host = self.proxy_task.host().to_string();
-        let proxy_port = self.proxy_task.port().to_string();
-        if !proxy_host.is_empty() {
-            if !proxy_port.is_empty() {
-                proxy_host.push(':');
-                proxy_host += &proxy_port;
-            }
-            let proxy_exculsion = self.proxy_task.exlist().to_string();
-            let proxy_res = Proxy::all(&proxy_host).no_proxy(&proxy_exculsion).build();
-            match proxy_res {
+        if !self.conf.proxy.is_empty() {
+            let user_proxy = Proxy::all(&self.conf.proxy).build();
+
+            match user_proxy {
                 Ok(p) => {
                     client = client.proxy(p);
                 }
                 Err(e) => {
-                    error!("Set proxy failed, error is {:?}", e);
+                    error!("Set user proxy failed, error is {:?}", e);
                     self.set_status(State::Failed, Reason::IoError);
                     return None;
+                }
+            }
+        } else {
+            let mut proxy_host = self.proxy_task.host().to_string();
+            let proxy_port = self.proxy_task.port().to_string();
+            if !proxy_host.is_empty() {
+                if !proxy_port.is_empty() {
+                    proxy_host.push(':');
+                    proxy_host += &proxy_port;
+                }
+                let proxy_exculsion = self.proxy_task.exlist().to_string();
+                let proxy_res = Proxy::all(&proxy_host).no_proxy(&proxy_exculsion).build();
+                match proxy_res {
+                    Ok(p) => {
+                        client = client.proxy(p);
+                    }
+                    Err(e) => {
+                        error!("Set proxy failed, error is {:?}", e);
+                        self.set_status(State::Failed, Reason::IoError);
+                        return None;
+                    }
                 }
             }
         }
@@ -604,7 +619,9 @@ impl RequestTask {
                     }
                     // user triggered
                     ErrorKind::UserAborted => return true,
-                    ErrorKind::BodyTransfer => self.handle_body_transfer_error(),
+                    ErrorKind::BodyTransfer | ErrorKind::BodyDecode => {
+                        self.handle_body_transfer_error()
+                    }
                     _ => {
                         self.set_status(State::Failed, Reason::OthersError);
                     }
