@@ -136,15 +136,16 @@ describe('RequestTest', function () {
     });
 
     /**
-     * @tc.number    SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003
-     * @tc.desc       Called when the current download session complete、pause or remove.
-     * @tc.size      : MEDIUM
+     * @tc.number    : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003
+     * @tc.name      : SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003
+     * @tc.desc      : Called when the current download session complete、pause or remove.
+     * @tc.size      : MediumTest
      * @tc.type      : Function
      * @tc.level     : Level 2
      */
     it('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003', 0, async function (done) {
         downloadConfig = {
-            url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+            url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
             header: {
                 headers: 'http'
             },

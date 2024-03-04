@@ -219,15 +219,18 @@ export default function requestOperateTaskTest() {
     })
 
     /**
+     * @tc.number: testStartTask008
      * @tc.name: testStartTask008
      * @tc.desc: Test start two FOREGROUND task
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testStartTask008', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
         saveas: `test.apk`,
         mode: request.agent.Mode.FOREGROUND
       }
@@ -356,15 +359,18 @@ export default function requestOperateTaskTest() {
     })
 
     /**
+     * @tc.number: testPauseTask005
      * @tc.name: testPauseTask005
      * @tc.desc: Test pause resume pause background task
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testPauseTask005', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
         saveas: `test.apk`,
         mode: request.agent.Mode.BACKGROUND
       }
@@ -720,15 +726,18 @@ export default function requestOperateTaskTest() {
     })
 
     /**
+     * @tc.number: testOnTask006
      * @tc.name: testOnTask006
      * @tc.desc: Test on task for progress state REMOVED
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testOnTask006', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
         saveas: `test.apk`,
         mode: request.agent.Mode.FOREGROUND
       }
