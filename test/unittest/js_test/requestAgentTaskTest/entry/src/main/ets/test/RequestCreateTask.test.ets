@@ -1432,15 +1432,18 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskIndex004
      * @tc.name: testTaskIndex004
      * @tc.desc: Test create task when index is 0 and begins is 5 and ends is 10 for download
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskIndex004', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/47273f95/Feishu-win32_ia32-7.9.7-signed.exe',
         mode: request.agent.Mode.FOREGROUND,
         begins: 5,
         ends: 10,
@@ -1541,15 +1544,18 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskIndex008
      * @tc.name: testTaskIndex008
      * @tc.desc: Test create task when index is 0 and begins is not exists and ends is 10 for download
-     * @tc.type: FUNC
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
      * @tc.require:
      */
     it('testTaskIndex008', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/6d6bc5/Feishu-win32_ia32-5.10.6-signed.exe',
+        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/47273f95/Feishu-win32_ia32-7.9.7-signed.exe',
         mode: request.agent.Mode.FOREGROUND,
         ends: 10,
         gauge: true,
