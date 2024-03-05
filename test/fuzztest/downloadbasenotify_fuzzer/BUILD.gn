@@ -21,6 +21,8 @@ import("//build/test.gni")
 ohos_fuzztest("DownloadBaseNotifyFuzzTest") {
   module_out_path = "request/request"
 
+  fuzz_config_file = "../../../test/fuzztest/downloadbasenotify_fuzzer"
+
   include_dirs = [
     "../../../frameworks/js/napi/include",
     "../../../frameworks/native/include",
