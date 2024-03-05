@@ -33,8 +33,8 @@ impl TaskManager {
                         return Some(config.clone());
                     }
                 }
-                if let Some(config) = self.query_single_failed_task_config(task_id) {
-                    debug!("found a failed task in database, task_id:{}", task_id);
+                if let Some(config) = self.query_single_task_config(task_id) {
+                    debug!("found single task in database, task_id:{}", task_id);
                     return Some(config);
                 }
                 None

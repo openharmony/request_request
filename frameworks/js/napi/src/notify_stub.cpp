@@ -80,7 +80,12 @@ void NotifyStub::OnCallBack(MessageParcel &data)
     }
     RequestCallBack(type, tid, notifyData);
 
-    if (type == "complete" || type == "fail" || type == "remove") {
+    if (notifyData.version == Version::API9) {
+        if (type == "complete" || type == "fail" || type == "remove") {
+            JsTask::ClearTaskContext(tid);
+            JsTask::ClearTaskMap(tid);
+        }
+    } else if (notifyData.version == Version::API10 && type == "remove") {
         JsTask::ClearTaskContext(tid);
         JsTask::ClearTaskMap(tid);
     }

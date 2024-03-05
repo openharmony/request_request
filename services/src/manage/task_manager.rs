@@ -440,10 +440,13 @@ impl TaskManager {
             Notifier::remove_notify(&remove_task);
         }
 
-        // Notifies NotifyManager to remove `RemoteObj` when task has been removed.
-        #[cfg(feature = "oh")]
-        Notifier::clear_notify(&remove_task);
-
+        let version = task.conf.version;
+        if (version == Version::API9) || (state == State::Completed || state == State::Removed) {
+            // Notifies NotifyManager to remove `RemoteObj` when task has been removed.
+            #[cfg(feature = "oh")]
+            Notifier::clear_notify(&remove_task);
+        }
+        
         let map = self
             .qos
             .remove(task.conf.common_data.uid, task.conf.common_data.task_id);

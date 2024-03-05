@@ -151,7 +151,7 @@ CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo);
 CProgress BuildCProgress(const Progress &progress);
 bool HasTaskConfigRecord(uint32_t taskId);
 CTaskConfig **QueryAllTaskConfig();
-CTaskConfig *QuerySingleFailedTaskConfig(uint32_t taskId);
+CTaskConfig *QuerySingleTaskConfig(uint32_t taskId);
 int QueryTaskConfigLen();
 int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, std::vector<TaskConfig> &taskConfigs);
 CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs);
