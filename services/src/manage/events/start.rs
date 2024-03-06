@@ -37,7 +37,7 @@ impl TaskManager {
             ErrorCode::ErrOk
         } else if self.has_task_config_record(task_id) {
             info!(
-                "Has found a failed task in database, task_id:{}, try to continue download",
+                "Task exists in database, task_id:{}, try to continue download",
                 task_id
             );
             self.continue_single_failed_task(self.recording_rdb_num.clone(), task_id);

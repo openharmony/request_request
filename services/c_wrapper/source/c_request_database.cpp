@@ -1094,12 +1094,10 @@ CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs)
     return cTaskConfigs;
 }
 
-CTaskConfig *QuerySingleFailedTaskConfig(uint32_t taskId)
+CTaskConfig *QuerySingleTaskConfig(uint32_t taskId)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.EqualTo("task_id", std::to_string(taskId))
-        ->And()
-        ->EqualTo("state", static_cast<uint8_t>(State::FAILED));
+    rdbPredicates.EqualTo("task_id", std::to_string(taskId));
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(
         rdbPredicates, { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming",
                            "retry", "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority",
@@ -1124,7 +1122,7 @@ CTaskConfig *QuerySingleFailedTaskConfig(uint32_t taskId)
     }
 
     TaskConfig taskConfig = BuildRequestTaskConfig(resultSet);
-    REQUEST_HILOGI("QuerySingleFailedTaskConfig in, after BuildRequestTaskConfig, task_id: %{public}u",
+    REQUEST_HILOGD("QuerySingleTaskConfig in, after BuildRequestTaskConfig, task_id: %{public}u",
         taskConfig.commonData.taskId);
     CTaskConfig *cTaskConfig = new CTaskConfig;
     BuildCTaskConfig(cTaskConfig, taskConfig);

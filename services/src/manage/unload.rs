@@ -121,15 +121,16 @@ impl TaskManager {
         recording_rdb_num: RdbRecording,
         task_id: u32,
     ) {
-        if let Some(config) = self.query_single_failed_task_config(task_id) {
-            debug!("RSA query single failed task config is {:?}", config);
+        if let Some(config) = self.query_single_task_config(task_id) {
+            debug!("RSA query single task config is {:?}", config);
             let uid = config.common_data.uid;
             let task_id = config.common_data.task_id;
             let token = config.token.clone();
             if let Some(task_info) = self.touch(uid, task_id, token) {
                 let state = State::from(task_info.progress.common_data.state);
-                if state != State::Failed {
-                    error!("state of continue task is not Failed");
+                debug!("get continue task state is {:?}", state);
+                if state != State::Failed && state != State::Stopped {
+                    error!("state of continue task is not Failed or Stopped");
                     return;
                 }
                 let app_state = self.app_state(uid, &config.bundle);
@@ -241,9 +242,9 @@ impl TaskManager {
         Some(task_config_map)
     }
 
-    pub(crate) fn query_single_failed_task_config(&self, task_id: u32) -> Option<TaskConfig> {
-        debug!("query single failed task config in database");
-        let c_task_config = unsafe { QuerySingleFailedTaskConfig(task_id) };
+    pub(crate) fn query_single_task_config(&self, task_id: u32) -> Option<TaskConfig> {
+        debug!("query single task config in database");
+        let c_task_config = unsafe { QuerySingleTaskConfig(task_id) };
         if c_task_config.is_null() {
             debug!(
                 "can not find the failed task in database, which task id is {}",
@@ -282,7 +283,7 @@ extern "C" {
     pub(crate) fn DeleteCTaskConfigs(ptr: *const *const CTaskConfig);
     pub(crate) fn QueryAllTaskConfig() -> *const *const CTaskConfig;
     pub(crate) fn QueryTaskConfigLen() -> i32;
-    pub(crate) fn QuerySingleFailedTaskConfig(taskId: u32) -> *const CTaskConfig;
+    pub(crate) fn QuerySingleTaskConfig(taskId: u32) -> *const CTaskConfig;
     pub(crate) fn DeleteCTaskConfig(ptr: *const CTaskConfig);
     pub(crate) fn RequestDBRemoveRecordsFromTime(time: u64);
 }
