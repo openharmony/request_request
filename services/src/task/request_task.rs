@@ -20,10 +20,9 @@ use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::Duration;
 
-use ylong_http_client::async_impl::Client;
+use ylong_http_client::async_impl::{Body, Client, Request, RequestBuilder, Response};
 use ylong_http_client::{
-    Body, Certificate, ErrorKind, HttpClientError, Method, Proxy, Redirect, Request,
-    RequestBuilder, Response, Timeout, TlsVersion,
+    Certificate, ErrorKind, HttpClientError, Proxy, Redirect, Timeout, TlsVersion,
 };
 use ylong_runtime::fs::File as YlongFile;
 use ylong_runtime::io::{AsyncSeekExt, AsyncWriteExt};
@@ -423,7 +422,6 @@ impl RequestTask {
                 _ => "",
             },
         };
-        let method = Method::try_from(method).unwrap();
         let mut request = RequestBuilder::new().method(method).url(url.as_str());
         for (key, value) in self.conf.headers.iter() {
             request = request.header(key.as_str(), value.as_str());
@@ -460,7 +458,7 @@ impl RequestTask {
         }
     }
 
-    pub(crate) async fn build_download_request(&self) -> Option<Request<String>> {
+    pub(crate) async fn build_download_request(&self) -> Option<Request> {
         let mut request_builder = self.build_request_builder();
         let mut begins = self.conf.common_data.begins;
         let ends = self.conf.common_data.ends;
@@ -513,7 +511,7 @@ impl RequestTask {
         } else {
             self.range_request.store(false, Ordering::SeqCst);
         }
-        let result = request_builder.body(self.conf.data.clone());
+        let result = request_builder.body(Body::slice(self.conf.data.clone()));
         match result {
             Ok(value) => Some(value),
             Err(e) => {
@@ -531,14 +529,14 @@ impl RequestTask {
         self.get_file_info.store(true, Ordering::SeqCst);
         let content_type = response.headers().get("content-type");
         if let Some(mime_type) = content_type {
-            if let Ok(value) = mime_type.to_str() {
+            if let Ok(value) = mime_type.to_string() {
                 *self.mime_type.lock().unwrap() = value;
             }
         }
 
         let content_length = response.headers().get("content-length");
         if let Some(len) = content_length {
-            let length = len.to_str();
+            let length = len.to_string();
             match length {
                 Ok(value) => {
                     let len = value.parse::<i64>();
@@ -707,7 +705,7 @@ impl RequestTask {
             let mut guard = self.progress.lock().unwrap();
             guard.extras.clear();
             for (k, v) in r.headers() {
-                if let Ok(value) = v.to_str() {
+                if let Ok(value) = v.to_string() {
                     guard.extras.insert(k.to_string().to_lowercase(), value);
                 }
             }
@@ -731,7 +729,7 @@ impl RequestTask {
 
             loop {
                 let mut buf = [0u8; 1024];
-                let size = r.body_mut().data(&mut buf).await;
+                let size = r.data(&mut buf).await;
                 let size = match size {
                     Ok(size) => size,
                     Err(_e) => break,

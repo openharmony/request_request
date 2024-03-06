@@ -16,8 +16,8 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
-use ylong_http_client::async_impl::{DownloadOperator, Downloader};
-use ylong_http_client::{HttpClientError, Response, SpeedLimit, Timeout};
+use ylong_http_client::async_impl::{DownloadOperator, Downloader, Response};
+use ylong_http_client::{HttpClientError, SpeedLimit, Timeout};
 
 use super::operator::TaskOperator;
 use super::reason::Reason;
