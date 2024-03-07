@@ -23,6 +23,7 @@ use super::events::{
 };
 use super::qos::{Qos, QosChange, QosQueue};
 use super::scheduled;
+use crate::service::ability::RequestAbility;
 use crate::error::ErrorCode;
 use crate::service::ability::PANIC_INFO;
 use crate::task::config::Version;
@@ -395,6 +396,8 @@ impl TaskManager {
             "TaskManager remove task_id:{} from map",
             task.conf.common_data.task_id
         );
+
+        RequestAbility::client_manager().notify_task_finished(task.conf.common_data.task_id);
 
         let remove_task = match self.tasks.remove(&task.conf.common_data.task_id) {
             Some(task) => task,
