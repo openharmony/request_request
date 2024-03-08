@@ -73,6 +73,18 @@ enum Reason : uint32_t {
     OTHERS_ERROR,
 };
 
+enum class SubscribeType : uint32_t {
+    COMPLETED = 0,
+    FAILED,
+    HEADER_RECEIVE,
+    PAUSE,
+    PROGRESS,
+    REMOVE,
+    RESUME,
+    RESPONSE,
+    BUTT,
+};
+
 struct UploadResponse {
     int32_t code;
     std::string data;
@@ -168,6 +180,8 @@ struct TaskState {
 };
 
 struct NotifyData {
+    SubscribeType type;
+    uint32_t taskId;
     Progress progress;
     Action action;
     Version version;
@@ -272,5 +286,6 @@ struct Response {
     std::string reason;
     std::map<std::string, std::vector<std::string>> headers;
 };
+
 } // namespace OHOS::Request
 #endif //JS_COMMON_H

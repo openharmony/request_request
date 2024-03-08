@@ -44,6 +44,7 @@ use crate::task::ffi::{
     GetNetworkInfo, RequestBackgroundNotify, RequestTaskMsg, UpdateRequestTask,
 };
 use crate::task::files::{AttachedFiles, Files};
+use crate::task::notify::SubscribeType;
 use crate::utils::c_wrapper::CStringWrapper;
 use crate::utils::{get_current_timestamp, hashmap_to_string};
 
@@ -77,6 +78,7 @@ pub(crate) struct RequestTask {
     pub(crate) skip_bytes: AtomicU64,
     pub(crate) upload_counts: AtomicUsize,
     pub(crate) rate_limiting: AtomicBool,
+    #[allow(unused)]
     pub(crate) app_state: Arc<AtomicU8>,
     pub(crate) last_notify: AtomicU64,
 }
@@ -197,7 +199,6 @@ impl RequestTask {
             each_file_status: vec,
             task_id: self.conf.common_data.task_id,
             _uid: self.conf.common_data.uid,
-            _bundle: self.conf.bundle.clone(),
         }
     }
 
@@ -584,7 +585,7 @@ impl RequestTask {
         if self.conf.version == Version::API9 && self.conf.common_data.action == Action::Upload {
             let notify_data = self.build_notify_data();
             #[cfg(feature = "oh")]
-            Notifier::service_front_notify("headerReceive".into(), notify_data, &self.app_state);
+            Notifier::service_front_notify(SubscribeType::HeaderReceive, notify_data);
         }
     }
 
@@ -693,7 +694,7 @@ impl RequestTask {
         debug!("state change notification");
         let notify_data = self.build_notify_data();
         #[cfg(feature = "oh")]
-        Notifier::service_front_notify("progress".into(), notify_data.clone(), &self.app_state);
+        Notifier::service_front_notify(SubscribeType::Progress, notify_data.clone());
         let bundle = CString::new(self.conf.bundle.as_str()).unwrap();
         match state {
             State::Completed => {
@@ -706,7 +707,7 @@ impl RequestTask {
                     );
                 }
                 #[cfg(feature = "oh")]
-                Notifier::service_front_notify("complete".into(), notify_data, &self.app_state)
+                Notifier::service_front_notify(SubscribeType::Complete, notify_data)
             }
             State::Failed => {
                 unsafe {
@@ -718,12 +719,12 @@ impl RequestTask {
                     );
                 }
                 #[cfg(feature = "oh")]
-                Notifier::service_front_notify("fail".into(), notify_data, &self.app_state)
+                Notifier::service_front_notify(SubscribeType::Fail, notify_data)
             }
             State::Paused | State::Waiting =>
             {
                 #[cfg(feature = "oh")]
-                Notifier::service_front_notify("pause".into(), notify_data, &self.app_state)
+                Notifier::service_front_notify(SubscribeType::Pause, notify_data)
             }
             _ => {}
         }

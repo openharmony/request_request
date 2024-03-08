@@ -18,6 +18,7 @@
 #include <fcntl.h>
 
 #include <cstring>
+#include <fstream>
 #include <initializer_list>
 #include <memory>
 #include <regex>

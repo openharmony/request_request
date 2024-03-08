@@ -18,15 +18,12 @@
 
 #include <set>
 
+#include "i_notify_data_listener.h"
 #include "i_response_listener.h"
 
 namespace OHOS::Request {
 
 class Request {
-public:
-    static constexpr uint32_t EVENT_NONE = 0;
-    static constexpr uint32_t EVENT_RESPONSE = (1 << 0);
-
 public:
     Request(const std::string &taskId) : taskId_(taskId), events_(0U)
     {
@@ -37,52 +34,78 @@ public:
         return this->taskId_;
     }
 
-    size_t AddListener(const std::shared_ptr<IResponseListener> &listener)
+    void AddListener(const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener)
     {
-        this->responseListeners_.emplace(listener);
-        return this->responseListeners_.size();
+        if (type == SubscribeType::RESPONSE) {
+            responseListener_ = listener;
+        }
     }
 
-    size_t RemoveListener(const std::shared_ptr<IResponseListener> &listener)
+    void RemoveListener(const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener)
     {
-        this->responseListeners_.erase(listener);
-        return this->responseListeners_.size();
+        if (type == SubscribeType::RESPONSE) {
+            responseListener_.reset();
+        }
     }
 
-    bool IsEventSubscribed(uint32_t eventType)
+    void AddListener(const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener)
     {
-        return ((events_ & eventType) == eventType);
+        if (type != SubscribeType::RESPONSE && type < SubscribeType::BUTT) {
+            notifyDataListenerMap_[type] = listener;
+        }
     }
 
-    void MarkEventSubscribed(uint32_t eventType, bool subscribed)
+    void RemoveListener(const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener)
     {
+        if (type != SubscribeType::RESPONSE && type < SubscribeType::BUTT) {
+            notifyDataListenerMap_.erase(type);
+        }
+    }
+
+    bool IsEventSubscribed(SubscribeType eventType)
+    {
+        uint32_t type = 1 << static_cast<uint32_t>(eventType);
+        return ((events_ & type) == type);
+    }
+
+    void MarkEventSubscribed(SubscribeType eventType, bool subscribed)
+    {
+        uint32_t type = 1 << static_cast<uint32_t>(eventType);
         if (subscribed) {
-            events_ |= eventType;
+            events_ |= type;
         } else {
-            events_ &= (~eventType);
+            events_ &= (~type);
         }
     }
 
     bool HasListener() const
     {
-        return !(this->responseListeners_.empty());
+        if (responseListener_ != nullptr) {
+            return true;
+        }
+        return !notifyDataListenerMap_.empty();
     }
 
     void OnResponseReceive(const std::shared_ptr<Response> &response)
     {
-        std::vector<std::shared_ptr<IResponseListener>> responseListenerVec;
-        for (auto responseListener : responseListeners_) {
-            responseListenerVec.push_back(responseListener);
+        if (responseListener_ != nullptr) {
+            responseListener_->OnResponseReceive(response);
         }
-        for (auto responseListener : responseListenerVec) {
-            responseListener->OnResponseReceive(response);
+    }
+
+    void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData)
+    {
+        auto listener = notifyDataListenerMap_.find(notifyData->type);
+        if (listener != notifyDataListenerMap_.end()) {
+            listener->second->OnNotifyDataReceive(notifyData);
         }
     }
 
 private:
     const std::string taskId_;
     uint32_t events_;
-    std::set<std::shared_ptr<IResponseListener>> responseListeners_;
+    std::shared_ptr<IResponseListener> responseListener_;
+    std::map<SubscribeType, std::shared_ptr<INotifyDataListener>> notifyDataListenerMap_;
 };
 
 } // namespace OHOS::Request

@@ -16,11 +16,12 @@
 #ifndef OHOS_REQUEST_I_RESPONSE_MESSAGE_HANDLER_H
 #define OHOS_REQUEST_I_RESPONSE_MESSAGE_HANDLER_H
 
+#include "i_notify_data_listener.h"
 #include "i_response_listener.h"
 
 namespace OHOS::Request {
 
-class IResponseMessageHandler : public IResponseListener {
+class IResponseMessageHandler : public IResponseListener, public INotifyDataListener {
 public:
     virtual void OnChannelBroken() = 0;
 };

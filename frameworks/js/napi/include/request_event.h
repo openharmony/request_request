@@ -26,7 +26,6 @@
 #include "napi_utils.h"
 #include "noncopyable.h"
 #include "notify_interface.h"
-#include "request_notify.h"
 
 namespace OHOS::Request {
 class RequestEvent final {
@@ -52,6 +51,7 @@ public:
 private:
     struct JsParam {
         std::string type;
+        SubscribeType subscribeType;
         napi_value callback;
         napi_value self;
         JsTask *task;
@@ -65,8 +65,8 @@ private:
     };
 
     using Event = std::function<int32_t(const std::shared_ptr<ExecContext> &)>;
-    static std::unordered_set<std::string> supportEventsV10_;
-    static std::unordered_set<std::string> supportEventsV9_;
+    static std::map<std::string, SubscribeType> supportEventsV10_;
+    static std::map<std::string, SubscribeType> supportEventsV9_;
     static std::map<std::string, Event> requestEvent_;
     static std::map<std::string, uint32_t> resMap_;
     static std::map<State, DownloadStatus> stateMap_;
@@ -88,8 +88,7 @@ private:
         napi_env env, const std::shared_ptr<ExecContext> &context, const std::string &execType, napi_value &result);
     static void GetDownloadInfo(const TaskInfo &infoRes, DownloadInfo &info);
     static NotifyData BuildNotifyData(const std::shared_ptr<TaskInfo> &taskInfo);
-    static bool IsSupportType(const std::string &type, Version version);
-    static void ConvertType(std::string &type);
+    static SubscribeType StringToSubscribeType(const std::string &type, Version version);
 };
 } // namespace OHOS::Request
 

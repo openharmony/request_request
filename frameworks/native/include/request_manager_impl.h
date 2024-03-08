@@ -23,11 +23,11 @@
 
 #include "constant.h"
 #include "data_ability_helper.h"
+#include "i_notify_data_listener.h"
 #include "i_response_message_handler.h"
 #include "iremote_object.h"
 #include "iservice_registry.h"
 #include "js_common.h"
-#include "notify_stub.h"
 #include "refbase.h"
 #include "request.h"
 #include "request_service_interface.h"
@@ -46,7 +46,7 @@ public:
 class RequestManagerImpl : public IResponseMessageHandler {
 public:
     static const std::unique_ptr<RequestManagerImpl> &GetInstance();
-    int32_t Create(const Config &config, int32_t &tid, sptr<NotifyInterface> listener);
+    int32_t Create(const Config &config, int32_t &tid);
     int32_t GetTask(const std::string &tid, const std::string &token, Config &config);
     int32_t Start(const std::string &tid);
     int32_t Stop(const std::string &tid);
@@ -59,11 +59,17 @@ public:
     int32_t Remove(const std::string &tid, Version version);
     int32_t Resume(const std::string &tid);
 
-    int32_t On(const std::string &type, const std::string &tid, const sptr<NotifyInterface> &listener, Version version);
-    int32_t Off(const std::string &type, const std::string &tid, Version version);
+    int32_t Subscribe(const std::string &taskId);
+    int32_t Unsubscribe(const std::string &taskId);
 
-    int32_t Subscribe(const std::string &taskId, const std::shared_ptr<IResponseListener> &listener);
-    int32_t Unsubscribe(const std::string &taskId, const std::shared_ptr<IResponseListener> &listener);
+    int32_t AddListener(
+        const std::string &taskId, const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener);
+    int32_t RemoveListener(
+        const std::string &taskId, const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener);
+    int32_t AddListener(
+        const std::string &taskId, const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener);
+    int32_t RemoveListener(
+        const std::string &taskId, const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener);
 
     int32_t SubRunCount(const sptr<NotifyInterface> &listener);
     int32_t UnsubRunCount();
@@ -83,13 +89,14 @@ private:
     RequestManagerImpl(RequestManagerImpl &&) = delete;
     RequestManagerImpl &operator=(const RequestManagerImpl &) = delete;
     sptr<RequestServiceInterface> GetRequestServiceProxy();
-    int32_t Retry(int32_t &taskId, const Config &config, int32_t errorCode, sptr<NotifyInterface> listener);
+    int32_t Retry(int32_t &taskId, const Config &config, int32_t errorCode);
     void SetRequestServiceProxy(sptr<RequestServiceInterface> proxy);
     bool SubscribeSA(sptr<ISystemAbilityManager> systemAbilityManager);
     int32_t EnsureChannelOpen();
     std::shared_ptr<Request> GetTask(const std::string &taskId);
     void OnChannelBroken() override;
     void OnResponseReceive(const std::shared_ptr<Response> &response) override;
+    void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData) override;
 
 private:
     static std::mutex instanceLock_;

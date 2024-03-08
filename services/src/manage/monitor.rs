@@ -18,6 +18,7 @@ use super::TaskManager;
 use crate::manage::scheduled;
 use crate::task::config::Action;
 use crate::task::info::{ApplicationState, Mode, State};
+use crate::task::notify::SubscribeType;
 use crate::task::reason::Reason;
 
 cfg_oh! {
@@ -125,13 +126,8 @@ impl TaskManager {
                 task.resume.store(true, Ordering::SeqCst);
 
                 let notify_data = task.build_notify_data();
-
                 #[cfg(feature = "oh")]
-                Notifier::service_front_notify(
-                    "resume".into(),
-                    notify_data,
-                    &self.app_state(uid, &task.conf.bundle),
-                );
+                Notifier::service_front_notify(SubscribeType::Resume, notify_data);
                 self.start_inner(task);
             }
         });

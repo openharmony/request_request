@@ -26,6 +26,6 @@ public:
 int32_t SubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob);
 void UnsubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob);
 
-}
+} // namespace OHOS::Request
 
 #endif // REQUEST_RUNNING_TASK_COUNT_H

@@ -15,18 +15,20 @@
 
 #include "js_initialize.h"
 
-#include "js_common.h"
-#include "log.h"
-#include "napi_utils.h"
-#include "net_conn_client.h"
-#include "request_manager.h"
+#include <securec.h>
+#include <sys/stat.h>
+
 #include <algorithm>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <regex>
-#include <securec.h>
-#include <sys/stat.h>
+
+#include "js_common.h"
+#include "log.h"
+#include "napi_utils.h"
+#include "net_conn_client.h"
+#include "request_manager.h"
 
 static constexpr const char *PARAM_KEY_DESCRIPTION = "description";
 static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";

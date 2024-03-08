@@ -14,16 +14,16 @@
  */
 
 #include "runcount_notify_stub.h"
-#include "base/request/request/interfaces/inner_api/include/running_task_count.h"
-#include "request_running_task_count.h"
 
 #include <cstdint>
 #include <memory>
 #include <thread>
 
+#include "base/request/request/interfaces/inner_api/include/running_task_count.h"
 #include "download_server_ipc_interface_code.h"
 #include "log.h"
 #include "parcel_helper.h"
+#include "request_running_task_count.h"
 
 namespace OHOS::Request {
 void RunCountNotifyStub::CallBack(const Notify &notify)
@@ -41,7 +41,8 @@ sptr<RunCountNotifyStub> RunCountNotifyStub::GetInstance()
     return pInstance;
 }
 
-int32_t RunCountNotifyStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+int32_t RunCountNotifyStub::OnRemoteRequest(
+    uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     auto descriptorToken = data.ReadInterfaceToken();
     if (descriptorToken != GetDescriptor()) {

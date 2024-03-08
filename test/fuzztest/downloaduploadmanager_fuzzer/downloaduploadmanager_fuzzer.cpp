@@ -23,7 +23,6 @@
 #include "message_parcel.h"
 #include "nativetoken_kit.h"
 #include "request_manager.h"
-#include "request_notify.h"
 #include "request_service_interface.h"
 #include "token_setproc.h"
 
@@ -66,12 +65,8 @@ void CreateRequestFuzzTest(const uint8_t *data, size_t size)
     Config config;
     auto tid = static_cast<int32_t>(size);
 
-    napi_env env = nullptr;
-    napi_value value = nullptr;
-    sptr<RequestNotify> listener_ = new RequestNotify(env, value);
-
     GrantNativePermission();
-    RequestManager::GetInstance()->Create(config, tid, listener_);
+    RequestManager::GetInstance()->Create(config, tid);
 }
 
 void StartRequestFuzzTest(const uint8_t *data, size_t size)
@@ -146,28 +141,6 @@ void ResumeRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Resume(tid);
 }
 
-void OnRequestFuzzTest(const uint8_t *data, size_t size)
-{
-    Version version = static_cast<Version>(ConvertToUint32(data, size));
-    std::string tid(reinterpret_cast<const char *>(data), size);
-    std::string type(data, data + size);
-
-    napi_env env = nullptr;
-    napi_value value = nullptr;
-    sptr<RequestNotify> listener_ = new RequestNotify(env, value);
-
-    GrantNativePermission();
-    RequestManager::GetInstance()->On(type, tid, listener_, version);
-}
-
-void OffRequestFuzzTest(const uint8_t *data, size_t size)
-{
-    Version version = static_cast<Version>(ConvertToUint32(data, size));
-    std::string tid(reinterpret_cast<const char *>(data), size);
-    std::string type(data, data + size);
-    GrantNativePermission();
-    RequestManager::GetInstance()->Off(type, tid, version);
-}
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -188,7 +161,5 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::QueryMimeTypeRequestFuzzTest(data, size);
     OHOS::RemoveRequestFuzzTest(data, size);
     OHOS::ResumeRequestFuzzTest(data, size);
-    OHOS::OnRequestFuzzTest(data, size);
-    OHOS::OffRequestFuzzTest(data, size);
     return 0;
 }

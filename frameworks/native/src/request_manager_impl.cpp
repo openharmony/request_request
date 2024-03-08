@@ -28,11 +28,11 @@
 #include "rdb_predicates.h"
 #include "rdb_store.h"
 #include "request_manager.h"
-#include "runcount_notify_stub.h"
 #include "request_running_task_count.h"
 #include "request_sync_load_callback.h"
 #include "response_message_receiver.h"
 #include "result_set.h"
+#include "runcount_notify_stub.h"
 #include "system_ability_definition.h"
 
 namespace OHOS::Request {
@@ -45,7 +45,7 @@ const std::unique_ptr<RequestManagerImpl> &RequestManagerImpl::GetInstance()
     return instance;
 }
 
-int32_t RequestManagerImpl::Create(const Config &config, int32_t &tid, sptr<NotifyInterface> listener)
+int32_t RequestManagerImpl::Create(const Config &config, int32_t &tid)
 {
     REQUEST_HILOGD("RequestManagerImpl Create start.");
 
@@ -54,17 +54,23 @@ int32_t RequestManagerImpl::Create(const Config &config, int32_t &tid, sptr<Noti
         REQUEST_HILOGE("GetRequestServiceProxy fail.");
         return E_SERVICE_ERROR;
     }
-    int32_t ret = proxy->Create(config, tid, listener);
+    int32_t ret = proxy->Create(config, tid);
     if (ret == E_UNLOADING_SA) {
         REQUEST_HILOGE("Service ability is quitting");
-        return Retry(tid, config, ret, listener);
+        ret = Retry(tid, config, ret);
+        if (ret != E_OK) {
+            return ret;
+        }
     }
     REQUEST_HILOGD("RequestManagerImpl Create end.");
+    if (ret == E_OK) {
+        this->Subscribe(std::to_string(tid));
+    }
+
     return ret;
 }
 
-int32_t RequestManagerImpl::Retry(
-    int32_t &taskId, const Config &config, int32_t errorCode, sptr<NotifyInterface> listener)
+int32_t RequestManagerImpl::Retry(int32_t &taskId, const Config &config, int32_t errorCode)
 {
     REQUEST_HILOGD("Retry in");
     int32_t interval = 1;
@@ -86,7 +92,7 @@ int32_t RequestManagerImpl::Retry(
             REQUEST_HILOGE("proxy is nullptr!");
             continue;
         }
-        errorCode = proxy->Create(config, taskId, listener);
+        errorCode = proxy->Create(config, taskId);
         ++interval;
     }
     if (errorCode != E_OK && config.action == Action::DOWNLOAD) {
@@ -227,68 +233,64 @@ int32_t RequestManagerImpl::Resume(const std::string &tid)
     return proxy->Resume(tid);
 }
 
-int32_t RequestManagerImpl::On(
-    const std::string &type, const std::string &tid, const sptr<NotifyInterface> &listener, Version version)
+int32_t RequestManagerImpl::AddListener(
+    const std::string &taskId, const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener)
 {
-    REQUEST_HILOGD("On in");
-    auto proxy = GetRequestServiceProxy();
-    if (proxy == nullptr) {
-        return false;
-    }
-
-    return proxy->On(type, tid, listener, version);
+    REQUEST_HILOGD("AddListener in");
+    std::shared_ptr<Request> task = this->GetTask(taskId);
+    task->AddListener(type, listener);
+    return E_OK;
 }
 
-int32_t RequestManagerImpl::Off(const std::string &type, const std::string &tid, Version version)
+int32_t RequestManagerImpl::RemoveListener(
+    const std::string &taskId, const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener)
 {
-    REQUEST_HILOGD("Off in");
-    auto proxy = GetRequestServiceProxy();
-    if (proxy == nullptr) {
-        return false;
-    }
-
-    return proxy->Off(type, tid, version);
+    REQUEST_HILOGD("RemoveListener in");
+    std::shared_ptr<Request> task = this->GetTask(taskId);
+    task->RemoveListener(type, listener);
+    return E_OK;
 }
 
-int32_t RequestManagerImpl::Subscribe(const std::string &taskId, const std::shared_ptr<IResponseListener> &listener)
+int32_t RequestManagerImpl::AddListener(
+    const std::string &taskId, const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener)
+{
+    REQUEST_HILOGD("AddListener in");
+    std::shared_ptr<Request> task = this->GetTask(taskId);
+    task->AddListener(type, listener);
+    return E_OK;
+}
+
+int32_t RequestManagerImpl::RemoveListener(
+    const std::string &taskId, const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener)
+{
+    REQUEST_HILOGD("RemoveListener in");
+    std::shared_ptr<Request> task = this->GetTask(taskId);
+    task->RemoveListener(type, listener);
+    return E_OK;
+}
+
+int32_t RequestManagerImpl::Subscribe(const std::string &taskId)
 {
     REQUEST_HILOGD("Subscribe in");
     auto proxy = GetRequestServiceProxy();
     if (proxy == nullptr) {
-        return false;
+        REQUEST_HILOGE("GetRequestServiceProxy fail.");
+        return E_SERVICE_ERROR;
     }
-    std::shared_ptr<Request> task = this->GetTask(taskId);
-    task->AddListener(listener);
-    if (task->IsEventSubscribed(Request::EVENT_RESPONSE)) {
-        return E_OK;
-    }
-
     this->EnsureChannelOpen();
-    proxy->Subscribe(taskId, Request::EVENT_RESPONSE);
-    task->MarkEventSubscribed(Request::EVENT_RESPONSE, true);
-    return E_OK;
+
+    return proxy->Subscribe(taskId);
 }
 
-int32_t RequestManagerImpl::Unsubscribe(const std::string &taskId, const std::shared_ptr<IResponseListener> &listener)
+int32_t RequestManagerImpl::Unsubscribe(const std::string &taskId)
 {
     REQUEST_HILOGD("Unsubscribe in");
     auto proxy = GetRequestServiceProxy();
     if (proxy == nullptr) {
-        return false;
+        REQUEST_HILOGE("GetRequestServiceProxy fail.");
+        return E_SERVICE_ERROR;
     }
-    std::shared_ptr<Request> task = this->GetTask(taskId);
-    size_t size = task->RemoveListener(listener);
-    if (size != 0U) {
-        return E_OK;
-    }
-
-    if (!task->IsEventSubscribed(Request::EVENT_RESPONSE)) {
-        return E_OK;
-    }
-
-    proxy->Unsubscribe(taskId, Request::EVENT_RESPONSE);
-    task->MarkEventSubscribed(Request::EVENT_RESPONSE, false);
-    return E_OK;
+    return proxy->Unsubscribe(taskId);
 }
 
 int32_t RequestManagerImpl::SubRunCount(const sptr<NotifyInterface> &listener)
@@ -365,6 +367,17 @@ void RequestManagerImpl::OnResponseReceive(const std::shared_ptr<Response> &resp
     }
 
     it->second->OnResponseReceive(response);
+}
+
+void RequestManagerImpl::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData)
+{
+    auto it = tasks_.find(std::to_string(notifyData->taskId));
+    if (it == tasks_.end()) {
+        REQUEST_HILOGE("task not found");
+        return;
+    }
+
+    it->second->OnNotifyDataReceive(notifyData);
 }
 
 sptr<RequestServiceInterface> RequestManagerImpl::GetRequestServiceProxy()
@@ -468,6 +481,10 @@ void RequestManagerImpl::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
     ready_.store(false);
     SetRequestServiceProxy(nullptr);
     FwkRunningTaskCountManager::GetInstance()->SetCount(0);
+    if (!msgReceiver_) {
+        return;
+    }
+    msgReceiver_->Shutdown();
 }
 
 RequestSaDeathRecipient::RequestSaDeathRecipient()

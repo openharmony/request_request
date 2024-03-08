@@ -32,23 +32,23 @@ static constexpr const char *EVENT_FAIL = "fail";
 static constexpr const char *EVENT_COMPLETE = "complete";
 static constexpr const char *EVENT_RESPONSE = "response";
 
-std::unordered_set<std::string> RequestEvent::supportEventsV9_ = {
-    EVENT_COMPLETE,
-    EVENT_PAUSE,
-    EVENT_REMOVE,
-    EVENT_PROGRESS,
-    EVENT_HEADERRECEIVE,
-    EVENT_FAIL,
+std::map<std::string, SubscribeType> RequestEvent::supportEventsV9_ = {
+    { EVENT_COMPLETE, SubscribeType::COMPLETED },
+    { EVENT_PAUSE, SubscribeType::PAUSE },
+    { EVENT_REMOVE, SubscribeType::REMOVE },
+    { EVENT_PROGRESS, SubscribeType::PROGRESS },
+    { EVENT_HEADERRECEIVE, SubscribeType::HEADER_RECEIVE },
+    { EVENT_FAIL, SubscribeType::FAILED },
 };
 
-std::unordered_set<std::string> RequestEvent::supportEventsV10_ = {
-    EVENT_PROGRESS,
-    EVENT_COMPLETED,
-    EVENT_FAILED,
-    EVENT_PAUSE,
-    EVENT_RESUME,
-    EVENT_REMOVE,
-    EVENT_RESPONSE,
+std::map<std::string, SubscribeType> RequestEvent::supportEventsV10_ = {
+    { EVENT_PROGRESS, SubscribeType::PROGRESS },
+    { EVENT_COMPLETED, SubscribeType::COMPLETED },
+    { EVENT_FAILED, SubscribeType::FAILED },
+    { EVENT_PAUSE, SubscribeType::PAUSE },
+    { EVENT_RESUME, SubscribeType::RESUME },
+    { EVENT_REMOVE, SubscribeType::REMOVE },
+    { EVENT_RESPONSE, SubscribeType::RESPONSE },
 };
 
 std::map<std::string, RequestEvent::Event> RequestEvent::requestEvent_ = {
@@ -144,27 +144,26 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    /* on response */
-    if (jsParam.type.compare(EVENT_RESPONSE) == 0) {
+    if (jsParam.subscribeType == SubscribeType::RESPONSE) {
+        if (jsParam.task->responseListener_ == nullptr) {
+            jsParam.task->responseListener_ = std::make_shared<JSResponseListener>(env, jsParam.task->GetTid());
+        }
         napi_status ret = jsParam.task->responseListener_->AddListener(jsParam.callback);
         if (ret != napi_ok) {
             REQUEST_HILOGE("AddListener fail");
         }
         REQUEST_HILOGD("On event %{public}s + %{public}s", jsParam.type.c_str(), jsParam.task->GetTid().c_str());
-        return nullptr;
-    }
-
-    sptr<RequestNotify> listener = new (std::nothrow) RequestNotify(env, jsParam.callback);
-    if (listener == nullptr) {
-        REQUEST_HILOGE("Create callback object fail");
-        return nullptr;
-    }
-    REQUEST_HILOGD("On event %{public}s + %{public}s", jsParam.type.c_str(), jsParam.task->GetTid().c_str());
-    std::string key = jsParam.type + jsParam.task->GetTid();
-    jsParam.task->AddListener(key, listener);
-    if (jsParam.task->GetListenerSize(key) == 1) {
-        RequestManager::GetInstance()->On(
-            jsParam.type, jsParam.task->GetTid(), listener, jsParam.task->config_.version);
+    } else {
+        auto listener = jsParam.task->notifyDataListenerMap_.find(jsParam.subscribeType);
+        if (listener == jsParam.task->notifyDataListenerMap_.end()) {
+            jsParam.task->notifyDataListenerMap_[jsParam.subscribeType] =
+                std::make_shared<JSNotifyDataListener>(env, jsParam.task->GetTid(), jsParam.subscribeType);
+        }
+        napi_status ret = jsParam.task->notifyDataListenerMap_[jsParam.subscribeType]->AddListener(jsParam.callback);
+        if (ret != napi_ok) {
+            REQUEST_HILOGE("AddListener fail");
+        }
+        REQUEST_HILOGD("On event %{public}s + %{public}s", jsParam.type.c_str(), jsParam.task->GetTid().c_str());
     }
     return nullptr;
 }
@@ -179,31 +178,41 @@ napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    /* off response */
-    if (jsParam.type.compare(EVENT_RESPONSE) == 0) {
+    if (jsParam.subscribeType == SubscribeType::RESPONSE) {
+        if (jsParam.task->responseListener_ == nullptr) {
+            jsParam.task->responseListener_ = std::make_shared<JSResponseListener>(env, jsParam.task->GetTid());
+        }
         napi_status ret = jsParam.task->responseListener_->RemoveListener(jsParam.callback);
         if (ret != napi_ok) {
             REQUEST_HILOGE("RemoveListener fail");
         }
-        return nullptr;
+    } else {
+        auto listener = jsParam.task->notifyDataListenerMap_.find(jsParam.subscribeType);
+        if (listener == jsParam.task->notifyDataListenerMap_.end()) {
+            jsParam.task->notifyDataListenerMap_[jsParam.subscribeType] =
+                std::make_shared<JSNotifyDataListener>(env, jsParam.task->GetTid(), jsParam.subscribeType);
+        }
+        napi_status ret = jsParam.task->notifyDataListenerMap_[jsParam.subscribeType]->RemoveListener(jsParam.callback);
+        if (ret != napi_ok) {
+            REQUEST_HILOGE("RemoveListener fail");
+        }
     }
 
-    if (jsParam.callback == nullptr) {
-        jsParam.task->RemoveListener(jsParam.type, jsParam.task->GetTid(), jsParam.task->config_.version);
-    } else {
-        jsParam.task->RemoveListener(
-            jsParam.type, jsParam.task->GetTid(), jsParam.callback, jsParam.task->config_.version);
-    }
     return nullptr;
 }
 
-bool RequestEvent::IsSupportType(const std::string &type, Version version)
+SubscribeType RequestEvent::StringToSubscribeType(const std::string &type, Version version)
 {
     if (version == Version::API10) {
-        return supportEventsV10_.find(type) != supportEventsV10_.end();
+        if (supportEventsV10_.find(type) != supportEventsV10_.end()) {
+            return supportEventsV10_[type];
+        }
     } else {
-        return supportEventsV9_.find(type) != supportEventsV9_.end();
+        if (supportEventsV9_.find(type) != supportEventsV9_.end()) {
+            return supportEventsV9_[type];
+        }
     }
+    return SubscribeType::BUTT;
 }
 
 NotifyData RequestEvent::BuildNotifyData(const std::shared_ptr<TaskInfo> &taskInfo)
@@ -241,10 +250,10 @@ ExceptionError RequestEvent::ParseOnOffParameters(
         return { .code = E_PARAMETER_CHECK, .errInfo = "The first parameter is not of string type" };
     }
     jsParam.type = NapiUtils::Convert2String(env, argv[NapiUtils::FIRST_ARGV]);
-    if (!IsSupportType(jsParam.type, jsParam.task->config_.version)) {
+    jsParam.subscribeType = StringToSubscribeType(jsParam.type, jsParam.task->config_.version);
+    if (jsParam.subscribeType == SubscribeType::BUTT) {
         return { .code = E_PARAMETER_CHECK, .errInfo = "First parameter error" };
     }
-    ConvertType(jsParam.type);
     if (argc == NapiUtils::ONE_ARG) {
         return err;
     }
@@ -255,16 +264,6 @@ ExceptionError RequestEvent::ParseOnOffParameters(
     }
     jsParam.callback = argv[NapiUtils::SECOND_ARGV];
     return err;
-}
-
-void RequestEvent::ConvertType(std::string &type)
-{
-    if (type == EVENT_COMPLETED) {
-        type = EVENT_COMPLETE;
-    }
-    if (type == EVENT_FAILED) {
-        type = EVENT_FAIL;
-    }
 }
 
 napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, const std::string &execType)

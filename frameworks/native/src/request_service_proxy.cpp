@@ -35,7 +35,7 @@ RequestServiceProxy::RequestServiceProxy(const sptr<IRemoteObject> &object)
 {
 }
 
-int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid, sptr<NotifyInterface> listener)
+int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid)
 {
     REQUEST_HILOGD("Create");
     MessageParcel data, reply;
@@ -65,7 +65,6 @@ int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid, sptr<Not
     data.WriteString(config.data);
     data.WriteString(config.proxy);
     GetVectorData(config, data);
-    data.WriteRemoteObject(listener->AsObject().GetRefPtr());
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REQUEST), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("SendRequest ret : %{public}d", ret);
@@ -336,42 +335,6 @@ int32_t RequestServiceProxy::Resume(const std::string &tid)
     return reply.ReadInt32();
 }
 
-int32_t RequestServiceProxy::On(
-    const std::string &type, const std::string &tid, const sptr<NotifyInterface> &listener, Version version)
-{
-    REQUEST_HILOGD("On");
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteUint32(static_cast<uint32_t>(version));
-    data.WriteString(type);
-    data.WriteString(tid);
-    data.WriteRemoteObject(listener->AsObject().GetRefPtr());
-    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_ON), data, reply, option);
-    if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
-        return E_SERVICE_ERROR;
-    }
-    return E_OK;
-}
-
-int32_t RequestServiceProxy::Off(const std::string &type, const std::string &tid, Version version)
-{
-    REQUEST_HILOGD("Off");
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteUint32(static_cast<uint32_t>(version));
-    data.WriteString(type);
-    data.WriteString(tid);
-    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_OFF), data, reply, option);
-    if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
-        return E_SERVICE_ERROR;
-    }
-    return E_OK;
-}
-
 int32_t RequestServiceProxy::OpenChannel(int32_t &sockFd)
 {
     REQUEST_HILOGD("OpenChannel");
@@ -393,14 +356,13 @@ int32_t RequestServiceProxy::OpenChannel(int32_t &sockFd)
     return E_OK;
 }
 
-int32_t RequestServiceProxy::Subscribe(const std::string &taskId, int32_t cbType)
+int32_t RequestServiceProxy::Subscribe(const std::string &taskId)
 {
     REQUEST_HILOGD("Subscribe");
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(taskId);
-    data.WriteInt32(cbType);
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SUBSCRIBE), data, reply, option);
     if (ret != ERR_NONE) {
@@ -410,14 +372,13 @@ int32_t RequestServiceProxy::Subscribe(const std::string &taskId, int32_t cbType
     return E_OK;
 }
 
-int32_t RequestServiceProxy::Unsubscribe(const std::string &taskId, int32_t cbType)
+int32_t RequestServiceProxy::Unsubscribe(const std::string &taskId)
 {
     REQUEST_HILOGD("Unsubscribe");
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(taskId);
-    data.WriteInt32(cbType);
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_UNSUBSCRIBE), data, reply, option);
     if (ret != ERR_NONE) {

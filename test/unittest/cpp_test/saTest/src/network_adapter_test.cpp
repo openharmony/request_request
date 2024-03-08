@@ -18,8 +18,8 @@
 #define private public
 #define protected public
 
-#include "network_adapter.h"
 #include "net_all_capabilities.h"
+#include "network_adapter.h"
 
 using namespace testing::ext;
 using namespace OHOS::Request;

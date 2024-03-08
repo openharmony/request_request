@@ -36,7 +36,6 @@ mod utils;
 
 cfg_oh! {
     mod init;
-    mod notify;
     mod trace;
     mod sys_event;
     mod service;

@@ -15,10 +15,12 @@
 
 #include "c_request_database.h"
 
-#include "log.h"
+#include <securec.h>
+
 #include <algorithm>
 #include <cstdint>
-#include <securec.h>
+
+#include "log.h"
 
 namespace OHOS::Request {
 RequestDataBase::RequestDataBase()

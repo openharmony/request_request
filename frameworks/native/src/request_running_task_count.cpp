@@ -26,8 +26,8 @@
 #include "download_server_ipc_interface_code.h"
 #include "iremote_broker.h"
 #include "parcel_helper.h"
-#include "runcount_notify_stub.h"
 #include "request_manager_impl.h"
+#include "runcount_notify_stub.h"
 
 namespace OHOS::Request {
 using namespace OHOS::HiviewDFX;
@@ -48,7 +48,7 @@ std::shared_ptr<IRunningTaskObserver> FwkIRunningTaskObserver::GetInnerObserver(
 }
 
 // impl FwkRunningTaskCountManager
-std::unique_ptr<FwkRunningTaskCountManager>& FwkRunningTaskCountManager::GetInstance()
+std::unique_ptr<FwkRunningTaskCountManager> &FwkRunningTaskCountManager::GetInstance()
 {
     static std::unique_ptr<FwkRunningTaskCountManager> instance(new FwkRunningTaskCountManager());
     return instance;

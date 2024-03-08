@@ -11,55 +11,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Arc;
 
-use crate::notify::{Event, NotifyEvent};
 use crate::service::ability::RequestAbility;
-use crate::task::config::Version;
-use crate::task::info::ApplicationState;
-use crate::task::notify::NotifyData;
+use crate::task::notify::{NotifyData, SubscribeType};
 use crate::task::request_task::RequestTask;
 
 pub(crate) struct Notifier;
 
 impl Notifier {
     pub(crate) fn service_front_notify(
-        event: String,
-        notify_data: NotifyData,
-        app_state: &Arc<AtomicU8>,
+        subscribe_type: SubscribeType,
+        notify_data: NotifyData
     ) {
         let total_processed = notify_data.progress.common_data.total_processed;
         let file_total_size: i64 = notify_data.progress.sizes.iter().sum();
-        if total_processed == 0 && file_total_size < 0 && event.eq("progress") {
+        if total_processed == 0 && file_total_size < 0 && subscribe_type.eq(&SubscribeType::Progress) {
             return;
         }
 
-        if ApplicationState::from(app_state.load(Ordering::SeqCst)) != ApplicationState::Foreground
-            && (notify_data.version == Version::API10 || event.eq("progress"))
-        {
-            return;
-        }
-        let event = match event.try_into() {
-            Ok(event) => event,
-            Err(e) => {
-                error!("TaskManager notify try_into failed {:?}", e);
-                return;
-            }
-        };
-
-        let event = NotifyEvent::notify(event, notify_data);
-        RequestAbility::notify().send_event(event);
+        RequestAbility::client_manager().send_notify_data(subscribe_type, notify_data)
     }
 
     pub(crate) fn remove_notify(task: &Arc<RequestTask>) {
         let data = task.build_notify_data();
-        let event = NotifyEvent::notify(Event::Remove, data);
-        RequestAbility::notify().send_event(event);
-    }
-
-    pub(crate) fn clear_notify(task: &Arc<RequestTask>) {
-        let event = NotifyEvent::clear(task.conf.common_data.task_id);
-        RequestAbility::notify().send_event(event);
+        RequestAbility::client_manager().send_notify_data(SubscribeType::Remove, data);
+        RequestAbility::client_manager().notify_task_finished(task.conf.common_data.task_id);
     }
 }

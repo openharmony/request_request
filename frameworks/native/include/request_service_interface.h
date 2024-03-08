@@ -28,7 +28,7 @@ namespace OHOS::Request {
 class RequestServiceInterface : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Download.RequestServiceInterface");
-    virtual int32_t Create(const Config &config, int32_t &taskId, sptr<NotifyInterface> listener) = 0;
+    virtual int32_t Create(const Config &config, int32_t &taskId) = 0;
     virtual int32_t GetTask(const std::string &tid, const std::string &token, Config &config) = 0;
     virtual int32_t Start(const std::string &tid) = 0;
     virtual int32_t Pause(const std::string &tid, Version version) = 0;
@@ -42,13 +42,9 @@ public:
     virtual int32_t Search(const Filter &filter, std::vector<std::string> &tids) = 0;
     virtual int32_t Show(const std::string &tid, TaskInfo &info) = 0;
 
-    virtual int32_t On(
-        const std::string &type, const std::string &tid, const sptr<NotifyInterface> &listener, Version version) = 0;
-    virtual int32_t Off(const std::string &type, const std::string &tid, Version version) = 0;
-
     virtual int32_t OpenChannel(int32_t &sockFd) = 0;
-    virtual int32_t Subscribe(const std::string &taskId, int32_t cbType) = 0;
-    virtual int32_t Unsubscribe(const std::string &taskId, int32_t cbType) = 0;
+    virtual int32_t Subscribe(const std::string &taskId) = 0;
+    virtual int32_t Unsubscribe(const std::string &taskId) = 0;
     virtual int32_t SubRunCount(const sptr<NotifyInterface> &listener) = 0;
     virtual int32_t UnsubRunCount() = 0;
 };
