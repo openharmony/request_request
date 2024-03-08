@@ -750,7 +750,7 @@ export default function requestOperateTaskTest() {
         }
       })
       await task.start();
-      await sleep(2000);
+      await sleep(4000);
       await request.agent.remove(task.tid);
     })
 
