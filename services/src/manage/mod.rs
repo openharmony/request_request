@@ -16,6 +16,7 @@ pub(crate) use task_manager::{SystemProxyManager, TaskManager};
 
 pub(crate) mod monitor;
 pub(crate) mod unload;
+pub(crate) mod keeper;
 
 pub(crate) mod events;
 pub(crate) mod qos;

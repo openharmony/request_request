@@ -13,7 +13,6 @@
 
 pub(crate) mod config;
 pub(crate) mod ffi;
-pub(crate) mod flag;
 pub(crate) mod info;
 pub(crate) mod notify;
 pub(crate) mod reason;

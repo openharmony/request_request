@@ -15,6 +15,7 @@ use std::cell::UnsafeCell;
 use std::ffi::CString;
 use std::fs::File;
 use std::io::{Read, SeekFrom};
+use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
@@ -35,13 +36,13 @@ use super::notify::{EachFileStatus, NotifyData, Progress};
 use super::reason::Reason;
 use super::upload::upload;
 use crate::manage::monitor::IsOnline;
+use crate::manage::keeper::SAKeeper;
 use crate::manage::SystemProxyManager;
 use crate::service::ability::RequestAbility;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::ffi::{
     GetNetworkInfo, RequestBackgroundNotify, RequestTaskMsg, UpdateRequestTask,
 };
-use crate::task::flag::RdbRecording;
 use crate::utils::c_wrapper::CStringWrapper;
 use crate::utils::{get_current_timestamp, hashmap_to_string};
 
@@ -116,7 +117,6 @@ pub(crate) struct RequestTask {
     pub(crate) skip_bytes: AtomicU64,
     pub(crate) upload_counts: AtomicU32,
     pub(crate) client: Option<Client>,
-    pub(crate) recording_rdb_num: RdbRecording,
     pub(crate) rate_limiting: AtomicBool,
     pub(crate) app_state: Arc<AtomicU8>,
     pub(crate) last_notify: AtomicU64,
@@ -127,7 +127,6 @@ impl RequestTask {
         conf: TaskConfig,
         files: Vec<File>,
         body_files: Vec<File>,
-        recording_rdb_num: RdbRecording,
         rate_limiting: AtomicBool,
         app_state: Arc<AtomicU8>,
         proxy_task: SystemProxyManager,
@@ -179,7 +178,6 @@ impl RequestTask {
             skip_bytes: AtomicU64::new(0),
             upload_counts: AtomicU32::new(0),
             client: None,
-            recording_rdb_num,
             rate_limiting,
             app_state,
             last_notify: AtomicU64::new(get_current_timestamp()),
@@ -197,7 +195,6 @@ impl RequestTask {
     pub(crate) fn restore_task(
         conf: TaskConfig,
         info: TaskInfo,
-        recording_rdb_num: RdbRecording,
         rate_limiting: AtomicBool,
         app_state: Arc<AtomicU8>,
         proxy_task: SystemProxyManager,
@@ -246,7 +243,6 @@ impl RequestTask {
             skip_bytes: AtomicU64::new(0),
             upload_counts: AtomicU32::new(progress_index as u32),
             client: None,
-            recording_rdb_num,
             rate_limiting,
             app_state,
             last_notify: AtomicU64::new(get_current_timestamp()),
@@ -885,10 +881,6 @@ impl RequestTask {
             self.conf.common_data.task_id
         );
 
-        // This flag will be automatically dropped at the end of the function,
-        // decrementing the count.
-        let _flag = self.recording_rdb_num.clone();
-
         let has_record = unsafe { HasRequestTaskRecord(self.conf.common_data.task_id) };
         if has_record {
             let update_info = self.get_update_info();
@@ -1083,7 +1075,30 @@ impl RequestTask {
     }
 }
 
-pub(crate) async fn run(task: Arc<RequestTask>) {
+pub(crate) struct RunningTask {
+    task: Arc<RequestTask>,
+    // `_unloader` is never used when executing the task.
+    _unloader: SAKeeper,
+}
+
+impl RunningTask {
+    pub(crate) fn new(task: Arc<RequestTask>, unloader: SAKeeper) -> Self {
+        Self {
+            task,
+            _unloader: unloader,
+        }
+    }
+}
+
+impl Deref for RunningTask {
+    type Target = Arc<RequestTask>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.task
+    }
+}
+
+pub(crate) async fn run(task: RunningTask) {
     info!("run the task which id is {}", task.conf.common_data.task_id);
     if !task.net_work_online() || !task.check_net_work_status() {
         return;

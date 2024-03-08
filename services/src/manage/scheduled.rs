@@ -28,7 +28,6 @@ const MILLISECONDS_IN_ONE_DAY: u64 = 24 * 60 * 60 * 1000;
 const MILLISECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
 const CLEAR_INTERVAL: u64 = 30 * 60;
 const LOG_INTERVAL: u64 = 5 * 60;
-const UNLOAD_WAITING: u64 = 60;
 const BACKGROUND_TASK_STOP_INTERVAL: u64 = 60;
 const RESTORE_ALL_TASKS_INTERVAL: u64 = 10;
 
@@ -46,11 +45,6 @@ pub(crate) async fn log_all_task_info(tx: UnboundedSender<EventMessage>) {
         ylong_runtime::time::sleep(Duration::from_secs(LOG_INTERVAL)).await;
         let _ = tx.send(EventMessage::Scheduled(ScheduledMessage::LogTasks));
     }
-}
-
-pub(crate) async fn unload_sa(tx: UnboundedSender<EventMessage>) {
-    ylong_runtime::time::sleep(Duration::from_secs(UNLOAD_WAITING)).await;
-    let _ = tx.send(EventMessage::Scheduled(ScheduledMessage::Unload));
 }
 
 pub(crate) async fn update_background_app(uid: u64, tx: UnboundedSender<EventMessage>) {
@@ -100,29 +94,14 @@ impl TaskManager {
 
     pub(crate) fn log_all_task_info(&self) {
         let api10_background_task_count = self.api10_background_task_count;
-        let recording_rdb_num = self.recording_rdb_num.count();
         info!(
-            "dump all task info, api10_background_task_count:{}, recording_rdb_num:{}",
-            api10_background_task_count, recording_rdb_num
+            "dump all task info, api10_background_task_count:{}",
+            api10_background_task_count,
         );
         for (task_id, task) in self.tasks.iter() {
             let task_status = task.status.lock().unwrap();
             info!("dump task message, task_id:{}, action:{}, mode:{}, bundle name:{}, task_status:{:?}",
                 task_id, task.conf.common_data.action as u8, task.conf.common_data.mode as u8, task.conf.bundle, *task_status);
-        }
-    }
-
-    pub(crate) fn schedule_unload_sa(&mut self) {
-        debug!("TaskManage clock 60s to close sa");
-        let tx = self.tx.clone();
-        match self.unload_handle.take() {
-            Some(handle) => {
-                handle.cancel();
-                self.unload_handle = Some(ylong_runtime::spawn(unload_sa(tx)));
-            }
-            None => {
-                self.unload_handle = Some(ylong_runtime::spawn(unload_sa(tx)));
-            }
         }
     }
 }

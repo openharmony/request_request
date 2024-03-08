@@ -278,13 +278,11 @@ void RequestDBUpdateInvalidRecords(OHOS::NativeRdb::RdbStore &store)
     // so they are not processed.
     int changedRows = 0;
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::INITIALIZED))
-        ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::RUNNING))
+    rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::RUNNING))
         ->Or()
         ->EqualTo("state", static_cast<uint8_t>(State::RETRYING))
         ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::DEFAULT));
+        ->EqualTo("state", static_cast<uint8_t>(State::CREATED));
 
     if (store.Update(changedRows, values, rdbPredicates) != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("Updates all invalid task to `FAILED` state failed");
@@ -985,7 +983,10 @@ CTaskConfig **QueryAllTaskConfig()
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
         ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::PAUSED));
+        ->EqualTo("state", static_cast<uint8_t>(State::PAUSED))
+        ->Or()
+        ->EqualTo("state", static_cast<uint8_t>(State::INITIALIZED));
+
     std::vector<TaskConfig> taskConfigs;
     if (QueryRequestTaskConfig(rdbPredicates, taskConfigs) == OHOS::Request::QUERY_ERR) {
         return nullptr;
@@ -998,7 +999,10 @@ int QueryTaskConfigLen()
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
         ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::PAUSED));
+        ->EqualTo("state", static_cast<uint8_t>(State::PAUSED))
+        ->Or()
+        ->EqualTo("state", static_cast<uint8_t>(State::INITIALIZED));
+
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "task_id", "uid" });
     int len = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(len) != OHOS::NativeRdb::E_OK) {
