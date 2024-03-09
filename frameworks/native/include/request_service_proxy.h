@@ -16,6 +16,7 @@
 #ifndef DOWNLOAD_SERVICE_PROXY_H
 #define DOWNLOAD_SERVICE_PROXY_H
 
+#include <cstdint>
 #include "iremote_proxy.h"
 #include "js_common.h"
 #include "notify_interface.h"
@@ -48,6 +49,8 @@ public:
     int32_t OpenChannel(int32_t &sockFd) override;
     int32_t Subscribe(const std::string &taskId, int32_t cbType) override;
     int32_t Unsubscribe(const std::string &taskId, int32_t cbType) override;
+    int32_t SubRunCount(const sptr<NotifyInterface> &listener) override;
+    int32_t UnsubRunCount() override;
 
 private:
     static void GetVectorData(const Config &config, MessageParcel &data);

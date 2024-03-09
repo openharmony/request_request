@@ -20,6 +20,7 @@ pub(crate) mod command;
 pub(crate) mod interface;
 pub(crate) mod listener;
 pub(crate) mod permission;
+pub(crate) mod runcount;
 
 use std::fs::{File, OpenOptions};
 
@@ -75,6 +76,8 @@ fn on_remote_request(
         RequestInterfaceCode::OpenChannel => stub.open_channel(data, reply),
         RequestInterfaceCode::Subscribe => stub.subscribe(data, reply),
         RequestInterfaceCode::Unsubscribe => stub.unsubscribe(data, reply),
+        RequestInterfaceCode::SubRunCount => stub.sub_runcount(data, reply),
+        RequestInterfaceCode::UnsubRunCount => stub.unsub_runcount(data, reply),
     }
 }
 
@@ -212,6 +215,24 @@ pub trait RequestServiceInterface: IRemoteBroker {
     ) -> IpcResult<()> {
         Ok(())
     }
+
+    ///  subscribe running task count
+    fn sub_runcount(
+        &self,
+        _data: &BorrowedMsgParcel,
+        _reply: &mut BorrowedMsgParcel,
+    ) -> IpcResult<()> {
+        Ok(())
+    }
+
+    ///  unsubscribe running task count
+    fn unsub_runcount(
+        &self,
+        _data: &BorrowedMsgParcel,
+        _reply: &mut BorrowedMsgParcel,
+    ) -> IpcResult<()> {
+        Ok(())
+    }
 }
 
 impl RequestServiceInterface for RequestServiceProxy {}
@@ -304,6 +325,22 @@ impl RequestServiceInterface for RequestService {
         reply: &mut BorrowedMsgParcel,
     ) -> IpcResult<()> {
         command::Unsubscribe::execute(data, reply)
+    }
+
+    fn sub_runcount(
+        &self,
+        data: &BorrowedMsgParcel,
+        reply: &mut BorrowedMsgParcel,
+    ) -> IpcResult<()> {
+        command::SubRunCount::execute(data, reply)
+    }
+
+    fn unsub_runcount(
+        &self,
+        data: &BorrowedMsgParcel,
+        reply: &mut BorrowedMsgParcel,
+    ) -> IpcResult<()> {
+        command::UnsubRunCount::execute(data, reply)
     }
 }
 

@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <cstdint>
 #include <ctime>
 
 #include "download_server_ipc_interface_code.h"
@@ -419,6 +420,43 @@ int32_t RequestServiceProxy::Unsubscribe(const std::string &taskId, int32_t cbTy
     data.WriteInt32(cbType);
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_UNSUBSCRIBE), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        return E_SERVICE_ERROR;
+    }
+    return E_OK;
+}
+
+int32_t RequestServiceProxy::SubRunCount(const sptr<NotifyInterface> &listener)
+{
+    REQUEST_HILOGD("SubRunCount");
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteRemoteObject(listener->AsObject().GetRefPtr());
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SUB_RUNCOUNT), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        return E_SERVICE_ERROR;
+    }
+    int32_t errCode = reply.ReadInt32();
+    if (errCode != E_OK) {
+        REQUEST_HILOGE("errCode: %{public}d, Subscribe RUNCOUNT failed", errCode);
+        return errCode;
+    }
+    REQUEST_HILOGD("Subscribe RUNCOUNT success");
+    return E_OK;
+}
+
+int32_t RequestServiceProxy::UnsubRunCount()
+{
+    REQUEST_HILOGD("UnsubRunCount");
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_UNSUB_RUNCOUNT), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;

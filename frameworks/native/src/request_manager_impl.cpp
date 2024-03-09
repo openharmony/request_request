@@ -16,6 +16,7 @@
 #include "request_manager_impl.h"
 
 #include <atomic>
+#include <cstdint>
 #include <memory>
 
 #include "data_ability_predicates.h"
@@ -27,6 +28,8 @@
 #include "rdb_predicates.h"
 #include "rdb_store.h"
 #include "request_manager.h"
+#include "runcount_notify_stub.h"
+#include "request_running_task_count.h"
 #include "request_sync_load_callback.h"
 #include "response_message_receiver.h"
 #include "result_set.h"
@@ -288,6 +291,30 @@ int32_t RequestManagerImpl::Unsubscribe(const std::string &taskId, const std::sh
     return E_OK;
 }
 
+int32_t RequestManagerImpl::SubRunCount(const sptr<NotifyInterface> &listener)
+{
+    REQUEST_HILOGD("Impl SubRunCount in");
+    auto proxy = GetRequestServiceProxy();
+    if (proxy == nullptr) {
+        REQUEST_HILOGE("GetRequestServiceProxy fail.");
+        return E_SERVICE_ERROR;
+    }
+
+    return proxy->SubRunCount(listener);
+}
+
+int32_t RequestManagerImpl::UnsubRunCount()
+{
+    REQUEST_HILOGD("Impl UnsubRunCount in");
+    auto proxy = GetRequestServiceProxy();
+    if (proxy == nullptr) {
+        REQUEST_HILOGE("GetRequestServiceProxy fail.");
+        return E_SERVICE_ERROR;
+    }
+
+    return proxy->UnsubRunCount();
+}
+
 int32_t RequestManagerImpl::EnsureChannelOpen()
 {
     if (msgReceiver_) {
@@ -394,6 +421,21 @@ void RequestManagerImpl::RestoreListener(void (*callback)())
     callback_ = callback;
 }
 
+void RequestManagerImpl::RestoreSubRunCount()
+{
+    REQUEST_HILOGD("Restore sub run count in");
+    auto proxy = GetRequestServiceProxy();
+    if (proxy == nullptr) {
+        REQUEST_HILOGE("GetRequestServiceProxy fail.");
+    }
+
+    auto listener = RunCountNotifyStub::GetInstance();
+    int32_t ret = proxy->SubRunCount(listener);
+    if (ret != E_OK) {
+        REQUEST_HILOGE("Restore sub run count failed, ret: %{public}d.", ret);
+    }
+}
+
 RequestManagerImpl::SystemAbilityStatusChangeListener::SystemAbilityStatusChangeListener()
 {
 }
@@ -408,6 +450,7 @@ void RequestManagerImpl::SystemAbilityStatusChangeListener::OnAddSystemAbility(
     if (RequestManagerImpl::GetInstance()->callback_ != nullptr) {
         RequestManagerImpl::GetInstance()->callback_();
     }
+    RequestManagerImpl::GetInstance()->RestoreSubRunCount();
 }
 
 void RequestManagerImpl::SystemAbilityStatusChangeListener::OnRemoveSystemAbility(
@@ -424,6 +467,7 @@ void RequestManagerImpl::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
     REQUEST_HILOGD(" RequestManagerImpl::OnRemoteSaDied");
     ready_.store(false);
     SetRequestServiceProxy(nullptr);
+    FwkRunningTaskCountManager::GetInstance()->SetCount(0);
 }
 
 RequestSaDeathRecipient::RequestSaDeathRecipient()

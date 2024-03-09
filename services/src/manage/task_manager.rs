@@ -100,12 +100,6 @@ impl TaskManagerEntry {
 impl TaskManager {
     pub(crate) fn init() -> TaskManagerEntry {
         debug!("TaskManager init");
-
-        ylong_runtime::builder::RuntimeBuilder::new_multi_thread()
-            .worker_num(4)
-            .build_global()
-            .unwrap();
-
         let (tx, rx) = unbounded_channel();
         let mut task_manager = Self::new(tx.clone(), rx);
 
