@@ -16,19 +16,17 @@ use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Arc;
 
 use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
-use ylong_runtime::task::JoinHandle;
 
 use super::events::{
     ConstructMessage, EventMessage, ScheduledMessage, ServiceMessage, StateMessage, TaskMessage,
 };
 use super::qos::{Qos, QosChange, QosQueue};
 use super::scheduled;
-use crate::service::ability::RequestAbility;
 use crate::error::ErrorCode;
-use crate::service::ability::PANIC_INFO;
+use crate::manage::keeper::SAKeeper;
+use crate::service::ability::{RequestAbility, PANIC_INFO};
 use crate::task::config::Version;
 use crate::task::ffi::HasRequestTaskRecord;
-use crate::task::flag::RdbRecording;
 use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
@@ -47,8 +45,7 @@ pub(crate) struct TaskManager {
     pub(crate) app_state_map: HashMap<u64, Arc<AtomicU8>>,
     pub(crate) restoring_tasks: Vec<Arc<RequestTask>>,
     pub(crate) api10_background_task_count: u32,
-    pub(crate) unload_handle: Option<JoinHandle<()>>,
-    pub(crate) recording_rdb_num: RdbRecording,
+    pub(crate) unloader: SAKeeper,
     pub(crate) tx: UnboundedSender<EventMessage>,
     pub(crate) rx: UnboundedReceiver<EventMessage>,
 }
@@ -114,7 +111,7 @@ impl TaskManager {
 
         // Considers update invalid task in database to FAILED state here?.
 
-        task_manager.restore_all_tasks(task_manager.recording_rdb_num.clone());
+        task_manager.restore_all_tasks();
         ylong_runtime::spawn(scheduled::restore_all_tasks(task_manager.tx.clone()));
 
         ylong_runtime::spawn(scheduled::clear_timeout_tasks(task_manager.tx.clone()));
@@ -135,10 +132,9 @@ impl TaskManager {
             tasks: HashMap::new(),
             app_task_map: HashMap::new(),
             app_state_map: HashMap::new(),
-            unload_handle: None,
+            unloader: SAKeeper::new(tx.clone()),
             restoring_tasks: Vec::new(),
             api10_background_task_count: 0,
-            recording_rdb_num: RdbRecording::new(),
             rx,
             tx,
         }
@@ -449,16 +445,14 @@ impl TaskManager {
             #[cfg(feature = "oh")]
             Notifier::clear_notify(&remove_task);
         }
-        
+
         let map = self
             .qos
             .remove(task.conf.common_data.uid, task.conf.common_data.task_id);
 
         self.change_qos(map);
 
-        if self.check_unload_sa() {
-            self.schedule_unload_sa();
-        } else {
+        if !self.check_unload_sa() {
             self.process_waiting_task(remove_task.conf.common_data.uid, remove_task.conf.version);
         }
     }
@@ -480,9 +474,6 @@ impl TaskManager {
                 "TaskManager pause a task, uid:{}, task_id:{} success",
                 uid, task_id
             );
-            if self.check_unload_sa() {
-                self.schedule_unload_sa();
-            }
             ErrorCode::ErrOk
         }
     }

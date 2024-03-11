@@ -45,7 +45,7 @@ enum class State : uint8_t {
     COMPLETED = 0x40,
     FAILED = 0x41,
     REMOVED = 0x50,
-    DEFAULT = 0x60,
+    CREATED = 0x60,
     ANY = 0x61,
 };
 #endif // REQUEST_C_ENUMRATION_H

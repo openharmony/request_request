@@ -231,8 +231,6 @@ impl TaskManager {
 
     pub(crate) fn update_network(&mut self) {
         let tasks = self.tasks.values().cloned().collect::<Vec<_>>();
-        self.schedule_unload_sa();
-
         for task in tasks {
             if unsafe { IsOnline() } {
                 self.resume_waiting_task(task.clone());

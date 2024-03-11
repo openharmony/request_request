@@ -19,7 +19,7 @@ use crate::manage::events::{EventMessage, TaskMessage};
 use crate::manage::TaskManager;
 use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
-use crate::task::request_task::run;
+use crate::task::request_task::{run, RunningTask};
 use crate::task::RequestTask;
 
 impl TaskManager {
@@ -39,7 +39,7 @@ impl TaskManager {
                 "Task exists in database, task_id:{}, try to continue download",
                 task_id
             );
-            self.continue_single_failed_task(self.recording_rdb_num.clone(), task_id);
+            self.continue_task_from_database(task_id);
             ErrorCode::ErrOk
         } else {
             if self.tasks.contains_key(&task_id) {
@@ -93,8 +93,11 @@ impl TaskManager {
 
         self.change_qos(qos_changes);
 
+        let unloader = self.unloader.clone();
+
         ylong_runtime::spawn(async move {
-            run(task.clone()).await;
+            let running_task = RunningTask::new(task.clone(), unloader);
+            run(running_task).await;
             tx.send(EventMessage::Task(TaskMessage::Finished(
                 task.conf.common_data.task_id,
             )))

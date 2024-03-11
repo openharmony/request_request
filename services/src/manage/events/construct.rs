@@ -54,7 +54,6 @@ impl TaskManager {
             config,
             files,
             body_files,
-            self.recording_rdb_num.clone(),
             AtomicBool::new(false),
             app_state,
             proxy_task,
@@ -73,11 +72,6 @@ impl TaskManager {
         }
 
         self.record_request_task(task.as_ref());
-
-        if let Some(handle) = self.unload_handle.take() {
-            debug!("TaskManager close sa timing abort");
-            handle.cancel();
-        }
 
         ErrorCode::ErrOk
     }
@@ -165,10 +159,6 @@ impl TaskManager {
 
     pub(crate) fn record_request_task(&mut self, task: &RequestTask) {
         debug!("record request task into database");
-
-        // This flag will be automatically dropped at the end of the function,
-        // decrementing the count.
-        let _flag = self.recording_rdb_num.clone();
 
         if unsafe { HasRequestTaskRecord(task.conf.common_data.task_id) } {
             return;

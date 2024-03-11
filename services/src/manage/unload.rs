@@ -20,7 +20,6 @@ use super::TaskManager;
 use crate::manage::monitor::IsOnline;
 use crate::task::config::{TaskConfig, Version};
 use crate::task::ffi::{CTaskConfig, ChangeRequestTaskState};
-use crate::task::flag::RdbRecording;
 use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
 use crate::task::RequestTask;
@@ -28,10 +27,7 @@ use crate::task::RequestTask;
 impl TaskManager {
     pub(crate) fn check_unload_sa(&self) -> bool {
         if !self.tasks.is_empty() && !self.pause_check_unload_sa() {
-            return false;
-        }
-
-        if self.recording_rdb_num.is_recording() {
+            info!("Running tasks are not 0 when trying to unload SA");
             return false;
         }
 
@@ -43,7 +39,6 @@ impl TaskManager {
         const REQUEST_SERVICE_ID: i32 = 3706;
 
         if !self.rx.is_empty() {
-            self.schedule_unload_sa();
             return false;
         }
 
@@ -55,7 +50,6 @@ impl TaskManager {
 
         // check rx again for there may be new message arrive.
         if !self.rx.is_empty() {
-            self.schedule_unload_sa();
             return false;
         }
 
@@ -75,7 +69,7 @@ impl TaskManager {
         true
     }
 
-    pub(crate) fn restore_all_tasks(&mut self, recording_rdb_num: RdbRecording) {
+    pub(crate) fn restore_all_tasks(&mut self) {
         if let Some(config_map) = self.query_all_task_config() {
             info!(
                 "RSA query task config list len: {} in database",
@@ -88,14 +82,16 @@ impl TaskManager {
                 let token = config.token.clone();
                 if let Some(task_info) = self.touch(uid, task_id, token) {
                     let state = State::from(task_info.progress.common_data.state);
-                    if state != State::Waiting && state != State::Paused {
+                    if state != State::Waiting
+                        && state != State::Paused
+                        && state != State::Initialized
+                    {
                         continue;
                     }
                     let app_state = self.app_state(uid, &config.bundle);
                     match RequestTask::restore_task(
                         config,
                         task_info,
-                        recording_rdb_num.clone(),
                         AtomicBool::new(false),
                         app_state,
                         self.sys_proxy.clone(),
@@ -107,8 +103,6 @@ impl TaskManager {
                     }
                 }
             }
-        } else {
-            self.schedule_unload_sa();
         }
     }
 
@@ -116,11 +110,7 @@ impl TaskManager {
         unsafe { HasTaskConfigRecord(task_id) }
     }
 
-    pub(crate) fn continue_single_failed_task(
-        &mut self,
-        recording_rdb_num: RdbRecording,
-        task_id: u32,
-    ) {
+    pub(crate) fn continue_task_from_database(&mut self, task_id: u32) {
         if let Some(config) = self.query_single_task_config(task_id) {
             debug!("RSA query single task config is {:?}", config);
             let uid = config.common_data.uid;
@@ -129,15 +119,15 @@ impl TaskManager {
             if let Some(task_info) = self.touch(uid, task_id, token) {
                 let state = State::from(task_info.progress.common_data.state);
                 debug!("get continue task state is {:?}", state);
-                if state != State::Failed && state != State::Stopped {
-                    error!("state of continue task is not Failed or Stopped");
+                if state != State::Failed && state != State::Stopped && state != State::Initialized
+                {
+                    error!("state of continue task is not Failed\\Stopped\\Initialized");
                     return;
                 }
                 let app_state = self.app_state(uid, &config.bundle);
                 match RequestTask::restore_task(
                     config,
                     task_info,
-                    recording_rdb_num,
                     AtomicBool::new(false),
                     app_state,
                     self.sys_proxy.clone(),
@@ -210,6 +200,8 @@ impl TaskManager {
                 || state == State::Stopped
                 || state == State::Waiting
                 || state == State::Paused
+                || state == State::Initialized
+                || state == State::Created
             {
                 need_unload = true;
             } else {
