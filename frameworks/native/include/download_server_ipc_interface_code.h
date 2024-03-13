@@ -38,11 +38,14 @@ enum class RequestInterfaceCode {
     CMD_OPENCHANNEL,
     CMD_SUBSCRIBE,
     CMD_UNSUBSCRIBE,
+    CMD_SUB_RUNCOUNT,
+    CMD_UNSUB_RUNCOUNT,
 };
 
 enum class RequestNotifyInterfaceCode {
     REQUEST_NOTIFY = 0,
     REQUEST_DONE_NOTIFY,
+    REQUEST_NOTIFY_RUNCOUNT,
 };
 } // namespace Request
 } // namespace OHOS

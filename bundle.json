@@ -71,6 +71,17 @@
           "//base/request/request/services:download_server"
         ]
       },
+      "inner_api": [
+        {
+          "name": "//base/request/request/interfaces/inner_api:running_task_count",
+          "header": {
+            "header_files": [
+              "running_task_count.h"
+            ],
+            "header_base":"//base/request/request/interfaces/inner_api/include"
+          }
+        }
+      ],
       "inner_kits": [],
       "test": [
         "//base/request/request/test/fuzztest:fuzztest",
@@ -78,7 +89,8 @@
         "//base/request/request/test/unittest/js_test/requestAgentTaskTest:unittest",
         "//base/request/request/test/unittest/js_test/requestQueryTaskTest:unittest",
         "//base/request/request/test/unittest/js_test/requestSystemQueryTest:unittest",
-        "//base/request/request/test/unittest/cpp_test/saTest:unittest"
+        "//base/request/request/test/unittest/cpp_test/saTest:unittest",
+        "//base/request/request/test/unittest/cpp_test/fwkTest:unittest"
       ]
     }
   }

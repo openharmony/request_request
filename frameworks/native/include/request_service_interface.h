@@ -16,6 +16,7 @@
 #ifndef DOWNLOAD_SERVICE_INTERFACE_H
 #define DOWNLOAD_SERVICE_INTERFACE_H
 
+#include <cstdint>
 #include <string>
 
 #include "constant.h"
@@ -48,6 +49,8 @@ public:
     virtual int32_t OpenChannel(int32_t &sockFd) = 0;
     virtual int32_t Subscribe(const std::string &taskId, int32_t cbType) = 0;
     virtual int32_t Unsubscribe(const std::string &taskId, int32_t cbType) = 0;
+    virtual int32_t SubRunCount(const sptr<NotifyInterface> &listener) = 0;
+    virtual int32_t UnsubRunCount() = 0;
 };
 } // namespace OHOS::Request
 #endif // DOWNLOAD_SERVICE_INTERFACE_H

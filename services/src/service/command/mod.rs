@@ -29,6 +29,8 @@ mod stop;
 mod subscribe;
 mod touch;
 mod unsubscribe;
+mod sub_runcount;
+mod unsub_runcount;
 
 pub(crate) use construct::Construct;
 pub(crate) use dump::Dump;
@@ -48,3 +50,5 @@ pub(crate) use stop::Stop;
 pub(crate) use subscribe::Subscribe;
 pub(crate) use touch::Touch;
 pub(crate) use unsubscribe::Unsubscribe;
+pub(crate) use sub_runcount::SubRunCount;
+pub(crate) use unsub_runcount::UnsubRunCount;

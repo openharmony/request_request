@@ -50,6 +50,10 @@ pub(crate) enum RequestInterfaceCode {
     Subscribe,
     ///  unsubscribe response
     Unsubscribe,
+    /// subscribe running task count
+    SubRunCount,
+    /// unsubscribe running task count
+    UnsubRunCount,
 }
 
 /// Function code of RequestNotifyInterfaceCode
@@ -58,4 +62,6 @@ pub(crate) enum RequestNotifyInterfaceCode {
     Notify = 0,
     /// Cache callback notification
     DoneNotify,
+    /// run count notification
+    NotifyRunCount,
 }

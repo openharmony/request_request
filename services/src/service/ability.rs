@@ -35,6 +35,7 @@ use crate::manage::TaskManager;
 use crate::notify::{NotifyEntry, NotifyManager};
 use crate::service::client::{ClientManager, ClientManagerEntry};
 use crate::service::listener::{AppStateListener, NetworkChangeListener};
+use crate::service::runcount::{RunCountManager, RunCountManagerEntry};
 
 static mut REQUEST_ABILITY: MaybeUninit<RequestAbility> = MaybeUninit::uninit();
 static STATE: AtomicU8 = AtomicU8::new(RequestAbility::NOT_INITED);
@@ -42,6 +43,7 @@ static STATE: AtomicU8 = AtomicU8::new(RequestAbility::NOT_INITED);
 pub(crate) static mut PANIC_INFO: Option<String> = None;
 
 pub(crate) struct RequestAbility {
+    runcount: RunCountManagerEntry,
     manager: TaskManagerEntry,
     notify: NotifyEntry,
     app: AppStateListener,
@@ -84,12 +86,19 @@ impl RequestAbility {
             )
             .is_ok()
         {
+            ylong_runtime::builder::RuntimeBuilder::new_multi_thread()
+            .worker_num(4)
+            .build_global()
+            .unwrap();
+
             unsafe {
                 REQUEST_ABILITY.write(Self {
+                    // first init RunCountManager to record Running task count
+                    runcount: RunCountManager::init(),
                     manager: TaskManager::init(),
                     notify: NotifyManager::init(),
                     app: AppStateListener::init(),
-                    network: NetworkChangeListener::init(),
+                    network: NetworkChangeListener::init(),                   
                     client_manager: ClientManager::init(),
                 });
                 RequestInitServiceHandler();
@@ -114,9 +123,14 @@ impl RequestAbility {
                 ability.notify.shutdown();
                 ability.app.shutdown();
                 ability.network.shutdown();
+                ability.runcount.shutdown();
             };
             STATE.store(Self::STOPPED, Ordering::SeqCst);
         }
+    }
+
+    pub(crate) fn runcount_manager() -> RunCountManagerEntry {
+        Self::get_instance().runcount.clone()
     }
 
     pub(crate) fn notify() -> NotifyEntry {

@@ -65,7 +65,11 @@ public:
     int32_t Subscribe(const std::string &taskId, const std::shared_ptr<IResponseListener> &listener);
     int32_t Unsubscribe(const std::string &taskId, const std::shared_ptr<IResponseListener> &listener);
 
+    int32_t SubRunCount(const sptr<NotifyInterface> &listener);
+    int32_t UnsubRunCount();
+
     void RestoreListener(void (*callback)());
+    void RestoreSubRunCount();
     bool LoadRequestServer();
     bool IsSaReady();
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);

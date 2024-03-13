@@ -49,9 +49,11 @@ ohos_shared_library("request_native") {
     "src/parcel_helper.cpp",
     "src/request_manager.cpp",
     "src/request_manager_impl.cpp",
+    "src/request_running_task_count.cpp",
     "src/request_service_proxy.cpp",
     "src/request_sync_load_callback.cpp",
     "src/response_message_receiver.cpp",
+    "src/runcount_notify_stub.cpp",
   ]
   deps = [ "../../common:request_common_static" ]
 
