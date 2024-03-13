@@ -24,9 +24,6 @@ use crate::task::info::State;
 use crate::task::reason::Reason;
 use crate::task::RequestTask;
 
-const MAX_TASK_COUNT: u32 = 300;
-const MAX_TASK_COUNT_EACH_APP: u8 = 10;
-
 impl TaskManager {
     pub(crate) fn construct_task(
         &mut self,
@@ -113,18 +110,8 @@ impl TaskManager {
         let task_id = task.conf.common_data.task_id;
         let uid = task.conf.common_data.uid;
 
-        if self.api10_background_task_count >= MAX_TASK_COUNT {
-            error!("TaskManager add v10 task failed, the number of tasks has reached the limit in the system");
-            return false;
-        }
-
         match self.app_task_map.get_mut(&uid) {
             Some(set) => {
-                if (set.len() as u8) == MAX_TASK_COUNT_EACH_APP {
-                    error!(
-                        "TaskManager add v10 task failed, the maximum value for each application processing task has been reached");
-                    return false;
-                }
                 set.insert(task_id);
 
                 task.set_status(State::Initialized, Reason::Default);
