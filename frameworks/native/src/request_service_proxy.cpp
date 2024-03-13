@@ -62,6 +62,7 @@ int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid, sptr<Not
     data.WriteString(config.token);
     data.WriteString(config.description);
     data.WriteString(config.data);
+    data.WriteString(config.proxy);
     GetVectorData(config, data);
     data.WriteRemoteObject(listener->AsObject().GetRefPtr());
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REQUEST), data, reply, option);

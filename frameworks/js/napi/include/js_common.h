@@ -120,6 +120,7 @@ struct Config {
     std::string token = "null";
     std::string description;
     std::string data;
+    std::string proxy;
     std::map<std::string, std::string> headers;
     std::vector<FormItem> forms;
     std::vector<FileSpec> files;

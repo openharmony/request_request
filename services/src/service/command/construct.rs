@@ -91,6 +91,8 @@ impl Construct {
 
         let data_base: String = data.read()?;
 
+        let proxy: String = data.read()?;
+
         let bundle = get_calling_bundle();
         // Creates task_id here, move it to task_manager later?
         let task_id = generate_task_id();
@@ -202,6 +204,7 @@ impl Construct {
             headers,
             data: data_base,
             token,
+            proxy,
             extras,
             version,
             form_items,

@@ -15,12 +15,10 @@
 
 #include "c_request_database.h"
 
-#include <securec.h>
-
+#include "log.h"
 #include <algorithm>
 #include <cstdint>
-
-#include "log.h"
+#include <securec.h>
 
 namespace OHOS::Request {
 RequestDataBase::RequestDataBase()
@@ -159,14 +157,28 @@ void RequestDBRemoveOldTables(OHOS::NativeRdb::RdbStore &store)
 int RequestDBCheckVersion(OHOS::NativeRdb::RdbStore &store)
 {
     REQUEST_HILOGD("RequestDBCheckVersion in");
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_version");
-    auto resultSet = store.Query(rdbPredicates, { "version", "task_table" });
+    auto resultSet = store.QuerySql(CHECK_REQUEST_VERSION);
     if (resultSet == nullptr) {
+        return CHECK_VERSION_FAILED;
+    }
+    int rowCount = 0;
+    int ret = resultSet->GetRowCount(rowCount);
+    if (ret != OHOS::NativeRdb::E_OK || rowCount > 1) {
+        REQUEST_HILOGE("Gets rowCount failed, GetRowCount ret: %{public}d, rowCount: %{public}d", ret, rowCount);
+        return CHECK_VERSION_FAILED;
+    }
+
+    if (rowCount == 0) {
         return WITHOUT_VERSION_TABLE;
     }
 
-    int rowCount = 0;
-    int ret = resultSet->GetRowCount(rowCount);
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_version");
+    resultSet = store.Query(rdbPredicates, { "version", "task_table" });
+    if (resultSet == nullptr) {
+        return CHECK_VERSION_FAILED;
+    }
+
+    ret = resultSet->GetRowCount(rowCount);
     if (ret != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("Gets rowCount failed, GetRowCount ret: %{public}d", ret);
         return CHECK_VERSION_FAILED;
@@ -224,47 +236,55 @@ int RequestDBCreateTables(OHOS::NativeRdb::RdbStore &store)
 // Keeps this function for possible extensions later
 int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store)
 {
-    return RequestDBInitVersionTable(store);
+    int ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_PROXY);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("Creates request_version table failed, ret: %{public}d", ret);
+        return ret;
+    }
+    return ret;
 }
 
 int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
 {
     REQUEST_HILOGD("Begins upgrading database");
 
-    int res = RequestDBCreateTables(store);
-    if (res != OHOS::NativeRdb::E_OK) {
-        return res;
-    }
-
+    int res;
     int version = RequestDBCheckVersion(store);
     switch (version) {
-        case WITHOUT_VERSION_TABLE: {
-            REQUEST_HILOGI("Begins upgrading database from 4.0 or earlier");
-            return OHOS::NativeRdb::E_OK;
-        }
-
         case INVALID_VERSION: {
-            REQUEST_HILOGI("Begins upgrading database from invaliad version");
+            REQUEST_HILOGI("Upgrading database from invaliad version");
             RequestDBRemoveOldTables(store);
-            int ret = RequestDBInitVersionTable(store);
-            return ret;
         }
-
+            [[fallthrough]];
+        case WITHOUT_VERSION_TABLE: {
+            REQUEST_HILOGI("Upgrading database from 4.0 or earlier");
+            res = RequestDBCreateTables(store);
+            if (res != OHOS::NativeRdb::E_OK) {
+                return res;
+            }
+        }
+            [[fallthrough]];
         case API11_4_1_RELEASE: {
-            REQUEST_HILOGI("Begins upgrading database from 4.1-Release");
-            int ret = RequestDBUpgradeFrom41(store);
-            return ret;
+            REQUEST_HILOGI("Upgrading database from 4.1-Release");
+            res = RequestDBUpgradeFrom41(store);
+            if (res != OHOS::NativeRdb::E_OK) {
+                return res;
+            }
         }
-
+            [[fallthrough]];
         case API12_5_0_RELEASE: {
             REQUEST_HILOGI("Version is 5.0-release, no need to update database.");
-            return OHOS::NativeRdb::E_OK;
+            break;
         }
-
-        default:
+        default: {
             REQUEST_HILOGI("Checks version failed, cannot update request database.");
             return OHOS::NativeRdb::E_ERROR;
+        }
     }
+    if (version != API12_5_0_RELEASE) {
+        return RequestDBInitVersionTable(store);
+    }
+    return 0;
 }
 
 void RequestDBUpdateInvalidRecords(OHOS::NativeRdb::RdbStore &store)
@@ -295,6 +315,9 @@ void RequestDBUpdateInvalidRecords(OHOS::NativeRdb::RdbStore &store)
 int RequestDBOpenCallback::OnOpen(OHOS::NativeRdb::RdbStore &store)
 {
     int ret = RequestDBUpgrade(store);
+    if (ret != 0) {
+        REQUEST_HILOGE("database upgrade failed");
+    }
     RequestDBUpdateInvalidRecords(store);
     return ret;
 }
@@ -638,6 +661,7 @@ void BuildRequestTaskConfigWithString(std::shared_ptr<OHOS::NativeRdb::ResultSet
     set->GetString(24, config.data);        // Line 24 is 'data'
     set->GetString(25, config.token);       // Line 25 is 'token'
     set->GetString(26, config.extras);      // Line 26 is 'config_extras'
+    set->GetString(32, config.proxy);       // Line 32 is 'proxy'
 }
 
 void BuildRequestTaskConfigWithBlob(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
@@ -714,6 +738,7 @@ bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
     insertValues.PutString("url", std::string(taskConfig->url.cStr, taskConfig->url.len));
     insertValues.PutString("data", std::string(taskConfig->data.cStr, taskConfig->data.len));
     insertValues.PutString("token", std::string(taskConfig->token.cStr, taskConfig->token.len));
+    insertValues.PutString("proxy", std::string(taskConfig->proxy.cStr, taskConfig->proxy.len));
     insertValues.PutString("title", std::string(taskConfig->title.cStr, taskConfig->title.len));
     insertValues.PutString("description", std::string(taskConfig->description.cStr, taskConfig->description.len));
     insertValues.PutString("method", std::string(taskConfig->method.cStr, taskConfig->method.len));
@@ -1047,6 +1072,7 @@ void BuildCTaskConfig(CTaskConfig *cTaskConfig, const TaskConfig &taskConfig)
     cTaskConfig->data = WrapperCString(taskConfig.data);
     cTaskConfig->token = WrapperCString(taskConfig.token);
     cTaskConfig->extras = WrapperCString(taskConfig.extras);
+    cTaskConfig->proxy = WrapperCString(taskConfig.proxy);
     cTaskConfig->version = taskConfig.version;
 
     uint32_t formItemsLen = taskConfig.formItems.size();
@@ -1102,11 +1128,11 @@ CTaskConfig *QuerySingleTaskConfig(uint32_t taskId)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
-    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(
-        rdbPredicates, { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming",
-                           "retry", "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority",
-                           "background", "bundle", "url", "title", "description", "method", "headers", "data", "token",
-                           "config_extras", "version", "form_items", "file_specs", "body_file_names", "certs_paths" });
+    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates,
+        { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming", "retry",
+            "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority", "background", "bundle", "url",
+            "title", "description", "method", "headers", "data", "token", "config_extras", "version", "form_items",
+            "file_specs", "body_file_names", "certs_paths", "proxy" });
     int rowCount = 0;
     if (resultSet == nullptr) {
         REQUEST_HILOGE("result set is nullptr");
@@ -1126,8 +1152,8 @@ CTaskConfig *QuerySingleTaskConfig(uint32_t taskId)
     }
 
     TaskConfig taskConfig = BuildRequestTaskConfig(resultSet);
-    REQUEST_HILOGD("QuerySingleTaskConfig in, after BuildRequestTaskConfig, task_id: %{public}u",
-        taskConfig.commonData.taskId);
+    REQUEST_HILOGD(
+        "QuerySingleTaskConfig in, after BuildRequestTaskConfig, task_id: %{public}u", taskConfig.commonData.taskId);
     CTaskConfig *cTaskConfig = new CTaskConfig;
     BuildCTaskConfig(cTaskConfig, taskConfig);
     return cTaskConfig;

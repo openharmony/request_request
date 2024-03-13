@@ -15,20 +15,18 @@
 
 #include "js_initialize.h"
 
-#include <securec.h>
-#include <sys/stat.h>
-
-#include <algorithm>
-#include <cstring>
-#include <filesystem>
-#include <fstream>
-#include <regex>
-
 #include "js_common.h"
 #include "log.h"
 #include "napi_utils.h"
 #include "net_conn_client.h"
 #include "request_manager.h"
+#include <algorithm>
+#include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <regex>
+#include <securec.h>
+#include <sys/stat.h>
 
 static constexpr const char *PARAM_KEY_DESCRIPTION = "description";
 static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";
@@ -345,6 +343,10 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
         errInfo = "Index exceeds file list";
         return false;
     }
+    if (!ParseProxy(env, jsConfig, config.proxy)) {
+        errInfo = "parse proxy error";
+        return false;
+    }
     if (!ParseTitle(env, jsConfig, config) || !ParseToken(env, jsConfig, config)
         || !ParseDescription(env, jsConfig, config.description)) {
         errInfo = "Exceeding maximum length";
@@ -577,6 +579,25 @@ bool JsInitialize::ParseTitle(napi_env env, napi_value jsConfig, Config &config)
     }
     if (config.title.empty()) {
         config.title = config.action == Action::UPLOAD ? "upload" : "download";
+    }
+    return true;
+}
+
+bool JsInitialize::ParseProxy(napi_env env, napi_value jsConfig, std::string &proxy)
+{
+    proxy = NapiUtils::Convert2String(env, jsConfig, "proxy");
+    if (proxy.empty()) {
+        return true;
+    }
+
+    if (proxy.size() > URL_MAXIMUM) {
+        REQUEST_HILOGE("The proxy exceeds the maximum length of 2048");
+        return false;
+    }
+
+    if (!regex_match(proxy, std::regex("^http:\\/\\/.+"))) {
+        REQUEST_HILOGE("ParseProxy error");
+        return false;
     }
     return true;
 }

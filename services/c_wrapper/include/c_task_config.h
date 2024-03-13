@@ -61,6 +61,7 @@ struct CTaskConfig {
     CStringWrapper headers;
     CStringWrapper data;
     CStringWrapper token;
+    CStringWrapper proxy;
     CStringWrapper extras;
     uint8_t version;
     CFormItem *formItemsPtr;
@@ -83,6 +84,7 @@ struct TaskConfig {
     std::string headers;
     std::string data;
     std::string token;
+    std::string proxy;
     std::string extras;
     uint8_t version;
     std::vector<FormItem> formItems;
