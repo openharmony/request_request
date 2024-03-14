@@ -12,16 +12,18 @@
 // limitations under the License.
 
 use std::collections::HashMap;
+use std::os::fd::{IntoRawFd, RawFd};
 
 use ipc_rust::{
-    get_calling_token_id, get_calling_uid, BorrowedMsgParcel, IMsgParcel, IpcResult, IpcStatusCode,
+    get_calling_token_id, get_calling_uid, BorrowedMsgParcel, FileDesc, IMsgParcel, IpcResult,
+    IpcStatusCode,
 };
 
 use crate::error::ErrorCode;
 use crate::manage::events::EventMessage;
 use crate::service::ability::RequestAbility;
-use crate::service::permission::PermissionChecker;
 use crate::service::get_calling_bundle;
+use crate::service::permission::PermissionChecker;
 use crate::task::config::{Action, CommonTaskConfig, Network, TaskConfig, Version};
 use crate::task::info::Mode;
 use crate::utils::form_item::{FileSpec, FormItem};
@@ -135,11 +137,19 @@ impl Construct {
             let path: String = data.read()?;
             let file_name: String = data.read()?;
             let mime_type: String = data.read()?;
+            let is_user_file: bool = data.read()?;
+            let mut fd: Option<RawFd> = None;
+            if is_user_file {
+                let ipc_fd: FileDesc = data.read()?;
+                fd = Some(ipc_fd.into_raw_fd());
+            }
             file_specs.push(FileSpec {
                 name,
                 path,
                 file_name,
                 mime_type,
+                is_user_file,
+                fd,
             });
         }
 

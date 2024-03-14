@@ -380,6 +380,7 @@ std::vector<uint8_t> CFileSpecToBlob(const CFileSpec *cpointer, uint32_t length)
         blob.insert(blob.end(), obj.path.cStr, obj.path.cStr + obj.path.len);
         blob.insert(blob.end(), obj.fileName.cStr, obj.fileName.cStr + obj.fileName.len);
         blob.insert(blob.end(), obj.mimeType.cStr, obj.mimeType.cStr + obj.mimeType.len);
+        blob.emplace_back(obj.is_user_file);
     }
     return blob;
 }
@@ -408,6 +409,9 @@ std::vector<CFileSpec> BlobToCFileSpec(const std::vector<uint8_t> &blob)
         obj.mimeType.cStr = new char[obj.mimeType.len];
         memcpy_s(obj.mimeType.cStr, obj.mimeType.len, blob.data() + position, obj.mimeType.len);
         position += obj.mimeType.len;
+
+        obj.is_user_file = blob[position];
+        position += 1;
 
         vec.push_back(obj);
     }
@@ -502,6 +506,7 @@ std::vector<FileSpec> VecToFileSpec(const std::vector<CFileSpec> &cvec)
         fileSpec.path = std::string(obj.path.cStr, obj.path.len);
         fileSpec.fileName = std::string(obj.fileName.cStr, obj.fileName.len);
         fileSpec.mimeType = std::string(obj.mimeType.cStr, obj.mimeType.len);
+        fileSpec.is_user_file = obj.is_user_file;
         vec.push_back(std::move(fileSpec));
     }
     return vec;
@@ -948,6 +953,7 @@ CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo)
         fileSpecsPtr[i].path = WrapperCString(taskInfo.fileSpecs[i].path);
         fileSpecsPtr[i].fileName = WrapperCString(taskInfo.fileSpecs[i].fileName);
         fileSpecsPtr[i].mimeType = WrapperCString(taskInfo.fileSpecs[i].mimeType);
+        fileSpecsPtr[i].is_user_file = taskInfo.fileSpecs[i].is_user_file;
         eachFileStatusPtr[i].path = WrapperCString(taskInfo.eachFileStatus[i].path);
         eachFileStatusPtr[i].reason = taskInfo.eachFileStatus[i].reason;
         eachFileStatusPtr[i].message = WrapperCString(taskInfo.eachFileStatus[i].message);
@@ -1088,6 +1094,7 @@ void BuildCTaskConfig(CTaskConfig *cTaskConfig, const TaskConfig &taskConfig)
         fileSpecsPtr[j].path = WrapperCString(taskConfig.fileSpecs[j].path);
         fileSpecsPtr[j].fileName = WrapperCString(taskConfig.fileSpecs[j].fileName);
         fileSpecsPtr[j].mimeType = WrapperCString(taskConfig.fileSpecs[j].mimeType);
+        fileSpecsPtr[j].is_user_file = taskConfig.fileSpecs[j].is_user_file;
     }
     uint32_t bodyFileNamesLen = taskConfig.bodyFileNames.size();
     CStringWrapper *bodyFileNamesPtr = new CStringWrapper[bodyFileNamesLen];

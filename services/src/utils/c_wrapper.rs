@@ -77,6 +77,7 @@ pub(crate) struct CFileSpec {
     pub(crate) path: CStringWrapper,
     pub(crate) file_name: CStringWrapper,
     pub(crate) mime_type: CStringWrapper,
+    pub(crate) is_user_file: bool,
 }
 
 impl FileSpec {
@@ -86,6 +87,7 @@ impl FileSpec {
             path: CStringWrapper::from(&self.path),
             file_name: CStringWrapper::from(&self.file_name),
             mime_type: CStringWrapper::from(&self.mime_type),
+            is_user_file: self.is_user_file,
         }
     }
 
@@ -95,6 +97,8 @@ impl FileSpec {
             path: c_struct.path.to_string(),
             file_name: c_struct.file_name.to_string(),
             mime_type: c_struct.mime_type.to_string(),
+            is_user_file: c_struct.is_user_file,
+            fd: None,
         }
     }
 }

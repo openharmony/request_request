@@ -11,12 +11,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::os::fd::RawFd;
+
 #[derive(Clone, Debug)]
 pub(crate) struct FileSpec {
     pub(crate) name: String,
     pub(crate) path: String,
     pub(crate) file_name: String,
     pub(crate) mime_type: String,
+    pub(crate) is_user_file: bool,
+    // Only for user file.
+    pub(crate) fd: Option<RawFd>,
 }
 
 #[derive(Clone, Debug)]

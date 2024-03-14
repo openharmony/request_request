@@ -148,34 +148,17 @@ ExceptionError JsInitialize::CheckFilePath(
 {
     ExceptionError err = { .code = E_OK };
     if (config.action == Action::DOWNLOAD) {
-        if (config.version == Version::API10 && !CheckDownloadFilePath(context, config, err.errInfo)) {
-            err.code = E_PARAMETER_CHECK;
+        err = CheckDownloadFileSpec(context, config);
+        if (err.code != E_OK) {
             return err;
         }
-        FileSpec file = { .uri = config.saveas };
-        config.files.push_back(file);
-    }
-
-    // need reconstruction.
-    for (auto &file : config.files) {
-        std::string path;
-        if (!GetInternalPath(file.uri, context, config, path)) {
-            return { .code = E_PARAMETER_CHECK, .errInfo = "this is fail path" };
+    } else {
+        err = CheckUploadFileSpec(context, config);
+        if (err.code != E_OK) {
+            return err;
         }
-        file.uri = path;
-        if (file.filename.empty()) {
-            InterceptData("/", file.uri, file.filename);
-        }
-        if (file.type.empty()) {
-            InterceptData(".", file.filename, file.type);
-        }
-        if (file.name.empty()) {
-            file.name = "file";
-        }
-        if (!JsTask::SetPathPermission(file.uri)) {
-            return { .code = E_FILE_IO, .errInfo = "set path permission fail" };
-        }
-        err = GetFD(path, config, file.fd);
+        std::string filePath = context->GetCacheDir();
+        err = CheckUploadBodyFiles(config, filePath);
         if (err.code != E_OK) {
             return err;
         }
@@ -183,11 +166,6 @@ ExceptionError JsInitialize::CheckFilePath(
 
     if (!JsTask::SetDirsPermission(config.certsPath)) {
         return { .code = E_FILE_IO, .errInfo = "set files of directors permission fail" };
-    }
-
-    if (config.action == Action::UPLOAD) {
-        std::string filePath = context->GetCacheDir();
-        err = CheckUploadBodyFiles(config, filePath);
     }
     return err;
 }
@@ -210,7 +188,6 @@ ExceptionError JsInitialize::CheckUploadBodyFiles(Config &config, const std::str
             REQUEST_HILOGE("IsPathValid error %{public}s", fileName.c_str());
             return { .code = E_PARAMETER_CHECK, .errInfo = "IsPathValid error fail path" };
         }
-
         int32_t bodyFd = open(fileName.c_str(), O_TRUNC | O_RDWR);
         if (bodyFd < 0) {
             bodyFd = open(fileName.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
@@ -218,11 +195,12 @@ ExceptionError JsInitialize::CheckUploadBodyFiles(Config &config, const std::str
                 return { .code = E_FILE_IO, .errInfo = "Failed to open file errno " + std::to_string(errno) };
             }
         }
-
         if (bodyFd >= 0) {
             chmod(fileName.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
         }
-
+        if (!JsTask::SetPathPermission(fileName)) {
+            return { .code = E_FILE_IO, .errInfo = "set body path permission fail" };
+        }
         config.bodyFds.push_back(bodyFd);
         config.bodyFileNames.push_back(fileName);
     }
@@ -268,10 +246,6 @@ ExceptionError JsInitialize::GetFD(const std::string &path, const Config &config
 bool JsInitialize::GetInternalPath(const std::string &fileUri,
     const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, std::string &filePath)
 {
-    if (config.action == Action::DOWNLOAD && fileUri.find('/') == 0) {
-        filePath = fileUri;
-        return true;
-    }
     std::string fileName;
     std::string pattern = config.version == Version::API10 ? "./" : "internal://cache/";
     size_t pos = fileUri.find(pattern);
@@ -454,6 +428,7 @@ bool JsInitialize::ParseSaveas(napi_env env, napi_value jsConfig, Config &config
         return true;
     }
     std::string temp = NapiUtils::Convert2String(env, jsConfig, "saveas");
+    StringTrim(temp);
     if (temp.empty() || temp == "./") {
         return InterceptData("/", config.url, config.saveas);
     }
@@ -746,15 +721,15 @@ bool JsInitialize::Convert2FileSpecs(
     return true;
 }
 
+// Assert `in` is trimmed.
 bool JsInitialize::InterceptData(const std::string &str, const std::string &in, std::string &out)
 {
-    std::string tmpStr = std::string(in, 0, in.find_last_not_of(' ') + 1);
-    std::size_t position = tmpStr.find_last_of(str);
+    std::size_t position = in.find_last_of(str);
     // when the str at last index, will error.
-    if (position == std::string::npos || position >= tmpStr.size() - 1) {
+    if (position == std::string::npos || position >= in.size() - 1) {
         return false;
     }
-    out = std::string(tmpStr, position + 1);
+    out = std::string(in, position + 1);
     return true;
 }
 
@@ -763,6 +738,7 @@ bool JsInitialize::Convert2FileSpec(napi_env env, napi_value jsValue, const std:
     REQUEST_HILOGD("Convert2FileSpec in");
     file.name = name;
     file.uri = NapiUtils::Convert2String(env, jsValue, "path");
+    StringTrim(file.uri);
     if (file.uri.empty()) {
         return false;
     }
@@ -878,6 +854,111 @@ void JsInitialize::CreatProperties(napi_env env, napi_value &self, napi_value co
         NapiUtils::SetStringPropertyUtf8(env, self, "tid", task->GetTid());
         napi_set_named_property(env, self, "config", config);
     }
+}
+
+bool JsInitialize::IsUserFile(const std::string &path)
+{
+    return path.find("file://docs/") == 0 || path.find("file://media/") == 0;
+}
+
+void JsInitialize::StandardizeFileSpec(FileSpec &file)
+{
+    if (file.filename.empty()) {
+        InterceptData("/", file.uri, file.filename);
+    }
+    if (file.type.empty()) {
+        InterceptData(".", file.filename, file.type);
+    }
+    if (file.name.empty()) {
+        file.name = "file";
+    }
+    return;
+}
+
+ExceptionError JsInitialize::CheckUserFileSpec(
+    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, FileSpec &file)
+{
+    ExceptionError err = { .code = E_OK };
+    file.isUserFile = true;
+    if (config.mode != Mode::FOREGROUND) {
+        return { .code = E_PARAMETER_CHECK, .errInfo = "user file can only for Mode::FOREGROUND." };
+    }
+    if (config.version != Version::API10) {
+        return { .code = E_PARAMETER_CHECK, .errInfo = "user file can only for request.agent." };
+    }
+    REQUEST_HILOGD("UserFile in: %{public}s", file.uri.c_str());
+    std::shared_ptr<Uri> uri = std::make_shared<Uri>(file.uri);
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> dataAbilityHelper =
+        AppExecFwk::DataAbilityHelper::Creator(context, uri);
+    if (dataAbilityHelper == nullptr) {
+        REQUEST_HILOGE("dataAbilityHelper null");
+        return { .code = E_PARAMETER_CHECK, .errInfo = "dataAbilityHelper null." };
+    }
+    file.fd = dataAbilityHelper->OpenFile(*uri, "r");
+    if (file.fd < 0) {
+        REQUEST_HILOGE("Failed to open user file: %{public}s, fd: %{public}d", file.uri.c_str(), file.fd);
+        return { .code = E_FILE_IO, .errInfo = "Failed to open user file." };
+    }
+    StandardizeFileSpec(file);
+    return err;
+}
+
+ExceptionError JsInitialize::CheckUploadFileSpec(
+    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config)
+{
+    ExceptionError err = { .code = E_OK };
+    // need reconstruction.
+    for (auto &file : config.files) {
+        if (IsUserFile(file.uri)) {
+            err = CheckUserFileSpec(context, config, file);
+            if (err.code != E_OK) {
+                return err;
+            }
+        } else {
+            file.isUserFile = false;
+            std::string path;
+            if (!GetInternalPath(file.uri, context, config, path)) {
+                return { .code = E_PARAMETER_CHECK, .errInfo = "this is fail path" };
+            }
+            file.uri = path;
+            if (!JsTask::SetPathPermission(file.uri)) {
+                return { .code = E_FILE_IO, .errInfo = "set path permission fail" };
+            }
+            err = GetFD(path, config, file.fd);
+            if (err.code != E_OK) {
+                return err;
+            }
+            StandardizeFileSpec(file);
+        }
+    }
+    return err;
+}
+
+ExceptionError JsInitialize::CheckDownloadFileSpec(
+    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config)
+{
+    ExceptionError err = { .code = E_OK };
+    if (config.version == Version::API9) {
+        std::string path = config.saveas;
+        if (config.saveas.find('/') == 0) {
+            // API9 do not check.
+        } else if (!GetInternalPath(config.saveas, context, config, path)) {
+            return { .code = E_PARAMETER_CHECK, .errInfo = "this is fail path, api9 download." };
+        }
+        config.saveas = path;
+    } else {
+        if (!CheckDownloadFilePath(context, config, err.errInfo)) {
+            err.code = E_PARAMETER_CHECK;
+            return err;
+        }
+    }
+    if (!JsTask::SetPathPermission(config.saveas)) {
+        return { .code = E_FILE_IO, .errInfo = "set path permission fail, download." };
+    }
+    FileSpec file = { .uri = config.saveas, .isUserFile = false };
+    StandardizeFileSpec(file);
+    config.files.push_back(file);
+    return GetFD(file.uri, config, file.fd);
 }
 
 bool JsInitialize::CheckDownloadFilePath(
@@ -1025,6 +1106,16 @@ void JsInitialize::StringSplit(const std::string &str, const char delim, std::ve
             elems.push_back(item);
         }
     }
+    return;
+}
+
+void JsInitialize::StringTrim(std::string &str)
+{
+    if (str.empty()) {
+        return;
+    }
+    str.erase(0, str.find_first_not_of(" "));
+    str.erase(str.find_last_not_of(" ") + 1);
     return;
 }
 
