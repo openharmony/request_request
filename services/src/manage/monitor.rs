@@ -34,6 +34,7 @@ impl TaskManager {
             ApplicationState::Foreground => {
                 match self.app_state_map.get(&uid) {
                     Some(state) => {
+                        debug!("update app state, get uid: {:?} from app_state_map", &uid);
                         state.store(ApplicationState::Foreground as u8, Ordering::SeqCst)
                     }
                     None => {

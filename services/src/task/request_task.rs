@@ -35,8 +35,8 @@ use super::info::{CommonTaskInfo, Mode, State, TaskInfo, UpdateInfo};
 use super::notify::{EachFileStatus, NotifyData, Progress};
 use super::reason::Reason;
 use super::upload::upload;
-use crate::manage::monitor::IsOnline;
 use crate::manage::keeper::SAKeeper;
+use crate::manage::monitor::IsOnline;
 use crate::manage::SystemProxyManager;
 use crate::service::ability::RequestAbility;
 use crate::service::runcount::RunCountEvent;
@@ -813,7 +813,7 @@ impl RequestTask {
                         return false;
                     }
                 }
-                State::Failed | State::Waiting => {
+                State::Failed => {
                     if current_state == State::Completed
                         || current_state == State::Removed
                         || current_state == State::Stopped
@@ -821,13 +821,19 @@ impl RequestTask {
                         return false;
                     }
                     self.set_code(index, reason);
-                    if state == State::Failed {
-                        let file_counts = self.conf.file_specs.len();
-                        for i in index..file_counts {
-                            self.set_code(i, reason);
-                        }
+                    let file_counts = self.conf.file_specs.len();
+                    for i in index..file_counts {
+                        self.set_code(i, reason);
                     }
                 }
+
+                State::Waiting => {
+                    if current_state == State::Completed || current_state == State::Removed {
+                        return false;
+                    }
+                    self.set_code(index, reason);
+                }
+
                 State::Removed => self.set_code(index, reason),
                 _ => {}
             }
