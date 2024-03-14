@@ -14,6 +14,7 @@
 use std::cell::UnsafeCell;
 use std::fs::{File, OpenOptions};
 use std::io;
+use std::os::fd::FromRawFd;
 
 use ylong_runtime::fs::File as AsyncFile;
 
@@ -59,12 +60,22 @@ fn open_task_files(config: &TaskConfig) -> io::Result<(Files, Vec<i64>)> {
     for (idx, fs) in config.file_specs.iter().enumerate() {
         match config.common_data.action {
             Action::Upload => {
-                let file = cvt_res_error!(
-                    open_file_readonly(uid, bundle, &fs.path),
-                    "Open file RO failed - task_id: {}, idx: {}",
-                    tid,
-                    idx
-                );
+                let file = if fs.is_user_file {
+                    match fs.fd {
+                        Some(fd) => unsafe { File::from_raw_fd(fd) },
+                        None => {
+                            error!("None user file failed - task_id: {}, idx: {}", tid, idx);
+                            return Err(io::Error::other("none user file"));
+                        }
+                    }
+                } else {
+                    cvt_res_error!(
+                        open_file_readonly(uid, bundle, &fs.path),
+                        "Open file RO failed - task_id: {}, idx: {}",
+                        tid,
+                        idx
+                    )
+                };
                 let size = cvt_res_error!(
                     file.metadata().map(|data| data.len()),
                     "Cannot get upload file's size - task_id: {}, idx: {}",

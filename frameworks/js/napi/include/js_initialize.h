@@ -17,6 +17,7 @@
 #define JS_INITIALIZE_H
 
 #include "ability.h"
+#include "data_ability_helper.h"
 #include "directory_ex.h"
 #include "js_task.h"
 #include "napi_base_context.h"
@@ -42,6 +43,7 @@ public:
     static bool GetBaseDir(std::string &baseDir);
     static bool CheckPathBaseDir(const std::string &filepath, std::string &baseDir);
     static void StringSplit(const std::string &str, const char delim, std::vector<std::string> &elems);
+    static void StringTrim(std::string &str);
     static bool CreateDirs(const std::vector<std::string> &pathDirs);
     static bool FindDir(const std::string &pathDir);
 
@@ -99,6 +101,14 @@ private:
         const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path);
     static bool WholeToNormal(const std::string &wholePath, std::string &normalPath, std::vector<std::string> &out);
     static bool PathVecToNormal(const std::vector<std::string> &in, std::vector<std::string> &out);
+    static bool IsUserFile(const std::string &filePath);
+    static void StandardizeFileSpec(FileSpec &file);
+    static ExceptionError CheckUserFileSpec(
+        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, FileSpec &file);
+    static ExceptionError CheckUploadFileSpec(
+        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
+    static ExceptionError CheckDownloadFileSpec(
+        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
 };
 } // namespace OHOS::Request
 #endif // JS_INITIALIZE_H

@@ -16,6 +16,7 @@
 #![warn(missing_docs, unreachable_pub)]
 #![warn(clippy::redundant_clone, clippy::redundant_static_lifetimes)]
 #![cfg_attr(not(feature = "oh"), allow(unused))]
+#![feature(io_error_other)]
 
 #[macro_use]
 mod macros;

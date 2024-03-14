@@ -1744,5 +1744,42 @@ export default function requestOperateTaskTest() {
         done();
       }
     })
+
+    /**
+     * @tc.number: testUploadTaskUserFile001
+     * @tc.name: testUploadTaskUserFile001
+     * @tc.desc: Test when upload user file with wrong `Mode`
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadTaskUserFile001', 0, async function (done) {
+      let fileSpec = {
+        path: `file://media/Photo/1/test.img`
+      }
+      let formItem = {
+        name: 'file',
+        value: fileSpec
+      }
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        mode: request.agent.Mode.BACKGROUND,
+        data: [formItem],
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          expect(false).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(true).assertTrue();
+        done();
+      }
+    })
   })
 }

@@ -25,6 +25,7 @@ struct CFileSpec {
     CStringWrapper path;
     CStringWrapper fileName;
     CStringWrapper mimeType;
+    bool is_user_file;
 };
 
 struct FileSpec {
@@ -32,6 +33,7 @@ struct FileSpec {
     std::string path;
     std::string fileName;
     std::string mimeType;
+    bool is_user_file;
 };
 
 struct CFormItem {
