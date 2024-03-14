@@ -17,13 +17,12 @@ use std::sync::Arc;
 
 use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
-use super::events::{
-    ConstructMessage, EventMessage, ScheduledMessage, ServiceMessage, StateMessage, TaskMessage,
-};
+use super::events::{EventMessage, ScheduledMessage, ServiceMessage, StateMessage, TaskMessage};
 use super::qos::{Qos, QosChange, QosQueue};
 use super::scheduled;
 use crate::error::ErrorCode;
 use crate::manage::keeper::SAKeeper;
+use crate::manage::system_proxy::SystemProxyManager;
 use crate::service::ability::{RequestAbility, PANIC_INFO};
 use crate::task::config::Version;
 use crate::task::ffi::HasRequestTaskRecord;
@@ -34,7 +33,7 @@ use crate::task::tick::Clock;
 use crate::utils::c_wrapper::CStringWrapper;
 
 cfg_oh! {
-    use crate::manage::Notifier;
+    use crate::manage::notifier::Notifier;
 }
 
 pub(crate) struct TaskManager {
@@ -50,26 +49,10 @@ pub(crate) struct TaskManager {
     pub(crate) rx: UnboundedReceiver<EventMessage>,
 }
 
-#[derive(Clone)]
-pub(crate) struct SystemProxyManager;
-
-impl SystemProxyManager {
-    pub(crate) fn init() -> Self {
-        unsafe {
-            RegisterProxySubscriber();
-        }
-        Self
-    }
-
-    pub(crate) fn host(&self) -> CStringWrapper {
-        unsafe { GetHost() }
-    }
-    pub(crate) fn port(&self) -> CStringWrapper {
-        unsafe { GetPort() }
-    }
-    pub(crate) fn exlist(&self) -> CStringWrapper {
-        unsafe { GetExclusionList() }
-    }
+pub(crate) struct SystemConfig {
+    pub(crate) proxy_host: String,
+    pub(crate) proxy_port: String,
+    pub(crate) proxy_exlist: String,
 }
 
 #[derive(Clone)]
@@ -226,14 +209,8 @@ impl TaskManager {
         debug!("TaskManager handle service_message {:?}", message);
 
         match message {
-            ServiceMessage::Construct(construct_message, tx) => {
-                let ConstructMessage {
-                    config,
-                    files,
-                    body_files,
-                } = *construct_message;
-                let error_code =
-                    self.construct_task(config, files, body_files, self.sys_proxy.clone());
+            ServiceMessage::Construct(msg, tx) => {
+                let error_code = self.create(msg.config);
                 let _ = tx.send(error_code);
             }
             ServiceMessage::Pause(uid, task_id, tx) => {
@@ -506,15 +483,19 @@ impl TaskManager {
             }
         }
     }
+
+    pub(crate) fn system_config(&self) -> SystemConfig {
+        SystemConfig {
+            proxy_host: self.sys_proxy.host(),
+            proxy_port: self.sys_proxy.port(),
+            proxy_exlist: self.sys_proxy.exlist(),
+        }
+    }
 }
 
 #[cfg(feature = "oh")]
 #[link(name = "request_service_c")]
 extern "C" {
     pub(crate) fn GetTopBundleName() -> CStringWrapper;
-    pub(crate) fn RegisterProxySubscriber();
-    pub(crate) fn GetHost() -> CStringWrapper;
-    pub(crate) fn GetPort() -> CStringWrapper;
-    pub(crate) fn GetExclusionList() -> CStringWrapper;
     pub(crate) fn QueryTaskTokenId(task_id: u32) -> u64;
 }

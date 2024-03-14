@@ -22,8 +22,6 @@ pub(crate) mod listener;
 pub(crate) mod permission;
 pub(crate) mod runcount;
 
-use std::fs::{File, OpenOptions};
-
 pub(crate) use interface::{RequestInterfaceCode, RequestNotifyInterfaceCode};
 use ipc_rust::{
     define_remote_object, get_calling_token_id, BorrowedMsgParcel, FileDesc, IRemoteBroker,
@@ -459,9 +457,9 @@ pub(crate) fn serialize_task_config(
         reply.write(&(config.file_specs[i].mime_type))?;
     }
     // write config.body_file_names
-    reply.write(&(config.body_file_names.len() as u32))?;
-    for i in 0..config.body_file_names.len() {
-        reply.write(&(config.body_file_names[i]))?;
+    reply.write(&(config.body_file_paths.len() as u32))?;
+    for i in 0..config.body_file_paths.len() {
+        reply.write(&(config.body_file_paths[i]))?;
     }
     Ok(())
 }
@@ -478,44 +476,6 @@ pub(crate) fn is_system_api() -> bool {
     let token_id = get_calling_token_id();
     debug!("Gets token id {}", &token_id);
     unsafe { RequestIsSystemAPI(token_id) }
-}
-
-pub(crate) fn open_file_readwrite(uid: u64, bundle: &str, path: &str) -> IpcResult<File> {
-    match OpenOptions::new()
-        .read(true)
-        .write(true)
-        .append(true)
-        .open(convert_path(uid, bundle, path))
-    {
-        Ok(file) => Ok(file),
-        Err(e) => {
-            error!("open_file_readwrite failed, err is {:?}", e);
-            Err(IpcStatusCode::Failed)
-        }
-    }
-}
-
-pub(crate) fn open_file_readonly(uid: u64, bundle: &str, path: &str) -> IpcResult<File> {
-    match OpenOptions::new()
-        .read(true)
-        .open(convert_path(uid, bundle, path))
-    {
-        Ok(file) => Ok(file),
-        Err(e) => {
-            error!("open_file_readonly failed, err is {:?}", e);
-            Err(IpcStatusCode::Failed)
-        }
-    }
-}
-
-pub(crate) fn convert_path(uid: u64, bundle: &str, path: &str) -> String {
-    let uuid = uid / 200000;
-    let base_replace = format!("{}/base/{}", uuid, bundle);
-    let real_path = path
-        .replacen("storage", "app", 1)
-        .replacen("base", &base_replace, 1);
-    debug!("convert to real_path: {}", real_path);
-    real_path
 }
 
 #[cfg(feature = "oh")]

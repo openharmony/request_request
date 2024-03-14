@@ -20,10 +20,10 @@ use ylong_http_client::HttpClientError;
 use ylong_runtime::io::AsyncWrite;
 
 #[cfg(feature = "oh")]
-use crate::manage::Notifier;
+use crate::manage::notifier::Notifier;
 use crate::task::config::Version;
 use crate::task::info::State;
-use crate::task::RequestTask;
+use crate::task::request_task::RequestTask;
 use crate::utils::get_current_timestamp;
 
 const FRONT_NOTIFY_INTERVAL: u64 = 1000;
@@ -116,7 +116,7 @@ impl TaskOperator {
         data: &[u8],
         skip_size: usize,
     ) -> Poll<Result<usize, HttpClientError>> {
-        let file = unsafe { &mut *self.task.files.0.get() }.get_mut(0).unwrap();
+        let file = self.task.files.get_mut(0).unwrap();
         let mut progress_guard = self.task.progress.lock().unwrap();
         match Pin::new(file).poll_write(cx, data) {
             Poll::Ready(Ok(size)) => {

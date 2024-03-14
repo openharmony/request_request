@@ -13,6 +13,7 @@
 
 use std::io::SeekFrom;
 use std::pin::Pin;
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
@@ -24,7 +25,7 @@ use super::operator::TaskOperator;
 use super::reason::Reason;
 use super::tick::{Clock, WAITING_TO_TICK, WAITING_TO_WAKE};
 use crate::task::info::State;
-use crate::task::RequestTask;
+use crate::task::request_task::RequestTask;
 
 cfg_oh! {
     use crate::trace::Trace;
@@ -35,8 +36,6 @@ struct TaskReader {
     waiting: usize,
     tick_waiting: usize,
 }
-
-use std::sync::atomic::Ordering;
 
 impl TaskReader {
     pub(crate) fn new(task: Arc<RequestTask>) -> Self {
@@ -71,9 +70,7 @@ impl AsyncRead for TaskReader {
         }
 
         let index = self.task.progress.lock().unwrap().common_data.index;
-        let file = unsafe { &mut *self.task.files.0.get() }
-            .get_mut(index)
-            .unwrap();
+        let file = self.task.files.get_mut(index).unwrap();
         let (is_partial_upload, total_upload_bytes) = self.task.get_upload_info(index);
         let mut progress_guard = self.task.progress.lock().unwrap();
         if !is_partial_upload {
@@ -103,9 +100,7 @@ impl AsyncRead for TaskReader {
             let buf_filled_len = buf.filled().len();
             let mut read_buf = buf.take(total_upload_bytes as usize);
             let filled_len = read_buf.filled().len();
-            let file = unsafe { &mut *self.task.files.0.get() }
-                .get_mut(index)
-                .unwrap();
+            let file = self.task.files.get_mut(index).unwrap();
             match Pin::new(file).poll_read(cx, &mut read_buf) {
                 Poll::Ready(Ok(_)) => {
                     let current_filled_len = read_buf.filled().len();
@@ -134,6 +129,7 @@ impl UploadOperator for TaskOperator {
         self.poll_progress_common(cx)
     }
 }
+
 fn build_stream_request(task: Arc<RequestTask>, index: usize) -> Option<Request> {
     debug!("build stream request");
     let task_reader = TaskReader::new(task.clone());
@@ -219,9 +215,6 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
     let _trace = Trace::new(&format!("exec upload task url: {url} file num: {num}"));
 
     let size = task.conf.file_specs.len();
-    if task.client.is_none() {
-        return;
-    }
     let index = task.progress.lock().unwrap().common_data.index;
     debug!("index is {}", index);
     for i in index..size {
@@ -254,7 +247,7 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
     }
 
     let uploaded = task.upload_counts.load(Ordering::SeqCst);
-    if uploaded == size as u32 {
+    if uploaded == size {
         task.set_status(State::Completed, Reason::Default);
     } else {
         task.set_status(State::Failed, Reason::UploadFileError);
@@ -271,7 +264,7 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
             .param(build_number_param!(crate::sys_event::TOTAL_FILE_NUM, size))
             .param(build_number_param!(
                 crate::sys_event::FAIL_FILE_NUM,
-                size as u32 - uploaded
+                size - uploaded
             ))
             .param(build_number_param!(
                 crate::sys_event::SUCCESS_FILE_NUM,
@@ -308,12 +301,7 @@ where
         if request.is_none() {
             return false;
         }
-        let response = task
-            .client
-            .as_ref()
-            .unwrap()
-            .request(request.unwrap())
-            .await;
+        let response = task.client.request(request.unwrap()).await;
         if task.handle_response_error(&response).await {
             task.code.lock().unwrap()[index] = Reason::Default;
             task.record_upload_response(index, response).await;

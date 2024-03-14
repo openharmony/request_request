@@ -12,9 +12,14 @@
 // limitations under the License.
 
 use std::fmt::Debug;
-use std::fs::File;
 
 use ylong_runtime::sync::oneshot::{channel, Sender};
+
+use crate::error::ErrorCode;
+use crate::task::config::{Action, TaskConfig};
+use crate::task::info::{ApplicationState, DumpAllInfo, DumpOneInfo, TaskInfo};
+use crate::utils::filter::Filter;
+use crate::utils::Recv;
 
 mod construct;
 mod dump;
@@ -30,12 +35,6 @@ mod start;
 mod stop;
 mod touch;
 
-use crate::error::ErrorCode;
-use crate::task::config::{Action, TaskConfig};
-use crate::task::info::{ApplicationState, DumpAllInfo, DumpOneInfo, TaskInfo};
-use crate::utils::filter::Filter;
-use crate::utils::Recv;
-
 #[derive(Debug)]
 pub(crate) enum EventMessage {
     Service(ServiceMessage),
@@ -45,19 +44,11 @@ pub(crate) enum EventMessage {
 }
 
 impl EventMessage {
-    pub(crate) fn construct(
-        config: TaskConfig,
-        files: Vec<File>,
-        body_files: Vec<File>,
-    ) -> (Self, Recv<ErrorCode>) {
+    pub(crate) fn construct(config: TaskConfig) -> (Self, Recv<ErrorCode>) {
         let (tx, rx) = channel::<ErrorCode>();
         (
             Self::Service(ServiceMessage::Construct(
-                Box::new(ConstructMessage {
-                    config,
-                    files,
-                    body_files,
-                }),
+                Box::new(ConstructMessage { config }),
                 tx,
             )),
             Recv::new(rx),
@@ -215,8 +206,6 @@ pub(crate) enum StateMessage {
 
 pub(crate) struct ConstructMessage {
     pub(crate) config: TaskConfig,
-    pub(crate) files: Vec<File>,
-    pub(crate) body_files: Vec<File>,
 }
 
 impl Debug for ConstructMessage {

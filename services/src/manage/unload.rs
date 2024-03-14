@@ -12,7 +12,6 @@
 // limitations under the License.
 
 use std::collections::{HashMap, HashSet};
-use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use super::task_manager::GetTopBundleName;
@@ -22,7 +21,7 @@ use crate::task::config::{TaskConfig, Version};
 use crate::task::ffi::{CTaskConfig, ChangeRequestTaskState};
 use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
-use crate::task::RequestTask;
+use crate::task::request_task::RequestTask;
 
 impl TaskManager {
     pub(crate) fn check_unload_sa(&self) -> bool {
@@ -89,15 +88,10 @@ impl TaskManager {
                         continue;
                     }
                     let app_state = self.app_state(uid, &config.bundle);
-                    match RequestTask::restore_task(
-                        config,
-                        task_info,
-                        AtomicBool::new(false),
-                        app_state,
-                        self.sys_proxy.clone(),
-                    ) {
-                        Some(task) => self.restoring_tasks.push(Arc::new(task)),
-                        None => {
+                    match RequestTask::new(config, self.system_config(), app_state, Some(task_info))
+                    {
+                        Ok(task) => self.restoring_tasks.push(Arc::new(task)),
+                        Err(_) => {
                             unsafe { ChangeRequestTaskState(task_id, uid, State::Failed) };
                         }
                     }
@@ -125,14 +119,8 @@ impl TaskManager {
                     return;
                 }
                 let app_state = self.app_state(uid, &config.bundle);
-                match RequestTask::restore_task(
-                    config,
-                    task_info,
-                    AtomicBool::new(false),
-                    app_state,
-                    self.sys_proxy.clone(),
-                ) {
-                    Some(task) => {
+                match RequestTask::new(config, self.system_config(), app_state, Some(task_info)) {
+                    Ok(task) => {
                         task.set_status(State::Waiting, Reason::Default);
                         unsafe { ChangeRequestTaskState(task_id, uid, State::Waiting) };
                         let arc_task = Arc::new(task);
@@ -140,7 +128,7 @@ impl TaskManager {
                         // Adds tasks to task map and inits it.
                         self.insert_restore_tasks();
                     }
-                    None => error!("continue task failed"),
+                    Err(_) => error!("continue task failed"),
                 }
             }
         }

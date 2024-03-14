@@ -21,7 +21,7 @@ use crate::task::info::{ApplicationState, Mode, State};
 use crate::task::reason::Reason;
 
 cfg_oh! {
-    use crate::manage::Notifier;
+    use crate::manage::notifier::Notifier;
 }
 
 impl TaskManager {
@@ -188,10 +188,10 @@ impl TaskManager {
             }
         };
         tasks.into_iter().for_each(|task| {
-            if task.conf.common_data.action == Action::UpLoad {
+            if task.conf.common_data.action == Action::Upload {
                 task.set_status(State::Failed, Reason::AppBackgroundOrTerminate);
                 self.after_task_processed(&task);
-            } else if task.conf.common_data.action == Action::DownLoad {
+            } else if task.conf.common_data.action == Action::Download {
                 self.pause_task(task, Reason::AppBackgroundOrTerminate);
             }
         });

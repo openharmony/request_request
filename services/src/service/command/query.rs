@@ -40,8 +40,8 @@ impl Query {
                 reply.write(&(ErrorCode::Permission as i32))?;
                 return Err(IpcStatusCode::Failed);
             }
-            QueryPermission::QueryDownLoad => Action::DownLoad,
-            QueryPermission::QueryUpload => Action::UpLoad,
+            QueryPermission::QueryDownLoad => Action::Download,
+            QueryPermission::QueryUpload => Action::Upload,
             QueryPermission::QueryAll => Action::Any,
         };
 

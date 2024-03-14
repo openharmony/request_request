@@ -19,8 +19,7 @@ use crate::manage::events::{EventMessage, TaskMessage};
 use crate::manage::TaskManager;
 use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
-use crate::task::request_task::{run, RunningTask};
-use crate::task::RequestTask;
+use crate::task::request_task::{run, RequestTask, RunningTask};
 
 impl TaskManager {
     pub(crate) fn start(&mut self, uid: u64, task_id: u32) -> ErrorCode {
@@ -71,7 +70,7 @@ impl TaskManager {
             (status.state, status.reason)
         };
         if state == State::Waiting
-            && (reason == Reason::NetWorkOffline || reason == Reason::UnSupportedNetWorkType)
+            && (reason == Reason::NetworkOffline || reason == Reason::UnsupportedNetworkType)
         {
             task.retry.store(true, Ordering::SeqCst);
             task.tries.fetch_add(1, Ordering::SeqCst);

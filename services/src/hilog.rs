@@ -48,3 +48,16 @@ macro_rules! error {
         hilog_rust::error!(LOG_LABEL,"{}",@public(log));
     }}
 }
+
+macro_rules! cvt_res_error {
+    ($res: expr, $($args:tt)*) => {{
+        match $res {
+            Ok(value) => value,
+            Err(e) => {
+                error!($($args)*);
+                error!("Error msg: {:?}", e);
+                return Err(e);
+            }
+        }
+    }}
+}

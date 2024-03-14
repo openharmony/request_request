@@ -21,7 +21,7 @@ use super::TaskManager;
 use crate::task::config::Version;
 use crate::task::info::State;
 use crate::task::reason::Reason;
-use crate::task::RequestTask;
+use crate::task::request_task::RequestTask;
 use crate::utils::get_current_timestamp;
 
 const MILLISECONDS_IN_ONE_DAY: u64 = 24 * 60 * 60 * 1000;
@@ -67,12 +67,12 @@ impl TaskManager {
             let current_time = get_current_timestamp();
             let (state, time) = {
                 let guard = task.status.lock().unwrap();
-                (guard.state, guard.waitting_network_time)
+                (guard.state, guard.waiting_network_time)
             };
             if state == State::Waiting {
                 if let Some(t) = time {
                     if current_time - t > MILLISECONDS_IN_ONE_DAY {
-                        task.set_status(State::Stopped, Reason::WaittingNetWorkOneday);
+                        task.set_status(State::Stopped, Reason::WaitingNetworkOneDay);
                         remove_tasks.push(task.clone());
                     }
                 }

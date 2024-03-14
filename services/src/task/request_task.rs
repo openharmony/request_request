@@ -11,21 +11,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::cell::UnsafeCell;
 use std::ffi::CString;
-use std::fs::File;
-use std::io::{Read, SeekFrom};
+use std::io::SeekFrom;
 use std::ops::Deref;
-use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicU8, Ordering};
+use std::sync::atomic::{
+    AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicU8, AtomicUsize, Ordering,
+};
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::Duration;
 
 use ylong_http_client::async_impl::{Body, Client, Request, RequestBuilder, Response};
-use ylong_http_client::{
-    Certificate, ErrorKind, HttpClientError, Proxy, Redirect, Timeout, TlsVersion,
-};
-use ylong_runtime::fs::File as YlongFile;
+use ylong_http_client::{ErrorKind, HttpClientError};
 use ylong_runtime::io::{AsyncSeekExt, AsyncWriteExt};
 
 use super::config::{Network, Version};
@@ -35,66 +32,32 @@ use super::info::{CommonTaskInfo, Mode, State, TaskInfo, UpdateInfo};
 use super::notify::{EachFileStatus, NotifyData, Progress};
 use super::reason::Reason;
 use super::upload::upload;
+use crate::error::ErrorCode;
 use crate::manage::keeper::SAKeeper;
 use crate::manage::monitor::IsOnline;
-use crate::manage::SystemProxyManager;
+use crate::manage::task_manager::SystemConfig;
 use crate::service::ability::RequestAbility;
 use crate::service::runcount::RunCountEvent;
+use crate::task::client::build_client;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::ffi::{
     GetNetworkInfo, RequestBackgroundNotify, RequestTaskMsg, UpdateRequestTask,
 };
+use crate::task::files::{AttachedFiles, Files};
 use crate::utils::c_wrapper::CStringWrapper;
 use crate::utils::{get_current_timestamp, hashmap_to_string};
 
 cfg_oh! {
-    use crate::service::{open_file_readonly, open_file_readwrite, convert_path};
-    use crate::manage::Notifier;
+    use crate::manage::notifier::Notifier;
 }
 
-const SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
-
-const CONNECT_TIMEOUT: u64 = 60;
 const RETRY_INTERVAL: u64 = 20;
-
-#[derive(Clone, Debug)]
-pub(crate) struct TaskStatus {
-    pub(crate) waitting_network_time: Option<u64>,
-    pub(crate) mtime: u64,
-    pub(crate) state: State,
-    pub(crate) reason: Reason,
-}
-
-impl Default for TaskStatus {
-    fn default() -> Self {
-        TaskStatus {
-            waitting_network_time: None,
-            mtime: get_current_timestamp(),
-            state: State::Created,
-            reason: Reason::Default,
-        }
-    }
-}
-
-pub(crate) struct Files(pub(crate) UnsafeCell<Vec<YlongFile>>);
-
-impl Files {
-    pub(crate) fn get(&self, index: usize) -> Option<&YlongFile> {
-        unsafe { &*self.0.get() }.get(index)
-    }
-}
-
-unsafe impl Sync for Files {}
-unsafe impl Send for Files {}
-
-// Need to release file timely.
-pub(crate) struct BodyFiles(UnsafeCell<Vec<Option<YlongFile>>>);
-unsafe impl Sync for BodyFiles {}
-unsafe impl Send for BodyFiles {}
 
 pub(crate) struct RequestTask {
     pub(crate) conf: TaskConfig,
-    pub(crate) proxy_task: SystemProxyManager,
+    pub(crate) client: Client,
+    pub(crate) files: Files,
+    pub(crate) body_files: Files,
     pub(crate) ctime: u64,
     pub(crate) mime_type: Mutex<String>,
     pub(crate) progress: Mutex<Progress>,
@@ -103,162 +66,117 @@ pub(crate) struct RequestTask {
     pub(crate) retry: AtomicBool,
     pub(crate) get_file_info: AtomicBool,
     pub(crate) retry_for_request: AtomicBool,
-    #[allow(unused)]
-    pub(crate) retry_for_speed: AtomicBool,
     pub(crate) code: Mutex<Vec<Reason>>,
     pub(crate) background_notify_time: AtomicU64,
     pub(crate) file_total_size: AtomicI64,
     pub(crate) resume: AtomicBool,
-    pub(crate) files: Files,
-    pub(crate) body_files: BodyFiles,
     pub(crate) seek_flag: AtomicBool,
     pub(crate) range_request: AtomicBool,
     pub(crate) range_response: AtomicBool,
     pub(crate) restored: AtomicBool,
     pub(crate) skip_bytes: AtomicU64,
-    pub(crate) upload_counts: AtomicU32,
-    pub(crate) client: Option<Client>,
+    pub(crate) upload_counts: AtomicUsize,
     pub(crate) rate_limiting: AtomicBool,
     pub(crate) app_state: Arc<AtomicU8>,
     pub(crate) last_notify: AtomicU64,
 }
 
 impl RequestTask {
-    pub(crate) fn constructor(
-        conf: TaskConfig,
-        files: Vec<File>,
-        body_files: Vec<File>,
-        rate_limiting: AtomicBool,
+    pub(crate) fn new(
+        config: TaskConfig,
+        system: SystemConfig,
         app_state: Arc<AtomicU8>,
-        proxy_task: SystemProxyManager,
-    ) -> Self {
-        let mut sizes = Vec::new();
-        match conf.common_data.action {
-            Action::DownLoad => sizes.push(-1),
-            Action::UpLoad => {
-                for f in files.iter() {
-                    let file_size = f.metadata().unwrap().len() as i64;
-                    debug!("file size size is {}", file_size);
-                    sizes.push(file_size);
-                }
-            }
-            _ => {}
+        info: Option<TaskInfo>,
+    ) -> Result<RequestTask, ErrorCode> {
+        if !check_configs(&config) {
+            return Err(ErrorCode::Other);
         }
-        let file_count = files.len();
-        let action = conf.common_data.action;
 
-        let mut task = RequestTask {
-            conf,
-            proxy_task,
-            ctime: get_current_timestamp(),
-            files: Files(UnsafeCell::new(
-                files.into_iter().map(YlongFile::new).collect(),
-            )),
-            body_files: BodyFiles(UnsafeCell::new(
-                body_files
-                    .into_iter()
-                    .map(|f| Some(YlongFile::new(f)))
-                    .collect(),
-            )),
-            mime_type: Mutex::new(String::new()),
-            progress: Mutex::new(Progress::new(sizes)),
-            tries: AtomicU32::new(0),
-            status: Mutex::new(TaskStatus::default()),
-            retry: AtomicBool::new(false),
+        let files = AttachedFiles::open(&config).map_err(|_| ErrorCode::FileOperationErr)?;
+
+        let client = build_client(&config, &system).map_err(|_| ErrorCode::Other)?;
+
+        let file_len = files.files.len();
+        let action = config.common_data.action;
+        let time = get_current_timestamp();
+
+        let file_total_size = match action {
+            Action::Upload => {
+                let mut file_total_size = 0i64;
+                // If the total size overflows, ignore it.
+                for size in files.sizes.iter() {
+                    file_total_size += *size;
+                }
+                file_total_size
+            }
+            Action::Download => info
+                .as_ref()
+                .map(|info| info.progress.sizes[0])
+                .unwrap_or(-1),
+            _ => unreachable!("Action::Any in RequestTask::new never reach"),
+        };
+
+        // If `TaskInfo` is provided, use data of it.
+        let ctime = info
+            .as_ref()
+            .map(|info| info.common_data.ctime)
+            .unwrap_or(time);
+        let mime_type = info
+            .as_ref()
+            .map(|info| info.mime_type.clone())
+            .unwrap_or_default();
+        let tries = info
+            .as_ref()
+            .map(|info| info.common_data.tries)
+            .unwrap_or(0);
+        let upload_counts = info
+            .as_ref()
+            .map(|info| info.progress.common_data.index)
+            .unwrap_or(0);
+        let status = info
+            .as_ref()
+            .map(|info| TaskStatus {
+                waiting_network_time: None,
+                mtime: time,
+                state: State::from(info.progress.common_data.state),
+                reason: Reason::from(info.common_data.reason),
+            })
+            .unwrap_or(TaskStatus::new(time));
+        let retry = info
+            .as_ref()
+            .map(|info| info.common_data.retry)
+            .unwrap_or(false);
+        let progress = info
+            .map(|info| info.progress)
+            .unwrap_or(Progress::new(files.sizes));
+
+        Ok(RequestTask {
+            conf: config,
+            client,
+            files: files.files,
+            body_files: files.body_files,
+            ctime,
+            mime_type: Mutex::new(mime_type),
+            progress: Mutex::new(progress),
+            tries: AtomicU32::new(tries),
+            status: Mutex::new(status),
+            retry: AtomicBool::new(retry),
             get_file_info: AtomicBool::new(false),
             retry_for_request: AtomicBool::new(false),
-            retry_for_speed: AtomicBool::new(false),
-            code: Mutex::new(vec![Reason::Default; file_count]),
-            background_notify_time: AtomicU64::new(get_current_timestamp()),
-            file_total_size: AtomicI64::new(-1),
+            code: Mutex::new(vec![Reason::Default; file_len]),
+            background_notify_time: AtomicU64::new(time),
+            file_total_size: AtomicI64::new(file_total_size),
             resume: AtomicBool::new(false),
             seek_flag: AtomicBool::new(false),
             range_request: AtomicBool::new(false),
             range_response: AtomicBool::new(false),
             restored: AtomicBool::new(false),
             skip_bytes: AtomicU64::new(0),
-            upload_counts: AtomicU32::new(0),
-            client: None,
-            rate_limiting,
+            upload_counts: AtomicUsize::new(upload_counts),
+            rate_limiting: AtomicBool::new(false),
             app_state,
-            last_notify: AtomicU64::new(get_current_timestamp()),
-        };
-        task.client = task.build_client();
-
-        if action == Action::UpLoad {
-            task.file_total_size
-                .store(task.get_upload_file_total_size() as i64, Ordering::SeqCst);
-        }
-        task
-    }
-
-    // When we refactor, we'll use result here instead of
-    pub(crate) fn restore_task(
-        conf: TaskConfig,
-        info: TaskInfo,
-        rate_limiting: AtomicBool,
-        app_state: Arc<AtomicU8>,
-        proxy_task: SystemProxyManager,
-    ) -> Option<Self> {
-        let progress_index = info.progress.common_data.index;
-        let uid = info.common_data.uid;
-        let action = conf.common_data.action;
-        let files = get_restore_files(&conf, uid)?;
-        let body_files = get_restore_body_files(&conf, uid)?;
-        let file_count = files.len();
-
-        let mut task = RequestTask {
-            conf,
-            proxy_task,
-            ctime: info.common_data.ctime,
-            files: Files(UnsafeCell::new(
-                files.into_iter().map(YlongFile::new).collect(),
-            )),
-            body_files: BodyFiles(UnsafeCell::new(
-                body_files
-                    .into_iter()
-                    .map(|f| Some(YlongFile::new(f)))
-                    .collect(),
-            )),
-            mime_type: Mutex::new(info.mime_type),
-            progress: Mutex::new(info.progress.clone()),
-            tries: AtomicU32::new(info.common_data.tries),
-            status: Mutex::new(TaskStatus {
-                waitting_network_time: None,
-                mtime: get_current_timestamp(),
-                state: State::from(info.progress.common_data.state),
-                reason: Reason::from(info.common_data.reason),
-            }),
-            retry: AtomicBool::new(info.common_data.retry),
-            get_file_info: AtomicBool::new(false),
-            retry_for_request: AtomicBool::new(false),
-            retry_for_speed: AtomicBool::new(false),
-            code: Mutex::new(vec![Reason::Default; file_count]),
-            background_notify_time: AtomicU64::new(get_current_timestamp()),
-            file_total_size: AtomicI64::new(-1),
-            resume: AtomicBool::new(false),
-            seek_flag: AtomicBool::new(false),
-            range_request: AtomicBool::new(false),
-            range_response: AtomicBool::new(false),
-            restored: AtomicBool::new(true),
-            skip_bytes: AtomicU64::new(0),
-            upload_counts: AtomicU32::new(progress_index as u32),
-            client: None,
-            rate_limiting,
-            app_state,
-            last_notify: AtomicU64::new(get_current_timestamp()),
-        };
-        task.client = task.build_client();
-        match action {
-            Action::UpLoad => task
-                .file_total_size
-                .store(task.get_upload_file_total_size() as i64, Ordering::SeqCst),
-            Action::DownLoad => task
-                .file_total_size
-                .store(info.progress.sizes[progress_index], Ordering::SeqCst),
-            _ => {}
-        }
-        Some(task)
+            last_notify: AtomicU64::new(time),
+        })
     }
 
     pub(crate) fn build_notify_data(&self) -> NotifyData {
@@ -285,7 +203,7 @@ impl RequestTask {
 
     pub(crate) fn record_waitting_network_time(&self) {
         let mut staus = self.status.lock().unwrap();
-        staus.waitting_network_time = Some(get_current_timestamp());
+        staus.waiting_network_time = Some(get_current_timestamp());
     }
 
     pub(crate) fn check_net_work_status(&self) -> bool {
@@ -294,9 +212,9 @@ impl RequestTask {
                 && self.conf.common_data.mode == Mode::BackGround
                 && self.conf.common_data.retry
             {
-                self.set_status(State::Waiting, Reason::UnSupportedNetWorkType);
+                self.set_status(State::Waiting, Reason::UnsupportedNetworkType);
             } else {
-                self.set_status(State::Failed, Reason::UnSupportedNetWorkType);
+                self.set_status(State::Failed, Reason::UnsupportedNetworkType);
             }
             return false;
         }
@@ -309,7 +227,7 @@ impl RequestTask {
                 && self.conf.common_data.mode == Mode::BackGround
                 && self.conf.common_data.retry
             {
-                self.set_status(State::Waiting, Reason::NetWorkOffline);
+                self.set_status(State::Waiting, Reason::NetworkOffline);
             } else {
                 let retry_times = 20;
                 for _ in 0..retry_times {
@@ -318,102 +236,11 @@ impl RequestTask {
                     }
                     sleep(Duration::from_millis(RETRY_INTERVAL));
                 }
-                self.set_status(State::Failed, Reason::NetWorkOffline);
+                self.set_status(State::Failed, Reason::NetworkOffline);
             }
             return false;
         }
         true
-    }
-
-    fn build_client(&self) -> Option<Client> {
-        let mut client = Client::builder()
-            .connect_timeout(Timeout::from_secs(CONNECT_TIMEOUT))
-            .request_timeout(Timeout::from_secs(SECONDS_IN_ONE_WEEK))
-            .min_tls_version(TlsVersion::TLS_1_2);
-
-        if self.conf.common_data.redirect {
-            client = client.redirect(Redirect::limited(usize::MAX));
-        } else {
-            client = client.redirect(Redirect::none());
-        }
-
-        if !self.conf.proxy.is_empty() {
-            let user_proxy = Proxy::all(&self.conf.proxy).build();
-
-            match user_proxy {
-                Ok(p) => {
-                    client = client.proxy(p);
-                }
-                Err(e) => {
-                    error!("Set user proxy failed, error is {:?}", e);
-                    self.set_status(State::Failed, Reason::IoError);
-                    return None;
-                }
-            }
-        } else {
-            let mut proxy_host = self.proxy_task.host().to_string();
-            let proxy_port = self.proxy_task.port().to_string();
-            if !proxy_host.is_empty() {
-                if !proxy_port.is_empty() {
-                    proxy_host.push(':');
-                    proxy_host += &proxy_port;
-                }
-                let proxy_exculsion = self.proxy_task.exlist().to_string();
-                let proxy_res = Proxy::all(&proxy_host).no_proxy(&proxy_exculsion).build();
-                match proxy_res {
-                    Ok(p) => {
-                        client = client.proxy(p);
-                    }
-                    Err(e) => {
-                        error!("Set proxy failed, error is {:?}", e);
-                        self.set_status(State::Failed, Reason::IoError);
-                        return None;
-                    }
-                }
-            }
-        }
-
-        // http links that contain redirects also require a certificate when redirected
-        // to https.
-        let mut buf = Vec::new();
-        let file = File::open("/etc/ssl/certs/cacert.pem");
-        match file {
-            Ok(mut f) => {
-                f.read_to_end(&mut buf).unwrap();
-                let cert = Certificate::from_pem(&buf).unwrap();
-                client = client.add_root_certificate(cert);
-            }
-            Err(e) => {
-                error!("open cacert.pem failed, error is {:?}", e);
-                self.set_status(State::Failed, Reason::IoError);
-                return None;
-            }
-        }
-
-        let path_list = self.conf.certs_path.clone();
-        for path in path_list.into_iter() {
-            let real_path = convert_path(self.conf.common_data.uid, &self.conf.bundle, &path);
-            let file = Certificate::from_path(&real_path);
-            match file {
-                Ok(c) => {
-                    client = client.add_root_certificate(c);
-                }
-                Err(e) => {
-                    debug!("open {:?} failed, reason is {:?}", path, e);
-                    self.set_status(State::Failed, Reason::IoError);
-                    return None;
-                }
-            }
-        }
-        let result = client.build();
-        match result {
-            Ok(value) => Some(value),
-            Err(e) => {
-                error!("build client error is {:?}", e);
-                self.set_status(State::Failed, Reason::BuildClientFailed);
-                None
-            }
-        }
     }
 
     pub(crate) fn build_request_builder(&self) -> RequestBuilder {
@@ -423,14 +250,14 @@ impl RequestTask {
             "POST" => "POST",
             "GET" => "GET",
             _ => match self.conf.common_data.action {
-                Action::UpLoad => {
+                Action::Upload => {
                     if self.conf.version == Version::API10 {
                         "PUT"
                     } else {
                         "POST"
                     }
                 }
-                Action::DownLoad => "GET",
+                Action::Download => "GET",
                 _ => "",
             },
         };
@@ -442,7 +269,7 @@ impl RequestTask {
     }
 
     async fn clear_downloaded_file(&self) -> bool {
-        let file = unsafe { &mut *self.files.0.get() }.get_mut(0).unwrap();
+        let file = self.files.get_mut(0).unwrap();
         let res = file.set_len(0).await;
         match res {
             Err(e) => {
@@ -504,7 +331,7 @@ impl RequestTask {
                     }
                 }
             }
-            let file = unsafe { &mut *self.files.0.get() }.get_mut(0).unwrap();
+            let file = self.files.get_mut(0).unwrap();
             let current_len = file.metadata().await.unwrap().len();
             begins += current_len;
             // Modifys the progress to the current file size.
@@ -584,18 +411,18 @@ impl RequestTask {
         if unsafe { !IsOnline() } {
             match self.conf.version {
                 Version::API9 => {
-                    if self.conf.common_data.action == Action::DownLoad {
-                        self.set_status(State::Waiting, Reason::NetWorkOffline);
+                    if self.conf.common_data.action == Action::Download {
+                        self.set_status(State::Waiting, Reason::NetworkOffline);
                     } else {
-                        self.set_status(State::Failed, Reason::NetWorkOffline);
+                        self.set_status(State::Failed, Reason::NetworkOffline);
                     }
                 }
                 Version::API10 => {
                     if self.conf.common_data.mode == Mode::FrontEnd || !self.conf.common_data.retry
                     {
-                        self.set_status(State::Failed, Reason::NetWorkOffline);
+                        self.set_status(State::Failed, Reason::NetworkOffline);
                     } else {
-                        self.set_status(State::Waiting, Reason::NetWorkOffline);
+                        self.set_status(State::Waiting, Reason::NetworkOffline);
                     }
                 }
             }
@@ -612,7 +439,7 @@ impl RequestTask {
                 error!("download err is {:?}", err);
                 match err.error_kind() {
                     ErrorKind::Timeout => {
-                        self.set_status(State::Failed, Reason::ContinuousTaskTimeOut);
+                        self.set_status(State::Failed, Reason::ContinuousTaskTimeout);
                     }
                     // user triggered
                     ErrorKind::UserAborted => return true,
@@ -664,7 +491,7 @@ impl RequestTask {
                                     return false;
                                 }
                             } else {
-                                self.set_code(index, Reason::UnSupportRangeRequest);
+                                self.set_code(index, Reason::UnsupportedRangeRequest);
                                 return false;
                             }
                         }
@@ -677,7 +504,7 @@ impl RequestTask {
                 error!("http client err is {:?}", e);
                 match e.error_kind() {
                     ErrorKind::UserAborted => self.set_code(index, Reason::UserOperation),
-                    ErrorKind::Timeout => self.set_code(index, Reason::ContinuousTaskTimeOut),
+                    ErrorKind::Timeout => self.set_code(index, Reason::ContinuousTaskTimeout),
                     ErrorKind::Request => self.set_code(index, Reason::RequestError),
                     ErrorKind::Redirect => self.set_code(index, Reason::RedirectError),
                     ErrorKind::Connect | ErrorKind::ConnectionUpgrade => {
@@ -733,11 +560,8 @@ impl RequestTask {
     ) {
         self.record_response_header(&response);
         if let Ok(mut r) = response {
-            let mut yfile = match unsafe { &mut *self.body_files.0.get() }.get_mut(index) {
-                Some(yfile) => match yfile.take() {
-                    Some(yf) => yf,
-                    None => return,
-                },
+            let yfile = match self.body_files.get_mut(index) {
+                Some(yfile) => yfile,
                 None => return,
             };
 
@@ -757,7 +581,7 @@ impl RequestTask {
             // Makes sure all the data has been written to the target file.
             let _ = yfile.sync_all().await;
         }
-        if self.conf.version == Version::API9 && self.conf.common_data.action == Action::UpLoad {
+        if self.conf.version == Version::API9 && self.conf.common_data.action == Action::Upload {
             let notify_data = self.build_notify_data();
             #[cfg(feature = "oh")]
             Notifier::service_front_notify("headerReceive".into(), notify_data, &self.app_state);
@@ -972,11 +796,11 @@ impl RequestTask {
             mime_type: {
                 match self.conf.version {
                     Version::API10 => match self.conf.common_data.action {
-                        Action::DownLoad => match self.conf.headers.get("Content-Type") {
+                        Action::Download => match self.conf.headers.get("Content-Type") {
                             None => "".into(),
                             Some(v) => v.clone(),
                         },
-                        Action::UpLoad => "multipart/form-data".into(),
+                        Action::Upload => "multipart/form-data".into(),
                         _ => "".into(),
                     },
                     Version::API9 => self.mime_type.lock().unwrap().clone(),
@@ -1044,7 +868,7 @@ impl RequestTask {
         if file_total_size <= 0 || total_processed == 0 {
             return;
         }
-        if self.conf.common_data.action == Action::DownLoad {
+        if self.conf.common_data.action == Action::Download {
             if self.conf.common_data.ends < 0 {
                 file_total_size -= self.conf.common_data.begins as i64;
             } else {
@@ -1095,15 +919,6 @@ impl RequestTask {
         upload_file_length = ends as u64 - begins + 1 - guard.processed[index] as u64;
         (is_partial_upload, upload_file_length)
     }
-
-    fn get_upload_file_total_size(&self) -> u64 {
-        let mut file_total_size = 0;
-        for i in 0..self.conf.file_specs.len() {
-            let (_, upload_size) = self.get_upload_info(i);
-            file_total_size += upload_size;
-        }
-        file_total_size
-    }
 }
 
 pub(crate) struct RunningTask {
@@ -1136,7 +951,7 @@ pub(crate) async fn run(task: RunningTask) {
     }
     let action = task.conf.common_data.action;
     match action {
-        Action::DownLoad => loop {
+        Action::Download => loop {
             task.reset_code(0);
 
             download(task.clone()).await;
@@ -1151,7 +966,7 @@ pub(crate) async fn run(task: RunningTask) {
                 break;
             }
         },
-        Action::UpLoad => {
+        Action::Upload => {
             let state = task.status.lock().unwrap().state;
             if state == State::Retrying {
                 let index = {
@@ -1161,7 +976,7 @@ pub(crate) async fn run(task: RunningTask) {
                     progress_guard.processed[index] = 0;
                     index
                 };
-                let file = unsafe { &mut *task.files.0.get() }.get_mut(index).unwrap();
+                let file = task.files.get_mut(index).unwrap();
                 let mut begins = task.conf.common_data.begins;
                 let (is_partial_upload, _) = task.get_upload_info(index);
                 if !is_partial_upload {
@@ -1178,46 +993,39 @@ pub(crate) async fn run(task: RunningTask) {
     }
     info!("run end");
 }
-// When we refactor, we'll use result here instead of
-fn get_restore_files(conf: &TaskConfig, uid: u64) -> Option<Vec<File>> {
-    let mut files: Vec<File> = Vec::new();
 
-    #[cfg(feature = "oh")]
-    for fs in &conf.file_specs {
-        if conf.common_data.action == Action::UpLoad {
-            match open_file_readonly(uid, &conf.bundle, &fs.path) {
-                Ok(file) => files.push(file),
-                Err(e) => {
-                    error!("open file RO failed, err is {:?}", e);
-                    return None;
-                }
-            }
-        } else {
-            match open_file_readwrite(uid, &conf.bundle, &fs.path) {
-                Ok(file) => files.push(file),
-                Err(e) => {
-                    error!("open file RW failed, err is {:?}", e);
-                    return None;
-                }
-            }
-        }
-    }
-    Some(files)
+#[derive(Clone, Debug)]
+pub(crate) struct TaskStatus {
+    pub(crate) waiting_network_time: Option<u64>,
+    pub(crate) mtime: u64,
+    pub(crate) state: State,
+    pub(crate) reason: Reason,
 }
 
-// When we refactor, we'll use result here instead of
-fn get_restore_body_files(conf: &TaskConfig, uid: u64) -> Option<Vec<File>> {
-    let mut body_files: Vec<File> = Vec::new();
-
-    #[cfg(feature = "oh")]
-    for name in &conf.body_file_names {
-        match open_file_readwrite(uid, &conf.bundle, name) {
-            Ok(body_file) => body_files.push(body_file),
-            Err(e) => {
-                error!("open body_file failed, err is {:?}", e);
-                return None;
-            }
+impl TaskStatus {
+    pub(crate) fn new(mtime: u64) -> Self {
+        TaskStatus {
+            waiting_network_time: None,
+            mtime,
+            state: State::Created,
+            reason: Reason::Default,
         }
     }
-    Some(body_files)
+}
+
+pub(crate) fn check_configs(config: &TaskConfig) -> bool {
+    const EL1: &str = "/data/storage/el1/base/";
+    const EL2: &str = "/data/storage/el2/base/";
+
+    let mut result = true;
+    for (idx, spec) in config.file_specs.iter().enumerate() {
+        let path = &spec.path;
+        if !path.starts_with(EL1) && !path.starts_with(EL2) {
+            error!("File path invalid - path: {}, idx: {}", path, idx);
+            result = false;
+            break;
+        }
+    }
+
+    result
 }

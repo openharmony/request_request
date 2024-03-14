@@ -97,7 +97,6 @@ void RequestServiceProxy::GetVectorData(const Config &config, MessageParcel &dat
         data.WriteString(file.uri);
         data.WriteString(file.filename);
         data.WriteString(file.type);
-        data.WriteInt32(static_cast<int32_t>(errno));
     }
 
     for (const auto &file : config.files) {
