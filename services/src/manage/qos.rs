@@ -18,7 +18,8 @@ use std::sync::Arc;
 
 use crate::task::info::ApplicationState::{self, Background, Foreground, Terminated};
 use crate::task::info::Mode;
-use crate::task::RequestTask;
+use crate::task::request_task::RequestTask;
+
 // The smaller the value of index, the higher the task priority.
 // The smaller the value of Qoscase, the higher the task priority.
 // Tasks with different uid have equal priority

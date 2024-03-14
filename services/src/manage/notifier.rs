@@ -19,7 +19,8 @@ use crate::service::ability::RequestAbility;
 use crate::task::config::Version;
 use crate::task::info::ApplicationState;
 use crate::task::notify::NotifyData;
-use crate::task::RequestTask;
+use crate::task::request_task::RequestTask;
+
 pub(crate) struct Notifier;
 
 impl Notifier {

@@ -328,7 +328,7 @@ impl TaskConfig {
                 c_struct.file_specs_len as usize,
                 FileSpec::from_c_struct,
             ),
-            body_file_names: build_vec(
+            body_file_paths: build_vec(
                 c_struct.body_file_names_ptr,
                 c_struct.body_file_names_len as usize,
                 CStringWrapper::to_string,

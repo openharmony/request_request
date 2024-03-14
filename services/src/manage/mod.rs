@@ -12,7 +12,7 @@
 // limitations under the License.
 
 pub(crate) mod task_manager;
-pub(crate) use task_manager::{SystemProxyManager, TaskManager};
+pub(crate) use task_manager::TaskManager;
 
 pub(crate) mod keeper;
 pub(crate) mod monitor;
@@ -21,9 +21,8 @@ pub(crate) mod unload;
 pub(crate) mod events;
 pub(crate) mod qos;
 pub(crate) mod scheduled;
+pub(crate) mod system_proxy;
 
 cfg_oh! {
-    mod notifier;
-
-    pub(crate) use notifier::Notifier;
+    pub(crate) mod notifier;
 }

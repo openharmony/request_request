@@ -12,7 +12,6 @@
 // limitations under the License.
 
 use std::collections::HashMap;
-use std::fs::File;
 
 use ipc_rust::{
     get_calling_token_id, get_calling_uid, BorrowedMsgParcel, IMsgParcel, IpcResult, IpcStatusCode,
@@ -22,7 +21,7 @@ use crate::error::ErrorCode;
 use crate::manage::events::EventMessage;
 use crate::service::ability::RequestAbility;
 use crate::service::permission::PermissionChecker;
-use crate::service::{get_calling_bundle, open_file_readonly, open_file_readwrite};
+use crate::service::get_calling_bundle;
 use crate::task::config::{Action, CommonTaskConfig, Network, TaskConfig, Version};
 use crate::task::info::Mode;
 use crate::utils::form_item::{FileSpec, FormItem};
@@ -99,52 +98,43 @@ impl Construct {
         let uid = get_calling_uid();
         let token_id = get_calling_token_id();
 
-        let mut certs_path = Vec::new();
         let certs_path_size: u32 = data.read()?;
         if certs_path_size > data.get_readable_bytes() {
             error!("Service construct: certs_path_size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
+        let mut certs_path = Vec::new();
         for _ in 0..certs_path_size {
             let cert_path: String = data.read()?;
             certs_path.push(cert_path);
         }
 
-        let mut form_items = Vec::new();
         let form_size: u32 = data.read()?;
         if form_size > data.get_readable_bytes() {
             error!("Service construct: form_size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
+        let mut form_items = Vec::new();
         for _ in 0..form_size {
             let name: String = data.read()?;
             let value: String = data.read()?;
             form_items.push(FormItem { name, value });
         }
 
-        let mut files = Vec::<File>::new();
-        let mut file_specs: Vec<FileSpec> = Vec::new();
         let file_size: u32 = data.read()?;
         if file_size > data.get_readable_bytes() {
             error!("Service construct: file_specs size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
+        let mut file_specs: Vec<FileSpec> = Vec::new();
         for _ in 0..file_size {
             let name: String = data.read()?;
             let path: String = data.read()?;
             let file_name: String = data.read()?;
             let mime_type: String = data.read()?;
-            if action == Action::UpLoad {
-                let file = open_file_readonly(uid, &bundle, &path)?;
-                files.push(file);
-            } else {
-                let file = open_file_readwrite(uid, &bundle, &path)?;
-                files.push(file);
-            }
-            let _fd_error: i32 = data.read()?;
             file_specs.push(FileSpec {
                 name,
                 path,
@@ -160,13 +150,11 @@ impl Construct {
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
-        let mut body_files = Vec::new();
-        let mut body_file_names: Vec<String> = Vec::new();
+
+        let mut body_file_paths: Vec<String> = Vec::new();
         for _ in 0..body_file_size {
             let file_name: String = data.read()?;
-            let body_file = open_file_readwrite(uid, &bundle, &file_name)?;
-            body_file_names.push(file_name);
-            body_files.push(body_file);
+            body_file_paths.push(file_name);
         }
 
         let header_size: u32 = data.read()?;
@@ -209,7 +197,7 @@ impl Construct {
             version,
             form_items,
             file_specs,
-            body_file_names,
+            body_file_paths,
             certs_path,
             common_data: CommonTaskConfig {
                 task_id,
@@ -234,9 +222,8 @@ impl Construct {
         };
 
         debug!("Service construct: task_config constructed");
-        debug!("Service construct: target files {:?}", files);
 
-        let (event, rx) = EventMessage::construct(task_config, files, body_files);
+        let (event, rx) = EventMessage::construct(task_config);
         if !RequestAbility::task_manager().send_event(event) {
             return Err(IpcStatusCode::Failed);
         }

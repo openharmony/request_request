@@ -11,14 +11,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+pub(crate) mod client;
 pub(crate) mod config;
+mod download;
 pub(crate) mod ffi;
+pub(crate) mod files;
 pub(crate) mod info;
 pub(crate) mod notify;
+mod operator;
 pub(crate) mod reason;
 pub(crate) mod request_task;
-pub(crate) use request_task::RequestTask;
-mod download;
-mod operator;
 pub(crate) mod tick;
 mod upload;

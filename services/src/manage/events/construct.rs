@@ -12,30 +12,18 @@
 // limitations under the License.
 
 use std::collections::HashSet;
-use std::fs::File;
-use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use crate::error::ErrorCode;
-use crate::manage::{SystemProxyManager, TaskManager};
+use crate::manage::TaskManager;
 use crate::task::config::{TaskConfig, Version};
 use crate::task::ffi::{CTaskConfig, CTaskInfo};
 use crate::task::info::State;
 use crate::task::reason::Reason;
-use crate::task::RequestTask;
+use crate::task::request_task::RequestTask;
 
 impl TaskManager {
-    pub(crate) fn construct_task(
-        &mut self,
-        config: TaskConfig,
-        files: Vec<File>,
-        body_files: Vec<File>,
-        proxy_task: SystemProxyManager,
-    ) -> ErrorCode {
-        if files.is_empty() {
-            return ErrorCode::FileOperationErr;
-        }
-
+    pub(crate) fn create(&mut self, config: TaskConfig) -> ErrorCode {
         let uid = config.common_data.uid;
         let task_id = config.common_data.task_id;
         let version = config.version;
@@ -47,14 +35,12 @@ impl TaskManager {
 
         let app_state = self.app_state(uid, &config.bundle);
 
-        let task = Arc::new(RequestTask::constructor(
-            config,
-            files,
-            body_files,
-            AtomicBool::new(false),
-            app_state,
-            proxy_task,
-        ));
+        let task = match RequestTask::new(config, self.system_config(), app_state, None) {
+            Ok(task) => task,
+            Err(e) => return e,
+        };
+
+        let task = Arc::new(task);
 
         match version {
             Version::API10 => {

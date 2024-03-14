@@ -21,8 +21,8 @@ use crate::utils::hashmap_to_string;
 #[derive(Clone, Copy, PartialEq, Debug)]
 #[repr(u8)]
 pub(crate) enum Action {
-    DownLoad = 0,
-    UpLoad,
+    Download = 0,
+    Upload,
     Any,
 }
 
@@ -80,7 +80,7 @@ pub(crate) struct TaskConfig {
     pub(crate) version: Version,
     pub(crate) form_items: Vec<FormItem>,
     pub(crate) file_specs: Vec<FileSpec>,
-    pub(crate) body_file_names: Vec<String>,
+    pub(crate) body_file_paths: Vec<String>,
     pub(crate) certs_path: Vec<String>,
     pub(crate) common_data: CommonTaskConfig,
 }
@@ -97,8 +97,8 @@ pub(crate) struct ConfigSet {
 impl From<u8> for Action {
     fn from(value: u8) -> Self {
         match value {
-            0 => Action::DownLoad,
-            1 => Action::UpLoad,
+            0 => Action::Download,
+            1 => Action::Upload,
             _ => Action::Any,
         }
     }
@@ -131,7 +131,7 @@ impl TaskConfig {
             form_items: self.form_items.iter().map(|x| x.to_c_struct()).collect(),
             file_specs: self.file_specs.iter().map(|x| x.to_c_struct()).collect(),
             body_file_names: self
-                .body_file_names
+                .body_file_paths
                 .iter()
                 .map(CStringWrapper::from)
                 .collect(),

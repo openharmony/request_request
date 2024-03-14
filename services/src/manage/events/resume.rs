@@ -18,7 +18,7 @@ use crate::manage::TaskManager;
 use crate::task::info::State;
 
 cfg_oh! {
-    use crate::manage::Notifier;
+    use crate::manage::notifier::Notifier;
 }
 
 impl TaskManager {
