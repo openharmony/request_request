@@ -26,8 +26,6 @@ enum class RequestInterfaceCode {
     CMD_QUERYMIMETYPE,
     CMD_REMOVE,
     CMD_RESUME,
-    CMD_ON,
-    CMD_OFF,
     CMD_START,
     CMD_STOP,
     CMD_SHOW,

@@ -24,11 +24,12 @@ namespace OHOS::Request {
 
 enum MessageType {
     HTTP_RESPONSE = 0,
+    NOTIFY_DATA,
 };
 
 class ResponseMessageReceiver
-    : public OHOS::AppExecFwk::FileDescriptorListener
-    , public std::enable_shared_from_this<ResponseMessageReceiver> {
+    : public OHOS::AppExecFwk::FileDescriptorListener,
+      public std::enable_shared_from_this<ResponseMessageReceiver> {
 public:
     static constexpr uint32_t RESPONSE_MAX_SIZE = 8 * 1024;
     static constexpr uint32_t RESPONSE_MAGIC_NUM = 0x43434646;

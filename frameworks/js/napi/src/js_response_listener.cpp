@@ -15,115 +15,68 @@
 
 #include "js_response_listener.h"
 
+#include "log.h"
 #include "request_manager.h"
+#include "uv_queue.h"
 
 namespace OHOS::Request {
 
 napi_status JSResponseListener::AddListener(napi_value cb)
 {
-    std::lock_guard<std::recursive_mutex> lock(allCbMutex_);
-    if (this->IsListenerAdded(cb)) {
-        return napi_ok;
+    napi_status ret = this->AddListenerInner(cb);
+    if (ret != napi_ok) {
+        return ret;
     }
-
-    napi_ref ref;
-    napi_status status = napi_create_reference(env_, cb, 1, &ref);
-    if (status != napi_ok) {
-        return status;
-    }
-
-    this->allCb_.push_back(std::make_pair(true, ref));
-    ++this->validCbNum;
     if (this->validCbNum == 1) {
-        RequestManager::GetInstance()->Subscribe(this->taskId_, shared_from_this());
+        RequestManager::GetInstance()->AddListener(this->taskId_, this->type_, shared_from_this());
     }
-
     return napi_ok;
 }
 
 napi_status JSResponseListener::RemoveListener(napi_value cb)
 {
-    std::lock_guard<std::recursive_mutex> lock(allCbMutex_);
+    napi_status ret = this->RemoveListenerInner(cb);
+    if (ret != napi_ok) {
+        return ret;
+    }
     if (this->validCbNum == 0) {
-        return napi_ok;
+        RequestManager::GetInstance()->RemoveListener(this->taskId_, this->type_, shared_from_this());
     }
-
-    if (cb == nullptr) {
-        RequestManager::GetInstance()->Unsubscribe(this->taskId_, shared_from_this());
-        for (auto it = this->allCb_.begin(); it != this->allCb_.end(); it++) {
-            it->first = false;
-        }
-        this->validCbNum = 0;
-        return napi_ok;
-    }
-
-    for (auto it = this->allCb_.begin(); it != this->allCb_.end(); it++) {
-        napi_value copyValue = nullptr;
-        napi_get_reference_value(this->env_, it->second, &copyValue);
-
-        bool isEquals = false;
-        napi_strict_equals(this->env_, cb, copyValue, &isEquals);
-        if (isEquals) {
-            if (it->first == true) {
-                it->first = false;
-                --this->validCbNum;
-            }
-            break;
-        }
-    }
-
-    if (this->validCbNum == 0) {
-        RequestManager::GetInstance()->Unsubscribe(this->taskId_, shared_from_this());
-    }
-
     return napi_ok;
 }
 
 void JSResponseListener::OnResponseReceive(const std::shared_ptr<Response> &response)
 {
-    std::lock_guard<std::recursive_mutex> lock(allCbMutex_);
-    napi_value value = NapiUtils::Convert2JSValue(this->env_, response);
-    for (auto it = this->allCb_.begin(); it != this->allCb_.end();) {
-        if (it->first == false) {
-            napi_delete_reference(this->env_, it->second);
-            it = this->allCb_.erase(it);
-            continue;
-        }
-        napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(this->env_, &scope);
-        napi_value callbackFunc = nullptr;
-        napi_get_reference_value(this->env_, it->second, &callbackFunc);
-
-        napi_value callbackResult = nullptr;
-        uint32_t paramNumber = 1;
-        napi_call_function(this->env_, nullptr, callbackFunc, paramNumber, &value, &callbackResult);
-        napi_close_handle_scope(this->env_, scope);
-        it++;
+    REQUEST_HILOGI("OnResponseReceive, tid is %{public}s", response->taskId.c_str());
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(this->env_, &loop);
+    if (loop == nullptr) {
+        REQUEST_HILOGE("napi_get_uv_event_loop failed");
+        return;
     }
-}
-
-bool JSResponseListener::IsListenerAdded(napi_value cb)
-{
-    if (cb == nullptr) {
-        return true;
+    uv_work_t *work = new (std::nothrow) uv_work_t;
+    if (work == nullptr) {
+        REQUEST_HILOGE("uv_work_t new failed");
+        return;
     }
-    for (auto it = this->allCb_.begin(); it != this->allCb_.end(); it++) {
-        napi_value copyValue = nullptr;
-        napi_get_reference_value(this->env_, it->second, &copyValue);
-
-        bool isEquals = false;
-        napi_strict_equals(this->env_, cb, copyValue, &isEquals);
-        if (isEquals) {
-            return it->first;
-        }
+    {
+        std::lock_guard<std::mutex> lock(this->responseMutex_);
+        this->response_ = response;
     }
-
-    return false;
-}
-
-bool JSResponseListener::HasListener()
-{
-    return this->validCbNum != 0;
+    work->data = reinterpret_cast<void *>(this);
+    uv_queue_work(
+        loop, work, [](uv_work_t *work) {},
+        [](uv_work_t *work, int status) {
+            napi_value values[NapiUtils::TWO_ARG] = { nullptr };
+            JSResponseListener *listener = static_cast<JSResponseListener *>(work->data);
+            std::lock_guard<std::mutex> lock(listener->responseMutex_);
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(listener->env_, &scope);
+            napi_value value = NapiUtils::Convert2JSValue(listener->env_, listener->response_);
+            listener->OnMessageReceive(&value, 1);
+            napi_close_handle_scope(listener->env_, scope);
+            delete work;
+        });
 }
 
 } // namespace OHOS::Request

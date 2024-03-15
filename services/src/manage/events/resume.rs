@@ -16,6 +16,7 @@ use std::sync::atomic::Ordering;
 use crate::error::ErrorCode;
 use crate::manage::TaskManager;
 use crate::task::info::State;
+use crate::task::notify::SubscribeType;
 
 cfg_oh! {
     use crate::manage::notifier::Notifier;
@@ -36,11 +37,7 @@ impl TaskManager {
             let notify_data = task.build_notify_data();
 
             #[cfg(feature = "oh")]
-            Notifier::service_front_notify(
-                "resume".into(),
-                notify_data,
-                &self.app_state(task.conf.common_data.uid, &task.conf.bundle),
-            );
+            Notifier::service_front_notify(SubscribeType::Resume, notify_data);
             self.start_inner(task);
             ErrorCode::ErrOk
         } else {

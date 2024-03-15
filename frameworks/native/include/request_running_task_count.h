@@ -16,12 +16,11 @@
 #ifndef OHOS_REQUEST_RUNNING_TASK_COUNT_H
 #define OHOS_REQUEST_RUNNING_TASK_COUNT_H
 
-#include "../../interfaces/inner_api/include/running_task_count.h"
-
 #include <memory>
 #include <mutex>
 #include <vector>
 
+#include "../../interfaces/inner_api/include/running_task_count.h"
 #include "iremote_proxy.h"
 #include "js_common.h"
 #include "log.h"
@@ -45,8 +44,8 @@ private:
 };
 
 class FwkRunningTaskCountManager {
-public: 
-    static std::unique_ptr<FwkRunningTaskCountManager>& GetInstance();
+public:
+    static std::unique_ptr<FwkRunningTaskCountManager> &GetInstance();
     int32_t GetCount();
     void SetCount(int runCount);
     void AttachObserver(std::shared_ptr<IRunningTaskObserver> ob);
@@ -67,6 +66,6 @@ private:
     std::vector<std::shared_ptr<FwkIRunningTaskObserver>> observers_;
 };
 
-}
+} // namespace OHOS::Request
 
 #endif // OHOS_REQUEST_RUNNING_TASK_COUNT_H

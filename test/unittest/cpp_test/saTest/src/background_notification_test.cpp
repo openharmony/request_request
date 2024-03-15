@@ -61,7 +61,7 @@ void BackgroundNotificationTest::TearDown(void)
  */
 HWTEST_F(BackgroundNotificationTest, BackGroundNotifyTest_001, TestSize.Level1)
 {
-    RequestTaskMsg msg = RequestTaskMsg {
+    RequestTaskMsg msg = RequestTaskMsg{
         123,                                   // uint32_t taskId
         123456,                                // pid_t uid
         static_cast<uint8_t>(Action::DOWNLOAD) // uint8_t action
@@ -81,10 +81,10 @@ HWTEST_F(BackgroundNotificationTest, BackGroundNotifyTest_001, TestSize.Level1)
  */
 HWTEST_F(BackgroundNotificationTest, BackGroundNotifyTest_002, TestSize.Level1)
 {
-    RequestTaskMsg msg = RequestTaskMsg {
-        123,                                   // uint32_t taskId
-        123456,                                // pid_t uid
-        static_cast<uint8_t>(Action::UPLOAD)   // uint8_t action
+    RequestTaskMsg msg = RequestTaskMsg{
+        123,                                 // uint32_t taskId
+        123456,                              // pid_t uid
+        static_cast<uint8_t>(Action::UPLOAD) // uint8_t action
     };
 
     CStringWrapper wrappedPath = WrapperCString("../BUILD.gn");

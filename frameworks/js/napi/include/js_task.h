@@ -18,8 +18,8 @@
 
 #include "async_call.h"
 #include "js_common.h"
+#include "js_notify_data_listener.h"
 #include "js_response_listener.h"
-#include "request_notify.h"
 
 namespace OHOS::Request {
 class JsTask {
@@ -40,11 +40,6 @@ public:
 
     std::string GetTid();
     void SetTid(int32_t tid);
-    void AddListener(const std::string &key, const sptr<RequestNotify> &listener);
-    void RemoveListener(const std::string &type, const std::string &tid, napi_value callback, Version version);
-    void RemoveListener(const std::string &type, const std::string &tid, Version version);
-    size_t GetListenerSize(const std::string &key);
-    void ClearListener();
 
     static void ReloadListener();
     static void ReloadListenerByTaskId(const std::string &tid);
@@ -61,9 +56,8 @@ public:
     static std::map<std::string, JsTask *> taskMap_;
     static std::mutex pathMutex_;
     static std::map<std::string, int32_t> pathMap_;
-    std::mutex listenerMutex_;
-    std::map<std::string, std::vector<sptr<RequestNotify>>> listenerMap_;
     std::shared_ptr<JSResponseListener> responseListener_;
+    std::map<SubscribeType, std::shared_ptr<JSNotifyDataListener>> notifyDataListenerMap_;
 
 private:
     struct ContextInfo : public AsyncCall::Context {

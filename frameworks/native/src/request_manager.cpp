@@ -25,9 +25,9 @@ const std::unique_ptr<RequestManager> &RequestManager::GetInstance()
     return instance;
 }
 
-int32_t RequestManager::Create(const Config &config, int32_t &tid, sptr<NotifyInterface> listener)
+int32_t RequestManager::Create(const Config &config, int32_t &tid)
 {
-    return RequestManagerImpl::GetInstance()->Create(config, tid, listener);
+    return RequestManagerImpl::GetInstance()->Create(config, tid);
 }
 int32_t RequestManager::GetTask(const std::string &tid, const std::string &token, Config &config)
 {
@@ -82,25 +82,14 @@ int32_t RequestManager::Resume(const std::string &tid)
     return RequestManagerImpl::GetInstance()->Resume(tid);
 }
 
-int32_t RequestManager::On(
-    const std::string &type, const std::string &tid, const sptr<NotifyInterface> &listener, Version version)
+int32_t RequestManager::Subscribe(const std::string &taskId)
 {
-    return RequestManagerImpl::GetInstance()->On(type, tid, listener, version);
+    return RequestManagerImpl::GetInstance()->Subscribe(taskId);
 }
 
-int32_t RequestManager::Off(const std::string &type, const std::string &tid, Version version)
+int32_t RequestManager::Unsubscribe(const std::string &taskId)
 {
-    return RequestManagerImpl::GetInstance()->Off(type, tid, version);
-}
-
-int32_t RequestManager::Subscribe(const std::string &taskId, const std::shared_ptr<IResponseListener> &listener)
-{
-    return RequestManagerImpl::GetInstance()->Subscribe(taskId, listener);
-}
-
-int32_t RequestManager::Unsubscribe(const std::string &taskId, const std::shared_ptr<IResponseListener> &listener)
-{
-    return RequestManagerImpl::GetInstance()->Unsubscribe(taskId, listener);
+    return RequestManagerImpl::GetInstance()->Unsubscribe(taskId);
 }
 
 void RequestManager::RestoreListener(void (*callback)())
@@ -121,6 +110,30 @@ bool RequestManager::IsSaReady()
 void RequestManager::ReopenChannel()
 {
     return RequestManagerImpl::GetInstance()->ReopenChannel();
+}
+
+int32_t RequestManager::AddListener(
+    const std::string &taskId, const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener)
+{
+    return RequestManagerImpl::GetInstance()->AddListener(taskId, type, listener);
+}
+
+int32_t RequestManager::RemoveListener(
+    const std::string &taskId, const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener)
+{
+    return RequestManagerImpl::GetInstance()->RemoveListener(taskId, type, listener);
+}
+
+int32_t RequestManager::AddListener(
+    const std::string &taskId, const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener)
+{
+    return RequestManagerImpl::GetInstance()->AddListener(taskId, type, listener);
+}
+
+int32_t RequestManager::RemoveListener(
+    const std::string &taskId, const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener)
+{
+    return RequestManagerImpl::GetInstance()->RemoveListener(taskId, type, listener);
 }
 
 } // namespace OHOS::Request

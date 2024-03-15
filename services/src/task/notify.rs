@@ -17,6 +17,18 @@ use super::config::{Action, Version};
 use super::info::State;
 use super::reason::Reason;
 
+// NotifyData's callback arg
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
+pub(crate) enum SubscribeType {
+    Complete = 0,
+    Fail,
+    HeaderReceive,
+    Pause,
+    Progress,
+    Remove,
+    Resume,
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct NotifyData {
     pub(crate) progress: Progress,
@@ -25,7 +37,6 @@ pub(crate) struct NotifyData {
     pub(crate) each_file_status: Vec<EachFileStatus>,
     pub(crate) task_id: u32,
     pub(crate) _uid: u64,
-    pub(crate) _bundle: String,
 }
 
 #[repr(C)]

@@ -62,8 +62,6 @@ fn on_remote_request(
         RequestInterfaceCode::QueryMimeType => stub.query_mime_type(data, reply),
         RequestInterfaceCode::Remove => stub.remove(data, reply),
         RequestInterfaceCode::Resume => stub.resume(data, reply),
-        RequestInterfaceCode::On => stub.on(data, reply),
-        RequestInterfaceCode::Off => stub.off(data, reply),
         RequestInterfaceCode::Start => stub.start(data, reply),
         RequestInterfaceCode::Stop => stub.stop(data, reply),
         RequestInterfaceCode::Show => stub.show(data, reply),
@@ -90,8 +88,6 @@ impl TryFrom<u32> for RequestInterfaceCode {
             _ if code == Self::QueryMimeType as u32 => Ok(Self::QueryMimeType),
             _ if code == Self::Remove as u32 => Ok(Self::Remove),
             _ if code == Self::Resume as u32 => Ok(Self::Resume),
-            _ if code == Self::On as u32 => Ok(Self::On),
-            _ if code == Self::Off as u32 => Ok(Self::Off),
             _ if code == Self::Start as u32 => Ok(Self::Start),
             _ if code == Self::Stop as u32 => Ok(Self::Stop),
             _ if code == Self::Show as u32 => Ok(Self::Show),
@@ -144,16 +140,6 @@ pub trait RequestServiceInterface: IRemoteBroker {
 
     /// Resumes a task.
     fn resume(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        Ok(())
-    }
-
-    /// Sets the `on` callback of a task.
-    fn on(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        Ok(())
-    }
-
-    /// Sets the `off` callback of a task.
-    fn off(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
         Ok(())
     }
 
@@ -271,14 +257,6 @@ impl RequestServiceInterface for RequestService {
 
     fn resume(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
         command::Resume::execute(data, reply)
-    }
-
-    fn on(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        command::On::execute(data, reply)
-    }
-
-    fn off(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        command::Off::execute(data, reply)
     }
 
     fn start(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {

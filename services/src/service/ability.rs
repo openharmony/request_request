@@ -32,7 +32,6 @@ use std::sync::atomic::{AtomicU8, Ordering};
 
 use crate::manage::task_manager::TaskManagerEntry;
 use crate::manage::TaskManager;
-use crate::notify::{NotifyEntry, NotifyManager};
 use crate::service::client::{ClientManager, ClientManagerEntry};
 use crate::service::listener::{AppStateListener, NetworkChangeListener};
 use crate::service::runcount::{RunCountManager, RunCountManagerEntry};
@@ -45,7 +44,6 @@ pub(crate) static mut PANIC_INFO: Option<String> = None;
 pub(crate) struct RequestAbility {
     runcount: RunCountManagerEntry,
     manager: TaskManagerEntry,
-    notify: NotifyEntry,
     app: AppStateListener,
     network: NetworkChangeListener,
     client_manager: ClientManagerEntry,
@@ -96,7 +94,6 @@ impl RequestAbility {
                     // first init RunCountManager to record Running task count
                     runcount: RunCountManager::init(),
                     manager: TaskManager::init(),
-                    notify: NotifyManager::init(),
                     app: AppStateListener::init(),
                     network: NetworkChangeListener::init(),                   
                     client_manager: ClientManager::init(),
@@ -120,7 +117,6 @@ impl RequestAbility {
             unsafe {
                 let ability = REQUEST_ABILITY.assume_init_ref();
                 // After entries shutdown, the `rx`s of these channels will be dropped.
-                ability.notify.shutdown();
                 ability.app.shutdown();
                 ability.network.shutdown();
                 ability.runcount.shutdown();
@@ -131,10 +127,6 @@ impl RequestAbility {
 
     pub(crate) fn runcount_manager() -> RunCountManagerEntry {
         Self::get_instance().runcount.clone()
-    }
-
-    pub(crate) fn notify() -> NotifyEntry {
-        Self::get_instance().notify.clone()
     }
 
     pub(crate) fn task_manager() -> TaskManagerEntry {

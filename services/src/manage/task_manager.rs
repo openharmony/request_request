@@ -23,10 +23,11 @@ use super::scheduled;
 use crate::error::ErrorCode;
 use crate::manage::keeper::SAKeeper;
 use crate::manage::system_proxy::SystemProxyManager;
-use crate::service::ability::{RequestAbility, PANIC_INFO};
+use crate::service::ability::PANIC_INFO;
 use crate::task::config::Version;
 use crate::task::ffi::HasRequestTaskRecord;
 use crate::task::info::{ApplicationState, State};
+use crate::task::notify::SubscribeType;
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::task::tick::Clock;
@@ -359,12 +360,11 @@ impl TaskManager {
         {
             return;
         }
+
         debug!(
             "TaskManager remove task_id:{} from map",
             task.conf.common_data.task_id
         );
-
-        RequestAbility::client_manager().notify_task_finished(task.conf.common_data.task_id);
 
         let remove_task = match self.tasks.remove(&task.conf.common_data.task_id) {
             Some(task) => task,
@@ -402,20 +402,8 @@ impl TaskManager {
             self.api10_background_task_count -= 1;
         }
 
-        let app_state = ApplicationState::from(remove_task.app_state.load(Ordering::SeqCst));
-        if !(app_state == ApplicationState::Background
-            && remove_task.conf.version == Version::API10)
-        {
-            #[cfg(feature = "oh")]
-            Notifier::remove_notify(&remove_task);
-        }
-
-        let version = task.conf.version;
-        if (version == Version::API9) || (state == State::Completed || state == State::Removed) {
-            // Notifies NotifyManager to remove `RemoteObj` when task has been removed.
-            #[cfg(feature = "oh")]
-            Notifier::clear_notify(&remove_task);
-        }
+        #[cfg(feature = "oh")]
+        Notifier::remove_notify(&remove_task);
 
         let map = self
             .qos
@@ -456,12 +444,9 @@ impl TaskManager {
             task.resume.store(true, Ordering::SeqCst);
             let notify_data = task.build_notify_data();
 
+            // what to do
             #[cfg(feature = "oh")]
-            Notifier::service_front_notify(
-                "resume".into(),
-                notify_data,
-                &self.app_state(task.conf.common_data.uid, &task.conf.bundle),
-            );
+            Notifier::service_front_notify(SubscribeType::Resume, notify_data);
             self.start_inner(task);
         }
     }

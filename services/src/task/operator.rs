@@ -23,6 +23,7 @@ use ylong_runtime::io::AsyncWrite;
 use crate::manage::notifier::Notifier;
 use crate::task::config::Version;
 use crate::task::info::State;
+use crate::task::notify::SubscribeType;
 use crate::task::request_task::RequestTask;
 use crate::utils::get_current_timestamp;
 
@@ -64,7 +65,7 @@ impl TaskOperator {
             self.task.last_notify.store(current, Ordering::SeqCst);
 
             #[cfg(feature = "oh")]
-            Notifier::service_front_notify("progress".into(), notify_data, &self.task.app_state);
+            Notifier::service_front_notify(SubscribeType::Progress, notify_data);
         }
 
         let gauge = self.task.conf.common_data.gauge;

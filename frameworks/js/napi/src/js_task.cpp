@@ -82,7 +82,6 @@ napi_property_descriptor clzDesV9[] = {
 JsTask::~JsTask()
 {
     REQUEST_HILOGD("~JsTask()");
-    ClearListener();
 }
 napi_value JsTask::JsUpload(napi_env env, napi_callback_info info)
 {
@@ -150,8 +149,6 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
         }
         napi_status status = napi_get_reference_value(context->env_, context->taskRef, result);
         context->task->SetTid(context->tid);
-        context->task->responseListener_ =
-            std::make_shared<JSResponseListener>(context->env_, std::to_string(context->tid));
         JsTask::AddTaskMap(std::to_string(context->tid), context->task);
         JsTask::AddTaskContextMap(std::to_string(context->tid), context);
         napi_value config = nullptr;
@@ -174,10 +171,7 @@ int32_t JsTask::CreateExec(const std::shared_ptr<ContextInfo> &context)
     if (context->task->config_.mode == Mode::FOREGROUND) {
         RegisterForegroundResume();
     }
-    sptr<RequestNotify> listener = new RequestNotify();
-    std::string key = "done" + context->task->GetTid();
-    context->task->AddListener(key, listener);
-    return RequestManager::GetInstance()->Create(context->task->config_, context->tid, listener);
+    return RequestManager::GetInstance()->Create(context->task->config_, context->tid);
 }
 
 napi_value JsTask::GetCtor(napi_env env, Version version)
@@ -368,7 +362,6 @@ bool JsTask::GetTaskOutput(std::shared_ptr<ContextInfo> context)
         }
         napi_unwrap(context->env_, jsTask, reinterpret_cast<void **>(&context->task));
         napi_create_reference(context->env_, jsTask, 1, &(context->taskRef));
-        context->task->responseListener_ = std::make_shared<JSResponseListener>(context->env_, tid);
         JsTask::AddTaskMap(tid, context->task);
         JsTask::AddTaskContextMap(tid, context);
     }
@@ -748,17 +741,6 @@ void JsTask::SetTid(int32_t tid)
     tid_ = std::to_string(tid);
 }
 
-size_t JsTask::GetListenerSize(const std::string &key)
-{
-    std::lock_guard<std::mutex> autoLock(listenerMutex_);
-    auto it = listenerMap_.find(key);
-    if (it == listenerMap_.end()) {
-        return 0;
-    }
-    REQUEST_HILOGD("listenerMap_ size %{public}zu", it->second.size());
-    return it->second.size();
-}
-
 void JsTask::AddTaskMap(const std::string &key, JsTask *task)
 {
     std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
@@ -771,89 +753,13 @@ void JsTask::AddTaskContextMap(const std::string &key, std::shared_ptr<ContextIn
     JsTask::taskContextMap_[key] = context;
 }
 
-void JsTask::AddListener(const std::string &key, const sptr<RequestNotify> &listener)
-{
-    REQUEST_HILOGD("AddListener key %{public}s", key.c_str());
-    std::lock_guard<std::mutex> autoLock(listenerMutex_);
-    listenerMap_[key].push_back(listener);
-}
-
-void JsTask::RemoveListener(const std::string &type, const std::string &tid, napi_value callback, Version version)
-{
-    std::string key = type + tid;
-    std::lock_guard<std::mutex> autoLock(listenerMutex_);
-    auto it = listenerMap_.find(key);
-    if (it == listenerMap_.end()) {
-        return;
-    }
-    for (auto item = it->second.begin(); item != it->second.end(); item++) {
-        if (Equals((*item)->env_, callback, (*item)->ref_)) {
-            listenerMap_[key].erase(item);
-            break;
-        }
-    }
-    if (listenerMap_[key].empty()) {
-        RequestManager::GetInstance()->Off(type, tid, version);
-        listenerMap_.erase(key);
-    }
-}
-
-void JsTask::RemoveListener(const std::string &type, const std::string &tid, Version version)
-{
-    {
-        std::lock_guard<std::mutex> autoLock(listenerMutex_);
-        auto it = listenerMap_.find(type + tid);
-        if (it == listenerMap_.end()) {
-            return;
-        }
-    }
-    int32_t ret = RequestManager::GetInstance()->Off(type, tid, version);
-    {
-        std::lock_guard<std::mutex> autoLock(listenerMutex_);
-        auto it = listenerMap_.find(type + tid);
-        if (it == listenerMap_.end()) {
-            return;
-        }
-        if (ret == E_OK) {
-            listenerMap_.erase(it);
-        }
-    }
-}
-
-void JsTask::ClearListener()
-{
-    std::lock_guard<std::mutex> autoLock(listenerMutex_);
-    for (const auto &listener : listenerMap_) {
-        for (const auto &iter : listener.second) {
-            if (iter != nullptr) {
-                iter->DeleteCallbackRef();
-            }
-        }
-    }
-    listenerMap_.clear();
-}
-
 void JsTask::ReloadListener()
 {
     REQUEST_HILOGD("ReloadListener in");
     std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
     RequestManager::GetInstance()->ReopenChannel();
     for (const auto &it : taskMap_) {
-        std::string tid = it.first;
-        if (it.second->responseListener_->HasListener()) {
-            RequestManager::GetInstance()->Unsubscribe(tid, it.second->responseListener_);
-            RequestManager::GetInstance()->Subscribe(tid, it.second->responseListener_);
-        }
-        for (auto itListener : it.second->listenerMap_) {
-            std::string key = itListener.first;
-            if (key.find(tid) == std::string::npos) {
-                continue;
-            }
-            std::string type = key.substr(0, key.find(tid));
-            for (const auto &listener : itListener.second) {
-                RequestManager::GetInstance()->On(type, tid, listener, it.second->config_.version);
-            }
-        }
+        RequestManager::GetInstance()->Subscribe(it.first);
     }
 }
 

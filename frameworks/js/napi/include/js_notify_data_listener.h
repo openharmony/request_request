@@ -13,30 +13,36 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_REQUEST_JS_RESPONSE_LISTENER_H
-#define OHOS_REQUEST_JS_RESPONSE_LISTENER_H
+#ifndef OHOS_REQUEST_JS_NOTIFY_DATA_LISTENER_H
+#define OHOS_REQUEST_JS_NOTIFY_DATA_LISTENER_H
 
-#include "i_response_listener.h"
+#include "i_notify_data_listener.h"
 #include "listener_list.h"
 
 namespace OHOS::Request {
-class JSResponseListener
-    : public IResponseListener,
+
+class JSNotifyDataListener
+    : public INotifyDataListener,
       public ListenerList,
-      public std::enable_shared_from_this<JSResponseListener> {
+      public std::enable_shared_from_this<JSNotifyDataListener> {
 public:
-    JSResponseListener(napi_env env, const std::string &taskId) : ListenerList(env, taskId, SubscribeType::RESPONSE)
+    JSNotifyDataListener(napi_env env, const std::string &taskId, const SubscribeType &type)
+        : ListenerList(env, taskId, type)
     {
     }
     napi_status AddListener(napi_value cb);
     napi_status RemoveListener(napi_value cb = nullptr);
-    void OnResponseReceive(const std::shared_ptr<Response> &response) override;
+    void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData) override;
 
 private:
-    std::mutex responseMutex_;
-    std::shared_ptr<Response> response_;
+    void ProcessHeaderReceive(const std::shared_ptr<NotifyData> &notifyData);
+    void NotifyDataProcess(const std::shared_ptr<NotifyData> &notifyData, napi_value *value, uint32_t &paramNumber);
+
+private:
+    std::mutex notifyDataMutex_;
+    std::shared_ptr<NotifyData> notifyData_;
 };
 
 } // namespace OHOS::Request
 
-#endif // OHOS_REQUEST_JS_RESPONSE_LISTENER_H
+#endif // OHOS_REQUEST_JS_NOTIFY_DATA_LISTENER_H

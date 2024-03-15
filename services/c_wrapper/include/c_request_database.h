@@ -16,6 +16,9 @@
 #ifndef C_REQUEST_DATABASE_H
 #define C_REQUEST_DATABASE_H
 
+#include <cstdint>
+#include <vector>
+
 #include "c_enumration.h"
 #include "c_filter.h"
 #include "c_progress.h"
@@ -28,8 +31,6 @@
 #include "rdb_store.h"
 #include "result_set.h"
 #include "value_object.h"
-#include <cstdint>
-#include <vector>
 
 namespace OHOS::Request {
 constexpr const char *DB_NAME = "/data/service/el1/public/database/request/request.db";

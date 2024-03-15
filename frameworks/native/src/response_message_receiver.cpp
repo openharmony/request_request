@@ -26,12 +26,37 @@
 
 namespace OHOS::Request {
 
+static constexpr int32_t INT64_SIZE = 8;
 static constexpr int32_t INT32_SIZE = 4;
 static constexpr int32_t INT16_SIZE = 2;
+// static constexpr int32_t INT8_SIZE = 1;
 
 std::shared_ptr<OHOS::AppExecFwk::EventHandler> serviceHandler_;
 
-// retval == 0 means success, < 0 means failed
+static int32_t Int64FromParcel(int64_t &num, char *&parcel, int32_t &size)
+{
+    if (size < INT64_SIZE) {
+        REQUEST_HILOGE("message not complete");
+        return -1;
+    }
+    num = *reinterpret_cast<int64_t *>(parcel);
+    parcel += INT64_SIZE;
+    size -= INT64_SIZE;
+    return 0;
+}
+
+static int32_t Uint64FromParcel(uint64_t &num, char *&parcel, int32_t &size)
+{
+    if (size < INT64_SIZE) {
+        REQUEST_HILOGE("message not complete");
+        return -1;
+    }
+    num = *reinterpret_cast<uint64_t *>(parcel);
+    parcel += INT64_SIZE;
+    size -= INT64_SIZE;
+    return 0;
+}
+
 static int32_t Int32FromParcel(int32_t &num, char *&parcel, int32_t &size)
 {
     if (size < INT32_SIZE) {
@@ -44,7 +69,19 @@ static int32_t Int32FromParcel(int32_t &num, char *&parcel, int32_t &size)
     return 0;
 }
 
-static int16_t Int16FromParcel(int16_t &num, char *&parcel, int32_t &size)
+static int32_t Uint32FromParcel(uint32_t &num, char *&parcel, int32_t &size)
+{
+    if (size < INT32_SIZE) {
+        REQUEST_HILOGE("message not complete");
+        return -1;
+    }
+    num = *reinterpret_cast<uint32_t *>(parcel);
+    parcel += INT32_SIZE;
+    size -= INT32_SIZE;
+    return 0;
+}
+
+static int32_t Int16FromParcel(int16_t &num, char *&parcel, int32_t &size)
 {
     if (size < INT16_SIZE) {
         REQUEST_HILOGE("message not complete");
@@ -53,6 +90,46 @@ static int16_t Int16FromParcel(int16_t &num, char *&parcel, int32_t &size)
     num = *reinterpret_cast<int16_t *>(parcel);
     parcel += INT16_SIZE;
     size -= INT16_SIZE;
+    return 0;
+}
+
+static int32_t StateFromParcel(State &state, char *&parcel, int32_t &size)
+{
+    uint32_t temp;
+    if (Uint32FromParcel(temp, parcel, size) || temp > static_cast<uint32_t>(State::ANY)) {
+        return -1;
+    }
+    state = static_cast<State>(temp);
+    return 0;
+}
+
+static int32_t ActionFromParcel(Action &action, char *&parcel, int32_t &size)
+{
+    uint32_t temp;
+    if (Uint32FromParcel(temp, parcel, size) || temp > static_cast<uint32_t>(Action::ANY)) {
+        return -1;
+    }
+    action = static_cast<Action>(temp);
+    return 0;
+}
+
+static int32_t VersionFromParcel(Version &version, char *&parcel, int32_t &size)
+{
+    uint32_t temp;
+    if (Uint32FromParcel(temp, parcel, size) || temp > static_cast<uint32_t>(Version::API10)) {
+        return -1;
+    }
+    version = static_cast<Version>(temp);
+    return 0;
+}
+
+static int32_t SubscribeTypeFromParcel(SubscribeType &type, char *&parcel, int32_t &size)
+{
+    uint32_t temp;
+    if (Uint32FromParcel(temp, parcel, size) || temp > static_cast<uint32_t>(SubscribeType::BUTT)) {
+        return -1;
+    }
+    type = static_cast<SubscribeType>(temp);
     return 0;
 }
 
@@ -95,6 +172,45 @@ static int32_t ResponseHeaderFromParcel(
     return 0;
 }
 
+static int32_t ProgressExtrasFromParcel(std::map<std::string, std::string> &extras, char *&parcel, int32_t &size)
+{
+    uint32_t length;
+    if (Uint32FromParcel(length, parcel, size)) {
+        return -1;
+    }
+
+    for (uint32_t i = 0; i < length; ++i) {
+        std::string key;
+        std::string value;
+        if (StringFromParcel(key, parcel, size) != 0) {
+            return -1;
+        }
+        if (StringFromParcel(value, parcel, size) != 0) {
+            return -1;
+        }
+        extras[key] = value;
+    }
+
+    return 0;
+}
+
+static int32_t VecInt64FromParcel(std::vector<int64_t> &vec, char *&parcel, int32_t &size)
+{
+    uint32_t length;
+    if (Uint32FromParcel(length, parcel, size)) {
+        return -1;
+    }
+    for (uint32_t i = 0; i < length; ++i) {
+        int64_t value;
+        if (Int64FromParcel(value, parcel, size)) {
+            return -1;
+        }
+        vec.push_back(value);
+    }
+
+    return 0;
+}
+
 ResponseMessageReceiver::ResponseMessageReceiver(IResponseMessageHandler *handler, int32_t sockFd)
     : handler_(handler), sockFd_(sockFd)
 {
@@ -132,7 +248,7 @@ static int32_t MsgHeaderParcel(int32_t &msgId, int16_t &msgType, int16_t &bodySi
     return 0;
 }
 
-static int32_t MsgFromParcel(std::shared_ptr<Response> &response, char *&parcel, int32_t &size)
+static int32_t ResponseFromParcel(std::shared_ptr<Response> &response, char *&parcel, int32_t &size)
 {
     int32_t tid;
     if (Int32FromParcel(tid, parcel, size) != 0) {
@@ -163,12 +279,87 @@ static int32_t MsgFromParcel(std::shared_ptr<Response> &response, char *&parcel,
     return 0;
 }
 
+static int32_t TaskStatesFromParcel(std::vector<TaskState> &taskStates, char *&parcel, int32_t &size)
+{
+    uint32_t length;
+    if (Uint32FromParcel(length, parcel, size) != 0) {
+        REQUEST_HILOGE("Bad type");
+        return -1;
+    }
+    for (uint32_t i = 0; i < length; ++i) {
+        TaskState taskState;
+        if (StringFromParcel(taskState.path, parcel, size) != 0) {
+            REQUEST_HILOGE("Bad path");
+            return -1;
+        }
+        if (Uint32FromParcel(taskState.responseCode, parcel, size) != 0) {
+            REQUEST_HILOGE("Bad responseCode");
+            return -1;
+        }
+        if (StringFromParcel(taskState.message, parcel, size) != 0) {
+            REQUEST_HILOGE("Bad message");
+            return -1;
+        }
+        taskStates.push_back(taskState);
+    }
+    return 0;
+}
+
+static int32_t NotifyDataFromParcel(std::shared_ptr<NotifyData> &notifyData, char *&parcel, int32_t &size)
+{
+    if (SubscribeTypeFromParcel(notifyData->type, parcel, size) != 0) {
+        REQUEST_HILOGE("Bad type");
+        return -1;
+    }
+    if (Uint32FromParcel(notifyData->taskId, parcel, size) != 0) {
+        REQUEST_HILOGE("Bad tid");
+        return -1;
+    }
+    if (StateFromParcel(notifyData->progress.state, parcel, size) != 0) {
+        REQUEST_HILOGE("Bad state");
+        return -1;
+    }
+    if (Uint32FromParcel(notifyData->progress.index, parcel, size) != 0) {
+        REQUEST_HILOGE("Bad index");
+        return -1;
+    }
+    if (Uint64FromParcel(notifyData->progress.processed, parcel, size) != 0) {
+        REQUEST_HILOGE("Bad processed");
+        return -1;
+    }
+    if (Uint64FromParcel(notifyData->progress.totalProcessed, parcel, size) != 0) {
+        REQUEST_HILOGE("Bad totalProcessed");
+        return -1;
+    }
+    if (VecInt64FromParcel(notifyData->progress.sizes, parcel, size) != 0) {
+        REQUEST_HILOGE("Bad sizes");
+        return -1;
+    }
+    if (ProgressExtrasFromParcel(notifyData->progress.extras, parcel, size) != 0) {
+        REQUEST_HILOGE("Bad extras");
+        return -1;
+    }
+
+    if (ActionFromParcel(notifyData->action, parcel, size) != 0) {
+        REQUEST_HILOGE("Bad version");
+        return -1;
+    }
+    if (VersionFromParcel(notifyData->version, parcel, size) != 0) {
+        REQUEST_HILOGE("Bad action");
+        return -1;
+    }
+    if (TaskStatesFromParcel(notifyData->taskStates, parcel, size) != 0) {
+        REQUEST_HILOGE("Bad taskStates");
+        return -1;
+    }
+    return 0;
+}
+
 void ResponseMessageReceiver::OnReadable(int32_t fd)
 {
     int32_t msgId;
     int16_t msgType;
     int16_t headerSize;
-    std::shared_ptr<Response> response = std::make_shared<Response>();
     int readSize = ResponseMessageReceiver::RESPONSE_MAX_SIZE;
     char buffer[readSize];
 
@@ -176,8 +367,14 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
     if (length <= 0) {
         return;
     }
+    REQUEST_HILOGD("read message: %{public}d", length);
 
-    REQUEST_HILOGD("read response: %{public}d", length);
+    char lenBuf[4];
+    *(uint32_t *)lenBuf = length;
+    int32_t ret = write(fd, lenBuf, 4);
+    if (ret <= 0) {
+        REQUEST_HILOGE("send length back failed: %{public}d", ret);
+    }
 
     char *leftBuf = buffer;
     int32_t leftLen = length;
@@ -191,8 +388,20 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
     }
     ++messageId_;
 
-    if (MsgFromParcel(response, leftBuf, leftLen) == 0) {
-        this->handler_->OnResponseReceive(response);
+    if (msgType == MessageType::HTTP_RESPONSE) {
+        std::shared_ptr<Response> response = std::make_shared<Response>();
+        if (ResponseFromParcel(response, leftBuf, leftLen) == 0) {
+            this->handler_->OnResponseReceive(response);
+        } else {
+            REQUEST_HILOGE("Bad Response");
+        }
+    } else if (msgType == MessageType::NOTIFY_DATA) {
+        std::shared_ptr<NotifyData> notifyData = std::make_shared<NotifyData>();
+        if (NotifyDataFromParcel(notifyData, leftBuf, leftLen) == 0) {
+            this->handler_->OnNotifyDataReceive(notifyData);
+        } else {
+            REQUEST_HILOGE("Bad NotifyData");
+        }
     }
 }
 

@@ -26,10 +26,6 @@ pub(crate) enum RequestInterfaceCode {
     Remove,
     /// resume task
     Resume,
-    /// on task
-    On,
-    /// off task
-    Off,
     /// ap10 start task
     Start,
     /// stop task
