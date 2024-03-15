@@ -14,8 +14,8 @@
 use std::collections::HashMap;
 
 use super::ffi::CEachFileStatus;
-use super::notify::{EachFileStatus, Progress};
-use crate::task::config::Action;
+use super::notify::{EachFileStatus, NotifyData, Progress};
+use crate::task::config::{Action, Version};
 use crate::task::reason::Reason;
 use crate::utils::c_wrapper::{CFileSpec, CFormItem};
 use crate::utils::form_item::{FileSpec, FormItem};
@@ -160,6 +160,17 @@ impl TaskInfo {
                 .iter()
                 .map(|x| x.to_c_struct())
                 .collect(),
+        }
+    }
+
+    pub(crate) fn build_notify_data(&self) -> NotifyData {
+        NotifyData {
+            progress: self.progress.clone(),
+            action: Action::from(self.common_data.action),
+            version: Version::from(self.common_data.version),
+            each_file_status: self.each_file_status.clone(),
+            task_id: self.common_data.task_id,
+            _uid: self.common_data.uid,
         }
     }
 }
