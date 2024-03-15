@@ -100,12 +100,13 @@ impl RunCountManager {
     }
 
     fn handle_sub_runcount(&mut self, subkey: SubKey, obj: RemoteObj, tx: Sender<ErrorCode>) {
+        debug!("handle sub runcount in");
         let subclient = SubClient::new(obj);
         if self.remotes.get(&subkey).is_none() {
             self.remotes.insert(subkey, subclient.clone());
             debug!("RunCountManager has inserted subkey: {:?}", subkey);
-            let _ = tx.send(ErrorCode::ErrOk);
         }
+        let _ = tx.send(ErrorCode::ErrOk);
         // Need to notify client immediately, then client get runcount by its callback
         subclient.notify_runcount(self.runcount)
     }
@@ -123,11 +124,13 @@ impl RunCountManager {
     }
 
     fn handle_change_runcount(&mut self, change: i64) {
+        debug!("handle change runcount in");
         self.runcount += change;
         self.handle_notify_runcount();
     }
 
     fn handle_notify_runcount(&self) {
+        debug!("handle notify runcount to all subclient");
         for (_, subclient) in self.remotes.clone() {
             subclient.notify_runcount(self.runcount)
         }

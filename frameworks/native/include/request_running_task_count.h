@@ -20,7 +20,7 @@
 #include <mutex>
 #include <vector>
 
-#include "../../interfaces/inner_api/include/running_task_count.h"
+#include "../../interfaces/inner_kits/running_count/include/running_task_count.h"
 #include "iremote_proxy.h"
 #include "js_common.h"
 #include "log.h"
@@ -45,7 +45,7 @@ private:
 
 class FwkRunningTaskCountManager {
 public:
-    static std::unique_ptr<FwkRunningTaskCountManager> &GetInstance();
+    static std::unique_ptr<FwkRunningTaskCountManager>& GetInstance();
     int32_t GetCount();
     void SetCount(int runCount);
     void AttachObserver(std::shared_ptr<IRunningTaskObserver> ob);

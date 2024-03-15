@@ -298,7 +298,7 @@ int32_t RequestManagerImpl::SubRunCount(const sptr<NotifyInterface> &listener)
     REQUEST_HILOGD("Impl SubRunCount in");
     auto proxy = GetRequestServiceProxy();
     if (proxy == nullptr) {
-        REQUEST_HILOGE("GetRequestServiceProxy fail.");
+        REQUEST_HILOGE("Impl SubRunCount in, get request service proxy failed.");
         return E_SERVICE_ERROR;
     }
 
@@ -439,7 +439,8 @@ void RequestManagerImpl::RestoreSubRunCount()
     REQUEST_HILOGD("Restore sub run count in");
     auto proxy = GetRequestServiceProxy();
     if (proxy == nullptr) {
-        REQUEST_HILOGE("GetRequestServiceProxy fail.");
+        REQUEST_HILOGE("Restore sub run count, but get request service proxy fail.");
+        return;
     }
 
     auto listener = RunCountNotifyStub::GetInstance();
@@ -481,6 +482,7 @@ void RequestManagerImpl::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
     ready_.store(false);
     SetRequestServiceProxy(nullptr);
     FwkRunningTaskCountManager::GetInstance()->SetCount(0);
+    FwkRunningTaskCountManager::GetInstance()->NotifyAllObservers();
     if (!msgReceiver_) {
         return;
     }

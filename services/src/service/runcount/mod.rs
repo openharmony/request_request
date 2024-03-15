@@ -73,6 +73,7 @@ impl SubClient {
     }
 
     fn notify_runcount(&self, runcount: i64) {
+        debug!("notify runcount in");
         let mut parcel = match MsgParcel::new() {
             Some(parcel) => parcel,
             None => {
@@ -93,6 +94,7 @@ impl SubClient {
             false,
         ) {
             error!("During notify_runcount: send request failed {:?}", e);
+            return;
         }
         debug!("During notify_runcount: send request success");
     }

@@ -31,7 +31,7 @@ namespace OHOS::Request {
 class RunCountNotifyStub : public IRemoteStub<NotifyInterface> {
 public:
     static sptr<RunCountNotifyStub> GetInstance();
-    RunCountNotifyStub() = default;
+    explicit RunCountNotifyStub() = default;
     ~RunCountNotifyStub() override = default;
     REQUEST_API int32_t OnRemoteRequest(
         uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;

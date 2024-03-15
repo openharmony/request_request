@@ -16,6 +16,7 @@
 #define REQUEST_RUNNING_TASK_COUNT_H
 
 #include <memory>
+#include "visibility.h"
 namespace OHOS::Request {
 class IRunningTaskObserver {
 public:
@@ -23,8 +24,8 @@ public:
     virtual void OnRunningTaskCountUpdate(int count) = 0;
 };
 
-int32_t SubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob);
-void UnsubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob);
+REQUEST_API int32_t SubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob);
+REQUEST_API void UnsubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob);
 
 } // namespace OHOS::Request
 

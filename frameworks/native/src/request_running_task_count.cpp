@@ -108,6 +108,7 @@ void FwkRunningTaskCountManager::NotifyAllObservers()
     auto it = observers_.begin();
     while (it != observers_.end()) {
         (*it)->UpdateRunningTaskCount();
+        it++;
     }
     observersLock_.unlock();
 }
@@ -123,6 +124,9 @@ int32_t SubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob)
 
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob);
     auto listener = RunCountNotifyStub::GetInstance();
+    if (listener == nullptr) {
+        REQUEST_HILOGE("Get fwk run count listenr is null.");
+    }   
     int32_t ret = RequestManagerImpl::GetInstance()->SubRunCount(listener);
     if (ret != E_OK) {
         FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob);
