@@ -11,11 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::Arc;
-
 use crate::service::ability::RequestAbility;
 use crate::task::notify::{NotifyData, SubscribeType};
-use crate::task::request_task::RequestTask;
 
 pub(crate) struct Notifier;
 
@@ -33,9 +30,9 @@ impl Notifier {
         RequestAbility::client_manager().send_notify_data(subscribe_type, notify_data)
     }
 
-    pub(crate) fn remove_notify(task: &Arc<RequestTask>) {
-        let data = task.build_notify_data();
+    pub(crate) fn remove_notify(data: NotifyData) {
+        let tid = data.task_id;
         RequestAbility::client_manager().send_notify_data(SubscribeType::Remove, data);
-        RequestAbility::client_manager().notify_task_finished(task.conf.common_data.task_id);
+        RequestAbility::client_manager().notify_task_finished(tid);
     }
 }

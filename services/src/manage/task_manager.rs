@@ -402,9 +402,6 @@ impl TaskManager {
             self.api10_background_task_count -= 1;
         }
 
-        #[cfg(feature = "oh")]
-        Notifier::remove_notify(&remove_task);
-
         let map = self
             .qos
             .remove(task.conf.common_data.uid, task.conf.common_data.task_id);
@@ -444,7 +441,6 @@ impl TaskManager {
             task.resume.store(true, Ordering::SeqCst);
             let notify_data = task.build_notify_data();
 
-            // what to do
             #[cfg(feature = "oh")]
             Notifier::service_front_notify(SubscribeType::Resume, notify_data);
             self.start_inner(task);
