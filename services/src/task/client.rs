@@ -12,8 +12,6 @@
 // limitations under the License.
 
 use std::error::Error;
-use std::fs::File;
-use std::io::Read;
 
 use ylong_http_client::async_impl::Client;
 use ylong_http_client::{Certificate, Proxy, Redirect, Timeout, TlsVersion};
@@ -27,7 +25,7 @@ const SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
 
 pub(crate) fn build_client(
     config: &TaskConfig,
-    system: &SystemConfig,
+    mut system: SystemConfig,
 ) -> Result<Client, Box<dyn Error + Send + Sync>> {
     let mut client = Client::builder()
         .connect_timeout(Timeout::from_secs(CONNECT_TIMEOUT))
@@ -44,7 +42,7 @@ pub(crate) fn build_client(
     // Set HTTP proxy.
     if let Some(proxy) = build_task_proxy(config)? {
         client = client.proxy(proxy);
-    } else if let Some(proxy) = build_system_proxy(system)? {
+    } else if let Some(proxy) = build_system_proxy(&system)? {
         client = client.proxy(proxy);
     }
 
@@ -52,8 +50,9 @@ pub(crate) fn build_client(
     // redirected to HTTPS.
 
     // Set system certs.
-    let cert = build_system_certs()?;
-    client = client.add_root_certificate(cert);
+    if let Some(certs) = system.certs.take() {
+        client = client.add_root_certificate(certs);
+    }
 
     // Set task certs.
     let certificates = build_task_certs(config)?;
@@ -101,24 +100,6 @@ fn build_system_proxy(
             .map_err(Box::new),
         "Create system proxy failed",
     )))
-}
-
-fn build_system_certs() -> Result<Certificate, Box<dyn Error + Send + Sync>> {
-    let mut buf = Vec::new();
-    let mut file = cvt_res_error!(
-        File::open("/etc/ssl/certs/cacert.pem").map_err(Box::new),
-        "Open default system cert failed",
-    );
-
-    cvt_res_error!(
-        file.read_to_end(&mut buf).map_err(Box::new),
-        "Read default system cert failed",
-    );
-
-    Ok(cvt_res_error!(
-        Certificate::from_pem(&buf).map_err(Box::new),
-        "Parse default system cert failed",
-    ))
 }
 
 fn build_task_certs(config: &TaskConfig) -> Result<Vec<Certificate>, Box<dyn Error + Send + Sync>> {
