@@ -177,7 +177,7 @@ fn build_multipart_request(task: Arc<RequestTask>, index: usize) -> Option<Reque
         .build();
 
     let request_builder = task.build_request_builder();
-    let request: Result<Request, HttpClientError> = request_builder.body(Body::stream(uploader));
+    let request: Result<Request, HttpClientError> = request_builder.body(Body::multipart(uploader));
     build_request_common(&task, index, request)
 }
 
