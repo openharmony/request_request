@@ -30,7 +30,8 @@ napi_status JSNotifyDataListener::AddListener(napi_value cb)
     if (ret != napi_ok) {
         return ret;
     }
-    if (this->validCbNum == 1) {
+    /* remove listener must be subscribed to free task */
+    if (this->validCbNum == 1 && this->type_ != SubscribeType::REMOVE) {
         RequestManager::GetInstance()->AddListener(this->taskId_, this->type_, shared_from_this());
     }
     return napi_ok;
@@ -42,7 +43,7 @@ napi_status JSNotifyDataListener::RemoveListener(napi_value cb)
     if (ret != napi_ok) {
         return ret;
     }
-    if (this->validCbNum == 0) {
+    if (this->validCbNum == 0 && this->type_ != SubscribeType::REMOVE) {
         RequestManager::GetInstance()->RemoveListener(this->taskId_, this->type_, shared_from_this());
     }
     return napi_ok;
@@ -172,37 +173,46 @@ void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
         REQUEST_HILOGE("uv_work_t new failed");
         return;
     }
-    {
-        std::lock_guard<std::mutex> lock(this->notifyDataMutex_);
-        this->notifyData_ = notifyData;
+    NotifyDataPtr *ptr = new (std::nothrow) NotifyDataPtr;
+    if (ptr == nullptr) {
+        REQUEST_HILOGE("NotifyDataPtr new failed");
+        return;
     }
-    work->data = reinterpret_cast<void *>(this);
+    ptr->listener = shared_from_this();
+    ptr->notifyData = notifyData;
+
+    work->data = reinterpret_cast<void *>(ptr);
     uv_queue_work(
         loop, work, [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
             uint32_t paramNumber = NapiUtils::ONE_ARG;
-            JSNotifyDataListener *listener = static_cast<JSNotifyDataListener *>(work->data);
-            std::lock_guard<std::mutex> lock(listener->notifyDataMutex_);
+            NotifyDataPtr *ptr = static_cast<NotifyDataPtr *>(work->data);
             napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(listener->env_, &scope);
+            napi_open_handle_scope(ptr->listener->env_, &scope);
             napi_value values[NapiUtils::TWO_ARG] = { nullptr };
-            listener->NotifyDataProcess(listener->notifyData_, values, paramNumber);
-            listener->OnMessageReceive(values, paramNumber);
-            napi_close_handle_scope(listener->env_, scope);
-            std::string tid = std::to_string(listener->notifyData_->taskId);
-            if (listener->notifyData_->version == Version::API9 &&
-                (listener->notifyData_->type == SubscribeType::COMPLETED ||
-                 listener->notifyData_->type == SubscribeType::FAILED ||
-                 listener->notifyData_->type == SubscribeType::REMOVE)) {
-                JsTask::ClearTaskContext(tid);
-                JsTask::ClearTaskMap(tid);
-            } else if (listener->notifyData_->version == Version::API10 &&
-                       listener->notifyData_->type == SubscribeType::REMOVE) {
-                JsTask::ClearTaskContext(tid);
-                JsTask::ClearTaskMap(tid);
-            }
+            ptr->listener->NotifyDataProcess(ptr->notifyData, values, paramNumber);
+            ptr->listener->OnMessageReceive(values, paramNumber);
+            napi_close_handle_scope(ptr->listener->env_, scope);
             delete work;
+            delete ptr;
         });
+
+    std::string tid = std::to_string(notifyData->taskId);
+    if (notifyData->version == Version::API9 &&
+        (notifyData->type == SubscribeType::COMPLETED ||
+         notifyData->type == SubscribeType::FAILED ||
+         notifyData->type == SubscribeType::REMOVE)) {
+        RequestManager::GetInstance()->RemoveAllListeners(tid);
+        JsTask::ClearTaskContext(tid);
+        JsTask::ClearTaskMap(tid);
+        REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
+    } else if (notifyData->version == Version::API10 &&
+               notifyData->type == SubscribeType::REMOVE) {
+        RequestManager::GetInstance()->RemoveAllListeners(tid);
+        JsTask::ClearTaskContext(tid);
+        JsTask::ClearTaskMap(tid);
+        REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
+    }
 }
 
 } // namespace OHOS::Request

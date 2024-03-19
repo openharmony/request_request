@@ -136,4 +136,9 @@ int32_t RequestManager::RemoveListener(
     return RequestManagerImpl::GetInstance()->RemoveListener(taskId, type, listener);
 }
 
+void RequestManager::RemoveAllListeners(const std::string &taskId)
+{
+    RequestManagerImpl::GetInstance()->RemoveAllListeners(taskId);
+}
+
 } // namespace OHOS::Request

@@ -70,6 +70,7 @@ public:
         const std::string &taskId, const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener);
     int32_t RemoveListener(
         const std::string &taskId, const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener);
+    void RemoveAllListeners(const std::string &taskId);
 
     int32_t SubRunCount(const sptr<NotifyInterface> &listener);
     int32_t UnsubRunCount();
@@ -112,7 +113,9 @@ private:
     std::atomic<bool> ready_ = false;
     static constexpr int LOAD_SA_TIMEOUT_MS = 15000;
     void (*callback_)() = nullptr;
+    std::mutex tasksMutex_;
     std::map<std::string, std::shared_ptr<Request>> tasks_;
+    std::recursive_mutex msgReceiverMutex_;
     std::shared_ptr<ResponseMessageReceiver> msgReceiver_;
 
 private:

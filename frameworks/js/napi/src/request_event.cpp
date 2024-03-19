@@ -145,6 +145,7 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
     }
 
     if (jsParam.subscribeType == SubscribeType::RESPONSE) {
+        std::lock_guard<std::mutex> lock(jsParam.task->listenerMutex_);
         if (jsParam.task->responseListener_ == nullptr) {
             jsParam.task->responseListener_ = std::make_shared<JSResponseListener>(env, jsParam.task->GetTid());
         }
@@ -152,8 +153,8 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
         if (ret != napi_ok) {
             REQUEST_HILOGE("AddListener fail");
         }
-        REQUEST_HILOGD("On event %{public}s + %{public}s", jsParam.type.c_str(), jsParam.task->GetTid().c_str());
     } else {
+        std::lock_guard<std::mutex> lock(jsParam.task->listenerMutex_);
         auto listener = jsParam.task->notifyDataListenerMap_.find(jsParam.subscribeType);
         if (listener == jsParam.task->notifyDataListenerMap_.end()) {
             jsParam.task->notifyDataListenerMap_[jsParam.subscribeType] =
@@ -163,8 +164,9 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
         if (ret != napi_ok) {
             REQUEST_HILOGE("AddListener fail");
         }
-        REQUEST_HILOGD("On event %{public}s + %{public}s", jsParam.type.c_str(), jsParam.task->GetTid().c_str());
     }
+    
+    REQUEST_HILOGD("On event %{public}s + %{public}s", jsParam.type.c_str(), jsParam.task->GetTid().c_str());
     return nullptr;
 }
 
@@ -179,6 +181,7 @@ napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
     }
 
     if (jsParam.subscribeType == SubscribeType::RESPONSE) {
+        std::lock_guard<std::mutex> lock(jsParam.task->listenerMutex_);
         if (jsParam.task->responseListener_ == nullptr) {
             jsParam.task->responseListener_ = std::make_shared<JSResponseListener>(env, jsParam.task->GetTid());
         }
@@ -187,6 +190,7 @@ napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
             REQUEST_HILOGE("RemoveListener fail");
         }
     } else {
+        std::lock_guard<std::mutex> lock(jsParam.task->listenerMutex_);
         auto listener = jsParam.task->notifyDataListenerMap_.find(jsParam.subscribeType);
         if (listener == jsParam.task->notifyDataListenerMap_.end()) {
             jsParam.task->notifyDataListenerMap_[jsParam.subscribeType] =
