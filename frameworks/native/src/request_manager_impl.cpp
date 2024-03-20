@@ -362,7 +362,7 @@ void RequestManagerImpl::OnResponseReceive(const std::shared_ptr<Response> &resp
 {
     auto it = tasks_.find(response->taskId);
     if (it == tasks_.end()) {
-        REQUEST_HILOGE("task not found");
+        REQUEST_HILOGD("task not found");
         return;
     }
 
@@ -373,7 +373,7 @@ void RequestManagerImpl::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &
 {
     auto it = tasks_.find(std::to_string(notifyData->taskId));
     if (it == tasks_.end()) {
-        REQUEST_HILOGE("task not found");
+        REQUEST_HILOGD("task not found");
         return;
     }
 

@@ -39,7 +39,7 @@ FwkIRunningTaskObserver::FwkIRunningTaskObserver(std::shared_ptr<IRunningTaskObs
 
 void FwkIRunningTaskObserver::UpdateRunningTaskCount()
 {
-    pInnerOb_->onRunningTaskCountUpdate(FwkRunningTaskCountManager::GetInstance()->GetCount());
+    pInnerOb_->OnRunningTaskCountUpdate(FwkRunningTaskCountManager::GetInstance()->GetCount());
 }
 
 std::shared_ptr<IRunningTaskObserver> FwkIRunningTaskObserver::GetInnerObserver()
@@ -117,7 +117,7 @@ int32_t SubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob)
 {
     if (FwkRunningTaskCountManager::GetInstance()->HasObserver()) {
         FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob);
-        ob->onRunningTaskCountUpdate(FwkRunningTaskCountManager::GetInstance()->GetCount());
+        ob->OnRunningTaskCountUpdate(FwkRunningTaskCountManager::GetInstance()->GetCount());
         return E_OK;
     }
 

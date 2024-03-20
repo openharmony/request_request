@@ -56,7 +56,7 @@ void NetworkAdapterTest::TearDown(void)
 }
 
 // function for testing RegisterNetworkCallback
-void ParamFun()
+static void ParamFun()
 {
     return;
 }

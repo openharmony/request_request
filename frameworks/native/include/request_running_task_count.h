@@ -54,12 +54,12 @@ public:
     bool HasObserver();
 
     ~FwkRunningTaskCountManager() = default;
-    FwkRunningTaskCountManager() = default;
     FwkRunningTaskCountManager(const FwkRunningTaskCountManager &) = delete;
     FwkRunningTaskCountManager(FwkRunningTaskCountManager &&) = delete;
     FwkRunningTaskCountManager &operator=(const FwkRunningTaskCountManager &) = delete;
 
 private:
+    FwkRunningTaskCountManager() = default;
     std::mutex observersLock_;
     std::mutex countLock_;
     int count_ = 0;

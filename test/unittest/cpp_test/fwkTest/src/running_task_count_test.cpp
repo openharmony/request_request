@@ -34,14 +34,14 @@ using namespace OHOS::Request;
 
 class FwkTestOberver : public IRunningTaskObserver {
 public:
-    virtual void onRunningTaskCountUpdate(int count) override;
+    void OnRunningTaskCountUpdate(int count) override;
     ~FwkTestOberver() = default;
     FwkTestOberver() = default;
 };
 
-void FwkTestOberver::onRunningTaskCountUpdate(int count)
+void FwkTestOberver::OnRunningTaskCountUpdate(int count)
 {
-    REQUEST_HILOGI("[RunningTaskCountTest] onRunningTaskCountUpdate count = %{public}d", count);
+    REQUEST_HILOGI("[RunningTaskCountTest] OnRunningTaskCountUpdate count = %{public}d", count);
 }
 
 class RunningTaskCountTest : public testing::Test {
@@ -70,12 +70,6 @@ void RunningTaskCountTest::SetUp(void)
 void RunningTaskCountTest::TearDown(void)
 {
     // input testcase teardown step，teardown invoked after each testcases
-}
-
-// function for testing RegisterNetworkCallback
-void ParamFun()
-{
-    return;
 }
 
 /**

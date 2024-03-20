@@ -180,12 +180,12 @@ void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
     uv_queue_work(
         loop, work, [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
-            napi_value values[NapiUtils::TWO_ARG] = { nullptr };
             uint32_t paramNumber = NapiUtils::ONE_ARG;
             JSNotifyDataListener *listener = static_cast<JSNotifyDataListener *>(work->data);
             std::lock_guard<std::mutex> lock(listener->notifyDataMutex_);
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(listener->env_, &scope);
+            napi_value values[NapiUtils::TWO_ARG] = { nullptr };
             listener->NotifyDataProcess(listener->notifyData_, values, paramNumber);
             listener->OnMessageReceive(values, paramNumber);
             napi_close_handle_scope(listener->env_, scope);

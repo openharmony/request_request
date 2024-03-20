@@ -20,7 +20,7 @@ namespace OHOS::Request {
 class IRunningTaskObserver {
 public:
     virtual ~IRunningTaskObserver() = default;
-    virtual void onRunningTaskCountUpdate(int count) = 0;
+    virtual void OnRunningTaskCountUpdate(int count) = 0;
 };
 
 int32_t SubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob);
