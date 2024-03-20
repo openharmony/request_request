@@ -15,12 +15,14 @@ use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Arc;
 
+use ylong_http_client::Certificate;
 use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
 use super::events::{EventMessage, ScheduledMessage, ServiceMessage, StateMessage, TaskMessage};
 use super::qos::{Qos, QosChange, QosQueue};
 use super::scheduled;
 use crate::error::ErrorCode;
+use crate::manage::cert_manager::CertManager;
 use crate::manage::keeper::SAKeeper;
 use crate::manage::system_proxy::SystemProxyManager;
 use crate::service::ability::PANIC_INFO;
@@ -40,6 +42,7 @@ cfg_oh! {
 pub(crate) struct TaskManager {
     pub(crate) tasks: HashMap<u32, Arc<RequestTask>>,
     pub(crate) sys_proxy: SystemProxyManager,
+    pub(crate) cert_manager: CertManager,
     pub(crate) qos: QosQueue,
     pub(crate) app_task_map: HashMap<u64, HashSet<u32>>,
     pub(crate) app_state_map: HashMap<u64, Arc<AtomicU8>>,
@@ -54,6 +57,7 @@ pub(crate) struct SystemConfig {
     pub(crate) proxy_host: String,
     pub(crate) proxy_port: String,
     pub(crate) proxy_exlist: String,
+    pub(crate) certs: Option<Certificate>,
 }
 
 #[derive(Clone)]
@@ -84,8 +88,11 @@ impl TaskManagerEntry {
 impl TaskManager {
     pub(crate) fn init() -> TaskManagerEntry {
         debug!("TaskManager init");
+        // CertManager needs to start early to restore file content
+        let cert_manager = CertManager::new();
+
         let (tx, rx) = unbounded_channel();
-        let mut task_manager = Self::new(tx.clone(), rx);
+        let mut task_manager = Self::new(tx.clone(), rx, cert_manager);
 
         // Considers update invalid task in database to FAILED state here?.
 
@@ -101,12 +108,17 @@ impl TaskManager {
         TaskManagerEntry::new(tx)
     }
 
-    fn new(tx: UnboundedSender<EventMessage>, rx: UnboundedReceiver<EventMessage>) -> Self {
+    fn new(
+        tx: UnboundedSender<EventMessage>,
+        rx: UnboundedReceiver<EventMessage>,
+        cert: CertManager,
+    ) -> Self {
         const HIGH_QOS_MAX: usize = 10;
 
         TaskManager {
             qos: QosQueue::new(HIGH_QOS_MAX),
             sys_proxy: SystemProxyManager::init(),
+            cert_manager: cert,
             tasks: HashMap::new(),
             app_task_map: HashMap::new(),
             app_state_map: HashMap::new(),
@@ -466,10 +478,18 @@ impl TaskManager {
     }
 
     pub(crate) fn system_config(&self) -> SystemConfig {
+        let mut certs = self.cert_manager.certificate();
+
+        if certs.is_none() {
+            self.cert_manager.force_update();
+            certs = self.cert_manager.certificate();
+        }
+
         SystemConfig {
             proxy_host: self.sys_proxy.host(),
             proxy_port: self.sys_proxy.port(),
             proxy_exlist: self.sys_proxy.exlist(),
+            certs,
         }
     }
 }

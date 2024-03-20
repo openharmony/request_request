@@ -96,7 +96,7 @@ impl RequestTask {
 
         let files = AttachedFiles::open(&config).map_err(|_| ErrorCode::FileOperationErr)?;
 
-        let client = build_client(&config, &system).map_err(|_| ErrorCode::Other)?;
+        let client = build_client(&config, system).map_err(|_| ErrorCode::Other)?;
 
         let file_len = files.files.len();
         let action = config.common_data.action;

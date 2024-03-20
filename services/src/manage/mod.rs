@@ -18,6 +18,7 @@ pub(crate) mod keeper;
 pub(crate) mod monitor;
 pub(crate) mod unload;
 
+pub(crate) mod cert_manager;
 pub(crate) mod events;
 pub(crate) mod qos;
 pub(crate) mod scheduled;
