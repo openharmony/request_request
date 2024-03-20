@@ -67,7 +67,6 @@ void JSResponseListener::OnResponseReceive(const std::shared_ptr<Response> &resp
     uv_queue_work(
         loop, work, [](uv_work_t *work) {},
         [](uv_work_t *work, int status) {
-            napi_value values[NapiUtils::TWO_ARG] = { nullptr };
             JSResponseListener *listener = static_cast<JSResponseListener *>(work->data);
             std::lock_guard<std::mutex> lock(listener->responseMutex_);
             napi_handle_scope scope = nullptr;

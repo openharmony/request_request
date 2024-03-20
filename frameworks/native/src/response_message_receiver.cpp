@@ -357,9 +357,6 @@ static int32_t NotifyDataFromParcel(std::shared_ptr<NotifyData> &notifyData, cha
 
 void ResponseMessageReceiver::OnReadable(int32_t fd)
 {
-    int32_t msgId;
-    int16_t msgType;
-    int16_t headerSize;
     int readSize = ResponseMessageReceiver::RESPONSE_MAX_SIZE;
     char buffer[readSize];
 
@@ -378,12 +375,15 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
 
     char *leftBuf = buffer;
     int32_t leftLen = length;
+    int32_t msgId = -1;
+    int16_t msgType = -1;
+    int16_t headerSize = -1;
     MsgHeaderParcel(msgId, msgType, headerSize, leftBuf, leftLen);
     if (msgId != messageId_) {
         REQUEST_HILOGE("Bad messageId");
         return;
     }
-    if (headerSize != length) {
+    if (headerSize != static_cast<int16_t>(length)) {
         REQUEST_HILOGE("Bad headerSize, %{public}d, %{public}d", length, headerSize);
     }
     ++messageId_;

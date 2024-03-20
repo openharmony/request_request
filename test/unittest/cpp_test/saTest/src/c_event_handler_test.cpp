@@ -49,7 +49,7 @@ void EventHandlerTest::TearDown(void)
 }
 
 // function for testing RequestPostTask
-int32_t ParamFunc()
+static int32_t ParamFunc()
 {
     return PARAM_FUNC_RET;
 }

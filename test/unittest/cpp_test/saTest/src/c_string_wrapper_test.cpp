@@ -57,7 +57,7 @@ HWTEST_F(StringWrapperTest, WrapperCStringTest_001, TestSize.Level1)
     std::string str("c_string_wrapper_for_test");
     CStringWrapper ret = WrapperCString(str);
     EXPECT_EQ(ret.len, str.length());
-    EXPECT_EQ(strcmp(ret.cStr, str.c_str()), 0);
+    EXPECT_EQ(strncmp(ret.cStr, str.c_str(), ret.len), 0);
 
     char *str1 = new char[10];
     DeleteChar(str1);
