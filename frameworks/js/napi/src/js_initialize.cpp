@@ -38,6 +38,7 @@ static constexpr uint32_t FILE_PERMISSION = 0644;
 static constexpr uint32_t TITLE_MAXIMUM = 256;
 static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
 static constexpr uint32_t URL_MAXIMUM = 2048;
+static constexpr uint32_t PROXY_MAXIMUM = 512;
 
 namespace OHOS::Request {
 napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Version version, bool firstInit)
@@ -567,12 +568,12 @@ bool JsInitialize::ParseProxy(napi_env env, napi_value jsConfig, std::string &pr
         return true;
     }
 
-    if (proxy.size() > URL_MAXIMUM) {
-        REQUEST_HILOGE("The proxy exceeds the maximum length of 2048");
+    if (proxy.size() > PROXY_MAXIMUM) {
+        REQUEST_HILOGE("The proxy exceeds the maximum length of 512");
         return false;
     }
 
-    if (!regex_match(proxy, std::regex("^http:\\/\\/.+"))) {
+    if (!regex_match(proxy, std::regex("^http:\\/\\/.+:\\d{1,5}$"))) {
         REQUEST_HILOGE("ParseProxy error");
         return false;
     }
