@@ -19,7 +19,7 @@
 #include <memory>
 #include <thread>
 
-#include "base/request/request/interfaces/inner_api/include/running_task_count.h"
+#include "base/request/request/interfaces/inner_kits/running_count/include/running_task_count.h"
 #include "download_server_ipc_interface_code.h"
 #include "log.h"
 #include "parcel_helper.h"
@@ -36,9 +36,8 @@ void RunCountNotifyStub::Done(const TaskInfo &taskInfo)
 
 sptr<RunCountNotifyStub> RunCountNotifyStub::GetInstance()
 {
-    static auto g_pRunCountNotifyStub = sptr(new RunCountNotifyStub());
-    auto pInstance = sptr(g_pRunCountNotifyStub);
-    return pInstance;
+    static sptr<RunCountNotifyStub> instance(new RunCountNotifyStub());
+    return instance;
 }
 
 int32_t RunCountNotifyStub::OnRemoteRequest(

@@ -23,7 +23,7 @@ ohos_unittest("fwkTest") {
     "include",
     "../../../../frameworks/js/napi/include",
     "../../../../frameworks/native/include",
-    "../../../../interfaces/inner_api/include",
+    "../../../../interfaces/inner_kits/running_count/include",
   ]
 
   sources = [

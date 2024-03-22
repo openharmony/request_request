@@ -98,6 +98,8 @@ impl TryFrom<u32> for RequestInterfaceCode {
             _ if code == Self::OpenChannel as u32 => Ok(Self::OpenChannel),
             _ if code == Self::Subscribe as u32 => Ok(Self::Subscribe),
             _ if code == Self::Unsubscribe as u32 => Ok(Self::Unsubscribe),
+            _ if code == Self::SubRunCount as u32 => Ok(Self::SubRunCount),
+            _ if code == Self::UnsubRunCount as u32 => Ok(Self::UnsubRunCount),
             _ => Err(IpcStatusCode::Failed),
         }
     }

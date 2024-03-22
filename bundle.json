@@ -71,18 +71,17 @@
           "//base/request/request/services:download_server"
         ]
       },
-      "inner_api": [
+      "inner_kits": [
         {
-          "name": "//base/request/request/interfaces/inner_api:running_task_count",
+          "name": "//base/request/request/frameworks/native:request_native",
           "header": {
             "header_files": [
               "running_task_count.h"
             ],
-            "header_base":"//base/request/request/interfaces/inner_api/include"
+            "header_base": "//base/request/request/interfaces/inner_kits/running_count/include"
           }
         }
       ],
-      "inner_kits": [],
       "test": [
         "//base/request/request/test/fuzztest:fuzztest",
         "//base/request/request/test/unittest/common/napi/requestTest:unittest",

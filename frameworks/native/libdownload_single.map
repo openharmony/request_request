@@ -17,6 +17,9 @@
     *NotifyStub*;
     *DownloadTask*;
     *ParcelHelper*;
+    *IRunningTaskObserver*;
+    *SubscribeRunningTaskCount*;
+    *UnsubscribeRunningTaskCount*;
   local:
     *;
 };

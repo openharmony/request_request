@@ -29,8 +29,10 @@ impl SubRunCount {
         debug!("Service runcount subscribe: pid is {}", pid);
 
         let obj: RemoteObj = data.read::<RemoteObj>()?;
+        debug!("read obj from data success!");
         let (event, rx) = RunCountEvent::sub_runcount(pid, obj);
         RequestAbility::runcount_manager().send_event(event);
+        debug!("send event sub runcount success!");
 
         let ret = match rx.get() {
             Some(ret) => ret,

@@ -398,7 +398,7 @@ int32_t RequestServiceProxy::SubRunCount(const sptr<NotifyInterface> &listener)
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
-    data.WriteRemoteObject(listener->AsObject().GetRefPtr());
+    data.WriteRemoteObject(listener->AsObject());
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SUB_RUNCOUNT), data, reply, option);
     if (ret != ERR_NONE) {
