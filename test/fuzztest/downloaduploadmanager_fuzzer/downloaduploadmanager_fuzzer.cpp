@@ -141,6 +141,59 @@ void ResumeRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Resume(tid);
 }
 
+void GetTaskRequestFuzzTest(const uint8_t *data, size_t size)
+{
+    Config config;
+    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string token(reinterpret_cast<const char *>(data), size);
+    GrantNativePermission();
+    RequestManager::GetInstance()->GetTask(tid, token, config);
+}
+
+void SubscribeRequestFuzzTest(const uint8_t *data, size_t size)
+{
+    std::string tid(reinterpret_cast<const char *>(data), size);
+    GrantNativePermission();
+    RequestManager::GetInstance()->Subscribe(tid);
+}
+
+void UnsubscribeRequestFuzzTest(const uint8_t *data, size_t size)
+{
+    std::string tid(reinterpret_cast<const char *>(data), size);
+    GrantNativePermission();
+    RequestManager::GetInstance()->Unsubscribe(tid);
+}
+
+void IsSaReadyRequestFuzzTest(const uint8_t *data, size_t size)
+{
+    GrantNativePermission();
+    RequestManager::GetInstance()->IsSaReady();
+}
+
+void ReopenChannelRequestFuzzTest(const uint8_t *data, size_t size)
+{
+    GrantNativePermission();
+    RequestManager::GetInstance()->ReopenChannel();
+}
+
+void TestFunc(void) {
+    return;
+}
+
+void RestoreListenerRequestFuzzTest(const uint8_t *data, size_t size)
+{
+    GrantNativePermission();
+    RequestManager::GetInstance()->RestoreListener(TestFunc);
+}
+
+void QueryRequestFuzzTest(const uint8_t *data, size_t size)
+{
+    std::string tid(reinterpret_cast<const char *>(data), size);
+    TaskInfo taskinfo;
+    GrantNativePermission();
+    RequestManager::GetInstance()->Query(tid, taskinfo);
+}
+
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -161,5 +214,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::QueryMimeTypeRequestFuzzTest(data, size);
     OHOS::RemoveRequestFuzzTest(data, size);
     OHOS::ResumeRequestFuzzTest(data, size);
+    OHOS::GetTaskRequestFuzzTest(data, size);
+    OHOS::SubscribeRequestFuzzTest(data, size);
+    OHOS::UnsubscribeRequestFuzzTest(data, size);
+    OHOS::RestoreListenerRequestFuzzTest(data, size);
+    OHOS::IsSaReadyRequestFuzzTest(data, size);
+    OHOS::ReopenChannelRequestFuzzTest(data, size);
+    OHOS::QueryRequestFuzzTest(data, size);
     return 0;
 }
