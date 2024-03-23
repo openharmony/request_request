@@ -236,37 +236,60 @@ int32_t RequestManagerImpl::Resume(const std::string &tid)
 int32_t RequestManagerImpl::AddListener(
     const std::string &taskId, const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener)
 {
-    REQUEST_HILOGD("AddListener in");
+    REQUEST_HILOGD("AddListener in, tid:%{public}s, type: %{public}d", taskId.c_str(), type);
     std::shared_ptr<Request> task = this->GetTask(taskId);
-    task->AddListener(type, listener);
-    return E_OK;
+    if (task) {
+        task->AddListener(type, listener);
+        return E_OK;
+    } else {
+        return E_OTHER;
+    } 
 }
 
 int32_t RequestManagerImpl::RemoveListener(
     const std::string &taskId, const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener)
 {
-    REQUEST_HILOGD("RemoveListener in");
+    REQUEST_HILOGD("RemoveListener in, tid:%{public}s, type: %{public}d", taskId.c_str(), type);
     std::shared_ptr<Request> task = this->GetTask(taskId);
-    task->RemoveListener(type, listener);
-    return E_OK;
+    if (task) {
+        task->RemoveListener(type, listener);
+        return E_OK;
+    } else {
+        return E_OTHER;
+    }
 }
 
 int32_t RequestManagerImpl::AddListener(
     const std::string &taskId, const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener)
 {
-    REQUEST_HILOGD("AddListener in");
+    REQUEST_HILOGD("AddListener in, tid:%{public}s, type: %{public}d", taskId.c_str(), type);
     std::shared_ptr<Request> task = this->GetTask(taskId);
-    task->AddListener(type, listener);
-    return E_OK;
+    if (task) {
+        task->AddListener(type, listener);
+        return E_OK;
+    } else {
+        return E_OTHER;
+    } 
 }
 
 int32_t RequestManagerImpl::RemoveListener(
     const std::string &taskId, const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener)
 {
-    REQUEST_HILOGD("RemoveListener in");
+    REQUEST_HILOGD("RemoveListener in, tid:%{public}s, type: %{public}d", taskId.c_str(), type);
     std::shared_ptr<Request> task = this->GetTask(taskId);
-    task->RemoveListener(type, listener);
-    return E_OK;
+    if (task) {
+        task->RemoveListener(type, listener);
+        return E_OK;
+    } else {
+        return E_OTHER;
+    }
+}
+
+void RequestManagerImpl::RemoveAllListeners(const std::string &taskId)
+{
+    REQUEST_HILOGD("RemoveAllListeners in, tid:%{public}s", taskId.c_str());
+    std::lock_guard<std::mutex> lock(tasksMutex_);
+    tasks_.erase(taskId);
 }
 
 int32_t RequestManagerImpl::Subscribe(const std::string &taskId)
@@ -319,6 +342,7 @@ int32_t RequestManagerImpl::UnsubRunCount()
 
 int32_t RequestManagerImpl::EnsureChannelOpen()
 {
+    std::lock_guard<std::recursive_mutex> lock(msgReceiverMutex_);
     if (msgReceiver_) {
         return E_OK;
     }
@@ -340,6 +364,7 @@ int32_t RequestManagerImpl::EnsureChannelOpen()
 
 std::shared_ptr<Request> RequestManagerImpl::GetTask(const std::string &taskId)
 {
+    std::lock_guard<std::mutex> lock(tasksMutex_);
     auto it = tasks_.find(taskId);
     if (it != tasks_.end()) {
         return it->second;
@@ -348,36 +373,47 @@ std::shared_ptr<Request> RequestManagerImpl::GetTask(const std::string &taskId)
     auto retPair = this->tasks_.emplace(taskId, std::make_shared<Request>(Request(taskId)));
     if (retPair.second) {
         return retPair.first->second;
+    } else {
+        this->tasks_.erase(taskId);
+        REQUEST_HILOGE("Response Task create fail");
+        return std::shared_ptr<Request>();
     }
-    REQUEST_HILOGE("Response Task create fail");
-    return std::shared_ptr<Request>();
 }
 
 void RequestManagerImpl::OnChannelBroken()
 {
+    std::lock_guard<std::recursive_mutex> lock(msgReceiverMutex_);
     this->msgReceiver_.reset();
 }
 
 void RequestManagerImpl::OnResponseReceive(const std::shared_ptr<Response> &response)
 {
-    auto it = tasks_.find(response->taskId);
-    if (it == tasks_.end()) {
-        REQUEST_HILOGD("task not found");
-        return;
+    std::shared_ptr<Request> task;
+    {
+        std::lock_guard<std::mutex> lock(tasksMutex_);
+        auto it = tasks_.find(response->taskId);
+        if (it == tasks_.end()) {
+            REQUEST_HILOGD("OnResponseReceive task not found");
+            return;
+        }
+        task = it->second;
     }
-
-    it->second->OnResponseReceive(response);
+    task->OnResponseReceive(response);
 }
 
 void RequestManagerImpl::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData)
 {
-    auto it = tasks_.find(std::to_string(notifyData->taskId));
-    if (it == tasks_.end()) {
-        REQUEST_HILOGD("task not found");
-        return;
+    std::shared_ptr<Request> task;
+    {
+        std::lock_guard<std::mutex> lock(tasksMutex_);
+        auto it = tasks_.find(std::to_string(notifyData->taskId));
+        if (it == tasks_.end()) {
+            REQUEST_HILOGD("OnNotifyDataReceive task not found");
+            return;
+        }
+        task = it->second;
     }
-
-    it->second->OnNotifyDataReceive(notifyData);
+    task->OnNotifyDataReceive(notifyData);
 }
 
 sptr<RequestServiceInterface> RequestManagerImpl::GetRequestServiceProxy()
@@ -483,6 +519,7 @@ void RequestManagerImpl::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
     SetRequestServiceProxy(nullptr);
     FwkRunningTaskCountManager::GetInstance()->SetCount(0);
     FwkRunningTaskCountManager::GetInstance()->NotifyAllObservers();
+    std::lock_guard<std::recursive_mutex> lock(msgReceiverMutex_);
     if (!msgReceiver_) {
         return;
     }
@@ -567,6 +604,7 @@ void RequestManagerImpl::LoadServerFail()
 
 void RequestManagerImpl::ReopenChannel()
 {
+    std::lock_guard<std::recursive_mutex> lock(msgReceiverMutex_);
     if (!msgReceiver_) {
         return;
     }

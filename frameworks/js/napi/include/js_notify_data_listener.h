@@ -37,10 +37,11 @@ public:
 private:
     void ProcessHeaderReceive(const std::shared_ptr<NotifyData> &notifyData);
     void NotifyDataProcess(const std::shared_ptr<NotifyData> &notifyData, napi_value *value, uint32_t &paramNumber);
+};
 
-private:
-    std::mutex notifyDataMutex_;
-    std::shared_ptr<NotifyData> notifyData_;
+struct NotifyDataPtr {
+    std::shared_ptr<NotifyData> notifyData = nullptr;
+    std::shared_ptr<JSNotifyDataListener> listener = nullptr;
 };
 
 } // namespace OHOS::Request

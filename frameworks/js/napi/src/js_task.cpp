@@ -171,7 +171,17 @@ int32_t JsTask::CreateExec(const std::shared_ptr<ContextInfo> &context)
     if (context->task->config_.mode == Mode::FOREGROUND) {
         RegisterForegroundResume();
     }
-    return RequestManager::GetInstance()->Create(context->task->config_, context->tid);
+    int32_t ret = RequestManager::GetInstance()->Create(context->task->config_, context->tid);
+    if (ret != E_OK) {
+        return ret;
+    }
+    std::string tid = std::to_string(context->tid);
+    std::lock_guard<std::mutex> lock(context->task->listenerMutex_);
+    context->task->notifyDataListenerMap_[SubscribeType::REMOVE] =
+        std::make_shared<JSNotifyDataListener>(context->env_, tid, SubscribeType::REMOVE);
+    RequestManager::GetInstance()->AddListener(tid, SubscribeType::REMOVE,
+        context->task->notifyDataListenerMap_[SubscribeType::REMOVE]);
+    return ret;
 }
 
 napi_value JsTask::GetCtor(napi_env env, Version version)

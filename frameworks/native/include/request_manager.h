@@ -50,6 +50,7 @@ public:
         const std::string &taskId, const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener);
     REQUEST_API int32_t RemoveListener(
         const std::string &taskId, const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener);
+    REQUEST_API void RemoveAllListeners(const std::string &taskId);
 
     REQUEST_API void RestoreListener(void (*callback)());
     REQUEST_API bool LoadRequestServer();
