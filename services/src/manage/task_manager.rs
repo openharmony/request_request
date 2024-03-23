@@ -28,7 +28,7 @@ use crate::manage::system_proxy::SystemProxyManager;
 use crate::service::ability::PANIC_INFO;
 use crate::task::config::Version;
 use crate::task::ffi::HasRequestTaskRecord;
-use crate::task::info::{ApplicationState, State};
+use crate::task::info::{ApplicationState, Mode, State};
 use crate::task::notify::SubscribeType;
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
@@ -492,6 +492,15 @@ impl TaskManager {
             certs,
         }
     }
+
+    pub(crate) fn app_uncompleted_tasks_num(&self, uid: u64, mode: Mode) -> usize {
+        let result = unsafe { QueryAppUncompletedTasksNum(uid, mode as u8) as usize };
+        debug!(
+            "App uid {} uncompleted tasks in mode {:?} number is {}",
+            uid, mode, result
+        );
+        result
+    }
 }
 
 #[cfg(feature = "oh")]
@@ -499,4 +508,5 @@ impl TaskManager {
 extern "C" {
     pub(crate) fn GetTopBundleName() -> CStringWrapper;
     pub(crate) fn QueryTaskTokenId(task_id: u32) -> u64;
+    pub(crate) fn QueryAppUncompletedTasksNum(uid: u64, mode: u8) -> u32;
 }
