@@ -124,7 +124,7 @@ void JSNotifyDataListener::NotifyDataProcess(
                 totalSize += size;
             }
             value[0] = NapiUtils::Convert2JSValue(this->env_, notifyData->progress.totalProcessed);
-            value[0] = NapiUtils::Convert2JSValue(this->env_, totalSize);
+            value[1] = NapiUtils::Convert2JSValue(this->env_, totalSize);
             paramNumber = NapiUtils::TWO_ARG;
         } else if (notifyData->type == SubscribeType::HEADER_RECEIVE) {
             value[0] = NapiUtils::Convert2JSHeadersAndBody(
