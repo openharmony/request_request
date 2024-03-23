@@ -18,9 +18,12 @@ use crate::error::ErrorCode;
 use crate::manage::TaskManager;
 use crate::task::config::{TaskConfig, Version};
 use crate::task::ffi::{CTaskConfig, CTaskInfo};
-use crate::task::info::State;
+use crate::task::info::{Mode, State};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
+
+const MAX_BACKGROUND_TASK: usize = 100;
+const MAX_FRONTEND_TASK: usize = 2000;
 
 impl TaskManager {
     pub(crate) fn create(&mut self, config: TaskConfig) -> ErrorCode {
@@ -32,6 +35,21 @@ impl TaskManager {
             "TaskManager Construct, uid:{}, task_id:{}, version:{:?}",
             uid, task_id, version
         );
+
+        match config.common_data.mode {
+            Mode::BackGround => {
+                if self.app_uncompleted_tasks_num(uid, Mode::BackGround) == MAX_BACKGROUND_TASK {
+                    debug!("TaskManager background enqueue error");
+                    return ErrorCode::TaskEnqueueErr;
+                }
+            }
+            _ => {
+                if self.app_uncompleted_tasks_num(uid, Mode::FrontEnd) == MAX_FRONTEND_TASK {
+                    debug!("TaskManager frontend enqueue error");
+                    return ErrorCode::TaskEnqueueErr;
+                }
+            }
+        }
 
         let app_state = self.app_state(uid, &config.bundle);
 

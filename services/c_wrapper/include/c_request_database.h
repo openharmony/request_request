@@ -152,6 +152,7 @@ void DeleteCVectorWrapper(uint32_t *ptr);
 void GetCommonTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskInfo &taskInfo);
 int TouchRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo);
 int QueryRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo);
+uint32_t QueryAppUncompletedTasksNum(uint64_t uid, uint8_t mode);
 CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo);
 CProgress BuildCProgress(const Progress &progress);
 bool HasTaskConfigRecord(uint32_t taskId);

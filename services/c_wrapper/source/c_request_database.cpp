@@ -990,6 +990,32 @@ CProgress BuildCProgress(const Progress &progress)
     };
 }
 
+uint32_t QueryAppUncompletedTasksNum(uint64_t uid, uint8_t mode)
+{
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
+    rdbPredicates.EqualTo("uid", std::to_string(uid));
+    rdbPredicates.EqualTo("mode", mode);
+    rdbPredicates.BeginWrap();
+    rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
+        ->Or()
+        ->EqualTo("state", static_cast<uint8_t>(State::PAUSED))
+        ->Or()
+        ->EqualTo("state", static_cast<uint8_t>(State::INITIALIZED))
+        ->Or()
+        ->EqualTo("state", static_cast<uint8_t>(State::RUNNING))
+        ->Or()
+        ->EqualTo("state", static_cast<uint8_t>(State::RETRYING));
+    rdbPredicates.EndWrap();
+
+    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "task_id" });
+    int rowCount = 0;
+    if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("WaitingApps result set is nullptr or get row count failed");
+    }
+
+    return rowCount;
+}
+
 bool HasTaskConfigRecord(uint32_t taskId)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
