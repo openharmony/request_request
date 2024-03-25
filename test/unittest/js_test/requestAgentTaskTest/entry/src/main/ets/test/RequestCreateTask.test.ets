@@ -2221,6 +2221,58 @@ export default function requestCreateTaskTest() {
         expect(err.code).assertEqual(401);
         done();
       }
+    })
+
+    /**
+     * @tc.number: testTaskProxy002
+     * @tc.name: testTaskProxy002
+     * @tc.desc: Test create task when proxy format error
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskProxy002', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        proxy: 'http://127.0.0.1:8080/proxy'
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskProxy003
+     * @tc.name: testTaskProxy003
+     * @tc.desc: Test create task when proxy format error
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskProxy003', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        proxy: 'http://127.0.0.1:111111'
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
     });
   })
 }
