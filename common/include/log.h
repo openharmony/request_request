@@ -46,25 +46,25 @@ static constexpr OHOS::HiviewDFX::HiLogLabel REQUEST_LOG_LABEL = { LOG_CORE, REQ
 
 #define MAKE_FILE_NAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
 
-#define REQUEST_HILOGF(fmt, ...)                                                                                      \
-    (void)OHOS::HiviewDFX::HiLog::Fatal(REQUEST_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt, MAKE_FILE_NAME, \
-        __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define REQUEST_HILOGF(fmt, ...)                                                           \
+    (void)HILOG_IMPL(LOG_CORE, LOG_FATAL, REQUEST_LOG_LABEL.domain, REQUEST_LOG_LABEL.tag, \
+        "[%{public}s %{public}s %{public}d] " fmt, MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
-#define REQUEST_HILOGE(fmt, ...)                                                                                      \
-    (void)OHOS::HiviewDFX::HiLog::Error(REQUEST_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt, MAKE_FILE_NAME, \
-        __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define REQUEST_HILOGE(fmt, ...)                                                           \
+    (void)HILOG_IMPL(LOG_CORE, LOG_ERROR, REQUEST_LOG_LABEL.domain, REQUEST_LOG_LABEL.tag, \
+        "[%{public}s %{public}s %{public}d] " fmt, MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
-#define REQUEST_HILOGW(fmt, ...)                                                                                     \
-    (void)OHOS::HiviewDFX::HiLog::Warn(REQUEST_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt, MAKE_FILE_NAME, \
-        __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define REQUEST_HILOGW(fmt, ...)                                                          \
+    (void)HILOG_IMPL(LOG_CORE, LOG_WARN, REQUEST_LOG_LABEL.domain, REQUEST_LOG_LABEL.tag, \
+        "[%{public}s %{public}s %{public}d] " fmt, MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
-#define REQUEST_HILOGD(fmt, ...)                                                                                      \
-    (void)OHOS::HiviewDFX::HiLog::Debug(REQUEST_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt, MAKE_FILE_NAME, \
-        __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define REQUEST_HILOGD(fmt, ...)                                                           \
+    (void)HILOG_IMPL(LOG_CORE, LOG_DEBUG, REQUEST_LOG_LABEL.domain, REQUEST_LOG_LABEL.tag, \
+        "[%{public}s %{public}s %{public}d] " fmt, MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
-#define REQUEST_HILOGI(fmt, ...)                                                                                     \
-    (void)OHOS::HiviewDFX::HiLog::Info(REQUEST_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt, MAKE_FILE_NAME, \
-        __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define REQUEST_HILOGI(fmt, ...)                                                          \
+    (void)HILOG_IMPL(LOG_CORE, LOG_INFO, REQUEST_LOG_LABEL.domain, REQUEST_LOG_LABEL.tag, \
+        "[%{public}s %{public}s %{public}d] " fmt, MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 #else
 
