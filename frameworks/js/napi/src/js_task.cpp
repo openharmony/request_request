@@ -176,11 +176,12 @@ int32_t JsTask::CreateExec(const std::shared_ptr<ContextInfo> &context)
         return ret;
     }
     std::string tid = std::to_string(context->tid);
-    std::lock_guard<std::mutex> lock(context->task->listenerMutex_);
+    context->task->listenerMutex_.lock();
     context->task->notifyDataListenerMap_[SubscribeType::REMOVE] =
         std::make_shared<JSNotifyDataListener>(context->env_, tid, SubscribeType::REMOVE);
-    RequestManager::GetInstance()->AddListener(tid, SubscribeType::REMOVE,
-        context->task->notifyDataListenerMap_[SubscribeType::REMOVE]);
+    context->task->listenerMutex_.unlock();
+    RequestManager::GetInstance()->AddListener(
+        tid, SubscribeType::REMOVE, context->task->notifyDataListenerMap_[SubscribeType::REMOVE]);
     return ret;
 }
 
@@ -447,8 +448,6 @@ napi_value JsTask::Remove(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() {
         context->innerCode_ = RequestManager::GetInstance()->Remove(context->tid, Version::API10);
-        // Removed Task can not return notify, so unref in this.
-        JsTask::ClearTaskContext(context->tid);
     };
     context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
     AsyncCall asyncCall(env, info, context);

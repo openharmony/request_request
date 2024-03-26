@@ -47,6 +47,7 @@ ohos_shared_library("request_native") {
 
   sources = [
     "src/parcel_helper.cpp",
+    "src/request.cpp",
     "src/request_manager.cpp",
     "src/request_manager_impl.cpp",
     "src/request_running_task_count.cpp",

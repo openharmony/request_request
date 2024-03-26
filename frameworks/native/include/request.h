@@ -16,7 +16,9 @@
 #ifndef OHOS_REQUEST_REQUEST_H
 #define OHOS_REQUEST_REQUEST_H
 
-#include <set>
+#include <map>
+#include <memory>
+#include <mutex>
 
 #include "i_notify_data_listener.h"
 #include "i_response_listener.h"
@@ -25,87 +27,22 @@ namespace OHOS::Request {
 
 class Request {
 public:
-    Request(const std::string &taskId) : taskId_(taskId), events_(0U)
-    {
-    }
-
-    const std::string &getId() const
-    {
-        return this->taskId_;
-    }
-
-    void AddListener(const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener)
-    {
-        if (type == SubscribeType::RESPONSE) {
-            responseListener_ = listener;
-        }
-    }
-
-    void RemoveListener(const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener)
-    {
-        if (type == SubscribeType::RESPONSE) {
-            responseListener_.reset();
-        }
-    }
-
-    void AddListener(const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener)
-    {
-        if (type != SubscribeType::RESPONSE && type < SubscribeType::BUTT) {
-            notifyDataListenerMap_[type] = listener;
-        }
-    }
-
-    void RemoveListener(const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener)
-    {
-        if (type != SubscribeType::RESPONSE && type < SubscribeType::BUTT) {
-            notifyDataListenerMap_.erase(type);
-        }
-    }
-
-    bool IsEventSubscribed(SubscribeType eventType)
-    {
-        uint32_t type = 1 << static_cast<uint32_t>(eventType);
-        return ((events_ & type) == type);
-    }
-
-    void MarkEventSubscribed(SubscribeType eventType, bool subscribed)
-    {
-        uint32_t type = 1 << static_cast<uint32_t>(eventType);
-        if (subscribed) {
-            events_ |= type;
-        } else {
-            events_ &= (~type);
-        }
-    }
-
-    bool HasListener() const
-    {
-        if (responseListener_ != nullptr) {
-            return true;
-        }
-        return !notifyDataListenerMap_.empty();
-    }
-
-    void OnResponseReceive(const std::shared_ptr<Response> &response)
-    {
-        if (responseListener_ != nullptr) {
-            responseListener_->OnResponseReceive(response);
-        }
-    }
-
-    void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData)
-    {
-        auto listener = notifyDataListenerMap_.find(notifyData->type);
-        if (listener != notifyDataListenerMap_.end()) {
-            listener->second->OnNotifyDataReceive(notifyData);
-        }
-    }
+    Request(const std::string &taskId);
+    const std::string &getId() const;
+    void AddListener(const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener);
+    void RemoveListener(const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener);
+    void AddListener(const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener);
+    void RemoveListener(const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener);
+    bool HasListener();
+    void OnResponseReceive(const std::shared_ptr<Response> &response);
+    void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData);
 
 private:
     const std::string taskId_;
-    uint32_t events_;
+    std::mutex listenerMutex_;
     std::shared_ptr<IResponseListener> responseListener_;
     std::map<SubscribeType, std::shared_ptr<INotifyDataListener>> notifyDataListenerMap_;
+    std::map<SubscribeType, std::shared_ptr<NotifyData>> unusedNotifyData_;
 };
 
 } // namespace OHOS::Request

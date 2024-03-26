@@ -35,6 +35,7 @@ public:
     void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData) override;
 
 private:
+    bool IsHeaderReceive(const std::shared_ptr<NotifyData> &notifyData);
     void ProcessHeaderReceive(const std::shared_ptr<NotifyData> &notifyData);
     void NotifyDataProcess(const std::shared_ptr<NotifyData> &notifyData, napi_value *value, uint32_t &paramNumber);
 };

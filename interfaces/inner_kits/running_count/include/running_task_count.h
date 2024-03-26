@@ -16,6 +16,7 @@
 #define REQUEST_RUNNING_TASK_COUNT_H
 
 #include <memory>
+
 #include "visibility.h"
 namespace OHOS::Request {
 class IRunningTaskObserver {

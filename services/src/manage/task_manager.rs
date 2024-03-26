@@ -412,6 +412,10 @@ impl TaskManager {
 
         if remove_task.conf.version == Version::API10 {
             self.api10_background_task_count -= 1;
+        } else {
+            // auto remove js task in api9
+            let notify_data = task.build_notify_data();
+            Notifier::remove_notify(notify_data);
         }
 
         let map = self
