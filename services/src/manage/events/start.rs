@@ -38,8 +38,14 @@ impl TaskManager {
                 "Task exists in database, task_id:{}, try to continue download",
                 task_id
             );
-            self.continue_task_from_database(task_id);
-            ErrorCode::ErrOk
+            let err_code = self.continue_task_from_database(task_id);
+            if err_code != ErrorCode::ErrOk {
+                error!(
+                    "continue task from database failed, task_id:{}, errCode:{:?}",
+                    task_id, err_code
+                );
+            }
+            return err_code;
         } else {
             if self.tasks.contains_key(&task_id) {
                 info!("TaskManager start a task, task_id:{} exist, but not found in app_task_map, uid:{}", task_id, uid);

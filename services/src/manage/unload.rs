@@ -16,6 +16,7 @@ use std::sync::Arc;
 
 use super::task_manager::GetTopBundleName;
 use super::TaskManager;
+use crate::error::ErrorCode;
 use crate::manage::monitor::IsOnline;
 use crate::task::config::{TaskConfig, Version};
 use crate::task::ffi::{CTaskConfig, ChangeRequestTaskState};
@@ -104,7 +105,7 @@ impl TaskManager {
         unsafe { HasTaskConfigRecord(task_id) }
     }
 
-    pub(crate) fn continue_task_from_database(&mut self, task_id: u32) {
+    pub(crate) fn continue_task_from_database(&mut self, task_id: u32) -> ErrorCode {
         if let Some(config) = self.query_single_task_config(task_id) {
             debug!("RSA query single task config is {:?}", config);
             let uid = config.common_data.uid;
@@ -116,7 +117,7 @@ impl TaskManager {
                 if state != State::Failed && state != State::Stopped && state != State::Initialized
                 {
                     error!("state of continue task is not Failed\\Stopped\\Initialized");
-                    return;
+                    return ErrorCode::TaskStateErr;
                 }
                 let app_state = self.app_state(uid, &config.bundle);
                 match RequestTask::new(config, self.system_config(), app_state, Some(task_info)) {
@@ -127,11 +128,16 @@ impl TaskManager {
                         self.restoring_tasks.push(arc_task);
                         // Adds tasks to task map and inits it.
                         self.insert_restore_tasks();
+                        return ErrorCode::ErrOk;
                     }
-                    Err(_) => error!("continue task failed"),
+                    Err(_) => {
+                        error!("continue task failed");
+                        return ErrorCode::Other;
+                    }
                 }
             }
         }
+        ErrorCode::TaskNotFound
     }
 
     pub(crate) fn insert_restore_tasks(&mut self) {
@@ -226,7 +232,7 @@ impl TaskManager {
         debug!("query single task config in database");
         let c_task_config = unsafe { QuerySingleTaskConfig(task_id) };
         if c_task_config.is_null() {
-            debug!(
+            error!(
                 "can not find the failed task in database, which task id is {}",
                 task_id
             );
