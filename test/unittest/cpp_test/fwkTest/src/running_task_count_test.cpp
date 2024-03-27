@@ -86,7 +86,7 @@ HWTEST_F(RunningTaskCountTest, SubscribeRunningTaskCountTest_001, TestSize.Level
     if (proxy == nullptr) {
         std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FwkTestOberver>();
         int32_t ret = SubscribeRunningTaskCount(ob);
-        EXPECT_EQ(ret, E_SERVICE_ERROR);
+        EXPECT_EQ(ret, E_OK);
     }
     REQUEST_HILOGI("[RunningTaskCountTest] SubscribeRunningTaskCountTest_001 end");
 }

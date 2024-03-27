@@ -26,6 +26,7 @@
 #include "iremote_broker.h"
 #include "log.h"
 #include "parcel_helper.h"
+#include "request_running_task_count.h"
 
 namespace OHOS::Request {
 using namespace OHOS::HiviewDFX;
@@ -395,6 +396,7 @@ int32_t RequestServiceProxy::Unsubscribe(const std::string &taskId)
 int32_t RequestServiceProxy::SubRunCount(const sptr<NotifyInterface> &listener)
 {
     REQUEST_HILOGD("SubRunCount");
+    FwkRunningTaskCountManager::GetInstance()->SetSaStatus(true);
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
@@ -402,8 +404,8 @@ int32_t RequestServiceProxy::SubRunCount(const sptr<NotifyInterface> &listener)
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SUB_RUNCOUNT), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
-        return E_SERVICE_ERROR;
+        REQUEST_HILOGE("remote send request failed, ret code is %{public}d", ret);
+        return ret;
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK) {

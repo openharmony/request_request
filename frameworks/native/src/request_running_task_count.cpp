@@ -74,6 +74,7 @@ void FwkRunningTaskCountManager::AttachObserver(std::shared_ptr<IRunningTaskObse
     }
     std::lock_guard<std::mutex> lock(observersLock_);
     observers_.push_back(pNewFwkOb);
+    REQUEST_HILOGD("Fwk runcount manager has push observer, now has %{public}d observers", observers_.size());
 }
 
 void FwkRunningTaskCountManager::DetachObserver(std::shared_ptr<IRunningTaskObserver> ob)
@@ -102,15 +103,25 @@ bool FwkRunningTaskCountManager::HasObserver()
     return !observers_.empty();
 }
 
+bool FwkRunningTaskCountManager::SaIsOnline()
+{
+    return saIsOnline_;
+}
+
+void FwkRunningTaskCountManager::SetSaStatus(bool isOnline)
+{
+    saIsOnline_ = isOnline;
+}
+
 void FwkRunningTaskCountManager::NotifyAllObservers()
 {
-    observersLock_.lock();
+    REQUEST_HILOGD("Notify runcount to %{public}d observers.", observers_.size());
+    std::lock_guard<std::mutex> observer_lock(observersLock_);
     auto it = observers_.begin();
     while (it != observers_.end()) {
         (*it)->UpdateRunningTaskCount();
         it++;
     }
-    observersLock_.unlock();
 }
 
 // impl Sub && UnSub
@@ -124,14 +135,14 @@ int32_t SubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob)
 
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob);
     auto listener = RunCountNotifyStub::GetInstance();
-    if (listener == nullptr) {
-        REQUEST_HILOGE("Get fwk run count listenr is null.");
-    }
     int32_t ret = RequestManagerImpl::GetInstance()->SubRunCount(listener);
     if (ret != E_OK) {
-        FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob);
+        // IPC is failed, but observer has attached.
         REQUEST_HILOGE("Subscribe running task count failed, ret: %{public}d.", ret);
         return ret;
+    }
+    if (!FwkRunningTaskCountManager::GetInstance()->SaIsOnline()) {
+        ob->OnRunningTaskCountUpdate(0);
     }
     return E_OK;
 }
