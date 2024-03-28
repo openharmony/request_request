@@ -243,7 +243,7 @@ int32_t RequestManagerImpl::AddListener(
         return E_OK;
     } else {
         return E_OTHER;
-    } 
+    }
 }
 
 int32_t RequestManagerImpl::RemoveListener(
@@ -269,7 +269,7 @@ int32_t RequestManagerImpl::AddListener(
         return E_OK;
     } else {
         return E_OTHER;
-    } 
+    }
 }
 
 int32_t RequestManagerImpl::RemoveListener(
@@ -370,7 +370,7 @@ std::shared_ptr<Request> RequestManagerImpl::GetTask(const std::string &taskId)
         return it->second;
     }
 
-    auto retPair = this->tasks_.emplace(taskId, std::make_shared<Request>(Request(taskId)));
+    auto retPair = this->tasks_.emplace(taskId, std::make_shared<Request>(taskId));
     if (retPair.second) {
         return retPair.first->second;
     } else {

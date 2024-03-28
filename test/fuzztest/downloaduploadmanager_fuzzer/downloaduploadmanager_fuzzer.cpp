@@ -176,7 +176,8 @@ void ReopenChannelRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->ReopenChannel();
 }
 
-void TestFunc(void) {
+void TestFunc(void)
+{
     return;
 }
 

@@ -27,6 +27,7 @@ ohos_unittest("fwkTest") {
   ]
 
   sources = [
+    "../../../../frameworks/native/src/request.cpp",
     "../../../../frameworks/native/src/request_manager_impl.cpp",
     "../../../../frameworks/native/src/request_running_task_count.cpp",
     "../../../../frameworks/native/src/response_message_receiver.cpp",

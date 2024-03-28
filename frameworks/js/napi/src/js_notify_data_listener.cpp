@@ -49,17 +49,21 @@ napi_status JSNotifyDataListener::RemoveListener(napi_value cb)
     return napi_ok;
 }
 
+bool JSNotifyDataListener::IsHeaderReceive(const std::shared_ptr<NotifyData> &notifyData)
+{
+    if (notifyData->version == Version::API9 && notifyData->action == Action::UPLOAD &&
+        notifyData->type == SubscribeType::HEADER_RECEIVE) {
+        return true;
+    } else if (notifyData->version == Version::API10 && notifyData->action == Action::UPLOAD &&
+               notifyData->progress.state == State::COMPLETED &&
+               (notifyData->type == SubscribeType::PROGRESS || notifyData->type == SubscribeType::COMPLETED)) {
+        return true;
+    }
+    return false;
+}
+
 void JSNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData> &notifyData)
 {
-    if (!(notifyData->version == Version::API9 && notifyData->action == Action::UPLOAD &&
-        notifyData->type == SubscribeType::HEADER_RECEIVE)) {
-        return;
-    } else if (!(notifyData->version == Version::API10 && notifyData->action == Action::UPLOAD &&
-               notifyData->progress.state == State::COMPLETED &&
-               (notifyData->type == SubscribeType::PROGRESS || notifyData->type == SubscribeType::COMPLETED))) {
-        return;
-    }
-
     JsTask *task = nullptr;
     {
         std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
@@ -87,13 +91,15 @@ void JSNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData
 void JSNotifyDataListener::NotifyDataProcess(
     const std::shared_ptr<NotifyData> &notifyData, napi_value *value, uint32_t &paramNumber)
 {
+    if (IsHeaderReceive(notifyData)) {
+        ProcessHeaderReceive(notifyData);
+    }
+
     if (notifyData->version == Version::API10) {
         REQUEST_HILOGD("Receive API10 callback");
         value[0] = NapiUtils::Convert2JSValue(this->env_, notifyData->progress);
         return;
     }
-
-    ProcessHeaderReceive(notifyData);
 
     if (notifyData->action == Action::DOWNLOAD) {
         if (notifyData->type == SubscribeType::PROGRESS) {
@@ -158,6 +164,25 @@ static std::string SubscribeTypeToString(SubscribeType type)
     }
 }
 
+static void RemoveJSTask(const std::shared_ptr<NotifyData> &notifyData)
+{
+    std::string tid = std::to_string(notifyData->taskId);
+    if (notifyData->version == Version::API9 &&
+        (notifyData->type == SubscribeType::COMPLETED ||
+         notifyData->type == SubscribeType::FAILED ||
+         notifyData->type == SubscribeType::REMOVE)) {
+        RequestManager::GetInstance()->RemoveAllListeners(tid);
+        JsTask::ClearTaskContext(tid);
+        JsTask::ClearTaskMap(tid);
+        REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
+    } else if (notifyData->version == Version::API10 && notifyData->type == SubscribeType::REMOVE) {
+        RequestManager::GetInstance()->RemoveAllListeners(tid);
+        JsTask::ClearTaskContext(tid);
+        JsTask::ClearTaskMap(tid);
+        REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
+    }
+}
+
 void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData)
 {
     REQUEST_HILOGI("OnNotifyDataReceive type is %{public}s, tid is %{public}d",
@@ -196,23 +221,7 @@ void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
             delete work;
             delete ptr;
         });
-
-    std::string tid = std::to_string(notifyData->taskId);
-    if (notifyData->version == Version::API9 &&
-        (notifyData->type == SubscribeType::COMPLETED ||
-         notifyData->type == SubscribeType::FAILED ||
-         notifyData->type == SubscribeType::REMOVE)) {
-        RequestManager::GetInstance()->RemoveAllListeners(tid);
-        JsTask::ClearTaskContext(tid);
-        JsTask::ClearTaskMap(tid);
-        REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
-    } else if (notifyData->version == Version::API10 &&
-               notifyData->type == SubscribeType::REMOVE) {
-        RequestManager::GetInstance()->RemoveAllListeners(tid);
-        JsTask::ClearTaskContext(tid);
-        JsTask::ClearTaskMap(tid);
-        REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
-    }
+    RemoveJSTask(notifyData);
 }
 
 } // namespace OHOS::Request
