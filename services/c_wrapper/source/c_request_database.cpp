@@ -1077,7 +1077,8 @@ int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, 
         rdbPredicates, { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming",
                            "retry", "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority",
                            "background", "bundle", "url", "title", "description", "method", "headers", "data", "token",
-                           "config_extras", "version", "form_items", "file_specs", "body_file_names", "certs_paths" });
+                           "config_extras", "version", "form_items", "file_specs", "body_file_names", "certs_paths",
+                           "proxy" });
     int rowCount = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("TaskConfig result set is nullptr or get row count failed");
