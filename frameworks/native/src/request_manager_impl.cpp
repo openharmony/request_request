@@ -322,9 +322,10 @@ int32_t RequestManagerImpl::SubRunCount(const sptr<NotifyInterface> &listener)
     auto proxy = GetRequestServiceProxy();
     if (proxy == nullptr) {
         REQUEST_HILOGE("Impl SubRunCount in, get request service proxy failed.");
-        return E_SERVICE_ERROR;
+        FwkRunningTaskCountManager::GetInstance()->SetSaStatus(false);
+        // Proxy does not affect sub runcount at framework.
+        return E_OK;
     }
-
     return proxy->SubRunCount(listener);
 }
 
@@ -428,13 +429,15 @@ sptr<RequestServiceInterface> RequestManagerImpl::GetRequestServiceProxy()
         REQUEST_HILOGE("Getting SystemAbilityManager failed.");
         return nullptr;
     }
+    // In RSS scenario, we need to monitor SA startup even if SA is not running,
+    // so `GetSystemAbility` needs to be executed after `SubscribeSA`.
+    if (!SubscribeSA(systemAbilityManager)) {
+        REQUEST_HILOGE("Subscribe SystemAbility failed.");
+        return nullptr;
+    }
     auto systemAbility = systemAbilityManager->GetSystemAbility(DOWNLOAD_SERVICE_ID, "");
     if (systemAbility == nullptr) {
         REQUEST_HILOGE("Get SystemAbility failed.");
-        return nullptr;
-    }
-    if (!SubscribeSA(systemAbilityManager)) {
-        REQUEST_HILOGE("Subscribe SystemAbility failed.");
         return nullptr;
     }
     deathRecipient_ = new RequestSaDeathRecipient();
@@ -518,6 +521,7 @@ void RequestManagerImpl::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
     ready_.store(false);
     SetRequestServiceProxy(nullptr);
     FwkRunningTaskCountManager::GetInstance()->SetCount(0);
+    FwkRunningTaskCountManager::GetInstance()->SetSaStatus(false);
     FwkRunningTaskCountManager::GetInstance()->NotifyAllObservers();
     std::lock_guard<std::recursive_mutex> lock(msgReceiverMutex_);
     if (!msgReceiver_) {

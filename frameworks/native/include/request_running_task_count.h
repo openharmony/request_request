@@ -45,13 +45,15 @@ private:
 
 class FwkRunningTaskCountManager {
 public:
-    static std::unique_ptr<FwkRunningTaskCountManager>& GetInstance();
+    static std::unique_ptr<FwkRunningTaskCountManager> &GetInstance();
     int32_t GetCount();
     void SetCount(int runCount);
     void AttachObserver(std::shared_ptr<IRunningTaskObserver> ob);
     void DetachObserver(std::shared_ptr<IRunningTaskObserver> ob);
     void NotifyAllObservers();
     bool HasObserver();
+    bool SaIsOnline();
+    void SetSaStatus(bool isOnline);
 
     ~FwkRunningTaskCountManager() = default;
     FwkRunningTaskCountManager(const FwkRunningTaskCountManager &) = delete;
@@ -60,9 +62,10 @@ public:
 
 private:
     FwkRunningTaskCountManager() = default;
+    bool saIsOnline_;
+    int count_ = 0;
     std::mutex observersLock_;
     std::mutex countLock_;
-    int count_ = 0;
     std::vector<std::shared_ptr<FwkIRunningTaskObserver>> observers_;
 };
 
