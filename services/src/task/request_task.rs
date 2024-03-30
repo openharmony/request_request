@@ -37,7 +37,6 @@ use crate::manage::keeper::SAKeeper;
 use crate::manage::monitor::IsOnline;
 use crate::manage::task_manager::SystemConfig;
 use crate::service::ability::RequestAbility;
-use crate::service::runcount::RunCountEvent;
 use crate::task::client::build_client;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::ffi::{
@@ -664,13 +663,6 @@ impl RequestTask {
             }
             current_status.mtime = get_current_timestamp();
             progress_guard.common_data.state = state as u8;
-            if current_state != State::Running && state == State::Running {
-                let event = RunCountEvent::change_runcount(1);
-                RequestAbility::runcount_manager().send_event(event);
-            } else if current_state == State::Running && state != State::Running {
-                let event = RunCountEvent::change_runcount(-1);
-                RequestAbility::runcount_manager().send_event(event);
-            }
             current_status.state = state;
             current_status.reason = reason;
             debug!("current state is {:?}, reason is {:?}", state, reason);
