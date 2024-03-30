@@ -13,7 +13,6 @@
 
 mod manager;
 
-use std::collections::HashMap;
 use std::net::Shutdown;
 use std::os::fd::AsRawFd;
 
@@ -177,12 +176,14 @@ impl Client {
 
     async fn run(mut self) {
         loop {
-            let mut temp_notify_data: HashMap<SubscribeType, NotifyData> = HashMap::new();
+            // only send last progress message
+            let mut progress_index = 0;
+            let mut temp_notify_data: Vec<(SubscribeType, NotifyData)> = Vec::new();
             let mut len = self.rx.len();
             if len == 0 {
                 len = 1;
             }
-            for _ in 0..len {
+            for index in 0..len {
                 let recv = match self.rx.recv().await {
                     Ok(message) => message,
                     Err(e) => {
@@ -202,13 +203,18 @@ impl Client {
                         self.handle_send_response(tid, version, status_code, reason, headers).await;
                     },
                     ClientEvent::SendNotifyData(subscribe_type, notify_data) => {
-                        temp_notify_data.entry(subscribe_type).or_insert(notify_data);
+                        if subscribe_type == SubscribeType::Progress {
+                            progress_index = index;
+                        }
+                        temp_notify_data.push((subscribe_type, notify_data));
                     },
                     _ => {}
                 }
             }
-            for (subscribe_type, data) in temp_notify_data {
-                self.handle_send_notify_data(subscribe_type, data).await;
+            for (index, (subscribe_type, notify_data)) in temp_notify_data.into_iter().enumerate() {
+                if subscribe_type != SubscribeType::Progress || progress_index == index {
+                    self.handle_send_notify_data(subscribe_type, notify_data).await;
+                }
             }
 
             debug!("Client handle message done");
