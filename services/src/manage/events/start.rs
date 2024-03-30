@@ -73,6 +73,19 @@ impl TaskManager {
             return;
         }
 
+        // Everytime a task need to be started, a permit is required.
+        let permit = match self
+            .limit
+            .get_permit(task.conf.common_data.uid, task.conf.version)
+        {
+            Some(permit) => permit,
+            None => {
+                debug!("Running task full, waiting for schedule");
+                task.set_status(State::Waiting, Reason::RunningTaskMeetLimits);
+                return;
+            }
+        };
+
         let (state, reason) = {
             let status = task.status.lock().unwrap();
             (status.state, status.reason)
@@ -103,7 +116,7 @@ impl TaskManager {
         let unloader = self.unloader.clone();
 
         ylong_runtime::spawn(async move {
-            let running_task = RunningTask::new(task.clone(), unloader);
+            let running_task = RunningTask::new(task.clone(), unloader, permit);
             // Task start running, then runcount ++
             let event = RunCountEvent::change_runcount(1);
             RequestAbility::runcount_manager().send_event(event);

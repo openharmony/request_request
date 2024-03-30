@@ -15,6 +15,7 @@ pub(crate) mod task_manager;
 pub(crate) use task_manager::TaskManager;
 
 pub(crate) mod keeper;
+pub(crate) mod limit;
 pub(crate) mod monitor;
 pub(crate) mod unload;
 
