@@ -17,6 +17,8 @@ use std::sync::Arc;
 use crate::error::ErrorCode;
 use crate::manage::events::{EventMessage, TaskMessage};
 use crate::manage::TaskManager;
+use crate::service::ability::RequestAbility;
+use crate::service::runcount::RunCountEvent;
 use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
 use crate::task::request_task::{run, RequestTask, RunningTask};
@@ -102,7 +104,15 @@ impl TaskManager {
 
         ylong_runtime::spawn(async move {
             let running_task = RunningTask::new(task.clone(), unloader);
+            // Task start running, then runcount ++
+            let event = RunCountEvent::change_runcount(1);
+            RequestAbility::runcount_manager().send_event(event);
+
             run(running_task).await;
+
+            // Task running finished, then runcount --
+            let event = RunCountEvent::change_runcount(-1);
+            RequestAbility::runcount_manager().send_event(event);
             tx.send(EventMessage::Task(TaskMessage::Finished(
                 task.conf.common_data.task_id,
             )))
