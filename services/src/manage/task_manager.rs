@@ -24,6 +24,7 @@ use super::scheduled;
 use crate::error::ErrorCode;
 use crate::manage::cert_manager::CertManager;
 use crate::manage::keeper::SAKeeper;
+use crate::manage::limit::PermitManager;
 use crate::manage::system_proxy::SystemProxyManager;
 use crate::service::ability::PANIC_INFO;
 use crate::task::config::Version;
@@ -48,6 +49,7 @@ pub(crate) struct TaskManager {
     pub(crate) app_state_map: HashMap<u64, Arc<AtomicU8>>,
     pub(crate) restoring_tasks: Vec<Arc<RequestTask>>,
     pub(crate) api10_background_task_count: u32,
+    pub(crate) limit: PermitManager,
     pub(crate) unloader: SAKeeper,
     pub(crate) tx: UnboundedSender<EventMessage>,
     pub(crate) rx: UnboundedReceiver<EventMessage>,
@@ -122,6 +124,7 @@ impl TaskManager {
             tasks: HashMap::new(),
             app_task_map: HashMap::new(),
             app_state_map: HashMap::new(),
+            limit: PermitManager::new(),
             unloader: SAKeeper::new(tx.clone()),
             restoring_tasks: Vec::new(),
             api10_background_task_count: 0,
@@ -333,11 +336,16 @@ impl TaskManager {
                     };
                     if request_task.conf.version == Version::API10 {
                         let state = request_task.status.lock().unwrap().state;
+                        let reason = request_task.status.lock().unwrap().reason;
                         if state == State::Waiting {
                             debug!(
                                 "TaskManager begin process v10 task_id:{} which in waitting state",
                                 task
                             );
+
+                            if reason == Reason::RunningTaskMeetLimits {
+                                debug!("Waiting task reschedule");
+                            }
                             self.start_inner(request_task.clone());
                             return;
                         }

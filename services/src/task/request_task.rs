@@ -34,6 +34,7 @@ use super::reason::Reason;
 use super::upload::upload;
 use crate::error::ErrorCode;
 use crate::manage::keeper::SAKeeper;
+use crate::manage::limit::RunningPermit;
 use crate::manage::monitor::IsOnline;
 use crate::manage::task_manager::SystemConfig;
 use crate::service::ability::RequestAbility;
@@ -918,13 +919,16 @@ pub(crate) struct RunningTask {
     task: Arc<RequestTask>,
     // `_unloader` is never used when executing the task.
     _unloader: SAKeeper,
+    // `_permit` is never used when executing the task.
+    _permit: RunningPermit,
 }
 
 impl RunningTask {
-    pub(crate) fn new(task: Arc<RequestTask>, unloader: SAKeeper) -> Self {
+    pub(crate) fn new(task: Arc<RequestTask>, unloader: SAKeeper, permit: RunningPermit) -> Self {
         Self {
             task,
             _unloader: unloader,
+            _permit: permit,
         }
     }
 }
