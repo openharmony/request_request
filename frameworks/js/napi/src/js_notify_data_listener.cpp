@@ -15,6 +15,8 @@
 
 #include "js_notify_data_listener.h"
 
+#include <numeric>
+
 #include "js_task.h"
 #include "log.h"
 #include "napi_utils.h"
@@ -126,10 +128,8 @@ void JSNotifyDataListener::NotifyDataProcess(
         if (notifyData->type == SubscribeType::COMPLETED || notifyData->type == SubscribeType::FAILED) {
             value[0] = NapiUtils::Convert2JSValue(env_, notifyData->taskStates);
         } else if (notifyData->type == SubscribeType::PROGRESS) {
-            int64_t totalSize = 0;
-            for (const auto &size : notifyData->progress.sizes) {
-                totalSize += size;
-            }
+            int64_t totalSize = std::accumulate(notifyData->progress.sizes.begin(),
+                                                notifyData->progress.sizes.end(), 0);
             value[0] = NapiUtils::Convert2JSValue(this->env_, notifyData->progress.totalProcessed);
             value[1] = NapiUtils::Convert2JSValue(this->env_, totalSize);
             paramNumber = NapiUtils::TWO_ARG;

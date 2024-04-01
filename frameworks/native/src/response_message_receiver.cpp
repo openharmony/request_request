@@ -15,6 +15,7 @@
 
 #include "response_message_receiver.h"
 
+#include <cstdint>
 #include <unistd.h>
 
 #include <cstdlib>
@@ -367,7 +368,7 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
     REQUEST_HILOGD("read message: %{public}d", length);
 
     char lenBuf[4];
-    *(uint32_t *)lenBuf = length;
+    *reinterpret_cast<uint32_t *>(lenBuf) = length;
     int32_t ret = write(fd, lenBuf, 4);
     if (ret <= 0) {
         REQUEST_HILOGE("send length back failed: %{public}d", ret);
