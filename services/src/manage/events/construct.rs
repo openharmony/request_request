@@ -21,14 +21,18 @@ use crate::task::ffi::{CTaskConfig, CTaskInfo};
 use crate::task::info::{Mode, State};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
+use crate::utils::task_id_generator::TaskIdGenerator;
 
 const MAX_BACKGROUND_TASK: usize = 100;
 const MAX_FRONTEND_TASK: usize = 2000;
 
 impl TaskManager {
-    pub(crate) fn create(&mut self, config: TaskConfig) -> ErrorCode {
+    pub(crate) fn create(&mut self, mut config: TaskConfig) -> Result<u32, ErrorCode> {
         let uid = config.common_data.uid;
-        let task_id = config.common_data.task_id;
+
+        let task_id = TaskIdGenerator::generate();
+        config.common_data.task_id = task_id;
+
         let version = config.version;
 
         debug!(
@@ -40,13 +44,13 @@ impl TaskManager {
             Mode::BackGround => {
                 if self.app_uncompleted_tasks_num(uid, Mode::BackGround) == MAX_BACKGROUND_TASK {
                     debug!("TaskManager background enqueue error");
-                    return ErrorCode::TaskEnqueueErr;
+                    return Err(ErrorCode::TaskEnqueueErr);
                 }
             }
             _ => {
                 if self.app_uncompleted_tasks_num(uid, Mode::FrontEnd) == MAX_FRONTEND_TASK {
                     debug!("TaskManager frontend enqueue error");
-                    return ErrorCode::TaskEnqueueErr;
+                    return Err(ErrorCode::TaskEnqueueErr);
                 }
             }
         }
@@ -55,7 +59,7 @@ impl TaskManager {
 
         let task = match RequestTask::new(config, self.system_config(), app_state, None) {
             Ok(task) => task,
-            Err(e) => return e,
+            Err(e) => return Err(e),
         };
 
         let task = Arc::new(task);
@@ -63,7 +67,7 @@ impl TaskManager {
         match version {
             Version::API10 => {
                 if !self.add_task_api10(task.clone()) {
-                    return ErrorCode::TaskEnqueueErr;
+                    return Err(ErrorCode::TaskEnqueueErr);
                 }
                 self.api10_background_task_count += 1;
             }
@@ -74,7 +78,7 @@ impl TaskManager {
 
         self.record_request_task(task.as_ref());
 
-        ErrorCode::ErrOk
+        Ok(task_id)
     }
 
     pub(crate) fn add_task_api9(&mut self, task: Arc<RequestTask>) {
