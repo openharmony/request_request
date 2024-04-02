@@ -44,8 +44,8 @@ pub(crate) enum EventMessage {
 }
 
 impl EventMessage {
-    pub(crate) fn construct(config: TaskConfig) -> (Self, Recv<ErrorCode>) {
-        let (tx, rx) = channel::<ErrorCode>();
+    pub(crate) fn construct(config: TaskConfig) -> (Self, Recv<Result<u32, ErrorCode>>) {
+        let (tx, rx) = channel::<Result<u32, ErrorCode>>();
         (
             Self::Service(ServiceMessage::Construct(
                 Box::new(ConstructMessage { config }),
@@ -178,7 +178,7 @@ impl EventMessage {
 }
 
 pub(crate) enum ServiceMessage {
-    Construct(Box<ConstructMessage>, Sender<ErrorCode>),
+    Construct(Box<ConstructMessage>, Sender<Result<u32, ErrorCode>>),
     Pause(u64, u32, Sender<ErrorCode>),
     QueryMimeType(u64, u32, Sender<String>),
     Start(u64, u32, Sender<ErrorCode>),

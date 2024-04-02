@@ -226,8 +226,8 @@ impl TaskManager {
 
         match message {
             ServiceMessage::Construct(msg, tx) => {
-                let error_code = self.create(msg.config);
-                let _ = tx.send(error_code);
+                let result = self.create(msg.config);
+                let _ = tx.send(result);
             }
             ServiceMessage::Pause(uid, task_id, tx) => {
                 let error_code = self.pause(uid, task_id);

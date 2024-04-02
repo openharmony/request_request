@@ -14,10 +14,10 @@
 pub(crate) mod c_wrapper;
 pub(crate) mod filter;
 pub(crate) mod form_item;
+pub(crate) mod task_id_generator;
 
 use std::collections::HashMap;
 use std::io::Write;
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use ylong_runtime::sync::oneshot::Receiver;
@@ -52,17 +52,6 @@ pub(crate) fn get_current_timestamp() -> u64 {
     match SystemTime::now().duration_since(UNIX_EPOCH) {
         Ok(n) => n.as_millis() as u64,
         Err(_) => panic!("SystemTime before UNIX EPOCH!"),
-    }
-}
-
-pub(crate) fn generate_task_id() -> u32 {
-    match SystemTime::now().duration_since(UNIX_EPOCH) {
-        Ok(time) => time.subsec_nanos(),
-        Err(e) => {
-            static ID: AtomicU32 = AtomicU32::new(0);
-            error!("Generate task id from system time failed {:?}", e);
-            ID.fetch_add(1, Ordering::Relaxed)
-        }
     }
 }
 

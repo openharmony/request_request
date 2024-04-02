@@ -27,7 +27,6 @@ use crate::service::permission::PermissionChecker;
 use crate::task::config::{Action, CommonTaskConfig, Network, TaskConfig, Version};
 use crate::task::info::Mode;
 use crate::utils::form_item::{FileSpec, FormItem};
-use crate::utils::generate_task_id;
 
 pub(crate) struct Construct;
 
@@ -95,8 +94,6 @@ impl Construct {
         let proxy: String = data.read()?;
 
         let bundle = get_calling_bundle();
-        // Creates task_id here, move it to task_manager later?
-        let task_id = generate_task_id();
         let uid = get_calling_uid();
         let token_id = get_calling_token_id();
 
@@ -210,7 +207,7 @@ impl Construct {
             body_file_paths,
             certs_path,
             common_data: CommonTaskConfig {
-                task_id,
+                task_id: 0,
                 uid,
                 token_id,
                 action,
@@ -245,6 +242,19 @@ impl Construct {
             }
         };
 
+        let task_id = match ret {
+            Ok(id) => id,
+            Err(err_code) => {
+                error!(
+                    "Service construct: construct task failed, err_code: {:?}",
+                    err_code
+                );
+                reply.write(&(err_code as i32))?;
+                return Err(IpcStatusCode::Failed);
+            }
+        };
+
+
         debug!("Service construct: construct event sent to manager");
 
         if version != Version::API10 {
@@ -255,11 +265,7 @@ impl Construct {
             debug!("Service construct: start event sent to manager");
         }
 
-        reply.write(&(ret as i32))?;
-        if ret != ErrorCode::ErrOk {
-            error!("Service construct: construct task failed");
-            return Err(IpcStatusCode::Failed);
-        }
+        reply.write(&(ErrorCode::ErrOk as i32))?;
         debug!("Service construct: task id {}", task_id);
         reply.write(&(task_id as i32))?;
         Ok(())
