@@ -56,7 +56,8 @@ public:
     static std::map<std::string, JsTask *> taskMap_;
     static std::mutex pathMutex_;
     static std::map<std::string, int32_t> pathMap_;
-
+    static std::map<std::string, int32_t> fileMap_;
+    
     std::mutex listenerMutex_;
     std::shared_ptr<JSResponseListener> responseListener_;
     std::map<SubscribeType, std::shared_ptr<JSNotifyDataListener>> notifyDataListenerMap_;
