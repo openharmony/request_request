@@ -11,22 +11,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ipc_rust::{get_calling_pid, BorrowedMsgParcel, IpcResult, IpcStatusCode};
+use ipc::parcel::MsgParcel;
+use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::service::ability::RequestAbility;
 use crate::service::runcount::RunCountEvent;
-
 pub(crate) struct UnsubRunCount;
 
 impl UnsubRunCount {
-    pub(crate) fn execute(
-        _data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    pub(crate) fn execute(_data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("Service runcount unsubscribe");
-        let pid = get_calling_pid();
-        // let uid = get_calling_uid();
+        let pid = ipc::Skeleton::calling_pid();
+        // let uid = ipc::Skeleton::calling_uid();
         debug!("Service runcount unsubscribe: pid is {}", pid);
 
         let (event, rx) = RunCountEvent::unsub_runcount(pid);

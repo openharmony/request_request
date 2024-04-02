@@ -14,6 +14,8 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
+use samgr::manage::SystemAbilityManager;
+
 use super::task_manager::GetTopBundleName;
 use super::TaskManager;
 use crate::error::ErrorCode;
@@ -57,14 +59,8 @@ impl TaskManager {
 
         info!("unload SA");
 
-        #[cfg(feature = "oh")]
-        let samgr_proxy = rust_samgr::get_systemability_manager();
-
         // failed logic?
-        #[cfg(feature = "oh")]
-        let _ = samgr_proxy
-            .unload_systemability(REQUEST_SERVICE_ID)
-            .map_err(|e| error!("unload SA failed, err is {:?}", e));
+        let _ = SystemAbilityManager::unload_system_ability(REQUEST_SERVICE_ID);
 
         true
     }

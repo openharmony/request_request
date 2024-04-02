@@ -11,7 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ipc_rust::{BorrowedMsgParcel, IpcResult, IpcStatusCode};
+use ipc::parcel::MsgParcel;
+use ipc::{IpcResult, IpcStatusCode};
 
 use crate::manage::events::EventMessage;
 use crate::service::ability::RequestAbility;
@@ -21,10 +22,7 @@ use crate::utils::filter::{CommonFilter, Filter};
 pub(crate) struct Search;
 
 impl Search {
-    pub(crate) fn execute(
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("Service search");
         let mut bundle: String = data.read()?;
         if !is_system_api() {

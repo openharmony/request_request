@@ -11,7 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ipc_rust::{BorrowedMsgParcel, IpcResult, IpcStatusCode};
+use ipc::parcel::MsgParcel;
+use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::manage::events::EventMessage;
@@ -23,10 +24,7 @@ use crate::task::config::Action;
 pub(crate) struct Query;
 
 impl Query {
-    pub(crate) fn execute(
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("Service query");
         if !is_system_api() {
             error!("Service query: not system api");

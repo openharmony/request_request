@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ipc_rust::{get_calling_uid, BorrowedMsgParcel, IpcResult, IpcStatusCode};
+use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::manage::events::EventMessage;
@@ -20,11 +20,9 @@ use crate::service::permission::PermissionChecker;
 
 pub(crate) struct QueryMimeType;
 
+use ipc::parcel::MsgParcel;
 impl QueryMimeType {
-    pub(crate) fn execute(
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("Service query mime type");
         if !PermissionChecker::check_internet() {
             error!("Service query mime type: no INTERNET permission");
@@ -37,7 +35,7 @@ impl QueryMimeType {
             Ok(id) => {
                 debug!("Service query mime type: u32 task_id is {}", id);
 
-                let uid = get_calling_uid();
+                let uid = ipc::Skeleton::calling_uid();
                 debug!("Service query mime type: uid is {}", uid);
 
                 let (event, rx) = EventMessage::query_mime_type(uid, id);

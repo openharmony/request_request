@@ -11,9 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::fs::File;
 use std::io::Write;
 
-use ipc_rust::{FileDesc, IpcStatusCode, String16};
+use ipc::IpcResult;
 
 use crate::manage::events::EventMessage;
 use crate::service::ability::RequestAbility;
@@ -27,42 +28,40 @@ pub(crate) struct Dump;
 
 impl Dump {
     // Ignores all the file error.
-    pub(crate) fn execute(file: &FileDesc, args: &mut Vec<String16>) -> i32 {
+    pub(crate) fn execute(mut file: File, args: Vec<String>) -> IpcResult<()> {
         info!("Service dump");
 
         let len = args.len();
-        if len == 0 || args[0].get_string().eq("-h") {
-            let _ = file.as_ref().write(HELP_MSG.as_bytes());
-            return IpcStatusCode::Ok as i32;
+        if len == 0 || args[0] == "-h" {
+            let _ = file.write(HELP_MSG.as_bytes());
+            return Ok(());
         }
 
-        if !args[0].get_string().eq("-t") {
-            let _ = file.as_ref().write("invalid args".as_bytes());
-            return IpcStatusCode::Ok as i32;
+        if args[0] != "-t" {
+            let _ = file.write("invalid args".as_bytes());
+            return Ok(());
         }
 
         match len {
             1 => dump_all_task_info(file),
             2 => {
-                let task_id = args[1].get_string().parse::<u32>();
+                let task_id = args[1].parse::<u32>();
                 match task_id {
                     Ok(id) => dump_one_task_info(file, id),
                     Err(_) => {
-                        let _ = file.as_ref().write("-t accept a number".as_bytes());
+                        let _ = file.write("-t accept a number".as_bytes());
                     }
                 }
             }
             _ => {
-                let _ = file
-                    .as_ref()
-                    .write("too many args, -t accept no arg or one arg".as_bytes());
+                let _ = file.write("too many args, -t accept no arg or one arg".as_bytes());
             }
         }
-        IpcStatusCode::Ok as i32
+        Ok(())
     }
 }
 
-fn dump_all_task_info(file: &FileDesc) {
+fn dump_all_task_info(mut file: File) {
     info!("Service dump: dump all task info");
 
     let (event, rx) = EventMessage::dump_all();
@@ -78,7 +77,6 @@ fn dump_all_task_info(file: &FileDesc) {
         }
     };
     let len = infos.vec.len();
-    let mut file = file.as_ref();
     let _ = file.write(format!("task num: {}\n", len).as_bytes());
     if len > 0 {
         let _ = file.write(
@@ -100,7 +98,7 @@ fn dump_all_task_info(file: &FileDesc) {
     }
 }
 
-fn dump_one_task_info(file: &FileDesc, task_id: u32) {
+fn dump_one_task_info(mut file: File, task_id: u32) {
     info!("Service dump: dump one task info");
 
     let (event, rx) = EventMessage::dump_one(task_id);
@@ -114,7 +112,6 @@ fn dump_one_task_info(file: &FileDesc, task_id: u32) {
             return;
         }
     };
-    let mut file = file.as_ref();
 
     if let Some(task) = task {
         let _ = file.write(

@@ -53,7 +53,7 @@ ohos_rust_shared_library("download_server") {
     "ipc:ipc_rust",
     "netstack:ylong_http_client",
     "safwk:system_ability_fwk_rust",
-    "samgr:rust_samgr",
+    "samgr:samgr_rust",
     "ylong_runtime:ylong_runtime",
   ]
 

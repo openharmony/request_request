@@ -11,7 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ipc_rust::{get_calling_pid, BorrowedMsgParcel, IpcResult, IpcStatusCode, RemoteObj};
+use ipc::parcel::MsgParcel;
+use ipc::remote::RemoteObj;
+use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::service::ability::RequestAbility;
@@ -20,15 +22,12 @@ use crate::service::runcount::RunCountEvent;
 pub(crate) struct SubRunCount;
 
 impl SubRunCount {
-    pub(crate) fn execute(
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("Service runcount subscribe");
-        let pid = get_calling_pid();
+        let pid = ipc::Skeleton::calling_pid();
         debug!("Service runcount subscribe: pid is {}", pid);
 
-        let obj: RemoteObj = data.read::<RemoteObj>()?;
+        let obj: RemoteObj = data.read_remote()?;
         debug!("read obj from data success!");
         let (event, rx) = RunCountEvent::sub_runcount(pid, obj);
         RequestAbility::runcount_manager().send_event(event);

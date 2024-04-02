@@ -13,8 +13,7 @@
 
 use std::collections::HashMap;
 
-use ipc_rust::RemoteObj;
-
+use ipc::remote::RemoteObj;
 use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 use ylong_runtime::sync::oneshot::Sender;
 
@@ -85,9 +84,7 @@ impl RunCountManager {
                 RunCountEvent::SubRunCount(subkey, obj, tx) => {
                     self.handle_sub_runcount(subkey, obj, tx)
                 }
-                RunCountEvent::UnsubRunCount(subkey, tx) => {
-                    self.handle_unsub_runcount(subkey, tx)
-                }
+                RunCountEvent::UnsubRunCount(subkey, tx) => self.handle_unsub_runcount(subkey, tx),
                 RunCountEvent::ChangeRunCount(change) => self.handle_change_runcount(change),
                 RunCountEvent::Shutdown => {
                     info!("RunCountManager shuts down");
@@ -102,13 +99,16 @@ impl RunCountManager {
     fn handle_sub_runcount(&mut self, subkey: SubKey, obj: RemoteObj, tx: Sender<ErrorCode>) {
         debug!("handle sub runcount in");
         let subclient = SubClient::new(obj);
+
+        subclient.notify_runcount(self.runcount);
         if self.remotes.get(&subkey).is_none() {
-            self.remotes.insert(subkey, subclient.clone());
+            self.remotes.insert(subkey, subclient);
             debug!("RunCountManager has inserted subkey: {:?}", subkey);
         }
+
         let _ = tx.send(ErrorCode::ErrOk);
-        // Need to notify client immediately, then client get runcount by its callback
-        subclient.notify_runcount(self.runcount)
+        // Need to notify client immediately, then client get runcount by its
+        // callback
     }
 
     fn handle_unsub_runcount(&mut self, subkey: SubKey, tx: Sender<ErrorCode>) {
@@ -131,7 +131,7 @@ impl RunCountManager {
 
     fn handle_notify_runcount(&self) {
         debug!("handle notify runcount to all subclient");
-        for (_, subclient) in self.remotes.clone() {
+        for (_, subclient) in self.remotes.iter() {
             subclient.notify_runcount(self.runcount)
         }
     }
