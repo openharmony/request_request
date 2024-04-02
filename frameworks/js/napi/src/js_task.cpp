@@ -52,6 +52,7 @@ std::map<std::string, JsTask *> JsTask::taskMap_;
 bool JsTask::register_ = false;
 std::mutex JsTask::pathMutex_;
 std::map<std::string, int32_t> JsTask::pathMap_;
+std::map<std::string, int32_t> JsTask::fileMap_;
 std::mutex JsTask::taskContextMutex_;
 std::map<std::string, std::shared_ptr<JsTask::ContextInfo>> JsTask::taskContextMap_;
 
@@ -851,6 +852,16 @@ bool JsTask::SetPathPermission(const std::string &filepath)
 
 void JsTask::AddPathMap(const std::string &filepath, const std::string &baseDir)
 {
+    {
+        std::lock_guard<std::mutex> lockGuard(JsTask::pathMutex_);
+        auto it = fileMap_.find(filepath);
+        if (it == fileMap_.end()) {
+            fileMap_[filepath] = 1;
+        } else {
+            fileMap_[filepath] += 1;
+        }
+    }
+
     std::string childDir(filepath);
     std::string parentDir;
     while (childDir.length() > baseDir.length()) {
@@ -881,8 +892,19 @@ void JsTask::RemovePathMap(const std::string &filepath)
         return;
     }
 
-    if (chmod(filepath.c_str(), S_IRUSR | S_IWUSR | S_IRGRP) != 0) {
-        REQUEST_HILOGE("File remove OTH access Failed.");
+    {
+        std::lock_guard<std::mutex> lockGuard(JsTask::pathMutex_);
+        auto it = fileMap_.find(filepath);
+        if (it != fileMap_.end()) {
+            if (fileMap_[filepath] <= 1) {
+                fileMap_.erase(filepath);
+                if (chmod(filepath.c_str(), S_IRUSR | S_IWUSR | S_IRGRP) != 0) {
+                    REQUEST_HILOGE("File remove OTH access Failed.");
+                }
+            } else {
+                fileMap_[filepath] -= 1;
+            }
+        }
     }
 
     std::string childDir(filepath);
