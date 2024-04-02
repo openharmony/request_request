@@ -149,14 +149,13 @@ bool JsInitialize::GetBaseDir(std::string &baseDir)
 ExceptionError JsInitialize::CheckFilePath(
     const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config)
 {
-    ExceptionError err = { .code = E_OK };
     if (config.action == Action::DOWNLOAD) {
-        err = CheckDownloadFileSpec(context, config);
+        ExceptionError err = CheckDownloadFileSpec(context, config);
         if (err.code != E_OK) {
             return err;
         }
     } else {
-        err = CheckUploadFileSpec(context, config);
+        ExceptionError err = CheckUploadFileSpec(context, config);
         if (err.code != E_OK) {
             return err;
         }
@@ -170,7 +169,7 @@ ExceptionError JsInitialize::CheckFilePath(
     if (!JsTask::SetDirsPermission(config.certsPath)) {
         return { .code = E_FILE_IO, .errInfo = "set files of directors permission fail" };
     }
-    return err;
+    return { .code = E_OK };
 }
 
 ExceptionError JsInitialize::CheckUploadBodyFiles(Config &config, const std::string &filePath)
