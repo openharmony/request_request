@@ -32,9 +32,6 @@ impl TaskManager {
                 "TaskManager remove a task, uid:{}, task_id:{} success",
                 uid, task_id
             );
-            unsafe {
-                ChangeRequestTaskState(task_id, uid, State::Removed);
-            }
             return ErrorCode::ErrOk;
         }
         let c_task_info = unsafe { Show(task_id, uid) };

@@ -164,10 +164,15 @@ impl TaskManager {
         debug!("TaskManager handle task_message {:?}", message);
 
         match message {
-            TaskMessage::Finished(task_id) => {
+            TaskMessage::Finished(task_id, uid, version) => {
                 let task = match self.tasks.get(&task_id) {
                     Some(task) => task.clone(),
-                    None => return,
+                    None => {
+                        info!("RunningPermit task finished but task not found, {}", task_id);
+                        // For some complex reason, here we must reschedule waiting tasks!
+                        self.process_waiting_task(uid, version);
+                        return
+                    },
                 };
                 self.after_task_processed(&task);
             }
@@ -347,7 +352,6 @@ impl TaskManager {
                                 debug!("Waiting task reschedule");
                             }
                             self.start_inner(request_task.clone());
-                            return;
                         }
                     }
                 }
@@ -373,6 +377,7 @@ impl TaskManager {
 
     pub(crate) fn after_task_processed(&mut self, task: &Arc<RequestTask>) {
         let state = task.status.lock().unwrap().state;
+
         if state != State::Completed
             && state != State::Failed
             && state != State::Removed

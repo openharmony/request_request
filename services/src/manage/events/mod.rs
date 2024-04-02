@@ -16,7 +16,7 @@ use std::fmt::Debug;
 use ylong_runtime::sync::oneshot::{channel, Sender};
 
 use crate::error::ErrorCode;
-use crate::task::config::{Action, TaskConfig};
+use crate::task::config::{Action, TaskConfig, Version};
 use crate::task::info::{ApplicationState, DumpAllInfo, DumpOneInfo, TaskInfo};
 use crate::utils::filter::Filter;
 use crate::utils::Recv;
@@ -195,7 +195,7 @@ pub(crate) enum ServiceMessage {
 }
 
 pub(crate) enum TaskMessage {
-    Finished(u32),
+    Finished(u32, u64, Version),
     Subscribe(u32, u64, Sender<ErrorCode>),
 }
 
@@ -288,9 +288,11 @@ impl Debug for ServiceMessage {
 impl Debug for TaskMessage {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Finished(task_id) => f
+            Self::Finished(task_id, uid, version) => f
                 .debug_struct("Finished")
+                .field("uid", uid)
                 .field("task_id", task_id)
+                .field("version", version)
                 .finish(),
             Self::Subscribe(task_id, token_id, _) => f
                 .debug_struct("Subscribe")
