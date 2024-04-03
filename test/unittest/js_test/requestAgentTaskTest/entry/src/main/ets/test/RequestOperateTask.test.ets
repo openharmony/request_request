@@ -69,6 +69,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testStartTask001.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -92,7 +93,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testStartTask002.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -119,7 +120,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testStartTask003.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -143,7 +144,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testStartTask004.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf)
@@ -170,7 +171,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testStartTask005.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -198,7 +199,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testStartTask006.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -225,7 +226,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testStartTask007.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -302,6 +303,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testPauseTask001.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -326,7 +328,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testPauseTask002.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -354,7 +356,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testPauseTask003.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -379,7 +381,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testPauseTask004.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -407,7 +409,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
-        saveas: `test.txt`,
+        saveas: 'testPauseTask005.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -443,7 +445,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testResumeTask001.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -469,7 +471,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testResumeTask002.txt',
         mode: request.agent.Mode.BACKGROUND
       }
 
@@ -496,7 +498,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testResumeTask003.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -529,7 +531,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testResumeTask004.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -557,7 +559,7 @@ export default function requestOperateTaskTest() {
         let conf = {
           action: request.agent.Action.DOWNLOAD,
           url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
-          saveas: `test.txt`,
+          saveas: 'testResumeTask005.txt',
           mode: request.agent.Mode.FOREGROUND
         }
         let task = await request.agent.create(context, conf);
@@ -587,7 +589,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
-        saveas: `test.txt`,
+        saveas: 'testResumeTask006.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -619,7 +621,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testStopTask001.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -643,7 +645,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testStopTask002.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -670,7 +672,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testStopTask003.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -694,7 +696,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testStopTask004.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -722,7 +724,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testStopTask005.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       try{
@@ -750,7 +752,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
-        saveas: `test.txt`,
+        saveas: 'testStopTask006.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       try{
@@ -777,7 +779,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testOnTask001.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -803,7 +805,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testOnTask002.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -829,7 +831,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.txt',
-        saveas: `test.txt`,
+        saveas: 'testOnTask003.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -853,7 +855,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testOnTask004.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -882,7 +884,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testOnTask005.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -911,7 +913,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
-        saveas: `test.txt`,
+        saveas: 'testOnTask006.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -937,7 +939,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testOnTask007.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -966,7 +968,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testOffTask001.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -992,7 +994,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testOffTask002.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1018,7 +1020,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.txt',
-        saveas: `test.txt`,
+        saveas: 'testOffTask003.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1046,7 +1048,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testOffTask004.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1076,7 +1078,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testOffTask005.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1110,7 +1112,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testOffTask006.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1175,6 +1177,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testRemove003.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1200,6 +1203,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testRemove004.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1222,6 +1226,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testRemove005.txt',
         mode: request.agent.Mode.FOREGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -1247,7 +1252,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testRedirect001.txt',
         mode: request.agent.Mode.FOREGROUND,
         redirect: true
       }
@@ -1272,7 +1277,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testRedirect002.txt',
         mode: request.agent.Mode.FOREGROUND,
         redirect: false
       }
@@ -1297,7 +1302,7 @@ export default function requestOperateTaskTest() {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testOnResponse001.txt',
         mode: request.agent.Mode.FOREGROUND,
         overwrite: true,
       }
@@ -1324,7 +1329,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testOnResponse002.txt',
         mode: request.agent.Mode.FOREGROUND,
         overwrite: true,
       }
@@ -1355,7 +1360,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testOnResponse003.txt',
         mode: request.agent.Mode.FOREGROUND,
         overwrite: true,
       }
@@ -1390,7 +1395,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test.txt`,
+        saveas: 'testOnResponse004.txt',
         mode: request.agent.Mode.FOREGROUND,
         overwrite: true,
       }
@@ -1416,7 +1421,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.jpg',
-        saveas: `test.txt`,
+        saveas: 'testOnResponse005.txt',
         mode: request.agent.Mode.FOREGROUND,
         overwrite: true,
       }
@@ -1444,6 +1449,7 @@ export default function requestOperateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testDownloadTaskSaveas001.txt',
         mode: request.agent.Mode.BACKGROUND
       }
       await request.agent.create(context, conf).then(async () => {

@@ -66,6 +66,7 @@ export default function requestSystemQueryTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        saveas: `testSystemSearchTask001.txt`,
       }
       let task = await request.agent.create(context, conf);
       let filter = {
@@ -91,6 +92,7 @@ export default function requestSystemQueryTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        saveas: `testSystemSearchTask002.txt`,
       }
       let task = await request.agent.create(context, conf);
       request.agent.search({}, async (err, tids) => {
@@ -110,6 +112,7 @@ export default function requestSystemQueryTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        saveas: `testSystemSearchTask003.txt`,
       }
       let task = await request.agent.create(context, conf);
       let filter = {
@@ -135,6 +138,7 @@ export default function requestSystemQueryTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        saveas: `testSystemSearchTask004.txt`,
       }
       let task = await request.agent.create(context, conf);
       let filter = {
@@ -285,7 +289,7 @@ export default function requestSystemQueryTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
-        saveas: `test.apk`,
+        saveas: `testSystemQueryTask007.txt`,
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
@@ -294,7 +298,7 @@ export default function requestSystemQueryTest() {
         expect(info.bundle).assertEqual("com.acts.request");
         expect(info.url).assertEqual("");
         expect(info.data).assertEqual("");
-        expect(info.saveas).assertEqual("/data/storage/el2/base/haps/testModule/cache/test.apk");
+        expect(info.saveas).assertEqual("/data/storage/el2/base/haps/testModule/cache/testSystemQueryTask007.txt");
         expect(info.tid).assertEqual(task.tid);
         expect(info.title).assertEqual("download");
         expect(info.description).assertEqual("");

@@ -477,6 +477,7 @@ describe('RequestTaskTest', function () {
         let conf = JSON.parse(JSON.stringify(globalConf));
         conf.url = 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt';
         conf.action = agent.Action.DOWNLOAD;
+        conf.saveas = 'testTaskCover001.txt';
         conf.cover = true;
         expect(true).assertTrue()
         await createApi10Task(conf);
@@ -495,6 +496,7 @@ describe('RequestTaskTest', function () {
         let conf = JSON.parse(JSON.stringify(globalConf));
         conf.url = 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt';
         conf.action = agent.Action.DOWNLOAD;
+        conf.saveas = 'testTaskCover002.txt';
         conf.cover = true;
         expect(true).assertTrue()
         await createApi10Task(conf);
@@ -514,6 +516,7 @@ describe('RequestTaskTest', function () {
         let conf = JSON.parse(JSON.stringify(globalConf));
         conf.url = 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt';
         conf.action = agent.Action.DOWNLOAD;
+        conf.saveas = 'testTaskCover003.txt';
         conf.cover = false;
         expect(true).assertTrue()
         await createApi10Task(conf);
@@ -532,6 +535,7 @@ describe('RequestTaskTest', function () {
         let conf = JSON.parse(JSON.stringify(globalConf));
         conf.url = 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt';
         conf.action = agent.Action.DOWNLOAD;
+        conf.saveas = 'testTaskCover004.txt';
         conf.cover = false;
         expect(true).assertTrue()
         await createApi10Task(conf);
@@ -598,7 +602,7 @@ describe('RequestTaskTest', function () {
         let conf = {
             action: agent.Action.DOWNLOAD,
             url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-            saveas: `${cacheDir}`,
+            saveas: `${cacheDir}/testTaskMethod002.txt`,
             method: 'POST'
         }
         expect(true).assertTrue()
@@ -618,7 +622,7 @@ describe('RequestTaskTest', function () {
         let conf = {
             action: agent.Action.DOWNLOAD,
             url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-            saveas: `${cacheDir}`,
+            saveas: `${cacheDir}/testTaskMethod003.txt`,
             method: 123
         }
         expect(true).assertTrue()
@@ -638,7 +642,7 @@ describe('RequestTaskTest', function () {
         let conf = {
             action: agent.Action.DOWNLOAD,
             url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-            saveas: `${cacheDir}`,
+            saveas: `${cacheDir}/testTaskMethod004.txt`,
             method: ''
         }
         expect(true).assertTrue()
@@ -675,7 +679,7 @@ describe('RequestTaskTest', function () {
         let conf = {
             action: agent.Action.DOWNLOAD,
             url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-            saveas: `${cacheDir}`,
+            saveas: `${cacheDir}/testTaskMethod006.txt`,
             method: 'PUT'
         }
         expect(true).assertTrue()
@@ -734,6 +738,7 @@ describe('RequestTaskTest', function () {
         let conf = {
             action: agent.Action.DOWNLOAD,
             url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+            saveas: 'testTaskHeaders003.txt',
         }
         task = await agent.create(conf);
         task.start().then(() => {
@@ -1095,6 +1100,7 @@ describe('RequestTaskTest', function () {
         let conf = {
             action: agent.Action.DOWNLOAD,
             url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+            saveas: 'testTaskNetwork003.txt',
             network: agent.NetWork.WIFI
         }
         task.create(context, conf).then(() => {
@@ -1160,6 +1166,7 @@ describe('RequestTaskTest', function () {
             action: agent.Action.DOWNLOAD,
             url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
             mode: agent.Mode.BACKGROUND,
+            saveas: 'testTaskRetry002.txt',
             retry: true
         }
         task = await agent.create(conf);
