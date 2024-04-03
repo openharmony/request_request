@@ -503,7 +503,9 @@ void RequestManagerImpl::SystemAbilityStatusChangeListener::OnAddSystemAbility(
     if (RequestManagerImpl::GetInstance()->callback_ != nullptr) {
         RequestManagerImpl::GetInstance()->callback_();
     }
-    RequestManagerImpl::GetInstance()->RestoreSubRunCount();
+    if (FwkRunningTaskCountManager::GetInstance()->HasObserver()) {
+        RequestManagerImpl::GetInstance()->RestoreSubRunCount();
+    }   
 }
 
 void RequestManagerImpl::SystemAbilityStatusChangeListener::OnRemoveSystemAbility(
