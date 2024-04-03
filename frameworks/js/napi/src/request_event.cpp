@@ -349,7 +349,8 @@ int32_t RequestEvent::StartExec(const std::shared_ptr<ExecContext> &context)
     const auto it = JsTask::taskMap_.find(tid);
     if (it == JsTask::taskMap_.end()) {
         REQUEST_HILOGE("Can not find task in JsTask::taskMap_ by tid: %{public}s.", tid.c_str());
-        return E_TASK_NOT_FOUND;
+        // In JS d.ts, only can throw 201/13400003/21900007（E_TASK_STATE）
+        return E_TASK_STATE;
     }
 
     int32_t ret = RequestManager::GetInstance()->Start(tid);

@@ -1781,5 +1781,34 @@ export default function requestOperateTaskTest() {
         done();
       }
     })
+
+    /**
+     * @tc.number: testRemoveTaskStart001
+     * @tc.name: testRemoveTaskStart001
+     * @tc.desc: Test remove task and then start
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testRemoveTaskStart001', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        mode: request.agent.Mode.BACKGROUND,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test_remove_task_start_001`,
+      }
+      try {
+        let task: request.agent.Task = await request.agent.create(context, conf);
+        await request.agent.remove(task.tid);
+        await task.start();
+        expect(false).assertTrue();
+        done();
+      } catch (err) {
+        expect(err.code).assertEqual(21900007);
+        expect(true).assertTrue();
+        done();
+      }
+    })
   })
 }
