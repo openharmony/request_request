@@ -128,6 +128,8 @@ impl TaskManager {
             RequestAbility::runcount_manager().send_event(event);
             tx.send(EventMessage::Task(TaskMessage::Finished(
                 task.conf.common_data.task_id,
+                task.conf.common_data.uid,
+                task.conf.version,
             )))
         });
 

@@ -187,12 +187,15 @@ impl TaskManager {
     fn pause_check_unload_sa(&self) -> bool {
         let mut need_unload = false;
         for task in self.tasks.values() {
-            let state = task.status.lock().unwrap().state;
+            let (state, reason) = {
+                let task = task.status.lock().unwrap();
+                (task.state, task.reason)
+            };
             if state == State::Completed
                 || state == State::Failed
                 || state == State::Removed
                 || state == State::Stopped
-                || state == State::Waiting
+                || (state == State::Waiting && (reason == Reason::NetworkOffline || reason == Reason::UnsupportedNetworkType))
                 || state == State::Paused
                 || state == State::Initialized
                 || state == State::Created

@@ -29,7 +29,6 @@ impl TaskManager {
                 );
                 return ErrorCode::TaskStateErr;
             }
-            self.after_task_processed(&task);
             debug!(
                 "TaskManager stop a task, uid: {}, task_id:{} success",
                 uid, task_id
