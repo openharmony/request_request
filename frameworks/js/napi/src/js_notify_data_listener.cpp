@@ -167,19 +167,22 @@ static std::string SubscribeTypeToString(SubscribeType type)
 static void RemoveJSTask(const std::shared_ptr<NotifyData> &notifyData)
 {
     std::string tid = std::to_string(notifyData->taskId);
-    if (notifyData->version == Version::API9 &&
-        (notifyData->type == SubscribeType::COMPLETED ||
-         notifyData->type == SubscribeType::FAILED ||
-         notifyData->type == SubscribeType::REMOVE)) {
+    if (notifyData->version == Version::API9
+        && (notifyData->type == SubscribeType::COMPLETED || notifyData->type == SubscribeType::FAILED
+            || notifyData->type == SubscribeType::REMOVE)) {
         RequestManager::GetInstance()->RemoveAllListeners(tid);
-        JsTask::ClearTaskContext(tid);
+        JsTask::ClearTaskTemp(tid, true, true, true, true);
         JsTask::ClearTaskMap(tid);
         REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
-    } else if (notifyData->version == Version::API10 && notifyData->type == SubscribeType::REMOVE) {
-        RequestManager::GetInstance()->RemoveAllListeners(tid);
-        JsTask::ClearTaskContext(tid);
-        JsTask::ClearTaskMap(tid);
-        REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
+    } else if (notifyData->version == Version::API10) {
+        if (notifyData->type == SubscribeType::REMOVE) {
+            RequestManager::GetInstance()->RemoveAllListeners(tid);
+            JsTask::ClearTaskTemp(tid, true, true, true, true);
+            JsTask::ClearTaskMap(tid);
+            REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
+        } else if (notifyData->type == SubscribeType::COMPLETED || notifyData->type == SubscribeType::FAILED) {
+            JsTask::ClearTaskTemp(tid, true, false, false, false);
+        }
     }
 }
 

@@ -937,26 +937,35 @@ void JsTask::RemoveDirsPermission(const std::vector<std::string> &dirs)
     }
 }
 
-void JsTask::ClearTaskContext(const std::string &key)
+void JsTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls, bool isRmContext)
 {
     std::lock_guard<std::mutex> lockGuard(JsTask::taskContextMutex_);
-    auto it = taskContextMap_.find(key);
+    auto it = taskContextMap_.find(tid);
     if (it == taskContextMap_.end()) {
-        REQUEST_HILOGD("Clear task context, not in ContextMap");
+        REQUEST_HILOGD("Clear task tmp files, not in ContextMap");
         return;
     }
     auto context = it->second;
-    auto bodyFileNames = context->task->config_.bodyFileNames;
-    for (auto &filePath : bodyFileNames) {
-        NapiUtils::RemoveFile(filePath);
+
+    if (isRmFiles) {
+        auto bodyFileNames = context->task->config_.bodyFileNames;
+        for (auto &filePath : bodyFileNames) {
+            NapiUtils::RemoveFile(filePath);
+        }
     }
-    // Reset Acl permission
-    for (auto &file : context->task->config_.files) {
-        RemovePathMap(file.uri);
+    if (isRmAcls) {
+        // Reset Acl permission
+        for (auto &file : context->task->config_.files) {
+            RemovePathMap(file.uri);
+        }
     }
-    RemoveDirsPermission(context->task->config_.certsPath);
-    taskContextMap_.erase(it);
-    UnrefTaskContextMap(context);
+    if (isRmCertsAcls) {
+        RemoveDirsPermission(context->task->config_.certsPath);
+    }
+    if (isRmContext) {
+        taskContextMap_.erase(it);
+        UnrefTaskContextMap(context);
+    }
 }
 
 void JsTask::UnrefTaskContextMap(std::shared_ptr<ContextInfo> context)

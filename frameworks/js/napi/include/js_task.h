@@ -47,7 +47,8 @@ public:
     static void AddTaskMap(const std::string &key, JsTask *task);
     static bool SetDirsPermission(std::vector<std::string> &dirs);
     static bool SetPathPermission(const std::string &filepath);
-    static void ClearTaskContext(const std::string &key);
+    static void ClearTaskTemp(
+        const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls, bool isRmContext);
     static void RemoveDirsPermission(const std::vector<std::string> &dirs);
 
     Config config_;
@@ -57,7 +58,7 @@ public:
     static std::mutex pathMutex_;
     static std::map<std::string, int32_t> pathMap_;
     static std::map<std::string, int32_t> fileMap_;
-    
+
     std::mutex listenerMutex_;
     std::shared_ptr<JSResponseListener> responseListener_;
     std::map<SubscribeType, std::shared_ptr<JSNotifyDataListener>> notifyDataListenerMap_;
