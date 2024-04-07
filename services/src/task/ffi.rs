@@ -34,6 +34,7 @@ pub(crate) struct CTaskConfig {
     pub(crate) data: CStringWrapper,
     pub(crate) token: CStringWrapper,
     pub(crate) proxy: CStringWrapper,
+    pub(crate) certificate_pins: CStringWrapper,
     pub(crate) extras: CStringWrapper,
     pub(crate) version: u8,
     pub(crate) form_items_ptr: *const CFormItem,
@@ -273,6 +274,7 @@ impl TaskConfig {
             token: CStringWrapper::from(&self.token),
             extras: CStringWrapper::from(&set.extras),
             proxy: CStringWrapper::from(&self.proxy),
+            certificate_pins: CStringWrapper::from(&self.certificate_pins),
             version: self.version as u8,
             form_items_ptr: set.form_items.as_ptr(),
             form_items_len: set.form_items.len() as u32,
@@ -317,6 +319,7 @@ impl TaskConfig {
             token: c_struct.token.to_string(),
             extras: string_to_hashmap(&mut c_struct.extras.to_string()),
             proxy: c_struct.proxy.to_string(),
+            certificate_pins: c_struct.certificate_pins.to_string(),
             version: Version::from(c_struct.version),
             form_items: build_vec(
                 c_struct.form_items_ptr,

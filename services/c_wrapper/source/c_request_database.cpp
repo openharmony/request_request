@@ -240,7 +240,13 @@ int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store)
 {
     int ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_PROXY);
     if (ret != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("Creates request_version table failed, ret: %{public}d", ret);
+        REQUEST_HILOGE("add column proxy failed, ret: %{public}d", ret);
+        return ret;
+    }
+
+    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CERTIFICATE_PINS);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("add column certificate_pins failed, ret: %{public}d", ret);
         return ret;
     }
     return ret;
@@ -659,16 +665,17 @@ void BuildRequestTaskConfigWithInt(std::shared_ptr<OHOS::NativeRdb::ResultSet> s
 
 void BuildRequestTaskConfigWithString(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
 {
-    set->GetString(18, config.bundle);      // Line 18 is 'bundle'
-    set->GetString(19, config.url);         // Line 19 is 'url'
-    set->GetString(20, config.title);       // Line 20 is 'title'
-    set->GetString(21, config.description); // Line 21 is 'description'
-    set->GetString(22, config.method);      // Line 22 is 'method'
-    set->GetString(23, config.headers);     // Line 23 is 'headers'
-    set->GetString(24, config.data);        // Line 24 is 'data'
-    set->GetString(25, config.token);       // Line 25 is 'token'
-    set->GetString(26, config.extras);      // Line 26 is 'config_extras'
-    set->GetString(32, config.proxy);       // Line 32 is 'proxy'
+    set->GetString(18, config.bundle);            // Line 18 is 'bundle'
+    set->GetString(19, config.url);               // Line 19 is 'url'
+    set->GetString(20, config.title);             // Line 20 is 'title'
+    set->GetString(21, config.description);       // Line 21 is 'description'
+    set->GetString(22, config.method);            // Line 22 is 'method'
+    set->GetString(23, config.headers);           // Line 23 is 'headers'
+    set->GetString(24, config.data);              // Line 24 is 'data'
+    set->GetString(25, config.token);             // Line 25 is 'token'
+    set->GetString(26, config.extras);            // Line 26 is 'config_extras'
+    set->GetString(32, config.proxy);             // Line 32 is 'proxy'
+    set->GetString(33, config.certificatePins);  // Line 33 is 'certificate_pins'
 }
 
 void BuildRequestTaskConfigWithBlob(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
@@ -746,6 +753,8 @@ bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
     insertValues.PutString("data", std::string(taskConfig->data.cStr, taskConfig->data.len));
     insertValues.PutString("token", std::string(taskConfig->token.cStr, taskConfig->token.len));
     insertValues.PutString("proxy", std::string(taskConfig->proxy.cStr, taskConfig->proxy.len));
+    insertValues.PutString("certificate_pins", std::string(taskConfig->certificatePins.cStr,
+                           taskConfig->certificatePins.len));
     insertValues.PutString("title", std::string(taskConfig->title.cStr, taskConfig->title.len));
     insertValues.PutString("description", std::string(taskConfig->description.cStr, taskConfig->description.len));
     insertValues.PutString("method", std::string(taskConfig->method.cStr, taskConfig->method.len));
@@ -1078,7 +1087,7 @@ int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, 
                            "retry", "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority",
                            "background", "bundle", "url", "title", "description", "method", "headers", "data", "token",
                            "config_extras", "version", "form_items", "file_specs", "body_file_names", "certs_paths",
-                           "proxy" });
+                           "proxy" , "certificate_pins" });
     int rowCount = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("TaskConfig result set is nullptr or get row count failed");
@@ -1108,6 +1117,7 @@ void BuildCTaskConfig(CTaskConfig *cTaskConfig, const TaskConfig &taskConfig)
     cTaskConfig->token = WrapperCString(taskConfig.token);
     cTaskConfig->extras = WrapperCString(taskConfig.extras);
     cTaskConfig->proxy = WrapperCString(taskConfig.proxy);
+    cTaskConfig->certificatePins = WrapperCString(taskConfig.certificatePins);
     cTaskConfig->version = taskConfig.version;
 
     uint32_t formItemsLen = taskConfig.formItems.size();
@@ -1168,7 +1178,7 @@ CTaskConfig *QuerySingleTaskConfig(uint32_t taskId)
         { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming", "retry",
             "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority", "background", "bundle", "url",
             "title", "description", "method", "headers", "data", "token", "config_extras", "version", "form_items",
-            "file_specs", "body_file_names", "certs_paths", "proxy" });
+            "file_specs", "body_file_names", "certs_paths", "proxy" , "certificate_pins" });
     int rowCount = 0;
     if (resultSet == nullptr) {
         REQUEST_HILOGE("result set is nullptr");

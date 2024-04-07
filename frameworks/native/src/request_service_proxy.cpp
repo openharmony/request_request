@@ -65,6 +65,7 @@ int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid)
     data.WriteString(config.description);
     data.WriteString(config.data);
     data.WriteString(config.proxy);
+    data.WriteString(config.certificatePins);
     GetVectorData(config, data);
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REQUEST), data, reply, option);
     if (ret != ERR_NONE) {

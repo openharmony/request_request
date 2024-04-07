@@ -93,6 +93,8 @@ impl Construct {
 
         let proxy: String = data.read()?;
 
+        let certificate_pins: String = data.read()?;
+
         let bundle = get_calling_bundle();
         let uid = get_calling_uid();
         let token_id = get_calling_token_id();
@@ -200,6 +202,7 @@ impl Construct {
             data: data_base,
             token,
             proxy,
+            certificate_pins,
             extras,
             version,
             form_items,

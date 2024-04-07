@@ -323,6 +323,10 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
         errInfo = "parse proxy error";
         return false;
     }
+    if (!ParseProxy(env, jsConfig, config.certificatePins)) {
+        errInfo = "parse certificatePins error";
+        return false;
+    }
     if (!ParseTitle(env, jsConfig, config) || !ParseToken(env, jsConfig, config)
         || !ParseDescription(env, jsConfig, config.description)) {
         errInfo = "Exceeding maximum length";
@@ -574,6 +578,20 @@ bool JsInitialize::ParseProxy(napi_env env, napi_value jsConfig, std::string &pr
 
     if (!regex_match(proxy, std::regex("^http:\\/\\/.+:\\d{1,5}$"))) {
         REQUEST_HILOGE("ParseProxy error");
+        return false;
+    }
+    return true;
+}
+
+bool JsInitialize::ParseCertificatePins(napi_env env, napi_value jsConfig, std::string &certificatePins)
+{
+    certificatePins = NapiUtils::Convert2String(env, jsConfig, "certificatePins");
+    if (certificatePins.empty()) {
+        return true;
+    }
+
+    if (certificatePins.size() != 32) {
+        REQUEST_HILOGE("The certificatePins length is not equal to 2048");
         return false;
     }
     return true;
