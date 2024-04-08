@@ -585,7 +585,7 @@ void JsInitialize::ParseCertificatePins(napi_env env, std::string &url, std::str
     auto hostname = CommonUtils::GetHostnameFromURL(url);
     auto ret = NetManagerStandard::NetConnClient::GetInstance.GetPinSetForHostName(hostname, certificatePins);
     if (ret != 0 || certificatePins.empty()) {
-        REQUEST_HILOGE("Get No pin set by hostname");
+        REQUEST_HILOGI("Get No pin set by hostname");
     }
 }
 
