@@ -323,10 +323,6 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
         errInfo = "parse proxy error";
         return false;
     }
-    if (!ParseProxy(env, jsConfig, config.certificatePins)) {
-        errInfo = "parse certificatePins error";
-        return false;
-    }
     if (!ParseTitle(env, jsConfig, config) || !ParseToken(env, jsConfig, config)
         || !ParseDescription(env, jsConfig, config.description)) {
         errInfo = "Exceeding maximum length";
@@ -336,6 +332,7 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
         errInfo = "parse saveas error";
         return false;
     }
+    ParseCertificatePins(env, config.url, config.certificatePins);
     ParseMethod(env, jsConfig, config);
     ParseRoaming(env, jsConfig, config);
     ParseRedirect(env, jsConfig, config.redirect);
@@ -583,18 +580,13 @@ bool JsInitialize::ParseProxy(napi_env env, napi_value jsConfig, std::string &pr
     return true;
 }
 
-bool JsInitialize::ParseCertificatePins(napi_env env, napi_value jsConfig, std::string &certificatePins)
+void JsInitialize::ParseCertificatePins(napi_env env, std::string &url, std::string &certificatePins)
 {
-    certificatePins = NapiUtils::Convert2String(env, jsConfig, "certificatePins");
-    if (certificatePins.empty()) {
-        return true;
+    auto hostname = CommonUtils::GetHostnameFromURL(url);
+    auto ret = NetManagerStandard::NetConnClient::GetInstance.GetPinSetForHostName(hostname, certificatePins);
+    if (ret != 0 || certificatePins.empty()) {
+        REQUEST_HILOGE("Get No pin set by hostname");
     }
-
-    if (certificatePins.size() != 32) {
-        REQUEST_HILOGE("The certificatePins length is not equal to 2048");
-        return false;
-    }
-    return true;
 }
 
 void JsInitialize::ParseMethod(napi_env env, napi_value jsConfig, Config &config)

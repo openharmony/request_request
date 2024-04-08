@@ -58,13 +58,13 @@ private:
     static bool ParseAction(napi_env env, napi_value jsConfig, Action &action);
     static bool ParseUrl(napi_env env, napi_value jsConfig, std::string &url);
     static bool ParseProxy(napi_env env, napi_value jsConfig, std::string &proxy);
-    static bool ParseCertificatePins(napi_env env, napi_value jsConfig, std::string &certificatePins);
     static bool ParseCertsPath(napi_env env, napi_value jsConfig, std::vector<std::string> &certsPath);
     static bool ParseData(napi_env env, napi_value jsConfig, Config &config);
     static bool ParseIndex(napi_env env, napi_value jsConfig, Config &config);
     static bool ParseName(napi_env env, napi_value jsVal, std::string &name);
     static bool ParseTitle(napi_env env, napi_value jsConfig, Config &config);
     static void ParseNetwork(napi_env env, napi_value jsConfig, Network &network);
+    static bool ParseCertificatePins(napi_env env, std::string &url, std::string &certificatePins);
     static void ParseMethod(napi_env env, napi_value jsConfig, Config &config);
     static void ParseRedirect(napi_env env, napi_value jsConfig, bool &redirect);
     static void ParseRoaming(napi_env env, napi_value jsConfig, Config &config);
