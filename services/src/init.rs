@@ -13,13 +13,13 @@
 //! This create implement the request server register and publish
 
 use hisysevent::{build_number_param, write, EventType};
-use ipc_rust::{IRemoteBroker, RemoteObj};
-use system_ability_fwk_rust::{IMethod, ISystemAbility, RSystemAbility};
+use samgr::definition::DOWNLOAD_SERVICE_ID;
+use system_ability_fwk::ability::{Ability, PublishHandler};
 
-use crate::{start, stop, RequestService, RequestServiceStub};
+use crate::service::RequestServiceStub;
+use crate::{start, stop};
 
 /// TEST_SERVICE_ID SAID
-const REQUEST_SERVICE_ID: i32 = 3706;
 
 fn service_start_fault() {
     const DOMAIN: &str = "REQUEST";
@@ -35,46 +35,16 @@ fn service_start_fault() {
     );
 }
 
-struct SystemAbility {
-    r_system_ability: RSystemAbility<SystemAbility>,
-}
+struct RequestAbility;
 
-impl SystemAbility {
-    /// Create a SystemAbility object
-    #[allow(dead_code)]
-    fn new_system_ability(said: i32, run_on_create: bool) -> Option<Self> {
-        let r_system_ability = RSystemAbility::new(said, run_on_create);
-        match r_system_ability {
-            Some(r_system_ability) => Some(SystemAbility { r_system_ability }),
-            None => {
-                error!("RSystemAbility::new failed");
-                None
-            }
-        }
-    }
-}
-
-impl ISystemAbility for SystemAbility {
+impl Ability for RequestAbility {
     /// Callback to deal safwk onstart for this system_ability
-    fn on_start(&self) {
+    fn on_start(&self, handler: PublishHandler) {
         info!("on_start");
-        let service = match RequestServiceStub::new_remote_stub(RequestService) {
-            Some(service) => service,
-            None => {
-                service_start_fault();
-                panic!("create RequestService failed");
-            }
-        };
 
-        let object = match service.as_object() {
-            Some(object) => object,
-            None => {
-                service_start_fault();
-                panic!("get request service failed");
-            }
-        };
-
-        self.publish(&object, REQUEST_SERVICE_ID);
+        if !handler.publish(RequestServiceStub) {
+            service_start_fault();
+        }
         start();
         info!("on_start succeed");
     }
@@ -87,25 +57,14 @@ impl ISystemAbility for SystemAbility {
     }
 }
 
-impl IMethod for SystemAbility {
-    /// Call RSystemAbility<SystemAbility> register_ability
-    fn register(&self) {
-        self.r_system_ability.register_ability(self);
-    }
-
-    /// Call RSystemAbility<SystemAbility> publish
-    fn publish(&self, service: &RemoteObj, said: i32) {
-        self.r_system_ability.publish(service, said);
-    }
-}
-
 #[used]
 #[link_section = ".init_array"]
 static A: extern "C" fn() = {
     extern "C" fn init() {
         info!("request service init");
-        let system_ability = SystemAbility::new_system_ability(REQUEST_SERVICE_ID, false)
-            .expect("create service failed");
+        let system_ability = RequestAbility
+            .build_system_ability(DOWNLOAD_SERVICE_ID, false)
+            .unwrap();
         system_ability.register();
     }
     init

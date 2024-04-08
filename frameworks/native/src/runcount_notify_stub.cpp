@@ -24,6 +24,7 @@
 #include "log.h"
 #include "parcel_helper.h"
 #include "request_running_task_count.h"
+#include "string_ex.h"
 
 namespace OHOS::Request {
 void RunCountNotifyStub::CallBack(const Notify &notify)
@@ -62,6 +63,8 @@ void RunCountNotifyStub::OnCallBack(MessageParcel &data)
 {
     REQUEST_HILOGD("Receive callback");
     int runCount = data.ReadInt64();
+    REQUEST_HILOGI("RunCount num %{public}d", runCount);
+
     FwkRunningTaskCountManager::GetInstance()->SetCount(runCount);
     FwkRunningTaskCountManager::GetInstance()->NotifyAllObservers();
 }

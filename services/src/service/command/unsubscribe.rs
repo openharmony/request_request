@@ -11,7 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ipc_rust::{BorrowedMsgParcel, IpcResult, IpcStatusCode};
+use ipc::parcel::MsgParcel;
+use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::service::ability::RequestAbility;
@@ -19,10 +20,7 @@ use crate::service::ability::RequestAbility;
 pub(crate) struct Unsubscribe;
 
 impl Unsubscribe {
-    pub(crate) fn execute(
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("unsubscribe");
         let tid: String = data.read()?;
         debug!("Service unsubscribe: task_id is {}", tid);

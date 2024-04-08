@@ -14,10 +14,8 @@
 use std::fs::File;
 use std::os::unix::io::FromRawFd;
 
-use ipc_rust::{
-    get_calling_pid, get_calling_token_id, get_calling_uid, BorrowedMsgParcel, FileDesc, IpcResult,
-    IpcStatusCode,
-};
+use ipc::parcel::MsgParcel;
+use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::service::ability::RequestAbility;
@@ -25,21 +23,17 @@ use crate::service::ability::RequestAbility;
 pub(crate) struct OpenChannel;
 
 impl OpenChannel {
-    pub(crate) fn execute(
-        _data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    pub(crate) fn execute(_data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("open channel");
-        let pid = get_calling_pid();
-        let uid = get_calling_uid();
-        let token_id = get_calling_token_id();
+        let pid = ipc::Skeleton::calling_pid();
+        let uid = ipc::Skeleton::calling_uid();
+        let token_id = ipc::Skeleton::calling_full_token_id();
         match RequestAbility::client_manager().open_channel(pid, uid, token_id) {
             Ok(fd) => {
                 debug!("open channel ok, fd is {}", fd);
                 let file = unsafe { File::from_raw_fd(fd) };
-                let file = FileDesc::new(file);
                 reply.write(&(ErrorCode::ErrOk as i32))?;
-                reply.write(&file)?;
+                reply.write_file(file)?;
                 Ok(())
             }
             Err(_) => {

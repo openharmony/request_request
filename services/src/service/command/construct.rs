@@ -12,12 +12,11 @@
 // limitations under the License.
 
 use std::collections::HashMap;
+use std::fs::File;
 use std::os::fd::{IntoRawFd, RawFd};
 
-use ipc_rust::{
-    get_calling_token_id, get_calling_uid, BorrowedMsgParcel, FileDesc, IMsgParcel, IpcResult,
-    IpcStatusCode,
-};
+use ipc::parcel::MsgParcel;
+use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::manage::events::EventMessage;
@@ -27,14 +26,10 @@ use crate::service::permission::PermissionChecker;
 use crate::task::config::{Action, CommonTaskConfig, Network, TaskConfig, Version};
 use crate::task::info::Mode;
 use crate::utils::form_item::{FileSpec, FormItem};
-
 pub(crate) struct Construct;
 
 impl Construct {
-    pub(crate) fn execute(
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("Service construct");
 
         if !PermissionChecker::check_internet() {
@@ -94,11 +89,12 @@ impl Construct {
         let proxy: String = data.read()?;
 
         let bundle = get_calling_bundle();
-        let uid = get_calling_uid();
-        let token_id = get_calling_token_id();
+        // Creates task_id here, move it to task_manager later?
+        let uid = ipc::Skeleton::calling_uid();
+        let token_id = ipc::Skeleton::calling_full_token_id();
 
         let certs_path_size: u32 = data.read()?;
-        if certs_path_size > data.get_readable_bytes() {
+        if certs_path_size > data.readable() as u32 {
             error!("Service construct: certs_path_size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
@@ -110,7 +106,7 @@ impl Construct {
         }
 
         let form_size: u32 = data.read()?;
-        if form_size > data.get_readable_bytes() {
+        if form_size > data.readable() as u32 {
             error!("Service construct: form_size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
@@ -123,7 +119,7 @@ impl Construct {
         }
 
         let file_size: u32 = data.read()?;
-        if file_size > data.get_readable_bytes() {
+        if file_size > data.readable() as u32 {
             error!("Service construct: file_specs size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
@@ -137,7 +133,7 @@ impl Construct {
             let is_user_file: bool = data.read()?;
             let mut fd: Option<RawFd> = None;
             if is_user_file {
-                let ipc_fd: FileDesc = data.read()?;
+                let ipc_fd: File = data.read_file()?;
                 fd = Some(ipc_fd.into_raw_fd());
             }
             file_specs.push(FileSpec {
@@ -152,7 +148,7 @@ impl Construct {
 
         // Response bodies fd.
         let body_file_size: u32 = data.read()?;
-        if body_file_size > data.get_readable_bytes() {
+        if body_file_size > data.readable() as u32 {
             error!("Service construct: body_file size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
@@ -165,7 +161,7 @@ impl Construct {
         }
 
         let header_size: u32 = data.read()?;
-        if header_size > data.get_readable_bytes() {
+        if header_size > data.readable() as u32 {
             error!("Service construct: header size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
@@ -178,7 +174,7 @@ impl Construct {
         }
 
         let extras_size: u32 = data.read()?;
-        if extras_size > data.get_readable_bytes() {
+        if extras_size > data.readable() as u32 {
             error!("Service construct: extras size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);

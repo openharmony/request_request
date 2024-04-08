@@ -11,20 +11,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ipc_rust::{get_calling_uid, BorrowedMsgParcel, IpcResult, IpcStatusCode};
+use ipc::parcel::MsgParcel;
+use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::manage::events::EventMessage;
 use crate::service::ability::RequestAbility;
 use crate::service::serialize_task_info;
-
 pub(crate) struct Touch;
 
 impl Touch {
-    pub(crate) fn execute(
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         debug!("Service touch");
         let id: String = data.read()?;
         debug!("Service touch: task_id is {}", id);
@@ -33,7 +30,7 @@ impl Touch {
                 debug!("Service touch: u32 task_id is {}", id);
                 let token: String = data.read()?;
                 debug!("Service touch: token is {}", token);
-                let uid = get_calling_uid();
+                let uid = ipc::Skeleton::calling_uid();
                 debug!("Service touch: uid is {}", uid);
                 let (event, rx) = EventMessage::touch(uid, id, token);
                 if !RequestAbility::task_manager().send_event(event) {

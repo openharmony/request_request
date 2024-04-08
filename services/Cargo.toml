@@ -20,7 +20,7 @@ license = "Apache-2.0"
 [features]
 default = ["oh"]
 
-oh = ["hilog_rust", "hisysevent", "hitrace_meter_rust", "rust_samgr", "ipc_rust"]
+oh = []
 
 [dependencies]
 ylong_runtime = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime", features = ["full"] }
@@ -31,12 +31,10 @@ ylong_http_client = { git = "https://gitee.com/openharmony/commonlibrary_rust_yl
     "ylong_base",
 ] }
 
-hilog_rust = { git = "https://gitee.com/openharmony/hiviewdfx_hilog.git", optional = true }
-hisysevent = { git = "https://gitee.com/openharmony/hiviewdfx_hisysevent.git", optional = true }
-hitrace_meter_rust = { git = "https://gitee.com/openharmony/hiviewdfx_hitrace.git", optional = true }
-system_ability_fwk_rust = { git = "https://gitee.com/openharmony/systemabilitymgr_safwk" }
-rust_samgr = { git = "https://gitee.com/openharmony/systemabilitymgr_samgr.git", optional = true }
-ipc_rust = { git = "https://gitee.com/openharmony/communication_ipc.git", optional = true }
+hilog_rust = { git = "https://gitee.com/openharmony/hiviewdfx_hilog" }
+hisysevent = { git = "https://gitee.com/openharmony/hiviewdfx_hisysevent" }
+hitrace_meter_rust = { git = "https://gitee.com/openharmony/hiviewdfx_hitrace" }
 
-log = { version = "0.4.20" }
-env_logger = { version = "0.10.1" }
+system_ability_fwk = { git = "https://gitee.com/openharmony/systemabilitymgr_safwk" }
+samgr = { git = "https://gitee.com/openharmony/systemabilitymgr_samgr" }
+ipc = { git = "https://gitee.com/openharmony/communication_ipc" }

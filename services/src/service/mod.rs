@@ -22,307 +22,158 @@ pub(crate) mod listener;
 pub(crate) mod permission;
 pub(crate) mod runcount;
 
+use std::fs::File;
+
 pub(crate) use interface::{RequestInterfaceCode, RequestNotifyInterfaceCode};
-use ipc_rust::{
-    define_remote_object, get_calling_token_id, BorrowedMsgParcel, FileDesc, IRemoteBroker,
-    InterfaceToken, IpcResult, IpcStatusCode, RemoteObj, RemoteStub, String16,
-};
+use ipc::parcel::MsgParcel;
+use ipc::remote::RemoteStub;
+use ipc::{IpcResult, IpcStatusCode};
 
 use crate::task::config::TaskConfig;
 use crate::task::info::TaskInfo;
 use crate::utils::c_wrapper::CStringWrapper;
 
-define_remote_object!(
-    RequestServiceInterface["ohos.request.service"] {
-        stub: RequestServiceStub(on_remote_request),
-        proxy: RequestServiceProxy,
-    }
-);
+pub(crate) struct RequestServiceStub;
 
-fn on_remote_request(
-    stub: &dyn RequestServiceInterface,
-    code: u32,
-    data: &BorrowedMsgParcel,
-    reply: &mut BorrowedMsgParcel,
-) -> IpcResult<()> {
-    const SERVICE_TOKEN: &str = "OHOS.Download.RequestServiceInterface";
+impl RemoteStub for RequestServiceStub {
+    fn on_remote_request(&self, code: u32, data: &mut MsgParcel, reply: &mut MsgParcel) -> i32 {
+        const SERVICE_TOKEN: &str = "OHOS.Download.RequestServiceInterface";
 
-    debug!("Processes on_remote_request, code: {}", code);
-    match data.read::<InterfaceToken>().map(|token| token.get_token()) {
-        Ok(token) if token == SERVICE_TOKEN => {}
-        _ => {
-            error!("Gets invalid token");
-            return Err(IpcStatusCode::Failed);
+        debug!("Processes on_remote_request, code: {}", code);
+        match data.read_interface_token() {
+            Ok(token) if token == SERVICE_TOKEN => {}
+            _ => {
+                error!("Gets invalid token");
+                return IpcStatusCode::Failed as i32;
+            }
+        };
+        
+        let res = match code {
+            _ if code == RequestInterfaceCode::Construct as u32 => {
+                RequestService::construct(data, reply)
+            }
+            _ if code == RequestInterfaceCode::Pause as u32 => RequestService::pause(data, reply),
+            _ if code == RequestInterfaceCode::Query as u32 => RequestService::query(data, reply),
+            _ if code == RequestInterfaceCode::QueryMimeType as u32 => {
+                RequestService::query_mime_type(data, reply)
+            }
+            _ if code == RequestInterfaceCode::Remove as u32 => RequestService::remove(data, reply),
+            _ if code == RequestInterfaceCode::Resume as u32 => RequestService::resume(data, reply),
+            _ if code == RequestInterfaceCode::Start as u32 => RequestService::start(data, reply),
+            _ if code == RequestInterfaceCode::Stop as u32 => RequestService::stop(data, reply),
+            _ if code == RequestInterfaceCode::Show as u32 => RequestService::show(data, reply),
+            _ if code == RequestInterfaceCode::Touch as u32 => RequestService::touch(data, reply),
+            _ if code == RequestInterfaceCode::Search as u32 => RequestService::search(data, reply),
+            _ if code == RequestInterfaceCode::GetTask as u32 => {
+                RequestService::get_task(data, reply)
+            }
+            _ if code == RequestInterfaceCode::Clear as u32 => Ok(()),
+            _ if code == RequestInterfaceCode::OpenChannel as u32 => {
+                RequestService::open_channel(data, reply)
+            }
+            _ if code == RequestInterfaceCode::Subscribe as u32 => {
+                RequestService::subscribe(data, reply)
+            }
+            _ if code == RequestInterfaceCode::Unsubscribe as u32 => {
+                RequestService::unsubscribe(data, reply)
+            }
+            _ if code == RequestInterfaceCode::SubRunCount as u32 => {
+                RequestService::sub_runcount(data, reply)
+            }
+            _ if code == RequestInterfaceCode::UnsubRunCount as u32 => {
+                RequestService::unsub_runcount(data, reply)
+            }
+            _ => return IpcStatusCode::Failed as i32,
+        };
+
+        match res {
+            Ok(_) => 0,
+            Err(e) => e as i32,
         }
-    };
-    match code.try_into()? {
-        RequestInterfaceCode::Construct => stub.construct(data, reply),
-        RequestInterfaceCode::Pause => stub.pause(data, reply),
-        RequestInterfaceCode::Query => stub.query(data, reply),
-        RequestInterfaceCode::QueryMimeType => stub.query_mime_type(data, reply),
-        RequestInterfaceCode::Remove => stub.remove(data, reply),
-        RequestInterfaceCode::Resume => stub.resume(data, reply),
-        RequestInterfaceCode::Start => stub.start(data, reply),
-        RequestInterfaceCode::Stop => stub.stop(data, reply),
-        RequestInterfaceCode::Show => stub.show(data, reply),
-        RequestInterfaceCode::Touch => stub.touch(data, reply),
-        RequestInterfaceCode::Search => stub.search(data, reply),
-        RequestInterfaceCode::GetTask => stub.get_task(data, reply),
-        RequestInterfaceCode::Clear => Ok(()),
-        RequestInterfaceCode::OpenChannel => stub.open_channel(data, reply),
-        RequestInterfaceCode::Subscribe => stub.subscribe(data, reply),
-        RequestInterfaceCode::Unsubscribe => stub.unsubscribe(data, reply),
-        RequestInterfaceCode::SubRunCount => stub.sub_runcount(data, reply),
-        RequestInterfaceCode::UnsubRunCount => stub.unsub_runcount(data, reply),
     }
-}
 
-impl TryFrom<u32> for RequestInterfaceCode {
-    type Error = IpcStatusCode;
-
-    fn try_from(code: u32) -> IpcResult<Self> {
-        match code {
-            _ if code == Self::Construct as u32 => Ok(Self::Construct),
-            _ if code == Self::Pause as u32 => Ok(Self::Pause),
-            _ if code == Self::Query as u32 => Ok(Self::Query),
-            _ if code == Self::QueryMimeType as u32 => Ok(Self::QueryMimeType),
-            _ if code == Self::Remove as u32 => Ok(Self::Remove),
-            _ if code == Self::Resume as u32 => Ok(Self::Resume),
-            _ if code == Self::Start as u32 => Ok(Self::Start),
-            _ if code == Self::Stop as u32 => Ok(Self::Stop),
-            _ if code == Self::Show as u32 => Ok(Self::Show),
-            _ if code == Self::Touch as u32 => Ok(Self::Touch),
-            _ if code == Self::Search as u32 => Ok(Self::Search),
-            _ if code == Self::GetTask as u32 => Ok(Self::GetTask),
-            _ if code == Self::Clear as u32 => Ok(Self::Clear),
-            _ if code == Self::OpenChannel as u32 => Ok(Self::OpenChannel),
-            _ if code == Self::Subscribe as u32 => Ok(Self::Subscribe),
-            _ if code == Self::Unsubscribe as u32 => Ok(Self::Unsubscribe),
-            _ if code == Self::SubRunCount as u32 => Ok(Self::SubRunCount),
-            _ if code == Self::UnsubRunCount as u32 => Ok(Self::UnsubRunCount),
-            _ => Err(IpcStatusCode::Failed),
+    fn dump(&self, file: File, args: Vec<String>) -> i32 {
+        match command::Dump::execute(file, args) {
+            Ok(()) => 0,
+            Err(e) => e as i32,
         }
     }
 }
-
-/// Functions between proxy and stub.
-pub trait RequestServiceInterface: IRemoteBroker {
-    /// Constructs or creates a task.
-    fn construct(
-        &self,
-        _data: &BorrowedMsgParcel,
-        _reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
-        Ok(())
-    }
-
-    /// Pauses a task.
-    fn pause(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        Ok(())
-    }
-
-    /// Queries tasks.
-    fn query(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        Ok(())
-    }
-
-    /// Queries the mime type of a task.
-    fn query_mime_type(
-        &self,
-        _data: &BorrowedMsgParcel,
-        _reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
-        Ok(())
-    }
-
-    /// Removes a task.
-    fn remove(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        Ok(())
-    }
-
-    /// Resumes a task.
-    fn resume(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        Ok(())
-    }
-
-    /// Starts a task.
-    fn start(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        Ok(())
-    }
-
-    /// Stops a task.
-    fn stop(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        Ok(())
-    }
-
-    /// Shows a specified task details which belongs to the caller.
-    fn show(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        Ok(())
-    }
-
-    /// Touches a specified task with token.
-    fn touch(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        Ok(())
-    }
-
-    /// Searches tasks of this system.
-    fn search(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        Ok(())
-    }
-
-    /// Get a task of this system.
-    fn get_task(&self, _data: &BorrowedMsgParcel, _reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
-        Ok(())
-    }
-
-    ///  open the channel for ipc
-    fn open_channel(
-        &self,
-        _data: &BorrowedMsgParcel,
-        _reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
-        Ok(())
-    }
-
-    ///  subscribe response
-    fn subscribe(
-        &self,
-        _data: &BorrowedMsgParcel,
-        _reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
-        Ok(())
-    }
-
-    ///  unsubscribe response
-    fn unsubscribe(
-        &self,
-        _data: &BorrowedMsgParcel,
-        _reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
-        Ok(())
-    }
-
-    ///  subscribe running task count
-    fn sub_runcount(
-        &self,
-        _data: &BorrowedMsgParcel,
-        _reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
-        Ok(())
-    }
-
-    ///  unsubscribe running task count
-    fn unsub_runcount(
-        &self,
-        _data: &BorrowedMsgParcel,
-        _reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
-        Ok(())
-    }
-}
-
-impl RequestServiceInterface for RequestServiceProxy {}
 
 /// RequestService type
-pub struct RequestService;
+struct RequestService;
 
-impl IRemoteBroker for RequestService {
-    fn dump(&self, file: &FileDesc, args: &mut Vec<String16>) -> i32 {
-        command::Dump::execute(file, args)
-    }
-}
-
-impl RequestServiceInterface for RequestService {
-    fn construct(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+impl RequestService {
+    fn construct(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::Construct::execute(data, reply)
     }
 
-    fn pause(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+    fn pause(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::Pause::execute(data, reply)
     }
 
-    fn query(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+    fn query(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::Query::execute(data, reply)
     }
 
-    fn query_mime_type(
-        &self,
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    fn query_mime_type(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::QueryMimeType::execute(data, reply)
     }
 
-    fn remove(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+    fn remove(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::Remove::execute(data, reply)
     }
 
-    fn resume(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+    fn resume(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::Resume::execute(data, reply)
     }
 
-    fn start(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+    fn start(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::Start::execute(data, reply)
     }
 
-    fn stop(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+    fn stop(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::Stop::execute(data, reply)
     }
 
-    fn show(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+    fn show(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::Show::execute(data, reply)
     }
 
-    fn touch(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+    fn touch(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::Touch::execute(data, reply)
     }
 
-    fn search(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+    fn search(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::Search::execute(data, reply)
     }
 
-    fn get_task(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+    fn get_task(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::GetTask::execute(data, reply)
     }
 
-    fn open_channel(
-        &self,
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    fn open_channel(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::OpenChannel::execute(data, reply)
     }
 
-    fn subscribe(&self, data: &BorrowedMsgParcel, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+    fn subscribe(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::Subscribe::execute(data, reply)
     }
 
-    fn unsubscribe(
-        &self,
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    fn unsubscribe(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::Unsubscribe::execute(data, reply)
     }
 
-    fn sub_runcount(
-        &self,
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    fn sub_runcount(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::SubRunCount::execute(data, reply)
     }
 
-    fn unsub_runcount(
-        &self,
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    fn unsub_runcount(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         command::UnsubRunCount::execute(data, reply)
     }
 }
 
-pub(crate) fn serialize_task_info(tf: TaskInfo, reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+pub(crate) fn serialize_task_info(tf: TaskInfo, reply: &mut MsgParcel) -> IpcResult<()> {
     reply.write(&(tf.common_data.gauge))?;
     reply.write(&(tf.common_data.retry))?;
     reply.write(&(tf.common_data.action as u32))?;
@@ -364,14 +215,14 @@ pub(crate) fn serialize_task_info(tf: TaskInfo, reply: &mut BorrowedMsgParcel) -
 
     reply.write(&(tf.progress.extras.len() as u32))?;
     for (k, v) in tf.progress.extras.iter() {
-        reply.write(&(k))?;
-        reply.write(&(v))?;
+        reply.write(k)?;
+        reply.write(v)?;
     }
 
     reply.write(&(tf.extras.len() as u32))?;
     for (k, v) in tf.extras.iter() {
-        reply.write(&(k))?;
-        reply.write(&(v))?;
+        reply.write(k)?;
+        reply.write(v)?;
     }
     reply.write(&(tf.common_data.version as u32))?;
     reply.write(&(tf.each_file_status.len() as u32))?;
@@ -383,10 +234,7 @@ pub(crate) fn serialize_task_info(tf: TaskInfo, reply: &mut BorrowedMsgParcel) -
     Ok(())
 }
 
-pub(crate) fn serialize_task_config(
-    config: TaskConfig,
-    reply: &mut BorrowedMsgParcel,
-) -> IpcResult<()> {
+pub(crate) fn serialize_task_config(config: TaskConfig, reply: &mut MsgParcel) -> IpcResult<()> {
     reply.write(&(config.common_data.action as u32))?;
     reply.write(&(config.common_data.mode as u32))?;
     reply.write(&(config.common_data.cover))?;
@@ -410,16 +258,16 @@ pub(crate) fn serialize_task_config(
     // write config.headers
     reply.write(&(config.headers.len() as u32))?;
     for (k, v) in config.headers.iter() {
-        reply.write(&(k))?;
-        reply.write(&(v))?;
+        reply.write(k)?;
+        reply.write(v)?;
     }
     reply.write(&(config.data))?;
     reply.write(&(config.token))?;
     // write config.extras
     reply.write(&(config.extras.len() as u32))?;
     for (k, v) in config.extras.iter() {
-        reply.write(&(k))?;
-        reply.write(&(v))?;
+        reply.write(k)?;
+        reply.write(v)?;
     }
     reply.write(&(config.version as u32))?;
     // write config.form_items
@@ -446,14 +294,14 @@ pub(crate) fn serialize_task_config(
 
 pub(crate) fn get_calling_bundle() -> String {
     debug!("Gets calling bundle");
-    let token_id = get_calling_token_id();
+    let token_id = ipc::Skeleton::calling_full_token_id();
     debug!("Gets token id {}", &token_id);
     unsafe { GetCallingBundle(token_id).to_string() }
 }
 
 pub(crate) fn is_system_api() -> bool {
     debug!("Checks if the api is a system_api");
-    let token_id = get_calling_token_id();
+    let token_id = ipc::Skeleton::calling_full_token_id();
     debug!("Gets token id {}", &token_id);
     unsafe { RequestIsSystemAPI(token_id) }
 }

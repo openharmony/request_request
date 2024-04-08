@@ -11,7 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ipc_rust::{get_calling_uid, BorrowedMsgParcel, IpcResult, IpcStatusCode};
+use ipc::parcel::MsgParcel;
+use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::manage::events::EventMessage;
@@ -20,17 +21,14 @@ use crate::service::ability::RequestAbility;
 pub(crate) struct Stop;
 
 impl Stop {
-    pub(crate) fn execute(
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         debug!("Service stop");
         let id: String = data.read()?;
         debug!("Service stop: task_id is {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
                 debug!("Service stop: u32 task_id is {}", id);
-                let uid = get_calling_uid();
+                let uid = ipc::Skeleton::calling_uid();
                 debug!("Service stop: uid is {}", uid);
                 let (event, rx) = EventMessage::stop(uid, id);
                 if !RequestAbility::task_manager().send_event(event) {

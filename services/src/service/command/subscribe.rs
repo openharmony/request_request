@@ -11,10 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ipc_rust::{
-    get_calling_pid, get_calling_token_id, get_calling_uid, BorrowedMsgParcel, IpcResult,
-    IpcStatusCode,
-};
+use ipc::parcel::MsgParcel;
+use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::manage::events::EventMessage;
@@ -23,16 +21,13 @@ use crate::service::ability::RequestAbility;
 pub(crate) struct Subscribe;
 
 impl Subscribe {
-    pub(crate) fn execute(
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("subscribe");
         let tid: String = data.read()?;
         debug!("Service subscribe: task_id is {}", tid);
-        let pid = get_calling_pid();
-        let uid = get_calling_uid();
-        let token_id = get_calling_token_id();
+        let pid = ipc::Skeleton::calling_pid();
+        let uid = ipc::Skeleton::calling_uid();
+        let token_id = ipc::Skeleton::calling_full_token_id();
         match tid.parse::<u32>() {
             Ok(tid) => {
                 let (event, rx) = EventMessage::subscribe(tid, token_id);

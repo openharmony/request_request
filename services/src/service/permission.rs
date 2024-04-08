@@ -11,8 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ipc_rust::get_calling_token_id;
-
 use crate::utils::c_wrapper::CStringWrapper;
 
 static INTERNET_PERMISSION: &str = "ohos.permission.INTERNET";
@@ -26,7 +24,7 @@ impl PermissionChecker {
         debug!("Checks INTERNET permission");
         unsafe {
             DownloadServerCheckPermission(
-                get_calling_token_id(),
+                ipc::Skeleton::calling_full_token_id(),
                 CStringWrapper::from(INTERNET_PERMISSION),
             )
         }
@@ -34,7 +32,7 @@ impl PermissionChecker {
 
     pub(crate) fn check_query() -> QueryPermission {
         debug!("Checks QUERY permission");
-        let id = get_calling_token_id();
+        let id = ipc::Skeleton::calling_full_token_id();
         let query_download =
             unsafe { DownloadServerCheckPermission(id, CStringWrapper::from(QUERY_DOWNLOAD)) };
         let query_upload =

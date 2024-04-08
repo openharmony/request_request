@@ -13,7 +13,9 @@
 
 mod manager;
 
-use ipc_rust::{IRemoteObj, InterfaceToken, IpcResult, MsgParcel, RemoteObj};
+use ipc::parcel::MsgParcel;
+use ipc::remote::RemoteObj;
+use ipc::IpcResult;
 pub(crate) use manager::{RunCountManager, RunCountManagerEntry};
 use ylong_runtime::sync::oneshot::{channel, Sender};
 
@@ -36,10 +38,7 @@ impl RunCountEvent {
 
     pub(crate) fn unsub_runcount(pid: u64) -> (Self, Recv<ErrorCode>) {
         let (tx, rx) = channel::<ErrorCode>();
-        (
-            Self::UnsubRunCount(SubKey::new(pid), tx),
-            Recv::new(rx),
-        )
+        (Self::UnsubRunCount(SubKey::new(pid), tx), Recv::new(rx))
     }
 
     pub(crate) fn change_runcount(change: i64) -> Self {
@@ -62,7 +61,6 @@ impl SubKey {
     }
 }
 
-#[derive(Clone)]
 struct SubClient {
     obj: RemoteObj,
 }
@@ -74,13 +72,7 @@ impl SubClient {
 
     fn notify_runcount(&self, runcount: i64) {
         debug!("notify runcount in");
-        let mut parcel = match MsgParcel::new() {
-            Some(parcel) => parcel,
-            None => {
-                error!("During notify_runcount: create MsgParcel failed");
-                return;
-            }
-        };
+        let mut parcel = MsgParcel::new();
 
         if self.write_parcel_runcount(&mut parcel, runcount).is_err() {
             error!("During notify_runcount: ipc write failed");
@@ -90,8 +82,7 @@ impl SubClient {
         debug!("During notify_runcount: send request");
         if let Err(e) = self.obj.send_request(
             RequestNotifyInterfaceCode::NotifyRunCount as u32,
-            &parcel,
-            false,
+            &mut parcel,
         ) {
             error!("During notify_runcount: send request failed {:?}", e);
             return;
@@ -100,7 +91,7 @@ impl SubClient {
     }
 
     fn write_parcel_runcount(&self, parcel: &mut MsgParcel, runcount: i64) -> IpcResult<()> {
-        parcel.write(&InterfaceToken::new("OHOS.Download.NotifyInterface"))?;
+        parcel.write_interface_token("OHOS.Download.NotifyInterface")?;
         parcel.write(&(runcount))?;
         Ok(())
     }

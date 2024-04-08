@@ -17,14 +17,14 @@ use std::net::Shutdown;
 use std::os::fd::AsRawFd;
 
 pub(crate) use manager::{ClientManager, ClientManagerEntry};
-use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 use ylong_http_client::Headers;
 use ylong_runtime::net::UnixDatagram;
+use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 use ylong_runtime::sync::oneshot::{channel, Sender};
 
 use crate::error::ErrorCode;
-use crate::utils::Recv;
 use crate::task::notify::{NotifyData, SubscribeType};
+use crate::utils::Recv;
 
 const REQUEST_MAGIC_NUM: u32 = 0x43434646;
 const HEADERS_MAX_SIZE: u16 = 8 * 1024;
@@ -128,11 +128,7 @@ impl ClientManagerEntry {
         let _ = self.send_event(event);
     }
 
-    pub(crate) fn send_notify_data(
-        &self,
-        subscribe_type: SubscribeType,
-        notify_data: NotifyData,
-    ) {
+    pub(crate) fn send_notify_data(&self, subscribe_type: SubscribeType, notify_data: NotifyData) {
         let event = ClientEvent::SendNotifyData(subscribe_type, notify_data);
         let _ = self.send_event(event);
     }
@@ -151,7 +147,11 @@ pub(crate) struct Client {
 }
 
 impl Client {
-    pub(crate) fn constructor(pid: u64, uid: u64, token_id: u64) -> Option<(UnboundedSender<ClientEvent>, i32)> {
+    pub(crate) fn constructor(
+        pid: u64,
+        uid: u64,
+        token_id: u64,
+    ) -> Option<(UnboundedSender<ClientEvent>, i32)> {
         let (tx, rx) = unbounded_channel();
         let (server_sock_fd, client_sock_fd) = match UnixDatagram::pair() {
             Ok((server_sock_fd, client_sock_fd)) => (server_sock_fd, client_sock_fd),
@@ -200,8 +200,9 @@ impl Client {
                         return;
                     }
                     ClientEvent::SendResponse(tid, version, status_code, reason, headers) => {
-                        self.handle_send_response(tid, version, status_code, reason, headers).await;
-                    },
+                        self.handle_send_response(tid, version, status_code, reason, headers)
+                            .await;
+                    }
                     ClientEvent::SendNotifyData(subscribe_type, notify_data) => {
                         if subscribe_type == SubscribeType::Progress {
                             progress_index = index;
@@ -263,7 +264,7 @@ impl Client {
             }
             response.push(b'\n');
         }
-        
+
         let mut size = response.len() as u16;
         if size > HEADERS_MAX_SIZE {
             response.truncate(HEADERS_MAX_SIZE as usize);
@@ -277,7 +278,11 @@ impl Client {
         self.send_message(response).await;
     }
 
-    async fn handle_send_notify_data(&mut self,subscribe_type: SubscribeType, notify_data: NotifyData) {
+    async fn handle_send_notify_data(
+        &mut self,
+        subscribe_type: SubscribeType,
+        notify_data: NotifyData,
+    ) {
         let mut message = Vec::<u8>::new();
 
         message.extend_from_slice(&REQUEST_MAGIC_NUM.to_le_bytes());
@@ -296,13 +301,15 @@ impl Client {
         message.extend_from_slice(&notify_data.task_id.to_le_bytes());
 
         message.extend_from_slice(&(notify_data.progress.common_data.state as u32).to_le_bytes());
-        
+
         let index = notify_data.progress.common_data.index;
         message.extend_from_slice(&(index as u32).to_le_bytes());
 
         message.extend_from_slice(&(notify_data.progress.processed[index] as u64).to_le_bytes());
 
-        message.extend_from_slice(&(notify_data.progress.common_data.total_processed as u64).to_le_bytes());
+        message.extend_from_slice(
+            &(notify_data.progress.common_data.total_processed as u64).to_le_bytes(),
+        );
 
         message.extend_from_slice(&(notify_data.progress.sizes.len() as u32).to_le_bytes());
         for size in notify_data.progress.sizes {
@@ -320,7 +327,7 @@ impl Client {
         message.extend_from_slice(&(notify_data.action as u32).to_le_bytes());
 
         message.extend_from_slice(&(notify_data.version as u32).to_le_bytes());
-        
+
         message.extend_from_slice(&(notify_data.each_file_status.len() as u32).to_le_bytes());
         for status in notify_data.each_file_status {
             message.extend_from_slice(&status.path.into_bytes());
@@ -340,21 +347,22 @@ impl Client {
     }
 
     async fn send_message(&mut self, message: Vec<u8>) {
-         let ret = self.server_sock_fd.send(&message).await;
-         match ret {
+        let ret = self.server_sock_fd.send(&message).await;
+        match ret {
             Ok(_) => {
                 let mut buf: [u8; 4] = [0; 4];
                 let ret = self.server_sock_fd.recv(&mut buf).await;
-                if let Err(e) = ret { error!("message len err, {:?}", e) }
+                if let Err(e) = ret {
+                    error!("message len err, {:?}", e)
+                }
                 let len: u32 = u32::from_le_bytes(buf);
                 if len != message.len() as u32 {
                     error!("message len bad, send {:?}, recv {:?}", message.len(), len);
                 }
-            },
+            }
             Err(err) => {
                 error!("message send error: {:?}", err);
             }
-         }
-         
+        }
     }
 }

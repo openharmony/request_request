@@ -11,7 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ipc_rust::{get_calling_uid, BorrowedMsgParcel, IpcResult, IpcStatusCode};
+use ipc::parcel::MsgParcel;
+use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::manage::events::EventMessage;
@@ -22,10 +23,7 @@ use crate::task::config::Version;
 pub(crate) struct Pause;
 
 impl Pause {
-    pub(crate) fn execute(
-        data: &BorrowedMsgParcel,
-        reply: &mut BorrowedMsgParcel,
-    ) -> IpcResult<()> {
+    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("Service pause");
         let version: u32 = data.read()?;
         debug!("Service pause: version {}", version);
@@ -41,7 +39,7 @@ impl Pause {
             Ok(id) => {
                 debug!("Service pause: u32 task_id is {}", id);
 
-                let uid = get_calling_uid();
+                let uid = ipc::Skeleton::calling_uid();
                 debug!("Service pause: uid is {}", uid);
 
                 let (event, rx) = EventMessage::pause(uid, id);

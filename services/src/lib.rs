@@ -40,7 +40,6 @@ cfg_oh! {
     mod trace;
     mod sys_event;
     mod service;
-    pub use service::{RequestService, RequestServiceStub};
 
     /// hilog label
     pub const LOG_LABEL: hilog_rust::HiLogLabel = hilog_rust::HiLogLabel {
