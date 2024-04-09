@@ -374,7 +374,8 @@ int32_t RequestServiceProxy::Subscribe(const std::string &taskId)
         REQUEST_HILOGE("send request ret code is %{public}d", ret);
         return E_SERVICE_ERROR;
     }
-    return E_OK;
+    int32_t errCode = reply.ReadInt32();
+    return errCode;
 }
 
 int32_t RequestServiceProxy::Unsubscribe(const std::string &taskId)

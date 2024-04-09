@@ -302,7 +302,14 @@ int32_t RequestManagerImpl::Subscribe(const std::string &taskId)
     }
     this->EnsureChannelOpen();
 
-    return proxy->Subscribe(taskId);
+    int32_t ret = proxy->Subscribe(taskId);
+
+    // channel not open may happen when app state notified terminated but actually does not exit.
+    if (ret == E_CHANNEL_NOT_OPEN) {
+        this->ReopenChannel();
+        ret = proxy->Subscribe(taskId);
+    }
+    return ret;
 }
 
 int32_t RequestManagerImpl::Unsubscribe(const std::string &taskId)

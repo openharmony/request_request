@@ -51,15 +51,14 @@ impl Subscribe {
                     return Err(IpcStatusCode::Failed);
                 }
 
-                if RequestAbility::client_manager().subscribe(tid, pid, uid, token_id)
-                    == ErrorCode::ErrOk
-                {
+                let ret = RequestAbility::client_manager().subscribe(tid, pid, uid, token_id);
+                if ret == ErrorCode::ErrOk {
                     reply.write(&(ErrorCode::ErrOk as i32))?;
                     info!("subscribe ok");
                     Ok(())
                 } else {
                     error!("subscribe failed");
-                    reply.write(&(ErrorCode::TaskNotFound as i32))?;
+                    reply.write(&(ret as i32))?;
                     Err(IpcStatusCode::Failed)
                 }
             }
