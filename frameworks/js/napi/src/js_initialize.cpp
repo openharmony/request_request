@@ -453,7 +453,12 @@ int64_t JsInitialize::ParseEnds(napi_env env, napi_value jsConfig)
     if (!NapiUtils::HasNamedProperty(env, jsConfig, "ends")) {
         return -1;
     }
-    return NapiUtils::Convert2Int64(env, jsConfig, "ends");
+
+    napi_value value = NapiUtils::GetNamedProperty(env, jsConfig, "ends");
+    if (NapiUtils::GetValueType(env, value) != napi_number) {
+        return -1;
+    }
+    return NapiUtils::Convert2Int64(env, value);
 }
 
 uint32_t JsInitialize::ParsePriority(napi_env env, napi_value jsConfig)
