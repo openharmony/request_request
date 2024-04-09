@@ -91,6 +91,7 @@ ohos_static_library("request_service_c") {
     "c_wrapper/source/get_proxy.cpp",
     "c_wrapper/source/get_top_bundle.cpp",
     "c_wrapper/source/network_adapter.cpp",
+    "c_wrapper/source/request_cert_mgr_adapter.cpp",
     "c_wrapper/source/url_policy.cpp",
   ]
   cflags_cc = [ "-O2" ]
@@ -104,6 +105,7 @@ ohos_static_library("request_service_c") {
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
     "c_utils:utils",
+    "certificate_manager:cert_manager_sdk",
     "common_event_service:cesfwk_innerkits",
     "distributed_notification_service:ans_innerkits",
     "eventhandler:libeventhandler",

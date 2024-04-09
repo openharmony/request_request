@@ -59,7 +59,7 @@ pub(crate) struct SystemConfig {
     pub(crate) proxy_host: String,
     pub(crate) proxy_port: String,
     pub(crate) proxy_exlist: String,
-    pub(crate) certs: Option<Certificate>,
+    pub(crate) certs: Option<Vec<Certificate>>,
 }
 
 #[derive(Clone)]

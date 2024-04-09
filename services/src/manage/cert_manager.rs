@@ -32,7 +32,7 @@ impl CertManager {
         Self { info }
     }
 
-    pub(crate) fn certificate(&self) -> Option<Certificate> {
+    pub(crate) fn certificate(&self) -> Option<Vec<Certificate>> {
         self.info.read().unwrap().cert.clone()
     }
 
@@ -44,7 +44,7 @@ impl CertManager {
 #[derive(Default)]
 struct CertInfo {
     time: Option<SystemTime>,
-    cert: Option<Certificate>,
+    cert: Option<Vec<Certificate>>,
 }
 
 async fn run(info: Arc<RwLock<CertInfo>>) {
@@ -86,10 +86,10 @@ fn update_system_cert(info: &Arc<RwLock<CertInfo>>) {
         return;
     }
 
-    let cert = match Certificate::from_pem(&buf) {
+    let mut cert_from_pem = match Certificate::from_pem(&buf) {
         Ok(cert) => CertInfo {
             time: modified,
-            cert: Some(cert),
+            cert: Some(vec![cert]),
         },
         Err(e) => {
             error!("parse cacert.pem failed, error is {:?}", e);
@@ -97,5 +97,58 @@ fn update_system_cert(info: &Arc<RwLock<CertInfo>>) {
         }
     };
 
+    let c_certs_ptr = unsafe { GetUserCertsData() };
+    if !c_certs_ptr.is_null() {
+        error!("GetUserCertsData is not ptr");
+        let certs = unsafe { &*c_certs_ptr };
+        let c_cert_list_ptr =
+            unsafe { std::slice::from_raw_parts(certs.cert_data_list, certs.len as usize) };
+        for (_, item) in c_cert_list_ptr.iter().enumerate() {
+            let cert = unsafe { &**item };
+            let cert_slice = unsafe { std::slice::from_raw_parts(cert.data, cert.size as usize) };
+            cert_from_pem = match Certificate::from_pem(cert_slice) {
+                Ok(cert) => {
+                    cert_from_pem.cert.as_mut().unwrap().push(cert);
+                    cert_from_pem
+                },
+                Err(e) => {
+                    error!("parse security cert path failed, error is {:?}", e);
+                    return;
+                }
+            };
+        }
+        unsafe { FreeCertDataList(c_certs_ptr) };
+    }
+
+    let cert = match Certificate::from_path("/system/etc/security/certificates/") {
+        Ok(cert) => {
+            cert_from_pem.cert.as_mut().unwrap().push(cert);
+            cert_from_pem
+        },
+        Err(e) => {
+            error!("parse security cert path failed, error is {:?}", e);
+            return;
+        }
+    };
+
     *info = cert;
+}
+
+#[cfg(feature = "oh")]
+#[link(name = "request_service_c")]
+extern "C" {
+    pub(crate) fn GetUserCertsData() -> *const CRequestCerts;
+    pub(crate) fn FreeCertDataList(certs: *const CRequestCerts);
+}
+
+#[repr(C)]
+pub(crate) struct CRequestCert {
+    pub(crate) size: u32,
+    pub(crate) data: *const u8,
+}
+
+#[repr(C)]
+pub(crate) struct CRequestCerts {
+    pub(crate) cert_data_list: *const *const CRequestCert,
+    pub(crate) len: u32,
 }

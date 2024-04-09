@@ -54,7 +54,10 @@ pub(crate) fn build_client(
 
     // Set system certs.
     if let Some(certs) = system.certs.take() {
-        client = client.add_root_certificate(certs);
+        for cert in certs.into_iter() {
+            error!("client add_root_certificate");
+            client = client.add_root_certificate(cert)
+        }
     }
 
     // Set task certs.
