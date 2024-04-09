@@ -57,7 +57,7 @@ impl ClientManagerEntry {
         match rx.get() {
             Some(ret) => ret,
             None => {
-                error!("open channel fail");
+                error!("open channel fail, recv none");
                 Err(ErrorCode::Other)
             }
         }
@@ -73,7 +73,7 @@ impl ClientManagerEntry {
         match rx.get() {
             Some(ret) => ret,
             None => {
-                error!("subscribe failed");
+                error!("subscribe fail, recv none");
                 ErrorCode::Other
             }
         }

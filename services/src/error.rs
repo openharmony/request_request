@@ -16,6 +16,7 @@ pub(crate) enum ErrorCode {
     ErrOk = 0,
     _UnloadingSA = 1,
     IpcSizeTooLarge = 2,
+    ChannelNotOpen = 5,
     Permission = 201,
     SystemApi = 202,
     ParameterCheck = 401,
