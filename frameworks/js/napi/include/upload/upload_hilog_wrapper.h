@@ -54,15 +54,20 @@ static constexpr OHOS::HiviewDFX::HiLogLabel UPLOAD_MODULE_LABEL[UPLOAD_MODULE_B
 
 // In order to improve performance, do not check the module range.
 // Besides, make sure module is less than UPLOAD_MODULE_BUTT.
-#define UPLOAD_HILOGF(module, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Fatal(UPLOAD_MODULE_LABEL[module], FORMATTED(__VA_ARGS__))
-#define UPLOAD_HILOGE(module, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Error(UPLOAD_MODULE_LABEL[module], FORMATTED(__VA_ARGS__))
-#define UPLOAD_HILOGW(module, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Warn(UPLOAD_MODULE_LABEL[module], FORMATTED(__VA_ARGS__))
-#define UPLOAD_HILOGI(module, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Info(UPLOAD_MODULE_LABEL[module], FORMATTED(__VA_ARGS__))
-#define UPLOAD_HILOGD(module, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Debug(UPLOAD_MODULE_LABEL[module], FORMATTED(__VA_ARGS__))
+#define UPLOAD_HILOGF(module, fmt, ...)                                                                        \
+    (void)HILOG_IMPL(LOG_CORE, LOG_FATAL, UPLOAD_MODULE_LABEL[module].domain, UPLOAD_MODULE_LABEL[module].tag, \
+        "[%{public}s] %{public}s# " fmt, FILENAME, __FUNCTION__, ##__VA_ARGS__)
+#define UPLOAD_HILOGE(module, fmt, ...)                                                                        \
+    (void)HILOG_IMPL(LOG_CORE, LOG_ERROR, UPLOAD_MODULE_LABEL[module].domain, UPLOAD_MODULE_LABEL[module].tag, \
+        "[%{public}s] %{public}s# " fmt, FILENAME, __FUNCTION__, ##__VA_ARGS__)
+#define UPLOAD_HILOGW(module, fmt, ...)                                                                       \
+    (void)HILOG_IMPL(LOG_CORE, LOG_WARN, UPLOAD_MODULE_LABEL[module].domain, UPLOAD_MODULE_LABEL[module].tag, \
+        "[%{public}s] %{public}s# " fmt, FILENAME, __FUNCTION__, ##__VA_ARGS__)
+#define UPLOAD_HILOGI(module, fmt, ...)                                                                       \
+    (void)HILOG_IMPL(LOG_CORE, LOG_INFO, UPLOAD_MODULE_LABEL[module].domain, UPLOAD_MODULE_LABEL[module].tag, \
+        "[%{public}s] %{public}s# " fmt, FILENAME, __FUNCTION__, ##__VA_ARGS__)
+#define UPLOAD_HILOGD(module, fmt, ...)                                                                        \
+    (void)HILOG_IMPL(LOG_CORE, LOG_DEBUG, UPLOAD_MODULE_LABEL[module].domain, UPLOAD_MODULE_LABEL[module].tag, \
+        "[%{public}s] %{public}s# " fmt, FILENAME, __FUNCTION__, ##__VA_ARGS__)
 } // namespace OHOS::Request::Upload
 #endif // UPLOAD_HILOG_WRAPPER_H
