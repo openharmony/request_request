@@ -16,12 +16,12 @@
 #ifndef JS_COMMON_H
 #define JS_COMMON_H
 
+#include "constant.h"
 #include <cstdint>
 #include <map>
 #include <string>
 #include <vector>
 
-#include "constant.h"
 
 namespace OHOS::Request {
 
@@ -134,6 +134,7 @@ struct Config {
     std::string description;
     std::string data;
     std::string proxy;
+    std::string certificatePins;
     std::map<std::string, std::string> headers;
     std::vector<FormItem> forms;
     std::vector<FileSpec> files;

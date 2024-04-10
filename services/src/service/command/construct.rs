@@ -88,6 +88,8 @@ impl Construct {
 
         let proxy: String = data.read()?;
 
+        let certificate_pins: String = data.read()?;
+
         let bundle = get_calling_bundle();
         // Creates task_id here, move it to task_manager later?
         let uid = ipc::Skeleton::calling_uid();
@@ -196,6 +198,7 @@ impl Construct {
             data: data_base,
             token,
             proxy,
+            certificate_pins,
             extras,
             version,
             form_items,

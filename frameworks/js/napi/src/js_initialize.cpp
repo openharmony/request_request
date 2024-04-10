@@ -332,6 +332,7 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
         errInfo = "parse saveas error";
         return false;
     }
+    ParseCertificatePins(env, config.url, config.certificatePins);
     ParseMethod(env, jsConfig, config);
     ParseRoaming(env, jsConfig, config);
     ParseRedirect(env, jsConfig, config.redirect);
@@ -582,6 +583,41 @@ bool JsInitialize::ParseProxy(napi_env env, napi_value jsConfig, std::string &pr
         return false;
     }
     return true;
+}
+
+std::string GetHostnameFromURL(const std::string &url)
+{
+    if (url.empty()) {
+        return "";
+    }
+    std::string delimiter = "://";
+    std::string tempUrl = url;
+    std::replace(tempUrl.begin(), tempUrl.end(), '\\', '/');
+    size_t posStart = tempUrl.find(delimiter);
+    if (posStart != std::string::npos) {
+        posStart += delimiter.length();
+    } else {
+        posStart = 0;
+    }
+    size_t notSlash = tempUrl.find_first_not_of('/', posStart);
+    if (notSlash != std::string::npos) {
+        posStart = notSlash;
+    }
+    size_t posEnd = std::min({ tempUrl.find(':', posStart),
+                              tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
+    if (posEnd != std::string::npos) {
+        return tempUrl.substr(posStart, posEnd - posStart);
+    }
+    return tempUrl.substr(posStart);
+}
+
+void JsInitialize::ParseCertificatePins(napi_env env, std::string &url, std::string &certificatePins)
+{
+    auto hostname = GetHostnameFromURL(url);
+    auto ret = OHOS::NetManagerStandard::NetConnClient::GetInstance().GetPinSetForHostName(hostname, certificatePins);
+    if (ret != 0 || certificatePins.empty()) {
+        REQUEST_HILOGI("Get No pin set by hostname");
+    }
 }
 
 void JsInitialize::ParseMethod(napi_env env, napi_value jsConfig, Config &config)

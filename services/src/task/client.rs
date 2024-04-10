@@ -14,7 +14,7 @@
 use std::error::Error;
 
 use ylong_http_client::async_impl::Client;
-use ylong_http_client::{Certificate, Proxy, Redirect, Timeout, TlsVersion};
+use ylong_http_client::{Certificate, Proxy, Redirect, Timeout, TlsVersion, PubKeyPins};
 
 use crate::manage::task_manager::SystemConfig;
 use crate::task::config::TaskConfig;
@@ -60,6 +60,11 @@ pub(crate) fn build_client(
         client = client.add_root_certificate(cert)
     }
 
+    // Set task certificate pinned_key.
+    if let Some(pinned_key) = build_task_certificate_pins(config)? {
+        client = client.add_public_key_pins(pinned_key);
+    }
+
     // Build client.
     Ok(cvt_res_error!(
         client.build().map_err(Box::new),
@@ -75,6 +80,20 @@ fn build_task_proxy(config: &TaskConfig) -> Result<Option<Proxy>, Box<dyn Error 
     Ok(Some(cvt_res_error!(
         Proxy::all(&config.proxy).build().map_err(Box::new),
         "Create task proxy failed",
+    )))
+}
+
+fn build_task_certificate_pins(config: &TaskConfig) -> Result<Option<PubKeyPins>, Box<dyn Error + Send + Sync>> {
+    if config.certificate_pins.is_empty() {
+        return Ok(None);
+    }
+
+    Ok(Some(cvt_res_error!(
+        PubKeyPins::builder()
+            .add(&config.url, &config.certificate_pins)
+            .build().
+            map_err(Box::new),
+        "Create task certificate pinned_key failed",
     )))
 }
 
