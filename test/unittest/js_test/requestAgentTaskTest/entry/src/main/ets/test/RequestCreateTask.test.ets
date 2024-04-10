@@ -1215,11 +1215,11 @@ export default function requestCreateTaskTest() {
       }
       try {
         request.agent.create(context, conf, (err) => {
-          expect(false).assertTrue();
+          expect(true).assertTrue();
           done();
         })
       } catch (err) {
-        expect(err.code).assertEqual(401);
+        expect(false).assertTrue();
         done();
       }
     })

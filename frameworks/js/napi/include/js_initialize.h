@@ -40,8 +40,8 @@ public:
     static void CreatProperties(napi_env env, napi_value &self, napi_value config, JsTask *task);
     static napi_status GetContext(
         napi_env env, napi_value value, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
-    static bool GetBaseDir(std::string &baseDir);
-    static bool CheckPathBaseDir(const std::string &filepath, std::string &baseDir);
+    static bool GetAppBaseDir(std::string &baseDir);
+    static bool CheckBelongAppBaseDir(const std::string &filepath, std::string &baseDir);
     static void StringSplit(const std::string &str, const char delim, std::vector<std::string> &elems);
     static void StringTrim(std::string &str);
     static bool CreateDirs(const std::vector<std::string> &pathDirs);
@@ -85,31 +85,37 @@ private:
     static bool Convert2FileSpecs(
         napi_env env, napi_value jsValue, const std::string &name, std::vector<FileSpec> &files);
     static bool Convert2FileSpec(napi_env env, napi_value jsValue, const std::string &name, FileSpec &file);
-    static bool GetInternalPath(const std::string &fileUri,
-        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, std::string &filePath);
+    static bool GetInternalPath(
+        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path);
 
-    static ExceptionError CheckFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
-    static ExceptionError CheckUploadBodyFiles(Config &config, const std::string &filePath);
-    static ExceptionError GetFD(const std::string &path, const Config &config, int32_t &fd);
+    static bool CheckUploadBodyFiles(const std::string &filePath, Config &config, ExceptionError &error);
+    static bool GetFD(const std::string &path, const Config &config, int32_t &fd, ExceptionError &error);
     static bool InterceptData(const std::string &str, const std::string &in, std::string &out);
     static bool IsStageMode(napi_env env, napi_value value);
     static bool CheckDownloadFilePath(
         const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, std::string &errInfo);
     static bool StandardizePath(
         const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path);
+    static bool BaseToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, std::string &path);
     static bool CacheToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, std::string &path);
     static bool FileToWhole(
         const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path);
-    static bool WholeToNormal(const std::string &wholePath, std::string &normalPath, std::vector<std::string> &out);
+    static bool WholeToNormal(std::string &path, std::vector<std::string> &out);
     static bool PathVecToNormal(const std::vector<std::string> &in, std::vector<std::string> &out);
     static bool IsUserFile(const std::string &filePath);
     static void StandardizeFileSpec(FileSpec &file);
-    static ExceptionError CheckUserFileSpec(
-        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, FileSpec &file);
-    static ExceptionError CheckUploadFileSpec(
-        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
-    static ExceptionError CheckDownloadFileSpec(
-        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
+    static bool GetSandboxPath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
+        std::string &path, std::vector<std::string> &pathVec, std::string &errInfo);
+    static bool CheckUserFileSpec(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
+        FileSpec &file, ExceptionError &error);
+    static bool CheckUploadFileSpec(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config,
+        FileSpec &file, ExceptionError &error);
+    static bool CheckDownloadFile(
+        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, ExceptionError &error);
+    static bool CheckUploadFiles(
+        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, ExceptionError &error);
+    static bool CheckFilePath(
+        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, ExceptionError &error);
 };
 } // namespace OHOS::Request
 #endif // JS_INITIALIZE_H
