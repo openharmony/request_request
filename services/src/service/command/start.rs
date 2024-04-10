@@ -23,7 +23,6 @@ pub(crate) struct Start;
 
 impl Start {
     pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service start");
         if !PermissionChecker::check_internet() {
             error!("Service start: no INTERNET permission.");
             reply.write(&(ErrorCode::Permission as i32))?;
@@ -31,7 +30,7 @@ impl Start {
         }
 
         let id: String = data.read()?;
-        debug!("Service start: task_id is {}", id);
+        info!("Process Service start: task_id is {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
                 debug!("Service start: u32 task_id is {}", id);
@@ -45,19 +44,20 @@ impl Start {
                 let ret = match rx.get() {
                     Some(ret) => ret,
                     None => {
-                        error!("Service start: receives ret failed");
+                        error!("End Service start, task_id is {}, failed with reason: receives ret failed", id);
                         return Err(IpcStatusCode::Failed);
                     }
                 };
                 reply.write(&(ret as i32))?;
                 if ret != ErrorCode::ErrOk {
-                    error!("Service start: start failed for ret is {}", ret as i32);
+                    error!("End Service start, task_id is {}, failed with reason: {}", id, ret as i32);
                     return Err(IpcStatusCode::Failed);
                 }
+                info!("End Service start successfully: task_id is {}", id);
                 Ok(())
             }
             _ => {
-                error!("Service start: task_id not valid");
+                error!("End Service start, failed with reason: task_id not valid");
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

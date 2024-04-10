@@ -23,7 +23,6 @@ pub(crate) struct Resume;
 
 impl Resume {
     pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service resume");
         if !PermissionChecker::check_internet() {
             error!("Service resume: no INTERNET permission");
             reply.write(&(ErrorCode::Permission as i32))?;
@@ -31,7 +30,7 @@ impl Resume {
         }
 
         let id: String = data.read()?;
-        debug!("Service resume: task_id is {}", id);
+        info!("Process Service resume: task_id is {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
                 debug!("Service resume: u32 task_id is {}", id);
@@ -44,19 +43,20 @@ impl Resume {
                 let ret = match rx.get() {
                     Some(ret) => ret,
                     None => {
-                        error!("Service resume: receives ret failed");
+                        error!("End Service resume, task_id is {}, failed with reason: receives ret failed", id);
                         return Err(IpcStatusCode::Failed);
                     }
                 };
                 reply.write(&(ret as i32))?;
                 if ret != ErrorCode::ErrOk {
-                    error!("Service resume: resume failed for ret is {}", ret as i32);
+                    error!("End Service resume, task_id is {}, failed with reason: {}", id, ret as i32);
                     return Err(IpcStatusCode::Failed);
                 }
+                info!("End Service resume successfully: task_id is {}", id);
                 Ok(())
             }
             _ => {
-                error!("Service resume: task_id not valid");
+                error!("End Service resume, task_id is {}, failed with reason: task_id not valid", id);
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

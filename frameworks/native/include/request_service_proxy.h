@@ -44,8 +44,8 @@ public:
     int32_t Show(const std::string &tid, TaskInfo &info) override;
 
     int32_t OpenChannel(int32_t &sockFd) override;
-    int32_t Subscribe(const std::string &taskId) override;
-    int32_t Unsubscribe(const std::string &taskId) override;
+    int32_t Subscribe(const std::string &tid) override;
+    int32_t Unsubscribe(const std::string &tid) override;
     int32_t SubRunCount(const sptr<NotifyInterface> &listener) override;
     int32_t UnsubRunCount() override;
 

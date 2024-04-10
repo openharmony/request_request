@@ -61,11 +61,12 @@ impl Ability for RequestAbility {
 #[link_section = ".init_array"]
 static A: extern "C" fn() = {
     extern "C" fn init() {
-        info!("request service init");
+        info!("begin request service init");
         let system_ability = RequestAbility
             .build_system_ability(DOWNLOAD_SERVICE_ID, false)
             .unwrap();
         system_ability.register();
+        info!("request service inited");
     }
     init
 };

@@ -188,7 +188,10 @@ fn build_request_common(
 ) -> Option<Request> {
     match request {
         Ok(value) => {
-            info!("build upload request success");
+            info!(
+                "build upload request success, task_id is {}",
+                task.conf.common_data.task_id
+            );
             Some(value)
         }
         Err(e) => {
@@ -206,7 +209,10 @@ fn build_request_common(
 }
 
 pub(crate) async fn upload(task: Arc<RequestTask>) {
-    info!("begin upload");
+    info!(
+        "begin upload task, task_id is {}",
+        task.conf.common_data.task_id
+    );
 
     let url = task.conf.url.as_str();
     let num = task.conf.file_specs.len();
@@ -237,7 +243,10 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
             }
         }
         if result {
-            info!("upload one file success, which index is {}", i);
+            info!(
+                "upload one file success, task_id is {}, index is {}",
+                task.conf.common_data.task_id, i
+            );
             task.upload_counts.fetch_add(1, Ordering::SeqCst);
         }
         let state = task.status.lock().unwrap().state;
@@ -277,14 +286,17 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
             .write();
     }
 
-    info!("upload end");
+    info!("upload end, task_id is {}", task.conf.common_data.task_id);
 }
 
 async fn upload_one_file<F>(task: Arc<RequestTask>, index: usize, build_upload_request: F) -> bool
 where
     F: Fn(Arc<RequestTask>, usize) -> Option<Request>,
 {
-    info!("begin upload one file");
+    info!(
+        "begin upload one file, task_id is {}, index is {}",
+        task.conf.common_data.task_id, index
+    );
 
     let (_, size) = task.get_upload_info(index);
     let name = task.conf.file_specs[index].file_name.as_str();

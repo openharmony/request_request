@@ -86,7 +86,7 @@ private:
 
     static napi_value DefineClass(
         napi_env env, const napi_property_descriptor *desc, size_t count, napi_callback cb, napi_ref *ctor);
-    static napi_value JsMain(napi_env env, napi_callback_info info, Version version);
+    static napi_value JsMain(napi_env env, napi_callback_info info, Version version, int32_t seq);
     static napi_value Create(napi_env env, napi_callback_info info);
     static napi_value GetCtor(napi_env env, Version version);
     static napi_value GetCtorV8(napi_env env);
@@ -94,7 +94,7 @@ private:
     static napi_value GetCtorV10(napi_env env);
     static napi_value RequestFile(napi_env env, napi_callback_info info);
     static napi_value RequestFileV8(napi_env env, napi_callback_info info);
-    static int32_t CreateExec(const std::shared_ptr<ContextInfo> &context);
+    static int32_t CreateExec(const std::shared_ptr<ContextInfo> &context, int32_t seq);
     static napi_value GetTaskCtor(napi_env env);
     static napi_value GetTaskCreate(napi_env env, napi_callback_info info);
     static void GetTaskExecution(std::shared_ptr<ContextInfo> context);
@@ -102,7 +102,7 @@ private:
     static bool ParseGetTask(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<ContextInfo> context);
     static std::string ParseTid(napi_env env, size_t argc, napi_value *argv);
     static napi_value TouchInner(napi_env env, napi_callback_info info, AsyncCall::Context::InputAction action,
-        std::shared_ptr<TouchContext> context);
+        std::shared_ptr<TouchContext> context, int32_t req);
     static bool ParseSearch(napi_env env, size_t argc, napi_value *argv, Filter &filter);
     static std::string ParseBundle(napi_env env, napi_value value);
     static State ParseState(napi_env env, napi_value value);

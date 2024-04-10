@@ -464,7 +464,10 @@ impl RequestTask {
         match response {
             Ok(r) => {
                 let http_response_code = r.status();
-                info!("the http response code is {}", http_response_code);
+                info!(
+                    "task {} get http response code {}",
+                    self.conf.common_data.task_id, http_response_code
+                );
                 if http_response_code.is_server_error()
                     || (http_response_code.as_u16() != 408 && http_response_code.is_client_error())
                     || http_response_code.is_redirection()
@@ -988,7 +991,7 @@ pub(crate) async fn run(task: RunningTask) {
         }
         _ => {}
     }
-    info!("run end");
+    info!("task run end, task_id is {}", task.conf.common_data.task_id);
 }
 
 #[derive(Clone, Debug)]

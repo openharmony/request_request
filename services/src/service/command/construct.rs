@@ -30,10 +30,10 @@ pub(crate) struct Construct;
 
 impl Construct {
     pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service construct");
+        info!("Process Service construct");
 
         if !PermissionChecker::check_internet() {
-            error!("Service construct: no INTERNET permission");
+            error!("End Service construct, failed with reason: no INTERNET permission");
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -97,7 +97,7 @@ impl Construct {
 
         let certs_path_size: u32 = data.read()?;
         if certs_path_size > data.readable() as u32 {
-            error!("Service construct: certs_path_size too large");
+            error!("End Service construct, failed with reason: certs_path_size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -109,7 +109,7 @@ impl Construct {
 
         let form_size: u32 = data.read()?;
         if form_size > data.readable() as u32 {
-            error!("Service construct: form_size too large");
+            error!("End Service construct, failed with reason: form_size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -122,7 +122,7 @@ impl Construct {
 
         let file_size: u32 = data.read()?;
         if file_size > data.readable() as u32 {
-            error!("Service construct: file_specs size too large");
+            error!("End Service construct, failed with reason: file_specs size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -151,7 +151,7 @@ impl Construct {
         // Response bodies fd.
         let body_file_size: u32 = data.read()?;
         if body_file_size > data.readable() as u32 {
-            error!("Service construct: body_file size too large");
+            error!("End Service construct, failed with reason: body_file size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -164,7 +164,7 @@ impl Construct {
 
         let header_size: u32 = data.read()?;
         if header_size > data.readable() as u32 {
-            error!("Service construct: header size too large");
+            error!("End Service construct, failed with reason: header size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -177,7 +177,7 @@ impl Construct {
 
         let extras_size: u32 = data.read()?;
         if extras_size > data.readable() as u32 {
-            error!("Service construct: extras size too large");
+            error!("End Service construct, failed with reason: extras size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -236,7 +236,7 @@ impl Construct {
         let ret = match rx.get() {
             Some(ret) => ret,
             None => {
-                error!("Service construct: receives ret failed");
+                error!("End Service construct, failed with reason: receives ret failed");
                 return Err(IpcStatusCode::Failed);
             }
         };
@@ -245,7 +245,7 @@ impl Construct {
             Ok(id) => id,
             Err(err_code) => {
                 error!(
-                    "Service construct: construct task failed, err_code: {:?}",
+                    "End Service construct, failed with reason: {:?}",
                     err_code
                 );
                 reply.write(&(err_code as i32))?;
@@ -265,7 +265,7 @@ impl Construct {
         }
 
         reply.write(&(ErrorCode::ErrOk as i32))?;
-        debug!("Service construct: task id {}", task_id);
+        info!("End Service construct, succeed with tid: {}", task_id);
         reply.write(&(task_id as i32))?;
         Ok(())
     }

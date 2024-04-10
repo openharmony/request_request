@@ -119,7 +119,10 @@ pub(crate) async fn download(task: Arc<RequestTask>) {
 }
 
 async fn download_inner(task: Arc<RequestTask>) {
-    info!("begin download");
+    info!(
+        "begin download task, task_id is {}",
+        task.conf.common_data.task_id
+    );
 
     // Ensures `_trace` can only be freed when this function exits.
     #[cfg(feature = "oh")]

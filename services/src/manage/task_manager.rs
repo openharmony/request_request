@@ -168,11 +168,14 @@ impl TaskManager {
                 let task = match self.tasks.get(&task_id) {
                     Some(task) => task.clone(),
                     None => {
-                        info!("RunningPermit task finished but task not found, {}", task_id);
+                        info!(
+                            "RunningPermit task finished but task not found, {}",
+                            task_id
+                        );
                         // For some complex reason, here we must reschedule waiting tasks!
                         self.process_waiting_task(uid, version);
-                        return
-                    },
+                        return;
+                    }
                 };
                 self.after_task_processed(&task);
             }

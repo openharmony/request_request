@@ -23,9 +23,8 @@ pub(crate) struct GetTask;
 
 impl GetTask {
     pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        debug!("Service getTask");
         let tid: String = data.read()?;
-        debug!("Service getTask: task_id is {}", tid);
+        info!("Process Service getTask: task_id is {}", tid);
         match tid.parse::<u32>() {
             Ok(tid) => {
                 debug!("Service getTask: u32 task_id is {}", tid);
@@ -40,23 +39,23 @@ impl GetTask {
                 match rx.get() {
                     Some(Some(config)) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;
-                        debug!("Service getTask: task_config get");
+                        info!("End Service getTask successfully: task_id is {}", tid);
                         serialize_task_config(config, reply)?;
                         Ok(())
                     }
                     Some(None) => {
-                        error!("Service getTask: task_id or token not found");
+                        error!("End Service getTask, task_id is {}, failed with reason: task_id or token not found", tid);
                         reply.write(&(ErrorCode::TaskNotFound as i32))?;
                         Err(IpcStatusCode::Failed)
                     }
                     None => {
-                        error!("Service getTask: receives task_config failed");
+                        error!("End Service getTask, task_id is {}, failed with reason: receives task_config failed", tid);
                         Err(IpcStatusCode::Failed)
                     }
                 }
             }
             _ => {
-                error!("Service getTask: task_id or token not valid");
+                error!("End Service getTask, task_id is {}, failed with reason: task_id or token not valid", tid);
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

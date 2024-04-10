@@ -45,7 +45,7 @@ const std::unique_ptr<RequestManagerImpl> &RequestManagerImpl::GetInstance()
     return instance;
 }
 
-int32_t RequestManagerImpl::Create(const Config &config, int32_t &tid)
+int32_t RequestManagerImpl::Create(const Config &config, int32_t seq, int32_t &tid)
 {
     REQUEST_HILOGD("RequestManagerImpl Create start.");
 
@@ -54,18 +54,20 @@ int32_t RequestManagerImpl::Create(const Config &config, int32_t &tid)
         REQUEST_HILOGE("GetRequestServiceProxy fail.");
         return E_SERVICE_ERROR;
     }
+    REQUEST_HILOGI("Process send create request, seq: %{public}d", seq);
     int32_t ret = proxy->Create(config, tid);
     if (ret == E_UNLOADING_SA) {
-        REQUEST_HILOGE("Service ability is quitting");
+        REQUEST_HILOGE("Send create request, seq: %{public}d, failed with reason: Service ability is quitting", seq);
         ret = Retry(tid, config, ret);
         if (ret != E_OK) {
+            REQUEST_HILOGE("Send create request, seq: %{public}d, failed with reason: %{public}d", seq, ret);
             return ret;
         }
     }
-    REQUEST_HILOGD("RequestManagerImpl Create end.");
     if (ret == E_OK) {
         this->Subscribe(std::to_string(tid));
     }
+    REQUEST_HILOGI("End Send create request successfully, seq: %{public}d, ret: %{public}d", seq, ret);
 
     return ret;
 }
@@ -268,6 +270,7 @@ int32_t RequestManagerImpl::AddListener(
         task->AddListener(type, listener);
         return E_OK;
     } else {
+        REQUEST_HILOGE("GetTask Failed");
         return E_OTHER;
     }
 }
@@ -302,9 +305,8 @@ int32_t RequestManagerImpl::Subscribe(const std::string &taskId)
     }
     this->EnsureChannelOpen();
 
-    int32_t ret = proxy->Subscribe(taskId);
-
     // channel not open may happen when app state notified terminated but actually does not exit.
+    int32_t ret = proxy->Subscribe(taskId);
     if (ret == E_CHANNEL_NOT_OPEN) {
         this->ReopenChannel();
         ret = proxy->Subscribe(taskId);
@@ -357,12 +359,14 @@ int32_t RequestManagerImpl::EnsureChannelOpen()
 
     auto proxy = GetRequestServiceProxy();
     if (proxy == nullptr) {
+        REQUEST_HILOGE("EnsureChannelOpen failed with reason: proxy is null");
         return false;
     }
 
     int32_t sockFd = -1;
     int32_t ret = proxy->OpenChannel(sockFd);
     if (ret != E_OK) {
+        REQUEST_HILOGE("EnsureChannelOpen failed with reason: %{public}d", ret);
         return ret;
     }
     msgReceiver_ = std::make_shared<ResponseMessageReceiver>(this, sockFd);
@@ -512,7 +516,7 @@ void RequestManagerImpl::SystemAbilityStatusChangeListener::OnAddSystemAbility(
     }
     if (FwkRunningTaskCountManager::GetInstance()->HasObserver()) {
         RequestManagerImpl::GetInstance()->RestoreSubRunCount();
-    }   
+    }
 }
 
 void RequestManagerImpl::SystemAbilityStatusChangeListener::OnRemoveSystemAbility(
@@ -551,36 +555,39 @@ void RequestSaDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 
 bool RequestManagerImpl::LoadRequestServer()
 {
-    REQUEST_HILOGD("Begin load request server");
     if (ready_.load()) {
         REQUEST_HILOGD("GetSystemAbilityManager ready_ true");
         return true;
     }
+    REQUEST_HILOGI("Process load request server");
     std::lock_guard<std::mutex> lock(downloadMutex_);
     if (ready_.load()) {
-        REQUEST_HILOGD("GetSystemAbilityManager ready_ is true");
+        REQUEST_HILOGD("GetSystemAbilityManager ready_ true");
         return true;
     }
 
     auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sm == nullptr) {
-        REQUEST_HILOGE("GetSystemAbilityManager return null");
+        REQUEST_HILOGE("End load request server, failed with reason: GetSystemAbilityManager return null");
         return false;
     }
     auto systemAbility = sm->CheckSystemAbility(DOWNLOAD_SERVICE_ID);
     if (systemAbility != nullptr) {
-        REQUEST_HILOGI("service already exists");
+        REQUEST_HILOGI("End load request server, service already exists");
+        ready_.store(true);
         return true;
     }
     sptr<RequestSyncLoadCallback> loadCallback_ = new (std::nothrow) RequestSyncLoadCallback();
     if (loadCallback_ == nullptr) {
-        REQUEST_HILOGE("new DownloadAbilityCallback fail");
+        REQUEST_HILOGE("End load request server, failed with reason: new DownloadAbilityCallback fail");
         return false;
     }
 
     int32_t result = sm->LoadSystemAbility(DOWNLOAD_SERVICE_ID, loadCallback_);
     if (result != E_OK) {
-        REQUEST_HILOGE("LoadSystemAbility %{public}d failed, result: %{public}d", DOWNLOAD_SERVICE_ID, result);
+        REQUEST_HILOGE("End load request server, failed with reason: LoadSystemAbility %{public}d failed, result: "
+                       "%{public}d",
+            DOWNLOAD_SERVICE_ID, result);
         return false;
     }
 
@@ -589,10 +596,11 @@ bool RequestManagerImpl::LoadRequestServer()
         auto waitStatus = syncCon_.wait_for(
             conditionLock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS), [this]() { return ready_.load(); });
         if (!waitStatus) {
-            REQUEST_HILOGE("download server load sa timeout");
+            REQUEST_HILOGE("End load request server, failed with reason: download server load sa timeout");
             return false;
         }
     }
+    REQUEST_HILOGI("End load request server successfully");
     return true;
 }
 
@@ -623,6 +631,12 @@ void RequestManagerImpl::ReopenChannel()
     }
     msgReceiver_->Shutdown();
     this->EnsureChannelOpen();
+}
+
+int32_t RequestManagerImpl::GetNextSeq()
+{
+    static std::atomic<int32_t> seq{ 0 };
+    return seq.fetch_add(1);
 }
 
 } // namespace OHOS::Request

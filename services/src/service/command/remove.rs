@@ -24,7 +24,6 @@ pub(crate) struct Remove;
 
 impl Remove {
     pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service remove");
         let version: u32 = data.read()?;
         if Version::from(version as u8) == Version::API9 && !PermissionChecker::check_internet() {
             error!("Service remove: no INTERNET permission");
@@ -33,7 +32,7 @@ impl Remove {
         }
 
         let id: String = data.read()?;
-        debug!("Service remove: task_id is {}", id);
+        info!("Process Service remove: task_id is {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
                 debug!("Service remove: u32 task_id is {}", id);
@@ -46,19 +45,20 @@ impl Remove {
                 let ret = match rx.get() {
                     Some(ret) => ret,
                     None => {
-                        error!("Service remove: receives ret failed");
+                        error!("End Service remove, task_id is {}, failed with reason: receives ret failed", id);
                         return Err(IpcStatusCode::Failed);
                     }
                 };
                 reply.write(&(ret as i32))?;
                 if ret != ErrorCode::ErrOk {
-                    error!("Service remove: remove failed for ret is {}", ret as i32);
+                    error!("End Service remove, task_id is {}, failed with reason: {}", id, ret as i32);
                     return Err(IpcStatusCode::Failed);
                 }
+                info!("End Service remove successfully, task_id is {}", id);
                 Ok(())
             }
             _ => {
-                error!("Service remove: task_id not valid");
+                error!("End Service remove, task_id is {}, failed with reason: task_id not valid", id);
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

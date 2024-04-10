@@ -95,7 +95,7 @@ bool NetworkAdapter::GetNetAllCapabilities(NetManagerStandard::NetAllCapabilitie
     }
     ret = NetConnClient::GetInstance().GetNetCapabilities(handle, capabilities);
     if (ret != NETMANAGER_SUCCESS) {
-        REQUEST_HILOGE("get net capabilities failed");
+        REQUEST_HILOGE("get net capabilities failed with reason: %{public}d", ret);
         return false;
     }
     return true;

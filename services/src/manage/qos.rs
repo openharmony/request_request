@@ -256,12 +256,13 @@ impl QosQueue {
             }
             Terminated => unreachable!(),
         };
-        info!("Qos remove finished");
+        info!("Qos remove finished, task_id is {}", task_id);
         res
     }
 
     fn insert_inner(&mut self, case: QosCase, insert_state: ApplicationState) -> Vec<QosChange> {
-        self.tasks.insert(case.task_id);
+        let tid = case.task_id;
+        self.tasks.insert(tid);
 
         if self.app_high_qos_count.get(&case.uid).is_none() {
             self.app_high_qos_count.insert(case.uid, 0);
@@ -300,7 +301,7 @@ impl QosQueue {
                 }
             }
         };
-        info!("Qos insert task finished");
+        info!("Qos insert task finished, task_id is {}", tid);
         res
     }
 

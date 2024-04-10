@@ -24,20 +24,20 @@ pub(crate) struct OpenChannel;
 
 impl OpenChannel {
     pub(crate) fn execute(_data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("open channel");
         let pid = ipc::Skeleton::calling_pid();
+        info!("Process Service open channel, pid: {}", pid);
         let uid = ipc::Skeleton::calling_uid();
         let token_id = ipc::Skeleton::calling_full_token_id();
         match RequestAbility::client_manager().open_channel(pid, uid, token_id) {
             Ok(fd) => {
-                debug!("open channel ok, fd is {}", fd);
+                info!("End Service open channel successfully, fd is {}", fd);
                 let file = unsafe { File::from_raw_fd(fd) };
                 reply.write(&(ErrorCode::ErrOk as i32))?;
                 reply.write_file(file)?;
                 Ok(())
             }
-            Err(_) => {
-                error!("open channel fail");
+            Err(err) => {
+                error!("End Service open channel, failed with reason: {:?}", err);
                 reply.write(&(ErrorCode::ParameterCheck as i32))?;
                 Err(IpcStatusCode::Failed)
             }

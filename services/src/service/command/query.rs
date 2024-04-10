@@ -25,7 +25,6 @@ pub(crate) struct Query;
 
 impl Query {
     pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service query");
         if !is_system_api() {
             error!("Service query: not system api");
             reply.write(&(ErrorCode::SystemApi as i32))?;
@@ -44,7 +43,7 @@ impl Query {
         };
 
         let id: String = data.read()?;
-        debug!("Service query: task_id is {}", id);
+        info!("Process Service query: task_id is {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
                 debug!("Service query: u32 task_id is {}", id);
@@ -55,23 +54,23 @@ impl Query {
                 match rx.get() {
                     Some(Some(info)) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;
-                        debug!("Service query: task_info - {:?}", info);
+                        info!("End Service query successfully, task_id is {}", id);
                         serialize_task_info(info, reply)?;
                         Ok(())
                     }
                     Some(None) => {
-                        error!("Service query: task_id not found");
+                        error!("End Service query, failed with reason: task_id not found, task_id is {}", id);
                         reply.write(&(ErrorCode::TaskNotFound as i32))?;
                         Err(IpcStatusCode::Failed)
                     }
                     None => {
-                        error!("Service query: receives task_info failed");
+                        error!("End Service query, task_id is {}, failed with reason: receives task_info failed", id);
                         Err(IpcStatusCode::Failed)
                     }
                 }
             }
             _ => {
-                error!("Service query: task_id not valid");
+                error!("End Service query, task_id is {}, failed with reason: task_id not valid", id);
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

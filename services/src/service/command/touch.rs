@@ -22,9 +22,8 @@ pub(crate) struct Touch;
 
 impl Touch {
     pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        debug!("Service touch");
         let id: String = data.read()?;
-        debug!("Service touch: task_id is {}", id);
+        info!("Process Service touch: task_id is {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
                 debug!("Service touch: u32 task_id is {}", id);
@@ -39,23 +38,23 @@ impl Touch {
                 match rx.get() {
                     Some(Some(info)) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;
-                        debug!("Service touch: task_info get");
                         serialize_task_info(info, reply)?;
+                        info!("End Service touch successfully: task_id is {}", id);
                         Ok(())
                     }
                     Some(None) => {
-                        error!("Service touch: task_id or token not found");
+                        error!("End Service touch, task_id is {}, failed with reason: task_id or token not found", id);
                         reply.write(&(ErrorCode::TaskNotFound as i32))?;
                         Err(IpcStatusCode::Failed)
                     }
                     None => {
-                        error!("Service touch: receives task_info failed");
+                        error!("End Service touch, task_id is {}, failed with reason: receives task_info failed", id);
                         Err(IpcStatusCode::Failed)
                     }
                 }
             }
             _ => {
-                error!("Service touch: task_id or token not valid");
+                error!("End Service touch, failed with reason: task_id or token not valid");
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

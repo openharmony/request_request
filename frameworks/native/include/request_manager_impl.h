@@ -46,7 +46,7 @@ public:
 class RequestManagerImpl : public IResponseMessageHandler {
 public:
     static const std::unique_ptr<RequestManagerImpl> &GetInstance();
-    int32_t Create(const Config &config, int32_t &tid);
+    int32_t Create(const Config &config, int32_t seq, int32_t &tid);
     int32_t GetTask(const std::string &tid, const std::string &token, Config &config);
     int32_t Start(const std::string &tid);
     int32_t Stop(const std::string &tid);
@@ -83,6 +83,7 @@ public:
     void LoadServerSuccess();
     void LoadServerFail();
     void ReopenChannel();
+    int32_t GetNextSeq();
 
 private:
     RequestManagerImpl() = default;

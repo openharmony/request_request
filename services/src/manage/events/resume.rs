@@ -32,7 +32,6 @@ impl TaskManager {
                 error!("can not resume a task which state is not paused");
                 return ErrorCode::TaskStateErr;
             }
-            error!("resume the task success");
             task.resume.store(true, Ordering::SeqCst);
             let notify_data = task.build_notify_data();
 

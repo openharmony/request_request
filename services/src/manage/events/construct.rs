@@ -169,7 +169,10 @@ impl TaskManager {
         let info_set = task_info.build_info_set();
         let c_task_info = task_info.to_c_struct(&info_set);
         let ret = unsafe { RecordRequestTask(&c_task_info, &c_task_config) };
-        info!("insert request_task DB ret is {}", ret);
+        info!(
+            "insert task {} to request_task DB, ret is {}",
+            task.conf.common_data.task_id, ret
+        );
     }
 }
 

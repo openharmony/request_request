@@ -21,22 +21,22 @@ pub(crate) struct Unsubscribe;
 
 impl Unsubscribe {
     pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("unsubscribe");
         let tid: String = data.read()?;
-        debug!("Service unsubscribe: task_id is {}", tid);
+        info!("Process Service unsubscribe: task_id is {}", tid);
         match tid.parse::<u32>() {
             Ok(tid) => {
                 if RequestAbility::client_manager().unsubscribe(tid) == ErrorCode::ErrOk {
                     reply.write(&(ErrorCode::ErrOk as i32))?;
+                    info!("End Service unsubscribe successfully: task_id is {}", tid);
                     Ok(())
                 } else {
-                    debug!("unsubscribe failed");
+                    debug!("unsubscribe failed, task_id is {}", tid);
                     reply.write(&(ErrorCode::TaskNotFound as i32))?;
                     Err(IpcStatusCode::Failed)
                 }
             }
             _ => {
-                error!("Service unsubscribe: task_id not valid");
+                error!("End Service unsubscribe, failed with reason: task_id not valid");
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }
