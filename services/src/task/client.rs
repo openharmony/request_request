@@ -14,7 +14,7 @@
 use std::error::Error;
 
 use ylong_http_client::async_impl::Client;
-use ylong_http_client::{Certificate, Proxy, Redirect, Timeout, TlsVersion, PubKeyPins};
+use ylong_http_client::{Certificate, Proxy, PubKeyPins, Redirect, Timeout, TlsVersion};
 
 use crate::manage::task_manager::SystemConfig;
 use crate::task::config::TaskConfig;
@@ -83,7 +83,9 @@ fn build_task_proxy(config: &TaskConfig) -> Result<Option<Proxy>, Box<dyn Error 
     )))
 }
 
-fn build_task_certificate_pins(config: &TaskConfig) -> Result<Option<PubKeyPins>, Box<dyn Error + Send + Sync>> {
+fn build_task_certificate_pins(
+    config: &TaskConfig,
+) -> Result<Option<PubKeyPins>, Box<dyn Error + Send + Sync>> {
     if config.certificate_pins.is_empty() {
         return Ok(None);
     }
@@ -91,8 +93,8 @@ fn build_task_certificate_pins(config: &TaskConfig) -> Result<Option<PubKeyPins>
     Ok(Some(cvt_res_error!(
         PubKeyPins::builder()
             .add(&config.url, &config.certificate_pins)
-            .build().
-            map_err(Box::new),
+            .build()
+            .map_err(Box::new),
         "Create task certificate pinned_key failed",
     )))
 }

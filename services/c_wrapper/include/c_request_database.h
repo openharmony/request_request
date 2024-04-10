@@ -103,7 +103,8 @@ constexpr const char *CREATE_REQUEST_TASK_TABLE = "CREATE TABLE IF NOT EXISTS re
 
 constexpr const char *REQUEST_TASK_TABLE_ADD_PROXY = "ALTER TABLE request_task ADD COLUMN proxy TEXT";
 
-constexpr const char *REQUEST_TASK_TABLE_ADD_CERTIFICATE_PINS = "ALTER TABLE request_task ADD COLUMN certificate_pins TEXT";
+constexpr const char *REQUEST_TASK_TABLE_ADD_CERTIFICATE_PINS = "ALTER TABLE request_task ADD COLUMN certificate_pins "
+                                                                "TEXT";
 
 class RequestDataBase {
 public:
