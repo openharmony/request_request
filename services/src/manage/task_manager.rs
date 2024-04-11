@@ -440,7 +440,7 @@ impl TaskManager {
 
         self.change_qos(map);
 
-        if !self.check_unload_sa() {
+        if self.keep_sa() {
             self.process_waiting_task(remove_task.conf.common_data.uid, remove_task.conf.version);
         }
     }

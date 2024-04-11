@@ -27,16 +27,15 @@ use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 
 impl TaskManager {
-    pub(crate) fn check_unload_sa(&self) -> bool {
-        if !self.tasks.is_empty() && !self.pause_check_unload_sa() {
+    pub(crate) fn keep_sa(&self) -> bool {
+        if self.has_running_tasks() {
             info!(
                 "Running tasks num is {} not 0, when trying to unload SA",
                 self.tasks.len()
             );
-            return false;
+            return true;
         }
-
-        true
+        false
     }
 
     pub(crate) fn unload_sa(&mut self) -> bool {
@@ -47,7 +46,7 @@ impl TaskManager {
             return false;
         }
 
-        if !self.check_unload_sa() {
+        if self.keep_sa() {
             return false;
         }
 
@@ -183,28 +182,30 @@ impl TaskManager {
         }
     }
 
-    fn pause_check_unload_sa(&self) -> bool {
-        let mut need_unload = false;
+    fn has_running_tasks(&self) -> bool {
+        if self.tasks.is_empty() {
+            return false;
+        }
         for task in self.tasks.values() {
             let (state, reason) = {
                 let task = task.status.lock().unwrap();
                 (task.state, task.reason)
             };
-            if state == State::Completed
+            if !(state == State::Completed
                 || state == State::Failed
                 || state == State::Removed
                 || state == State::Stopped
-                || (state == State::Waiting && (reason == Reason::NetworkOffline || reason == Reason::UnsupportedNetworkType))
+                || (state == State::Waiting
+                    && (reason == Reason::NetworkOffline
+                        || reason == Reason::UnsupportedNetworkType))
                 || state == State::Paused
                 || state == State::Initialized
-                || state == State::Created
+                || state == State::Created)
             {
-                need_unload = true;
-            } else {
-                return false;
+                return true;
             }
         }
-        need_unload
+        false
     }
 
     pub(crate) fn query_all_task_config(&self) -> Option<HashMap<u32, TaskConfig>> {
