@@ -612,7 +612,8 @@ std::string GetHostnameFromURL(const std::string &url)
     if (notSlash != std::string::npos) {
         posStart = notSlash;
     }
-    size_t posEnd = std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
+    size_t posEnd = std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart),
+                               tempUrl.find('?', posStart) });
     if (posEnd != std::string::npos) {
         return tempUrl.substr(posStart, posEnd - posStart);
     }
@@ -624,7 +625,7 @@ void JsInitialize::ParseCertificatePins(napi_env env, std::string &url, std::str
     auto hostname = GetHostnameFromURL(url);
     auto ret = OHOS::NetManagerStandard::NetConnClient::GetInstance().GetPinSetForHostName(hostname, certificatePins);
     if (ret != 0 || certificatePins.empty()) {
-        REQUEST_HILOGI("Get No pin set by hostname");
+        REQUEST_HILOGD("Get No pin set by hostname");
     }
 }
 
