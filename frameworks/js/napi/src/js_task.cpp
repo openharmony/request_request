@@ -828,7 +828,7 @@ bool JsTask::SetDirsPermission(std::vector<std::string> &dirs)
 bool JsTask::SetPathPermission(const std::string &filepath)
 {
     std::string baseDir;
-    if (!JsInitialize::CheckPathBaseDir(filepath, baseDir)) {
+    if (!JsInitialize::CheckBelongAppBaseDir(filepath, baseDir)) {
         return false;
     }
 
@@ -888,7 +888,7 @@ void JsTask::ResetDirAccess(const std::string &filepath)
 void JsTask::RemovePathMap(const std::string &filepath)
 {
     std::string baseDir;
-    if (!JsInitialize::CheckPathBaseDir(filepath, baseDir)) {
+    if (!JsInitialize::CheckBelongAppBaseDir(filepath, baseDir)) {
         return;
     }
 
@@ -950,6 +950,7 @@ void JsTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls
     if (isRmFiles) {
         auto bodyFileNames = context->task->config_.bodyFileNames;
         for (auto &filePath : bodyFileNames) {
+            RemovePathMap(filePath);
             NapiUtils::RemoveFile(filePath);
         }
     }
