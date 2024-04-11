@@ -27,7 +27,10 @@ impl TaskManager {
                 debug!("TaskManager show: show task info from database");
                 let c_task_info = unsafe { Show(task_id, uid) };
                 if c_task_info.is_null() {
-                    info!("TaskManger show: no task found in database");
+                    info!(
+                        "TaskManger show: no task found in database, task_id: {}",
+                        task_id
+                    );
                     return None;
                 }
                 let c_task_info = unsafe { &*c_task_info };

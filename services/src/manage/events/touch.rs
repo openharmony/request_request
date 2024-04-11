@@ -34,7 +34,10 @@ impl TaskManager {
                 debug!("TaskManger touch: touch task_info from database");
                 let c_task_info = unsafe { Touch(task_id, uid, CStringWrapper::from(&token)) };
                 if c_task_info.is_null() {
-                    info!("TaskManger touch: no task found in database");
+                    info!(
+                        "TaskManger touch: no task found in database, task_id: {}",
+                        task_id
+                    );
                     return None;
                 }
                 let c_task_info = unsafe { &*c_task_info };

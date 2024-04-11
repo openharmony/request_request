@@ -25,9 +25,9 @@ const std::unique_ptr<RequestManager> &RequestManager::GetInstance()
     return instance;
 }
 
-int32_t RequestManager::Create(const Config &config, int32_t &tid)
+int32_t RequestManager::Create(const Config &config, int32_t seq, int32_t &tid)
 {
-    return RequestManagerImpl::GetInstance()->Create(config, tid);
+    return RequestManagerImpl::GetInstance()->Create(config, seq, tid);
 }
 int32_t RequestManager::GetTask(const std::string &tid, const std::string &token, Config &config)
 {
@@ -139,6 +139,11 @@ int32_t RequestManager::RemoveListener(
 void RequestManager::RemoveAllListeners(const std::string &taskId)
 {
     RequestManagerImpl::GetInstance()->RemoveAllListeners(taskId);
+}
+
+int32_t RequestManager::GetNextSeq()
+{
+    return RequestManagerImpl::GetInstance()->GetNextSeq();
 }
 
 } // namespace OHOS::Request

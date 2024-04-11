@@ -23,9 +23,8 @@ pub(crate) struct SubRunCount;
 
 impl SubRunCount {
     pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service runcount subscribe");
         let pid = ipc::Skeleton::calling_pid();
-        debug!("Service runcount subscribe: pid is {}", pid);
+        info!("Process Service runcount subscribe: pid is {}", pid);
 
         let obj: RemoteObj = data.read_remote()?;
         debug!("read obj from data success!");
@@ -36,18 +35,19 @@ impl SubRunCount {
         let ret = match rx.get() {
             Some(ret) => ret,
             None => {
-                error!("Service runcount subscribe: receives ret failed");
+                error!("End Service runcount subscribe, failed with reason: receives ret failed");
                 return Err(IpcStatusCode::Failed);
             }
         };
         reply.write(&(ret as i32))?;
         if ret != ErrorCode::ErrOk {
             error!(
-                "Service runcount subscribe: on failed for ret is {}",
+                "End Service runcount subscribe, failed with reason:{}",
                 ret as i32
             );
             return Err(IpcStatusCode::Failed);
         }
+        info!("End Service runcount subscribe successfully: pid is {}", pid);
         Ok(())
     }
 }

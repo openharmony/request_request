@@ -24,7 +24,6 @@ pub(crate) struct Pause;
 
 impl Pause {
     pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service pause");
         let version: u32 = data.read()?;
         debug!("Service pause: version {}", version);
         if Version::from(version as u8) == Version::API9 && !PermissionChecker::check_internet() {
@@ -34,7 +33,7 @@ impl Pause {
         }
 
         let id: String = data.read()?;
-        debug!("Service pause: task_id is {}", id);
+        info!("Process Service pause: task_id is {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
                 debug!("Service pause: u32 task_id is {}", id);
@@ -49,19 +48,20 @@ impl Pause {
                 let ret = match rx.get() {
                     Some(ret) => ret,
                     None => {
-                        error!("Service pause: receives ret failed");
+                        error!("End Service pause, task_id is {}, failed with reason: receives ret failed", id);
                         return Err(IpcStatusCode::Failed);
                     }
                 };
                 reply.write(&(ret as i32))?;
                 if ret != ErrorCode::ErrOk {
-                    error!("Service pause: pause fail for ret is {}", ret as u32);
+                    error!("End Service pause, task_id is {}, failed with reason: {}", id, ret as u32);
                     return Err(IpcStatusCode::Failed);
                 }
+                info!("End Service pause successfully: task_id is {}", id);
                 Ok(())
             }
             _ => {
-                error!("Service pause: task_id not valid");
+                error!("End Service pause, task_id is {}, failed with reason: task_id not valid", id);
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

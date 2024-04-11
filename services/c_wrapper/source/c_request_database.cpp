@@ -25,13 +25,18 @@
 namespace OHOS::Request {
 RequestDataBase::RequestDataBase()
 {
+    REQUEST_HILOGI("Process Get request database");
     int errCode = OHOS::NativeRdb::E_OK;
     OHOS::NativeRdb::RdbStoreConfig config(DB_NAME);
     config.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     config.SetEncryptStatus(true);
     RequestDBOpenCallback requestDBOpenCallback;
     store_ = OHOS::NativeRdb::RdbHelper::GetRdbStore(config, DATABASE_OPEN_VERSION, requestDBOpenCallback, errCode);
-    REQUEST_HILOGI("Gets request database, ret: %{public}d", errCode);
+    if (store_ == nullptr) {
+        REQUEST_HILOGE("End get request database, failed with reason: %{public}d", errCode);
+    } else {
+        REQUEST_HILOGI("End get request database successful");
+    }
 }
 
 RequestDataBase &RequestDataBase::GetInstance()
@@ -43,7 +48,6 @@ RequestDataBase &RequestDataBase::GetInstance()
 bool RequestDataBase::Insert(const std::string &table, const OHOS::NativeRdb::ValuesBucket &insertValues)
 {
     if (store_ == nullptr) {
-        REQUEST_HILOGE("store_ is nullptr");
         return false;
     }
 
@@ -57,7 +61,6 @@ bool RequestDataBase::Update(
     const OHOS::NativeRdb::ValuesBucket values, const OHOS::NativeRdb::AbsRdbPredicates &predicates)
 {
     if (store_ == nullptr) {
-        REQUEST_HILOGE("store_ is nullptr");
         return false;
     }
 
@@ -71,7 +74,6 @@ std::shared_ptr<OHOS::NativeRdb::ResultSet> RequestDataBase::Query(
     const OHOS::NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
     if (store_ == nullptr) {
-        REQUEST_HILOGE("store_ is nullptr");
         return nullptr;
     }
     return store_->Query(predicates, columns);
@@ -80,7 +82,6 @@ std::shared_ptr<OHOS::NativeRdb::ResultSet> RequestDataBase::Query(
 bool RequestDataBase::Delete(const OHOS::NativeRdb::AbsRdbPredicates &predicates)
 {
     if (store_ == nullptr) {
-        REQUEST_HILOGE("store_ is nullptr");
         return false;
     }
 
@@ -101,7 +102,7 @@ int RequestDBInitVersionTable(OHOS::NativeRdb::RdbStore &store)
     // Clears `request_version` table first.
     int ret = store.ExecuteSql("DELETE FROM request_version");
     if (ret != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("Clears request_version table failed");
+        REQUEST_HILOGE("Clears request_version table failed with reason: %{public}d", ret);
         return ret;
     }
 
@@ -111,7 +112,7 @@ int RequestDBInitVersionTable(OHOS::NativeRdb::RdbStore &store)
     insertValues.PutString("task_table", std::string(REQUEST_TASK_TABLE_NAME));
     ret = store.Insert(outRowId, std::string("request_version"), insertValues);
     if (ret != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("Inits request_version table failed");
+        REQUEST_HILOGE("Inits request_version table failed with reason: %{public}d", ret);
         return ret;
     }
     REQUEST_HILOGD("Inits version_table success");
@@ -324,7 +325,7 @@ int RequestDBOpenCallback::OnOpen(OHOS::NativeRdb::RdbStore &store)
 {
     int ret = RequestDBUpgrade(store);
     if (ret != 0) {
-        REQUEST_HILOGE("database upgrade failed");
+        REQUEST_HILOGE("database upgrade failed with reason: %{public}d", ret);
     }
     RequestDBUpdateInvalidRecords(store);
     return ret;
@@ -712,7 +713,7 @@ bool HasRequestTaskRecord(uint32_t taskId)
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "task_id" });
     if (resultSet == nullptr) {
-        REQUEST_HILOGE("result set is nullptr");
+        REQUEST_HILOGE("HasRequestTaskRecord failed with reason: result set is nullptr, task_id: %{public}d", taskId);
         return false;
     }
     int rowCount = 0;
@@ -765,7 +766,7 @@ bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
         return false;
     }
     if (!OHOS::Request::RequestDataBase::GetInstance().Insert(std::string("request_task"), insertValues)) {
-        REQUEST_HILOGE("insert to request_task failed");
+        REQUEST_HILOGE("insert to request_task failed, task_id: %{public}d", taskConfig->commonData.taskId);
         return false;
     }
     REQUEST_HILOGD("insert to request_task success");
@@ -787,7 +788,7 @@ bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo)
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
     if (!OHOS::Request::RequestDataBase::GetInstance().Update(values, rdbPredicates)) {
-        REQUEST_HILOGE("update table1 failed");
+        REQUEST_HILOGE("update table1 failed, task_id: %{public}d", taskId);
         return false;
     }
     return true;
@@ -795,7 +796,8 @@ bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo)
 
 bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state)
 {
-    REQUEST_HILOGI("Change Request Task State");
+    REQUEST_HILOGI(
+        "Change task state, task_id is %{public}d, state is %{public}d", taskId, static_cast<int32_t>(state));
 
     OHOS::NativeRdb::ValuesBucket values;
     values.PutInt("state", static_cast<uint8_t>(state));
@@ -803,7 +805,7 @@ bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state)
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
     if (!OHOS::Request::RequestDataBase::GetInstance().Update(values, rdbPredicates)) {
-        REQUEST_HILOGE("Change request_task state failed");
+        REQUEST_HILOGE("Change request_task state failed, taskid: %{public}d", taskId);
         return false;
     }
     return true;
@@ -815,6 +817,9 @@ CTaskInfo *Show(uint32_t taskId, uint64_t uid)
     rdbPredicates1.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
     TaskInfo taskInfo;
     if (TouchRequestTaskInfo(rdbPredicates1, taskInfo) == OHOS::Request::QUERY_ERR) {
+        REQUEST_HILOGE("TouchRequestTaskInfo failed with reason: result set is nullptr or go to first row failed, "
+                       "task_id: %{public}d",
+            taskId);
         return nullptr;
     }
 
@@ -831,6 +836,9 @@ CTaskInfo *Touch(uint32_t taskId, uint64_t uid, CStringWrapper token)
         ->EqualTo("token", std::string(token.cStr, token.len));
     TaskInfo taskInfo;
     if (TouchRequestTaskInfo(rdbPredicates1, taskInfo) == OHOS::Request::QUERY_ERR) {
+        REQUEST_HILOGE("TouchRequestTaskInfo failed with reason: result set is nullptr or go to first row failed, "
+                       "task_id: %{public}d",
+            taskId);
         return nullptr;
     }
 
@@ -846,6 +854,9 @@ CTaskInfo *Query(uint32_t taskId, Action queryAction)
     }
     TaskInfo taskInfo;
     if (QueryRequestTaskInfo(rdbPredicates1, taskInfo) == OHOS::Request::QUERY_ERR) {
+        REQUEST_HILOGE("QueryRequestTaskInfo failed with reason: result set is nullptr or go to first row failed, "
+                       "task_id: %{public}d",
+            taskId);
         return nullptr;
     }
 
@@ -874,7 +885,7 @@ CVectorWrapper Search(CFilter filter)
     }
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "task_id" });
     if (resultSet == nullptr) {
-        REQUEST_HILOGE("result set is nullptr");
+        REQUEST_HILOGE("Search failed with reason: result set is nullptr");
         return cVectorWrapper;
     }
     int rowCount = 0;
@@ -922,7 +933,6 @@ int TouchRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, Ta
             "priority", "url", "data", "title", "description", "mime_type", "state", "idx", "total_processed", "sizes",
             "processed", "extras", "form_items", "file_specs", "each_file_status" });
     if (resultSet == nullptr || resultSet->GoToFirstRow() != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("result set is nullptr or go to first row failed");
         return OHOS::Request::QUERY_ERR;
     }
     GetCommonTaskInfo(resultSet, taskInfo);
@@ -938,7 +948,6 @@ int QueryRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, Ta
                            "version", "bundle", "title", "description", "mime_type", "state", "idx", "total_processed",
                            "sizes", "processed", "extras", "form_items", "file_specs", "each_file_status" });
     if (resultSet == nullptr || resultSet->GoToFirstRow() != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("result set is nullptr or go to first row failed");
         return OHOS::Request::QUERY_ERR;
     }
     GetCommonTaskInfo(resultSet, taskInfo);
@@ -1181,7 +1190,7 @@ CTaskConfig *QuerySingleTaskConfig(uint32_t taskId)
             "file_specs", "body_file_names", "certs_paths", "proxy" , "certificate_pins" });
     int rowCount = 0;
     if (resultSet == nullptr) {
-        REQUEST_HILOGE("result set is nullptr");
+        REQUEST_HILOGE("QuerySingleTaskConfig failed with reason: result set is nullptr");
         return nullptr;
     }
     if (resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
@@ -1237,7 +1246,7 @@ uint64_t QueryTaskTokenId(uint32_t taskId)
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "token_id" });
     int rowCount = 0;
     if (resultSet == nullptr) {
-        REQUEST_HILOGE("result set is nullptr");
+        REQUEST_HILOGE("QueryTaskTokenId failed with reason: result set is nullptr, taskId: %{public}d", taskId);
         return -1;
     }
     if (resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {

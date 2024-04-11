@@ -34,7 +34,7 @@ impl AppStateListener {
 }
 
 extern "C" fn app_state_change_callback(uid: i32, state: i32, pid: i32) {
-    info!("Receives app state change callback");
+    info!("Receives app state change callback, uid is {}, pid is {}, state is {}", uid, pid, state);
     let state = match state {
         2 => ApplicationState::Foreground,
         4 => ApplicationState::Background,

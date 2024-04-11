@@ -33,7 +33,10 @@ impl TaskManager {
                 debug!("TaskManager query mime type: show mime type from database");
                 let c_task_info = unsafe { Show(task_id, uid) };
                 if c_task_info.is_null() {
-                    info!("TaskManger query mime type: no task found in database");
+                    info!(
+                        "TaskManger query mime type: no task found in database, task_id: {}",
+                        task_id
+                    );
                     return "".into();
                 }
                 let c_task_info = unsafe { &*c_task_info };

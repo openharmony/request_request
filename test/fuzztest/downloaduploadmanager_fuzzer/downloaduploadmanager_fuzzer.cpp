@@ -66,7 +66,8 @@ void CreateRequestFuzzTest(const uint8_t *data, size_t size)
     auto tid = static_cast<int32_t>(size);
 
     GrantNativePermission();
-    RequestManager::GetInstance()->Create(config, tid);
+    int32_t seq = RequestManager::GetInstance()->GetNextSeq();
+    RequestManager::GetInstance()->Create(config, seq, tid);
 }
 
 void StartRequestFuzzTest(const uint8_t *data, size_t size)

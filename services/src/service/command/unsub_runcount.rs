@@ -21,10 +21,9 @@ pub(crate) struct UnsubRunCount;
 
 impl UnsubRunCount {
     pub(crate) fn execute(_data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service runcount unsubscribe");
         let pid = ipc::Skeleton::calling_pid();
         // let uid = ipc::Skeleton::calling_uid();
-        debug!("Service runcount unsubscribe: pid is {}", pid);
+        info!("Process Service runcount unsubscribe: pid is {}", pid);
 
         let (event, rx) = RunCountEvent::unsub_runcount(pid);
         RequestAbility::runcount_manager().send_event(event);
@@ -32,18 +31,19 @@ impl UnsubRunCount {
         let ret = match rx.get() {
             Some(ret) => ret,
             None => {
-                error!("Service runcount unsubscribe: receives ret failed");
+                error!("End Service runcount unsubscribe, failed with reason: receives ret failed");
                 return Err(IpcStatusCode::Failed);
             }
         };
         reply.write(&(ret as i32))?;
         if ret != ErrorCode::ErrOk {
             error!(
-                "Service runcount unsubscribe: on failed for ret is {}",
+                "End Service runcount unsubscribe, failed with reason: {}",
                 ret as i32
             );
             return Err(IpcStatusCode::Failed);
         }
+        info!("End Service runcount successfully: pid is {}", pid);
         Ok(())
     }
 }

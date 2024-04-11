@@ -24,14 +24,13 @@ pub(crate) struct Show;
 
 impl Show {
     pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service show");
         if !PermissionChecker::check_internet() {
             error!("Service show: no INTERNET permission");
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
         }
         let id: String = data.read()?;
-        debug!("Service show: task_id is {}", id);
+        info!("Process Service show: task_id is {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
                 debug!("Service show: u32 task_id is {}", id);
@@ -45,23 +44,23 @@ impl Show {
                 match rx.get() {
                     Some(Some(info)) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;
-                        debug!("Service show: task_info {:?}", info);
+                        info!("End Service show successfully, task_id is {}", id);
                         serialize_task_info(info, reply)?;
                         Ok(())
                     }
                     Some(None) => {
-                        error!("Service show: task_id not found");
+                        error!("End Service show, failed with reason: task_id not found, task_id is {}", id);
                         reply.write(&(ErrorCode::TaskNotFound as i32))?;
                         Err(IpcStatusCode::Failed)
                     }
                     None => {
-                        error!("Service show: receives task_info failed");
+                        error!("End Service show, task_id is {}, failed with reason: receives task_info failed", id);
                         Err(IpcStatusCode::Failed)
                     }
                 }
             }
             _ => {
-                error!("Service show: task_id not valid");
+                error!("End Service show, failed with reason: task_id not valid");
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

@@ -23,7 +23,7 @@ pub(crate) struct Search;
 
 impl Search {
     pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service search");
+        info!("Process Service search");
         let mut bundle: String = data.read()?;
         if !is_system_api() {
             debug!("Service search: not system api");
@@ -59,11 +59,11 @@ impl Search {
         let ids = match rx.get() {
             Some(ids) => ids,
             None => {
-                error!("Service search: receives ids failed");
+                error!("End Service search, failed with reason: receives ids failed");
                 return Err(IpcStatusCode::Failed);
             }
         };
-        debug!("Service search: search task ids is {:?}", ids);
+        info!("End Service search successfully: search task ids is {:?}", ids);
         reply.write(&(ids.len() as u32))?;
         for it in ids.iter() {
             reply.write(&(it.to_string()))?;

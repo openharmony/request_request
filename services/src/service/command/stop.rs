@@ -22,9 +22,8 @@ pub(crate) struct Stop;
 
 impl Stop {
     pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        debug!("Service stop");
         let id: String = data.read()?;
-        debug!("Service stop: task_id is {}", id);
+        info!("Process Service stop: task_id is {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
                 debug!("Service stop: u32 task_id is {}", id);
@@ -37,19 +36,20 @@ impl Stop {
                 let ret = match rx.get() {
                     Some(ret) => ret,
                     None => {
-                        error!("Service stop: receives ret failed");
+                        error!("End Service stop, task_id is {}, failed with reason: receives ret failed", id);
                         return Err(IpcStatusCode::Failed);
                     }
                 };
                 reply.write(&(ret as i32))?;
                 if ret != ErrorCode::ErrOk {
-                    error!("Service stop: stop failed for ret is {}", ret as i32);
+                    error!("End Service stop, task_id is {}, failed with reason: {}", id, ret as i32);
                     return Err(IpcStatusCode::Failed);
                 }
+                info!("End Service stop successfully: task_id is {}", id);
                 Ok(())
             }
             _ => {
-                error!("Service stop: task_id not valid");
+                error!("End Service stop, failed with reason: task_id not valid");
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

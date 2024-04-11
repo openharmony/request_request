@@ -23,14 +23,13 @@ pub(crate) struct QueryMimeType;
 use ipc::parcel::MsgParcel;
 impl QueryMimeType {
     pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service query mime type");
         if !PermissionChecker::check_internet() {
             error!("Service query mime type: no INTERNET permission");
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
         }
         let id: String = data.read()?;
-        debug!("Service query mime type: task_id is {}", id);
+        info!("Process Service query mime type: task_id is {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
                 debug!("Service query mime type: u32 task_id is {}", id);
@@ -45,17 +44,18 @@ impl QueryMimeType {
                 let mime = match rx.get() {
                     Some(mime) => mime,
                     None => {
-                        error!("Service query mime type: receives mime failed");
+                        error!("End Service query mime type, task_id is {}, failed with reason: receive mime failed", id);
                         return Err(IpcStatusCode::Failed);
                     }
                 };
                 debug!("Service query mime type: {}", mime);
+                info!("End Service query mime type successfully: task_id is {}", id);
                 reply.write(&(ErrorCode::ErrOk as i32))?;
                 reply.write(&mime)?;
                 Ok(())
             }
             _ => {
-                error!("Service query mime type: task_id not valid");
+                error!("End Service query mime type, failed with reason: task_id not valid");
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

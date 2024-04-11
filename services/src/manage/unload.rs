@@ -29,7 +29,10 @@ use crate::task::request_task::RequestTask;
 impl TaskManager {
     pub(crate) fn check_unload_sa(&self) -> bool {
         if !self.tasks.is_empty() && !self.pause_check_unload_sa() {
-            info!("Running tasks are not 0 when trying to unload SA");
+            info!(
+                "Running tasks num is {} not 0, when trying to unload SA",
+                self.tasks.len()
+            );
             return false;
         }
 

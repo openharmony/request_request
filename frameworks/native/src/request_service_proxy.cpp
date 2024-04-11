@@ -38,7 +38,6 @@ RequestServiceProxy::RequestServiceProxy(const sptr<IRemoteObject> &object)
 
 int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid)
 {
-    REQUEST_HILOGD("Create");
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
@@ -69,11 +68,12 @@ int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid)
     GetVectorData(config, data);
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REQUEST), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("SendRequest ret : %{public}d", ret);
+        REQUEST_HILOGE("End send create request, failed with reason: %{public}d", ret);
         return E_SERVICE_ERROR;
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK) {
+        REQUEST_HILOGE("End send create request, failed with reason: %{public}d", errCode);
         return errCode;
     }
     tid = reply.ReadInt32();
@@ -134,7 +134,7 @@ void RequestServiceProxy::GetVectorData(const Config &config, MessageParcel &dat
 
 int32_t RequestServiceProxy::GetTask(const std::string &tid, const std::string &token, Config &config)
 {
-    REQUEST_HILOGD("GetTask");
+    REQUEST_HILOGI("Process send get task request, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
@@ -142,69 +142,78 @@ int32_t RequestServiceProxy::GetTask(const std::string &tid, const std::string &
     data.WriteString(token);
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_GETTASK), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        REQUEST_HILOGE("End send get task request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK) {
+        REQUEST_HILOGE(
+            "End send get task request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), errCode);
         return errCode;
     }
     ParcelHelper::UnMarshalConfig(reply, config);
+    REQUEST_HILOGI("End send get task request successfully, tid: %{public}s", tid.c_str());
     return E_OK;
 }
 
 int32_t RequestServiceProxy::Start(const std::string &tid)
 {
+    REQUEST_HILOGI("Process send start request, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(tid);
-    REQUEST_HILOGD("Start.");
+
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_START), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        REQUEST_HILOGE("End send start request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
+    REQUEST_HILOGI("End send start request successfully, tid: %{public}s", tid.c_str());
     return reply.ReadInt32();
 }
 
 int32_t RequestServiceProxy::Stop(const std::string &tid)
 {
+    REQUEST_HILOGI("Process send stop request, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(tid);
-    REQUEST_HILOGD("Stop");
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_STOP), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        REQUEST_HILOGE("End send stop request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
+    REQUEST_HILOGI("End send stop request successfully, tid: %{public}s", tid.c_str());
     return reply.ReadInt32();
 }
 
 int32_t RequestServiceProxy::Query(const std::string &tid, TaskInfo &info)
 {
+    REQUEST_HILOGI("Process send query request, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteString(tid);
-    REQUEST_HILOGD("Query");
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_QUERY), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        REQUEST_HILOGE("End send query request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK) {
+        REQUEST_HILOGE("End send query request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), errCode);
         return errCode;
     }
     ParcelHelper::UnMarshal(reply, info);
+    REQUEST_HILOGI("End send query request successfully, tid: %{public}s", tid.c_str());
     return E_OK;
 }
 
 int32_t RequestServiceProxy::Touch(const std::string &tid, const std::string &token, TaskInfo &info)
 {
+    REQUEST_HILOGI("Process send touch request, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
@@ -212,19 +221,22 @@ int32_t RequestServiceProxy::Touch(const std::string &tid, const std::string &to
     data.WriteString(token);
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_TOUCH), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        REQUEST_HILOGE("End send touch request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK) {
+        REQUEST_HILOGE("End send touch request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), errCode);
         return errCode;
     }
     ParcelHelper::UnMarshal(reply, info);
+    REQUEST_HILOGI("End send touch request successfully, tid: %{public}s", tid.c_str());
     return E_OK;
 }
 
 int32_t RequestServiceProxy::Search(const Filter &filter, std::vector<std::string> &tids)
 {
+    REQUEST_HILOGI("Process send search request");
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
@@ -236,168 +248,183 @@ int32_t RequestServiceProxy::Search(const Filter &filter, std::vector<std::strin
     data.WriteUint32(static_cast<uint32_t>(filter.mode));
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SEARCH), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        REQUEST_HILOGE("End send search request, failed with reason: %{public}d", ret);
         return E_SERVICE_ERROR;
     }
     uint32_t size = reply.ReadUint32();
     for (uint32_t i = 0; i < size; i++) {
         tids.push_back(reply.ReadString());
     }
+    REQUEST_HILOGI("End send search request successfully");
     return E_OK;
 }
 
 int32_t RequestServiceProxy::Show(const std::string &tid, TaskInfo &info)
 {
+    REQUEST_HILOGI("Process send show request, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteString(tid);
-    REQUEST_HILOGD("RequestServiceProxy Show started.");
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SHOW), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        REQUEST_HILOGE("End send show request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK) {
+        REQUEST_HILOGE("End send show request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), errCode);
         return errCode;
     }
     ParcelHelper::UnMarshal(reply, info);
+    REQUEST_HILOGI("End send show request successfully, tid: %{public}s", tid.c_str());
     return E_OK;
 }
 
 int32_t RequestServiceProxy::Pause(const std::string &tid, Version version)
 {
-    REQUEST_HILOGD("Pause");
+    REQUEST_HILOGI("Process send pause request, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteUint32(static_cast<uint32_t>(version));
     data.WriteString(tid);
-    REQUEST_HILOGD("RequestServiceProxy Pause started.");
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_PAUSE), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        REQUEST_HILOGE("End send pause request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
+    REQUEST_HILOGI("End send pause request successfully, tid: %{public}s", tid.c_str());
     return reply.ReadInt32();
 }
 
 int32_t RequestServiceProxy::QueryMimeType(const std::string &tid, std::string &mimeType)
 {
+    REQUEST_HILOGI("Process send query mimetyoe request, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteString(tid);
-    REQUEST_HILOGD("RequestServiceProxy QueryMimeType started.");
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_QUERYMIMETYPE), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        REQUEST_HILOGE(
+            "End send query mimetype request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK) {
+        REQUEST_HILOGE(
+            "End send query mimetype request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), errCode);
         return errCode;
     }
     mimeType = reply.ReadString();
+    REQUEST_HILOGI("End send query mimitype request successfully, tid: %{public}s", tid.c_str());
     return E_OK;
 }
 
 int32_t RequestServiceProxy::Remove(const std::string &tid, Version version)
 {
+    REQUEST_HILOGI("Process send remove request, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteUint32(static_cast<uint32_t>(version));
     data.WriteString(tid);
-    REQUEST_HILOGD("RequestServiceProxy Remove started.");
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REMOVE), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        REQUEST_HILOGE("End send remove request, tid: %{public}s failed with reason: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
 
     // API9 or lower will not return E_TASK_NOT_FOUND.
     int32_t result = reply.ReadInt32();
     if (version == Version::API9) {
+        REQUEST_HILOGI("End send remove request successfully, tid: %{public}s", tid.c_str());
         result = E_OK;
     }
+    REQUEST_HILOGI("End send remove request successfully, tid: %{public}s, result: %{public}d", tid.c_str(), result);
     return result;
 }
 
 int32_t RequestServiceProxy::Resume(const std::string &tid)
 {
+    REQUEST_HILOGI("Process send resume request, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteString(tid);
-    REQUEST_HILOGD("RequestServiceProxy Resume started.");
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_RESUME), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        REQUEST_HILOGE("End send resume request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
+    REQUEST_HILOGI("End send resume request successfully, tid: %{public}s", tid.c_str());
     return reply.ReadInt32();
 }
 
 int32_t RequestServiceProxy::OpenChannel(int32_t &sockFd)
 {
-    REQUEST_HILOGD("OpenChannel");
+    REQUEST_HILOGI("Process send open channel request");
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_OPENCHANNEL), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        REQUEST_HILOGE("End send open channel request, failed with reason: %{public}d", ret);
         return E_SERVICE_ERROR;
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK) {
+        REQUEST_HILOGE("End send open channel request, failed with reason: %{public}d", errCode);
         return errCode;
     }
     sockFd = reply.ReadFileDescriptor();
-    REQUEST_HILOGD("OpenChannel sockFd: %{public}d", sockFd);
+
+    REQUEST_HILOGI("End send open channel request successfully, fd: %{public}d", sockFd);
     return E_OK;
 }
 
-int32_t RequestServiceProxy::Subscribe(const std::string &taskId)
+int32_t RequestServiceProxy::Subscribe(const std::string &tid)
 {
-    REQUEST_HILOGD("Subscribe");
+    REQUEST_HILOGI("Process send subscribe request, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(taskId);
+    data.WriteString(tid);
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SUBSCRIBE), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        REQUEST_HILOGE("End send subscribe request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
+    REQUEST_HILOGI("End send subscribe request successfully, tid: %{public}s", tid.c_str());
     int32_t errCode = reply.ReadInt32();
     return errCode;
 }
 
-int32_t RequestServiceProxy::Unsubscribe(const std::string &taskId)
+int32_t RequestServiceProxy::Unsubscribe(const std::string &tid)
 {
-    REQUEST_HILOGD("Unsubscribe");
+    REQUEST_HILOGI("Process send unsubscribe request, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(taskId);
+    data.WriteString(tid);
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_UNSUBSCRIBE), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        REQUEST_HILOGE(
+            "End send unsubscribe request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
+    REQUEST_HILOGI("End send unsubscribe request successfully, tid: %{public}s", tid.c_str());
     return E_OK;
 }
 
 int32_t RequestServiceProxy::SubRunCount(const sptr<NotifyInterface> &listener)
 {
-    REQUEST_HILOGD("SubRunCount");
+    REQUEST_HILOGI("Process send sub runcount request");
     FwkRunningTaskCountManager::GetInstance()->SetSaStatus(true);
     MessageParcel data, reply;
     MessageOption option;
@@ -406,30 +433,31 @@ int32_t RequestServiceProxy::SubRunCount(const sptr<NotifyInterface> &listener)
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SUB_RUNCOUNT), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("remote send request failed, ret code is %{public}d", ret);
+        REQUEST_HILOGE("End send subscribe runcount request, failed with reason: %{public}d", ret);
         return ret;
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK) {
-        REQUEST_HILOGE("errCode: %{public}d, Subscribe RUNCOUNT failed", errCode);
+        REQUEST_HILOGE("End send subscribe runcount request, failed with reason: %{public}d", errCode);
         return errCode;
     }
-    REQUEST_HILOGD("Subscribe RUNCOUNT success");
+    REQUEST_HILOGI("End send subscribe runcount request successfully");
     return E_OK;
 }
 
 int32_t RequestServiceProxy::UnsubRunCount()
 {
-    REQUEST_HILOGD("UnsubRunCount");
+    REQUEST_HILOGI("Process send unsubscribe runcount request");
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_UNSUB_RUNCOUNT), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("send request ret code is %{public}d", ret);
+        REQUEST_HILOGE("End send unsubscribe runcount request, failed with reason: %{public}d", ret);
         return E_SERVICE_ERROR;
     }
+    REQUEST_HILOGI("End send unsubscribe runcount request successfully");
     return E_OK;
 }
 

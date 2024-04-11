@@ -22,9 +22,8 @@ pub(crate) struct Subscribe;
 
 impl Subscribe {
     pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("subscribe");
         let tid: String = data.read()?;
-        debug!("Service subscribe: task_id is {}", tid);
+        info!("Process Service subscribe: task_id is {}", tid);
         let pid = ipc::Skeleton::calling_pid();
         let uid = ipc::Skeleton::calling_uid();
         let token_id = ipc::Skeleton::calling_full_token_id();
@@ -33,20 +32,20 @@ impl Subscribe {
                 let (event, rx) = EventMessage::subscribe(tid, token_id);
                 if !RequestAbility::task_manager().send_event(event) {
                     reply.write(&(ErrorCode::Other as i32))?;
-                    error!("send event failed");
+                    error!("End Service subscribe, task_id is {}, failed with reason: send event failed", tid);
                     return Err(IpcStatusCode::Failed);
                 }
                 let ret = match rx.get() {
                     Some(ret) => ret,
                     None => {
-                        error!("Service construct: receives ret failed");
+                        error!("End Service subscribe, task_id is {}, failed with reason: receives ret failed", tid);
                         reply.write(&(ErrorCode::Other as i32))?;
                         return Err(IpcStatusCode::Failed);
                     }
                 };
 
                 if ret != ErrorCode::ErrOk {
-                    error!("subscribe failed: {:?}", ret);
+                    error!("End Service subscribe, task_id is {}, failed with reason: {:?}", tid, ret);
                     reply.write(&(ret as i32))?;
                     return Err(IpcStatusCode::Failed);
                 }
@@ -54,16 +53,16 @@ impl Subscribe {
                 let ret = RequestAbility::client_manager().subscribe(tid, pid, uid, token_id);
                 if ret == ErrorCode::ErrOk {
                     reply.write(&(ErrorCode::ErrOk as i32))?;
-                    info!("subscribe ok");
+                    info!("End Service subscribe successfully: task_id is {}", tid);
                     Ok(())
                 } else {
-                    error!("subscribe failed");
+                    error!("End Service subscribe, task_id is {}, failed with reason: {:?}", tid, ret);
                     reply.write(&(ret as i32))?;
                     Err(IpcStatusCode::Failed)
                 }
             }
             _ => {
-                error!("Service subscribe: task_id not valid");
+                error!("End Service subscribe, failed with reason: task_id not valid");
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }
