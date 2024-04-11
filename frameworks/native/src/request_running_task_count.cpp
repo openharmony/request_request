@@ -68,10 +68,6 @@ void FwkRunningTaskCountManager::SetCount(int runCount)
 void FwkRunningTaskCountManager::AttachObserver(std::shared_ptr<IRunningTaskObserver> ob)
 {
     auto pNewFwkOb = std::make_shared<FwkIRunningTaskObserver>(ob);
-    if (pNewFwkOb == nullptr) {
-        REQUEST_HILOGE("Create new FwkIRunningTaskObserver failed");
-        return;
-    }
     std::lock_guard<std::mutex> lock(observersLock_);
     observers_.push_back(pNewFwkOb);
     REQUEST_HILOGD("Fwk runcount manager has push observer, now has %{public}d observers",
