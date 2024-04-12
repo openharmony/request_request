@@ -957,6 +957,8 @@ void JsTask::RemovePathMap(const std::string &filepath)
             } else {
                 fileMap_[filepath] -= 1;
             }
+        } else {
+            return;
         }
     }
 

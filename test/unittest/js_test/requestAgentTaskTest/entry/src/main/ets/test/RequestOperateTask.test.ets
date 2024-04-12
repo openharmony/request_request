@@ -1752,6 +1752,31 @@ export default function requestOperateTaskTest() {
     })
 
     /**
+     * @tc.number: testDownloadTaskSaveas013
+     * @tc.name: testDownloadTaskSaveas013
+     * @tc.desc: Test when saveas is internal://files/filename
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskSaveas013', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        saveas: 'internal://files/path_save_as_013/test_saveas_013'
+      }
+      await request.agent.create(context, conf).then(async () => {
+        expect(true).assertTrue();
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })
+
+    /**
      * @tc.number: testUploadTaskUserFile001
      * @tc.name: testUploadTaskUserFile001
      * @tc.desc: Test when upload user file with wrong `Mode`
@@ -1776,6 +1801,402 @@ export default function requestOperateTaskTest() {
       }
       try {
         await request.agent.create(context, conf).then(async () => {
+          expect(false).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(true).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadTaskPath001
+     * @tc.name: testUploadTaskPath001
+     * @tc.desc: Test when path is ./filename
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadTaskPath001', 0, async function (done) {
+      let context = globalThis.abilityContext;
+      let dir = context.cacheDir;
+      let file = fs.openSync(dir + '/upload_001', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+                 name: 'file',
+                 value: {
+                   path: `./upload_001`
+                 }
+               }]
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          if (fs.accessSync(dir + '/upload_001')) {
+            fs.unlinkSync(dir + '/upload_001');
+          }
+          expect(true).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadTaskPath002
+     * @tc.name: testUploadTaskPath002
+     * @tc.desc: Test when path is filename
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadTaskPath002', 0, async function (done) {
+      let context = globalThis.abilityContext;
+      let dir = context.cacheDir;
+      let file = fs.openSync(dir + '/upload_002', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+                 name: 'file',
+                 value: {
+                   path: `./upload_002`
+                 }
+               }]
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          if (fs.accessSync(dir + '/upload_002')) {
+            fs.unlinkSync(dir + '/upload_002');
+          }
+          expect(true).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadTaskPath003
+     * @tc.name: testUploadTaskPath003
+     * @tc.desc: Test when path is internal://cache/filename
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadTaskPath003', 0, async function (done) {
+      let context = globalThis.abilityContext;
+      let dir = context.cacheDir;
+      let file = fs.openSync(dir + '/upload_003', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+                 name: 'file',
+                 value: {
+                   path: `internal://cache/upload_003`
+                 }
+               }]
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          if (fs.accessSync(dir + '/upload_003')) {
+            fs.unlinkSync(dir + '/upload_003');
+          }
+          expect(true).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadTaskPath004
+     * @tc.name: testUploadTaskPath004
+     * @tc.desc: Test when path is internal://files/filename
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadTaskPath004', 0, async function (done) {
+      let context = globalThis.abilityContext;
+      let dir = context.filesDir;
+      let file = fs.openSync(dir + '/upload_004', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+                 name: 'file',
+                 value: {
+                   path: `internal://files/upload_004`
+                 }
+               }]
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          if (fs.accessSync(dir + '/upload_004')) {
+            fs.unlinkSync(dir + '/upload_004');
+          }
+          expect(true).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadTaskPath005
+     * @tc.name: testUploadTaskPath005
+     * @tc.desc: Test when path is whole path in base
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadTaskPath005', 0, async function (done) {
+      let context = globalThis.abilityContext;
+      let dir = context.cacheDir;
+      let file = fs.openSync(dir + '/upload_005', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+                 name: 'file',
+                 value: {
+                   path: dir + `/upload_005`
+                 }
+               }]
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          if (fs.accessSync(dir + '/upload_005')) {
+            fs.unlinkSync(dir + '/upload_005');
+          }
+          expect(true).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadTaskPath006
+     * @tc.name: testUploadTaskPath006
+     * @tc.desc: Test when path is whole path but not in base
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadTaskPath006', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+                 name: 'file',
+                 value: {
+                   path: `/data/storage/upload_006`
+                 }
+               }]
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          expect(false).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(true).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadTaskPath007
+     * @tc.name: testUploadTaskPath007
+     * @tc.desc: Test when path is whole path which contains ..
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadTaskPath007', 0, async function (done) {
+      let context = globalThis.abilityContext.getApplicationContext();
+      let dir = context.cacheDir;
+      let file = fs.openSync(dir + '/upload_007', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+                 name: 'file',
+                 value: {
+                   path: '/data/storage/../../data/storage/el1/../el2/base/cache/upload_007'
+                 }
+               }]
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          if (fs.accessSync(dir + '/upload_007')) {
+            fs.unlinkSync(dir + '/upload_007');
+          }
+          expect(true).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadTaskPath008
+     * @tc.name: testUploadTaskPath008
+     * @tc.desc: Test when path is whole path which contains error ..
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadTaskPath008', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+                 name: 'file',
+                 value: {
+                   path: '/data/storage/../../el2/base/upload_008'
+                 }
+               }]
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          expect(false).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(true).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadTaskPath009
+     * @tc.name: testUploadTaskPath009
+     * @tc.desc: Test when path is file:// with correct package name
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadTaskPath009', 0, async function (done) {
+      let context = globalThis.abilityContext.getApplicationContext();
+      let dir = context.cacheDir;
+      let file = fs.openSync(dir + '/upload_009', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+                 name: 'file',
+                 value: {
+                   path: 'file://com.acts.request/data/storage/el2/base/cache/upload_009'
+                 }
+               }]
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          if (fs.accessSync(dir + '/upload_009')) {
+            fs.unlinkSync(dir + '/upload_009');
+          }
+          expect(true).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadTaskPath010
+     * @tc.name: testUploadTaskPath010
+     * @tc.desc: Test when path is file:// with error package name
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadTaskPath010', 0, async function (done) {
+      let context = globalThis.abilityContext.getApplicationContext();
+      let dir = context.cacheDir;
+      let file = fs.openSync(dir + '/upload_010', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+                 name: 'file',
+                 value: {
+                   path: 'file://com.acts.request1111/data/storage/el2/base/cache/upload_010'
+                 }
+               }]
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          if (fs.accessSync(dir + '/upload_010')) {
+            fs.unlinkSync(dir + '/upload_010');
+          }
           expect(false).assertTrue();
           done();
         }).catch((err) => {
