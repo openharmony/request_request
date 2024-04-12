@@ -14,7 +14,7 @@
 
 use hisysevent::{build_number_param, write, EventType};
 use samgr::definition::DOWNLOAD_SERVICE_ID;
-use system_ability_fwk::ability::{Ability, PublishHandler};
+use system_ability_fwk::ability::{Ability, Handler};
 
 use crate::service::RequestServiceStub;
 use crate::{start, stop};
@@ -39,7 +39,7 @@ struct RequestAbility;
 
 impl Ability for RequestAbility {
     /// Callback to deal safwk onstart for this system_ability
-    fn on_start(&self, handler: PublishHandler) {
+    fn on_start(&self, handler: Handler) {
         info!("on_start");
 
         if !handler.publish(RequestServiceStub) {
