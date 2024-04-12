@@ -77,6 +77,7 @@ napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Versi
         REQUEST_HILOGD("destructed task");
         JsTask *task = reinterpret_cast<JsTask *>(data);
         JsTask::ClearTaskMap(task->GetTid());
+        RequestManager::GetInstance()->RemoveAllListeners(task->GetTid());
         delete task;
     };
     if (napi_wrap(env, self, task, finalize, nullptr, nullptr) != napi_ok) {
