@@ -91,9 +91,10 @@ impl Construct {
         let certificate_pins: String = data.read()?;
 
         let bundle = get_calling_bundle();
-        // Creates task_id here, move it to task_manager later?
+
         let uid = ipc::Skeleton::calling_uid();
         let token_id = ipc::Skeleton::calling_full_token_id();
+        let pid = ipc::Skeleton::calling_pid();
 
         let certs_path_size: u32 = data.read()?;
         if certs_path_size > data.readable() as u32 {
@@ -256,12 +257,12 @@ impl Construct {
 
         debug!("Service construct: construct event sent to manager");
 
-        if version != Version::API10 {
-            let (event, _) = EventMessage::start(uid, task_id);
-            if !RequestAbility::task_manager().send_event(event) {
-                return Err(IpcStatusCode::Failed);
-            }
-            debug!("Service construct: start event sent to manager");
+        let ret = RequestAbility::client_manager().subscribe(task_id, pid, uid, token_id);
+        if ret != ErrorCode::ErrOk {
+            error!("End Service subscribe, task_id is {}, failed with reason: {:?}", task_id, ret);
+            reply.write(&(ret as i32))?;
+            reply.write(&(task_id as i32))?;
+            return Err(IpcStatusCode::Failed);
         }
 
         reply.write(&(ErrorCode::ErrOk as i32))?;

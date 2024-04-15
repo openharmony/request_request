@@ -170,13 +170,11 @@ static void RemoveJSTask(const std::shared_ptr<NotifyData> &notifyData)
     if (notifyData->version == Version::API9
         && (notifyData->type == SubscribeType::COMPLETED || notifyData->type == SubscribeType::FAILED
             || notifyData->type == SubscribeType::REMOVE)) {
-        RequestManager::GetInstance()->RemoveAllListeners(tid);
         JsTask::ClearTaskTemp(tid, true, true, true, true);
         JsTask::ClearTaskMap(tid);
         REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
     } else if (notifyData->version == Version::API10) {
         if (notifyData->type == SubscribeType::REMOVE) {
-            RequestManager::GetInstance()->RemoveAllListeners(tid);
             JsTask::ClearTaskTemp(tid, true, true, true, true);
             JsTask::ClearTaskMap(tid);
             REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());

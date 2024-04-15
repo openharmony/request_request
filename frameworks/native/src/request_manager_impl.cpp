@@ -55,6 +55,7 @@ int32_t RequestManagerImpl::Create(const Config &config, int32_t seq, int32_t &t
         return E_SERVICE_ERROR;
     }
     REQUEST_HILOGI("Process send create request, seq: %{public}d", seq);
+    this->EnsureChannelOpen();
     int32_t ret = proxy->Create(config, tid);
     if (ret == E_UNLOADING_SA) {
         REQUEST_HILOGE("Send create request, seq: %{public}d, failed with reason: Service ability is quitting", seq);
@@ -64,10 +65,18 @@ int32_t RequestManagerImpl::Create(const Config &config, int32_t seq, int32_t &t
             return ret;
         }
     }
-    if (ret == E_OK) {
-        this->Subscribe(std::to_string(tid));
+    if (ret == E_CHANNEL_NOT_OPEN) {
+        this->ReopenChannel();
+        ret = proxy->Subscribe(std::to_string(tid));
     }
-    REQUEST_HILOGI("End Send create request successfully, seq: %{public}d, ret: %{public}d", seq, ret);
+    if (ret == E_OK && config.version != Version::API10) {
+        ret = proxy->Start(std::to_string(tid));
+    }
+    if (ret != E_OK) {
+        REQUEST_HILOGE("Send create request, seq: %{public}d, failed with reason: %{public}d", seq, ret);
+    } else {
+        REQUEST_HILOGI("End send create request successfully, seq: %{public}d, ret: %{public}d", seq, ret);
+    }
 
     return ret;
 }
@@ -240,7 +249,7 @@ int32_t RequestManagerImpl::AddListener(
 {
     REQUEST_HILOGD("AddListener in, tid:%{public}s, type: %{public}d", taskId.c_str(), type);
     std::shared_ptr<Request> task = this->GetTask(taskId);
-    if (task) {
+    if (task.get()) {
         task->AddListener(type, listener);
         return E_OK;
     } else {
@@ -253,7 +262,7 @@ int32_t RequestManagerImpl::RemoveListener(
 {
     REQUEST_HILOGD("RemoveListener in, tid:%{public}s, type: %{public}d", taskId.c_str(), type);
     std::shared_ptr<Request> task = this->GetTask(taskId);
-    if (task) {
+    if (task.get()) {
         task->RemoveListener(type, listener);
         return E_OK;
     } else {
@@ -266,7 +275,7 @@ int32_t RequestManagerImpl::AddListener(
 {
     REQUEST_HILOGD("AddListener in, tid:%{public}s, type: %{public}d", taskId.c_str(), type);
     std::shared_ptr<Request> task = this->GetTask(taskId);
-    if (task) {
+    if (task.get()) {
         task->AddListener(type, listener);
         return E_OK;
     } else {
@@ -280,7 +289,7 @@ int32_t RequestManagerImpl::RemoveListener(
 {
     REQUEST_HILOGD("RemoveListener in, tid:%{public}s, type: %{public}d", taskId.c_str(), type);
     std::shared_ptr<Request> task = this->GetTask(taskId);
-    if (task) {
+    if (task.get()) {
         task->RemoveListener(type, listener);
         return E_OK;
     } else {
@@ -388,7 +397,7 @@ std::shared_ptr<Request> RequestManagerImpl::GetTask(const std::string &taskId)
     } else {
         this->tasks_.erase(taskId);
         REQUEST_HILOGE("Response Task create fail");
-        return std::shared_ptr<Request>();
+        return std::shared_ptr<Request>(nullptr);
     }
 }
 
@@ -400,30 +409,20 @@ void RequestManagerImpl::OnChannelBroken()
 
 void RequestManagerImpl::OnResponseReceive(const std::shared_ptr<Response> &response)
 {
-    std::shared_ptr<Request> task;
-    {
-        std::lock_guard<std::mutex> lock(tasksMutex_);
-        auto it = tasks_.find(response->taskId);
-        if (it == tasks_.end()) {
-            REQUEST_HILOGD("OnResponseReceive task not found");
-            return;
-        }
-        task = it->second;
+    std::shared_ptr<Request> task = this->GetTask(response->taskId);
+    if (task.get() == nullptr) {
+        REQUEST_HILOGE("OnResponseReceive task not found");
+        return;
     }
     task->OnResponseReceive(response);
 }
 
 void RequestManagerImpl::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData)
 {
-    std::shared_ptr<Request> task;
-    {
-        std::lock_guard<std::mutex> lock(tasksMutex_);
-        auto it = tasks_.find(std::to_string(notifyData->taskId));
-        if (it == tasks_.end()) {
-            REQUEST_HILOGD("OnNotifyDataReceive task not found");
-            return;
-        }
-        task = it->second;
+    std::shared_ptr<Request> task = this->GetTask(std::to_string(notifyData->taskId));
+    if (task.get() == nullptr) {
+        REQUEST_HILOGE("OnNotifyDataReceive task not found");
+        return;
     }
     task->OnNotifyDataReceive(notifyData);
 }

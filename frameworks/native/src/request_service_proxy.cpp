@@ -72,12 +72,12 @@ int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid)
         return E_SERVICE_ERROR;
     }
     int32_t errCode = reply.ReadInt32();
-    if (errCode != E_OK) {
+    if (errCode != E_OK && errCode != E_CHANNEL_NOT_OPEN) {
         REQUEST_HILOGE("End send create request, failed with reason: %{public}d", errCode);
         return errCode;
     }
     tid = reply.ReadInt32();
-    return E_OK;
+    return errCode;
 }
 
 void RequestServiceProxy::GetVectorData(const Config &config, MessageParcel &data)

@@ -110,7 +110,7 @@ impl ClientManager {
                             debug!("response client not found");
                         }
                     } else {
-                        debug!("response pid not found");
+                        debug!("notify data pid not found");
                     }
                 }
                 _ => {}
