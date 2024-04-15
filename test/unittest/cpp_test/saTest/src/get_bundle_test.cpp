@@ -68,5 +68,5 @@ HWTEST_F(GetBundleTest, GetBundleTest_001, TestSize.Level1)
  */
 HWTEST_F(GetBundleTest, GetBundleTest_002, TestSize.Level1)
 {
-    CStringWrapper ret = GetTopBundleName();
+    GetTopBundleName();
 }
