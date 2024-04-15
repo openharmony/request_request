@@ -93,6 +93,10 @@ impl TaskManager {
         if state == State::Waiting
             && (reason == Reason::NetworkOffline || reason == Reason::UnsupportedNetworkType)
         {
+            info!(
+                "Retry a waiting task with NetworkOffline/UnsupportedNetworkType, uid:{}, task_id:{}",
+                task.conf.common_data.uid, task.conf.common_data.task_id
+            );
             task.retry.store(true, Ordering::SeqCst);
             task.tries.fetch_add(1, Ordering::SeqCst);
             task.set_status(State::Retrying, Reason::Default);
