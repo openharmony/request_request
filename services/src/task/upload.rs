@@ -197,9 +197,12 @@ fn build_request_common(
         Err(e) => {
             error!("build upload request error is {:?}", e);
             {
-                let mut guard = task.code.lock().unwrap();
-                for i in index..guard.len() {
-                    guard[i] = Reason::BuildRequestFailed;
+                // `unwrap` for propagating panics among threads.
+                let mut codes_guard = task.code.lock().unwrap();
+                for (i, code) in codes_guard.iter_mut().enumerate() {
+                    if i >= index {
+                        *code = Reason::BuildRequestFailed;
+                    }
                 }
             }
             task.set_status(State::Failed, Reason::BuildRequestFailed);
@@ -315,19 +318,28 @@ where
         }
         let response = task.client.request(request.unwrap()).await;
         if task.handle_response_error(&response).await {
-            task.code.lock().unwrap()[index] = Reason::Default;
+            // `unwrap` for propagating panics among threads.
+            if let Some(code) = task.code.lock().unwrap().get_mut(index) {
+                *code = Reason::Default;
+            }
             task.record_upload_response(index, response).await;
             return true;
         }
         task.record_upload_response(index, response).await;
-        let code = task.code.lock().unwrap()[index];
-        if code != Reason::Default {
-            error!(
-                "upload {} file fail, which reason is {}",
-                index, code as u32
-            );
+        // `unwrap` for propagating panics among threads.
+        if let Some(code) = task.code.lock().unwrap().get(index) {
+            if *code != Reason::Default {
+                error!(
+                    "upload {} file fail, which reason is {}",
+                    index, *code as u32
+                );
+                return false;
+            }
+        } else {
+            error!("upload {} file fail, which reason is not found", index);
             return false;
         }
+
         let state = task.status.lock().unwrap().state;
         if state != State::Running && state != State::Retrying {
             return false;
