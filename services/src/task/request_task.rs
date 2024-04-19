@@ -95,7 +95,6 @@ impl RequestTask {
         }
 
         let files = AttachedFiles::open(&config).map_err(|_| ErrorCode::FileOperationErr)?;
-
         let client = build_client(&config, system).map_err(|_| ErrorCode::Other)?;
 
         let file_len = files.files.len();
@@ -182,17 +181,9 @@ impl RequestTask {
     }
 
     pub(crate) fn build_notify_data(&self) -> NotifyData {
-        let mut vec = Vec::new();
-        let size = self.conf.file_specs.len();
-        let guard = self.code.lock().unwrap();
-        for i in 0..size {
-            vec.push(EachFileStatus {
-                path: self.conf.file_specs[i].path.clone(),
-                reason: guard[i],
-                message: guard[i].to_str().into(),
-            });
-        }
+        let vec = self.get_each_file_status();
         NotifyData {
+            // `unwrap` for propagating panics among threads.
             progress: self.progress.lock().unwrap().clone(),
             action: self.conf.common_data.action,
             version: self.conf.version,
@@ -203,6 +194,7 @@ impl RequestTask {
     }
 
     pub(crate) fn record_waitting_network_time(&self) {
+        // `unwrap` for propagating panics among threads.
         let mut staus = self.status.lock().unwrap();
         staus.waiting_network_time = Some(get_current_timestamp());
     }
@@ -596,19 +588,48 @@ impl RequestTask {
         if code == Reason::UploadFileError {
             return;
         }
-        let mut code_guard = self.code.lock().unwrap();
-        if index < code_guard.len() && code_guard[index] == Reason::Default {
-            debug!("set code");
-            code_guard[index] = code;
+        // `unwrap` for propagating panics among threads.
+        let mut codes_guard = self.code.lock().unwrap();
+        match codes_guard.get_mut(index) {
+            Some(reason) => {
+                if *reason == Reason::Default {
+                    *reason = code;
+                    debug!(
+                        "set code; tid: {}, index: {}, code: {:?}",
+                        self.conf.common_data.task_id, index, code
+                    );
+                }
+                info!(
+                    "set code error; tid: {}, index: {}, code: {:?}, reason: {:?}",
+                    self.conf.common_data.task_id, index, code, reason
+                );
+            }
+            None => {
+                info!(
+                    "set code index error; tid: {}, index: {}, code: {:?}",
+                    self.conf.common_data.task_id, index, code
+                );
+            }
         }
     }
 
     pub(crate) fn reset_code(&self, index: usize) {
-        let file_counts = self.conf.file_specs.len();
-        let mut code_guard = self.code.lock().unwrap();
-        if index < file_counts {
-            debug!("reset code");
-            code_guard[index] = Reason::Default;
+        // `unwrap` for propagating panics among threads.
+        let mut codes_guard = self.code.lock().unwrap();
+        match codes_guard.get_mut(index) {
+            Some(reason) => {
+                *reason = Reason::Default;
+                debug!(
+                    "reset code; tid: {}, index: {}",
+                    self.conf.common_data.task_id, index
+                );
+            }
+            None => {
+                error!(
+                    "reset code error; tid: {}, index: {}",
+                    self.conf.common_data.task_id, index
+                );
+            }
         }
     }
 
@@ -753,13 +774,14 @@ impl RequestTask {
 
     fn get_each_file_status(&self) -> Vec<EachFileStatus> {
         let mut vec = Vec::new();
-        let size = self.conf.file_specs.len();
-        let guard = self.code.lock().unwrap();
-        for i in 0..size {
+        // `unwrap` for propagating panics among threads.
+        let codes_guard = self.code.lock().unwrap();
+        for (i, file_spec) in self.conf.file_specs.iter().enumerate() {
+            let reason = *codes_guard.get(i).unwrap_or(&Reason::Default);
             vec.push(EachFileStatus {
-                path: self.conf.file_specs[i].path.clone(),
-                reason: guard[i],
-                message: guard[i].to_str().into(),
+                path: file_spec.path.clone(),
+                reason,
+                message: reason.to_str().into(),
             });
         }
         vec
@@ -960,7 +982,8 @@ pub(crate) async fn run(task: RunningTask) {
             if state != State::Running && state != State::Retrying {
                 break;
             }
-            let code = task.code.lock().unwrap()[0];
+            // `unwrap` for propagating panics among threads.
+            let code = *task.code.lock().unwrap().get(0).unwrap_or(&Reason::Default);
             if code != Reason::Default {
                 task.set_status(State::Failed, code);
                 break;

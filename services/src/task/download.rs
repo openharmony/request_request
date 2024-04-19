@@ -100,8 +100,9 @@ pub(crate) async fn download(task: Arc<RequestTask>) {
 
     #[cfg(feature = "oh")]
     use crate::sys_event::SysEvent;
+    // `unwrap` for propagating panics among threads.
     #[cfg(feature = "oh")]
-    let reason = task.code.lock().unwrap()[0];
+    let reason = *task.code.lock().unwrap().get(0).unwrap_or(&Reason::Default);
     // If `Reason` is not `Default`a records this sys event.
     #[cfg(feature = "oh")]
     if reason != Reason::Default {
