@@ -98,7 +98,6 @@ void RequestManager::CallFunctionAsync(napi_env env, napi_ref func, const ArgsGe
 
 void RequestManager::OnTaskDone(const std::string &token, bool successful, const std::string &errMsg)
 {
-    REQUEST_HILOGI("token=%{public}s", token.c_str());
     DownloadDescriptor descriptor{};
     {
         std::lock_guard<std::mutex> lockGuard(lock_);
@@ -289,7 +288,6 @@ napi_value RequestManager::OnDownloadComplete(napi_env env, napi_callback_info i
         std::lock_guard<std::mutex> lockGuard(lock_);
         auto it = downloadDescriptors_.find(token);
         if (it != downloadDescriptors_.end()) {
-            REQUEST_HILOGI("find token=%{public}s", token.c_str());
             it->second.env_ = env;
             napi_create_reference(env, argv[0], 1, &it->second.this_);
             auto callback = NapiUtils::GetNamedProperty(env, argv[0], "success");
@@ -299,7 +297,6 @@ napi_value RequestManager::OnDownloadComplete(napi_env env, napi_callback_info i
             return res;
         }
     }
-    REQUEST_HILOGE("%{public}s is not exist", token.c_str());
     auto callback = NapiUtils::GetNamedProperty(env, argv[0], "fail");
     if (callback != nullptr) {
         napi_value result[FAIL_CB_ARGC]{};

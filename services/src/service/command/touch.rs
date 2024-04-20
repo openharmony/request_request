@@ -28,7 +28,6 @@ impl Touch {
             Ok(id) => {
                 debug!("Service touch: u32 task_id is {}", id);
                 let token: String = data.read()?;
-                debug!("Service touch: token is {}", token);
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service touch: uid is {}", uid);
                 let (event, rx) = EventMessage::touch(uid, id, token);
