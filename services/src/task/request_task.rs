@@ -236,8 +236,18 @@ impl RequestTask {
         true
     }
 
-    pub(crate) fn build_request_builder(&self) -> RequestBuilder {
+    pub(crate) fn build_request_builder(&self) -> Result<RequestBuilder, HttpClientError> {
+        use ylong_http_client::async_impl::PercentEncoder;
+
         let url = self.conf.url.clone();
+        let url = match PercentEncoder::encode(url.as_str()) {
+            Ok(value) => value,
+            Err(e) => {
+                error!("url percent encoding error is {:?}", e);
+                return Err(e);
+            }
+        };
+
         let method = match self.conf.method.to_uppercase().as_str() {
             "PUT" => "PUT",
             "POST" => "POST",
@@ -258,7 +268,7 @@ impl RequestTask {
         for (key, value) in self.conf.headers.iter() {
             request = request.header(key.as_str(), value.as_str());
         }
-        request
+        Ok(request)
     }
 
     async fn clear_downloaded_file(&self) -> bool {
@@ -291,7 +301,14 @@ impl RequestTask {
     }
 
     pub(crate) async fn build_download_request(&self) -> Option<Request> {
-        let mut request_builder = self.build_request_builder();
+        let mut request_builder = match self.build_request_builder() {
+            Ok(builder) => builder,
+            _ => {
+                self.set_status(State::Failed, Reason::BuildRequestFailed);
+                return None;
+            }
+        };
+
         let mut begins = self.conf.common_data.begins;
         let ends = self.conf.common_data.ends;
         self.range_response.store(false, Ordering::SeqCst);
