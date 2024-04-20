@@ -147,7 +147,8 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
         jsParam.task->listenerMutex_.unlock();
         napi_status ret = jsParam.task->responseListener_->AddListener(jsParam.callback);
         if (ret != napi_ok) {
-            REQUEST_HILOGE("End task on, seq: %{public}d, failed with reason: AddListener fail code %{public}d", seq, ret);
+            REQUEST_HILOGE(
+                "End task on, seq: %{public}d, failed with reason: AddListener fail code %{public}d", seq, ret);
             return nullptr;
         }
     } else {
@@ -160,7 +161,8 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
         jsParam.task->listenerMutex_.unlock();
         napi_status ret = jsParam.task->notifyDataListenerMap_[jsParam.subscribeType]->AddListener(jsParam.callback);
         if (ret != napi_ok) {
-            REQUEST_HILOGE("End task on, seq: %{public}d, failed with reason: AddListener fail code %{public}d", seq, ret);
+            REQUEST_HILOGE(
+                "End task on, seq: %{public}d, failed with reason: AddListener fail code %{public}d", seq, ret);
             return nullptr;
         }
     }
@@ -249,25 +251,35 @@ ExceptionError RequestEvent::ParseOnOffParameters(
     napi_value argv[NapiUtils::MAX_ARGC] = { nullptr };
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &jsParam.self, nullptr);
     if (status != napi_ok) {
-        return { .code = E_PARAMETER_CHECK, .errInfo = "Failed to obtain parameters" };
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Failed to obtain parameters";
+        return err;
     }
     napi_unwrap(env, jsParam.self, reinterpret_cast<void **>(&jsParam.task));
     if (jsParam.task == nullptr) {
-        return { .code = E_PARAMETER_CHECK, .errInfo = "Failed to obtain the current object" };
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Failed to obtain the current object";
+        return err;
     }
 
     if ((IsRequiredParam && argc < NapiUtils::TWO_ARG) || (!IsRequiredParam && argc < NapiUtils::ONE_ARG)) {
-        return { .code = E_PARAMETER_CHECK, .errInfo = "Wrong number of arguments" };
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Wrong number of arguments";
+        return err;
     }
     napi_valuetype valuetype;
     napi_typeof(env, argv[NapiUtils::FIRST_ARGV], &valuetype);
     if (valuetype != napi_string) {
-        return { .code = E_PARAMETER_CHECK, .errInfo = "The first parameter is not of string type" };
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "The first parameter is not of string type";
+        return err;
     }
     jsParam.type = NapiUtils::Convert2String(env, argv[NapiUtils::FIRST_ARGV]);
     jsParam.subscribeType = StringToSubscribeType(jsParam.type, jsParam.task->config_.version);
     if (jsParam.subscribeType == SubscribeType::BUTT) {
-        return { .code = E_PARAMETER_CHECK, .errInfo = "First parameter error" };
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "First parameter error";
+        return err;
     }
     if (argc == NapiUtils::ONE_ARG) {
         return err;
@@ -275,7 +287,9 @@ ExceptionError RequestEvent::ParseOnOffParameters(
     valuetype = napi_undefined;
     napi_typeof(env, argv[NapiUtils::SECOND_ARGV], &valuetype);
     if (valuetype != napi_function) {
-        return { .code = E_PARAMETER_CHECK, .errInfo = "The second parameter is not of function type" };
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "The second parameter is not of function type";
+        return err;
     }
     jsParam.callback = argv[NapiUtils::SECOND_ARGV];
     return err;

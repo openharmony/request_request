@@ -40,7 +40,9 @@ void UvQueue::DeleteRef(napi_env env, napi_ref ref)
     }
     callbackData->env = env;
     callbackData->ref = ref;
-    UvQueue::Call(env, reinterpret_cast<void *>(callbackData), UvDelete);
+    if (!UvQueue::Call(env, reinterpret_cast<void *>(callbackData), UvDelete)) {
+        delete callbackData;
+    }
 }
 
 void UvQueue::UvDelete(uv_work_t *work, int status)

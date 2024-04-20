@@ -97,11 +97,15 @@ ExceptionError JsInitialize::InitParam(
     napi_status getStatus = GetContext(env, argv[0], context);
     if (getStatus != napi_ok) {
         REQUEST_HILOGE("Get context fail");
-        return { .code = E_PARAMETER_CHECK, .errInfo = "Get context fail" };
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Get context fail";
+        return err;
     }
 
     if (context->GetApplicationInfo() == nullptr) {
-        return { .code = E_OTHER, .errInfo = "ApplicationInfo is null" };
+        err.code = E_OTHER;
+        err.errInfo = "ApplicationInfo is null";
+        return err;
     }
     if (!ParseConfig(env, argv[parametersPosition], config, err.errInfo)) {
         err.code = E_PARAMETER_CHECK;
@@ -446,7 +450,7 @@ bool JsInitialize::ParseSaveas(napi_env env, napi_value jsConfig, Config &config
         return InterceptData("/", config.url, config.saveas);
     }
     temp = std::string(temp, 0, temp.find_last_not_of(' ') + 1);
-    if (temp[temp.size() - 1] == '/') {
+    if (temp.size() <= 0 || temp[temp.size() - 1] == '/') {
         return false;
     }
     config.saveas = temp;
@@ -613,8 +617,7 @@ std::string GetHostnameFromURL(const std::string &url)
     if (notSlash != std::string::npos) {
         posStart = notSlash;
     }
-    size_t posEnd = std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart),
-                               tempUrl.find('?', posStart) });
+    size_t posEnd = std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
     if (posEnd != std::string::npos) {
         return tempUrl.substr(posStart, posEnd - posStart);
     }
@@ -779,7 +782,7 @@ bool JsInitialize::InterceptData(const std::string &str, const std::string &in, 
 {
     std::size_t position = in.find_last_of(str);
     // when the str at last index, will error.
-    if (position == std::string::npos || position >= in.size() - 1) {
+    if (position == std::string::npos || position + 1 >= in.size()) {
         return false;
     }
     out = std::string(in, position + 1);
