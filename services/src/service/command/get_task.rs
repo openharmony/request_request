@@ -29,7 +29,6 @@ impl GetTask {
             Ok(tid) => {
                 debug!("Service getTask: u32 task_id is {}", tid);
                 let token: String = data.read()?;
-                debug!("Service getTask: token is {}", token);
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service getTask: uid is {}", uid);
                 let (event, rx) = EventMessage::get_task(uid, tid, token);
