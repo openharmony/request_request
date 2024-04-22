@@ -53,12 +53,12 @@ napi_status JSNotifyDataListener::RemoveListener(napi_value cb)
 
 bool JSNotifyDataListener::IsHeaderReceive(const std::shared_ptr<NotifyData> &notifyData)
 {
-    if (notifyData->version == Version::API9 && notifyData->action == Action::UPLOAD &&
-        notifyData->type == SubscribeType::HEADER_RECEIVE) {
+    if (notifyData->version == Version::API9 && notifyData->action == Action::UPLOAD
+        && notifyData->type == SubscribeType::HEADER_RECEIVE) {
         return true;
-    } else if (notifyData->version == Version::API10 && notifyData->action == Action::UPLOAD &&
-               notifyData->progress.state == State::COMPLETED &&
-               (notifyData->type == SubscribeType::PROGRESS || notifyData->type == SubscribeType::COMPLETED)) {
+    } else if (notifyData->version == Version::API10 && notifyData->action == Action::UPLOAD
+               && notifyData->progress.state == State::COMPLETED
+               && (notifyData->type == SubscribeType::PROGRESS || notifyData->type == SubscribeType::COMPLETED)) {
         return true;
     }
     return false;
@@ -83,8 +83,7 @@ void JSNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData
         std::string &filePath = task->config_.bodyFileNames[index];
         NapiUtils::ReadBytesFromFile(filePath, notifyData->progress.bodyBytes);
         // Waiting for "complete" to read and delete.
-        if (!(notifyData->version == Version::API10 && index == len - 1 &&
-              notifyData->type == SubscribeType::PROGRESS)) {
+        if (!(notifyData->version == Version::API10 && index + 1 == len && notifyData->type == SubscribeType::PROGRESS)) {
             NapiUtils::RemoveFile(filePath);
         }
     }
@@ -128,8 +127,8 @@ void JSNotifyDataListener::NotifyDataProcess(
         if (notifyData->type == SubscribeType::COMPLETED || notifyData->type == SubscribeType::FAILED) {
             value[0] = NapiUtils::Convert2JSValue(env_, notifyData->taskStates);
         } else if (notifyData->type == SubscribeType::PROGRESS) {
-            int64_t totalSize = std::accumulate(notifyData->progress.sizes.begin(),
-                                                notifyData->progress.sizes.end(), 0);
+            int64_t totalSize =
+                std::accumulate(notifyData->progress.sizes.begin(), notifyData->progress.sizes.end(), 0);
             value[0] = NapiUtils::Convert2JSValue(this->env_, notifyData->progress.totalProcessed);
             value[1] = NapiUtils::Convert2JSValue(this->env_, totalSize);
             paramNumber = NapiUtils::TWO_ARG;
@@ -202,6 +201,7 @@ void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
     NotifyDataPtr *ptr = new (std::nothrow) NotifyDataPtr;
     if (ptr == nullptr) {
         REQUEST_HILOGE("NotifyDataPtr new failed");
+        delete work;
         return;
     }
     ptr->listener = shared_from_this();

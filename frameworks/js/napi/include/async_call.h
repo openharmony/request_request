@@ -37,9 +37,7 @@ public:
         Context() = default;
         virtual ~Context()
         {
-            ContextNapiHolder *holder =
-                new ContextNapiHolder{ .env = env_, .callbackRef = callbackRef_, .self = self_, .work = work_ };
-            UvQueue::Call(env_, static_cast<void *>(holder), [](uv_work_t *work, int status) {
+            auto afterCallback = [](uv_work_t *work, int status) {
                 // Can ensure that the `holder` is not nullptr.
                 ContextNapiHolder *holder = static_cast<ContextNapiHolder *>(work->data);
                 napi_handle_scope scope = nullptr;
@@ -57,7 +55,12 @@ public:
                 napi_close_handle_scope(holder->env, scope);
                 delete holder;
                 delete work;
-            });
+            };
+            ContextNapiHolder *holder =
+                new ContextNapiHolder{ .env = env_, .callbackRef = callbackRef_, .self = self_, .work = work_ };
+            if (!UvQueue::Call(env_, static_cast<void *>(holder), afterCallback)) {
+                delete holder;
+            }
         };
         inline Context &SetInput(InputAction action)
         {

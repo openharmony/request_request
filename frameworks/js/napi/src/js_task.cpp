@@ -1031,7 +1031,9 @@ void JsTask::UnrefTaskContextMap(std::shared_ptr<ContextInfo> context)
         return;
     }
     data->context = context;
-    UvQueue::Call(data->context->env_, static_cast<void *>(data), UvUnrefTaskContext);
+    if (!UvQueue::Call(data->context->env_, static_cast<void *>(data), UvUnrefTaskContext)) {
+        delete data;
+    }
     return;
 }
 
