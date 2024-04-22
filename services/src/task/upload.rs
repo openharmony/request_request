@@ -134,20 +134,27 @@ fn build_stream_request(task: Arc<RequestTask>, index: usize) -> Option<Request>
     debug!("build stream request");
     let task_reader = TaskReader::new(task.clone());
     let task_operator = TaskOperator::new(task.clone());
-    let mut request_builder = task.build_request_builder();
-    if task.conf.headers.get("Content-Type").is_none() {
-        request_builder = request_builder.header("Content-Type", "application/octet-stream");
+
+    match task.build_request_builder() {
+        Ok(mut request_builder) => {
+            if task.conf.headers.get("Content-Type").is_none() {
+                request_builder =
+                    request_builder.header("Content-Type", "application/octet-stream");
+            }
+            let (_, upload_length) = task.get_upload_info(index);
+            debug!("upload length is {}", upload_length);
+            request_builder =
+                request_builder.header("Content-Length", upload_length.to_string().as_str());
+            let uploader = Uploader::builder()
+                .reader(task_reader)
+                .operator(task_operator)
+                .total_bytes(Some(upload_length))
+                .build();
+            let request = request_builder.body(Body::stream(uploader));
+            build_request_common(&task, index, request)
+        }
+        Err(err) => build_request_common(&task, index, Err(err)),
     }
-    let (_, upload_length) = task.get_upload_info(index);
-    debug!("upload length is {}", upload_length);
-    request_builder = request_builder.header("Content-Length", upload_length.to_string().as_str());
-    let uploader = Uploader::builder()
-        .reader(task_reader)
-        .operator(task_operator)
-        .total_bytes(Some(upload_length))
-        .build();
-    let request = request_builder.body(Body::stream(uploader));
-    build_request_common(&task, index, request)
 }
 
 fn build_multipart_request(task: Arc<RequestTask>, index: usize) -> Option<Request> {
@@ -176,9 +183,14 @@ fn build_multipart_request(task: Arc<RequestTask>, index: usize) -> Option<Reque
         .operator(task_operator)
         .build();
 
-    let request_builder = task.build_request_builder();
-    let request: Result<Request, HttpClientError> = request_builder.body(Body::multipart(uploader));
-    build_request_common(&task, index, request)
+    match task.build_request_builder() {
+        Ok(request_builder) => {
+            let request: Result<Request, HttpClientError> =
+                request_builder.body(Body::multipart(uploader));
+            build_request_common(&task, index, request)
+        }
+        Err(err) => build_request_common(&task, index, Err(err)),
+    }
 }
 
 fn build_request_common(
