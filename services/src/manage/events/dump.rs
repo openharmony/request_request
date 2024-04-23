@@ -34,11 +34,14 @@ impl TaskManager {
             vec: self
                 .tasks
                 .values()
-                .map(|task| DumpAllEachInfo {
-                    task_id: task.conf.common_data.task_id,
-                    action: task.conf.common_data.action,
-                    state: task.status.lock().unwrap().state,
-                    reason: task.status.lock().unwrap().reason,
+                .map(|task| {
+                    let status = task.status.lock().unwrap();
+                    DumpAllEachInfo {
+                        task_id: task.conf.common_data.task_id,
+                        action: task.conf.common_data.action,
+                        state: status.state,
+                        reason: status.reason,
+                    }
                 })
                 .collect(),
         }
