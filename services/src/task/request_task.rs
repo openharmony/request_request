@@ -437,8 +437,7 @@ impl RequestTask {
                 }
             }
         } else {
-            let index = self.progress.lock().unwrap().common_data.index;
-            self.set_code(index, Reason::OthersError);
+            self.set_status(State::Failed, Reason::OthersError);
         }
     }
 
