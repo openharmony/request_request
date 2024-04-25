@@ -175,7 +175,7 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
 napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
-    REQUEST_HILOGI("Begin task off, seq: %{public}d", seq);
+    REQUEST_HILOGD("Begin task off, seq: %{public}d", seq);
     JsParam jsParam;
     ExceptionError err = ParseOnOffParameters(env, info, false, jsParam);
     if (err.code != E_OK) {
@@ -213,7 +213,7 @@ napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
         }
     }
 
-    REQUEST_HILOGI("End task off event %{public}s successfully, seq: %{public}d, tid: %{public}s",
+    REQUEST_HILOGD("End task off event %{public}s successfully, seq: %{public}d, tid: %{public}s",
         jsParam.type.c_str(), seq, jsParam.task->GetTid().c_str());
     return nullptr;
 }
