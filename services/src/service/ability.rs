@@ -26,9 +26,7 @@
 
 //! Request ability services implementations.
 
-use std::hint;
 use std::mem::MaybeUninit;
-use std::sync::atomic::{AtomicU8, Ordering};
 
 use crate::manage::task_manager::TaskManagerEntry;
 use crate::manage::TaskManager;
@@ -37,7 +35,6 @@ use crate::service::listener::{AppStateListener, NetworkChangeListener};
 use crate::service::runcount::{RunCountManager, RunCountManagerEntry};
 
 static mut REQUEST_ABILITY: MaybeUninit<RequestAbility> = MaybeUninit::uninit();
-static STATE: AtomicU8 = AtomicU8::new(RequestAbility::NOT_INITED);
 
 pub(crate) static mut PANIC_INFO: Option<String> = None;
 
@@ -50,20 +47,9 @@ pub(crate) struct RequestAbility {
 }
 
 impl RequestAbility {
-    const NOT_INITED: u8 = 0;
-    const INITIALIZING: u8 = 1;
-    const RUNNING: u8 = 2;
-    const STOPPING: u8 = 3;
-    const STOPPED: u8 = 4;
-
     // `init` must have been called before calling `get_instance`.
     pub(crate) fn get_instance() -> &'static Self {
-        loop {
-            match STATE.load(Ordering::SeqCst) {
-                Self::RUNNING | Self::STOPPED => return unsafe { &*REQUEST_ABILITY.as_ptr() },
-                _ => hint::spin_loop(),
-            }
-        }
+        unsafe { &*REQUEST_ABILITY.as_ptr() }
     }
 
     pub(crate) fn init() {
@@ -75,54 +61,32 @@ impl RequestAbility {
             PANIC_INFO = Some(info);
         }));
 
-        if STATE
-            .compare_exchange(
-                Self::NOT_INITED,
-                Self::INITIALIZING,
-                Ordering::SeqCst,
-                Ordering::SeqCst,
-            )
-            .is_ok()
-        {
-            ylong_runtime::builder::RuntimeBuilder::new_multi_thread()
+        ylong_runtime::builder::RuntimeBuilder::new_multi_thread()
             .worker_num(4)
             .build_global()
             .unwrap();
 
-            unsafe {
-                REQUEST_ABILITY.write(Self {
-                    // first init RunCountManager to record Running task count
-                    runcount: RunCountManager::init(),
-                    manager: TaskManager::init(),
-                    app: AppStateListener::init(),
-                    network: NetworkChangeListener::init(),                   
-                    client_manager: ClientManager::init(),
-                });
-                RequestInitServiceHandler();
-            };
-            STATE.store(Self::RUNNING, Ordering::SeqCst);
-        }
+        unsafe {
+            REQUEST_ABILITY.write(Self {
+                // first init RunCountManager to record Running task count
+                runcount: RunCountManager::init(),
+                manager: TaskManager::init(),
+                app: AppStateListener::init(),
+                network: NetworkChangeListener::init(),
+                client_manager: ClientManager::init(),
+            });
+            RequestInitServiceHandler();
+        };
     }
 
     pub(crate) fn stop() {
-        if STATE
-            .compare_exchange(
-                Self::RUNNING,
-                Self::STOPPING,
-                Ordering::SeqCst,
-                Ordering::SeqCst,
-            )
-            .is_ok()
-        {
-            unsafe {
-                let ability = REQUEST_ABILITY.assume_init_ref();
-                // After entries shutdown, the `rx`s of these channels will be dropped.
-                ability.app.shutdown();
-                ability.network.shutdown();
-                ability.runcount.shutdown();
-            };
-            STATE.store(Self::STOPPED, Ordering::SeqCst);
-        }
+        unsafe {
+            let ability = REQUEST_ABILITY.assume_init_ref();
+            // After entries shutdown, the `rx`s of these channels will be dropped.
+            ability.app.shutdown();
+            ability.network.shutdown();
+            ability.runcount.shutdown();
+        };
     }
 
     pub(crate) fn runcount_manager() -> RunCountManagerEntry {

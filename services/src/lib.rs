@@ -47,21 +47,6 @@ cfg_oh! {
         domain: 0xD001C50,
         tag: "RequestService",
     };
-
-    /// Starts DownloadAbility.
-    pub fn start() {
-        info!("Download Ability prepared to be inited");
-        service::ability::RequestAbility::init();
-        info!("Download Ability inited");
-    }
-
-    /// Starts DownloadAbility.
-    pub fn stop() {
-        info!("Download Ability prepared to be stopped");
-        service::ability::RequestAbility::stop();
-        info!("Download Ability stopped");
-    }
-
 }
 
 cfg_not_oh! {
