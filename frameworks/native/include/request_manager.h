@@ -56,6 +56,8 @@ public:
     REQUEST_API bool LoadRequestServer();
     REQUEST_API bool IsSaReady();
     REQUEST_API void ReopenChannel();
+    REQUEST_API bool SubscribeSA();
+    REQUEST_API bool UnsubscribeSA();
     REQUEST_API int32_t GetNextSeq();
 
 private:
