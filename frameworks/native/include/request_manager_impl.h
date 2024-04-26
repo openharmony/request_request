@@ -22,7 +22,6 @@
 #include <mutex>
 
 #include "constant.h"
-#include "data_ability_helper.h"
 #include "i_notify_data_listener.h"
 #include "i_response_message_handler.h"
 #include "iremote_object.h"
