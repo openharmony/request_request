@@ -339,21 +339,25 @@ where
         }
         task.record_upload_response(index, response).await;
         // `unwrap` for propagating panics among threads.
-        if let Some(code) = task.code.lock().unwrap().get(index) {
-            if *code != Reason::Default {
-                error!(
-                    "upload {} file fail, which reason is {}",
-                    index, *code as u32
-                );
-                return false;
-            }
-        } else {
-            error!("upload {} file fail, which reason is not found", index);
-            return false;
-        }
 
         let state = task.status.lock().unwrap().state;
         if state != State::Running && state != State::Retrying {
+            return false;
+        }
+        let code = *task
+            .code
+            .lock()
+            .unwrap()
+            .get(index)
+            .unwrap_or(&Reason::OthersError);
+        if code != Reason::Default {
+            error!(
+                "upload {} file fail, which reason is {}",
+                index, code as u32
+            );
+            if code != Reason::UserOperation {
+                task.set_status(State::Failed, code);
+            }
             return false;
         }
     }
