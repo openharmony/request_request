@@ -62,10 +62,6 @@ ohos_shared_library("request_native") {
   deps = [ "../../common:request_common_static" ]
 
   external_deps = [
-    "ability_base:zuri",
-    "ability_runtime:abilitykit_native",
-    "ability_runtime:data_ability_helper",
-    "ability_runtime:napi_base_context",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
