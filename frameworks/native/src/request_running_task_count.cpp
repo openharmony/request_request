@@ -132,6 +132,7 @@ int32_t SubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob)
 
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob);
     auto listener = RunCountNotifyStub::GetInstance();
+    RequestManagerImpl::GetInstance()->SubscribeSA();
     int32_t ret = RequestManagerImpl::GetInstance()->SubRunCount(listener);
     if (ret != E_OK) {
         // IPC is failed, but observer has attached.
@@ -153,6 +154,7 @@ void UnsubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob)
     }
 
     int32_t ret = RequestManagerImpl::GetInstance()->UnsubRunCount();
+    RequestManagerImpl::GetInstance()->UnsubscribeSA();
     if (ret != E_OK) {
         REQUEST_HILOGE("Unsubscribe running task count failed, ret: %{public}d.", ret);
     }

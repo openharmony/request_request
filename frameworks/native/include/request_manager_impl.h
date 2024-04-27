@@ -83,6 +83,8 @@ public:
     void LoadServerFail();
     void ReopenChannel();
     int32_t GetNextSeq();
+    bool SubscribeSA();
+    bool UnsubscribeSA();
 
 private:
     RequestManagerImpl() = default;
@@ -92,7 +94,6 @@ private:
     sptr<RequestServiceInterface> GetRequestServiceProxy();
     int32_t Retry(int32_t &taskId, const Config &config, int32_t errorCode);
     void SetRequestServiceProxy(sptr<RequestServiceInterface> proxy);
-    bool SubscribeSA(sptr<ISystemAbilityManager> systemAbilityManager);
     int32_t EnsureChannelOpen();
     std::shared_ptr<Request> GetTask(const std::string &taskId);
     void OnChannelBroken() override;
@@ -105,6 +106,7 @@ private:
     std::mutex downloadMutex_;
     std::mutex conditionMutex_;
     std::mutex serviceProxyMutex_;
+    std::mutex saChangeListenerMutex_;
 
     sptr<RequestServiceInterface> requestServiceProxy_;
     sptr<RequestSaDeathRecipient> deathRecipient_;

@@ -439,12 +439,6 @@ sptr<RequestServiceInterface> RequestManagerImpl::GetRequestServiceProxy()
         REQUEST_HILOGE("Getting SystemAbilityManager failed.");
         return nullptr;
     }
-    // In RSS scenario, we need to monitor SA startup even if SA is not running,
-    // so `GetSystemAbility` needs to be executed after `SubscribeSA`.
-    if (!SubscribeSA(systemAbilityManager)) {
-        REQUEST_HILOGE("Subscribe SystemAbility failed.");
-        return nullptr;
-    }
     auto systemAbility = systemAbilityManager->GetSystemAbility(DOWNLOAD_SERVICE_ID, "");
     if (systemAbility == nullptr) {
         REQUEST_HILOGE("Get SystemAbility failed.");
@@ -460,11 +454,17 @@ sptr<RequestServiceInterface> RequestManagerImpl::GetRequestServiceProxy()
     return requestServiceProxy_;
 }
 
-// Subscribe SA status changes only once
-bool RequestManagerImpl::SubscribeSA(sptr<ISystemAbilityManager> systemAbilityManager)
+bool RequestManagerImpl::SubscribeSA()
 {
+    std::lock_guard<std::mutex> lock(saChangeListenerMutex_);
     if (saChangeListener_ != nullptr) {
         return true;
+    }
+    sptr<ISystemAbilityManager> systemAbilityManager =
+            SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (systemAbilityManager == nullptr) {
+        REQUEST_HILOGE("Getting SystemAbilityManager failed.");
+        return false;
     }
     saChangeListener_ = new (std::nothrow) SystemAbilityStatusChangeListener();
     if (saChangeListener_ == nullptr) {
@@ -473,6 +473,25 @@ bool RequestManagerImpl::SubscribeSA(sptr<ISystemAbilityManager> systemAbilityMa
     }
     if (systemAbilityManager->SubscribeSystemAbility(DOWNLOAD_SERVICE_ID, saChangeListener_) != E_OK) {
         REQUEST_HILOGE("SubscribeSystemAbility failed.");
+        return false;
+    }
+    return true;
+}
+
+bool RequestManagerImpl::UnsubscribeSA()
+{
+    std::lock_guard<std::mutex> lock(saChangeListenerMutex_);
+    if (saChangeListener_ == nullptr) {
+        return true;
+    }
+    sptr<ISystemAbilityManager> systemAbilityManager =
+            SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (systemAbilityManager == nullptr) {
+        REQUEST_HILOGE("Getting SystemAbilityManager failed.");
+        return false;
+    }
+    if (systemAbilityManager->UnSubscribeSystemAbility(DOWNLOAD_SERVICE_ID, saChangeListener_) != E_OK) {
+        REQUEST_HILOGE("UnsubscribeSystemAbility failed.");
         return false;
     }
     return true;

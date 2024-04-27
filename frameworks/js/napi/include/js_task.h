@@ -41,6 +41,8 @@ public:
     std::string GetTid();
     void SetTid(int32_t tid);
 
+    static void SubscribeSA();
+    static void UnsubscribeSA();
     static void ReloadListener();
     static void ReloadListenerByTaskId(const std::string &tid);
     static void ClearTaskMap(const std::string &key);

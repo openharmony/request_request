@@ -102,6 +102,16 @@ bool RequestManager::LoadRequestServer()
     return RequestManagerImpl::GetInstance()->LoadRequestServer();
 }
 
+bool RequestManager::SubscribeSA()
+{
+    return RequestManagerImpl::GetInstance()->SubscribeSA();
+}
+
+bool RequestManager::UnsubscribeSA()
+{
+    return RequestManagerImpl::GetInstance()->UnsubscribeSA();
+}
+
 bool RequestManager::IsSaReady()
 {
     return RequestManagerImpl::GetInstance()->IsSaReady();

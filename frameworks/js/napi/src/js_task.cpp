@@ -808,12 +808,32 @@ void JsTask::AddTaskMap(const std::string &key, JsTask *task)
 {
     std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
     JsTask::taskMap_[key] = task;
+
+    if (!JsTask::taskMap_.empty()) {
+        JsTask::SubscribeSA();
+    }
 }
 
 void JsTask::AddTaskContextMap(const std::string &key, std::shared_ptr<ContextInfo> context)
 {
     std::lock_guard<std::mutex> lockGuard(JsTask::taskContextMutex_);
     JsTask::taskContextMap_[key] = context;
+}
+
+void JsTask::SubscribeSA()
+{
+    REQUEST_HILOGD("SubscribeSA in");
+    if (!RequestManager::GetInstance()->SubscribeSA()) {
+        REQUEST_HILOGE("SubscribeSA Failed");
+    }
+}
+
+void JsTask::UnsubscribeSA()
+{
+    REQUEST_HILOGD("UnsubscribeSA in");
+    if (!RequestManager::GetInstance()->UnsubscribeSA()) {
+        REQUEST_HILOGE("UnsubscribeSA Failed");
+    }
 }
 
 void JsTask::ReloadListener()
@@ -830,10 +850,12 @@ void JsTask::ClearTaskMap(const std::string &key)
 {
     std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
     auto it = taskMap_.find(key);
-    if (it == taskMap_.end()) {
-        return;
+    if (it != taskMap_.end()) {
+        taskMap_.erase(it);
     }
-    taskMap_.erase(it);
+    if (taskMap_.empty()) {
+        JsTask::UnsubscribeSA();
+    }
 }
 
 bool JsTask::SetDirsPermission(std::vector<std::string> &dirs)
