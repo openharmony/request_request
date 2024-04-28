@@ -67,6 +67,7 @@ pub(crate) struct CommonTaskConfig {
 #[derive(Clone, Debug)]
 pub(crate) struct TaskConfig {
     pub(crate) bundle: String,
+    pub(crate) bundle_type: u32,
     pub(crate) url: String,
     pub(crate) title: String,
     pub(crate) description: String,

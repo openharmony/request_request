@@ -16,12 +16,12 @@
 #ifndef JS_COMMON_H
 #define JS_COMMON_H
 
-#include "constant.h"
 #include <cstdint>
 #include <map>
 #include <string>
 #include <vector>
 
+#include "constant.h"
 
 namespace OHOS::Request {
 
@@ -111,6 +111,7 @@ struct Config {
     std::vector<std::string> certsPath;
     Version version;
     std::string bundleName;
+    uint32_t bundleType = 0;
     Mode mode = Mode::BACKGROUND;
     Network network = Network::ANY;
     uint32_t index = 0;

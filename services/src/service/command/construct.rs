@@ -47,6 +47,8 @@ impl Construct {
         let mode: u32 = data.read()?;
         let mode: Mode = Mode::from(mode as u8);
 
+        let bundle_type: u32 = data.read()?;
+
         let cover: bool = data.read()?;
 
         let network: u32 = data.read()?;
@@ -191,6 +193,7 @@ impl Construct {
 
         let task_config = TaskConfig {
             bundle,
+            bundle_type,
             url,
             title,
             description,
@@ -245,21 +248,20 @@ impl Construct {
         let task_id = match ret {
             Ok(id) => id,
             Err(err_code) => {
-                error!(
-                    "End Service construct, failed with reason: {:?}",
-                    err_code
-                );
+                error!("End Service construct, failed with reason: {:?}", err_code);
                 reply.write(&(err_code as i32))?;
                 return Err(IpcStatusCode::Failed);
             }
         };
 
-
         debug!("Service construct: construct event sent to manager");
 
         let ret = RequestAbility::client_manager().subscribe(task_id, pid, uid, token_id);
         if ret != ErrorCode::ErrOk {
-            error!("End Service subscribe, task_id is {}, failed with reason: {:?}", task_id, ret);
+            error!(
+                "End Service subscribe, task_id is {}, failed with reason: {:?}",
+                task_id, ret
+            );
             reply.write(&(ret as i32))?;
             reply.write(&(task_id as i32))?;
             return Err(IpcStatusCode::Failed);

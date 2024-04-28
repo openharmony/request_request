@@ -250,6 +250,12 @@ int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store)
         REQUEST_HILOGE("add column certificate_pins failed, ret: %{public}d", ret);
         return ret;
     }
+
+    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_Bundle_Type);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("add column bundle_type failed, ret: %{public}d", ret);
+        return ret;
+    }
     return ret;
 }
 
@@ -662,6 +668,7 @@ void BuildRequestTaskConfigWithInt(std::shared_ptr<OHOS::NativeRdb::ResultSet> s
     config.commonData.precise = static_cast<bool>(GetInt(set, 15));    // Line 15 is 'precise'
     config.commonData.background = static_cast<bool>(GetInt(set, 17)); // Line 17 is 'background'
     config.version = static_cast<uint8_t>(GetInt(set, 27));            // Line 27 here is 'version'
+    config.bundleType = static_cast<uint8_t>(GetInt(set, 34));         // Line 34 here is 'bundle_type'
 }
 
 void BuildRequestTaskConfigWithString(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
@@ -761,6 +768,7 @@ bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
     insertValues.PutString("method", std::string(taskConfig->method.cStr, taskConfig->method.len));
     insertValues.PutString("headers", std::string(taskConfig->headers.cStr, taskConfig->headers.len));
     insertValues.PutString("config_extras", std::string(taskConfig->extras.cStr, taskConfig->extras.len));
+    insertValues.PutInt("bundle_type", taskConfig->bundleType);
     if (!WriteMutableData(insertValues, taskInfo, taskConfig)) {
         REQUEST_HILOGE("write blob data failed");
         return false;
@@ -930,8 +938,8 @@ int TouchRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, Ta
 {
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates,
         { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry", "tries", "version",
-            "priority", "url", "data", "title", "description", "mime_type", "state", "idx", "total_processed", "sizes",
-            "processed", "extras", "form_items", "file_specs", "each_file_status" });
+            "priority", "url", "data", "title", "description", "mime_type", "state", "idx", "total_processed",
+            "sizes", "processed", "extras", "form_items", "file_specs", "each_file_status" });
     if (resultSet == nullptr || resultSet->GoToFirstRow() != OHOS::NativeRdb::E_OK) {
         return OHOS::Request::QUERY_ERR;
     }
@@ -943,10 +951,10 @@ int TouchRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, Ta
 
 int QueryRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo)
 {
-    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(
-        rdbPredicates, { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry", "tries",
-                           "version", "bundle", "title", "description", "mime_type", "state", "idx", "total_processed",
-                           "sizes", "processed", "extras", "form_items", "file_specs", "each_file_status" });
+    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates,
+        { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry", "tries", "version",
+            "bundle", "title", "description", "mime_type", "state", "idx", "total_processed", "sizes", "processed",
+            "extras", "form_items", "file_specs", "each_file_status" });
     if (resultSet == nullptr || resultSet->GoToFirstRow() != OHOS::NativeRdb::E_OK) {
         return OHOS::Request::QUERY_ERR;
     }
@@ -1095,7 +1103,7 @@ int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, 
         { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming", "retry",
             "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority", "background", "bundle", "url",
             "title", "description", "method", "headers", "data", "token", "config_extras", "version", "form_items",
-            "file_specs", "body_file_names", "certs_paths", "proxy", "certificate_pins" });
+            "file_specs", "body_file_names", "certs_paths", "proxy", "certificate_pins", "bundle_type" });
     int rowCount = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("TaskConfig result set is nullptr or get row count failed");
@@ -1127,6 +1135,7 @@ void BuildCTaskConfig(CTaskConfig *cTaskConfig, const TaskConfig &taskConfig)
     cTaskConfig->proxy = WrapperCString(taskConfig.proxy);
     cTaskConfig->certificatePins = WrapperCString(taskConfig.certificatePins);
     cTaskConfig->version = taskConfig.version;
+    cTaskConfig->bundleType = taskConfig.bundleType;
 
     uint32_t formItemsLen = taskConfig.formItems.size();
     CFormItem *formItemsPtr = new CFormItem[formItemsLen];
@@ -1186,7 +1195,7 @@ CTaskConfig *QuerySingleTaskConfig(uint32_t taskId)
         { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming", "retry",
             "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority", "background", "bundle", "url",
             "title", "description", "method", "headers", "data", "token", "config_extras", "version", "form_items",
-            "file_specs", "body_file_names", "certs_paths", "proxy", "certificate_pins" });
+            "file_specs", "body_file_names", "certs_paths", "proxy", "certificate_pins", "bundle_type" });
     int rowCount = 0;
     if (resultSet == nullptr) {
         REQUEST_HILOGE("QuerySingleTaskConfig failed with reason: result set is nullptr");
