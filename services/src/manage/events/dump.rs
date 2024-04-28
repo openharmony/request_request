@@ -11,19 +11,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::sync::atomic::Ordering;
+
 use crate::manage::TaskManager;
 use crate::task::info::{DumpAllEachInfo, DumpAllInfo, DumpOneInfo};
 
 impl TaskManager {
     pub(crate) fn query_one_task(&self, task_id: u32) -> Option<DumpOneInfo> {
-        self.tasks.get(&task_id).map(|task| DumpOneInfo {
+        self.scheduler.get_task(task_id).map(|task| DumpOneInfo {
             task_id: task.conf.common_data.task_id,
             action: task.conf.common_data.action,
             state: task.status.lock().unwrap().state,
             reason: task.status.lock().unwrap().reason,
-            total_size: task
-                .file_total_size
-                .load(std::sync::atomic::Ordering::SeqCst),
+            total_size: task.file_total_size.load(Ordering::SeqCst),
             tran_size: task.progress.lock().unwrap().common_data.total_processed,
             url: task.conf.url.clone(),
         })
@@ -32,8 +32,8 @@ impl TaskManager {
     pub(crate) fn query_all_task(&self) -> DumpAllInfo {
         DumpAllInfo {
             vec: self
-                .tasks
-                .values()
+                .scheduler
+                .tasks()
                 .map(|task| {
                     let status = task.status.lock().unwrap();
                     DumpAllEachInfo {

@@ -15,15 +15,12 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::manage::events::EventMessage;
-use crate::service::ability::RequestAbility;
+use crate::manage::events::TaskManagerEvent;
 use crate::service::permission::PermissionChecker;
-use crate::service::serialize_task_info;
+use crate::service::{serialize_task_info, RequestServiceStub};
 
-pub(crate) struct Show;
-
-impl Show {
-    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+impl RequestServiceStub {
+    pub(crate) fn show(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         if !PermissionChecker::check_internet() {
             error!("Service show: no INTERNET permission");
             reply.write(&(ErrorCode::Permission as i32))?;
@@ -37,8 +34,8 @@ impl Show {
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service show: uid is {}", uid);
 
-                let (event, rx) = EventMessage::show(uid, id);
-                if !RequestAbility::task_manager().send_event(event) {
+                let (event, rx) = TaskManagerEvent::show(uid, id);
+                if !self.task_manager.send_event(event) {
                     return Err(IpcStatusCode::Failed);
                 }
                 match rx.get() {
@@ -49,7 +46,10 @@ impl Show {
                         Ok(())
                     }
                     Some(None) => {
-                        error!("End Service show, failed with reason: task_id not found, task_id is {}", id);
+                        error!(
+                        "End Service show, failed with reason: task_id not found, task_id is {}",
+                        id
+                    );
                         reply.write(&(ErrorCode::TaskNotFound as i32))?;
                         Err(IpcStatusCode::Failed)
                     }

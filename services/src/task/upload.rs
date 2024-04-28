@@ -26,10 +26,7 @@ use super::reason::Reason;
 use super::tick::{Clock, WAITING_TO_TICK, WAITING_TO_WAKE};
 use crate::task::info::State;
 use crate::task::request_task::RequestTask;
-
-cfg_oh! {
-    use crate::trace::Trace;
-}
+use crate::trace::Trace;
 
 struct TaskReader {
     task: Arc<RequestTask>,
@@ -232,7 +229,7 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
     let url = task.conf.url.as_str();
     let num = task.conf.file_specs.len();
     // Ensures `_trace` can only be freed when this function exits.
-    #[cfg(feature = "oh")]
+
     let _trace = Trace::new(&format!("exec upload task url: {url} file num: {num}"));
 
     let size = task.conf.file_specs.len();
@@ -276,13 +273,11 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
     } else {
         task.set_status(State::Failed, Reason::UploadFileError);
 
-        #[cfg(feature = "oh")]
         use hisysevent::{build_number_param, build_str_param};
 
-        #[cfg(feature = "oh")]
         use crate::sys_event::SysEvent;
         // Records sys event.
-        #[cfg(feature = "oh")]
+
         SysEvent::task_fault()
             .param(build_str_param!(crate::sys_event::TASKS_TYPE, "UPLOAD"))
             .param(build_number_param!(crate::sys_event::TOTAL_FILE_NUM, size))
@@ -317,7 +312,7 @@ where
     let name = task.conf.file_specs[index].file_name.as_str();
 
     // Ensures `_trace` can only be freed when this function exits.
-    #[cfg(feature = "oh")]
+
     let _trace = Trace::new(&format!(
         "upload file name:{name} index:{index} size:{size}"
     ));

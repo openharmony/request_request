@@ -15,13 +15,11 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::manage::events::EventMessage;
-use crate::service::ability::RequestAbility;
+use crate::manage::events::TaskManagerEvent;
+use crate::service::RequestServiceStub;
 
-pub(crate) struct Stop;
-
-impl Stop {
-    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+impl RequestServiceStub {
+    pub(crate) fn stop(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         let id: String = data.read()?;
         info!("Process Service stop: task_id is {}", id);
         match id.parse::<u32>() {
@@ -29,20 +27,26 @@ impl Stop {
                 debug!("Service stop: u32 task_id is {}", id);
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service stop: uid is {}", uid);
-                let (event, rx) = EventMessage::stop(uid, id);
-                if !RequestAbility::task_manager().send_event(event) {
+                let (event, rx) = TaskManagerEvent::stop(uid, id);
+                if !self.task_manager.send_event(event) {
                     return Err(IpcStatusCode::Failed);
                 }
                 let ret = match rx.get() {
                     Some(ret) => ret,
                     None => {
-                        error!("End Service stop, task_id is {}, failed with reason: receives ret failed", id);
+                        error!(
+                        "End Service stop, task_id is {}, failed with reason: receives ret failed",
+                        id
+                    );
                         return Err(IpcStatusCode::Failed);
                     }
                 };
                 reply.write(&(ret as i32))?;
                 if ret != ErrorCode::ErrOk {
-                    error!("End Service stop, task_id is {}, failed with reason: {}", id, ret as i32);
+                    error!(
+                        "End Service stop, task_id is {}, failed with reason: {}",
+                        id, ret as i32
+                    );
                     return Err(IpcStatusCode::Failed);
                 }
                 info!("End Service stop successfully: task_id is {}", id);

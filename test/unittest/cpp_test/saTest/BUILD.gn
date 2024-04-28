@@ -22,18 +22,18 @@ ohos_unittest("saTest") {
   include_dirs = [
     "include",
     "../../../../frameworks/js/napi/include",
-    "../../../../services/c_wrapper/include",
+    "../../../../services/include",
   ]
 
   sources = [
-    "../../../../services/c_wrapper/source/background_notification.cpp",
-    "../../../../services/c_wrapper/source/c_check_permission.cpp",
-    "../../../../services/c_wrapper/source/c_event_handler.cpp",
-    "../../../../services/c_wrapper/source/c_string_wrapper.cpp",
-    "../../../../services/c_wrapper/source/common_event_notify.cpp",
-    "../../../../services/c_wrapper/source/get_calling_bundle.cpp",
-    "../../../../services/c_wrapper/source/get_top_bundle.cpp",
-    "../../../../services/c_wrapper/source/network_adapter.cpp",
+    "../../../../services/src/cxx/background_notification.cpp",
+    "../../../../services/src/cxx/c_check_permission.cpp",
+    "../../../../services/src/cxx/c_event_handler.cpp",
+    "../../../../services/src/cxx/c_string_wrapper.cpp",
+    "../../../../services/src/cxx/common_event_notify.cpp",
+    "../../../../services/src/cxx/get_calling_bundle.cpp",
+    "../../../../services/src/cxx/get_top_bundle.cpp",
+    "../../../../services/src/cxx/network_adapter.cpp",
     "src/background_notification_test.cpp",
     "src/c_check_permission_test.cpp",
     "src/c_event_handler_test.cpp",
@@ -74,5 +74,4 @@ ohos_unittest("saTest") {
 group("unittest") {
   testonly = true
   deps = [ ":saTest" ]
-  deps += []
 }

@@ -11,13 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::ffi::CString;
 use std::io::SeekFrom;
-use std::ops::Deref;
-use std::sync::atomic::{
-    AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicU8, AtomicUsize, Ordering,
-};
-use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicUsize, Ordering};
+use std::sync::Mutex;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -26,32 +22,23 @@ use ylong_http_client::{ErrorKind, HttpClientError};
 use ylong_runtime::io::{AsyncSeekExt, AsyncWriteExt};
 
 use super::config::{Network, Version};
-use super::download::download;
-use super::ffi::{HasRequestTaskRecord, PublishStateChangeEvents};
 use super::info::{CommonTaskInfo, Mode, State, TaskInfo, UpdateInfo};
 use super::notify::{EachFileStatus, NotifyData, Progress};
 use super::reason::Reason;
-use super::upload::upload;
 use crate::error::ErrorCode;
-use crate::manage::keeper::SAKeeper;
-use crate::manage::limit::RunningPermit;
-use crate::manage::monitor::IsOnline;
-use crate::manage::task_manager::SystemConfig;
-use crate::service::ability::RequestAbility;
+use crate::manage::app_state::AppState;
+use crate::manage::database::Database;
+use crate::manage::network::NetworkManager;
+use crate::manage::notifier::Notifier;
+use crate::manage::SystemConfig;
+use crate::service::client::ClientManagerEntry;
 use crate::task::client::build_client;
 use crate::task::config::{Action, TaskConfig};
-use crate::task::ffi::{
-    GetNetworkInfo, RequestBackgroundNotify, RequestTaskMsg, UpdateRequestTask,
-};
+use crate::task::ffi::{publish_event, RequestBackgroundNotify, RequestTaskMsg};
 use crate::task::files::{AttachedFiles, Files};
-use crate::task::notify::SubscribeType;
+use crate::task::tick::Clock;
 use crate::utils::c_wrapper::CStringWrapper;
-use crate::utils::{get_current_timestamp, hashmap_to_string};
-
-cfg_oh! {
-    use crate::manage::notifier::Notifier;
-}
-
+use crate::utils::get_current_timestamp;
 const RETRY_INTERVAL: u64 = 20;
 
 pub(crate) struct RequestTask {
@@ -78,17 +65,80 @@ pub(crate) struct RequestTask {
     pub(crate) skip_bytes: AtomicU64,
     pub(crate) upload_counts: AtomicUsize,
     pub(crate) rate_limiting: AtomicBool,
-    #[allow(unused)]
-    pub(crate) app_state: Arc<AtomicU8>,
+    pub(crate) database: Database,
+    pub(crate) app_state: AppState,
     pub(crate) last_notify: AtomicU64,
+    pub(crate) client_manager: ClientManagerEntry,
+}
+
+impl RequestTask {
+    pub(crate) fn task_id(&self) -> u32 {
+        self.conf.common_data.task_id
+    }
+
+    pub(crate) fn uid(&self) -> u64 {
+        self.conf.common_data.uid
+    }
+
+    pub(crate) fn version(&self) -> Version {
+        self.conf.version
+    }
+
+    pub(crate) fn config(&self) -> &TaskConfig {
+        &self.conf
+    }
+
+    // only use for download task
+    pub(crate) fn mime_type(&self) -> String {
+        self.mime_type.lock().unwrap().clone()
+    }
+
+    pub(crate) fn action(&self) -> Action {
+        self.conf.common_data.action
+    }
+
+    pub(crate) fn mode(&self) -> Mode {
+        self.conf.common_data.mode
+    }
+
+    pub(crate) fn bundle(&self) -> &str {
+        self.conf.bundle.as_str()
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn priority(&self) -> u32 {
+        self.conf.common_data.priority
+    }
+
+    pub(crate) fn speed_limit(&self, limit: bool) {
+        if limit {
+            info!("Qos task_id:{} set to Low Qos", self.task_id());
+            self.rate_limiting.store(true, Ordering::Release);
+        } else {
+            info!("Qos task_id:{} set to High Qos", self.task_id());
+            self.rate_limiting.store(false, Ordering::Release);
+            Clock::get_instance().wake_one(self.task_id());
+        }
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn satisfied(&self) -> bool {
+        if !self.net_work_online() || !self.check_net_work_status() {
+            error!("check network failed");
+            false
+        } else {
+            true
+        }
+    }
 }
 
 impl RequestTask {
     pub(crate) fn new(
         config: TaskConfig,
         system: SystemConfig,
-        app_state: Arc<AtomicU8>,
+        app_state: AppState,
         info: Option<TaskInfo>,
+        client_manager: ClientManagerEntry,
     ) -> Result<RequestTask, ErrorCode> {
         if !check_configs(&config) {
             return Err(ErrorCode::Other);
@@ -174,9 +224,11 @@ impl RequestTask {
             restored: AtomicBool::new(false),
             skip_bytes: AtomicU64::new(0),
             upload_counts: AtomicUsize::new(upload_counts),
+            database: Database::new(),
             rate_limiting: AtomicBool::new(false),
             app_state,
             last_notify: AtomicU64::new(time),
+            client_manager,
         })
     }
 
@@ -214,8 +266,22 @@ impl RequestTask {
         true
     }
 
+    pub(crate) fn check_app_state(&self) -> bool {
+        if self.conf.common_data.mode == Mode::FrontEnd && !self.app_state.is_foreground() {
+            if self.conf.common_data.action == Action::Upload {
+                self.set_status(State::Failed, Reason::AppBackgroundOrTerminate);
+            } else if self.conf.common_data.action == Action::Download {
+                self.set_status(State::Paused, Reason::AppBackgroundOrTerminate);
+            }
+            false
+        } else {
+            true
+        }
+    }
+
     pub(crate) fn net_work_online(&self) -> bool {
-        if unsafe { !IsOnline() } {
+        let network_manager = NetworkManager::new();
+        if !network_manager.is_online() {
             if self.conf.version == Version::API10
                 && self.conf.common_data.mode == Mode::BackGround
                 && self.conf.common_data.retry
@@ -224,7 +290,7 @@ impl RequestTask {
             } else {
                 let retry_times = 20;
                 for _ in 0..retry_times {
-                    if unsafe { IsOnline() } {
+                    if network_manager.is_online() {
                         return true;
                     }
                     sleep(Duration::from_millis(RETRY_INTERVAL));
@@ -418,7 +484,7 @@ impl RequestTask {
     }
 
     fn handle_body_transfer_error(&self) {
-        if unsafe { !IsOnline() } {
+        if !NetworkManager::new().is_online() {
             match self.conf.version {
                 Version::API9 => {
                     if self.conf.common_data.action == Action::Download {
@@ -543,13 +609,8 @@ impl RequestTask {
         }
         let headers = response.headers().clone();
         debug!("notify_response");
-        RequestAbility::client_manager().send_response(
-            tid,
-            version,
-            status_code,
-            status_message,
-            headers,
-        )
+        self.client_manager
+            .send_response(tid, version, status_code, status_message, headers)
     }
 
     pub(crate) fn record_response_header(&self, response: &Result<Response, HttpClientError>) {
@@ -595,12 +656,12 @@ impl RequestTask {
         }
         if self.conf.version == Version::API9 && self.conf.common_data.action == Action::Upload {
             let notify_data = self.build_notify_data();
-            #[cfg(feature = "oh")]
-            Notifier::service_front_notify(SubscribeType::HeaderReceive, notify_data);
+
+            Notifier::header_receive(&self.client_manager, notify_data);
         }
     }
 
-    fn set_code(&self, index: usize, code: Reason) {
+    pub(crate) fn set_code(&self, index: usize, code: Reason) {
         if code == Reason::UploadFileError {
             return;
         }
@@ -711,81 +772,50 @@ impl RequestTask {
         if state == State::Waiting {
             self.record_waitting_network_time();
         }
-        self.record_task_info();
-        self.state_change_notify(state);
+        self.database.update_task(self);
         true
     }
 
-    fn state_change_notify(&self, state: State) {
+    pub(crate) fn state_change_notify(&self) {
+        let state = self.status.lock().unwrap().state;
+        let total_processed = self.progress.lock().unwrap().common_data.total_processed;
+
         if state == State::Initialized
-            || (self.progress.lock().unwrap().common_data.total_processed == 0
-                && (state == State::Running || state == State::Retrying))
+            || (total_processed == 0 && (state == State::Running || state == State::Retrying))
         {
             return;
         }
 
         debug!("state change notification");
         let notify_data = self.build_notify_data();
-        #[cfg(feature = "oh")]
-        Notifier::service_front_notify(SubscribeType::Progress, notify_data.clone());
-        let bundle = CString::new(self.conf.bundle.as_str()).unwrap();
+
+        Notifier::progress(&self.client_manager, notify_data.clone());
         match state {
             State::Completed => {
-                unsafe {
-                    PublishStateChangeEvents(
-                        bundle.as_ptr(),
-                        self.conf.bundle.len() as u32,
-                        self.conf.common_data.task_id,
-                        State::Completed as i32,
-                    );
-                }
-                #[cfg(feature = "oh")]
-                Notifier::service_front_notify(SubscribeType::Complete, notify_data)
+                publish_event(
+                    self.conf.bundle.as_str(),
+                    self.conf.common_data.task_id,
+                    State::Completed,
+                );
+
+                Notifier::complete(&self.client_manager, notify_data)
             }
             State::Failed => {
-                unsafe {
-                    PublishStateChangeEvents(
-                        bundle.as_ptr(),
-                        self.conf.bundle.len() as u32,
-                        self.conf.common_data.task_id,
-                        State::Failed as i32,
-                    );
-                }
-                #[cfg(feature = "oh")]
-                Notifier::service_front_notify(SubscribeType::Fail, notify_data)
+                publish_event(
+                    self.conf.bundle.as_str(),
+                    self.conf.common_data.task_id,
+                    State::Failed,
+                );
+
+                Notifier::fail(&self.client_manager, notify_data)
             }
-            State::Paused | State::Waiting =>
-            {
-                #[cfg(feature = "oh")]
-                Notifier::service_front_notify(SubscribeType::Pause, notify_data)
+            State::Paused | State::Waiting => Notifier::pause(&self.client_manager, notify_data),
+            State::Removed => {
+                Notifier::remove(&self.client_manager, notify_data);
             }
             _ => {}
         }
         self.background_notify();
-    }
-
-    fn record_task_info(&self) {
-        debug!(
-            "RequestTask record task info, task_id:{}",
-            self.conf.common_data.task_id
-        );
-
-        let has_record = unsafe { HasRequestTaskRecord(self.conf.common_data.task_id) };
-        if has_record {
-            let update_info = self.get_update_info();
-            let sizes: String = format!("{:?}", update_info.progress.sizes);
-            let processed: String = format!("{:?}", update_info.progress.processed);
-            let extras = hashmap_to_string(&update_info.progress.extras);
-            let each_file_status = update_info
-                .each_file_status
-                .iter()
-                .map(|x| x.to_c_struct())
-                .collect();
-            let c_update_info =
-                update_info.to_c_struct(&sizes, &processed, &extras, &each_file_status);
-            let ret = unsafe { UpdateRequestTask(self.conf.common_data.task_id, &c_update_info) };
-            debug!("update database ret is {}", ret);
-        }
     }
 
     fn get_each_file_status(&self) -> Vec<EachFileStatus> {
@@ -803,7 +833,7 @@ impl RequestTask {
         vec
     }
 
-    fn get_update_info(&self) -> UpdateInfo {
+    pub(crate) fn update_info(&self) -> UpdateInfo {
         let status = self.status.lock().unwrap();
         let progress = self.progress.lock().unwrap();
         UpdateInfo {
@@ -816,7 +846,7 @@ impl RequestTask {
         }
     }
 
-    pub(crate) fn show(&self) -> TaskInfo {
+    pub(crate) fn info(&self) -> TaskInfo {
         let status = self.status.lock().unwrap();
         let progress = self.progress.lock().unwrap();
         TaskInfo {
@@ -864,30 +894,28 @@ impl RequestTask {
         }
     }
 
-    // only use for download task
-    pub(crate) fn query_mime_type(&self) -> String {
-        self.mime_type.lock().unwrap().clone()
-    }
-
     pub(crate) fn is_satisfied_configuration(&self) -> bool {
         if self.conf.common_data.network == Network::Any {
             return true;
         }
-        unsafe {
-            let network_info = GetNetworkInfo();
-            if !self.conf.common_data.roaming && (*network_info).is_roaming {
+
+        if let Some(network_info) = NetworkManager::new().get_network_info() {
+            if !self.conf.common_data.roaming && network_info.is_roaming {
                 error!("not allow roaming");
                 return false;
             }
-            if !self.conf.common_data.metered && (*network_info).is_metered {
+            if !self.conf.common_data.metered && network_info.is_metered {
                 error!("not allow metered");
                 return false;
             }
-            if (*network_info).network_type != self.conf.common_data.network {
+            if network_info.network_type != self.conf.common_data.network {
                 error!("dismatch network type");
                 return false;
             }
-        };
+        } else {
+            return false;
+        }
+
         true
     }
 
@@ -954,83 +982,6 @@ impl RequestTask {
         upload_file_length = ends as u64 - begins + 1 - guard.processed[index] as u64;
         (is_partial_upload, upload_file_length)
     }
-}
-
-pub(crate) struct RunningTask {
-    task: Arc<RequestTask>,
-    // `_unloader` is never used when executing the task.
-    _unloader: SAKeeper,
-    // `_permit` is never used when executing the task.
-    _permit: RunningPermit,
-}
-
-impl RunningTask {
-    pub(crate) fn new(task: Arc<RequestTask>, unloader: SAKeeper, permit: RunningPermit) -> Self {
-        Self {
-            task,
-            _unloader: unloader,
-            _permit: permit,
-        }
-    }
-}
-
-impl Deref for RunningTask {
-    type Target = Arc<RequestTask>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.task
-    }
-}
-
-pub(crate) async fn run(task: RunningTask) {
-    info!("run the task which id is {}", task.conf.common_data.task_id);
-    if !task.net_work_online() || !task.check_net_work_status() {
-        return;
-    }
-    let action = task.conf.common_data.action;
-    match action {
-        Action::Download => loop {
-            task.reset_code(0);
-
-            download(task.clone()).await;
-
-            let state = task.status.lock().unwrap().state;
-            if state != State::Running && state != State::Retrying {
-                break;
-            }
-            // `unwrap` for propagating panics among threads.
-            let code = *task.code.lock().unwrap().get(0).unwrap_or(&Reason::Default);
-            if code != Reason::Default {
-                task.set_status(State::Failed, code);
-                break;
-            }
-        },
-        Action::Upload => {
-            let state = task.status.lock().unwrap().state;
-            if state == State::Retrying {
-                let index = {
-                    let mut progress_guard = task.progress.lock().unwrap();
-                    let index = progress_guard.common_data.index;
-                    progress_guard.common_data.total_processed -= progress_guard.processed[index];
-                    progress_guard.processed[index] = 0;
-                    index
-                };
-                let file = task.files.get_mut(index).unwrap();
-                let mut begins = task.conf.common_data.begins;
-                let (is_partial_upload, _) = task.get_upload_info(index);
-                if !is_partial_upload {
-                    begins = 0;
-                }
-                if let Err(e) = file.seek(SeekFrom::Start(begins)).await {
-                    task.set_code(index, Reason::IoError);
-                    error!("seek err is {:?}", e);
-                }
-            }
-            upload(task.clone()).await;
-        }
-        _ => {}
-    }
-    info!("task run end, task_id is {}", task.conf.common_data.task_id);
 }
 
 #[derive(Clone, Debug)]

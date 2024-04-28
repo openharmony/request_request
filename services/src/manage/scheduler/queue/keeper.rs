@@ -11,18 +11,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use ylong_runtime::sync::mpsc::UnboundedSender;
 use ylong_runtime::task::JoinHandle;
 
-use crate::manage::events::{EventMessage, ScheduledMessage};
+use crate::manage::events::{ScheduleEvent, TaskManagerEvent};
+use crate::manage::task_manager::TaskManagerTx;
 
 const UNLOAD_WAITING: u64 = 60;
 
 pub(crate) struct SAKeeper {
-    tx: UnboundedSender<EventMessage>,
+    tx: UnboundedSender<TaskManagerEvent>,
     inner: Arc<Mutex<Inner>>,
 }
 
@@ -32,11 +34,12 @@ struct Inner {
 }
 
 impl SAKeeper {
-    pub(crate) fn new(tx: UnboundedSender<EventMessage>) -> Self {
+    pub(crate) fn new(tx: TaskManagerTx) -> Self {
         info!("Countdown 60s future started");
+        let tx = tx.deref();
         let handle = count_down(tx.clone());
         Self {
-            tx,
+            tx: tx.clone(),
             inner: Arc::new(Mutex::new(Inner {
                 cnt: 0,
                 handle: Some(handle),
@@ -79,13 +82,13 @@ impl Drop for SAKeeper {
     }
 }
 
-fn count_down(tx: UnboundedSender<EventMessage>) -> JoinHandle<()> {
+fn count_down(tx: UnboundedSender<TaskManagerEvent>) -> JoinHandle<()> {
     ylong_runtime::spawn(unload_sa(tx))
 }
 
-async fn unload_sa(tx: UnboundedSender<EventMessage>) {
+async fn unload_sa(tx: UnboundedSender<TaskManagerEvent>) {
     loop {
         ylong_runtime::time::sleep(Duration::from_secs(UNLOAD_WAITING)).await;
-        let _ = tx.send(EventMessage::Scheduled(ScheduledMessage::Unload));
+        let _ = tx.send(TaskManagerEvent::Schedule(ScheduleEvent::Unload));
     }
 }

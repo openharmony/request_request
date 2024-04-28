@@ -14,13 +14,14 @@
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::task::ffi::HasRequestTaskRecord;
+use crate::manage::database::Database;
 
 pub(crate) struct TaskIdGenerator;
 
 impl TaskIdGenerator {
     pub(crate) fn generate() -> u32 {
         loop {
+            debug!("generate task_id");
             let task_id = match SystemTime::now().duration_since(UNIX_EPOCH) {
                 Ok(time) => time.subsec_nanos(),
                 Err(e) => {
@@ -29,7 +30,7 @@ impl TaskIdGenerator {
                     ID.fetch_add(1, Ordering::Relaxed)
                 }
             };
-            if unsafe { !HasRequestTaskRecord(task_id) } {
+            if !Database::new().contains_task(task_id) {
                 return task_id;
             }
         }

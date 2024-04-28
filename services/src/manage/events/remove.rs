@@ -13,67 +13,11 @@
 
 use crate::error::ErrorCode;
 use crate::manage::TaskManager;
-use crate::task::ffi::{CTaskInfo, ChangeRequestTaskState, DeleteCTaskInfo};
-use crate::task::info::{State, TaskInfo};
-use crate::task::reason::Reason;
-cfg_oh! {
-    use crate::manage::notifier::Notifier;
-}
 
 impl TaskManager {
-    pub(crate) fn remove(&mut self, uid: u64, task_id: u32) -> ErrorCode {
-        if let Some(task) = self.get_task(uid, task_id) {
-            task.set_status(State::Removed, Reason::UserOperation);
-            #[cfg(feature = "oh")]
-            let notify_data = task.build_notify_data();
-            Notifier::remove_notify(notify_data);
-            self.after_task_processed(&task);
-            debug!(
-                "TaskManager remove a task, uid:{}, task_id:{} success",
-                uid, task_id
-            );
-            return ErrorCode::ErrOk;
-        }
-        let c_task_info = unsafe { Show(task_id, uid) };
-        if !c_task_info.is_null() {
-            let c_task_info = unsafe { &*c_task_info };
-            let task_info = TaskInfo::from_c_struct(c_task_info);
-            unsafe { DeleteCTaskInfo(c_task_info) };
-            if State::from(task_info.progress.common_data.state) == State::Removed {
-                error!(
-                    "TaskManager remove a task, uid:{}, task_id:{} removed already",
-                    uid, task_id
-                );
-                ErrorCode::TaskNotFound
-            } else {
-                let notify_data = task_info.build_notify_data();
-                #[cfg(feature = "oh")]
-                Notifier::remove_notify(notify_data);
-                debug!(
-                    "TaskManager remove a task, uid:{}, task_id:{} success",
-                    uid, task_id
-                );
-                unsafe {
-                    ChangeRequestTaskState(task_id, uid, State::Removed);
-                }
-                ErrorCode::ErrOk
-            }
-        } else {
-            if self.tasks.contains_key(&task_id) {
-                error!("TaskManager remove a task, task_id:{} exist, but not found in app_task_map, uid:{}", task_id, uid);
-            } else {
-                error!(
-                    "TaskManager remove a task, uid:{}, task_id:{} not exist",
-                    uid, task_id
-                );
-            }
-            ErrorCode::TaskNotFound
-        }
+    pub(crate) async fn remove(&mut self, uid: u64, task_id: u32) -> ErrorCode {
+        debug!("TaskManager Remove, uid: {}, task_id: {}", uid, task_id);
+        self.scheduler.remove_task(uid, task_id).await
+        // Notifier::remove_notify(task.build_notify_data());
     }
-}
-
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
-extern "C" {
-    pub(crate) fn Show(task_id: u32, uid: u64) -> *const CTaskInfo;
 }

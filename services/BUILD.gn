@@ -14,55 +14,7 @@
 import("//base/request/request/request_aafwk.gni")
 import("//build/ohos.gni")
 
-config("download_service_config") {
-  visibility = [ ":*" ]
-  include_dirs = [ "include" ]
-
-  ldflags = [ "-Wl,--exclude-libs=ALL" ]
-  cflags_cc = [ "-fno-exceptions" ]
-  cflags = [
-    "-fdata-sections",
-    "-ffunction-sections",
-    "-fvisibility=hidden",
-  ]
-}
-
-ohos_rust_shared_library("download_server") {
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
-  sources = [ "src/lib.rs" ]
-
-  public_configs = [ ":download_service_config" ]
-
-  deps = [ ":request_service_c" ]
-
-  features = [ "oh" ]
-
-  external_deps = [
-    "hilog:hilog_rust",
-    "hilog:libhilog",
-    "hisysevent:hisysevent_rust",
-    "hitrace:hitrace_meter_rust",
-    "ipc:ipc_rust",
-    "netstack:ylong_http_client",
-    "safwk:system_ability_fwk_rust",
-    "samgr:samgr_rust",
-    "ylong_runtime:ylong_runtime",
-  ]
-
-  crate_name = "download_server"
-  subsystem_name = "request"
-  part_name = "request"
-}
-
-ohos_static_library("request_service_c") {
+ohos_static_library("download_server_cxx") {
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -73,28 +25,28 @@ ohos_static_library("request_service_c") {
   }
   stack_protector_ret = true
 
-  include_dirs = [
-    "../common/include",
-    "c_wrapper/include",
-  ]
   sources = [
-    "c_wrapper/source/application_state_observer.cpp",
-    "c_wrapper/source/background_notification.cpp",
-    "c_wrapper/source/c_check_permission.cpp",
-    "c_wrapper/source/c_event_handler.cpp",
-    "c_wrapper/source/c_request_database.cpp",
-    "c_wrapper/source/c_string_wrapper.cpp",
-    "c_wrapper/source/c_task_config.cpp",
-    "c_wrapper/source/c_task_info.cpp",
-    "c_wrapper/source/common_event_notify.cpp",
-    "c_wrapper/source/get_calling_bundle.cpp",
-    "c_wrapper/source/get_proxy.cpp",
-    "c_wrapper/source/get_top_bundle.cpp",
-    "c_wrapper/source/network_adapter.cpp",
-    "c_wrapper/source/request_cert_mgr_adapter.cpp",
-    "c_wrapper/source/url_policy.cpp",
+    "src/cxx/application_state_observer.cpp",
+    "src/cxx/background_notification.cpp",
+    "src/cxx/c_check_permission.cpp",
+    "src/cxx/c_event_handler.cpp",
+    "src/cxx/c_request_database.cpp",
+    "src/cxx/c_string_wrapper.cpp",
+    "src/cxx/c_task_config.cpp",
+    "src/cxx/c_task_info.cpp",
+    "src/cxx/common_event_notify.cpp",
+    "src/cxx/get_calling_bundle.cpp",
+    "src/cxx/get_proxy.cpp",
+    "src/cxx/get_top_bundle.cpp",
+    "src/cxx/network_adapter.cpp",
+    "src/cxx/request_cert_mgr_adapter.cpp",
+    "src/cxx/url_policy.cpp",
   ]
-  cflags_cc = [ "-O2" ]
+
+  include_dirs = [
+    "include",
+    "../common/include",
+  ]
 
   external_deps = [
     "ability_base:base",
@@ -118,6 +70,9 @@ ohos_static_library("request_service_c") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  deps = [ "//third_party/rust/crates/cxx:cxx_cppdeps" ]
+
   defines = []
   if (request_telephony_core_service && request_telephony_cellular_data) {
     external_deps += [
@@ -126,7 +81,41 @@ ohos_static_library("request_service_c") {
     ]
     defines += [ "REQUEST_TELEPHONY_CORE_SERVICE" ]
   }
-  output_extension = "so"
+
+  subsystem_name = "request"
+  part_name = "request"
+}
+
+ohos_rust_shared_library("download_server") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  sources = [ "src/lib.rs" ]
+
+  deps = [
+    ":download_server_cxx",
+    "//third_party/rust/crates/cxx:lib",
+  ]
+
+  external_deps = [
+    "hilog:hilog_rust",
+    "hilog:libhilog",
+    "hisysevent:hisysevent_rust",
+    "hitrace:hitrace_meter_rust",
+    "ipc:ipc_rust",
+    "netstack:ylong_http_client",
+    "safwk:system_ability_fwk_rust",
+    "samgr:samgr_rust",
+    "ylong_runtime:ylong_runtime",
+  ]
+
+  crate_name = "download_server"
   subsystem_name = "request"
   part_name = "request"
 }

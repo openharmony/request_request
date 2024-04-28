@@ -13,32 +13,48 @@
 
 //! This crate implement the request server service.
 
-pub(crate) mod ability;
 pub(crate) mod client;
 pub(crate) mod command;
-#[allow(unused)]
-pub(crate) mod interface;
-pub(crate) mod listener;
 pub(crate) mod permission;
 pub(crate) mod runcount;
 
 use std::fs::File;
 
-pub(crate) use interface::{RequestInterfaceCode, RequestNotifyInterfaceCode};
 use ipc::parcel::MsgParcel;
 use ipc::remote::RemoteStub;
 use ipc::{IpcResult, IpcStatusCode};
 
+use self::client::ClientManagerEntry;
+use self::runcount::RunCountManagerEntry;
+use crate::interface;
+use crate::manage::task_manager::TaskManagerTx;
 use crate::task::config::TaskConfig;
 use crate::task::info::TaskInfo;
 use crate::utils::c_wrapper::CStringWrapper;
 
-pub(crate) struct RequestServiceStub;
+pub(crate) struct RequestServiceStub {
+    task_manager: TaskManagerTx,
+    client_manager: ClientManagerEntry,
+    runcount_manager: RunCountManagerEntry,
+}
+
+impl RequestServiceStub {
+    pub(crate) fn new(
+        task_manager: TaskManagerTx,
+        client_manager: ClientManagerEntry,
+        runcount_manager: RunCountManagerEntry,
+    ) -> Self {
+        Self {
+            task_manager,
+            client_manager,
+            runcount_manager,
+        }
+    }
+}
 
 impl RemoteStub for RequestServiceStub {
     fn on_remote_request(&self, code: u32, data: &mut MsgParcel, reply: &mut MsgParcel) -> i32 {
         const SERVICE_TOKEN: &str = "OHOS.Download.RequestServiceInterface";
-
         debug!("Processes on_remote_request, code: {}", code);
         match data.read_interface_token() {
             Ok(token) if token == SERVICE_TOKEN => {}
@@ -47,42 +63,26 @@ impl RemoteStub for RequestServiceStub {
                 return IpcStatusCode::Failed as i32;
             }
         };
-
         let res = match code {
-            _ if code == RequestInterfaceCode::Construct as u32 => {
-                RequestService::construct(data, reply)
-            }
-            _ if code == RequestInterfaceCode::Pause as u32 => RequestService::pause(data, reply),
-            _ if code == RequestInterfaceCode::Query as u32 => RequestService::query(data, reply),
-            _ if code == RequestInterfaceCode::QueryMimeType as u32 => {
-                RequestService::query_mime_type(data, reply)
-            }
-            _ if code == RequestInterfaceCode::Remove as u32 => RequestService::remove(data, reply),
-            _ if code == RequestInterfaceCode::Resume as u32 => RequestService::resume(data, reply),
-            _ if code == RequestInterfaceCode::Start as u32 => RequestService::start(data, reply),
-            _ if code == RequestInterfaceCode::Stop as u32 => RequestService::stop(data, reply),
-            _ if code == RequestInterfaceCode::Show as u32 => RequestService::show(data, reply),
-            _ if code == RequestInterfaceCode::Touch as u32 => RequestService::touch(data, reply),
-            _ if code == RequestInterfaceCode::Search as u32 => RequestService::search(data, reply),
-            _ if code == RequestInterfaceCode::GetTask as u32 => {
-                RequestService::get_task(data, reply)
-            }
-            _ if code == RequestInterfaceCode::Clear as u32 => Ok(()),
-            _ if code == RequestInterfaceCode::OpenChannel as u32 => {
-                RequestService::open_channel(data, reply)
-            }
-            _ if code == RequestInterfaceCode::Subscribe as u32 => {
-                RequestService::subscribe(data, reply)
-            }
-            _ if code == RequestInterfaceCode::Unsubscribe as u32 => {
-                RequestService::unsubscribe(data, reply)
-            }
-            _ if code == RequestInterfaceCode::SubRunCount as u32 => {
-                RequestService::sub_runcount(data, reply)
-            }
-            _ if code == RequestInterfaceCode::UnsubRunCount as u32 => {
-                RequestService::unsub_runcount(data, reply)
-            }
+            interface::CONSTRUCT => self.construct(data, reply),
+            interface::PAUSE => self.pause(data, reply),
+
+            interface::QUERY => self.query(data, reply),
+            interface::QUERY_MIME_TYPE => self.query_mime_type(data, reply),
+            interface::REMOVE => self.remove(data, reply),
+            interface::RESUME => self.resume(data, reply),
+            interface::START => self.start(data, reply),
+            interface::STOP => self.stop(data, reply),
+            interface::SHOW => self.show(data, reply),
+            interface::TOUCH => self.touch(data, reply),
+            interface::SEARCH => self.search(data, reply),
+            interface::GET_TASK => self.get_task(data, reply),
+            interface::CLEAR => Ok(()),
+            interface::OPEN_CHANNEL => self.open_channel(reply),
+            interface::SUBSCRIBE => self.subscribe(data, reply),
+            interface::UNSUBSCRIBE => self.unsubscribe(data, reply),
+            interface::SUB_RUN_COUNT => self.sub_runcount(data, reply),
+            interface::UNSUB_RUN_COUNT => self.unsub_runcount(reply),
             _ => return IpcStatusCode::Failed as i32,
         };
 
@@ -93,83 +93,10 @@ impl RemoteStub for RequestServiceStub {
     }
 
     fn dump(&self, file: File, args: Vec<String>) -> i32 {
-        match command::Dump::execute(file, args) {
+        match self.dump(file, args) {
             Ok(()) => 0,
             Err(e) => e as i32,
         }
-    }
-}
-
-/// RequestService type
-struct RequestService;
-
-impl RequestService {
-    fn construct(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::Construct::execute(data, reply)
-    }
-
-    fn pause(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::Pause::execute(data, reply)
-    }
-
-    fn query(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::Query::execute(data, reply)
-    }
-
-    fn query_mime_type(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::QueryMimeType::execute(data, reply)
-    }
-
-    fn remove(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::Remove::execute(data, reply)
-    }
-
-    fn resume(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::Resume::execute(data, reply)
-    }
-
-    fn start(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::Start::execute(data, reply)
-    }
-
-    fn stop(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::Stop::execute(data, reply)
-    }
-
-    fn show(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::Show::execute(data, reply)
-    }
-
-    fn touch(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::Touch::execute(data, reply)
-    }
-
-    fn search(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::Search::execute(data, reply)
-    }
-
-    fn get_task(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::GetTask::execute(data, reply)
-    }
-
-    fn open_channel(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::OpenChannel::execute(data, reply)
-    }
-
-    fn subscribe(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::Subscribe::execute(data, reply)
-    }
-
-    fn unsubscribe(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::Unsubscribe::execute(data, reply)
-    }
-
-    fn sub_runcount(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::SubRunCount::execute(data, reply)
-    }
-
-    fn unsub_runcount(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        command::UnsubRunCount::execute(data, reply)
     }
 }
 
@@ -307,8 +234,7 @@ pub(crate) fn is_system_api() -> bool {
     unsafe { RequestIsSystemAPI(token_id) }
 }
 
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
+#[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     pub(crate) fn GetCallingBundle(token_id: u64) -> CStringWrapper;
     pub(crate) fn RequestIsSystemAPI(token_id: u64) -> bool;

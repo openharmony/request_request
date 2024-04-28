@@ -13,25 +13,10 @@
 
 use crate::error::ErrorCode;
 use crate::manage::TaskManager;
-use crate::task::reason::Reason;
 
 impl TaskManager {
-    pub(crate) fn pause(&mut self, uid: u64, task_id: u32) -> ErrorCode {
+    pub(crate) async fn pause(&mut self, uid: u64, task_id: u32) -> ErrorCode {
         debug!("TaskManager pause, uid:{}, task_id:{}", uid, task_id);
-
-        match self.get_task(uid, task_id) {
-            Some(task) => self.pause_task(task, Reason::UserOperation),
-            None => {
-                if self.tasks.contains_key(&task_id) {
-                    error!("TaskManager pause a task, task_id:{} exist, but not found in app_task_map, uid:{}", task_id, uid);
-                } else {
-                    error!(
-                        "TaskManager pause a task, uid:{}, task_id:{} not exist",
-                        uid, task_id
-                    );
-                }
-                ErrorCode::TaskStateErr
-            }
-        }
+        self.scheduler.pause_task(uid, task_id).await
     }
 }

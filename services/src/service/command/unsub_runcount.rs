@@ -15,18 +15,17 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::service::ability::RequestAbility;
 use crate::service::runcount::RunCountEvent;
-pub(crate) struct UnsubRunCount;
+use crate::service::RequestServiceStub;
 
-impl UnsubRunCount {
-    pub(crate) fn execute(_data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+impl RequestServiceStub {
+    pub(crate) fn unsub_runcount(&self, reply: &mut MsgParcel) -> IpcResult<()> {
         let pid = ipc::Skeleton::calling_pid();
         // let uid = ipc::Skeleton::calling_uid();
         info!("Process Service runcount unsubscribe: pid is {}", pid);
 
         let (event, rx) = RunCountEvent::unsub_runcount(pid);
-        RequestAbility::runcount_manager().send_event(event);
+        self.runcount_manager.send_event(event);
 
         let ret = match rx.get() {
             Some(ret) => ret,

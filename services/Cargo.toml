@@ -34,6 +34,7 @@ ylong_http_client = { git = "https://gitee.com/openharmony/commonlibrary_rust_yl
 hilog_rust = { git = "https://gitee.com/openharmony/hiviewdfx_hilog" }
 hisysevent = { git = "https://gitee.com/openharmony/hiviewdfx_hisysevent" }
 hitrace_meter_rust = { git = "https://gitee.com/openharmony/hiviewdfx_hitrace" }
+cxx = "1.0.115"
 
 system_ability_fwk = { git = "https://gitee.com/openharmony/systemabilitymgr_safwk" }
 samgr = { git = "https://gitee.com/openharmony/systemabilitymgr_samgr" }

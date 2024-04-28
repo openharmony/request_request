@@ -16,19 +16,16 @@ use std::io::Write;
 
 use ipc::IpcResult;
 
-use crate::manage::events::EventMessage;
-use crate::service::ability::RequestAbility;
+use crate::manage::events::TaskManagerEvent;
+use crate::service::RequestServiceStub;
 
 const HELP_MSG: &str = "usage:\n\
                          -h                    help text for the tool\n\
                          -t [taskid]           without taskid: display all task summary info; \
                          taskid: display one task detail info\n";
-
-pub(crate) struct Dump;
-
-impl Dump {
+impl RequestServiceStub {
     // Ignores all the file error.
-    pub(crate) fn execute(mut file: File, args: Vec<String>) -> IpcResult<()> {
+    pub(crate) fn dump(&self, mut file: File, args: Vec<String>) -> IpcResult<()> {
         info!("Service dump");
 
         let len = args.len();
@@ -43,11 +40,11 @@ impl Dump {
         }
 
         match len {
-            1 => dump_all_task_info(file),
+            1 => self.dump_all_task_info(file),
             2 => {
                 let task_id = args[1].parse::<u32>();
                 match task_id {
-                    Ok(id) => dump_one_task_info(file, id),
+                    Ok(id) => self.dump_one_task_info(file, id),
                     Err(_) => {
                         let _ = file.write("-t accept a number".as_bytes());
                     }
@@ -59,82 +56,82 @@ impl Dump {
         }
         Ok(())
     }
-}
 
-fn dump_all_task_info(mut file: File) {
-    info!("Service dump: dump all task info");
+    fn dump_all_task_info(&self, mut file: File) {
+        info!("Service dump: dump all task info");
 
-    let (event, rx) = EventMessage::dump_all();
-    if !RequestAbility::task_manager().send_event(event) {
-        return;
-    }
-
-    let infos = match rx.get() {
-        Some(infos) => infos,
-        None => {
-            error!("Service dump: receives infos failed");
+        let (event, rx) = TaskManagerEvent::dump_all();
+        if !self.task_manager.send_event(event) {
             return;
         }
-    };
-    let len = infos.vec.len();
-    let _ = file.write(format!("task num: {}\n", len).as_bytes());
-    if len > 0 {
-        let _ = file.write(
-            format!(
-                "{:<20}{:<12}{:<12}{:<12}\n",
-                "id", "action", "state", "reason"
-            )
-            .as_bytes(),
-        );
-        for info in infos.vec.iter() {
+
+        let infos = match rx.get() {
+            Some(infos) => infos,
+            None => {
+                error!("Service dump: receives infos failed");
+                return;
+            }
+        };
+        let len = infos.vec.len();
+        let _ = file.write(format!("task num: {}\n", len).as_bytes());
+        if len > 0 {
             let _ = file.write(
                 format!(
                     "{:<20}{:<12}{:<12}{:<12}\n",
-                    info.task_id, info.action as u8, info.state as u8, info.reason as u8
+                    "id", "action", "state", "reason"
                 )
                 .as_bytes(),
             );
+            for info in infos.vec.iter() {
+                let _ = file.write(
+                    format!(
+                        "{:<20}{:<12}{:<12}{:<12}\n",
+                        info.task_id, info.action as u8, info.state as u8, info.reason as u8
+                    )
+                    .as_bytes(),
+                );
+            }
         }
     }
-}
 
-fn dump_one_task_info(mut file: File, task_id: u32) {
-    info!("Service dump: dump one task info");
+    fn dump_one_task_info(&self, mut file: File, task_id: u32) {
+        info!("Service dump: dump one task info");
 
-    let (event, rx) = EventMessage::dump_one(task_id);
-    if !RequestAbility::task_manager().send_event(event) {
-        return;
-    }
-    let task = match rx.get() {
-        Some(task) => task,
-        None => {
-            error!("Service dump: receives task failed");
+        let (event, rx) = TaskManagerEvent::dump_one(task_id);
+        if !self.task_manager.send_event(event) {
             return;
         }
-    };
+        let task = match rx.get() {
+            Some(task) => task,
+            None => {
+                error!("Service dump: receives task failed");
+                return;
+            }
+        };
 
-    if let Some(task) = task {
-        let _ = file.write(
-            format!(
-                "{:<20}{:<12}{:<12}{:<12}{:<12}{:<12}{}\n",
-                "id", "action", "state", "reason", "total_size", "tran_size", "url"
-            )
-            .as_bytes(),
-        );
-        let _ = file.write(
-            format!(
-                "{:<20}{:<12}{:<12}{:<12}{:<12}{:<12}{}\n",
-                task.task_id,
-                task.action as u8,
-                task.state as u8,
-                task.reason as u8,
-                task.total_size,
-                task.tran_size,
-                task.url
-            )
-            .as_bytes(),
-        );
-    } else {
-        let _ = file.write(format!("invalid task id {}", task_id).as_bytes());
+        if let Some(task) = task {
+            let _ = file.write(
+                format!(
+                    "{:<20}{:<12}{:<12}{:<12}{:<12}{:<12}{}\n",
+                    "id", "action", "state", "reason", "total_size", "tran_size", "url"
+                )
+                .as_bytes(),
+            );
+            let _ = file.write(
+                format!(
+                    "{:<20}{:<12}{:<12}{:<12}{:<12}{:<12}{}\n",
+                    task.task_id,
+                    task.action as u8,
+                    task.state as u8,
+                    task.reason as u8,
+                    task.total_size,
+                    task.tran_size,
+                    task.url
+                )
+                .as_bytes(),
+            );
+        } else {
+            let _ = file.write(format!("invalid task id {}", task_id).as_bytes());
+        }
     }
 }

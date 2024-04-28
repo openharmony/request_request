@@ -58,8 +58,7 @@ pub(crate) enum QueryPermission {
     QueryAll,
 }
 
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
+#[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     pub(crate) fn DownloadServerCheckPermission(token_id: u64, permission: CStringWrapper) -> bool;
 }

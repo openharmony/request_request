@@ -208,13 +208,14 @@ impl Client {
                             progress_index = index;
                         }
                         temp_notify_data.push((subscribe_type, notify_data));
-                    },
+                    }
                     _ => {}
                 }
             }
             for (index, (subscribe_type, notify_data)) in temp_notify_data.into_iter().enumerate() {
                 if subscribe_type != SubscribeType::Progress || progress_index == index {
-                    self.handle_send_notify_data(subscribe_type, notify_data).await;
+                    self.handle_send_notify_data(subscribe_type, notify_data)
+                        .await;
                 }
             }
 
@@ -338,7 +339,10 @@ impl Client {
         }
 
         let size = message.len() as u16;
-        debug!("send notify data, type: {:?}, size: {:?}", subscribe_type, size);
+        debug!(
+            "send notify data, type: {:?}, size: {:?}",
+            subscribe_type, size
+        );
         let size = size.to_le_bytes();
         message[POSITION_OF_LENGTH as usize] = size[0];
         message[(POSITION_OF_LENGTH + 1) as usize] = size[1];

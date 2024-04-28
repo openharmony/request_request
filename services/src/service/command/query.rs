@@ -15,16 +15,13 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::manage::events::EventMessage;
-use crate::service::ability::RequestAbility;
+use crate::manage::events::TaskManagerEvent;
 use crate::service::permission::{PermissionChecker, QueryPermission};
-use crate::service::{is_system_api, serialize_task_info};
+use crate::service::{is_system_api, serialize_task_info, RequestServiceStub};
 use crate::task::config::Action;
 
-pub(crate) struct Query;
-
-impl Query {
-    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+impl RequestServiceStub {
+    pub(crate) fn query(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         if !is_system_api() {
             error!("Service query: not system api");
             reply.write(&(ErrorCode::SystemApi as i32))?;
@@ -47,8 +44,8 @@ impl Query {
         match id.parse::<u32>() {
             Ok(id) => {
                 debug!("Service query: u32 task_id is {}", id);
-                let (event, rx) = EventMessage::query(id, action);
-                if !RequestAbility::task_manager().send_event(event) {
+                let (event, rx) = TaskManagerEvent::query(id, action);
+                if !self.task_manager.send_event(event) {
                     return Err(IpcStatusCode::Failed);
                 }
                 match rx.get() {
@@ -59,7 +56,10 @@ impl Query {
                         Ok(())
                     }
                     Some(None) => {
-                        error!("End Service query, failed with reason: task_id not found, task_id is {}", id);
+                        error!(
+                        "End Service query, failed with reason: task_id not found, task_id is {}",
+                        id
+                    );
                         reply.write(&(ErrorCode::TaskNotFound as i32))?;
                         Err(IpcStatusCode::Failed)
                     }
@@ -70,7 +70,10 @@ impl Query {
                 }
             }
             _ => {
-                error!("End Service query, task_id is {}, failed with reason: task_id not valid", id);
+                error!(
+                    "End Service query, task_id is {}, failed with reason: task_id not valid",
+                    id
+                );
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

@@ -12,39 +12,21 @@
 // limitations under the License.
 
 use crate::manage::TaskManager;
-use crate::task::ffi::{CTaskInfo, DeleteCTaskInfo};
 use crate::task::info::TaskInfo;
 
 impl TaskManager {
     pub(crate) fn show(&self, uid: u64, task_id: u32) -> Option<TaskInfo> {
-        match self.get_task(uid, task_id) {
-            Some(value) => {
-                debug!("TaskManager show, uid:{}, task_id:{} success", uid, task_id);
-                let task_info = value.show();
-                Some(task_info)
+        debug!("TaskManager Show, uid: {}, task_id: {}", uid, task_id);
+
+        match self.database.get_task_info(task_id) {
+            Some(info) if info.uid() == uid => {
+                debug!("TaskManager Show: task info is {:?}", info);
+                Some(info)
             }
-            None => {
-                debug!("TaskManager show: show task info from database");
-                let c_task_info = unsafe { Show(task_id, uid) };
-                if c_task_info.is_null() {
-                    info!(
-                        "TaskManger show: no task found in database, task_id: {}",
-                        task_id
-                    );
-                    return None;
-                }
-                let c_task_info = unsafe { &*c_task_info };
-                let task_info = TaskInfo::from_c_struct(c_task_info);
-                debug!("TaskManager show: task info is {:?}", task_info);
-                unsafe { DeleteCTaskInfo(c_task_info) };
-                Some(task_info)
+            _ => {
+                info!("TaskManger Show: no task found in database");
+                None
             }
         }
     }
-}
-
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
-extern "C" {
-    pub(crate) fn Show(task_id: u32, uid: u64) -> *const CTaskInfo;
 }

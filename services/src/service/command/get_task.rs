@@ -15,14 +15,11 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::manage::events::EventMessage;
-use crate::service::ability::RequestAbility;
-use crate::service::serialize_task_config;
+use crate::manage::events::TaskManagerEvent;
+use crate::service::{serialize_task_config, RequestServiceStub};
 
-pub(crate) struct GetTask;
-
-impl GetTask {
-    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+impl RequestServiceStub {
+    pub(crate) fn get_task(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         let tid: String = data.read()?;
         info!("Process Service getTask: task_id is {}", tid);
         match tid.parse::<u32>() {
@@ -31,8 +28,8 @@ impl GetTask {
                 let token: String = data.read()?;
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service getTask: uid is {}", uid);
-                let (event, rx) = EventMessage::get_task(uid, tid, token);
-                if !RequestAbility::task_manager().send_event(event) {
+                let (event, rx) = TaskManagerEvent::get_task(uid, tid, token);
+                if !self.task_manager.send_event(event) {
                     return Err(IpcStatusCode::Failed);
                 }
                 match rx.get() {

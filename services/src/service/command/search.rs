@@ -14,15 +14,12 @@
 use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
-use crate::manage::events::EventMessage;
-use crate::service::ability::RequestAbility;
-use crate::service::{get_calling_bundle, is_system_api};
+use crate::manage::events::TaskManagerEvent;
+use crate::service::{get_calling_bundle, is_system_api, RequestServiceStub};
 use crate::utils::filter::{CommonFilter, Filter};
 
-pub(crate) struct Search;
-
-impl Search {
-    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+impl RequestServiceStub {
+    pub(crate) fn search(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("Process Service search");
         let mut bundle: String = data.read()?;
         if !is_system_api() {
@@ -52,8 +49,8 @@ impl Search {
             bundle,
             common_data,
         };
-        let (event, rx) = EventMessage::search(filter);
-        if !RequestAbility::task_manager().send_event(event) {
+        let (event, rx) = TaskManagerEvent::search(filter);
+        if !self.task_manager.send_event(event) {
             return Err(IpcStatusCode::Failed);
         }
         let ids = match rx.get() {
@@ -63,7 +60,10 @@ impl Search {
                 return Err(IpcStatusCode::Failed);
             }
         };
-        info!("End Service search successfully: search task ids is {:?}", ids);
+        info!(
+            "End Service search successfully: search task ids is {:?}",
+            ids
+        );
         reply.write(&(ids.len() as u32))?;
         for it in ids.iter() {
             reply.write(&(it.to_string()))?;

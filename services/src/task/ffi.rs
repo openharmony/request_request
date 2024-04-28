@@ -14,9 +14,10 @@
 use std::ffi::c_char;
 
 use super::config::{Action, CommonTaskConfig, ConfigSet, Network, TaskConfig, Version};
-use super::info::{CommonTaskInfo, InfoSet, Mode, State, TaskInfo, UpdateInfo};
+use super::info::{CommonTaskInfo, InfoSet, Mode, TaskInfo, UpdateInfo};
 use super::notify::{CommonProgress, EachFileStatus, Progress};
 use super::reason::Reason;
+use crate::task::info::State;
 use crate::utils::c_wrapper::{
     CFileSpec, CFormItem, CStringWrapper, DeleteCFileSpec, DeleteCFormItem, DeleteCStringPtr,
 };
@@ -175,7 +176,10 @@ impl TaskInfo {
         let extras = progress.extras.clone();
 
         // Removes this logic if api9 and api10 matched.
-        let mime_type = if c_struct.common_data.version == Version::API9 as u8 {
+        let mime_type = if c_struct.common_data.version == Version::API9 as u8
+            || (c_struct.progress.common_data.state != State::Completed as u8
+                && c_struct.progress.common_data.state != State::Failed as u8)
+        {
             c_struct.mime_type.to_string()
         } else {
             String::new()
@@ -254,7 +258,7 @@ pub(crate) struct RequestTaskMsg {
     pub(crate) action: u8,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub(crate) struct NetworkInfo {
     pub(crate) network_type: Network,
@@ -373,27 +377,33 @@ impl TaskConfig {
     }
 }
 
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
+pub(crate) fn publish_event(bundle: &str, task_id: u32, state: State) {
+    let len = bundle.len();
+    unsafe {
+        PublishStateChangeEvents(
+            bundle.as_ptr() as *const c_char,
+            len as u32,
+            task_id,
+            state as i32,
+        );
+    }
+}
+
+#[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     pub(crate) fn GetNetworkInfo() -> *const NetworkInfo;
-    pub(crate) fn DeleteCTaskInfo(ptr: *const CTaskInfo);
     pub(crate) fn DeleteCEachFileStatus(ptr: *const CEachFileStatus);
-    pub(crate) fn UpdateRequestTask(taskId: u32, updateInfo: *const CUpdateInfo) -> bool;
-    pub(crate) fn HasRequestTaskRecord(taskId: u32) -> bool;
     pub(crate) fn PublishStateChangeEvents(
-        bundleName: *const c_char,
-        bundleNameLen: u32,
-        taskId: u32,
+        bundle_name: *const c_char,
+        bundle_name_len: u32,
+        task_id: u32,
         state: i32,
     );
 
-    pub(crate) fn ChangeRequestTaskState(task_id: u32, uid: u64, state: State) -> bool;
     pub(crate) fn RequestBackgroundNotify(
         msg: RequestTaskMsg,
-        wrappedPath: CStringWrapper,
-        wrappedFileName: CStringWrapper,
+        wrapped_path: CStringWrapper,
+        wrapped_file_name: CStringWrapper,
         percent: u32,
     );
-
 }

@@ -31,14 +31,19 @@
 #include "rdb_store.h"
 #include "result_set.h"
 #include "value_object.h"
+#include "network_adapter.h"
 
 namespace OHOS::Request {
+#ifndef REQUEST_DATABASE_TEST
 constexpr const char *DB_NAME = "/data/service/el1/public/database/request/request.db";
+constexpr int DATABASE_VERSION = 1;
+#else
+constexpr const char *DB_NAME = "/data/test/request.db";
+constexpr int DATABASE_VERSION = 2;
+#endif
 constexpr const char *REQUEST_DATABASE_VERSION_4_1_RELEASE = "API11_4.1-release";
 constexpr const char *REQUEST_DATABASE_VERSION = "API12_5.0-release";
 constexpr const char *REQUEST_TASK_TABLE_NAME = "request_task";
-constexpr int DATABASE_OPEN_VERSION = 1;
-constexpr int DATABASE_NEW_VERSION = 2;
 constexpr int QUERY_ERR = -1;
 constexpr int QUERY_OK = 0;
 constexpr int WITHOUT_VERSION_TABLE = 40;
@@ -145,21 +150,16 @@ struct CVectorWrapper {
 };
 
 // Request Database Modify.
+bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state);
 bool HasRequestTaskRecord(uint32_t taskId);
+bool QueryTaskTokenId(uint32_t taskId, uint64_t &tokenId);
 bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig);
 bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo);
-bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state);
-CTaskInfo *Show(uint32_t taskId, uint64_t uid);
-CTaskInfo *Touch(uint32_t taskId, uint64_t uid, CStringWrapper token);
-CTaskInfo *Query(uint32_t taskId, Action queryAction);
-CVectorWrapper Search(CFilter filter);
 void DeleteCVectorWrapper(uint32_t *ptr);
 void GetCommonTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskInfo &taskInfo);
 int TouchRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo);
 int QueryRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo);
 uint32_t QueryAppUncompletedTasksNum(uint64_t uid, uint8_t mode);
-CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo);
-CProgress BuildCProgress(const Progress &progress);
 bool HasTaskConfigRecord(uint32_t taskId);
 CTaskConfig **QueryAllTaskConfig(uint32_t &len);
 CTaskConfig *QuerySingleTaskConfig(uint32_t taskId);
@@ -167,7 +167,18 @@ int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, 
 CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs);
 bool CleanTaskConfigTable(uint32_t taskId, uint64_t uid);
 void RequestDBRemoveRecordsFromTime(uint64_t time);
-uint64_t QueryTaskTokenId(uint32_t taskId);
+int QueryTaskConfigLen();
+uint32_t QueryAppUncompletedTasksNum(uint64_t uid, uint8_t mode);
+CVectorWrapper Search(CFilter filter);
+CTaskInfo *GetTaskInfo(uint32_t taskId);
+CTaskConfig *QueryTaskConfig(uint32_t taskId);
+CTaskConfig **QueryAllTaskConfigs();
+void UpdateTaskStateOnAppStateChange(uint64_t uid, uint8_t appState);
+void UpdateTaskStateOnNetworkChange(NetworkInfo info);
+void GetTaskQosInfo(uint64_t uid, uint32_t taskId, TaskQosInfo **info);
+void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len);
+void GetAppArray(AppInfo *apps, size_t *len);
+CStringWrapper GetAppBundle(uint64_t uid);
 
 #ifdef __cplusplus
 }

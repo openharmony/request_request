@@ -26,7 +26,7 @@ pub(crate) struct CertManager {
 }
 
 impl CertManager {
-    pub(crate) fn new() -> Self {
+    pub(crate) fn init() -> Self {
         let info = Arc::new(RwLock::new(CertInfo::default()));
         ylong_runtime::spawn(run(info.clone()));
         Self { info }
@@ -110,7 +110,7 @@ fn update_system_cert(info: &Arc<RwLock<CertInfo>>) {
                 Ok(cert) => {
                     cert_from_pem.cert.as_mut().unwrap().push(cert);
                     cert_from_pem
-                },
+                }
                 Err(e) => {
                     error!("parse security cert path failed, error is {:?}", e);
                     return;
@@ -124,7 +124,7 @@ fn update_system_cert(info: &Arc<RwLock<CertInfo>>) {
         Ok(cert) => {
             cert_from_pem.cert.as_mut().unwrap().push(cert);
             cert_from_pem
-        },
+        }
         Err(e) => {
             error!("parse security cert path failed, error is {:?}", e);
             return;
@@ -134,8 +134,7 @@ fn update_system_cert(info: &Arc<RwLock<CertInfo>>) {
     *info = cert;
 }
 
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
+#[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     pub(crate) fn GetUserCertsData() -> *const CRequestCerts;
     pub(crate) fn FreeCertDataList(certs: *const CRequestCerts);
@@ -151,4 +150,19 @@ pub(crate) struct CRequestCert {
 pub(crate) struct CRequestCerts {
     pub(crate) cert_data_list: *const *const CRequestCert,
     pub(crate) len: u32,
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_cert_manager() {
+        let cert_manager = CertManager::init();
+        let cert = cert_manager.certificate();
+        if cert.is_none() {
+            cert_manager.force_update();
+        }
+        assert!(cert_manager.certificate().is_some());
+    }
 }

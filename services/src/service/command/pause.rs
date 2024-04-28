@@ -15,15 +15,13 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::manage::events::EventMessage;
-use crate::service::ability::RequestAbility;
+use crate::manage::events::TaskManagerEvent;
 use crate::service::permission::PermissionChecker;
+use crate::service::RequestServiceStub;
 use crate::task::config::Version;
 
-pub(crate) struct Pause;
-
-impl Pause {
-    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+impl RequestServiceStub {
+    pub(crate) fn pause(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         let version: u32 = data.read()?;
         debug!("Service pause: version {}", version);
         if Version::from(version as u8) == Version::API9 && !PermissionChecker::check_internet() {
@@ -41,27 +39,36 @@ impl Pause {
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service pause: uid is {}", uid);
 
-                let (event, rx) = EventMessage::pause(uid, id);
-                if !RequestAbility::task_manager().send_event(event) {
+                let (event, rx) = TaskManagerEvent::pause(uid, id);
+                if !self.task_manager.send_event(event) {
                     return Err(IpcStatusCode::Failed);
                 }
                 let ret = match rx.get() {
                     Some(ret) => ret,
                     None => {
-                        error!("End Service pause, task_id is {}, failed with reason: receives ret failed", id);
+                        error!(
+                        "End Service pause, task_id is {}, failed with reason: receives ret failed",
+                        id
+                    );
                         return Err(IpcStatusCode::Failed);
                     }
                 };
                 reply.write(&(ret as i32))?;
                 if ret != ErrorCode::ErrOk {
-                    error!("End Service pause, task_id is {}, failed with reason: {}", id, ret as u32);
+                    error!(
+                        "End Service pause, task_id is {}, failed with reason: {}",
+                        id, ret as u32
+                    );
                     return Err(IpcStatusCode::Failed);
                 }
                 info!("End Service pause successfully: task_id is {}", id);
                 Ok(())
             }
             _ => {
-                error!("End Service pause, task_id is {}, failed with reason: task_id not valid", id);
+                error!(
+                    "End Service pause, task_id is {}, failed with reason: task_id not valid",
+                    id
+                );
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

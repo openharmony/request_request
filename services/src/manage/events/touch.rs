@@ -12,46 +12,39 @@
 // limitations under the License.
 
 use crate::manage::TaskManager;
-use crate::task::ffi::{CTaskInfo, DeleteCTaskInfo};
 use crate::task::info::TaskInfo;
-use crate::utils::c_wrapper::CStringWrapper;
 
 impl TaskManager {
     pub(crate) fn touch(&self, uid: u64, task_id: u32, token: String) -> Option<TaskInfo> {
-        debug!("TaskManager touch a task, uid:{}, task_id:{}", uid, task_id);
+        debug!("TaskManager Touch, uid: {}, task_id: {}", uid, task_id);
 
-        match self.get_task(uid, task_id) {
-            Some(value) => {
-                debug!("touch task info by memory");
-                if value.conf.token.eq(token.as_str()) {
-                    let mut task_info = value.show();
-                    task_info.bundle = "".to_string();
-                    return Some(task_info);
+        match self.scheduler.get_task(task_id) {
+            Some(task) => {
+                if task.uid() == uid && task.conf.token.eq(token.as_str()) {
+                    let mut info = task.info();
+                    info.bundle = "".to_string();
+                    Some(info)
+                } else {
+                    None
                 }
-                None
             }
             None => {
-                debug!("TaskManger touch: touch task_info from database");
-                let c_task_info = unsafe { Touch(task_id, uid, CStringWrapper::from(&token)) };
-                if c_task_info.is_null() {
-                    info!(
-                        "TaskManger touch: no task found in database, task_id: {}",
-                        task_id
-                    );
-                    return None;
+                let mut info = match self.database.get_task_info(task_id) {
+                    Some(info) => info,
+                    None => {
+                        info!("TaskManger Touch: no task found");
+                        return None;
+                    }
+                };
+
+                if info.uid() == uid && info.token() == token {
+                    info.bundle = "".to_string();
+                    Some(info)
+                } else {
+                    info!("TaskManger Touch: no task found");
+                    None
                 }
-                let c_task_info = unsafe { &*c_task_info };
-                let task_info = TaskInfo::from_c_struct(c_task_info);
-                debug!("TaskManger touch: task info is {:?}", task_info);
-                unsafe { DeleteCTaskInfo(c_task_info) };
-                Some(task_info)
             }
         }
     }
-}
-
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
-extern "C" {
-    pub(crate) fn Touch(taskId: u32, uid: u64, token: CStringWrapper) -> *const CTaskInfo;
 }

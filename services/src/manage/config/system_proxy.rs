@@ -37,11 +37,24 @@ impl SystemProxyManager {
     }
 }
 
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
+#[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     pub(crate) fn RegisterProxySubscriber();
     pub(crate) fn GetHost() -> CStringWrapper;
     pub(crate) fn GetPort() -> CStringWrapper;
     pub(crate) fn GetExclusionList() -> CStringWrapper;
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_system_proxy_manager() {
+        let system_proxy_manager = SystemProxyManager::init();
+        let host = system_proxy_manager.host();
+        let port = system_proxy_manager.port();
+        let exlist = system_proxy_manager.exlist();
+        println!("host: {}, port: {}, exlist: {}", host, port, exlist);
+    }
 }

@@ -15,17 +15,15 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::service::ability::RequestAbility;
+use crate::service::RequestServiceStub;
 
-pub(crate) struct Unsubscribe;
-
-impl Unsubscribe {
-    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+impl RequestServiceStub {
+    pub(crate) fn unsubscribe(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         let tid: String = data.read()?;
         info!("Process Service unsubscribe: task_id is {}", tid);
         match tid.parse::<u32>() {
             Ok(tid) => {
-                if RequestAbility::client_manager().unsubscribe(tid) == ErrorCode::ErrOk {
+                if self.client_manager.unsubscribe(tid) == ErrorCode::ErrOk {
                     reply.write(&(ErrorCode::ErrOk as i32))?;
                     info!("End Service unsubscribe successfully: task_id is {}", tid);
                     Ok(())

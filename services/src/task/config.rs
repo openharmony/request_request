@@ -77,7 +77,6 @@ pub(crate) struct TaskConfig {
     pub(crate) token: String,
     pub(crate) proxy: String,
     pub(crate) certificate_pins: String,
-    #[allow(unused)]
     pub(crate) extras: HashMap<String, String>,
     pub(crate) version: Version,
     pub(crate) form_items: Vec<FormItem>,
@@ -138,6 +137,50 @@ impl TaskConfig {
                 .map(CStringWrapper::from)
                 .collect(),
             certs_path: self.certs_path.iter().map(CStringWrapper::from).collect(),
+        }
+    }
+}
+
+impl Default for TaskConfig {
+    fn default() -> Self {
+        Self {
+            bundle_type: 0,
+            bundle: "xxx".to_string(),
+            url: "http://127.0.0.1:80".to_string(),
+            title: "xxx".to_string(),
+            description: "xxx".to_string(),
+            method: "GET".to_string(),
+            headers: Default::default(),
+            data: "".to_string(),
+            token: "xxx".to_string(),
+            proxy: "".to_string(),
+            extras: Default::default(),
+            version: Version::API9,
+            form_items: vec![],
+            file_specs: vec![],
+            body_file_paths: vec![],
+            certs_path: vec![],
+            certificate_pins: "".to_string(),
+            common_data: CommonTaskConfig {
+                task_id: 0,
+                uid: 0,
+                token_id: 0,
+                action: Action::Download,
+                mode: Mode::BackGround,
+                cover: false,
+                network: Network::Wifi,
+                metered: false,
+                roaming: false,
+                retry: false,
+                redirect: false,
+                index: 0,
+                begins: 0,
+                ends: -1,
+                gauge: false,
+                precise: false,
+                priority: 0,
+                background: false,
+            },
         }
     }
 }
