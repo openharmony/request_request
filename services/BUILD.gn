@@ -91,6 +91,7 @@ ohos_static_library("request_service_c") {
     "c_wrapper/source/get_proxy.cpp",
     "c_wrapper/source/get_top_bundle.cpp",
     "c_wrapper/source/network_adapter.cpp",
+    "c_wrapper/source/url_policy.cpp",
   ]
   cflags_cc = [ "-O2" ]
 

@@ -13,12 +13,15 @@
 
 use std::error::Error;
 
-use ylong_http_client::async_impl::Client;
-use ylong_http_client::{Certificate, Proxy, PubKeyPins, Redirect, Timeout, TlsVersion};
+use ylong_http_client::async_impl::{Client, Interceptor, Request};
+use ylong_http_client::{
+    Certificate, HttpClientError, Proxy, PubKeyPins, Redirect, Timeout, TlsVersion,
+};
 
 use crate::manage::task_manager::SystemConfig;
-use crate::task::config::TaskConfig;
+use crate::task::config::{Action, TaskConfig};
 use crate::task::files::convert_path;
+use crate::utils::url_policy::check_url_domain;
 
 const CONNECT_TIMEOUT: u64 = 60;
 const SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
@@ -63,6 +66,17 @@ pub(crate) fn build_client(
     // Set task certificate pinned_key.
     if let Some(pinned_key) = build_task_certificate_pins(config)? {
         client = client.add_public_key_pins(pinned_key);
+    }
+
+    const ATOMIC_SERVICE: u32 = 1;
+    if config.bundle_type == ATOMIC_SERVICE {
+        let domain_type = action_to_domian_type(config.common_data.action);
+        let interceptors = DomainInterceptor::new(config.bundle.clone(), domain_type);
+        client = client.interceptor(interceptors);
+        info!(
+            "add interceptor domain check, task_id is {}",
+            config.common_data.task_id
+        );
     }
 
     // Build client.
@@ -140,4 +154,48 @@ fn build_task_certs(config: &TaskConfig) -> Result<Vec<Certificate>, Box<dyn Err
         certs.push(cert);
     }
     Ok(certs)
+}
+
+fn action_to_domian_type(action: Action) -> String {
+    match action {
+        Action::Download => "download".to_string(),
+        Action::Upload => "upload".to_string(),
+        Action::Any => "".to_string(),
+    }
+}
+
+struct DomainInterceptor {
+    app_id: String,
+    domain_type: String,
+}
+
+impl DomainInterceptor {
+    fn new(app_id: String, domain_type: String) -> Self {
+        DomainInterceptor {
+            app_id,
+            domain_type,
+        }
+    }
+}
+
+impl Interceptor for DomainInterceptor {
+    /// Intercepts the Request that is eventually transmitted to the peer end.
+    fn intercept_request(&self, request: &Request) -> Result<(), HttpClientError> {
+        let url = &request.uri().to_string();
+        match check_url_domain(&self.app_id, &self.domain_type, url).unwrap_or(true) {
+            true => Ok(()),
+            false => Err(HttpClientError::other("Intercept request by domain check")),
+        }
+    }
+
+    /// Intercepts the redirect request.
+    fn intercept_redirect_request(&self, request: &Request) -> Result<(), HttpClientError> {
+        let url = &request.uri().to_string();
+        match check_url_domain(&self.app_id, &self.domain_type, url).unwrap_or(true) {
+            true => Ok(()),
+            false => Err(HttpClientError::other(
+                "Intercept redirect request by domain check",
+            )),
+        }
+    }
 }

@@ -101,12 +101,14 @@ ExceptionError JsInitialize::InitParam(
         err.errInfo = "Get context fail";
         return err;
     }
-
-    if (context->GetApplicationInfo() == nullptr) {
+    auto applicationInfo = context->GetApplicationInfo();
+    if (applicationInfo == nullptr) {
         err.code = E_OTHER;
         err.errInfo = "ApplicationInfo is null";
         return err;
     }
+    config.bundleType = static_cast<u_int32_t>(applicationInfo->bundleType);
+    REQUEST_HILOGD("config.bundleType is %{public}d", config.bundleType);
     if (!ParseConfig(env, argv[parametersPosition], config, err.errInfo)) {
         err.code = E_PARAMETER_CHECK;
         return err;
@@ -617,7 +619,8 @@ std::string GetHostnameFromURL(const std::string &url)
     if (notSlash != std::string::npos) {
         posStart = notSlash;
     }
-    size_t posEnd = std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
+    size_t posEnd =
+        std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
     if (posEnd != std::string::npos) {
         return tempUrl.substr(posStart, posEnd - posStart);
     }

@@ -154,6 +154,7 @@ void ParcelHelper::UnMarshalConfig(MessageParcel &data, Config &config)
 {
     config.action = static_cast<Action>(data.ReadUint32());
     config.mode = static_cast<Mode>(data.ReadUint32());
+    config.bundleType = data.ReadUint32();
     config.overwrite = data.ReadBool();
     config.network = static_cast<Network>(data.ReadUint32());
     config.metered = data.ReadBool();
