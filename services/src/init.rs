@@ -16,8 +16,7 @@ use hisysevent::{build_number_param, write, EventType};
 use samgr::definition::DOWNLOAD_SERVICE_ID;
 use system_ability_fwk::ability::{Ability, Handler};
 
-use crate::service::RequestServiceStub;
-use crate::{start, stop};
+use crate::service::{ability, RequestServiceStub};
 
 /// TEST_SERVICE_ID SAID
 
@@ -40,20 +39,18 @@ struct RequestAbility;
 impl Ability for RequestAbility {
     /// Callback to deal safwk onstart for this system_ability
     fn on_start(&self, handler: Handler) {
-        info!("on_start");
-
+        info!("ability init");
+        ability::RequestAbility::init();
+        info!("ability init succeed");
         if !handler.publish(RequestServiceStub) {
             service_start_fault();
         }
-        start();
-        info!("on_start succeed");
+        info!("ability publish succeed");
     }
 
     /// Callback to deal safwk onstop for this system_ability
     fn on_stop(&self) {
-        info!("on_stop");
-        stop();
-        info!("on_stop succeed");
+        ability::RequestAbility::stop();
     }
 }
 
