@@ -1036,6 +1036,7 @@ void JsTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls
         for (auto &file : context->task->config_.files) {
             RemovePathMap(file.uri);
         }
+        context->task->isGetPermission = false;
     }
     if (isRmCertsAcls) {
         RemoveDirsPermission(context->task->config_.certsPath);
