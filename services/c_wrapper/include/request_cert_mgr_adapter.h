@@ -16,35 +16,38 @@
 #ifndef REQUEST_CERT_MGR_ADAPTER
 #define REQUEST_CERT_MGR_ADAPTER
 
-#include "cert_manager_api.h"
-#include "cm_type.h"
-#include <cstdint>
 #include <securec.h>
 #include <stdint.h>
+
+#include <cstdint>
 #include <vector>
 
+#include "cert_manager_api.h"
+#include "cm_type.h"
+
+
 struct CRequestCert {
-  uint32_t size;
-  uint8_t *data;
+    uint32_t size;
+    uint8_t *data;
 };
 
 struct CRequestCerts {
-  struct CRequestCert **certDataList;
-  uint32_t len;
+    struct CRequestCert **certDataList;
+    uint32_t len;
 };
 
 class RequestCertManager {
 public:
-  static RequestCertManager &GetInstance();
-  void FreeCertDataList(struct CRequestCerts *certs);
-  struct CRequestCerts *GetUserCertsData();
+    static RequestCertManager &GetInstance();
+    void FreeCertDataList(struct CRequestCerts *certs);
+    struct CRequestCerts *GetUserCertsData();
 
 private:
-  int32_t InitCertList(struct CertList **certList);
-  int32_t InitCertInfo(struct CertInfo *certInfo);
-  void FreeCertList(CertList *certList);
-  void FreeCertData(struct CRequestCert *cert);
-  void FreeCertInfo(struct CertInfo *certInfo);
+    int32_t InitCertList(struct CertList **certList);
+    int32_t InitCertInfo(struct CertInfo *certInfo);
+    void FreeCertList(CertList *certList);
+    void FreeCertData(struct CRequestCert *cert);
+    void FreeCertInfo(struct CertInfo *certInfo);
 };
 
 #ifdef __cplusplus
