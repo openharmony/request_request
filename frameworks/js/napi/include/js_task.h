@@ -54,6 +54,7 @@ public:
     static void RemoveDirsPermission(const std::vector<std::string> &dirs);
 
     Config config_;
+    bool isGetPermission;
     static bool register_;
     static std::mutex taskMutex_;
     static std::map<std::string, JsTask *> taskMap_;
