@@ -211,17 +211,14 @@ impl TaskManager {
     pub(crate) fn query_all_task_config(&self) -> Option<HashMap<u32, TaskConfig>> {
         debug!("query all task config in database");
         let mut task_config_map: HashMap<u32, TaskConfig> = HashMap::new();
-        let c_config_list_len = unsafe { QueryTaskConfigLen() };
-        if c_config_list_len <= 0 {
-            debug!("no task config in database");
-            return None;
-        }
-        let c_task_config_list = unsafe { QueryAllTaskConfig() };
-        if c_task_config_list.is_null() {
+        let mut len = 0u32;
+        let c_task_config_list = unsafe { QueryAllTaskConfig(&mut len as *mut u32) };
+        debug!("query all task config in database, len: {}", len);
+        if c_task_config_list.is_null() || len == 0 {
             return None;
         }
         let c_task_config_ptrs =
-            unsafe { std::slice::from_raw_parts(c_task_config_list, c_config_list_len as usize) };
+            unsafe { std::slice::from_raw_parts(c_task_config_list, len as usize) };
         for c_task_config in c_task_config_ptrs.iter() {
             let task_config = TaskConfig::from_c_struct(unsafe { &**c_task_config });
             task_config_map.insert(task_config.common_data.task_id, task_config);
@@ -270,8 +267,7 @@ impl TaskManager {
 extern "C" {
     pub(crate) fn HasTaskConfigRecord(task_id: u32) -> bool;
     pub(crate) fn DeleteCTaskConfigs(ptr: *const *const CTaskConfig);
-    pub(crate) fn QueryAllTaskConfig() -> *const *const CTaskConfig;
-    pub(crate) fn QueryTaskConfigLen() -> i32;
+    pub(crate) fn QueryAllTaskConfig(len: *mut u32) -> *const *const CTaskConfig;
     pub(crate) fn QuerySingleTaskConfig(taskId: u32) -> *const CTaskConfig;
     pub(crate) fn DeleteCTaskConfig(ptr: *const CTaskConfig);
     pub(crate) fn RequestDBRemoveRecordsFromTime(time: u64);
