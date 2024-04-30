@@ -34,24 +34,17 @@ use crate::service::client::{ClientManager, ClientManagerEntry};
 use crate::service::listener::{AppStateListener, NetworkChangeListener};
 use crate::service::runcount::{RunCountManager, RunCountManagerEntry};
 
-static mut REQUEST_ABILITY: MaybeUninit<RequestAbility> = MaybeUninit::uninit();
-
 pub(crate) static mut PANIC_INFO: Option<String> = None;
 
-pub(crate) struct RequestAbility {
-    runcount: RunCountManagerEntry,
-    manager: TaskManagerEntry,
-    app: AppStateListener,
-    network: NetworkChangeListener,
-    client_manager: ClientManagerEntry,
-}
+static mut RUN_COUNT: MaybeUninit<RunCountManagerEntry> = MaybeUninit::uninit();
+static mut TASK_MANAGER: MaybeUninit<TaskManagerEntry> = MaybeUninit::uninit();
+static mut APP: MaybeUninit<AppStateListener> = MaybeUninit::uninit();
+static mut NETWORK: MaybeUninit<NetworkChangeListener> = MaybeUninit::uninit();
+static mut CLIENT_MANAGER: MaybeUninit<ClientManagerEntry> = MaybeUninit::uninit();
+
+pub(crate) struct RequestAbility;
 
 impl RequestAbility {
-    // `init` must have been called before calling `get_instance`.
-    pub(crate) fn get_instance() -> &'static Self {
-        unsafe { &*REQUEST_ABILITY.as_ptr() }
-    }
-
     pub(crate) fn init() {
         std::panic::set_hook(Box::new(|info| unsafe {
             let trace = std::backtrace::Backtrace::force_capture();
@@ -67,38 +60,27 @@ impl RequestAbility {
             .unwrap();
 
         unsafe {
-            REQUEST_ABILITY.write(Self {
-                // first init RunCountManager to record Running task count
-                runcount: RunCountManager::init(),
-                manager: TaskManager::init(),
-                app: AppStateListener::init(),
-                network: NetworkChangeListener::init(),
-                client_manager: ClientManager::init(),
-            });
+            // first init RunCountManager to record Running task count
+
+            RUN_COUNT.write(RunCountManager::init());
+            TASK_MANAGER.write(TaskManager::init());
+            APP.write(AppStateListener::init());
+            NETWORK.write(NetworkChangeListener::init());
+            CLIENT_MANAGER.write(ClientManager::init());
             RequestInitServiceHandler();
         };
     }
 
-    pub(crate) fn stop() {
-        unsafe {
-            let ability = REQUEST_ABILITY.assume_init_ref();
-            // After entries shutdown, the `rx`s of these channels will be dropped.
-            ability.app.shutdown();
-            ability.network.shutdown();
-            ability.runcount.shutdown();
-        };
-    }
-
     pub(crate) fn runcount_manager() -> RunCountManagerEntry {
-        Self::get_instance().runcount.clone()
+        unsafe { RUN_COUNT.assume_init_ref().clone() }
     }
 
     pub(crate) fn task_manager() -> TaskManagerEntry {
-        Self::get_instance().manager.clone()
+        unsafe { TASK_MANAGER.assume_init_ref().clone() }
     }
 
     pub(crate) fn client_manager() -> ClientManagerEntry {
-        Self::get_instance().client_manager.clone()
+        unsafe { CLIENT_MANAGER.assume_init_ref().clone() }
     }
 }
 

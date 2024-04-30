@@ -26,15 +26,13 @@ impl AppStateListener {
         info!("AppStateListener is inited");
         Self
     }
-
-    pub(crate) fn shutdown(&self) {
-        // Considers remove the callback.
-        info!("AppStateListener is stopped");
-    }
 }
 
 extern "C" fn app_state_change_callback(uid: i32, state: i32, pid: i32) {
-    info!("Receives app state change callback, uid is {}, pid is {}, state is {}", uid, pid, state);
+    info!(
+        "Receives app state change callback, uid is {}, pid is {}, state is {}",
+        uid, pid, state
+    );
     let state = match state {
         2 => ApplicationState::Foreground,
         4 => ApplicationState::Background,

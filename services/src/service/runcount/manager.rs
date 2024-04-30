@@ -31,11 +31,6 @@ impl RunCountManagerEntry {
         Self { tx }
     }
 
-    pub(crate) fn shutdown(&self) {
-        // Ignore the result.
-        self.send_event(RunCountEvent::shutdown());
-    }
-
     pub(crate) fn send_event(&self, event: RunCountEvent) -> bool {
         if self.tx.send(event).is_err() {
             unsafe {
@@ -81,15 +76,9 @@ impl RunCountManager {
             };
 
             match recv {
-                RunCountEvent::SubRunCount(subkey, obj, tx) => {
-                    self.handle_sub_runcount(subkey, obj, tx)
-                }
-                RunCountEvent::UnsubRunCount(subkey, tx) => self.handle_unsub_runcount(subkey, tx),
-                RunCountEvent::ChangeRunCount(change) => self.handle_change_runcount(change),
-                RunCountEvent::Shutdown => {
-                    info!("RunCountManager shuts down");
-                    return;
-                }
+                RunCountEvent::Sub(subkey, obj, tx) => self.handle_sub_runcount(subkey, obj, tx),
+                RunCountEvent::Unsub(subkey, tx) => self.handle_unsub_runcount(subkey, tx),
+                RunCountEvent::Change(change) => self.handle_change_runcount(change),
             }
 
             debug!("RunCountManager handle message done");

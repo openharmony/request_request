@@ -24,29 +24,24 @@ use crate::service::RequestNotifyInterfaceCode;
 use crate::utils::Recv;
 
 pub(crate) enum RunCountEvent {
-    SubRunCount(SubKey, RemoteObj, Sender<ErrorCode>),
-    UnsubRunCount(SubKey, Sender<ErrorCode>),
-    ChangeRunCount(i64),
-    Shutdown,
+    Sub(SubKey, RemoteObj, Sender<ErrorCode>),
+    Unsub(SubKey, Sender<ErrorCode>),
+    Change(i64),
 }
 
 impl RunCountEvent {
     pub(crate) fn sub_runcount(pid: u64, obj: RemoteObj) -> (Self, Recv<ErrorCode>) {
         let (tx, rx) = channel::<ErrorCode>();
-        (Self::SubRunCount(SubKey::new(pid), obj, tx), Recv::new(rx))
+        (Self::Sub(SubKey::new(pid), obj, tx), Recv::new(rx))
     }
 
     pub(crate) fn unsub_runcount(pid: u64) -> (Self, Recv<ErrorCode>) {
         let (tx, rx) = channel::<ErrorCode>();
-        (Self::UnsubRunCount(SubKey::new(pid), tx), Recv::new(rx))
+        (Self::Unsub(SubKey::new(pid), tx), Recv::new(rx))
     }
 
     pub(crate) fn change_runcount(change: i64) -> Self {
-        Self::ChangeRunCount(change)
-    }
-
-    pub(crate) fn shutdown() -> Self {
-        Self::Shutdown
+        Self::Change(change)
     }
 }
 
