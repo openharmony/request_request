@@ -47,11 +47,6 @@ impl Ability for RequestAbility {
         }
         info!("ability publish succeed");
     }
-
-    /// Callback to deal safwk onstop for this system_ability
-    fn on_stop(&self) {
-        ability::RequestAbility::stop();
-    }
 }
 
 #[used]

@@ -25,11 +25,6 @@ impl NetworkChangeListener {
         info!("NetworkChangeListener is inited");
         Self
     }
-
-    pub(crate) fn shutdown(&self) {
-        // Considers remove the callback.
-        info!("NetworkChangeListener is stopped");
-    }
 }
 
 extern "C" fn network_change_callback() {
