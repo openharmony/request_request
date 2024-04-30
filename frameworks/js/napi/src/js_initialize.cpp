@@ -453,7 +453,7 @@ bool JsInitialize::ParseSaveas(napi_env env, napi_value jsConfig, Config &config
         return InterceptData("/", config.url, config.saveas);
     }
     temp = std::string(temp, 0, temp.find_last_not_of(' ') + 1);
-    if (temp.size() <= 0 || temp[temp.size() - 1] == '/') {
+    if (temp.size() == 0 || temp[temp.size() - 1] == '/') {
         return false;
     }
     config.saveas = temp;
