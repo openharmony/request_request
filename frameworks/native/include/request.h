@@ -36,6 +36,7 @@ public:
     bool HasListener();
     void OnResponseReceive(const std::shared_ptr<Response> &response);
     void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData);
+    bool NeedNotify(const std::shared_ptr<NotifyData> &notifyData);
 
 private:
     const std::string taskId_;
@@ -43,6 +44,7 @@ private:
     std::shared_ptr<IResponseListener> responseListener_;
     std::map<SubscribeType, std::shared_ptr<INotifyDataListener>> notifyDataListenerMap_;
     std::map<SubscribeType, std::shared_ptr<NotifyData>> unusedNotifyData_;
+    bool needRemove_ = true;
 };
 
 } // namespace OHOS::Request

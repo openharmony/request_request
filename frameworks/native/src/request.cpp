@@ -42,6 +42,20 @@ void Request::RemoveListener(const SubscribeType &type, const std::shared_ptr<IR
     }
 }
 
+// for api9, remove do not notify after complete/fail
+bool Request::NeedNotify(const std::shared_ptr<NotifyData> &notifyData)
+{
+    if (notifyData->type == SubscribeType::REMOVE && notifyData->version != Version::API10
+        && this->needRemove_ == false) {
+        return false;
+    }
+    if ((notifyData->type == SubscribeType::COMPLETED || notifyData->type == SubscribeType::FAILED)
+        && notifyData->version != Version::API10) {
+        this->needRemove_ = false;
+    }
+    return true;
+}
+
 void Request::AddListener(const SubscribeType &type, const std::shared_ptr<INotifyDataListener> &listener)
 {
     std::lock_guard<std::mutex> lock(listenerMutex_);
@@ -49,7 +63,9 @@ void Request::AddListener(const SubscribeType &type, const std::shared_ptr<INoti
         notifyDataListenerMap_[type] = listener;
     }
     if (unusedNotifyData_.find(type) != unusedNotifyData_.end()) {
-        listener->OnNotifyDataReceive(unusedNotifyData_[type]);
+        if (NeedNotify(unusedNotifyData_[type])) {
+            listener->OnNotifyDataReceive(unusedNotifyData_[type]);
+        }
         unusedNotifyData_.erase(type);
     }
 }
@@ -84,7 +100,9 @@ void Request::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData)
     std::lock_guard<std::mutex> lock(listenerMutex_);
     auto listener = notifyDataListenerMap_.find(notifyData->type);
     if (listener != notifyDataListenerMap_.end()) {
-        listener->second->OnNotifyDataReceive(notifyData);
+        if (NeedNotify(notifyData)) {
+            listener->second->OnNotifyDataReceive(notifyData);
+        }
     } else if (notifyData->version != Version::API10) {
         unusedNotifyData_[notifyData->type] = notifyData;
     }
