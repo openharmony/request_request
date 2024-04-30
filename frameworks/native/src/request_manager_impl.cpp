@@ -142,6 +142,10 @@ int32_t RequestManagerImpl::Start(const std::string &tid)
         proxy = GetRequestServiceProxy();
     }
 
+    if (proxy == nullptr) {
+        return E_SERVICE_ERROR;
+    }
+
     return proxy->Start(tid);
 }
 

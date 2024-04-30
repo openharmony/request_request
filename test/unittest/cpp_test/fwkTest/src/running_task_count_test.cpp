@@ -41,6 +41,7 @@ public:
 
 void FwkTestOberver::OnRunningTaskCountUpdate(int count)
 {
+    EXPECT_EQ(FwkRunningTaskCountManager::GetInstance()->GetCount(), count);
     REQUEST_HILOGI("[RunningTaskCountTest] OnRunningTaskCountUpdate count = %{public}d", count);
 }
 
@@ -87,6 +88,7 @@ HWTEST_F(RunningTaskCountTest, SubscribeRunningTaskCountTest_001, TestSize.Level
         std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FwkTestOberver>();
         int32_t ret = SubscribeRunningTaskCount(ob);
         EXPECT_EQ(ret, E_OK);
+        UnsubscribeRunningTaskCount(ob);
     }
     REQUEST_HILOGI("[RunningTaskCountTest] SubscribeRunningTaskCountTest_001 end");
 }
@@ -101,12 +103,16 @@ HWTEST_F(RunningTaskCountTest, SubscribeRunningTaskCountTest_002, TestSize.Level
 {
     GTEST_LOG_(INFO) << "RunningTaskCountTest, SubscribeRunningTaskCountTest_002, TestSize.Level1";
     REQUEST_HILOGI("[RunningTaskCountTest] SubscribeRunningTaskCountTest_002 begin");
-    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
-    if (proxy != nullptr) {
-        std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FwkTestOberver>();
-        int32_t ret = SubscribeRunningTaskCount(ob);
-        EXPECT_EQ(ret, E_OK);
-    }
+
+    std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FwkTestOberver>();
+    int32_t ret = SubscribeRunningTaskCount(ob1);
+    EXPECT_EQ(ret, E_OK);
+    std::shared_ptr<IRunningTaskObserver> ob2 = std::make_shared<FwkTestOberver>();
+    FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob2);
+    ret = SubscribeRunningTaskCount(ob2);
+    EXPECT_EQ(ret, E_OK);
+    FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob1);
+    FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob2);
     REQUEST_HILOGI("[RunningTaskCountTest] SubscribeRunningTaskCountTest_002 end");
 }
 
@@ -125,5 +131,51 @@ HWTEST_F(RunningTaskCountTest, UnubscribeRunningTaskCountTest_001, TestSize.Leve
 
     std::shared_ptr<IRunningTaskObserver> ob2 = std::make_shared<FwkTestOberver>();
     UnsubscribeRunningTaskCount(ob2);
+    UnsubscribeRunningTaskCount(ob1);
     REQUEST_HILOGI("[RunningTaskCountTest] UnubscribeRunningTaskCountTest_001 end");
+}
+
+/**
+ * @tc.name: GetAndSetCount001
+ * @tc.desc: Test GetAndSetCount001 interface base function - GetCount/SetCount
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RunningTaskCountTest, GetAndSetCount001, TestSize.Level1)
+{
+    int old = FwkRunningTaskCountManager::GetInstance()->GetCount();
+    int except = 10; // 10 is except count num
+    FwkRunningTaskCountManager::GetInstance()->SetCount(except);
+    int count = FwkRunningTaskCountManager::GetInstance()->GetCount();
+    EXPECT_EQ(count, except);
+    FwkRunningTaskCountManager::GetInstance()->SetCount(old);
+    count = FwkRunningTaskCountManager::GetInstance()->GetCount();
+    EXPECT_EQ(count, old);
+}
+
+/**
+ * @tc.name: UpdateRunningTaskCountTest001
+ * @tc.desc: Test UpdateRunningTaskCountTest001 interface base function - UpdateRunningTaskCount
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RunningTaskCountTest, UpdateRunningTaskCountTest001, TestSize.Level1)
+{
+    std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FwkTestOberver>();
+    FwkIRunningTaskObserver runningOb = FwkIRunningTaskObserver(ob);
+    runningOb.UpdateRunningTaskCount();
+}
+
+/**
+ * @tc.name: NotifyAllObserversTest001
+ * @tc.desc: Test NotifyAllObserversTest001 interface base function - NotifyAllObservers
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RunningTaskCountTest, NotifyAllObserversTest001, TestSize.Level1)
+{
+    std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FwkTestOberver>();
+    FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob1);
+    FwkRunningTaskCountManager::GetInstance()->NotifyAllObservers();
+    FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob1);
 }

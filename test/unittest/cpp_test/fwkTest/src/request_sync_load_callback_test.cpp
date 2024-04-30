@@ -73,6 +73,12 @@ void RequestSyncLoadCallbackTest::TearDown(void)
 
 class RSLCTRemoteObjectImpl : public OHOS::IRemoteObject {};
 
+/**
+ * @tc.name: OnLoadSystemAbilityTest001
+ * @tc.desc: Test OnLoadSystemAbilityTest001 interface base function - OnLoadSystemAbilityFail/OnLoadSystemAbilitySuccess
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
 HWTEST_F(RequestSyncLoadCallbackTest, OnLoadSystemAbility001, TestSize.Level1)
 {
     OHOS::sptr<RSLCTRemoteObjectImpl> remote;
