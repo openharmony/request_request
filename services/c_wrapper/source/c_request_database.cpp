@@ -259,6 +259,15 @@ int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store)
     return ret;
 }
 
+// This function is used to adapt beta version, remove it later.
+void RequestDBUpgradeFrom50(OHOS::NativeRdb::RdbStore &store)
+{
+    // Ignores these error if these columns already exists.
+    int ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_PROXY);
+    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CERTIFICATE_PINS);
+    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_Bundle_Type);
+}
+
 int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
 {
     REQUEST_HILOGD("Begins upgrading database");
@@ -289,6 +298,7 @@ int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
             [[fallthrough]];
         case API12_5_0_RELEASE: {
             REQUEST_HILOGI("Version is 5.0-release, no need to update database.");
+            RequestDBUpgradeFrom50(store);
             break;
         }
         default: {
@@ -1063,7 +1073,7 @@ bool HasTaskConfigRecord(uint32_t taskId)
     return true;
 }
 
-CTaskConfig **QueryAllTaskConfig()
+CTaskConfig **QueryAllTaskConfig(uint32_t &len)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
@@ -1076,25 +1086,9 @@ CTaskConfig **QueryAllTaskConfig()
     if (QueryRequestTaskConfig(rdbPredicates, taskConfigs) == OHOS::Request::QUERY_ERR) {
         return nullptr;
     }
+
+    len = taskConfigs.size();
     return BuildCTaskConfigs(taskConfigs);
-}
-
-int QueryTaskConfigLen()
-{
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
-        ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::PAUSED))
-        ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::INITIALIZED));
-
-    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "task_id", "uid" });
-    int len = 0;
-    if (resultSet == nullptr || resultSet->GetRowCount(len) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("Get TaskConfigs length failed");
-        return OHOS::Request::QUERY_ERR;
-    }
-    return len;
 }
 
 int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, std::vector<TaskConfig> &taskConfigs)
