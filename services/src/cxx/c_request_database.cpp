@@ -598,29 +598,29 @@ inline int GetInt(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, int lin
 
 void FillCommonTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskInfo &info)
 {
-    info.commonData.taskId = static_cast<uint32_t>(GetLong(set, 0));  // Line 0 is 'task_id'
-    info.commonData.uid = static_cast<uint64_t>(GetLong(set, 1));     // Line 1 is 'uid'
-    info.commonData.action = static_cast<uint8_t>(GetInt(set, 2));    // Line 2 is 'action'
-    info.commonData.mode = static_cast<uint8_t>(GetInt(set, 3));      // Line 3 is 'mode'
-    info.commonData.ctime = static_cast<uint64_t>(GetLong(set, 4));   // Line 4 is 'ctime'
-    info.commonData.mtime = static_cast<uint64_t>(GetLong(set, 5));   // Line 5 is 'mtime'
-    info.commonData.reason = static_cast<uint8_t>(GetInt(set, 6));    // Line 6 is 'reason'
-    info.commonData.gauge = static_cast<bool>(GetInt(set, 7));        // Line 7 is 'gauge'
-    info.commonData.retry = static_cast<bool>(GetInt(set, 8));        // Line 8 is 'retry'
-    info.commonData.tries = static_cast<uint64_t>(GetLong(set, 9));   // Line 9 is 'tries'
-    info.commonData.version = static_cast<uint8_t>(GetLong(set, 10)); // Line 10 is 'version'
+    info.commonData.taskId = static_cast<uint32_t>(GetLong(set, 0));    // Line 0 is 'task_id'
+    info.commonData.uid = static_cast<uint64_t>(GetLong(set, 1));       // Line 1 is 'uid'
+    info.commonData.action = static_cast<uint8_t>(GetInt(set, 2));      // Line 2 is 'action'
+    info.commonData.mode = static_cast<uint8_t>(GetInt(set, 3));        // Line 3 is 'mode'
+    info.commonData.ctime = static_cast<uint64_t>(GetLong(set, 4));     // Line 4 is 'ctime'
+    info.commonData.mtime = static_cast<uint64_t>(GetLong(set, 5));     // Line 5 is 'mtime'
+    info.commonData.reason = static_cast<uint8_t>(GetInt(set, 6));      // Line 6 is 'reason'
+    info.commonData.gauge = static_cast<bool>(GetInt(set, 7));          // Line 7 is 'gauge'
+    info.commonData.retry = static_cast<bool>(GetInt(set, 8));          // Line 8 is 'retry'
+    info.commonData.tries = static_cast<uint64_t>(GetLong(set, 9));     // Line 9 is 'tries'
+    info.commonData.version = static_cast<uint8_t>(GetLong(set, 10));   // Line 10 is 'version'
     info.commonData.priority = static_cast<uint32_t>(GetLong(set, 11)); // Line 11 is 'priority'
 }
 
 void FillOtherTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskInfo &info)
 {
-    set->GetString(12, info.bundle);             // Line 12 is 'bundle'
-    set->GetString(13, info.url);                // Line 13 is 'url'
-    set->GetString(14, info.data);               // Line 14 is 'data'
-    set->GetString(15, info.token);              // Line 15 is 'token'
-    set->GetString(16, info.title);              // Line 16 is 'title'
-    set->GetString(17, info.description);        // Line 17 is 'description'
-    set->GetString(18, info.mimeType);           // Line 18 is 'mime_type'
+    set->GetString(12, info.bundle);      // Line 12 is 'bundle'
+    set->GetString(13, info.url);         // Line 13 is 'url'
+    set->GetString(14, info.data);        // Line 14 is 'data'
+    set->GetString(15, info.token);       // Line 15 is 'token'
+    set->GetString(16, info.title);       // Line 16 is 'title'
+    set->GetString(17, info.description); // Line 17 is 'description'
+    set->GetString(18, info.mimeType);    // Line 18 is 'mime_type'
 
     info.progress.commonData.state = static_cast<uint8_t>(GetInt(set, 19));  // Line 19 here is 'state'
     info.progress.commonData.index = static_cast<uint8_t>(GetLong(set, 20)); // Line 20 here is 'idx'
@@ -874,10 +874,9 @@ bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state)
 int GetTaskInfoInner(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo)
 {
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates,
-         { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge",
-           "retry", "tries", "version", "priority", "bundle", "url", "data", "token",
-           "title", "description", "mime_type", "state", "idx", "total_processed", "sizes",
-           "processed", "extras", "form_items", "file_specs", "each_file_status" });
+        { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry", "tries", "version",
+            "priority", "bundle", "url", "data", "token", "title", "description", "mime_type", "state", "idx",
+            "total_processed", "sizes", "processed", "extras", "form_items", "file_specs", "each_file_status" });
     if (resultSet == nullptr || resultSet->GoToFirstRow() != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("result set is nullptr or go to first row failed");
         return OHOS::Request::QUERY_ERR;
@@ -1285,13 +1284,11 @@ void UpdateTaskStateOnNetworkChange(NetworkInfo info)
         satisfiedCellular.EqualTo("network", std::to_string(static_cast<uint8_t>(Network::WIFI)));
 
         if (!info.isMetered) {
-            satisfiedCellular.And()
-                ->EqualTo("metered", std::to_string(static_cast<uint8_t>(false)));
+            satisfiedCellular.And()->EqualTo("metered", std::to_string(static_cast<uint8_t>(false)));
         }
 
         if (!info.isRoaming) {
-            satisfiedCellular.And()
-                ->EqualTo("roaming", std::to_string(static_cast<uint8_t>(false)));
+            satisfiedCellular.And()->EqualTo("roaming", std::to_string(static_cast<uint8_t>(false)));
         }
 
         if (!OHOS::Request::RequestDataBase::GetInstance().Update(satisfied, satisfiedCellular)) {
@@ -1303,9 +1300,9 @@ void UpdateTaskStateOnNetworkChange(NetworkInfo info)
 
 void BuildTaskQosInfo(TaskQosInfo *info, std::shared_ptr<OHOS::NativeRdb::ResultSet> set)
 {
-    info->taskId = static_cast<uint32_t>(GetLong(set, 0));  // Line 0 is 'task_id'
-    info->action = static_cast<uint8_t>(GetInt(set, 1));      // Line 1 is 'action'
-    info->mode = static_cast<uint8_t>(GetInt(set, 2));      // Line 2 is 'mode'
+    info->taskId = static_cast<uint32_t>(GetLong(set, 0));   // Line 0 is 'task_id'
+    info->action = static_cast<uint8_t>(GetInt(set, 1));     // Line 1 is 'action'
+    info->mode = static_cast<uint8_t>(GetInt(set, 2));       // Line 2 is 'mode'
     info->state = static_cast<uint8_t>(GetInt(set, 3));      // Line 3 is 'state'
     info->priority = static_cast<uint32_t>(GetLong(set, 4)); // Line 4 is 'priority'
 }
@@ -1313,12 +1310,10 @@ void BuildTaskQosInfo(TaskQosInfo *info, std::shared_ptr<OHOS::NativeRdb::Result
 void GetTaskQosInfo(uint64_t uid, uint32_t taskId, TaskQosInfo **info)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.EqualTo("uid", std::to_string(uid))
-        ->And()
-        ->EqualTo("task_id", std::to_string(taskId));
+    rdbPredicates.EqualTo("uid", std::to_string(uid))->And()->EqualTo("task_id", std::to_string(taskId));
 
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(
-            rdbPredicates, { "task_id", "action", "mode", "state", "priority" });
+        rdbPredicates, { "task_id", "action", "mode", "state", "priority" });
     int rowCount = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("GetRunningTasksArray result set is nullptr or get row count failed");
@@ -1355,7 +1350,7 @@ void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len)
     *len = 0;
 
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(
-            rdbPredicates, { "task_id", "action", "mode", "state", "priority" });
+        rdbPredicates, { "task_id", "action", "mode", "state", "priority" });
     int rowCount = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("GetRunningTasksArray result set is nullptr or get row count failed");
@@ -1405,8 +1400,8 @@ void GetAppArray(AppInfo *apps, size_t *len)
         }
 
         std::string temp = "";
-        resultSet->GetString(1, temp);      // Line 1 is 'bundle'
-        apps[i].uid = static_cast<uint32_t>(GetLong(resultSet, 0));  // Line 0 is 'uid'
+        resultSet->GetString(1, temp);                              // Line 1 is 'bundle'
+        apps[i].uid = static_cast<uint32_t>(GetLong(resultSet, 0)); // Line 0 is 'uid'
         apps[i].bundle = WrapperCString(temp);
     }
 }
@@ -1437,7 +1432,7 @@ CStringWrapper GetAppBundle(uint64_t uid)
     }
 
     std::string temp = "";
-    resultSet->GetString(0, temp);      // Line 0 is 'bundle'
+    resultSet->GetString(0, temp); // Line 0 is 'bundle'
 
     res = WrapperCString(temp);
     return res;

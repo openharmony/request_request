@@ -22,9 +22,9 @@
 namespace OHOS::Request {
 
 class JSNotifyDataListener
-    : public INotifyDataListener,
-      public ListenerList,
-      public std::enable_shared_from_this<JSNotifyDataListener> {
+    : public INotifyDataListener
+    , public ListenerList
+    , public std::enable_shared_from_this<JSNotifyDataListener> {
 public:
     JSNotifyDataListener(napi_env env, const std::string &taskId, const SubscribeType &type)
         : ListenerList(env, taskId, type)
