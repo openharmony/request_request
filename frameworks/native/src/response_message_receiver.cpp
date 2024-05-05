@@ -381,7 +381,7 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
     int16_t headerSize = -1;
     MsgHeaderParcel(msgId, msgType, headerSize, leftBuf, leftLen);
     if (msgId != messageId_) {
-        REQUEST_HILOGE("Bad messageId");
+        REQUEST_HILOGE("Bad messageId, expect %{public}d = %{public}d", msgId, messageId_);
         return;
     }
     if (headerSize != static_cast<int16_t>(length)) {

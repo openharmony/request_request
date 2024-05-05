@@ -13,42 +13,31 @@
 
 use crate::manage::TaskManager;
 use crate::task::config::Action;
-use crate::task::ffi::{CTaskInfo, DeleteCTaskInfo};
 use crate::task::info::TaskInfo;
 
 impl TaskManager {
-    pub(crate) fn query(&self, task_id: u32, query_action: Action) -> Option<TaskInfo> {
+    pub(crate) fn query(&self, task_id: u32, action: Action) -> Option<TaskInfo> {
         debug!(
-            "TaskManager query, task_id:{}, query_action:{:?}",
-            task_id, query_action
+            "TaskManager Query, task_id: {}, query_action: {:?}",
+            task_id, action
         );
 
-        if let Some(task) = self.tasks.get(&task_id) {
-            if task.conf.common_data.action == query_action || query_action == Action::Any {
-                debug!("query task info by memory");
-                let mut task_info = task.show();
-                task_info.data = "".to_string();
-                task_info.url = "".to_string();
-                debug!("query task info is {:?}", task_info);
-                return Some(task_info);
+        let mut info = match self.database.get_task_info(task_id) {
+            Some(info) => info,
+            None => {
+                info!("TaskManger Query: no task found");
+                return None;
             }
-        }
+        };
 
-        debug!("query task info by database");
-        let c_task_info = unsafe { Query(task_id, query_action) };
-        if c_task_info.is_null() {
-            return None;
+        if info.action() == action || action == Action::Any {
+            info.data = "".to_string();
+            info.url = "".to_string();
+            debug!("TaskManager Query, query task info is {:?}", info);
+            Some(info)
+        } else {
+            info!("TaskManger Query: no task found");
+            None
         }
-        let c_task_info = unsafe { &*c_task_info };
-        let task_info = TaskInfo::from_c_struct(c_task_info);
-        debug!("query task info is {:?}", task_info);
-        unsafe { DeleteCTaskInfo(c_task_info) };
-        Some(task_info)
     }
-}
-
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
-extern "C" {
-    pub(crate) fn Query(taskId: u32, queryAction: Action) -> *const CTaskInfo;
 }

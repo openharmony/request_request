@@ -19,7 +19,7 @@ use ylong_runtime::sync::oneshot::Sender;
 
 use super::{RunCountEvent, SubClient, SubKey};
 use crate::error::ErrorCode;
-use crate::service::ability::PANIC_INFO;
+use crate::init::PANIC_INFO;
 
 #[derive(Clone)]
 pub(crate) struct RunCountManagerEntry {

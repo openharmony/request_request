@@ -13,7 +13,7 @@
 
 pub(crate) mod client;
 pub(crate) mod config;
-mod download;
+pub(crate) mod download;
 pub(crate) mod ffi;
 pub(crate) mod files;
 pub(crate) mod info;
@@ -22,4 +22,4 @@ mod operator;
 pub(crate) mod reason;
 pub(crate) mod request_task;
 pub(crate) mod tick;
-mod upload;
+pub(crate) mod upload;

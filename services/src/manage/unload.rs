@@ -19,7 +19,6 @@ use samgr::manage::SystemAbilityManager;
 use super::task_manager::GetTopBundleName;
 use super::TaskManager;
 use crate::error::ErrorCode;
-use crate::manage::monitor::IsOnline;
 use crate::task::config::{TaskConfig, Version};
 use crate::task::ffi::{CTaskConfig, ChangeRequestTaskState};
 use crate::task::info::{ApplicationState, State};
@@ -39,7 +38,6 @@ impl TaskManager {
     }
 
     pub(crate) fn unload_sa(&mut self) -> bool {
-        #[cfg(feature = "oh")]
         const REQUEST_SERVICE_ID: i32 = 3706;
 
         if !self.rx.is_empty() {
@@ -153,7 +151,7 @@ impl TaskManager {
             self.update_app_state(task.conf.common_data.uid, ApplicationState::Foreground);
         }
 
-        if unsafe { IsOnline() } {
+        if unsafe { NetworkManager::new().is_online() } {
             self.resume_waiting_task(task);
         }
     }
@@ -262,8 +260,7 @@ impl TaskManager {
     }
 }
 
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
+#[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     pub(crate) fn HasTaskConfigRecord(task_id: u32) -> bool;
     pub(crate) fn DeleteCTaskConfigs(ptr: *const *const CTaskConfig);

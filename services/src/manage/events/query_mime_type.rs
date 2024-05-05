@@ -11,41 +11,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::show::Show;
 use crate::manage::TaskManager;
-use crate::task::ffi::DeleteCTaskInfo;
-use crate::task::info::TaskInfo;
 
 impl TaskManager {
     pub(crate) fn query_mime_type(&self, uid: u64, task_id: u32) -> String {
         debug!(
-            "TaskManager query mime type, uid:{}, task_id:{}",
+            "TaskManager QueryMimeType, uid: {}, task_id: {}",
             uid, task_id
         );
 
-        let task = self.get_task(uid, task_id);
-        match task {
-            Some(value) => {
-                debug!("TaskManager query mime type by memory");
-                value.query_mime_type()
-            }
-            None => {
-                debug!("TaskManager query mime type: show mime type from database");
-                let c_task_info = unsafe { Show(task_id, uid) };
-                if c_task_info.is_null() {
-                    info!(
-                        "TaskManger query mime type: no task found in database, task_id: {}",
-                        task_id
-                    );
-                    return "".into();
+        match self.scheduler.get_task(task_id) {
+            Some(task) => {
+                if task.uid() == uid {
+                    task.mime_type()
+                } else {
+                    "".into()
                 }
-                let c_task_info = unsafe { &*c_task_info };
-                let task_info = TaskInfo::from_c_struct(c_task_info);
-                let mime_type = task_info.mime_type;
-                debug!("TaskManager query mime type: mime type is {:?}", mime_type);
-                unsafe { DeleteCTaskInfo(c_task_info) };
-                mime_type
             }
+            None => match self.database.get_task_info(task_id) {
+                Some(info) if info.uid() == uid => {
+                    let mime_type = info.mime_type();
+                    debug!("TaskManager QueryMimeType: mime_type is {:?}", mime_type);
+                    mime_type
+                }
+                _ => {
+                    info!("TaskManger QueryMimeType: no task found in database");
+                    "".into()
+                }
+            },
         }
     }
 }

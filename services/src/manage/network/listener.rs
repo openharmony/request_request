@@ -11,29 +11,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::manage::events::EventMessage;
-use crate::service::ability::RequestAbility;
+use std::mem::MaybeUninit;
 
-pub(crate) struct NetworkChangeListener;
+use crate::manage::events::TaskManagerEvent;
+use crate::manage::task_manager::TaskManagerTx;
+
+pub(crate) struct NetworkChangeListener {
+    task_manager: TaskManagerTx,
+}
+
+static mut NETWORK_CHANGE_LISTENER: MaybeUninit<NetworkChangeListener> = MaybeUninit::uninit();
 
 impl NetworkChangeListener {
-    pub(crate) fn init() -> Self {
+    pub(crate) fn init(task_manager: TaskManagerTx) {
         info!("NetworkChangeListener prepares to be inited");
+
         unsafe {
+            NETWORK_CHANGE_LISTENER.write(NetworkChangeListener { task_manager });
             RegisterNetworkCallback(network_change_callback);
         }
         info!("NetworkChangeListener is inited");
-        Self
     }
 }
 
 extern "C" fn network_change_callback() {
     info!("Receives network change callback");
-    RequestAbility::task_manager().send_event(EventMessage::network_change());
+    unsafe {
+        NETWORK_CHANGE_LISTENER
+            .assume_init_ref()
+            .task_manager
+            .send_event(TaskManagerEvent::network_change())
+    };
 }
 
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
+#[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     fn RegisterNetworkCallback(f: extern "C" fn());
 }

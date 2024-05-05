@@ -24,10 +24,7 @@ use super::reason::Reason;
 use super::tick::{Clock, WAITING_TO_TICK, WAITING_TO_WAKE};
 use crate::task::info::State;
 use crate::task::request_task::RequestTask;
-
-cfg_oh! {
-    use crate::trace::Trace;
-}
+use crate::trace::Trace;
 
 const SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
 
@@ -95,16 +92,14 @@ pub(crate) fn build_downloader(
 pub(crate) async fn download(task: Arc<RequestTask>) {
     download_inner(task.clone()).await;
 
-    #[cfg(feature = "oh")]
     use hisysevent::{build_number_param, build_str_param};
 
-    #[cfg(feature = "oh")]
     use crate::sys_event::SysEvent;
     // `unwrap` for propagating panics among threads.
-    #[cfg(feature = "oh")]
+
     let reason = *task.code.lock().unwrap().get(0).unwrap_or(&Reason::Default);
     // If `Reason` is not `Default`a records this sys event.
-    #[cfg(feature = "oh")]
+
     if reason != Reason::Default {
         SysEvent::task_fault()
             .param(build_str_param!(crate::sys_event::TASKS_TYPE, "DOWNLOAD"))
@@ -126,7 +121,7 @@ async fn download_inner(task: Arc<RequestTask>) {
     );
 
     // Ensures `_trace` can only be freed when this function exits.
-    #[cfg(feature = "oh")]
+
     let _trace = Trace::new("download file");
 
     let response = {
@@ -139,7 +134,7 @@ async fn download_inner(task: Arc<RequestTask>) {
         let download = task.progress.lock().unwrap().processed[0];
 
         // Ensures `_trace` can only be freed when this function exits.
-        #[cfg(feature = "oh")]
+
         let _trace = Trace::new(&format!(
             "download file name: {name} downloaded size: {download}"
         ));

@@ -38,6 +38,34 @@ pub(crate) struct TaskInfo {
     pub(crate) common_data: CommonTaskInfo,
 }
 
+impl TaskInfo {
+    pub(crate) fn uid(&self) -> u64 {
+        self.common_data.uid
+    }
+
+    pub(crate) fn mime_type(&self) -> String {
+        self.mime_type.clone()
+    }
+
+    pub(crate) fn action(&self) -> Action {
+        Action::from(self.common_data.action)
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn state(&self) -> State {
+        State::from(self.progress.common_data.state)
+    }
+
+    pub(crate) fn token(&self) -> String {
+        self.token.clone()
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn set_state(&mut self, state: State) {
+        self.progress.common_data.state = state as u8;
+    }
+}
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub(crate) struct CommonTaskInfo {
@@ -204,6 +232,16 @@ pub(crate) enum ApplicationState {
     Foreground = 2,
     Background = 4,
     Terminated = 5,
+}
+
+impl ApplicationState {
+    pub(crate) fn from_bundles(top: &str, target: &str) -> Self {
+        if top == target {
+            ApplicationState::Foreground
+        } else {
+            ApplicationState::Background
+        }
+    }
 }
 
 impl From<u8> for ApplicationState {

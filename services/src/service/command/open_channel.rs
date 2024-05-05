@@ -18,17 +18,15 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::service::ability::RequestAbility;
+use crate::service::RequestServiceStub;
 
-pub(crate) struct OpenChannel;
-
-impl OpenChannel {
-    pub(crate) fn execute(_data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+impl RequestServiceStub {
+    pub(crate) fn open_channel(&self, reply: &mut MsgParcel) -> IpcResult<()> {
         let pid = ipc::Skeleton::calling_pid();
         info!("Process Service open channel, pid: {}", pid);
         let uid = ipc::Skeleton::calling_uid();
         let token_id = ipc::Skeleton::calling_full_token_id();
-        match RequestAbility::client_manager().open_channel(pid, uid, token_id) {
+        match self.client_manager.open_channel(pid, uid, token_id) {
             Ok(fd) => {
                 info!("End Service open channel successfully, fd is {}", fd);
                 let file = unsafe { File::from_raw_fd(fd) };

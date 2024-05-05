@@ -95,6 +95,20 @@ struct CUpdateInfo {
     CEachFileStatus *eachFileStatusPtr;
     uint32_t eachFileStatusLen;
 };
+
+struct TaskQosInfo {
+    uint32_t taskId;
+    uint8_t action;
+    uint8_t mode;
+    uint8_t state;
+    uint32_t priority;
+};
+
+struct AppInfo {
+    uint64_t uid;
+    CStringWrapper bundle;
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -104,6 +118,7 @@ void DeleteCFileSpec(CFileSpec *ptr);
 void DeleteCStringPtr(CStringWrapper *ptr);
 void DeleteCEachFileStatus(CEachFileStatus *ptr);
 void DeleteCTaskInfo(CTaskInfo *ptr);
+void DeleteTaskQosInfo(TaskQosInfo *ptr);
 
 #ifdef __cplusplus
 }

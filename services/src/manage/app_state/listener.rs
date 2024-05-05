@@ -11,20 +11,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::manage::events::EventMessage;
-use crate::service::ability::RequestAbility;
+use std::mem::MaybeUninit;
+
+use super::AppStateManagerTx;
+use crate::service::client::ClientManagerEntry;
 use crate::task::info::ApplicationState;
 
-pub(crate) struct AppStateListener;
+pub(crate) struct AppStateListener {
+    client_manager: ClientManagerEntry,
+    app_state_manager: AppStateManagerTx,
+}
+
+static mut APP_STATE_LISTENER: MaybeUninit<AppStateListener> = MaybeUninit::uninit();
 
 impl AppStateListener {
-    pub(crate) fn init() -> Self {
+    pub(crate) fn init(client_manager: ClientManagerEntry, app_state_manager: AppStateManagerTx) {
         info!("AppStateListener prepares to be inited");
         unsafe {
+            APP_STATE_LISTENER.write(AppStateListener {
+                client_manager,
+                app_state_manager,
+            });
             RegisterAPPStateCallback(app_state_change_callback);
         }
+
         info!("AppStateListener is inited");
-        Self
     }
 }
 
@@ -37,17 +48,26 @@ extern "C" fn app_state_change_callback(uid: i32, state: i32, pid: i32) {
         2 => ApplicationState::Foreground,
         4 => ApplicationState::Background,
         5 => {
-            RequestAbility::client_manager().notify_process_terminate(pid as u64);
+            unsafe {
+                APP_STATE_LISTENER
+                    .assume_init_ref()
+                    .client_manager
+                    .notify_process_terminate(pid as u64)
+            };
             ApplicationState::Terminated
         }
         _ => return,
     };
 
-    RequestAbility::task_manager().send_event(EventMessage::app_state_change(uid as u64, state));
+    unsafe {
+        APP_STATE_LISTENER
+            .assume_init_ref()
+            .app_state_manager
+            .change_app_state(uid as u64, state)
+    };
 }
 
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
+#[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     fn RegisterAPPStateCallback(f: extern "C" fn(i32, i32, i32));
 }

@@ -67,8 +67,8 @@
           "//base/request/request/frameworks/native:request_native"
         ],
         "service_group": [
-          "//base/request/request/services/etc/init:downloadservice.cfg",
-          "//base/request/request/services/sa_profile:download_sa_profiles",
+          "//base/request/request/etc/init:downloadservice.cfg",
+          "//base/request/request/etc/sa_profile:download_sa_profiles",
           "//base/request/request/services:download_server"
         ]
       },

@@ -11,28 +11,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::service::ability::RequestAbility;
+use crate::service::client::ClientManagerEntry;
 use crate::task::notify::{NotifyData, SubscribeType};
 
 pub(crate) struct Notifier;
 
 impl Notifier {
-    pub(crate) fn service_front_notify(
-        subscribe_type: SubscribeType,
-        notify_data: NotifyData
-    ) {
-        let total_processed = notify_data.progress.common_data.total_processed;
-        let file_total_size: i64 = notify_data.progress.sizes.iter().sum();
-        if total_processed == 0 && file_total_size < 0 && subscribe_type.eq(&SubscribeType::Progress) {
-            return;
-        }
-
-        RequestAbility::client_manager().send_notify_data(subscribe_type, notify_data)
+    pub(crate) fn complete(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
+        client_manager.send_notify_data(SubscribeType::Complete, notify_data)
     }
 
-    pub(crate) fn remove_notify(data: NotifyData) {
-        let tid = data.task_id;
-        RequestAbility::client_manager().send_notify_data(SubscribeType::Remove, data);
-        RequestAbility::client_manager().notify_task_finished(tid);
+    pub(crate) fn fail(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
+        client_manager.send_notify_data(SubscribeType::Fail, notify_data)
+    }
+
+    pub(crate) fn pause(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
+        client_manager.send_notify_data(SubscribeType::Pause, notify_data)
+    }
+
+    pub(crate) fn resume(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
+        client_manager.send_notify_data(SubscribeType::Resume, notify_data)
+    }
+
+    pub(crate) fn header_receive(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
+        client_manager.send_notify_data(SubscribeType::HeaderReceive, notify_data)
+    }
+
+    pub(crate) fn progress(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
+        let total_processed = notify_data.progress.common_data.total_processed;
+        let file_total_size: i64 = notify_data.progress.sizes.iter().sum();
+        if total_processed == 0 && file_total_size < 0 {
+            return;
+        }
+        client_manager.send_notify_data(SubscribeType::Progress, notify_data)
+    }
+
+    pub(crate) fn remove(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
+        let task_id = notify_data.task_id;
+        client_manager.send_notify_data(SubscribeType::Remove, notify_data);
+        client_manager.notify_task_finished(task_id);
     }
 }

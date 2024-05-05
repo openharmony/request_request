@@ -11,45 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::atomic::Ordering;
-
 use crate::error::ErrorCode;
 use crate::manage::TaskManager;
-use crate::task::info::State;
-use crate::task::notify::SubscribeType;
-
-cfg_oh! {
-    use crate::manage::notifier::Notifier;
-}
 
 impl TaskManager {
-    pub(crate) fn resume(&mut self, uid: u64, task_id: u32) -> ErrorCode {
+    pub(crate) async fn resume(&mut self, uid: u64, task_id: u32) -> ErrorCode {
         debug!("TaskManager resume, uid:{}, task_id:{}", uid, task_id);
-
-        if let Some(task) = self.get_task(uid, task_id) {
-            let state = task.status.lock().unwrap().state;
-            if state != State::Paused {
-                error!("can not resume a task which state is not paused");
-                return ErrorCode::TaskStateErr;
-            }
-            task.resume.store(true, Ordering::SeqCst);
-            let notify_data = task.build_notify_data();
-
-            #[cfg(feature = "oh")]
-            Notifier::service_front_notify(SubscribeType::Resume, notify_data);
-            self.start_inner(task);
-            ErrorCode::ErrOk
-        } else {
-            if self.tasks.contains_key(&task_id) {
-                error!("TaskManager resume a task, task_id:{} exist, but not found in app_task_map, uid:{}", task_id, uid);
-            } else {
-                error!(
-                    "TaskManager resume a task, uid:{}, task_id:{} not exist",
-                    uid, task_id
-                );
-            }
-
-            ErrorCode::TaskStateErr
-        }
+        self.scheduler
+            .resume_task(uid, task_id, self.app_state_manager.clone())
+            .await
     }
 }

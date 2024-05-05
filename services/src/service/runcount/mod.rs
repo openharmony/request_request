@@ -20,7 +20,7 @@ pub(crate) use manager::{RunCountManager, RunCountManagerEntry};
 use ylong_runtime::sync::oneshot::{channel, Sender};
 
 use crate::error::ErrorCode;
-use crate::service::RequestNotifyInterfaceCode;
+use crate::interface;
 use crate::utils::Recv;
 
 pub(crate) enum RunCountEvent {
@@ -75,10 +75,10 @@ impl SubClient {
         }
 
         debug!("During notify_runcount: send request");
-        if let Err(e) = self.obj.send_request(
-            RequestNotifyInterfaceCode::NotifyRunCount as u32,
-            &mut parcel,
-        ) {
+        if let Err(e) = self
+            .obj
+            .send_request(interface::NOTIFY_RUN_COUNT, &mut parcel)
+        {
             error!("During notify_runcount: send request failed {:?}", e);
             return;
         }

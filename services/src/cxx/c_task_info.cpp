@@ -39,3 +39,13 @@ void DeleteCTaskInfo(CTaskInfo *ptr)
 {
     delete[] ptr;
 }
+
+void DeleteTaskQosInfo(TaskQosInfo *ptr)
+{
+    delete[] ptr;
+}
+
+void DeleteAppInfo(AppInfo *ptr)
+{
+    delete[] ptr;
+}

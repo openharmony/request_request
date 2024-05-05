@@ -18,7 +18,7 @@ use ylong_http_client::{
     Certificate, HttpClientError, Proxy, PubKeyPins, Redirect, Timeout, TlsVersion,
 };
 
-use crate::manage::task_manager::SystemConfig;
+use crate::manage::SystemConfig;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::files::convert_path;
 use crate::utils::url_policy::check_url_domain;
@@ -55,7 +55,6 @@ pub(crate) fn build_client(
     // Set system certs.
     if let Some(certs) = system.certs.take() {
         for cert in certs.into_iter() {
-            error!("client add_root_certificate");
             client = client.add_root_certificate(cert)
         }
     }

@@ -17,6 +17,7 @@ use std::slice;
 use crate::utils::filter::{CommonFilter, Filter};
 use crate::utils::form_item::{FileSpec, FormItem};
 
+#[derive(Clone, Debug)]
 #[repr(C)]
 pub(crate) struct CStringWrapper {
     c_str: *const c_char,
@@ -125,12 +126,10 @@ impl FormItem {
     }
 }
 
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
+#[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     pub(crate) fn DeleteChar(ptr: *const c_char);
     pub(crate) fn DeleteCFormItem(ptr: *const CFormItem);
     pub(crate) fn DeleteCFileSpec(ptr: *const CFileSpec);
-    pub(crate) fn DeleteCVectorWrapper(ptr: *const u32);
     pub(crate) fn DeleteCStringPtr(ptr: *const CStringWrapper);
 }

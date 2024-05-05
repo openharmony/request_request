@@ -11,8 +11,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod app;
-mod network;
+use std::ops::Deref;
+use std::sync::Arc;
 
-pub(crate) use app::AppStateListener;
-pub(crate) use network::NetworkChangeListener;
+use crate::task::request_task::RequestTask;
+
+pub(crate) struct NotifyTask {
+    task: Arc<RequestTask>,
+}
+
+impl NotifyTask {
+    pub(crate) fn new(task: Arc<RequestTask>) -> Self {
+        Self { task }
+    }
+}
+
+impl Deref for NotifyTask {
+    type Target = Arc<RequestTask>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.task
+    }
+}
+
+impl Drop for NotifyTask {
+    fn drop(&mut self) {
+        self.task.state_change_notify();
+    }
+}

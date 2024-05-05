@@ -19,17 +19,15 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::manage::events::EventMessage;
-use crate::service::ability::RequestAbility;
-use crate::service::get_calling_bundle;
+use crate::manage::events::TaskManagerEvent;
 use crate::service::permission::PermissionChecker;
+use crate::service::{get_calling_bundle, RequestServiceStub};
 use crate::task::config::{Action, CommonTaskConfig, Network, TaskConfig, Version};
 use crate::task::info::Mode;
 use crate::utils::form_item::{FileSpec, FormItem};
-pub(crate) struct Construct;
 
-impl Construct {
-    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+impl RequestServiceStub {
+    pub(crate) fn construct(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("Process Service construct");
 
         if !PermissionChecker::check_internet() {
@@ -233,8 +231,8 @@ impl Construct {
 
         debug!("Service construct: task_config constructed");
 
-        let (event, rx) = EventMessage::construct(task_config);
-        if !RequestAbility::task_manager().send_event(event) {
+        let (event, rx) = TaskManagerEvent::construct(task_config);
+        if !self.task_manager.send_event(event) {
             return Err(IpcStatusCode::Failed);
         }
         let ret = match rx.get() {
@@ -256,7 +254,7 @@ impl Construct {
 
         debug!("Service construct: construct event sent to manager");
 
-        let ret = RequestAbility::client_manager().subscribe(task_id, pid, uid, token_id);
+        let ret = self.client_manager.subscribe(task_id, pid, uid, token_id);
         if ret != ErrorCode::ErrOk {
             error!(
                 "End Service subscribe, task_id is {}, failed with reason: {:?}",

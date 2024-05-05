@@ -11,14 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::HashSet;
-use std::sync::Arc;
-
 use crate::error::ErrorCode;
+use crate::init::SYSTEM_CONFIG_MANAGER;
+use crate::manage::app_state::{AppState, GetTopBundleName};
 use crate::manage::TaskManager;
-use crate::task::config::{TaskConfig, Version};
-use crate::task::ffi::{CTaskConfig, CTaskInfo};
-use crate::task::info::{Mode, State};
+use crate::task::config::TaskConfig;
+use crate::task::info::{ApplicationState, Mode, State};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::utils::task_id_generator::TaskIdGenerator;
@@ -27,12 +25,11 @@ const MAX_BACKGROUND_TASK: usize = 100;
 const MAX_FRONTEND_TASK: usize = 2000;
 
 impl TaskManager {
-    pub(crate) fn create(&mut self, mut config: TaskConfig) -> Result<u32, ErrorCode> {
-        let uid = config.common_data.uid;
-
+    pub(crate) async fn create(&mut self, mut config: TaskConfig) -> Result<u32, ErrorCode> {
         let task_id = TaskIdGenerator::generate();
         config.common_data.task_id = task_id;
 
+        let uid = config.common_data.uid;
         let version = config.version;
 
         debug!(
@@ -42,146 +39,55 @@ impl TaskManager {
 
         match config.common_data.mode {
             Mode::BackGround => {
-                if self.app_uncompleted_tasks_num(uid, Mode::BackGround) == MAX_BACKGROUND_TASK {
+                if self
+                    .database
+                    .app_uncompleted_tasks_num(uid, Mode::BackGround)
+                    == MAX_BACKGROUND_TASK
+                {
                     debug!("TaskManager background enqueue error");
                     return Err(ErrorCode::TaskEnqueueErr);
                 }
             }
             _ => {
-                if self.app_uncompleted_tasks_num(uid, Mode::FrontEnd) == MAX_FRONTEND_TASK {
+                if self.database.app_uncompleted_tasks_num(uid, Mode::FrontEnd) == MAX_FRONTEND_TASK
+                {
                     debug!("TaskManager frontend enqueue error");
                     return Err(ErrorCode::TaskEnqueueErr);
                 }
             }
         }
 
-        let app_state = self.app_state(uid, &config.bundle);
-
-        let task = match RequestTask::new(config, self.system_config(), app_state, None) {
+        // Here we don not need to run the task, just add it to database.
+        let top_bundle = unsafe { GetTopBundleName() }.to_string();
+        let app_state = if top_bundle == config.bundle {
+            AppState::new(
+                uid,
+                ApplicationState::Foreground,
+                self.app_state_manager.clone(),
+            )
+        } else {
+            AppState::new(
+                uid,
+                ApplicationState::Background,
+                self.app_state_manager.clone(),
+            )
+        };
+        let system_config = unsafe { SYSTEM_CONFIG_MANAGER.assume_init_ref().system_config() };
+        let task = match RequestTask::new(
+            config,
+            system_config,
+            app_state,
+            None,
+            self.client_manager.clone(),
+        ) {
             Ok(task) => task,
             Err(e) => return Err(e),
         };
 
-        let task = Arc::new(task);
+        task.set_status(State::Initialized, Reason::Default);
 
-        match version {
-            Version::API10 => {
-                if !self.add_task_api10(task.clone()) {
-                    return Err(ErrorCode::TaskEnqueueErr);
-                }
-                self.api10_background_task_count += 1;
-            }
-            Version::API9 => {
-                self.add_task_api9(task.clone());
-            }
-        }
-
-        self.record_request_task(task.as_ref());
+        self.database.insert_task(&task);
 
         Ok(task_id)
     }
-
-    pub(crate) fn add_task_api9(&mut self, task: Arc<RequestTask>) {
-        task.set_status(State::Initialized, Reason::Default);
-
-        let task_id = task.conf.common_data.task_id;
-        let uid = task.conf.common_data.uid;
-
-        self.tasks.insert(task_id, task);
-
-        match self.app_task_map.get_mut(&uid) {
-            Some(set) => {
-                set.insert(task_id);
-
-                debug!(
-                    "TaskManager app {} task count:{}, all task count {}",
-                    uid,
-                    set.len(),
-                    self.tasks.len()
-                );
-            }
-            None => {
-                let mut set = HashSet::new();
-                set.insert(task_id);
-                self.app_task_map.insert(uid, set);
-                debug!(
-                    "TaskManager app {} task count:{}, all task count {}",
-                    uid,
-                    1,
-                    self.tasks.len()
-                );
-            }
-        }
-    }
-
-    pub(crate) fn add_task_api10(&mut self, task: Arc<RequestTask>) -> bool {
-        let task_id = task.conf.common_data.task_id;
-        let uid = task.conf.common_data.uid;
-
-        match self.app_task_map.get_mut(&uid) {
-            Some(set) => {
-                set.insert(task_id);
-
-                task.set_status(State::Initialized, Reason::Default);
-                self.tasks.insert(task_id, task);
-
-                debug!(
-                    "TaskManager app {} task count:{}, all task count {}",
-                    uid,
-                    set.len(),
-                    self.tasks.len()
-                );
-                true
-            }
-            None => {
-                let mut set = HashSet::new();
-                set.insert(task_id);
-                self.app_task_map.insert(uid, set);
-
-                task.set_status(State::Initialized, Reason::Default);
-                self.tasks.insert(task_id, task);
-
-                debug!(
-                    "TaskManager app {} task count:{}, all task count {}",
-                    uid,
-                    1,
-                    self.tasks.len()
-                );
-                true
-            }
-        }
-    }
-
-    pub(crate) fn record_request_task(&mut self, task: &RequestTask) {
-        debug!("record request task into database");
-
-        if unsafe { HasRequestTaskRecord(task.conf.common_data.task_id) } {
-            return;
-        }
-        let task_config = &task.conf;
-        let config_set = task_config.build_config_set();
-        let c_task_config = task_config.to_c_struct(
-            task.conf.common_data.task_id,
-            task.conf.common_data.uid,
-            &config_set,
-        );
-        let task_info = &task.show();
-        let info_set = task_info.build_info_set();
-        let c_task_info = task_info.to_c_struct(&info_set);
-        let ret = unsafe { RecordRequestTask(&c_task_info, &c_task_config) };
-        info!(
-            "insert task {} to request_task DB, ret is {}",
-            task.conf.common_data.task_id, ret
-        );
-    }
-}
-
-#[cfg(feature = "oh")]
-#[link(name = "request_service_c")]
-extern "C" {
-    pub(crate) fn HasRequestTaskRecord(taskId: u32) -> bool;
-    pub(crate) fn RecordRequestTask(
-        taskInfo: *const CTaskInfo,
-        taskConfig: *const CTaskConfig,
-    ) -> bool;
 }

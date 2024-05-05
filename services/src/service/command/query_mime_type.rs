@@ -11,18 +11,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::manage::events::EventMessage;
-use crate::service::ability::RequestAbility;
+use crate::manage::events::TaskManagerEvent;
 use crate::service::permission::PermissionChecker;
+use crate::service::RequestServiceStub;
 
-pub(crate) struct QueryMimeType;
-
-use ipc::parcel::MsgParcel;
-impl QueryMimeType {
-    pub(crate) fn execute(data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+impl RequestServiceStub {
+    pub(crate) fn query_mime_type(
+        &self,
+        data: &mut MsgParcel,
+        reply: &mut MsgParcel,
+    ) -> IpcResult<()> {
         if !PermissionChecker::check_internet() {
             error!("Service query mime type: no INTERNET permission");
             reply.write(&(ErrorCode::Permission as i32))?;
@@ -37,8 +39,8 @@ impl QueryMimeType {
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service query mime type: uid is {}", uid);
 
-                let (event, rx) = EventMessage::query_mime_type(uid, id);
-                if !RequestAbility::task_manager().send_event(event) {
+                let (event, rx) = TaskManagerEvent::query_mime_type(uid, id);
+                if !self.task_manager.send_event(event) {
                     return Err(IpcStatusCode::Failed);
                 }
                 let mime = match rx.get() {
@@ -49,7 +51,10 @@ impl QueryMimeType {
                     }
                 };
                 debug!("Service query mime type: {}", mime);
-                info!("End Service query mime type successfully: task_id is {}", id);
+                info!(
+                    "End Service query mime type successfully: task_id is {}",
+                    id
+                );
                 reply.write(&(ErrorCode::ErrOk as i32))?;
                 reply.write(&mime)?;
                 Ok(())

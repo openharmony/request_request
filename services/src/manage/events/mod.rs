@@ -36,18 +36,19 @@ mod stop;
 mod touch;
 
 #[derive(Debug)]
-pub(crate) enum EventMessage {
-    Service(ServiceMessage),
-    State(StateMessage),
-    Scheduled(ScheduledMessage),
-    Task(TaskMessage),
+pub(crate) enum TaskManagerEvent {
+    Service(ServiceEvent),
+    State(StateEvent),
+    Schedule(ScheduleEvent),
+    Task(TaskEvent),
+    Device(i32),
 }
 
-impl EventMessage {
+impl TaskManagerEvent {
     pub(crate) fn construct(config: TaskConfig) -> (Self, Recv<Result<u32, ErrorCode>>) {
         let (tx, rx) = channel::<Result<u32, ErrorCode>>();
         (
-            Self::Service(ServiceMessage::Construct(
+            Self::Service(ServiceEvent::Construct(
                 Box::new(ConstructMessage { config }),
                 tx,
             )),
@@ -58,7 +59,7 @@ impl EventMessage {
     pub(crate) fn pause(uid: u64, task_id: u32) -> (Self, Recv<ErrorCode>) {
         let (tx, rx) = channel::<ErrorCode>();
         (
-            Self::Service(ServiceMessage::Pause(uid, task_id, tx)),
+            Self::Service(ServiceEvent::Pause(uid, task_id, tx)),
             Recv::new(rx),
         )
     }
@@ -66,7 +67,7 @@ impl EventMessage {
     pub(crate) fn query(task_id: u32, action: Action) -> (Self, Recv<Option<TaskInfo>>) {
         let (tx, rx) = channel::<Option<TaskInfo>>();
         (
-            Self::Service(ServiceMessage::Query(task_id, action, tx)),
+            Self::Service(ServiceEvent::Query(task_id, action, tx)),
             Recv::new(rx),
         )
     }
@@ -74,7 +75,7 @@ impl EventMessage {
     pub(crate) fn query_mime_type(uid: u64, task_id: u32) -> (Self, Recv<String>) {
         let (tx, rx) = channel::<String>();
         (
-            Self::Service(ServiceMessage::QueryMimeType(uid, task_id, tx)),
+            Self::Service(ServiceEvent::QueryMimeType(uid, task_id, tx)),
             Recv::new(rx),
         )
     }
@@ -82,7 +83,7 @@ impl EventMessage {
     pub(crate) fn start(uid: u64, task_id: u32) -> (Self, Recv<ErrorCode>) {
         let (tx, rx) = channel::<ErrorCode>();
         (
-            Self::Service(ServiceMessage::Start(uid, task_id, tx)),
+            Self::Service(ServiceEvent::Start(uid, task_id, tx)),
             Recv::new(rx),
         )
     }
@@ -90,7 +91,7 @@ impl EventMessage {
     pub(crate) fn stop(uid: u64, task_id: u32) -> (Self, Recv<ErrorCode>) {
         let (tx, rx) = channel::<ErrorCode>();
         (
-            Self::Service(ServiceMessage::Stop(uid, task_id, tx)),
+            Self::Service(ServiceEvent::Stop(uid, task_id, tx)),
             Recv::new(rx),
         )
     }
@@ -98,7 +99,7 @@ impl EventMessage {
     pub(crate) fn show(uid: u64, task_id: u32) -> (Self, Recv<Option<TaskInfo>>) {
         let (tx, rx) = channel::<Option<TaskInfo>>();
         (
-            Self::Service(ServiceMessage::Show(uid, task_id, tx)),
+            Self::Service(ServiceEvent::Show(uid, task_id, tx)),
             Recv::new(rx),
         )
     }
@@ -106,7 +107,7 @@ impl EventMessage {
     pub(crate) fn search(filter: Filter) -> (Self, Recv<Vec<u32>>) {
         let (tx, rx) = channel::<Vec<u32>>();
         (
-            Self::Service(ServiceMessage::Search(filter, tx)),
+            Self::Service(ServiceEvent::Search(filter, tx)),
             Recv::new(rx),
         )
     }
@@ -114,7 +115,7 @@ impl EventMessage {
     pub(crate) fn touch(uid: u64, task_id: u32, token: String) -> (Self, Recv<Option<TaskInfo>>) {
         let (tx, rx) = channel::<Option<TaskInfo>>();
         (
-            Self::Service(ServiceMessage::Touch(uid, task_id, token, tx)),
+            Self::Service(ServiceEvent::Touch(uid, task_id, token, tx)),
             Recv::new(rx),
         )
     }
@@ -126,7 +127,7 @@ impl EventMessage {
     ) -> (Self, Recv<Option<TaskConfig>>) {
         let (tx, rx) = channel::<Option<TaskConfig>>();
         (
-            Self::Service(ServiceMessage::GetTask(uid, task_id, token, tx)),
+            Self::Service(ServiceEvent::GetTask(uid, task_id, token, tx)),
             Recv::new(rx),
         )
     }
@@ -134,7 +135,7 @@ impl EventMessage {
     pub(crate) fn remove(uid: u64, task_id: u32) -> (Self, Recv<ErrorCode>) {
         let (tx, rx) = channel::<ErrorCode>();
         (
-            Self::Service(ServiceMessage::Remove(uid, task_id, tx)),
+            Self::Service(ServiceEvent::Remove(uid, task_id, tx)),
             Recv::new(rx),
         )
     }
@@ -142,42 +143,43 @@ impl EventMessage {
     pub(crate) fn resume(uid: u64, task_id: u32) -> (Self, Recv<ErrorCode>) {
         let (tx, rx) = channel::<ErrorCode>();
         (
-            Self::Service(ServiceMessage::Resume(uid, task_id, tx)),
+            Self::Service(ServiceEvent::Resume(uid, task_id, tx)),
             Recv::new(rx),
         )
     }
 
     pub(crate) fn dump_all() -> (Self, Recv<DumpAllInfo>) {
         let (tx, rx) = channel::<DumpAllInfo>();
-        (Self::Service(ServiceMessage::DumpAll(tx)), Recv::new(rx))
+        (Self::Service(ServiceEvent::DumpAll(tx)), Recv::new(rx))
     }
 
     pub(crate) fn dump_one(task_id: u32) -> (Self, Recv<Option<DumpOneInfo>>) {
         let (tx, rx) = channel::<Option<DumpOneInfo>>();
         (
-            Self::Service(ServiceMessage::DumpOne(task_id, tx)),
+            Self::Service(ServiceEvent::DumpOne(task_id, tx)),
             Recv::new(rx),
         )
     }
 
+    #[allow(dead_code)]
     pub(crate) fn app_state_change(uid: u64, state: ApplicationState) -> Self {
-        Self::State(StateMessage::AppStateChange(uid, state))
+        Self::State(StateEvent::AppStateChange(uid, state))
     }
 
     pub(crate) fn network_change() -> Self {
-        Self::State(StateMessage::NetworkChange)
+        Self::State(StateEvent::NetworkChange)
     }
 
     pub(crate) fn subscribe(task_id: u32, token_id: u64) -> (Self, Recv<ErrorCode>) {
         let (tx, rx) = channel::<ErrorCode>();
         (
-            Self::Task(TaskMessage::Subscribe(task_id, token_id, tx)),
+            Self::Task(TaskEvent::Subscribe(task_id, token_id, tx)),
             Recv::new(rx),
         )
     }
 }
 
-pub(crate) enum ServiceMessage {
+pub(crate) enum ServiceEvent {
     Construct(Box<ConstructMessage>, Sender<Result<u32, ErrorCode>>),
     Pause(u64, u32, Sender<ErrorCode>),
     QueryMimeType(u64, u32, Sender<String>),
@@ -194,12 +196,12 @@ pub(crate) enum ServiceMessage {
     DumpAll(Sender<DumpAllInfo>),
 }
 
-pub(crate) enum TaskMessage {
+pub(crate) enum TaskEvent {
     Finished(u32, u64, Version),
     Subscribe(u32, u64, Sender<ErrorCode>),
 }
 
-pub(crate) enum StateMessage {
+pub(crate) enum StateEvent {
     NetworkChange,
     AppStateChange(u64, ApplicationState),
 }
@@ -220,7 +222,7 @@ impl Debug for ConstructMessage {
     }
 }
 
-impl Debug for ServiceMessage {
+impl Debug for ServiceEvent {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Construct(message, _) => message.fmt(f),
@@ -285,7 +287,7 @@ impl Debug for ServiceMessage {
     }
 }
 
-impl Debug for TaskMessage {
+impl Debug for TaskEvent {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Finished(task_id, uid, version) => f
@@ -303,7 +305,7 @@ impl Debug for TaskMessage {
     }
 }
 
-impl Debug for StateMessage {
+impl Debug for StateEvent {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::NetworkChange => f.pad("NetworkChange"),
@@ -317,10 +319,9 @@ impl Debug for StateMessage {
 }
 
 #[derive(Debug)]
-pub(crate) enum ScheduledMessage {
+pub(crate) enum ScheduleEvent {
     ClearTimeoutTasks,
     LogTasks,
-    Unload,
-    UpdateBackgroundApp(u64),
     RestoreAllTasks,
+    Unload,
 }

@@ -19,11 +19,9 @@ use std::task::{Context, Poll};
 use ylong_http_client::HttpClientError;
 use ylong_runtime::io::AsyncWrite;
 
-#[cfg(feature = "oh")]
 use crate::manage::notifier::Notifier;
 use crate::task::config::Version;
 use crate::task::info::State;
-use crate::task::notify::SubscribeType;
 use crate::task::request_task::RequestTask;
 use crate::utils::get_current_timestamp;
 
@@ -58,14 +56,17 @@ impl TaskOperator {
             debug!("pause the task");
             return Poll::Ready(Err(HttpClientError::user_aborted()));
         }
+        if !self.task.check_app_state() {
+            debug!("pause for app state");
+            return Poll::Ready(Err(HttpClientError::user_aborted()));
+        }
 
         let version = self.task.conf.version;
         if current > self.task.last_notify.load(Ordering::SeqCst) + FRONT_NOTIFY_INTERVAL {
             let notify_data = self.task.build_notify_data();
             self.task.last_notify.store(current, Ordering::SeqCst);
 
-            #[cfg(feature = "oh")]
-            Notifier::service_front_notify(SubscribeType::Progress, notify_data);
+            Notifier::progress(&self.task.client_manager, notify_data);
         }
 
         let gauge = self.task.conf.common_data.gauge;

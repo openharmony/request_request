@@ -67,39 +67,3 @@ impl Clock {
             .insert(task_id, cx.waker().clone());
     }
 }
-
-#[cfg(test)]
-mod test {
-
-    use std::future::Future;
-    use std::task::Poll;
-
-    use super::*;
-    struct TestFuture(Option<()>);
-    impl Future for TestFuture {
-        type Output = ();
-        fn poll(self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-            let me = self.get_mut();
-            if me.0.take().is_none() {
-                Clock::get_instance().register(0, cx);
-                me.0 = Some(());
-                println!("hello");
-                Poll::Pending
-            } else {
-                println!("world");
-                Poll::Ready(())
-            }
-        }
-    }
-
-    #[test]
-    fn tick_tesk() {
-        let join_handle = ylong_runtime::spawn(TestFuture(None));
-        assert!(!join_handle.is_finished());
-        let _ = ylong_runtime::spawn(async {
-            loop {
-                Clock::get_instance().tick();
-            }
-        });
-    }
-}
