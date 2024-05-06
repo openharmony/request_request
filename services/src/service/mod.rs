@@ -15,6 +15,7 @@
 
 pub(crate) mod client;
 pub(crate) mod command;
+mod interface;
 pub(crate) mod permission;
 pub(crate) mod runcount;
 
@@ -26,7 +27,6 @@ use ipc::{IpcResult, IpcStatusCode};
 
 use self::client::ClientManagerEntry;
 use self::runcount::RunCountManagerEntry;
-use crate::interface;
 use crate::manage::task_manager::TaskManagerTx;
 use crate::task::config::TaskConfig;
 use crate::task::info::TaskInfo;
