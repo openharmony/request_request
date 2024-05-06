@@ -26,7 +26,6 @@ mod hilog;
 
 mod error;
 mod init;
-mod interface;
 mod manage;
 mod service;
 mod sys_event;
