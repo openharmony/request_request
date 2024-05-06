@@ -461,7 +461,7 @@ bool RequestManagerImpl::SubscribeSA()
         return true;
     }
     sptr<ISystemAbilityManager> systemAbilityManager =
-            SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityManager == nullptr) {
         REQUEST_HILOGE("Getting SystemAbilityManager failed.");
         return false;
@@ -485,7 +485,7 @@ bool RequestManagerImpl::UnsubscribeSA()
         return true;
     }
     sptr<ISystemAbilityManager> systemAbilityManager =
-            SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityManager == nullptr) {
         REQUEST_HILOGE("Getting SystemAbilityManager failed.");
         return false;

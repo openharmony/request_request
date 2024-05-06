@@ -21,7 +21,9 @@
 
 namespace OHOS::Request {
 
-class IResponseMessageHandler : public IResponseListener, public INotifyDataListener {
+class IResponseMessageHandler
+    : public IResponseListener
+    , public INotifyDataListener {
 public:
     virtual void OnChannelBroken() = 0;
 };

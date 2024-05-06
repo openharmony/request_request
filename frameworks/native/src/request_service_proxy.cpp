@@ -204,8 +204,7 @@ int32_t RequestServiceProxy::Query(const std::string &tid, TaskInfo &info)
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK) {
-        REQUEST_HILOGE(
-            "End send query request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), errCode);
+        REQUEST_HILOGE("End send query request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), errCode);
         return errCode;
     }
     ParcelHelper::UnMarshal(reply, info);
@@ -228,8 +227,7 @@ int32_t RequestServiceProxy::Touch(const std::string &tid, const std::string &to
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK) {
-        REQUEST_HILOGE(
-            "End send touch request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), errCode);
+        REQUEST_HILOGE("End send touch request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), errCode);
         return errCode;
     }
     ParcelHelper::UnMarshal(reply, info);
@@ -399,8 +397,7 @@ int32_t RequestServiceProxy::Subscribe(const std::string &tid)
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SUBSCRIBE), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE(
-            "End send subscribe request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), ret);
+        REQUEST_HILOGE("End send subscribe request, tid: %{public}s, failed with reason: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
     REQUEST_HILOGI("End send subscribe request successfully, tid: %{public}s", tid.c_str());

@@ -24,6 +24,7 @@
 #include "c_progress.h"
 #include "c_task_config.h"
 #include "c_task_info.h"
+#include "network_adapter.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -31,7 +32,6 @@
 #include "rdb_store.h"
 #include "result_set.h"
 #include "value_object.h"
-#include "network_adapter.h"
 
 namespace OHOS::Request {
 #ifndef REQUEST_DATABASE_TEST

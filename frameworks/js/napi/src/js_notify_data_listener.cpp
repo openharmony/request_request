@@ -83,8 +83,7 @@ void JSNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData
         std::string &filePath = task->config_.bodyFileNames[index];
         NapiUtils::ReadBytesFromFile(filePath, notifyData->progress.bodyBytes);
         // Waiting for "complete" to read and delete.
-        if (!(notifyData->version == Version::API10 && index + 1 == len
-                && notifyData->type == SubscribeType::PROGRESS)) {
+        if (!(notifyData->version == Version::API10 && index + 1 == len && notifyData->type == SubscribeType::PROGRESS)) {
             NapiUtils::RemoveFile(filePath);
         }
     }

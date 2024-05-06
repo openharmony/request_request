@@ -21,9 +21,9 @@
 
 namespace OHOS::Request {
 class JSResponseListener
-    : public IResponseListener,
-      public ListenerList,
-      public std::enable_shared_from_this<JSResponseListener> {
+    : public IResponseListener
+    , public ListenerList
+    , public std::enable_shared_from_this<JSResponseListener> {
 public:
     JSResponseListener(napi_env env, const std::string &taskId) : ListenerList(env, taskId, SubscribeType::RESPONSE)
     {
