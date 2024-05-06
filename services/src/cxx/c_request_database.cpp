@@ -1409,7 +1409,9 @@ void GetAppArray(AppInfo *apps, size_t *len)
 CStringWrapper GetAppBundle(uint64_t uid)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.EqualTo("uid", std::to_string(uid));
+
+    // Descending to get the latest bundlename by uid
+    rdbPredicates.EqualTo("uid", std::to_string(uid))->OrderByDesc("ctime");
 
     CStringWrapper res;
     res.cStr = nullptr;
