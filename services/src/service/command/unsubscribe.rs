@@ -20,21 +20,21 @@ use crate::service::RequestServiceStub;
 impl RequestServiceStub {
     pub(crate) fn unsubscribe(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         let tid: String = data.read()?;
-        info!("Process Service unsubscribe: task_id is {}", tid);
+        info!("Service unsubscribe: tid: {}", tid);
         match tid.parse::<u32>() {
             Ok(tid) => {
                 if self.client_manager.unsubscribe(tid) == ErrorCode::ErrOk {
                     reply.write(&(ErrorCode::ErrOk as i32))?;
-                    info!("End Service unsubscribe successfully: task_id is {}", tid);
+                    info!("End Service unsubscribe ok: tid: {}", tid);
                     Ok(())
                 } else {
-                    debug!("unsubscribe failed, task_id is {}", tid);
+                    debug!("unsubscribe failed, tid: {}", tid);
                     reply.write(&(ErrorCode::TaskNotFound as i32))?;
                     Err(IpcStatusCode::Failed)
                 }
             }
             _ => {
-                error!("End Service unsubscribe, failed with reason: task_id not valid");
+                error!("End Service unsubscribe, failed: task_id not valid");
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

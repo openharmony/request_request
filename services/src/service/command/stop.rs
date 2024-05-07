@@ -21,10 +21,10 @@ use crate::service::RequestServiceStub;
 impl RequestServiceStub {
     pub(crate) fn stop(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         let id: String = data.read()?;
-        info!("Process Service stop: task_id is {}", id);
+        info!("Service stop: tid: {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
-                debug!("Service stop: u32 task_id is {}", id);
+                debug!("Service stop: u32 tid: {}", id);
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service stop: uid is {}", uid);
                 let (event, rx) = TaskManagerEvent::stop(uid, id);
@@ -34,26 +34,20 @@ impl RequestServiceStub {
                 let ret = match rx.get() {
                     Some(ret) => ret,
                     None => {
-                        error!(
-                        "End Service stop, task_id is {}, failed with reason: receives ret failed",
-                        id
-                    );
+                        error!("End Service stop, tid: {}, failed: receives ret failed", id);
                         return Err(IpcStatusCode::Failed);
                     }
                 };
                 reply.write(&(ret as i32))?;
                 if ret != ErrorCode::ErrOk {
-                    error!(
-                        "End Service stop, task_id is {}, failed with reason: {}",
-                        id, ret as i32
-                    );
+                    error!("End Service stop, tid: {}, failed: {}", id, ret as i32);
                     return Err(IpcStatusCode::Failed);
                 }
-                info!("End Service stop successfully: task_id is {}", id);
+                info!("End Service stop ok: tid: {}", id);
                 Ok(())
             }
             _ => {
-                error!("End Service stop, failed with reason: task_id not valid");
+                error!("End Service stop, failed: task_id not valid");
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

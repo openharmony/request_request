@@ -20,7 +20,7 @@ use crate::utils::filter::{CommonFilter, Filter};
 
 impl RequestServiceStub {
     pub(crate) fn search(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Process Service search");
+        info!("Service search");
         let mut bundle: String = data.read()?;
         if !is_system_api() {
             debug!("Service search: not system api");
@@ -56,14 +56,11 @@ impl RequestServiceStub {
         let ids = match rx.get() {
             Some(ids) => ids,
             None => {
-                error!("End Service search, failed with reason: receives ids failed");
+                error!("End Service search, failed: receives ids failed");
                 return Err(IpcStatusCode::Failed);
             }
         };
-        info!(
-            "End Service search successfully: search task ids is {:?}",
-            ids
-        );
+        info!("End Service search ok: search task ids is {:?}", ids);
         reply.write(&(ids.len() as u32))?;
         for it in ids.iter() {
             reply.write(&(it.to_string()))?;

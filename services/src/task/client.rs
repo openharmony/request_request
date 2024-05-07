@@ -97,7 +97,7 @@ pub(crate) fn build_client(
         let interceptors = DomainInterceptor::new(config.bundle.clone(), domain_type);
         client = client.interceptor(interceptors);
         info!(
-            "add interceptor domain check, task_id is {}",
+            "add interceptor domain check, tid: {}",
             config.common_data.task_id
         );
     }

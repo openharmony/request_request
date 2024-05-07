@@ -26,7 +26,7 @@ impl RequestServiceStub {
         reply: &mut MsgParcel,
     ) -> IpcResult<()> {
         let pid = ipc::Skeleton::calling_pid();
-        info!("Process Service runcount subscribe: pid is {}", pid);
+        info!("Service runcount subscribe: pid is {}", pid);
 
         let obj: RemoteObj = data.read_remote()?;
         debug!("read obj from data success!");
@@ -37,22 +37,16 @@ impl RequestServiceStub {
         let ret = match rx.get() {
             Some(ret) => ret,
             None => {
-                error!("End Service runcount subscribe, failed with reason: receives ret failed");
+                error!("End Service runcount subscribe, failed: receives ret failed");
                 return Err(IpcStatusCode::Failed);
             }
         };
         reply.write(&(ret as i32))?;
         if ret != ErrorCode::ErrOk {
-            error!(
-                "End Service runcount subscribe, failed with reason:{}",
-                ret as i32
-            );
+            error!("End Service runcount subscribe, failed:{}", ret as i32);
             return Err(IpcStatusCode::Failed);
         }
-        info!(
-            "End Service runcount subscribe successfully: pid is {}",
-            pid
-        );
+        info!("End Service runcount subscribe ok: pid is {}", pid);
         Ok(())
     }
 }

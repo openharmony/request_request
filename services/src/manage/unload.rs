@@ -231,7 +231,7 @@ impl TaskManager {
         let c_task_config = unsafe { QuerySingleTaskConfig(task_id) };
         if c_task_config.is_null() {
             error!(
-                "can not find the failed task in database, which task id is {}",
+                "can not find the failed task in database, tid: {}",
                 task_id
             );
             None

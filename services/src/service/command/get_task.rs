@@ -21,10 +21,10 @@ use crate::service::{serialize_task_config, RequestServiceStub};
 impl RequestServiceStub {
     pub(crate) fn get_task(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         let tid: String = data.read()?;
-        info!("Process Service getTask: task_id is {}", tid);
+        info!("Service getTask, tid: {}", tid);
         match tid.parse::<u32>() {
             Ok(tid) => {
-                debug!("Service getTask: u32 task_id is {}", tid);
+                debug!("Service getTask: u32 tid: {}", tid);
                 let token: String = data.read()?;
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service getTask: uid is {}", uid);
@@ -35,23 +35,32 @@ impl RequestServiceStub {
                 match rx.get() {
                     Some(Some(config)) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;
-                        info!("End Service getTask successfully: task_id is {}", tid);
+                        info!("End Service getTask ok: tid: {}", tid);
                         serialize_task_config(config, reply)?;
                         Ok(())
                     }
                     Some(None) => {
-                        error!("End Service getTask, task_id is {}, failed with reason: task_id or token not found", tid);
+                        error!(
+                            "End Service getTask, tid: {}, failed: task_id or token not found",
+                            tid
+                        );
                         reply.write(&(ErrorCode::TaskNotFound as i32))?;
                         Err(IpcStatusCode::Failed)
                     }
                     None => {
-                        error!("End Service getTask, task_id is {}, failed with reason: receives task_config failed", tid);
+                        error!(
+                            "End Service getTask, tid: {}, failed: receives task_config failed",
+                            tid
+                        );
                         Err(IpcStatusCode::Failed)
                     }
                 }
             }
             _ => {
-                error!("End Service getTask, task_id is {}, failed with reason: task_id or token not valid", tid);
+                error!(
+                    "End Service getTask, tid: {}, failed: task_id or token not valid",
+                    tid
+                );
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

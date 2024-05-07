@@ -31,10 +31,10 @@ impl RequestServiceStub {
             return Err(IpcStatusCode::Failed);
         }
         let id: String = data.read()?;
-        info!("Process Service query mime type: task_id is {}", id);
+        info!("Service query mime type: tid: {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
-                debug!("Service query mime type: u32 task_id is {}", id);
+                debug!("Service query mime type: u32 tid: {}", id);
 
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service query mime type: uid is {}", uid);
@@ -46,21 +46,21 @@ impl RequestServiceStub {
                 let mime = match rx.get() {
                     Some(mime) => mime,
                     None => {
-                        error!("End Service query mime type, task_id is {}, failed with reason: receive mime failed", id);
+                        error!(
+                            "End Service query mime type, tid: {}, failed: receive mime failed",
+                            id
+                        );
                         return Err(IpcStatusCode::Failed);
                     }
                 };
                 debug!("Service query mime type: {}", mime);
-                info!(
-                    "End Service query mime type successfully: task_id is {}",
-                    id
-                );
+                info!("End Service query mime type ok: tid: {}", id);
                 reply.write(&(ErrorCode::ErrOk as i32))?;
                 reply.write(&mime)?;
                 Ok(())
             }
             _ => {
-                error!("End Service query mime type, failed with reason: task_id not valid");
+                error!("End Service query mime type, failed: task_id not valid");
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

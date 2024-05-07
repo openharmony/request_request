@@ -63,7 +63,7 @@ void RunCountNotifyStub::OnCallBack(MessageParcel &data)
 {
     REQUEST_HILOGD("Receive callback");
     int runCount = data.ReadInt64();
-    REQUEST_HILOGI("RunCount num %{public}d", runCount);
+    REQUEST_HILOGD("RunCount num %{public}d", runCount);
 
     FwkRunningTaskCountManager::GetInstance()->SetCount(runCount);
     FwkRunningTaskCountManager::GetInstance()->NotifyAllObservers();

@@ -23,19 +23,19 @@ use crate::service::RequestServiceStub;
 impl RequestServiceStub {
     pub(crate) fn open_channel(&self, reply: &mut MsgParcel) -> IpcResult<()> {
         let pid = ipc::Skeleton::calling_pid();
-        info!("Process Service open channel, pid: {}", pid);
+        info!("Service open channel, pid: {}", pid);
         let uid = ipc::Skeleton::calling_uid();
         let token_id = ipc::Skeleton::calling_full_token_id();
         match self.client_manager.open_channel(pid, uid, token_id) {
             Ok(fd) => {
-                info!("End Service open channel successfully, fd is {}", fd);
+                info!("End Service open channel ok, fd is {}", fd);
                 let file = unsafe { File::from_raw_fd(fd) };
                 reply.write(&(ErrorCode::ErrOk as i32))?;
                 reply.write_file(file)?;
                 Ok(())
             }
             Err(err) => {
-                error!("End Service open channel, failed with reason: {:?}", err);
+                error!("End Service open channel, failed: {:?}", err);
                 reply.write(&(ErrorCode::ParameterCheck as i32))?;
                 Err(IpcStatusCode::Failed)
             }

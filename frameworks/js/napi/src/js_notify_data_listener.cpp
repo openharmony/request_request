@@ -185,8 +185,8 @@ static void RemoveJSTask(const std::shared_ptr<NotifyData> &notifyData)
 
 void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData)
 {
-    REQUEST_HILOGI("OnNotifyDataReceive type is %{public}s, tid is %{public}d",
-        SubscribeTypeToString(notifyData->type).c_str(), notifyData->taskId);
+    REQUEST_HILOGI("Notify type: %{public}s, tid: %{public}d", SubscribeTypeToString(notifyData->type).c_str(),
+        notifyData->taskId);
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(this->env_, &loop);
     if (loop == nullptr) {

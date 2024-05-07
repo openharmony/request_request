@@ -134,7 +134,7 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
     ExceptionError err = ParseOnOffParameters(env, info, true, jsParam);
     if (err.code != E_OK) {
         bool withErrCode = jsParam.task->config_.version == Version::API10;
-        REQUEST_HILOGE("End task on, seq: %{public}d, failed with reason: %{public}d", seq, err.code);
+        REQUEST_HILOGE("End task on, seq: %{public}d, failed: %{public}d", seq, err.code);
         NapiUtils::ThrowError(env, err.code, err.errInfo, withErrCode);
         return nullptr;
     }
@@ -147,8 +147,7 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
         jsParam.task->listenerMutex_.unlock();
         napi_status ret = jsParam.task->responseListener_->AddListener(jsParam.callback);
         if (ret != napi_ok) {
-            REQUEST_HILOGE(
-                "End task on, seq: %{public}d, failed with reason: AddListener fail code %{public}d", seq, ret);
+            REQUEST_HILOGE("End task on, seq: %{public}d, failed: AddListener fail code %{public}d", seq, ret);
             return nullptr;
         }
     } else {
@@ -161,14 +160,13 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
         jsParam.task->listenerMutex_.unlock();
         napi_status ret = jsParam.task->notifyDataListenerMap_[jsParam.subscribeType]->AddListener(jsParam.callback);
         if (ret != napi_ok) {
-            REQUEST_HILOGE(
-                "End task on, seq: %{public}d, failed with reason: AddListener fail code %{public}d", seq, ret);
+            REQUEST_HILOGE("End task on, seq: %{public}d, failed: AddListener fail code %{public}d", seq, ret);
             return nullptr;
         }
     }
 
-    REQUEST_HILOGI("End task on event %{public}s successfully, seq: %{public}d, tid: %{public}s", jsParam.type.c_str(),
-        seq, jsParam.task->GetTid().c_str());
+    REQUEST_HILOGI("End task on %{public}s ok, seq: %{public}d, tid: %{public}s", jsParam.type.c_str(), seq,
+        jsParam.task->GetTid().c_str());
     return nullptr;
 }
 
@@ -180,7 +178,7 @@ napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
     ExceptionError err = ParseOnOffParameters(env, info, false, jsParam);
     if (err.code != E_OK) {
         bool withErrCode = jsParam.task->config_.version == Version::API10;
-        REQUEST_HILOGE("End task off, seq: %{public}d, failed with reason: %{public}d", seq, err.code);
+        REQUEST_HILOGE("End task off, seq: %{public}d, failed: %{public}d", seq, err.code);
         NapiUtils::ThrowError(env, err.code, err.errInfo, withErrCode);
         return nullptr;
     }
@@ -193,8 +191,7 @@ napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
         jsParam.task->listenerMutex_.unlock();
         napi_status ret = jsParam.task->responseListener_->RemoveListener(jsParam.callback);
         if (ret != napi_ok) {
-            REQUEST_HILOGE(
-                "End task off, seq: %{public}d, failed with reason: RemoveListener fail code %{public}d", seq, ret);
+            REQUEST_HILOGE("End task off, seq: %{public}d, failed: RemoveListener fail code %{public}d", seq, ret);
             return nullptr;
         }
     } else {
@@ -207,14 +204,13 @@ napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
         jsParam.task->listenerMutex_.unlock();
         napi_status ret = jsParam.task->notifyDataListenerMap_[jsParam.subscribeType]->RemoveListener(jsParam.callback);
         if (ret != napi_ok) {
-            REQUEST_HILOGE(
-                "End task off, seq: %{public}d, failed with reason: RemoveListener fail code %{public}d", seq, ret);
+            REQUEST_HILOGE("End task off, seq: %{public}d, failed: RemoveListener fail code %{public}d", seq, ret);
             return nullptr;
         }
     }
 
-    REQUEST_HILOGD("End task off event %{public}s successfully, seq: %{public}d, tid: %{public}s",
-        jsParam.type.c_str(), seq, jsParam.task->GetTid().c_str());
+    REQUEST_HILOGD("End task off %{public}s ok, seq: %{public}d, tid: %{public}s", jsParam.type.c_str(), seq,
+        jsParam.task->GetTid().c_str());
     return nullptr;
 }
 
@@ -305,17 +301,17 @@ napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, const std::
     };
     auto output = [context, execType, seq](napi_value *result) -> napi_status {
         if (context->innerCode_ != E_OK) {
-            REQUEST_HILOGE("End task %{public}s in AsyncCall output, seq: %{public}d, failed with reason: %{public}d",
+            REQUEST_HILOGE("End task %{public}s in AsyncCall output, seq: %{public}d, failed: %{public}d",
                 execType.c_str(), seq, context->innerCode_);
             return napi_generic_failure;
         }
 
         napi_status status = GetResult(context->env_, context, execType, *result);
         if (status != napi_ok) {
-            REQUEST_HILOGE("End task %{public}s in AsyncCall output, seq: %{public}d, failed with reason: %{public}d",
+            REQUEST_HILOGE("End task %{public}s in AsyncCall output, seq: %{public}d, failed: %{public}d",
                 execType.c_str(), seq, status);
         } else {
-            REQUEST_HILOGI("End task %{public}s successfully, seq: %{public}d", execType.c_str(), seq);
+            REQUEST_HILOGI("End task %{public}s ok, seq: %{public}d", execType.c_str(), seq);
         }
         return status;
     };

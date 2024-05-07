@@ -31,10 +31,10 @@ impl RequestServiceStub {
         }
 
         let id: String = data.read()?;
-        info!("Process Service pause: task_id is {}", id);
+        info!("Service pause: tid: {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
-                debug!("Service pause: u32 task_id is {}", id);
+                debug!("Service pause: u32 tid: {}", id);
 
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service pause: uid is {}", uid);
@@ -47,28 +47,22 @@ impl RequestServiceStub {
                     Some(ret) => ret,
                     None => {
                         error!(
-                        "End Service pause, task_id is {}, failed with reason: receives ret failed",
-                        id
-                    );
+                            "End Service pause, tid: {}, failed: receives ret failed",
+                            id
+                        );
                         return Err(IpcStatusCode::Failed);
                     }
                 };
                 reply.write(&(ret as i32))?;
                 if ret != ErrorCode::ErrOk {
-                    error!(
-                        "End Service pause, task_id is {}, failed with reason: {}",
-                        id, ret as u32
-                    );
+                    error!("End Service pause, tid: {}, failed: {}", id, ret as u32);
                     return Err(IpcStatusCode::Failed);
                 }
-                info!("End Service pause successfully: task_id is {}", id);
+                info!("End Service pause ok: tid: {}", id);
                 Ok(())
             }
             _ => {
-                error!(
-                    "End Service pause, task_id is {}, failed with reason: task_id not valid",
-                    id
-                );
+                error!("End Service pause, tid: {}, failed: task_id not valid", id);
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

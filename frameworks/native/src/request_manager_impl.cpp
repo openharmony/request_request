@@ -54,14 +54,14 @@ int32_t RequestManagerImpl::Create(const Config &config, int32_t seq, std::strin
         REQUEST_HILOGE("GetRequestServiceProxy fail.");
         return E_SERVICE_ERROR;
     }
-    REQUEST_HILOGI("Process send create request, seq: %{public}d", seq);
+    REQUEST_HILOGI("Request create, seq: %{public}d", seq);
     this->EnsureChannelOpen();
     int32_t ret = proxy->Create(config, tid);
     if (ret == E_UNLOADING_SA) {
-        REQUEST_HILOGE("Send create request, seq: %{public}d, failed with reason: Service ability is quitting", seq);
+        REQUEST_HILOGE("End Request create, seq: %{public}d, failed: Service ability is quitting", seq);
         ret = Retry(tid, config, ret);
         if (ret != E_OK) {
-            REQUEST_HILOGE("Send create request, seq: %{public}d, failed with reason: %{public}d", seq, ret);
+            REQUEST_HILOGE("End Request create, seq: %{public}d, failed: %{public}d", seq, ret);
             return ret;
         }
     }
@@ -73,9 +73,9 @@ int32_t RequestManagerImpl::Create(const Config &config, int32_t seq, std::strin
         ret = proxy->Start(tid);
     }
     if (ret != E_OK) {
-        REQUEST_HILOGE("Send create request, seq: %{public}d, failed with reason: %{public}d", seq, ret);
+        REQUEST_HILOGE("Request create, seq: %{public}d, failed: %{public}d", seq, ret);
     } else {
-        REQUEST_HILOGI("End send create request successfully, seq: %{public}d, ret: %{public}d", seq, ret);
+        REQUEST_HILOGI("End Request create ok, seq: %{public}d, ret: %{public}d", seq, ret);
     }
 
     return ret;
@@ -372,14 +372,14 @@ int32_t RequestManagerImpl::EnsureChannelOpen()
 
     auto proxy = GetRequestServiceProxy();
     if (proxy == nullptr) {
-        REQUEST_HILOGE("EnsureChannelOpen failed with reason: proxy is null");
+        REQUEST_HILOGE("EnsureChannelOpen failed: proxy is null");
         return false;
     }
 
     int32_t sockFd = -1;
     int32_t ret = proxy->OpenChannel(sockFd);
     if (ret != E_OK) {
-        REQUEST_HILOGE("EnsureChannelOpen failed with reason: %{public}d", ret);
+        REQUEST_HILOGE("EnsureChannelOpen failed: %{public}d", ret);
         return ret;
     }
     msgReceiver_ = std::make_shared<ResponseMessageReceiver>(this, sockFd);
@@ -590,7 +590,7 @@ bool RequestManagerImpl::LoadRequestServer()
 
     auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sm == nullptr) {
-        REQUEST_HILOGE("End load request server, failed with reason: GetSystemAbilityManager return null");
+        REQUEST_HILOGE("End load request server, failed: GetSystemAbilityManager return null");
         return false;
     }
     auto systemAbility = sm->CheckSystemAbility(DOWNLOAD_SERVICE_ID);
@@ -601,13 +601,13 @@ bool RequestManagerImpl::LoadRequestServer()
     }
     sptr<RequestSyncLoadCallback> loadCallback_ = new (std::nothrow) RequestSyncLoadCallback();
     if (loadCallback_ == nullptr) {
-        REQUEST_HILOGE("End load request server, failed with reason: new DownloadAbilityCallback fail");
+        REQUEST_HILOGE("End load request server, failed: new DownloadAbilityCallback fail");
         return false;
     }
 
     int32_t result = sm->LoadSystemAbility(DOWNLOAD_SERVICE_ID, loadCallback_);
     if (result != E_OK) {
-        REQUEST_HILOGE("End load request server, failed with reason: LoadSystemAbility %{public}d failed, result: "
+        REQUEST_HILOGE("End load request server, failed: LoadSystemAbility %{public}d failed, result: "
                        "%{public}d",
             DOWNLOAD_SERVICE_ID, result);
         return false;
@@ -618,7 +618,7 @@ bool RequestManagerImpl::LoadRequestServer()
         auto waitStatus = syncCon_.wait_for(
             conditionLock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS), [this]() { return ready_.load(); });
         if (!waitStatus) {
-            REQUEST_HILOGE("End load request server, failed with reason: download server load sa timeout");
+            REQUEST_HILOGE("End load request server, failed: download server load sa timeout");
             return false;
         }
     }

@@ -28,10 +28,10 @@ impl RequestServiceStub {
         }
 
         let id: String = data.read()?;
-        info!("Process Service start: task_id is {}", id);
+        info!("Service start: tid: {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
-                debug!("Service start: u32 task_id is {}", id);
+                debug!("Service start: u32 tid: {}", id);
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service start: uid is {}", uid);
 
@@ -43,25 +43,22 @@ impl RequestServiceStub {
                     Some(ret) => ret,
                     None => {
                         error!(
-                        "End Service start, task_id is {}, failed with reason: receives ret failed",
-                        id
-                    );
+                            "End Service start, tid: {}, failed: receives ret failed",
+                            id
+                        );
                         return Err(IpcStatusCode::Failed);
                     }
                 };
                 reply.write(&(ret as i32))?;
                 if ret != ErrorCode::ErrOk {
-                    error!(
-                        "End Service start, task_id is {}, failed with reason: {}",
-                        id, ret as i32
-                    );
+                    error!("End Service start, tid: {}, failed: {}", id, ret as i32);
                     return Err(IpcStatusCode::Failed);
                 }
-                info!("End Service start successfully: task_id is {}", id);
+                info!("End Service start ok: tid: {}", id);
                 Ok(())
             }
             _ => {
-                error!("End Service start, failed with reason: task_id not valid");
+                error!("End Service start, failed: task_id not valid");
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

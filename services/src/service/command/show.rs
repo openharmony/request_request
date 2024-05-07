@@ -27,10 +27,10 @@ impl RequestServiceStub {
             return Err(IpcStatusCode::Failed);
         }
         let id: String = data.read()?;
-        info!("Process Service show: task_id is {}", id);
+        info!("Service show: tid: {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
-                debug!("Service show: u32 task_id is {}", id);
+                debug!("Service show: u32 tid: {}", id);
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service show: uid is {}", uid);
 
@@ -41,26 +41,26 @@ impl RequestServiceStub {
                 match rx.get() {
                     Some(Some(info)) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;
-                        info!("End Service show successfully, task_id is {}", id);
+                        info!("End Service show ok, tid: {}", id);
                         serialize_task_info(info, reply)?;
                         Ok(())
                     }
                     Some(None) => {
-                        error!(
-                        "End Service show, failed with reason: task_id not found, task_id is {}",
-                        id
-                    );
+                        error!("End Service show, failed: task_id not found, tid: {}", id);
                         reply.write(&(ErrorCode::TaskNotFound as i32))?;
                         Err(IpcStatusCode::Failed)
                     }
                     None => {
-                        error!("End Service show, task_id is {}, failed with reason: receives task_info failed", id);
+                        error!(
+                            "End Service show, tid: {}, failed: receives task_info failed",
+                            id
+                        );
                         Err(IpcStatusCode::Failed)
                     }
                 }
             }
             _ => {
-                error!("End Service show, failed with reason: task_id not valid");
+                error!("End Service show, failed: task_id not valid");
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

@@ -88,13 +88,15 @@ impl ClientManager {
                 ClientEvent::SendResponse(tid, version, status_code, reason, headers) => {
                     if let Some(&pid) = self.pid_map.get(&tid) {
                         if let Some((rx, _fd)) = self.clients.get_mut(&pid) {
-                            let _ = rx.send(ClientEvent::SendResponse(
+                            if let Err(err) = rx.send(ClientEvent::SendResponse(
                                 tid,
                                 version,
                                 status_code,
                                 reason,
                                 headers,
-                            ));
+                            )) {
+                                error!("send response error, {}", err);
+                            }
                         } else {
                             debug!("response client not found");
                         }
@@ -105,8 +107,11 @@ impl ClientManager {
                 ClientEvent::SendNotifyData(subscribe_type, notify_data) => {
                     if let Some(&pid) = self.pid_map.get(&(notify_data.task_id)) {
                         if let Some((rx, _fd)) = self.clients.get_mut(&pid) {
-                            let _ =
-                                rx.send(ClientEvent::SendNotifyData(subscribe_type, notify_data));
+                            if let Err(err) =
+                                rx.send(ClientEvent::SendNotifyData(subscribe_type, notify_data))
+                            {
+                                error!("send notify data error, {}", err);
+                            }
                         } else {
                             debug!("response client not found");
                         }
