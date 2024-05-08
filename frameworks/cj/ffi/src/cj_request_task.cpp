@@ -268,7 +268,9 @@ ExceptionError CJTask::Create(Context* context, Config &config)
     config_ = config;
     RequestManager::GetInstance()->RestoreListener(CJTask::ReloadListener);
     if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        return {.code = ExceptionErrorCode::E_SERVICE_ERROR};
+        return {
+            .code = ExceptionErrorCode::E_SERVICE_ERROR
+        };
     }
 
     if (config.mode == Mode::FOREGROUND) {
@@ -278,7 +280,9 @@ ExceptionError CJTask::Create(Context* context, Config &config)
     int32_t err = RequestManager::GetInstance()->Create(config_, seq, taskId_);
     if (err != ExceptionErrorCode::E_OK) {
         REQUEST_HILOGE("Create task failed, in");
-        return {.code = (ExceptionErrorCode)err};
+        return {
+            .code = (ExceptionErrorCode)err
+        };
     }
 
     SetTid();
@@ -291,7 +295,9 @@ ExceptionError CJTask::Create(Context* context, Config &config)
 
     AddTaskMap(GetTidStr(), this);
 
-    return {.code = ExceptionErrorCode::E_OK};
+    return {
+        .code = ExceptionErrorCode::E_OK
+    };
 }
 
 ExceptionError CJTask::Remove(const std::string &tid)
@@ -323,7 +329,9 @@ ExceptionError CJTask::On(std::string type, int32_t taskId, void (*callback)(CPr
 
     SubscribeType subscribeType = CJRequestEvent::StringToSubscribeType(type);
     if (subscribeType == SubscribeType::BUTT) {
-        return { .code = ExceptionErrorCode::E_PARAMETER_CHECK, .errInfo = "First parameter error" };
+        return {
+            .code = ExceptionErrorCode::E_PARAMETER_CHECK, .errInfo = "First parameter error"
+        };
     }
 
     listenerMutex_.lock();
@@ -339,7 +347,9 @@ ExceptionError CJTask::On(std::string type, int32_t taskId, void (*callback)(CPr
     REQUEST_HILOGI("End task on event %{public}s successfully, seq: %{public}d, tid: %{public}s", type.c_str(), seq,
         GetTidStr().c_str());
 
-    return {.code = ExceptionErrorCode::E_OK};
+    return {
+        .code = ExceptionErrorCode::E_OK
+    };
 }
 
 ExceptionError CJTask::Off(std::string event, CFunc callback)
@@ -349,7 +359,10 @@ ExceptionError CJTask::Off(std::string event, CFunc callback)
 
     SubscribeType subscribeType = CJRequestEvent::StringToSubscribeType(event);
     if (subscribeType == SubscribeType::BUTT) {
-        return { .code = ExceptionErrorCode::E_PARAMETER_CHECK, .errInfo = "First parameter error" };
+        return {
+            .code = ExceptionErrorCode::E_PARAMETER_CHECK,
+            .errInfo = "First parameter error"
+        };
     }
 
     listenerMutex_.lock();
@@ -361,7 +374,9 @@ ExceptionError CJTask::Off(std::string event, CFunc callback)
     listenerMutex_.unlock();
     notifyDataListenerMap_[subscribeType]->RemoveListener((CFunc)callback);
 
-    return {.code = ExceptionErrorCode::E_OK};
+    return {
+        .code = ExceptionErrorCode::E_OK
+    };
 }
 
 void CJTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls)

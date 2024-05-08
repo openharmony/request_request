@@ -126,6 +126,5 @@ FFI_EXPORT RetError FfiOHOSRequestTaskResume(int32_t taskId);
 FFI_EXPORT RetError FfiOHOSRequestTaskStop(int32_t taskId);
 FFI_EXPORT RetReqData FfiOHOSRequestCreateTask(void* context, CConfig config);
 FFI_EXPORT RetError FfiOHOSRequestRemoveTask(int32_t taskId);
-
 }
 #endif

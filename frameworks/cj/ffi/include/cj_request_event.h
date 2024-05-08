@@ -43,9 +43,7 @@ private:
     static ExceptionErrorCode StopExec(const CJTask *task);
     static ExceptionErrorCode PauseExec(const CJTask *task);
     static ExceptionErrorCode ResumeExec(const CJTask *task);
-
     static std::map<std::string, SubscribeType> supportEventsV10_;
-
 };
 
 } // namespace OHOS::CJSystemapi::Request
