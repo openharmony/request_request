@@ -146,6 +146,14 @@ impl Drop for RunningTask {
         // Task finishes running, then running count -1.
         self.runcount_manager
             .send_event(RunCountEvent::change_runcount(-1));
+        let (state, reason) = {
+            let status = self.task.status.lock().unwrap();
+            (status.state, status.reason)
+        };
+        // Only tasks that cannot run automatically need to be removed from QoS
+        if state == State::Waiting && reason == Reason::RunningTaskMeetLimits {
+            return;
+        }
         let _ = self.tx.send(TaskManagerEvent::Task(TaskEvent::Finished(
             self.task_id(),
             self.uid(),
