@@ -81,11 +81,17 @@ public:
     void OnResponseReceive(const std::shared_ptr<Response> &response) override
     {
         (void)response;
-        g_requestTest = 2;
+        g_requestTest = 2; // 2 is except result
         return;
     }
 };
 
+/**
+ * @tc.name: AddAndRemoveListenerTest001
+ * @tc.desc: Test AddAndRemoveListenerTest001 interface base function - AddListener/RemoveListener
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
 HWTEST_F(RequestTest, AddAndRemoveListenerTest001, TestSize.Level1)
 {
     string tid = "testTid";
@@ -109,6 +115,12 @@ public:
     }
 };
 
+/**
+ * @tc.name: OnNotifyDataReceiveTest001
+ * @tc.desc: Test OnNotifyDataReceiveTest001 interface base function - OnNotifyDataReceive
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
 HWTEST_F(RequestTest, OnNotifyDataReceiveTest001, TestSize.Level1)
 {
     g_requestTest = 0;
@@ -127,6 +139,12 @@ HWTEST_F(RequestTest, OnNotifyDataReceiveTest001, TestSize.Level1)
     EXPECT_EQ(g_requestTest, 1);
 }
 
+/**
+ * @tc.name: AddAndRemoveListenerTest002
+ * @tc.desc: Test AddAndRemoveListenerTest002 interface base function - AddListener/RemoveListener
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
 HWTEST_F(RequestTest, AddAndRemoveListenerTest002, TestSize.Level1)
 {
     g_requestTest = 0;
@@ -145,7 +163,13 @@ HWTEST_F(RequestTest, AddAndRemoveListenerTest002, TestSize.Level1)
     EXPECT_EQ(request.HasListener(), false);
 }
 
-HWTEST_F(RequestTest, OnResponseReceiveTest002, TestSize.Level1)
+/**
+ * @tc.name: OnResponseReceiveTest001
+ * @tc.desc: Test OnResponseReceiveTest001 interface base function - OnResponseReceive
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestTest, OnResponseReceiveTest001, TestSize.Level1)
 {
     g_requestTest = 0;
     string tid = "testTid";
@@ -158,5 +182,5 @@ HWTEST_F(RequestTest, OnResponseReceiveTest002, TestSize.Level1)
     request.AddListener(type, listenerPtr);
     EXPECT_EQ(request.HasListener(), true);
     request.OnResponseReceive(response);
-    EXPECT_EQ(g_requestTest, 2);
+    EXPECT_EQ(g_requestTest, 2); // 2 is except result
 }

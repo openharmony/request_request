@@ -54,7 +54,7 @@ extern "C" {
 #endif
 
 void FreeCertDataList(struct CRequestCerts *certs);
-struct CRequestCerts *GetUserCertsData();
+struct CRequestCerts *GetUserCertsData(void);
 
 #ifdef __cplusplus
 }

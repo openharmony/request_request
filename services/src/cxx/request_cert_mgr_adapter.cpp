@@ -142,7 +142,7 @@ struct CRequestCerts *RequestCertManager::GetUserCertsData()
             return nullptr;
         }
         char *uri = certList->certAbstract[i].uri;
-        struct CmBlob uriBlob = { strlen(uri) + 1, (uint8_t *)(uri) };
+        struct CmBlob uriBlob = { strlen(uri) + 1, reinterpret_cast<uint8_t *>(uri) };
 
         ret = CmGetUserCertInfo(&uriBlob, CM_USER_TRUSTED_STORE, &certInfo);
         if (ret != CM_SUCCESS) {
@@ -154,6 +154,12 @@ struct CRequestCerts *RequestCertManager::GetUserCertsData()
         }
 
         struct CRequestCert *cert = static_cast<struct CRequestCert *>(malloc(sizeof(struct CRequestCert)));
+        if (cert == nullptr) {
+            FreeCertInfo(&certInfo);
+            FreeCertDataList(certs);
+            FreeCertList(certList);
+            return nullptr;
+        }
         cert->data = certInfo.certInfo.data;
         cert->size = certInfo.certInfo.size;
         certDataList[i] = cert;
@@ -168,7 +174,7 @@ void FreeCertDataList(struct CRequestCerts *certs)
     RequestCertManager::GetInstance().FreeCertDataList(certs);
 }
 
-struct CRequestCerts *GetUserCertsData()
+struct CRequestCerts *GetUserCertsData(void)
 {
     return RequestCertManager::GetInstance().GetUserCertsData();
 }

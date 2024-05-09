@@ -263,9 +263,9 @@ int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store)
 void RequestDBUpgradeFrom50(OHOS::NativeRdb::RdbStore &store)
 {
     // Ignores these error if these columns already exists.
-    int ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_PROXY);
-    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CERTIFICATE_PINS);
-    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_Bundle_Type);
+    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_PROXY);
+    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CERTIFICATE_PINS);
+    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_Bundle_Type);
 }
 
 int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
