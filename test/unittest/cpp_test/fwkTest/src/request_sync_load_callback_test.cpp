@@ -75,7 +75,7 @@ class RSLCTRemoteObjectImpl : public OHOS::IRemoteObject {};
 
 /**
  * @tc.name: OnLoadSystemAbilityTest001
- * @tc.desc: Test OnLoadSystemAbilityTest001 interface base function - OnLoadSystemAbilityFail/OnLoadSystemAbilitySuccess
+ * @tc.desc: Test OnLoadSystemAbilityTest001 interface base function - OnLoadSystemAbilityFail/Success
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */

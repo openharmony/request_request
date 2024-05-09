@@ -29,13 +29,16 @@ ohos_unittest("fwkTest") {
 
   sources = [
     "../../../../common/src/module_init.cpp",
+    "../../../../frameworks/native/src/parcel_helper.cpp",
     "../../../../frameworks/native/src/request.cpp",
     "../../../../frameworks/native/src/request_manager.cpp",
     "../../../../frameworks/native/src/request_manager_impl.cpp",
     "../../../../frameworks/native/src/request_running_task_count.cpp",
+    "../../../../frameworks/native/src/request_service_proxy.cpp",
     "../../../../frameworks/native/src/request_sync_load_callback.cpp",
     "../../../../frameworks/native/src/response_message_receiver.cpp",
     "../../../../frameworks/native/src/runcount_notify_stub.cpp",
+    "src/request_manager_impl_test.cpp",
     "src/request_manager_test.cpp",
     "src/request_sync_load_callback_test.cpp",
     "src/request_test.cpp",
