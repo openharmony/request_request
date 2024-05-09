@@ -761,6 +761,12 @@ impl RequestTask {
                 }
 
                 State::Removed => self.set_code(index, reason),
+
+                State::Running => {
+                    if current_state == State::Waiting || current_state == State::Paused {
+                        self.resume.store(true, Ordering::SeqCst);
+                    }
+                }
                 _ => {}
             }
             current_status.mtime = get_current_timestamp();
