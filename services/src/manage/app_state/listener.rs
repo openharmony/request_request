@@ -33,6 +33,7 @@ impl AppStateListener {
                 app_state_manager,
             });
             RegisterAPPStateCallback(app_state_change_callback);
+            RegisterProcessStateCallback(process_state_change_callback);
         }
 
         info!("AppStateListener is inited");
@@ -47,15 +48,7 @@ extern "C" fn app_state_change_callback(uid: i32, state: i32, pid: i32) {
     let state = match state {
         2 => ApplicationState::Foreground,
         4 => ApplicationState::Background,
-        5 => {
-            unsafe {
-                APP_STATE_LISTENER
-                    .assume_init_ref()
-                    .client_manager
-                    .notify_process_terminate(pid as u64)
-            };
-            ApplicationState::Terminated
-        }
+        5 => ApplicationState::Terminated,
         _ => return,
     };
 
@@ -67,7 +60,23 @@ extern "C" fn app_state_change_callback(uid: i32, state: i32, pid: i32) {
     };
 }
 
+extern "C" fn process_state_change_callback(uid: i32, state: i32, pid: i32) {
+    if state == 5 {
+        info!(
+            "Receives process died notify, uid is {}, pid is {}",
+            uid, pid
+        );
+        unsafe {
+            APP_STATE_LISTENER
+                .assume_init_ref()
+                .client_manager
+                .notify_process_terminate(pid as u64)
+        };
+    }
+}
+
 #[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     fn RegisterAPPStateCallback(f: extern "C" fn(i32, i32, i32));
+    fn RegisterProcessStateCallback(f: extern "C" fn(i32, i32, i32));
 }
