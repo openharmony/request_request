@@ -318,10 +318,11 @@ napi_value JsTask::GetTask(napi_env env, napi_callback_info info)
     context->withErrCode_ = true;
     context->version_ = Version::API10;
     auto input = [context, seq](size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        if (!ParseGetTask(context->env_, argc, argv, context)) {
+        ExceptionError err = ParseGetTask(context->env_, argc, argv, context);
+        if (err.code != E_OK) {
             REQUEST_HILOGE(
                 "End get task in AsyncCall input, seq: %{public}d, failed with reason: parse tid or token fail", seq);
-            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Parse tid or token fail!", true);
+            NapiUtils::ThrowError(context->env_, err.code, err.errInfo, true);
             return napi_invalid_arg;
         }
         napi_create_reference(context->env_, argv[0], 1, &(context->baseContext));
@@ -406,28 +407,37 @@ bool JsTask::GetTaskOutput(std::shared_ptr<ContextInfo> context)
     return true;
 }
 
-bool JsTask::ParseGetTask(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<ContextInfo> context)
+ExceptionError JsTask::ParseGetTask(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<ContextInfo> context)
 {
+    ExceptionError err = { .code = E_OK };
     // need at least 2 params.
     if (argc < 2) {
         REQUEST_HILOGE("Wrong number of arguments");
-        return false;
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Missing mandatory parameters, need at least two params, context and id";
+        return err;
     }
     if (NapiUtils::GetValueType(env, argv[1]) != napi_string) {
-        REQUEST_HILOGE("The parameter is not of string type");
-        return false;
+        REQUEST_HILOGE("The parameter: tid is not of string type");
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Incorrect parameter type, tid is not of string type";
+        return err;
     }
     std::string tid = NapiUtils::Convert2String(env, argv[1]);
     if (tid.empty()) {
         REQUEST_HILOGE("tid is empty");
-        return false;
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Parameter verification failed, tid is empty";
+        return err;
     }
     context->tid = std::stoi(tid);
     // handle 3rd param TOKEN
     if (argc == 3) {
         if (NapiUtils::GetValueType(env, argv[2]) != napi_string) { // argv[2] is the 3rd param
-            REQUEST_HILOGE("The parameter is not of string type");
-            return false;
+            REQUEST_HILOGE("The parameter: token is not of string type");
+            err.code = E_PARAMETER_CHECK;
+            err.errInfo = "Incorrect parameter type, token is not of string type";
+            return err;
         }
         uint32_t bufferLen = TOKEN_MAX_BYTES + 2;
         std::unique_ptr<char[]> token = std::make_unique<char[]>(bufferLen);
@@ -436,16 +446,20 @@ bool JsTask::ParseGetTask(napi_env env, size_t argc, napi_value *argv, std::shar
         if (status != napi_ok) {
             REQUEST_HILOGE("napi get value string utf8 failed");
             memset_s(token.get(), bufferLen, 0, bufferLen);
-            return false;
+            err.code = E_PARAMETER_CHECK;
+            err.errInfo = "Parameter verification failed, get parameter token failed";
+            return err;
         }
         if (len < TOKEN_MIN_BYTES || len > TOKEN_MAX_BYTES) {
             memset_s(token.get(), bufferLen, 0, bufferLen);
-            return false;
+            err.code = E_PARAMETER_CHECK;
+            err.errInfo = "Parameter verification failed, the length of token should between 8 and 2048 bytes";
+            return err;
         }
         context->token = NapiUtils::SHA256(token.get(), len);
         memset_s(token.get(), bufferLen, 0, bufferLen);
     }
-    return true;
+    return err;
 }
 
 napi_value JsTask::Remove(napi_env env, napi_callback_info info)
@@ -461,10 +475,10 @@ napi_value JsTask::Remove(napi_env env, napi_callback_info info)
     context->withErrCode_ = true;
     context->version_ = Version::API10;
     auto input = [context, seq](size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        context->tid = ParseTid(context->env_, argc, argv);
-        if (context->tid.empty()) {
+        ExceptionError err = ParseTid(context->env_, argc, argv, context->tid);
+        if (err.code != E_OK) {
             REQUEST_HILOGE("End task remove in AsyncCall input, seq: %{public}d, failed with reason: tid invalid", seq);
-            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Parse tid fail!", true);
+            NapiUtils::ThrowError(context->env_, err.code, err.errInfo, true);
             return napi_invalid_arg;
         }
         return napi_ok;
@@ -487,17 +501,28 @@ napi_value JsTask::Remove(napi_env env, napi_callback_info info)
     return asyncCall.Call(context, "remove");
 }
 
-std::string JsTask::ParseTid(napi_env env, size_t argc, napi_value *argv)
+ExceptionError JsTask::ParseTid(napi_env env, size_t argc, napi_value *argv, std::string &tid)
 {
+    ExceptionError err = { .code = E_OK };
     if (argc < 1) {
         REQUEST_HILOGE("Wrong number of arguments");
-        return "";
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Missing mandatory parameters, missing tid";
+        return err;
     }
     if (NapiUtils::GetValueType(env, argv[0]) != napi_string) {
         REQUEST_HILOGE("The first parameter is not of string type");
-        return "";
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Incorrect parameter type, tid is not of string type";
+        return err;
     }
-    return NapiUtils::Convert2String(env, argv[0]);
+    tid = NapiUtils::Convert2String(env, argv[0]);
+    if (tid.empty()) {
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Parameter verification failed, tid is empty";
+        return err;
+    }
+    return err;
 }
 
 napi_value JsTask::Show(napi_env env, napi_callback_info info)
@@ -506,10 +531,10 @@ napi_value JsTask::Show(napi_env env, napi_callback_info info)
     REQUEST_HILOGI("Begin task show, seq: %{public}d", seq);
     auto context = std::make_shared<TouchContext>();
     auto input = [context, seq](size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        context->tid = ParseTid(context->env_, argc, argv);
-        if (context->tid.empty()) {
+        ExceptionError err = ParseTid(context->env_, argc, argv, context->tid);
+        if (err.code != E_OK) {
             REQUEST_HILOGE("End task show in AsyncCall input, seq: %{public}d, failed with reason: tid invalid", seq);
-            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Parse tid fail!", true);
+            NapiUtils::ThrowError(context->env_, err.code, err.errInfo, true);
             return napi_invalid_arg;
         }
         return napi_ok;
@@ -523,10 +548,10 @@ napi_value JsTask::Touch(napi_env env, napi_callback_info info)
     REQUEST_HILOGI("Begin task touch, seq: %{public}d", seq);
     auto context = std::make_shared<TouchContext>();
     auto input = [context, seq](size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        bool ret = ParseTouch(context->env_, argc, argv, context);
-        if (!ret) {
+        ExceptionError err = ParseTouch(context->env_, argc, argv, context);
+        if (err.code != E_OK) {
             REQUEST_HILOGE("End task touch in AsyncCall input, seq: %{public}d, failed with reason: arg invalid", seq);
-            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Parse tid or token fail!", true);
+            NapiUtils::ThrowError(context->env_, err.code, err.errInfo, true);
             return napi_invalid_arg;
         }
         return napi_ok;
@@ -561,21 +586,28 @@ napi_value JsTask::TouchInner(napi_env env, napi_callback_info info, AsyncCall::
     return asyncCall.Call(context, "touch");
 }
 
-bool JsTask::ParseTouch(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<TouchContext> context)
+ExceptionError JsTask::ParseTouch(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<TouchContext> context)
 {
+    ExceptionError err = { .code = E_OK };
     // 2 means least param num.
     if (argc < 2) {
         REQUEST_HILOGE("Wrong number of arguments");
-        return false;
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Missing mandatory parameters, need at least two params, id and token";
+        return err;
     }
     if (NapiUtils::GetValueType(env, argv[0]) != napi_string || NapiUtils::GetValueType(env, argv[1]) != napi_string) {
-        REQUEST_HILOGE("The parameter is not of string type");
-        return false;
+        REQUEST_HILOGE("The parameter: tid is not of string type");
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Incorrect parameter type, tid is not of string type";
+        return err;
     }
     context->tid = NapiUtils::Convert2String(env, argv[0]);
     if (context->tid.empty()) {
         REQUEST_HILOGE("tid is empty");
-        return false;
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Parameter verification failed, tid is empty";
+        return err;
     }
     uint32_t bufferLen = TOKEN_MAX_BYTES + 2;
     char *token = new char[bufferLen];
@@ -585,47 +617,56 @@ bool JsTask::ParseTouch(napi_env env, size_t argc, napi_value *argv, std::shared
         REQUEST_HILOGE("napi get value string utf8 failed");
         memset_s(token, bufferLen, 0, bufferLen);
         delete[] token;
-        return false;
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Parameter verification failed, get token failed";
+        return err;
     }
     if (len < TOKEN_MIN_BYTES || len > TOKEN_MAX_BYTES) {
         memset_s(token, bufferLen, 0, bufferLen);
         delete[] token;
-        return false;
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Parameter verification failed, the length of token should between 8 and 2048 bytes";
+        return err;
     }
     context->token = NapiUtils::SHA256(token, len);
     memset_s(token, bufferLen, 0, bufferLen);
     delete[] token;
-    return true;
+    return err;
 }
 
-bool JsTask::ParseSearch(napi_env env, size_t argc, napi_value *argv, Filter &filter)
+ExceptionError JsTask::ParseSearch(napi_env env, size_t argc, napi_value *argv, Filter &filter)
 {
+    ExceptionError err = { .code = E_OK };
     using namespace std::chrono;
     filter.bundle = "*";
     filter.before = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
     filter.after = filter.before - MILLISECONDS_IN_ONE_DAY;
     if (argc < 1) {
-        return true;
+        return err;
     }
     napi_valuetype valueType = NapiUtils::GetValueType(env, argv[0]);
     if (valueType == napi_null || valueType == napi_undefined) {
-        return true;
+        return err;
     }
     if (valueType != napi_object) {
-        REQUEST_HILOGE("The parameter is not of object type");
-        return false;
+        REQUEST_HILOGE("The parameter: filter is not of object type");
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Incorrect parameter type, filter is not of object type";
+        return err;
     }
     filter.bundle = ParseBundle(env, argv[0]);
     filter.before = ParseBefore(env, argv[0]);
     filter.after = ParseAfter(env, argv[0], filter.before);
     if (filter.before < filter.after) {
         REQUEST_HILOGE("before is small than after");
-        return false;
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Parameter verification failed, filter before is small than after";
+        return err;
     }
     filter.state = ParseState(env, argv[0]);
     filter.action = ParseAction(env, argv[0]);
     filter.mode = ParseMode(env, argv[0]);
-    return true;
+    return err;
 }
 
 std::string JsTask::ParseBundle(napi_env env, napi_value value)
@@ -720,10 +761,10 @@ napi_value JsTask::Search(napi_env env, napi_callback_info info)
     context->withErrCode_ = true;
     context->version_ = Version::API10;
     auto input = [context, seq](size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        bool ret = ParseSearch(context->env_, argc, argv, context->filter);
-        if (!ret) {
+        ExceptionError err = ParseSearch(context->env_, argc, argv, context->filter);
+        if (err.code != E_OK) {
             REQUEST_HILOGE("End task search in AsyncCall input, seq: %{public}d, failed with reason: arg invalid", seq);
-            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Parse filter fail!", true);
+            NapiUtils::ThrowError(context->env_, err.code, err.errInfo, true);
             return napi_invalid_arg;
         }
         return napi_ok;
@@ -763,10 +804,10 @@ napi_value JsTask::Query(napi_env env, napi_callback_info info)
     context->withErrCode_ = true;
     context->version_ = Version::API10;
     auto input = [context, seq](size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        context->tid = ParseTid(context->env_, argc, argv);
-        if (context->tid.empty()) {
+        ExceptionError err = ParseTid(context->env_, argc, argv, context->tid);
+        if (err.code != E_OK) {
             REQUEST_HILOGE("End task query in AsyncCall input, seq: %{public}d, failed with reason: tid invalid", seq);
-            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, "Parse tid fail!", true);
+            NapiUtils::ThrowError(context->env_, err.code, err.errInfo, true);
             return napi_invalid_arg;
         }
         return napi_ok;
