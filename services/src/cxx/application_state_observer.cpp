@@ -64,7 +64,7 @@ bool ApplicationStateObserver::RegisterAppStateChanged(RegCallBack &&callback)
         int ret = appObject->RegisterApplicationStateObserver(appProcessState);
         if (ret == ERR_OK) {
             REQUEST_HILOGD("register success");
-            callback_ = callback;
+            appStateCallback_ = callback;
             return true;
         }
         REQUEST_HILOGE("register fail, ret = %{public}d", ret);
@@ -72,6 +72,11 @@ bool ApplicationStateObserver::RegisterAppStateChanged(RegCallBack &&callback)
     }
     REQUEST_HILOGD("RegisterAppState Out");
     return false;
+}
+
+void ApplicationStateObserver::RegisterProcessStateChanged(RegCallBack &&callback)
+{
+    processCallback_ = callback;
 }
 
 void ApplicationStateObserver::AppProcessState::OnForegroundApplicationChanged(
@@ -84,7 +89,7 @@ void ApplicationStateObserver::AppProcessState::OnAbilityStateChanged(
 {
     REQUEST_HILOGD("OnAbilityStateChanged uid=%{public}d,  bundleName=%{public}s,state=%{public}d",
         abilityStateData.uid, abilityStateData.bundleName.c_str(), abilityStateData.abilityState);
-    RunCallback(abilityStateData.uid, abilityStateData.abilityState, abilityStateData.pid);
+    RunAppStateCallback(abilityStateData.uid, abilityStateData.abilityState, abilityStateData.pid);
 }
 
 void ApplicationStateObserver::AppProcessState::OnExtensionStateChanged(
@@ -100,16 +105,25 @@ void ApplicationStateObserver::AppProcessState::OnProcessDied(const AppExecFwk::
 {
     REQUEST_HILOGD("OnProcessDied uid=%{public}d,  bundleName=%{public}s, state=%{public}d, pid=%{public}d",
         processData.uid, processData.bundleName.c_str(), static_cast<int32_t>(processData.state), processData.pid);
-    RunCallback(processData.uid, static_cast<int32_t>(processData.state), processData.pid);
+    RunProcessStateCallback(processData.uid, static_cast<int32_t>(processData.state), processData.pid);
 }
 
-void ApplicationStateObserver::AppProcessState::RunCallback(int32_t uid, int32_t state, int32_t pid)
+void ApplicationStateObserver::AppProcessState::RunAppStateCallback(int32_t uid, int32_t state, int32_t pid)
 {
-    if (appStateObserver_.callback_ == nullptr) {
+    if (appStateObserver_.appStateCallback_ == nullptr) {
         REQUEST_HILOGE("appStateObserver callback is nullptr");
         return;
     }
-    appStateObserver_.callback_(uid, state, pid);
+    appStateObserver_.appStateCallback_(uid, state, pid);
+}
+
+void ApplicationStateObserver::AppProcessState::RunProcessStateCallback(int32_t uid, int32_t state, int32_t pid)
+{
+    if (appStateObserver_.processCallback_ == nullptr) {
+        REQUEST_HILOGE("processStateObserver callback is nullptr");
+        return;
+    }
+    appStateObserver_.processCallback_(uid, state, pid);
 }
 } // namespace OHOS::Request
 
@@ -118,4 +132,10 @@ void RegisterAPPStateCallback(APPStateCallback fun)
 {
     ApplicationStateObserver::GetInstance().RegisterAppStateChanged(fun);
     REQUEST_HILOGD("running RegisterAPPStateCallback");
+}
+
+void RegisterProcessStateCallback(APPStateCallback fun)
+{
+    ApplicationStateObserver::GetInstance().RegisterProcessStateChanged(fun);
+    REQUEST_HILOGD("running RegisterProcessStateCallback");
 }

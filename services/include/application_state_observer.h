@@ -31,6 +31,7 @@ public:
     using RegCallBack = std::function<void(int32_t uid, int32_t state, int32_t pid)>;
     static ApplicationStateObserver &GetInstance();
     bool RegisterAppStateChanged(RegCallBack &&callback);
+    void RegisterProcessStateChanged(RegCallBack &&callback);
 
 public:
     class AppProcessState : public AppExecFwk::ApplicationStateObserverStub {
@@ -46,11 +47,13 @@ public:
         void OnProcessDied(const AppExecFwk::ProcessData &processData) override;
 
     public:
-        void RunCallback(int32_t uid, int32_t state, int32_t pid);
+        void RunAppStateCallback(int32_t uid, int32_t state, int32_t pid);
+        void RunProcessStateCallback(int32_t uid, int32_t state, int32_t pid);
         ApplicationStateObserver &appStateObserver_;
     };
     ApplicationStateObserver();
-    RegCallBack callback_ = nullptr;
+    RegCallBack appStateCallback_ = nullptr;
+    RegCallBack processCallback_ = nullptr;
 };
 } // namespace OHOS::Request
 
@@ -60,6 +63,7 @@ extern "C" {
 
 typedef void (*APPStateCallback)(int32_t, int32_t, int32_t);
 void RegisterAPPStateCallback(APPStateCallback fun);
+void RegisterProcessStateCallback(APPStateCallback fun);
 
 #ifdef __cplusplus
 }
