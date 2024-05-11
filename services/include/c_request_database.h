@@ -172,7 +172,7 @@ uint32_t QueryAppUncompletedTasksNum(uint64_t uid, uint8_t mode);
 CVectorWrapper Search(CFilter filter);
 CTaskInfo *GetTaskInfo(uint32_t taskId);
 CTaskConfig *QueryTaskConfig(uint32_t taskId);
-CTaskConfig **QueryAllTaskConfigs();
+CTaskConfig **QueryAllTaskConfigs(void);
 void UpdateTaskStateOnAppStateChange(uint64_t uid, uint8_t appState);
 void UpdateTaskStateOnNetworkChange(NetworkInfo info);
 void GetTaskQosInfo(uint64_t uid, uint32_t taskId, TaskQosInfo **info);

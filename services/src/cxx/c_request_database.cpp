@@ -1105,7 +1105,7 @@ CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs)
     return cTaskConfigs;
 }
 
-CTaskConfig **QueryAllTaskConfigs()
+CTaskConfig **QueryAllTaskConfigs(void)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
@@ -1209,7 +1209,7 @@ bool QueryTaskTokenId(uint32_t taskId, uint64_t &tokenId)
         REQUEST_HILOGE("TaskConfig result set go to 0 row failed");
         return false;
     }
-    tokenId = GetLong(resultSet, 0);
+    tokenId = static_cast<uint64_t>(GetLong(resultSet, 0));
     return true;
 }
 
