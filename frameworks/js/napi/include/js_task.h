@@ -102,16 +102,18 @@ private:
     static napi_value GetTaskCreate(napi_env env, napi_callback_info info);
     static void GetTaskExecution(std::shared_ptr<ContextInfo> context);
     static bool GetTaskOutput(std::shared_ptr<ContextInfo> context);
-    static bool ParseGetTask(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<ContextInfo> context);
-    static std::string ParseTid(napi_env env, size_t argc, napi_value *argv);
+    static ExceptionError ParseGetTask(
+        napi_env env, size_t argc, napi_value *argv, std::shared_ptr<ContextInfo> context);
+    static ExceptionError ParseTid(napi_env env, size_t argc, napi_value *argv, std::string &tid);
     static napi_value TouchInner(napi_env env, napi_callback_info info, AsyncCall::Context::InputAction action,
         std::shared_ptr<TouchContext> context, int32_t req);
-    static bool ParseSearch(napi_env env, size_t argc, napi_value *argv, Filter &filter);
+    static ExceptionError ParseSearch(napi_env env, size_t argc, napi_value *argv, Filter &filter);
     static std::string ParseBundle(napi_env env, napi_value value);
     static State ParseState(napi_env env, napi_value value);
     static Action ParseAction(napi_env env, napi_value value);
     static Mode ParseMode(napi_env env, napi_value value);
-    static bool ParseTouch(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<TouchContext> context);
+    static ExceptionError ParseTouch(
+        napi_env env, size_t argc, napi_value *argv, std::shared_ptr<TouchContext> context);
     static int64_t ParseBefore(napi_env env, napi_value value);
     static int64_t ParseAfter(napi_env env, napi_value value, int64_t before);
     static void AddPathMap(const std::string &filepath, const std::string &baseDir);

@@ -252,33 +252,33 @@ ExceptionError RequestEvent::ParseOnOffParameters(
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &jsParam.self, nullptr);
     if (status != napi_ok) {
         err.code = E_PARAMETER_CHECK;
-        err.errInfo = "Failed to obtain parameters";
+        err.errInfo = "Parameter verification failed, Failed to obtain parameters";
         return err;
     }
     napi_unwrap(env, jsParam.self, reinterpret_cast<void **>(&jsParam.task));
     if (jsParam.task == nullptr) {
         err.code = E_PARAMETER_CHECK;
-        err.errInfo = "Failed to obtain the current object";
+        err.errInfo = "Parameter verification failed, Failed to obtain the current object";
         return err;
     }
 
     if ((IsRequiredParam && argc < NapiUtils::TWO_ARG) || (!IsRequiredParam && argc < NapiUtils::ONE_ARG)) {
         err.code = E_PARAMETER_CHECK;
-        err.errInfo = "Wrong number of arguments";
+        err.errInfo = "Missing mandatory parameters, Wrong number of arguments";
         return err;
     }
     napi_valuetype valuetype;
     napi_typeof(env, argv[NapiUtils::FIRST_ARGV], &valuetype);
     if (valuetype != napi_string) {
         err.code = E_PARAMETER_CHECK;
-        err.errInfo = "The first parameter is not of string type";
+        err.errInfo = "Incorrect parameter type, event is not of string type";
         return err;
     }
     jsParam.type = NapiUtils::Convert2String(env, argv[NapiUtils::FIRST_ARGV]);
     jsParam.subscribeType = StringToSubscribeType(jsParam.type, jsParam.task->config_.version);
     if (jsParam.subscribeType == SubscribeType::BUTT) {
         err.code = E_PARAMETER_CHECK;
-        err.errInfo = "First parameter error";
+        err.errInfo = "Parameter verification failed, event parse error";
         return err;
     }
     if (argc == NapiUtils::ONE_ARG) {
@@ -288,7 +288,7 @@ ExceptionError RequestEvent::ParseOnOffParameters(
     napi_typeof(env, argv[NapiUtils::SECOND_ARGV], &valuetype);
     if (valuetype != napi_function) {
         err.code = E_PARAMETER_CHECK;
-        err.errInfo = "The second parameter is not of function type";
+        err.errInfo = "Incorrect parameter type, callback is not of function type";
         return err;
     }
     jsParam.callback = argv[NapiUtils::SECOND_ARGV];

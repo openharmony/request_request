@@ -55,23 +55,24 @@ private:
     static void SetParseConfig(napi_env env, napi_value jsConfig, Config &config);
     static bool ParseUploadConfig(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static bool ParseDownloadConfig(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
-    static bool ParseAction(napi_env env, napi_value jsConfig, Action &action);
-    static bool ParseUrl(napi_env env, napi_value jsConfig, std::string &url);
-    static bool ParseProxy(napi_env env, napi_value jsConfig, std::string &proxy);
-    static bool ParseCertsPath(napi_env env, napi_value jsConfig, std::vector<std::string> &certsPath);
-    static bool ParseData(napi_env env, napi_value jsConfig, Config &config);
-    static bool ParseIndex(napi_env env, napi_value jsConfig, Config &config);
+    static bool ParseAction(napi_env env, napi_value jsConfig, Action &action, std::string &errInfo);
+    static bool ParseUrl(napi_env env, napi_value jsConfig, std::string &url, std::string &errInfo);
+    static bool ParseProxy(napi_env env, napi_value jsConfig, std::string &proxy, std::string &errInfo);
+    static bool ParseCertsPath(
+        napi_env env, napi_value jsConfig, std::vector<std::string> &certsPath, std::string &errInfo);
+    static bool ParseData(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
+    static bool ParseIndex(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static bool ParseName(napi_env env, napi_value jsVal, std::string &name);
-    static bool ParseTitle(napi_env env, napi_value jsConfig, Config &config);
+    static bool ParseTitle(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static void ParseNetwork(napi_env env, napi_value jsConfig, Network &network);
     static void ParseCertificatePins(napi_env env, std::string &url, std::string &certificatePins);
     static void ParseMethod(napi_env env, napi_value jsConfig, Config &config);
     static void ParseRedirect(napi_env env, napi_value jsConfig, bool &redirect);
     static void ParseRoaming(napi_env env, napi_value jsConfig, Config &config);
     static void ParseRetry(napi_env env, napi_value jsConfig, bool &retry);
-    static bool ParseSaveas(napi_env env, napi_value jsConfig, Config &config);
-    static bool ParseToken(napi_env env, napi_value jsConfig, Config &config);
-    static bool ParseDescription(napi_env env, napi_value jsConfig, std::string &description);
+    static bool ParseSaveas(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
+    static bool ParseToken(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
+    static bool ParseDescription(napi_env env, napi_value jsConfig, std::string &description, std::string &errInfo);
     static int64_t ParseEnds(napi_env env, napi_value jsConfig);
     static int64_t ParseBegins(napi_env env, napi_value jsConfig);
     static uint32_t ParsePriority(napi_env env, napi_value jsConfig);
@@ -80,13 +81,13 @@ private:
 
     static bool GetFormItems(
         napi_env env, napi_value jsVal, std::vector<FormItem> &forms, std::vector<FileSpec> &files);
-    static bool Convert2FormItems(
-        napi_env env, napi_value jsValue, std::vector<FormItem> &forms, std::vector<FileSpec> &files);
+    static bool Convert2FormItems(napi_env env, napi_value jsValue, std::vector<FormItem> &forms,
+        std::vector<FileSpec> &files, std::string &errInfo);
     static bool Convert2FileSpecs(
         napi_env env, napi_value jsValue, const std::string &name, std::vector<FileSpec> &files);
     static bool Convert2FileSpec(napi_env env, napi_value jsValue, const std::string &name, FileSpec &file);
-    static bool GetInternalPath(
-        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path);
+    static bool GetInternalPath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
+        std::string &path, std::string &errInfo);
 
     static bool CheckUploadBodyFiles(const std::string &filePath, Config &config, ExceptionError &error);
     static bool GetFD(const std::string &path, const Config &config, int32_t &fd, ExceptionError &error);
