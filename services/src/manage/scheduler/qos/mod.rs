@@ -117,9 +117,9 @@ impl Qos {
                 continue;
             }
             if count < m1 {
-                qos_vec.push(QosDirection::high_speed(task.task_id()));
+                qos_vec.push(QosDirection::high_speed(task.uid(), task.task_id()));
             } else if count < m1 + m2 {
-                qos_vec.push(QosDirection::low_speed(task.task_id()));
+                qos_vec.push(QosDirection::low_speed(task.uid(), task.task_id()));
             }
             count += 1;
             if count == m1 + m2 {
@@ -162,7 +162,7 @@ impl Qos {
                 }
 
                 if count < m1 + m2 + m3 {
-                    qos_vec.push(QosDirection::low_speed(task.task_id()));
+                    qos_vec.push(QosDirection::low_speed(task.uid(), task.task_id()));
                 }
 
                 count += 1;

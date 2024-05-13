@@ -26,11 +26,16 @@ impl QosChanges {
 }
 
 pub(crate) struct QosDirection {
+    uid: u64,
     task_id: u32,
     direction: QosLevel,
 }
 
 impl QosDirection {
+    pub(crate) fn uid(&self) -> u64 {
+        self.uid
+    }
+
     pub(crate) fn task_id(&self) -> u32 {
         self.task_id
     }
@@ -39,16 +44,20 @@ impl QosDirection {
         self.direction
     }
 
-    pub(crate) fn high_speed(task_id: u32) -> Self {
-        Self::new(task_id, QosLevel::HighSpeed)
+    pub(crate) fn high_speed(uid: u64, task_id: u32) -> Self {
+        Self::new(uid, task_id, QosLevel::HighSpeed)
     }
 
-    pub(crate) fn low_speed(task_id: u32) -> Self {
-        Self::new(task_id, QosLevel::LowSpeed)
+    pub(crate) fn low_speed(uid: u64, task_id: u32) -> Self {
+        Self::new(uid, task_id, QosLevel::LowSpeed)
     }
 
-    pub(crate) fn new(task_id: u32, direction: QosLevel) -> Self {
-        Self { task_id, direction }
+    pub(crate) fn new(uid: u64, task_id: u32, direction: QosLevel) -> Self {
+        Self {
+            uid,
+            task_id,
+            direction,
+        }
     }
 }
 

@@ -86,11 +86,11 @@ impl Scheduler {
     pub(crate) fn tasks(&self) -> impl Iterator<Item = &Arc<RequestTask>> {
         self.upload_queue.tasks().chain(self.download_queue.tasks())
     }
-
-    pub(crate) fn get_task(&self, task_id: u32) -> Option<&Arc<RequestTask>> {
+    
+    pub(crate) fn get_task(&self, uid: u64, task_id: u32) -> Option<&Arc<RequestTask>> {
         self.upload_queue
-            .get_task(task_id)
-            .or(self.download_queue.get_task(task_id))
+            .get_task(uid, task_id)
+            .or(self.download_queue.get_task(uid, task_id))
     }
 
     pub(crate) fn running_tasks(&self) -> usize {
@@ -220,12 +220,16 @@ impl Scheduler {
         // the task status directly.
         if self
             .download_queue
-            .modify_task_state_by_user(task_id, state)
+            .modify_task_state_by_user(uid, task_id, state)
             == ErrorCode::ErrOk
         {
             return ErrorCode::ErrOk;
         }
-        if self.upload_queue.modify_task_state_by_user(task_id, state) == ErrorCode::ErrOk {
+        if self
+            .upload_queue
+            .modify_task_state_by_user(uid, task_id, state)
+            == ErrorCode::ErrOk
+        {
             return ErrorCode::ErrOk;
         }
         // If the task is not in the running queue but exists in qos, we need to

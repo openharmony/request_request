@@ -204,6 +204,7 @@ impl PartialOrd for App {
 }
 
 pub(crate) struct Task {
+    uid: u64,
     task_id: u32,
     mode: Mode,
     action: Action,
@@ -211,6 +212,10 @@ pub(crate) struct Task {
 }
 
 impl Task {
+    pub(crate) fn uid(&self) -> u64 {
+        self.uid
+    }
+
     pub(crate) fn task_id(&self) -> u32 {
         self.task_id
     }
@@ -223,6 +228,7 @@ impl Task {
 impl From<TaskQosInfo> for Task {
     fn from(value: TaskQosInfo) -> Self {
         Self {
+            uid: value.uid,
             task_id: value.task_id,
             mode: Mode::from(value.mode),
             action: Action::from(value.action),
@@ -295,6 +301,7 @@ fn reload_tasks_of_app_from_database(uid: u64) -> Vec<Task> {
         .get_app_task_qos_infos(uid)
         .iter()
         .map(|info| Task {
+            uid: info.uid,
             task_id: info.task_id,
             mode: Mode::from(info.mode),
             action: Action::from(info.action),
@@ -320,6 +327,7 @@ mod ut_manage_scheduler_qos_apps {
     impl Task {
         fn new(task_id: u32, mode: Mode, priority: u32) -> Self {
             Self {
+                uid: 0,
                 action: crate::task::config::Action::Any,
                 task_id,
                 mode,
