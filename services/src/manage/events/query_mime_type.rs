@@ -20,7 +20,7 @@ impl TaskManager {
             uid, task_id
         );
 
-        match self.scheduler.get_task(task_id) {
+        match self.scheduler.get_task(uid, task_id) {
             Some(task) => {
                 if task.uid() == uid {
                     task.mime_type()

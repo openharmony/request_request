@@ -40,7 +40,7 @@ use crate::utils::get_current_timestamp;
 const MILLISECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
 
 pub(crate) struct RunningQueue {
-    running: HashMap<u32, Arc<RequestTask>>,
+    running: HashMap<(u64, u32), Arc<RequestTask>>,
     keeper: SAKeeper,
     tx: TaskManagerTx,
     app_state_manager: AppStateManagerTx,
@@ -69,8 +69,8 @@ impl RunningQueue {
         self.running.values()
     }
 
-    pub(crate) fn get_task(&self, task_id: u32) -> Option<&Arc<RequestTask>> {
-        self.running.get(&task_id)
+    pub(crate) fn get_task(&self, uid: u64, task_id: u32) -> Option<&Arc<RequestTask>> {
+        self.running.get(&(uid, task_id))
     }
 
     pub(crate) fn running_tasks(&self) -> usize {
@@ -83,10 +83,10 @@ impl RunningQueue {
             self.running_tasks()
         );
 
-        for (task_id, task) in self.running.iter() {
+        for ((uid, task_id), task) in self.running.iter() {
             let task_status = task.status.lock().unwrap();
-            info!("dump task message, task_id:{}, action:{}, mode:{}, bundle name:{}, task_status:{:?}",
-                task_id, task.action() as u8, task.mode() as u8, task.bundle(), *task_status);
+            info!("dump task message, uid:{}, task_id:{}, action:{}, mode:{}, bundle name:{}, task_status:{:?}",
+                uid, task_id, task.action() as u8, task.mode() as u8, task.bundle(), *task_status);
         }
     }
 
@@ -108,15 +108,16 @@ impl RunningQueue {
 
         // We need to decide which tasks need to continue running based on `QosChanges`.
         for qos_direction in qos_vec.iter() {
+            let uid = qos_direction.uid();
             let task_id = qos_direction.task_id();
             let limit = qos_direction.direction() == QosLevel::LowSpeed;
 
-            if let Some(task) = self.running.remove(&task_id) {
+            if let Some(task) = self.running.remove(&(uid, task_id)) {
                 // If we can find that the task is running in `running_tasks`,
                 // we just need to adjust its rate.
                 task.speed_limit(limit);
                 // Then we put it into `satisfied_tasks`.
-                satisfied_tasks.insert(task_id, task);
+                satisfied_tasks.insert((uid, task_id), task);
                 continue;
             }
 
@@ -140,7 +141,7 @@ impl RunningQueue {
             let tx = self.tx.clone();
             let runcount_manager = self.runcount_manager.clone();
             task.speed_limit(limit);
-            satisfied_tasks.insert(task_id, task.clone());
+            satisfied_tasks.insert((uid, task_id), task.clone());
             ylong_runtime::spawn(async move {
                 RunningTask::new(runcount_manager, task.clone(), tx, keeper)
                     .run()
@@ -157,8 +158,13 @@ impl RunningQueue {
         self.running = satisfied_tasks;
     }
 
-    pub(crate) fn modify_task_state_by_user(&mut self, task_id: u32, state: State) -> ErrorCode {
-        if let Some(task) = self.running.remove(&task_id) {
+    pub(crate) fn modify_task_state_by_user(
+        &mut self,
+        uid: u64,
+        task_id: u32,
+        state: State,
+    ) -> ErrorCode {
+        if let Some(task) = self.running.remove(&(uid, task_id)) {
             set_task_state_by_user(&self.client_manager, task, state)
         } else {
             ErrorCode::TaskNotFound

@@ -18,19 +18,22 @@ use crate::task::info::{DumpAllEachInfo, DumpAllInfo, DumpOneInfo};
 
 impl TaskManager {
     pub(crate) fn query_one_task(&self, task_id: u32) -> Option<DumpOneInfo> {
-        self.scheduler.get_task(task_id).map(|task| {
-            let status = task.status.lock().unwrap();
-            let tran_size = task.progress.lock().unwrap().common_data.total_processed;
-            DumpOneInfo {
-                task_id: task.conf.common_data.task_id,
-                action: task.conf.common_data.action,
-                state: status.state,
-                reason: status.reason,
-                total_size: task.file_total_size.load(Ordering::SeqCst),
-                tran_size,
-                url: task.conf.url.clone(),
-            }
-        })
+        self.scheduler
+            .tasks()
+            .find(|task| task.task_id() == task_id)
+            .map(|task| {
+                let status = task.status.lock().unwrap();
+                let tran_size = task.progress.lock().unwrap().common_data.total_processed;
+                DumpOneInfo {
+                    task_id: task.conf.common_data.task_id,
+                    action: task.conf.common_data.action,
+                    state: status.state,
+                    reason: status.reason,
+                    total_size: task.file_total_size.load(Ordering::SeqCst),
+                    tran_size,
+                    url: task.conf.url.clone(),
+                }
+            })
     }
 
     pub(crate) fn query_all_task(&self) -> DumpAllInfo {

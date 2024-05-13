@@ -210,6 +210,7 @@ impl Database {
 
         let res = unsafe {
             TaskQosInfo {
+                uid: (*info).uid,
                 task_id: (*info).task_id,
                 action: (*info).action,
                 mode: (*info).mode,
@@ -311,6 +312,7 @@ impl Database {
 #[derive(Clone, Debug, Copy)]
 #[repr(C)]
 pub(crate) struct TaskQosInfo {
+    pub(crate) uid: u64,
     pub(crate) task_id: u32,
     pub(crate) action: u8,
     pub(crate) mode: u8,

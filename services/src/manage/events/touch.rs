@@ -18,7 +18,7 @@ impl TaskManager {
     pub(crate) fn touch(&self, uid: u64, task_id: u32, token: String) -> Option<TaskInfo> {
         debug!("TaskManager Touch, uid: {}, task_id: {}", uid, task_id);
 
-        match self.scheduler.get_task(task_id) {
+        match self.scheduler.get_task(uid, task_id) {
             Some(task) => {
                 if task.uid() == uid && task.conf.token.eq(token.as_str()) {
                     let mut info = task.info();
