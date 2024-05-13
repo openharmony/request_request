@@ -24,6 +24,13 @@ ohos_shared_library("cj_request_ffi") {
   }
   stack_protector_ret = true
 
+  cflags_cc = [ "-fno-exceptions" ]
+  cflags = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fvisibility=hidden",
+  ]
+
   if (!defined(defines)) {
     defines = []
   }
@@ -34,7 +41,7 @@ ohos_shared_library("cj_request_ffi") {
     "../../js/napi/include",
   ]
 
-  if (product_name != "ohos-sdk") {
+  if (!build_ohos_sdk) {
     deps = [
       "../../../common:request_common_static",
       "../../native:request_native",
@@ -73,16 +80,18 @@ ohos_shared_library("cj_request_ffi") {
   } else {
     defines += [ "PREVIEWER" ]
     sources = [ "src/request_mock.cpp" ]
+    external_deps = [ "napi:cj_bind_ffi" ]
   }
 
-  if (current_os == "ohos") {
+  if (is_ohos) {
     defines += [ "OHOS_PLATFORM" ]
   }
 
-  if (current_os == "mingw") {
+  if (is_mingw) {
     defines += [ "WINDOWS_PLATFORM" ]
   }
 
+  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "request"
   part_name = "request"
 }

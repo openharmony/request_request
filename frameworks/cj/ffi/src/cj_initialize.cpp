@@ -63,7 +63,9 @@ ExceptionError CJInitialize::ParseBundleName(const std::shared_ptr<OHOS::Ability
 
     bundleName = context->GetBundleName();
 
-    return {.code = ExceptionErrorCode::E_OK};
+    return {
+        .code = ExceptionErrorCode::E_OK
+    };
 }
 
 bool CJInitialize::ParseUrl(std::string &url)
@@ -189,7 +191,7 @@ bool CJInitialize::ParseFormItems(const CFormItemArr *cForms, std::vector<FormIt
 
 bool CJInitialize::ParseData(const CConfig *config, Config &out)
 {
-    REQUEST_HILOGD("formItems.size is %{public}lld, data.str is %{public}p", config->data.formItems.size,
+    REQUEST_HILOGD("formItems.size is %{public}" PRIi64 ", data.str is %{public}p", config->data.formItems.size,
         config->data.str);
     if (config->data.str == nullptr && config->data.formItems.size <= 0) {
         return true;
@@ -511,7 +513,9 @@ ExceptionError CJInitialize::UploadBodyFileProc(std::string &fileName, Config &c
     config.bodyFds.push_back(bodyFd);
     config.bodyFileNames.push_back(fileName);
 
-    return { .code = ExceptionErrorCode::E_OK };
+    return {
+        .code = ExceptionErrorCode::E_OK
+    };
 }
 
 ExceptionError CJInitialize::CheckUploadBodyFiles(Config &config, const std::string &filePath)
@@ -541,7 +545,9 @@ ExceptionError CJInitialize::CheckUploadBodyFiles(Config &config, const std::str
             return ret;
         }
     }
-    return { .code = ExceptionErrorCode::E_OK };
+    return {
+        .code = ExceptionErrorCode::E_OK
+    };
 }
 
 bool CJInitialize::InterceptData(const std::string &str, const std::string &in, std::string &out)
@@ -584,12 +590,17 @@ ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config
     } else {
         if (config.action == Action::UPLOAD) {
             ExceptionErrorCode code = ExceptionErrorCode::E_FILE_IO;
-            return {.code = code, .errInfo = "Failed to open file errno " + std::to_string(errno)};
+            return {
+                .code = code,
+                .errInfo = "Failed to open file errno " + std::to_string(errno)
+            };
         }
         fd = open(path.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
         if (fd < 0) {
-            return {.code = ExceptionErrorCode::E_FILE_IO, .errInfo = "Failed to open file errno " +
-                std::to_string(errno)};
+            return {
+                .code = ExceptionErrorCode::E_FILE_IO,
+                .errInfo = "Failed to open file errno " +std::to_string(errno)
+            };
         }
         chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
     }
@@ -676,7 +687,10 @@ ExceptionError CJInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRu
     }
 
     if (!CJTask::SetDirsPermission(config.certsPath)) {
-        return {.code = ExceptionErrorCode::E_FILE_IO, .errInfo = "set files of directors permission fail"};
+        return {
+            .code = ExceptionErrorCode::E_FILE_IO,
+            .errInfo = "set files of directors permission fail"
+        };
     }
 
     if (config.action == Action::UPLOAD) {

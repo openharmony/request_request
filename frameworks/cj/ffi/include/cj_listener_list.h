@@ -60,9 +60,5 @@ protected:
     std::list<std::pair<bool, std::shared_ptr<CallBackInfo>>> allCb_;
     std::atomic<uint32_t> validCbNum{ 0 };
 };
-
-
-
-} // namespace OHOS::Request
-
-#endif // OHOS_REQUEST_LISTENER_LIST_H
+} // namespace OHOS::CJSystemapi::Request
+#endif // OHOS_REQUEST_CJ_LISTENER_LIST_H

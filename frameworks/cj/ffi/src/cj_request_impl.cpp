@@ -132,7 +132,9 @@ RetReqData CJRequestImpl::CreateTask(OHOS::AbilityRuntime::Context* context, CCo
     Convert2Config(FfiConfig, config);
     ExceptionError result = CJInitialize::ParseConfig(context, FfiConfig, config);
     if (result.code != 0) {
-        return {.err = Convert2RetErr(result)};
+        return {
+            .err = Convert2RetErr(result)
+        };
     }
 
     RetReqData ret{};
@@ -145,7 +147,9 @@ RetReqData CJRequestImpl::CreateTask(OHOS::AbilityRuntime::Context* context, CCo
     result = task->Create(context, config);
     if (result.code != 0) {
         REQUEST_HILOGE("[CJRequestImpl] task create failed, ret:%{public}d.", result.code);
-        return {.err = Convert2RetErr(result)};
+        return {
+            .err = Convert2RetErr(result)
+        };
     }
 
     ret.taskId = task->taskId_;

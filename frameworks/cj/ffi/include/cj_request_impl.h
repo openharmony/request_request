@@ -54,4 +54,4 @@ private:
 
 } // namespace OHOS::CJSystemapi::Request
 
-#endif // OHOS_REQUEST_JS_RESPONSE_LISTENER_H
+#endif // OHOS_REQUEST_CJ_REQUEST_IMPL_H
