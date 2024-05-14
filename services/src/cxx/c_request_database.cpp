@@ -21,6 +21,7 @@
 #include <cstdint>
 
 #include "log.h"
+#include "rdb_errno.h"
 
 namespace OHOS::Request {
 RequestDataBase::RequestDataBase()
@@ -240,23 +241,23 @@ int RequestDBCreateTables(OHOS::NativeRdb::RdbStore &store)
 int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store)
 {
     int ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_PROXY);
-    if (ret != OHOS::NativeRdb::E_OK) {
+    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
         REQUEST_HILOGE("add column proxy failed, ret: %{public}d", ret);
         return ret;
     }
 
     ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CERTIFICATE_PINS);
-    if (ret != OHOS::NativeRdb::E_OK) {
+    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
         REQUEST_HILOGE("add column certificate_pins failed, ret: %{public}d", ret);
         return ret;
     }
 
     ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_Bundle_Type);
-    if (ret != OHOS::NativeRdb::E_OK) {
+    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
         REQUEST_HILOGE("add column bundle_type failed, ret: %{public}d", ret);
         return ret;
     }
-    return ret;
+    return OHOS::NativeRdb::E_OK;
 }
 
 // This function is used to adapt beta version, remove it later.
