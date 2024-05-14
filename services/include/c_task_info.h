@@ -97,6 +97,7 @@ struct CUpdateInfo {
 };
 
 struct TaskQosInfo {
+    uint64_t uid;
     uint32_t taskId;
     uint8_t action;
     uint8_t mode;
