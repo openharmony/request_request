@@ -23,6 +23,14 @@ enum class Network : uint8_t {
     CELLULAR,
 };
 
+/* used only in sa, do not mix with enum Network. */
+enum class NetworkInner : uint8_t {
+    ANY,                /* Maintain consistency with Network::ANY */
+    WIFI,               /* Maintain consistency with Network::WIFI */
+    CELLULAR,           /* Maintain consistency with Network::CECCULAR */
+    NET_LOST,
+};
+
 enum class Action : uint8_t {
     DOWNLOAD,
     UPLOAD,
@@ -47,5 +55,29 @@ enum class State : uint8_t {
     REMOVED = 0x50,
     CREATED = 0x60,
     ANY = 0x61,
+};
+
+enum class Reason : uint8_t {
+    REASON_OK = 0,
+    TASK_SURVIVAL_ONE_MONTH,
+    WAITTING_NETWORK_ONE_DAY,
+    STOPPED_NEW_FRONT_TASK,
+    RUNNING_TASK_MEET_LIMITS,
+    USER_OPERATION,
+    APP_BACKGROUND_OR_TERMINATE,
+    NETWORK_OFFLINE,
+    UNSUPPORTED_NETWORK_TYPE,
+    BUILD_CLIENT_FAILED,
+    BUILD_REQUEST_FAILED,
+    GET_FILESIZE_FAILED,
+    CONTINUOUS_TASK_TIMEOUT,
+    CONNECT_ERROR,
+    REQUEST_ERROR,
+    UPLOAD_FILE_ERROR,
+    REDIRECT_ERROR,
+    PROTOCOL_ERROR,
+    IO_ERROR,
+    UNSUPPORT_RANGE_REQUEST,
+    OTHERS_ERROR,
 };
 #endif // REQUEST_C_ENUMRATION_H

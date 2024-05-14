@@ -19,10 +19,10 @@ pub(crate) struct RssCapacity(usize, usize, usize);
 
 impl RssCapacity {
     pub(crate) const LEVEL0: Self = Self(8, 32, 8);
-    pub(crate) const LEVEL1: Self = Self(8, 24, 6);
-    pub(crate) const LEVEL2: Self = Self(8, 16, 4);
-    pub(crate) const LEVEL3: Self = Self(8, 16, 2);
-    pub(crate) const LEVEL4: Self = Self(4, 8, 0);
+    pub(crate) const LEVEL1: Self = Self(8, 32, 8);
+    pub(crate) const LEVEL2: Self = Self(8, 32, 8);
+    pub(crate) const LEVEL3: Self = Self(8, 16, 4);
+    pub(crate) const LEVEL4: Self = Self(4, 8, 2);
     pub(crate) const LEVEL5: Self = Self(4, 4, 0);
     pub(crate) const LEVEL6: Self = Self(2, 0, 0);
     pub(crate) const LEVEL7: Self = Self(2, 0, 0);

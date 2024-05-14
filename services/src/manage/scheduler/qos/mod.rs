@@ -147,13 +147,7 @@ impl Qos {
         loop {
             let mut no_tasks_left = true;
 
-            for tasks in self.apps.iter().skip(app_i + 1).map(|app| &app[..]).chain(
-                self.apps
-                    .iter()
-                    .skip(app_i)
-                    .take(1)
-                    .map(|app| &app[task_i + 1..]),
-            ) {
+            for tasks in self.apps.iter().skip(app_i + 1).map(|app| &app[..]) {
                 let task = match tasks.get(i) {
                     Some(task) => {
                         no_tasks_left = false;
@@ -168,6 +162,8 @@ impl Qos {
 
                 if count < m1 + m2 + m3 {
                     qos_vec.push(QosDirection::low_speed(task.uid(), task.task_id()));
+                } else {
+                    return qos_vec;
                 }
 
                 count += 1;
@@ -178,6 +174,28 @@ impl Qos {
             }
             i += 1;
         }
+
+        // supplement fair position with remaining tasks
+        for task in self
+            .apps
+            .iter()
+            .skip(app_i)
+            .take(1)
+            .flat_map(|app| app.iter().skip(task_i + 1))
+        {
+            if task.action() != action {
+                continue;
+            }
+
+            if count < m1 + m2 + m3 {
+                qos_vec.push(QosDirection::low_speed(task.uid(), task.task_id()));
+            } else {
+                return qos_vec;
+            }
+
+            count += 1;
+        }
+
         qos_vec
     }
 }

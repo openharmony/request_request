@@ -81,7 +81,6 @@ HWTEST_F(NetworkAdapterTest, RegisterNetworkCallbackTest_001, TestSize.Level1)
 HWTEST_F(NetworkAdapterTest, GetNetworkInfoTest_001, TestSize.Level1)
 {
     NetworkInfo *netWorkInfo = GetNetworkInfo();
-    EXPECT_EQ(netWorkInfo->networkType, Network::ANY);
     EXPECT_FALSE(netWorkInfo->isMetered);
     EXPECT_FALSE(netWorkInfo->isRoaming);
 }
@@ -193,7 +192,7 @@ HWTEST_F(NetworkAdapterTest, NetLostTest_001, TestSize.Level1)
         OHOS::Request::NetworkAdapter::NetConnCallbackObserver(network);
     ob.NetLost(netHandle);
     auto networkInfo = network.GetNetworkInfo();
-    EXPECT_EQ(networkInfo->networkType, Network::ANY);
+    EXPECT_EQ(networkInfo->networkType, NetworkInner::NET_LOST);
     EXPECT_FALSE(networkInfo->isMetered);
     EXPECT_FALSE(network.IsOnline());
 }

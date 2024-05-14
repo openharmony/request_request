@@ -22,6 +22,7 @@ use crate::service::client::ClientManagerEntry;
 use crate::task::config::TaskConfig;
 use crate::task::ffi::{CTaskConfig, CTaskInfo, CUpdateInfo, NetworkInfo};
 use crate::task::info::{ApplicationState, Mode, State, TaskInfo};
+use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::utils::c_wrapper::{CFilter, CStringWrapper, CVectorWrapper};
 use crate::utils::filter::Filter;
@@ -91,8 +92,8 @@ impl Database {
         debug!("Update task in database, ret is {}", ret);
     }
 
-    pub(crate) fn change_task_state(&self, task_id: u32, uid: u64, state: State) {
-        unsafe { ChangeRequestTaskState(task_id, uid, state) };
+    pub(crate) fn change_task_state(&self, task_id: u32, uid: u64, state: State, reason: Reason) {
+        unsafe { ChangeRequestTaskState(task_id, uid, state, reason) };
     }
 
     pub(crate) fn get_task_info(&self, task_id: u32) -> Option<TaskInfo> {
@@ -118,9 +119,10 @@ impl Database {
             return Vec::new();
         }
         let slice = unsafe { std::slice::from_raw_parts(wrapper.ptr, wrapper.len as usize) };
+        let vec = slice.to_vec();
         debug!("c_vector_wrapper is not null");
         unsafe { DeleteCVectorWrapper(wrapper.ptr) };
-        slice.to_vec()
+        vec
     }
 
     pub(crate) fn app_uncompleted_tasks_num(&self, uid: u64, mode: Mode) -> usize {
@@ -243,9 +245,9 @@ impl Database {
     }
 
     pub(crate) fn get_app_infos(&self) -> Vec<(u64, String)> {
-        let array = null_mut::<AppInfo>();
+        let mut array = null_mut::<AppInfo>();
         let mut len = 0;
-        unsafe { GetAppArray(array, &mut len as *mut usize) };
+        unsafe { GetAppArray(&mut array as *mut *mut AppInfo, &mut len as *mut usize) };
 
         let mut vec = Vec::new();
         if array.is_null() {
@@ -329,7 +331,7 @@ pub(crate) struct AppInfo {
 
 #[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
-    fn ChangeRequestTaskState(task_id: u32, uid: u64, state: State) -> bool;
+    fn ChangeRequestTaskState(task_id: u32, uid: u64, state: State, reason: Reason) -> bool;
     fn DeleteCTaskConfig(ptr: *const CTaskConfig);
     fn DeleteCTaskConfigs(ptr: *const *const CTaskConfig);
     fn DeleteCTaskInfo(ptr: *const CTaskInfo);
@@ -349,7 +351,7 @@ extern "C" {
     fn UpdateTaskStateOnNetworkChange(info: NetworkInfo) -> c_void;
     fn GetTaskQosInfo(uid: u64, task_id: u32, info: *mut *mut TaskQosInfo) -> c_void;
     fn GetAppTaskQosInfos(uid: u64, array: *mut *mut TaskQosInfo, len: *mut usize) -> c_void;
-    fn GetAppArray(apps: *mut AppInfo, len: *mut usize) -> c_void;
+    fn GetAppArray(apps: *mut *mut AppInfo, len: *mut usize) -> c_void;
     fn DeleteTaskQosInfo(ptr: *const TaskQosInfo) -> c_void;
     fn DeleteAppInfo(ptr: *const AppInfo) -> c_void;
     fn GetAppBundle(uid: u64) -> CStringWrapper;

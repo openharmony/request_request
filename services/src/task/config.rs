@@ -41,6 +41,17 @@ pub(crate) enum Network {
     Cellular,
 }
 
+// used only in sa, do not mix with enum Network
+#[derive(Clone, Copy, PartialEq, Debug)]
+#[repr(u8)]
+#[allow(dead_code)]
+pub(crate) enum NetworkInner {
+    ANY = 0,  // Maintain consistency with Network::ANY
+    WIFI,     // Maintain consistency with Network::WIFI
+    CELLULAR, // Maintain consistency with Network::CELLULAR
+    NetLost,
+}
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub(crate) struct CommonTaskConfig {

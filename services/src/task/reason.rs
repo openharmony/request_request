@@ -12,6 +12,7 @@
 // limitations under the License.
 
 #[derive(Clone, Copy, PartialEq, Debug)]
+#[repr(u8)]
 pub(crate) enum Reason {
     Default = 0,
     TaskSurvivalOneMonth,
