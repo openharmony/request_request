@@ -1300,11 +1300,12 @@ void UpdateTaskStateOnNetworkChange(NetworkInfo info)
 
 void BuildTaskQosInfo(TaskQosInfo *info, std::shared_ptr<OHOS::NativeRdb::ResultSet> set)
 {
-    info->taskId = static_cast<uint32_t>(GetLong(set, 0));   // Line 0 is 'task_id'
-    info->action = static_cast<uint8_t>(GetInt(set, 1));     // Line 1 is 'action'
-    info->mode = static_cast<uint8_t>(GetInt(set, 2));       // Line 2 is 'mode'
-    info->state = static_cast<uint8_t>(GetInt(set, 3));      // Line 3 is 'state'
-    info->priority = static_cast<uint32_t>(GetLong(set, 4)); // Line 4 is 'priority'
+    info->uid = static_cast<uint64_t>(GetLong(set, 0));      // Line 0 is 'uid'
+    info->taskId = static_cast<uint32_t>(GetLong(set, 1));   // Line 1 is 'task_id'
+    info->action = static_cast<uint8_t>(GetInt(set, 2));     // Line 2 is 'action'
+    info->mode = static_cast<uint8_t>(GetInt(set, 3));       // Line 3 is 'mode'
+    info->state = static_cast<uint8_t>(GetInt(set, 4));      // Line 4 is 'state'
+    info->priority = static_cast<uint32_t>(GetLong(set, 5)); // Line 5 is 'priority'
 }
 
 void GetTaskQosInfo(uint64_t uid, uint32_t taskId, TaskQosInfo **info)
@@ -1313,7 +1314,7 @@ void GetTaskQosInfo(uint64_t uid, uint32_t taskId, TaskQosInfo **info)
     rdbPredicates.EqualTo("uid", std::to_string(uid))->And()->EqualTo("task_id", std::to_string(taskId));
 
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(
-        rdbPredicates, { "task_id", "action", "mode", "state", "priority" });
+        rdbPredicates, { "uid", "task_id", "action", "mode", "state", "priority" });
     int rowCount = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("GetRunningTasksArray result set is nullptr or get row count failed");
