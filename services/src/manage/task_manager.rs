@@ -21,8 +21,9 @@ use ylong_runtime::time::sleep;
 use super::app_state::AppStateManagerTx;
 // use super::app_state::AppStateManager;
 use super::events::{ScheduleEvent, ServiceEvent, StateEvent, TaskEvent, TaskManagerEvent};
+use crate::ability::PANIC_INFO;
 use crate::error::ErrorCode;
-use crate::init::PANIC_INFO;
+use crate::manage::account::registry_account_subscribe;
 use crate::manage::app_state::AppStateManager;
 use crate::manage::database::Database;
 use crate::manage::network::NetworkManager;
@@ -51,9 +52,8 @@ const RESTORE_ALL_TASKS_INTERVAL: u64 = 10;
 
 pub(crate) struct TaskManager {
     pub(crate) scheduler: Scheduler,
+
     pub(crate) database: Database,
-    #[allow(dead_code)]
-    pub(crate) tx: TaskManagerTx,
     pub(crate) rx: TaskManagerRx,
     pub(crate) app_state_manager: AppStateManagerTx,
     pub(crate) client_manager: ClientManagerEntry,
@@ -71,6 +71,7 @@ impl TaskManager {
         let rx = TaskManagerRx::new(rx);
 
         let app_state_manager = AppStateManager::init(client_manager.clone(), tx.clone());
+        registry_account_subscribe(tx.clone());
 
         let task_manager = Self::new(
             tx.clone(),
@@ -110,13 +111,12 @@ impl TaskManager {
     ) -> Self {
         Self {
             scheduler: Scheduler::init(
-                tx.clone(),
+                tx,
                 runcount_manager,
                 app_state_manager.clone(),
                 client_manager.clone(),
             ),
             database: Database::new(),
-            tx,
             rx,
             app_state_manager,
             client_manager,
@@ -147,6 +147,7 @@ impl TaskManager {
                 TaskManagerEvent::Device(level) => {
                     self.scheduler.on_rss_change(level).await;
                 }
+                TaskManagerEvent::Account(event) => self.handle_account_event(event).await,
             }
 
             debug!("TaskManager handles events finished");
@@ -308,9 +309,10 @@ impl TaskManager {
     }
 }
 
+#[allow(unreachable_pub)]
 #[derive(Clone)]
-pub(crate) struct TaskManagerTx {
-    tx: UnboundedSender<TaskManagerEvent>,
+pub struct TaskManagerTx {
+    pub(crate) tx: UnboundedSender<TaskManagerEvent>,
 }
 
 impl TaskManagerTx {
@@ -330,14 +332,6 @@ impl TaskManagerTx {
             return false;
         }
         true
-    }
-}
-
-impl Deref for TaskManagerTx {
-    type Target = UnboundedSender<TaskManagerEvent>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.tx
     }
 }
 

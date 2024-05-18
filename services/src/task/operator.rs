@@ -19,9 +19,12 @@ use std::task::{Context, Poll};
 use ylong_http_client::HttpClientError;
 use ylong_runtime::io::AsyncWrite;
 
+use super::info::Mode;
+use crate::manage::account::is_active_user;
 use crate::manage::notifier::Notifier;
 use crate::task::config::Version;
 use crate::task::info::State;
+use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::utils::get_current_timestamp;
 
@@ -53,11 +56,17 @@ impl TaskOperator {
         if (state != State::Running && state != State::Retrying)
             || (self.task.conf.version == Version::API10 && !self.task.check_net_work_status())
         {
-            debug!("pause the task");
+            info!("pause the task");
             return Poll::Ready(Err(HttpClientError::user_aborted()));
         }
         if !self.task.check_app_state() {
-            debug!("pause for app state");
+            info!("pause for app state");
+            return Poll::Ready(Err(HttpClientError::user_aborted()));
+        }
+        
+        if self.task.conf.common_data.mode == Mode::BackGround && !is_active_user(self.task.uid()) {
+            info!("pause for user stopped");
+            self.task.set_status(State::Waiting, Reason::AccountStopped);
             return Poll::Ready(Err(HttpClientError::user_aborted()));
         }
 

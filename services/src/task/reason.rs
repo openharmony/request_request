@@ -34,6 +34,7 @@ pub(crate) enum Reason {
     IoError,
     UnsupportedRangeRequest,
     OthersError,
+    AccountStopped,
 }
 
 impl From<u8> for Reason {
@@ -88,6 +89,7 @@ impl Reason {
             Reason::IoError => "Io Error",
             Reason::UnsupportedRangeRequest => "The server is not support range request",
             Reason::OthersError => "Some other error occured",
+            Reason::AccountStopped => "Account stopped"
         }
     }
 }

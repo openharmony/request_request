@@ -17,15 +17,13 @@
 #define COMMON_EVENT_NOTIFY_H
 
 #include <cstdint>
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-constexpr const char *EVENT_NAME_COMPLETE = "ohos.request.event.COMPLETE";
-void PublishStateChangeEvents(const char *bundleName, uint32_t len, uint32_t taskId, int32_t state);
+#include "cxx.h"
 
-#ifdef __cplusplus
+namespace OHOS::Request {
+
+void PublishStateChangeEvent(rust::str bundleName, uint32_t taskId, int32_t state);
+
 }
-#endif
 
 #endif // COMMON_EVENT_NOTIFY_H

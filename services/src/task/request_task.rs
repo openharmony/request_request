@@ -34,10 +34,9 @@ use crate::manage::SystemConfig;
 use crate::service::client::ClientManagerEntry;
 use crate::task::client::build_client;
 use crate::task::config::{Action, TaskConfig};
-use crate::task::ffi::{publish_event, RequestBackgroundNotify, RequestTaskMsg};
+use crate::task::ffi::{PublishStateChangeEvent, RequestBackgroundNotify, RequestTaskMsg};
 use crate::task::files::{AttachedFiles, Files};
 use crate::task::tick::Clock;
-use crate::utils::c_wrapper::CStringWrapper;
 use crate::utils::get_current_timestamp;
 const RETRY_INTERVAL: u64 = 20;
 
@@ -798,19 +797,19 @@ impl RequestTask {
         Notifier::progress(&self.client_manager, notify_data.clone());
         match state {
             State::Completed => {
-                publish_event(
+                PublishStateChangeEvent(
                     self.conf.bundle.as_str(),
                     self.conf.common_data.task_id,
-                    State::Completed,
+                    State::Completed as i32,
                 );
 
                 Notifier::complete(&self.client_manager, notify_data)
             }
             State::Failed => {
-                publish_event(
+                PublishStateChangeEvent(
                     self.conf.bundle.as_str(),
                     self.conf.common_data.task_id,
-                    State::Failed,
+                    State::Failed as i32,
                 );
 
                 Notifier::fail(&self.client_manager, notify_data)
@@ -958,11 +957,10 @@ impl RequestTask {
             uid: self.conf.common_data.uid as i32,
             action: self.conf.common_data.action as u8,
         };
-        unsafe {
-            let c_path = CStringWrapper::from(self.conf.file_specs[index].path.as_str());
-            let c_file_name = CStringWrapper::from(self.conf.file_specs[index].file_name.as_str());
-            RequestBackgroundNotify(task_msg, c_path, c_file_name, percent as u32);
-        };
+
+        let path = self.conf.file_specs[index].path.as_str();
+        let file_name = self.conf.file_specs[index].file_name.as_str();
+        RequestBackgroundNotify(task_msg, path, file_name, percent as u32);
     }
 
     pub(crate) fn get_upload_info(&self, index: usize) -> (bool, u64) {

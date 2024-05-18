@@ -11,8 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::ability::SYSTEM_CONFIG_MANAGER;
 use crate::error::ErrorCode;
-use crate::init::SYSTEM_CONFIG_MANAGER;
 use crate::manage::app_state::{AppState, GetTopBundleName};
 use crate::manage::TaskManager;
 use crate::task::config::TaskConfig;

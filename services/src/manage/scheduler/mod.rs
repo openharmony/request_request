@@ -20,8 +20,8 @@ use qos::Qos;
 use queue::{NotifyTask, RunningQueue};
 
 use super::app_state::AppStateManagerTx;
+use crate::ability::SYSTEM_CONFIG_MANAGER;
 use crate::error::ErrorCode;
-use crate::init::SYSTEM_CONFIG_MANAGER;
 use crate::manage::database::Database;
 use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::qos::{QosChanges, RssCapacity};
@@ -86,7 +86,7 @@ impl Scheduler {
     pub(crate) fn tasks(&self) -> impl Iterator<Item = &Arc<RequestTask>> {
         self.upload_queue.tasks().chain(self.download_queue.tasks())
     }
-    
+
     pub(crate) fn get_task(&self, uid: u64, task_id: u32) -> Option<&Arc<RequestTask>> {
         self.upload_queue
             .get_task(uid, task_id)
@@ -180,6 +180,11 @@ impl Scheduler {
 
     pub(crate) async fn on_app_state_change(&mut self, uid: u64, state: ApplicationState) {
         let changes = self.qos.change_app_state(uid, state);
+        self.reschedule(changes).await;
+    }
+
+    pub(crate) async fn on_user_change(&mut self) {
+        let changes = self.qos.change_user();
         self.reschedule(changes).await;
     }
 

@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::ffi::c_char;
 
 use super::config::{Action, CommonTaskConfig, ConfigSet, Network, TaskConfig, Version};
 use super::info::{CommonTaskInfo, InfoSet, Mode, TaskInfo, UpdateInfo};
@@ -251,13 +250,6 @@ impl UpdateInfo {
     }
 }
 
-#[repr(C)]
-pub(crate) struct RequestTaskMsg {
-    pub(crate) task_id: u32,
-    pub(crate) uid: i32,
-    pub(crate) action: u8,
-}
-
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub(crate) struct NetworkInfo {
@@ -377,33 +369,35 @@ impl TaskConfig {
     }
 }
 
-pub(crate) fn publish_event(bundle: &str, task_id: u32, state: State) {
-    let len = bundle.len();
-    unsafe {
-        PublishStateChangeEvents(
-            bundle.as_ptr() as *const c_char,
-            len as u32,
-            task_id,
-            state as i32,
-        );
-    }
-}
-
 #[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     pub(crate) fn GetNetworkInfo() -> *const NetworkInfo;
     pub(crate) fn DeleteCEachFileStatus(ptr: *const CEachFileStatus);
-    pub(crate) fn PublishStateChangeEvents(
-        bundle_name: *const c_char,
-        bundle_name_len: u32,
-        task_id: u32,
-        state: i32,
-    );
 
-    pub(crate) fn RequestBackgroundNotify(
-        msg: RequestTaskMsg,
-        wrapped_path: CStringWrapper,
-        wrapped_file_name: CStringWrapper,
-        percent: u32,
-    );
+}
+
+pub(crate) use tffi::*;
+
+#[allow(unreachable_pub)]
+#[cxx::bridge(namespace = "OHOS::Request")]
+mod tffi {
+    pub(crate) struct RequestTaskMsg {
+        pub(crate) task_id: u32,
+        pub(crate) uid: i32,
+        pub(crate) action: u8,
+    }
+
+    unsafe extern "C++" {
+        include!("common_event_notify.h");
+        include!("background_notification.h");
+
+        fn PublishStateChangeEvent(bundleName: &str, taskId: u32, state: i32);
+
+        fn RequestBackgroundNotify(
+            msg: RequestTaskMsg,
+            wrapped_path: &str,
+            wrapped_file_name: &str,
+            percent: u32,
+        );
+    }
 }

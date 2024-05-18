@@ -9,9 +9,15 @@
             "dump_level": 1,
             "start-on-demand": {
                 "commonevent": [
-                    {   
+                    {
                         "name": "usual.event.CONNECTIVITY_CHANGE",
                         "value": "3"
+                    },
+                    {
+                        "name": "usual.event.USER_REMOVED"
+                    },
+                    {
+                        "name": "usual.event.USER_SWITCHED"
                     }
                 ]
             }

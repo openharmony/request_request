@@ -12,7 +12,6 @@
 // limitations under the License.
 
 //! This create implement the request proxy and stub
-
 #![feature(io_error_other)]
 #![warn(
     missing_docs,
@@ -24,8 +23,8 @@
 #[macro_use]
 mod hilog;
 
+mod ability;
 mod error;
-mod init;
 mod manage;
 mod service;
 mod sys_event;
