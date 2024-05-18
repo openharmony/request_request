@@ -11,15 +11,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+pub(crate) mod account;
 pub(crate) mod app_state;
 pub(crate) mod config;
 pub(crate) mod database;
 pub(crate) mod events;
 pub(crate) mod network;
+pub(crate) mod notifier;
 pub(crate) mod scheduler;
 pub(crate) mod task_manager;
-
-pub(crate) mod notifier;
 
 pub(crate) use config::{SystemConfig, SystemConfigManager};
 pub(crate) use task_manager::TaskManager;

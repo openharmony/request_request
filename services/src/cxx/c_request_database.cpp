@@ -16,10 +16,14 @@
 #include "c_request_database.h"
 
 #include <securec.h>
+#include <stdint.h>
 
 #include <algorithm>
 #include <cstdint>
+#include <string>
 
+#include "c_enumration.h"
+#include "cxx.h"
 #include "log.h"
 #include "rdb_errno.h"
 
@@ -90,6 +94,21 @@ bool RequestDataBase::Delete(const OHOS::NativeRdb::AbsRdbPredicates &predicates
     int ret = store_->Delete(deletedRows, predicates);
     REQUEST_HILOGD("Request databases delete rows, rows: %{public}d, ret: %{public}d", ret, deletedRows);
     return ret == OHOS::NativeRdb::E_OK;
+}
+
+int RequestDataBase::DeleteAllAccountTasks(int user_id)
+{
+    REQUEST_HILOGI("Delete all account tasks for user: %{public}d", user_id);
+    std::string Delete = "DELETE from request_task WHERE uid/200000 = " + std::to_string(user_id);
+    return store_->ExecuteSql(Delete);
+}
+
+int RequestDataBase::OnAccountChange(int user_id)
+{
+    std::string OnAccountChange = "UPDATE request_task SET reason = 4 WHERE uid/200000 = " + std::to_string(user_id)
+                                  + " AND state = " + std::to_string(static_cast<uint8_t>(State::WAITING))
+                                  + " AND reason = 21";
+    return store_->ExecuteSql(OnAccountChange);
 }
 
 int RequestDBOpenCallback::OnCreate(OHOS::NativeRdb::RdbStore &store)

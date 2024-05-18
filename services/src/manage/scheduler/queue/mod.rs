@@ -23,8 +23,8 @@ use keeper::SAKeeper;
 pub(crate) use notify_task::NotifyTask;
 use running_task::RunningTask;
 
+use crate::ability::SYSTEM_CONFIG_MANAGER;
 use crate::error::ErrorCode;
-use crate::init::SYSTEM_CONFIG_MANAGER;
 use crate::manage::app_state::AppStateManagerTx;
 use crate::manage::database::Database;
 use crate::manage::notifier::Notifier;

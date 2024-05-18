@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -36,7 +35,7 @@ struct Inner {
 impl SAKeeper {
     pub(crate) fn new(tx: TaskManagerTx) -> Self {
         info!("Countdown 60s future started");
-        let tx = tx.deref();
+        let tx = &tx.tx;
         let handle = count_down(tx.clone());
         Self {
             tx: tx.clone(),

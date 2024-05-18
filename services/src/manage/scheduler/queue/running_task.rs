@@ -154,10 +154,12 @@ impl Drop for RunningTask {
         if state == State::Waiting && reason == Reason::RunningTaskMeetLimits {
             return;
         }
-        let _ = self.tx.send(TaskManagerEvent::Task(TaskEvent::Finished(
-            self.task_id(),
-            self.uid(),
-            self.version(),
-        )));
+        let _ = self
+            .tx
+            .send_event(TaskManagerEvent::Task(TaskEvent::Finished(
+                self.task_id(),
+                self.uid(),
+                self.version(),
+            )));
     }
 }

@@ -19,11 +19,11 @@ use hisysevent::{build_number_param, write, EventType};
 use samgr::definition::DOWNLOAD_SERVICE_ID;
 use system_ability_fwk::ability::{Ability, Handler};
 
+use crate::manage::account::update_accounts;
 use crate::manage::network::listener::NetworkChangeListener;
-use crate::manage::{SystemConfigManager, TaskManager};
+use crate::manage::{account, SystemConfigManager, TaskManager};
 use crate::service::client::ClientManager;
 use crate::service::runcount::RunCountManager;
-
 pub(crate) static mut PANIC_INFO: Option<String> = None;
 use crate::manage::events::TaskManagerEvent;
 use crate::manage::task_manager::TaskManagerTx;
@@ -57,11 +57,8 @@ impl RequestAbility {
             task_manager: Mutex::new(None),
         }
     }
-}
 
-impl Ability for RequestAbility {
-    /// Callback to deal safwk onstart for this system_ability
-    fn on_start(&self, handler: Handler) {
+    fn init(&self, handler: Handler) {
         info!("ability init");
 
         std::panic::set_hook(Box::new(|info| unsafe {
@@ -75,6 +72,8 @@ impl Ability for RequestAbility {
             .build_global()
             .unwrap();
         info!("ylong_runtime init succeed");
+
+        update_accounts();
 
         let runcount_manager = RunCountManager::init();
         info!("runcount_manager init succeed");
@@ -102,10 +101,27 @@ impl Ability for RequestAbility {
         let stub = RequestServiceStub::new(task_manager, client_manger, runcount_manager);
 
         info!("ability init succeed");
+        info!("ability publish succeed");
         if !handler.publish(stub) {
             service_start_fault();
         }
-        info!("ability publish succeed");
+    }
+}
+
+impl Ability for RequestAbility {
+    fn on_start_with_reason(
+        &self,
+        reason: system_ability_fwk::cxx_share::SystemAbilityOnDemandReason,
+        handler: Handler,
+    ) {
+        info!("on_start_with_reason: {:?}", reason);
+        if reason.name == "usual.event.USER_REMOVED" {
+            let user_id = reason.value.parse::<i32>().unwrap();
+            account::remove_account_tasks(user_id);
+            self.init(handler);
+        } else {
+            self.init(handler);
+        }
     }
 
     fn on_device_level_changed(&self, change_type: i32, level: i32, action: String) {

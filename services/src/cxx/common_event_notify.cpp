@@ -22,25 +22,26 @@
 #include "common_event_publish_info.h"
 #include "log.h"
 
+namespace OHOS::Request {
 using namespace OHOS::EventFwk;
 
-void PublishStateChangeEvents(const char *bundleName, uint32_t len, uint32_t taskId, int32_t state)
+void PublishStateChangeEvent(rust::str bundleName, uint32_t taskId, int32_t state)
 {
     REQUEST_HILOGD("PublishStateChangeEvents in.");
     static constexpr const char *eventAction = "ohos.request.event.COMPLETE";
 
-    std::string bundle(bundleName, len);
     Want want;
     want.SetAction(eventAction);
-    want.SetBundle(bundle);
+    want.SetBundle(std::string(bundleName));
 
     std::string data = std::to_string(taskId);
     CommonEventData commonData(want, state, data);
     CommonEventPublishInfo publishInfo;
-    publishInfo.SetBundleName(bundle);
+    publishInfo.SetBundleName(std::string(bundleName));
 
     bool res = CommonEventManager::PublishCommonEvent(commonData, publishInfo);
     if (!res) {
         REQUEST_HILOGE("PublishStateChangeEvents failed!");
     }
 }
+} // namespace OHOS::Request

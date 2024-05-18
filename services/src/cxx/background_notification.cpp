@@ -22,20 +22,22 @@
 #include "notification_content.h"
 #include "notification_helper.h"
 #include "string_wrapper.h"
+#include "task/ffi.rs.h"
 #include "want_params.h"
 
+namespace OHOS::Request {
 using namespace OHOS::Notification;
 static constexpr uint8_t DOWNLOAD_ACTION = 0;
-void RequestBackgroundNotify(
-    RequestTaskMsg msg, CStringWrapper wrappedPath, CStringWrapper wrappedFileName, uint32_t percent)
+
+void RequestBackgroundNotify(RequestTaskMsg msg, rust::str filePath, rust::str fileName, uint32_t percent)
 {
     REQUEST_HILOGD("Background Notification, percent is %{public}d", percent);
     auto requestTemplate = std::make_shared<NotificationTemplate>();
-    std::string filepath(wrappedPath.cStr, wrappedPath.len);
+    
     requestTemplate->SetTemplateName("downloadTemplate");
     OHOS::AAFwk::WantParams wantParams;
     wantParams.SetParam("progressValue", OHOS::AAFwk::Integer::Box(percent));
-    wantParams.SetParam("fileName", OHOS::AAFwk::String::Box(filepath));
+    wantParams.SetParam("fileName", OHOS::AAFwk::String::Box(std::string(filePath)));
     std::shared_ptr<NotificationNormalContent> normalContent = std::make_shared<NotificationNormalContent>();
     if (msg.action == DOWNLOAD_ACTION) {
         wantParams.SetParam("title", OHOS::AAFwk::String::Box("Download"));
@@ -45,10 +47,10 @@ void RequestBackgroundNotify(
         normalContent->SetTitle("Upload");
     }
     requestTemplate->SetTemplateData(std::make_shared<OHOS::AAFwk::WantParams>(wantParams));
-    std::string contentText(wrappedFileName.cStr, wrappedFileName.len);
-    normalContent->SetText(contentText);
+    normalContent->SetText(std::string(fileName));
+
     auto content = std::make_shared<NotificationContent>(normalContent);
-    NotificationRequest req(msg.taskId);
+    NotificationRequest req(msg.task_id);
     req.SetCreatorUid(msg.uid);
     req.SetContent(content);
     req.SetTemplate(requestTemplate);
@@ -57,4 +59,6 @@ void RequestBackgroundNotify(
     if (errCode != OHOS::ERR_OK) {
         REQUEST_HILOGE("notification errCode: %{public}d", errCode);
     }
+
 }
+} // namespace OHOS::Request

@@ -17,8 +17,8 @@ use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedS
 use ylong_runtime::sync::oneshot::Sender;
 
 use super::{Client, ClientEvent};
+use crate::ability::PANIC_INFO;
 use crate::error::ErrorCode;
-use crate::init::PANIC_INFO;
 
 #[derive(Clone)]
 pub(crate) struct ClientManagerEntry {

@@ -14,6 +14,7 @@
 use std::cmp;
 use std::ops::Deref;
 
+use crate::manage::account::is_foreground_user;
 use crate::manage::database::{Database, TaskQosInfo};
 use crate::task::config::Action;
 use crate::task::ffi::NetworkInfo;
@@ -38,6 +39,10 @@ impl SortedApps {
         Database::new().update_on_network_change(network);
 
         // Then, we need to reload the app based on the current status of all tasks.
+        self.inner = reload_all_app_from_database();
+    }
+
+    pub(crate) fn change_user(&mut self) {
         self.inner = reload_all_app_from_database();
     }
 
@@ -199,7 +204,13 @@ impl PartialEq for App {
 
 impl PartialOrd for App {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
-        Some(self.state.cmp(&other.state))
+        let self_is_foreground = is_foreground_user(self.uid);
+        let other_is_foreground = is_foreground_user(other.uid);
+        Some(
+            self_is_foreground
+                .cmp(&other_is_foreground)
+                .then(self.state.cmp(&other.state)),
+        )
     }
 }
 

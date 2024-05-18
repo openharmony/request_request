@@ -14,6 +14,22 @@
 import("//base/request/request/request_aafwk.gni")
 import("//build/ohos.gni")
 
+rust_cxx("download_server_cxx_gen") {
+  sources = [
+    "src/manage/account.rs",
+    "src/task/ffi.rs",
+  ]
+}
+
+config("download_server_cxx_config") {
+  visibility = [ ":*" ]
+  include_dirs = [
+    "include",
+    "../common/include",
+    "${target_gen_dir}/src",
+  ]
+}
+
 ohos_static_library("download_server_cxx") {
   sanitize = {
     integer_overflow = true
@@ -25,7 +41,10 @@ ohos_static_library("download_server_cxx") {
   }
   stack_protector_ret = true
 
+  public_configs = [ ":download_server_cxx_config" ]
+
   sources = [
+    "src/cxx/account.cpp",
     "src/cxx/application_state_observer.cpp",
     "src/cxx/background_notification.cpp",
     "src/cxx/c_check_permission.cpp",
@@ -42,11 +61,7 @@ ohos_static_library("download_server_cxx") {
     "src/cxx/request_cert_mgr_adapter.cpp",
     "src/cxx/url_policy.cpp",
   ]
-
-  include_dirs = [
-    "include",
-    "../common/include",
-  ]
+  sources += get_target_outputs(":download_server_cxx_gen")
 
   external_deps = [
     "ability_base:base",
@@ -64,6 +79,7 @@ ohos_static_library("download_server_cxx") {
     "hilog:libhilog",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_appdatafwk",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
@@ -71,7 +87,10 @@ ohos_static_library("download_server_cxx") {
     "samgr:samgr_proxy",
   ]
 
-  deps = [ "//third_party/rust/crates/cxx:cxx_cppdeps" ]
+  deps = [
+    ":download_server_cxx_gen",
+    "//third_party/rust/crates/cxx:cxx_cppdeps",
+  ]
 
   defines = []
   if (request_telephony_core_service && request_telephony_cellular_data) {

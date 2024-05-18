@@ -16,6 +16,8 @@
 #ifndef C_REQUEST_DATABASE_H
 #define C_REQUEST_DATABASE_H
 
+#include <stdint.h>
+
 #include <cstdint>
 #include <vector>
 
@@ -24,6 +26,7 @@
 #include "c_progress.h"
 #include "c_task_config.h"
 #include "c_task_info.h"
+#include "cxx.h"
 #include "network_adapter.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -123,6 +126,8 @@ public:
     std::shared_ptr<OHOS::NativeRdb::ResultSet> Query(
         const OHOS::NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
     bool Delete(const OHOS::NativeRdb::AbsRdbPredicates &predicates);
+    int DeleteAllAccountTasks(int user_id);
+    int OnAccountChange(int user_id);
 
 private:
     RequestDataBase();
@@ -130,6 +135,11 @@ private:
 private:
     std::shared_ptr<OHOS::NativeRdb::RdbStore> store_;
 };
+
+inline RequestDataBase *GetDatabaseInstance()
+{
+    return &RequestDataBase::GetInstance();
+}
 
 class RequestDBOpenCallback : public OHOS::NativeRdb::RdbOpenCallback {
 public:

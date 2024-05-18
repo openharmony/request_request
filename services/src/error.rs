@@ -14,7 +14,6 @@
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub(crate) enum ErrorCode {
     ErrOk = 0,
-    _UnloadingSA = 1,
     IpcSizeTooLarge = 2,
     ChannelNotOpen = 5,
     Permission = 201,
@@ -23,7 +22,6 @@ pub(crate) enum ErrorCode {
     FileOperationErr = 13400001,
     Other = 13499999,
     TaskEnqueueErr = 21900004,
-    _TaskModeErr,
-    TaskNotFound,
+    TaskNotFound = 21900006,
     TaskStateErr,
 }

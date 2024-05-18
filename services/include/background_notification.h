@@ -18,23 +18,13 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include "c_string_wrapper.h"
+#include "cxx.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace OHOS::Request {
+struct RequestTaskMsg;
 
-struct RequestTaskMsg {
-    uint32_t taskId;
-    pid_t uid;
-    uint8_t action;
-};
+void RequestBackgroundNotify(RequestTaskMsg msg, rust::str filePath, rust::str fileName, uint32_t percent);
 
-void RequestBackgroundNotify(
-    RequestTaskMsg msg, CStringWrapper wrappedPath, CStringWrapper wrappedFileName, uint32_t percent);
-
-#ifdef __cplusplus
-}
-#endif
+} // namespace OHOS::Request
 
 #endif // REQUEST_BACKGROUND_NOTIFICATION_H

@@ -67,6 +67,11 @@ impl Qos {
         self.reschedule(Action::Any)
     }
 
+    pub(crate) fn change_user(&mut self) -> QosChanges {
+        self.apps.change_user();
+        self.reschedule(Action::Any)
+    }
+
     pub(crate) fn change_rss(&mut self, rss: RssCapacity) -> QosChanges {
         self.capacity = rss;
         self.reschedule(Action::Any)

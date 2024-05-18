@@ -15,6 +15,7 @@ use std::fmt::Debug;
 
 use ylong_runtime::sync::oneshot::{channel, Sender};
 
+use super::account::AccountEvent;
 use crate::error::ErrorCode;
 use crate::task::config::{Action, TaskConfig, Version};
 use crate::task::info::{ApplicationState, DumpAllInfo, DumpOneInfo, TaskInfo};
@@ -42,6 +43,7 @@ pub(crate) enum TaskManagerEvent {
     Schedule(ScheduleEvent),
     Task(TaskEvent),
     Device(i32),
+    Account(AccountEvent),
 }
 
 impl TaskManagerEvent {

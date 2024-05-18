@@ -66,7 +66,6 @@ impl RemoteStub for RequestServiceStub {
         let res = match code {
             interface::CONSTRUCT => self.construct(data, reply),
             interface::PAUSE => self.pause(data, reply),
-
             interface::QUERY => self.query(data, reply),
             interface::QUERY_MIME_TYPE => self.query_mime_type(data, reply),
             interface::REMOVE => self.remove(data, reply),
