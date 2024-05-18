@@ -30,7 +30,7 @@ use crate::service::client::ClientManagerEntry;
 use crate::service::runcount::RunCountManagerEntry;
 use crate::task::config::Action;
 use crate::task::ffi::NetworkInfo;
-use crate::task::info::{ApplicationState, State};
+use crate::task::info::{ApplicationState, Mode, State};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 
@@ -51,8 +51,7 @@ use crate::task::request_task::RequestTask;
 
 pub(crate) struct Scheduler {
     qos: Qos,
-    upload_queue: RunningQueue,
-    download_queue: RunningQueue,
+    running_queue: RunningQueue,
     app_state_manager: AppStateManagerTx,
     client_manager: ClientManagerEntry,
 }
@@ -66,13 +65,7 @@ impl Scheduler {
     ) -> Scheduler {
         Self {
             qos: Qos::new(),
-            upload_queue: RunningQueue::new(
-                tx.clone(),
-                runcount_manager.clone(),
-                app_state_manager.clone(),
-                client_manager.clone(),
-            ),
-            download_queue: RunningQueue::new(
+            running_queue: RunningQueue::new(
                 tx,
                 runcount_manager,
                 app_state_manager.clone(),
@@ -84,22 +77,19 @@ impl Scheduler {
     }
 
     pub(crate) fn tasks(&self) -> impl Iterator<Item = &Arc<RequestTask>> {
-        self.upload_queue.tasks().chain(self.download_queue.tasks())
+        self.running_queue.tasks()
     }
 
     pub(crate) fn get_task(&self, uid: u64, task_id: u32) -> Option<&Arc<RequestTask>> {
-        self.upload_queue
-            .get_task(uid, task_id)
-            .or(self.download_queue.get_task(uid, task_id))
+        self.running_queue.get_task(uid, task_id)
     }
 
     pub(crate) fn running_tasks(&self) -> usize {
-        self.upload_queue.running_tasks() + self.download_queue.running_tasks()
+        self.running_queue.running_tasks()
     }
 
     pub(crate) fn dump_tasks(&self) {
-        self.upload_queue.dump_tasks();
-        self.download_queue.dump_tasks();
+        self.running_queue.dump_tasks();
     }
 
     pub(crate) async fn start_task(&mut self, uid: u64, task_id: u32) -> ErrorCode {
@@ -111,8 +101,20 @@ impl Scheduler {
             if task_state == State::Initialized
                 || (task_state == State::Failed && action == Action::Download)
             {
-                let changes = self.qos.start_task(uid, app_state, task);
-                self.reschedule(changes).await;
+                if Mode::from(task.mode) != Mode::FrontEnd
+                    || app_state == ApplicationState::Foreground
+                {
+                    let changes = self.qos.start_task(uid, app_state, task);
+                    self.reschedule(changes).await;
+                } else {
+                    info!("task {} started, waiting for app state", task_id);
+                    database.change_task_state(
+                        task_id,
+                        uid,
+                        State::Paused,
+                        Reason::AppBackgroundOrTerminate,
+                    );
+                }
                 return ErrorCode::ErrOk;
             }
             return ErrorCode::TaskStateErr;
@@ -156,10 +158,7 @@ impl Scheduler {
     }
 
     pub(crate) fn clear_timeout_tasks(&mut self) {
-        self.download_queue.clear_timeout_tasks();
-        self.upload_queue.clear_timeout_tasks();
-        // TODO: 考虑优化，在进行删除操作之后若队列没有变化，则不 reload。
-        // TODO:任务结束时如何进行qos及queue操作的。
+        self.running_queue.clear_timeout_tasks();
     }
 
     pub(crate) async fn restore_all_tasks(&mut self) {
@@ -195,26 +194,11 @@ impl Scheduler {
     }
 
     async fn reschedule(&mut self, changes: QosChanges) {
-        if let Some(vec) = changes.download {
-            self.download_queue.reschedule(vec).await;
-        }
-        if let Some(vec) = changes.upload {
-            self.upload_queue.reschedule(vec).await;
-        }
+        self.running_queue.reschedule(changes).await;
     }
 }
 
 impl Scheduler {
-    // 如何调整任务状态并触发回调？
-    // 任务所处的位置有三个：
-    // 1）存在 running 队列中且存在 qos 队列中。 （Running \ Retrying）
-    // 2）不存在 running 队列中但存在 qos 队列中。（Waiting &&
-    // RunningTaskMeetsLimit） 3）既不存在 running 队列且也不存在 qos
-    // 队列中。（Waiting && NetworkOffline \ Waiting && AppStateNotSatisfied）
-    //
-    // 针对场景 1），可以利用 running_task 的析构函数触发回调逻辑。
-    // 针对场景 2），可以直接从数据库里取出对应的任务信息，触发回调。
-    // 针对场景 3），可以直接从数据库里取出对应的任务信息，触发回调。
     async fn modify_task_state_by_user(
         &mut self,
         uid: u64,
@@ -224,19 +208,14 @@ impl Scheduler {
         // If the task currently exists in the running queue, simply manipulate
         // the task status directly.
         if self
-            .download_queue
+            .running_queue
             .modify_task_state_by_user(uid, task_id, state)
             == ErrorCode::ErrOk
         {
+            let _ = self.qos.finish_task(uid, task_id);
             return ErrorCode::ErrOk;
         }
-        if self
-            .upload_queue
-            .modify_task_state_by_user(uid, task_id, state)
-            == ErrorCode::ErrOk
-        {
-            return ErrorCode::ErrOk;
-        }
+
         // If the task is not in the running queue but exists in qos, we need to
         // update task status in the database.
         if self.qos.contains_task(uid, task_id) {
@@ -277,7 +256,7 @@ impl Scheduler {
                         "TaskManager remove a task, uid:{}, task_id:{} success",
                         uid, task_id
                     );
-                    database.change_task_state(task_id, uid, State::Removed);
+                    database.change_task_state(task_id, uid, State::Removed, Reason::UserOperation);
                     info.progress.common_data.state = State::Removed as u8;
                     let notify_data = info.build_notify_data();
                     Notifier::remove(&self.client_manager, notify_data);

@@ -21,7 +21,7 @@ use ylong_http_client::async_impl::{Body, Client, Request, RequestBuilder, Respo
 use ylong_http_client::{ErrorKind, HttpClientError};
 use ylong_runtime::io::{AsyncSeekExt, AsyncWriteExt};
 
-use super::config::{Network, Version};
+use super::config::{Network, NetworkInner, Version};
 use super::info::{CommonTaskInfo, Mode, State, TaskInfo, UpdateInfo};
 use super::notify::{EachFileStatus, NotifyData, Progress};
 use super::reason::Reason;
@@ -761,7 +761,7 @@ impl RequestTask {
 
                 State::Removed => self.set_code(index, reason),
 
-                State::Running => {
+                State::Running | State::Retrying => {
                     if current_state == State::Waiting || current_state == State::Paused {
                         self.resume.store(true, Ordering::SeqCst);
                     }
@@ -913,7 +913,9 @@ impl RequestTask {
                 error!("not allow metered");
                 return false;
             }
-            if network_info.network_type != self.conf.common_data.network {
+            if network_info.network_type as u8 != self.conf.common_data.network as u8
+                && network_info.network_type != NetworkInner::ANY
+            {
                 error!("dismatch network type");
                 return false;
             }

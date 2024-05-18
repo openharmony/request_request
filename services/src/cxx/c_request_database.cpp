@@ -874,13 +874,14 @@ bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo)
     return true;
 }
 
-bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state)
+bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state, Reason reason)
 {
     REQUEST_HILOGI(
         "Change task state, task_id is %{public}d, state is %{public}d", taskId, static_cast<int32_t>(state));
 
     OHOS::NativeRdb::ValuesBucket values;
     values.PutInt("state", static_cast<uint8_t>(state));
+    values.PutInt("reason", static_cast<uint8_t>(reason));
 
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
@@ -1239,7 +1240,7 @@ void UpdateTaskStateOnAppStateChange(uint64_t uid, uint8_t appState)
     if (appState == 2) { // 2 means ApplicationState::Foreground
         rdbPredicates.EqualTo("uid", std::to_string(uid));
         rdbPredicates.EqualTo("mode", static_cast<uint8_t>(Mode::FOREGROUND));
-        rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING));
+        rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::PAUSED));
         rdbPredicates.EqualTo("reason", static_cast<uint8_t>(6)); // 6 means Reason::AppBackgroundOrTerminate.
 
         OHOS::NativeRdb::ValuesBucket values;
@@ -1257,7 +1258,7 @@ void UpdateTaskStateOnAppStateChange(uint64_t uid, uint8_t appState)
         rdbPredicates.EqualTo("reason", static_cast<uint8_t>(4)); // 4 means Reason::RunningTaskMeetLimits.
 
         OHOS::NativeRdb::ValuesBucket values;
-        values.PutInt("state", static_cast<uint8_t>(State::WAITING));
+        values.PutInt("state", static_cast<uint8_t>(State::PAUSED));
         values.PutInt("reason", static_cast<uint8_t>(6)); // 6 means Reason::AppBackgroundOrTerminate.
 
         if (!OHOS::Request::RequestDataBase::GetInstance().Update(values, rdbPredicates)) {
@@ -1269,29 +1270,34 @@ void UpdateTaskStateOnAppStateChange(uint64_t uid, uint8_t appState)
 
 void UpdateTaskStateOnNetworkChange(NetworkInfo info)
 {
-    // First, change states of all tasks with `Reason::NetworkOffline` or
-    // `RunningTaskMeetLimits` state to `Reason::NetworkOffline` state.
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
-        ->And()
-        ->EqualTo("reason", std::to_string(4)); // 4 means Reason::RunningTaskMeetLimits.
+    if (info.networkType == NetworkInner::NET_LOST) {
+        // change states of all tasks with `Reason::NetworkOffline` or
+        // `RunningTaskMeetLimits` state to `Reason::NetworkOffline` state.
+        OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
+        rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
+            ->And()
+            ->EqualTo("reason", static_cast<uint8_t>(Reason::RUNNING_TASK_MEET_LIMITS));
 
-    OHOS::NativeRdb::ValuesBucket networkOffline;
-    networkOffline.PutInt("reason", static_cast<uint8_t>(7)); // 7 means Reason::NetworkOffline.
+        OHOS::NativeRdb::ValuesBucket networkOffline;
+        networkOffline.PutInt("reason", static_cast<uint8_t>(Reason::NETWORK_OFFLINE));
 
-    if (!OHOS::Request::RequestDataBase::GetInstance().Update(networkOffline, rdbPredicates)) {
-        REQUEST_HILOGE("Change request_task state to NetworkOffline on network change failed");
+        if (!OHOS::Request::RequestDataBase::GetInstance().Update(networkOffline, rdbPredicates)) {
+            REQUEST_HILOGE("Change request_task state to NetworkOffline on network change failed");
+        }
         return;
     }
 
-    // Then, change states of all satisfied task to `RunningTaskMeetLimits` state.
+    // change states of all satisfied task to `RunningTaskMeetLimits` state.
     OHOS::NativeRdb::ValuesBucket satisfied;
-    satisfied.PutInt("reason", static_cast<uint8_t>(4)); // 4 means Reason::RunningTaskMeetLimits.
-
+    satisfied.PutInt("reason", static_cast<uint8_t>(Reason::RUNNING_TASK_MEET_LIMITS));
     // For WI-FI situation.
-    if (info.networkType == Network::WIFI || info.networkType == Network::ANY) {
+    if (info.networkType == NetworkInner::WIFI || info.networkType == NetworkInner::ANY) {
         OHOS::NativeRdb::RdbPredicates satisfiedWifi("request_task");
-        satisfiedWifi.EqualTo("network", std::to_string(static_cast<uint8_t>(Network::WIFI)));
+        satisfiedWifi.EqualTo("network", static_cast<uint8_t>(NetworkInner::WIFI))
+            ->And()
+            ->EqualTo("state", static_cast<uint8_t>(State::WAITING))
+            ->And()
+            ->EqualTo("reason", static_cast<uint8_t>(Reason::NETWORK_OFFLINE));
         if (!OHOS::Request::RequestDataBase::GetInstance().Update(satisfied, satisfiedWifi)) {
             REQUEST_HILOGE("Change WI-FI task to RunningTaskMeetLimits on network change failed");
             return;
@@ -1299,9 +1305,13 @@ void UpdateTaskStateOnNetworkChange(NetworkInfo info)
     }
 
     // For CELLULAR situation.
-    if (info.networkType == Network::CELLULAR || info.networkType == Network::ANY) {
+    if (info.networkType == NetworkInner::CELLULAR || info.networkType == NetworkInner::ANY) {
         OHOS::NativeRdb::RdbPredicates satisfiedCellular("request_task");
-        satisfiedCellular.EqualTo("network", std::to_string(static_cast<uint8_t>(Network::WIFI)));
+        satisfiedCellular.EqualTo("network", static_cast<uint8_t>(NetworkInner::CELLULAR))
+            ->And()
+            ->EqualTo("state", static_cast<uint8_t>(State::WAITING))
+            ->And()
+            ->EqualTo("reason", static_cast<uint8_t>(Reason::NETWORK_OFFLINE));
 
         if (!info.isMetered) {
             satisfiedCellular.And()->EqualTo("metered", std::to_string(static_cast<uint8_t>(false)));
@@ -1371,7 +1381,7 @@ void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len)
     *len = 0;
 
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(
-        rdbPredicates, { "task_id", "action", "mode", "state", "priority" });
+        rdbPredicates, { "uid", "task_id", "action", "mode", "state", "priority" });
     int rowCount = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("GetRunningTasksArray result set is nullptr or get row count failed");
@@ -1394,12 +1404,12 @@ void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len)
     }
 }
 
-void GetAppArray(AppInfo *apps, size_t *len)
+void GetAppArray(AppInfo **apps, size_t *len)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.Distinct();
 
-    apps = nullptr;
+    *apps = nullptr;
     *len = 0;
 
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "uid", "bundle" });
@@ -1412,7 +1422,7 @@ void GetAppArray(AppInfo *apps, size_t *len)
         return;
     }
 
-    apps = new AppInfo[rowCount];
+    *apps = new AppInfo[rowCount];
     *len = rowCount;
     for (auto i = 0; i < rowCount; i++) {
         if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
@@ -1422,8 +1432,8 @@ void GetAppArray(AppInfo *apps, size_t *len)
 
         std::string temp = "";
         resultSet->GetString(1, temp);                              // Line 1 is 'bundle'
-        apps[i].uid = static_cast<uint32_t>(GetLong(resultSet, 0)); // Line 0 is 'uid'
-        apps[i].bundle = WrapperCString(temp);
+        (*apps)[i].uid = static_cast<uint32_t>(GetLong(resultSet, 0)); // Line 0 is 'uid'
+        (*apps)[i].bundle = WrapperCString(temp);
     }
 }
 

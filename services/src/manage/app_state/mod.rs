@@ -39,10 +39,6 @@ use crate::service::client::ClientManagerEntry;
 use crate::task::info::ApplicationState;
 use crate::utils::c_wrapper::CStringWrapper;
 
-// TODO: 类似于网络状态变化，
-// 我们需要让任务在处理过程中主动判断所属应用的前后台状态，
-// 及时将任务自动暂停或停止。
-
 const BACKGROUND_TASK_STOP_INTERVAL: u64 = 60;
 
 pub(crate) struct AppStateManager {
@@ -145,16 +141,15 @@ impl AppStateManager {
         let _ = self.app_state.remove(&uid);
     }
 
-    // TODO：后台自动启动前台任务是否直接不执行
-    // TODO: 此处有个问题，如果应用从前台切到后台，
-    // 此时正在执行的前台任务要一段时间后停止，这个没问题，
-    // 那此时启动新的前台任务该如何处理？
     fn change_app_state(&mut self, uid: u64, state: ApplicationState) {
         if let Some(st) = self.app_state.get_mut(&uid) {
             if state == ApplicationState::Foreground {
                 st.handle = None;
                 {
                     let mut a = st.state.inner.lock().unwrap();
+                    if a.state == state {
+                        return;
+                    }
                     a.state = state;
                 }
                 self.task_manager

@@ -115,13 +115,19 @@ void NetworkAdapter::UpdateNetworkInfoInner(const NetManagerStandard::NetAllCapa
 {
     if (capabilities.netCaps_.find(NET_CAPABILITY_INTERNET) != capabilities.netCaps_.end()) {
         isOnline_ = true;
+        networkInfo_.networkType = NetworkInner::NET_LOST;
         if (capabilities.bearerTypes_.find(NetBearType::BEARER_CELLULAR) != capabilities.bearerTypes_.end()) {
             REQUEST_HILOGD("Bearer Cellular");
-            networkInfo_.networkType = Network::CELLULAR;
+            networkInfo_.networkType = NetworkInner::CELLULAR;
             networkInfo_.isMetered = true;
-        } else if (capabilities.bearerTypes_.find(NetBearType::BEARER_WIFI) != capabilities.bearerTypes_.end()) {
+        }
+        if (capabilities.bearerTypes_.find(NetBearType::BEARER_WIFI) != capabilities.bearerTypes_.end()) {
             REQUEST_HILOGD("Bearer Wifi");
-            networkInfo_.networkType = Network::WIFI;
+            if (networkInfo_.networkType == NetworkInner::CELLULAR) {
+                networkInfo_.networkType = NetworkInner::ANY;
+            } else {
+                networkInfo_.networkType = NetworkInner::WIFI;
+            }
             networkInfo_.isMetered = false;
         }
         UpdateRoaming();
@@ -151,7 +157,7 @@ int32_t NetworkAdapter::NetConnCallbackObserver::NetConnectionPropertiesChange(
 int32_t NetworkAdapter::NetConnCallbackObserver::NetLost(sptr<NetHandle> &netHandle)
 {
     REQUEST_HILOGE("Observe bearer cellular lost");
-    netAdapter_.networkInfo_.networkType = Network::ANY;
+    netAdapter_.networkInfo_.networkType = NetworkInner::NET_LOST;
     netAdapter_.networkInfo_.isMetered = false;
     netAdapter_.isOnline_ = false;
     if (netAdapter_.callback_ != nullptr) {
@@ -247,4 +253,9 @@ void RegisterNetworkCallback(NetworkCallback fun)
 NetworkInfo *GetNetworkInfo(void)
 {
     return NetworkAdapter::GetInstance().GetNetworkInfo();
+}
+
+void UpdateNetworkInfo(void)
+{
+    NetworkAdapter::GetInstance().UpdateNetworkInfo();
 }

@@ -28,10 +28,11 @@ use crate::error::ErrorCode;
 use crate::manage::app_state::AppStateManagerTx;
 use crate::manage::database::Database;
 use crate::manage::notifier::Notifier;
-use crate::manage::scheduler::qos::{QosDirection, QosLevel};
+use crate::manage::scheduler::qos::{QosChanges, QosDirection, QosLevel};
 use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
 use crate::service::runcount::RunCountManagerEntry;
+use crate::task::config::Action;
 use crate::task::info::State;
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
@@ -40,7 +41,8 @@ use crate::utils::get_current_timestamp;
 const MILLISECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
 
 pub(crate) struct RunningQueue {
-    running: HashMap<(u64, u32), Arc<RequestTask>>,
+    download_queue: HashMap<(u64, u32), Arc<RequestTask>>,
+    upload_queue: HashMap<(u64, u32), Arc<RequestTask>>,
     keeper: SAKeeper,
     tx: TaskManagerTx,
     app_state_manager: AppStateManagerTx,
@@ -56,7 +58,8 @@ impl RunningQueue {
         client_manager: ClientManagerEntry,
     ) -> Self {
         Self {
-            running: HashMap::new(),
+            download_queue: HashMap::new(),
+            upload_queue: HashMap::new(),
             keeper: SAKeeper::new(tx.clone()),
             tx,
             app_state_manager,
@@ -66,15 +69,19 @@ impl RunningQueue {
     }
 
     pub(crate) fn tasks(&self) -> impl Iterator<Item = &Arc<RequestTask>> {
-        self.running.values()
+        self.download_queue
+            .values()
+            .chain(self.upload_queue.values())
     }
 
     pub(crate) fn get_task(&self, uid: u64, task_id: u32) -> Option<&Arc<RequestTask>> {
-        self.running.get(&(uid, task_id))
+        self.download_queue
+            .get(&(uid, task_id))
+            .or(self.upload_queue.get(&(uid, task_id)))
     }
 
     pub(crate) fn running_tasks(&self) -> usize {
-        self.running.len()
+        self.download_queue.len() + self.upload_queue.len()
     }
 
     pub(crate) fn dump_tasks(&self) {
@@ -83,7 +90,7 @@ impl RunningQueue {
             self.running_tasks()
         );
 
-        for ((uid, task_id), task) in self.running.iter() {
+        for ((uid, task_id), task) in self.download_queue.iter().chain(self.upload_queue.iter()) {
             let task_status = task.status.lock().unwrap();
             info!("dump task message, uid:{}, task_id:{}, action:{}, mode:{}, bundle name:{}, task_status:{:?}",
                 uid, task_id, task.action() as u8, task.mode() as u8, task.bundle(), *task_status);
@@ -93,18 +100,35 @@ impl RunningQueue {
     pub(crate) fn clear_timeout_tasks(&mut self) {
         let current_time = get_current_timestamp();
 
-        for task in self.running.values() {
+        for task in self.tasks() {
             if current_time - task.ctime > MILLISECONDS_IN_ONE_MONTH {
                 task.set_status(State::Stopped, Reason::TaskSurvivalOneMonth);
                 continue;
             }
         }
-
-        // TODO: 移除数据库的超时任务，并发送通知。
     }
 
-    pub(crate) async fn reschedule(&mut self, qos_vec: Vec<QosDirection>) {
+    pub(crate) async fn reschedule(&mut self, qos: QosChanges) {
+        if let Some(vec) = qos.download {
+            self.download_queue = self.reschedule_inner(Action::Download, vec).await;
+        }
+        if let Some(vec) = qos.upload {
+            self.upload_queue = self.reschedule_inner(Action::Upload, vec).await;
+        }
+    }
+
+    pub(crate) async fn reschedule_inner(
+        &mut self,
+        action: Action,
+        qos_vec: Vec<QosDirection>,
+    ) -> HashMap<(u64, u32), Arc<RequestTask>> {
         let mut satisfied_tasks = HashMap::new();
+
+        let queue = if action == Action::Download {
+            &mut self.download_queue
+        } else {
+            &mut self.upload_queue
+        };
 
         // We need to decide which tasks need to continue running based on `QosChanges`.
         for qos_direction in qos_vec.iter() {
@@ -112,7 +136,7 @@ impl RunningQueue {
             let task_id = qos_direction.task_id();
             let limit = qos_direction.direction() == QosLevel::LowSpeed;
 
-            if let Some(task) = self.running.remove(&(uid, task_id)) {
+            if let Some(task) = queue.remove(&(uid, task_id)) {
                 // If we can find that the task is running in `running_tasks`,
                 // we just need to adjust its rate.
                 task.speed_limit(limit);
@@ -142,20 +166,19 @@ impl RunningQueue {
             let runcount_manager = self.runcount_manager.clone();
             task.speed_limit(limit);
             satisfied_tasks.insert((uid, task_id), task.clone());
+            let task = RunningTask::new(runcount_manager, task.clone(), tx, keeper);
             ylong_runtime::spawn(async move {
-                RunningTask::new(runcount_manager, task.clone(), tx, keeper)
-                    .run()
-                    .await;
+                task.run().await;
             });
         }
         // every satisfied tasks in running has been moved, set left tasks to Waiting
-        for task in self.running.values_mut() {
+        for task in queue.values_mut() {
             let state = task.status.lock().unwrap().state;
             if state == State::Running {
                 task.set_status(State::Waiting, Reason::RunningTaskMeetLimits);
             }
         }
-        self.running = satisfied_tasks;
+        satisfied_tasks
     }
 
     pub(crate) fn modify_task_state_by_user(
@@ -164,7 +187,11 @@ impl RunningQueue {
         task_id: u32,
         state: State,
     ) -> ErrorCode {
-        if let Some(task) = self.running.remove(&(uid, task_id)) {
+        if let Some(task) = self
+            .download_queue
+            .remove(&(uid, task_id))
+            .or(self.upload_queue.remove(&(uid, task_id)))
+        {
             set_task_state_by_user(&self.client_manager, task, state)
         } else {
             ErrorCode::TaskNotFound

@@ -242,7 +242,9 @@ impl TaskManager {
     }
 
     async fn handle_network_change(&mut self) {
-        if let Some(info) = NetworkManager::new().get_network_info() {
+        let manager = NetworkManager::new();
+        manager.update_network_info();
+        if let Some(info) = manager.get_network_info() {
             self.scheduler.on_network_change(info).await;
         }
     }

@@ -12,7 +12,9 @@
 // limitations under the License.
 
 
-use super::config::{Action, CommonTaskConfig, ConfigSet, Network, TaskConfig, Version};
+use super::config::{
+    Action, CommonTaskConfig, ConfigSet, Network, NetworkInner, TaskConfig, Version,
+};
 use super::info::{CommonTaskInfo, InfoSet, Mode, TaskInfo, UpdateInfo};
 use super::notify::{CommonProgress, EachFileStatus, Progress};
 use super::reason::Reason;
@@ -253,7 +255,7 @@ impl UpdateInfo {
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub(crate) struct NetworkInfo {
-    pub(crate) network_type: Network,
+    pub(crate) network_type: NetworkInner,
     pub(crate) is_metered: bool,
     pub(crate) is_roaming: bool,
 }
@@ -373,6 +375,7 @@ impl TaskConfig {
 extern "C" {
     pub(crate) fn GetNetworkInfo() -> *const NetworkInfo;
     pub(crate) fn DeleteCEachFileStatus(ptr: *const CEachFileStatus);
+    pub(crate) fn UpdateNetworkInfo();
 
 }
 

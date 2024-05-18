@@ -160,7 +160,7 @@ struct CVectorWrapper {
 };
 
 // Request Database Modify.
-bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state);
+bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state, Reason reason);
 bool HasRequestTaskRecord(uint32_t taskId);
 bool QueryTaskTokenId(uint32_t taskId, uint64_t &tokenId);
 bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig);
@@ -187,7 +187,7 @@ void UpdateTaskStateOnAppStateChange(uint64_t uid, uint8_t appState);
 void UpdateTaskStateOnNetworkChange(NetworkInfo info);
 void GetTaskQosInfo(uint64_t uid, uint32_t taskId, TaskQosInfo **info);
 void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len);
-void GetAppArray(AppInfo *apps, size_t *len);
+void GetAppArray(AppInfo **apps, size_t *len);
 CStringWrapper GetAppBundle(uint64_t uid);
 
 #ifdef __cplusplus

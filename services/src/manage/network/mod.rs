@@ -13,7 +13,7 @@
 
 pub(crate) mod listener;
 
-use crate::task::ffi::{GetNetworkInfo, NetworkInfo};
+use crate::task::ffi::{GetNetworkInfo, NetworkInfo, UpdateNetworkInfo};
 
 pub(crate) struct NetworkManager;
 
@@ -24,6 +24,12 @@ impl NetworkManager {
 
     pub(crate) fn is_online(&self) -> bool {
         unsafe { IsOnline() }
+    }
+
+    pub(crate) fn update_network_info(&self) {
+        unsafe {
+            UpdateNetworkInfo();
+        }
     }
 
     pub(crate) fn get_network_info(&self) -> Option<NetworkInfo> {
