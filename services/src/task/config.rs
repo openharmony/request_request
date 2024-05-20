@@ -150,6 +150,15 @@ impl TaskConfig {
             certs_path: self.certs_path.iter().map(CStringWrapper::from).collect(),
         }
     }
+
+    pub(crate) fn contains_user_file(&self) -> bool {
+        for specs in self.file_specs.iter() {
+            if specs.is_user_file {
+                return true;
+            }
+        }
+        false
+    }
 }
 
 impl Default for TaskConfig {
