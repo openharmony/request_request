@@ -44,14 +44,6 @@ impl QosDirection {
         self.direction
     }
 
-    pub(crate) fn high_speed(uid: u64, task_id: u32) -> Self {
-        Self::new(uid, task_id, QosLevel::HighSpeed)
-    }
-
-    pub(crate) fn low_speed(uid: u64, task_id: u32) -> Self {
-        Self::new(uid, task_id, QosLevel::LowSpeed)
-    }
-
     pub(crate) fn new(uid: u64, task_id: u32, direction: QosLevel) -> Self {
         Self {
             uid,
@@ -63,6 +55,9 @@ impl QosDirection {
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub(crate) enum QosLevel {
+    FullSpeed = 0,
     HighSpeed,
+    MiddleSpeed,
     LowSpeed,
+    BUTT,
 }

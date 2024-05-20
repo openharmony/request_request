@@ -18,6 +18,7 @@ use std::task::{Context, Poll};
 
 use ylong_http_client::HttpClientError;
 use ylong_runtime::io::AsyncWrite;
+use ylong_runtime::time::Sleep;
 
 use super::info::Mode;
 use crate::manage::account::is_active_user;
@@ -27,28 +28,38 @@ use crate::task::info::State;
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::utils::get_current_timestamp;
+const SPEED_CACULATE_INTERVAL: u64 = 2000;
+const SPEED_LIMIT_INTERVAL: u64 = 100;
+use std::future::Future;
+use std::time::Duration;
+
+use ylong_runtime::time::sleep;
 
 const FRONT_NOTIFY_INTERVAL: u64 = 1000;
 const BACKGROUND_NOTIFY_INTERVAL: u64 = 3000;
 
 pub(crate) struct TaskOperator {
+    pub(crate) sleep: Option<Sleep>,
     pub(crate) task: Arc<RequestTask>,
-    pub(crate) waiting: usize,
-    pub(crate) tick_waiting: usize,
+    pub(crate) begin_time: u64,
+    pub(crate) begin_size: u64,
+    pub(crate) speed: u64,
 }
 
 impl TaskOperator {
     pub(crate) fn new(task: Arc<RequestTask>) -> Self {
         Self {
+            sleep: None,
             task,
-            waiting: 0,
-            tick_waiting: 0,
+            begin_time: 0,
+            begin_size: 0,
+            speed: 0,
         }
     }
 
     pub(crate) fn poll_progress_common(
-        &self,
-        _cx: &mut Context<'_>,
+        &mut self,
+        cx: &mut Context<'_>,
     ) -> Poll<Result<(), HttpClientError>> {
         let current = get_current_timestamp();
 
@@ -63,7 +74,7 @@ impl TaskOperator {
             info!("pause for app state");
             return Poll::Ready(Err(HttpClientError::user_aborted()));
         }
-        
+
         if self.task.conf.common_data.mode == Mode::BackGround && !is_active_user(self.task.uid()) {
             info!("pause for user stopped");
             self.task.set_status(State::Waiting, Reason::AccountStopped);
@@ -84,6 +95,42 @@ impl TaskOperator {
                 self.task.background_notify_time.load(Ordering::SeqCst);
             if get_current_timestamp() - last_background_notify_time >= BACKGROUND_NOTIFY_INTERVAL {
                 self.task.background_notify();
+            }
+        }
+
+        let total_processed = self
+            .task
+            .progress
+            .lock()
+            .unwrap()
+            .common_data
+            .total_processed as u64;
+        if self.begin_time == 0 && total_processed != 0 {
+            self.begin_time = current;
+            self.begin_size = total_processed;
+        }
+        if self.speed == 0
+            && (current > (self.begin_time + SPEED_CACULATE_INTERVAL))
+            && total_processed != 0
+        {
+            self.speed = (total_processed - self.begin_size) / (current - self.begin_time);
+        }
+        let speed_limit = self.task.rate_limiting.load(Ordering::Acquire) as u64;
+        // For every 1 increase in the speed_limit, the speed decreases by 25%
+        if speed_limit != 0
+            && self.speed != 0
+            && ((total_processed - self.begin_size)
+                > (self.speed * (current - self.begin_time) / 4 * (4 - speed_limit)))
+        {
+            self.sleep = Some(sleep(Duration::from_millis(SPEED_LIMIT_INTERVAL)));
+        } else {
+            self.sleep = None;
+        }
+
+        if self.sleep.is_some() {
+            match Pin::new(self.sleep.as_mut().unwrap()).poll(cx) {
+                Poll::Ready(_) => return Poll::Ready(Ok(())),
+                Poll::Pending => return Poll::Pending,
             }
         }
         Poll::Ready(Ok(()))

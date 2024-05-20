@@ -28,7 +28,7 @@ use crate::error::ErrorCode;
 use crate::manage::app_state::AppStateManagerTx;
 use crate::manage::database::Database;
 use crate::manage::notifier::Notifier;
-use crate::manage::scheduler::qos::{QosChanges, QosDirection, QosLevel};
+use crate::manage::scheduler::qos::{QosChanges, QosDirection};
 use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
 use crate::service::runcount::RunCountManagerEntry;
@@ -134,12 +134,11 @@ impl RunningQueue {
         for qos_direction in qos_vec.iter() {
             let uid = qos_direction.uid();
             let task_id = qos_direction.task_id();
-            let limit = qos_direction.direction() == QosLevel::LowSpeed;
 
             if let Some(task) = queue.remove(&(uid, task_id)) {
                 // If we can find that the task is running in `running_tasks`,
                 // we just need to adjust its rate.
-                task.speed_limit(limit);
+                task.speed_limit(qos_direction.direction() as u8);
                 // Then we put it into `satisfied_tasks`.
                 satisfied_tasks.insert((uid, task_id), task);
                 continue;
@@ -164,7 +163,7 @@ impl RunningQueue {
             let keeper = self.keeper.clone();
             let tx = self.tx.clone();
             let runcount_manager = self.runcount_manager.clone();
-            task.speed_limit(limit);
+            task.speed_limit(qos_direction.direction() as u8);
             satisfied_tasks.insert((uid, task_id), task.clone());
             let task = RunningTask::new(runcount_manager, task.clone(), tx, keeper);
             ylong_runtime::spawn(async move {

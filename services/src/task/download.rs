@@ -21,7 +21,6 @@ use ylong_http_client::{HttpClientError, SpeedLimit, Timeout};
 
 use super::operator::TaskOperator;
 use super::reason::Reason;
-use super::tick::{Clock, WAITING_TO_TICK, WAITING_TO_WAKE};
 use crate::task::info::State;
 use crate::task::request_task::RequestTask;
 use crate::trace::Trace;
@@ -33,26 +32,10 @@ const LOW_SPEED_LIMIT: u64 = 1;
 
 impl DownloadOperator for TaskOperator {
     fn poll_download(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         cx: &mut Context<'_>,
         data: &[u8],
     ) -> Poll<Result<usize, HttpClientError>> {
-        if self.task.rate_limiting.load(Ordering::Acquire) {
-            if self.waiting == WAITING_TO_WAKE {
-                self.waiting = 0;
-            } else {
-                self.waiting += 1;
-                Clock::get_instance().register(self.task.conf.common_data.task_id, cx);
-                return Poll::Pending;
-            }
-        } else {
-            self.tick_waiting += 1;
-            if self.tick_waiting == WAITING_TO_TICK {
-                self.tick_waiting = 0;
-                Clock::get_instance().tick();
-            }
-        }
-
         if self.task.range_request.load(Ordering::SeqCst) {
             if self.task.range_response.load(Ordering::SeqCst) {
                 return self.poll_write_file(cx, data, 0);
@@ -66,7 +49,7 @@ impl DownloadOperator for TaskOperator {
     }
 
     fn poll_progress(
-        self: Pin<&mut Self>,
+        mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,
         _downloaded: u64,
         _total: Option<u64>,

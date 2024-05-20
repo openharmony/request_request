@@ -12,7 +12,9 @@
 // limitations under the License.
 
 use std::io::SeekFrom;
-use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{
+    AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicU8, AtomicUsize, Ordering,
+};
 use std::sync::Mutex;
 use std::thread::sleep;
 use std::time::Duration;
@@ -36,7 +38,6 @@ use crate::task::client::build_client;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::ffi::{PublishStateChangeEvent, RequestBackgroundNotify, RequestTaskMsg};
 use crate::task::files::{AttachedFiles, Files};
-use crate::task::tick::Clock;
 use crate::utils::get_current_timestamp;
 const RETRY_INTERVAL: u64 = 20;
 
@@ -63,7 +64,7 @@ pub(crate) struct RequestTask {
     pub(crate) restored: AtomicBool,
     pub(crate) skip_bytes: AtomicU64,
     pub(crate) upload_counts: AtomicUsize,
-    pub(crate) rate_limiting: AtomicBool,
+    pub(crate) rate_limiting: AtomicU8,
     pub(crate) database: Database,
     pub(crate) app_state: AppState,
     pub(crate) last_notify: AtomicU64,
@@ -109,15 +110,9 @@ impl RequestTask {
         self.conf.common_data.priority
     }
 
-    pub(crate) fn speed_limit(&self, limit: bool) {
-        if limit {
-            info!("Qos task_id:{} set to Low Qos", self.task_id());
-            self.rate_limiting.store(true, Ordering::Release);
-        } else {
-            info!("Qos task_id:{} set to High Qos", self.task_id());
-            self.rate_limiting.store(false, Ordering::Release);
-            Clock::get_instance().wake_one(self.task_id());
-        }
+    pub(crate) fn speed_limit(&self, limit: u8) {
+        info!("task_id:{} speed_limit level {}", self.task_id(), limit);
+        self.rate_limiting.store(limit, Ordering::Release);
     }
 
     #[allow(dead_code)]
@@ -224,7 +219,7 @@ impl RequestTask {
             skip_bytes: AtomicU64::new(0),
             upload_counts: AtomicUsize::new(upload_counts),
             database: Database::new(),
-            rate_limiting: AtomicBool::new(false),
+            rate_limiting: AtomicU8::new(0),
             app_state,
             last_notify: AtomicU64::new(time),
             client_manager,
