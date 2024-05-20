@@ -206,6 +206,7 @@ impl AppStateManagerTx {
         rx.recv().await.unwrap()
     }
 
+    #[allow(dead_code)]
     pub(crate) fn remove_app_state(&self, uid: u64) {
         let _ = self.tx.send(AppStateEvent::RemoveAppState(uid));
     }
@@ -307,11 +308,6 @@ impl AppState {
 
 impl Clone for AppState {
     fn clone(&self) -> Self {
-        {
-            let mut lock = self.inner.lock().unwrap();
-            lock.cnt += 1;
-        }
-
         Self {
             uid: self.uid,
             inner: self.inner.clone(),
@@ -320,27 +316,13 @@ impl Clone for AppState {
     }
 }
 
-impl Drop for AppState {
-    fn drop(&mut self) {
-        let mut lock = self.inner.lock().unwrap();
-        if lock.cnt >= 1 {
-            lock.cnt -= 1;
-        }
-
-        if lock.cnt == 0 {
-            self.app_state_manager.remove_app_state(self.uid);
-        }
-    }
-}
-
 struct Inner {
-    cnt: usize,
     state: ApplicationState,
 }
 
 impl Inner {
     fn new(state: ApplicationState) -> Self {
-        Self { cnt: 0, state }
+        Self { state }
     }
 }
 
