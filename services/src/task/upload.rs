@@ -23,49 +23,26 @@ use ylong_runtime::io::{AsyncRead, AsyncSeek, ReadBuf};
 
 use super::operator::TaskOperator;
 use super::reason::Reason;
-use super::tick::{Clock, WAITING_TO_TICK, WAITING_TO_WAKE};
 use crate::task::info::State;
 use crate::task::request_task::RequestTask;
 use crate::trace::Trace;
 
 struct TaskReader {
-    task: Arc<RequestTask>,
-    waiting: usize,
-    tick_waiting: usize,
+    pub(crate) task: Arc<RequestTask>,
 }
 
 impl TaskReader {
     pub(crate) fn new(task: Arc<RequestTask>) -> Self {
-        Self {
-            task,
-            waiting: 0,
-            tick_waiting: 0,
-        }
+        Self { task }
     }
 }
 
 impl AsyncRead for TaskReader {
     fn poll_read(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<std::io::Result<()>> {
-        if self.task.rate_limiting.load(Ordering::Acquire) {
-            if self.waiting == WAITING_TO_WAKE {
-                self.waiting = 0;
-            } else {
-                self.waiting += 1;
-                Clock::get_instance().register(self.task.conf.common_data.task_id, cx);
-                return Poll::Pending;
-            }
-        } else {
-            self.tick_waiting += 1;
-            if self.tick_waiting == WAITING_TO_TICK {
-                self.tick_waiting = 0;
-                Clock::get_instance().tick();
-            }
-        }
-
         let index = self.task.progress.lock().unwrap().common_data.index;
         let file = self.task.files.get_mut(index).unwrap();
         let (is_partial_upload, total_upload_bytes) = self.task.get_upload_info(index);
@@ -123,7 +100,8 @@ impl UploadOperator for TaskOperator {
         _uploaded: u64,
         _total: Option<u64>,
     ) -> Poll<Result<(), HttpClientError>> {
-        self.poll_progress_common(cx)
+        let mut this = self;
+        this.poll_progress_common(cx)
     }
 }
 

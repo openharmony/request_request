@@ -1369,7 +1369,7 @@ void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len)
         ->BeginWrap()
         ->EqualTo("state", static_cast<uint8_t>(State::WAITING))
         ->And()
-        ->EqualTo("reason", static_cast<uint8_t>(4)) // 4 means Reason::RunningTaskMeetLimits.
+        ->EqualTo("reason", static_cast<uint8_t>(Reason::RUNNING_TASK_MEET_LIMITS))
         ->EndWrap()
         ->Or()
         ->EqualTo("state", static_cast<uint8_t>(State::RUNNING))

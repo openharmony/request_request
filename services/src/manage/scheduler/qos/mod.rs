@@ -103,8 +103,11 @@ impl Qos {
 
     fn reschedule_inner(&mut self, action: Action) -> Vec<QosDirection> {
         let m1 = self.capacity.m1();
+        let m1_speed = self.capacity.m1_speed();
         let m2 = self.capacity.m2();
+        let m2_speed = self.capacity.m2_speed();
         let m3 = self.capacity.m3();
+        let m3_speed = self.capacity.m3_speed();
 
         let mut count = 0;
         let mut app_i = 0;
@@ -122,9 +125,9 @@ impl Qos {
                 continue;
             }
             if count < m1 {
-                qos_vec.push(QosDirection::high_speed(task.uid(), task.task_id()));
+                qos_vec.push(QosDirection::new(task.uid(), task.task_id(), m1_speed));
             } else if count < m1 + m2 {
-                qos_vec.push(QosDirection::low_speed(task.uid(), task.task_id()));
+                qos_vec.push(QosDirection::new(task.uid(), task.task_id(), m2_speed));
             }
             count += 1;
             if count == m1 + m2 {
@@ -161,7 +164,7 @@ impl Qos {
                 }
 
                 if count < m1 + m2 + m3 {
-                    qos_vec.push(QosDirection::low_speed(task.uid(), task.task_id()));
+                    qos_vec.push(QosDirection::new(task.uid(), task.task_id(), m3_speed));
                 } else {
                     return qos_vec;
                 }
@@ -188,7 +191,7 @@ impl Qos {
             }
 
             if count < m1 + m2 + m3 {
-                qos_vec.push(QosDirection::low_speed(task.uid(), task.task_id()));
+                qos_vec.push(QosDirection::new(task.uid(), task.task_id(), m3_speed));
             } else {
                 return qos_vec;
             }
