@@ -11,10 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fs::File;
-use std::io::Read;
 use std::sync::{Arc, RwLock};
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
 
 use ylong_http_client::Certificate;
 
@@ -43,7 +41,6 @@ impl CertManager {
 
 #[derive(Default)]
 struct CertInfo {
-    time: Option<SystemTime>,
     cert: Option<Vec<Certificate>>,
 }
 
@@ -58,58 +55,20 @@ async fn run(info: Arc<RwLock<CertInfo>>) {
 fn update_system_cert(info: &Arc<RwLock<CertInfo>>) {
     let mut info = info.write().unwrap();
 
-    let mut file = match File::open("/etc/ssl/certs/cacert.pem") {
-        Ok(file) => file,
-        Err(e) => {
-            error!("open cacert.pem failed, error is {:?}", e);
-            return;
-        }
-    };
-
-    let modified = match file.metadata().and_then(|meta| meta.modified()) {
-        Ok(modified) => Some(modified),
-        Err(e) => {
-            error!("open cacert.pem failed, error is {:?}", e);
-            return;
-        }
-    };
-
-    // If the certificate file has not been updated, there is no need to update
-    // `CertInfo`.
-    if info.time == modified {
-        return;
-    }
-
-    let mut buf = Vec::new();
-    if let Err(e) = file.read_to_end(&mut buf) {
-        error!("read cacert.pem failed, error is {:?}", e);
-        return;
-    }
-
-    let mut cert_from_pem = match Certificate::from_pem(&buf) {
-        Ok(cert) => CertInfo {
-            time: modified,
-            cert: Some(vec![cert]),
-        },
-        Err(e) => {
-            error!("parse cacert.pem failed, error is {:?}", e);
-            return;
-        }
-    };
+    let mut certificates = Vec::new();
 
     let c_certs_ptr = unsafe { GetUserCertsData() };
     if !c_certs_ptr.is_null() {
-        error!("GetUserCertsData is not ptr");
+        info!("GetUserCertsData valid");
         let certs = unsafe { &*c_certs_ptr };
         let c_cert_list_ptr =
             unsafe { std::slice::from_raw_parts(certs.cert_data_list, certs.len as usize) };
         for (_, item) in c_cert_list_ptr.iter().enumerate() {
             let cert = unsafe { &**item };
             let cert_slice = unsafe { std::slice::from_raw_parts(cert.data, cert.size as usize) };
-            cert_from_pem = match Certificate::from_pem(cert_slice) {
+            match Certificate::from_pem(cert_slice) {
                 Ok(cert) => {
-                    cert_from_pem.cert.as_mut().unwrap().push(cert);
-                    cert_from_pem
+                    certificates.push(cert);
                 }
                 Err(e) => {
                     error!("parse security cert path failed, error is {:?}", e);
@@ -120,10 +79,9 @@ fn update_system_cert(info: &Arc<RwLock<CertInfo>>) {
         unsafe { FreeCertDataList(c_certs_ptr) };
     }
 
-    let cert = match Certificate::from_path("/system/etc/security/certificates/") {
+    match Certificate::from_path("/system/etc/security/certificates/") {
         Ok(cert) => {
-            cert_from_pem.cert.as_mut().unwrap().push(cert);
-            cert_from_pem
+            certificates.push(cert);
         }
         Err(e) => {
             error!("parse security cert path failed, error is {:?}", e);
@@ -131,7 +89,9 @@ fn update_system_cert(info: &Arc<RwLock<CertInfo>>) {
         }
     };
 
-    *info = cert;
+    *info = CertInfo {
+        cert: Some(certificates),
+    };
 }
 
 #[link(name = "download_server_cxx", kind = "static")]
