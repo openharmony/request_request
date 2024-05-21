@@ -93,7 +93,7 @@ impl Scheduler {
     }
 
     pub(crate) async fn start_task(&mut self, uid: u64, task_id: u32) -> ErrorCode {
-        let database = Database::new();
+        let database = Database::get_instance();
         if let Some(task) = database.get_task_qos_info(uid, task_id) {
             let action = Action::from(task.action);
             let task_state = State::from(task.state);
@@ -128,7 +128,7 @@ impl Scheduler {
         task_id: u32,
         app_state_manager: AppStateManagerTx,
     ) -> ErrorCode {
-        let database = Database::new();
+        let database = Database::get_instance();
         if let Some(task) = database.get_task_qos_info(uid, task_id) {
             let task_state = State::from(task.state);
             let app_state = app_state_manager.get_app_raw_state(uid).await;
@@ -223,7 +223,7 @@ impl Scheduler {
             // also we need to delete it from qos.
             let _ = self.qos.finish_task(uid, task_id);
         }
-        let database = Database::new();
+        let database = Database::get_instance();
         if state != State::Removed {
             let system_config = unsafe { SYSTEM_CONFIG_MANAGER.assume_init_ref().system_config() };
             if let Some(task) = database
@@ -237,7 +237,7 @@ impl Scheduler {
             {
                 return if task.set_status(state, Reason::UserOperation) {
                     // Here we use the `drop` method of `NotifyTask` to notify apps.
-                    let _ = NotifyTask::new(Arc::new(task));
+                    let _ = NotifyTask::new(task);
                     ErrorCode::ErrOk
                 } else {
                     ErrorCode::TaskStateErr

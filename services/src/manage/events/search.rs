@@ -11,12 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::manage::database::Database;
 use crate::manage::TaskManager;
 use crate::utils::filter::Filter;
 
 impl TaskManager {
     pub(crate) fn search(&self, filter: Filter) -> Vec<u32> {
         debug!("TaskManager Search, filter:{:?}", filter);
-        self.database.search_tasks(filter)
+        Database::get_instance().search_tasks(filter)
     }
 }

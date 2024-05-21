@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::manage::database::Database;
 use crate::manage::TaskManager;
 use crate::task::info::TaskInfo;
 
@@ -29,7 +30,7 @@ impl TaskManager {
                 }
             }
             None => {
-                let mut info = match self.database.get_task_info(task_id) {
+                let mut info = match Database::get_instance().get_task_info(task_id) {
                     Some(info) => info,
                     None => {
                         info!("TaskManger Touch: no task found");
