@@ -97,23 +97,27 @@ impl Scheduler {
         if let Some(task) = database.get_task_qos_info(uid, task_id) {
             let action = Action::from(task.action);
             let task_state = State::from(task.state);
-            let app_state = self.app_state_manager.get_app_raw_state(uid).await;
+            let app_state = self.app_state_manager.get_app_state(uid).await;
+            let raw_state = app_state.state();
             if task_state == State::Initialized
                 || (task_state == State::Failed && action == Action::Download)
             {
                 if Mode::from(task.mode) != Mode::FrontEnd
-                    || app_state == ApplicationState::Foreground
+                    || raw_state == ApplicationState::Foreground
                 {
-                    let changes = self.qos.start_task(uid, app_state, task);
+                    let changes = self.qos.start_task(uid, raw_state, task);
                     self.reschedule(changes).await;
                 } else {
                     info!("task {} started, waiting for app state", task_id);
+                    // to insert app, further optimization will be carried out in the future
+                    self.qos.apps.insert_task(uid, raw_state, task);
                     database.change_task_state(
                         task_id,
                         uid,
                         State::Paused,
                         Reason::AppBackgroundOrTerminate,
                     );
+                    self.qos.apps.remove_task(uid, task_id);
                 }
                 return ErrorCode::ErrOk;
             }

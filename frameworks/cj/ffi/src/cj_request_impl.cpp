@@ -152,7 +152,8 @@ RetReqData CJRequestImpl::CreateTask(OHOS::AbilityRuntime::Context* context, CCo
         };
     }
 
-    ret.taskId = task->taskId_;
+    ret.taskId = std::stoi(task->taskId_);
+    
     REQUEST_HILOGD("[CJRequestImpl] CreateTask end");
     return ret;
 }

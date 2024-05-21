@@ -45,7 +45,7 @@ public:
 class RequestManagerImpl : public IResponseMessageHandler {
 public:
     static const std::unique_ptr<RequestManagerImpl> &GetInstance();
-    int32_t Create(const Config &config, int32_t seq, int32_t &tid);
+    int32_t Create(const Config &config, int32_t seq, std::string &tid);
     int32_t GetTask(const std::string &tid, const std::string &token, Config &config);
     int32_t Start(const std::string &tid);
     int32_t Stop(const std::string &tid);
@@ -92,7 +92,7 @@ private:
     RequestManagerImpl(RequestManagerImpl &&) = delete;
     RequestManagerImpl &operator=(const RequestManagerImpl &) = delete;
     sptr<RequestServiceInterface> GetRequestServiceProxy();
-    int32_t Retry(int32_t &taskId, const Config &config, int32_t errorCode);
+    int32_t Retry(std::string &taskId, const Config &config, int32_t errorCode);
     void SetRequestServiceProxy(sptr<RequestServiceInterface> proxy);
     int32_t EnsureChannelOpen();
     std::shared_ptr<Request> GetTask(const std::string &taskId);

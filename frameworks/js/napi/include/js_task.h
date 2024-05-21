@@ -39,7 +39,7 @@ public:
     static napi_value Query(napi_env env, napi_callback_info info);
 
     std::string GetTid();
-    void SetTid(int32_t tid);
+    void SetTid(std::string &tid);
 
     static void SubscribeSA();
     static void UnsubscribeSA();
@@ -73,7 +73,7 @@ private:
         napi_ref jsConfig = nullptr;
         napi_ref baseContext = nullptr;
         Config config{};
-        int32_t tid{};
+        std::string tid{};
         std::string token = "null";
     };
 

@@ -26,7 +26,7 @@ namespace OHOS::Request {
 class RequestManager {
 public:
     REQUEST_API static const std::unique_ptr<RequestManager> &GetInstance();
-    REQUEST_API int32_t Create(const Config &config, int32_t seq, int32_t &tid);
+    REQUEST_API int32_t Create(const Config &config, int32_t seq, std::string &tid);
     REQUEST_API int32_t GetTask(const std::string &tid, const std::string &token, Config &config);
     REQUEST_API int32_t Start(const std::string &tid);
     REQUEST_API int32_t Stop(const std::string &tid);

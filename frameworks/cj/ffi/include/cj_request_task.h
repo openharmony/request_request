@@ -47,7 +47,7 @@ public:
     std::map<SubscribeType, std::shared_ptr<CJNotifyDataListener>> notifyDataListenerMap_;
 
     Config config_;
-    int32_t taskId_{0};
+    std::string taskId_{ };
 
     static std::mutex taskMutex_;
     static std::map<std::string, CJTask *> taskMap_;
