@@ -21,6 +21,7 @@
 #include <cstdint>
 
 #include "log.h"
+#include "rdb_errno.h"
 
 namespace OHOS::Request {
 RequestDataBase::RequestDataBase()
@@ -245,17 +246,17 @@ int RequestDBCreateTables(OHOS::NativeRdb::RdbStore &store)
 int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store)
 {
     int ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_PROXY);
-    if (ret != OHOS::NativeRdb::E_OK) {
+    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
         REQUEST_HILOGE("add column proxy failed, ret: %{public}d", ret);
         return ret;
     }
 
     ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CERTIFICATE_PINS);
-    if (ret != OHOS::NativeRdb::E_OK) {
+    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
         REQUEST_HILOGE("add column certificate_pins failed, ret: %{public}d", ret);
         return ret;
     }
-    return ret;
+    return OHOS::NativeRdb::E_OK;
 }
 
 // This function is used to adapt beta version, remove it later.
@@ -1268,7 +1269,11 @@ void UpdateTaskStateOnNetworkChange(NetworkInfo info)
     // For WI-FI situation.
     if (info.networkType == NetworkInner::WIFI || info.networkType == NetworkInner::ANY) {
         OHOS::NativeRdb::RdbPredicates satisfiedWifi("request_task");
-        satisfiedWifi.EqualTo("network", static_cast<uint8_t>(NetworkInner::WIFI))
+        satisfiedWifi.BeginWrap()
+            ->EqualTo("network", static_cast<uint8_t>(Network::WIFI))
+            ->Or()
+            ->EqualTo("network", static_cast<uint8_t>(Network::ANY))
+            ->EndWrap()
             ->And()
             ->EqualTo("state", static_cast<uint8_t>(State::WAITING))
             ->And()
@@ -1282,7 +1287,11 @@ void UpdateTaskStateOnNetworkChange(NetworkInfo info)
     // For CELLULAR situation.
     if (info.networkType == NetworkInner::CELLULAR || info.networkType == NetworkInner::ANY) {
         OHOS::NativeRdb::RdbPredicates satisfiedCellular("request_task");
-        satisfiedCellular.EqualTo("network", static_cast<uint8_t>(NetworkInner::CELLULAR))
+        satisfiedCellular.BeginWrap()
+            ->EqualTo("network", static_cast<uint8_t>(Network::CELLULAR))
+            ->Or()
+            ->EqualTo("network", static_cast<uint8_t>(Network::ANY))
+            ->EndWrap()
             ->And()
             ->EqualTo("state", static_cast<uint8_t>(State::WAITING))
             ->And()
@@ -1355,7 +1364,7 @@ void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len)
     *len = 0;
 
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(
-        rdbPredicates, { "uid", "task_id", "action", "mode", "state", "priority" });
+        rdbPredicates, { "task_id", "action", "mode", "state", "priority" });
     int rowCount = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("GetRunningTasksArray result set is nullptr or get row count failed");
@@ -1405,7 +1414,7 @@ void GetAppArray(AppInfo **apps, size_t *len)
         }
 
         std::string temp = "";
-        resultSet->GetString(1, temp);                              // Line 1 is 'bundle'
+        resultSet->GetString(1, temp);                                 // Line 1 is 'bundle'
         (*apps)[i].uid = static_cast<uint32_t>(GetLong(resultSet, 0)); // Line 0 is 'uid'
         (*apps)[i].bundle = WrapperCString(temp);
     }

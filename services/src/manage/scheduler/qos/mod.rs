@@ -25,7 +25,8 @@ use crate::task::ffi::NetworkInfo;
 use crate::task::info::ApplicationState;
 
 pub(crate) struct Qos {
-    apps: SortedApps,
+    // should not pub
+    pub(crate) apps: SortedApps,
     capacity: RssCapacity,
 }
 

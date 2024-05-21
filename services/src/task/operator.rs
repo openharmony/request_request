@@ -38,8 +38,8 @@ const BACKGROUND_NOTIFY_INTERVAL: u64 = 3000;
 pub(crate) struct TaskOperator {
     pub(crate) sleep: Option<Sleep>,
     pub(crate) task: Arc<RequestTask>,
-    pub(crate) begin_time: u64,
-    pub(crate) begin_size: u64,
+    pub(crate) last_time: u64,
+    pub(crate) last_size: u64,
     pub(crate) speed: u64,
 }
 
@@ -48,8 +48,8 @@ impl TaskOperator {
         Self {
             sleep: None,
             task,
-            begin_time: 0,
-            begin_size: 0,
+            last_time: 0,
+            last_size: 0,
             speed: 0,
         }
     }
@@ -96,26 +96,38 @@ impl TaskOperator {
             .unwrap()
             .common_data
             .total_processed as u64;
-        if self.begin_time == 0 && total_processed != 0 {
-            self.begin_time = current;
-            self.begin_size = total_processed;
+
+        // get the init time and size, for speed caculate
+        if self.last_time == 0 && total_processed != 0 {
+            self.last_time = current;
+            self.last_size = total_processed;
         }
-        if self.speed == 0
-            && (current > (self.begin_time + SPEED_CACULATE_INTERVAL))
+
+        let speed_limit = self.task.rate_limiting.load(Ordering::Acquire) as u64;
+        // caculate download/upload speed
+        if speed_limit != 0
+            && self.speed == 0
+            && (current > (self.last_time + SPEED_CACULATE_INTERVAL))
             && total_processed != 0
         {
-            self.speed = (total_processed - self.begin_size) / (current - self.begin_time);
+            self.speed = (total_processed - self.last_size) / (current - self.last_time);
         }
-        let speed_limit = self.task.rate_limiting.load(Ordering::Acquire) as u64;
+
         // For every 1 increase in the speed_limit, the speed decreases by 25%
         if speed_limit != 0
             && self.speed != 0
-            && ((total_processed - self.begin_size)
-                > (self.speed * (current - self.begin_time) / 4 * (4 - speed_limit)))
+            && ((total_processed - self.last_size)
+                > (self.speed * (current - self.last_time) / 4 * (4 - speed_limit)))
         {
             self.sleep = Some(sleep(Duration::from_millis(SPEED_LIMIT_INTERVAL)));
         } else {
             self.sleep = None;
+            // last caculate window has meet speed limit, update last_time and last_size,
+            // for next poll's speed compare
+            if self.speed != 0 {
+                self.last_time = current;
+                self.last_size = total_processed;
+            }
         }
 
         if self.sleep.is_some() {

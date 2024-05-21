@@ -45,7 +45,7 @@ const std::unique_ptr<RequestManagerImpl> &RequestManagerImpl::GetInstance()
     return instance;
 }
 
-int32_t RequestManagerImpl::Create(const Config &config, int32_t seq, int32_t &tid)
+int32_t RequestManagerImpl::Create(const Config &config, int32_t seq, std::string &tid)
 {
     REQUEST_HILOGD("RequestManagerImpl Create start.");
 
@@ -67,10 +67,10 @@ int32_t RequestManagerImpl::Create(const Config &config, int32_t seq, int32_t &t
     }
     if (ret == E_CHANNEL_NOT_OPEN) {
         this->ReopenChannel();
-        ret = proxy->Subscribe(std::to_string(tid));
+        ret = proxy->Subscribe(tid);
     }
     if (ret == E_OK && config.version != Version::API10) {
-        ret = proxy->Start(std::to_string(tid));
+        ret = proxy->Start(tid);
     }
     if (ret != E_OK) {
         REQUEST_HILOGE("Send create request, seq: %{public}d, failed with reason: %{public}d", seq, ret);
@@ -81,7 +81,7 @@ int32_t RequestManagerImpl::Create(const Config &config, int32_t seq, int32_t &t
     return ret;
 }
 
-int32_t RequestManagerImpl::Retry(int32_t &taskId, const Config &config, int32_t errorCode)
+int32_t RequestManagerImpl::Retry(std::string &taskId, const Config &config, int32_t errorCode)
 {
     REQUEST_HILOGD("Retry in");
     int32_t interval = 1;

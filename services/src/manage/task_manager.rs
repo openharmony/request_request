@@ -51,9 +51,6 @@ const RESTORE_ALL_TASKS_INTERVAL: u64 = 10;
 
 pub(crate) struct TaskManager {
     pub(crate) scheduler: Scheduler,
-    pub(crate) database: Database,
-    #[allow(dead_code)]
-    pub(crate) tx: TaskManagerTx,
     pub(crate) rx: TaskManagerRx,
     pub(crate) app_state_manager: AppStateManagerTx,
     pub(crate) client_manager: ClientManagerEntry,
@@ -110,13 +107,11 @@ impl TaskManager {
     ) -> Self {
         Self {
             scheduler: Scheduler::init(
-                tx.clone(),
+                tx,
                 runcount_manager,
                 app_state_manager.clone(),
                 client_manager.clone(),
             ),
-            database: Database::new(),
-            tx,
             rx,
             app_state_manager,
             client_manager,
@@ -257,7 +252,7 @@ impl TaskManager {
     }
 
     fn check_subscriber(&self, task_id: u32, token_id: u64) -> ErrorCode {
-        match self.database.get_token_id(task_id) {
+        match Database::get_instance().get_token_id(task_id) {
             Some(id) if id == token_id => ErrorCode::ErrOk,
             Some(_) => ErrorCode::Permission,
             None => ErrorCode::TaskNotFound,
@@ -292,7 +287,7 @@ impl TaskManager {
             return false;
         }
 
-        self.database.delete_early_records();
+        Database::get_instance().delete_early_records();
 
         // check rx again for there may be new message arrive.
         if !self.rx.is_empty() {

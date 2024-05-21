@@ -25,9 +25,9 @@ enum class Network : uint8_t {
 
 /* used only in sa, do not mix with enum Network. */
 enum class NetworkInner : uint8_t {
-    ANY,                /* Maintain consistency with Network::ANY */
-    WIFI,               /* Maintain consistency with Network::WIFI */
-    CELLULAR,           /* Maintain consistency with Network::CECCULAR */
+    ANY,      /* Maintain consistency with Network::ANY */
+    WIFI,     /* Maintain consistency with Network::WIFI */
+    CELLULAR, /* Maintain consistency with Network::CECCULAR */
     NET_LOST,
 };
 
