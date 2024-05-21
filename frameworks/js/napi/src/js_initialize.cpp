@@ -23,6 +23,8 @@
 #include <filesystem>
 #include <fstream>
 #include <regex>
+#include <string>
+#include <system_error>
 
 #include "js_common.h"
 #include "log.h"
@@ -51,7 +53,8 @@ napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Versi
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
     int32_t number = version == Version::API8 ? NapiUtils::ONE_ARG : NapiUtils::TWO_ARG;
     if (static_cast<int32_t>(argc) < number) {
-        NapiUtils::ThrowError(env, E_PARAMETER_CHECK, "invalid parameter count", withErrCode);
+        NapiUtils::ThrowError(
+            env, E_PARAMETER_CHECK, "Missing mandatory parameters, invalid parameter count", withErrCode);
         return nullptr;
     }
 
@@ -99,7 +102,7 @@ ExceptionError JsInitialize::InitParam(
     if (getStatus != napi_ok) {
         REQUEST_HILOGE("Get context fail");
         err.code = E_PARAMETER_CHECK;
-        err.errInfo = "Get context fail";
+        err.errInfo = "Parameter verification failed, Get context fail";
         return err;
     }
     auto applicationInfo = context->GetApplicationInfo();
@@ -187,7 +190,7 @@ bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &con
         if (filePath.empty()) {
             REQUEST_HILOGE("internal to cache error");
             error.code = E_PARAMETER_CHECK;
-            error.errInfo = "UploadBodyFiles error empty path";
+            error.errInfo = "Parameter verification failed, UploadBodyFiles error empty path";
             return false;
         }
         auto now = std::chrono::high_resolution_clock::now();
@@ -197,7 +200,7 @@ bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &con
         if (!NapiUtils::IsPathValid(path)) {
             REQUEST_HILOGE("IsPathValid error %{public}s", path.c_str());
             error.code = E_PARAMETER_CHECK;
-            error.errInfo = "UploadBodyFiles error fail path";
+            error.errInfo = "Parameter verification failed, UploadBodyFiles error fail path";
             return false;
         }
         int32_t bodyFd = open(path.c_str(), O_TRUNC | O_RDWR);
@@ -262,8 +265,8 @@ bool JsInitialize::GetFD(const std::string &path, const Config &config, int32_t 
     return true;
 }
 
-bool JsInitialize::GetInternalPath(
-    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path)
+bool JsInitialize::GetInternalPath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
+    std::string &path, std::string &errInfo)
 {
     std::string fileName;
     std::string pattern = "internal://cache/";
@@ -274,16 +277,19 @@ bool JsInitialize::GetInternalPath(
         fileName = path.substr(pattern.size(), path.size());
     }
     if (fileName.empty()) {
+        errInfo = "Parameter verification failed, GetInternalPath failed, fileName is empty";
         return false;
     }
     path = context->GetCacheDir();
     if (path.empty()) {
         REQUEST_HILOGE("internal to cache error");
+        errInfo = "Parameter verification failed, GetInternalPath failed, cache path is empty";
         return false;
     }
     path += "/" + fileName;
     if (!NapiUtils::IsPathValid(path)) {
         REQUEST_HILOGE("IsPathValid error %{public}s", path.c_str());
+        errInfo = "Parameter verification failed, GetInternalPath failed, filePath is not valid";
         return false;
     }
     return true;
@@ -309,44 +315,36 @@ void JsInitialize::SetParseConfig(napi_env env, napi_value jsConfig, Config &con
 bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
 {
     if (NapiUtils::GetValueType(env, jsConfig) != napi_object) {
-        errInfo = "Wrong conf type, expected object";
+        errInfo = "Incorrect parameter type, Wrong config type, expected object";
         return false;
     }
     if (config.version != Version::API10) {
         return ParseConfigV9(env, jsConfig, config, errInfo);
     }
 
-    if (!ParseAction(env, jsConfig, config.action)) {
-        errInfo = "parse action error";
+    if (!ParseAction(env, jsConfig, config.action, errInfo)) {
         return false;
     }
-    if (!ParseUrl(env, jsConfig, config.url)) {
-        errInfo = "parse url error";
+    if (!ParseUrl(env, jsConfig, config.url, errInfo)) {
         return false;
     }
-    if (!ParseCertsPath(env, jsConfig, config.certsPath)) {
-        errInfo = "parse certs path error";
+    if (!ParseCertsPath(env, jsConfig, config.certsPath, errInfo)) {
         return false;
     }
-    if (!ParseData(env, jsConfig, config)) {
-        errInfo = "parse data error";
+    if (!ParseData(env, jsConfig, config, errInfo)) {
         return false;
     }
-    if (!ParseIndex(env, jsConfig, config)) {
-        errInfo = "Index exceeds file list";
+    if (!ParseIndex(env, jsConfig, config, errInfo)) {
         return false;
     }
-    if (!ParseProxy(env, jsConfig, config.proxy)) {
-        errInfo = "parse proxy error";
+    if (!ParseProxy(env, jsConfig, config.proxy, errInfo)) {
         return false;
     }
-    if (!ParseTitle(env, jsConfig, config) || !ParseToken(env, jsConfig, config)
-        || !ParseDescription(env, jsConfig, config.description)) {
-        errInfo = "Exceeding maximum length";
+    if (!ParseTitle(env, jsConfig, config, errInfo) || !ParseToken(env, jsConfig, config, errInfo)
+        || !ParseDescription(env, jsConfig, config.description, errInfo)) {
         return false;
     }
-    if (!ParseSaveas(env, jsConfig, config)) {
-        errInfo = "parse saveas error";
+    if (!ParseSaveas(env, jsConfig, config, errInfo)) {
         return false;
     }
     ParseCertificatePins(env, config.url, config.certificatePins);
@@ -376,7 +374,7 @@ void JsInitialize::ParseNetwork(napi_env env, napi_value jsConfig, Network &netw
     }
 }
 
-bool JsInitialize::ParseToken(napi_env env, napi_value jsConfig, Config &config)
+bool JsInitialize::ParseToken(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
 {
     char *token = nullptr;
     size_t len = 0;
@@ -393,11 +391,13 @@ bool JsInitialize::ParseToken(napi_env env, napi_value jsConfig, Config &config)
     if (status != napi_ok) {
         REQUEST_HILOGE("napi get value string utf8 failed");
         memset_s(token, bufferLen, 0, bufferLen);
+        errInfo = "Parameter verification failed, get parameter config.token failed";
         delete[] token;
         return false;
     }
     if (len < TOKEN_MIN_BYTES || len > TOKEN_MAX_BYTES) {
         memset_s(token, bufferLen, 0, bufferLen);
+        errInfo = "Parameter verification failed, the length of token should between 8 and 2048 bytes";
         delete[] token;
         return false;
     }
@@ -407,7 +407,7 @@ bool JsInitialize::ParseToken(napi_env env, napi_value jsConfig, Config &config)
     return true;
 }
 
-bool JsInitialize::ParseIndex(napi_env env, napi_value jsConfig, Config &config)
+bool JsInitialize::ParseIndex(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
 {
     config.index = NapiUtils::Convert2Uint32(env, jsConfig, "index");
     if (config.action == Action::DOWNLOAD) {
@@ -416,32 +416,36 @@ bool JsInitialize::ParseIndex(napi_env env, napi_value jsConfig, Config &config)
     }
     if (config.files.size() <= config.index) {
         REQUEST_HILOGE("files.size is %{public}zu, index is %{public}d", config.files.size(), config.index);
+        errInfo = "Parameter verification failed, config.index exceeds file list";
         return false;
     }
     return true;
 }
 
-bool JsInitialize::ParseAction(napi_env env, napi_value jsConfig, Action &action)
+bool JsInitialize::ParseAction(napi_env env, napi_value jsConfig, Action &action, std::string &errInfo)
 {
     if (!NapiUtils::HasNamedProperty(env, jsConfig, "action")) {
         REQUEST_HILOGE("ParseAction err");
+        errInfo = "Missing mandatory parameters, can not find property action";
         return false;
     }
     napi_value value = NapiUtils::GetNamedProperty(env, jsConfig, "action");
     if (NapiUtils::GetValueType(env, value) != napi_number) {
         REQUEST_HILOGE("GetNamedProperty err");
+        errInfo = "Incorrect parameter type, action type is not of napi_number type";
         return false;
     }
     action = static_cast<Action>(NapiUtils::Convert2Uint32(env, value));
     if (action != Action::DOWNLOAD && action != Action::UPLOAD) {
         REQUEST_HILOGE("Must be UPLOAD or DOWNLOAD");
+        errInfo = "Parameter verification failed, action must be UPLOAD or DOWNLOAD";
         return false;
     }
     return true;
 }
 
 // Only use for Action::DOWNLOAD.
-bool JsInitialize::ParseSaveas(napi_env env, napi_value jsConfig, Config &config)
+bool JsInitialize::ParseSaveas(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
 {
     if (config.action != Action::DOWNLOAD) {
         config.saveas = "";
@@ -450,10 +454,15 @@ bool JsInitialize::ParseSaveas(napi_env env, napi_value jsConfig, Config &config
     std::string temp = NapiUtils::Convert2String(env, jsConfig, "saveas");
     StringTrim(temp);
     if (temp.empty() || temp == "./") {
-        return InterceptData("/", config.url, config.saveas);
+        bool result = InterceptData("/", config.url, config.saveas);
+        if (!result) {
+            errInfo = "Parameter verification failed, config.saveas parse error";
+        }
+        return result;
     }
     temp = std::string(temp, 0, temp.find_last_not_of(' ') + 1);
     if (temp.size() == 0 || temp[temp.size() - 1] == '/') {
+        errInfo = "Parameter verification failed, config.saveas parse error";
         return false;
     }
     config.saveas = temp;
@@ -487,10 +496,11 @@ uint32_t JsInitialize::ParsePriority(napi_env env, napi_value jsConfig)
     return NapiUtils::Convert2Uint32(env, jsConfig, "priority");
 }
 
-bool JsInitialize::ParseDescription(napi_env env, napi_value jsConfig, std::string &description)
+bool JsInitialize::ParseDescription(napi_env env, napi_value jsConfig, std::string &description, std::string &errInfo)
 {
     description = NapiUtils::Convert2String(env, jsConfig, "description");
     if (description.size() > DESCRIPTION_MAXIMUM) {
+        errInfo = "Parameter verification failed, the length of config.description exceeds 1024";
         return false;
     }
     return true;
@@ -512,30 +522,35 @@ std::map<std::string, std::string> JsInitialize::ParseMap(
     return result;
 }
 
-bool JsInitialize::ParseUrl(napi_env env, napi_value jsConfig, std::string &url)
+bool JsInitialize::ParseUrl(napi_env env, napi_value jsConfig, std::string &url, std::string &errInfo)
 {
     url = NapiUtils::Convert2String(env, jsConfig, "url");
     if (url.size() > URL_MAXIMUM) {
         REQUEST_HILOGE("The URL exceeds the maximum length of 2048");
+        errInfo = "Parameter verification failed, the length of url exceeds 2048";
         return false;
     }
     if (!regex_match(url, std::regex("^http(s)?:\\/\\/.+"))) {
         REQUEST_HILOGE("ParseUrl error");
+        errInfo = "Parameter verification failed, the url should start with http(s)://";
         return false;
     }
 
     return true;
 }
 
-bool JsInitialize::ParseCertsPath(napi_env env, napi_value jsConfig, std::vector<std::string> &certsPath)
+bool JsInitialize::ParseCertsPath(
+    napi_env env, napi_value jsConfig, std::vector<std::string> &certsPath, std::string &errInfo)
 {
     std::string url = NapiUtils::Convert2String(env, jsConfig, "url");
     if (url.size() > URL_MAXIMUM) {
         REQUEST_HILOGE("The URL exceeds the maximum length of 2048");
+        errInfo = "Parameter verification failed, the length of url exceeds 2048";
         return false;
     }
     if (!regex_match(url, std::regex("^http(s)?:\\/\\/.+"))) {
         REQUEST_HILOGE("ParseUrl error");
+        errInfo = "Parameter verification failed, the url should start with http(s)://";
         return false;
     }
 
@@ -571,10 +586,11 @@ bool JsInitialize::ParseCertsPath(napi_env env, napi_value jsConfig, std::vector
     return true;
 }
 
-bool JsInitialize::ParseTitle(napi_env env, napi_value jsConfig, Config &config)
+bool JsInitialize::ParseTitle(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
 {
     config.title = NapiUtils::Convert2String(env, jsConfig, "title");
     if (config.version == Version::API10 && config.title.size() > TITLE_MAXIMUM) {
+        errInfo = "Parameter verification failed, the length of config title exceeds 256";
         return false;
     }
     if (config.title.empty()) {
@@ -583,7 +599,7 @@ bool JsInitialize::ParseTitle(napi_env env, napi_value jsConfig, Config &config)
     return true;
 }
 
-bool JsInitialize::ParseProxy(napi_env env, napi_value jsConfig, std::string &proxy)
+bool JsInitialize::ParseProxy(napi_env env, napi_value jsConfig, std::string &proxy, std::string &errInfo)
 {
     proxy = NapiUtils::Convert2String(env, jsConfig, "proxy");
     if (proxy.empty()) {
@@ -592,11 +608,13 @@ bool JsInitialize::ParseProxy(napi_env env, napi_value jsConfig, std::string &pr
 
     if (proxy.size() > PROXY_MAXIMUM) {
         REQUEST_HILOGE("The proxy exceeds the maximum length of 512");
+        errInfo = "Parameter verification failed, the length of config.proxy exceeds 512";
         return false;
     }
 
     if (!regex_match(proxy, std::regex("^http:\\/\\/.+:\\d{1,5}$"))) {
         REQUEST_HILOGE("ParseProxy error");
+        errInfo = "Parameter verification failed, the format of proxy is http(s)://<address or domain>:port";
         return false;
     }
     return true;
@@ -655,7 +673,7 @@ void JsInitialize::ParseMethod(napi_env env, napi_value jsConfig, Config &config
     }
 }
 
-bool JsInitialize::ParseData(napi_env env, napi_value jsConfig, Config &config)
+bool JsInitialize::ParseData(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
 {
     napi_value value = NapiUtils::GetNamedProperty(env, jsConfig, "data");
     if (value == nullptr) {
@@ -664,11 +682,12 @@ bool JsInitialize::ParseData(napi_env env, napi_value jsConfig, Config &config)
 
     napi_valuetype valueType = NapiUtils::GetValueType(env, value);
     if (config.action == Action::UPLOAD && valueType == napi_object) {
-        return Convert2FormItems(env, value, config.forms, config.files);
+        return Convert2FormItems(env, value, config.forms, config.files, errInfo);
     } else if (config.action == Action::DOWNLOAD && valueType == napi_string) {
         config.data = NapiUtils::Convert2String(env, value);
     } else {
         REQUEST_HILOGE("data type is error");
+        errInfo = "Incorrect parameter type, the config.data parameter type is incorrect";
         return false;
     }
     return true;
@@ -727,7 +746,7 @@ bool JsInitialize::GetFormItems(
 }
 
 bool JsInitialize::Convert2FormItems(
-    napi_env env, napi_value jsValue, std::vector<FormItem> &forms, std::vector<FileSpec> &files)
+    napi_env env, napi_value jsValue, std::vector<FormItem> &forms, std::vector<FileSpec> &files, std::string &errInfo)
 {
     bool isArray = false;
     napi_is_array(env, jsValue, &isArray);
@@ -741,15 +760,18 @@ bool JsInitialize::Convert2FormItems(
         napi_get_element(env, jsValue, i, &jsVal);
         if (jsVal == nullptr) {
             REQUEST_HILOGE("Get element jsVal failed");
+            errInfo = "Missing mandatory parameters, Get element jsVal failed";
             return false;
         }
         if (!GetFormItems(env, jsVal, forms, files)) {
             REQUEST_HILOGE("Get formItems failed");
+            errInfo = "Missing mandatory parameters, Get formItems failed";
             return false;
         }
         napi_close_handle_scope(env, scope);
     }
     if (files.empty()) {
+        errInfo = "Missing mandatory parameters, files is empty";
         return false;
     }
     return true;
@@ -839,7 +861,7 @@ bool JsInitialize::ParseConfigV9(napi_env env, napi_value jsConfig, Config &conf
     REQUEST_HILOGD("ParseConfigV9 in");
     config.action = NapiUtils::GetRequestAction(env, jsConfig);
     config.headers = ParseMap(env, jsConfig, "header");
-    if (!ParseUrl(env, jsConfig, config.url)) {
+    if (!ParseUrl(env, jsConfig, config.url, errInfo)) {
         errInfo = "Parse url error";
         return false;
     }
@@ -847,7 +869,7 @@ bool JsInitialize::ParseConfigV9(napi_env env, napi_value jsConfig, Config &conf
     if (!func(env, jsConfig, config, errInfo)) {
         return false;
     }
-    ParseTitle(env, jsConfig, config);
+    ParseTitle(env, jsConfig, config, errInfo);
     return true;
 }
 
@@ -863,19 +885,18 @@ bool JsInitialize::ParseUploadConfig(napi_env env, napi_value jsConfig, Config &
 
     config.files = NapiUtils::Convert2FileVector(env, jsFiles, "API8");
     if (config.files.empty()) {
-        errInfo = "Parse config files error";
+        errInfo = "Parameter verification failed, Parse config files error";
         return false;
     }
 
     napi_value jsData = NapiUtils::GetNamedProperty(env, jsConfig, PARAM_KEY_DATA);
     if (jsData == nullptr) {
-        errInfo = "Parse config data error";
+        errInfo = "Parameter verification failed, Parse config data error";
         return false;
     }
     config.forms = NapiUtils::Convert2RequestDataVector(env, jsData);
 
-    if (!ParseIndex(env, jsConfig, config)) {
-        errInfo = "Index exceeds file list";
+    if (!ParseIndex(env, jsConfig, config, errInfo)) {
         return false;
     }
 
@@ -934,7 +955,7 @@ bool JsInitialize::CheckUserFileSpec(const std::shared_ptr<OHOS::AbilityRuntime:
 {
     if (config.mode != Mode::FOREGROUND) {
         error.code = E_PARAMETER_CHECK;
-        error.errInfo = "user file can only for Mode::FOREGROUND";
+        error.errInfo = "Parameter verification failed, user file can only for Mode::FOREGROUND";
         return false;
     }
     REQUEST_HILOGD("UserFile in: %{public}s", file.uri.c_str());
@@ -944,7 +965,7 @@ bool JsInitialize::CheckUserFileSpec(const std::shared_ptr<OHOS::AbilityRuntime:
     if (dataAbilityHelper == nullptr) {
         REQUEST_HILOGE("dataAbilityHelper null");
         error.code = E_PARAMETER_CHECK;
-        error.errInfo = "dataAbilityHelper null";
+        error.errInfo = "Parameter verification failed, dataAbilityHelper null";
         return false;
     }
     file.fd = dataAbilityHelper->OpenFile(*uri, "r");
@@ -967,7 +988,7 @@ bool JsInitialize::CheckUploadFiles(
             file.isUserFile = true;
             if (config.version == Version::API9) {
                 error.code = E_PARAMETER_CHECK;
-                error.errInfo = "user file can only for request.agent.";
+                error.errInfo = "Parameter verification failed, user file can only for request.agent.";
                 return false;
             }
             if (!CheckUserFileSpec(context, config, file, error)) {
@@ -990,9 +1011,8 @@ bool JsInitialize::CheckUploadFileSpec(const std::shared_ptr<OHOS::AbilityRuntim
     file.isUserFile = false;
     std::string path = file.uri;
     if (config.version == Version::API9) {
-        if (!GetInternalPath(context, config, path)) {
+        if (!GetInternalPath(context, config, path, error.errInfo)) {
             error.code = E_PARAMETER_CHECK;
-            error.errInfo = "this is fail path, uploadFile get internal";
             return false;
         }
     } else {
@@ -1023,9 +1043,8 @@ bool JsInitialize::CheckDownloadFile(
         std::string path = config.saveas;
         if (config.saveas.find('/') == 0) {
             // API9 do not check.
-        } else if (!GetInternalPath(context, config, path)) {
+        } else if (!GetInternalPath(context, config, path, error.errInfo)) {
             error.code = E_PARAMETER_CHECK;
-            error.errInfo = "this is fail path, for api9 download";
             return false;
         }
         config.saveas = path;
@@ -1058,7 +1077,7 @@ bool JsInitialize::CheckDownloadFilePath(
     pathVec.pop_back();
     if (!CreateDirs(pathVec)) {
         REQUEST_HILOGE("CreateDirs Err: %{public}s", path.c_str());
-        errInfo = "this is fail saveas path";
+        errInfo = "Parameter verification failed, this is fail saveas path";
         return false;
     }
     config.saveas = path;
@@ -1100,18 +1119,18 @@ bool JsInitialize::GetSandboxPath(const std::shared_ptr<OHOS::AbilityRuntime::Co
 {
     if (!StandardizePath(context, config, path)) {
         REQUEST_HILOGE("StandardizePath Err: %{public}s", path.c_str());
-        errInfo = "StandardizePath fail";
+        errInfo = "Parameter verification failed, GetSandboxPath failed, StandardizePath fail";
         return false;
     };
     if (!WholeToNormal(path, pathVec) || pathVec.empty()) {
         REQUEST_HILOGE("WholeToNormal Err: %{public}s", path.c_str());
-        errInfo = "WholeToNormal path fail";
+        errInfo = "Parameter verification failed, GetSandboxPath failed, WholeToNormal path fail";
         return false;
     };
     std::string baseDir;
     if (!CheckBelongAppBaseDir(path, baseDir)) {
         REQUEST_HILOGE("CheckBelongAppBaseDir Err: %{public}s", path.c_str());
-        errInfo = "path not belong app base dir";
+        errInfo = "Parameter verification failed, GetSandboxPath failed, path not belong app base dir";
         return false;
     };
     return true;
