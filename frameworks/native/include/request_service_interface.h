@@ -28,7 +28,7 @@ namespace OHOS::Request {
 class RequestServiceInterface : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Download.RequestServiceInterface");
-    virtual int32_t Create(const Config &config, int32_t &taskId) = 0;
+    virtual int32_t Create(const Config &config, std::string &taskId) = 0;
     virtual int32_t GetTask(const std::string &tid, const std::string &token, Config &config) = 0;
     virtual int32_t Start(const std::string &tid) = 0;
     virtual int32_t Pause(const std::string &tid, Version version) = 0;

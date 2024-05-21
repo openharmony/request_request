@@ -36,7 +36,7 @@ using namespace OHOS::Request;
 
 class MockRequestServiceInterface : public RequestServiceInterface {
 public:
-    MOCK_METHOD(int32_t, Create, (const Config &config, int32_t &taskId), (override));
+    MOCK_METHOD(int32_t, Create, (const Config &config, std::string &taskId), (override));
     MOCK_METHOD(int32_t, GetTask, (const std::string &tid, const std::string &token, Config &config), (override));
     MOCK_METHOD(int32_t, Start, (const std::string &tid), (override));
     MOCK_METHOD(int32_t, Pause, (const std::string &tid, Version version), (override));
@@ -114,7 +114,7 @@ HWTEST_F(RequestManagerImplTest, CreateTest001, TestSize.Level1)
     Config config;
     config.version = Version::API9;
     int32_t seq = 1;
-    int32_t tid = 1;
+    std::string tid = "1";
     EXPECT_CALL(*g_exceptProxy, Create(testing::_, tid))
         .WillOnce(testing::Return(E_CHANNEL_NOT_OPEN))
         .WillOnce(testing::Return(E_OK));

@@ -74,7 +74,7 @@ std::string CJTask::GetTidStr() const
 
 void CJTask::SetTid()
 {
-    tid_ = std::to_string(taskId_);
+    tid_ = taskId_;
 }
 
 void CJTask::AddTaskMap(const std::string &key, CJTask *task)

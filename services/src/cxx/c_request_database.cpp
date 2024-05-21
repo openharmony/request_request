@@ -1293,7 +1293,11 @@ void UpdateTaskStateOnNetworkChange(NetworkInfo info)
     // For WI-FI situation.
     if (info.networkType == NetworkInner::WIFI || info.networkType == NetworkInner::ANY) {
         OHOS::NativeRdb::RdbPredicates satisfiedWifi("request_task");
-        satisfiedWifi.EqualTo("network", static_cast<uint8_t>(NetworkInner::WIFI))
+        satisfiedWifi.BeginWrap()
+            ->EqualTo("network", static_cast<uint8_t>(Network::WIFI))
+            ->Or()
+            ->EqualTo("network", static_cast<uint8_t>(Network::ANY))
+            ->EndWrap()
             ->And()
             ->EqualTo("state", static_cast<uint8_t>(State::WAITING))
             ->And()
@@ -1307,7 +1311,11 @@ void UpdateTaskStateOnNetworkChange(NetworkInfo info)
     // For CELLULAR situation.
     if (info.networkType == NetworkInner::CELLULAR || info.networkType == NetworkInner::ANY) {
         OHOS::NativeRdb::RdbPredicates satisfiedCellular("request_task");
-        satisfiedCellular.EqualTo("network", static_cast<uint8_t>(NetworkInner::CELLULAR))
+        satisfiedCellular.BeginWrap()
+            ->EqualTo("network", static_cast<uint8_t>(Network::CELLULAR))
+            ->Or()
+            ->EqualTo("network", static_cast<uint8_t>(Network::ANY))
+            ->EndWrap()
             ->And()
             ->EqualTo("state", static_cast<uint8_t>(State::WAITING))
             ->And()
@@ -1431,7 +1439,7 @@ void GetAppArray(AppInfo **apps, size_t *len)
         }
 
         std::string temp = "";
-        resultSet->GetString(1, temp);                              // Line 1 is 'bundle'
+        resultSet->GetString(1, temp);                                 // Line 1 is 'bundle'
         (*apps)[i].uid = static_cast<uint32_t>(GetLong(resultSet, 0)); // Line 0 is 'uid'
         (*apps)[i].bundle = WrapperCString(temp);
     }

@@ -25,7 +25,7 @@ const std::unique_ptr<RequestManager> &RequestManager::GetInstance()
     return instance;
 }
 
-int32_t RequestManager::Create(const Config &config, int32_t seq, int32_t &tid)
+int32_t RequestManager::Create(const Config &config, int32_t seq, std::string &tid)
 {
     return RequestManagerImpl::GetInstance()->Create(config, seq, tid);
 }

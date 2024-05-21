@@ -29,7 +29,7 @@ public:
     explicit RequestServiceProxy(const sptr<IRemoteObject> &object);
     ~RequestServiceProxy() = default;
     DISALLOW_COPY_AND_MOVE(RequestServiceProxy);
-    int32_t Create(const Config &config, int32_t &tid) override;
+    int32_t Create(const Config &config, std::string &tid) override;
     int32_t GetTask(const std::string &tid, const std::string &token, Config &config) override;
     int32_t Start(const std::string &tid) override;
     int32_t Pause(const std::string &tid, Version version) override;
