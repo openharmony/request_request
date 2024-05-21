@@ -7,7 +7,6 @@
             "run-on-create": false,
             "distributed": false,
             "dump_level": 1,
-            "recycle-strategy": "low-memory",
             "start-on-demand": {
                 "commonevent": [
                     {
