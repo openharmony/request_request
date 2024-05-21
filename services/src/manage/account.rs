@@ -103,11 +103,11 @@ pub(crate) fn is_foreground_user(uid: u64) -> bool {
 }
 
 pub(crate) fn is_active_user(uid: u64) -> bool {
-    get_user_id_from_uid(uid) == FOREGROUND_ACCOUNT.load(Ordering::Acquire)
-        || BACKGOUNFD_ACCOUNTS
-            .lock()
-            .unwrap()
-            .contains(&get_user_id_from_uid(uid))
+    let user_id = get_user_id_from_uid(uid);
+
+    user_id <= 100
+        || user_id == FOREGROUND_ACCOUNT.load(Ordering::Acquire)
+        || BACKGOUNFD_ACCOUNTS.lock().unwrap().contains(&user_id)
 }
 
 fn get_user_id_from_uid(uid: u64) -> i32 {
