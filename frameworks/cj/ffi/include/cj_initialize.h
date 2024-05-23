@@ -60,6 +60,7 @@ public:
     static void ParseNetwork(Network &network);
     static void ParseBackGround(Mode mode, bool &background);
 
+    static ExceptionError CheckFileSpec(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
     static ExceptionError CheckFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
     static bool CheckPathBaseDir(const std::string &filepath, std::string &baseDir);
     static bool CreateDirs(const std::vector<std::string> &pathDirs);

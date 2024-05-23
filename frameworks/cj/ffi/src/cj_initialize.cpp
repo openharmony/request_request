@@ -639,21 +639,10 @@ bool CJInitialize::GetInternalPath(const std::string &fileUri,
     return true;
 }
 
-
-ExceptionError CJInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
+ExceptionError CJInitialize::CheckFileSpec(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
     Config &config)
 {
     ExceptionError err = { .code = ExceptionErrorCode::E_OK };
-    if (config.action == Action::DOWNLOAD) {
-        if (!CheckDownloadFilePath(context, config, err.errInfo)) {
-            err.code = ExceptionErrorCode::E_PARAMETER_CHECK;
-            return err;
-        }
-
-        FileSpec file = { .uri = config.saveas };
-        config.files.push_back(file);
-    }
-
     for (auto &file : config.files) {
         std::string path;
         if (!GetInternalPath(file.uri, context, config, path)) {
@@ -684,6 +673,27 @@ ExceptionError CJInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRu
         if (err.code != ExceptionErrorCode::E_OK) {
             return err;
         }
+    }
+    return err;
+}
+
+ExceptionError CJInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
+    Config &config)
+{
+    ExceptionError err = { .code = ExceptionErrorCode::E_OK };
+    if (config.action == Action::DOWNLOAD) {
+        if (!CheckDownloadFilePath(context, config, err.errInfo)) {
+            err.code = ExceptionErrorCode::E_PARAMETER_CHECK;
+            return err;
+        }
+
+        FileSpec file = { .uri = config.saveas };
+        config.files.push_back(file);
+    }
+
+    err = CheckFileSpec(context, config);
+    if (err.code != ExceptionErrorCode::E_OK) {
+        return err;
     }
 
     if (!CJTask::SetDirsPermission(config.certsPath)) {
