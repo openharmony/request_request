@@ -57,21 +57,19 @@ public:
     MOCK_METHOD(OHOS::sptr<OHOS::IRemoteObject>, AsObject, (), (override));
 };
 
-OHOS::sptr<RequestServiceInterface> g_testProxy(nullptr);
-OHOS::sptr<MockRequestServiceInterface> g_exceptProxy(nullptr);
-
 class RequestManagerImplTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    OHOS::sptr<RequestServiceInterface> testProxy;
+    OHOS::sptr<MockRequestServiceInterface> exceptProxy;
 };
 
 void RequestManagerImplTest::SetUpTestCase(void)
 {
     // input testSuit setup step，setup invoked before all testCases
-    g_exceptProxy = OHOS::sptr<MockRequestServiceInterface>(new MockRequestServiceInterface());
 }
 
 void RequestManagerImplTest::TearDownTestCase(void)
@@ -81,10 +79,11 @@ void RequestManagerImplTest::TearDownTestCase(void)
 
 void RequestManagerImplTest::SetUp(void)
 {
-    g_testProxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
-    RequestManagerImpl::GetInstance()->SetRequestServiceProxy(g_exceptProxy);
+    exceptProxy = OHOS::sptr<MockRequestServiceInterface>(new MockRequestServiceInterface());
+    testProxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
+    RequestManagerImpl::GetInstance()->SetRequestServiceProxy(exceptProxy);
     auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
-    EXPECT_TRUE(proxy == (static_cast<OHOS::sptr<RequestServiceInterface>>(g_exceptProxy)));
+    EXPECT_TRUE(proxy == (static_cast<OHOS::sptr<RequestServiceInterface>>(exceptProxy)));
     // input testCase setup step，setup invoked before each testCase
     testing::UnitTest *test = testing::UnitTest::GetInstance();
     ASSERT_NE(test, nullptr);
@@ -98,8 +97,9 @@ void RequestManagerImplTest::SetUp(void)
 void RequestManagerImplTest::TearDown(void)
 {
     // input testCase teardown step，teardown invoked after each testCase
-    RequestManagerImpl::GetInstance()->SetRequestServiceProxy(g_testProxy);
-    g_testProxy = nullptr;
+    RequestManagerImpl::GetInstance()->SetRequestServiceProxy(testProxy);
+    testProxy = nullptr;
+    exceptProxy = nullptr;
 }
 
 /**
@@ -110,16 +110,19 @@ void RequestManagerImplTest::TearDown(void)
  */
 HWTEST_F(RequestManagerImplTest, CreateTest001, TestSize.Level1)
 {
-    EXPECT_CALL(*g_exceptProxy, OpenChannel(testing::_)).WillRepeatedly(testing::Return(E_TASK_STATE));
+    RequestManagerImpl::GetInstance()->OnChannelBroken();
+    EXPECT_CALL(*exceptProxy, OpenChannel(testing::_))
+        .WillOnce(testing::Return(E_TASK_STATE))
+        .WillOnce(testing::Return(E_OK));
     Config config;
     config.version = Version::API9;
     int32_t seq = 1;
     std::string tid = "1";
-    EXPECT_CALL(*g_exceptProxy, Create(testing::_, tid))
+    EXPECT_CALL(*exceptProxy, Create(testing::_, tid))
         .WillOnce(testing::Return(E_CHANNEL_NOT_OPEN))
         .WillOnce(testing::Return(E_OK));
-    EXPECT_CALL(*g_exceptProxy, Start(testing::_)).WillOnce(testing::Return(E_OK));
-    EXPECT_CALL(*g_exceptProxy, Start(testing::_))
+    EXPECT_CALL(*exceptProxy, Subscribe(testing::_)).WillOnce(testing::Return(E_OK));
+    EXPECT_CALL(*exceptProxy, Start(testing::_))
         .WillOnce(testing::Return(E_OK))
         .WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->Create(config, seq, tid), E_OK);
@@ -138,7 +141,7 @@ HWTEST_F(RequestManagerImplTest, GetTaskTest001, TestSize.Level1)
     config.version = Version::API9;
     string token = "token";
     string tid = "tid";
-    EXPECT_CALL(*g_exceptProxy, GetTask(tid, token, testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, GetTask(tid, token, testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->GetTask(tid, token, config), E_CHANNEL_NOT_OPEN);
 }
 
@@ -151,7 +154,7 @@ HWTEST_F(RequestManagerImplTest, GetTaskTest001, TestSize.Level1)
 HWTEST_F(RequestManagerImplTest, StartTest001, TestSize.Level1)
 {
     string tid = "tid";
-    EXPECT_CALL(*g_exceptProxy, Start(tid)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, Start(tid)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->Start(tid), E_CHANNEL_NOT_OPEN);
 }
 
@@ -164,7 +167,7 @@ HWTEST_F(RequestManagerImplTest, StartTest001, TestSize.Level1)
 HWTEST_F(RequestManagerImplTest, StopTest001, TestSize.Level1)
 {
     string tid = "tid";
-    EXPECT_CALL(*g_exceptProxy, Stop(tid)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, Stop(tid)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->Stop(tid), E_CHANNEL_NOT_OPEN);
 }
 
@@ -178,7 +181,7 @@ HWTEST_F(RequestManagerImplTest, QueryTest001, TestSize.Level1)
 {
     TaskInfo info;
     string tid = "tid";
-    EXPECT_CALL(*g_exceptProxy, Query(tid, testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, Query(tid, testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->Query(tid, info), E_CHANNEL_NOT_OPEN);
 }
 
@@ -193,7 +196,7 @@ HWTEST_F(RequestManagerImplTest, TouchTest001, TestSize.Level1)
     TaskInfo info;
     string tid = "tid";
     string token = "token";
-    EXPECT_CALL(*g_exceptProxy, Touch(tid, token, testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, Touch(tid, token, testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->Touch(tid, token, info), E_CHANNEL_NOT_OPEN);
 }
 
@@ -207,7 +210,7 @@ HWTEST_F(RequestManagerImplTest, SearchTest001, TestSize.Level1)
 {
     Filter filter;
     std::vector<std::string> tids;
-    EXPECT_CALL(*g_exceptProxy, Search(testing::_, tids)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, Search(testing::_, tids)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->Search(filter, tids), E_CHANNEL_NOT_OPEN);
 }
 
@@ -221,7 +224,7 @@ HWTEST_F(RequestManagerImplTest, ShowTest001, TestSize.Level1)
 {
     TaskInfo info;
     string tid = "tid";
-    EXPECT_CALL(*g_exceptProxy, Show(tid, testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, Show(tid, testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->Show(tid, info), E_CHANNEL_NOT_OPEN);
 }
 
@@ -234,7 +237,7 @@ HWTEST_F(RequestManagerImplTest, ShowTest001, TestSize.Level1)
 HWTEST_F(RequestManagerImplTest, PauseTest001, TestSize.Level1)
 {
     string tid = "tid";
-    EXPECT_CALL(*g_exceptProxy, Pause(tid, Version::API10)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, Pause(tid, Version::API10)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->Pause(tid, Version::API10), E_CHANNEL_NOT_OPEN);
 }
 
@@ -248,7 +251,7 @@ HWTEST_F(RequestManagerImplTest, QueryMimeTypeTest001, TestSize.Level1)
 {
     string tid = "tid";
     std::string mimeType = "mimeType";
-    EXPECT_CALL(*g_exceptProxy, QueryMimeType(tid, mimeType)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, QueryMimeType(tid, mimeType)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->QueryMimeType(tid, mimeType), E_CHANNEL_NOT_OPEN);
 }
 
@@ -261,7 +264,7 @@ HWTEST_F(RequestManagerImplTest, QueryMimeTypeTest001, TestSize.Level1)
 HWTEST_F(RequestManagerImplTest, RemoveTest001, TestSize.Level1)
 {
     string tid = "tid";
-    EXPECT_CALL(*g_exceptProxy, Remove(tid, Version::API10)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, Remove(tid, Version::API10)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->Remove(tid, Version::API10), E_CHANNEL_NOT_OPEN);
 }
 
@@ -274,7 +277,7 @@ HWTEST_F(RequestManagerImplTest, RemoveTest001, TestSize.Level1)
 HWTEST_F(RequestManagerImplTest, ResumeTest001, TestSize.Level1)
 {
     string tid = "tid";
-    EXPECT_CALL(*g_exceptProxy, Resume(tid)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, Resume(tid)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->Resume(tid), E_CHANNEL_NOT_OPEN);
 }
 
@@ -287,10 +290,12 @@ HWTEST_F(RequestManagerImplTest, ResumeTest001, TestSize.Level1)
 HWTEST_F(RequestManagerImplTest, SubscribeTest001, TestSize.Level1)
 {
     string taskId = "taskId";
-    EXPECT_CALL(*g_exceptProxy, Subscribe(taskId))
+    RequestManagerImpl::GetInstance()->OnChannelBroken();
+    EXPECT_CALL(*exceptProxy, OpenChannel(testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, Subscribe(taskId))
         .WillOnce(testing::Return(E_CHANNEL_NOT_OPEN))
-        .WillOnce(testing::Return(E_TASK_STATE));
-    EXPECT_EQ(RequestManagerImpl::GetInstance()->Subscribe(taskId), E_TASK_STATE);
+        .WillOnce(testing::Return(E_OK));
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->Subscribe(taskId), E_OK);
 }
 
 /**
@@ -302,7 +307,7 @@ HWTEST_F(RequestManagerImplTest, SubscribeTest001, TestSize.Level1)
 HWTEST_F(RequestManagerImplTest, UnsubscribeTest001, TestSize.Level1)
 {
     string taskId = "taskId";
-    EXPECT_CALL(*g_exceptProxy, Unsubscribe(taskId)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, Unsubscribe(taskId)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->Unsubscribe(taskId), E_CHANNEL_NOT_OPEN);
 }
 
@@ -315,7 +320,7 @@ HWTEST_F(RequestManagerImplTest, UnsubscribeTest001, TestSize.Level1)
 HWTEST_F(RequestManagerImplTest, SubRunCountTest001, TestSize.Level1)
 {
     OHOS::sptr<NotifyInterface> listener(nullptr);
-    EXPECT_CALL(*g_exceptProxy, SubRunCount(testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, SubRunCount(testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->SubRunCount(listener), E_CHANNEL_NOT_OPEN);
 }
 
@@ -327,7 +332,7 @@ HWTEST_F(RequestManagerImplTest, SubRunCountTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerImplTest, UnsubRunCountTest001, TestSize.Level1)
 {
-    EXPECT_CALL(*g_exceptProxy, UnsubRunCount()).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, UnsubRunCount()).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->UnsubRunCount(), E_CHANNEL_NOT_OPEN);
 }
 
@@ -339,7 +344,8 @@ HWTEST_F(RequestManagerImplTest, UnsubRunCountTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerImplTest, EnsureChannelOpenTest001, TestSize.Level1)
 {
-    EXPECT_CALL(*g_exceptProxy, OpenChannel(testing::_))
+    RequestManagerImpl::GetInstance()->OnChannelBroken();
+    EXPECT_CALL(*exceptProxy, OpenChannel(testing::_))
         .WillOnce(testing::Return(E_CHANNEL_NOT_OPEN))
         .WillOnce(testing::Return(E_OK));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->EnsureChannelOpen(), E_CHANNEL_NOT_OPEN);
@@ -390,8 +396,8 @@ HWTEST_F(RequestManagerImplTest, OnNotifyDataReceiveTest001, TestSize.Level1)
 HWTEST_F(RequestManagerImplTest, RestoreSubRunCountTest001, TestSize.Level1)
 {
     OHOS::sptr<NotifyInterface> listener(nullptr);
-    EXPECT_CALL(*g_exceptProxy, SubRunCount(testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
-    RequestManagerImpl::GetInstance()->SetRequestServiceProxy(g_exceptProxy);
+    EXPECT_CALL(*exceptProxy, SubRunCount(testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    RequestManagerImpl::GetInstance()->SetRequestServiceProxy(exceptProxy);
     RequestManagerImpl::GetInstance()->RestoreSubRunCount();
 }
 
