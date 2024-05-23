@@ -105,6 +105,9 @@ int RequestDataBase::DeleteAllAccountTasks(int user_id)
 {
     REQUEST_HILOGI("Delete all account tasks for user: %{public}d", user_id);
     std::string Delete = "DELETE from request_task WHERE uid/200000 = " + std::to_string(user_id);
+    if (store_ == nullptr) {
+        return -1;
+    }
     return store_->ExecuteSql(Delete);
 }
 
@@ -113,6 +116,9 @@ int RequestDataBase::OnAccountChange(int user_id)
     std::string OnAccountChange = "UPDATE request_task SET reason = 4 WHERE uid/200000 = " + std::to_string(user_id)
                                   + " AND state = " + std::to_string(static_cast<uint8_t>(State::WAITING))
                                   + " AND reason = 21";
+    if (store_ == nullptr) {
+        return -1;
+    }
     return store_->ExecuteSql(OnAccountChange);
 }
 
