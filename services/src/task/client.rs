@@ -73,6 +73,27 @@ pub(crate) fn build_client(
     const ATOMIC_SERVICE: u32 = 1;
     if config.bundle_type == ATOMIC_SERVICE {
         let domain_type = action_to_domian_type(config.common_data.action);
+        info!(
+            "ApiPolicy Domain check, task_id is {}, bundle is {}, domian_type is {}, url is {}",
+            config.common_data.task_id, &config.bundle, &domain_type, &config.url
+        );
+        if let Some(is_accessed) = check_url_domain(&config.bundle, &domain_type, &config.url) {
+            if !is_accessed {
+                error!(
+                    "Intercept request by domain check, task_id is {}, bundle is {}, domian_type is {}, url is {}",
+                    config.common_data.task_id, &config.bundle, &domain_type, &config.url
+                );
+                return Err(Box::new(HttpClientError::other(
+                    "Intercept request by domain check",
+                )));
+            }
+        } else {
+            info!(
+                "Intercept request by domain check, task_id is {}, domian_type is {}, url is {}",
+                config.common_data.task_id, &domain_type, &config.url
+            );
+        }
+
         let interceptors = DomainInterceptor::new(config.bundle.clone(), domain_type);
         client = client.interceptor(interceptors);
         info!(
@@ -181,18 +202,13 @@ impl DomainInterceptor {
 }
 
 impl Interceptor for DomainInterceptor {
-    /// Intercepts the Request that is eventually transmitted to the peer end.
-    fn intercept_request(&self, request: &Request) -> Result<(), HttpClientError> {
-        let url = &request.uri().to_string();
-        match check_url_domain(&self.app_id, &self.domain_type, url).unwrap_or(true) {
-            true => Ok(()),
-            false => Err(HttpClientError::other("Intercept request by domain check")),
-        }
-    }
-
     /// Intercepts the redirect request.
     fn intercept_redirect_request(&self, request: &Request) -> Result<(), HttpClientError> {
         let url = &request.uri().to_string();
+        info!(
+            "ApiPolicy Domain check redirect, bundle is {}, domian_type is {}, url is {}",
+            &self.app_id, &self.domain_type, &url
+        );
         match check_url_domain(&self.app_id, &self.domain_type, url).unwrap_or(true) {
             true => Ok(()),
             false => Err(HttpClientError::other(
