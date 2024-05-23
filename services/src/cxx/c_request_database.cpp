@@ -36,11 +36,16 @@ RequestDataBase::RequestDataBase()
     config.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     config.SetEncryptStatus(true);
     RequestDBOpenCallback requestDBOpenCallback;
-    store_ = OHOS::NativeRdb::RdbHelper::GetRdbStore(config, DATABASE_VERSION, requestDBOpenCallback, errCode);
-    if (store_ == nullptr) {
-        REQUEST_HILOGE("End get request database, failed with reason: %{public}d", errCode);
-    } else {
-        REQUEST_HILOGI("End get request database successful");
+    // retry 10 times
+    for (int index = 0; index < 10; ++index) {
+        store_ = OHOS::NativeRdb::RdbHelper::GetRdbStore(config, DATABASE_VERSION, requestDBOpenCallback, errCode);
+        if (store_ == nullptr) {
+            REQUEST_HILOGE("GetRdbStore failed with reason: %{public}d, try DeleteRdbStore", errCode);
+            OHOS::NativeRdb::RdbHelper::DeleteRdbStore(DB_NAME);
+        } else {
+            REQUEST_HILOGI("End get request database successful");
+            return;
+        }
     }
 }
 
