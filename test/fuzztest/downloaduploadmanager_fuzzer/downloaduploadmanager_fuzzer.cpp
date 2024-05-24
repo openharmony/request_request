@@ -17,6 +17,8 @@
 
 #include "downloaduploadmanager_fuzzer.h"
 
+#include <securec.h>
+
 #include <cstddef>
 #include <cstdint>
 
@@ -29,8 +31,10 @@
 #include "request_manager_impl.h"
 #include "request_running_task_count.h"
 #include "request_service_interface.h"
+#include "request_sync_load_callback.h"
 #include "runcount_notify_stub.h"
 #include "running_task_count.h"
+#include "system_ability_definition.h"
 #include "token_setproc.h"
 
 using namespace OHOS::Request;
@@ -186,6 +190,61 @@ void ReopenChannelRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->ReopenChannel();
 }
 
+void SubscribeSARequestFuzzTest(const uint8_t *data, size_t size)
+{
+    GrantNativePermission();
+    RequestManager::GetInstance()->SubscribeSA();
+    RequestManager::GetInstance()->UnsubscribeSA();
+}
+
+class FuzzResponseListenerImpl : public IResponseListener {
+public:
+    ~FuzzResponseListenerImpl(){};
+    void OnResponseReceive(const std::shared_ptr<Response> &response) override
+    {
+        (void)response;
+        return;
+    }
+};
+
+class FuzzNotifyDataListenerImpl : public INotifyDataListener {
+public:
+    ~FuzzNotifyDataListenerImpl(){};
+    void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData) override
+    {
+        (void)notifyData;
+        return;
+    }
+};
+
+void AddAndRemoveListenerRequestFuzzTest(const uint8_t *data, size_t size)
+{
+    std::string taskId(reinterpret_cast<const char *>(data), size);
+    GrantNativePermission();
+    SubscribeType type = SubscribeType::RESPONSE;
+    std::shared_ptr<FuzzResponseListenerImpl> listener = std::make_shared<FuzzResponseListenerImpl>();
+    RequestManager::GetInstance()->AddListener(taskId, type, listener);
+    RequestManager::GetInstance()->RemoveListener(taskId, type, listener);
+    type = SubscribeType::COMPLETED;
+    std::shared_ptr<FuzzNotifyDataListenerImpl> listener2 = std::make_shared<FuzzNotifyDataListenerImpl>();
+    RequestManager::GetInstance()->AddListener(taskId, type, listener2);
+    RequestManager::GetInstance()->RemoveListener(taskId, type, listener2);
+}
+
+void RemoveAllListenersRequestFuzzTest(const uint8_t *data, size_t size)
+{
+    std::string taskId(reinterpret_cast<const char *>(data), size);
+    GrantNativePermission();
+    SubscribeType type = SubscribeType::RESPONSE;
+    std::shared_ptr<FuzzResponseListenerImpl> listener = std::make_shared<FuzzResponseListenerImpl>();
+    RequestManager::GetInstance()->AddListener(taskId, type, listener);
+    type = SubscribeType::COMPLETED;
+    std::shared_ptr<FuzzNotifyDataListenerImpl> listener2 = std::make_shared<FuzzNotifyDataListenerImpl>();
+    RequestManager::GetInstance()->AddListener(taskId, type, listener2);
+    RequestManager::GetInstance()->RemoveAllListeners(taskId);
+    RequestManager::GetInstance()->RestoreListener(nullptr);
+}
+
 void TestFunc(void)
 {
     return;
@@ -210,38 +269,20 @@ void RequestFuzzTestGetId(const uint8_t *data, size_t size)
     std::string tid(reinterpret_cast<const char *>(data), size);
     GrantNativePermission();
     auto request = OHOS::Request::Request(tid);
+    request.getId();
 }
-
-class RTResponseListenerImpl : public IResponseListener {
-public:
-    ~RTResponseListenerImpl(){};
-    void OnResponseReceive(const std::shared_ptr<Response> &response) override
-    {
-        (void)response;
-        return;
-    }
-};
 
 void RequestFuzzTestHasListener(const uint8_t *data, size_t size)
 {
     std::string tid(reinterpret_cast<const char *>(data), size);
     SubscribeType type = SubscribeType::RESPONSE;
     auto request = OHOS::Request::Request(tid);
-    std::shared_ptr<RTResponseListenerImpl> listenerPtr = std::make_shared<RTResponseListenerImpl>();
+    std::shared_ptr<FuzzResponseListenerImpl> listenerPtr = std::make_shared<FuzzResponseListenerImpl>();
     GrantNativePermission();
     request.AddListener(type, listenerPtr);
+    request.HasListener();
     request.RemoveListener(type, listenerPtr);
 }
-
-class RTNotifyDataListenerImpl : public INotifyDataListener {
-public:
-    ~RTNotifyDataListenerImpl(){};
-    void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData) override
-    {
-        (void)notifyData;
-        return;
-    }
-};
 
 void RequestFuzzTestOnNotifyDataReceive(const uint8_t *data, size_t size)
 {
@@ -253,7 +294,7 @@ void RequestFuzzTestOnNotifyDataReceive(const uint8_t *data, size_t size)
     notifyData->version = Version::API9;
     GrantNativePermission();
     request.OnNotifyDataReceive(notifyData);
-    std::shared_ptr<RTNotifyDataListenerImpl> listenerPtr = std::make_shared<RTNotifyDataListenerImpl>();
+    std::shared_ptr<FuzzNotifyDataListenerImpl> listenerPtr = std::make_shared<FuzzNotifyDataListenerImpl>();
     request.AddListener(type, listenerPtr);
     request.OnNotifyDataReceive(notifyData);
 }
@@ -269,7 +310,7 @@ void RequestFuzzTestAddAndRemoveListener(const uint8_t *data, size_t size)
     notifyData->version = Version::API9;
 
     request.OnNotifyDataReceive(notifyData);
-    std::shared_ptr<RTNotifyDataListenerImpl> listenerPtr = std::make_shared<RTNotifyDataListenerImpl>();
+    std::shared_ptr<FuzzNotifyDataListenerImpl> listenerPtr = std::make_shared<FuzzNotifyDataListenerImpl>();
     request.AddListener(type, listenerPtr);
     request.RemoveListener(type, listenerPtr);
 }
@@ -282,19 +323,19 @@ void RequestFuzzTestOnResponseReceive(const uint8_t *data, size_t size)
     GrantNativePermission();
     auto request = OHOS::Request::Request(tid);
     request.OnResponseReceive(response);
-    std::shared_ptr<RTResponseListenerImpl> listenerPtr = std::make_shared<RTResponseListenerImpl>();
+    std::shared_ptr<FuzzResponseListenerImpl> listenerPtr = std::make_shared<FuzzResponseListenerImpl>();
     request.AddListener(type, listenerPtr);
     request.OnResponseReceive(response);
 }
 
-class FwkTestOberver : public IRunningTaskObserver {
+class FuzzFwkTestOberver : public IRunningTaskObserver {
 public:
     void OnRunningTaskCountUpdate(int count) override;
-    ~FwkTestOberver() = default;
-    FwkTestOberver() = default;
+    ~FuzzFwkTestOberver() = default;
+    FuzzFwkTestOberver() = default;
 };
 
-void FwkTestOberver::OnRunningTaskCountUpdate(int count)
+void FuzzFwkTestOberver::OnRunningTaskCountUpdate(int count)
 {
 }
 
@@ -303,13 +344,13 @@ void RunningTaskCountFuzzTestSubscribeRunningTaskCount(const uint8_t *data, size
     GrantNativePermission();
     auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
     if (proxy == nullptr) {
-        std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FwkTestOberver>();
+        std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FuzzFwkTestOberver>();
         SubscribeRunningTaskCount(ob);
         UnsubscribeRunningTaskCount(ob);
     }
-    std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FwkTestOberver>();
+    std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FuzzFwkTestOberver>();
     SubscribeRunningTaskCount(ob1);
-    std::shared_ptr<IRunningTaskObserver> ob2 = std::make_shared<FwkTestOberver>();
+    std::shared_ptr<IRunningTaskObserver> ob2 = std::make_shared<FuzzFwkTestOberver>();
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob2);
     SubscribeRunningTaskCount(ob2);
     FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob1);
@@ -319,10 +360,10 @@ void RunningTaskCountFuzzTestSubscribeRunningTaskCount(const uint8_t *data, size
 void RunningTaskCountFuzzTestUnubscribeRunning(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
-    std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FwkTestOberver>();
+    std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FuzzFwkTestOberver>();
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob1);
 
-    std::shared_ptr<IRunningTaskObserver> ob2 = std::make_shared<FwkTestOberver>();
+    std::shared_ptr<IRunningTaskObserver> ob2 = std::make_shared<FuzzFwkTestOberver>();
     UnsubscribeRunningTaskCount(ob2);
     UnsubscribeRunningTaskCount(ob1);
 }
@@ -341,7 +382,7 @@ void RunningTaskCountFuzzTestGetAndSetCount(const uint8_t *data, size_t size)
 void RunningTaskCountFuzzTestUpdateRunningTaskCount(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
-    std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FwkTestOberver>();
+    std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FuzzFwkTestOberver>();
     FwkIRunningTaskObserver runningOb = FwkIRunningTaskObserver(ob);
     runningOb.UpdateRunningTaskCount();
 }
@@ -349,7 +390,7 @@ void RunningTaskCountFuzzTestUpdateRunningTaskCount(const uint8_t *data, size_t 
 void RunningTaskCountFuzzTestNotifyAllObservers(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
-    std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FwkTestOberver>();
+    std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FuzzFwkTestOberver>();
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob1);
     FwkRunningTaskCountManager::GetInstance()->NotifyAllObservers();
     FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob1);
@@ -357,18 +398,21 @@ void RunningTaskCountFuzzTestNotifyAllObservers(const uint8_t *data, size_t size
 
 void RunCountNotifyStubFuzzTestGetInstance(const uint8_t *data, size_t size)
 {
+    GrantNativePermission();
     RunCountNotifyStub::GetInstance();
 }
 
 void RunCountNotifyStubFuzzTestCallBack(const uint8_t *data, size_t size)
 {
     Notify notify;
+    GrantNativePermission();
     RunCountNotifyStub::GetInstance()->CallBack(notify);
 }
 
 void RunCountNotifyStubFuzzTestDone(const uint8_t *data, size_t size)
 {
     TaskInfo taskInfo;
+    GrantNativePermission();
     RunCountNotifyStub::GetInstance()->Done(taskInfo);
 }
 
@@ -378,10 +422,429 @@ void RunCountNotifyStubFuzzTestOnCallBack(const uint8_t *data, size_t size)
     int old = FwkRunningTaskCountManager::GetInstance()->GetCount();
     OHOS::MessageParcel parcel;
     parcel.WriteInt64(except);
+    GrantNativePermission();
     RunCountNotifyStub::GetInstance()->OnCallBack(parcel);
     FwkRunningTaskCountManager::GetInstance()->GetCount();
     FwkRunningTaskCountManager::GetInstance()->SetCount(old);
     FwkRunningTaskCountManager::GetInstance()->GetCount();
+}
+
+static constexpr int32_t ARRAY_LEN = 256; // 128 is array length
+static constexpr int32_t INT64_SIZE = 8;  // 8 is int64 and uint64 num length
+static constexpr int32_t INT32_SIZE = 4;  // 4 is int32 and uint32 num length
+static constexpr int32_t INT16_SIZE = 2;  // 2 is int16 and uint16 num length
+
+void ResponseMessageFuzzTestInt64FromParcel(const uint8_t *data, size_t size)
+{
+    int64_t except = 123456; // 123456 is except num
+    char *parcel = reinterpret_cast<char *>(&except);
+    int64_t num;
+    int testSize = INT32_SIZE;
+    ResponseMessageReceiver::Int64FromParcel(num, parcel, testSize);
+    testSize = INT64_SIZE;
+    ResponseMessageReceiver::Int64FromParcel(num, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestUint64FromParcel(const uint8_t *data, size_t size)
+{
+    uint64_t except = 123456; // 123456 is except num
+    char *parcel = reinterpret_cast<char *>(&except);
+    uint64_t num;
+    int testSize = INT32_SIZE;
+    ResponseMessageReceiver::Uint64FromParcel(num, parcel, testSize);
+    testSize = INT64_SIZE;
+    ResponseMessageReceiver::Uint64FromParcel(num, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestInt32FromParcel(const uint8_t *data, size_t size)
+{
+    int32_t except = 123456; // 123456 is except num
+    char *parcel = reinterpret_cast<char *>(&except);
+    int32_t num;
+    int testSize = INT16_SIZE;
+    ResponseMessageReceiver::Int32FromParcel(num, parcel, testSize);
+    testSize = INT32_SIZE;
+    ResponseMessageReceiver::Int32FromParcel(num, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestUint32FromParcel(const uint8_t *data, size_t size)
+{
+    uint32_t except = 123456; // 123456 is except num
+    char *parcel = reinterpret_cast<char *>(&except);
+    uint32_t num;
+    int testSize = INT16_SIZE;
+    ResponseMessageReceiver::Uint32FromParcel(num, parcel, testSize);
+    testSize = INT32_SIZE;
+    ResponseMessageReceiver::Uint32FromParcel(num, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestInt16FromParcel(const uint8_t *data, size_t size)
+{
+    int16_t except = 123; // 123 is except num
+    char *parcel = reinterpret_cast<char *>(&except);
+    int16_t num;
+    int testSize = 0;
+    ResponseMessageReceiver::Int16FromParcel(num, parcel, testSize);
+    testSize = INT16_SIZE;
+    ResponseMessageReceiver::Int16FromParcel(num, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestStateFromParcel(const uint8_t *data, size_t size)
+{
+    State state;
+    uint32_t except = static_cast<uint32_t>(State::ANY) + 1;
+    char *parcel = reinterpret_cast<char *>(&except);
+    int testSize = INT32_SIZE;
+    ResponseMessageReceiver::StateFromParcel(state, parcel, testSize);
+    except = static_cast<uint32_t>(State::ANY);
+    parcel = reinterpret_cast<char *>(&except);
+    testSize = INT32_SIZE;
+    ResponseMessageReceiver::StateFromParcel(state, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestActionFromParcel(const uint8_t *data, size_t size)
+{
+    Action action;
+    uint32_t except = static_cast<uint32_t>(Action::ANY) + 1;
+    char *parcel = reinterpret_cast<char *>(&except);
+    int testSize = INT32_SIZE;
+    ResponseMessageReceiver::ActionFromParcel(action, parcel, testSize);
+    except = static_cast<uint32_t>(Action::ANY);
+    parcel = reinterpret_cast<char *>(&except);
+    testSize = INT32_SIZE;
+    ResponseMessageReceiver::ActionFromParcel(action, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestVersionFromParcel(const uint8_t *data, size_t size)
+{
+    Version version;
+    uint32_t except = static_cast<uint32_t>(Version::API10) + 1;
+    char *parcel = reinterpret_cast<char *>(&except);
+    int testSize = INT32_SIZE;
+    ResponseMessageReceiver::VersionFromParcel(version, parcel, testSize);
+    except = static_cast<uint32_t>(Version::API10);
+    parcel = reinterpret_cast<char *>(&except);
+    testSize = INT32_SIZE;
+    ResponseMessageReceiver::VersionFromParcel(version, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestSubscribeTypeFromParcel(const uint8_t *data, size_t size)
+{
+    SubscribeType type;
+    uint32_t except = static_cast<uint32_t>(SubscribeType::BUTT) + 1;
+    char *parcel = reinterpret_cast<char *>(&except);
+    int testSize = INT32_SIZE;
+    ResponseMessageReceiver::SubscribeTypeFromParcel(type, parcel, testSize);
+    except = static_cast<uint32_t>(SubscribeType::BUTT);
+    parcel = reinterpret_cast<char *>(&except);
+    testSize = INT32_SIZE;
+    ResponseMessageReceiver::SubscribeTypeFromParcel(type, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestStringFromParcel(const uint8_t *data, size_t size)
+{
+    std::string str;
+    std::string except = "except string";
+    char *parcel = const_cast<char *>(except.c_str());
+    int testSize = except.size() - 1;
+    ResponseMessageReceiver::StringFromParcel(str, parcel, testSize);
+    testSize = except.size() + 1;
+    ResponseMessageReceiver::StringFromParcel(str, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestResponseHeaderFromParcel(const uint8_t *data, size_t size)
+{
+    std::map<std::string, std::vector<std::string>> headers;
+    std::string except = "header:aaa,bbb,ccc\n";
+    std::vector<std::string> header;
+    char *parcel = const_cast<char *>(except.c_str());
+    int testSize = except.size();
+    ResponseMessageReceiver::ResponseHeaderFromParcel(headers, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestProgressExtrasFromParcel(const uint8_t *data, size_t size)
+{
+    int arraySize = 64; // 64 is char array length
+    char except[arraySize];
+    uint32_t length = 1;
+    memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&length), sizeof(length));
+    char keyValue[] = "key\0value\0";
+    memcpy_s(except + sizeof(length), static_cast<size_t>(arraySize - sizeof(length)), keyValue,
+        9); // 9 is keyValue length
+    std::map<std::string, std::string> extras;
+    char *parcel = except;
+    int testSize = INT16_SIZE;
+    ResponseMessageReceiver::ProgressExtrasFromParcel(extras, parcel, testSize);
+    parcel = except;
+    testSize = sizeof(length) + 1;
+    ResponseMessageReceiver::ProgressExtrasFromParcel(extras, parcel, testSize);
+    parcel = except;
+    testSize = sizeof(length) + 6; // 6 make except testSize between the keyValue
+    ResponseMessageReceiver::ProgressExtrasFromParcel(extras, parcel, testSize);
+    parcel = except;
+    testSize = arraySize;
+    ResponseMessageReceiver::ProgressExtrasFromParcel(extras, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestVecInt64FromParcel(const uint8_t *data, size_t size)
+{
+    int arraySize = INT32_SIZE + INT64_SIZE;
+    char except[arraySize];
+    uint32_t length = 1;
+    memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&length), sizeof(length));
+    int64_t value = 123456; // 123456 is except num
+    memcpy_s(except + sizeof(length), static_cast<size_t>(arraySize - sizeof(length)),
+        reinterpret_cast<void *>(&value), sizeof(value));
+    std::vector<int64_t> vec;
+    char *parcel = except;
+    int testSize = INT16_SIZE;
+    ResponseMessageReceiver::VecInt64FromParcel(vec, parcel, testSize);
+    parcel = except;
+    testSize = INT64_SIZE;
+    ResponseMessageReceiver::VecInt64FromParcel(vec, parcel, testSize);
+    parcel = except;
+    testSize = arraySize; // 6 make except testSize between the keyValue
+    ResponseMessageReceiver::VecInt64FromParcel(vec, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestResponseMessageReceiver(const uint8_t *data, size_t size)
+{
+    IResponseMessageHandler *handler = nullptr;
+    int32_t sockFd = -1;
+    ResponseMessageReceiver receiver = ResponseMessageReceiver(handler, sockFd);
+}
+
+void ResponseMessageFuzzTestMsgHeaderParcel(const uint8_t *data, size_t size)
+{
+    uint32_t magicNum = ResponseMessageReceiver::RESPONSE_MAGIC_NUM - 1;
+    int pos = 0;
+    int arraySize = INT32_SIZE + INT64_SIZE;
+    char except[arraySize];
+    memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&magicNum), sizeof(magicNum));
+    pos += sizeof(magicNum);
+    int32_t msgId = 123456; // 123456 is except num
+    memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&msgId), sizeof(msgId));
+    pos += sizeof(msgId);
+    int16_t msgType = 123; // 123 is except num
+    memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&msgType), sizeof(msgType));
+    pos += sizeof(msgType);
+    int16_t bodySize = 456; // 456 is except num
+    memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&bodySize), sizeof(bodySize));
+    pos += sizeof(bodySize);
+    msgId = 0;
+    msgType = 0;
+    bodySize = 0;
+    char *parcel = except;
+    int testSize = INT16_SIZE;
+    ResponseMessageReceiver::MsgHeaderParcel(msgId, msgType, bodySize, parcel, testSize);
+    parcel = except;
+    testSize = INT32_SIZE;
+    ResponseMessageReceiver::MsgHeaderParcel(msgId, msgType, bodySize, parcel, testSize);
+    parcel = except;
+    testSize = INT32_SIZE;
+    magicNum = ResponseMessageReceiver::RESPONSE_MAGIC_NUM;
+    memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&magicNum), sizeof(magicNum));
+    ResponseMessageReceiver::MsgHeaderParcel(msgId, msgType, bodySize, parcel, testSize);
+    parcel = except;
+    testSize = INT32_SIZE + INT16_SIZE;
+    ResponseMessageReceiver::MsgHeaderParcel(msgId, msgType, bodySize, parcel, testSize);
+    parcel = except;
+    testSize = INT64_SIZE;
+    ResponseMessageReceiver::MsgHeaderParcel(msgId, msgType, bodySize, parcel, testSize); // 123456 is except num
+    parcel = except;
+    testSize = INT64_SIZE + INT16_SIZE;
+    ResponseMessageReceiver::MsgHeaderParcel(msgId, msgType, bodySize, parcel, testSize);
+    parcel = except;
+    testSize = arraySize;
+    ResponseMessageReceiver::MsgHeaderParcel(msgId, msgType, bodySize, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestResponseFromParcel(const uint8_t *data, size_t size)
+{
+    std::shared_ptr<Response> response = std::make_shared<Response>();
+    int pos = 0;
+    int32_t tid = 123; // 123 is except tid
+    std::string version = "version";
+    int32_t statusCode = 456; // 456 is except statusCode
+    std::string reason = "reason";
+    std::string headers = "header:aaa,bbb,ccc\n";
+    char except[ARRAY_LEN];
+    memcpy_s(except, static_cast<size_t>(ARRAY_LEN), reinterpret_cast<void *>(&tid), sizeof(tid));
+    pos += sizeof(tid);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), version.c_str(), version.size() + 1);
+    pos += (version.size() + 1);
+    memcpy_s(
+        except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&statusCode), sizeof(statusCode));
+    pos += sizeof(statusCode);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reason.c_str(), reason.size() + 1);
+    pos += (reason.size() + 1);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), headers.c_str(), headers.size() + 1);
+    pos += (headers.size() + 1);
+    char *parcel = except;
+    int testSize = INT16_SIZE;
+    ResponseMessageReceiver::ResponseFromParcel(response, parcel, testSize);
+    parcel = except;
+    testSize = INT32_SIZE;
+    ResponseMessageReceiver::ResponseFromParcel(response, parcel, testSize);
+    parcel = except;
+    testSize = INT32_SIZE + version.size() + 1;
+    ResponseMessageReceiver::ResponseFromParcel(response, parcel, testSize);
+    parcel = except;
+    testSize = INT64_SIZE + version.size() + 1;
+    ResponseMessageReceiver::ResponseFromParcel(response, parcel, testSize);
+    parcel = except;
+    testSize = ARRAY_LEN;
+    ResponseMessageReceiver::ResponseFromParcel(response, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestTaskStatesFromParcel(const uint8_t *data, size_t size)
+{
+    std::vector<TaskState> taskStates;
+    int pos = 0;
+    int32_t length = 1;
+    std::string path = "path";
+    int32_t responseCode = ACCOUNT_STOPPED;
+    std::string message = "message";
+    char except[ARRAY_LEN];
+    memcpy_s(except, static_cast<size_t>(ARRAY_LEN), reinterpret_cast<void *>(&length), sizeof(length));
+    pos += sizeof(length);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), path.c_str(), path.size() + 1);
+    pos += (path.size() + 1);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&responseCode),
+        sizeof(responseCode));
+    pos += sizeof(responseCode);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), message.c_str(), message.size() + 1);
+    pos += (message.size() + 1);
+    char *parcel = except;
+    int testSize = INT16_SIZE;
+    ResponseMessageReceiver::TaskStatesFromParcel(taskStates, parcel, testSize);
+    parcel = except;
+    testSize = INT32_SIZE;
+    ResponseMessageReceiver::TaskStatesFromParcel(taskStates, parcel, testSize);
+    parcel = except;
+    testSize = INT32_SIZE + path.size() + 1;
+    ResponseMessageReceiver::TaskStatesFromParcel(taskStates, parcel, testSize);
+    parcel = except;
+    testSize = INT64_SIZE + path.size() + 1;
+    ResponseMessageReceiver::TaskStatesFromParcel(taskStates, parcel, testSize);
+    parcel = except;
+    testSize = ARRAY_LEN;
+    ResponseMessageReceiver::TaskStatesFromParcel(taskStates, parcel, testSize);
+}
+
+void ResponseMessageFuzzTestNotifyDataFromParcel(const uint8_t *data, size_t size)
+{
+    std::shared_ptr<NotifyData> notifyData = std::make_shared<NotifyData>();
+    int pos = 0;
+    int32_t length = 1;
+    SubscribeType type = SubscribeType::BUTT;
+    uint32_t taskId = 123; // 123 is except tid
+    State state = State::ANY;
+    uint32_t index = 456;             // 456 is except index
+    uint64_t processed = 123456;      // 123456 is except processed
+    uint64_t totalProcessed = 111222; // 111222 is except totalProcessed
+    int64_t value = 333444;           // 333444 is except num
+    int ketValueLen = 10;             //9 is keyValue length
+    char keyValue[] = "key\0value\0";
+    Action action = Action::UPLOAD;
+    Version version = Version::API10;
+    std::string path = "path";
+    int32_t responseCode = ACCOUNT_STOPPED;
+    std::string message = "message";
+    char except[ARRAY_LEN];
+    memcpy_s(except, static_cast<size_t>(ARRAY_LEN), reinterpret_cast<void *>(&type), sizeof(type));
+    pos += sizeof(type);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&taskId), sizeof(taskId));
+    pos += sizeof(taskId);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&state), sizeof(state));
+    pos += sizeof(state);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&index), sizeof(index));
+    pos += sizeof(index);
+    memcpy_s(
+        except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&processed), sizeof(processed));
+    pos += sizeof(processed);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&totalProcessed),
+        sizeof(totalProcessed));
+    pos += sizeof(totalProcessed);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&length), sizeof(length));
+    pos += sizeof(length);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&value), sizeof(value));
+    pos += sizeof(value);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&length), sizeof(length));
+    pos += sizeof(length);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), keyValue, ketValueLen);
+    pos += ketValueLen;
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&action), sizeof(action));
+    pos += sizeof(action);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&version), sizeof(version));
+    pos += sizeof(version);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&length), sizeof(length));
+    pos += sizeof(length);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), path.c_str(), path.size() + 1);
+    pos += (path.size() + 1);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&responseCode),
+        sizeof(responseCode));
+    pos += sizeof(responseCode);
+    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), message.c_str(), message.size() + 1);
+    pos += (message.size() + 1);
+    char *parcel = except;
+    int testSize = INT16_SIZE;
+    ResponseMessageReceiver::NotifyDataFromParcel(notifyData, parcel, testSize);
+    parcel = except;
+    testSize = INT32_SIZE;
+    int maxLen = testSize;
+    ResponseMessageReceiver::NotifyDataFromParcel(notifyData, parcel, testSize);
+    parcel = except;
+    maxLen += INT32_SIZE;
+    testSize = maxLen;
+    ResponseMessageReceiver::NotifyDataFromParcel(notifyData, parcel, testSize);
+    parcel = except;
+    maxLen += INT32_SIZE;
+    testSize = maxLen;
+    ResponseMessageReceiver::NotifyDataFromParcel(notifyData, parcel, testSize);
+    parcel = except;
+    maxLen += INT32_SIZE;
+    testSize = maxLen;
+    ResponseMessageReceiver::NotifyDataFromParcel(notifyData, parcel, testSize);
+    parcel = except;
+    maxLen += INT64_SIZE;
+    testSize = maxLen;
+    ResponseMessageReceiver::NotifyDataFromParcel(notifyData, parcel, testSize);
+    parcel = except;
+    maxLen += INT64_SIZE;
+    testSize = maxLen;
+    ResponseMessageReceiver::NotifyDataFromParcel(notifyData, parcel, testSize);
+    parcel = except;
+    maxLen += (sizeof(length) + sizeof(value));
+    testSize = maxLen;
+    ResponseMessageReceiver::NotifyDataFromParcel(notifyData, parcel, testSize);
+    parcel = except;
+    maxLen += (sizeof(length) + ketValueLen);
+    testSize = maxLen;
+    ResponseMessageReceiver::NotifyDataFromParcel(notifyData, parcel, testSize);
+    parcel = except;
+    maxLen += INT32_SIZE;
+    testSize = maxLen;
+    ResponseMessageReceiver::NotifyDataFromParcel(notifyData, parcel, testSize);
+    parcel = except;
+    maxLen += INT32_SIZE;
+    testSize = maxLen;
+    ResponseMessageReceiver::NotifyDataFromParcel(notifyData, parcel, testSize);
+    parcel = except;
+    testSize = ARRAY_LEN;
+    ResponseMessageReceiver::NotifyDataFromParcel(notifyData, parcel, testSize);
+}
+
+class FuzzRemoteObjectImpl : public OHOS::IRemoteObject {};
+
+void RequestSyncLoadFuzzTestOnLoadSystemAbility(const uint8_t *data, size_t size)
+{
+    OHOS::sptr<FuzzRemoteObjectImpl> remote;
+    RequestSyncLoadCallback requestSyncLoadCallback = RequestSyncLoadCallback();
+    requestSyncLoadCallback.OnLoadSystemAbilityFail(OHOS::PRINT_SERVICE_ID);
+    requestSyncLoadCallback.OnLoadSystemAbilityFail(OHOS::DOWNLOAD_SERVICE_ID);
+    requestSyncLoadCallback.OnLoadSystemAbilitySuccess(OHOS::PRINT_SERVICE_ID, remote);
+    requestSyncLoadCallback.OnLoadSystemAbilitySuccess(OHOS::DOWNLOAD_SERVICE_ID, remote);
 }
 
 } // namespace OHOS
@@ -406,6 +869,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::RestoreListenerRequestFuzzTest(data, size);
     OHOS::IsSaReadyRequestFuzzTest(data, size);
     OHOS::ReopenChannelRequestFuzzTest(data, size);
+    OHOS::SubscribeSARequestFuzzTest(data, size);
+    OHOS::AddAndRemoveListenerRequestFuzzTest(data, size);
+    OHOS::RemoveAllListenersRequestFuzzTest(data, size);
     OHOS::QueryRequestFuzzTest(data, size);
     OHOS::RequestFuzzTestGetId(data, size);
     OHOS::RequestFuzzTestHasListener(data, size);
@@ -421,5 +887,24 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::RunCountNotifyStubFuzzTestCallBack(data, size);
     OHOS::RunCountNotifyStubFuzzTestDone(data, size);
     OHOS::RunCountNotifyStubFuzzTestOnCallBack(data, size);
+    OHOS::ResponseMessageFuzzTestInt64FromParcel(data, size);
+    OHOS::ResponseMessageFuzzTestUint64FromParcel(data, size);
+    OHOS::ResponseMessageFuzzTestInt32FromParcel(data, size);
+    OHOS::ResponseMessageFuzzTestUint32FromParcel(data, size);
+    OHOS::ResponseMessageFuzzTestInt16FromParcel(data, size);
+    OHOS::ResponseMessageFuzzTestStateFromParcel(data, size);
+    OHOS::ResponseMessageFuzzTestActionFromParcel(data, size);
+    OHOS::ResponseMessageFuzzTestVersionFromParcel(data, size);
+    OHOS::ResponseMessageFuzzTestSubscribeTypeFromParcel(data, size);
+    OHOS::ResponseMessageFuzzTestStringFromParcel(data, size);
+    OHOS::ResponseMessageFuzzTestResponseHeaderFromParcel(data, size);
+    OHOS::ResponseMessageFuzzTestProgressExtrasFromParcel(data, size);
+    OHOS::ResponseMessageFuzzTestVecInt64FromParcel(data, size);
+    OHOS::ResponseMessageFuzzTestResponseMessageReceiver(data, size);
+    OHOS::ResponseMessageFuzzTestMsgHeaderParcel(data, size);
+    OHOS::ResponseMessageFuzzTestResponseFromParcel(data, size);
+    OHOS::ResponseMessageFuzzTestTaskStatesFromParcel(data, size);
+    OHOS::ResponseMessageFuzzTestNotifyDataFromParcel(data, size);
+    OHOS::RequestSyncLoadFuzzTestOnLoadSystemAbility(data, size);
     return 0;
 }

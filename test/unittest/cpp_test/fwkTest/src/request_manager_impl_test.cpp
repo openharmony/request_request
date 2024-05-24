@@ -27,6 +27,7 @@
 #include "js_common.h"
 #include "log.h"
 #include "request_manager_impl.h"
+#include "system_ability_definition.h"
 
 using namespace testing::ext;
 using namespace OHOS::Request;
@@ -424,4 +425,69 @@ HWTEST_F(RequestManagerImplTest, OnRemoteDiedTest001, TestSize.Level1)
     OHOS::wptr<OHOS::IRemoteObject> remote;
     RequestSaDeathRecipient recipient = RequestSaDeathRecipient();
     recipient.OnRemoteDied(remote);
+}
+
+/**
+ * @tc.name: Retry001
+ * @tc.desc: Test Retry001 interface base function - Retry
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, RetryTest001, TestSize.Level1)
+{
+    std::string taskId;
+    Config config;
+    int32_t errorCode = E_TASK_STATE;
+    FileSpec file;
+    file.uri = "uri";
+    RequestManagerImpl::GetInstance()->Retry(taskId, config, errorCode);
+    config.files.push_back(file);
+    RequestManagerImpl::GetInstance()->Retry(taskId, config, errorCode);
+}
+
+/**
+ * @tc.name: UnsubscribeSA001
+ * @tc.desc: Test UnsubscribeSA001 interface base function - UnsubscribeSA
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, UnsubscribeSA001, TestSize.Level1)
+{
+    RequestManagerImpl::GetInstance()->UnsubscribeSA();
+}
+
+void RMITestCallback()
+{
+}
+
+/**
+ * @tc.name: OnAddSystemAbility001
+ * @tc.desc: Test OnAddSystemAbility001 interface base function - OnAddSystemAbility
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, OnAddSystemAbility001, TestSize.Level1)
+{
+    string deviceId = "deviceId";
+    RequestManagerImpl::SystemAbilityStatusChangeListener listener =
+        RequestManagerImpl::SystemAbilityStatusChangeListener();
+    RequestManagerImpl::GetInstance()->RestoreListener(RMITestCallback);
+    listener.OnAddSystemAbility(OHOS::DOWNLOAD_SERVICE_ID, deviceId);
+    RequestManagerImpl::GetInstance()->RestoreListener(nullptr);
+    listener.OnAddSystemAbility(OHOS::PRINT_SERVICE_ID, deviceId);
+}
+
+/**
+ * @tc.name: OnRemoveSystemAbility001
+ * @tc.desc: Test OnRemoveSystemAbility001 interface base function - OnRemoveSystemAbility
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, OnRemoveSystemAbility001, TestSize.Level1)
+{
+    string deviceId = "deviceId";
+    RequestManagerImpl::SystemAbilityStatusChangeListener listener =
+        RequestManagerImpl::SystemAbilityStatusChangeListener();
+    listener.OnRemoveSystemAbility(OHOS::DOWNLOAD_SERVICE_ID, deviceId);
+    listener.OnRemoveSystemAbility(OHOS::PRINT_SERVICE_ID, deviceId);
 }

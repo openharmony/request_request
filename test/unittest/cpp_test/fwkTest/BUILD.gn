@@ -42,6 +42,7 @@ ohos_unittest("fwkTest") {
     "src/request_manager_test.cpp",
     "src/request_sync_load_callback_test.cpp",
     "src/request_test.cpp",
+    "src/response_message_receiver_test.cpp",
     "src/runcount_notify_stub_test.cpp",
     "src/running_task_count_test.cpp",
   ]

@@ -13,20 +13,22 @@
  * limitations under the License.
  */
 
+#include <string>
 #define private public
 #define protected public
-
-#include "runcount_notify_stub.h"
 
 #include <gtest/gtest.h>
 
 #include <cstdint>
 #include <memory>
 
+#include "download_server_ipc_interface_code.h"
 #include "gmock/gmock.h"
 #include "js_common.h"
 #include "log.h"
+#include "parcel_helper.h"
 #include "request_running_task_count.h"
+#include "runcount_notify_stub.h"
 
 using namespace testing::ext;
 using namespace OHOS::Request;
@@ -122,4 +124,29 @@ HWTEST_F(RuncountNotifyStubTest, OnCallBackTest001, TestSize.Level1)
     FwkRunningTaskCountManager::GetInstance()->SetCount(old);
     count = FwkRunningTaskCountManager::GetInstance()->GetCount();
     EXPECT_EQ(count, old);
+}
+
+/**
+ * @tc.name: OnRemoteRequestTest001
+ * @tc.desc: Test OnRemoteRequestTest001 interface base function - OnRemoteRequest
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RuncountNotifyStubTest, OnRemoteRequestTest001, TestSize.Level1)
+{
+    uint32_t code = static_cast<uint32_t>(RequestNotifyInterfaceCode::REQUEST_NOTIFY_RUNCOUNT);
+    OHOS::MessageParcel data;
+    std::u16string token = u"token";
+    data.WriteInterfaceToken(token);
+    data.WriteInt64(0);
+    OHOS::MessageParcel reply;
+    OHOS::MessageOption option;
+    RunCountNotifyStub runCount = RunCountNotifyStub();
+    runCount.OnRemoteRequest(code, data, reply, option);
+    OHOS::MessageParcel data1;
+    token = runCount.GetDescriptor();
+    data1.WriteInterfaceToken(token);
+    data1.WriteInt64(0);
+    code = static_cast<uint32_t>(RequestNotifyInterfaceCode::REQUEST_DONE_NOTIFY);
+    runCount.OnRemoteRequest(code, data, reply, option);
 }
