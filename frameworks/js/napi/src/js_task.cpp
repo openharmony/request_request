@@ -900,8 +900,6 @@ void JsTask::UnsubscribeSA()
 void JsTask::ReloadListener()
 {
     REQUEST_HILOGD("ReloadListener in");
-    std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
-    RequestManager::GetInstance()->ReopenChannel();
     for (const auto &it : taskMap_) {
         RequestManager::GetInstance()->Subscribe(it.first);
     }
