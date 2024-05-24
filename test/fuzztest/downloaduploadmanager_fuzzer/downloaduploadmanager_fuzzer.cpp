@@ -29,6 +29,7 @@
 #include "request_manager_impl.h"
 #include "request_running_task_count.h"
 #include "request_service_interface.h"
+#include "runcount_notify_stub.h"
 #include "running_task_count.h"
 #include "token_setproc.h"
 
@@ -307,10 +308,10 @@ void RunningTaskCountFuzzTestSubscribeRunningTaskCount(const uint8_t *data, size
         UnsubscribeRunningTaskCount(ob);
     }
     std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FwkTestOberver>();
-    int32_t ret = SubscribeRunningTaskCount(ob1);
+    SubscribeRunningTaskCount(ob1);
     std::shared_ptr<IRunningTaskObserver> ob2 = std::make_shared<FwkTestOberver>();
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob2);
-    ret = SubscribeRunningTaskCount(ob2);
+    SubscribeRunningTaskCount(ob2);
     FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob1);
     FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob2);
 }
@@ -330,11 +331,11 @@ void RunningTaskCountFuzzTestGetAndSetCount(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
     int old = FwkRunningTaskCountManager::GetInstance()->GetCount();
-    int except = 10; // 10 is except count num
+    int except = 1; // 10 is except count num
     FwkRunningTaskCountManager::GetInstance()->SetCount(except);
-    int count = FwkRunningTaskCountManager::GetInstance()->GetCount();
+    FwkRunningTaskCountManager::GetInstance()->GetCount();
     FwkRunningTaskCountManager::GetInstance()->SetCount(old);
-    count = FwkRunningTaskCountManager::GetInstance()->GetCount();
+    FwkRunningTaskCountManager::GetInstance()->GetCount();
 }
 
 void RunningTaskCountFuzzTestUpdateRunningTaskCount(const uint8_t *data, size_t size)
@@ -352,6 +353,35 @@ void RunningTaskCountFuzzTestNotifyAllObservers(const uint8_t *data, size_t size
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob1);
     FwkRunningTaskCountManager::GetInstance()->NotifyAllObservers();
     FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob1);
+}
+
+void RunCountNotifyStubFuzzTestGetInstance(const uint8_t *data, size_t size)
+{
+    RunCountNotifyStub::GetInstance();
+}
+
+void RunCountNotifyStubFuzzTestCallBack(const uint8_t *data, size_t size)
+{
+    Notify notify;
+    RunCountNotifyStub::GetInstance()->CallBack(notify);
+}
+
+void RunCountNotifyStubFuzzTestDone(const uint8_t *data, size_t size)
+{
+    TaskInfo taskInfo;
+    RunCountNotifyStub::GetInstance()->Done(taskInfo);
+}
+
+void RunCountNotifyStubFuzzTestOnCallBack(const uint8_t *data, size_t size)
+{
+    int64_t except = 10; // 10 is except value
+    int old = FwkRunningTaskCountManager::GetInstance()->GetCount();
+    OHOS::MessageParcel parcel;
+    parcel.WriteInt64(except);
+    RunCountNotifyStub::GetInstance()->OnCallBack(parcel);
+    FwkRunningTaskCountManager::GetInstance()->GetCount();
+    FwkRunningTaskCountManager::GetInstance()->SetCount(old);
+    FwkRunningTaskCountManager::GetInstance()->GetCount();
 }
 
 } // namespace OHOS
@@ -387,5 +417,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::RunningTaskCountFuzzTestGetAndSetCount(data, size);
     OHOS::RunningTaskCountFuzzTestUpdateRunningTaskCount(data, size);
     OHOS::RunningTaskCountFuzzTestNotifyAllObservers(data, size);
+    OHOS::RunCountNotifyStubFuzzTestGetInstance(data, size);
+    OHOS::RunCountNotifyStubFuzzTestCallBack(data, size);
+    OHOS::RunCountNotifyStubFuzzTestDone(data, size);
+    OHOS::RunCountNotifyStubFuzzTestOnCallBack(data, size);
     return 0;
 }
