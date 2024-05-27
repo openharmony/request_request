@@ -29,7 +29,7 @@ impl RequestServiceStub {
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service touch: uid is {}", uid);
                 let (event, rx) = TaskManagerEvent::touch(uid, id, token);
-                if !self.task_manager.send_event(event) {
+                if !self.task_manager.lock().unwrap().send_event(event) {
                     return Err(IpcStatusCode::Failed);
                 }
                 match rx.get() {

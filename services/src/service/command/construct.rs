@@ -232,7 +232,7 @@ impl RequestServiceStub {
         debug!("Service construct: task_config constructed");
 
         let (event, rx) = TaskManagerEvent::construct(task_config);
-        if !self.task_manager.send_event(event) {
+        if !self.task_manager.lock().unwrap().send_event(event) {
             return Err(IpcStatusCode::Failed);
         }
         let ret = match rx.get() {

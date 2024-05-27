@@ -36,7 +36,7 @@ impl RequestServiceStub {
                 debug!("Service start: uid is {}", uid);
 
                 let (event, rx) = TaskManagerEvent::start(uid, id);
-                if !self.task_manager.send_event(event) {
+                if !self.task_manager.lock().unwrap().send_event(event) {
                     return Err(IpcStatusCode::Failed);
                 }
                 let ret = match rx.get() {

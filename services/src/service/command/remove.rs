@@ -37,7 +37,7 @@ impl RequestServiceStub {
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service remove: uid is {}", uid);
                 let (event, rx) = TaskManagerEvent::remove(uid, id);
-                if !self.task_manager.send_event(event) {
+                if !self.task_manager.lock().unwrap().send_event(event) {
                     return Err(IpcStatusCode::Failed);
                 }
                 let ret = match rx.get() {

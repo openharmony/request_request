@@ -35,7 +35,7 @@ impl RequestServiceStub {
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service resume: uid is {}", uid);
                 let (event, rx) = TaskManagerEvent::resume(uid, id);
-                if !self.task_manager.send_event(event) {
+                if !self.task_manager.lock().unwrap().send_event(event) {
                     return Err(IpcStatusCode::Failed);
                 }
                 let ret = match rx.get() {

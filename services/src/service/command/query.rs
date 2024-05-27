@@ -45,7 +45,7 @@ impl RequestServiceStub {
             Ok(id) => {
                 debug!("Service query: u32 task_id is {}", id);
                 let (event, rx) = TaskManagerEvent::query(id, action);
-                if !self.task_manager.send_event(event) {
+                if !self.task_manager.lock().unwrap().send_event(event) {
                     return Err(IpcStatusCode::Failed);
                 }
                 match rx.get() {
