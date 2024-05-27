@@ -50,7 +50,7 @@ impl RequestServiceStub {
             common_data,
         };
         let (event, rx) = TaskManagerEvent::search(filter);
-        if !self.task_manager.send_event(event) {
+        if !self.task_manager.lock().unwrap().send_event(event) {
             return Err(IpcStatusCode::Failed);
         }
         let ids = match rx.get() {

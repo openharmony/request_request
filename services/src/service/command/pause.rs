@@ -40,7 +40,7 @@ impl RequestServiceStub {
                 debug!("Service pause: uid is {}", uid);
 
                 let (event, rx) = TaskManagerEvent::pause(uid, id);
-                if !self.task_manager.send_event(event) {
+                if !self.task_manager.lock().unwrap().send_event(event) {
                     return Err(IpcStatusCode::Failed);
                 }
                 let ret = match rx.get() {

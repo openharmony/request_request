@@ -28,7 +28,7 @@ impl RequestServiceStub {
         match tid.parse::<u32>() {
             Ok(tid) => {
                 let (event, rx) = TaskManagerEvent::subscribe(tid, token_id);
-                if !self.task_manager.send_event(event) {
+                if !self.task_manager.lock().unwrap().send_event(event) {
                     reply.write(&(ErrorCode::Other as i32))?;
                     error!(
                     "End Service subscribe, task_id is {}, failed with reason: send event failed",

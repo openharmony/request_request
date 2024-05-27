@@ -61,7 +61,7 @@ impl RequestServiceStub {
         info!("Service dump: dump all task info");
 
         let (event, rx) = TaskManagerEvent::dump_all();
-        if !self.task_manager.send_event(event) {
+        if !self.task_manager.lock().unwrap().send_event(event) {
             return;
         }
 
@@ -98,7 +98,7 @@ impl RequestServiceStub {
         info!("Service dump: dump one task info");
 
         let (event, rx) = TaskManagerEvent::dump_one(task_id);
-        if !self.task_manager.send_event(event) {
+        if !self.task_manager.lock().unwrap().send_event(event) {
             return;
         }
         let task = match rx.get() {

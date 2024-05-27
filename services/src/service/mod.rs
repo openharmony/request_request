@@ -20,6 +20,7 @@ pub(crate) mod permission;
 pub(crate) mod runcount;
 
 use std::fs::File;
+use std::sync::Mutex;
 
 use ipc::parcel::MsgParcel;
 use ipc::remote::RemoteStub;
@@ -33,7 +34,7 @@ use crate::task::info::TaskInfo;
 use crate::utils::c_wrapper::CStringWrapper;
 
 pub(crate) struct RequestServiceStub {
-    task_manager: TaskManagerTx,
+    task_manager: Mutex<TaskManagerTx>,
     client_manager: ClientManagerEntry,
     runcount_manager: RunCountManagerEntry,
 }
@@ -45,7 +46,7 @@ impl RequestServiceStub {
         runcount_manager: RunCountManagerEntry,
     ) -> Self {
         Self {
-            task_manager,
+            task_manager: Mutex::new(task_manager),
             client_manager,
             runcount_manager,
         }

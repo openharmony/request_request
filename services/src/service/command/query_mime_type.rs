@@ -40,7 +40,7 @@ impl RequestServiceStub {
                 debug!("Service query mime type: uid is {}", uid);
 
                 let (event, rx) = TaskManagerEvent::query_mime_type(uid, id);
-                if !self.task_manager.send_event(event) {
+                if !self.task_manager.lock().unwrap().send_event(event) {
                     return Err(IpcStatusCode::Failed);
                 }
                 let mime = match rx.get() {
