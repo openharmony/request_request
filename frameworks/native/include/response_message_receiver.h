@@ -39,7 +39,25 @@ public:
     void Shutdown(void);
 
 private:
+    static int32_t Int64FromParcel(int64_t &num, char *&parcel, int32_t &size);
+    static int32_t Uint64FromParcel(uint64_t &num, char *&parcel, int32_t &size);
+    static int32_t Int32FromParcel(int32_t &num, char *&parcel, int32_t &size);
+    static int32_t Uint32FromParcel(uint32_t &num, char *&parcel, int32_t &size);
+    static int32_t Int16FromParcel(int16_t &num, char *&parcel, int32_t &size);
+    static int32_t StateFromParcel(State &state, char *&parcel, int32_t &size);
+    static int32_t ActionFromParcel(Action &action, char *&parcel, int32_t &size);
+    static int32_t VersionFromParcel(Version &version, char *&parcel, int32_t &size);
+    static int32_t SubscribeTypeFromParcel(SubscribeType &type, char *&parcel, int32_t &size);
+    static int32_t StringFromParcel(std::string &str, char *&parcel, int32_t &size);
+    static int32_t ResponseHeaderFromParcel(
+        std::map<std::string, std::vector<std::string>> &headers, char *&parcel, int32_t &size);
+    static int32_t ProgressExtrasFromParcel(std::map<std::string, std::string> &extras, char *&parcel, int32_t &size);
     void OnReadable(int32_t fd) override;
+    static int32_t VecInt64FromParcel(std::vector<int64_t> &vec, char *&parcel, int32_t &size);
+    static int32_t MsgHeaderParcel(int32_t &msgId, int16_t &msgType, int16_t &bodySize, char *&parcel, int32_t &size);
+    static int32_t ResponseFromParcel(std::shared_ptr<Response> &response, char *&parcel, int32_t &size);
+    static int32_t TaskStatesFromParcel(std::vector<TaskState> &taskStates, char *&parcel, int32_t &size);
+    static int32_t NotifyDataFromParcel(std::shared_ptr<NotifyData> &notifyData, char *&parcel, int32_t &size);
     void OnShutdown(int32_t fd) override;
     void OnException(int32_t fd) override;
 

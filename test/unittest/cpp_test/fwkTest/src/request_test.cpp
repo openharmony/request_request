@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
+#include "gtest/hwext/gtest-ext.h"
 #define private public
 #define protected public
-#include "request.h"
-
 #include <gtest/gtest.h>
 
 #include <memory>
@@ -24,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "js_common.h"
 #include "log.h"
+#include "request.h"
 
 using namespace testing::ext;
 using namespace OHOS::Request;
@@ -102,6 +102,10 @@ HWTEST_F(RequestTest, AddAndRemoveListenerTest001, TestSize.Level1)
     EXPECT_EQ(request.HasListener(), true);
     request.RemoveListener(type, listenerPtr);
     EXPECT_EQ(request.HasListener(), false);
+    type = SubscribeType::FAILED;
+    request.AddListener(type, listenerPtr);
+    EXPECT_EQ(request.HasListener(), false);
+    request.RemoveListener(type, listenerPtr);
 }
 
 class RTNotifyDataListenerImpl : public INotifyDataListener {
@@ -136,7 +140,51 @@ HWTEST_F(RequestTest, OnNotifyDataReceiveTest001, TestSize.Level1)
     request.AddListener(type, listenerPtr);
     EXPECT_EQ(request.HasListener(), true);
     request.OnNotifyDataReceive(notifyData);
+    notifyData->type = SubscribeType::RESPONSE;
+    notifyData->version = Version::API10;
+    request.OnNotifyDataReceive(notifyData);
     EXPECT_EQ(g_requestTest, 1);
+    g_requestTest = 0;
+    notifyData->type = SubscribeType::REMOVE;
+    notifyData->version = Version::API9;
+    request.needRemove_ = false;
+    request.AddListener(SubscribeType::REMOVE, listenerPtr);
+    request.OnNotifyDataReceive(notifyData);
+    EXPECT_EQ(g_requestTest, 0);
+}
+
+/**
+ * @tc.name: NeedNotifyTest001
+ * @tc.desc: Test NeedNotifyTest001 interface base function - NeedNotify
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestTest, NeedNotifyTest001, TestSize.Level1)
+{
+    string tid = "testTid";
+    Request request = Request(tid);
+    std::shared_ptr<NotifyData> notifyData = std::make_shared<NotifyData>();
+    notifyData->type = SubscribeType::COMPLETED;
+    notifyData->version = Version::API10;
+    request.needRemove_ = true;
+    EXPECT_EQ(request.NeedNotify(notifyData), true);
+    notifyData->type = SubscribeType::REMOVE;
+    notifyData->version = Version::API9;
+    request.needRemove_ = true;
+    EXPECT_EQ(request.NeedNotify(notifyData), true);
+    notifyData->type = SubscribeType::COMPLETED;
+    notifyData->version = Version::API10;
+    EXPECT_EQ(request.NeedNotify(notifyData), true);
+    notifyData->type = SubscribeType::FAILED;
+    notifyData->version = Version::API10;
+    EXPECT_EQ(request.NeedNotify(notifyData), true);
+    notifyData->type = SubscribeType::HEADER_RECEIVE;
+    notifyData->version = Version::API9;
+    EXPECT_EQ(request.NeedNotify(notifyData), true);
+    notifyData->type = SubscribeType::REMOVE;
+    notifyData->version = Version::API9;
+    request.needRemove_ = false;
+    EXPECT_EQ(request.NeedNotify(notifyData), false);
 }
 
 /**
@@ -156,9 +204,12 @@ HWTEST_F(RequestTest, AddAndRemoveListenerTest002, TestSize.Level1)
     notifyData->version = Version::API9;
     request.OnNotifyDataReceive(notifyData);
     std::shared_ptr<RTNotifyDataListenerImpl> listenerPtr = std::make_shared<RTNotifyDataListenerImpl>();
+    request.AddListener(SubscribeType::BUTT, listenerPtr);
     request.AddListener(type, listenerPtr);
     EXPECT_EQ(request.HasListener(), true);
     EXPECT_EQ(g_requestTest, 1);
+    request.RemoveListener(SubscribeType::RESPONSE, listenerPtr);
+    request.RemoveListener(SubscribeType::BUTT, listenerPtr);
     request.RemoveListener(type, listenerPtr);
     EXPECT_EQ(request.HasListener(), false);
 }
@@ -183,4 +234,30 @@ HWTEST_F(RequestTest, OnResponseReceiveTest001, TestSize.Level1)
     EXPECT_EQ(request.HasListener(), true);
     request.OnResponseReceive(response);
     EXPECT_EQ(g_requestTest, 2); // 2 is except result
+}
+
+/**
+ * @tc.name: AddListenerTest001
+ * @tc.desc: Test AddListenerTest001 interface base function - AddListener
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestTest, AddListenerTest002, TestSize.Level1)
+{
+    g_requestTest = 0;
+    string tid = "testTid";
+    Request request = Request(tid);
+    std::shared_ptr<RTNotifyDataListenerImpl> listenerPtr = std::make_shared<RTNotifyDataListenerImpl>();
+    request.AddListener(SubscribeType::RESPONSE, listenerPtr);
+    request.AddListener(SubscribeType::BUTT, listenerPtr);
+    std::shared_ptr<NotifyData> notifyData = std::make_shared<NotifyData>();
+    notifyData->type = SubscribeType::HEADER_RECEIVE;
+    notifyData->version = Version::API9;
+    request.needRemove_ = true;
+    request.unusedNotifyData_[SubscribeType::HEADER_RECEIVE] = notifyData;
+    request.AddListener(SubscribeType::HEADER_RECEIVE, listenerPtr);
+    request.needRemove_ = false;
+    request.unusedNotifyData_[SubscribeType::HEADER_RECEIVE] = notifyData;
+    request.AddListener(SubscribeType::HEADER_RECEIVE, listenerPtr);
+    EXPECT_EQ(g_requestTest, 1);
 }

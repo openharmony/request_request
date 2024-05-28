@@ -34,7 +34,7 @@ static constexpr int32_t INT16_SIZE = 2;
 
 std::shared_ptr<OHOS::AppExecFwk::EventHandler> serviceHandler_;
 
-static int32_t Int64FromParcel(int64_t &num, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::Int64FromParcel(int64_t &num, char *&parcel, int32_t &size)
 {
     if (size < INT64_SIZE) {
         REQUEST_HILOGE("message not complete");
@@ -46,7 +46,7 @@ static int32_t Int64FromParcel(int64_t &num, char *&parcel, int32_t &size)
     return 0;
 }
 
-static int32_t Uint64FromParcel(uint64_t &num, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::Uint64FromParcel(uint64_t &num, char *&parcel, int32_t &size)
 {
     if (size < INT64_SIZE) {
         REQUEST_HILOGE("message not complete");
@@ -58,7 +58,7 @@ static int32_t Uint64FromParcel(uint64_t &num, char *&parcel, int32_t &size)
     return 0;
 }
 
-static int32_t Int32FromParcel(int32_t &num, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::Int32FromParcel(int32_t &num, char *&parcel, int32_t &size)
 {
     if (size < INT32_SIZE) {
         REQUEST_HILOGE("message not complete");
@@ -70,7 +70,7 @@ static int32_t Int32FromParcel(int32_t &num, char *&parcel, int32_t &size)
     return 0;
 }
 
-static int32_t Uint32FromParcel(uint32_t &num, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::Uint32FromParcel(uint32_t &num, char *&parcel, int32_t &size)
 {
     if (size < INT32_SIZE) {
         REQUEST_HILOGE("message not complete");
@@ -82,7 +82,7 @@ static int32_t Uint32FromParcel(uint32_t &num, char *&parcel, int32_t &size)
     return 0;
 }
 
-static int32_t Int16FromParcel(int16_t &num, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::Int16FromParcel(int16_t &num, char *&parcel, int32_t &size)
 {
     if (size < INT16_SIZE) {
         REQUEST_HILOGE("message not complete");
@@ -94,7 +94,7 @@ static int32_t Int16FromParcel(int16_t &num, char *&parcel, int32_t &size)
     return 0;
 }
 
-static int32_t StateFromParcel(State &state, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::StateFromParcel(State &state, char *&parcel, int32_t &size)
 {
     uint32_t temp;
     if (Uint32FromParcel(temp, parcel, size) || temp > static_cast<uint32_t>(State::ANY)) {
@@ -104,7 +104,7 @@ static int32_t StateFromParcel(State &state, char *&parcel, int32_t &size)
     return 0;
 }
 
-static int32_t ActionFromParcel(Action &action, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::ActionFromParcel(Action &action, char *&parcel, int32_t &size)
 {
     uint32_t temp;
     if (Uint32FromParcel(temp, parcel, size) || temp > static_cast<uint32_t>(Action::ANY)) {
@@ -114,7 +114,7 @@ static int32_t ActionFromParcel(Action &action, char *&parcel, int32_t &size)
     return 0;
 }
 
-static int32_t VersionFromParcel(Version &version, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::VersionFromParcel(Version &version, char *&parcel, int32_t &size)
 {
     uint32_t temp;
     if (Uint32FromParcel(temp, parcel, size) || temp > static_cast<uint32_t>(Version::API10)) {
@@ -124,7 +124,7 @@ static int32_t VersionFromParcel(Version &version, char *&parcel, int32_t &size)
     return 0;
 }
 
-static int32_t SubscribeTypeFromParcel(SubscribeType &type, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::SubscribeTypeFromParcel(SubscribeType &type, char *&parcel, int32_t &size)
 {
     uint32_t temp;
     if (Uint32FromParcel(temp, parcel, size) || temp > static_cast<uint32_t>(SubscribeType::BUTT)) {
@@ -134,7 +134,7 @@ static int32_t SubscribeTypeFromParcel(SubscribeType &type, char *&parcel, int32
     return 0;
 }
 
-static int32_t StringFromParcel(std::string &str, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::StringFromParcel(std::string &str, char *&parcel, int32_t &size)
 {
     int32_t i = 0;
 
@@ -153,7 +153,7 @@ static int32_t StringFromParcel(std::string &str, char *&parcel, int32_t &size)
     }
 }
 
-static int32_t ResponseHeaderFromParcel(
+int32_t ResponseMessageReceiver::ResponseHeaderFromParcel(
     std::map<std::string, std::vector<std::string>> &headers, char *&parcel, int32_t &size)
 {
     std::string s(parcel, size);
@@ -173,7 +173,8 @@ static int32_t ResponseHeaderFromParcel(
     return 0;
 }
 
-static int32_t ProgressExtrasFromParcel(std::map<std::string, std::string> &extras, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::ProgressExtrasFromParcel(
+    std::map<std::string, std::string> &extras, char *&parcel, int32_t &size)
 {
     uint32_t length;
     if (Uint32FromParcel(length, parcel, size)) {
@@ -195,7 +196,7 @@ static int32_t ProgressExtrasFromParcel(std::map<std::string, std::string> &extr
     return 0;
 }
 
-static int32_t VecInt64FromParcel(std::vector<int64_t> &vec, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::VecInt64FromParcel(std::vector<int64_t> &vec, char *&parcel, int32_t &size)
 {
     uint32_t length;
     if (Uint32FromParcel(length, parcel, size)) {
@@ -226,7 +227,8 @@ void ResponseMessageReceiver::BeginReceive()
 }
 
 // ret 0 if success, ret < 0 if fail
-static int32_t MsgHeaderParcel(int32_t &msgId, int16_t &msgType, int16_t &bodySize, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::MsgHeaderParcel(
+    int32_t &msgId, int16_t &msgType, int16_t &bodySize, char *&parcel, int32_t &size)
 {
     int32_t magicNum = 0;
     if (Int32FromParcel(magicNum, parcel, size) != 0) {
@@ -249,7 +251,7 @@ static int32_t MsgHeaderParcel(int32_t &msgId, int16_t &msgType, int16_t &bodySi
     return 0;
 }
 
-static int32_t ResponseFromParcel(std::shared_ptr<Response> &response, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::ResponseFromParcel(std::shared_ptr<Response> &response, char *&parcel, int32_t &size)
 {
     int32_t tid;
     if (Int32FromParcel(tid, parcel, size) != 0) {
@@ -273,14 +275,11 @@ static int32_t ResponseFromParcel(std::shared_ptr<Response> &response, char *&pa
         return -1;
     }
 
-    if (ResponseHeaderFromParcel(response->headers, parcel, size) != 0) {
-        REQUEST_HILOGE("Bad headers");
-        return -1;
-    }
+    ResponseHeaderFromParcel(response->headers, parcel, size);
     return 0;
 }
 
-static int32_t TaskStatesFromParcel(std::vector<TaskState> &taskStates, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::TaskStatesFromParcel(std::vector<TaskState> &taskStates, char *&parcel, int32_t &size)
 {
     uint32_t length;
     if (Uint32FromParcel(length, parcel, size) != 0) {
@@ -306,7 +305,8 @@ static int32_t TaskStatesFromParcel(std::vector<TaskState> &taskStates, char *&p
     return 0;
 }
 
-static int32_t NotifyDataFromParcel(std::shared_ptr<NotifyData> &notifyData, char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::NotifyDataFromParcel(
+    std::shared_ptr<NotifyData> &notifyData, char *&parcel, int32_t &size)
 {
     if (SubscribeTypeFromParcel(notifyData->type, parcel, size) != 0) {
         REQUEST_HILOGE("Bad type");
@@ -342,11 +342,11 @@ static int32_t NotifyDataFromParcel(std::shared_ptr<NotifyData> &notifyData, cha
     }
 
     if (ActionFromParcel(notifyData->action, parcel, size) != 0) {
-        REQUEST_HILOGE("Bad version");
+        REQUEST_HILOGE("Bad action");
         return -1;
     }
     if (VersionFromParcel(notifyData->version, parcel, size) != 0) {
-        REQUEST_HILOGE("Bad action");
+        REQUEST_HILOGE("Bad version");
         return -1;
     }
     if (TaskStatesFromParcel(notifyData->taskStates, parcel, size) != 0) {
