@@ -67,7 +67,6 @@ pub(crate) struct CommonTaskConfig {
 #[derive(Clone, Debug)]
 pub(crate) struct TaskConfig {
     pub(crate) bundle: String,
-    pub(crate) bundle_type: u32,
     pub(crate) url: String,
     pub(crate) title: String,
     pub(crate) description: String,
@@ -144,7 +143,6 @@ impl TaskConfig {
 impl Default for TaskConfig {
     fn default() -> Self {
         Self {
-            bundle_type: 0,
             bundle: "xxx".to_string(),
             url: "http://127.0.0.1:80".to_string(),
             title: "xxx".to_string(),

@@ -54,7 +54,6 @@ struct CStringMap {
 
 struct CTaskConfig {
     CStringWrapper bundle;
-    uint8_t bundleType;
     CStringWrapper url;
     CStringWrapper title;
     CStringWrapper description;
@@ -79,7 +78,6 @@ struct CTaskConfig {
 
 struct TaskConfig {
     std::string bundle;
-    uint8_t bundleType;
     std::string url;
     std::string title;
     std::string description;

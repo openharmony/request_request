@@ -27,7 +27,6 @@ use crate::utils::{build_vec, split_string, string_to_hashmap};
 #[repr(C)]
 pub(crate) struct CTaskConfig {
     pub(crate) bundle: CStringWrapper,
-    pub(crate) bundle_type: u8,
     pub(crate) url: CStringWrapper,
     pub(crate) title: CStringWrapper,
     pub(crate) description: CStringWrapper,
@@ -270,7 +269,6 @@ impl TaskConfig {
     pub(crate) fn to_c_struct(&self, task_id: u32, uid: u64, set: &ConfigSet) -> CTaskConfig {
         CTaskConfig {
             bundle: CStringWrapper::from(&self.bundle),
-            bundle_type: self.bundle_type as u8,
             url: CStringWrapper::from(&self.url),
             title: CStringWrapper::from(&self.title),
             description: CStringWrapper::from(&self.description),
@@ -316,7 +314,6 @@ impl TaskConfig {
     pub(crate) fn from_c_struct(c_struct: &CTaskConfig) -> Self {
         let task_config: TaskConfig = TaskConfig {
             bundle: c_struct.bundle.to_string(),
-            bundle_type: c_struct.bundle_type as u32,
             url: c_struct.url.to_string(),
             title: c_struct.title.to_string(),
             description: c_struct.description.to_string(),
