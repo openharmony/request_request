@@ -18,10 +18,12 @@ pub(crate) mod task_id_generator;
 pub(crate) mod url_policy;
 
 use std::collections::HashMap;
+use std::future::Future;
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use ylong_runtime::sync::oneshot::Receiver;
+use ylong_runtime::task::JoinHandle;
 
 pub(crate) struct Recv<T> {
     rx: Receiver<T>,
@@ -82,4 +84,13 @@ pub(crate) fn string_to_hashmap(str: &mut String) -> HashMap<String, String> {
 pub(crate) fn split_string(str: &mut str) -> std::str::Split<'_, &str> {
     let pat: &[_] = &['[', ']'];
     str.trim_matches(pat).split(", ")
+}
+
+#[inline(always)]
+pub(crate) fn runtime_spawn<F: Future<Output = ()> + Send + Sync + 'static>(
+    fut: F,
+) -> JoinHandle<()> {
+    ylong_runtime::spawn(Box::into_pin(
+        Box::new(fut) as Box<dyn Future<Output = ()> + Send + Sync>
+    ))
 }

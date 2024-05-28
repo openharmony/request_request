@@ -20,6 +20,7 @@ use ylong_runtime::sync::oneshot::Sender;
 use super::{RunCountEvent, SubClient, SubKey};
 use crate::ability::PANIC_INFO;
 use crate::error::ErrorCode;
+use crate::utils::runtime_spawn;
 
 #[derive(Clone)]
 pub(crate) struct RunCountManagerEntry {
@@ -61,7 +62,7 @@ impl RunCountManager {
             remotes: HashMap::new(),
             rx,
         };
-        ylong_runtime::spawn(runcount_manager.run());
+        runtime_spawn(runcount_manager.run());
         RunCountManagerEntry::new(tx)
     }
 

@@ -19,6 +19,7 @@ use ylong_runtime::task::JoinHandle;
 
 use crate::manage::events::{ScheduleEvent, TaskManagerEvent};
 use crate::manage::task_manager::TaskManagerTx;
+use crate::utils::runtime_spawn;
 
 const UNLOAD_WAITING: u64 = 60;
 
@@ -82,7 +83,7 @@ impl Drop for SAKeeper {
 }
 
 fn count_down(tx: UnboundedSender<TaskManagerEvent>) -> JoinHandle<()> {
-    ylong_runtime::spawn(unload_sa(tx))
+    runtime_spawn(unload_sa(tx))
 }
 
 async fn unload_sa(tx: UnboundedSender<TaskManagerEvent>) {

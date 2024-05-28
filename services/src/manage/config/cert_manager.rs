@@ -16,6 +16,8 @@ use std::time::Duration;
 
 use ylong_http_client::Certificate;
 
+use crate::utils::runtime_spawn;
+
 const UPDATE_SYSTEM_CERT_INTERVAL_IN_SECS: u64 = 60 * 60;
 
 #[derive(Clone)]
@@ -26,7 +28,7 @@ pub(crate) struct CertManager {
 impl CertManager {
     pub(crate) fn init() -> Self {
         let info = Arc::new(RwLock::new(CertInfo::default()));
-        ylong_runtime::spawn(run(info.clone()));
+        runtime_spawn(run(info.clone()));
         Self { info }
     }
 
