@@ -88,9 +88,7 @@
         {
           "name": "//base/request/request/frameworks/cj/ffi:cj_request_ffi",
           "header": {
-            "header_files": [
-              "cj_request_ffi.h"
-            ],
+            "header_files": [],
             "header_base": "//base/request/request/frameworks/cj/ffi/include"
           }
         }
