@@ -62,8 +62,7 @@
     "build": {
       "group_type": {
         "base_group": [
-          "//base/request/request/frameworks/js/napi:request",
-          "//base/request/request/frameworks/cj/ffi:cj_request_ffi"
+          "//base/request/request/frameworks/js/napi:request"
         ],
         "fwk_group": [
           "//base/request/request/frameworks/native:request_native"
@@ -82,15 +81,6 @@
               "running_task_count.h"
             ],
             "header_base": "//base/request/request/interfaces/inner_kits/running_count/include"
-          }
-        },
-        {
-          "name": "//base/request/request/frameworks/cj/ffi:cj_request_ffi",
-          "header": {
-            "header_files": [
-              "cj_request_ffi.h"
-            ],
-            "header_base": "//base/request/request/frameworks/cj/ffi/include"
           }
         }
       ],
