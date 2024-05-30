@@ -91,6 +91,9 @@
             "header_files": [],
             "header_base": "//base/request/request/frameworks/cj/ffi/include"
           }
+        },
+        {
+          "name": "//base/request/request/frameworks/js/napi:request_static"
         }
       ],
       "test": [
