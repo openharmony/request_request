@@ -38,6 +38,7 @@ use crate::manage::events::{StateEvent, TaskManagerEvent};
 use crate::service::client::ClientManagerEntry;
 use crate::task::info::ApplicationState;
 use crate::utils::c_wrapper::CStringWrapper;
+use crate::utils::runtime_spawn;
 
 const BACKGROUND_TASK_STOP_INTERVAL: u64 = 60;
 
@@ -65,7 +66,7 @@ impl AppStateManager {
             tx: tx.clone(),
             rx,
         };
-        ylong_runtime::spawn(manager.run());
+        runtime_spawn(manager.run());
         AppStateListener::init(client_manager, tx.clone());
         tx
     }
@@ -158,7 +159,7 @@ impl AppStateManager {
                     )));
             } else {
                 // Here we need not to change app state immediately.
-                st.handle = Some(ylong_runtime::spawn(update_background_app(
+                st.handle = Some(runtime_spawn(update_background_app(
                     uid,
                     state,
                     self.tx.clone(),

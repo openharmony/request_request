@@ -21,7 +21,6 @@ use std::sync::Arc;
 
 use keeper::SAKeeper;
 pub(crate) use notify_task::NotifyTask;
-use running_task::RunningTask;
 
 use crate::ability::SYSTEM_CONFIG_MANAGER;
 use crate::error::ErrorCode;
@@ -29,6 +28,7 @@ use crate::manage::app_state::AppStateManagerTx;
 use crate::manage::database::Database;
 use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::qos::{QosChanges, QosDirection};
+use crate::manage::scheduler::queue::running_task::RunningTask;
 use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
 use crate::service::runcount::RunCountManagerEntry;
@@ -36,7 +36,7 @@ use crate::task::config::Action;
 use crate::task::info::State;
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
-use crate::utils::get_current_timestamp;
+use crate::utils::{get_current_timestamp, runtime_spawn};
 
 const MILLISECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
 
@@ -165,8 +165,8 @@ impl RunningQueue {
             let runcount_manager = self.runcount_manager.clone();
             task.speed_limit(qos_direction.direction() as u8);
             satisfied_tasks.insert((uid, task_id), task.clone());
-            let task = RunningTask::new(runcount_manager, task.clone(), tx, keeper);
-            ylong_runtime::spawn(async move {
+            let task = RunningTask::new(runcount_manager, task, tx, keeper);
+            runtime_spawn(async move {
                 task.run().await;
             });
         }

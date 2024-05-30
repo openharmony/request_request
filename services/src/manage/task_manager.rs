@@ -31,6 +31,7 @@ use crate::manage::scheduler::Scheduler;
 use crate::service::client::ClientManagerEntry;
 use crate::service::runcount::RunCountManagerEntry;
 use crate::task::info::ApplicationState;
+use crate::utils::runtime_spawn;
 
 const CLEAR_INTERVAL: u64 = 30 * 60;
 const LOG_INTERVAL: u64 = 5 * 60;
@@ -92,11 +93,11 @@ impl TaskManager {
         // If a new task is started at this time, this future can
         // be removed because the scheduler will also be rearranged in the
         // startup logic of the new task.
-        ylong_runtime::spawn(restore_all_tasks(tx.clone()));
+        runtime_spawn(restore_all_tasks(tx.clone()));
 
-        ylong_runtime::spawn(clear_timeout_tasks(tx.clone()));
-        ylong_runtime::spawn(log_all_task_info(tx.clone()));
-        ylong_runtime::spawn(task_manager.run());
+        runtime_spawn(clear_timeout_tasks(tx.clone()));
+        runtime_spawn(log_all_task_info(tx.clone()));
+        runtime_spawn(task_manager.run());
         tx
     }
 

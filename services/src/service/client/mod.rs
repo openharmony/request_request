@@ -24,7 +24,7 @@ use ylong_runtime::sync::oneshot::{channel, Sender};
 
 use crate::error::ErrorCode;
 use crate::task::notify::{NotifyData, SubscribeType};
-use crate::utils::Recv;
+use crate::utils::{runtime_spawn, Recv};
 
 const REQUEST_MAGIC_NUM: u32 = 0x43434646;
 const HEADERS_MAX_SIZE: u16 = 8 * 1024;
@@ -170,7 +170,7 @@ impl Client {
             rx,
         };
         let fd = client.client_sock_fd.as_raw_fd();
-        ylong_runtime::spawn(client.run());
+        runtime_spawn(client.run());
         Some((tx, fd))
     }
 
