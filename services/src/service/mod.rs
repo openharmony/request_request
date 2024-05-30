@@ -164,7 +164,6 @@ pub(crate) fn serialize_task_info(tf: TaskInfo, reply: &mut MsgParcel) -> IpcRes
 pub(crate) fn serialize_task_config(config: TaskConfig, reply: &mut MsgParcel) -> IpcResult<()> {
     reply.write(&(config.common_data.action as u32))?;
     reply.write(&(config.common_data.mode as u32))?;
-    reply.write(&(config.bundle_type))?;
     reply.write(&(config.common_data.cover))?;
     reply.write(&(config.common_data.network as u32))?;
     reply.write(&(config.common_data.metered))?;

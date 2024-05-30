@@ -15,11 +15,9 @@
 
 #ifndef REQUEST_PARCEL_HELPER_H
 #define REQUEST_PARCEL_HELPER_H
-
 #include "js_common.h"
 #include "message_parcel.h"
 #include "visibility.h"
-
 namespace OHOS {
 namespace Request {
 class ParcelHelper {

@@ -45,8 +45,6 @@ impl RequestServiceStub {
         let mode: u32 = data.read()?;
         let mode: Mode = Mode::from(mode as u8);
 
-        let bundle_type: u32 = data.read()?;
-
         let cover: bool = data.read()?;
 
         let network: u32 = data.read()?;
@@ -191,7 +189,6 @@ impl RequestServiceStub {
 
         let task_config = TaskConfig {
             bundle,
-            bundle_type,
             url,
             title,
             description,

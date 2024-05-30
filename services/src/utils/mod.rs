@@ -15,7 +15,6 @@ pub(crate) mod c_wrapper;
 pub(crate) mod filter;
 pub(crate) mod form_item;
 pub(crate) mod task_id_generator;
-pub(crate) mod url_policy;
 
 use std::collections::HashMap;
 use std::io::Write;

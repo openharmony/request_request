@@ -105,14 +105,12 @@ ExceptionError JsInitialize::InitParam(
         err.errInfo = "Parameter verification failed, Get context fail";
         return err;
     }
-    auto applicationInfo = context->GetApplicationInfo();
-    if (applicationInfo == nullptr) {
+
+    if (context->GetApplicationInfo() == nullptr) {
         err.code = E_OTHER;
         err.errInfo = "ApplicationInfo is null";
         return err;
     }
-    config.bundleType = static_cast<u_int32_t>(applicationInfo->bundleType);
-    REQUEST_HILOGD("config.bundleType is %{public}d", config.bundleType);
     if (!ParseConfig(env, argv[parametersPosition], config, err.errInfo)) {
         err.code = E_PARAMETER_CHECK;
         return err;

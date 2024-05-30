@@ -44,7 +44,6 @@ int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid)
     data.WriteUint32(static_cast<uint32_t>(config.action));
     data.WriteUint32(static_cast<uint32_t>(config.version));
     data.WriteUint32(static_cast<uint32_t>(config.mode));
-    data.WriteUint32(static_cast<uint32_t>(config.bundleType));
     data.WriteBool(config.overwrite);
     data.WriteUint32(static_cast<uint32_t>(config.network));
     data.WriteBool(config.metered);
