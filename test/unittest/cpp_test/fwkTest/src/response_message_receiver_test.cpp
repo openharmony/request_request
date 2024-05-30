@@ -307,10 +307,10 @@ HWTEST_F(ResponseMessageReceiverTest, ProgressExtrasFromParcel001, TestSize.Leve
     int arraySize = 64; // 64 is char array length
     char except[arraySize];
     uint32_t length = 1;
-    memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&length), sizeof(length));
+    EXPECT_EQ(memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&length), sizeof(length)), 0);
     char keyValue[] = "key\0value\0";
-    memcpy_s(except + sizeof(length), static_cast<size_t>(arraySize - sizeof(length)), keyValue,
-        9); // 9 is keyValue length
+    EXPECT_EQ(memcpy_s(except + sizeof(length), static_cast<size_t>(arraySize - sizeof(length)), keyValue, 9),
+        0); // 9 is keyValue length
     std::map<std::string, std::string> extras;
     char *parcel = except;
     int size = INT16_SIZE;
@@ -338,10 +338,11 @@ HWTEST_F(ResponseMessageReceiverTest, VecInt64FromParcel001, TestSize.Level1)
     int arraySize = INT32_SIZE + INT64_SIZE;
     char except[arraySize];
     uint32_t length = 1;
-    memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&length), sizeof(length));
+    EXPECT_EQ(memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&length), sizeof(length)), 0);
     int64_t value = 123456; // 123456 is except num
-    memcpy_s(except + sizeof(length), static_cast<size_t>(arraySize - sizeof(length)),
-        reinterpret_cast<void *>(&value), sizeof(value));
+    EXPECT_EQ(memcpy_s(except + sizeof(length), static_cast<size_t>(arraySize - sizeof(length)),
+                  reinterpret_cast<void *>(&value), sizeof(value)),
+        0);
     std::vector<int64_t> vec;
     char *parcel = except;
     int size = INT16_SIZE;
@@ -382,6 +383,7 @@ HWTEST_F(ResponseMessageReceiverTest, ResponseMessageReceiver001, TestSize.Level
     RMRestResponseListener handler = RMRestResponseListener();
     int32_t sockFd = -1;
     ResponseMessageReceiver receiver = ResponseMessageReceiver(&handler, sockFd);
+    EXPECT_EQ(&handler, receiver.handler_);
 }
 
 /**
@@ -396,16 +398,23 @@ HWTEST_F(ResponseMessageReceiverTest, MsgHeaderParcel001, TestSize.Level1)
     int pos = 0;
     int arraySize = INT32_SIZE + INT64_SIZE;
     char except[arraySize];
-    memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&magicNum), sizeof(magicNum));
+    EXPECT_EQ(
+        memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&magicNum), sizeof(magicNum)), 0);
     pos += sizeof(magicNum);
     int32_t msgId = 123456; // 123456 is except num
-    memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&msgId), sizeof(msgId));
+    EXPECT_EQ(
+        memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&msgId), sizeof(msgId)),
+        0);
     pos += sizeof(msgId);
     int16_t msgType = 123; // 123 is except num
-    memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&msgType), sizeof(msgType));
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&msgType),
+                  sizeof(msgType)),
+        0);
     pos += sizeof(msgType);
     int16_t bodySize = 456; // 456 is except num
-    memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&bodySize), sizeof(bodySize));
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&bodySize),
+                  sizeof(bodySize)),
+        0);
     pos += sizeof(bodySize);
     msgId = 0;
     msgType = 0;
@@ -419,7 +428,8 @@ HWTEST_F(ResponseMessageReceiverTest, MsgHeaderParcel001, TestSize.Level1)
     parcel = except;
     size = INT32_SIZE;
     magicNum = ResponseMessageReceiver::RESPONSE_MAGIC_NUM;
-    memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&magicNum), sizeof(magicNum));
+    EXPECT_EQ(
+        memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&magicNum), sizeof(magicNum)), 0);
     EXPECT_EQ(ResponseMessageReceiver::MsgHeaderParcel(msgId, msgType, bodySize, parcel, size), -1);
     parcel = except;
     size = INT32_SIZE + INT16_SIZE;
@@ -454,16 +464,17 @@ HWTEST_F(ResponseMessageReceiverTest, ResponseFromParcel001, TestSize.Level1)
     string reason = "reason";
     string headers = "header:aaa,bbb,ccc\n";
     char except[ARRAY_LEN];
-    memcpy_s(except, static_cast<size_t>(ARRAY_LEN), reinterpret_cast<void *>(&tid), sizeof(tid));
+    EXPECT_EQ(memcpy_s(except, static_cast<size_t>(ARRAY_LEN), reinterpret_cast<void *>(&tid), sizeof(tid)), 0);
     pos += sizeof(tid);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), version.c_str(), version.size() + 1);
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), version.c_str(), version.size() + 1), 0);
     pos += (version.size() + 1);
-    memcpy_s(
-        except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&statusCode), sizeof(statusCode));
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&statusCode),
+                  sizeof(statusCode)),
+        0);
     pos += sizeof(statusCode);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reason.c_str(), reason.size() + 1);
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reason.c_str(), reason.size() + 1), 0);
     pos += (reason.size() + 1);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), headers.c_str(), headers.size() + 1);
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), headers.c_str(), headers.size() + 1), 0);
     pos += (headers.size() + 1);
     char *parcel = except;
     int size = INT16_SIZE;
@@ -502,17 +513,18 @@ HWTEST_F(ResponseMessageReceiverTest, TaskStatesFromParcel001, TestSize.Level1)
     int pos = 0;
     int32_t length = 1;
     string path = "path";
-    int32_t responseCode = ACCOUNT_STOPPED;
+    int32_t responseCode = NETWORK_OFFLINE;
     string message = "message";
     char except[ARRAY_LEN];
-    memcpy_s(except, static_cast<size_t>(ARRAY_LEN), reinterpret_cast<void *>(&length), sizeof(length));
+    EXPECT_EQ(memcpy_s(except, static_cast<size_t>(ARRAY_LEN), reinterpret_cast<void *>(&length), sizeof(length)), 0);
     pos += sizeof(length);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), path.c_str(), path.size() + 1);
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), path.c_str(), path.size() + 1), 0);
     pos += (path.size() + 1);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&responseCode),
-        sizeof(responseCode));
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&responseCode),
+                  sizeof(responseCode)),
+        0);
     pos += sizeof(responseCode);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), message.c_str(), message.size() + 1);
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), message.c_str(), message.size() + 1), 0);
     pos += (message.size() + 1);
     char *parcel = except;
     int size = INT16_SIZE;
@@ -557,43 +569,64 @@ HWTEST_F(ResponseMessageReceiverTest, NotifyDataFromParcel001, TestSize.Level1)
     Action action = Action::UPLOAD;
     Version version = Version::API10;
     string path = "path";
-    int32_t responseCode = ACCOUNT_STOPPED;
+    int32_t responseCode = NETWORK_OFFLINE;
     string message = "message";
     char except[ARRAY_LEN];
-    memcpy_s(except, static_cast<size_t>(ARRAY_LEN), reinterpret_cast<void *>(&type), sizeof(type));
+    EXPECT_EQ(memcpy_s(except, static_cast<size_t>(ARRAY_LEN), reinterpret_cast<void *>(&type), sizeof(type)), 0);
     pos += sizeof(type);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&taskId), sizeof(taskId));
+    EXPECT_EQ(
+        memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&taskId), sizeof(taskId)),
+        0);
     pos += sizeof(taskId);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&state), sizeof(state));
+    EXPECT_EQ(
+        memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&state), sizeof(state)),
+        0);
     pos += sizeof(state);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&index), sizeof(index));
+    EXPECT_EQ(
+        memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&index), sizeof(index)),
+        0);
     pos += sizeof(index);
-    memcpy_s(
-        except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&processed), sizeof(processed));
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&processed),
+                  sizeof(processed)),
+        0);
     pos += sizeof(processed);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&totalProcessed),
-        sizeof(totalProcessed));
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&totalProcessed),
+                  sizeof(totalProcessed)),
+        0);
     pos += sizeof(totalProcessed);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&length), sizeof(length));
+    EXPECT_EQ(
+        memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&length), sizeof(length)),
+        0);
     pos += sizeof(length);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&value), sizeof(value));
+    EXPECT_EQ(
+        memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&value), sizeof(value)),
+        0);
     pos += sizeof(value);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&length), sizeof(length));
+    EXPECT_EQ(
+        memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&length), sizeof(length)),
+        0);
     pos += sizeof(length);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), keyValue, ketValueLen);
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), keyValue, ketValueLen), 0);
     pos += ketValueLen;
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&action), sizeof(action));
+    EXPECT_EQ(
+        memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&action), sizeof(action)),
+        0);
     pos += sizeof(action);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&version), sizeof(version));
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&version),
+                  sizeof(version)),
+        0);
     pos += sizeof(version);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&length), sizeof(length));
+    EXPECT_EQ(
+        memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&length), sizeof(length)),
+        0);
     pos += sizeof(length);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), path.c_str(), path.size() + 1);
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), path.c_str(), path.size() + 1), 0);
     pos += (path.size() + 1);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&responseCode),
-        sizeof(responseCode));
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&responseCode),
+                  sizeof(responseCode)),
+        0);
     pos += sizeof(responseCode);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), message.c_str(), message.size() + 1);
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), message.c_str(), message.size() + 1), 0);
     pos += (message.size() + 1);
     char *parcel = except;
     int size = INT16_SIZE;

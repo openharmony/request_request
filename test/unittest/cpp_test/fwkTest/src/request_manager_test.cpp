@@ -71,17 +71,6 @@ void RequestManagerTest::TearDown(void)
 }
 
 /**
- * @tc.name: GetInstance001
- * @tc.desc: Test GetInstance001 interface base function - GetInstance
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestManagerTest, GetInstance001, TestSize.Level1)
-{
-    RequestManager::GetInstance();
-}
-
-/**
  * @tc.name: CreateTest001
  * @tc.desc: Test CreateTest001 interface base function - Create
  * @tc.type: FUNC
@@ -89,6 +78,7 @@ HWTEST_F(RequestManagerTest, GetInstance001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, CreateTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     Config config;
     int32_t seq = 1;
     std::string tid = "1";
@@ -103,6 +93,7 @@ HWTEST_F(RequestManagerTest, CreateTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, GetTaskTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string tidStr = "tid";
     std::string token = "token";
     Config config;
@@ -120,6 +111,7 @@ HWTEST_F(RequestManagerTest, GetTaskTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, StartTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string tidStr = "tid";
     RequestManager::GetInstance()->Start(tidStr);
 }
@@ -132,6 +124,7 @@ HWTEST_F(RequestManagerTest, StartTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, StopTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string tid = "tid";
     RequestManager::GetInstance()->Stop(tid);
 }
@@ -144,6 +137,7 @@ HWTEST_F(RequestManagerTest, StopTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, QueryTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string tid = "tid";
     TaskInfo info;
     RequestManager::GetInstance()->Query(tid, info);
@@ -157,6 +151,7 @@ HWTEST_F(RequestManagerTest, QueryTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, Touch001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string tid = "tid";
     std::string token = "token";
     TaskInfo info;
@@ -171,6 +166,7 @@ HWTEST_F(RequestManagerTest, Touch001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, SearchTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     Filter filter;
     std::vector<std::string> tids;
     RequestManager::GetInstance()->Search(filter, tids);
@@ -184,6 +180,7 @@ HWTEST_F(RequestManagerTest, SearchTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, ShowTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string tid = "tid";
     TaskInfo info;
     RequestManager::GetInstance()->Show(tid, info);
@@ -197,6 +194,7 @@ HWTEST_F(RequestManagerTest, ShowTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, PauseTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string tid = "tid";
     RequestManager::GetInstance()->Pause(tid, Version::API9);
     RequestManager::GetInstance()->Pause(tid, Version::API10);
@@ -210,6 +208,7 @@ HWTEST_F(RequestManagerTest, PauseTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, QueryMimeTypeTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string tid = "tid";
     std::string mimeType = "mimeType";
     RequestManager::GetInstance()->QueryMimeType(tid, mimeType);
@@ -223,6 +222,7 @@ HWTEST_F(RequestManagerTest, QueryMimeTypeTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, RemoveTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string tid = "tid";
     RequestManager::GetInstance()->Remove(tid, Version::API9);
     RequestManager::GetInstance()->Remove(tid, Version::API10);
@@ -236,8 +236,8 @@ HWTEST_F(RequestManagerTest, RemoveTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, ResumeTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string tid = "tid";
-    RequestManager::GetInstance()->Resume(tid);
     RequestManager::GetInstance()->Resume(tid);
 }
 
@@ -249,6 +249,7 @@ HWTEST_F(RequestManagerTest, ResumeTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, SubscribeTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string taskId = "taskId";
     RequestManager::GetInstance()->Subscribe(taskId);
 }
@@ -261,6 +262,7 @@ HWTEST_F(RequestManagerTest, SubscribeTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, Unsubscribe001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string taskId = "taskId";
     RequestManager::GetInstance()->Unsubscribe(taskId);
 }
@@ -293,6 +295,7 @@ public:
  */
 HWTEST_F(RequestManagerTest, AddAndRemoveListenerTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     string taskId = "taskId";
     SubscribeType type = SubscribeType::RESPONSE;
     std::shared_ptr<RMTResponseListenerImpl> listener = std::make_shared<RMTResponseListenerImpl>();
@@ -302,6 +305,10 @@ HWTEST_F(RequestManagerTest, AddAndRemoveListenerTest001, TestSize.Level1)
     std::shared_ptr<RMTNotifyDataListenerImpl> listener2 = std::make_shared<RMTNotifyDataListenerImpl>();
     RequestManager::GetInstance()->AddListener(taskId, type, listener2);
     RequestManager::GetInstance()->RemoveListener(taskId, type, listener2);
+}
+
+void TestRestoreCallback()
+{
 }
 
 /**
@@ -320,6 +327,8 @@ HWTEST_F(RequestManagerTest, RemoveAllListenersTest001, TestSize.Level1)
     std::shared_ptr<RMTNotifyDataListenerImpl> listener2 = std::make_shared<RMTNotifyDataListenerImpl>();
     RequestManager::GetInstance()->AddListener(taskId, type, listener2);
     RequestManager::GetInstance()->RemoveAllListeners(taskId);
+    RequestManager::GetInstance()->RestoreListener(TestRestoreCallback);
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->callback_, TestRestoreCallback);
     RequestManager::GetInstance()->RestoreListener(nullptr);
 }
 
@@ -331,6 +340,7 @@ HWTEST_F(RequestManagerTest, RemoveAllListenersTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, LoadRequestServerTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     RequestManager::GetInstance()->LoadRequestServer();
 }
 
@@ -342,6 +352,7 @@ HWTEST_F(RequestManagerTest, LoadRequestServerTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, IsSaReadyTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     RequestManager::GetInstance()->IsSaReady();
 }
 
@@ -353,6 +364,7 @@ HWTEST_F(RequestManagerTest, IsSaReadyTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, ReopenChannelTest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     RequestManager::GetInstance()->ReopenChannel();
 }
 
@@ -364,6 +376,7 @@ HWTEST_F(RequestManagerTest, ReopenChannelTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, SubscribeSATest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     RequestManager::GetInstance()->SubscribeSA();
 }
 
@@ -375,6 +388,7 @@ HWTEST_F(RequestManagerTest, SubscribeSATest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, UnsubscribeSATest001, TestSize.Level1)
 {
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
     RequestManager::GetInstance()->UnsubscribeSA();
 }
 
@@ -386,5 +400,6 @@ HWTEST_F(RequestManagerTest, UnsubscribeSATest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerTest, GetNextSeqTest001, TestSize.Level1)
 {
-    RequestManager::GetInstance()->GetNextSeq();
+    int32_t ret = RequestManager::GetInstance()->GetNextSeq();
+    EXPECT_EQ(RequestManager::GetInstance()->GetNextSeq(), ret + 1);
 }

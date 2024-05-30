@@ -72,41 +72,6 @@ void RuncountNotifyStubTest::TearDown(void)
 }
 
 /**
- * @tc.name: GetInstanceTest001
- * @tc.desc: Test GetInstanceTest001 interface base function - GetInstance
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RuncountNotifyStubTest, GetInstanceTest001, TestSize.Level1)
-{
-    RunCountNotifyStub::GetInstance();
-}
-
-/**
- * @tc.name: CallBackTest001
- * @tc.desc: Test CallBackTest001 interface base function - CallBack
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RuncountNotifyStubTest, CallBackTest001, TestSize.Level1)
-{
-    Notify notify;
-    RunCountNotifyStub::GetInstance()->CallBack(notify);
-}
-
-/**
- * @tc.name: DoneTest001
- * @tc.desc: Test DoneTest001 interface base function - Done
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RuncountNotifyStubTest, DoneTest001, TestSize.Level1)
-{
-    TaskInfo taskInfo;
-    RunCountNotifyStub::GetInstance()->Done(taskInfo);
-}
-
-/**
  * @tc.name: OnCallBackTest001
  * @tc.desc: Test OnCallBackTest001 interface base function - OnCallBack
  * @tc.type: FUNC
@@ -114,6 +79,10 @@ HWTEST_F(RuncountNotifyStubTest, DoneTest001, TestSize.Level1)
  */
 HWTEST_F(RuncountNotifyStubTest, OnCallBackTest001, TestSize.Level1)
 {
+    Notify notify;
+    RunCountNotifyStub::GetInstance()->CallBack(notify);
+    TaskInfo taskInfo;
+    RunCountNotifyStub::GetInstance()->Done(taskInfo);
     int64_t except = 10; // 10 is except value
     int old = FwkRunningTaskCountManager::GetInstance()->GetCount();
     OHOS::MessageParcel data;
@@ -148,5 +117,7 @@ HWTEST_F(RuncountNotifyStubTest, OnRemoteRequestTest001, TestSize.Level1)
     data1.WriteInterfaceToken(token);
     data1.WriteInt64(0);
     code = static_cast<uint32_t>(RequestNotifyInterfaceCode::REQUEST_DONE_NOTIFY);
-    runCount.OnRemoteRequest(code, data, reply, option);
+    runCount.OnRemoteRequest(code, data1, reply, option);
+    EXPECT_NE(runCount.OnRemoteRequest(code, data1, reply, option), 0);
+    code = static_cast<uint32_t>(RequestNotifyInterfaceCode::REQUEST_NOTIFY_RUNCOUNT);
 }

@@ -354,17 +354,6 @@ HWTEST_F(RequestManagerImplTest, EnsureChannelOpenTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnChannelBrokenTest001
- * @tc.desc: Test OnChannelBrokenTest001 interface base function - OnChannelBroken
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestManagerImplTest, OnChannelBrokenTest001, TestSize.Level1)
-{
-    RequestManagerImpl::GetInstance()->OnChannelBroken();
-}
-
-/**
  * @tc.name: OnResponseReceiveTest001
  * @tc.desc: Test OnResponseReceiveTest001 interface base function - OnResponseReceive
  * @tc.type: FUNC
@@ -372,6 +361,7 @@ HWTEST_F(RequestManagerImplTest, OnChannelBrokenTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerImplTest, OnResponseReceiveTest001, TestSize.Level1)
 {
+    EXPECT_NE(exceptProxy, nullptr);
     std::shared_ptr<Response> response = std::make_shared<Response>();
     RequestManagerImpl::GetInstance()->OnResponseReceive(response);
 }
@@ -384,6 +374,7 @@ HWTEST_F(RequestManagerImplTest, OnResponseReceiveTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerImplTest, OnNotifyDataReceiveTest001, TestSize.Level1)
 {
+    EXPECT_NE(exceptProxy, nullptr);
     std::shared_ptr<NotifyData> notifyData = std::make_shared<NotifyData>();
     RequestManagerImpl::GetInstance()->OnNotifyDataReceive(notifyData);
 }
@@ -396,6 +387,7 @@ HWTEST_F(RequestManagerImplTest, OnNotifyDataReceiveTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerImplTest, RestoreSubRunCountTest001, TestSize.Level1)
 {
+    EXPECT_NE(exceptProxy, nullptr);
     OHOS::sptr<NotifyInterface> listener(nullptr);
     EXPECT_CALL(*exceptProxy, SubRunCount(testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     RequestManagerImpl::GetInstance()->SetRequestServiceProxy(exceptProxy);
@@ -410,6 +402,7 @@ HWTEST_F(RequestManagerImplTest, RestoreSubRunCountTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerImplTest, OnRemoteSaDiedTest001, TestSize.Level1)
 {
+    EXPECT_NE(exceptProxy, nullptr);
     OHOS::wptr<OHOS::IRemoteObject> remote;
     RequestManagerImpl::GetInstance()->OnRemoteSaDied(remote);
 }
@@ -422,6 +415,7 @@ HWTEST_F(RequestManagerImplTest, OnRemoteSaDiedTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerImplTest, OnRemoteDiedTest001, TestSize.Level1)
 {
+    EXPECT_NE(exceptProxy, nullptr);
     OHOS::wptr<OHOS::IRemoteObject> remote;
     RequestSaDeathRecipient recipient = RequestSaDeathRecipient();
     recipient.OnRemoteDied(remote);
@@ -435,6 +429,7 @@ HWTEST_F(RequestManagerImplTest, OnRemoteDiedTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerImplTest, RetryTest001, TestSize.Level1)
 {
+    EXPECT_NE(exceptProxy, nullptr);
     std::string taskId;
     Config config;
     int32_t errorCode = E_TASK_STATE;
@@ -453,6 +448,7 @@ HWTEST_F(RequestManagerImplTest, RetryTest001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerImplTest, UnsubscribeSA001, TestSize.Level1)
 {
+    EXPECT_NE(exceptProxy, nullptr);
     RequestManagerImpl::GetInstance()->UnsubscribeSA();
 }
 
@@ -468,6 +464,7 @@ void RMITestCallback()
  */
 HWTEST_F(RequestManagerImplTest, OnAddSystemAbility001, TestSize.Level1)
 {
+    EXPECT_NE(exceptProxy, nullptr);
     string deviceId = "deviceId";
     RequestManagerImpl::SystemAbilityStatusChangeListener listener =
         RequestManagerImpl::SystemAbilityStatusChangeListener();
@@ -485,6 +482,7 @@ HWTEST_F(RequestManagerImplTest, OnAddSystemAbility001, TestSize.Level1)
  */
 HWTEST_F(RequestManagerImplTest, OnRemoveSystemAbility001, TestSize.Level1)
 {
+    EXPECT_NE(exceptProxy, nullptr);
     string deviceId = "deviceId";
     RequestManagerImpl::SystemAbilityStatusChangeListener listener =
         RequestManagerImpl::SystemAbilityStatusChangeListener();

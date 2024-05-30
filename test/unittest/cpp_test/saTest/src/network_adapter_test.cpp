@@ -18,6 +18,7 @@
 #define private public
 #define protected public
 
+#include "gmock/gmock.h"
 #include "net_all_capabilities.h"
 #include "network_adapter.h"
 
@@ -62,17 +63,6 @@ static void ParamFun()
 }
 
 /**
- * @tc.name: RegisterNetworkCallbackTest_001
- * @tc.desc: Test RegisterNetworkCallback interface base function
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(NetworkAdapterTest, RegisterNetworkCallbackTest_001, TestSize.Level1)
-{
-    RegisterNetworkCallback(ParamFun);
-}
-
-/**
  * @tc.name: GetNetworkInfoTest_001
  * @tc.desc: Test GetNetworkInfo interface base function
  * @tc.type: FUNC
@@ -80,34 +70,14 @@ HWTEST_F(NetworkAdapterTest, RegisterNetworkCallbackTest_001, TestSize.Level1)
  */
 HWTEST_F(NetworkAdapterTest, GetNetworkInfoTest_001, TestSize.Level1)
 {
+    RegisterNetworkCallback(ParamFun);
     NetworkInfo *netWorkInfo = GetNetworkInfo();
     EXPECT_FALSE(netWorkInfo->isMetered);
     EXPECT_FALSE(netWorkInfo->isRoaming);
-}
-
-/**
- * @tc.name: NetworkAdapterCoverTest_001
- * @tc.desc: Cover some functions return void
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(NetworkAdapterTest, NetworkAdapterCoverTest_001, TestSize.Level1)
-{
     NetworkAdapter::GetInstance().UpdateNetworkInfo();
     NetworkAdapter::GetInstance().UpdateRoaming();
-}
-
-/**
- * @tc.name: NetworkAdapterIsOnlineTest_001
- * @tc.desc: Cover some functions return void
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(NetworkAdapterTest, NetworkAdapterIsOnlineTest_001, TestSize.Level1)
-{
     IsOnline();
     NetworkAdapter::GetInstance().IsOnline();
-
     OHOS::NetManagerStandard::NetAllCapabilities capabilities;
     NetworkAdapter::GetInstance().UpdateNetworkInfoInner(capabilities);
 }
@@ -124,7 +94,7 @@ HWTEST_F(NetworkAdapterTest, NetAvailableTest_001, TestSize.Level1)
     OHOS::sptr<OHOS::NetManagerStandard::NetHandle> netHandle;
     OHOS::Request::NetworkAdapter::NetConnCallbackObserver ob =
         OHOS::Request::NetworkAdapter::NetConnCallbackObserver(network);
-    ob.NetAvailable(netHandle);
+    EXPECT_EQ(ob.NetAvailable(netHandle), 0);
 }
 
 /**
@@ -140,7 +110,7 @@ HWTEST_F(NetworkAdapterTest, NetConnectionPropertiesChangeTest_001, TestSize.Lev
     OHOS::sptr<OHOS::NetManagerStandard::NetLinkInfo> info;
     OHOS::Request::NetworkAdapter::NetConnCallbackObserver ob =
         OHOS::Request::NetworkAdapter::NetConnCallbackObserver(network);
-    ob.NetConnectionPropertiesChange(netHandle, info);
+    EXPECT_EQ(ob.NetConnectionPropertiesChange(netHandle, info), 0);
 }
 
 /**
@@ -154,7 +124,7 @@ HWTEST_F(NetworkAdapterTest, NetUnavailableTest_001, TestSize.Level1)
     NetworkAdapter network = NetworkAdapter();
     OHOS::Request::NetworkAdapter::NetConnCallbackObserver ob =
         OHOS::Request::NetworkAdapter::NetConnCallbackObserver(network);
-    ob.NetUnavailable();
+    EXPECT_EQ(ob.NetUnavailable(), 0);
 }
 
 /**
@@ -170,7 +140,7 @@ HWTEST_F(NetworkAdapterTest, NetBlockStatusChangeTest_001, TestSize.Level1)
     OHOS::sptr<OHOS::NetManagerStandard::NetLinkInfo> info;
     OHOS::Request::NetworkAdapter::NetConnCallbackObserver ob =
         OHOS::Request::NetworkAdapter::NetConnCallbackObserver(network);
-    ob.NetBlockStatusChange(netHandle, info);
+    EXPECT_EQ(ob.NetBlockStatusChange(netHandle, info), 0);
 }
 
 void RegCallBackTest()
@@ -213,5 +183,5 @@ HWTEST_F(NetworkAdapterTest, NetCapabilitiesChangeTest_001, TestSize.Level1)
     OHOS::sptr<OHOS::NetManagerStandard::NetHandle> netHandle;
     OHOS::Request::NetworkAdapter::NetConnCallbackObserver ob =
         OHOS::Request::NetworkAdapter::NetConnCallbackObserver(network);
-    ob.NetCapabilitiesChange(netHandle, capabilities);
+    EXPECT_EQ(ob.NetCapabilitiesChange(netHandle, capabilities), 0);
 }
