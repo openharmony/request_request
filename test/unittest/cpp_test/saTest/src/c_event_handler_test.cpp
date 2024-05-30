@@ -16,6 +16,8 @@
 #include "c_event_handler.h"
 
 #include <gtest/gtest.h>
+
+#include "gmock/gmock.h"
 using namespace testing::ext;
 
 #define PARAM_FUNC_RET 123
@@ -66,4 +68,5 @@ HWTEST_F(EventHandlerTest, InitServiceHandlerTest_001, TestSize.Level1)
     RequestInitServiceHandler();
     RequestInitServiceHandler();
     RequestPostTask(ParamFunc);
+    EXPECT_EQ(ParamFunc(), PARAM_FUNC_RET);
 }

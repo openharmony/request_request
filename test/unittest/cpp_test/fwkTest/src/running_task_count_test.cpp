@@ -127,7 +127,7 @@ HWTEST_F(RunningTaskCountTest, UnubscribeRunningTaskCountTest_001, TestSize.Leve
     REQUEST_HILOGI("[RunningTaskCountTest] UnubscribeRunningTaskCountTest_001 begin");
     std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FwkTestOberver>();
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob1);
-
+    EXPECT_TRUE(FwkRunningTaskCountManager::GetInstance()->HasObserver());
     std::shared_ptr<IRunningTaskObserver> ob2 = std::make_shared<FwkTestOberver>();
     UnsubscribeRunningTaskCount(ob2);
     UnsubscribeRunningTaskCount(ob1);
@@ -153,19 +153,6 @@ HWTEST_F(RunningTaskCountTest, GetAndSetCount001, TestSize.Level1)
 }
 
 /**
- * @tc.name: UpdateRunningTaskCountTest001
- * @tc.desc: Test UpdateRunningTaskCountTest001 interface base function - UpdateRunningTaskCount
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RunningTaskCountTest, UpdateRunningTaskCountTest001, TestSize.Level1)
-{
-    std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FwkTestOberver>();
-    FwkIRunningTaskObserver runningOb = FwkIRunningTaskObserver(ob);
-    runningOb.UpdateRunningTaskCount();
-}
-
-/**
  * @tc.name: NotifyAllObserversTest001
  * @tc.desc: Test NotifyAllObserversTest001 interface base function - NotifyAllObservers
  * @tc.type: FUNC
@@ -173,8 +160,12 @@ HWTEST_F(RunningTaskCountTest, UpdateRunningTaskCountTest001, TestSize.Level1)
  */
 HWTEST_F(RunningTaskCountTest, NotifyAllObserversTest001, TestSize.Level1)
 {
+    std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FwkTestOberver>();
+    FwkIRunningTaskObserver runningOb = FwkIRunningTaskObserver(ob);
+    runningOb.UpdateRunningTaskCount();
     std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FwkTestOberver>();
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob1);
+    EXPECT_TRUE(FwkRunningTaskCountManager::GetInstance()->HasObserver());
     FwkRunningTaskCountManager::GetInstance()->NotifyAllObservers();
     FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob1);
 }

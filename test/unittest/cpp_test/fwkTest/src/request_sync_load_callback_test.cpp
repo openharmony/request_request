@@ -28,6 +28,7 @@
 #include "js_common.h"
 #include "log.h"
 #include "refbase.h"
+#include "request_manager_impl.h"
 #include "system_ability_definition.h"
 
 using namespace testing::ext;
@@ -85,6 +86,8 @@ HWTEST_F(RequestSyncLoadCallbackTest, OnLoadSystemAbility001, TestSize.Level1)
     RequestSyncLoadCallback requestSyncLoadCallback = RequestSyncLoadCallback();
     requestSyncLoadCallback.OnLoadSystemAbilityFail(OHOS::PRINT_SERVICE_ID);
     requestSyncLoadCallback.OnLoadSystemAbilityFail(OHOS::DOWNLOAD_SERVICE_ID);
+    EXPECT_FALSE(RequestManagerImpl::GetInstance()->IsSaReady());
     requestSyncLoadCallback.OnLoadSystemAbilitySuccess(OHOS::PRINT_SERVICE_ID, remote);
     requestSyncLoadCallback.OnLoadSystemAbilitySuccess(OHOS::DOWNLOAD_SERVICE_ID, remote);
+    EXPECT_TRUE(RequestManagerImpl::GetInstance()->IsSaReady());
 }

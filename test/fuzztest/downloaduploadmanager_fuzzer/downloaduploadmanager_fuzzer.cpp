@@ -567,10 +567,16 @@ void ResponseMessageFuzzTestProgressExtrasFromParcel(const uint8_t *data, size_t
     int arraySize = 64; // 64 is char array length
     char except[arraySize];
     uint32_t length = 1;
-    memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&length), sizeof(length));
+    int ret = memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&length), sizeof(length));
+    if (ret != 0) {
+        return;
+    }
     char keyValue[] = "key\0value\0";
-    memcpy_s(except + sizeof(length), static_cast<size_t>(arraySize - sizeof(length)), keyValue,
+    ret = memcpy_s(except + sizeof(length), static_cast<size_t>(arraySize - sizeof(length)), keyValue,
         9); // 9 is keyValue length
+    if (ret != 0) {
+        return;
+    }
     std::map<std::string, std::string> extras;
     char *parcel = except;
     int testSize = INT16_SIZE;
@@ -591,10 +597,16 @@ void ResponseMessageFuzzTestVecInt64FromParcel(const uint8_t *data, size_t size)
     int arraySize = INT32_SIZE + INT64_SIZE;
     char except[arraySize];
     uint32_t length = 1;
-    memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&length), sizeof(length));
+    int ret = memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&length), sizeof(length));
+    if (ret != 0) {
+        return;
+    }
     int64_t value = 123456; // 123456 is except num
-    memcpy_s(except + sizeof(length), static_cast<size_t>(arraySize - sizeof(length)),
+    ret = memcpy_s(except + sizeof(length), static_cast<size_t>(arraySize - sizeof(length)),
         reinterpret_cast<void *>(&value), sizeof(value));
+    if (ret != 0) {
+        return;
+    }
     std::vector<int64_t> vec;
     char *parcel = except;
     int testSize = INT16_SIZE;
@@ -620,16 +632,30 @@ void ResponseMessageFuzzTestMsgHeaderParcel(const uint8_t *data, size_t size)
     int pos = 0;
     int arraySize = INT32_SIZE + INT64_SIZE;
     char except[arraySize];
-    memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&magicNum), sizeof(magicNum));
+    int ret = memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&magicNum), sizeof(magicNum));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(magicNum);
     int32_t msgId = 123456; // 123456 is except num
-    memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&msgId), sizeof(msgId));
+    ret = memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&msgId), sizeof(msgId));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(msgId);
     int16_t msgType = 123; // 123 is except num
-    memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&msgType), sizeof(msgType));
+    ret = memcpy_s(
+        except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&msgType), sizeof(msgType));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(msgType);
     int16_t bodySize = 456; // 456 is except num
-    memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&bodySize), sizeof(bodySize));
+    ret = memcpy_s(
+        except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&bodySize), sizeof(bodySize));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(bodySize);
     msgId = 0;
     msgType = 0;
@@ -643,7 +669,10 @@ void ResponseMessageFuzzTestMsgHeaderParcel(const uint8_t *data, size_t size)
     parcel = except;
     testSize = INT32_SIZE;
     magicNum = ResponseMessageReceiver::RESPONSE_MAGIC_NUM;
-    memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&magicNum), sizeof(magicNum));
+    ret = memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&magicNum), sizeof(magicNum));
+    if (ret != 0) {
+        return;
+    }
     ResponseMessageReceiver::MsgHeaderParcel(msgId, msgType, bodySize, parcel, testSize);
     parcel = except;
     testSize = INT32_SIZE + INT16_SIZE;
@@ -669,16 +698,31 @@ void ResponseMessageFuzzTestResponseFromParcel(const uint8_t *data, size_t size)
     std::string reason = "reason";
     std::string headers = "header:aaa,bbb,ccc\n";
     char except[ARRAY_LEN];
-    memcpy_s(except, static_cast<size_t>(ARRAY_LEN), reinterpret_cast<void *>(&tid), sizeof(tid));
+    int ret = memcpy_s(except, static_cast<size_t>(ARRAY_LEN), reinterpret_cast<void *>(&tid), sizeof(tid));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(tid);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), version.c_str(), version.size() + 1);
+    ret = memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), version.c_str(), version.size() + 1);
+    if (ret != 0) {
+        return;
+    }
     pos += (version.size() + 1);
-    memcpy_s(
+    ret = memcpy_s(
         except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&statusCode), sizeof(statusCode));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(statusCode);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reason.c_str(), reason.size() + 1);
+    ret = memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reason.c_str(), reason.size() + 1);
+    if (ret != 0) {
+        return;
+    }
     pos += (reason.size() + 1);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), headers.c_str(), headers.size() + 1);
+    ret = memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), headers.c_str(), headers.size() + 1);
+    if (ret != 0) {
+        return;
+    }
     pos += (headers.size() + 1);
     char *parcel = except;
     int testSize = INT16_SIZE;
@@ -703,17 +747,29 @@ void ResponseMessageFuzzTestTaskStatesFromParcel(const uint8_t *data, size_t siz
     int pos = 0;
     int32_t length = 1;
     std::string path = "path";
-    int32_t responseCode = ACCOUNT_STOPPED;
+    int32_t responseCode = NETWORK_OFFLINE;
     std::string message = "message";
     char except[ARRAY_LEN];
-    memcpy_s(except, static_cast<size_t>(ARRAY_LEN), reinterpret_cast<void *>(&length), sizeof(length));
+    int ret = memcpy_s(except, static_cast<size_t>(ARRAY_LEN), reinterpret_cast<void *>(&length), sizeof(length));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(length);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), path.c_str(), path.size() + 1);
+    ret = memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), path.c_str(), path.size() + 1);
+    if (ret != 0) {
+        return;
+    }
     pos += (path.size() + 1);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&responseCode),
+    ret = memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&responseCode),
         sizeof(responseCode));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(responseCode);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), message.c_str(), message.size() + 1);
+    ret = memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), message.c_str(), message.size() + 1);
+    if (ret != 0) {
+        return;
+    }
     pos += (message.size() + 1);
     char *parcel = except;
     int testSize = INT16_SIZE;
@@ -749,43 +805,97 @@ void ResponseMessageFuzzTestNotifyDataFromParcel(const uint8_t *data, size_t siz
     Action action = Action::UPLOAD;
     Version version = Version::API10;
     std::string path = "path";
-    int32_t responseCode = ACCOUNT_STOPPED;
+    int32_t responseCode = NETWORK_OFFLINE;
     std::string message = "message";
     char except[ARRAY_LEN];
-    memcpy_s(except, static_cast<size_t>(ARRAY_LEN), reinterpret_cast<void *>(&type), sizeof(type));
+    int ret = memcpy_s(except, static_cast<size_t>(ARRAY_LEN), reinterpret_cast<void *>(&type), sizeof(type));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(type);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&taskId), sizeof(taskId));
+    ret = memcpy_s(
+        except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&taskId), sizeof(taskId));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(taskId);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&state), sizeof(state));
+    ret = memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&state), sizeof(state));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(state);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&index), sizeof(index));
+    ret = memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&index), sizeof(index));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(index);
-    memcpy_s(
+    ret = memcpy_s(
         except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&processed), sizeof(processed));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(processed);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&totalProcessed),
+    ret = memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&totalProcessed),
         sizeof(totalProcessed));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(totalProcessed);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&length), sizeof(length));
+    ret = memcpy_s(
+        except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&length), sizeof(length));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(length);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&value), sizeof(value));
+    ret = memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&value), sizeof(value));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(value);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&length), sizeof(length));
+    ret = memcpy_s(
+        except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&length), sizeof(length));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(length);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), keyValue, ketValueLen);
+    ret = memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), keyValue, ketValueLen);
+    if (ret != 0) {
+        return;
+    }
     pos += ketValueLen;
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&action), sizeof(action));
+    ret = memcpy_s(
+        except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&action), sizeof(action));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(action);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&version), sizeof(version));
+    ret = memcpy_s(
+        except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&version), sizeof(version));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(version);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&length), sizeof(length));
+    ret = memcpy_s(
+        except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&length), sizeof(length));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(length);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), path.c_str(), path.size() + 1);
+    ret = memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), path.c_str(), path.size() + 1);
+    if (ret != 0) {
+        return;
+    }
     pos += (path.size() + 1);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&responseCode),
+    ret = memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), reinterpret_cast<void *>(&responseCode),
         sizeof(responseCode));
+    if (ret != 0) {
+        return;
+    }
     pos += sizeof(responseCode);
-    memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), message.c_str(), message.size() + 1);
+    ret = memcpy_s(except + pos, static_cast<size_t>(ARRAY_LEN - pos), message.c_str(), message.size() + 1);
+    if (ret != 0) {
+        return;
+    }
     pos += (message.size() + 1);
     char *parcel = except;
     int testSize = INT16_SIZE;

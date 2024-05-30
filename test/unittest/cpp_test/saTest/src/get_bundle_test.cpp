@@ -17,6 +17,7 @@
 
 #include "get_calling_bundle.h"
 #include "get_top_bundle.h"
+#include "gmock/gmock.h"
 using namespace testing::ext;
 
 class GetBundleTest : public testing::Test {
@@ -58,15 +59,5 @@ HWTEST_F(GetBundleTest, GetBundleTest_001, TestSize.Level1)
     uint64_t tokenId = 123456;
     CStringWrapper ret = GetCallingBundle(tokenId);
     EXPECT_EQ(ret.len, 0);
-}
-
-/**
- * @tc.name: GetBundleTest_002
- * @tc.desc: Test GetTopBundleName interface base function
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(GetBundleTest, GetBundleTest_002, TestSize.Level1)
-{
     GetTopBundleName();
 }

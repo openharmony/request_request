@@ -16,6 +16,8 @@
 #include "c_check_permission.h"
 
 #include <gtest/gtest.h>
+
+#include "gmock/gmock.h"
 using namespace testing::ext;
 
 class CheckPermissionTest : public testing::Test {
