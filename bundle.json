@@ -30,6 +30,7 @@
       "components": [
         "os_account",
         "samgr",
+        "init",
         "ipc",
         "certificate_manager",
         "common_event_service",

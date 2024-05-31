@@ -28,6 +28,7 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "openssl/sha.h"
+#include "parameter.h"
 #include "utf8_utils.h"
 
 namespace OHOS::Request::NapiUtils {

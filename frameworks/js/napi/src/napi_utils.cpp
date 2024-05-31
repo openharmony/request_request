@@ -17,6 +17,7 @@
 
 #include <fcntl.h>
 
+#include <cstdint>
 #include <cstring>
 #include <fstream>
 #include <initializer_list>
@@ -297,11 +298,11 @@ uint32_t Convert2Broken(Reason code)
         { BUILD_CLIENT_FAILED, Faults::OTHERS },
         { BUILD_REQUEST_FAILED, Faults::OTHERS },
         { GET_FILESIZE_FAILED, Faults::FSIO },
-        { CONTINUOUS_TASK_TIMEOUT, Faults::TIMEOUT },
-        { CONNECT_ERROR, Faults::PROTOCOL },
+        { CONTINUOUS_TASK_TIMEOUT, Faults::OTHERS },
+        { CONNECT_ERROR, Faults::CONNECT },
         { REQUEST_ERROR, Faults::PROTOCOL },
         { UPLOAD_FILE_ERROR, Faults::OTHERS },
-        { REDIRECT_ERROR, Faults::PROTOCOL },
+        { REDIRECT_ERROR, Faults::REDIRECT },
         { PROTOCOL_ERROR, Faults::PROTOCOL },
         { IO_ERROR, Faults::FSIO },
         { UNSUPPORT_RANGE_REQUEST, Faults::PROTOCOL },
@@ -309,6 +310,11 @@ uint32_t Convert2Broken(Reason code)
     };
     auto iter = InnerCodeToBroken.find(code);
     if (iter != InnerCodeToBroken.end()) {
+        int32_t sdkVersion = GetSdkApiVersion();
+        REQUEST_HILOGD("GetSdkApiVersion %{public}d", sdkVersion);
+        if (sdkVersion < 12 && (iter->second == Faults::CONNECT || iter->second == Faults::REDIRECT)) {
+            return static_cast<uint32_t>(Faults::OTHERS);
+        }
         return static_cast<uint32_t>(iter->second);
     }
     return 0;
