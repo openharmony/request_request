@@ -35,6 +35,7 @@ pub(crate) fn build_client(
         .request_timeout(Timeout::from_secs(SECONDS_IN_ONE_WEEK))
         .min_tls_version(TlsVersion::TLS_1_2);
 
+    client = client.sockets_owner(config.common_data.uid as u32, config.common_data.uid as u32);
     // Set redirect strategy.
     if config.common_data.redirect {
         client = client.redirect(Redirect::limited(usize::MAX));
