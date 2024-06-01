@@ -31,7 +31,6 @@ use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::task::upload::upload;
 
-// #[derive(Clone)]  TODO
 pub(crate) struct RunningTask {
     runcount_manager: RunCountManagerEntry,
     task: NotifyTask,
@@ -81,8 +80,6 @@ impl RunningTask {
     }
 
     pub(crate) async fn run(self) {
-        // TODO: 查看任务自动结束的各个节点是否都有正确设置任务状态，保证回调的正确性。
-
         let task = self;
         info!("run the task which id is {}", task.conf.common_data.task_id);
 
@@ -154,6 +151,12 @@ impl Drop for RunningTask {
         if state == State::Waiting && reason == Reason::RunningTaskMeetLimits {
             return;
         }
+
+        // UserOperation tasks has been removed from qos in TaskManager
+        if reason == Reason::UserOperation {
+            return;
+        }
+
         let _ = self.tx.send(TaskManagerEvent::Task(TaskEvent::Finished(
             self.task_id(),
             self.uid(),

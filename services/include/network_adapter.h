@@ -29,7 +29,7 @@
 #include "refbase.h"
 
 struct NetworkInfo {
-    Network networkType = Network::ANY;
+    NetworkInner networkType = NetworkInner::NET_LOST;
     bool isMetered = false;
     bool isRoaming = false;
 };
@@ -91,6 +91,7 @@ typedef void (*NetworkCallback)(void);
 bool IsOnline();
 void RegisterNetworkCallback(NetworkCallback fun);
 NetworkInfo *GetNetworkInfo(void);
+void UpdateNetworkInfo(void);
 
 #ifdef __cplusplus
 }

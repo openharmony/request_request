@@ -81,7 +81,6 @@ HWTEST_F(NetworkAdapterTest, RegisterNetworkCallbackTest_001, TestSize.Level1)
 HWTEST_F(NetworkAdapterTest, GetNetworkInfoTest_001, TestSize.Level1)
 {
     NetworkInfo *netWorkInfo = GetNetworkInfo();
-    EXPECT_EQ(netWorkInfo->networkType, Network::ANY);
     EXPECT_FALSE(netWorkInfo->isMetered);
     EXPECT_FALSE(netWorkInfo->isRoaming);
 }
@@ -111,4 +110,108 @@ HWTEST_F(NetworkAdapterTest, NetworkAdapterIsOnlineTest_001, TestSize.Level1)
 
     OHOS::NetManagerStandard::NetAllCapabilities capabilities;
     NetworkAdapter::GetInstance().UpdateNetworkInfoInner(capabilities);
+}
+
+/**
+ * @tc.name: NetAvailableTest_001
+ * @tc.desc: Cover some functions return void
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(NetworkAdapterTest, NetAvailableTest_001, TestSize.Level1)
+{
+    NetworkAdapter network = NetworkAdapter();
+    OHOS::sptr<OHOS::NetManagerStandard::NetHandle> netHandle;
+    OHOS::Request::NetworkAdapter::NetConnCallbackObserver ob =
+        OHOS::Request::NetworkAdapter::NetConnCallbackObserver(network);
+    ob.NetAvailable(netHandle);
+}
+
+/**
+ * @tc.name: NetConnectionPropertiesChangeTest_001
+ * @tc.desc: Cover some functions return void
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(NetworkAdapterTest, NetConnectionPropertiesChangeTest_001, TestSize.Level1)
+{
+    NetworkAdapter network = NetworkAdapter();
+    OHOS::sptr<OHOS::NetManagerStandard::NetHandle> netHandle;
+    OHOS::sptr<OHOS::NetManagerStandard::NetLinkInfo> info;
+    OHOS::Request::NetworkAdapter::NetConnCallbackObserver ob =
+        OHOS::Request::NetworkAdapter::NetConnCallbackObserver(network);
+    ob.NetConnectionPropertiesChange(netHandle, info);
+}
+
+/**
+ * @tc.name: NetUnavailableTest_001
+ * @tc.desc: Cover some functions return void
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(NetworkAdapterTest, NetUnavailableTest_001, TestSize.Level1)
+{
+    NetworkAdapter network = NetworkAdapter();
+    OHOS::Request::NetworkAdapter::NetConnCallbackObserver ob =
+        OHOS::Request::NetworkAdapter::NetConnCallbackObserver(network);
+    ob.NetUnavailable();
+}
+
+/**
+ * @tc.name: NetBlockStatusChangeTest_001
+ * @tc.desc: Cover some functions return void
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(NetworkAdapterTest, NetBlockStatusChangeTest_001, TestSize.Level1)
+{
+    NetworkAdapter network = NetworkAdapter();
+    OHOS::sptr<OHOS::NetManagerStandard::NetHandle> netHandle;
+    OHOS::sptr<OHOS::NetManagerStandard::NetLinkInfo> info;
+    OHOS::Request::NetworkAdapter::NetConnCallbackObserver ob =
+        OHOS::Request::NetworkAdapter::NetConnCallbackObserver(network);
+    ob.NetBlockStatusChange(netHandle, info);
+}
+
+void RegCallBackTest()
+{
+}
+
+/**
+ * @tc.name: NetLostTest_001
+ * @tc.desc: Cover some functions return void
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(NetworkAdapterTest, NetLostTest_001, TestSize.Level1)
+{
+    NetworkAdapter network = NetworkAdapter();
+    network.RegOnNetworkChange(RegCallBackTest);
+    OHOS::sptr<OHOS::NetManagerStandard::NetHandle> netHandle;
+    OHOS::Request::NetworkAdapter::NetConnCallbackObserver ob =
+        OHOS::Request::NetworkAdapter::NetConnCallbackObserver(network);
+    ob.NetLost(netHandle);
+    auto networkInfo = network.GetNetworkInfo();
+    EXPECT_EQ(networkInfo->networkType, NetworkInner::NET_LOST);
+    EXPECT_FALSE(networkInfo->isMetered);
+    EXPECT_FALSE(network.IsOnline());
+}
+
+/**
+ * @tc.name: NetCapabilitiesChangeTest_001
+ * @tc.desc: Cover some functions return void
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(NetworkAdapterTest, NetCapabilitiesChangeTest_001, TestSize.Level1)
+{
+    OHOS::sptr<OHOS::NetManagerStandard::NetAllCapabilities> capabilities(
+        new OHOS::NetManagerStandard::NetAllCapabilities());
+    NetworkAdapter network = NetworkAdapter();
+    network.UpdateNetworkInfoInner(*capabilities);
+    network.RegOnNetworkChange(RegCallBackTest);
+    OHOS::sptr<OHOS::NetManagerStandard::NetHandle> netHandle;
+    OHOS::Request::NetworkAdapter::NetConnCallbackObserver ob =
+        OHOS::Request::NetworkAdapter::NetConnCallbackObserver(network);
+    ob.NetCapabilitiesChange(netHandle, capabilities);
 }

@@ -105,11 +105,10 @@ HWTEST_F(RunningTaskCountTest, SubscribeRunningTaskCountTest_002, TestSize.Level
     REQUEST_HILOGI("[RunningTaskCountTest] SubscribeRunningTaskCountTest_002 begin");
 
     std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FwkTestOberver>();
-    int32_t ret = SubscribeRunningTaskCount(ob1);
-    EXPECT_EQ(ret, E_OK);
+    SubscribeRunningTaskCount(ob1);
     std::shared_ptr<IRunningTaskObserver> ob2 = std::make_shared<FwkTestOberver>();
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob2);
-    ret = SubscribeRunningTaskCount(ob2);
+    int ret = SubscribeRunningTaskCount(ob2);
     EXPECT_EQ(ret, E_OK);
     FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob1);
     FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob2);

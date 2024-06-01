@@ -42,28 +42,14 @@ impl SortedApps {
     }
 
     pub(crate) fn change_app_state(&mut self, uid: u64, state: ApplicationState) {
-        let mut need_remove_app = None;
-
-        if let Some((i, app)) = self
-            .inner
-            .iter_mut()
-            .enumerate()
-            .find(|app| app.1.uid == uid)
-        {
+        if let Some(app) = self.inner.iter_mut().find(|app| app.uid == uid) {
             Database::new().update_on_app_state_change(uid, state);
 
             let tasks = reload_tasks_of_app_from_database(uid);
-            if tasks.is_empty() {
-                need_remove_app = Some(i);
-            } else {
+            if !tasks.is_empty() {
                 app.state = state;
                 app.tasks = tasks;
             }
-        }
-
-        // If target app is empty, remove it.
-        if let Some(i) = need_remove_app {
-            self.inner.remove(i);
         }
     }
 
@@ -81,26 +67,12 @@ impl SortedApps {
     }
 
     pub(crate) fn remove_task(&mut self, uid: u64, task_id: u32) -> Option<Task> {
-        let mut need_remove_app = None;
         let mut task = None;
         // Remove target task in target app.
-        if let Some((i, app)) = self
-            .inner
-            .iter_mut()
-            .enumerate()
-            .find(|(_, app)| app.uid == uid)
-        {
+        if let Some(app) = self.inner.iter_mut().find(|app| app.uid == uid) {
             task = app.remove(task_id);
-
-            if app.is_empty() {
-                need_remove_app = Some(i);
-            }
         }
 
-        // If target app is empty, remove it.
-        if let Some(i) = need_remove_app {
-            self.inner.remove(i);
-        }
         task
     }
 

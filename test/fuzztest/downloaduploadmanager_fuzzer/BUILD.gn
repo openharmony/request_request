@@ -35,7 +35,16 @@ ohos_fuzztest("DownloadUploadManagerFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
 
-  sources = [ "downloaduploadmanager_fuzzer.cpp" ]
+  sources = [
+    "../../../frameworks/native/src/request.cpp",
+    "../../../frameworks/native/src/request_manager.cpp",
+    "../../../frameworks/native/src/request_manager_impl.cpp",
+    "../../../frameworks/native/src/request_running_task_count.cpp",
+    "../../../frameworks/native/src/request_sync_load_callback.cpp",
+    "../../../frameworks/native/src/response_message_receiver.cpp",
+    "../../../frameworks/native/src/runcount_notify_stub.cpp",
+    "downloaduploadmanager_fuzzer.cpp",
+  ]
 
   deps = [
     "../../../common:request_common_static",
@@ -51,11 +60,15 @@ ohos_fuzztest("DownloadUploadManagerFuzzTest") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "c_utils:utils",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "input:libmmi-client",
     "ipc:ipc_single",
     "napi:ace_napi",
+    "relational_store:native_dataability",
+    "relational_store:native_rdb",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
 }
 

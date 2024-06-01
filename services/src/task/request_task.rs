@@ -12,7 +12,9 @@
 // limitations under the License.
 
 use std::io::SeekFrom;
-use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{
+    AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicU8, AtomicUsize, Ordering,
+};
 use std::sync::Mutex;
 use std::thread::sleep;
 use std::time::Duration;
@@ -21,7 +23,7 @@ use ylong_http_client::async_impl::{Body, Client, Request, RequestBuilder, Respo
 use ylong_http_client::{ErrorKind, HttpClientError};
 use ylong_runtime::io::{AsyncSeekExt, AsyncWriteExt};
 
-use super::config::{Network, Version};
+use super::config::{Network, NetworkInner, Version};
 use super::info::{CommonTaskInfo, Mode, State, TaskInfo, UpdateInfo};
 use super::notify::{EachFileStatus, NotifyData, Progress};
 use super::reason::Reason;
@@ -36,7 +38,6 @@ use crate::task::client::build_client;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::ffi::{publish_event, RequestBackgroundNotify, RequestTaskMsg};
 use crate::task::files::{AttachedFiles, Files};
-use crate::task::tick::Clock;
 use crate::utils::c_wrapper::CStringWrapper;
 use crate::utils::get_current_timestamp;
 const RETRY_INTERVAL: u64 = 20;
@@ -64,7 +65,7 @@ pub(crate) struct RequestTask {
     pub(crate) restored: AtomicBool,
     pub(crate) skip_bytes: AtomicU64,
     pub(crate) upload_counts: AtomicUsize,
-    pub(crate) rate_limiting: AtomicBool,
+    pub(crate) rate_limiting: AtomicU8,
     pub(crate) database: Database,
     pub(crate) app_state: AppState,
     pub(crate) last_notify: AtomicU64,
@@ -110,15 +111,9 @@ impl RequestTask {
         self.conf.common_data.priority
     }
 
-    pub(crate) fn speed_limit(&self, limit: bool) {
-        if limit {
-            info!("Qos task_id:{} set to Low Qos", self.task_id());
-            self.rate_limiting.store(true, Ordering::Release);
-        } else {
-            info!("Qos task_id:{} set to High Qos", self.task_id());
-            self.rate_limiting.store(false, Ordering::Release);
-            Clock::get_instance().wake_one(self.task_id());
-        }
+    pub(crate) fn speed_limit(&self, limit: u8) {
+        info!("task_id:{} speed_limit level {}", self.task_id(), limit);
+        self.rate_limiting.store(limit, Ordering::Release);
     }
 
     #[allow(dead_code)]
@@ -225,7 +220,7 @@ impl RequestTask {
             skip_bytes: AtomicU64::new(0),
             upload_counts: AtomicUsize::new(upload_counts),
             database: Database::new(),
-            rate_limiting: AtomicBool::new(false),
+            rate_limiting: AtomicU8::new(0),
             app_state,
             last_notify: AtomicU64::new(time),
             client_manager,
@@ -762,7 +757,7 @@ impl RequestTask {
 
                 State::Removed => self.set_code(index, reason),
 
-                State::Running => {
+                State::Running | State::Retrying => {
                     if current_state == State::Waiting || current_state == State::Paused {
                         self.resume.store(true, Ordering::SeqCst);
                     }
@@ -914,7 +909,9 @@ impl RequestTask {
                 error!("not allow metered");
                 return false;
             }
-            if network_info.network_type != self.conf.common_data.network {
+            if network_info.network_type as u8 != self.conf.common_data.network as u8
+                && network_info.network_type != NetworkInner::ANY
+            {
                 error!("dismatch network type");
                 return false;
             }

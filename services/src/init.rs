@@ -113,12 +113,9 @@ impl Ability for RequestAbility {
             "on_device_level_changed change_type: {}, level: {}, action: {}",
             change_type, level, action
         );
-        self.task_manager
-            .lock()
-            .unwrap()
-            .as_ref()
-            .unwrap()
-            .send_event(TaskManagerEvent::Device(level));
+        if let Some(task_manager) = self.task_manager.lock().unwrap().as_ref() {
+            task_manager.send_event(TaskManagerEvent::Device(level));
+        }
     }
 }
 
