@@ -181,6 +181,7 @@ impl PartialOrd for App {
         Some(
             self_is_foreground
                 .cmp(&other_is_foreground)
+                .reverse()
                 .then(self.state.cmp(&other.state)),
         )
     }
