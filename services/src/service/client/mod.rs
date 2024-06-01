@@ -339,9 +339,9 @@ impl Client {
         }
 
         let size = message.len() as u16;
-        debug!(
-            "send notify data, type: {:?}, size: {:?}",
-            subscribe_type, size
+        info!(
+            "send notify data, type: {:?}, tid: {:?}",
+            subscribe_type, notify_data.task_id
         );
         let size = size.to_le_bytes();
         message[POSITION_OF_LENGTH as usize] = size[0];

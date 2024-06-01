@@ -953,7 +953,7 @@ export default function requestCreateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        mode: request.agent.Mode.FOREGROUND,
+        mode: request.agent.Mode.BACKGROUND,
         saveas: 123
       }
       let task = await request.agent.create(context, conf);
@@ -979,7 +979,7 @@ export default function requestCreateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        mode: request.agent.Mode.FOREGROUND
+        mode: request.agent.Mode.BACKGROUND
       }
       try {
         let task = await request.agent.create(context, conf);
@@ -1688,7 +1688,7 @@ export default function requestCreateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'http://xxx',
-        mode: request.agent.Mode.FOREGROUND,
+        mode: request.agent.Mode.BACKGROUND,
         retry: 'true',
         overwrite: true
       }
@@ -1737,7 +1737,7 @@ export default function requestCreateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.txt',
-        mode: request.agent.Mode.FOREGROUND,
+        mode: request.agent.Mode.BACKGROUND,
         retry: false,
         overwrite: true
       }
@@ -1764,7 +1764,7 @@ export default function requestCreateTaskTest() {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: 'testTaskIndex001.txt',
         index: '0',
-        mode: request.agent.Mode.FOREGROUND
+        mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
       task.on('completed', function() {
@@ -1849,7 +1849,7 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/47273f95/Feishu-win32_ia32-7.9.7-signed.exe',
         saveas: 'testTaskIndex004.exe',
-        mode: request.agent.Mode.FOREGROUND,
+        mode: request.agent.Mode.BACKGROUND,
         begins: 5,
         ends: 10,
         gauge: true
@@ -1912,7 +1912,7 @@ export default function requestCreateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        mode: request.agent.Mode.FOREGROUND,
+        mode: request.agent.Mode.BACKGROUND,
         begins: 5,
         gauge: true
       }
@@ -1971,7 +1971,7 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/47273f95/Feishu-win32_ia32-7.9.7-signed.exe',
         saveas: 'testTaskIndex008.exe',
-        mode: request.agent.Mode.FOREGROUND,
+        mode: request.agent.Mode.BACKGROUND,
         ends: 10,
         gauge: true,
         overwrite: true

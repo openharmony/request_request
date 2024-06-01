@@ -89,7 +89,7 @@ impl TaskManager {
                     {
                         Ok(task) => self.restoring_tasks.push(Arc::new(task)),
                         Err(_) => {
-                            unsafe { ChangeRequestTaskState(task_id, uid, State::Failed) };
+                            unsafe { ChangeRequestTaskState(task_id, uid, State::Failed, Reason::OthersError) };
                         }
                     }
                 }
@@ -119,7 +119,7 @@ impl TaskManager {
                 match RequestTask::new(config, self.system_config(), app_state, Some(task_info)) {
                     Ok(task) => {
                         task.set_status(State::Waiting, Reason::Default);
-                        unsafe { ChangeRequestTaskState(task_id, uid, State::Waiting) };
+                        unsafe { ChangeRequestTaskState(task_id, uid, State::Waiting, Reason::Default) };
                         let arc_task = Arc::new(task);
                         self.restoring_tasks.push(arc_task);
                         // Adds tasks to task map and inits it.

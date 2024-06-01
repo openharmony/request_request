@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define private public
+#define protected public
 
 #include "downloaduploadmanager_fuzzer.h"
 
@@ -22,16 +24,22 @@
 #include "js_common.h"
 #include "message_parcel.h"
 #include "nativetoken_kit.h"
+#include "request.h"
 #include "request_manager.h"
+#include "request_manager_impl.h"
+#include "request_running_task_count.h"
 #include "request_service_interface.h"
+#include "running_task_count.h"
 #include "token_setproc.h"
 
 using namespace OHOS::Request;
+using namespace OHOS::Security::AccessToken;
+
+#undef private
+#undef protected
 
 namespace OHOS {
-constexpr size_t THRESHOLD = 10;
 
-using namespace OHOS::Security::AccessToken;
 uint32_t ConvertToUint32(const uint8_t *ptr, size_t size)
 {
     if (ptr == nullptr || (size < sizeof(uint32_t))) {
@@ -196,15 +204,161 @@ void QueryRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Query(tid, taskinfo);
 }
 
+void RequestFuzzTestGetId(const uint8_t *data, size_t size)
+{
+    std::string tid(reinterpret_cast<const char *>(data), size);
+    GrantNativePermission();
+    auto request = OHOS::Request::Request(tid);
+}
+
+class RTResponseListenerImpl : public IResponseListener {
+public:
+    ~RTResponseListenerImpl(){};
+    void OnResponseReceive(const std::shared_ptr<Response> &response) override
+    {
+        (void)response;
+        return;
+    }
+};
+
+void RequestFuzzTestHasListener(const uint8_t *data, size_t size)
+{
+    std::string tid(reinterpret_cast<const char *>(data), size);
+    SubscribeType type = SubscribeType::RESPONSE;
+    auto request = OHOS::Request::Request(tid);
+    std::shared_ptr<RTResponseListenerImpl> listenerPtr = std::make_shared<RTResponseListenerImpl>();
+    GrantNativePermission();
+    request.AddListener(type, listenerPtr);
+    request.RemoveListener(type, listenerPtr);
+}
+
+class RTNotifyDataListenerImpl : public INotifyDataListener {
+public:
+    ~RTNotifyDataListenerImpl(){};
+    void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData) override
+    {
+        (void)notifyData;
+        return;
+    }
+};
+
+void RequestFuzzTestOnNotifyDataReceive(const uint8_t *data, size_t size)
+{
+    std::string tid(reinterpret_cast<const char *>(data), size);
+    SubscribeType type = SubscribeType::COMPLETED;
+    auto request = OHOS::Request::Request(tid);
+    std::shared_ptr<NotifyData> notifyData = std::make_shared<NotifyData>();
+    notifyData->type = type;
+    notifyData->version = Version::API9;
+    GrantNativePermission();
+    request.OnNotifyDataReceive(notifyData);
+    std::shared_ptr<RTNotifyDataListenerImpl> listenerPtr = std::make_shared<RTNotifyDataListenerImpl>();
+    request.AddListener(type, listenerPtr);
+    request.OnNotifyDataReceive(notifyData);
+}
+
+void RequestFuzzTestAddAndRemoveListener(const uint8_t *data, size_t size)
+{
+    std::string tid(reinterpret_cast<const char *>(data), size);
+    SubscribeType type = SubscribeType::COMPLETED;
+    GrantNativePermission();
+    auto request = OHOS::Request::Request(tid);
+    std::shared_ptr<NotifyData> notifyData = std::make_shared<NotifyData>();
+    notifyData->type = type;
+    notifyData->version = Version::API9;
+
+    request.OnNotifyDataReceive(notifyData);
+    std::shared_ptr<RTNotifyDataListenerImpl> listenerPtr = std::make_shared<RTNotifyDataListenerImpl>();
+    request.AddListener(type, listenerPtr);
+    request.RemoveListener(type, listenerPtr);
+}
+
+void RequestFuzzTestOnResponseReceive(const uint8_t *data, size_t size)
+{
+    std::string tid(reinterpret_cast<const char *>(data), size);
+    SubscribeType type = SubscribeType::RESPONSE;
+    std::shared_ptr<Response> response = std::make_shared<Response>();
+    GrantNativePermission();
+    auto request = OHOS::Request::Request(tid);
+    request.OnResponseReceive(response);
+    std::shared_ptr<RTResponseListenerImpl> listenerPtr = std::make_shared<RTResponseListenerImpl>();
+    request.AddListener(type, listenerPtr);
+    request.OnResponseReceive(response);
+}
+
+class FwkTestOberver : public IRunningTaskObserver {
+public:
+    void OnRunningTaskCountUpdate(int count) override;
+    ~FwkTestOberver() = default;
+    FwkTestOberver() = default;
+};
+
+void FwkTestOberver::OnRunningTaskCountUpdate(int count)
+{
+}
+
+void RunningTaskCountFuzzTestSubscribeRunningTaskCount(const uint8_t *data, size_t size)
+{
+    GrantNativePermission();
+    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
+    if (proxy == nullptr) {
+        std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FwkTestOberver>();
+        SubscribeRunningTaskCount(ob);
+        UnsubscribeRunningTaskCount(ob);
+    }
+    std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FwkTestOberver>();
+    int32_t ret = SubscribeRunningTaskCount(ob1);
+    std::shared_ptr<IRunningTaskObserver> ob2 = std::make_shared<FwkTestOberver>();
+    FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob2);
+    ret = SubscribeRunningTaskCount(ob2);
+    FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob1);
+    FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob2);
+}
+
+void RunningTaskCountFuzzTestUnubscribeRunning(const uint8_t *data, size_t size)
+{
+    GrantNativePermission();
+    std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FwkTestOberver>();
+    FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob1);
+
+    std::shared_ptr<IRunningTaskObserver> ob2 = std::make_shared<FwkTestOberver>();
+    UnsubscribeRunningTaskCount(ob2);
+    UnsubscribeRunningTaskCount(ob1);
+}
+
+void RunningTaskCountFuzzTestGetAndSetCount(const uint8_t *data, size_t size)
+{
+    GrantNativePermission();
+    int old = FwkRunningTaskCountManager::GetInstance()->GetCount();
+    int except = 10; // 10 is except count num
+    FwkRunningTaskCountManager::GetInstance()->SetCount(except);
+    int count = FwkRunningTaskCountManager::GetInstance()->GetCount();
+    FwkRunningTaskCountManager::GetInstance()->SetCount(old);
+    count = FwkRunningTaskCountManager::GetInstance()->GetCount();
+}
+
+void RunningTaskCountFuzzTestUpdateRunningTaskCount(const uint8_t *data, size_t size)
+{
+    GrantNativePermission();
+    std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FwkTestOberver>();
+    FwkIRunningTaskObserver runningOb = FwkIRunningTaskObserver(ob);
+    runningOb.UpdateRunningTaskCount();
+}
+
+void RunningTaskCountFuzzTestNotifyAllObservers(const uint8_t *data, size_t size)
+{
+    GrantNativePermission();
+    std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FwkTestOberver>();
+    FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob1);
+    FwkRunningTaskCountManager::GetInstance()->NotifyAllObservers();
+    FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob1);
+}
+
 } // namespace OHOS
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    if (size < OHOS::THRESHOLD) {
-        return 0;
-    }
-
     /* Run your code on data */
     OHOS::CreateRequestFuzzTest(data, size);
     OHOS::StartRequestFuzzTest(data, size);
@@ -223,5 +377,15 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::IsSaReadyRequestFuzzTest(data, size);
     OHOS::ReopenChannelRequestFuzzTest(data, size);
     OHOS::QueryRequestFuzzTest(data, size);
+    OHOS::RequestFuzzTestGetId(data, size);
+    OHOS::RequestFuzzTestHasListener(data, size);
+    OHOS::RequestFuzzTestOnNotifyDataReceive(data, size);
+    OHOS::RequestFuzzTestAddAndRemoveListener(data, size);
+    OHOS::RequestFuzzTestOnResponseReceive(data, size);
+    OHOS::RunningTaskCountFuzzTestSubscribeRunningTaskCount(data, size);
+    OHOS::RunningTaskCountFuzzTestUnubscribeRunning(data, size);
+    OHOS::RunningTaskCountFuzzTestGetAndSetCount(data, size);
+    OHOS::RunningTaskCountFuzzTestUpdateRunningTaskCount(data, size);
+    OHOS::RunningTaskCountFuzzTestNotifyAllObservers(data, size);
     return 0;
 }

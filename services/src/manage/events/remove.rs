@@ -18,6 +18,5 @@ impl TaskManager {
     pub(crate) async fn remove(&mut self, uid: u64, task_id: u32) -> ErrorCode {
         debug!("TaskManager Remove, uid: {}, task_id: {}", uid, task_id);
         self.scheduler.remove_task(uid, task_id).await
-        // Notifier::remove_notify(task.build_notify_data());
     }
 }

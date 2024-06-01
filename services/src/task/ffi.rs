@@ -10,10 +10,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 use std::ffi::c_char;
 
-use super::config::{Action, CommonTaskConfig, ConfigSet, Network, TaskConfig, Version};
+use super::config::{
+    Action, CommonTaskConfig, ConfigSet, Network, NetworkInner, TaskConfig, Version,
+};
 use super::info::{CommonTaskInfo, InfoSet, Mode, TaskInfo, UpdateInfo};
 use super::notify::{CommonProgress, EachFileStatus, Progress};
 use super::reason::Reason;
@@ -260,7 +261,7 @@ pub(crate) struct RequestTaskMsg {
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub(crate) struct NetworkInfo {
-    pub(crate) network_type: Network,
+    pub(crate) network_type: NetworkInner,
     pub(crate) is_metered: bool,
     pub(crate) is_roaming: bool,
 }
@@ -390,6 +391,7 @@ pub(crate) fn publish_event(bundle: &str, task_id: u32, state: State) {
 extern "C" {
     pub(crate) fn GetNetworkInfo() -> *const NetworkInfo;
     pub(crate) fn DeleteCEachFileStatus(ptr: *const CEachFileStatus);
+    pub(crate) fn UpdateNetworkInfo();
     pub(crate) fn PublishStateChangeEvents(
         bundle_name: *const c_char,
         bundle_name_len: u32,
