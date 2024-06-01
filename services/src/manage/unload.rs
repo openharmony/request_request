@@ -43,7 +43,7 @@ impl TaskManager {
         if !self.rx.is_empty() {
             return false;
         }
-
+        
         if self.keep_sa() {
             return false;
         }
@@ -54,9 +54,7 @@ impl TaskManager {
         if !self.rx.is_empty() {
             return false;
         }
-
-        self.rx.close();
-
+       
         info!("unload SA");
 
         // failed logic?
@@ -89,7 +87,14 @@ impl TaskManager {
                     {
                         Ok(task) => self.restoring_tasks.push(Arc::new(task)),
                         Err(_) => {
-                            unsafe { ChangeRequestTaskState(task_id, uid, State::Failed, Reason::OthersError) };
+                            unsafe {
+                                ChangeRequestTaskState(
+                                    task_id,
+                                    uid,
+                                    State::Failed,
+                                    Reason::OthersError,
+                                )
+                            };
                         }
                     }
                 }
@@ -119,7 +124,9 @@ impl TaskManager {
                 match RequestTask::new(config, self.system_config(), app_state, Some(task_info)) {
                     Ok(task) => {
                         task.set_status(State::Waiting, Reason::Default);
-                        unsafe { ChangeRequestTaskState(task_id, uid, State::Waiting, Reason::Default) };
+                        unsafe {
+                            ChangeRequestTaskState(task_id, uid, State::Waiting, Reason::Default)
+                        };
                         let arc_task = Arc::new(task);
                         self.restoring_tasks.push(arc_task);
                         // Adds tasks to task map and inits it.
