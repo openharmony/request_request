@@ -29,6 +29,7 @@ use std::time::Duration;
 
 use listener::AppStateListener;
 use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
+use ylong_runtime::sync::oneshot;
 use ylong_runtime::task::JoinHandle;
 use ylong_runtime::time::sleep;
 
@@ -103,7 +104,7 @@ impl AppStateManager {
         }
     }
 
-    fn get_app_state(&mut self, uid: u64, tx: UnboundedSender<AppState>) {
+    fn get_app_state(&mut self, uid: u64, tx: oneshot::Sender<AppState>) {
         // Everytime we get app state, update app state right now.
         self.top_bundle = top_bundle();
 
@@ -123,7 +124,7 @@ impl AppStateManager {
         let _ = tx.send(state);
     }
 
-    fn get_app_raw_state(&mut self, uid: u64, tx: UnboundedSender<ApplicationState>) {
+    fn get_app_raw_state(&mut self, uid: u64, tx: oneshot::Sender<ApplicationState>) {
         // Everytime we get app state, update app state right now.
         self.top_bundle = top_bundle();
 
@@ -194,17 +195,17 @@ impl AppStateManagerTx {
     }
 
     pub(crate) async fn get_app_state(&self, uid: u64) -> AppState {
-        let (tx, mut rx) = unbounded_channel();
+        let (tx, rx) = oneshot::channel();
         let _ = self.tx.send(AppStateEvent::GetAppState(uid, tx));
         // Here we must ensure that `AppStateManager` is working properly!
-        rx.recv().await.unwrap()
+        rx.await.unwrap()
     }
 
     pub(crate) async fn get_app_raw_state(&self, uid: u64) -> ApplicationState {
-        let (tx, mut rx) = unbounded_channel();
+        let (tx, rx) = oneshot::channel();
         let _ = self.tx.send(AppStateEvent::GetAppRawState(uid, tx));
         // Here we must ensure that `AppStateManager` is working properly!
-        rx.recv().await.unwrap()
+        rx.await.unwrap()
     }
 
     #[allow(dead_code)]
@@ -256,8 +257,8 @@ impl DerefMut for AppStateManagerRx {
 }
 
 pub(crate) enum AppStateEvent {
-    GetAppState(u64, UnboundedSender<AppState>), // TaskManager 启动任务时获取应用状态
-    GetAppRawState(u64, UnboundedSender<ApplicationState>),
+    GetAppState(u64, oneshot::Sender<AppState>), // TaskManager 启动任务时获取应用状态
+    GetAppRawState(u64, oneshot::Sender<ApplicationState>),
     RemoveAppState(u64), // 某应用最后一个任务完成时移除 AppState
     ChangeAppState(u64, ApplicationState), /* 应用状态变化，如果是前台切换到后台，则启动定时器。
                           * 如果在定时器定时过程中重新恢复到前台，则取消定时器 */
