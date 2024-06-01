@@ -174,7 +174,9 @@ enum class Faults : uint32_t {
     DISCONNECTED = 0x00,
     TIMEOUT = 0x10,
     PROTOCOL = 0x20,
+    CONNECT = 0x30,
     FSIO = 0x40,
+    REDIRECT = 0x50,
 };
 
 struct TaskState {
