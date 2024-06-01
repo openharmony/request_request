@@ -13,7 +13,8 @@
 //! This create implement the request server register and publish
 
 use std::mem::MaybeUninit;
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 
 use hisysevent::{build_number_param, write, EventType};
 use samgr::definition::DOWNLOAD_SERVICE_ID;
@@ -49,11 +50,13 @@ fn service_start_fault() {
 
 struct RequestAbility {
     task_manager: Mutex<Option<TaskManagerTx>>,
+    remote_busy: Arc<AtomicBool>,
 }
 
 impl RequestAbility {
     fn new() -> Self {
         Self {
+            remote_busy: Arc::new(AtomicBool::new(false)),
             task_manager: Mutex::new(None),
         }
     }
@@ -98,7 +101,13 @@ impl RequestAbility {
             RequestInitServiceHandler();
         }
 
-        let stub = RequestServiceStub::new(task_manager, client_manger, runcount_manager);
+        let stub = RequestServiceStub::new(
+            handler.clone(),
+            task_manager,
+            client_manger,
+            runcount_manager,
+            self.remote_busy.clone(),
+        );
 
         info!("ability init succeed");
         info!("ability publish succeed");
@@ -121,6 +130,20 @@ impl Ability for RequestAbility {
             self.init(handler);
         } else {
             self.init(handler);
+        }
+    }
+
+    fn on_active(&self, reason: system_ability_fwk::cxx_share::SystemAbilityOnDemandReason) {
+        info!("on_active: {:?}", reason);
+    }
+
+    fn on_idle(&self, _reason: system_ability_fwk::cxx_share::SystemAbilityOnDemandReason) -> i32 {
+        if self.remote_busy.load(Ordering::Acquire) {
+            info!("remote is busy, reject idle");
+            -1
+        } else {
+            info!("remote is not busy, accept idle");
+            0
         }
     }
 

@@ -20,11 +20,13 @@ pub(crate) mod permission;
 pub(crate) mod runcount;
 
 use std::fs::File;
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 
 use ipc::parcel::MsgParcel;
 use ipc::remote::RemoteStub;
 use ipc::{IpcResult, IpcStatusCode};
+use system_ability_fwk::ability::Handler;
 
 use self::client::ClientManagerEntry;
 use self::runcount::RunCountManagerEntry;
@@ -35,26 +37,34 @@ use crate::utils::c_wrapper::CStringWrapper;
 
 pub(crate) struct RequestServiceStub {
     task_manager: Mutex<TaskManagerTx>,
+    sa_handler: Handler,
     client_manager: ClientManagerEntry,
     runcount_manager: RunCountManagerEntry,
+    remote_busy: Arc<AtomicBool>,
 }
 
 impl RequestServiceStub {
     pub(crate) fn new(
+        sa_handler: Handler,
         task_manager: TaskManagerTx,
         client_manager: ClientManagerEntry,
         runcount_manager: RunCountManagerEntry,
+        remote_busy: Arc<AtomicBool>,
     ) -> Self {
         Self {
             task_manager: Mutex::new(task_manager),
+            sa_handler,
             client_manager,
             runcount_manager,
+            remote_busy,
         }
     }
 }
 
 impl RemoteStub for RequestServiceStub {
     fn on_remote_request(&self, code: u32, data: &mut MsgParcel, reply: &mut MsgParcel) -> i32 {
+        self.sa_handler.cancel_idle();
+        self.remote_busy.store(true, Ordering::Release);
         const SERVICE_TOKEN: &str = "OHOS.Download.RequestServiceInterface";
         debug!("Processes on_remote_request, code: {}", code);
         match data.read_interface_token() {
@@ -86,6 +96,7 @@ impl RemoteStub for RequestServiceStub {
             _ => return IpcStatusCode::Failed as i32,
         };
 
+        self.remote_busy.store(false, Ordering::Release);
         match res {
             Ok(_) => 0,
             Err(e) => e as i32,
