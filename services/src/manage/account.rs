@@ -25,6 +25,7 @@ use crate::manage::task_manager::TaskManagerTx;
 pub(crate) enum AccountEvent {
     Switch,
     Active,
+    Stop,
     Remove(i32),
 }
 
@@ -81,9 +82,8 @@ impl TaskManager {
     pub(crate) async fn handle_account_event(&mut self, event: AccountEvent) {
         update_accounts();
         match event {
-            AccountEvent::Active => self.scheduler.on_user_change().await,
-            AccountEvent::Switch => self.scheduler.on_user_change().await,
             AccountEvent::Remove(user_id) => remove_account_tasks(user_id),
+            _ => self.scheduler.on_user_change().await,
         }
     }
 }
@@ -171,7 +171,7 @@ pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
 
     let ret = RegistryAccountSubscriber(
         OS_ACCOUNT_SUBSCRIBE_TYPE::REMOVED,
-        Box::new(task_manager),
+        Box::new(task_manager.clone()),
         |id, task_manager| {
             task_manager.send_event(TaskManagerEvent::Account(AccountEvent::Remove(*id)));
         },
@@ -179,6 +179,19 @@ pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
     );
 
     if ret != 0 {
-        error!("registry_account_active_subscribe failed: {}", ret);
+        error!("registry_account_remove_subscribe failed: {}", ret);
+    }
+
+    let ret = RegistryAccountSubscriber(
+        OS_ACCOUNT_SUBSCRIBE_TYPE::STOPPED,
+        Box::new(task_manager),
+        |_id, task_manager| {
+            task_manager.send_event(TaskManagerEvent::Account(AccountEvent::Stop));
+        },
+        |_, _, _| {},
+    );
+
+    if ret != 0 {
+        error!("registry_account_stop_subscribe failed: {}", ret);
     }
 }
