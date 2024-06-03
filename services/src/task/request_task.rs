@@ -451,7 +451,7 @@ impl RequestTask {
                         Ok(v) => {
                             let mut guard = self.progress.lock().unwrap();
                             if !self.restored.load(Ordering::SeqCst) {
-                                guard.sizes[0] = v;
+                                guard.sizes[0] = v + guard.processed[0] as i64;
                             }
                             self.file_total_size.store(v, Ordering::SeqCst);
                             debug!("the download task content-length is {}", v);
@@ -755,7 +755,11 @@ impl RequestTask {
                 State::Removed => self.set_code(index, reason),
 
                 State::Running | State::Retrying => {
-                    if current_state == State::Waiting || current_state == State::Paused {
+                    if current_state == State::Waiting
+                        || current_state == State::Paused
+                        || current_state == State::Failed
+                        || current_state == State::Stopped
+                    {
                         self.resume.store(true, Ordering::SeqCst);
                     }
                 }
