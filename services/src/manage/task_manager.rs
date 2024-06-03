@@ -138,8 +138,7 @@ impl TaskManager {
                 TaskManagerEvent::Schedule(event) => {
                     if self.handle_schedule_event(event).await {
                         info!("TaskManager unload succeed");
-                        // If unload_sa success, breaks this loop.
-                        return;
+                        // If unload_sa success, can not breaks this loop.
                     }
                 }
                 TaskManagerEvent::Device(level) => {
@@ -297,8 +296,6 @@ impl TaskManager {
         if !self.rx.is_empty() {
             return false;
         }
-
-        self.rx.close();
 
         info!("unload SA");
 
