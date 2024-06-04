@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::manage::database::Database;
 use crate::manage::TaskManager;
 use crate::task::config::TaskConfig;
 
@@ -18,7 +19,7 @@ impl TaskManager {
     pub(crate) fn get_task(&self, uid: u64, task_id: u32, token: String) -> Option<TaskConfig> {
         debug!("TaskManager get a task, uid:{}, task_id:{}", uid, task_id);
 
-        if let Some(config) = self.database.get_task_config(task_id) {
+        if let Some(config) = Database::get_instance().get_task_config(task_id) {
             debug!("found single task in database, task_id:{}", task_id);
             if config.token.eq(token.as_str()) {
                 return Some(config);

@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::manage::database::Database;
 use crate::manage::TaskManager;
 use crate::task::info::TaskInfo;
 
@@ -18,7 +19,7 @@ impl TaskManager {
     pub(crate) fn show(&self, uid: u64, task_id: u32) -> Option<TaskInfo> {
         debug!("TaskManager Show, uid: {}, task_id: {}", uid, task_id);
 
-        match self.database.get_task_info(task_id) {
+        match Database::get_instance().get_task_info(task_id) {
             Some(info) if info.uid() == uid => {
                 debug!("TaskManager Show: task info is {:?}", info);
                 Some(info)

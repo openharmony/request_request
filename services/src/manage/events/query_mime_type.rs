@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::manage::database::Database;
 use crate::manage::TaskManager;
 
 impl TaskManager {
@@ -28,7 +29,7 @@ impl TaskManager {
                     "".into()
                 }
             }
-            None => match self.database.get_task_info(task_id) {
+            None => match Database::get_instance().get_task_info(task_id) {
                 Some(info) if info.uid() == uid => {
                     let mime_type = info.mime_type();
                     debug!("TaskManager QueryMimeType: mime_type is {:?}", mime_type);

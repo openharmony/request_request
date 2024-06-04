@@ -15,6 +15,7 @@ use std::collections::HashMap;
 use std::ffi::c_void;
 use std::ptr::null_mut;
 use std::slice;
+use std::sync::{Arc, Once};
 
 use super::app_state::AppStateManagerTx;
 use crate::manage::SystemConfig;
@@ -29,18 +30,29 @@ use crate::utils::filter::Filter;
 use crate::utils::hashmap_to_string;
 
 #[derive(Clone)]
-pub(crate) struct Database;
+pub(crate) struct Database {
+    user_file_tasks: HashMap<u32, Arc<RequestTask>>,
+}
 
 impl Database {
-    pub(crate) fn new() -> Self {
-        Self
+    pub(crate) fn get_instance() -> &'static mut Self {
+        static mut DATABASE: Option<Database> = None;
+        static ONCE: Once = Once::new();
+
+        ONCE.call_once(|| unsafe {
+            DATABASE = Some(Database {
+                user_file_tasks: HashMap::new(),
+            });
+        });
+
+        unsafe { DATABASE.as_mut().unwrap() }
     }
 
     pub(crate) fn contains_task(&self, task_id: u32) -> bool {
         unsafe { HasRequestTaskRecord(task_id) }
     }
 
-    pub(crate) fn insert_task(&self, task: &RequestTask) {
+    pub(crate) fn insert_task(&mut self, task: RequestTask) {
         let task_id = task.task_id();
         let uid = task.uid();
 
@@ -62,6 +74,12 @@ impl Database {
         let c_task_info = task_info.to_c_struct(&info_set);
 
         let ret = unsafe { RecordRequestTask(&c_task_info, &c_task_config) };
+
+        // For some tasks contains user_file, we must save it to map first.
+        if task.conf.contains_user_file() {
+            self.user_file_tasks.insert(task.task_id(), Arc::new(task));
+        }
+
         info!("Insert task to database, ret is {}", ret);
     }
 
@@ -148,7 +166,7 @@ impl Database {
             return None;
         }
         let c_task_config_ptrs =
-            unsafe { std::slice::from_raw_parts(c_task_config_list, c_config_list_len as usize) };
+            unsafe { slice::from_raw_parts(c_task_config_list, c_config_list_len as usize) };
 
         let mut task_config_map = HashMap::new();
         for c_task_config in c_task_config_ptrs.iter() {
@@ -275,7 +293,12 @@ impl Database {
         system: SystemConfig,
         app_state_manager: &AppStateManagerTx,
         client_manager: &ClientManagerEntry,
-    ) -> Option<RequestTask> {
+    ) -> Option<Arc<RequestTask>> {
+        // If this task exists in `user_file_map`，get it from this map.
+        if let Some(task) = self.user_file_tasks.get(&task_id) {
+            return Some(task.clone());
+        }
+
         // 此处需要根据 task_id 从数据库构造指定的任务。
         if let Some(config) = self.get_task_config(task_id) {
             let uid = config.common_data.uid;
@@ -297,7 +320,7 @@ impl Database {
                     client_manager.clone(),
                 ) {
                     Ok(task) => {
-                        return Some(task);
+                        return Some(Arc::new(task));
                     }
                     Err(_) => {
                         error!("new RequestTask failed");

@@ -146,7 +146,7 @@ impl RunningQueue {
             // If the task is not in the current running queue, retrieve
             // the corresponding task from the database and start it.
             let system_config = unsafe { SYSTEM_CONFIG_MANAGER.assume_init_ref().system_config() };
-            let task = match Database::new()
+            let task = match Database::get_instance()
                 .get_task(
                     task_id,
                     system_config,
@@ -155,7 +155,7 @@ impl RunningQueue {
                 )
                 .await
             {
-                Some(task) => Arc::new(task),
+                Some(task) => task,
                 None => continue,
             };
 

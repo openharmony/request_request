@@ -14,6 +14,7 @@
 use crate::error::ErrorCode;
 use crate::init::SYSTEM_CONFIG_MANAGER;
 use crate::manage::app_state::{AppState, GetTopBundleName};
+use crate::manage::database::Database;
 use crate::manage::TaskManager;
 use crate::task::config::TaskConfig;
 use crate::task::info::{ApplicationState, Mode, State};
@@ -37,20 +38,18 @@ impl TaskManager {
             uid, task_id, version
         );
 
+        let database = Database::get_instance();
+
         match config.common_data.mode {
             Mode::BackGround => {
-                if self
-                    .database
-                    .app_uncompleted_tasks_num(uid, Mode::BackGround)
-                    == MAX_BACKGROUND_TASK
+                if database.app_uncompleted_tasks_num(uid, Mode::BackGround) == MAX_BACKGROUND_TASK
                 {
                     debug!("TaskManager background enqueue error");
                     return Err(ErrorCode::TaskEnqueueErr);
                 }
             }
             _ => {
-                if self.database.app_uncompleted_tasks_num(uid, Mode::FrontEnd) == MAX_FRONTEND_TASK
-                {
+                if database.app_uncompleted_tasks_num(uid, Mode::FrontEnd) == MAX_FRONTEND_TASK {
                     debug!("TaskManager frontend enqueue error");
                     return Err(ErrorCode::TaskEnqueueErr);
                 }
@@ -86,7 +85,7 @@ impl TaskManager {
 
         task.set_status(State::Initialized, Reason::Default);
 
-        self.database.insert_task(&task);
+        database.insert_task(task);
 
         Ok(task_id)
     }

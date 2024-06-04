@@ -35,7 +35,7 @@ impl SortedApps {
     pub(crate) fn change_network(&mut self, network: NetworkInfo) {
         // Firstly, we need to update the status of the tasks waiting to be
         // executed based on changes in network status.
-        Database::new().update_on_network_change(network);
+        Database::get_instance().update_on_network_change(network);
 
         // Then, we need to reload the app based on the current status of all tasks.
         self.inner = reload_all_app_from_database();
@@ -43,7 +43,7 @@ impl SortedApps {
 
     pub(crate) fn change_app_state(&mut self, uid: u64, state: ApplicationState) {
         if let Some(app) = self.inner.iter_mut().find(|app| app.uid == uid) {
-            Database::new().update_on_app_state_change(uid, state);
+            Database::get_instance().update_on_app_state_change(uid, state);
 
             let tasks = reload_tasks_of_app_from_database(uid);
             if !tasks.is_empty() {
@@ -263,7 +263,7 @@ fn reload_all_app_from_database() -> Vec<App> {
 }
 
 fn reload_tasks_of_app_from_database(uid: u64) -> Vec<Task> {
-    Database::new()
+    Database::get_instance()
         .get_app_task_qos_infos(uid)
         .iter()
         .map(|info| Task {
@@ -276,7 +276,7 @@ fn reload_tasks_of_app_from_database(uid: u64) -> Vec<Task> {
 }
 
 fn reload_app_list_from_database() -> Vec<(u64, String)> {
-    Database::new().get_app_infos()
+    Database::get_instance().get_app_infos()
 }
 
 #[link(name = "download_server_cxx", kind = "static")]

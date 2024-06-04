@@ -66,7 +66,6 @@ pub(crate) struct RequestTask {
     pub(crate) skip_bytes: AtomicU64,
     pub(crate) upload_counts: AtomicUsize,
     pub(crate) rate_limiting: AtomicU8,
-    pub(crate) database: Database,
     pub(crate) app_state: AppState,
     pub(crate) last_notify: AtomicU64,
     pub(crate) client_manager: ClientManagerEntry,
@@ -219,7 +218,6 @@ impl RequestTask {
             restored: AtomicBool::new(false),
             skip_bytes: AtomicU64::new(0),
             upload_counts: AtomicUsize::new(upload_counts),
-            database: Database::new(),
             rate_limiting: AtomicU8::new(0),
             app_state,
             last_notify: AtomicU64::new(time),
@@ -773,7 +771,7 @@ impl RequestTask {
         if state == State::Waiting {
             self.record_waitting_network_time();
         }
-        self.database.update_task(self);
+        Database::get_instance().update_task(self);
         true
     }
 

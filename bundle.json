@@ -50,8 +50,7 @@
         "netstack",
         "ylong_runtime",
         "storage_service",
-        "ffrt",
-        "openssl"
+        "ffrt"
       ],
       "third_party": [
         "curl",

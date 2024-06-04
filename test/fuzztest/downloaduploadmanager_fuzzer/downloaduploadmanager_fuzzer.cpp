@@ -71,7 +71,7 @@ void GrantNativePermission()
 void CreateRequestFuzzTest(const uint8_t *data, size_t size)
 {
     Config config;
-    auto tid = static_cast<int32_t>(size);
+    auto tid = std::to_string(size);
 
     GrantNativePermission();
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();

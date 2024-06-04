@@ -159,12 +159,12 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
         }
         napi_status status = napi_get_reference_value(context->env_, context->taskRef, result);
         context->task->SetTid(context->tid);
-        JsTask::AddTaskMap(std::to_string(context->tid), context->task);
-        JsTask::AddTaskContextMap(std::to_string(context->tid), context);
+        JsTask::AddTaskMap(context->tid, context->task);
+        JsTask::AddTaskContextMap(context->tid, context);
         napi_value config = nullptr;
         napi_get_reference_value(context->env_, context->jsConfig, &config);
         JsInitialize::CreatProperties(context->env_, *result, config, context->task);
-        REQUEST_HILOGI("End create task successfully, seq: %{public}d, tid: %{public}d", seq, context->tid);
+        REQUEST_HILOGI("End create task successfully, seq: %{public}d, tid: %{public}s", seq, context->tid.c_str());
         return status;
     };
     context->SetInput(input).SetOutput(output).SetExec(exec);
@@ -192,7 +192,7 @@ int32_t JsTask::CreateExec(const std::shared_ptr<ContextInfo> &context, int32_t 
             "End create task in JsTask CreateExec, seq: %{public}d, failed with reason: %{public}d", seq, ret);
         return ret;
     }
-    std::string tid = std::to_string(context->tid);
+    std::string tid = context->tid;
     context->task->listenerMutex_.lock();
     context->task->notifyDataListenerMap_[SubscribeType::REMOVE] =
         std::make_shared<JSNotifyDataListener>(context->env_, tid, SubscribeType::REMOVE);
@@ -361,8 +361,8 @@ napi_value JsTask::GetTask(napi_env env, napi_callback_info info)
 
 void JsTask::GetTaskExecution(std::shared_ptr<ContextInfo> context)
 {
-    std::string tid = std::to_string(context->tid);
-    REQUEST_HILOGI("Process get task, tid: %{public}d", context->tid);
+    std::string tid = context->tid;
+    REQUEST_HILOGI("Process get task, tid: %{public}s", context->tid.c_str());
     if (taskContextMap_.find(tid) != taskContextMap_.end()) {
         REQUEST_HILOGD("Find in taskContextMap_");
         if (taskContextMap_[tid]->task->config_.version != Version::API10
@@ -385,7 +385,7 @@ void JsTask::GetTaskExecution(std::shared_ptr<ContextInfo> context)
 
 bool JsTask::GetTaskOutput(std::shared_ptr<ContextInfo> context)
 {
-    std::string tid = std::to_string(context->tid);
+    std::string tid = context->tid;
     if (taskMap_.find(tid) == taskMap_.end()) {
         napi_value config = NapiUtils::Convert2JSValue(context->env_, context->config);
         napi_create_reference(context->env_, config, 1, &(context->jsConfig));
@@ -430,7 +430,14 @@ ExceptionError JsTask::ParseGetTask(napi_env env, size_t argc, napi_value *argv,
         err.errInfo = "Parameter verification failed, tid is empty";
         return err;
     }
-    context->tid = std::stoi(tid);
+    // tid length <= 32
+    if (tid.size() > 32) {
+        REQUEST_HILOGE("tid invalid, %{public}s", tid.c_str());
+        err.code = E_TASK_NOT_FOUND;
+        err.errInfo = "task not found error";
+        return err;
+    }
+    context->tid = tid;
     // handle 3rd param TOKEN
     if (argc == 3) {
         if (NapiUtils::GetValueType(env, argv[2]) != napi_string) { // argv[2] is the 3rd param
@@ -537,6 +544,12 @@ napi_value JsTask::Show(napi_env env, napi_callback_info info)
             NapiUtils::ThrowError(context->env_, err.code, err.errInfo, true);
             return napi_invalid_arg;
         }
+        // tid length <= 32
+        if (context->tid.size() > 32) {
+            REQUEST_HILOGE("End task show in AsyncCall input, seq: %{public}d, failed with reason: tid invalid", seq);
+            NapiUtils::ThrowError(context->env_, E_TASK_NOT_FOUND, "task not found error", true);
+            return napi_invalid_arg;
+        }
         return napi_ok;
     };
     return TouchInner(env, info, std::move(input), std::move(context), seq);
@@ -607,6 +620,13 @@ ExceptionError JsTask::ParseTouch(napi_env env, size_t argc, napi_value *argv, s
         REQUEST_HILOGE("tid is empty");
         err.code = E_PARAMETER_CHECK;
         err.errInfo = "Parameter verification failed, tid is empty";
+        return err;
+    }
+    // tid length <= 32
+    if (context->tid.size() > 32) {
+        REQUEST_HILOGE("tid invalid, %{public}s", context->tid.c_str());
+        err.code = E_TASK_NOT_FOUND;
+        err.errInfo = "task not found error";
         return err;
     }
     uint32_t bufferLen = TOKEN_MAX_BYTES + 2;
@@ -840,9 +860,9 @@ std::string JsTask::GetTid()
     return tid_;
 }
 
-void JsTask::SetTid(int32_t tid)
+void JsTask::SetTid(std::string &tid)
 {
-    tid_ = std::to_string(tid);
+    tid_ = tid;
 }
 
 void JsTask::AddTaskMap(const std::string &key, JsTask *task)

@@ -91,7 +91,7 @@ HWTEST_F(RequestManagerTest, CreateTest001, TestSize.Level1)
 {
     Config config;
     int32_t seq = 1;
-    int32_t tid = 1;
+    std::string tid = "1";
     RequestManager::GetInstance()->Create(config, seq, tid);
 }
 
@@ -107,7 +107,7 @@ HWTEST_F(RequestManagerTest, GetTaskTest001, TestSize.Level1)
     std::string token = "token";
     Config config;
     int32_t seq = 1;
-    int32_t tid = 1;
+    std::string tid = "1";
     RequestManager::GetInstance()->Create(config, seq, tid);
     RequestManager::GetInstance()->RequestManager::GetInstance()->GetTask(tidStr, token, config);
 }

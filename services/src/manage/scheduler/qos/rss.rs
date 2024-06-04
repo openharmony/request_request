@@ -70,8 +70,14 @@ impl RssCapacity {
     );
     pub(crate) const LEVEL6: Self =
         Self(2, 0, 0, QosLevel::HighSpeed, QosLevel::BUTT, QosLevel::BUTT);
-    pub(crate) const LEVEL7: Self =
-        Self(2, 0, 0, QosLevel::HighSpeed, QosLevel::BUTT, QosLevel::BUTT);
+    pub(crate) const LEVEL7: Self = Self(
+        2,
+        0,
+        0,
+        QosLevel::MiddleSpeed,
+        QosLevel::BUTT,
+        QosLevel::BUTT,
+    );
 
     pub(crate) fn new(level: i32) -> Self {
         match level {

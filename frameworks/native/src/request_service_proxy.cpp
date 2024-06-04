@@ -36,7 +36,7 @@ RequestServiceProxy::RequestServiceProxy(const sptr<IRemoteObject> &object)
 {
 }
 
-int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid)
+int32_t RequestServiceProxy::Create(const Config &config, std::string &tid)
 {
     MessageParcel data, reply;
     MessageOption option;
@@ -76,7 +76,7 @@ int32_t RequestServiceProxy::Create(const Config &config, int32_t &tid)
         REQUEST_HILOGE("End send create request, failed with reason: %{public}d", errCode);
         return errCode;
     }
-    tid = reply.ReadInt32();
+    tid = std::to_string(reply.ReadInt32());
     return errCode;
 }
 

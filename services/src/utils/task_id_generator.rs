@@ -30,7 +30,7 @@ impl TaskIdGenerator {
                     ID.fetch_add(1, Ordering::Relaxed)
                 }
             };
-            if !Database::new().contains_task(task_id) {
+            if !Database::get_instance().contains_task(task_id) {
                 return task_id;
             }
         }
