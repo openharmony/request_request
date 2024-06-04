@@ -13,13 +13,13 @@
 
 use std::fmt::Debug;
 
+pub(crate) use search::{SearchMethod, TaskFilter};
 use ylong_runtime::sync::oneshot::{channel, Sender};
 
 use super::account::AccountEvent;
 use crate::error::ErrorCode;
 use crate::task::config::{Action, TaskConfig, Version};
 use crate::task::info::{ApplicationState, DumpAllInfo, DumpOneInfo, TaskInfo};
-use crate::utils::filter::Filter;
 use crate::utils::Recv;
 
 mod construct;
@@ -106,10 +106,10 @@ impl TaskManagerEvent {
         )
     }
 
-    pub(crate) fn search(filter: Filter) -> (Self, Recv<Vec<u32>>) {
+    pub(crate) fn search(filter: TaskFilter, method: SearchMethod) -> (Self, Recv<Vec<u32>>) {
         let (tx, rx) = channel::<Vec<u32>>();
         (
-            Self::Service(ServiceEvent::Search(filter, tx)),
+            Self::Service(ServiceEvent::Search(filter, method, tx)),
             Recv::new(rx),
         )
     }
@@ -194,7 +194,7 @@ pub(crate) enum ServiceEvent {
     Query(u32, Action, Sender<Option<TaskInfo>>),
     GetTask(u64, u32, String, Sender<Option<TaskConfig>>),
     DumpOne(u32, Sender<Option<DumpOneInfo>>),
-    Search(Filter, Sender<Vec<u32>>),
+    Search(TaskFilter, SearchMethod, Sender<Vec<u32>>),
     DumpAll(Sender<DumpAllInfo>),
 }
 
@@ -283,7 +283,11 @@ impl Debug for ServiceEvent {
             Self::DumpOne(task_id, _) => {
                 f.debug_struct("DumpOne").field("task_id", task_id).finish()
             }
-            Self::Search(filter, _) => f.debug_struct("Search").field("filter", filter).finish(),
+            Self::Search(filter, method, _) => f
+                .debug_struct("Search")
+                .field("method", method)
+                .field("filter", filter)
+                .finish(),
             Self::DumpAll(_) => f.debug_struct("DumpAll").finish(),
         }
     }

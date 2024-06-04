@@ -25,8 +25,7 @@ use crate::task::ffi::{CTaskConfig, CTaskInfo, CUpdateInfo, NetworkInfo};
 use crate::task::info::{ApplicationState, Mode, State, TaskInfo};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
-use crate::utils::c_wrapper::{CFilter, CStringWrapper, CVectorWrapper};
-use crate::utils::filter::Filter;
+use crate::utils::c_wrapper::CStringWrapper;
 use crate::utils::hashmap_to_string;
 
 #[derive(Clone)]
@@ -126,21 +125,6 @@ impl Database {
         debug!("Task info is {:?}", task_info);
         unsafe { DeleteCTaskInfo(c_task_info) };
         Some(task_info)
-    }
-
-    pub(crate) fn search_tasks(&self, filter: Filter) -> Vec<u32> {
-        debug!("Search tasks, filter: {:?}", filter);
-
-        let wrapper = unsafe { Search(filter.to_c_struct()) };
-        if wrapper.ptr.is_null() || wrapper.len == 0 {
-            error!("c_vector_wrapper is null");
-            return Vec::new();
-        }
-        let slice = unsafe { std::slice::from_raw_parts(wrapper.ptr, wrapper.len as usize) };
-        let vec = slice.to_vec();
-        debug!("c_vector_wrapper is not null");
-        unsafe { DeleteCVectorWrapper(wrapper.ptr) };
-        vec
     }
 
     pub(crate) fn app_uncompleted_tasks_num(&self, uid: u64, mode: Mode) -> usize {
@@ -358,7 +342,6 @@ extern "C" {
     fn DeleteCTaskConfig(ptr: *const CTaskConfig);
     fn DeleteCTaskConfigs(ptr: *const *const CTaskConfig);
     fn DeleteCTaskInfo(ptr: *const CTaskInfo);
-    fn DeleteCVectorWrapper(ptr: *const u32);
     fn GetTaskInfo(task_id: u32) -> *const CTaskInfo;
     fn HasRequestTaskRecord(id: u32) -> bool;
     fn QueryAllTaskConfigs() -> *const *const CTaskConfig;
@@ -368,7 +351,6 @@ extern "C" {
     fn QueryTaskTokenId(task_id: u32, token_id: *mut u64) -> bool;
     fn RecordRequestTask(info: *const CTaskInfo, config: *const CTaskConfig) -> bool;
     fn RequestDBRemoveRecordsFromTime(time: u64);
-    fn Search(filter: CFilter) -> CVectorWrapper;
     fn UpdateRequestTask(id: u32, info: *const CUpdateInfo) -> bool;
     fn UpdateTaskStateOnAppStateChange(uid: u64, app_state: u8) -> c_void;
     fn UpdateTaskStateOnNetworkChange(info: NetworkInfo) -> c_void;

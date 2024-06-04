@@ -116,6 +116,7 @@ constexpr const char *REQUEST_TASK_TABLE_ADD_CERTIFICATE_PINS = "ALTER TABLE req
 constexpr const char *REQUEST_TASK_TABLE_ADD_Bundle_Type = "ALTER TABLE request_task ADD COLUMN bundle_type "
                                                            "certificate_pins TEXT";
 
+struct TaskFilter;
 class RequestDataBase {
 public:
     static RequestDataBase &GetInstance();
@@ -128,6 +129,8 @@ public:
     bool Delete(const OHOS::NativeRdb::AbsRdbPredicates &predicates);
     int DeleteAllAccountTasks(int user_id);
     int OnAccountChange(int user_id);
+    rust::vec<rust::u32> SearchTask(TaskFilter filter, rust::u64 uid) const; 
+    rust::vec<rust::u32> SystemSearchTask(TaskFilter filter, rust::str bundleName) const;
 
 private:
     RequestDataBase();
@@ -179,7 +182,6 @@ bool CleanTaskConfigTable(uint32_t taskId, uint64_t uid);
 void RequestDBRemoveRecordsFromTime(uint64_t time);
 int QueryTaskConfigLen();
 uint32_t QueryAppUncompletedTasksNum(uint64_t uid, uint8_t mode);
-CVectorWrapper Search(CFilter filter);
 CTaskInfo *GetTaskInfo(uint32_t taskId);
 CTaskConfig *QueryTaskConfig(uint32_t taskId);
 CTaskConfig **QueryAllTaskConfigs(void);

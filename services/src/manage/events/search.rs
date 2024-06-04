@@ -11,13 +11,55 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::manage::database::Database;
+pub(crate) use ffi::TaskFilter;
+
+use crate::manage::account::GetDatabaseInstance;
 use crate::manage::TaskManager;
-use crate::utils::filter::Filter;
 
 impl TaskManager {
-    pub(crate) fn search(&self, filter: Filter) -> Vec<u32> {
-        debug!("TaskManager Search, filter:{:?}", filter);
-        Database::get_instance().search_tasks(filter)
+    pub(crate) fn search(&self, filter: TaskFilter, method: SearchMethod) -> Vec<u32> {
+        info!("Search task by filter: {:?} method: {:?}", filter, method);
+
+        let database = GetDatabaseInstance();
+
+        match method {
+            SearchMethod::User(uid) => unsafe { (*database).SearchTask(filter, uid) },
+            SearchMethod::System(bundle_name) => unsafe {
+                (*database).SystemSearchTask(filter, bundle_name.as_str())
+            },
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) enum SearchMethod {
+    User(u64),
+    System(String),
+}
+
+#[allow(unreachable_pub)]
+#[cxx::bridge(namespace = "OHOS::Request")]
+mod ffi {
+
+    #[derive(Debug)]
+    struct TaskFilter {
+        before: i64,
+        after: i64,
+        state: u8,
+        action: u8,
+        mode: u8,
+    }
+
+    unsafe extern "C++" {
+        include!("c_request_database.h");
+        type RequestDataBase = crate::manage::account::RequestDataBase;
+
+        fn SearchTask(self: &RequestDataBase, filter: TaskFilter, uid: u64) -> Vec<u32>;
+
+        fn SystemSearchTask(
+            self: &RequestDataBase,
+            filter: TaskFilter,
+            bundle_name: &str,
+        ) -> Vec<u32>;
     }
 }

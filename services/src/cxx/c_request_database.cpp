@@ -25,6 +25,7 @@
 #include "c_enumration.h"
 #include "cxx.h"
 #include "log.h"
+#include "manage/events/search.rs.h"
 #include "rdb_errno.h"
 
 namespace OHOS::Request {
@@ -78,6 +79,68 @@ bool RequestDataBase::Update(
     int ret = store_->Update(changedRows, values, predicates);
     REQUEST_HILOGD("Request databases update, changedRows: %{public}d, ret: %{public}d", changedRows, ret);
     return ret == OHOS::NativeRdb::E_OK;
+}
+
+void Search(
+    rust::vec<rust::u32> &tasks, std::shared_ptr<OHOS::NativeRdb::RdbStore> store_, std::string sql, TaskFilter filter)
+{
+    sql += "ctime BETWEEN " + std::to_string(filter.after) + " AND " + std::to_string(filter.before);
+    if (filter.state != static_cast<uint8_t>(State::ANY)) {
+        sql += " AND state = " + std::to_string(filter.state);
+    }
+    if (filter.action != static_cast<uint8_t>(Action::ANY)) {
+        sql += " AND action = " + std::to_string(filter.action);
+    }
+    if (filter.mode != static_cast<uint8_t>(Mode::ANY)) {
+        sql += " AND mode = " + std::to_string(filter.mode);
+    }
+
+    auto queryRet = store_->QuerySql(sql);
+
+    if (queryRet == nullptr) {
+        REQUEST_HILOGE("Search failed with reason: result set is nullptr");
+        return;
+    }
+    int rowCount = 0;
+
+    queryRet->GetRowCount(rowCount);
+    for (int i = 0; i < rowCount; i++) {
+        if (queryRet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
+            REQUEST_HILOGE("result set go to %{public}d row failed", i);
+            return;
+        }
+        int64_t taskId = 0;
+        queryRet->GetLong(0, taskId);
+        tasks.push_back(static_cast<uint32_t>(taskId));
+    }
+}
+
+rust::vec<rust::u32> RequestDataBase::SearchTask(TaskFilter filter, rust::u64 uid) const
+{
+    auto tasks = rust::vec<rust::u32>();
+    if (store_ == nullptr) {
+        return tasks;
+    }
+    std::string sql = "SELECT task_id from request_task WHERE uid = " + std::to_string(uid) + " AND ";
+
+    Search(tasks, store_, sql, filter);
+    return tasks;
+}
+
+rust::vec<rust::u32> RequestDataBase::SystemSearchTask(TaskFilter filter, rust::str bundleName) const
+{
+    auto tasks = rust::vec<rust::u32>();
+    if (store_ == nullptr) {
+        return tasks;
+    }
+    std::string sql = "SELECT task_id from request_task WHERE ";
+
+    if (bundleName != "*") {
+        sql += "bundle = " + std::string(bundleName) + " AND ";
+    }
+
+    Search(tasks, store_, sql, filter);
+    return tasks;
 }
 
 std::shared_ptr<OHOS::NativeRdb::ResultSet> RequestDataBase::Query(
@@ -932,48 +995,6 @@ CTaskInfo *GetTaskInfo(uint32_t taskId)
     }
 
     return BuildCTaskInfo(taskInfo);
-}
-
-CVectorWrapper Search(CFilter filter)
-{
-    CVectorWrapper cVectorWrapper;
-    cVectorWrapper.ptr = nullptr;
-    cVectorWrapper.len = 0;
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    std::string bundle = std::string(filter.bundle.cStr, filter.bundle.len);
-    rdbPredicates.Between("ctime", std::to_string(filter.commonData.after), std::to_string(filter.commonData.before));
-    if (filter.commonData.state != static_cast<uint8_t>(State::ANY)) {
-        rdbPredicates.EqualTo("state", std::to_string(filter.commonData.state));
-    }
-    if (filter.commonData.action != static_cast<uint8_t>(Action::ANY)) {
-        rdbPredicates.EqualTo("action", std::to_string(filter.commonData.action));
-    }
-    if (filter.commonData.mode != static_cast<uint8_t>(Mode::ANY)) {
-        rdbPredicates.EqualTo("mode", std::to_string(filter.commonData.mode));
-    }
-    if (bundle != "*") {
-        rdbPredicates.EqualTo("bundle", bundle);
-    }
-    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates, { "task_id" });
-    if (resultSet == nullptr) {
-        REQUEST_HILOGE("Search failed: result set is nullptr");
-        return cVectorWrapper;
-    }
-    int rowCount = 0;
-    resultSet->GetRowCount(rowCount);
-    cVectorWrapper.ptr = new uint32_t[rowCount];
-    cVectorWrapper.len = static_cast<uint64_t>(rowCount);
-    for (int i = 0; i < rowCount; i++) {
-        if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
-            REQUEST_HILOGE("result set go to %{public}d row failed", i);
-            cVectorWrapper.ptr = nullptr;
-            return cVectorWrapper;
-        }
-        int64_t taskId = 0;
-        resultSet->GetLong(0, taskId);
-        cVectorWrapper.ptr[i] = static_cast<uint32_t>(taskId);
-    }
-    return cVectorWrapper;
 }
 
 void DeleteCVectorWrapper(uint32_t *ptr)

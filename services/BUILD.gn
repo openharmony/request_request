@@ -17,6 +17,7 @@ import("//build/ohos.gni")
 rust_cxx("download_server_cxx_gen") {
   sources = [
     "src/manage/account.rs",
+    "src/manage/events/search.rs",
     "src/task/ffi.rs",
   ]
 }
