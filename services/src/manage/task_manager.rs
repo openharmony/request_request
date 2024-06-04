@@ -186,8 +186,8 @@ impl TaskManager {
             ServiceEvent::QueryMimeType(uid, task_id, tx) => {
                 let _ = tx.send(self.query_mime_type(uid, task_id));
             }
-            ServiceEvent::Search(filter, tx) => {
-                let _ = tx.send(self.search(filter));
+            ServiceEvent::Search(filter, method, tx) => {
+                let _ = tx.send(self.search(filter, method));
             }
             ServiceEvent::GetTask(uid, task_id, token, tx) => {
                 let _ = tx.send(self.get_task(uid, task_id, token));

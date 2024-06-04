@@ -14,20 +14,23 @@
 use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
-use crate::manage::events::TaskManagerEvent;
-use crate::service::{get_calling_bundle, is_system_api, RequestServiceStub};
-use crate::utils::filter::{CommonFilter, Filter};
+use crate::manage::events::{SearchMethod, TaskFilter, TaskManagerEvent};
+use crate::service::{is_system_api, RequestServiceStub};
 
 impl RequestServiceStub {
     pub(crate) fn search(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service search");
-        let mut bundle: String = data.read()?;
-        if !is_system_api() {
-            debug!("Service search: not system api");
-            bundle = get_calling_bundle();
-            debug!("Service search: bundle change: {}", bundle);
-        }
-        debug!("Service search: bundle is {}", bundle);
+        info!("Process Service search");
+        let bundle: String = data.read()?;
+
+        let method = if is_system_api() {
+            debug!("Service system api search: bundle name is {}", bundle);
+            SearchMethod::System(bundle)
+        } else {
+            let uid = ipc::Skeleton::calling_uid();
+            debug!("Service user search: uid is {}", uid);
+            SearchMethod::User(uid)
+        };
+
         let before: i64 = data.read()?;
         debug!("Service search: before is {}", before);
         let after: i64 = data.read()?;
@@ -38,18 +41,15 @@ impl RequestServiceStub {
         debug!("Service search: action is {}", action);
         let mode: u32 = data.read()?;
         debug!("Service search: mode is {}", mode);
-        let common_data = CommonFilter {
+
+        let filter = TaskFilter {
             before,
             after,
             state: state as u8,
             action: action as u8,
             mode: mode as u8,
         };
-        let filter = Filter {
-            bundle,
-            common_data,
-        };
-        let (event, rx) = TaskManagerEvent::search(filter);
+        let (event, rx) = TaskManagerEvent::search(filter, method);
         if !self.task_manager.lock().unwrap().send_event(event) {
             return Err(IpcStatusCode::Failed);
         }

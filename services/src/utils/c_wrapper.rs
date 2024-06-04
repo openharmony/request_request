@@ -14,7 +14,6 @@
 use std::ffi::c_char;
 use std::slice;
 
-use crate::utils::filter::{CommonFilter, Filter};
 use crate::utils::form_item::{FileSpec, FormItem};
 
 #[derive(Clone, Debug)]
@@ -49,27 +48,6 @@ impl ToString for CStringWrapper {
         unsafe { DeleteChar(self.c_str) };
         str
     }
-}
-
-#[repr(C)]
-pub(crate) struct CFilter {
-    bundle: CStringWrapper,
-    common_data: CommonFilter,
-}
-
-impl Filter {
-    pub(crate) fn to_c_struct(&self) -> CFilter {
-        CFilter {
-            bundle: CStringWrapper::from(&self.bundle),
-            common_data: self.common_data,
-        }
-    }
-}
-
-#[repr(C)]
-pub(crate) struct CVectorWrapper {
-    pub(crate) ptr: *const u32,
-    pub(crate) len: u64,
 }
 
 #[repr(C)]
