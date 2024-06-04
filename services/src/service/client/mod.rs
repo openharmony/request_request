@@ -13,6 +13,7 @@
 
 mod manager;
 
+use std::collections::HashMap;
 use std::net::Shutdown;
 use std::os::fd::AsRawFd;
 
@@ -176,8 +177,8 @@ impl Client {
 
     async fn run(mut self) {
         loop {
-            // only send last progress message
-            let mut progress_index = 0;
+            // for one task, only send last progress message
+            let mut progress_index = HashMap::new();
             let mut temp_notify_data: Vec<(SubscribeType, NotifyData)> = Vec::new();
             let mut len = self.rx.len();
             if len == 0 {
@@ -196,7 +197,7 @@ impl Client {
                         let _ = self.client_sock_fd.shutdown(Shutdown::Both);
                         let _ = self.server_sock_fd.shutdown(Shutdown::Both);
                         self.rx.close();
-                        debug!("client terminate, pid: {}", self.pid);
+                        info!("client terminate, pid: {}", self.pid);
                         return;
                     }
                     ClientEvent::SendResponse(tid, version, status_code, reason, headers) => {
@@ -205,7 +206,7 @@ impl Client {
                     }
                     ClientEvent::SendNotifyData(subscribe_type, notify_data) => {
                         if subscribe_type == SubscribeType::Progress {
-                            progress_index = index;
+                            progress_index.insert(notify_data.task_id, index);
                         }
                         temp_notify_data.push((subscribe_type, notify_data));
                     }
@@ -213,7 +214,9 @@ impl Client {
                 }
             }
             for (index, (subscribe_type, notify_data)) in temp_notify_data.into_iter().enumerate() {
-                if subscribe_type != SubscribeType::Progress || progress_index == index {
+                if subscribe_type != SubscribeType::Progress
+                    || progress_index.get(&notify_data.task_id) == Some(&index)
+                {
                     self.handle_send_notify_data(subscribe_type, notify_data)
                         .await;
                 }
@@ -340,8 +343,8 @@ impl Client {
 
         let size = message.len() as u16;
         info!(
-            "send notify data, type: {:?}, tid: {:?}",
-            subscribe_type, notify_data.task_id
+            "send notify data, type: {:?}, tid: {}, size: {}",
+            subscribe_type, notify_data.task_id, size
         );
         let size = size.to_le_bytes();
         message[POSITION_OF_LENGTH as usize] = size[0];
@@ -353,7 +356,8 @@ impl Client {
     async fn send_message(&mut self, message: Vec<u8>) {
         let ret = self.server_sock_fd.send(&message).await;
         match ret {
-            Ok(_) => {
+            Ok(size) => {
+                info!("send message ok, pid: {}, size: {}", self.pid, size);
                 let mut buf: [u8; 4] = [0; 4];
                 let ret = self.server_sock_fd.recv(&mut buf).await;
                 if let Err(e) = ret {
@@ -362,6 +366,8 @@ impl Client {
                 let len: u32 = u32::from_le_bytes(buf);
                 if len != message.len() as u32 {
                     error!("message len bad, send {:?}, recv {:?}", message.len(), len);
+                } else {
+                    debug!("notify done, pid: {}", self.pid);
                 }
             }
             Err(err) => {

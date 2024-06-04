@@ -40,10 +40,10 @@ impl RequestServiceStub {
         };
 
         let id: String = data.read()?;
-        info!("Process Service query: task_id is {}", id);
+        info!("Service query: tid: {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
-                debug!("Service query: u32 task_id is {}", id);
+                debug!("Service query: u32 tid: {}", id);
                 let (event, rx) = TaskManagerEvent::query(id, action);
                 if !self.task_manager.lock().unwrap().send_event(event) {
                     return Err(IpcStatusCode::Failed);
@@ -51,29 +51,26 @@ impl RequestServiceStub {
                 match rx.get() {
                     Some(Some(info)) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;
-                        info!("End Service query successfully, task_id is {}", id);
+                        info!("End Service query ok, tid: {}", id);
                         serialize_task_info(info, reply)?;
                         Ok(())
                     }
                     Some(None) => {
-                        error!(
-                        "End Service query, failed with reason: task_id not found, task_id is {}",
-                        id
-                    );
+                        error!("End Service query, failed: task_id not found, tid: {}", id);
                         reply.write(&(ErrorCode::TaskNotFound as i32))?;
                         Err(IpcStatusCode::Failed)
                     }
                     None => {
-                        error!("End Service query, task_id is {}, failed with reason: receives task_info failed", id);
+                        error!(
+                            "End Service query, tid: {}, failed: receives task_info failed",
+                            id
+                        );
                         Err(IpcStatusCode::Failed)
                     }
                 }
             }
             _ => {
-                error!(
-                    "End Service query, task_id is {}, failed with reason: task_id not valid",
-                    id
-                );
+                error!("End Service query, tid: {}, failed: task_id not valid", id);
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

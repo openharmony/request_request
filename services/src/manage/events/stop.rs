@@ -16,7 +16,7 @@ use crate::manage::TaskManager;
 
 impl TaskManager {
     pub(crate) async fn stop(&mut self, uid: u64, task_id: u32) -> ErrorCode {
-        info!("stop a task, which task id is {}", task_id);
+        info!("stop task, tid: {}", task_id);
         self.scheduler.stop_task(uid, task_id).await
     }
 }

@@ -47,7 +47,7 @@ napi_status JSResponseListener::RemoveListener(napi_value cb)
 
 void JSResponseListener::OnResponseReceive(const std::shared_ptr<Response> &response)
 {
-    REQUEST_HILOGI("OnResponseReceive, tid is %{public}s", response->taskId.c_str());
+    REQUEST_HILOGI("OnResponseReceive, tid: %{public}s", response->taskId.c_str());
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(this->env_, &loop);
     if (loop == nullptr) {

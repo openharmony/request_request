@@ -81,7 +81,8 @@ impl RunningTask {
 
     pub(crate) async fn run(self) {
         let task = self;
-        info!("run the task which id is {}", task.conf.common_data.task_id);
+        let mut index = 0;
+        info!("run task: {}", task.conf.common_data.task_id);
 
         let action = task.conf.common_data.action;
         match action {
@@ -103,7 +104,7 @@ impl RunningTask {
             Action::Upload => {
                 let state = task.status.lock().unwrap().state;
                 if state == State::Retrying {
-                    let index = {
+                    index = {
                         let mut progress_guard = task.progress.lock().unwrap();
                         let index = progress_guard.common_data.index;
                         progress_guard.common_data.total_processed -=
@@ -126,7 +127,12 @@ impl RunningTask {
             }
             _ => {}
         }
-        info!("task run end, task_id is {}", task.conf.common_data.task_id);
+        info!(
+            "task run end: {}, state: {:?}, reason: {:?}",
+            task.conf.common_data.task_id,
+            task.status.lock().unwrap().state,
+            task.code.lock().unwrap()[index]
+        );
     }
 }
 

@@ -22,7 +22,7 @@ impl RequestServiceStub {
     pub(crate) fn unsub_runcount(&self, reply: &mut MsgParcel) -> IpcResult<()> {
         let pid = ipc::Skeleton::calling_pid();
         // let uid = ipc::Skeleton::calling_uid();
-        info!("Process Service runcount unsubscribe: pid is {}", pid);
+        info!("Service runcount unsubscribe: pid is {}", pid);
 
         let (event, rx) = RunCountEvent::unsub_runcount(pid);
         self.runcount_manager.send_event(event);
@@ -30,19 +30,16 @@ impl RequestServiceStub {
         let ret = match rx.get() {
             Some(ret) => ret,
             None => {
-                error!("End Service runcount unsubscribe, failed with reason: receives ret failed");
+                error!("End Service runcount unsubscribe, failed: receives ret failed");
                 return Err(IpcStatusCode::Failed);
             }
         };
         reply.write(&(ret as i32))?;
         if ret != ErrorCode::ErrOk {
-            error!(
-                "End Service runcount unsubscribe, failed with reason: {}",
-                ret as i32
-            );
+            error!("End Service runcount unsubscribe, failed: {}", ret as i32);
             return Err(IpcStatusCode::Failed);
         }
-        info!("End Service runcount successfully: pid is {}", pid);
+        info!("End Service runcount ok: pid is {}", pid);
         Ok(())
     }
 }

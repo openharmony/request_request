@@ -99,7 +99,7 @@ pub(crate) async fn download(task: Arc<RequestTask>) {
 
 async fn download_inner(task: Arc<RequestTask>) {
     info!(
-        "begin download task, task_id is {}",
+        "begin download task, tid: {}",
         task.conf.common_data.task_id
     );
 

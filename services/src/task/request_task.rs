@@ -110,8 +110,11 @@ impl RequestTask {
     }
 
     pub(crate) fn speed_limit(&self, limit: u8) {
-        info!("task_id:{} speed_limit level {}", self.task_id(), limit);
-        self.rate_limiting.store(limit, Ordering::Release);
+        let old = self.rate_limiting.load(Ordering::Acquire);
+        if old != limit {
+            info!("task {} speed_limit {}", self.task_id(), limit);
+            self.rate_limiting.store(limit, Ordering::Release);
+        }
     }
 
     #[allow(dead_code)]
@@ -663,15 +666,7 @@ impl RequestTask {
             Some(reason) => {
                 if *reason == Reason::Default {
                     *reason = code;
-                    debug!(
-                        "set code; tid: {}, index: {}, code: {:?}",
-                        self.conf.common_data.task_id, index, code
-                    );
                 }
-                info!(
-                    "set code error; tid: {}, index: {}, code: {:?}, reason: {:?}",
-                    self.conf.common_data.task_id, index, code, reason
-                );
             }
             None => {
                 info!(

@@ -30,10 +30,10 @@ impl RequestServiceStub {
         }
 
         let id: String = data.read()?;
-        info!("Process Service remove: task_id is {}", id);
+        info!("Service remove: tid: {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
-                debug!("Service remove: u32 task_id is {}", id);
+                debug!("Service remove: u32 tid: {}", id);
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service remove: uid is {}", uid);
                 let (event, rx) = TaskManagerEvent::remove(uid, id);
@@ -43,26 +43,23 @@ impl RequestServiceStub {
                 let ret = match rx.get() {
                     Some(ret) => ret,
                     None => {
-                        error!("End Service remove, task_id is {}, failed with reason: receives ret failed", id);
+                        error!(
+                            "End Service remove, tid: {}, failed: receives ret failed",
+                            id
+                        );
                         return Err(IpcStatusCode::Failed);
                     }
                 };
                 reply.write(&(ret as i32))?;
                 if ret != ErrorCode::ErrOk {
-                    error!(
-                        "End Service remove, task_id is {}, failed with reason: {}",
-                        id, ret as i32
-                    );
+                    error!("End Service remove, tid: {}, failed: {}", id, ret as i32);
                     return Err(IpcStatusCode::Failed);
                 }
-                info!("End Service remove successfully, task_id is {}", id);
+                info!("End Service remove ok, tid: {}", id);
                 Ok(())
             }
             _ => {
-                error!(
-                    "End Service remove, task_id is {}, failed with reason: task_id not valid",
-                    id
-                );
+                error!("End Service remove, tid: {}, failed: task_id not valid", id);
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

@@ -28,10 +28,10 @@ use crate::utils::form_item::{FileSpec, FormItem};
 
 impl RequestServiceStub {
     pub(crate) fn construct(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Process Service construct");
+        info!("Service construct");
 
         if !PermissionChecker::check_internet() {
-            error!("End Service construct, failed with reason: no INTERNET permission");
+            error!("End Service construct, failed: no INTERNET permission");
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -98,7 +98,7 @@ impl RequestServiceStub {
 
         let certs_path_size: u32 = data.read()?;
         if certs_path_size > data.readable() as u32 {
-            error!("End Service construct, failed with reason: certs_path_size too large");
+            error!("End Service construct, failed: certs_path_size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -110,7 +110,7 @@ impl RequestServiceStub {
 
         let form_size: u32 = data.read()?;
         if form_size > data.readable() as u32 {
-            error!("End Service construct, failed with reason: form_size too large");
+            error!("End Service construct, failed: form_size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -123,7 +123,7 @@ impl RequestServiceStub {
 
         let file_size: u32 = data.read()?;
         if file_size > data.readable() as u32 {
-            error!("End Service construct, failed with reason: file_specs size too large");
+            error!("End Service construct, failed: file_specs size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -152,7 +152,7 @@ impl RequestServiceStub {
         // Response bodies fd.
         let body_file_size: u32 = data.read()?;
         if body_file_size > data.readable() as u32 {
-            error!("End Service construct, failed with reason: body_file size too large");
+            error!("End Service construct, failed: body_file size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -165,7 +165,7 @@ impl RequestServiceStub {
 
         let header_size: u32 = data.read()?;
         if header_size > data.readable() as u32 {
-            error!("End Service construct, failed with reason: header size too large");
+            error!("End Service construct, failed: header size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -178,7 +178,7 @@ impl RequestServiceStub {
 
         let extras_size: u32 = data.read()?;
         if extras_size > data.readable() as u32 {
-            error!("End Service construct, failed with reason: extras size too large");
+            error!("End Service construct, failed: extras size too large");
             reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -238,7 +238,7 @@ impl RequestServiceStub {
         let ret = match rx.get() {
             Some(ret) => ret,
             None => {
-                error!("End Service construct, failed with reason: receives ret failed");
+                error!("End Service construct, failed: receives ret failed");
                 return Err(IpcStatusCode::Failed);
             }
         };
@@ -246,7 +246,7 @@ impl RequestServiceStub {
         let task_id = match ret {
             Ok(id) => id,
             Err(err_code) => {
-                error!("End Service construct, failed with reason: {:?}", err_code);
+                error!("End Service construct, failed: {:?}", err_code);
                 reply.write(&(err_code as i32))?;
                 return Err(IpcStatusCode::Failed);
             }
@@ -256,10 +256,7 @@ impl RequestServiceStub {
 
         let ret = self.client_manager.subscribe(task_id, pid, uid, token_id);
         if ret != ErrorCode::ErrOk {
-            error!(
-                "End Service subscribe, task_id is {}, failed with reason: {:?}",
-                task_id, ret
-            );
+            error!("End Service subscribe, tid: {}, failed: {:?}", task_id, ret);
             reply.write(&(ret as i32))?;
             reply.write(&(task_id as i32))?;
             return Err(IpcStatusCode::Failed);

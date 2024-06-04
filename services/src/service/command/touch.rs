@@ -21,10 +21,10 @@ use crate::service::{serialize_task_info, RequestServiceStub};
 impl RequestServiceStub {
     pub(crate) fn touch(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         let id: String = data.read()?;
-        info!("Process Service touch: task_id is {}", id);
+        info!("Service touch: tid: {}", id);
         match id.parse::<u32>() {
             Ok(id) => {
-                debug!("Service touch: u32 task_id is {}", id);
+                debug!("Service touch: u32 tid: {}", id);
                 let token: String = data.read()?;
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service touch: uid is {}", uid);
@@ -36,22 +36,28 @@ impl RequestServiceStub {
                     Some(Some(info)) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;
                         serialize_task_info(info, reply)?;
-                        info!("End Service touch successfully: task_id is {}", id);
+                        info!("End Service touch ok: tid: {}", id);
                         Ok(())
                     }
                     Some(None) => {
-                        error!("End Service touch, task_id is {}, failed with reason: task_id or token not found", id);
+                        error!(
+                            "End Service touch, tid: {}, failed: task_id or token not found",
+                            id
+                        );
                         reply.write(&(ErrorCode::TaskNotFound as i32))?;
                         Err(IpcStatusCode::Failed)
                     }
                     None => {
-                        error!("End Service touch, task_id is {}, failed with reason: receives task_info failed", id);
+                        error!(
+                            "End Service touch, tid: {}, failed: receives task_info failed",
+                            id
+                        );
                         Err(IpcStatusCode::Failed)
                     }
                 }
             }
             _ => {
-                error!("End Service touch, failed with reason: task_id or token not valid");
+                error!("End Service touch, failed: task_id or token not valid");
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

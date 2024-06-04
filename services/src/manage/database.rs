@@ -73,14 +73,14 @@ impl Database {
         let info_set = task_info.build_info_set();
         let c_task_info = task_info.to_c_struct(&info_set);
 
-        let ret = unsafe { RecordRequestTask(&c_task_info, &c_task_config) };
+        if !unsafe { RecordRequestTask(&c_task_info, &c_task_config) } {
+            info!("Insert task {} to database failed", task_id);
+        }
 
         // For some tasks contains user_file, we must save it to map first.
         if task.conf.contains_user_file() {
             self.user_file_tasks.insert(task.task_id(), Arc::new(task));
         }
-
-        info!("Insert task to database, ret is {}", ret);
     }
 
     pub(crate) fn update_task(&self, task: &RequestTask) {
