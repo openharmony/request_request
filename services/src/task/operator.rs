@@ -31,7 +31,7 @@ use crate::task::request_task::RequestTask;
 use crate::utils::get_current_timestamp;
 const SPEED_CACULATE_INTERVAL: u64 = 5000;
 const SPEED_LIMIT_INTERVAL: u64 = 500;
-const MIN_SPEED: u64 = 512;
+const MIN_SPEED: u64 = 100;
 use std::future::Future;
 use std::time::Duration;
 
