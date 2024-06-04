@@ -18,6 +18,9 @@
                     },
                     {
                         "name": "usual.event.USER_SWITCHED"
+                    },
+                    {
+                        "name": "usual.event.USER_STOPPED"
                     }
                 ]
             }
