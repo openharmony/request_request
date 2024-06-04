@@ -80,6 +80,7 @@ ohos_shared_library("request") {
     "ability_runtime:abilitykit_native",
     "ability_runtime:app_context",
     "ability_runtime:data_ability_helper",
+    "ability_runtime:extensionkit_native",
     "ability_runtime:napi_base_context",
     "c_utils:utils",
     "ffrt:libffrt",

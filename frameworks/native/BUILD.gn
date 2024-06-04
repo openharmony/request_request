@@ -63,6 +63,7 @@ ohos_shared_library("request_native") {
   deps = [ "../../common:request_common_static" ]
 
   external_deps = [
+    "ability_runtime:extensionkit_native",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
