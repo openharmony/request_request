@@ -131,6 +131,7 @@ pub(crate) fn update_accounts() {
     }
     {
         let mut accounts = BACKGOUNFD_ACCOUNTS.lock().unwrap();
+        accounts.clear();
         GetBackgroundOsAccounts(&mut accounts);
         for account in accounts.iter() {
             unsafe {
