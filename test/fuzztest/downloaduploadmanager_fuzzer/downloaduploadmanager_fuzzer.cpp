@@ -556,7 +556,6 @@ void ResponseMessageFuzzTestResponseHeaderFromParcel(const uint8_t *data, size_t
 {
     std::map<std::string, std::vector<std::string>> headers;
     std::string except = "header:aaa,bbb,ccc\n";
-    std::vector<std::string> header;
     char *parcel = const_cast<char *>(except.c_str());
     int testSize = except.size();
     ResponseMessageReceiver::ResponseHeaderFromParcel(headers, parcel, testSize);

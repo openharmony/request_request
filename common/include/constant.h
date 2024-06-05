@@ -62,9 +62,9 @@ static constexpr const char *E_FILE_IO_INFO = " file operation error";
 static constexpr const char *E_FILE_PATH_INFO = "bad file path";
 static constexpr const char *E_SERVICE_ERROR_INFO = "task service ability error";
 static constexpr const char *E_OTHER_INFO = "other error";
-static constexpr const char *E_TASK_QUEUE_INFO = "application task queue full error";
+static constexpr const char *E_TASK_QUEUE_INFO = "the application task queue is full";
 static constexpr const char *E_TASK_MODE_INFO = "task mode error";
-static constexpr const char *E_TASK_NOT_FOUND_INFO = "task not found error";
+static constexpr const char *E_TASK_NOT_FOUND_INFO = "task not found";
 static constexpr const char *E_TASK_STATE_INFO = "task state error";
 
 static constexpr const char *FUNCTION_PAUSE = "pause";

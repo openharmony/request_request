@@ -318,12 +318,12 @@ uint32_t Convert2Broken(Reason code)
         { TCP, Faults::TCP },
         { SSL, Faults::SSL },
     };
-    constexpr const std::uint32_t DETAIL_VERSION = 0;
+    constexpr const int32_t detailVersion = 12;
     auto iter = InnerCodeToBroken.find(code);
     if (iter != InnerCodeToBroken.end()) {
         int32_t sdkVersion = GetSdkApiVersion();
         REQUEST_HILOGD("GetSdkApiVersion %{public}d", sdkVersion);
-        if (sdkVersion < DETAIL_VERSION
+        if (sdkVersion < detailVersion
             && (iter->second == Faults::PARAM || iter->second == Faults::DNS || iter->second == Faults::TCP
                 || iter->second == Faults::SSL || iter->second == Faults::REDIRECT)) {
             return static_cast<uint32_t>(Faults::OTHERS);
