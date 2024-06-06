@@ -100,7 +100,8 @@ impl Scheduler {
             let app_state = self.app_state_manager.get_app_state(uid).await;
             let raw_state = app_state.state();
             if task_state == State::Initialized
-                || (task_state == State::Failed && action == Action::Download)
+                || ((task_state == State::Failed || task_state == State::Stopped)
+                    && action == Action::Download)
             {
                 if Mode::from(task.mode) != Mode::FrontEnd
                     || raw_state == ApplicationState::Foreground

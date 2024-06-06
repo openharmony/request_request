@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::cmp::max;
 use std::pin::Pin;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
@@ -25,8 +26,9 @@ use crate::task::config::Version;
 use crate::task::info::State;
 use crate::task::request_task::RequestTask;
 use crate::utils::get_current_timestamp;
-const SPEED_CACULATE_INTERVAL: u64 = 2000;
-const SPEED_LIMIT_INTERVAL: u64 = 100;
+const SPEED_CACULATE_INTERVAL: u64 = 5000;
+const SPEED_LIMIT_INTERVAL: u64 = 500;
+const MIN_SPEED: u64 = 100;
 use std::future::Future;
 use std::time::Duration;
 
@@ -96,7 +98,6 @@ impl TaskOperator {
             .unwrap()
             .common_data
             .total_processed as u64;
-
         // get the init time and size, for speed caculate
         if self.last_time == 0 && total_processed != 0 {
             self.last_time = current;
@@ -110,21 +111,34 @@ impl TaskOperator {
             && (current > (self.last_time + SPEED_CACULATE_INTERVAL))
             && total_processed != 0
         {
-            self.speed = (total_processed - self.last_size) / (current - self.last_time);
+            let speed = (total_processed - self.last_size) / (current - self.last_time);
+            self.speed = if speed > MIN_SPEED {
+                debug!("limit speed, {}, {}", speed, self.task.task_id());
+                speed
+            } else {
+                self.last_time = current;
+                self.last_size = total_processed;
+                0
+            };
         }
 
-        // For every 1 increase in the speed_limit, the speed decreases by 25%
+        // For every 1 increase in the speed_limit, the speed decreases by 25%,
+        // but need to be larger than MIN_SPEED
+        let speed = max(self.speed / 4 * (4 - speed_limit), MIN_SPEED);
+
         if speed_limit != 0
             && self.speed != 0
-            && ((total_processed - self.last_size)
-                > (self.speed * (current - self.last_time) / 4 * (4 - speed_limit)))
+            && current - self.last_time < SPEED_LIMIT_INTERVAL
+            && ((total_processed - self.last_size) > speed * SPEED_LIMIT_INTERVAL)
         {
-            self.sleep = Some(sleep(Duration::from_millis(SPEED_LIMIT_INTERVAL)));
+            self.sleep = Some(sleep(Duration::from_millis(
+                SPEED_LIMIT_INTERVAL - (current - self.last_time),
+            )));
         } else {
             self.sleep = None;
             // last caculate window has meet speed limit, update last_time and last_size,
             // for next poll's speed compare
-            if self.speed != 0 {
+            if self.speed != 0 && current - self.last_time > SPEED_LIMIT_INTERVAL {
                 self.last_time = current;
                 self.last_size = total_processed;
             }

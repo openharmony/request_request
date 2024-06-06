@@ -407,6 +407,7 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
 
 void ResponseMessageReceiver::OnShutdown(int32_t fd)
 {
+    REQUEST_HILOGI("uds OnShutdown, %{public}d", fd);
     serviceHandler_->RemoveFileDescriptorListener(fd);
     close(fd);
     this->handler_->OnChannelBroken();
@@ -414,6 +415,7 @@ void ResponseMessageReceiver::OnShutdown(int32_t fd)
 
 void ResponseMessageReceiver::OnException(int32_t fd)
 {
+    REQUEST_HILOGI("uds OnException, %{public}d", fd);
     serviceHandler_->RemoveFileDescriptorListener(fd);
     close(fd);
     this->handler_->OnChannelBroken();
@@ -421,6 +423,7 @@ void ResponseMessageReceiver::OnException(int32_t fd)
 
 void ResponseMessageReceiver::Shutdown()
 {
+    REQUEST_HILOGI("uds shutdown, %{public}d", sockFd_);
     serviceHandler_->RemoveFileDescriptorListener(sockFd_);
     close(sockFd_);
     this->handler_->OnChannelBroken();
