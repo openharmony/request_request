@@ -1332,7 +1332,11 @@ void UpdateTaskStateOnNetworkChange(NetworkInfo info)
             ->And()
             ->EqualTo("state", static_cast<uint8_t>(State::WAITING))
             ->And()
-            ->EqualTo("reason", static_cast<uint8_t>(Reason::NETWORK_OFFLINE));
+            ->BeginWrap()
+            ->EqualTo("reason", static_cast<uint8_t>(Reason::NETWORK_OFFLINE))
+            ->Or()
+            ->EqualTo("reason", static_cast<uint8_t>(Reason::UNSUPPORTED_NETWORK_TYPE))
+            ->EndWrap();
         if (!OHOS::Request::RequestDataBase::GetInstance().Update(satisfied, satisfiedWifi)) {
             REQUEST_HILOGE("Change WI-FI task to RunningTaskMeetLimits on network change failed");
             return;
@@ -1350,7 +1354,11 @@ void UpdateTaskStateOnNetworkChange(NetworkInfo info)
             ->And()
             ->EqualTo("state", static_cast<uint8_t>(State::WAITING))
             ->And()
-            ->EqualTo("reason", static_cast<uint8_t>(Reason::NETWORK_OFFLINE));
+            ->BeginWrap()
+            ->EqualTo("reason", static_cast<uint8_t>(Reason::NETWORK_OFFLINE))
+            ->Or()
+            ->EqualTo("reason", static_cast<uint8_t>(Reason::UNSUPPORTED_NETWORK_TYPE))
+            ->EndWrap();
 
         if (!info.isMetered) {
             satisfiedCellular.And()->EqualTo("metered", std::to_string(static_cast<uint8_t>(false)));
