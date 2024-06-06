@@ -171,7 +171,7 @@ static void RemoveJSTask(const std::shared_ptr<NotifyData> &notifyData)
             || notifyData->type == SubscribeType::REMOVE)) {
         JsTask::ClearTaskTemp(tid, true, true, true, true);
         JsTask::ClearTaskMap(tid);
-        REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
+        REQUEST_HILOGD("jstask %{public}s clear and removed", tid.c_str());
     } else if (notifyData->version == Version::API10) {
         if (notifyData->type == SubscribeType::REMOVE) {
             JsTask::ClearTaskTemp(tid, true, true, true, true);
@@ -179,6 +179,7 @@ static void RemoveJSTask(const std::shared_ptr<NotifyData> &notifyData)
             REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
         } else if (notifyData->type == SubscribeType::COMPLETED || notifyData->type == SubscribeType::FAILED) {
             JsTask::ClearTaskTemp(tid, true, false, false, false);
+            REQUEST_HILOGD("jstask %{public}s clear", tid.c_str());
         }
     }
 }
@@ -218,11 +219,11 @@ void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
             napi_value values[NapiUtils::TWO_ARG] = { nullptr };
             ptr->listener->NotifyDataProcess(ptr->notifyData, values, paramNumber);
             ptr->listener->OnMessageReceive(values, paramNumber);
+            RemoveJSTask(ptr->notifyData);
             napi_close_handle_scope(ptr->listener->env_, scope);
             delete work;
             delete ptr;
         });
-    RemoveJSTask(notifyData);
 }
 
 } // namespace OHOS::Request

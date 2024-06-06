@@ -1031,7 +1031,7 @@ void JsTask::RemovePathMap(const std::string &filepath)
             if (fileMap_[filepath] <= 1) {
                 fileMap_.erase(filepath);
                 if (chmod(filepath.c_str(), S_IRUSR | S_IWUSR | S_IRGRP) != 0) {
-                    REQUEST_HILOGE("File remove OTH access Failed.");
+                    REQUEST_HILOGE("File remove OTH access Failed: %{public}s", filepath.c_str());
                 }
             } else {
                 fileMap_[filepath] -= 1;
@@ -1084,6 +1084,11 @@ void JsTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls
     if (isRmFiles) {
         auto bodyFileNames = context->task->config_.bodyFileNames;
         for (auto &filePath : bodyFileNames) {
+            std::error_code err;
+            if (!std::filesystem::exists(filePath, err)) {
+                continue;
+            }
+            err.clear();
             RemovePathMap(filePath);
             NapiUtils::RemoveFile(filePath);
         }
