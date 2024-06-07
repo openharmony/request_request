@@ -115,7 +115,7 @@ void NetworkAdapter::UpdateNetworkInfoInner(const NetManagerStandard::NetAllCapa
 {
     if (capabilities.netCaps_.find(NET_CAPABILITY_INTERNET) != capabilities.netCaps_.end()) {
         isOnline_ = true;
-        networkInfo_.networkType = NetworkInner::NET_LOST;
+        networkInfo_.networkType = NetworkInner::ANY;
         if (capabilities.bearerTypes_.find(NetBearType::BEARER_CELLULAR) != capabilities.bearerTypes_.end()) {
             REQUEST_HILOGD("Bearer Cellular");
             networkInfo_.networkType = NetworkInner::CELLULAR;
