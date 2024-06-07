@@ -133,7 +133,7 @@ fn build_stream_request(task: Arc<RequestTask>, index: usize) -> Option<Request>
 }
 
 fn build_multipart_request(task: Arc<RequestTask>, index: usize) -> Option<Request> {
-    info!("build multipart request");
+    debug!("build multipart request");
     let task_reader = TaskReader::new(task.clone());
     let task_operator = TaskOperator::new(task.clone());
     let mut multi_part = MultiPart::new();
@@ -175,7 +175,7 @@ fn build_request_common(
 ) -> Option<Request> {
     match request {
         Ok(value) => {
-            info!(
+            debug!(
                 "build upload request success, tid: {}",
                 task.conf.common_data.task_id
             );
@@ -199,7 +199,7 @@ fn build_request_common(
 }
 
 pub(crate) async fn upload(task: Arc<RequestTask>) {
-    info!("begin upload task, tid: {}", task.conf.common_data.task_id);
+    debug!("begin upload task, tid: {}", task.conf.common_data.task_id);
 
     let url = task.conf.url.as_str();
     let num = task.conf.file_specs.len();
@@ -271,7 +271,7 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
             .write();
     }
 
-    info!("upload end, tid: {}", task.conf.common_data.task_id);
+    debug!("upload end, tid: {}", task.conf.common_data.task_id);
 }
 
 async fn upload_one_file<F>(task: Arc<RequestTask>, index: usize, build_upload_request: F) -> bool

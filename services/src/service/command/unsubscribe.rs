@@ -25,7 +25,7 @@ impl RequestServiceStub {
             Ok(tid) => {
                 if self.client_manager.unsubscribe(tid) == ErrorCode::ErrOk {
                     reply.write(&(ErrorCode::ErrOk as i32))?;
-                    info!("End Service unsubscribe ok: tid: {}", tid);
+                    debug!("End Service unsubscribe ok: tid: {}", tid);
                     Ok(())
                 } else {
                     debug!("unsubscribe failed, tid: {}", tid);

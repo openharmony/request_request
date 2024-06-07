@@ -98,7 +98,7 @@ pub(crate) async fn download(task: Arc<RequestTask>) {
 }
 
 async fn download_inner(task: Arc<RequestTask>) {
-    info!(
+    debug!(
         "begin download task, tid: {}",
         task.conf.common_data.task_id
     );

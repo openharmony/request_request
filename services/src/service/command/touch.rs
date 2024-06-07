@@ -36,7 +36,7 @@ impl RequestServiceStub {
                     Some(Some(info)) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;
                         serialize_task_info(info, reply)?;
-                        info!("End Service touch ok: tid: {}", id);
+                        debug!("End Service touch ok: tid: {}", id);
                         Ok(())
                     }
                     Some(None) => {

@@ -51,7 +51,7 @@ impl RequestServiceStub {
                 match rx.get() {
                     Some(Some(info)) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;
-                        info!("End Service query ok, tid: {}", id);
+                        debug!("End Service query ok, tid: {}", id);
                         serialize_task_info(info, reply)?;
                         Ok(())
                     }
