@@ -46,7 +46,7 @@ impl RequestServiceStub {
             error!("End Service runcount subscribe, failed:{}", ret as i32);
             return Err(IpcStatusCode::Failed);
         }
-        info!("End Service runcount subscribe ok: pid is {}", pid);
+        debug!("End Service runcount subscribe ok: pid is {}", pid);
         Ok(())
     }
 }

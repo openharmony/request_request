@@ -950,7 +950,7 @@ bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo)
 
 bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state, Reason reason)
 {
-    REQUEST_HILOGI("Change task state, tid: %{public}d, state is %{public}d", taskId, static_cast<int32_t>(state));
+    REQUEST_HILOGD("Change task state, tid: %{public}d, state is %{public}d", taskId, static_cast<int32_t>(state));
 
     OHOS::NativeRdb::ValuesBucket values;
     values.PutInt("state", static_cast<uint8_t>(state));

@@ -263,7 +263,7 @@ impl RequestServiceStub {
         }
 
         reply.write(&(ErrorCode::ErrOk as i32))?;
-        info!("End Service construct, succeed with tid: {}", task_id);
+        debug!("End Service construct, succeed with tid: {}", task_id);
         reply.write(&(task_id as i32))?;
         Ok(())
     }

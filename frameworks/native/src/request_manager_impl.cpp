@@ -47,14 +47,12 @@ const std::unique_ptr<RequestManagerImpl> &RequestManagerImpl::GetInstance()
 
 int32_t RequestManagerImpl::Create(const Config &config, int32_t seq, std::string &tid)
 {
-    REQUEST_HILOGD("RequestManagerImpl Create start.");
-
     auto proxy = GetRequestServiceProxy();
     if (proxy == nullptr) {
         REQUEST_HILOGE("GetRequestServiceProxy fail.");
         return E_SERVICE_ERROR;
     }
-    REQUEST_HILOGI("Request create, seq: %{public}d", seq);
+    REQUEST_HILOGD("Request create, seq: %{public}d", seq);
     this->EnsureChannelOpen();
     int32_t ret = proxy->Create(config, tid);
     if (ret == E_UNLOADING_SA) {
@@ -75,7 +73,7 @@ int32_t RequestManagerImpl::Create(const Config &config, int32_t seq, std::strin
     if (ret != E_OK) {
         REQUEST_HILOGE("Request create, seq: %{public}d, failed: %{public}d", seq, ret);
     } else {
-        REQUEST_HILOGI("End Request create ok, seq: %{public}d, ret: %{public}d", seq, ret);
+        REQUEST_HILOGD("End Request create ok, seq: %{public}d, ret: %{public}d", seq, ret);
     }
 
     return ret;

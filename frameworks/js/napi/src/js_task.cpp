@@ -175,7 +175,7 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
 
 int32_t JsTask::CreateExec(const std::shared_ptr<ContextInfo> &context, int32_t seq)
 {
-    REQUEST_HILOGI("JsTask CreateExec: Action %{public}d, Mode %{public}d, seq: %{public}d",
+    REQUEST_HILOGD("JsTask CreateExec: Action %{public}d, Mode %{public}d, seq: %{public}d",
         context->task->config_.action, context->task->config_.mode, seq);
     if (!RequestManager::GetInstance()->LoadRequestServer()) {
         REQUEST_HILOGE("End create task in JsTask CreateExec, seq: %{public}d, failed: request service "
@@ -359,7 +359,7 @@ napi_value JsTask::GetTask(napi_env env, napi_callback_info info)
 void JsTask::GetTaskExecution(std::shared_ptr<ContextInfo> context)
 {
     std::string tid = context->tid;
-    REQUEST_HILOGI("Process get task, tid: %{public}s", context->tid.c_str());
+    REQUEST_HILOGD("Process get task, tid: %{public}s", context->tid.c_str());
     if (taskContextMap_.find(tid) != taskContextMap_.end()) {
         REQUEST_HILOGD("Find in taskContextMap_");
         if (taskContextMap_[tid]->task->config_.version != Version::API10

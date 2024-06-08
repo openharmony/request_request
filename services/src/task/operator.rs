@@ -69,16 +69,16 @@ impl TaskOperator {
         if (state != State::Running && state != State::Retrying)
             || (self.task.conf.version == Version::API10 && !self.task.check_net_work_status())
         {
-            info!("pause the task");
+            info!("pause the task, tid: {}", self.task.task_id());
             return Poll::Ready(Err(HttpClientError::user_aborted()));
         }
         if !self.task.check_app_state() {
-            info!("pause for app state");
+            info!("pause for app state, tid: {}", self.task.task_id());
             return Poll::Ready(Err(HttpClientError::user_aborted()));
         }
 
         if self.task.conf.common_data.mode == Mode::BackGround && !is_active_user(self.task.uid()) {
-            info!("pause for user stopped");
+            info!("pause for user stopped, tid: {}", self.task.task_id());
             self.task.set_status(State::Waiting, Reason::AccountStopped);
             return Poll::Ready(Err(HttpClientError::user_aborted()));
         }

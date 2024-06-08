@@ -342,10 +342,18 @@ impl Client {
         }
 
         let size = message.len() as u16;
-        info!(
-            "send notify data, type: {:?}, tid: {}, size: {}",
-            subscribe_type, notify_data.task_id, size
-        );
+        if subscribe_type == SubscribeType::Progress {
+            debug!(
+                "send notify data, type: {:?}, tid: {}, size: {}",
+                subscribe_type, notify_data.task_id, size
+            );
+        } else {
+            info!(
+                "send notify data, type: {:?}, tid: {}, size: {}",
+                subscribe_type, notify_data.task_id, size
+            );
+        }
+
         let size = size.to_le_bytes();
         message[POSITION_OF_LENGTH as usize] = size[0];
         message[(POSITION_OF_LENGTH + 1) as usize] = size[1];

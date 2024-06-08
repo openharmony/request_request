@@ -35,7 +35,7 @@ impl RequestServiceStub {
                 match rx.get() {
                     Some(Some(config)) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;
-                        info!("End Service getTask ok: tid: {}", tid);
+                        debug!("End Service getTask ok: tid: {}", tid);
                         serialize_task_config(config, reply)?;
                         Ok(())
                     }

@@ -18,7 +18,7 @@ use crate::manage::TaskManager;
 
 impl TaskManager {
     pub(crate) fn search(&self, filter: TaskFilter, method: SearchMethod) -> Vec<u32> {
-        info!("Search task by filter: {:?} method: {:?}", filter, method);
+        debug!("Search task by filter: {:?} method: {:?}", filter, method);
 
         let database = GetDatabaseInstance();
 

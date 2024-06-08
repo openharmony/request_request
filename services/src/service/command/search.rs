@@ -60,7 +60,7 @@ impl RequestServiceStub {
                 return Err(IpcStatusCode::Failed);
             }
         };
-        info!("End Service search ok: search task ids is {:?}", ids);
+        debug!("End Service search ok: search task ids is {:?}", ids);
         reply.write(&(ids.len() as u32))?;
         for it in ids.iter() {
             reply.write(&(it.to_string()))?;

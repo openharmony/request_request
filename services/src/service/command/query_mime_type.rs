@@ -54,7 +54,7 @@ impl RequestServiceStub {
                     }
                 };
                 debug!("Service query mime type: {}", mime);
-                info!("End Service query mime type ok: tid: {}", id);
+                debug!("End Service query mime type ok: tid: {}", id);
                 reply.write(&(ErrorCode::ErrOk as i32))?;
                 reply.write(&mime)?;
                 Ok(())

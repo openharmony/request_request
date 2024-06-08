@@ -57,7 +57,7 @@ impl RequestServiceStub {
                 let ret = self.client_manager.subscribe(tid, pid, uid, token_id);
                 if ret == ErrorCode::ErrOk {
                     reply.write(&(ErrorCode::ErrOk as i32))?;
-                    info!("End Service subscribe ok: tid: {}", tid);
+                    debug!("End Service subscribe ok: tid: {}", tid);
                     Ok(())
                 } else {
                     error!("End Service subscribe, tid: {}, failed: {:?}", tid, ret);

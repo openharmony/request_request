@@ -54,7 +54,7 @@ impl RequestServiceStub {
                     error!("End Service start, tid: {}, failed: {}", id, ret as i32);
                     return Err(IpcStatusCode::Failed);
                 }
-                info!("End Service start ok: tid: {}", id);
+                debug!("End Service start ok: tid: {}", id);
                 Ok(())
             }
             _ => {

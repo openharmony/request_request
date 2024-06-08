@@ -135,7 +135,7 @@ void RequestServiceProxy::GetVectorData(const Config &config, MessageParcel &dat
 
 int32_t RequestServiceProxy::GetTask(const std::string &tid, const std::string &token, Config &config)
 {
-    REQUEST_HILOGI("Request GetTask, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("Request GetTask, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
@@ -152,13 +152,13 @@ int32_t RequestServiceProxy::GetTask(const std::string &tid, const std::string &
         return errCode;
     }
     ParcelHelper::UnMarshalConfig(reply, config);
-    REQUEST_HILOGI("End Request GetTask ok, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("End Request GetTask ok, tid: %{public}s", tid.c_str());
     return E_OK;
 }
 
 int32_t RequestServiceProxy::Start(const std::string &tid)
 {
-    REQUEST_HILOGI("Request Start, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("Request Start, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
@@ -169,13 +169,13 @@ int32_t RequestServiceProxy::Start(const std::string &tid)
         REQUEST_HILOGE("End Request Start, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
-    REQUEST_HILOGI("End Request Start ok, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("End Request Start ok, tid: %{public}s", tid.c_str());
     return reply.ReadInt32();
 }
 
 int32_t RequestServiceProxy::Stop(const std::string &tid)
 {
-    REQUEST_HILOGI("Request Stop, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("Request Stop, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
@@ -185,13 +185,13 @@ int32_t RequestServiceProxy::Stop(const std::string &tid)
         REQUEST_HILOGE("End Request Stop, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
-    REQUEST_HILOGI("End Request Stop ok, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("End Request Stop ok, tid: %{public}s", tid.c_str());
     return reply.ReadInt32();
 }
 
 int32_t RequestServiceProxy::Query(const std::string &tid, TaskInfo &info)
 {
-    REQUEST_HILOGI("Request Query, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("Request Query, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
@@ -207,13 +207,13 @@ int32_t RequestServiceProxy::Query(const std::string &tid, TaskInfo &info)
         return errCode;
     }
     ParcelHelper::UnMarshal(reply, info);
-    REQUEST_HILOGI("End Request Query ok, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("End Request Query ok, tid: %{public}s", tid.c_str());
     return E_OK;
 }
 
 int32_t RequestServiceProxy::Touch(const std::string &tid, const std::string &token, TaskInfo &info)
 {
-    REQUEST_HILOGI("Request Touch, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("Request Touch, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
@@ -230,13 +230,13 @@ int32_t RequestServiceProxy::Touch(const std::string &tid, const std::string &to
         return errCode;
     }
     ParcelHelper::UnMarshal(reply, info);
-    REQUEST_HILOGI("End Request Touch ok, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("End Request Touch ok, tid: %{public}s", tid.c_str());
     return E_OK;
 }
 
 int32_t RequestServiceProxy::Search(const Filter &filter, std::vector<std::string> &tids)
 {
-    REQUEST_HILOGI("Request Search");
+    REQUEST_HILOGD("Request Search");
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
@@ -255,13 +255,13 @@ int32_t RequestServiceProxy::Search(const Filter &filter, std::vector<std::strin
     for (uint32_t i = 0; i < size; i++) {
         tids.push_back(reply.ReadString());
     }
-    REQUEST_HILOGI("End Request Search ok");
+    REQUEST_HILOGD("End Request Search ok");
     return E_OK;
 }
 
 int32_t RequestServiceProxy::Show(const std::string &tid, TaskInfo &info)
 {
-    REQUEST_HILOGI("Request Show, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("Request Show, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
@@ -277,13 +277,13 @@ int32_t RequestServiceProxy::Show(const std::string &tid, TaskInfo &info)
         return errCode;
     }
     ParcelHelper::UnMarshal(reply, info);
-    REQUEST_HILOGI("End Request Show ok, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("End Request Show ok, tid: %{public}s", tid.c_str());
     return E_OK;
 }
 
 int32_t RequestServiceProxy::Pause(const std::string &tid, Version version)
 {
-    REQUEST_HILOGI("Request Pause, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("Request Pause, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
@@ -294,13 +294,13 @@ int32_t RequestServiceProxy::Pause(const std::string &tid, Version version)
         REQUEST_HILOGE("End Request Pause, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
-    REQUEST_HILOGI("End Request Pause ok, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("End Request Pause ok, tid: %{public}s", tid.c_str());
     return reply.ReadInt32();
 }
 
 int32_t RequestServiceProxy::QueryMimeType(const std::string &tid, std::string &mimeType)
 {
-    REQUEST_HILOGI("Request QueryMimeType, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("Request QueryMimeType, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
@@ -317,13 +317,13 @@ int32_t RequestServiceProxy::QueryMimeType(const std::string &tid, std::string &
         return errCode;
     }
     mimeType = reply.ReadString();
-    REQUEST_HILOGI("End Request QueryMimeType ok, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("End Request QueryMimeType ok, tid: %{public}s", tid.c_str());
     return E_OK;
 }
 
 int32_t RequestServiceProxy::Remove(const std::string &tid, Version version)
 {
-    REQUEST_HILOGI("Request Remove, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("Request Remove, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
@@ -338,16 +338,16 @@ int32_t RequestServiceProxy::Remove(const std::string &tid, Version version)
     // API9 or lower will not return E_TASK_NOT_FOUND.
     int32_t result = reply.ReadInt32();
     if (version == Version::API9) {
-        REQUEST_HILOGI("End Request Remove ok, tid: %{public}s", tid.c_str());
+        REQUEST_HILOGD("End Request Remove ok, tid: %{public}s", tid.c_str());
         result = E_OK;
     }
-    REQUEST_HILOGI("End Request Remove ok, tid: %{public}s, result: %{public}d", tid.c_str(), result);
+    REQUEST_HILOGD("End Request Remove ok, tid: %{public}s, result: %{public}d", tid.c_str(), result);
     return result;
 }
 
 int32_t RequestServiceProxy::Resume(const std::string &tid)
 {
-    REQUEST_HILOGI("Request Resume, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("Request Resume, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
@@ -357,13 +357,13 @@ int32_t RequestServiceProxy::Resume(const std::string &tid)
         REQUEST_HILOGE("End Request Resume, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
-    REQUEST_HILOGI("End Request Resume ok, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("End Request Resume ok, tid: %{public}s", tid.c_str());
     return reply.ReadInt32();
 }
 
 int32_t RequestServiceProxy::OpenChannel(int32_t &sockFd)
 {
-    REQUEST_HILOGI("Request OpenChannel");
+    REQUEST_HILOGD("Request OpenChannel");
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
@@ -380,13 +380,13 @@ int32_t RequestServiceProxy::OpenChannel(int32_t &sockFd)
     }
     sockFd = reply.ReadFileDescriptor();
 
-    REQUEST_HILOGI("End Request OpenChannel ok, fd: %{public}d", sockFd);
+    REQUEST_HILOGD("End Request OpenChannel ok, fd: %{public}d", sockFd);
     return E_OK;
 }
 
 int32_t RequestServiceProxy::Subscribe(const std::string &tid)
 {
-    REQUEST_HILOGI("Request Subscribe, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("Request Subscribe, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
@@ -397,14 +397,14 @@ int32_t RequestServiceProxy::Subscribe(const std::string &tid)
         REQUEST_HILOGE("End Request Subscribe, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
-    REQUEST_HILOGI("End Request Subscribe ok, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("End Request Subscribe ok, tid: %{public}s", tid.c_str());
     int32_t errCode = reply.ReadInt32();
     return errCode;
 }
 
 int32_t RequestServiceProxy::Unsubscribe(const std::string &tid)
 {
-    REQUEST_HILOGI("Request Unsubscribe, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("Request Unsubscribe, tid: %{public}s", tid.c_str());
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
@@ -415,13 +415,13 @@ int32_t RequestServiceProxy::Unsubscribe(const std::string &tid)
         REQUEST_HILOGE("End Request Unsubscribe, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
         return E_SERVICE_ERROR;
     }
-    REQUEST_HILOGI("End Request Unsubscribe ok, tid: %{public}s", tid.c_str());
+    REQUEST_HILOGD("End Request Unsubscribe ok, tid: %{public}s", tid.c_str());
     return E_OK;
 }
 
 int32_t RequestServiceProxy::SubRunCount(const sptr<NotifyInterface> &listener)
 {
-    REQUEST_HILOGI("Request SubRunCount");
+    REQUEST_HILOGD("Request SubRunCount");
     FwkRunningTaskCountManager::GetInstance()->SetSaStatus(true);
     MessageParcel data, reply;
     MessageOption option;
@@ -438,13 +438,13 @@ int32_t RequestServiceProxy::SubRunCount(const sptr<NotifyInterface> &listener)
         REQUEST_HILOGE("End Request SubRunCount, failed: %{public}d", errCode);
         return errCode;
     }
-    REQUEST_HILOGI("End Request SubRunCount ok");
+    REQUEST_HILOGD("End Request SubRunCount ok");
     return E_OK;
 }
 
 int32_t RequestServiceProxy::UnsubRunCount()
 {
-    REQUEST_HILOGI("Request UnubRunCount");
+    REQUEST_HILOGD("Request UnubRunCount");
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
@@ -454,7 +454,7 @@ int32_t RequestServiceProxy::UnsubRunCount()
         REQUEST_HILOGE("End Request UnubRunCount, failed: %{public}d", ret);
         return E_SERVICE_ERROR;
     }
-    REQUEST_HILOGI("End Request UnubRunCount ok");
+    REQUEST_HILOGD("End Request UnubRunCount ok");
     return E_OK;
 }
 
