@@ -37,14 +37,14 @@ void RequestBackgroundNotify(RequestTaskMsg msg, rust::str filePath, rust::str f
     requestTemplate->SetTemplateName("downloadTemplate");
     OHOS::AAFwk::WantParams wantParams;
     wantParams.SetParam("progressValue", OHOS::AAFwk::Integer::Box(percent));
-    wantParams.SetParam("fileName", OHOS::AAFwk::String::Box(std::string(filePath)));
+    wantParams.SetParam("fileName", OHOS::AAFwk::String::Box(std::string(fileName)));
     std::shared_ptr<NotificationNormalContent> normalContent = std::make_shared<NotificationNormalContent>();
     if (msg.action == DOWNLOAD_ACTION) {
-        wantParams.SetParam("title", OHOS::AAFwk::String::Box("Download"));
-        normalContent->SetTitle("Download");
+        wantParams.SetParam("title", OHOS::AAFwk::String::Box("下载"));
+        normalContent->SetTitle("下载");
     } else {
-        wantParams.SetParam("title", OHOS::AAFwk::String::Box("Upload"));
-        normalContent->SetTitle("Upload");
+        wantParams.SetParam("title", OHOS::AAFwk::String::Box("上传"));
+        normalContent->SetTitle("上传");
     }
     requestTemplate->SetTemplateData(std::make_shared<OHOS::AAFwk::WantParams>(wantParams));
     normalContent->SetText(std::string(fileName));
