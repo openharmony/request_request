@@ -1360,12 +1360,12 @@ void UpdateTaskStateOnNetworkChange(NetworkInfo info)
             ->EqualTo("reason", static_cast<uint8_t>(Reason::UNSUPPORTED_NETWORK_TYPE))
             ->EndWrap();
 
-        if (!info.isMetered) {
-            satisfiedCellular.And()->EqualTo("metered", std::to_string(static_cast<uint8_t>(false)));
+        if (info.isMetered) {
+            satisfiedCellular.And()->EqualTo("metered", std::to_string(static_cast<uint8_t>(true)));
         }
 
-        if (!info.isRoaming) {
-            satisfiedCellular.And()->EqualTo("roaming", std::to_string(static_cast<uint8_t>(false)));
+        if (info.isRoaming) {
+            satisfiedCellular.And()->EqualTo("roaming", std::to_string(static_cast<uint8_t>(true)));
         }
 
         if (!OHOS::Request::RequestDataBase::GetInstance().Update(satisfied, satisfiedCellular)) {

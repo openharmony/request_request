@@ -79,7 +79,7 @@ impl RunningTask {
         }
     }
 
-    pub(crate) async fn run(self) {
+    pub(crate) async fn run(&self) {
         let task = self;
         let mut index = 0;
         info!("run task: {}", task.conf.common_data.task_id);

@@ -167,7 +167,20 @@ impl RunningQueue {
             satisfied_tasks.insert((uid, task_id), task.clone());
             let task = RunningTask::new(runcount_manager, task, tx, keeper);
             runtime_spawn(async move {
-                task.run().await;
+                while task.satisfied() {
+                    task.run().await;
+                    let (state, reason) = {
+                        let status = task.status.lock().unwrap();
+                        (status.state, status.reason)
+                    };
+                    if state == State::Waiting && reason == Reason::NetworkChanged {
+                        task.retry.store(true, Ordering::SeqCst);
+                        task.tries.fetch_add(1, Ordering::SeqCst);
+                        task.set_status(State::Retrying, Reason::Default);
+                    } else {
+                        break;
+                    }
+                }
             });
         }
         // every satisfied tasks in running has been moved, set left tasks to Waiting
