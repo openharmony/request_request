@@ -251,7 +251,7 @@ impl UpdateInfo {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(C)]
 pub(crate) struct NetworkInfo {
     pub(crate) network_type: NetworkInner,

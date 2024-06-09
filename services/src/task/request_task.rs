@@ -68,6 +68,7 @@ pub(crate) struct RequestTask {
     pub(crate) app_state: AppState,
     pub(crate) last_notify: AtomicU64,
     pub(crate) client_manager: ClientManagerEntry,
+    pub(crate) last_network_type: AtomicU8,
 }
 
 impl RequestTask {
@@ -117,12 +118,15 @@ impl RequestTask {
         }
     }
 
-    #[allow(dead_code)]
     pub(crate) fn satisfied(&self) -> bool {
         if !self.net_work_online() || !self.check_net_work_status() {
-            error!("check network failed");
+            error!("check network failed, tid: {}", self.task_id());
             false
         } else {
+            if let Some(network_info) = NetworkManager::new().get_network_info() {
+                self.last_network_type
+                    .store(network_info.network_type as u8, Ordering::SeqCst);
+            }
             true
         }
     }
@@ -224,6 +228,7 @@ impl RequestTask {
             app_state,
             last_notify: AtomicU64::new(time),
             client_manager,
+            last_network_type: AtomicU8::new(NetworkInner::ANY as u8),
         })
     }
 
@@ -497,6 +502,8 @@ impl RequestTask {
                     }
                 }
             }
+        } else if self.is_network_changed() {
+            self.set_status(State::Waiting, Reason::NetworkChanged);
         } else {
             self.set_status(State::Failed, Reason::OthersError);
         }
@@ -916,6 +923,38 @@ impl RequestTask {
         }
 
         true
+    }
+
+    pub(crate) fn is_network_changed(&self) -> bool {
+        if let Some(network_info) = NetworkManager::new().get_network_info() {
+            let network = self.last_network_type.load(Ordering::SeqCst);
+            if network == network_info.network_type as u8 {
+                return false;
+            }
+            self.last_network_type
+                .store(network_info.network_type as u8, Ordering::SeqCst);
+            info!(
+                "network changed from {:?} to {:?}",
+                network, network_info.network_type
+            );
+            // changed from Wifi to cellular
+            if (network == NetworkInner::ANY as u8 || network == NetworkInner::WIFI as u8)
+                && network_info.network_type == NetworkInner::CELLULAR
+            {
+                return true;
+            }
+            // changed from cellular to Wifi
+            if (network == NetworkInner::CELLULAR as u8)
+                && (network_info.network_type == NetworkInner::WIFI
+                    || network_info.network_type == NetworkInner::ANY)
+            {
+                return true;
+            }
+            // changed but no matter
+            false
+        } else {
+            true
+        }
     }
 
     pub(crate) fn background_notify(&self) {

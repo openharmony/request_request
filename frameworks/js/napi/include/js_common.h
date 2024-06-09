@@ -72,6 +72,7 @@ enum Reason : uint32_t {
     UNSUPPORT_RANGE_REQUEST,
     OTHERS_ERROR,
     ACCOUNT_STOPPED,
+    NETWORK_CHANGED,
 };
 
 enum class SubscribeType : uint32_t {
