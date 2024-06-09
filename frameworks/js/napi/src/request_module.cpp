@@ -73,8 +73,11 @@ static void NapiCreateFaults(napi_env env, napi_value &faults)
     NapiUtils::SetUint32Property(env, faults, "DISCONNECTED", static_cast<uint32_t>(Faults::DISCONNECTED));
     NapiUtils::SetUint32Property(env, faults, "TIMEOUT", static_cast<uint32_t>(Faults::TIMEOUT));
     NapiUtils::SetUint32Property(env, faults, "PROTOCOL", static_cast<uint32_t>(Faults::PROTOCOL));
-    NapiUtils::SetUint32Property(env, faults, "CONNECT", static_cast<uint32_t>(Faults::CONNECT));
+    NapiUtils::SetUint32Property(env, faults, "PARAM", static_cast<uint32_t>(Faults::PARAM));
     NapiUtils::SetUint32Property(env, faults, "FSIO", static_cast<uint32_t>(Faults::FSIO));
+    NapiUtils::SetUint32Property(env, faults, "DNS", static_cast<uint32_t>(Faults::DNS));
+    NapiUtils::SetUint32Property(env, faults, "TCP", static_cast<uint32_t>(Faults::TCP));
+    NapiUtils::SetUint32Property(env, faults, "SSL", static_cast<uint32_t>(Faults::SSL));
     NapiUtils::SetUint32Property(env, faults, "REDIRECT", static_cast<uint32_t>(Faults::REDIRECT));
 }
 

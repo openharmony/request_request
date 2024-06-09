@@ -53,6 +53,11 @@ static constexpr const char *PROTOCOL_ERROR_INFO = "Http protocol error";
 static constexpr const char *IO_ERROR_INFO = "Io Error";
 static constexpr const char *UNSUPPORT_RANGE_REQUEST_INFO = "Range request not supported";
 static constexpr const char *OTHERS_ERROR_INFO = "Some other error occured";
+static constexpr const char *ACCOUNT_STOPPED_INFO = "Account stopped";
+static constexpr const char *NETWORK_CHANGED_INFO = "Network changed";
+static constexpr const char *DNS_INFO = "DNS error";
+static constexpr const char *TCP_INFO = "TCP error";
+static constexpr const char *SSL_INFO = "TSL/SSL error";
 static constexpr const char *NOT_SYSTEM_APP = "permission verification failed, application which is not a system "
                                               "application uses system API";
 
@@ -295,11 +300,11 @@ uint32_t Convert2Broken(Reason code)
         { APP_BACKGROUND_OR_TERMINATE, Faults::OTHERS },
         { NETWORK_OFFLINE, Faults::DISCONNECTED },
         { UNSUPPORTED_NETWORK_TYPE, Faults::OTHERS },
-        { BUILD_CLIENT_FAILED, Faults::OTHERS },
-        { BUILD_REQUEST_FAILED, Faults::OTHERS },
+        { BUILD_CLIENT_FAILED, Faults::PARAM },
+        { BUILD_REQUEST_FAILED, Faults::PARAM },
         { GET_FILESIZE_FAILED, Faults::FSIO },
         { CONTINUOUS_TASK_TIMEOUT, Faults::OTHERS },
-        { CONNECT_ERROR, Faults::CONNECT },
+        { CONNECT_ERROR, Faults::TCP },
         { REQUEST_ERROR, Faults::PROTOCOL },
         { UPLOAD_FILE_ERROR, Faults::OTHERS },
         { REDIRECT_ERROR, Faults::REDIRECT },
@@ -307,12 +312,20 @@ uint32_t Convert2Broken(Reason code)
         { IO_ERROR, Faults::FSIO },
         { UNSUPPORT_RANGE_REQUEST, Faults::PROTOCOL },
         { OTHERS_ERROR, Faults::OTHERS },
+        { ACCOUNT_STOPPED, Faults::OTHERS },
+        { NETWORK_CHANGED, Faults::OTHERS },
+        { DNS, Faults::DNS },
+        { TCP, Faults::TCP },
+        { SSL, Faults::SSL },
     };
+    constexpr const std::uint32_t DETAIL_VERSION = 0;
     auto iter = InnerCodeToBroken.find(code);
     if (iter != InnerCodeToBroken.end()) {
         int32_t sdkVersion = GetSdkApiVersion();
         REQUEST_HILOGD("GetSdkApiVersion %{public}d", sdkVersion);
-        if (sdkVersion < 12 && (iter->second == Faults::CONNECT || iter->second == Faults::REDIRECT)) {
+        if (sdkVersion < DETAIL_VERSION
+            && (iter->second == Faults::PARAM || iter->second == Faults::DNS || iter->second == Faults::TCP
+                || iter->second == Faults::SSL || iter->second == Faults::REDIRECT)) {
             return static_cast<uint32_t>(Faults::OTHERS);
         }
         return static_cast<uint32_t>(iter->second);
@@ -344,6 +357,11 @@ std::string Convert2ReasonMsg(Reason code)
         { IO_ERROR, IO_ERROR_INFO },
         { UNSUPPORT_RANGE_REQUEST, UNSUPPORT_RANGE_REQUEST_INFO },
         { OTHERS_ERROR, OTHERS_ERROR_INFO },
+        { ACCOUNT_STOPPED, ACCOUNT_STOPPED_INFO },
+        { NETWORK_CHANGED, NETWORK_CHANGED_INFO },
+        { DNS, DNS_INFO },
+        { TCP, TCP_INFO },
+        { SSL, SSL_INFO },
     };
     auto iter = ReasonMsg.find(code);
     if (iter != ReasonMsg.end()) {
