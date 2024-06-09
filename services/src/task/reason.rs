@@ -16,18 +16,18 @@
 pub(crate) enum Reason {
     Default = 0,
     TaskSurvivalOneMonth,
-    WaitingNetworkOneDay,
-    StoppedByNewFrontTask,
+    WaitingNetworkOneDay,  // unused
+    StoppedByNewFrontTask, // unused
     RunningTaskMeetLimits,
     UserOperation,
     AppBackgroundOrTerminate,
     NetworkOffline,
     UnsupportedNetworkType,
-    BuildClientFailed,
+    BuildClientFailed, // unused
     BuildRequestFailed,
     GetFileSizeFailed,
     ContinuousTaskTimeout,
-    ConnectError,
+    ConnectError, // unused
     RequestError,
     UploadFileError,
     RedirectError,
@@ -37,6 +37,9 @@ pub(crate) enum Reason {
     OthersError,
     AccountStopped,
     NetworkChanged,
+    Dns,
+    Tcp,
+    Ssl,
 }
 
 impl From<u8> for Reason {
@@ -62,7 +65,11 @@ impl From<u8> for Reason {
             17 => Reason::ProtocolError,
             18 => Reason::IoError,
             19 => Reason::UnsupportedRangeRequest,
+            21 => Reason::AccountStopped,
             22 => Reason::NetworkChanged,
+            23 => Reason::Dns,
+            24 => Reason::Tcp,
+            25 => Reason::Ssl,
             _ => Reason::OthersError,
         }
     }
@@ -94,6 +101,9 @@ impl Reason {
             Reason::OthersError => "Some other error occured",
             Reason::AccountStopped => "Account stopped",
             Reason::NetworkChanged => "Network changed",
+            Reason::Dns => "DNS error",
+            Reason::Tcp => "TCP error",
+            Reason::Ssl => "TSL/SSL error",
         }
     }
 }

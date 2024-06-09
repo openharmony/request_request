@@ -588,7 +588,13 @@ impl RequestTask {
                     ErrorKind::Request => self.set_code(index, Reason::RequestError),
                     ErrorKind::Redirect => self.set_code(index, Reason::RedirectError),
                     ErrorKind::Connect | ErrorKind::ConnectionUpgrade => {
-                        self.set_code(index, Reason::ConnectError)
+                        if e.is_dns_error() {
+                            self.set_code(index, Reason::Dns);
+                        } else if e.is_tls_error() {
+                            self.set_code(index, Reason::Ssl);
+                        } else {
+                            self.set_code(index, Reason::Tcp)
+                        }
                     }
                     ErrorKind::BodyTransfer => self.handle_body_transfer_error(),
                     _ => self.set_code(index, Reason::OthersError),

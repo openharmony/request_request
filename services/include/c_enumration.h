@@ -79,5 +79,10 @@ enum class Reason : uint8_t {
     IO_ERROR,
     UNSUPPORT_RANGE_REQUEST,
     OTHERS_ERROR,
+    ACCOUNT_STOPPED,
+    NETWORK_CHANGED,
+    DNS,
+    TCP,
+    SSL,
 };
 #endif // REQUEST_C_ENUMRATION_H

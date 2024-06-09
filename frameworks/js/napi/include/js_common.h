@@ -73,6 +73,9 @@ enum Reason : uint32_t {
     OTHERS_ERROR,
     ACCOUNT_STOPPED,
     NETWORK_CHANGED,
+    DNS,
+    TCP,
+    SSL,
 };
 
 enum class SubscribeType : uint32_t {
@@ -175,9 +178,12 @@ enum class Faults : uint32_t {
     DISCONNECTED = 0x00,
     TIMEOUT = 0x10,
     PROTOCOL = 0x20,
-    CONNECT = 0x30,
+    PARAM = 0x30,
     FSIO = 0x40,
-    REDIRECT = 0x50,
+    DNS = 0X50,
+    TCP = 0X60,
+    SSL = 0X70,
+    REDIRECT = 0x80,
 };
 
 struct TaskState {
