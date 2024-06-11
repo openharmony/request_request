@@ -22,7 +22,7 @@ use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::utils::task_id_generator::TaskIdGenerator;
 
-const MAX_BACKGROUND_TASK: usize = 100;
+const MAX_BACKGROUND_TASK: usize = 1000;
 const MAX_FRONTEND_TASK: usize = 2000;
 
 impl TaskManager {
