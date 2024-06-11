@@ -16,7 +16,6 @@
 #ifndef REQUEST_LOG
 #define REQUEST_LOG
 
-#undef HILOG_RAWFORMAT
 #ifndef CONFIG_REQUEST_TEST
 #include "hilog/log.h"
 
