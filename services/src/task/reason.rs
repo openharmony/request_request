@@ -35,6 +35,7 @@ pub(crate) enum Reason {
     IoError,
     UnsupportedRangeRequest,
     OthersError,
+    NetworkChanged,
 }
 
 impl From<u8> for Reason {
@@ -60,6 +61,7 @@ impl From<u8> for Reason {
             17 => Reason::ProtocolError,
             18 => Reason::IoError,
             19 => Reason::UnsupportedRangeRequest,
+            21 => Reason::NetworkChanged,
             _ => Reason::OthersError,
         }
     }
@@ -89,6 +91,7 @@ impl Reason {
             Reason::IoError => "Io Error",
             Reason::UnsupportedRangeRequest => "The server is not support range request",
             Reason::OthersError => "Some other error occured",
+            Reason::NetworkChanged => "Network changed",
         }
     }
 }
