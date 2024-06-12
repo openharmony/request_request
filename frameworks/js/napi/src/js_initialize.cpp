@@ -77,6 +77,7 @@ napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Versi
     task->config_ = config;
     task->isGetPermission = true;
     RequestManager::GetInstance()->RestoreListener(JsTask::ReloadListener);
+    // `finalize` executes on the JS thread
     auto finalize = [](napi_env env, void *data, void *hint) {
         REQUEST_HILOGD("destructed task");
         JsTask *task = reinterpret_cast<JsTask *>(data);
