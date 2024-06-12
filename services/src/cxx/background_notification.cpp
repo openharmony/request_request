@@ -32,17 +32,18 @@ void RequestBackgroundNotify(
     REQUEST_HILOGD("Background Notification, percent is %{public}d", percent);
     auto requestTemplate = std::make_shared<NotificationTemplate>();
     std::string filepath(wrappedPath.cStr, wrappedPath.len);
+    std::string fileName(wrappedFileName.cStr, wrappedFileName.len);
     requestTemplate->SetTemplateName("downloadTemplate");
     OHOS::AAFwk::WantParams wantParams;
     wantParams.SetParam("progressValue", OHOS::AAFwk::Integer::Box(percent));
-    wantParams.SetParam("fileName", OHOS::AAFwk::String::Box(filepath));
+    wantParams.SetParam("fileName", OHOS::AAFwk::String::Box(fileName));
     std::shared_ptr<NotificationNormalContent> normalContent = std::make_shared<NotificationNormalContent>();
     if (msg.action == DOWNLOAD_ACTION) {
-        wantParams.SetParam("title", OHOS::AAFwk::String::Box("Download"));
-        normalContent->SetTitle("Download");
+        wantParams.SetParam("title", OHOS::AAFwk::String::Box("下载"));
+        normalContent->SetTitle("下载");
     } else {
-        wantParams.SetParam("title", OHOS::AAFwk::String::Box("Upload"));
-        normalContent->SetTitle("Upload");
+        wantParams.SetParam("title", OHOS::AAFwk::String::Box("上传"));
+        normalContent->SetTitle("上传");
     }
     requestTemplate->SetTemplateData(std::make_shared<OHOS::AAFwk::WantParams>(wantParams));
     std::string contentText(wrappedFileName.cStr, wrappedFileName.len);
