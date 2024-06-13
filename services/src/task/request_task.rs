@@ -40,7 +40,7 @@ use crate::task::ffi::{publish_event, RequestBackgroundNotify, RequestTaskMsg};
 use crate::task::files::{AttachedFiles, Files};
 use crate::utils::c_wrapper::CStringWrapper;
 use crate::utils::get_current_timestamp;
-const RETRY_INTERVAL: u64 = 20;
+const RETRY_INTERVAL: u64 = 200;
 
 pub(crate) struct RequestTask {
     pub(crate) conf: TaskConfig,
@@ -281,7 +281,7 @@ impl RequestTask {
             {
                 self.set_status(State::Waiting, Reason::NetworkOffline);
             } else {
-                let retry_times = 20;
+                let retry_times = 3;
                 for _ in 0..retry_times {
                     if network_manager.is_online() {
                         return true;
