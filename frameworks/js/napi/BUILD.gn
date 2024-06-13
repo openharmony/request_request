@@ -65,7 +65,6 @@ ohos_shared_library("request") {
     "src/upload/upload_task.cpp",
     "src/upload/upload_task_napiV5.cpp",
     "src/utf8_utils.cpp",
-    "src/uv_queue.cpp",
   ]
 
   deps = [
@@ -86,7 +85,6 @@ ohos_shared_library("request") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
-    "libuv:uv",
     "napi:ace_napi",
     "netmanager_base:net_conn_manager_if",
     "openssl:libssl_shared",
@@ -127,7 +125,6 @@ ohos_static_library("request_static") {
     "src/upload/upload_task.cpp",
     "src/upload/upload_task_napiV5.cpp",
     "src/utf8_utils.cpp",
-    "src/uv_queue.cpp",
   ]
 
   deps = [
@@ -147,7 +144,6 @@ ohos_static_library("request_static") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
-    "libuv:uv",
     "napi:ace_napi",
     "netmanager_base:net_conn_manager_if",
     "openssl:libssl_shared",

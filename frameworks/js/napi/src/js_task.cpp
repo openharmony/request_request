@@ -1154,44 +1154,42 @@ void JsTask::UnrefTaskContextMap(std::shared_ptr<ContextInfo> context)
         return;
     }
     data->context = context;
-    if (!UvQueue::Call(data->context->env_, static_cast<void *>(data), UvUnrefTaskContext)) {
-        delete data;
-    }
-    return;
-}
-
-void JsTask::UvUnrefTaskContext(uv_work_t *work, int status)
-{
-    ContextCallbackData *data = static_cast<ContextCallbackData *>(work->data);
-    if (data == nullptr) {
-        // Ensure that the `work` is not nullptr.
-        delete work;
-        return;
-    }
-    napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(data->context->env_, &scope);
-    if (scope == nullptr) {
-        delete data;
-        delete work;
-        return;
-    }
-    u_int32_t taskRefCount = 0;
-    napi_reference_unref(data->context->env_, data->context->taskRef, &taskRefCount);
-    REQUEST_HILOGD("Unref task ref, count is %{public}d", taskRefCount);
-    if (taskRefCount == 0) {
-        napi_delete_reference(data->context->env_, data->context->taskRef);
-    }
-    if (data->context->version_ == Version::API10) {
-        u_int32_t configRefCount = 0;
-        napi_reference_unref(data->context->env_, data->context->jsConfig, &configRefCount);
-        REQUEST_HILOGI("Unref task config ref, count %{public}d", configRefCount);
-        if (configRefCount == 0) {
-            napi_delete_reference(data->context->env_, data->context->jsConfig);
+    auto callback = [data]() {
+        if (data == nullptr) {
+            // Ensure that the `work` is not nullptr.
+            return;
         }
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(data->context->env_, &scope);
+        if (scope == nullptr) {
+            delete data;
+            return;
+        }
+        u_int32_t taskRefCount = 0;
+        napi_reference_unref(data->context->env_, data->context->taskRef, &taskRefCount);
+        REQUEST_HILOGD("Unref task ref, count is %{public}d", taskRefCount);
+        if (taskRefCount == 0) {
+            napi_delete_reference(data->context->env_, data->context->taskRef);
+        }
+        if (data->context->version_ == Version::API10) {
+            u_int32_t configRefCount = 0;
+            napi_reference_unref(data->context->env_, data->context->jsConfig, &configRefCount);
+            REQUEST_HILOGI("Unref task config ref, count is %{public}d", configRefCount);
+            if (configRefCount == 0) {
+                napi_delete_reference(data->context->env_, data->context->jsConfig);
+            }
+        }
+        napi_close_handle_scope(data->context->env_, scope);
+        delete data;
+        return;
+    };
+
+    int32_t ret = napi_send_event(data->context->env_, callback, napi_eprio_high);
+    if (ret != napi_ok) {
+        REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
+        delete data;
     }
-    napi_close_handle_scope(data->context->env_, scope);
-    delete data;
-    delete work;
+
     return;
 }
 
