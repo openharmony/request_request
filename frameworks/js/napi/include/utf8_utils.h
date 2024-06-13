@@ -28,4 +28,4 @@ bool Check3Bytes(const std::vector<uint8_t> &v, const size_t &first, size_t &ind
 bool Check4Bytes(const std::vector<uint8_t> &v, const size_t &first, size_t &index);
 bool RunUtf8Validation(const std::vector<uint8_t> &v);
 } // namespace OHOS::Request::Utf8Utils
-#endif // UV_QUEUE_H
+#endif // UTF8_UTILS_H

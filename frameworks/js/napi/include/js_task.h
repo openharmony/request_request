@@ -121,7 +121,6 @@ private:
     static void RemovePathMap(const std::string &filepath);
     static void AddTaskContextMap(const std::string &key, std::shared_ptr<ContextInfo> context);
     static void UnrefTaskContextMap(std::shared_ptr<ContextInfo> context);
-    static void UvUnrefTaskContext(uv_work_t *work, int status);
     static void RegisterForegroundResume();
     static void AddTask(std::shared_ptr<ContextInfo> context);
     static void AddRemoveListener(const std::shared_ptr<ContextInfo> &context);
