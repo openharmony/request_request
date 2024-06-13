@@ -29,6 +29,7 @@ use crate::manage::network::NetworkManager;
 use crate::manage::scheduler::Scheduler;
 use crate::service::client::ClientManagerEntry;
 use crate::service::runcount::RunCountManagerEntry;
+use crate::task::ffi::NetworkInfo;
 use crate::task::info::ApplicationState;
 
 const CLEAR_INTERVAL: u64 = 30 * 60;
@@ -236,10 +237,16 @@ impl TaskManager {
     }
 
     async fn handle_network_change(&mut self) {
+        static mut NETWORK_INFO: Option<NetworkInfo> = None;
         let manager = NetworkManager::new();
         manager.update_network_info();
         if let Some(info) = manager.get_network_info() {
-            self.scheduler.on_network_change(info).await;
+            unsafe {
+                if Some(info) != NETWORK_INFO {
+                    NETWORK_INFO = Some(info);
+                    self.scheduler.on_network_change(info).await;
+                }
+            }
         }
     }
 

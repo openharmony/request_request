@@ -258,7 +258,7 @@ pub(crate) struct RequestTaskMsg {
     pub(crate) action: u8,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(C)]
 pub(crate) struct NetworkInfo {
     pub(crate) network_type: NetworkInner,

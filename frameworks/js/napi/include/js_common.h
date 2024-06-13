@@ -71,6 +71,7 @@ enum Reason : uint32_t {
     IO_ERROR,
     UNSUPPORT_RANGE_REQUEST,
     OTHERS_ERROR,
+    NETWORK_CHANGED,
 };
 
 enum class SubscribeType : uint32_t {
