@@ -53,13 +53,11 @@
         "ylong_runtime",
         "storage_service",
         "ffrt",
-        "openssl"
-      ],
-      "third_party": [
+        "openssl",
         "curl",
-        "libuv",
-        "openssl"
-      ]
+        "libuv"
+      ],
+      "third_party": []
     },
     "build": {
       "group_type": {
