@@ -71,8 +71,6 @@ ohos_shared_library("request") {
   deps = [
     "../../../common:request_common_static",
     "../../native:request_native",
-    "//third_party/libuv:uv",
-    "//third_party/openssl:libssl_shared",
   ]
 
   external_deps = [
@@ -83,12 +81,15 @@ ohos_shared_library("request") {
     "ability_runtime:extensionkit_native",
     "ability_runtime:napi_base_context",
     "c_utils:utils",
+    "curl:curl_shared",
     "ffrt:libffrt",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "libuv:uv",
     "napi:ace_napi",
     "netmanager_base:net_conn_manager_if",
+    "openssl:libssl_shared",
     "storage_service:storage_manager_acl",
   ]
 
@@ -132,8 +133,6 @@ ohos_static_library("request_static") {
   deps = [
     "../../../common:request_common_static",
     "../../native:request_native",
-    "//third_party/libuv:uv",
-    "//third_party/openssl:libssl_shared",
   ]
 
   external_deps = [
@@ -143,12 +142,15 @@ ohos_static_library("request_static") {
     "ability_runtime:data_ability_helper",
     "ability_runtime:napi_base_context",
     "c_utils:utils",
+    "curl:curl_shared",
     "ffrt:libffrt",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "libuv:uv",
     "napi:ace_napi",
     "netmanager_base:net_conn_manager_if",
+    "openssl:libssl_shared",
     "storage_service:storage_manager_acl",
   ]
 

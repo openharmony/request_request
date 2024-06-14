@@ -13,13 +13,7 @@
 import("//build/ohos.gni")
 
 config("common_config") {
-  visibility = [ ":*" ]
-  include_dirs = [
-    "include",
-    "//third_party/curl/include",
-    "//third_party/openssl/include",
-  ]
-
+  include_dirs = [ "include" ]
   ldflags = [ "-Wl,--exclude-libs=ALL" ]
   cflags_cc = [ "-fexceptions" ]
   cflags = [ "-DOPENSSL_ARM64_PLATFORM" ]
@@ -37,13 +31,12 @@ ohos_static_library("request_common_static") {
 
   configs = [ "//build/config/gcc:symbol_visibility_hidden" ]
 
-  deps = [
-    "//third_party/curl:curl_shared",
-    "//third_party/openssl:libcrypto_shared",
-    "//third_party/openssl:libssl_shared",
+  external_deps = [
+    "curl:curl_shared",
+    "hilog:libhilog",
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
   ]
-
-  external_deps = [ "hilog:libhilog" ]
 
   subsystem_name = "request"
   part_name = "request"
