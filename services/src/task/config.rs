@@ -166,7 +166,7 @@ impl Default for TaskConfig {
         Self {
             bundle_type: 0,
             bundle: "xxx".to_string(),
-            url: "http://127.0.0.1:80".to_string(),
+            url: "".to_string(),
             title: "xxx".to_string(),
             description: "xxx".to_string(),
             method: "GET".to_string(),
