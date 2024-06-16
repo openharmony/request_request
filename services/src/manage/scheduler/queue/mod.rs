@@ -26,6 +26,7 @@ use crate::ability::SYSTEM_CONFIG_MANAGER;
 use crate::error::ErrorCode;
 use crate::manage::app_state::AppStateManagerTx;
 use crate::manage::database::Database;
+use crate::manage::events::{TaskEvent, TaskManagerEvent};
 use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::qos::{QosChanges, QosDirection};
 use crate::manage::scheduler::queue::running_task::RunningTask;
@@ -33,6 +34,7 @@ use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
 use crate::service::runcount::RunCountManagerEntry;
 use crate::task::config::Action;
+use crate::task::ffi::CUpdateStateInfo;
 use crate::task::info::State;
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
@@ -156,8 +158,26 @@ impl RunningQueue {
                 )
                 .await
             {
-                Some(task) => task,
-                None => continue,
+                Ok(task) => task,
+                Err(e) => {
+                    let database = Database::get_instance();
+                    let state_info = CUpdateStateInfo::new(State::Failed, Reason::OthersError);
+                    if !database.update_task_state(task_id, &state_info) {
+                        error!("{} update_task_state error: {:?}", task_id, e);
+                    }
+
+                    if let Some(info) = database.get_task_info(task_id) {
+                        let notify_data = info.build_notify_data();
+                        RequestTask::state_change_notify_of_no_run(
+                            &self.client_manager,
+                            notify_data,
+                        );
+                    }
+
+                    self.tx
+                        .send_event(TaskManagerEvent::Task(TaskEvent::Finished(task_id, uid)));
+                    continue;
+                }
             };
 
             let keeper = self.keeper.clone();

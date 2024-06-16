@@ -96,6 +96,12 @@ struct CUpdateInfo {
     uint32_t eachFileStatusLen;
 };
 
+struct CUpdateStateInfo {
+    uint64_t mtime;
+    uint8_t state;
+    uint8_t reason;
+};
+
 struct TaskQosInfo {
     uint64_t uid;
     uint32_t taskId;

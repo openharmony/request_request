@@ -31,6 +31,7 @@ pub(crate) enum SubscribeType {
 
 #[derive(Debug, Clone)]
 pub(crate) struct NotifyData {
+    pub(crate) bundle: String,
     pub(crate) progress: Progress,
     pub(crate) action: Action,
     pub(crate) version: Version,

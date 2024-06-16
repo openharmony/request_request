@@ -81,8 +81,8 @@ bool RequestDataBase::Update(
     return ret == OHOS::NativeRdb::E_OK;
 }
 
-void Search(
-    rust::vec<rust::u32> &tasks, std::shared_ptr<OHOS::NativeRdb::RdbStore> store_, std::string sql, TaskFilter filter)
+void Search(rust::vec<rust::u32> &tasks, std::shared_ptr<OHOS::NativeRdb::RdbStore> store_, std::string sql,
+    TaskFilter filter)
 {
     sql += "ctime BETWEEN " + std::to_string(filter.after) + " AND " + std::to_string(filter.before);
     if (filter.state != static_cast<uint8_t>(State::ANY)) {
@@ -948,16 +948,16 @@ bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo)
     return true;
 }
 
-bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state, Reason reason)
+bool UpdateRequestTaskState(uint32_t taskId, CUpdateStateInfo *updateStateInfo)
 {
-    REQUEST_HILOGD("Change task state, tid: %{public}d, state is %{public}d", taskId, static_cast<int32_t>(state));
-
+    REQUEST_HILOGD("Change task state, tid: %{public}d, state is %{public}d", taskId, updateStateInfo->state);
     OHOS::NativeRdb::ValuesBucket values;
-    values.PutInt("state", static_cast<uint8_t>(state));
-    values.PutInt("reason", static_cast<uint8_t>(reason));
+    values.PutLong("mtime", updateStateInfo->mtime);
+    values.PutInt("state", updateStateInfo->state);
+    values.PutInt("reason", updateStateInfo->reason);
 
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.EqualTo("task_id", std::to_string(taskId))->And()->EqualTo("uid", std::to_string(uid));
+    rdbPredicates.EqualTo("task_id", std::to_string(taskId));
     if (!OHOS::Request::RequestDataBase::GetInstance().Update(values, rdbPredicates)) {
         REQUEST_HILOGE("Change request_task state failed, taskid: %{public}d", taskId);
         return false;
