@@ -29,7 +29,7 @@ use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
 use crate::service::runcount::RunCountManagerEntry;
 use crate::task::config::Action;
-use crate::task::ffi::NetworkInfo;
+use crate::task::ffi::{CUpdateStateInfo, NetworkInfo};
 use crate::task::info::{ApplicationState, Mode, State};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
@@ -112,12 +112,9 @@ impl Scheduler {
                     info!("task {} started, waiting for app state", task_id);
                     // to insert app, further optimization will be carried out in the future
                     self.qos.apps.insert_task(uid, raw_state, task);
-                    database.change_task_state(
-                        task_id,
-                        uid,
-                        State::Paused,
-                        Reason::AppBackgroundOrTerminate,
-                    );
+                    let state_info =
+                        CUpdateStateInfo::new(State::Paused, Reason::AppBackgroundOrTerminate);
+                    database.update_task_state(task_id, &state_info);
                     self.qos.apps.remove_task(uid, task_id);
                 }
                 return ErrorCode::ErrOk;
@@ -229,46 +226,51 @@ impl Scheduler {
             let _ = self.qos.finish_task(uid, task_id);
         }
         let database = Database::get_instance();
-        if state != State::Removed {
-            let system_config = unsafe { SYSTEM_CONFIG_MANAGER.assume_init_ref().system_config() };
-            if let Some(task) = database
-                .get_task(
-                    task_id,
-                    system_config,
-                    &self.app_state_manager,
-                    &self.client_manager,
-                )
-                .await
-            {
-                return if task.set_status(state, Reason::UserOperation) {
+        let mut info = match database.get_task_info(task_id) {
+            Some(info) => info,
+            None => return ErrorCode::TaskNotFound,
+        };
+        if state == State::Removed {
+            if State::from(info.progress.common_data.state) == State::Removed {
+                error!(
+                    "TaskManager remove a task, uid:{}, task_id:{} removed already",
+                    uid, task_id
+                );
+                return ErrorCode::TaskNotFound;
+            }
+            debug!(
+                "TaskManager remove a task, uid:{}, task_id:{} success",
+                uid, task_id
+            );
+            let state_info = CUpdateStateInfo::new(State::Removed, Reason::UserOperation);
+            database.update_task_state(task_id, &state_info);
+            info.progress.common_data.state = State::Removed as u8;
+            let notify_data = info.build_notify_data();
+            Notifier::remove(&self.client_manager, notify_data);
+            return ErrorCode::ErrOk;
+        }
+
+        let system_config = unsafe { SYSTEM_CONFIG_MANAGER.assume_init_ref().system_config() };
+        match database
+            .get_task(
+                task_id,
+                system_config,
+                &self.app_state_manager,
+                &self.client_manager,
+            )
+            .await
+        {
+            Ok(task) => {
+                // TODO: do not use get_task, only check and change database.
+                if task.set_status(state, Reason::UserOperation) {
                     // Here we use the `drop` method of `NotifyTask` to notify apps.
                     let _ = NotifyTask::new(task);
                     ErrorCode::ErrOk
                 } else {
                     ErrorCode::TaskStateErr
-                };
-            }
-        } else {
-            // removed task can not be constructed, set state and send notify
-            if let Some(mut info) = database.get_task_info(task_id) {
-                if State::from(info.progress.common_data.state) == State::Removed {
-                    error!(
-                        "TaskManager remove a task, uid:{}, task_id:{} removed already",
-                        uid, task_id
-                    );
-                } else {
-                    debug!(
-                        "TaskManager remove a task, uid:{}, task_id:{} success",
-                        uid, task_id
-                    );
-                    database.change_task_state(task_id, uid, State::Removed, Reason::UserOperation);
-                    info.progress.common_data.state = State::Removed as u8;
-                    let notify_data = info.build_notify_data();
-                    Notifier::remove(&self.client_manager, notify_data);
-                    return ErrorCode::ErrOk;
                 }
             }
+            Err(e) => e,
         }
-        ErrorCode::TaskNotFound
     }
 }

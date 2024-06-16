@@ -18,12 +18,12 @@ use std::slice;
 use std::sync::{Arc, Once};
 
 use super::app_state::AppStateManagerTx;
+use crate::error::ErrorCode;
 use crate::manage::SystemConfig;
 use crate::service::client::ClientManagerEntry;
 use crate::task::config::TaskConfig;
-use crate::task::ffi::{CTaskConfig, CTaskInfo, CUpdateInfo, NetworkInfo};
+use crate::task::ffi::{CTaskConfig, CTaskInfo, CUpdateInfo, CUpdateStateInfo, NetworkInfo};
 use crate::task::info::{ApplicationState, Mode, State, TaskInfo};
-use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::utils::c_wrapper::CStringWrapper;
 use crate::utils::hashmap_to_string;
@@ -109,8 +109,13 @@ impl Database {
         debug!("Update task in database, ret is {}", ret);
     }
 
-    pub(crate) fn change_task_state(&self, task_id: u32, uid: u64, state: State, reason: Reason) {
-        unsafe { ChangeRequestTaskState(task_id, uid, state, reason) };
+    pub(crate) fn update_task_state(&self, task_id: u32, info: &CUpdateStateInfo) -> bool {
+        if !self.contains_task(task_id) {
+            return false;
+        }
+        let ret: bool = unsafe { UpdateRequestTaskState(task_id, info) };
+        debug!("Update task state in database, ret is {}", ret);
+        ret
     }
 
     pub(crate) fn get_task_info(&self, task_id: u32) -> Option<TaskInfo> {
@@ -278,10 +283,10 @@ impl Database {
         system: SystemConfig,
         app_state_manager: &AppStateManagerTx,
         client_manager: &ClientManagerEntry,
-    ) -> Option<Arc<RequestTask>> {
+    ) -> Result<Arc<RequestTask>, ErrorCode> {
         // If this task exists in `user_file_map`，get it from this map.
         if let Some(task) = self.user_file_tasks.get(&task_id) {
-            return Some(task.clone());
+            return Ok(task.clone());
         }
 
         // 此处需要根据 task_id 从数据库构造指定的任务。
@@ -293,7 +298,7 @@ impl Database {
                 debug!("get_task {} state is {:?}", task_id, state);
                 if state == State::Removed {
                     error!("get_task state is Removed, {}", task_id);
-                    return None;
+                    return Err(ErrorCode::TaskStateErr);
                 }
 
                 let app_state = app_state_manager.get_app_state(uid).await;
@@ -305,16 +310,16 @@ impl Database {
                     client_manager.clone(),
                 ) {
                     Ok(task) => {
-                        return Some(Arc::new(task));
+                        return Ok(Arc::new(task));
                     }
-                    Err(_) => {
-                        error!("new RequestTask failed");
-                        return None;
+                    Err(e) => {
+                        error!("new RequestTask failed {}, err: {:?}", task_id, e);
+                        return Err(e);
                     }
                 }
             }
         }
-        None
+        Err(ErrorCode::Other)
     }
 }
 
@@ -338,7 +343,6 @@ pub(crate) struct AppInfo {
 
 #[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
-    fn ChangeRequestTaskState(task_id: u32, uid: u64, state: State, reason: Reason) -> bool;
     fn DeleteCTaskConfig(ptr: *const CTaskConfig);
     fn DeleteCTaskConfigs(ptr: *const *const CTaskConfig);
     fn DeleteCTaskInfo(ptr: *const CTaskInfo);
@@ -352,6 +356,7 @@ extern "C" {
     fn RecordRequestTask(info: *const CTaskInfo, config: *const CTaskConfig) -> bool;
     fn RequestDBRemoveRecordsFromTime(time: u64);
     fn UpdateRequestTask(id: u32, info: *const CUpdateInfo) -> bool;
+    fn UpdateRequestTaskState(id: u32, info: *const CUpdateStateInfo) -> bool;
     fn UpdateTaskStateOnAppStateChange(uid: u64, app_state: u8) -> c_void;
     fn UpdateTaskStateOnNetworkChange(info: NetworkInfo) -> c_void;
     fn GetTaskQosInfo(uid: u64, task_id: u32, info: *mut *mut TaskQosInfo) -> c_void;

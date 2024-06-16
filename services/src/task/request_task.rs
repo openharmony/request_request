@@ -80,10 +80,6 @@ impl RequestTask {
         self.conf.common_data.uid
     }
 
-    pub(crate) fn version(&self) -> Version {
-        self.conf.version
-    }
-
     pub(crate) fn config(&self) -> &TaskConfig {
         &self.conf
     }
@@ -235,6 +231,7 @@ impl RequestTask {
     pub(crate) fn build_notify_data(&self) -> NotifyData {
         let vec = self.get_each_file_status();
         NotifyData {
+            bundle: self.conf.bundle.clone(),
             // `unwrap` for propagating panics among threads.
             progress: self.progress.lock().unwrap().clone(),
             action: self.conf.common_data.action,
@@ -826,6 +823,44 @@ impl RequestTask {
             _ => {}
         }
         self.background_notify();
+    }
+
+    pub(crate) fn state_change_notify_of_no_run(
+        client_manager: &ClientManagerEntry,
+        notify_data: NotifyData,
+    ) {
+        let state = State::from(notify_data.progress.common_data.state);
+        let total_processed = notify_data.progress.common_data.total_processed;
+        if state == State::Initialized
+            || (total_processed == 0 && (state == State::Running || state == State::Retrying))
+        {
+            return;
+        }
+        debug!("no run task state change notification: {:?}", state);
+        Notifier::progress(client_manager, notify_data.clone());
+        match state {
+            State::Completed => {
+                PublishStateChangeEvent(
+                    notify_data.bundle.as_str(),
+                    notify_data.task_id,
+                    State::Completed as i32,
+                );
+                Notifier::complete(client_manager, notify_data)
+            }
+            State::Failed => {
+                PublishStateChangeEvent(
+                    notify_data.bundle.as_str(),
+                    notify_data.task_id,
+                    State::Failed as i32,
+                );
+                Notifier::fail(client_manager, notify_data)
+            }
+            State::Paused | State::Waiting => Notifier::pause(client_manager, notify_data),
+            State::Removed => {
+                Notifier::remove(client_manager, notify_data);
+            }
+            _ => {}
+        }
     }
 
     fn get_each_file_status(&self) -> Vec<EachFileStatus> {

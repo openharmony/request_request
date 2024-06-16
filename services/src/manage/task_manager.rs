@@ -218,7 +218,7 @@ impl TaskManager {
         debug!("TaskManager handles task event {:?}", event);
 
         match event {
-            TaskEvent::Finished(task_id, uid, _version) => {
+            TaskEvent::Finished(task_id, uid) => {
                 self.handle_finished_task(uid, task_id).await;
             }
             TaskEvent::Subscribe(task_id, token_id, tx) => {

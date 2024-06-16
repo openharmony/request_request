@@ -168,7 +168,6 @@ impl Drop for RunningTask {
             .send_event(TaskManagerEvent::Task(TaskEvent::Finished(
                 self.task_id(),
                 self.uid(),
-                self.version(),
             )));
     }
 }

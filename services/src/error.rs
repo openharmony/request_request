@@ -23,5 +23,5 @@ pub(crate) enum ErrorCode {
     Other = 13499999,
     TaskEnqueueErr = 21900004,
     TaskNotFound = 21900006,
-    TaskStateErr,
+    TaskStateErr = 21900007,
 }

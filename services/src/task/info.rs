@@ -193,6 +193,7 @@ impl TaskInfo {
 
     pub(crate) fn build_notify_data(&self) -> NotifyData {
         NotifyData {
+            bundle: self.bundle.clone(),
             progress: self.progress.clone(),
             action: Action::from(self.common_data.action),
             version: Version::from(self.common_data.version),

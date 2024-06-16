@@ -18,7 +18,7 @@ use ylong_runtime::sync::oneshot::{channel, Sender};
 
 use super::account::AccountEvent;
 use crate::error::ErrorCode;
-use crate::task::config::{Action, TaskConfig, Version};
+use crate::task::config::{Action, TaskConfig};
 use crate::task::info::{ApplicationState, DumpAllInfo, DumpOneInfo, TaskInfo};
 use crate::utils::Recv;
 
@@ -199,7 +199,7 @@ pub(crate) enum ServiceEvent {
 }
 
 pub(crate) enum TaskEvent {
-    Finished(u32, u64, Version),
+    Finished(u32, u64),
     Subscribe(u32, u64, Sender<ErrorCode>),
 }
 
@@ -296,11 +296,10 @@ impl Debug for ServiceEvent {
 impl Debug for TaskEvent {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Finished(task_id, uid, version) => f
+            Self::Finished(task_id, uid) => f
                 .debug_struct("Finished")
                 .field("uid", uid)
                 .field("task_id", task_id)
-                .field("version", version)
                 .finish(),
             Self::Subscribe(task_id, token_id, _) => f
                 .debug_struct("Subscribe")

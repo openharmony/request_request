@@ -129,7 +129,7 @@ public:
     bool Delete(const OHOS::NativeRdb::AbsRdbPredicates &predicates);
     int DeleteAllAccountTasks(int user_id);
     int OnAccountChange(int user_id);
-    rust::vec<rust::u32> SearchTask(TaskFilter filter, rust::u64 uid) const; 
+    rust::vec<rust::u32> SearchTask(TaskFilter filter, rust::u64 uid) const;
     rust::vec<rust::u32> SystemSearchTask(TaskFilter filter, rust::str bundleName) const;
 
 private:
@@ -163,11 +163,11 @@ struct CVectorWrapper {
 };
 
 // Request Database Modify.
-bool ChangeRequestTaskState(uint32_t taskId, uint64_t uid, State state, Reason reason);
 bool HasRequestTaskRecord(uint32_t taskId);
 bool QueryTaskTokenId(uint32_t taskId, uint64_t &tokenId);
 bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig);
 bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo);
+bool UpdateRequestTaskState(uint32_t taskId, CUpdateStateInfo *updateStateInfo);
 void DeleteCVectorWrapper(uint32_t *ptr);
 void GetCommonTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, TaskInfo &taskInfo);
 int TouchRequestTaskInfo(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo);
