@@ -84,6 +84,9 @@ impl RequestAbility {
         let client_manger = ClientManager::init();
         info!("client_manger init succeed");
 
+        unsafe { SYSTEM_CONFIG_MANAGER.write(SystemConfigManager::init()) };
+        info!("system_config_manager init succeed");
+
         let task_manager = TaskManager::init(runcount_manager.clone(), client_manger.clone());
 
         *self.task_manager.lock().unwrap() = Some(task_manager.clone());
@@ -92,10 +95,6 @@ impl RequestAbility {
 
         NetworkChangeListener::init(task_manager.clone());
         info!("network_change_listener init succeed");
-
-        unsafe { SYSTEM_CONFIG_MANAGER.write(SystemConfigManager::init()) };
-
-        info!("system_config_manager init succeed");
 
         unsafe {
             RequestInitServiceHandler();
