@@ -72,7 +72,8 @@ void RequestSyncLoadCallbackTest::TearDown(void)
     // input testCase teardown step，teardown invoked after each testCase
 }
 
-class RSLCTRemoteObjectImpl : public OHOS::IRemoteObject {};
+class RSLCTRemoteObjectImpl : public OHOS::IRemoteObject {
+};
 
 /**
  * @tc.name: OnLoadSystemAbilityTest001

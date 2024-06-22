@@ -944,7 +944,8 @@ void ResponseMessageFuzzTestNotifyDataFromParcel(const uint8_t *data, size_t siz
     ResponseMessageReceiver::NotifyDataFromParcel(notifyData, parcel, testSize);
 }
 
-class FuzzRemoteObjectImpl : public OHOS::IRemoteObject {};
+class FuzzRemoteObjectImpl : public OHOS::IRemoteObject {
+};
 
 void RequestSyncLoadFuzzTestOnLoadSystemAbility(const uint8_t *data, size_t size)
 {

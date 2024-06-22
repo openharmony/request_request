@@ -626,7 +626,7 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start();
-      await task.stop((err) => {
+      await task.stop(async (err) => {
         expect(err === null).assertTrue()
         done()
       })
@@ -677,7 +677,7 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start();
-      await task.stop((err) => {
+      await task.stop(async (err) => {
         expect(err === null).assertTrue();
         done();
       })
@@ -1207,7 +1207,7 @@ export default function requestOperateTaskTest() {
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
-      request.agent.remove(task.tid, (err) => {
+      request.agent.remove(task.tid, async (err) => {
         expect(err === null).assertTrue();
         done();
       })
