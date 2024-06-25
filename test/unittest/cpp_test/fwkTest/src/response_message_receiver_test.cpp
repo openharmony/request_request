@@ -80,7 +80,7 @@ static constexpr int32_t INT16_SIZE = 2;  // 2 is int16 and uint16 num length
 
 /**
  * @tc.name: Int64FromParcel001
- * @tc.desc: Test GetInstance001 interface base function - Int64FromParcel
+ * @tc.desc: Test Int64FromParcel001 interface base function - Int64FromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -99,7 +99,7 @@ HWTEST_F(ResponseMessageReceiverTest, Int64FromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: Uint64FromParcel001
- * @tc.desc: Test GetInstance001 interface base function - Uint64FromParcel
+ * @tc.desc: Test Uint64FromParcel001 interface base function - Uint64FromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -118,7 +118,7 @@ HWTEST_F(ResponseMessageReceiverTest, Uint64FromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: Int32FromParcel001
- * @tc.desc: Test GetInstance001 interface base function - Int32FromParcel
+ * @tc.desc: Test Int32FromParcel001 interface base function - Int32FromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -137,7 +137,7 @@ HWTEST_F(ResponseMessageReceiverTest, Int32FromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: Uint32FromParcel001
- * @tc.desc: Test GetInstance001 interface base function - Uint32FromParcel
+ * @tc.desc: Test Uint32FromParcel001 interface base function - Uint32FromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -156,7 +156,7 @@ HWTEST_F(ResponseMessageReceiverTest, Uint32FromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: Int16FromParcel001
- * @tc.desc: Test GetInstance001 interface base function - Int16FromParcel
+ * @tc.desc: Test Int16FromParcel001 interface base function - Int16FromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -175,7 +175,7 @@ HWTEST_F(ResponseMessageReceiverTest, Int16FromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: StateFromParcel001
- * @tc.desc: Test GetInstance001 interface base function - StateFromParcel
+ * @tc.desc: Test StateFromParcel001 interface base function - StateFromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -196,7 +196,7 @@ HWTEST_F(ResponseMessageReceiverTest, StateFromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: ActionFromParcel001
- * @tc.desc: Test GetInstance001 interface base function - ActionFromParcel
+ * @tc.desc: Test ActionFromParcel001 interface base function - ActionFromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -217,7 +217,7 @@ HWTEST_F(ResponseMessageReceiverTest, ActionFromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: VersionFromParcel001
- * @tc.desc: Test GetInstance001 interface base function - VersionFromParcel
+ * @tc.desc: Test VersionFromParcel001 interface base function - VersionFromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -238,7 +238,7 @@ HWTEST_F(ResponseMessageReceiverTest, VersionFromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: SubscribeTypeFromParcel001
- * @tc.desc: Test GetInstance001 interface base function - SubscribeTypeFromParcel
+ * @tc.desc: Test SubscribeTypeFromParcel001 interface base function - SubscribeTypeFromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -259,7 +259,7 @@ HWTEST_F(ResponseMessageReceiverTest, SubscribeTypeFromParcel001, TestSize.Level
 
 /**
  * @tc.name: StringFromParcel001
- * @tc.desc: Test GetInstance001 interface base function - StringFromParcel
+ * @tc.desc: Test StringFromParcel001 interface base function - StringFromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -278,7 +278,7 @@ HWTEST_F(ResponseMessageReceiverTest, StringFromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: ResponseHeaderFromParcel001
- * @tc.desc: Test GetInstance001 interface base function - ResponseHeaderFromParcel
+ * @tc.desc: Test ResponseHeaderFromParcel001 interface base function - ResponseHeaderFromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -298,7 +298,7 @@ HWTEST_F(ResponseMessageReceiverTest, ResponseHeaderFromParcel001, TestSize.Leve
 
 /**
  * @tc.name: ProgressExtrasFromParcel001
- * @tc.desc: Test GetInstance001 interface base function - ProgressExtrasFromParcel
+ * @tc.desc: Test ProgressExtrasFromParcel001 interface base function - ProgressExtrasFromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -329,7 +329,7 @@ HWTEST_F(ResponseMessageReceiverTest, ProgressExtrasFromParcel001, TestSize.Leve
 
 /**
  * @tc.name: VecInt64FromParcel001
- * @tc.desc: Test GetInstance001 interface base function - VecInt64FromParcel
+ * @tc.desc: Test VecInt64FromParcel001 interface base function - VecInt64FromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -374,7 +374,7 @@ public:
 
 /**
  * @tc.name: ResponseMessageReceiver001
- * @tc.desc: Test GetInstance001 interface base function - ResponseMessageReceiver
+ * @tc.desc: Test ResponseMessageReceiver001 interface base function - ResponseMessageReceiver
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -388,7 +388,7 @@ HWTEST_F(ResponseMessageReceiverTest, ResponseMessageReceiver001, TestSize.Level
 
 /**
  * @tc.name: MsgHeaderParcel001
- * @tc.desc: Test GetInstance001 interface base function - MsgHeaderParcel
+ * @tc.desc: Test MsgHeaderParcel001 interface base function - MsgHeaderParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -450,7 +450,7 @@ HWTEST_F(ResponseMessageReceiverTest, MsgHeaderParcel001, TestSize.Level1)
 
 /**
  * @tc.name: ResponseFromParcel001
- * @tc.desc: Test GetInstance001 interface base function - ResponseFromParcel
+ * @tc.desc: Test ResponseFromParcel001 interface base function - ResponseFromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -503,7 +503,7 @@ HWTEST_F(ResponseMessageReceiverTest, ResponseFromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: TaskStatesFromParcel001
- * @tc.desc: Test GetInstance001 interface base function - TaskStatesFromParcel
+ * @tc.desc: Test TaskStatesFromParcel001 interface base function - TaskStatesFromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -548,7 +548,7 @@ HWTEST_F(ResponseMessageReceiverTest, TaskStatesFromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: NotifyDataFromParcel001
- * @tc.desc: Test GetInstance001 interface base function - NotifyDataFromParcel
+ * @tc.desc: Test NotifyDataFromParcel001 interface base function - NotifyDataFromParcel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -686,4 +686,61 @@ HWTEST_F(ResponseMessageReceiverTest, NotifyDataFromParcel001, TestSize.Level1)
     EXPECT_EQ(notifyData->taskStates[0].message, message);
     EXPECT_EQ(notifyData->taskStates[0].path, path);
     EXPECT_EQ(notifyData->taskStates[0].responseCode, responseCode);
+}
+
+/**
+ * @tc.name: OnReadable001
+ * @tc.desc: Test OnReadable001 interface base function - OnReadable
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(ResponseMessageReceiverTest, OnReadable001, TestSize.Level1)
+{
+    int32_t fd[2]; // 2 socket for socketpair
+    fd[0] = -1;
+    RMRestResponseListener handler = RMRestResponseListener();
+    int32_t sockFd = -1;
+    ResponseMessageReceiver receiver = ResponseMessageReceiver(&handler, sockFd);
+    receiver.OnReadable(fd[0]);
+    uint32_t magicNum = ResponseMessageReceiver::RESPONSE_MAGIC_NUM - 1;
+    int pos = 0;
+    int arraySize = INT32_SIZE + INT64_SIZE;
+    char except[arraySize];
+    EXPECT_EQ(
+        memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&magicNum), sizeof(magicNum)), 0);
+    pos += sizeof(magicNum);
+    int32_t msgId = 123456; // 123456 is except num
+    EXPECT_EQ(
+        memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&msgId), sizeof(msgId)),
+        0);
+    pos += sizeof(msgId);
+    int16_t msgType = 123; // 123 is except num
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&msgType),
+                  sizeof(msgType)),
+        0);
+    int msgTypePos = pos;
+    pos += sizeof(msgType);
+    int16_t bodySize = 456; // 456 is except num
+    EXPECT_EQ(memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&bodySize),
+                  sizeof(bodySize)),
+        0);
+    pos += sizeof(bodySize);
+    EXPECT_TRUE(socketpair(AF_UNIX, SOCK_STREAM, 0, fd) >= 0);
+    EXPECT_TRUE(write(fd[1], except, pos + 1) > 0);
+    receiver.OnReadable(fd[0]);
+    msgType = MessageType::HTTP_RESPONSE;
+    EXPECT_EQ(memcpy_s(except + msgTypePos, static_cast<size_t>(arraySize - msgTypePos),
+                  reinterpret_cast<void *>(&msgType), sizeof(msgType)),
+        0);
+    EXPECT_TRUE(write(fd[1], except, pos + 1) > 0);
+    receiver.OnReadable(fd[0]);
+    msgType = MessageType::NOTIFY_DATA;
+    EXPECT_EQ(memcpy_s(except + msgTypePos, static_cast<size_t>(arraySize - msgTypePos),
+                  reinterpret_cast<void *>(&msgType), sizeof(msgType)),
+        0);
+    EXPECT_TRUE(write(fd[1], except, pos + 1) > 0);
+    receiver.messageId_ = msgId;
+    receiver.OnReadable(fd[0]);
+    EXPECT_EQ(close(fd[0]), 0);
+    EXPECT_EQ(close(fd[1]), 0);
 }
