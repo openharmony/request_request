@@ -146,7 +146,9 @@ impl AppStateManager {
     fn change_app_state(&mut self, uid: u64, state: ApplicationState) {
         if let Some(st) = self.app_state.get_mut(&uid) {
             if state == ApplicationState::Foreground {
-                st.handle = None;
+                if let Some(handle) = st.handle.take() {
+                    handle.cancel();
+                }
                 {
                     let mut a = st.state.inner.lock().unwrap();
                     if a.state == state {
