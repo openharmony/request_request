@@ -366,7 +366,7 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
         REQUEST_HILOGE("read message error: %{public}d, %{public}d", length, errno);
         return;
     }
-    REQUEST_HILOGI("read message: %{public}d", length);
+    REQUEST_HILOGD("read message: %{public}d", length);
 
     char lenBuf[4];
     *reinterpret_cast<uint32_t *>(lenBuf) = length;

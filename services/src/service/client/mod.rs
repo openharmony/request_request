@@ -365,7 +365,7 @@ impl Client {
         let ret = self.server_sock_fd.send(&message).await;
         match ret {
             Ok(size) => {
-                info!("send message ok, pid: {}, size: {}", self.pid, size);
+                debug!("send message ok, pid: {}, size: {}", self.pid, size);
                 let mut buf: [u8; 4] = [0; 4];
                 let ret = self.server_sock_fd.recv(&mut buf).await;
                 if let Err(e) = ret {

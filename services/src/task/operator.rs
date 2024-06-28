@@ -11,15 +11,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::cmp::max;
+use std::future::Future;
 use std::pin::Pin;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::task::{Context, Poll};
+use std::time::Duration;
 
 use ylong_http_client::HttpClientError;
 use ylong_runtime::io::AsyncWrite;
-use ylong_runtime::time::Sleep;
+use ylong_runtime::time::{sleep, Sleep};
 
 use super::info::Mode;
 use crate::manage::account::is_active_user;
@@ -29,14 +30,8 @@ use crate::task::info::State;
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::utils::get_current_timestamp;
-const SPEED_CACULATE_INTERVAL: u64 = 5000;
-const SPEED_LIMIT_INTERVAL: u64 = 500;
-const MIN_SPEED: u64 = 100;
-use std::future::Future;
-use std::time::Duration;
 
-use ylong_runtime::time::sleep;
-
+const SPEED_LIMIT_INTERVAL: u64 = 1000;
 const FRONT_NOTIFY_INTERVAL: u64 = 1000;
 const BACKGROUND_NOTIFY_INTERVAL: u64 = 3000;
 
@@ -45,7 +40,7 @@ pub(crate) struct TaskOperator {
     pub(crate) task: Arc<RequestTask>,
     pub(crate) last_time: u64,
     pub(crate) last_size: u64,
-    pub(crate) speed: u64,
+    pub(crate) more_sleep_time: u64,
 }
 
 impl TaskOperator {
@@ -55,7 +50,7 @@ impl TaskOperator {
             task,
             last_time: 0,
             last_size: 0,
-            speed: 0,
+            more_sleep_time: 0,
         }
     }
 
@@ -84,7 +79,7 @@ impl TaskOperator {
         }
 
         let version = self.task.conf.version;
-        if current > self.task.last_notify.load(Ordering::SeqCst) + FRONT_NOTIFY_INTERVAL {
+        if current >= self.task.last_notify.load(Ordering::SeqCst) + FRONT_NOTIFY_INTERVAL {
             let notify_data = self.task.build_notify_data();
             self.task.last_notify.store(current, Ordering::SeqCst);
 
@@ -107,47 +102,36 @@ impl TaskOperator {
             .unwrap()
             .common_data
             .total_processed as u64;
-        // get the init time and size, for speed caculate
-        if self.last_time == 0 && total_processed != 0 {
-            self.last_time = current;
-            self.last_size = total_processed;
-        }
 
-        let speed_limit = self.task.rate_limiting.load(Ordering::Acquire) as u64;
-        // caculate download/upload speed
-        if speed_limit != 0
-            && self.speed == 0
-            && (current > (self.last_time + SPEED_CACULATE_INTERVAL))
-            && total_processed != 0
-        {
-            let speed = (total_processed - self.last_size) / (current - self.last_time);
-            self.speed = if speed > MIN_SPEED {
-                debug!("limit speed, {}, {}", speed, self.task.task_id());
-                speed
-            } else {
+        self.sleep = None;
+        let speed_limit = self.task.rate_limiting.load(Ordering::SeqCst);
+        if speed_limit != 0 {
+            if self.more_sleep_time != 0 {
+                // wake up for notify, sleep until speed limit conditions are met
+                self.sleep = Some(sleep(Duration::from_millis(self.more_sleep_time)));
+                self.more_sleep_time = 0;
+            } else if self.last_time == 0 {
+                // get the init time and size, for speed caculate
                 self.last_time = current;
                 self.last_size = total_processed;
-                0
-            };
-        }
-
-        // For every 1 increase in the speed_limit, the speed decreases by 25%,
-        // but need to be larger than MIN_SPEED
-        let speed = max(self.speed / 4 * (4 - speed_limit), MIN_SPEED);
-
-        if speed_limit != 0
-            && self.speed != 0
-            && current - self.last_time < SPEED_LIMIT_INTERVAL
-            && ((total_processed - self.last_size) > speed * SPEED_LIMIT_INTERVAL)
-        {
-            self.sleep = Some(sleep(Duration::from_millis(
-                SPEED_LIMIT_INTERVAL - (current - self.last_time),
-            )));
-        } else {
-            self.sleep = None;
-            // last caculate window has meet speed limit, update last_time and last_size,
-            // for next poll's speed compare
-            if self.speed != 0 && current - self.last_time > SPEED_LIMIT_INTERVAL {
+            } else if current - self.last_time < SPEED_LIMIT_INTERVAL
+                && ((total_processed - self.last_size) > speed_limit * SPEED_LIMIT_INTERVAL)
+            {
+                // sleep until notification is required or speed limit conditions are met
+                let limit_time =
+                    (total_processed - self.last_size) / speed_limit - (current - self.last_time);
+                let notify_time = FRONT_NOTIFY_INTERVAL
+                    - (current - self.task.last_notify.load(Ordering::SeqCst));
+                let sleep_time = if limit_time > notify_time {
+                    self.more_sleep_time = limit_time - notify_time;
+                    notify_time
+                } else {
+                    limit_time
+                };
+                self.sleep = Some(sleep(Duration::from_millis(sleep_time)));
+            } else if current - self.last_time >= SPEED_LIMIT_INTERVAL {
+                // last caculate window has meet speed limit, update last_time and last_size,
+                // for next poll's speed compare
                 self.last_time = current;
                 self.last_size = total_processed;
             }
