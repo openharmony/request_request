@@ -140,7 +140,7 @@ impl RunningQueue {
             if let Some(task) = queue.remove(&(uid, task_id)) {
                 // If we can find that the task is running in `running_tasks`,
                 // we just need to adjust its rate.
-                task.speed_limit(qos_direction.direction() as u8);
+                task.speed_limit(qos_direction.direction() as u64);
                 // Then we put it into `satisfied_tasks`.
                 satisfied_tasks.insert((uid, task_id), task);
                 continue;
@@ -183,7 +183,7 @@ impl RunningQueue {
             let keeper = self.keeper.clone();
             let tx = self.tx.clone();
             let runcount_manager = self.runcount_manager.clone();
-            task.speed_limit(qos_direction.direction() as u8);
+            task.speed_limit(qos_direction.direction() as u64);
             satisfied_tasks.insert((uid, task_id), task.clone());
             let task = RunningTask::new(runcount_manager, task, tx, keeper);
             if !task.satisfied() {

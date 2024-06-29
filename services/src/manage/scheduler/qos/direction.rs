@@ -53,11 +53,12 @@ impl QosDirection {
     }
 }
 
+// QosLevel's enum value means max speed (kB/s)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub(crate) enum QosLevel {
     FullSpeed = 0,
-    HighSpeed,
-    MiddleSpeed,
-    LowSpeed,
-    BUTT,
+    Shutdown,
+    LowSpeed = 100,
+    MiddleSpeed = 200,
+    HighSpeed = 400,
 }

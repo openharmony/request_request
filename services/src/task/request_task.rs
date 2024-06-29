@@ -64,7 +64,7 @@ pub(crate) struct RequestTask {
     pub(crate) restored: AtomicBool,
     pub(crate) skip_bytes: AtomicU64,
     pub(crate) upload_counts: AtomicUsize,
-    pub(crate) rate_limiting: AtomicU8,
+    pub(crate) rate_limiting: AtomicU64,
     pub(crate) app_state: AppState,
     pub(crate) last_notify: AtomicU64,
     pub(crate) client_manager: ClientManagerEntry,
@@ -106,11 +106,10 @@ impl RequestTask {
         self.conf.common_data.priority
     }
 
-    pub(crate) fn speed_limit(&self, limit: u8) {
-        let old = self.rate_limiting.load(Ordering::Acquire);
+    pub(crate) fn speed_limit(&self, limit: u64) {
+        let old = self.rate_limiting.swap(limit, Ordering::SeqCst);
         if old != limit {
             info!("task {} speed_limit {}", self.task_id(), limit);
-            self.rate_limiting.store(limit, Ordering::Release);
         }
     }
 
@@ -220,7 +219,7 @@ impl RequestTask {
             restored: AtomicBool::new(false),
             skip_bytes: AtomicU64::new(0),
             upload_counts: AtomicUsize::new(upload_counts),
-            rate_limiting: AtomicU8::new(0),
+            rate_limiting: AtomicU64::new(0),
             app_state,
             last_notify: AtomicU64::new(time),
             client_manager,
