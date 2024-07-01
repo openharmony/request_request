@@ -31,53 +31,45 @@ using namespace OHOS::AccountSA;
 struct TaskManagerTx;
 class SubscriberWrapper : public OsAccountSubscriber {
 public:
-  explicit SubscriberWrapper(
-      OS_ACCOUNT_SUBSCRIBE_TYPE type, rust::box<TaskManagerTx> task_manager,
-      rust::fn<void(const int &id, const TaskManagerTx &task_manager)>
-          on_accounts_changed,
-      rust::fn<void(const int &newId, const int &oldId,
-                    const TaskManagerTx &task_manager)>
-          on_accounts_switch);
+    explicit SubscriberWrapper(OS_ACCOUNT_SUBSCRIBE_TYPE type, rust::box<TaskManagerTx> task_manager,
+        rust::fn<void(const int &id, const TaskManagerTx &task_manager)> on_accounts_changed,
+        rust::fn<void(const int &newId, const int &oldId, const TaskManagerTx &task_manager)> on_accounts_switch);
 
-  ~SubscriberWrapper();
+    ~SubscriberWrapper();
 
-  virtual void OnAccountsChanged(const int &id) override;
-  virtual void OnAccountsSwitch(const int &newId, const int &oldId) override;
+    virtual void OnAccountsChanged(const int &id) override;
+    virtual void OnAccountsSwitch(const int &newId, const int &oldId) override;
 
 private:
-  TaskManagerTx *task_manager_;
-  rust::fn<void(const int &id, const TaskManagerTx &task_manager)>
-      on_accounts_changed_;
-  rust::fn<void(const int &newId, const int &oldId,
-                const TaskManagerTx &task_manager)>
-      on_accounts_switch_;
+    TaskManagerTx *task_manager_;
+    rust::fn<void(const int &id, const TaskManagerTx &task_manager)> on_accounts_changed_;
+    rust::fn<void(const int &newId, const int &oldId, const TaskManagerTx &task_manager)> on_accounts_switch_;
 };
 
-int RegistryAccountSubscriber(
-    OS_ACCOUNT_SUBSCRIBE_TYPE type, rust::box<TaskManagerTx> task_manager,
-    rust::fn<void(const int &id, const TaskManagerTx &task_manager)>
-        on_accounts_changed,
-    rust::fn<void(const int &newId, const int &oldId,
-                  const TaskManagerTx &task_manager)>
-        on_accounts_switch);
+int RegistryAccountSubscriber(OS_ACCOUNT_SUBSCRIBE_TYPE type, rust::box<TaskManagerTx> task_manager,
+    rust::fn<void(const int &id, const TaskManagerTx &task_manager)> on_accounts_changed,
+    rust::fn<void(const int &newId, const int &oldId, const TaskManagerTx &task_manager)> on_accounts_switch);
 
-inline ErrCode GetForegroundOsAccount(int &account) {
-  return OsAccountManager::GetForegroundOsAccountLocalId(account);
+inline ErrCode GetForegroundOsAccount(int &account)
+{
+    return OsAccountManager::GetForegroundOsAccountLocalId(account);
 }
 
-inline ErrCode GetBackgroundOsAccounts(rust::vec<int> &accounts) {
-  auto v = std::vector<int32_t>();
-  auto ret = OsAccountManager::GetBackgroundOsAccountLocalIds(v);
-  if (ret == 0) {
-    for (auto &account : v) {
-      accounts.push_back(account);
-    };
-  }
-  return ret;
+inline ErrCode GetBackgroundOsAccounts(rust::vec<int> &accounts)
+{
+    auto v = std::vector<int32_t>();
+    auto ret = OsAccountManager::GetBackgroundOsAccountLocalIds(v);
+    if (ret == 0) {
+        for (auto &account : v) {
+            accounts.push_back(account);
+        };
+    }
+    return ret;
 }
 
-inline ErrCode GetOsAccountLocalIdFromUid(const int uid, int &id) {
-  return OsAccountManager::GetOsAccountLocalIdFromUid(uid, id);
+inline ErrCode GetOsAccountLocalIdFromUid(const int uid, int &id)
+{
+    return OsAccountManager::GetOsAccountLocalIdFromUid(uid, id);
 }
 
 } // namespace OHOS::Request

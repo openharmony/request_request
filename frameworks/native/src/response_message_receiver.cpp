@@ -161,7 +161,8 @@ int32_t ResponseMessageReceiver::ResponseHeaderFromParcel(
     std::string line;
     while (std::getline(ss, line, '\n')) {
         std::stringstream keyValue(line);
-        std::string key, valueLine;
+        std::string key;
+        std::string valueLine;
         std::getline(keyValue, key, ':');
         std::getline(keyValue, valueLine);
         std::stringstream values(valueLine);

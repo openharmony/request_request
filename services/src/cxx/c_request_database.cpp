@@ -81,8 +81,8 @@ bool RequestDataBase::Update(
     return ret == OHOS::NativeRdb::E_OK;
 }
 
-void Search(rust::vec<rust::u32> &tasks, std::shared_ptr<OHOS::NativeRdb::RdbStore> store_, std::string sql,
-    TaskFilter filter)
+void Search(
+    rust::vec<rust::u32> &tasks, std::shared_ptr<OHOS::NativeRdb::RdbStore> store_, std::string sql, TaskFilter filter)
 {
     sql += "ctime BETWEEN " + std::to_string(filter.after) + " AND " + std::to_string(filter.before);
     if (filter.state != static_cast<uint8_t>(State::ANY)) {
