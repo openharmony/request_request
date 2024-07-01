@@ -113,8 +113,9 @@ constexpr const char *REQUEST_TASK_TABLE_ADD_PROXY = "ALTER TABLE request_task A
 
 constexpr const char *REQUEST_TASK_TABLE_ADD_CERTIFICATE_PINS = "ALTER TABLE request_task ADD COLUMN "
                                                                 "certificate_pins TEXT";
-constexpr const char *REQUEST_TASK_TABLE_ADD_Bundle_Type = "ALTER TABLE request_task ADD COLUMN bundle_type "
-                                                           "certificate_pins TEXT";
+constexpr const char *REQUEST_TASK_TABLE_ADD_BUNDLE_TYPE = "ALTER TABLE request_task ADD COLUMN bundle_type TEXT";
+constexpr const char *REQUEST_TASK_TABLE_ADD_ATOMIC_ACCOUNT = "ALTER TABLE request_task ADD COLUMN atomic_account "
+                                                              "TEXT";
 
 struct TaskFilter;
 class RequestDataBase {

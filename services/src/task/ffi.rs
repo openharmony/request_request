@@ -28,6 +28,7 @@ use crate::utils::{build_vec, get_current_timestamp, split_string, string_to_has
 pub(crate) struct CTaskConfig {
     pub(crate) bundle: CStringWrapper,
     pub(crate) bundle_type: u8,
+    pub(crate) atomic_account: CStringWrapper,
     pub(crate) url: CStringWrapper,
     pub(crate) title: CStringWrapper,
     pub(crate) description: CStringWrapper,
@@ -281,6 +282,7 @@ impl TaskConfig {
         CTaskConfig {
             bundle: CStringWrapper::from(&self.bundle),
             bundle_type: self.bundle_type as u8,
+            atomic_account: CStringWrapper::from(&self.atomic_account),
             url: CStringWrapper::from(&self.url),
             title: CStringWrapper::from(&self.title),
             description: CStringWrapper::from(&self.description),
@@ -327,6 +329,7 @@ impl TaskConfig {
         let task_config: TaskConfig = TaskConfig {
             bundle: c_struct.bundle.to_string(),
             bundle_type: c_struct.bundle_type as u32,
+            atomic_account: c_struct.atomic_account.to_string(),
             url: c_struct.url.to_string(),
             title: c_struct.title.to_string(),
             description: c_struct.description.to_string(),

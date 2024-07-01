@@ -20,7 +20,8 @@ use ylong_http_client::{
 
 use crate::manage::SystemConfig;
 use crate::task::config::{Action, TaskConfig};
-use crate::task::files::convert_path;
+use crate::task::files::{check_atomic_convert_path, convert_path};
+use crate::task::ATOMIC_SERVICE;
 use crate::utils::url_policy::check_url_domain;
 
 const CONNECT_TIMEOUT: u64 = 60;
@@ -165,10 +166,13 @@ fn build_task_certs(config: &TaskConfig) -> Result<Vec<Certificate>, Box<dyn Err
     let uid = config.common_data.uid;
     let bundle = config.bundle.as_str();
     let paths = config.certs_path.as_slice();
+    let is_account = config.bundle_type == ATOMIC_SERVICE;
+    let atomic_account = config.atomic_account.as_str();
+    let bundle_and_account = check_atomic_convert_path(is_account, bundle, atomic_account);
 
     let mut certs = Vec::new();
     for (idx, path) in paths.iter().enumerate() {
-        let path = convert_path(uid, bundle, path);
+        let path = convert_path(uid, &bundle_and_account, path);
         let cert = cvt_res_error!(
             Certificate::from_path(&path).map_err(Box::new),
             "Parse task cert failed - idx: {}, path: {}",

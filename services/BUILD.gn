@@ -80,6 +80,7 @@ ohos_static_library("download_server_cxx") {
     "hilog:libhilog",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",
+    "os_account:libaccountkits",
     "os_account:os_account_innerkits",
     "relational_store:native_appdatafwk",
     "relational_store:native_dataability",
