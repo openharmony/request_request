@@ -66,4 +66,15 @@ int GetForegroundOsAccountLocalId(int &id)
     return OsAccountManager::GetForegroundOsAccountLocalId(id);
 }
 
+rust::String GetOhosAccountUid()
+{
+    AccountSA::OhosAccountInfo accountInfo;
+    ErrCode errCode = AccountSA::OhosAccountKits::GetInstance().GetOhosAccountInfo(accountInfo);
+    if (errCode != ERR_OK) {
+        REQUEST_HILOGE("GetOhosAccountInfo err: %{public}d, %{public}s", errCode, accountInfo.uid_.c_str());
+        return rust::String("ohosAnonymousUid");
+    }
+    REQUEST_HILOGD("GetOhosAccountInfo ok: %{public}s", accountInfo.uid_.c_str());
+    return rust::String(accountInfo.uid_);
+}
 } // namespace OHOS::Request

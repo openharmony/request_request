@@ -79,6 +79,7 @@ pub(crate) struct CommonTaskConfig {
 pub(crate) struct TaskConfig {
     pub(crate) bundle: String,
     pub(crate) bundle_type: u32,
+    pub(crate) atomic_account: String,
     pub(crate) url: String,
     pub(crate) title: String,
     pub(crate) description: String,
@@ -165,6 +166,7 @@ impl Default for TaskConfig {
     fn default() -> Self {
         Self {
             bundle_type: 0,
+            atomic_account: "ohosAnonymousUid".to_string(),
             bundle: "xxx".to_string(),
             url: "".to_string(),
             title: "xxx".to_string(),

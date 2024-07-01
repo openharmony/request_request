@@ -19,6 +19,8 @@
 #include <vector>
 
 #include "cxx.h"
+#include "errors.h"
+#include "ohos_account_kits.h"
 #include "os_account_info.h"
 #include "os_account_manager.h"
 #include "os_account_subscribe_info.h"
@@ -72,5 +74,6 @@ inline ErrCode GetOsAccountLocalIdFromUid(const int uid, int &id)
     return OsAccountManager::GetOsAccountLocalIdFromUid(uid, id);
 }
 
+rust::String GetOhosAccountUid();
 } // namespace OHOS::Request
 #endif // ACCOUNT_H

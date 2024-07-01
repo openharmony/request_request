@@ -75,6 +75,7 @@ mod ffi {
             on_accounts_changed: fn(&i32, task_manager: &TaskManagerTx),
             on_accounts_switch: fn(&i32, &i32, task_manager: &TaskManagerTx),
         ) -> i32;
+        fn GetOhosAccountUid() -> String;
     }
 }
 

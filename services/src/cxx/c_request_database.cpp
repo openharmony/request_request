@@ -345,12 +345,18 @@ int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store)
         return ret;
     }
 
-    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_Bundle_Type);
+    ret = store.ExecuteSql(OHOS::Request::REQUEST_TASK_TABLE_ADD_BUNDLE_TYPE);
     if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
         REQUEST_HILOGE("add column bundle_type failed, ret: %{public}d", ret);
         return ret;
     }
-    return OHOS::NativeRdb::E_OK;
+
+    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_ATOMIC_ACCOUNT);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("add column atomic_account failed, ret: %{public}d", ret);
+        return ret;
+    }
+    return ret;
 }
 
 // This function is used to adapt beta version, remove it later.
@@ -359,7 +365,8 @@ void RequestDBUpgradeFrom50(OHOS::NativeRdb::RdbStore &store)
     // Ignores these error if these columns already exists.
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_PROXY);
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CERTIFICATE_PINS);
-    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_Bundle_Type);
+    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_BUNDLE_TYPE);
+    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_ATOMIC_ACCOUNT);
 }
 
 int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
@@ -813,8 +820,8 @@ void BuildRequestTaskConfigWithInt(std::shared_ptr<OHOS::NativeRdb::ResultSet> s
     config.commonData.gauge = static_cast<bool>(GetInt(set, 14));      // Line 14 is 'gauge'
     config.commonData.precise = static_cast<bool>(GetInt(set, 15));    // Line 15 is 'precise'
     config.commonData.background = static_cast<bool>(GetInt(set, 17)); // Line 17 is 'background'
-    config.version = static_cast<uint8_t>(GetInt(set, 27));            // Line 27 here is 'version'
-    config.bundleType = static_cast<uint8_t>(GetInt(set, 34));         // Line 34 here is 'bundle_type'
+    config.version = static_cast<uint8_t>(GetInt(set, 27));            // Line 27 is 'version'
+    config.bundleType = static_cast<uint8_t>(GetInt(set, 34));         // Line 34 is 'bundle_type'
 }
 
 void BuildRequestTaskConfigWithString(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
@@ -830,6 +837,7 @@ void BuildRequestTaskConfigWithString(std::shared_ptr<OHOS::NativeRdb::ResultSet
     set->GetString(26, config.extras);          // Line 26 is 'config_extras'
     set->GetString(32, config.proxy);           // Line 32 is 'proxy'
     set->GetString(33, config.certificatePins); // Line 33 is 'certificate_pins'
+    set->GetString(35, config.atomicAccount);   // Line 35 is 'atomic_account'
 }
 
 void BuildRequestTaskConfigWithBlob(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
@@ -915,6 +923,8 @@ bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
     insertValues.PutString("headers", std::string(taskConfig->headers.cStr, taskConfig->headers.len));
     insertValues.PutString("config_extras", std::string(taskConfig->extras.cStr, taskConfig->extras.len));
     insertValues.PutInt("bundle_type", taskConfig->bundleType);
+    insertValues.PutString(
+        "atomic_account", std::string(taskConfig->atomicAccount.cStr, taskConfig->atomicAccount.len));
     if (!WriteMutableData(insertValues, taskInfo, taskConfig)) {
         REQUEST_HILOGE("write blob data failed");
         return false;
@@ -1070,10 +1080,10 @@ CTaskConfig **QueryAllTaskConfig(uint32_t &len)
 int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, std::vector<TaskConfig> &taskConfigs)
 {
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates,
-        { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming", "retry",
-            "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority", "background", "bundle", "url",
-            "title", "description", "method", "headers", "data", "token", "config_extras", "version", "form_items",
-            "file_specs", "body_file_names", "certs_paths", "proxy", "certificate_pins", "bundle_type" });
+        { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming", "retry", "redirect",
+            "config_idx", "begins", "ends", "gauge", "precise", "priority", "background", "bundle", "url", "title",
+            "description", "method", "headers", "data", "token", "config_extras", "version", "form_items", "file_specs",
+            "body_file_names", "certs_paths", "proxy", "certificate_pins", "bundle_type", "atomic_account" });
     int rowCount = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("TaskConfig result set is nullptr or get row count failed");
@@ -1106,6 +1116,7 @@ void BuildCTaskConfig(CTaskConfig *cTaskConfig, const TaskConfig &taskConfig)
     cTaskConfig->certificatePins = WrapperCString(taskConfig.certificatePins);
     cTaskConfig->version = taskConfig.version;
     cTaskConfig->bundleType = taskConfig.bundleType;
+    cTaskConfig->atomicAccount = WrapperCString(taskConfig.atomicAccount);
 
     uint32_t formItemsLen = taskConfig.formItems.size();
     CFormItem *formItemsPtr = new CFormItem[formItemsLen];
@@ -1196,10 +1207,10 @@ CTaskConfig *QueryTaskConfig(uint32_t taskId)
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
     auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates,
-        { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming", "retry",
-            "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority", "background", "bundle", "url",
-            "title", "description", "method", "headers", "data", "token", "config_extras", "version", "form_items",
-            "file_specs", "body_file_names", "certs_paths", "proxy", "certificate_pins", "bundle_type" });
+        { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming", "retry", "redirect",
+            "config_idx", "begins", "ends", "gauge", "precise", "priority", "background", "bundle", "url", "title",
+            "description", "method", "headers", "data", "token", "config_extras", "version", "form_items", "file_specs",
+            "body_file_names", "certs_paths", "proxy", "certificate_pins", "bundle_type", "atomic_account" });
     int rowCount = 0;
     if (resultSet == nullptr) {
         REQUEST_HILOGE("QuerySingleTaskConfig failed: result set is nullptr");

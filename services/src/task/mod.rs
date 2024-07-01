@@ -24,3 +24,5 @@ pub(crate) mod request_task;
 #[allow(dead_code)]
 pub(crate) mod tick;
 pub(crate) mod upload;
+
+pub(crate) const ATOMIC_SERVICE: u32 = 1;

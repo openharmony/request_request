@@ -19,11 +19,13 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
+use crate::manage::account::GetOhosAccountUid;
 use crate::manage::events::TaskManagerEvent;
 use crate::service::permission::PermissionChecker;
 use crate::service::{get_calling_bundle, RequestServiceStub};
 use crate::task::config::{Action, CommonTaskConfig, Network, TaskConfig, Version};
 use crate::task::info::Mode;
+use crate::task::ATOMIC_SERVICE;
 use crate::utils::form_item::{FileSpec, FormItem};
 
 impl RequestServiceStub {
@@ -189,9 +191,16 @@ impl RequestServiceStub {
             extras.insert(key, value);
         }
 
+        let atomic_account = if bundle_type == ATOMIC_SERVICE {
+            GetOhosAccountUid()
+        } else {
+            "".to_string()
+        };
+
         let task_config = TaskConfig {
             bundle,
             bundle_type,
+            atomic_account,
             url,
             title,
             description,

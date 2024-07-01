@@ -16,9 +16,10 @@ use std::fs::{File, OpenOptions};
 use std::io;
 use std::os::fd::FromRawFd;
 
-use ylong_runtime::fs::File as AsyncFile;
-
 use crate::task::config::{Action, TaskConfig};
+use crate::task::ATOMIC_SERVICE;
+
+use ylong_runtime::fs::File as AsyncFile;
 
 pub(crate) struct AttachedFiles {
     pub(crate) files: Files,
@@ -53,6 +54,9 @@ fn open_task_files(config: &TaskConfig) -> io::Result<(Files, Vec<i64>)> {
     let tid = config.common_data.task_id;
     let uid = config.common_data.uid;
     let bundle = config.bundle.as_str();
+    let is_account = config.bundle_type == ATOMIC_SERVICE;
+    let atomic_account = config.atomic_account.as_str();
+    let bundle_and_account = check_atomic_convert_path(is_account, bundle, atomic_account);
 
     let mut files = Vec::new();
     let mut sizes = Vec::new();
@@ -70,7 +74,7 @@ fn open_task_files(config: &TaskConfig) -> io::Result<(Files, Vec<i64>)> {
                     }
                 } else {
                     cvt_res_error!(
-                        open_file_readonly(uid, bundle, &fs.path),
+                        open_file_readonly(uid, &bundle_and_account, &fs.path),
                         "Open file RO failed - task_id: {}, idx: {}",
                         tid,
                         idx
@@ -91,7 +95,7 @@ fn open_task_files(config: &TaskConfig) -> io::Result<(Files, Vec<i64>)> {
             }
             Action::Download => {
                 let file = cvt_res_error!(
-                    open_file_readwrite(uid, bundle, &fs.path),
+                    open_file_readwrite(uid, &bundle_and_account, &fs.path),
                     "Open file RW failed - task_id: {}, idx: {}",
                     tid,
                     idx
@@ -109,11 +113,14 @@ fn open_body_files(config: &TaskConfig) -> io::Result<Files> {
     let tid = config.common_data.task_id;
     let uid = config.common_data.uid;
     let bundle = config.bundle.as_str();
+    let is_account = config.bundle_type == ATOMIC_SERVICE;
+    let atomic_account = config.atomic_account.as_str();
+    let bundle_and_account = check_atomic_convert_path(is_account, bundle, atomic_account);
 
     let mut body_files = Vec::new();
     for (idx, path) in config.body_file_paths.iter().enumerate() {
         let file = cvt_res_error!(
-            open_file_readwrite(uid, bundle, path),
+            open_file_readwrite(uid, &bundle_and_account, path),
             "Open body_file failed - task_id: {}, idx: {}",
             tid,
             idx
@@ -134,18 +141,30 @@ fn open_file_readwrite(uid: u64, bundle: &str, path: &str) -> io::Result<File> {
     ))
 }
 
-fn open_file_readonly(uid: u64, bundle: &str, path: &str) -> io::Result<File> {
+fn open_file_readonly(uid: u64, bundle_and_account: &str, path: &str) -> io::Result<File> {
     Ok(cvt_res_error!(
         OpenOptions::new()
             .read(true)
-            .open(convert_path(uid, bundle, path)),
+            .open(convert_path(uid, bundle_and_account, path)),
         "open_file_readonly failed"
     ))
 }
 
-pub(crate) fn convert_path(uid: u64, bundle: &str, path: &str) -> String {
+pub(crate) fn  check_atomic_convert_path(
+    is_account: bool,
+    bundle: &str,
+    atomic_account: &str,
+) -> String {
+    if is_account {
+        format!("+auid-{}+{}", atomic_account, bundle)
+    } else {
+        bundle.to_string()
+    }
+}
+
+pub(crate) fn convert_path(uid: u64, bundle_and_account: &str, path: &str) -> String {
     let uuid = uid / 200000;
-    let base_replace = format!("{}/base/{}", uuid, bundle);
+    let base_replace = format!("{}/base/{}", uuid, bundle_and_account);
     let real_path = path
         .replacen("storage", "app", 1)
         .replacen("base", &base_replace, 1);
