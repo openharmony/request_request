@@ -319,7 +319,7 @@ impl Database {
                 }
             }
         }
-        Err(ErrorCode::Other)
+        Err(ErrorCode::TaskNotFound)
     }
 }
 
