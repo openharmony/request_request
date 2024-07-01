@@ -33,7 +33,7 @@ void RequestBackgroundNotify(RequestTaskMsg msg, rust::str filePath, rust::str f
 {
     REQUEST_HILOGD("Background Notification, percent is %{public}d", percent);
     auto requestTemplate = std::make_shared<NotificationTemplate>();
-    
+
     requestTemplate->SetTemplateName("downloadTemplate");
     OHOS::AAFwk::WantParams wantParams;
     wantParams.SetParam("progressValue", OHOS::AAFwk::Integer::Box(percent));
@@ -59,6 +59,5 @@ void RequestBackgroundNotify(RequestTaskMsg msg, rust::str filePath, rust::str f
     if (errCode != OHOS::ERR_OK) {
         REQUEST_HILOGE("notification errCode: %{public}d", errCode);
     }
-
 }
 } // namespace OHOS::Request
