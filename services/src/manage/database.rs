@@ -13,45 +13,48 @@
 
 use std::collections::HashMap;
 use std::ffi::c_void;
+use std::mem::MaybeUninit;
+use std::pin::Pin;
 use std::ptr::null_mut;
 use std::slice;
-use std::sync::{Arc, Once};
+use std::sync::{Arc, Mutex, Once};
+
+pub(crate) use ffi::*;
 
 use super::app_state::AppStateManagerTx;
 use crate::error::ErrorCode;
-use crate::manage::SystemConfig;
+use crate::manage::{Network, SystemConfig};
 use crate::service::client::ClientManagerEntry;
-use crate::task::config::TaskConfig;
-use crate::task::ffi::{CTaskConfig, CTaskInfo, CUpdateInfo, CUpdateStateInfo, NetworkInfo};
-use crate::task::info::{ApplicationState, Mode, State, TaskInfo};
+use crate::task::config::{Mode, TaskConfig};
+use crate::task::ffi::{CTaskConfig, CTaskInfo, CUpdateInfo, CUpdateStateInfo};
+use crate::task::info::{ApplicationState, State, TaskInfo};
 use crate::task::request_task::RequestTask;
 use crate::utils::c_wrapper::CStringWrapper;
 use crate::utils::hashmap_to_string;
 
-#[derive(Clone)]
 pub(crate) struct Database {
-    user_file_tasks: HashMap<u32, Arc<RequestTask>>,
+    user_file_tasks: Mutex<HashMap<u32, Arc<RequestTask>>>,
 }
 
 impl Database {
-    pub(crate) fn get_instance() -> &'static mut Self {
-        static mut DATABASE: Option<Database> = None;
+    pub(crate) fn get_instance() -> &'static Self {
+        static mut DATABASE: MaybeUninit<Database> = MaybeUninit::uninit();
         static ONCE: Once = Once::new();
 
         ONCE.call_once(|| unsafe {
-            DATABASE = Some(Database {
-                user_file_tasks: HashMap::new(),
+            DATABASE.write(Database {
+                user_file_tasks: Mutex::new(HashMap::new()),
             });
         });
 
-        unsafe { DATABASE.as_mut().unwrap() }
+        unsafe { DATABASE.assume_init_ref() }
     }
 
     pub(crate) fn contains_task(&self, task_id: u32) -> bool {
         unsafe { HasRequestTaskRecord(task_id) }
     }
 
-    pub(crate) fn insert_task(&mut self, task: RequestTask) {
+    pub(crate) fn insert_task(&self, task: RequestTask) {
         let task_id = task.task_id();
         let uid = task.uid();
 
@@ -78,7 +81,10 @@ impl Database {
 
         // For some tasks contains user_file, we must save it to map first.
         if task.conf.contains_user_file() {
-            self.user_file_tasks.insert(task.task_id(), Arc::new(task));
+            self.user_file_tasks
+                .lock()
+                .unwrap()
+                .insert(task.task_id(), Arc::new(task));
         }
     }
 
@@ -206,10 +212,6 @@ impl Database {
         unsafe { UpdateTaskStateOnAppStateChange(uid, state as u8) };
     }
 
-    pub(crate) fn update_on_network_change(&self, network: NetworkInfo) {
-        unsafe { UpdateTaskStateOnNetworkChange(network) };
-    }
-
     pub(crate) fn get_task_qos_info(&self, uid: u64, task_id: u32) -> Option<TaskQosInfo> {
         let mut info: *mut TaskQosInfo = null_mut::<TaskQosInfo>();
         unsafe { GetTaskQosInfo(uid, task_id, &mut info as *mut *mut TaskQosInfo) };
@@ -268,24 +270,20 @@ impl Database {
         vec
     }
 
-    pub(crate) fn get_app_bundle(&self, uid: u64) -> Option<String> {
-        let str = unsafe { GetAppBundle(uid) }.to_string();
-        if str.is_empty() {
-            None
-        } else {
-            Some(str)
-        }
+    pub(crate) fn get_app_bundle(&self, uid: u64) -> String {
+        unsafe { GetAppBundle(uid) }.to_string()
     }
 
     pub(crate) async fn get_task(
         &self,
         task_id: u32,
         system: SystemConfig,
+        network: Network,
         app_state_manager: &AppStateManagerTx,
         client_manager: &ClientManagerEntry,
     ) -> Result<Arc<RequestTask>, ErrorCode> {
         // If this task exists in `user_file_map`，get it from this map.
-        if let Some(task) = self.user_file_tasks.get(&task_id) {
+        if let Some(task) = self.user_file_tasks.lock().unwrap().get(&task_id) {
             return Ok(task.clone());
         }
 
@@ -308,6 +306,7 @@ impl Database {
                     app_state,
                     Some(task_info),
                     client_manager.clone(),
+                    network.clone(),
                 ) {
                     Ok(task) => {
                         return Ok(Arc::new(task));
@@ -358,11 +357,82 @@ extern "C" {
     fn UpdateRequestTask(id: u32, info: *const CUpdateInfo) -> bool;
     fn UpdateRequestTaskState(id: u32, info: *const CUpdateStateInfo) -> bool;
     fn UpdateTaskStateOnAppStateChange(uid: u64, app_state: u8) -> c_void;
-    fn UpdateTaskStateOnNetworkChange(info: NetworkInfo) -> c_void;
     fn GetTaskQosInfo(uid: u64, task_id: u32, info: *mut *mut TaskQosInfo) -> c_void;
     fn GetAppTaskQosInfos(uid: u64, array: *mut *mut TaskQosInfo, len: *mut usize) -> c_void;
     fn GetAppArray(apps: *mut *mut AppInfo, len: *mut usize) -> c_void;
     fn DeleteTaskQosInfo(ptr: *const TaskQosInfo) -> c_void;
     fn DeleteAppInfo(ptr: *const AppInfo) -> c_void;
     fn GetAppBundle(uid: u64) -> CStringWrapper;
+}
+
+pub(crate) struct RequestDb {
+    pub(crate) inner: *mut RequestDataBase,
+}
+
+impl RequestDb {
+    pub(crate) fn get_instance() -> Self {
+        let path = if cfg!(test) {
+            "/data/test/request.db"
+        } else {
+            "/data/service/el1/public/database/request/request.db"
+        };
+
+        let inner = GetDatabaseInstance(path);
+        Self { inner }
+    }
+
+    pub(crate) fn execute_sql(&mut self, sql: &str) -> Result<(), i32> {
+        let ret = unsafe { Pin::new_unchecked(&mut *self.inner).ExecuteSql(sql) };
+        if ret == 0 {
+            Ok(())
+        } else {
+            Err(ret)
+        }
+    }
+
+    #[allow(unused)]
+    pub(crate) fn query_sql(&mut self, sql: &str) -> Result<Vec<i32>, i32> {
+        let mut v = vec![];
+        let ret = unsafe { Pin::new_unchecked(&mut *self.inner).QuerySql(sql, &mut v) };
+        if ret == 0 {
+            Ok(v)
+        } else {
+            Err(ret)
+        }
+    }
+}
+
+#[cxx::bridge(namespace = "OHOS::Request")]
+mod ffi {
+    unsafe extern "C++" {
+        include!("c_request_database.h");
+        type RequestDataBase;
+        fn GetDatabaseInstance(path: &str) -> *mut RequestDataBase;
+        fn ExecuteSql(self: Pin<&mut RequestDataBase>, sql: &str) -> i32;
+        fn QuerySql(self: Pin<&mut RequestDataBase>, sql: &str, v: &mut Vec<i32>) -> i32;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::RequestDb;
+    use crate::tests::test_init;
+    use crate::utils::get_current_timestamp;
+
+    #[test]
+    fn ut_database_base() {
+        test_init();
+        let test_task_id = get_current_timestamp() as i32;
+        let mut db = RequestDb::get_instance();
+        db.execute_sql(&format!(
+            "INSERT INTO request_task (task_id, bundle) VALUES ({}, 'example_bundle')",
+            test_task_id
+        ))
+        .unwrap();
+
+        let tasks = db
+            .query_sql("SELECT task_id FROM request_task WHERE bundle = 'example_bundle'")
+            .unwrap();
+        assert!(tasks.contains(&test_task_id));
+    }
 }

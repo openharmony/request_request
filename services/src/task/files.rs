@@ -16,10 +16,10 @@ use std::fs::{File, OpenOptions};
 use std::io;
 use std::os::fd::FromRawFd;
 
+use ylong_runtime::fs::File as AsyncFile;
+
 use crate::task::config::{Action, TaskConfig};
 use crate::task::ATOMIC_SERVICE;
-
-use ylong_runtime::fs::File as AsyncFile;
 
 pub(crate) struct AttachedFiles {
     pub(crate) files: Files,
@@ -94,12 +94,22 @@ fn open_task_files(config: &TaskConfig) -> io::Result<(Files, Vec<i64>)> {
                 sizes.push(size as i64);
             }
             Action::Download => {
-                let file = cvt_res_error!(
-                    open_file_readwrite(uid, &bundle_and_account, &fs.path),
-                    "Open file RW failed - task_id: {}, idx: {}",
-                    tid,
-                    idx
-                );
+                let file = if fs.is_user_file {
+                    match fs.fd {
+                        Some(fd) => unsafe { File::from_raw_fd(fd) },
+                        None => {
+                            error!("None user file failed - task_id: {}, idx: {}", tid, idx);
+                            return Err(io::Error::other("none user file"));
+                        }
+                    }
+                } else {
+                    cvt_res_error!(
+                        open_file_readwrite(uid, &bundle_and_account, &fs.path),
+                        "Open file RW failed - task_id: {}, idx: {}",
+                        tid,
+                        idx
+                    )
+                };
                 files.push(AsyncFile::new(file));
                 sizes.push(-1)
             }
@@ -150,7 +160,7 @@ fn open_file_readonly(uid: u64, bundle_and_account: &str, path: &str) -> io::Res
     ))
 }
 
-pub(crate) fn  check_atomic_convert_path(
+pub(crate) fn check_atomic_convert_path(
     is_account: bool,
     bundle: &str,
     atomic_account: &str,

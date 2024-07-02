@@ -12,17 +12,36 @@
 // limitations under the License.
 
 use std::collections::HashMap;
+use std::fs::File;
+use std::os::fd::FromRawFd;
 
-use super::info::Mode;
+use ipc::parcel::Serialize;
+
 use crate::utils::c_wrapper::{CFileSpec, CFormItem, CStringWrapper};
 use crate::utils::form_item::{FileSpec, FormItem};
 use crate::utils::hashmap_to_string;
 
+/// Action
 #[derive(Clone, Copy, PartialEq, Debug)]
 #[repr(u8)]
-pub(crate) enum Action {
+pub enum Action {
+    /// Download
     Download = 0,
+    /// Upload
     Upload,
+    /// Any
+    Any,
+}
+
+/// Mode
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+#[repr(u8)]
+pub enum Mode {
+    /// BackGround
+    BackGround = 0,
+    /// ForeGround
+    FrontEnd,
+    /// Any
     Any,
 }
 
@@ -33,11 +52,15 @@ pub(crate) enum Version {
     API10,
 }
 
+/// NetworkConfig
 #[derive(Clone, Copy, PartialEq, Debug)]
 #[repr(u8)]
-pub(crate) enum Network {
+pub enum NetworkConfig {
+    /// Any
     Any = 0,
+    /// Wifi
     Wifi,
+    /// Cellular
     Cellular,
 }
 
@@ -61,7 +84,7 @@ pub(crate) struct CommonTaskConfig {
     pub(crate) action: Action,
     pub(crate) mode: Mode,
     pub(crate) cover: bool,
-    pub(crate) network: Network,
+    pub(crate) network_config: NetworkConfig,
     pub(crate) metered: bool,
     pub(crate) roaming: bool,
     pub(crate) retry: bool,
@@ -75,8 +98,9 @@ pub(crate) struct CommonTaskConfig {
     pub(crate) background: bool,
 }
 
+/// task config
 #[derive(Clone, Debug)]
-pub(crate) struct TaskConfig {
+pub struct TaskConfig {
     pub(crate) bundle: String,
     pub(crate) bundle_type: u32,
     pub(crate) atomic_account: String,
@@ -107,6 +131,38 @@ pub(crate) struct ConfigSet {
     pub(crate) certs_path: Vec<CStringWrapper>,
 }
 
+impl PartialOrd for Mode {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Mode {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        let me = match self {
+            Mode::FrontEnd => 0,
+            Mode::Any => 1,
+            Mode::BackGround => 2,
+        };
+        let other = match other {
+            Mode::FrontEnd => 0,
+            Mode::Any => 1,
+            Mode::BackGround => 2,
+        };
+        me.cmp(&other)
+    }
+}
+
+impl From<u8> for Mode {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => Mode::BackGround,
+            1 => Mode::FrontEnd,
+            _ => Mode::Any,
+        }
+    }
+}
+
 impl From<u8> for Action {
     fn from(value: u8) -> Self {
         match value {
@@ -126,12 +182,12 @@ impl From<u8> for Version {
     }
 }
 
-impl From<u8> for Network {
+impl From<u8> for NetworkConfig {
     fn from(value: u8) -> Self {
         match value {
-            0 => Network::Any,
-            2 => Network::Cellular,
-            _ => Network::Wifi,
+            0 => NetworkConfig::Any,
+            2 => NetworkConfig::Cellular,
+            _ => NetworkConfig::Wifi,
         }
     }
 }
@@ -190,7 +246,7 @@ impl Default for TaskConfig {
                 action: Action::Download,
                 mode: Mode::BackGround,
                 cover: false,
-                network: Network::Wifi,
+                network_config: NetworkConfig::Wifi,
                 metered: false,
                 roaming: false,
                 retry: false,
@@ -204,5 +260,147 @@ impl Default for TaskConfig {
                 background: false,
             },
         }
+    }
+}
+
+/// ConfigBuilder
+pub struct ConfigBuilder {
+    inner: TaskConfig,
+}
+
+impl ConfigBuilder {
+    /// Create a new ConfigBuilder
+    pub fn new() -> Self {
+        Self {
+            inner: TaskConfig::default(),
+        }
+    }
+    /// Set url
+    pub fn url(&mut self, url: &str) -> &mut Self {
+        self.inner.url = url.to_string();
+        self
+    }
+
+    /// Set title
+    pub fn file_spec<F: Fn(&mut Vec<FileSpec>)>(&mut self, op: F) -> &mut Self {
+        op(&mut self.inner.file_specs);
+        self
+    }
+    /// Set action
+    pub fn action(&mut self, action: Action) -> &mut Self {
+        self.inner.common_data.action = action;
+        self
+    }
+
+    /// Set mode
+    pub fn mode(&mut self, mode: Mode) -> &mut Self {
+        self.inner.common_data.mode = mode;
+        self
+    }
+
+    /// Set bundle name
+    pub fn bundle_name(&mut self, bundle_name: &str) -> &mut Self {
+        self.inner.bundle = bundle_name.to_string();
+        self
+    }
+
+    /// Set uid
+    pub fn uid(&mut self, uid: u64) -> &mut Self {
+        self.inner.common_data.uid = uid;
+        self
+    }
+
+    /// set network
+    pub fn network(&mut self, network: NetworkConfig) -> &mut Self {
+        self.inner.common_data.network_config = network;
+        self
+    }
+
+    /// Set metered
+    pub fn roaming(&mut self, roaming: bool) -> &mut Self {
+        self.inner.common_data.roaming = roaming;
+        self
+    }
+
+    /// set metered
+    pub fn metered(&mut self, metered: bool) -> &mut Self {
+        self.inner.common_data.metered = metered;
+        self
+    }
+
+    /// build
+    pub fn build(&mut self) -> TaskConfig {
+        self.inner.clone()
+    }
+}
+
+impl Serialize for TaskConfig {
+    fn serialize(&self, parcel: &mut ipc::parcel::MsgParcel) -> ipc::IpcResult<()> {
+        parcel.write(&(self.common_data.action as u32))?;
+        parcel.write(&(self.version as u32))?;
+        parcel.write(&(self.common_data.mode as u32))?;
+        parcel.write(&self.bundle_type)?;
+        parcel.write(&self.common_data.cover)?;
+        parcel.write(&(self.common_data.network_config as u32))?;
+        parcel.write(&(self.common_data.metered))?;
+        parcel.write(&self.common_data.roaming)?;
+        parcel.write(&(self.common_data.retry))?;
+        parcel.write(&(self.common_data.redirect))?;
+        parcel.write(&(self.common_data.background))?;
+        parcel.write(&self.common_data.index)?;
+        parcel.write(&(self.common_data.begins as i64))?;
+        parcel.write(&self.common_data.ends)?;
+        parcel.write(&self.common_data.gauge)?;
+        parcel.write(&self.common_data.precise)?;
+        parcel.write(&self.common_data.priority)?;
+        parcel.write(&self.url)?;
+        parcel.write(&self.title)?;
+        parcel.write(&self.method)?;
+        parcel.write(&self.token)?;
+        parcel.write(&self.description)?;
+        parcel.write(&self.data)?;
+        parcel.write(&self.proxy)?;
+        parcel.write(&self.certificate_pins)?;
+
+        parcel.write(&(self.certs_path.len() as u32))?;
+        for cert_path in &self.certs_path {
+            parcel.write(cert_path)?;
+        }
+
+        parcel.write(&(self.form_items.len() as u32))?;
+        for form_item in &self.form_items {
+            parcel.write(&form_item.name)?;
+            parcel.write(&form_item.value)?;
+        }
+        parcel.write(&(self.file_specs.len() as u32))?;
+        for file_spec in &self.file_specs {
+            parcel.write(&file_spec.name)?;
+            parcel.write(&file_spec.path)?;
+            parcel.write(&file_spec.file_name)?;
+            parcel.write(&file_spec.mime_type)?;
+            parcel.write(&file_spec.is_user_file)?;
+            if file_spec.is_user_file {
+                let file = unsafe { File::from_raw_fd(file_spec.fd.unwrap()) };
+                parcel.write_file(file)?;
+            }
+        }
+
+        parcel.write(&(self.body_file_paths.len() as u32))?;
+        for body_file_paths in self.body_file_paths.iter() {
+            parcel.write(body_file_paths)?;
+        }
+        parcel.write(&(self.headers.len() as u32))?;
+        for header in self.headers.iter() {
+            parcel.write(header.0)?;
+            parcel.write(header.1)?;
+        }
+
+        parcel.write(&(self.extras.len() as u32))?;
+        for extra in self.extras.iter() {
+            parcel.write(extra.0)?;
+            parcel.write(extra.1)?;
+        }
+
+        Ok(())
     }
 }

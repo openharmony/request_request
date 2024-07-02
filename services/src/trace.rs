@@ -11,8 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use hitrace_meter_rust::{finish_trace, start_trace};
-
 /// Hitrace adapter which provides timing capability.
 ///
 /// The timing will end automatically when the structure drops. Users should
@@ -25,7 +23,7 @@ impl Trace {
 
     /// Starts tracing.
     pub(crate) fn new(value: &str) -> Self {
-        start_trace(Self::HITRACE_TAG_MISC, value);
+        hitrace_meter_rust::start_trace(Self::HITRACE_TAG_MISC, value);
         Self
     }
 }
@@ -33,6 +31,6 @@ impl Trace {
 impl Drop for Trace {
     /// Stops tracing.
     fn drop(&mut self) {
-        finish_trace(Self::HITRACE_TAG_MISC);
+        hitrace_meter_rust::finish_trace(Self::HITRACE_TAG_MISC);
     }
 }

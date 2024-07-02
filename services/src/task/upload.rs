@@ -25,6 +25,7 @@ use super::operator::TaskOperator;
 use super::reason::Reason;
 use crate::task::info::State;
 use crate::task::request_task::RequestTask;
+#[cfg(feature = "oh")]
 use crate::trace::Trace;
 
 struct TaskReader {
@@ -201,11 +202,13 @@ fn build_request_common(
 pub(crate) async fn upload(task: Arc<RequestTask>) {
     debug!("begin upload task, tid: {}", task.conf.common_data.task_id);
 
-    let url = task.conf.url.as_str();
-    let num = task.conf.file_specs.len();
-    // Ensures `_trace` can only be freed when this function exits.
-
-    let _trace = Trace::new(&format!("exec upload task url: {url} file num: {num}"));
+    #[cfg(feature = "oh")]
+    {
+        // Ensures `_trace` can only be freed when this function exits.
+        let url = task.conf.url.as_str();
+        let num = task.conf.file_specs.len();
+        let _trace = Trace::new(&format!("exec upload task url: {url} file num: {num}"));
+    }
 
     let size = task.conf.file_specs.len();
     let index = task.progress.lock().unwrap().common_data.index;
@@ -283,14 +286,15 @@ where
         task.conf.common_data.task_id, index
     );
 
-    let (_, size) = task.get_upload_info(index);
-    let name = task.conf.file_specs[index].file_name.as_str();
-
     // Ensures `_trace` can only be freed when this function exits.
-
-    let _trace = Trace::new(&format!(
-        "upload file name:{name} index:{index} size:{size}"
-    ));
+    #[cfg(feature = "oh")]
+    {
+        let (_, size) = task.get_upload_info(index);
+        let name = task.conf.file_specs[index].file_name.as_str();
+        let _trace = Trace::new(&format!(
+            "upload file name:{name} index:{index} size:{size}"
+        ));
+    }
 
     loop {
         task.reset_code(index);

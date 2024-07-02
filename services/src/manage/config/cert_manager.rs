@@ -117,9 +117,11 @@ pub(crate) struct CRequestCerts {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::tests::test_init;
 
     #[test]
     fn test_cert_manager() {
+        test_init();
         let cert_manager = CertManager::init();
         let cert = cert_manager.certificate();
         if cert.is_none() {

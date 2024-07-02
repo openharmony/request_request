@@ -20,6 +20,6 @@ pub(crate) mod network;
 pub(crate) mod notifier;
 pub(crate) mod scheduler;
 pub(crate) mod task_manager;
-
 pub(crate) use config::{SystemConfig, SystemConfigManager};
+pub(crate) use network::Network;
 pub(crate) use task_manager::TaskManager;

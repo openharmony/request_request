@@ -22,7 +22,7 @@ use ylong_http_client::HttpClientError;
 use ylong_runtime::io::AsyncWrite;
 use ylong_runtime::time::{sleep, Sleep};
 
-use super::info::Mode;
+use super::config::Mode;
 use crate::manage::account::is_active_user;
 use crate::manage::notifier::Notifier;
 use crate::task::config::Version;
@@ -82,7 +82,6 @@ impl TaskOperator {
         if current >= self.task.last_notify.load(Ordering::SeqCst) + FRONT_NOTIFY_INTERVAL {
             let notify_data = self.task.build_notify_data();
             self.task.last_notify.store(current, Ordering::SeqCst);
-
             Notifier::progress(&self.task.client_manager, notify_data);
         }
 

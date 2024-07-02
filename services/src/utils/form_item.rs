@@ -13,15 +13,21 @@
 
 use std::os::fd::RawFd;
 
+/// File Spec
 #[derive(Clone, Debug)]
-pub(crate) struct FileSpec {
-    pub(crate) name: String,
-    pub(crate) path: String,
-    pub(crate) file_name: String,
-    pub(crate) mime_type: String,
-    pub(crate) is_user_file: bool,
-    // Only for user file.
-    pub(crate) fd: Option<RawFd>,
+pub struct FileSpec {
+    /// Name
+    pub name: String,
+    /// path
+    pub path: String,
+    /// file_name
+    pub file_name: String,
+    /// mime_type
+    pub mime_type: String,
+    /// is_user_file
+    pub is_user_file: bool,
+    /// Only for user file.
+    pub fd: Option<RawFd>,
 }
 
 #[derive(Clone, Debug)]

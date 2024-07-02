@@ -13,21 +13,32 @@
 
 pub(crate) use ffi::TaskFilter;
 
-use crate::manage::account::GetDatabaseInstance;
+use crate::manage::database::RequestDb;
 use crate::manage::TaskManager;
 
 impl TaskManager {
     pub(crate) fn search(&self, filter: TaskFilter, method: SearchMethod) -> Vec<u32> {
-        debug!("Search task by filter: {:?} method: {:?}", filter, method);
+        info!("Search task by filter: {:?} method: {:?}", filter, method);
 
-        let database = GetDatabaseInstance();
+        let database = RequestDb::get_instance();
 
-        match method {
-            SearchMethod::User(uid) => unsafe { (*database).SearchTask(filter, uid) },
-            SearchMethod::System(bundle_name) => unsafe {
-                (*database).SystemSearchTask(filter, bundle_name.as_str())
-            },
-        }
+        let res = match method {
+            SearchMethod::User(uid) => database.search_task(filter, uid),
+            SearchMethod::System(bundle_name) => 
+                database.system_search_task(filter, bundle_name),
+        };
+        info!("Search task result: {:?}", res);
+        res
+    }
+}
+
+impl RequestDb {
+    pub(crate) fn search_task(&self, filter: TaskFilter, uid: u64) -> Vec<u32> {
+        unsafe { (*self.inner).SearchTask(filter, uid) }
+    }
+
+    pub(crate) fn system_search_task(&self, filter: TaskFilter, bundle_name: String) -> Vec<u32> {
+        unsafe { (*self.inner).SystemSearchTask(filter, bundle_name.as_str()) }
     }
 }
 

@@ -31,6 +31,7 @@ use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::qos::{QosChanges, QosDirection};
 use crate::manage::scheduler::queue::running_task::RunningTask;
 use crate::manage::task_manager::TaskManagerTx;
+use crate::manage::Network;
 use crate::service::client::ClientManagerEntry;
 use crate::service::runcount::RunCountManagerEntry;
 use crate::task::config::Action;
@@ -45,28 +46,41 @@ const MILLISECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
 pub(crate) struct RunningQueue {
     download_queue: HashMap<(u64, u32), Arc<RequestTask>>,
     upload_queue: HashMap<(u64, u32), Arc<RequestTask>>,
+    join_handles: Vec<ylong_runtime::task::JoinHandle<()>>,
     keeper: SAKeeper,
     tx: TaskManagerTx,
     app_state_manager: AppStateManagerTx,
     runcount_manager: RunCountManagerEntry,
     client_manager: ClientManagerEntry,
+    network: Network,
 }
 
 impl RunningQueue {
+    pub(crate) fn clear(&mut self) {
+        self.join_handles.drain(..).for_each(|h| {
+            h.cancel();
+        });
+        self.download_queue.clear();
+        self.upload_queue.clear();
+    }
+
     pub(crate) fn new(
         tx: TaskManagerTx,
         runcount_manager: RunCountManagerEntry,
         app_state_manager: AppStateManagerTx,
         client_manager: ClientManagerEntry,
+        network: Network,
     ) -> Self {
         Self {
             download_queue: HashMap::new(),
             upload_queue: HashMap::new(),
             keeper: SAKeeper::new(tx.clone()),
             tx,
+            join_handles: vec![],
             app_state_manager,
             runcount_manager,
             client_manager,
+            network,
         }
     }
 
@@ -153,6 +167,7 @@ impl RunningQueue {
                 .get_task(
                     task_id,
                     system_config,
+                    self.network.clone(),
                     &self.app_state_manager,
                     &self.client_manager,
                 )
@@ -191,30 +206,15 @@ impl RunningQueue {
             if !task.satisfied() {
                 continue;
             }
-            runtime_spawn(async move {
-                loop {
-                    task.run().await;
-                    let (state, reason) = {
-                        let status = task.status.lock().unwrap();
-                        (status.state, status.reason)
-                    };
-                    if state == State::Waiting
-                        && reason == Reason::NetworkChanged
-                        && task.satisfied()
-                    {
-                        task.retry.store(true, Ordering::SeqCst);
-                        task.tries.fetch_add(1, Ordering::SeqCst);
-                        task.set_status(State::Retrying, Reason::Default);
-                    } else {
-                        break;
-                    }
-                }
-            });
+            self.join_handles.push(runtime_spawn(async move {
+                task.run().await;
+            }));
         }
         // every satisfied tasks in running has been moved, set left tasks to Waiting
         for task in queue.values_mut() {
             let state = task.status.lock().unwrap().state;
             if state == State::Running {
+                info!("task {} is running, set it to waiting", task.task_id());
                 task.set_status(State::Waiting, Reason::RunningTaskMeetLimits);
             }
         }
