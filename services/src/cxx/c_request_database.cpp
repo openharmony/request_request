@@ -16,7 +16,6 @@
 #include "c_request_database.h"
 
 #include <securec.h>
-#include <stdint.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -96,7 +95,6 @@ void Search(
     }
 
     auto queryRet = store_->QuerySql(sql);
-
     if (queryRet == nullptr) {
         REQUEST_HILOGE("Search failed with reason: result set is nullptr");
         return;
