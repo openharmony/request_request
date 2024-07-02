@@ -1455,6 +1455,7 @@ void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len)
     for (auto i = 0; i < rowCount; i++) {
         if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
             REQUEST_HILOGE("GetRunningTasksArray result set go to %{public}d row failed", i);
+            *len = i;   // Here `rowCount` can be wrong.
             return;
         }
 
@@ -1485,6 +1486,7 @@ void GetAppArray(AppInfo **apps, size_t *len)
     for (auto i = 0; i < rowCount; i++) {
         if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
             REQUEST_HILOGE("GetAppArray result set go to %{public}d row failed", i);
+            *len = i;   // Here `rowCount` can be wrong.
             return;
         }
 
