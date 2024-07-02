@@ -30,9 +30,8 @@ pub(crate) enum AccountEvent {
     Remove(i32),
 }
 
-const DEFAULT_USER_ID: i32 = 100;
-static FOREGROUND_ACCOUNT: AtomicI32 = AtomicI32::new(DEFAULT_USER_ID);
-static BACKGOUNFD_ACCOUNTS: Mutex<Vec<i32>> = Mutex::new(Vec::new());
+static FOREGROUND_ACCOUNT: AtomicI32 = AtomicI32::new(-1);
+static BACKGROUND_ACCOUNTS: Mutex<Option<Vec<i32>>> = Mutex::new(None);
 
 impl TaskManager {
     pub(crate) async fn handle_account_event(&mut self, event: AccountEvent) {
@@ -45,7 +44,7 @@ impl TaskManager {
 }
 
 pub(crate) fn remove_account_tasks(user_id: i32) {
-    info!("delte database task by user_id: {}", user_id);
+    info!("delete database task by user_id: {}", user_id);
     let mut request_db = RequestDb::get_instance();
     let res = request_db.delete_all_account_tasks(user_id);
     info!("delete data task finished: {}", res);
@@ -55,22 +54,41 @@ pub(crate) fn remove_account_tasks(user_id: i32) {
 }
 
 pub(crate) fn is_foreground_user(uid: u64) -> bool {
-    get_user_id_from_uid(uid) == FOREGROUND_ACCOUNT.load(Ordering::Acquire)
+    let foreground = FOREGROUND_ACCOUNT.load(Ordering::Acquire);
+    if foreground == -1 {
+        error!("foreground account is empty update accounts first");
+        update_accounts();
+        return is_foreground_user(uid);
+    }
+    get_user_id_from_uid(uid) == foreground
+}
+
+pub(crate) fn is_background_user(uid: u64) -> bool {
+    let background = BACKGROUND_ACCOUNTS.lock().unwrap();
+    match background.as_ref() {
+        Some(accounts) => accounts.contains(&get_user_id_from_uid(uid)),
+        None => {
+            error!("background accounts is empty update accounts first");
+            update_accounts();
+            is_background_user(uid)
+        }
+    }
+}
+
+pub(crate) fn is_system_user(uid: u64) -> bool {
+    get_user_id_from_uid(uid) <= 100
 }
 
 pub(crate) fn is_active_user(uid: u64) -> bool {
-    let user_id = get_user_id_from_uid(uid);
-
-    user_id <= 100
-        || user_id == FOREGROUND_ACCOUNT.load(Ordering::Acquire)
-        || BACKGOUNFD_ACCOUNTS.lock().unwrap().contains(&user_id)
+    is_foreground_user(uid) || is_background_user(uid) || is_system_user(uid)
 }
 
 fn get_user_id_from_uid(uid: u64) -> i32 {
     let mut user_id = 0;
     let res = GetOsAccountLocalIdFromUid(uid as i32, &mut user_id);
     if res != 0 {
-        error!("GetOsAccountLocalIdFromUid failed: {}", res);
+        error!("GetOsAccountLocalIdFromUid failed: {} retry", res);
+        return get_user_id_from_uid(uid);
     }
     user_id
 }
@@ -79,76 +97,115 @@ pub(crate) fn update_accounts() {
     let mut foreground_account = 0;
     let res = GetForegroundOsAccount(&mut foreground_account);
     if res != 0 {
-        error!("GetForegroundOsAccount failed: {}", res);
-        foreground_account = DEFAULT_USER_ID;
+        error!("GetForegroundOsAccount failed: {} retry", res);
+        return update_accounts();
     }
+    FOREGROUND_ACCOUNT.store(foreground_account, Ordering::Release);
 
     let request_db = RequestDb::get_instance();
     request_db.on_account_change(foreground_account);
-    {
-        let mut accounts = BACKGOUNFD_ACCOUNTS.lock().unwrap();
-        accounts.clear();
-        GetBackgroundOsAccounts(&mut accounts);
-        for account in accounts.iter() {
-            request_db.on_account_change(*account);
-        }
+
+    let mut new_accounts = vec![];
+    let res = GetBackgroundOsAccounts(&mut new_accounts);
+    if res != 0 {
+        error!("GetBackgroundOsAccount failed: {} retry", res);
+        return update_accounts();
     }
-    FOREGROUND_ACCOUNT.store(foreground_account, Ordering::Release);
+
+    for account in new_accounts.iter() {
+        request_db.on_account_change(*account);
+    }
+    *BACKGROUND_ACCOUNTS.lock().unwrap() = Some(new_accounts);
 }
 
 pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
     info!("registry_account_subscribe");
-    let ret = RegistryAccountSubscriber(
-        OS_ACCOUNT_SUBSCRIBE_TYPE::SWITCHED,
-        Box::new(task_manager.clone()),
-        |_, _| {},
-        |_new_id, _old_id, task_manager| {
-            task_manager.send_event(TaskManagerEvent::Account(AccountEvent::Switch));
-        },
-    );
 
-    if ret != 0 {
-        error!("registry_account_switch_subscribe  failed: {}", ret);
+    loop {
+        let ret = RegistryAccountSubscriber(
+            OS_ACCOUNT_SUBSCRIBE_TYPE::SWITCHED,
+            Box::new(task_manager.clone()),
+            |_, _| {},
+            |_new_id, _old_id, task_manager| {
+                task_manager.send_event(TaskManagerEvent::Account(AccountEvent::Switch));
+            },
+        );
+
+        if ret != 0 {
+            error!(
+                "registry_account_switch_subscribe  failed: {} retry 500ms later",
+                ret
+            );
+            std::thread::sleep(std::time::Duration::from_millis(500));
+        } else {
+            break;
+        }
     }
 
-    let ret = RegistryAccountSubscriber(
-        OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVED,
-        Box::new(task_manager.clone()),
-        |_id, task_manager| {
-            task_manager.send_event(TaskManagerEvent::Account(AccountEvent::Active));
-        },
-        |_, _, _| {},
-    );
+    loop {
+        let ret = RegistryAccountSubscriber(
+            OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVED,
+            Box::new(task_manager.clone()),
+            |_id, task_manager| {
+                task_manager.send_event(TaskManagerEvent::Account(AccountEvent::Active));
+            },
+            |_, _, _| {},
+        );
 
-    if ret != 0 {
-        error!("registry_account_active_subscribe failed: {}", ret);
+        if ret != 0 {
+            error!(
+                "registry_account_active_subscribe failed: {} retry 500ms later",
+                ret
+            );
+            std::thread::sleep(std::time::Duration::from_millis(500));
+        } else {
+            break;
+        }
     }
 
-    let ret = RegistryAccountSubscriber(
-        OS_ACCOUNT_SUBSCRIBE_TYPE::REMOVED,
-        Box::new(task_manager.clone()),
-        |id, task_manager| {
-            task_manager.send_event(TaskManagerEvent::Account(AccountEvent::Remove(*id)));
-        },
-        |_, _, _| {},
-    );
+    loop {
+        let ret = RegistryAccountSubscriber(
+            OS_ACCOUNT_SUBSCRIBE_TYPE::REMOVED,
+            Box::new(task_manager.clone()),
+            |id, task_manager| {
+                task_manager.send_event(TaskManagerEvent::Account(AccountEvent::Remove(*id)));
+            },
+            |_, _, _| {},
+        );
 
-    if ret != 0 {
-        error!("registry_account_remove_subscribe failed: {}", ret);
+        if ret != 0 {
+            error!(
+                "registry_account_remove_subscribe failed: {} retry 500ms later",
+                ret
+            );
+            std::thread::sleep(std::time::Duration::from_millis(500));
+        } else {
+            break;
+        }
     }
 
-    let ret = RegistryAccountSubscriber(
-        OS_ACCOUNT_SUBSCRIBE_TYPE::STOPPED,
-        Box::new(task_manager),
-        |_id, task_manager| {
-            task_manager.send_event(TaskManagerEvent::Account(AccountEvent::Stop));
-        },
-        |_, _, _| {},
-    );
+    loop {
+        let ret = RegistryAccountSubscriber(
+            OS_ACCOUNT_SUBSCRIBE_TYPE::STOPPED,
+            Box::new(task_manager.clone()),
+            |_id, task_manager| {
+                task_manager.send_event(TaskManagerEvent::Account(AccountEvent::Stop));
+            },
+            |_, _, _| {},
+        );
 
-    if ret != 0 {
-        error!("registry_account_stop_subscribe failed: {}", ret);
+        if ret != 0 {
+            error!(
+                "registry_account_stop_subscribe failed: {} retry 500ms later",
+                ret
+            );
+            std::thread::sleep(std::time::Duration::from_millis(500));
+        } else {
+            break;
+        }
     }
+
+    update_accounts();
 }
 
 impl RequestDb {
@@ -207,5 +264,43 @@ mod ffi {
         ) -> i32;
 
         fn GetOhosAccountUid() -> String;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use ylong_runtime::sync::mpsc;
+
+    use super::*;
+    use crate::tests::test_init;
+
+    const USER_100: u64 = 20012345;
+    const USER_101: u64 = 20212345;
+    const USER_SYSTEM: u64 = 2021234;
+
+    #[test]
+    fn ut_account_user_id() {
+        assert_eq!(100, get_user_id_from_uid(USER_100));
+        assert_eq!(101, get_user_id_from_uid(USER_101));
+        assert_eq!(10, get_user_id_from_uid(USER_SYSTEM));
+    }
+
+    #[test]
+    fn ut_account_check_oh() {
+        test_init();
+        assert_eq!(-1, FOREGROUND_ACCOUNT.load(Ordering::SeqCst));
+        assert!(BACKGROUND_ACCOUNTS.lock().unwrap().is_none());
+        assert!(is_foreground_user(USER_100));
+        assert!(is_system_user(USER_SYSTEM));
+        assert!(!is_background_user(USER_101));
+        assert!(BACKGROUND_ACCOUNTS.lock().unwrap().is_some());
+    }
+
+    #[test]
+    fn ut_account_registry_oh() {
+        let (tx, _rx) = mpsc::unbounded_channel();
+        let task_manager = TaskManagerTx { tx };
+        test_init();
+        registry_account_subscribe(task_manager)
     }
 }
