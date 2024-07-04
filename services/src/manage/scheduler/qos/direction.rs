@@ -24,7 +24,7 @@ impl QosChanges {
         }
     }
 }
-
+#[derive(Debug)]
 pub(crate) struct QosDirection {
     uid: u64,
     task_id: u32,

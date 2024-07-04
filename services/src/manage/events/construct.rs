@@ -16,8 +16,8 @@ use crate::error::ErrorCode;
 use crate::manage::app_state::{AppState, GetTopBundleName};
 use crate::manage::database::Database;
 use crate::manage::TaskManager;
-use crate::task::config::TaskConfig;
-use crate::task::info::{ApplicationState, Mode, State};
+use crate::task::config::{Mode, TaskConfig};
+use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::utils::task_id_generator::TaskIdGenerator;
@@ -78,6 +78,7 @@ impl TaskManager {
             app_state,
             None,
             self.client_manager.clone(),
+            self.network.clone(),
         ) {
             Ok(task) => task,
             Err(e) => return Err(e),

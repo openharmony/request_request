@@ -21,16 +21,16 @@ use ylong_runtime::time::sleep;
 use super::app_state::AppStateManagerTx;
 // use super::app_state::AppStateManager;
 use super::events::{ScheduleEvent, ServiceEvent, StateEvent, TaskEvent, TaskManagerEvent};
+use super::network::Network;
 use crate::ability::PANIC_INFO;
 use crate::error::ErrorCode;
 use crate::manage::account::registry_account_subscribe;
 use crate::manage::app_state::AppStateManager;
 use crate::manage::database::Database;
-use crate::manage::network::NetworkManager;
+use crate::manage::network::register_network_change;
 use crate::manage::scheduler::Scheduler;
 use crate::service::client::ClientManagerEntry;
 use crate::service::runcount::RunCountManagerEntry;
-use crate::task::ffi::NetworkInfo;
 use crate::task::info::ApplicationState;
 use crate::utils::runtime_spawn;
 
@@ -57,6 +57,7 @@ pub(crate) struct TaskManager {
     pub(crate) rx: TaskManagerRx,
     pub(crate) app_state_manager: AppStateManagerTx,
     pub(crate) client_manager: ClientManagerEntry,
+    pub(crate) network: Network,
 }
 
 impl TaskManager {
@@ -71,11 +72,14 @@ impl TaskManager {
         let rx = TaskManagerRx::new(rx);
 
         let app_state_manager = AppStateManager::init(client_manager.clone(), tx.clone());
+
         registry_account_subscribe(tx.clone());
+        let network = register_network_change(tx.clone());
 
         let task_manager = Self::new(
             tx.clone(),
             rx,
+            network,
             runcount_manager,
             app_state_manager,
             client_manager,
@@ -105,6 +109,7 @@ impl TaskManager {
     pub(crate) fn new(
         tx: TaskManagerTx,
         rx: TaskManagerRx,
+        network: Network,
         runcount_manager: RunCountManagerEntry,
         app_state_manager: AppStateManagerTx,
         client_manager: ClientManagerEntry,
@@ -115,7 +120,9 @@ impl TaskManager {
                 runcount_manager,
                 app_state_manager.clone(),
                 client_manager.clone(),
+                network.clone(),
             ),
+            network,
             rx,
             app_state_manager,
             client_manager,
@@ -205,9 +212,13 @@ impl TaskManager {
         debug!("TaskManager handles state event {:?}", event);
 
         match event {
-            StateEvent::NetworkChange => {
-                self.handle_network_change().await;
+            StateEvent::NetworkOnline => {
+                self.scheduler.on_network_online().await;
             }
+            StateEvent::NetworkOffline => {
+                self.scheduler.on_network_offline();
+            }
+
             StateEvent::AppStateChange(uid, state) => {
                 self.handle_app_state_change(uid, state).await;
             }
@@ -237,20 +248,6 @@ impl TaskManager {
             ScheduleEvent::Unload => return self.unload_sa(),
         }
         false
-    }
-
-    async fn handle_network_change(&mut self) {
-        static mut NETWORK_INFO: Option<NetworkInfo> = None;
-        let manager = NetworkManager::new();
-        manager.update_network_info();
-        if let Some(info) = manager.get_network_info() {
-            unsafe {
-                if Some(info) != NETWORK_INFO {
-                    NETWORK_INFO = Some(info);
-                    self.scheduler.on_network_change(info).await;
-                }
-            }
-        }
     }
 
     async fn handle_app_state_change(&mut self, uid: u64, state: ApplicationState) {
@@ -320,7 +317,7 @@ pub struct TaskManagerTx {
 }
 
 impl TaskManagerTx {
-    fn new(tx: UnboundedSender<TaskManagerEvent>) -> Self {
+    pub(crate) fn new(tx: UnboundedSender<TaskManagerEvent>) -> Self {
         Self { tx }
     }
 

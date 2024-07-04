@@ -133,22 +133,7 @@ impl RunningTask {
             task.status.lock().unwrap().state,
             task.code.lock().unwrap()[index]
         );
-    }
-}
 
-impl Deref for RunningTask {
-    type Target = Arc<RequestTask>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.task
-    }
-}
-
-impl Drop for RunningTask {
-    fn drop(&mut self) {
-        // Task finishes running, then running count -1.
-        self.runcount_manager
-            .send_event(RunCountEvent::change_runcount(-1));
         let (state, reason) = {
             let status = self.task.status.lock().unwrap();
             (status.state, status.reason)
@@ -169,5 +154,21 @@ impl Drop for RunningTask {
                 self.task_id(),
                 self.uid(),
             )));
+    }
+}
+
+impl Deref for RunningTask {
+    type Target = Arc<RequestTask>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.task
+    }
+}
+
+impl Drop for RunningTask {
+    fn drop(&mut self) {
+        // Task finishes running, then running count -1.
+        self.runcount_manager
+            .send_event(RunCountEvent::change_runcount(-1));
     }
 }

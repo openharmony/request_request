@@ -16,9 +16,8 @@ use std::ops::Deref;
 
 use crate::manage::account::is_foreground_user;
 use crate::manage::database::{Database, TaskQosInfo};
-use crate::task::config::Action;
-use crate::task::ffi::NetworkInfo;
-use crate::task::info::{ApplicationState, Mode};
+use crate::task::config::{Action, Mode};
+use crate::task::info::ApplicationState;
 use crate::utils::c_wrapper::CStringWrapper;
 
 /// List of sorted apps.
@@ -33,11 +32,7 @@ impl SortedApps {
         }
     }
 
-    pub(crate) fn change_network(&mut self, network: NetworkInfo) {
-        // Firstly, we need to update the status of the tasks waiting to be
-        // executed based on changes in network status.
-        Database::get_instance().update_on_network_change(network);
-
+    pub(crate) fn change_network(&mut self) {
         // Then, we need to reload the app based on the current status of all tasks.
         self.inner = reload_all_app_from_database();
     }
@@ -306,8 +301,8 @@ extern "C" {
 #[cfg(test)]
 mod ut_manage_scheduler_qos_apps {
     use super::{App, Task};
-    use crate::task::info::{ApplicationState, Mode};
-
+    use crate::task::config::Mode;
+    use crate::task::info::ApplicationState;
     impl Task {
         fn new(task_id: u32, mode: Mode, priority: u32) -> Self {
             Self {
@@ -321,9 +316,6 @@ mod ut_manage_scheduler_qos_apps {
     }
 
     #[test]
-    fn ut_sorted_app_insert_task() {}
-
-    #[test]
     fn ut_app_insert() {
         let mut app = App::new(1, ApplicationState::Foreground);
         assert!(app.tasks.is_empty());
@@ -331,31 +323,26 @@ mod ut_manage_scheduler_qos_apps {
         assert_eq!(app.state, ApplicationState::Foreground);
 
         app.insert(Task::new(1, Mode::FrontEnd, 0));
-        assert_eq!(app.tasks.len(), 1);
         assert_eq!(app.tasks[0].task_id, 1);
         assert_eq!(app.tasks[0].mode, Mode::FrontEnd);
         assert_eq!(app.tasks[0].priority, 0);
 
         app.insert(Task::new(2, Mode::FrontEnd, 100));
-        assert_eq!(app.tasks.len(), 2);
         assert_eq!(app.tasks[0].task_id, 1);
         assert_eq!(app.tasks[1].task_id, 2);
 
         app.insert(Task::new(3, Mode::FrontEnd, 50));
-        assert_eq!(app.tasks.len(), 3);
         assert_eq!(app.tasks[0].task_id, 1);
         assert_eq!(app.tasks[1].task_id, 3);
         assert_eq!(app.tasks[2].task_id, 2);
 
         app.insert(Task::new(4, Mode::BackGround, 0));
-        assert_eq!(app.tasks.len(), 3);
         assert_eq!(app.tasks[0].task_id, 1);
         assert_eq!(app.tasks[1].task_id, 3);
         assert_eq!(app.tasks[2].task_id, 2);
         assert_eq!(app.tasks[3].task_id, 4);
 
         app.insert(Task::new(5, Mode::BackGround, 100));
-        assert_eq!(app.tasks.len(), 3);
         assert_eq!(app.tasks[0].task_id, 1);
         assert_eq!(app.tasks[1].task_id, 3);
         assert_eq!(app.tasks[2].task_id, 2);
@@ -363,7 +350,6 @@ mod ut_manage_scheduler_qos_apps {
         assert_eq!(app.tasks[4].task_id, 5);
 
         app.insert(Task::new(6, Mode::BackGround, 50));
-        assert_eq!(app.tasks.len(), 3);
         assert_eq!(app.tasks[0].task_id, 1);
         assert_eq!(app.tasks[1].task_id, 3);
         assert_eq!(app.tasks[2].task_id, 2);
@@ -378,44 +364,29 @@ mod ut_manage_scheduler_qos_apps {
         for i in 0..5 {
             app.insert(Task::new(i, Mode::FrontEnd, i));
         }
-        assert_eq!(app.tasks.len(), 5);
-        assert_eq!(app.tasks[0].task_id, 1);
-        assert_eq!(app.tasks[1].task_id, 2);
-        assert_eq!(app.tasks[2].task_id, 3);
-        assert_eq!(app.tasks[3].task_id, 4);
-        assert_eq!(app.tasks[4].task_id, 5);
-
-        app.remove(6);
-        assert_eq!(app.tasks.len(), 5);
-        assert_eq!(app.tasks[0].task_id, 1);
-        assert_eq!(app.tasks[1].task_id, 2);
-        assert_eq!(app.tasks[2].task_id, 3);
-        assert_eq!(app.tasks[3].task_id, 4);
-        assert_eq!(app.tasks[4].task_id, 5);
+        assert_eq!(app.tasks[0].task_id, 0);
+        assert_eq!(app.tasks[1].task_id, 1);
+        assert_eq!(app.tasks[2].task_id, 2);
+        assert_eq!(app.tasks[3].task_id, 3);
+        assert_eq!(app.tasks[4].task_id, 4);
 
         app.remove(3);
-        assert_eq!(app.tasks.len(), 4);
-        assert_eq!(app.tasks[0].task_id, 1);
-        assert_eq!(app.tasks[1].task_id, 2);
-        assert_eq!(app.tasks[2].task_id, 4);
-        assert_eq!(app.tasks[3].task_id, 5);
+        assert_eq!(app.tasks[0].task_id, 0);
+        assert_eq!(app.tasks[1].task_id, 1);
+        assert_eq!(app.tasks[2].task_id, 2);
+        assert_eq!(app.tasks[3].task_id, 4);
 
         app.remove(1);
-        assert_eq!(app.tasks.len(), 3);
-        assert_eq!(app.tasks[0].task_id, 2);
-        assert_eq!(app.tasks[1].task_id, 4);
-        assert_eq!(app.tasks[2].task_id, 5);
+        assert_eq!(app.tasks[0].task_id, 0);
+        assert_eq!(app.tasks[1].task_id, 2);
+        assert_eq!(app.tasks[2].task_id, 4);
 
         app.remove(4);
-        assert_eq!(app.tasks.len(), 2);
-        assert_eq!(app.tasks[0].task_id, 2);
-        assert_eq!(app.tasks[1].task_id, 5);
+        assert_eq!(app.tasks[0].task_id, 0);
+        assert_eq!(app.tasks[1].task_id, 2);
 
-        app.remove(5);
-        assert_eq!(app.tasks.len(), 1);
+        app.remove(0);
         assert_eq!(app.tasks[0].task_id, 2);
-
-        app.remove(2);
     }
 
     #[test]

@@ -12,9 +12,7 @@
 // limitations under the License.
 
 use std::io::SeekFrom;
-use std::sync::atomic::{
-    AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicU8, AtomicUsize, Ordering,
-};
+use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicUsize, Ordering};
 use std::sync::Mutex;
 use std::thread::sleep;
 use std::time::Duration;
@@ -23,16 +21,15 @@ use ylong_http_client::async_impl::{Body, Client, Request, RequestBuilder, Respo
 use ylong_http_client::{ErrorKind, HttpClientError};
 use ylong_runtime::io::{AsyncSeekExt, AsyncWriteExt};
 
-use super::config::{Network, NetworkInner, Version};
-use super::info::{CommonTaskInfo, Mode, State, TaskInfo, UpdateInfo};
+use super::config::{Mode, Version};
+use super::info::{CommonTaskInfo, State, TaskInfo, UpdateInfo};
 use super::notify::{EachFileStatus, NotifyData, Progress};
 use super::reason::Reason;
 use crate::error::ErrorCode;
 use crate::manage::app_state::AppState;
 use crate::manage::database::Database;
-use crate::manage::network::NetworkManager;
 use crate::manage::notifier::Notifier;
-use crate::manage::SystemConfig;
+use crate::manage::{self, SystemConfig};
 use crate::service::client::ClientManagerEntry;
 use crate::task::client::build_client;
 use crate::task::config::{Action, TaskConfig};
@@ -68,7 +65,7 @@ pub(crate) struct RequestTask {
     pub(crate) app_state: AppState,
     pub(crate) last_notify: AtomicU64,
     pub(crate) client_manager: ClientManagerEntry,
-    pub(crate) last_network_type: AtomicU8,
+    pub(crate) network: manage::Network,
 }
 
 impl RequestTask {
@@ -118,10 +115,6 @@ impl RequestTask {
             error!("check network failed, tid: {}", self.task_id());
             false
         } else {
-            if let Some(network_info) = NetworkManager::new().get_network_info() {
-                self.last_network_type
-                    .store(network_info.network_type as u8, Ordering::SeqCst);
-            }
             true
         }
     }
@@ -134,6 +127,7 @@ impl RequestTask {
         app_state: AppState,
         info: Option<TaskInfo>,
         client_manager: ClientManagerEntry,
+        network: manage::Network,
     ) -> Result<RequestTask, ErrorCode> {
         if !check_configs(&config) {
             return Err(ErrorCode::Other);
@@ -223,7 +217,7 @@ impl RequestTask {
             app_state,
             last_notify: AtomicU64::new(time),
             client_manager,
-            last_network_type: AtomicU8::new(NetworkInner::ANY as u8),
+            network,
         })
     }
 
@@ -249,12 +243,10 @@ impl RequestTask {
 
     pub(crate) fn check_net_work_status(&self) -> bool {
         if !self.is_satisfied_configuration() {
-            if self.conf.version == Version::API10
+            if !(self.conf.version == Version::API10
                 && self.conf.common_data.mode == Mode::BackGround
-                && self.conf.common_data.retry
+                && self.conf.common_data.retry)
             {
-                self.set_status(State::Waiting, Reason::UnsupportedNetworkType);
-            } else {
                 self.set_status(State::Failed, Reason::UnsupportedNetworkType);
             }
             return false;
@@ -276,8 +268,7 @@ impl RequestTask {
     }
 
     pub(crate) fn net_work_online(&self) -> bool {
-        let network_manager = NetworkManager::new();
-        if !network_manager.is_online() {
+        if !self.network.is_online() {
             if self.conf.version == Version::API10
                 && self.conf.common_data.mode == Mode::BackGround
                 && self.conf.common_data.retry
@@ -286,7 +277,7 @@ impl RequestTask {
             } else {
                 let retry_times = 3;
                 for _ in 0..retry_times {
-                    if network_manager.is_online() {
+                    if self.network.is_online() {
                         return true;
                     }
                     sleep(Duration::from_millis(RETRY_INTERVAL));
@@ -479,13 +470,13 @@ impl RequestTask {
         true
     }
 
-    fn handle_body_transfer_error(&self) {
-        if !NetworkManager::new().is_online() {
+    async fn handle_body_transfer_error(&self) {
+        if self.network.check_interval_online().await {
+            self.set_status(State::Failed, Reason::OthersError);
+        } else {
             match self.conf.version {
                 Version::API9 => {
-                    if self.conf.common_data.action == Action::Download {
-                        self.set_status(State::Waiting, Reason::NetworkOffline);
-                    } else {
+                    if self.conf.common_data.action == Action::Upload {
                         self.set_status(State::Failed, Reason::NetworkOffline);
                     }
                 }
@@ -493,19 +484,13 @@ impl RequestTask {
                     if self.conf.common_data.mode == Mode::FrontEnd || !self.conf.common_data.retry
                     {
                         self.set_status(State::Failed, Reason::NetworkOffline);
-                    } else {
-                        self.set_status(State::Waiting, Reason::NetworkOffline);
                     }
                 }
             }
-        } else if self.is_network_changed() {
-            self.set_status(State::Waiting, Reason::NetworkChanged);
-        } else {
-            self.set_status(State::Failed, Reason::OthersError);
         }
     }
 
-    pub(crate) fn handle_download_error(&self, result: &Result<(), HttpClientError>) -> bool {
+    pub(crate) async fn handle_download_error(&self, result: &Result<(), HttpClientError>) -> bool {
         match result {
             Ok(_) => true,
             Err(err) => {
@@ -517,7 +502,7 @@ impl RequestTask {
                     // user triggered
                     ErrorKind::UserAborted => return true,
                     ErrorKind::BodyTransfer | ErrorKind::BodyDecode => {
-                        self.handle_body_transfer_error()
+                        self.handle_body_transfer_error().await;
                     }
                     _ => {
                         self.set_status(State::Failed, Reason::OthersError);
@@ -555,6 +540,7 @@ impl RequestTask {
                     }
                     return false;
                 }
+                
                 if self.range_request.load(Ordering::SeqCst) {
                     match http_response_code.as_u16() {
                         206 => {
@@ -592,7 +578,7 @@ impl RequestTask {
                             self.set_code(index, Reason::Tcp)
                         }
                     }
-                    ErrorKind::BodyTransfer => self.handle_body_transfer_error(),
+                    ErrorKind::BodyTransfer => self.handle_body_transfer_error().await,
                     _ => self.set_code(index, Reason::OthersError),
                 }
                 false
@@ -939,62 +925,7 @@ impl RequestTask {
     }
 
     pub(crate) fn is_satisfied_configuration(&self) -> bool {
-        if self.conf.common_data.network == Network::Any {
-            return true;
-        }
-
-        if let Some(network_info) = NetworkManager::new().get_network_info() {
-            if !self.conf.common_data.roaming && network_info.is_roaming {
-                error!("not allow roaming");
-                return false;
-            }
-            if !self.conf.common_data.metered && network_info.is_metered {
-                error!("not allow metered");
-                return false;
-            }
-            if network_info.network_type as u8 != self.conf.common_data.network as u8
-                && network_info.network_type != NetworkInner::ANY
-            {
-                error!("dismatch network type");
-                return false;
-            }
-        } else {
-            return false;
-        }
-
-        true
-    }
-
-    pub(crate) fn is_network_changed(&self) -> bool {
-        if let Some(network_info) = NetworkManager::new().get_network_info() {
-            let network = self.last_network_type.load(Ordering::SeqCst);
-            if network == network_info.network_type as u8 {
-                return false;
-            }
-            self.last_network_type
-                .store(network_info.network_type as u8, Ordering::SeqCst);
-            info!(
-                "network changed from {:?} to {:?}",
-                network, network_info.network_type
-            );
-            // changed from Wifi to cellular
-            if (network == NetworkInner::ANY as u8 || network == NetworkInner::WIFI as u8)
-                && network_info.network_type == NetworkInner::CELLULAR
-            {
-                return true;
-            }
-            // changed from cellular to Wifi
-            if (network == NetworkInner::CELLULAR as u8)
-                && (network_info.network_type == NetworkInner::WIFI
-                    || network_info.network_type == NetworkInner::ANY)
-            {
-                return true;
-            }
-            // changed but no matter
-            false
-        } else {
-            true
-        }
+        self.network.satisfied_state(&self.conf)
     }
 
     pub(crate) fn background_notify(&self) {

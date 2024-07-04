@@ -17,6 +17,7 @@ use std::sync::Mutex;
 
 pub(crate) use ffi::*;
 
+use super::database::RequestDb;
 use super::TaskManager;
 use crate::manage::events::TaskManagerEvent;
 use crate::manage::task_manager::TaskManagerTx;
@@ -33,52 +34,6 @@ const DEFAULT_USER_ID: i32 = 100;
 static FOREGROUND_ACCOUNT: AtomicI32 = AtomicI32::new(DEFAULT_USER_ID);
 static BACKGOUNFD_ACCOUNTS: Mutex<Vec<i32>> = Mutex::new(Vec::new());
 
-#[allow(unreachable_pub)]
-#[cxx::bridge(namespace = "OHOS::Request")]
-mod ffi {
-
-    #[repr(i32)]
-    enum OS_ACCOUNT_SUBSCRIBE_TYPE {
-        INVALID_TYPE = -1,
-        ACTIVED = 0,
-        ACTIVATING,
-        UNLOCKED,
-        CREATED,
-        REMOVED,
-        STOPPING,
-        STOPPED,
-        SWITCHING,
-        SWITCHED,
-    }
-
-    extern "Rust" {
-        type TaskManagerTx;
-    }
-
-    unsafe extern "C++" {
-        include!("account.h");
-        include!("c_request_database.h");
-        include!("os_account_subscribe_info.h");
-
-        type OS_ACCOUNT_SUBSCRIBE_TYPE;
-        type RequestDataBase;
-
-        fn GetForegroundOsAccount(account: &mut i32) -> i32;
-        fn GetBackgroundOsAccounts(accounts: &mut Vec<i32>) -> i32;
-        fn GetOsAccountLocalIdFromUid(uid: i32, user_id: &mut i32) -> i32;
-        fn GetDatabaseInstance() -> *mut RequestDataBase;
-        fn DeleteAllAccountTasks(self: Pin<&mut RequestDataBase>, user_id: i32) -> i32;
-        fn OnAccountChange(self: Pin<&mut RequestDataBase>, user_id: i32) -> i32;
-        fn RegistryAccountSubscriber(
-            subscribe_type: OS_ACCOUNT_SUBSCRIBE_TYPE,
-            task_manager: Box<TaskManagerTx>,
-            on_accounts_changed: fn(&i32, task_manager: &TaskManagerTx),
-            on_accounts_switch: fn(&i32, &i32, task_manager: &TaskManagerTx),
-        ) -> i32;
-        fn GetOhosAccountUid() -> String;
-    }
-}
-
 impl TaskManager {
     pub(crate) async fn handle_account_event(&mut self, event: AccountEvent) {
         update_accounts();
@@ -91,8 +46,8 @@ impl TaskManager {
 
 pub(crate) fn remove_account_tasks(user_id: i32) {
     info!("delte database task by user_id: {}", user_id);
-    let res =
-        unsafe { Pin::new_unchecked(&mut (*GetDatabaseInstance())).DeleteAllAccountTasks(user_id) };
+    let mut request_db = RequestDb::get_instance();
+    let res = request_db.delete_all_account_tasks(user_id);
     info!("delete data task finished: {}", res);
     if res != 0 {
         error!("delete account tasks failed: {}", res);
@@ -127,17 +82,15 @@ pub(crate) fn update_accounts() {
         error!("GetForegroundOsAccount failed: {}", res);
         foreground_account = DEFAULT_USER_ID;
     }
-    unsafe {
-        Pin::new_unchecked(&mut (*GetDatabaseInstance())).OnAccountChange(foreground_account);
-    }
+
+    let request_db = RequestDb::get_instance();
+    request_db.on_account_change(foreground_account);
     {
         let mut accounts = BACKGOUNFD_ACCOUNTS.lock().unwrap();
         accounts.clear();
         GetBackgroundOsAccounts(&mut accounts);
         for account in accounts.iter() {
-            unsafe {
-                Pin::new_unchecked(&mut (*GetDatabaseInstance())).OnAccountChange(*account);
-            }
+            request_db.on_account_change(*account);
         }
     }
     FOREGROUND_ACCOUNT.store(foreground_account, Ordering::Release);
@@ -195,5 +148,64 @@ pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
 
     if ret != 0 {
         error!("registry_account_stop_subscribe failed: {}", ret);
+    }
+}
+
+impl RequestDb {
+    pub(crate) fn on_account_change(&self, user_id: i32) {
+        let res = unsafe { Pin::new_unchecked(&mut (*self.inner)).OnAccountChange(user_id) };
+        if res != 0 {
+            error!("on_account_change failed: {}", res);
+        }
+    }
+
+    pub(crate) fn delete_all_account_tasks(&mut self, user_id: i32) -> i32 {
+        unsafe { Pin::new_unchecked(&mut (*self.inner)).DeleteAllAccountTasks(user_id) }
+    }
+}
+
+#[cxx::bridge(namespace = "OHOS::Request")]
+mod ffi {
+
+    #[repr(i32)]
+    enum OS_ACCOUNT_SUBSCRIBE_TYPE {
+        INVALID_TYPE = -1,
+        ACTIVED = 0,
+        ACTIVATING,
+        UNLOCKED,
+        CREATED,
+        REMOVED,
+        STOPPING,
+        STOPPED,
+        SWITCHING,
+        SWITCHED,
+    }
+
+    extern "Rust" {
+        type TaskManagerTx;
+    }
+
+    unsafe extern "C++" {
+        include!("account.h");
+        include!("os_account_subscribe_info.h");
+        include!("c_request_database.h");
+
+        type OS_ACCOUNT_SUBSCRIBE_TYPE;
+        type RequestDataBase = crate::manage::database::RequestDataBase;
+        fn DeleteAllAccountTasks(self: Pin<&mut RequestDataBase>, user_id: i32) -> i32;
+        fn OnAccountChange(self: Pin<&mut RequestDataBase>, user_id: i32) -> i32;
+
+        fn GetForegroundOsAccount(account: &mut i32) -> i32;
+        fn GetBackgroundOsAccounts(accounts: &mut Vec<i32>) -> i32;
+        fn GetOsAccountLocalIdFromUid(uid: i32, user_id: &mut i32) -> i32;
+
+        fn RegistryAccountSubscriber(
+            subscribe_type: OS_ACCOUNT_SUBSCRIBE_TYPE,
+            task_manager: Box<TaskManagerTx>,
+            on_accounts_changed: fn(&i32, task_manager: &TaskManagerTx),
+            on_accounts_switch: fn(&i32, &i32, task_manager: &TaskManagerTx),
+        ) -> i32;
+
+          fn GetOhosAccountUid() -> String;
     }
 }

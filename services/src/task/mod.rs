@@ -12,7 +12,9 @@
 // limitations under the License.
 
 pub(crate) mod client;
-pub(crate) mod config;
+/// request task config
+pub mod config;
+
 pub(crate) mod download;
 pub(crate) mod ffi;
 pub(crate) mod files;

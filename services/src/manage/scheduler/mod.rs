@@ -20,6 +20,7 @@ use qos::Qos;
 use queue::{NotifyTask, RunningQueue};
 
 use super::app_state::AppStateManagerTx;
+use super::Network;
 use crate::ability::SYSTEM_CONFIG_MANAGER;
 use crate::error::ErrorCode;
 use crate::manage::database::Database;
@@ -29,8 +30,9 @@ use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
 use crate::service::runcount::RunCountManagerEntry;
 use crate::task::config::Action;
-use crate::task::ffi::{CUpdateStateInfo, NetworkInfo};
-use crate::task::info::{ApplicationState, Mode, State};
+use crate::task::ffi::CUpdateStateInfo;
+use crate::task::info::{ApplicationState,  State};
+use crate::task::config::Mode;
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 
@@ -54,6 +56,7 @@ pub(crate) struct Scheduler {
     running_queue: RunningQueue,
     app_state_manager: AppStateManagerTx,
     client_manager: ClientManagerEntry,
+    network: Network,
 }
 
 impl Scheduler {
@@ -62,6 +65,7 @@ impl Scheduler {
         runcount_manager: RunCountManagerEntry,
         app_state_manager: AppStateManagerTx,
         client_manager: ClientManagerEntry,
+        network: Network,
     ) -> Scheduler {
         Self {
             qos: Qos::new(),
@@ -70,9 +74,11 @@ impl Scheduler {
                 runcount_manager,
                 app_state_manager.clone(),
                 client_manager.clone(),
+                network.clone(),
             ),
             app_state_manager,
             client_manager,
+            network,
         }
     }
 
@@ -164,6 +170,7 @@ impl Scheduler {
     }
 
     pub(crate) async fn restore_all_tasks(&mut self) {
+        info!("Reschedule tasks restore all tasks");
         // Reschedule tasks based on the current `QOS` status.
         let changes = self.qos.reschedule(Action::Any);
         self.reschedule(changes).await;
@@ -174,8 +181,13 @@ impl Scheduler {
         self.reschedule(changes).await;
     }
 
-    pub(crate) async fn on_network_change(&mut self, network: NetworkInfo) {
-        let changes = self.qos.change_network(network);
+    pub(crate) fn on_network_offline(&mut self) {
+        self.running_queue.clear();
+    }
+
+    pub(crate) async fn on_network_online(&mut self) {
+        self.running_queue.clear();
+        let changes = self.qos.change_network();
         self.reschedule(changes).await;
     }
 
@@ -255,6 +267,7 @@ impl Scheduler {
             .get_task(
                 task_id,
                 system_config,
+                self.network.clone(),
                 &self.app_state_manager,
                 &self.client_manager,
             )

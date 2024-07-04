@@ -15,7 +15,9 @@
 
 pub(crate) mod client;
 pub(crate) mod command;
-mod interface;
+
+/// The interface of the request server service.
+pub mod interface;
 pub(crate) mod permission;
 pub(crate) mod runcount;
 
@@ -178,7 +180,7 @@ pub(crate) fn serialize_task_config(config: TaskConfig, reply: &mut MsgParcel) -
     reply.write(&(config.bundle_type))?;
     reply.write(&(config.atomic_account))?;
     reply.write(&(config.common_data.cover))?;
-    reply.write(&(config.common_data.network as u32))?;
+    reply.write(&(config.common_data.network_config as u32))?;
     reply.write(&(config.common_data.metered))?;
     reply.write(&(config.common_data.roaming))?;
     reply.write(&(config.common_data.retry))?;

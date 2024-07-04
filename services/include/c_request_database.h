@@ -27,7 +27,6 @@
 #include "c_task_config.h"
 #include "c_task_info.h"
 #include "cxx.h"
-#include "network_adapter.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -118,9 +117,10 @@ constexpr const char *REQUEST_TASK_TABLE_ADD_ATOMIC_ACCOUNT = "ALTER TABLE reque
                                                               "TEXT";
 
 struct TaskFilter;
+struct NetworkInfo;
 class RequestDataBase {
 public:
-    static RequestDataBase &GetInstance();
+    static RequestDataBase &GetInstance(std::string path);
     RequestDataBase(const RequestDataBase &) = delete;
     RequestDataBase &operator=(const RequestDataBase &) = delete;
     bool Insert(const std::string &table, const OHOS::NativeRdb::ValuesBucket &insertValues);
@@ -132,17 +132,19 @@ public:
     int OnAccountChange(int user_id);
     rust::vec<rust::u32> SearchTask(TaskFilter filter, rust::u64 uid) const;
     rust::vec<rust::u32> SystemSearchTask(TaskFilter filter, rust::str bundleName) const;
+    int ExecuteSql(rust::str sql);
+    int QuerySql(rust::str sql, rust::vec<rust::i32> &tasks);
 
 private:
-    RequestDataBase();
+    RequestDataBase(std::string path);
 
 private:
     std::shared_ptr<OHOS::NativeRdb::RdbStore> store_;
 };
 
-inline RequestDataBase *GetDatabaseInstance()
+inline RequestDataBase *GetDatabaseInstance(rust::str path)
 {
-    return &RequestDataBase::GetInstance();
+    return &RequestDataBase::GetInstance(std::string(path));
 }
 
 class RequestDBOpenCallback : public OHOS::NativeRdb::RdbOpenCallback {
@@ -187,7 +189,7 @@ CTaskInfo *GetTaskInfo(uint32_t taskId);
 CTaskConfig *QueryTaskConfig(uint32_t taskId);
 CTaskConfig **QueryAllTaskConfigs(void);
 void UpdateTaskStateOnAppStateChange(uint64_t uid, uint8_t appState);
-void UpdateTaskStateOnNetworkChange(NetworkInfo info);
+
 void GetTaskQosInfo(uint64_t uid, uint32_t taskId, TaskQosInfo **info);
 void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len);
 void GetAppArray(AppInfo **apps, size_t *len);

@@ -19,12 +19,13 @@ ohos_rust_unittest("rust_request_ut_test") {
   sources = [ "../src/lib.rs" ]
   deps = [
     "../../services:download_server_cxx",
+    "./c:request_test",
     "//third_party/rust/crates/cxx:lib",
   ]
 
+  rustflags = [ "--cfg=feature=\"oh\"" ]
+
   external_deps = [
-    "access_token:libnativetoken",
-    "access_token:libtoken_setproc",
     "hilog:hilog_rust",
     "hilog:libhilog",
     "hisysevent:hisysevent_rust",
@@ -47,7 +48,16 @@ ohos_rust_unittest("rust_request_sdv_test") {
 
   sources = [ "entry.rs" ]
 
-  deps = [ "../../services:download_server" ]
+  deps = [
+    "../../services:download_server",
+    "./c:request_test",
+  ]
+
+  external_deps = [
+    "ipc:ipc_rust",
+    "safwk:system_ability_fwk_rust",
+    "samgr:samgr_rust",
+  ]
 
   subsystem_name = "request"
   part_name = "request"
@@ -55,5 +65,8 @@ ohos_rust_unittest("rust_request_sdv_test") {
 
 group("unittest") {
   testonly = true
-  deps = [ ":rust_request_ut_test" ]
+  deps = [
+    ":rust_request_sdv_test",
+    ":rust_request_ut_test",
+  ]
 }

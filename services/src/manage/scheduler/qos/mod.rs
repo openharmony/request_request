@@ -21,7 +21,6 @@ pub(crate) use rss::RssCapacity;
 
 use crate::manage::database::TaskQosInfo;
 use crate::task::config::Action;
-use crate::task::ffi::NetworkInfo;
 use crate::task::info::ApplicationState;
 
 pub(crate) struct Qos {
@@ -58,8 +57,8 @@ impl Qos {
         }
     }
 
-    pub(crate) fn change_network(&mut self, network: NetworkInfo) -> QosChanges {
-        self.apps.change_network(network);
+    pub(crate) fn change_network(&mut self) -> QosChanges {
+        self.apps.change_network();
         self.reschedule(Action::Any)
     }
 

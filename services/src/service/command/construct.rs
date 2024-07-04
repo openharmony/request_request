@@ -23,8 +23,7 @@ use crate::manage::account::GetOhosAccountUid;
 use crate::manage::events::TaskManagerEvent;
 use crate::service::permission::PermissionChecker;
 use crate::service::{get_calling_bundle, RequestServiceStub};
-use crate::task::config::{Action, CommonTaskConfig, Network, TaskConfig, Version};
-use crate::task::info::Mode;
+use crate::task::config::{Action, CommonTaskConfig, Mode, NetworkConfig, TaskConfig, Version};
 use crate::task::ATOMIC_SERVICE;
 use crate::utils::form_item::{FileSpec, FormItem};
 
@@ -52,7 +51,7 @@ impl RequestServiceStub {
         let cover: bool = data.read()?;
 
         let network: u32 = data.read()?;
-        let network: Network = Network::from(network as u8);
+        let network_config = NetworkConfig::from(network as u8);
 
         let metered: bool = data.read()?;
 
@@ -223,7 +222,7 @@ impl RequestServiceStub {
                 action,
                 mode,
                 cover,
-                network,
+                network_config,
                 metered,
                 roaming,
                 retry,
@@ -268,7 +267,7 @@ impl RequestServiceStub {
             error!("End Service subscribe, tid: {}, failed: {:?}", task_id, ret);
             reply.write(&(ret as i32))?;
             reply.write(&(task_id as i32))?;
-            return Err(IpcStatusCode::Failed);
+            return Ok(());
         }
 
         reply.write(&(ErrorCode::ErrOk as i32))?;

@@ -12,9 +12,9 @@
 // limitations under the License.
 
 use super::config::{
-    Action, CommonTaskConfig, ConfigSet, Network, NetworkInner, TaskConfig, Version,
+    Action, CommonTaskConfig, ConfigSet, Mode, NetworkConfig, TaskConfig, Version,
 };
-use super::info::{CommonTaskInfo, InfoSet, Mode, TaskInfo, UpdateInfo};
+use super::info::{CommonTaskInfo, InfoSet, TaskInfo, UpdateInfo};
 use super::notify::{CommonProgress, EachFileStatus, Progress};
 use super::reason::Reason;
 use crate::task::info::State;
@@ -120,10 +120,10 @@ impl Progress {
         Progress {
             common_data: c_struct.common_data.clone(),
             sizes: split_string(&mut c_struct.sizes.to_string())
-                .map(|s| s.parse::<i64>().unwrap())
+                .map(|s| s.parse::<i64>().unwrap_or_default())
                 .collect(),
             processed: split_string(&mut c_struct.processed.to_string())
-                .map(|s| s.parse::<usize>().unwrap())
+                .map(|s| s.parse::<usize>().unwrap_or_default())
                 .collect(),
             extras: string_to_hashmap(&mut c_struct.extras.to_string()),
         }
@@ -269,14 +269,6 @@ impl UpdateInfo {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-#[repr(C)]
-pub(crate) struct NetworkInfo {
-    pub(crate) network_type: NetworkInner,
-    pub(crate) is_metered: bool,
-    pub(crate) is_roaming: bool,
-}
-
 impl TaskConfig {
     pub(crate) fn to_c_struct(&self, task_id: u32, uid: u64, set: &ConfigSet) -> CTaskConfig {
         CTaskConfig {
@@ -309,7 +301,7 @@ impl TaskConfig {
                 action: self.common_data.action as u8,
                 mode: self.common_data.mode as u8,
                 cover: self.common_data.cover,
-                network: self.common_data.network as u8,
+                network: self.common_data.network_config as u8,
                 metered: self.common_data.metered,
                 roaming: self.common_data.roaming,
                 retry: self.common_data.retry,
@@ -368,7 +360,7 @@ impl TaskConfig {
                 action: Action::from(c_struct.common_data.action),
                 mode: Mode::from(c_struct.common_data.mode),
                 cover: c_struct.common_data.cover,
-                network: Network::from(c_struct.common_data.network),
+                network_config: NetworkConfig::from(c_struct.common_data.network),
                 metered: c_struct.common_data.metered,
                 roaming: c_struct.common_data.roaming,
                 retry: c_struct.common_data.retry,
@@ -392,10 +384,7 @@ impl TaskConfig {
 
 #[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
-    pub(crate) fn GetNetworkInfo() -> *const NetworkInfo;
     pub(crate) fn DeleteCEachFileStatus(ptr: *const CEachFileStatus);
-    pub(crate) fn UpdateNetworkInfo();
-
 }
 
 pub(crate) use tffi::*;

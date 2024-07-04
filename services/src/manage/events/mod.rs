@@ -168,8 +168,12 @@ impl TaskManagerEvent {
         Self::State(StateEvent::AppStateChange(uid, state))
     }
 
-    pub(crate) fn network_change() -> Self {
-        Self::State(StateEvent::NetworkChange)
+    pub(crate) fn network_online() -> Self {
+        Self::State(StateEvent::NetworkOnline)
+    }
+
+    pub(crate) fn network_offline() -> Self {
+        Self::State(StateEvent::NetworkOffline)
     }
 
     pub(crate) fn subscribe(task_id: u32, token_id: u64) -> (Self, Recv<ErrorCode>) {
@@ -204,7 +208,8 @@ pub(crate) enum TaskEvent {
 }
 
 pub(crate) enum StateEvent {
-    NetworkChange,
+    NetworkOnline,
+    NetworkOffline,
     AppStateChange(u64, ApplicationState),
 }
 
@@ -313,7 +318,8 @@ impl Debug for TaskEvent {
 impl Debug for StateEvent {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::NetworkChange => f.pad("NetworkChange"),
+            Self::NetworkOnline => f.pad("NetworkChange"),
+            Self::NetworkOffline => f.pad("NetworkOffline"),
             Self::AppStateChange(uid, state) => f
                 .debug_struct("AppStateChange")
                 .field("uid", uid)

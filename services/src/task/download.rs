@@ -23,6 +23,7 @@ use super::operator::TaskOperator;
 use super::reason::Reason;
 use crate::task::info::State;
 use crate::task::request_task::RequestTask;
+#[cfg(feature = "oh")]
 use crate::trace::Trace;
 
 const SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
@@ -104,7 +105,7 @@ async fn download_inner(task: Arc<RequestTask>) {
     );
 
     // Ensures `_trace` can only be freed when this function exits.
-
+    #[cfg(feature = "oh")]
     let _trace = Trace::new("download file");
 
     let response = {
@@ -113,14 +114,17 @@ async fn download_inner(task: Arc<RequestTask>) {
             None => return,
         };
 
-        let name = task.conf.file_specs[0].path.as_str();
-        let download = task.progress.lock().unwrap().processed[0];
+        #[cfg(feature = "oh")]
+        {
+            let name = task.conf.file_specs[0].path.as_str();
+            let download = task.progress.lock().unwrap().processed[0];
 
-        // Ensures `_trace` can only be freed when this function exits.
+            // Ensures `_trace` can only be freed when this function exits.
 
-        let _trace = Trace::new(&format!(
-            "download file name: {name} downloaded size: {download}"
-        ));
+            let _trace = Trace::new(&format!(
+                "download file name: {name} downloaded size: {download}"
+            ));
+        }
 
         task.client.request(request).await
     };
@@ -137,7 +141,7 @@ async fn download_inner(task: Arc<RequestTask>) {
 
     let result = downloader.download().await;
 
-    if !task.handle_download_error(&result) {
+    if !task.handle_download_error(&result).await {
         error!("handle_download_error");
         return;
     }

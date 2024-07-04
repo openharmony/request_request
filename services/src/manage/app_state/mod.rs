@@ -113,7 +113,7 @@ impl AppStateManager {
             return;
         }
 
-        let bundle = Database::get_instance().get_app_bundle(uid).unwrap();
+        let bundle = Database::get_instance().get_app_bundle(uid);
         let state = ApplicationState::from_bundles(self.top_bundle.as_str(), bundle.as_str());
 
         let app = AppStateInfo::new(AppState::new(uid, state, self.tx.clone()));
@@ -133,7 +133,7 @@ impl AppStateManager {
             return;
         }
 
-        let bundle = Database::get_instance().get_app_bundle(uid).unwrap();
+        let bundle = Database::get_instance().get_app_bundle(uid);
         let state = ApplicationState::from_bundles(self.top_bundle.as_str(), bundle.as_str());
 
         let _ = tx.send(state);

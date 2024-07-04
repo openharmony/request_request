@@ -17,11 +17,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use hisysevent::{build_number_param, write, EventType};
-use samgr::definition::DOWNLOAD_SERVICE_ID;
 use system_ability_fwk::ability::{Ability, Handler};
 
 use crate::manage::account::update_accounts;
-use crate::manage::network::listener::NetworkChangeListener;
 use crate::manage::{account, SystemConfigManager, TaskManager};
 use crate::service::client::ClientManager;
 use crate::service::runcount::RunCountManager;
@@ -48,13 +46,15 @@ fn service_start_fault() {
     );
 }
 
-struct RequestAbility {
+/// request ability
+pub struct RequestAbility {
     task_manager: Mutex<Option<TaskManagerTx>>,
     remote_busy: Arc<AtomicBool>,
 }
 
 impl RequestAbility {
-    fn new() -> Self {
+    /// new request ability
+    pub fn new() -> Self {
         Self {
             remote_busy: Arc::new(AtomicBool::new(false)),
             task_manager: Mutex::new(None),
@@ -93,7 +93,6 @@ impl RequestAbility {
 
         info!("task_manager init succeed");
 
-        NetworkChangeListener::init(task_manager.clone());
         info!("network_change_listener init succeed");
 
         unsafe {
@@ -157,13 +156,15 @@ impl Ability for RequestAbility {
     }
 }
 
+#[cfg(not(test))]
 #[used]
 #[link_section = ".init_array"]
 static A: extern "C" fn() = {
+    #[link_section = "..text.startup"]
     extern "C" fn init() {
         info!("begin request service init");
         let system_ability = RequestAbility::new()
-            .build_system_ability(DOWNLOAD_SERVICE_ID, false)
+            .build_system_ability(samgr::definition::DOWNLOAD_SERVICE_ID, false)
             .unwrap();
         system_ability.register();
         info!("request service inited");

@@ -12,28 +12,48 @@
 // limitations under the License.
 
 //! This create implement the request proxy and stub
-#![feature(io_error_other)]
+#![cfg_attr(feature = "oh", feature(io_error_other))]
+#![cfg_attr(test, feature(future_join))]
+#![cfg_attr(test, allow(clippy::redundant_clone))]
+#![allow(unreachable_pub, clippy::new_without_default)]
 #![warn(
     missing_docs,
-    unreachable_pub,
-    clippy::redundant_clone,
     clippy::redundant_static_lifetimes,
-    clippy::enum_variant_names
+    clippy::enum_variant_names,
+    clippy::clone_on_copy
 )]
 #[macro_use]
 mod hilog;
 
-mod ability;
+pub mod ability;
 mod error;
 mod manage;
 mod service;
 mod sys_event;
 mod task;
+
+#[cfg(feature = "oh")]
 mod trace;
 mod utils;
+
+pub use service::interface;
+pub use task::config;
+pub use utils::form_item::FileSpec;
 
 const LOG_LABEL: hilog_rust::HiLogLabel = hilog_rust::HiLogLabel {
     log_type: hilog_rust::LogType::LogCore,
     domain: 0xD001C50,
     tag: "RequestService",
 };
+
+#[cfg(test)]
+mod tests {
+    /// test init
+    pub(crate) fn test_init() {
+        unsafe { SetAccessTokenPermission() };
+    }
+
+    extern "C" {
+        fn SetAccessTokenPermission();
+    }
+}

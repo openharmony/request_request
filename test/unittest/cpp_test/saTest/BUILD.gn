@@ -31,12 +31,10 @@ ohos_unittest("saTest") {
     "../../../../services/src/cxx/c_string_wrapper.cpp",
     "../../../../services/src/cxx/get_calling_bundle.cpp",
     "../../../../services/src/cxx/get_top_bundle.cpp",
-    "../../../../services/src/cxx/network_adapter.cpp",
     "src/c_check_permission_test.cpp",
     "src/c_event_handler_test.cpp",
     "src/c_string_wrapper_test.cpp",
     "src/get_bundle_test.cpp",
-    "src/network_adapter_test.cpp",
   ]
 
   deps = [

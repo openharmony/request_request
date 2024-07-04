@@ -92,35 +92,9 @@ pub(crate) struct InfoSet {
     pub(crate) each_file_status: Vec<CEachFileStatus>,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
-#[repr(u8)]
-pub(crate) enum Mode {
-    BackGround = 0,
-    FrontEnd,
-    Any,
-}
 
-impl PartialOrd for Mode {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
 
-impl Ord for Mode {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        let me = match self {
-            Mode::FrontEnd => 0,
-            Mode::Any => 1,
-            Mode::BackGround => 2,
-        };
-        let other = match other {
-            Mode::FrontEnd => 0,
-            Mode::Any => 1,
-            Mode::BackGround => 2,
-        };
-        me.cmp(&other)
-    }
-}
+
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 #[repr(u8)]
@@ -147,15 +121,7 @@ pub(crate) struct UpdateInfo {
     pub(crate) each_file_status: Vec<EachFileStatus>,
 }
 
-impl From<u8> for Mode {
-    fn from(value: u8) -> Self {
-        match value {
-            0 => Mode::BackGround,
-            1 => Mode::FrontEnd,
-            _ => Mode::Any,
-        }
-    }
-}
+
 
 impl From<u8> for State {
     fn from(value: u8) -> Self {
