@@ -309,6 +309,7 @@ mod test {
     use super::*;
     use crate::manage::events::StateEvent;
     use crate::tests::test_init;
+    use crate::utils::task_id_generator::TaskIdGenerator;
 
     #[test]
     fn ut_network() {
@@ -485,12 +486,12 @@ mod test {
 
     #[test]
     fn ut_network_database_available() {
-        let test_task_id = get_current_timestamp() as i32;
+        let task_id = TaskIdGenerator::generate();
         test_init();
         let mut db = RequestDb::get_instance();
         db.execute_sql(&format!(
             "INSERT INTO request_task (task_id, state, reason, network,  metered, roaming) VALUES ({}, {}, {}, {}, 0, 0)",
-            test_task_id,
+            task_id,
             State::Waiting as u8,
             Reason::UnsupportedNetworkType as u8,
             NetworkType::Wifi.repr,
@@ -510,17 +511,17 @@ mod test {
                 Reason::RunningTaskMeetLimits as u8
             ))
             .unwrap();
-        assert!(v.contains(&test_task_id));
+        assert!(v.contains(&task_id));
     }
 
     #[test]
     fn ut_network_database_unavailable() {
-        let test_task_id = get_current_timestamp() as i32;
+        let task_id = TaskIdGenerator::generate();
         test_init();
         let mut db = RequestDb::get_instance();
         db.execute_sql(&format!(
-            "INSERT INTO request_task (task_id, state, reason, network,  metered, roaming) VALUES ({}, {}, {}, {}, 1, 1)",
-            test_task_id,
+            "INSERT INTO request_task (task_id, state, reason, network, metered, roaming) VALUES ({}, {}, {}, {}, 1, 1)",
+            task_id,
             State::Waiting as u8,
             Reason::RunningTaskMeetLimits as u8,
             NetworkType::Wifi.repr,
@@ -540,7 +541,7 @@ mod test {
                 Reason::UnsupportedNetworkType as u8
             ))
             .unwrap();
-        assert!(!v.contains(&test_task_id));
+        assert!(!v.contains(&task_id));
 
         db.update_for_network_unavailable(&NetworkInfo {
             network_type: NetworkType::Cellular,
@@ -555,17 +556,17 @@ mod test {
                 Reason::UnsupportedNetworkType as u8
             ))
             .unwrap();
-        assert!(v.contains(&test_task_id));
+        assert!(v.contains(&task_id));
     }
 
     #[test]
     fn ut_network_database_offline() {
-        let test_task_id = get_current_timestamp() as i32;
+        let task_id = TaskIdGenerator::generate();
         test_init();
         let mut db = RequestDb::get_instance();
         db.execute_sql(&format!(
-            "INSERT INTO request_task (task_id, state, reason, network,  metered, roaming) VALUES ({}, {}, {}, {}, 1, 1)",
-            test_task_id,
+            "INSERT INTO request_task (task_id, state, reason, network, metered, roaming) VALUES ({}, {}, {}, {}, 1, 1)",
+            task_id,
             State::Waiting as u8,
             Reason::RunningTaskMeetLimits as u8,
             NetworkType::Wifi.repr,
@@ -581,6 +582,6 @@ mod test {
                 Reason::UnsupportedNetworkType as u8
             ))
             .unwrap();
-        assert!(v.contains(&test_task_id));
+        assert!(v.contains(&task_id));
     }
 }

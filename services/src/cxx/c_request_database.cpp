@@ -160,7 +160,7 @@ int RequestDataBase::ExecuteSql(rust::str sql)
     return store_->ExecuteSql(std::string(sql));
 }
 
-int RequestDataBase::QuerySql(rust::str sql, rust::vec<rust::i32> &tasks)
+int RequestDataBase::QuerySql(rust::str sql, rust::vec<rust::u32> &tasks)
 {
     if (store_ == nullptr) {
         return -1;
@@ -180,7 +180,7 @@ int RequestDataBase::QuerySql(rust::str sql, rust::vec<rust::i32> &tasks)
         }
         int64_t taskId = 0;
         queryRet->GetLong(0, taskId);
-        tasks.push_back(rust::i32(taskId));
+        tasks.push_back(rust::u32(taskId));
     }
     return 0;
 }

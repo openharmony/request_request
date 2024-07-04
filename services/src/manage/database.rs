@@ -391,7 +391,7 @@ impl RequestDb {
     }
 
     #[allow(unused)]
-    pub(crate) fn query_sql(&mut self, sql: &str) -> Result<Vec<i32>, i32> {
+    pub(crate) fn query_sql(&mut self, sql: &str) -> Result<Vec<u32>, i32> {
         let mut v = vec![];
         let ret = unsafe { Pin::new_unchecked(&mut *self.inner).QuerySql(sql, &mut v) };
         if ret == 0 {
@@ -409,7 +409,7 @@ mod ffi {
         type RequestDataBase;
         fn GetDatabaseInstance(path: &str) -> *mut RequestDataBase;
         fn ExecuteSql(self: Pin<&mut RequestDataBase>, sql: &str) -> i32;
-        fn QuerySql(self: Pin<&mut RequestDataBase>, sql: &str, v: &mut Vec<i32>) -> i32;
+        fn QuerySql(self: Pin<&mut RequestDataBase>, sql: &str, v: &mut Vec<u32>) -> i32;
     }
 }
 
@@ -422,7 +422,7 @@ mod test {
     #[test]
     fn ut_database_base() {
         test_init();
-        let test_task_id = get_current_timestamp() as i32;
+        let test_task_id = get_current_timestamp() as u32;
         let mut db = RequestDb::get_instance();
         db.execute_sql(&format!(
             "INSERT INTO request_task (task_id, bundle) VALUES ({}, 'example_bundle')",
