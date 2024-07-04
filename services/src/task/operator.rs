@@ -101,7 +101,7 @@ impl TaskOperator {
             .unwrap()
             .common_data
             .total_processed as u64;
-
+        
         self.sleep = None;
         let speed_limit = self.task.rate_limiting.load(Ordering::SeqCst);
         if speed_limit != 0 {

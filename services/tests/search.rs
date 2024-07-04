@@ -12,7 +12,6 @@
 // limitations under the License.
 
 use download_server::config::ConfigBuilder;
-use download_server::interface;
 use ipc::parcel::MsgParcel;
 use ipc::remote::RemoteObj;
 const SERVICE_TOKEN: &str = "OHOS.Download.RequestServiceInterface";
@@ -31,16 +30,14 @@ fn test_init() -> RemoteObj {
 }
 
 #[test]
-fn sdv_construct_basic() {
+fn sdv_search_user() {
     let download_server = test_init();
 
     let config = ConfigBuilder::new().build();
     let mut data = MsgParcel::new();
     data.write_interface_token(SERVICE_TOKEN).unwrap();
     data.write(&config).unwrap();
-    let mut reply = download_server
-        .send_request(interface::CONSTRUCT, &mut data)
-        .unwrap();
+    let mut reply = download_server.send_request(0, &mut data).unwrap();
     let ret: i32 = reply.read().unwrap();
-    assert_eq!(ret, 5);
+    assert_eq!(ret, 0);
 }

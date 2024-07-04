@@ -540,7 +540,7 @@ impl RequestTask {
                     }
                     return false;
                 }
-                
+
                 if self.range_request.load(Ordering::SeqCst) {
                     match http_response_code.as_u16() {
                         206 => {

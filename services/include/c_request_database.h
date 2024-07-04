@@ -133,7 +133,7 @@ public:
     rust::vec<rust::u32> SearchTask(TaskFilter filter, rust::u64 uid) const;
     rust::vec<rust::u32> SystemSearchTask(TaskFilter filter, rust::str bundleName) const;
     int ExecuteSql(rust::str sql);
-    int QuerySql(rust::str sql, rust::vec<rust::i32> &tasks);
+    int QuerySql(rust::str sql, rust::vec<rust::u32> &tasks);
 
 private:
     RequestDataBase(std::string path);

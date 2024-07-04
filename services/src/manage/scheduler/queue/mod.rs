@@ -174,8 +174,8 @@ impl RunningQueue {
                 .await
             {
                 Ok(task) => task,
-                Err(ErrorCode::TaskNotFound) => continue,   // If we cannot find the task, skip it.
-                Err(ErrorCode::TaskStateErr) => continue,   // If we cannot find the task, skip it.
+                Err(ErrorCode::TaskNotFound) => continue, // If we cannot find the task, skip it.
+                Err(ErrorCode::TaskStateErr) => continue, // If we cannot find the task, skip it.
                 Err(e) => {
                     let database = Database::get_instance();
                     let state_info = CUpdateStateInfo::new(State::Failed, Reason::OthersError);

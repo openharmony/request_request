@@ -92,10 +92,6 @@ pub(crate) struct InfoSet {
     pub(crate) each_file_status: Vec<CEachFileStatus>,
 }
 
-
-
-
-
 #[derive(Clone, Copy, PartialEq, Debug)]
 #[repr(u8)]
 pub(crate) enum State {
@@ -120,8 +116,6 @@ pub(crate) struct UpdateInfo {
     pub(crate) progress: Progress,
     pub(crate) each_file_status: Vec<EachFileStatus>,
 }
-
-
 
 impl From<u8> for State {
     fn from(value: u8) -> Self {

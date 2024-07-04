@@ -29,10 +29,9 @@ use crate::manage::scheduler::qos::{QosChanges, RssCapacity};
 use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
 use crate::service::runcount::RunCountManagerEntry;
-use crate::task::config::Action;
+use crate::task::config::{Action, Mode};
 use crate::task::ffi::CUpdateStateInfo;
-use crate::task::info::{ApplicationState,  State};
-use crate::task::config::Mode;
+use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 
