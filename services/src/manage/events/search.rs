@@ -67,7 +67,6 @@ impl RequestDb {
         if filter.mode != Mode::Any as u8 {
             sql.push_str(&format!("AND mode = {} ", filter.mode));
         }
-
     }
 }
 

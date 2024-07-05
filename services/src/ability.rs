@@ -19,7 +19,6 @@ use std::sync::{Arc, Mutex};
 use hisysevent::{build_number_param, write, EventType};
 use system_ability_fwk::ability::{Ability, Handler};
 
-use crate::manage::account::update_accounts;
 use crate::manage::{account, SystemConfigManager, TaskManager};
 use crate::service::client::ClientManager;
 use crate::service::runcount::RunCountManager;
@@ -75,8 +74,6 @@ impl RequestAbility {
             .build_global()
             .unwrap();
         info!("ylong_runtime init succeed");
-
-        update_accounts();
 
         let runcount_manager = RunCountManager::init();
         info!("runcount_manager init succeed");
