@@ -84,6 +84,7 @@ std::map<State, DownloadStatus> RequestEvent::stateMap_ = {
 std::map<Reason, DownloadErrorCode> RequestEvent::failMap_ = {
     { REASON_OK, ERROR_FILE_ALREADY_EXISTS },
     { IO_ERROR, ERROR_FILE_ERROR },
+    { INSUFFICIENT_SPACE, ERROR_INSUFFICIENT_SPACE },
     { REDIRECT_ERROR, ERROR_TOO_MANY_REDIRECTS },
     { OTHERS_ERROR, ERROR_UNKNOWN },
     { NETWORK_OFFLINE, ERROR_OFFLINE },

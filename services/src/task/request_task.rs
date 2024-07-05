@@ -505,7 +505,11 @@ impl RequestTask {
                         self.handle_body_transfer_error().await;
                     }
                     _ => {
-                        self.set_status(State::Failed, Reason::OthersError);
+                        if format!("{}", err).contains("No space left on device") {
+                            self.set_status(State::Failed, Reason::InsufficientSpace);
+                        } else {
+                            self.set_status(State::Failed, Reason::OthersError);
+                        }
                     }
                 }
                 false
@@ -575,11 +579,17 @@ impl RequestTask {
                         } else if e.is_tls_error() {
                             self.set_code(index, Reason::Ssl);
                         } else {
-                            self.set_code(index, Reason::Tcp)
+                            self.set_code(index, Reason::Tcp);
                         }
                     }
                     ErrorKind::BodyTransfer => self.handle_body_transfer_error().await,
-                    _ => self.set_code(index, Reason::OthersError),
+                    _ => {
+                        if format!("{}", e).contains("No space left on device") {
+                            self.set_code(index, Reason::InsufficientSpace);
+                        } else {
+                            self.set_code(index, Reason::OthersError);
+                        }
+                    }
                 }
                 false
             }
