@@ -149,7 +149,7 @@ std::shared_ptr<OHOS::NativeRdb::ResultSet> RequestDataBase::Query(
     if (store_ == nullptr) {
         return nullptr;
     }
-    return store_->Query(predicates, columns);
+    return store_->QueryByStep(predicates, columns);
 }
 
 int RequestDataBase::ExecuteSql(rust::str sql)
@@ -287,12 +287,12 @@ void RequestDBRemoveOldTables(OHOS::NativeRdb::RdbStore &store)
 int RequestDBCheckVersion(OHOS::NativeRdb::RdbStore &store)
 {
     REQUEST_HILOGD("RequestDBCheckVersion in");
-    auto resultSet = store.QuerySql(CHECK_REQUEST_VERSION);
-    if (resultSet == nullptr) {
+    auto existsRequestVersion = store.QuerySql(CHECK_REQUEST_VERSION);
+    if (existsRequestVersion == nullptr) {
         return CHECK_VERSION_FAILED;
     }
     int rowCount = 0;
-    int ret = resultSet->GetRowCount(rowCount);
+    int ret = existsRequestVersion->GetRowCount(rowCount);
     if (ret != OHOS::NativeRdb::E_OK || rowCount > 1) {
         REQUEST_HILOGE("Gets rowCount failed, GetRowCount ret: %{public}d, rowCount: %{public}d", ret, rowCount);
         return CHECK_VERSION_FAILED;
@@ -303,7 +303,7 @@ int RequestDBCheckVersion(OHOS::NativeRdb::RdbStore &store)
     }
 
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_version");
-    resultSet = store.Query(rdbPredicates, { "version", "task_table" });
+    auto resultSet = store.QueryByStep(rdbPredicates, { "version", "task_table" });
     if (resultSet == nullptr) {
         return CHECK_VERSION_FAILED;
     }
@@ -1424,7 +1424,7 @@ void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len)
     for (auto i = 0; i < rowCount; i++) {
         if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
             REQUEST_HILOGE("GetRunningTasksArray result set go to %{public}d row failed", i);
-            *len = i;   // Here `rowCount` can be wrong.
+            *len = i; // Here `rowCount` can be wrong.
             return;
         }
 
@@ -1456,7 +1456,7 @@ void GetAppArray(AppInfo **apps, size_t *len)
     for (auto i = 0; i < rowCount; i++) {
         if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
             REQUEST_HILOGE("GetAppArray result set go to %{public}d row failed", i);
-            *len = i;   // Here `rowCount` can be wrong.
+            *len = i; // Here `rowCount` can be wrong.
             return;
         }
 
