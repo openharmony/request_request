@@ -34,7 +34,7 @@ public:
     CJRequestImpl() = default;
     ~CJRequestImpl() = default;
 
-    static RetReqData CreateTask(OHOS::AbilityRuntime::Context* context, CConfig *config);
+    static RetReqData CreateTask(OHOS::AbilityRuntime::Context* context, CConfig *ffiConfig);
     static RetError RemoveTask(int32_t taskId);
     static void FreeTask(int32_t taskId);
     static RetError ProgressOn(char *event, int32_t taskId, void (*callback)(CProgress progress));

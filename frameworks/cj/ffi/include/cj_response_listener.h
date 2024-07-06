@@ -27,7 +27,7 @@ class CJResponseListener
     : public OHOS::Request::IResponseListener,
       public std::enable_shared_from_this<CJResponseListener> {
 public:
-    CJResponseListener(const std::string &taskId) : taskId_(taskId) {}
+    explicit CJResponseListener(const std::string &taskId) : taskId_(taskId) {}
 
 private:
     const std::string taskId_;
