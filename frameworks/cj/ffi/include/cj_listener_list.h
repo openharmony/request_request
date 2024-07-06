@@ -42,15 +42,15 @@ public:
         ProgressOnCallBackType cb_;
         CFunc cbId_ = nullptr;
 
-        CallBackInfo(ProgressOnCallBackType cb_, CFunc cbId_)
-            : cb_(cb_), cbId_(cbId_) {}
+        CallBackInfo(ProgressOnCallBackType cb, CFunc cbId)
+            : cb_(cb), cbId_(cbId) {}
     };
 
 protected:
     bool IsListenerAdded(void *cb);
     void OnMessageReceive(const std::shared_ptr<NotifyData> &notifyData);
     void AddListenerInner(ProgressOnCallBackType &cb, CFunc cbId);
-    void RemoveListenerInner(CFunc cbId);
+    void RemoveListenerInner(CFunc cb);
 
 protected:
     const std::string taskId_;

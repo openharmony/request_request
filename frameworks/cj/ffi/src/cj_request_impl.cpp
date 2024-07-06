@@ -100,11 +100,11 @@ std::map<std::string, std::string> CJRequestImpl::ConvertCArr2Map(const CHashStr
 
 void CJRequestImpl::Convert2Config(CConfig *config, Config &out)
 {
-    out.action = (OHOS::Request::Action)config->action;
+    out.action = static_cast<OHOS::Request::Action>(config->action);
     out.url = config->url;
     out.version = Version::API10;  //CJ only support API10
-    out.mode = (OHOS::Request::Mode)config->mode;
-    out.network = (OHOS::Request::Network)config->network;
+    out.mode = static_cast<OHOS::Request::Mode>(config->mode);
+    out.network = static_cast<OHOS::Request::Network>(config->network);
     out.index = config->index;
     out.begins = config->begins;
     out.ends = config->ends;
@@ -125,12 +125,12 @@ void CJRequestImpl::Convert2Config(CConfig *config, Config &out)
     out.extras = ConvertCArr2Map(&config->extras);
 }
 
-RetReqData CJRequestImpl::CreateTask(OHOS::AbilityRuntime::Context* context, CConfig *FfiConfig)
+RetReqData CJRequestImpl::CreateTask(OHOS::AbilityRuntime::Context* context, CConfig *ffiConfig)
 {
     REQUEST_HILOGD("[CJRequestImpl] CreateTask start");
     Config config{};
-    Convert2Config(FfiConfig, config);
-    ExceptionError result = CJInitialize::ParseConfig(context, FfiConfig, config);
+    Convert2Config(ffiConfig, config);
+    ExceptionError result = CJInitialize::ParseConfig(context, ffiConfig, config);
     if (result.code != 0) {
         return {
             .err = Convert2RetErr(result)
