@@ -39,6 +39,7 @@ pub(crate) enum Reason {
     Dns = 23,
     Tcp,
     Ssl,
+    InsufficientSpace,
 }
 
 impl From<u8> for Reason {
@@ -68,6 +69,7 @@ impl From<u8> for Reason {
             23 => Reason::Dns,
             24 => Reason::Tcp,
             25 => Reason::Ssl,
+            26 => Reason::InsufficientSpace,
             _ => Reason::OthersError,
         }
     }
@@ -101,6 +103,7 @@ impl Reason {
             Reason::Dns => "DNS error",
             Reason::Tcp => "TCP error",
             Reason::Ssl => "TSL/SSL error",
+            Reason::InsufficientSpace => "Insufficient space",
         }
     }
 }

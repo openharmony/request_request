@@ -58,6 +58,7 @@ static constexpr const char *NETWORK_CHANGED_INFO = "Network changed";
 static constexpr const char *DNS_INFO = "DNS error";
 static constexpr const char *TCP_INFO = "TCP error";
 static constexpr const char *SSL_INFO = "TSL/SSL error";
+static constexpr const char *INSUFFICIENT_SPACE_INFO = "Insufficient space error";
 static constexpr const char *NOT_SYSTEM_APP = "permission verification failed, application which is not a system "
                                               "application uses system API";
 
@@ -317,6 +318,7 @@ uint32_t Convert2Broken(Reason code)
         { DNS, Faults::DNS },
         { TCP, Faults::TCP },
         { SSL, Faults::SSL },
+        { INSUFFICIENT_SPACE, Faults::OTHERS },
     };
     constexpr const int32_t detailVersion = 12;
     auto iter = InnerCodeToBroken.find(code);
@@ -362,6 +364,7 @@ std::string Convert2ReasonMsg(Reason code)
         { DNS, DNS_INFO },
         { TCP, TCP_INFO },
         { SSL, SSL_INFO },
+        { INSUFFICIENT_SPACE, INSUFFICIENT_SPACE_INFO },
     };
     auto iter = ReasonMsg.find(code);
     if (iter != ReasonMsg.end()) {

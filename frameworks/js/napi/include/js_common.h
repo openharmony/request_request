@@ -76,6 +76,7 @@ enum Reason : uint32_t {
     DNS,
     TCP,
     SSL,
+    INSUFFICIENT_SPACE,
 };
 
 enum class SubscribeType : uint32_t {
