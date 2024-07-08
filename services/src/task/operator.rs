@@ -36,7 +36,7 @@ const FRONT_NOTIFY_INTERVAL: u64 = 1000;
 const BACKGROUND_NOTIFY_INTERVAL: u64 = 3000;
 
 pub(crate) struct TaskOperator {
-    pub(crate) sleep: Option<Sleep>,
+    pub(crate) sleep: Option<Pin<Box<Sleep>>>,
     pub(crate) task: Arc<RequestTask>,
     pub(crate) last_time: u64,
     pub(crate) last_size: u64,
@@ -101,13 +101,13 @@ impl TaskOperator {
             .unwrap()
             .common_data
             .total_processed as u64;
-        
+
         self.sleep = None;
         let speed_limit = self.task.rate_limiting.load(Ordering::SeqCst);
         if speed_limit != 0 {
             if self.more_sleep_time != 0 {
                 // wake up for notify, sleep until speed limit conditions are met
-                self.sleep = Some(sleep(Duration::from_millis(self.more_sleep_time)));
+                self.sleep = Some(Box::pin(sleep(Duration::from_millis(self.more_sleep_time))));
                 self.more_sleep_time = 0;
             } else if self.last_time == 0 {
                 // get the init time and size, for speed caculate
@@ -127,7 +127,7 @@ impl TaskOperator {
                 } else {
                     limit_time
                 };
-                self.sleep = Some(sleep(Duration::from_millis(sleep_time)));
+                self.sleep = Some(Box::pin(sleep(Duration::from_millis(sleep_time))));
             } else if current - self.last_time >= SPEED_LIMIT_INTERVAL {
                 // last caculate window has meet speed limit, update last_time and last_size,
                 // for next poll's speed compare
