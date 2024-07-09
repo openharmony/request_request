@@ -92,10 +92,6 @@ impl RequestAbility {
 
         info!("network_change_listener init succeed");
 
-        unsafe {
-            RequestInitServiceHandler();
-        }
-
         let stub = RequestServiceStub::new(
             handler.clone(),
             task_manager,
@@ -168,8 +164,3 @@ static A: extern "C" fn() = {
     }
     init
 };
-
-#[link(name = "download_server_cxx", kind = "static")]
-extern "C" {
-    pub(crate) fn RequestInitServiceHandler();
-}
