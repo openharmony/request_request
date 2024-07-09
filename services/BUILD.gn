@@ -49,7 +49,6 @@ ohos_static_library("download_server_cxx") {
     "src/cxx/application_state_observer.cpp",
     "src/cxx/background_notification.cpp",
     "src/cxx/c_check_permission.cpp",
-    "src/cxx/c_event_handler.cpp",
     "src/cxx/c_request_database.cpp",
     "src/cxx/c_string_wrapper.cpp",
     "src/cxx/c_task_config.cpp",
