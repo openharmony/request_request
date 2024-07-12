@@ -385,7 +385,7 @@ int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store)
     }
 
     ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_ATOMIC_ACCOUNT);
-    if (ret != OHOS::NativeRdb::E_OK) {
+    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
         REQUEST_HILOGE("add column atomic_account failed, ret: %{public}d", ret);
         return ret;
     }
