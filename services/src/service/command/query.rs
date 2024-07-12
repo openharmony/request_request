@@ -17,8 +17,9 @@ use ipc::{IpcResult, IpcStatusCode};
 use crate::error::ErrorCode;
 use crate::manage::events::TaskManagerEvent;
 use crate::service::permission::{PermissionChecker, QueryPermission};
-use crate::service::{is_system_api, serialize_task_info, RequestServiceStub};
+use crate::service::{serialize_task_info, RequestServiceStub};
 use crate::task::config::Action;
+use crate::utils::is_system_api;
 
 impl RequestServiceStub {
     pub(crate) fn query(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {

@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::utils::c_wrapper::CStringWrapper;
+use crate::utils::check_permission;
 
 static INTERNET_PERMISSION: &str = "ohos.permission.INTERNET";
 static QUERY_DOWNLOAD: &str = "ohos.permission.DOWNLOAD_SESSION_MANAGER";
@@ -21,22 +21,14 @@ pub(crate) struct PermissionChecker;
 
 impl PermissionChecker {
     pub(crate) fn check_internet() -> bool {
-        debug!("Checks INTERNET permission");
-        unsafe {
-            DownloadServerCheckPermission(
-                ipc::Skeleton::calling_full_token_id(),
-                CStringWrapper::from(INTERNET_PERMISSION),
-            )
-        }
+        check_permission(INTERNET_PERMISSION)
     }
 
     pub(crate) fn check_query() -> QueryPermission {
         debug!("Checks QUERY permission");
-        let id = ipc::Skeleton::calling_full_token_id();
-        let query_download =
-            unsafe { DownloadServerCheckPermission(id, CStringWrapper::from(QUERY_DOWNLOAD)) };
-        let query_upload =
-            unsafe { DownloadServerCheckPermission(id, CStringWrapper::from(QUERY_UPLOAD)) };
+
+        let query_download = check_permission(QUERY_DOWNLOAD);
+        let query_upload = check_permission(QUERY_UPLOAD);
         info!(
             "Checks query_download permission is {}, query_upload permission is {}",
             query_download, query_upload
@@ -56,9 +48,4 @@ pub(crate) enum QueryPermission {
     QueryDownLoad,
     QueryUpload,
     QueryAll,
-}
-
-#[link(name = "download_server_cxx", kind = "static")]
-extern "C" {
-    pub(crate) fn DownloadServerCheckPermission(token_id: u64, permission: CStringWrapper) -> bool;
 }

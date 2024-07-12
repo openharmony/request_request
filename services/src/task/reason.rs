@@ -11,35 +11,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[derive(Clone, Copy, PartialEq, Debug)]
-#[repr(u8)]
-pub(crate) enum Reason {
-    Default = 0,
-    TaskSurvivalOneMonth,
-    WaitingNetworkOneDay,  // unused
-    StoppedByNewFrontTask, // unused
-    RunningTaskMeetLimits,
-    UserOperation,
-    AppBackgroundOrTerminate,
-    NetworkOffline,
-    UnsupportedNetworkType,
-    BuildClientFailed, // unused
-    BuildRequestFailed,
-    GetFileSizeFailed,
-    ContinuousTaskTimeout,
-    ConnectError, // unused
-    RequestError,
-    UploadFileError,
-    RedirectError,
-    ProtocolError,
-    IoError,
-    UnsupportedRangeRequest,
-    OthersError,
-    AccountStopped,
-    Dns = 23,
-    Tcp,
-    Ssl,
-    InsufficientSpace,
+pub(crate) use ffi::Reason;
+
+#[cxx::bridge(namespace = "OHOS::Request")]
+mod ffi {
+    #[derive(Clone, Copy, PartialEq, Debug)]
+    #[repr(u8)]
+    pub(crate) enum Reason {
+        Default = 0,
+        TaskSurvivalOneMonth,
+        WaitingNetworkOneDay,  // unused
+        StoppedByNewFrontTask, // unused
+        RunningTaskMeetLimits,
+        UserOperation,
+        AppBackgroundOrTerminate,
+        NetworkOffline,
+        UnsupportedNetworkType,
+        BuildClientFailed, // unused
+        BuildRequestFailed,
+        GetFileSizeFailed,
+        ContinuousTaskTimeout,
+        ConnectError, // unused
+        RequestError,
+        UploadFileError,
+        RedirectError,
+        ProtocolError,
+        IoError,
+        UnsupportedRangeRequest,
+        OthersError,
+        AccountStopped,
+        Dns = 23,
+        Tcp,
+        Ssl,
+        InsufficientSpace,
+    }
 }
 
 impl From<u8> for Reason {
@@ -104,6 +109,41 @@ impl Reason {
             Reason::Tcp => "TCP error",
             Reason::Ssl => "TSL/SSL error",
             Reason::InsufficientSpace => "Insufficient space",
+            _ => "unknown error",
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn ut_enum_reason() {
+        assert_eq!(Reason::Default.repr, 0);
+        assert_eq!(Reason::TaskSurvivalOneMonth.repr, 1);
+        assert_eq!(Reason::WaitingNetworkOneDay.repr, 2);
+        assert_eq!(Reason::StoppedByNewFrontTask.repr, 3);
+        assert_eq!(Reason::RunningTaskMeetLimits.repr, 4);
+        assert_eq!(Reason::UserOperation.repr, 5);
+        assert_eq!(Reason::AppBackgroundOrTerminate.repr, 6);
+        assert_eq!(Reason::NetworkOffline.repr, 7);
+        assert_eq!(Reason::UnsupportedNetworkType.repr, 8);
+        assert_eq!(Reason::BuildClientFailed.repr, 9);
+        assert_eq!(Reason::BuildRequestFailed.repr, 10);
+        assert_eq!(Reason::GetFileSizeFailed.repr, 11);
+        assert_eq!(Reason::ContinuousTaskTimeout.repr, 12);
+        assert_eq!(Reason::ConnectError.repr, 13);
+        assert_eq!(Reason::RequestError.repr, 14);
+        assert_eq!(Reason::UploadFileError.repr, 15);
+        assert_eq!(Reason::RedirectError.repr, 16);
+        assert_eq!(Reason::ProtocolError.repr, 17);
+        assert_eq!(Reason::IoError.repr, 18);
+        assert_eq!(Reason::UnsupportedRangeRequest.repr, 19);
+        assert_eq!(Reason::OthersError.repr, 20);
+        assert_eq!(Reason::AccountStopped.repr, 21);
+        assert_eq!(Reason::Dns.repr, 23);
+        assert_eq!(Reason::Tcp.repr, 24);
+        assert_eq!(Reason::Ssl.repr, 25);
+        assert_eq!(Reason::InsufficientSpace.repr, 26);
     }
 }

@@ -294,13 +294,9 @@ mod test {
         assert!(is_system_user(USER_SYSTEM));
         assert!(!is_background_user(USER_101));
         assert!(BACKGROUND_ACCOUNTS.lock().unwrap().is_some());
-    }
 
-    #[test]
-    fn ut_account_registry_oh() {
         let (tx, _rx) = mpsc::unbounded_channel();
         let task_manager = TaskManagerTx { tx };
-        test_init();
         registry_account_subscribe(task_manager)
     }
 }

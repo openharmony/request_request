@@ -15,34 +15,37 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::os::fd::FromRawFd;
 
+pub use ffi::{Action, Mode};
 use ipc::parcel::Serialize;
 
 use crate::utils::c_wrapper::{CFileSpec, CFormItem, CStringWrapper};
 use crate::utils::form_item::{FileSpec, FormItem};
 use crate::utils::hashmap_to_string;
+#[cxx::bridge(namespace = "OHOS::Request")]
+mod ffi {
+    /// Action
+    #[derive(Clone, Copy, PartialEq, Debug)]
+    #[repr(u8)]
+    pub enum Action {
+        /// Download
+        Download = 0,
+        /// Upload
+        Upload,
+        /// Any
+        Any,
+    }
 
-/// Action
-#[derive(Clone, Copy, PartialEq, Debug)]
-#[repr(u8)]
-pub enum Action {
-    /// Download
-    Download = 0,
-    /// Upload
-    Upload,
-    /// Any
-    Any,
-}
-
-/// Mode
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
-#[repr(u8)]
-pub enum Mode {
-    /// BackGround
-    BackGround = 0,
-    /// ForeGround
-    FrontEnd,
-    /// Any
-    Any,
+    /// Mode
+    #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+    #[repr(u8)]
+    pub enum Mode {
+        /// BackGround
+        BackGround = 0,
+        /// ForeGround
+        FrontEnd,
+        /// Any
+        Any,
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -62,17 +65,6 @@ pub enum NetworkConfig {
     Wifi,
     /// Cellular
     Cellular,
-}
-
-// used only in sa, do not mix with enum Network
-#[derive(Clone, Copy, PartialEq, Debug)]
-#[repr(u8)]
-#[allow(dead_code)]
-pub(crate) enum NetworkInner {
-    ANY = 0,  // Maintain consistency with Network::ANY
-    WIFI,     // Maintain consistency with Network::WIFI
-    CELLULAR, // Maintain consistency with Network::CELLULAR
-    NetLost,
 }
 
 #[repr(C)]
@@ -139,15 +131,17 @@ impl PartialOrd for Mode {
 
 impl Ord for Mode {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        let me = match self {
+        let me = match *self {
             Mode::FrontEnd => 0,
             Mode::Any => 1,
             Mode::BackGround => 2,
+            _ => unreachable!(),
         };
-        let other = match other {
+        let other = match *other {
             Mode::FrontEnd => 0,
             Mode::Any => 1,
             Mode::BackGround => 2,
+            _ => unreachable!(),
         };
         me.cmp(&other)
     }
@@ -336,9 +330,9 @@ impl ConfigBuilder {
 
 impl Serialize for TaskConfig {
     fn serialize(&self, parcel: &mut ipc::parcel::MsgParcel) -> ipc::IpcResult<()> {
-        parcel.write(&(self.common_data.action as u32))?;
+        parcel.write(&(self.common_data.action.repr as u32))?;
         parcel.write(&(self.version as u32))?;
-        parcel.write(&(self.common_data.mode as u32))?;
+        parcel.write(&(self.common_data.mode.repr as u32))?;
         parcel.write(&self.bundle_type)?;
         parcel.write(&self.common_data.cover)?;
         parcel.write(&(self.common_data.network_config as u32))?;
@@ -402,5 +396,36 @@ impl Serialize for TaskConfig {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn ut_enum_action() {
+        assert_eq!(Action::Download.repr, 0);
+        assert_eq!(Action::Upload.repr, 1);
+        assert_eq!(Action::Any.repr, 2);
+    }
+
+    #[test]
+    fn ut_enum_mode() {
+        assert_eq!(Mode::BackGround.repr, 0);
+        assert_eq!(Mode::FrontEnd.repr, 1);
+        assert_eq!(Mode::Any.repr, 2);
+    }
+
+    #[test]
+    fn ut_enum_version() {
+        assert_eq!(Version::API9 as u32, 1);
+        assert_eq!(Version::API10 as u32, 2);
+    }
+
+    #[test]
+    fn ut_enum_network_config() {
+        assert_eq!(NetworkConfig::Any as u32, 0);
+        assert_eq!(NetworkConfig::Wifi as u32, 1);
+        assert_eq!(NetworkConfig::Cellular as u32, 2);
     }
 }

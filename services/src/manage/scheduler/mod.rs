@@ -255,7 +255,7 @@ impl Scheduler {
             );
             let state_info = CUpdateStateInfo::new(State::Removed, Reason::UserOperation);
             database.update_task_state(task_id, &state_info);
-            info.progress.common_data.state = State::Removed as u8;
+            info.progress.common_data.state = State::Removed.repr;
             let notify_data = info.build_notify_data();
             Notifier::remove(&self.client_manager, notify_data);
             return ErrorCode::ErrOk;

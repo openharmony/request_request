@@ -15,12 +15,12 @@ pub(crate) mod c_wrapper;
 pub(crate) mod form_item;
 pub(crate) mod task_id_generator;
 pub(crate) mod url_policy;
-
 use std::collections::HashMap;
 use std::future::Future;
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+pub(crate) use ffi::RequestTaskMsg;
 use ylong_runtime::sync::oneshot::Receiver;
 use ylong_runtime::task::JoinHandle;
 
@@ -92,4 +92,150 @@ pub(crate) fn runtime_spawn<F: Future<Output = ()> + Send + Sync + 'static>(
     ylong_runtime::spawn(Box::into_pin(
         Box::new(fut) as Box<dyn Future<Output = ()> + Send + Sync>
     ))
+}
+
+pub(crate) fn query_top_bundle() -> String {
+    ffi::GetTopBundleName()
+}
+
+pub(crate) fn query_calling_bundle() -> String {
+    let token_id = ipc::Skeleton::calling_full_token_id();
+    ffi::GetCallingBundle(token_id)
+}
+
+pub(crate) fn is_system_api() -> bool {
+    let token_id = ipc::Skeleton::calling_full_token_id();
+    ffi::IsSystemAPI(token_id)
+}
+
+pub(crate) fn check_permission(permission: &str) -> bool {
+    let token_id = ipc::Skeleton::calling_full_token_id();
+    ffi::CheckPermission(token_id, permission)
+}
+
+pub(crate) fn publish_state_change_event(
+    bundle_name: &str,
+    task_id: u32,
+    state: i32,
+) -> Result<(), ()> {
+    match ffi::PublishStateChangeEvent(bundle_name, task_id, state) {
+        true => Ok(()),
+        false => Err(()),
+    }
+}
+
+pub(crate) fn request_background_notify(
+    msg: RequestTaskMsg,
+    wrapped_path: &str,
+    wrapped_file_name: &str,
+    percent: u32,
+) -> Result<(), i32> {
+    match ffi::RequestBackgroundNotify(msg, wrapped_path, wrapped_file_name, percent) {
+        0 => Ok(()),
+        code => Err(code),
+    }
+}
+
+#[cxx::bridge(namespace = "OHOS::Request")]
+mod ffi {
+    pub(crate) struct RequestTaskMsg {
+        pub(crate) task_id: u32,
+        pub(crate) uid: i32,
+        pub(crate) action: u8,
+    }
+
+    unsafe extern "C++" {}
+
+    unsafe extern "C++" {
+        include!("request_utils.h");
+
+        fn PublishStateChangeEvent(bundleName: &str, taskId: u32, state: i32) -> bool;
+
+        fn RequestBackgroundNotify(
+            msg: RequestTaskMsg,
+            wrapped_path: &str,
+            wrapped_file_name: &str,
+            percent: u32,
+        ) -> i32;
+
+        fn GetTopBundleName() -> String;
+        fn GetCallingBundle(token_id: u64) -> String;
+        fn IsSystemAPI(token_id: u64) -> bool;
+        fn CheckPermission(token_id: u64, permission: &str) -> bool;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::tests::test_init;
+    #[test]
+    fn ut_utils_oh() {
+        test_init();
+        assert!(!is_system_api());
+        assert_eq!(query_calling_bundle(), "");
+        assert!(!query_top_bundle().is_empty());
+    }
+
+    #[test]
+    fn ut_utils_publish_state_change_event() {
+        test_init();
+        publish_state_change_event("com.ohos.request", 1, 1).unwrap();
+    }
+
+    #[test]
+    fn ut_utils_request_background_notify() {
+        test_init();
+        request_background_notify(
+            RequestTaskMsg {
+                task_id: 1,
+                uid: 1,
+                action: 1,
+            },
+            "path",
+            "file",
+            1,
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn ut_utils_check_permission() {
+        assert!(!check_permission("ohos.permission.INTERNET"));
+        assert!(!check_permission("ohos.permission.GET_NETWORK_INFO"));
+        assert!(!check_permission("ohos.permission.READ_MEDIA"));
+        assert!(!check_permission("ohos.permission.WRITE_MEDIA"));
+        assert!(!check_permission("ohos.permission.RUNNING_STATE_OBSERVER"));
+        assert!(!check_permission("ohos.permission.GET_NETWORK_INFO"));
+        assert!(!check_permission("ohos.permission.CONNECTIVITY_INTERNAL"));
+        assert!(!check_permission(
+            "ohos.permission.SEND_TASK_COMPLETE_EVENT"
+        ));
+        assert!(!check_permission("ohos.permission.ACCESS_CERT_MANAGER"));
+        assert!(!check_permission(
+            "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS"
+        ));
+        assert!(!check_permission("ohos.permission.MANAGE_LOCAL_ACCOUNTS"));
+    }
+
+    #[test]
+    fn ut_utils_check_permission_oh() {
+        test_init();
+        assert!(check_permission("ohos.permission.INTERNET"));
+        assert!(check_permission("ohos.permission.GET_NETWORK_INFO"));
+        assert!(check_permission("ohos.permission.READ_MEDIA"));
+        assert!(check_permission("ohos.permission.WRITE_MEDIA"));
+        assert!(check_permission("ohos.permission.RUNNING_STATE_OBSERVER"));
+        assert!(check_permission("ohos.permission.GET_NETWORK_INFO"));
+        assert!(check_permission("ohos.permission.CONNECTIVITY_INTERNAL"));
+        assert!(check_permission("ohos.permission.SEND_TASK_COMPLETE_EVENT"));
+        assert!(check_permission("ohos.permission.ACCESS_CERT_MANAGER"));
+        assert!(check_permission(
+            "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS"
+        ));
+        assert!(check_permission("ohos.permission.MANAGE_LOCAL_ACCOUNTS"));
+        assert!(!check_permission(
+            "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS_EXTENSION"
+        ));
+    }
 }

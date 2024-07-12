@@ -22,12 +22,14 @@
 #include <string>
 
 #include "base/request/request/common/include/log.h"
-#include "c_enumration.h"
 #include "cxx.h"
 #include "log.h"
 #include "manage/events/search.rs.h"
 #include "manage/network.rs.h"
 #include "rdb_errno.h"
+#include "task/config.rs.h"
+#include "task/info.rs.h"
+#include "task/reason.rs.h"
 namespace OHOS::Request {
 
 RequestDataBase::RequestDataBase(std::string path)
@@ -86,13 +88,13 @@ void Search(
     rust::vec<rust::u32> &tasks, std::shared_ptr<OHOS::NativeRdb::RdbStore> store_, std::string sql, TaskFilter filter)
 {
     sql += "ctime BETWEEN " + std::to_string(filter.after) + " AND " + std::to_string(filter.before);
-    if (filter.state != static_cast<uint8_t>(State::ANY)) {
+    if (filter.state != static_cast<uint8_t>(State::Any)) {
         sql += " AND state = " + std::to_string(filter.state);
     }
-    if (filter.action != static_cast<uint8_t>(Action::ANY)) {
+    if (filter.action != static_cast<uint8_t>(Action::Any)) {
         sql += " AND action = " + std::to_string(filter.action);
     }
-    if (filter.mode != static_cast<uint8_t>(Mode::ANY)) {
+    if (filter.mode != static_cast<uint8_t>(Mode::Any)) {
         sql += " AND mode = " + std::to_string(filter.mode);
     }
 
@@ -160,7 +162,32 @@ int RequestDataBase::ExecuteSql(rust::str sql)
     return store_->ExecuteSql(std::string(sql));
 }
 
-int RequestDataBase::QuerySql(rust::str sql, rust::vec<rust::u32> &tasks)
+int RequestDataBase::QueryInteger(rust::str sql, rust::vec<rust::i64> &res)
+{
+    if (store_ == nullptr) {
+        return -1;
+    }
+    auto queryRet = store_->QueryByStep(std::string(sql));
+    if (queryRet == nullptr) {
+        REQUEST_HILOGE("Search failed with reason: result set is nullptr");
+        return -1;
+    }
+    int rowCount = 0;
+
+    queryRet->GetRowCount(rowCount);
+    for (int i = 0; i < rowCount; i++) {
+        if (queryRet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
+            REQUEST_HILOGE("result set go to %{public}d row failed", i);
+            return -1;
+        }
+        int64_t value = 0;
+        queryRet->GetLong(0, value);
+        res.push_back(rust::i64(value));
+    }
+    return 0;
+}
+
+int RequestDataBase::QueryText(rust::str sql, rust::vec<rust::String> &res)
 {
     if (store_ == nullptr) {
         return -1;
@@ -178,9 +205,9 @@ int RequestDataBase::QuerySql(rust::str sql, rust::vec<rust::u32> &tasks)
             REQUEST_HILOGE("result set go to %{public}d row failed", i);
             return -1;
         }
-        int64_t taskId = 0;
-        queryRet->GetLong(0, taskId);
-        tasks.push_back(rust::u32(taskId));
+        std::string value = "";
+        queryRet->GetString(i, value);
+        res.push_back(rust::string(value));
     }
     return 0;
 }
@@ -210,7 +237,7 @@ int RequestDataBase::DeleteAllAccountTasks(int user_id)
 int RequestDataBase::OnAccountChange(int user_id)
 {
     std::string OnAccountChange = "UPDATE request_task SET reason = 4 WHERE uid/200000 = " + std::to_string(user_id)
-                                  + " AND state = " + std::to_string(static_cast<uint8_t>(State::WAITING))
+                                  + " AND state = " + std::to_string(static_cast<uint8_t>(State::Waiting))
                                   + " AND reason = 21";
     if (store_ == nullptr) {
         return -1;
@@ -451,17 +478,17 @@ void RequestDBUpdateInvalidRecords(OHOS::NativeRdb::RdbStore &store)
     REQUEST_HILOGI("Updates all invalid task to failed");
 
     OHOS::NativeRdb::ValuesBucket values;
-    values.PutInt("state", static_cast<uint8_t>(State::FAILED));
+    values.PutInt("state", static_cast<uint8_t>(State::Failed));
 
     // Tasks in `WAITING` and `PAUSED` states need to be resumed,
     // so they are not processed.
     int changedRows = 0;
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::RUNNING))
+    rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::Running))
         ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::RETRYING))
+        ->EqualTo("state", static_cast<uint8_t>(State::Retrying))
         ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::CREATED));
+        ->EqualTo("state", static_cast<uint8_t>(State::Created));
 
     if (store.Update(changedRows, values, rdbPredicates) != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("Updates all invalid task to `FAILED` state failed");
@@ -1055,15 +1082,15 @@ uint32_t QueryAppUncompletedTasksNum(uint64_t uid, uint8_t mode)
     rdbPredicates.EqualTo("uid", std::to_string(uid));
     rdbPredicates.EqualTo("mode", mode);
     rdbPredicates.BeginWrap();
-    rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
+    rdbPredicates.EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Waiting))
         ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::PAUSED))
+        ->EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Paused))
         ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::INITIALIZED))
+        ->EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Initialized))
         ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::RUNNING))
+        ->EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Running))
         ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::RETRYING));
+        ->EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Retrying));
     rdbPredicates.EndWrap();
 
     auto resultSet =
@@ -1101,11 +1128,11 @@ bool HasTaskConfigRecord(uint32_t taskId)
 CTaskConfig **QueryAllTaskConfig(uint32_t &len)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
+    rdbPredicates.EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Waiting))
         ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::PAUSED))
+        ->EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Paused))
         ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::INITIALIZED));
+        ->EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Initialized));
 
     std::vector<TaskConfig> taskConfigs;
     if (QueryRequestTaskConfig(rdbPredicates, taskConfigs) == OHOS::Request::QUERY_ERR) {
@@ -1209,41 +1236,6 @@ CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs)
     return cTaskConfigs;
 }
 
-CTaskConfig **QueryAllTaskConfigs(void)
-{
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
-        ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::PAUSED))
-        ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::INITIALIZED));
-
-    std::vector<TaskConfig> taskConfigs;
-    if (QueryRequestTaskConfig(rdbPredicates, taskConfigs) == OHOS::Request::QUERY_ERR) {
-        return nullptr;
-    }
-    return BuildCTaskConfigs(taskConfigs);
-}
-
-int QueryTaskConfigLen()
-{
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING))
-        ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::PAUSED))
-        ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::INITIALIZED));
-
-    auto resultSet =
-        OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME).Query(rdbPredicates, { "task_id", "uid" });
-    int len = 0;
-    if (resultSet == nullptr || resultSet->GetRowCount(len) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("Get TaskConfigs length failed");
-        return OHOS::Request::QUERY_ERR;
-    }
-    return len;
-}
-
 CTaskConfig *QueryTaskConfig(uint32_t taskId)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
@@ -1326,12 +1318,12 @@ void UpdateTaskStateOnAppStateChange(uint64_t uid, uint8_t appState)
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     if (appState == 2) { // 2 means ApplicationState::Foreground
         rdbPredicates.EqualTo("uid", std::to_string(uid));
-        rdbPredicates.EqualTo("mode", static_cast<uint8_t>(Mode::FOREGROUND));
-        rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::PAUSED));
+        rdbPredicates.EqualTo("mode", static_cast<uint8_t>(OHOS::Request::Mode::FrontEnd));
+        rdbPredicates.EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Paused));
         rdbPredicates.EqualTo("reason", static_cast<uint8_t>(6)); // 6 means Reason::AppBackgroundOrTerminate.
 
         OHOS::NativeRdb::ValuesBucket values;
-        values.PutInt("state", static_cast<uint8_t>(State::WAITING));
+        values.PutInt("state", static_cast<uint8_t>(OHOS::Request::State::Waiting));
         values.PutInt("reason", static_cast<uint8_t>(4)); // 4 means Reason::RunningTaskMeetLimits.
 
         if (!OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME).Update(values, rdbPredicates)) {
@@ -1340,12 +1332,12 @@ void UpdateTaskStateOnAppStateChange(uint64_t uid, uint8_t appState)
         }
     } else {
         rdbPredicates.EqualTo("uid", std::to_string(uid));
-        rdbPredicates.EqualTo("mode", static_cast<uint8_t>(Mode::FOREGROUND));
-        rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::WAITING));
+        rdbPredicates.EqualTo("mode", static_cast<uint8_t>(OHOS::Request::Mode::FrontEnd));
+        rdbPredicates.EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Waiting));
         rdbPredicates.EqualTo("reason", static_cast<uint8_t>(4)); // 4 means Reason::RunningTaskMeetLimits.
 
         OHOS::NativeRdb::ValuesBucket values;
-        values.PutInt("state", static_cast<uint8_t>(State::PAUSED));
+        values.PutInt("state", static_cast<uint8_t>(OHOS::Request::State::Paused));
         values.PutInt("reason", static_cast<uint8_t>(6)); // 6 means Reason::AppBackgroundOrTerminate.
 
         if (!OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME).Update(values, rdbPredicates)) {
@@ -1394,14 +1386,14 @@ void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len)
         ->And()
         ->BeginWrap()
         ->BeginWrap()
-        ->EqualTo("state", static_cast<uint8_t>(State::WAITING))
+        ->EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Waiting))
         ->And()
-        ->EqualTo("reason", static_cast<uint8_t>(Reason::RUNNING_TASK_MEET_LIMITS))
+        ->EqualTo("reason", static_cast<uint8_t>(OHOS::Request::Reason::RunningTaskMeetLimits))
         ->EndWrap()
         ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::RUNNING))
+        ->EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Running))
         ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::RETRYING))
+        ->EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Retrying))
         ->EndWrap();
 
     *array = nullptr;
@@ -1465,39 +1457,4 @@ void GetAppArray(AppInfo **apps, size_t *len)
         (*apps)[i].uid = static_cast<uint32_t>(GetLong(resultSet, 0)); // Line 0 is 'uid'
         (*apps)[i].bundle = WrapperCString(temp);
     }
-}
-
-CStringWrapper GetAppBundle(uint64_t uid)
-{
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-
-    // Descending to get the latest bundlename by uid
-    rdbPredicates.EqualTo("uid", std::to_string(uid))->OrderByDesc("ctime");
-
-    CStringWrapper res;
-    res.cStr = nullptr;
-    res.len = 0;
-
-    auto resultSet =
-        OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME).Query(rdbPredicates, { "bundle" });
-    int rowCount = 0;
-    if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("GetAppArray result set is nullptr or get row count failed");
-        return res;
-    }
-
-    if (rowCount == 0) {
-        return res;
-    }
-
-    if (resultSet->GoToRow(0) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("GetAppArray result set go to 0 row failed");
-        return res;
-    }
-
-    std::string temp = "";
-    resultSet->GetString(0, temp); // Line 0 is 'bundle'
-
-    res = WrapperCString(temp);
-    return res;
 }

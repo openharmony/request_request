@@ -22,10 +22,11 @@ use crate::error::ErrorCode;
 use crate::manage::account::GetOhosAccountUid;
 use crate::manage::events::TaskManagerEvent;
 use crate::service::permission::PermissionChecker;
-use crate::service::{get_calling_bundle, RequestServiceStub};
+use crate::service::RequestServiceStub;
 use crate::task::config::{Action, CommonTaskConfig, Mode, NetworkConfig, TaskConfig, Version};
 use crate::task::ATOMIC_SERVICE;
 use crate::utils::form_item::{FileSpec, FormItem};
+use crate::utils::query_calling_bundle;
 
 impl RequestServiceStub {
     pub(crate) fn construct(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
@@ -91,7 +92,7 @@ impl RequestServiceStub {
 
         let certificate_pins: String = data.read()?;
 
-        let bundle = get_calling_bundle();
+        let bundle = query_calling_bundle();
 
         let uid = ipc::Skeleton::calling_uid();
         let token_id = ipc::Skeleton::calling_full_token_id();

@@ -269,7 +269,7 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
             ))
             .param(build_number_param!(
                 crate::sys_event::ERROR_INFO,
-                Reason::UploadFileError as i32
+                Reason::UploadFileError.repr as i32
             ))
             .write();
     }
@@ -327,7 +327,7 @@ where
         if code != Reason::Default {
             error!(
                 "upload {} file fail, which reason is {}",
-                index, code as u32
+                index, code.repr as u32
             );
             if code != Reason::UserOperation {
                 task.set_status(State::Failed, code);

@@ -152,6 +152,8 @@ impl NetworkInner {
             *self.last_notify_time.write().unwrap() = get_current_timestamp();
 
             *state = Online(info.clone());
+
+            #[cfg(not(test))]
             self.update_database(Online(info));
         } else {
             info!("Network change with the same: {:?}", info);
@@ -175,10 +177,10 @@ impl RequestDb {
     fn update_for_network_available(&mut self, info: &NetworkInfo) {
         let mut sql = format!(
             "UPDATE request_task SET reason = {} WHERE state = {} AND (reason = {} OR reason = {})",
-            Reason::RunningTaskMeetLimits as u8,
-            State::Waiting as u8,
-            Reason::UnsupportedNetworkType as u8,
-            Reason::NetworkOffline as u8,
+            Reason::RunningTaskMeetLimits.repr,
+            State::Waiting.repr,
+            Reason::UnsupportedNetworkType.repr,
+            Reason::NetworkOffline.repr,
         );
 
         if info.network_type != NetworkType::Other {
@@ -203,12 +205,12 @@ impl RequestDb {
     fn update_for_network_unavailable(&mut self, info: &NetworkInfo) {
         let mut sql = format!(
             "UPDATE request_task SET state = {}, reason = {} WHERE ((state = {} AND reason = {} ) OR state = {} OR state = {})",
-            State::Waiting as u8,
-            Reason::UnsupportedNetworkType as u8,
-            State::Waiting as u8,
-            Reason::RunningTaskMeetLimits as u8,
-            State::Running as u8,
-            State::Retrying as u8,
+            State::Waiting.repr,
+            Reason::UnsupportedNetworkType.repr,
+            State::Waiting.repr,
+            Reason::RunningTaskMeetLimits.repr,
+            State::Running.repr,
+            State::Retrying.repr,
         );
 
         let mut sql_1 = String::new();
@@ -243,12 +245,12 @@ impl RequestDb {
     fn update_for_network_offline(&mut self) {
         let sql = format!(
             "UPDATE request_task SET state = {}, reason = {} WHERE (state = {} AND reason = {}  OR state = {} OR state = {})",
-            State::Waiting as u8,
-            Reason::UnsupportedNetworkType as u8,
-            State::Waiting as u8,
-            Reason::RunningTaskMeetLimits as u8,
-            State::Running as u8,
-            State::Retrying as u8,
+            State::Waiting.repr,
+            Reason::UnsupportedNetworkType.repr,
+            State::Waiting.repr,
+            Reason::RunningTaskMeetLimits.repr,
+            State::Running.repr,
+            State::Retrying.repr,
         );
         if let Err(e) = self.execute_sql(&sql) {
             error!("update_for_network_offline sql failed: {}", e);
@@ -486,14 +488,14 @@ mod test {
 
     #[test]
     fn ut_network_database_available() {
-        let task_id = TaskIdGenerator::generate();
         test_init();
+        let task_id = TaskIdGenerator::generate();
         let mut db = RequestDb::get_instance();
         db.execute_sql(&format!(
             "INSERT INTO request_task (task_id, state, reason, network,  metered, roaming) VALUES ({}, {}, {}, {}, 0, 0)",
             task_id,
-            State::Waiting as u8,
-            Reason::UnsupportedNetworkType as u8,
+            State::Waiting.repr,
+            Reason::UnsupportedNetworkType.repr,
             NetworkType::Wifi.repr,
         ))
         .unwrap();
@@ -505,10 +507,10 @@ mod test {
         });
 
         let v = db
-            .query_sql(&format!(
+            .query_integer(&format!(
                 "SELECT task_id from request_task WHERE state = {} AND reason = {}",
-                State::Waiting as u8,
-                Reason::RunningTaskMeetLimits as u8
+                State::Waiting.repr,
+                Reason::RunningTaskMeetLimits.repr
             ))
             .unwrap();
         assert!(v.contains(&task_id));
@@ -516,14 +518,14 @@ mod test {
 
     #[test]
     fn ut_network_database_unavailable() {
-        let task_id = TaskIdGenerator::generate();
         test_init();
+        let task_id = TaskIdGenerator::generate();
         let mut db = RequestDb::get_instance();
         db.execute_sql(&format!(
             "INSERT INTO request_task (task_id, state, reason, network, metered, roaming) VALUES ({}, {}, {}, {}, 1, 1)",
             task_id,
-            State::Waiting as u8,
-            Reason::RunningTaskMeetLimits as u8,
+            State::Waiting.repr,
+            Reason::RunningTaskMeetLimits.repr,
             NetworkType::Wifi.repr,
         ))
         .unwrap();
@@ -535,10 +537,10 @@ mod test {
         });
 
         let v = db
-            .query_sql(&format!(
+            .query_integer(&format!(
                 "SELECT task_id from request_task WHERE state = {} AND reason = {}",
-                State::Waiting as u8,
-                Reason::UnsupportedNetworkType as u8
+                State::Waiting.repr,
+                Reason::UnsupportedNetworkType.repr
             ))
             .unwrap();
         assert!(!v.contains(&task_id));
@@ -550,10 +552,10 @@ mod test {
         });
 
         let v = db
-            .query_sql(&format!(
+            .query_integer(&format!(
                 "SELECT task_id from request_task WHERE state = {} AND reason = {}",
-                State::Waiting as u8,
-                Reason::UnsupportedNetworkType as u8
+                State::Waiting.repr,
+                Reason::UnsupportedNetworkType.repr
             ))
             .unwrap();
         assert!(v.contains(&task_id));
@@ -561,14 +563,14 @@ mod test {
 
     #[test]
     fn ut_network_database_offline() {
-        let task_id = TaskIdGenerator::generate();
         test_init();
+        let task_id = TaskIdGenerator::generate();
         let mut db = RequestDb::get_instance();
         db.execute_sql(&format!(
             "INSERT INTO request_task (task_id, state, reason, network, metered, roaming) VALUES ({}, {}, {}, {}, 1, 1)",
             task_id,
-            State::Waiting as u8,
-            Reason::RunningTaskMeetLimits as u8,
+            State::Waiting.repr,
+            Reason::RunningTaskMeetLimits.repr,
             NetworkType::Wifi.repr,
         ))
         .unwrap();
@@ -576,10 +578,10 @@ mod test {
         db.update_for_network_offline();
 
         let v = db
-            .query_sql(&format!(
+            .query_integer(&format!(
                 "SELECT task_id from request_task WHERE state = {} AND reason = {}",
-                State::Waiting as u8,
-                Reason::UnsupportedNetworkType as u8
+                State::Waiting.repr,
+                Reason::UnsupportedNetworkType.repr
             ))
             .unwrap();
         assert!(v.contains(&task_id));

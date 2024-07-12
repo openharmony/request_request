@@ -68,7 +68,7 @@ impl Progress {
         let len = sizes.len();
         Progress {
             common_data: CommonProgress {
-                state: State::Created as u8,
+                state: State::Created.repr,
                 index: 0,
                 total_processed: 0,
             },

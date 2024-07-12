@@ -163,11 +163,6 @@ impl TaskManagerEvent {
         )
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn app_state_change(uid: u64, state: ApplicationState) -> Self {
-        Self::State(StateEvent::AppStateChange(uid, state))
-    }
-
     pub(crate) fn network_online() -> Self {
         Self::State(StateEvent::NetworkOnline)
     }

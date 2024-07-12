@@ -189,6 +189,7 @@ fn action_to_domian_type(action: Action) -> String {
         Action::Download => "download".to_string(),
         Action::Upload => "upload".to_string(),
         Action::Any => "".to_string(),
+        _ => unreachable!(),
     }
 }
 

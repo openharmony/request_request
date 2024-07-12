@@ -109,7 +109,7 @@ impl RunningQueue {
         for ((uid, task_id), task) in self.download_queue.iter().chain(self.upload_queue.iter()) {
             let task_status = task.status.lock().unwrap();
             info!("dump task message, uid:{}, task_id:{}, action:{}, mode:{}, bundle name:{}, task_status:{:?}",
-                uid, task_id, task.action() as u8, task.mode() as u8, task.bundle(), *task_status);
+                uid, task_id, task.action().repr, task.mode().repr, task.bundle(), *task_status);
         }
     }
 

@@ -13,6 +13,7 @@
 
 use std::collections::HashMap;
 use std::ffi::c_void;
+use std::fmt::Display;
 use std::mem::MaybeUninit;
 use std::pin::Pin;
 use std::ptr::null_mut;
@@ -139,38 +140,12 @@ impl Database {
     }
 
     pub(crate) fn app_uncompleted_tasks_num(&self, uid: u64, mode: Mode) -> usize {
-        let result = unsafe { QueryAppUncompletedTasksNum(uid, mode as u8) as usize };
+        let result = unsafe { QueryAppUncompletedTasksNum(uid, mode.repr) as usize };
         debug!(
             "App uid {} uncompleted tasks in mode {:?} number is {}",
             uid, mode, result
         );
         result
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn get_all_uncompleted_task_config(&self) -> Option<HashMap<u32, TaskConfig>> {
-        debug!("query all task config in database");
-        let c_config_list_len = unsafe { QueryTaskConfigLen() };
-        if c_config_list_len <= 0 {
-            debug!("no task config in database");
-            return None;
-        }
-        let c_task_config_list = unsafe { QueryAllTaskConfigs() };
-        if c_task_config_list.is_null() {
-            debug!("no task config in database");
-            return None;
-        }
-        let c_task_config_ptrs =
-            unsafe { slice::from_raw_parts(c_task_config_list, c_config_list_len as usize) };
-
-        let mut task_config_map = HashMap::new();
-        for c_task_config in c_task_config_ptrs.iter() {
-            let task_config = TaskConfig::from_c_struct(unsafe { &**c_task_config });
-            task_config_map.insert(task_config.common_data.task_id, task_config);
-            unsafe { DeleteCTaskConfig(*c_task_config) };
-        }
-        unsafe { DeleteCTaskConfigs(c_task_config_list) };
-        Some(task_config_map)
     }
 
     pub(crate) fn get_task_config(&self, task_id: u32) -> Option<TaskConfig> {
@@ -270,10 +245,6 @@ impl Database {
         vec
     }
 
-    pub(crate) fn get_app_bundle(&self, uid: u64) -> String {
-        unsafe { GetAppBundle(uid) }.to_string()
-    }
-
     pub(crate) async fn get_task(
         &self,
         task_id: u32,
@@ -343,14 +314,11 @@ pub(crate) struct AppInfo {
 #[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     fn DeleteCTaskConfig(ptr: *const CTaskConfig);
-    fn DeleteCTaskConfigs(ptr: *const *const CTaskConfig);
     fn DeleteCTaskInfo(ptr: *const CTaskInfo);
     fn GetTaskInfo(task_id: u32) -> *const CTaskInfo;
     fn HasRequestTaskRecord(id: u32) -> bool;
-    fn QueryAllTaskConfigs() -> *const *const CTaskConfig;
     fn QueryAppUncompletedTasksNum(uid: u64, mode: u8) -> u32;
     fn QueryTaskConfig(task_id: u32) -> *const CTaskConfig;
-    fn QueryTaskConfigLen() -> i32;
     fn QueryTaskTokenId(task_id: u32, token_id: *mut u64) -> bool;
     fn RecordRequestTask(info: *const CTaskInfo, config: *const CTaskConfig) -> bool;
     fn RequestDBRemoveRecordsFromTime(time: u64);
@@ -362,7 +330,6 @@ extern "C" {
     fn GetAppArray(apps: *mut *mut AppInfo, len: *mut usize) -> c_void;
     fn DeleteTaskQosInfo(ptr: *const TaskQosInfo) -> c_void;
     fn DeleteAppInfo(ptr: *const AppInfo) -> c_void;
-    fn GetAppBundle(uid: u64) -> CStringWrapper;
 }
 
 pub(crate) struct RequestDb {
@@ -390,10 +357,32 @@ impl RequestDb {
         }
     }
 
-    #[allow(unused)]
-    pub(crate) fn query_sql(&mut self, sql: &str) -> Result<Vec<u32>, i32> {
+    pub(crate) fn query_integer<T: TryFrom<i64> + Default>(
+        &mut self,
+        sql: &str,
+    ) -> Result<Vec<T>, i32>
+    where
+        T::Error: Display,
+    {
         let mut v = vec![];
-        let ret = unsafe { Pin::new_unchecked(&mut *self.inner).QuerySql(sql, &mut v) };
+        let ret = unsafe { Pin::new_unchecked(&mut *self.inner).QueryInteger(sql, &mut v) };
+        if ret == 0 {
+            Ok(v.into_iter()
+                .map(|a| {
+                    a.try_into().unwrap_or_else(|e| {
+                        error!("query_integer failed, value: {}", e);
+                        Default::default()
+                    })
+                })
+                .collect())
+        } else {
+            Err(ret)
+        }
+    }
+
+    pub(crate) fn query_text(&mut self, sql: &str) -> Result<Vec<String>, i32> {
+        let mut v = vec![];
+        let ret = unsafe { Pin::new_unchecked(&mut *self.inner).QueryText(sql, &mut v) };
         if ret == 0 {
             Ok(v)
         } else {
@@ -409,7 +398,8 @@ mod ffi {
         type RequestDataBase;
         fn GetDatabaseInstance(path: &str) -> *mut RequestDataBase;
         fn ExecuteSql(self: Pin<&mut RequestDataBase>, sql: &str) -> i32;
-        fn QuerySql(self: Pin<&mut RequestDataBase>, sql: &str, v: &mut Vec<u32>) -> i32;
+        fn QueryInteger(self: Pin<&mut RequestDataBase>, sql: &str, v: &mut Vec<i64>) -> i32;
+        fn QueryText(self: Pin<&mut RequestDataBase>, sql: &str, v: &mut Vec<String>) -> i32;
     }
 }
 
@@ -417,22 +407,22 @@ mod ffi {
 mod test {
     use super::RequestDb;
     use crate::tests::test_init;
-    use crate::utils::get_current_timestamp;
+    use crate::utils::task_id_generator::TaskIdGenerator;
 
     #[test]
     fn ut_database_base() {
         test_init();
-        let test_task_id = get_current_timestamp() as u32;
+        let task_id = TaskIdGenerator::generate();
         let mut db = RequestDb::get_instance();
         db.execute_sql(&format!(
             "INSERT INTO request_task (task_id, bundle) VALUES ({}, 'example_bundle')",
-            test_task_id
+            task_id
         ))
         .unwrap();
 
         let tasks = db
-            .query_sql("SELECT task_id FROM request_task WHERE bundle = 'example_bundle'")
+            .query_integer("SELECT task_id FROM request_task WHERE bundle = 'example_bundle'")
             .unwrap();
-        assert!(tasks.contains(&test_task_id));
+        assert!(tasks.contains(&task_id));
     }
 }

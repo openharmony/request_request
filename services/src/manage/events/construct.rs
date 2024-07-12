@@ -13,13 +13,14 @@
 
 use crate::ability::SYSTEM_CONFIG_MANAGER;
 use crate::error::ErrorCode;
-use crate::manage::app_state::{AppState, GetTopBundleName};
+use crate::manage::app_state::AppState;
 use crate::manage::database::Database;
 use crate::manage::TaskManager;
 use crate::task::config::{Mode, TaskConfig};
 use crate::task::info::{ApplicationState, State};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
+use crate::utils::query_top_bundle;
 use crate::utils::task_id_generator::TaskIdGenerator;
 
 const MAX_BACKGROUND_TASK: usize = 1000;
@@ -57,7 +58,7 @@ impl TaskManager {
         }
 
         // Here we don not need to run the task, just add it to database.
-        let top_bundle = unsafe { GetTopBundleName() }.to_string();
+        let top_bundle = query_top_bundle();
         let app_state = if top_bundle == config.bundle {
             AppState::new(
                 uid,

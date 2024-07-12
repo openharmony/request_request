@@ -20,7 +20,6 @@
 
 #include "common_event_data.h"
 #include "common_event_manager.h"
-#include "common_event_notify.h"
 #include "common_event_publish_info.h"
 #include "log.h"
 #include "net_conn_client.h"

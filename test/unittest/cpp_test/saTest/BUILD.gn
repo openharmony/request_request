@@ -26,13 +26,8 @@ ohos_unittest("saTest") {
   ]
 
   sources = [
-    "../../../../services/src/cxx/c_check_permission.cpp",
     "../../../../services/src/cxx/c_string_wrapper.cpp",
-    "../../../../services/src/cxx/get_calling_bundle.cpp",
-    "../../../../services/src/cxx/get_top_bundle.cpp",
-    "src/c_check_permission_test.cpp",
     "src/c_string_wrapper_test.cpp",
-    "src/get_bundle_test.cpp",
   ]
 
   deps = [

@@ -92,7 +92,7 @@ pub(crate) async fn download(task: Arc<RequestTask>) {
             .param(build_number_param!(crate::sys_event::SUCCESS_FILE_NUM, 0))
             .param(build_number_param!(
                 crate::sys_event::ERROR_INFO,
-                reason as i32
+                reason.repr as i32
             ))
             .write();
     }
