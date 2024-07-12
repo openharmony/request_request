@@ -126,10 +126,6 @@ public:
     std::shared_ptr<OHOS::NativeRdb::ResultSet> Query(
         const OHOS::NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
     bool Delete(const OHOS::NativeRdb::AbsRdbPredicates &predicates);
-    int DeleteAllAccountTasks(int user_id);
-    int OnAccountChange(int user_id);
-    rust::vec<rust::u32> SearchTask(TaskFilter filter, rust::u64 uid) const;
-    rust::vec<rust::u32> SystemSearchTask(TaskFilter filter, rust::str bundleName) const;
     int ExecuteSql(rust::str sql);
     int QueryInteger(rust::str sql, rust::vec<rust::i64> &res);
     int QueryText(rust::str sql, rust::vec<rust::string> &res);
@@ -165,16 +161,10 @@ struct CVectorWrapper {
 };
 
 // Request Database Modify.
-bool HasRequestTaskRecord(uint32_t taskId);
-bool QueryTaskTokenId(uint32_t taskId, uint64_t &tokenId);
 bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig);
 bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo);
 bool UpdateRequestTaskState(uint32_t taskId, CUpdateStateInfo *updateStateInfo);
-CTaskConfig **QueryAllTaskConfig(uint32_t &len);
-int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, std::vector<TaskConfig> &taskConfigs);
-CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs);
 void RequestDBRemoveRecordsFromTime(uint64_t time);
-uint32_t QueryAppUncompletedTasksNum(uint64_t uid, uint8_t mode);
 CTaskInfo *GetTaskInfo(uint32_t taskId);
 CTaskConfig *QueryTaskConfig(uint32_t taskId);
 void UpdateTaskStateOnAppStateChange(uint64_t uid, uint8_t appState);

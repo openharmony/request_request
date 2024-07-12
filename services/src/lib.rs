@@ -56,10 +56,13 @@ const LOG_LABEL: hilog_rust::HiLogLabel = hilog_rust::HiLogLabel {
 
 #[cfg(test)]
 mod tests {
+
     /// test init
     pub(crate) fn test_init() {
         unsafe { SetAccessTokenPermission() };
     }
+
+    pub(crate) static DB_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
     extern "C" {
         fn SetAccessTokenPermission();

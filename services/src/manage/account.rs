@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::{Mutex, Once};
 
@@ -19,8 +18,10 @@ pub(crate) use ffi::*;
 
 use super::database::RequestDb;
 use super::TaskManager;
+use crate::info::State;
 use crate::manage::events::TaskManagerEvent;
 use crate::manage::task_manager::TaskManagerTx;
+use crate::task::reason::Reason;
 use crate::utils::runtime_spawn;
 
 #[derive(Debug)]
@@ -46,11 +47,7 @@ impl TaskManager {
 pub(crate) fn remove_account_tasks(user_id: i32) {
     info!("delete database task by user_id: {}", user_id);
     let mut request_db = RequestDb::get_instance();
-    let res = request_db.delete_all_account_tasks(user_id);
-    info!("delete data task finished: {}", res);
-    if res != 0 {
-        error!("delete account tasks failed: {}", res);
-    }
+    request_db.delete_all_account_tasks(user_id);
 }
 
 pub(crate) fn is_foreground_user(uid: u64) -> bool {
@@ -124,24 +121,23 @@ impl AccountUpdater {
 
     async fn update(mut self) {
         info!("AccountUpdate Start");
-        let old_forground = FOREGROUND_ACCOUNT.load(Ordering::SeqCst);
+        let old_foreground = FOREGROUND_ACCOUNT.load(Ordering::SeqCst);
         let old_background = BACKGROUND_ACCOUNTS.lock().unwrap().clone();
 
         if let Some(foreground_account) = get_foreground_account().await {
-            if old_forground != foreground_account {
+            if old_foreground != foreground_account {
                 self.change_flag = true;
                 FOREGROUND_ACCOUNT.store(foreground_account, Ordering::SeqCst);
-                let request_db = RequestDb::get_instance();
-                request_db.on_account_change(foreground_account);
+                RequestDb::get_instance().on_account_active(foreground_account);
             }
         }
 
         if let Some(background_accounts) = get_background_accounts().await {
             if !old_background.is_some_and(|old_background| old_background == background_accounts) {
                 self.change_flag = true;
-                let request_db = RequestDb::get_instance();
+                let mut request_db = RequestDb::get_instance();
                 for account in background_accounts.iter() {
-                    request_db.on_account_change(*account);
+                    request_db.on_account_active(*account);
                 }
                 *BACKGROUND_ACCOUNTS.lock().unwrap() = Some(background_accounts);
             }
@@ -280,15 +276,20 @@ pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
 }
 
 impl RequestDb {
-    pub(crate) fn on_account_change(&self, user_id: i32) {
-        let res = unsafe { Pin::new_unchecked(&mut (*self.inner)).OnAccountChange(user_id) };
-        if res != 0 {
-            error!("on_account_change failed: {}", res);
-        }
+    pub(crate) fn on_account_active(&mut self, user_id: i32) {
+        let sql =  format!("UPDATE request_task SET reason = {} WHERE uid/200000 = {} AND state = {} AND reason = {}", 
+        Reason::RunningTaskMeetLimits.repr,user_id, State::Waiting.repr, Reason::AccountStopped.repr);
+
+        if let Err(e) = self.execute(&sql) {
+            error!("on_account_change failed: {}", e);
+        };
     }
 
-    pub(crate) fn delete_all_account_tasks(&mut self, user_id: i32) -> i32 {
-        unsafe { Pin::new_unchecked(&mut (*self.inner)).DeleteAllAccountTasks(user_id) }
+    pub(crate) fn delete_all_account_tasks(&mut self, user_id: i32) {
+        let sql = format!("DELETE from request_task WHERE uid/200000 = {}", user_id);
+        if let Err(e) = self.execute(&sql) {
+            error!("delete_all_account_tasks failed: {}", e);
+        };
     }
 }
 
@@ -319,10 +320,6 @@ mod ffi {
         include!("c_request_database.h");
 
         type OS_ACCOUNT_SUBSCRIBE_TYPE;
-        type RequestDataBase = crate::manage::database::RequestDataBase;
-        fn DeleteAllAccountTasks(self: Pin<&mut RequestDataBase>, user_id: i32) -> i32;
-        fn OnAccountChange(self: Pin<&mut RequestDataBase>, user_id: i32) -> i32;
-
         fn GetForegroundOsAccount(account: &mut i32) -> i32;
         fn GetBackgroundOsAccounts(accounts: &mut Vec<i32>) -> i32;
         fn GetOsAccountLocalIdFromUid(uid: i32, user_id: &mut i32) -> i32;
@@ -343,7 +340,8 @@ mod test {
     use ylong_runtime::sync::mpsc;
 
     use super::*;
-    use crate::tests::test_init;
+    use crate::tests::{test_init, DB_LOCK};
+    use crate::utils::task_id_generator::TaskIdGenerator;
 
     const USER_100: u64 = 20012345;
     const USER_101: u64 = 20212345;
@@ -409,5 +407,59 @@ mod test {
         assert!(!old_background.is_some_and(|old_background| old_background == background_accounts));
         let old_background = Option::<Vec<i32>>::Some(vec![100]);
         assert!(old_background.is_some_and(|old_background| old_background == background_accounts));
+    }
+
+    #[test]
+    fn ut_database_on_account_change() {
+        test_init();
+        let _lock = DB_LOCK.lock().unwrap();
+
+        let task_id = TaskIdGenerator::generate();
+        let uid = 20210000;
+        assert_eq!(101, get_user_id_from_uid(uid));
+        let mut db = RequestDb::get_instance();
+        db.execute(&format!(
+            "INSERT INTO request_task (task_id, uid, state, reason) VALUES ({}, {}, {}, {})",
+            task_id,
+            uid,
+            State::Waiting.repr,
+            Reason::AccountStopped.repr,
+        ))
+        .unwrap();
+        let v = db.query_integer(&format!(
+            "SELECT task_id from request_task WHERE uid = {} AND state = {} AND reason = {}",
+            uid,
+            State::Waiting.repr,
+            Reason::RunningTaskMeetLimits.repr,
+        ));
+        assert!(!v.contains(&task_id));
+
+        db.on_account_active(101);
+
+        let v = db.query_integer(&format!(
+            "SELECT task_id from request_task WHERE uid = {} AND state = {} AND reason = {}",
+            uid,
+            State::Waiting.repr,
+            Reason::RunningTaskMeetLimits.repr
+        ));
+        assert!(v.contains(&task_id));
+    }
+
+    #[test]
+    fn ut_delete_all_account_tasks() {
+        test_init();
+
+        let task_id = TaskIdGenerator::generate();
+        let uid = 20210000;
+        assert_eq!(101, get_user_id_from_uid(uid));
+        let mut db = RequestDb::get_instance();
+        db.execute(&format!(
+            "INSERT INTO request_task (task_id, uid, state, reason) VALUES ({}, {}, {}, {})",
+            task_id,
+            uid,
+            State::Waiting.repr,
+            Reason::AccountStopped.repr,
+        ))
+        .unwrap();
     }
 }

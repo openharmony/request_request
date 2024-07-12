@@ -37,7 +37,7 @@ impl RequestDb {
     pub(crate) fn search_task(&mut self, filter: TaskFilter, uid: u64) -> Vec<u32> {
         let mut sql = format!("SELECT task_id from request_task WHERE uid = {} AND ", uid);
         Self::search_filter(&mut sql, &filter);
-        self.query_integer(&sql).unwrap_or_default()
+        self.query_integer(&sql)
     }
 
     pub(crate) fn system_search_task(
@@ -50,7 +50,7 @@ impl RequestDb {
             sql.push_str(&format!("bundle = '{}' AND ", bundle_name));
         }
         Self::search_filter(&mut sql, &filter);
-        self.query_integer(&sql).unwrap_or_default()
+        self.query_integer(&sql)
     }
 
     fn search_filter(sql: &mut String, filter: &TaskFilter) {
@@ -100,7 +100,7 @@ mod test {
         let mut db = RequestDb::get_instance();
         let task_id = TaskIdGenerator::generate();
         let uid = get_current_timestamp();
-        db.execute_sql(&format!(
+        db.execute(&format!(
             "INSERT INTO request_task (task_id, uid, state, ctime, action, mode) VALUES ({}, {}, {} ,{} ,{} ,{})",
             task_id,
             uid,
@@ -176,7 +176,7 @@ mod test {
         let mut db = RequestDb::get_instance();
         let task_id = TaskIdGenerator::generate();
         let bundle_name = "com.ohos.app";
-        db.execute_sql(&format!(
+        db.execute(&format!(
             "INSERT INTO request_task (task_id, bundle, state, ctime, action, mode) VALUES ({}, '{}' ,{} ,{} ,{}, {})",
             task_id,
             bundle_name,
