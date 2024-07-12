@@ -328,7 +328,7 @@ impl Client {
             message.push(b'\0');
         }
 
-        message.extend_from_slice(&(notify_data.action as u32).to_le_bytes());
+        message.extend_from_slice(&(notify_data.action.repr as u32).to_le_bytes());
 
         message.extend_from_slice(&(notify_data.version as u32).to_le_bytes());
 
@@ -336,7 +336,7 @@ impl Client {
         for status in notify_data.each_file_status {
             message.extend_from_slice(&status.path.into_bytes());
             message.push(b'\0');
-            message.extend_from_slice(&(status.reason as u32).to_le_bytes());
+            message.extend_from_slice(&(status.reason.repr as u32).to_le_bytes());
             message.extend_from_slice(&status.message.into_bytes());
             message.push(b'\0');
         }

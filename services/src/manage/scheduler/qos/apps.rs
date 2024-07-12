@@ -18,7 +18,7 @@ use crate::manage::account::is_foreground_user;
 use crate::manage::database::{Database, TaskQosInfo};
 use crate::task::config::{Action, Mode};
 use crate::task::info::ApplicationState;
-use crate::utils::c_wrapper::CStringWrapper;
+use crate::utils::query_top_bundle;
 
 /// List of sorted apps.
 pub(crate) struct SortedApps {
@@ -115,11 +115,6 @@ impl App {
 
     pub(crate) fn is_empty(&self) -> bool {
         self.tasks.is_empty()
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn len(&self) -> usize {
-        self.tasks.len()
     }
 
     fn insert(&mut self, task: Task) {
@@ -253,13 +248,9 @@ impl<T: Ord> Binary<T> for Vec<T> {
     }
 }
 
-fn top_bundle() -> String {
-    unsafe { GetTopBundleName() }.to_string()
-}
-
 fn reload_all_app_from_database() -> Vec<App> {
     let mut inner = Vec::new();
-    let top_bundle = top_bundle();
+    let top_bundle = query_top_bundle();
     for (uid, bundle) in reload_app_list_from_database() {
         let state = if top_bundle == bundle {
             ApplicationState::Foreground
@@ -291,11 +282,6 @@ fn reload_tasks_of_app_from_database(uid: u64) -> Vec<Task> {
 
 fn reload_app_list_from_database() -> Vec<(u64, String)> {
     Database::get_instance().get_app_infos()
-}
-
-#[link(name = "download_server_cxx", kind = "static")]
-extern "C" {
-    pub(crate) fn GetTopBundleName() -> CStringWrapper;
 }
 
 #[cfg(test)]

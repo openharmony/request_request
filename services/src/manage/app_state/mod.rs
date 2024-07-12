@@ -33,13 +33,12 @@ use ylong_runtime::sync::oneshot;
 use ylong_runtime::task::JoinHandle;
 use ylong_runtime::time::sleep;
 
+use super::database::RequestDb;
 use super::task_manager::TaskManagerTx;
-use crate::manage::database::Database;
 use crate::manage::events::{StateEvent, TaskManagerEvent};
 use crate::service::client::ClientManagerEntry;
 use crate::task::info::ApplicationState;
-use crate::utils::c_wrapper::CStringWrapper;
-use crate::utils::runtime_spawn;
+use crate::utils::{query_top_bundle, runtime_spawn};
 
 const BACKGROUND_TASK_STOP_INTERVAL: u64 = 60;
 
@@ -62,7 +61,7 @@ impl AppStateManager {
 
         let manager = Self {
             task_manager,
-            top_bundle: top_bundle(),
+            top_bundle: query_top_bundle(),
             app_state: HashMap::new(),
             tx: tx.clone(),
             rx,
@@ -89,9 +88,6 @@ impl AppStateManager {
                 AppStateEvent::GetAppRawState(uid, tx) => {
                     self.get_app_raw_state(uid, tx);
                 }
-                AppStateEvent::RemoveAppState(uid) => {
-                    self.remove_app_state(uid);
-                }
                 AppStateEvent::ChangeAppState(uid, state) => {
                     self.change_app_state(uid, state);
                 }
@@ -106,14 +102,14 @@ impl AppStateManager {
 
     fn get_app_state(&mut self, uid: u64, tx: oneshot::Sender<AppState>) {
         // Everytime we get app state, update app state right now.
-        self.top_bundle = top_bundle();
+        self.top_bundle = query_top_bundle();
 
         if let Some(app) = self.app_state.get(&uid) {
             let _ = tx.send(app.state.clone());
             return;
         }
 
-        let bundle = Database::get_instance().get_app_bundle(uid);
+        let bundle = RequestDb::get_instance().app_bundle(uid);
         let state = ApplicationState::from_bundles(self.top_bundle.as_str(), bundle.as_str());
 
         let app = AppStateInfo::new(AppState::new(uid, state, self.tx.clone()));
@@ -126,21 +122,17 @@ impl AppStateManager {
 
     fn get_app_raw_state(&mut self, uid: u64, tx: oneshot::Sender<ApplicationState>) {
         // Everytime we get app state, update app state right now.
-        self.top_bundle = top_bundle();
+        self.top_bundle = query_top_bundle();
 
         if let Some(app) = self.app_state.get(&uid) {
             let _ = tx.send(app.state.state());
             return;
         }
 
-        let bundle = Database::get_instance().get_app_bundle(uid);
+        let bundle = RequestDb::get_instance().app_bundle(uid);
         let state = ApplicationState::from_bundles(self.top_bundle.as_str(), bundle.as_str());
 
         let _ = tx.send(state);
-    }
-
-    fn remove_app_state(&mut self, uid: u64) {
-        let _ = self.app_state.remove(&uid);
     }
 
     fn change_app_state(&mut self, uid: u64, state: ApplicationState) {
@@ -210,11 +202,6 @@ impl AppStateManagerTx {
         rx.await.unwrap()
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn remove_app_state(&self, uid: u64) {
-        let _ = self.tx.send(AppStateEvent::RemoveAppState(uid));
-    }
-
     pub(crate) fn change_app_state(&self, uid: u64, state: ApplicationState) {
         let _ = self.tx.send(AppStateEvent::ChangeAppState(uid, state));
     }
@@ -261,9 +248,10 @@ impl DerefMut for AppStateManagerRx {
 pub(crate) enum AppStateEvent {
     GetAppState(u64, oneshot::Sender<AppState>), // TaskManager 启动任务时获取应用状态
     GetAppRawState(u64, oneshot::Sender<ApplicationState>),
-    RemoveAppState(u64), // 某应用最后一个任务完成时移除 AppState
-    ChangeAppState(u64, ApplicationState), /* 应用状态变化，如果是前台切换到后台，则启动定时器。
-                          * 如果在定时器定时过程中重新恢复到前台，则取消定时器 */
+    ChangeAppState(u64, ApplicationState), /* 应用状态变化，如果是前台切换到后台，
+                                            * 则启动定时器。
+                                            * 如果在定时器定时过程中重新恢复到前台，
+                                            * 则取消定时器 */
     TriggerAppStateChange(u64, ApplicationState), // 前台切后台定时器触发，改变任务状态。
 }
 
@@ -330,16 +318,54 @@ impl Inner {
     }
 }
 
-fn top_bundle() -> String {
-    unsafe { GetTopBundleName() }.to_string()
-}
-
 async fn update_background_app(uid: u64, state: ApplicationState, tx: AppStateManagerTx) {
     sleep(Duration::from_secs(BACKGROUND_TASK_STOP_INTERVAL)).await;
     tx.trigger_app_state_change(uid, state);
 }
 
-#[link(name = "download_server_cxx", kind = "static")]
-extern "C" {
-    pub(crate) fn GetTopBundleName() -> CStringWrapper;
+impl RequestDb {
+    fn app_bundle(&mut self, uid: u64) -> String {
+        let sql = format!(
+            "SELECT bundle FROM request_task WHERE uid = {} ORDER BY ctime DESC LIMIT 1",
+            uid
+        );
+        match self.query_text(&sql) {
+            Ok(mut bundle) => bundle.pop().unwrap_or_default(),
+            Err(e) => {
+                error!("Query app bundle error: {:?}", e);
+                "".to_string()
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::utils::get_current_timestamp;
+    use crate::utils::task_id_generator::TaskIdGenerator;
+    #[test]
+    fn ut_database_app_bundle() {
+        let task_id = TaskIdGenerator::generate();
+        let uid = get_current_timestamp();
+        let bundle_name_1 = "example_bundle_1".to_string();
+        let mut db = RequestDb::get_instance();
+        let ctime = get_current_timestamp();
+        db.execute_sql(&format!(
+            "INSERT INTO request_task (task_id, uid, bundle, ctime) VALUES ({}, {}, '{}', {})",
+            task_id, uid, bundle_name_1, ctime
+        ))
+        .unwrap();
+
+        let task_id = TaskIdGenerator::generate();
+        let bundle_name_2 = "example_bundle_2".to_string();
+        let ctime = get_current_timestamp();
+        db.execute_sql(&format!(
+            "INSERT INTO request_task (task_id, uid, bundle, ctime) VALUES ({}, {}, '{}', {})",
+            task_id, uid, bundle_name_2, ctime
+        ))
+        .unwrap();
+
+        assert_eq!(db.app_bundle(uid), bundle_name_2);
+    }
 }

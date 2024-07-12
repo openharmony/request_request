@@ -37,7 +37,7 @@ impl RequestDb {
     pub(crate) fn search_task(&mut self, filter: TaskFilter, uid: u64) -> Vec<u32> {
         let mut sql = format!("SELECT task_id from request_task WHERE uid = {} AND ", uid);
         Self::search_filter(&mut sql, &filter);
-        self.query_sql(&sql).unwrap_or_default()
+        self.query_integer(&sql).unwrap_or_default()
     }
 
     pub(crate) fn system_search_task(
@@ -50,7 +50,7 @@ impl RequestDb {
             sql.push_str(&format!("bundle = '{}' AND ", bundle_name));
         }
         Self::search_filter(&mut sql, &filter);
-        self.query_sql(&sql).unwrap_or_default()
+        self.query_integer(&sql).unwrap_or_default()
     }
 
     fn search_filter(sql: &mut String, filter: &TaskFilter) {
@@ -58,13 +58,13 @@ impl RequestDb {
             "ctime BETWEEN {} AND {} ",
             filter.after, filter.before
         ));
-        if filter.state != State::Any as u8 {
+        if filter.state != State::Any.repr {
             sql.push_str(&format!("AND state = {} ", filter.state));
         }
-        if filter.action != Action::Any as u8 {
+        if filter.action != Action::Any.repr {
             sql.push_str(&format!("AND action = {} ", filter.action));
         }
-        if filter.mode != Mode::Any as u8 {
+        if filter.mode != Mode::Any.repr {
             sql.push_str(&format!("AND mode = {} ", filter.mode));
         }
     }
@@ -104,18 +104,18 @@ mod test {
             "INSERT INTO request_task (task_id, uid, state, ctime, action, mode) VALUES ({}, {}, {} ,{} ,{} ,{})",
             task_id,
             uid,
-            State::Removed as u8,
+            State::Removed.repr,
             get_current_timestamp(),
-            Action::Upload as u8,
-            Mode::BackGround as u8
+            Action::Upload.repr,
+            Mode::BackGround.repr
         )).unwrap();
 
         let filter = TaskFilter {
             before: get_current_timestamp() as i64,
             after: get_current_timestamp() as i64 - 200,
-            state: State::Completed as u8,
-            action: Action::Any as u8,
-            mode: Mode::Any as u8,
+            state: State::Completed.repr,
+            action: Action::Any.repr,
+            mode: Mode::Any.repr,
         };
         let res = db.search_task(filter, uid);
         assert_eq!(res, vec![]);
@@ -123,9 +123,9 @@ mod test {
         let filter = TaskFilter {
             before: get_current_timestamp() as i64,
             after: get_current_timestamp() as i64 - 200,
-            state: State::Any as u8,
-            action: Action::Download as u8,
-            mode: Mode::Any as u8,
+            state: State::Any.repr,
+            action: Action::Download.repr,
+            mode: Mode::Any.repr,
         };
         let res = db.search_task(filter, uid);
         assert_eq!(res, vec![]);
@@ -133,9 +133,9 @@ mod test {
         let filter = TaskFilter {
             before: get_current_timestamp() as i64,
             after: get_current_timestamp() as i64 - 200,
-            state: State::Any as u8,
-            action: Action::Any as u8,
-            mode: Mode::FrontEnd as u8,
+            state: State::Any.repr,
+            action: Action::Any.repr,
+            mode: Mode::FrontEnd.repr,
         };
         let res = db.search_task(filter, uid);
         assert_eq!(res, vec![]);
@@ -143,9 +143,9 @@ mod test {
         let filter = TaskFilter {
             before: get_current_timestamp() as i64,
             after: get_current_timestamp() as i64 - 200,
-            state: State::Removed as u8,
-            action: Action::Upload as u8,
-            mode: Mode::BackGround as u8,
+            state: State::Removed.repr,
+            action: Action::Upload.repr,
+            mode: Mode::BackGround.repr,
         };
         let res = db.search_task(filter, uid);
         assert_eq!(res, vec![task_id as u32]);
@@ -153,9 +153,9 @@ mod test {
         let filter = TaskFilter {
             before: get_current_timestamp() as i64,
             after: get_current_timestamp() as i64 - 200,
-            state: State::Any as u8,
-            action: Action::Any as u8,
-            mode: Mode::Any as u8,
+            state: State::Any.repr,
+            action: Action::Any.repr,
+            mode: Mode::Any.repr,
         };
         let res = db.search_task(filter, uid);
         assert_eq!(res, vec![task_id as u32]);
@@ -163,9 +163,9 @@ mod test {
         let filter = TaskFilter {
             before: get_current_timestamp() as i64,
             after: get_current_timestamp() as i64 - 200,
-            state: State::Any as u8,
-            action: Action::Upload as u8,
-            mode: Mode::BackGround as u8,
+            state: State::Any.repr,
+            action: Action::Upload.repr,
+            mode: Mode::BackGround.repr,
         };
         let res = db.search_task(filter, uid);
         assert_eq!(res, vec![task_id as u32]);
@@ -180,18 +180,18 @@ mod test {
             "INSERT INTO request_task (task_id, bundle, state, ctime, action, mode) VALUES ({}, '{}' ,{} ,{} ,{}, {})",
             task_id,
             bundle_name,
-            State::Removed as u8,
+            State::Removed.repr,
             get_current_timestamp(),
-            Action::Download as u8,
-            Mode::BackGround as u8
+            Action::Download.repr,
+            Mode::BackGround.repr
         )).unwrap();
 
         let filter = TaskFilter {
             before: get_current_timestamp() as i64,
             after: get_current_timestamp() as i64 - 200,
-            state: State::Completed as u8,
-            action: Action::Any as u8,
-            mode: Mode::Any as u8,
+            state: State::Completed.repr,
+            action: Action::Any.repr,
+            mode: Mode::Any.repr,
         };
         let res = db.system_search_task(filter, bundle_name.to_string());
         assert_eq!(res, vec![]);
@@ -199,9 +199,9 @@ mod test {
         let filter = TaskFilter {
             before: get_current_timestamp() as i64,
             after: get_current_timestamp() as i64 - 200,
-            state: State::Any as u8,
-            action: Action::Any as u8,
-            mode: Mode::Any as u8,
+            state: State::Any.repr,
+            action: Action::Any.repr,
+            mode: Mode::Any.repr,
         };
         let res = db.system_search_task(filter, bundle_name.to_string());
         assert_eq!(res, vec![task_id as u32]);
@@ -209,9 +209,9 @@ mod test {
         let filter = TaskFilter {
             before: get_current_timestamp() as i64,
             after: get_current_timestamp() as i64 - 200,
-            state: State::Any as u8,
-            action: Action::Download as u8,
-            mode: Mode::BackGround as u8,
+            state: State::Any.repr,
+            action: Action::Download.repr,
+            mode: Mode::BackGround.repr,
         };
         let res = db.system_search_task(filter, "*".to_string());
         assert_eq!(res, vec![task_id as u32]);

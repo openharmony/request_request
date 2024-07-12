@@ -15,7 +15,8 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::manage::events::{SearchMethod, TaskFilter, TaskManagerEvent};
-use crate::service::{is_system_api, RequestServiceStub};
+use crate::service::RequestServiceStub;
+use crate::utils::is_system_api;
 
 impl RequestServiceStub {
     pub(crate) fn search(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {

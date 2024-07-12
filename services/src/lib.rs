@@ -40,10 +40,18 @@ pub use service::interface;
 pub use task::config;
 pub use utils::form_item::FileSpec;
 
+#[cfg(not(test))]
 const LOG_LABEL: hilog_rust::HiLogLabel = hilog_rust::HiLogLabel {
     log_type: hilog_rust::LogType::LogCore,
     domain: 0xD001C50,
     tag: "RequestService",
+};
+
+#[cfg(test)]
+const LOG_LABEL: hilog_rust::HiLogLabel = hilog_rust::HiLogLabel {
+    log_type: hilog_rust::LogType::LogCore,
+    domain: 0xD001C50,
+    tag: "RequestUtTest",
 };
 
 #[cfg(test)]

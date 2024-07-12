@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2023 Huawei Device Co., Ltd.
+* Copyright (C) 2024 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -13,17 +13,21 @@
 * limitations under the License.
 */
 
-#ifndef COMMON_EVENT_NOTIFY_H
-#define COMMON_EVENT_NOTIFY_H
-
-#include <cstdint>
+#ifndef REQUEST_UTILS_H
+#define REQUEST_UTILS_H
 
 #include "cxx.h"
 
 namespace OHOS::Request {
+struct RequestTaskMsg;
 
-void PublishStateChangeEvent(rust::str bundleName, uint32_t taskId, int32_t state);
+rust::string GetTopBundleName();
+rust::string GetCallingBundle(rust::u64 tokenId);
+bool IsSystemAPI(uint64_t tokenId);
+bool CheckPermission(uint64_t tokenId, rust::str permission);
+bool PublishStateChangeEvent(rust::str bundleName, uint32_t taskId, int32_t state);
+int RequestBackgroundNotify(RequestTaskMsg msg, rust::str filePath, rust::str fileName, uint32_t percent);
 
-}
+} // namespace OHOS::Request
 
-#endif // COMMON_EVENT_NOTIFY_H
+#endif

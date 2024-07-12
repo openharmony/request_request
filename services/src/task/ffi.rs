@@ -84,7 +84,7 @@ impl EachFileStatus {
     pub(crate) fn to_c_struct(&self) -> CEachFileStatus {
         CEachFileStatus {
             path: CStringWrapper::from(&self.path),
-            reason: self.reason as u8,
+            reason: self.reason.repr,
             message: CStringWrapper::from(&self.message),
         }
     }
@@ -178,8 +178,8 @@ impl TaskInfo {
 
         // Removes this logic if api9 and api10 matched.
         let mime_type = if c_struct.common_data.version == Version::API9 as u8
-            || (c_struct.progress.common_data.state != State::Completed as u8
-                && c_struct.progress.common_data.state != State::Failed as u8)
+            || (c_struct.progress.common_data.state != State::Completed.repr
+                && c_struct.progress.common_data.state != State::Failed.repr)
         {
             c_struct.mime_type.to_string()
         } else {
@@ -243,8 +243,8 @@ impl CUpdateStateInfo {
     pub(crate) fn new(state: State, reason: Reason) -> Self {
         Self {
             mtime: get_current_timestamp(),
-            state: state as u8,
-            reason: reason as u8,
+            state: state.repr,
+            reason: reason.repr,
         }
     }
 }
@@ -298,8 +298,8 @@ impl TaskConfig {
                 task_id,
                 uid,
                 token_id: self.common_data.token_id,
-                action: self.common_data.action as u8,
-                mode: self.common_data.mode as u8,
+                action: self.common_data.action.repr,
+                mode: self.common_data.mode.repr,
                 cover: self.common_data.cover,
                 network: self.common_data.network_config as u8,
                 metered: self.common_data.metered,
@@ -385,30 +385,4 @@ impl TaskConfig {
 #[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     pub(crate) fn DeleteCEachFileStatus(ptr: *const CEachFileStatus);
-}
-
-pub(crate) use tffi::*;
-
-#[allow(unreachable_pub)]
-#[cxx::bridge(namespace = "OHOS::Request")]
-mod tffi {
-    pub(crate) struct RequestTaskMsg {
-        pub(crate) task_id: u32,
-        pub(crate) uid: i32,
-        pub(crate) action: u8,
-    }
-
-    unsafe extern "C++" {
-        include!("common_event_notify.h");
-        include!("background_notification.h");
-
-        fn PublishStateChangeEvent(bundleName: &str, taskId: u32, state: i32);
-
-        fn RequestBackgroundNotify(
-            msg: RequestTaskMsg,
-            wrapped_path: &str,
-            wrapped_file_name: &str,
-            percent: u32,
-        );
-    }
 }

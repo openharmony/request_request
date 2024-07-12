@@ -35,7 +35,6 @@ use self::runcount::RunCountManagerEntry;
 use crate::manage::task_manager::TaskManagerTx;
 use crate::task::config::TaskConfig;
 use crate::task::info::TaskInfo;
-use crate::utils::c_wrapper::CStringWrapper;
 
 pub(crate) struct RequestServiceStub {
     task_manager: Mutex<TaskManagerTx>,
@@ -168,15 +167,15 @@ pub(crate) fn serialize_task_info(tf: TaskInfo, reply: &mut MsgParcel) -> IpcRes
     reply.write(&(tf.each_file_status.len() as u32))?;
     for item in tf.each_file_status.iter() {
         reply.write(&(item.path))?;
-        reply.write(&(item.reason as u32))?;
+        reply.write(&(item.reason.repr as u32))?;
         reply.write(&(item.message))?;
     }
     Ok(())
 }
 
 pub(crate) fn serialize_task_config(config: TaskConfig, reply: &mut MsgParcel) -> IpcResult<()> {
-    reply.write(&(config.common_data.action as u32))?;
-    reply.write(&(config.common_data.mode as u32))?;
+    reply.write(&(config.common_data.action.repr as u32))?;
+    reply.write(&(config.common_data.mode.repr as u32))?;
     reply.write(&(config.bundle_type))?;
     reply.write(&(config.atomic_account))?;
     reply.write(&(config.common_data.cover))?;
@@ -232,24 +231,4 @@ pub(crate) fn serialize_task_config(config: TaskConfig, reply: &mut MsgParcel) -
         reply.write(&(config.body_file_paths[i]))?;
     }
     Ok(())
-}
-
-pub(crate) fn get_calling_bundle() -> String {
-    debug!("Gets calling bundle");
-    let token_id = ipc::Skeleton::calling_full_token_id();
-    debug!("Gets token id {}", &token_id);
-    unsafe { GetCallingBundle(token_id).to_string() }
-}
-
-pub(crate) fn is_system_api() -> bool {
-    debug!("Checks if the api is a system_api");
-    let token_id = ipc::Skeleton::calling_full_token_id();
-    debug!("Gets token id {}", &token_id);
-    unsafe { RequestIsSystemAPI(token_id) }
-}
-
-#[link(name = "download_server_cxx", kind = "static")]
-extern "C" {
-    pub(crate) fn GetCallingBundle(token_id: u64) -> CStringWrapper;
-    pub(crate) fn RequestIsSystemAPI(token_id: u64) -> bool;
 }

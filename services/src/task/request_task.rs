@@ -33,9 +33,10 @@ use crate::manage::{self, SystemConfig};
 use crate::service::client::ClientManagerEntry;
 use crate::task::client::build_client;
 use crate::task::config::{Action, TaskConfig};
-use crate::task::ffi::{PublishStateChangeEvent, RequestBackgroundNotify, RequestTaskMsg};
 use crate::task::files::{AttachedFiles, Files};
-use crate::utils::get_current_timestamp;
+use crate::utils::{
+    get_current_timestamp, publish_state_change_event, request_background_notify, RequestTaskMsg,
+};
 const RETRY_INTERVAL: u64 = 200;
 
 pub(crate) struct RequestTask {
@@ -96,11 +97,6 @@ impl RequestTask {
 
     pub(crate) fn bundle(&self) -> &str {
         self.conf.bundle.as_str()
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn priority(&self) -> u32 {
-        self.conf.common_data.priority
     }
 
     pub(crate) fn speed_limit(&self, limit: u64) {
@@ -766,7 +762,7 @@ impl RequestTask {
                 _ => {}
             }
             current_status.mtime = get_current_timestamp();
-            progress_guard.common_data.state = state as u8;
+            progress_guard.common_data.state = state.repr;
             current_status.state = state;
             current_status.reason = reason;
             debug!("current state is {:?}, reason is {:?}", state, reason);
@@ -794,19 +790,19 @@ impl RequestTask {
         Notifier::progress(&self.client_manager, notify_data.clone());
         match state {
             State::Completed => {
-                PublishStateChangeEvent(
+                let _ = publish_state_change_event(
                     self.conf.bundle.as_str(),
                     self.conf.common_data.task_id,
-                    State::Completed as i32,
+                    State::Completed.repr as i32,
                 );
 
                 Notifier::complete(&self.client_manager, notify_data)
             }
             State::Failed => {
-                PublishStateChangeEvent(
+                let _ = publish_state_change_event(
                     self.conf.bundle.as_str(),
                     self.conf.common_data.task_id,
-                    State::Failed as i32,
+                    State::Failed.repr as i32,
                 );
 
                 Notifier::fail(&self.client_manager, notify_data)
@@ -835,18 +831,18 @@ impl RequestTask {
         Notifier::progress(client_manager, notify_data.clone());
         match state {
             State::Completed => {
-                PublishStateChangeEvent(
+                let _ = publish_state_change_event(
                     notify_data.bundle.as_str(),
                     notify_data.task_id,
-                    State::Completed as i32,
+                    State::Completed.repr as i32,
                 );
                 Notifier::complete(client_manager, notify_data)
             }
             State::Failed => {
-                PublishStateChangeEvent(
+                let _ = publish_state_change_event(
                     notify_data.bundle.as_str(),
                     notify_data.task_id,
-                    State::Failed as i32,
+                    State::Failed.repr as i32,
                 );
                 Notifier::fail(client_manager, notify_data)
             }
@@ -878,7 +874,7 @@ impl RequestTask {
         let progress = self.progress.lock().unwrap();
         UpdateInfo {
             mtime: status.mtime,
-            reason: status.reason as u8,
+            reason: status.reason.repr,
             tries: self.tries.load(Ordering::SeqCst),
             mime_type: self.mime_type.lock().unwrap().clone(),
             progress: progress.clone(),
@@ -917,11 +913,11 @@ impl RequestTask {
             common_data: CommonTaskInfo {
                 task_id: self.conf.common_data.task_id,
                 uid: self.conf.common_data.uid,
-                action: self.conf.common_data.action as u8,
-                mode: self.conf.common_data.mode as u8,
+                action: self.conf.common_data.action.repr,
+                mode: self.conf.common_data.mode.repr,
                 ctime: self.ctime,
                 mtime: status.mtime,
-                reason: status.reason as u8,
+                reason: status.reason.repr,
                 gauge: self.conf.common_data.gauge,
                 retry: match self.conf.common_data.mode {
                     Mode::FrontEnd => false,
@@ -969,12 +965,12 @@ impl RequestTask {
         let task_msg = RequestTaskMsg {
             task_id: self.conf.common_data.task_id,
             uid: self.conf.common_data.uid as i32,
-            action: self.conf.common_data.action as u8,
+            action: self.conf.common_data.action.repr,
         };
 
         let path = self.conf.file_specs[index].path.as_str();
         let file_name = self.conf.file_specs[index].file_name.as_str();
-        RequestBackgroundNotify(task_msg, path, file_name, percent as u32);
+        let _ = request_background_notify(task_msg, path, file_name, percent as u32);
     }
 
     pub(crate) fn get_upload_info(&self, index: usize) -> (bool, u64) {

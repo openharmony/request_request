@@ -13,6 +13,8 @@
 
 use std::collections::HashMap;
 
+pub(crate) use ffi::State;
+
 use super::ffi::CEachFileStatus;
 use super::notify::{EachFileStatus, NotifyData, Progress};
 use crate::task::config::{Action, Version};
@@ -20,7 +22,6 @@ use crate::task::reason::Reason;
 use crate::utils::c_wrapper::{CFileSpec, CFormItem};
 use crate::utils::form_item::{FileSpec, FormItem};
 use crate::utils::hashmap_to_string;
-
 #[derive(Debug)]
 pub(crate) struct TaskInfo {
     pub(crate) bundle: String,
@@ -51,18 +52,8 @@ impl TaskInfo {
         Action::from(self.common_data.action)
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn state(&self) -> State {
-        State::from(self.progress.common_data.state)
-    }
-
     pub(crate) fn token(&self) -> String {
         self.token.clone()
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn set_state(&mut self, state: State) {
-        self.progress.common_data.state = state as u8;
     }
 }
 
@@ -92,20 +83,23 @@ pub(crate) struct InfoSet {
     pub(crate) each_file_status: Vec<CEachFileStatus>,
 }
 
-#[derive(Clone, Copy, PartialEq, Debug)]
-#[repr(u8)]
-pub(crate) enum State {
-    Initialized = 0x00,
-    Waiting = 0x10,
-    Running = 0x20,
-    Retrying = 0x21,
-    Paused = 0x30,
-    Stopped = 0x31,
-    Completed = 0x40,
-    Failed = 0x41,
-    Removed = 0x50,
-    Created = 0x60,
-    Any = 0x61,
+#[cxx::bridge(namespace = "OHOS::Request")]
+mod ffi {
+    #[derive(Clone, Copy, PartialEq, Debug)]
+    #[repr(u8)]
+    enum State {
+        Initialized = 0x00,
+        Waiting = 0x10,
+        Running = 0x20,
+        Retrying = 0x21,
+        Paused = 0x30,
+        Stopped = 0x31,
+        Completed = 0x40,
+        Failed = 0x41,
+        Removed = 0x50,
+        Created = 0x60,
+        Any = 0x61,
+    }
 }
 
 pub(crate) struct UpdateInfo {
@@ -214,4 +208,32 @@ impl From<u8> for ApplicationState {
             _ => panic!("wrong application value"),
         }
     }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn ut_enum_state() {
+        assert_eq!(State::Initialized.repr, 0);
+        assert_eq!(State::Waiting.repr, 16);
+        assert_eq!(State::Running.repr, 32);
+        assert_eq!(State::Retrying.repr, 33);
+        assert_eq!(State::Paused.repr, 48);
+        assert_eq!(State::Stopped.repr, 49);
+        assert_eq!(State::Completed.repr, 64);
+        assert_eq!(State::Failed.repr, 65);
+        assert_eq!(State::Removed.repr, 80);
+        assert_eq!(State::Created.repr, 96);
+        assert_eq!(State::Any.repr, 97);
+    }
+
+    #[test]
+    fn ut_enum_application_state() {
+        assert_eq!(ApplicationState::Foreground as u8, 2);
+        assert_eq!(ApplicationState::Background as u8, 4);
+        assert_eq!(ApplicationState::Terminated as u8, 5);
+    }
+    
 }

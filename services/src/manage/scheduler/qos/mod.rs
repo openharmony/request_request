@@ -97,6 +97,7 @@ impl Qos {
             Action::Upload => {
                 changes.upload = Some(self.reschedule_inner(Action::Upload));
             }
+            _ => unreachable!(),
         }
         changes
     }

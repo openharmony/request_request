@@ -21,8 +21,6 @@
 #include <cstdint>
 #include <vector>
 
-#include "c_enumration.h"
-#include "c_filter.h"
 #include "c_progress.h"
 #include "c_task_config.h"
 #include "c_task_info.h"
@@ -133,7 +131,8 @@ public:
     rust::vec<rust::u32> SearchTask(TaskFilter filter, rust::u64 uid) const;
     rust::vec<rust::u32> SystemSearchTask(TaskFilter filter, rust::str bundleName) const;
     int ExecuteSql(rust::str sql);
-    int QuerySql(rust::str sql, rust::vec<rust::u32> &tasks);
+    int QueryInteger(rust::str sql, rust::vec<rust::i64> &res);
+    int QueryText(rust::str sql, rust::vec<rust::string> &res);
 
 private:
     RequestDataBase(std::string path);
@@ -183,17 +182,14 @@ int QueryRequestTaskConfig(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, 
 CTaskConfig **BuildCTaskConfigs(const std::vector<TaskConfig> &taskConfigs);
 bool CleanTaskConfigTable(uint32_t taskId, uint64_t uid);
 void RequestDBRemoveRecordsFromTime(uint64_t time);
-int QueryTaskConfigLen();
 uint32_t QueryAppUncompletedTasksNum(uint64_t uid, uint8_t mode);
 CTaskInfo *GetTaskInfo(uint32_t taskId);
 CTaskConfig *QueryTaskConfig(uint32_t taskId);
-CTaskConfig **QueryAllTaskConfigs(void);
 void UpdateTaskStateOnAppStateChange(uint64_t uid, uint8_t appState);
 
 void GetTaskQosInfo(uint64_t uid, uint32_t taskId, TaskQosInfo **info);
 void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len);
 void GetAppArray(AppInfo **apps, size_t *len);
-CStringWrapper GetAppBundle(uint64_t uid);
 
 #ifdef __cplusplus
 }

@@ -20,7 +20,10 @@ rust_cxx("download_server_cxx_gen") {
     "src/manage/database.rs",
     "src/manage/events/search.rs",
     "src/manage/network.rs",
-    "src/task/ffi.rs",
+    "src/task/config.rs",
+    "src/task/info.rs",
+    "src/task/reason.rs",
+    "src/utils/mod.rs",
   ]
 }
 
@@ -47,18 +50,14 @@ ohos_static_library("download_server_cxx") {
   sources = [
     "src/cxx/account.cpp",
     "src/cxx/application_state_observer.cpp",
-    "src/cxx/background_notification.cpp",
-    "src/cxx/c_check_permission.cpp",
     "src/cxx/c_request_database.cpp",
     "src/cxx/c_string_wrapper.cpp",
     "src/cxx/c_task_config.cpp",
     "src/cxx/c_task_info.cpp",
-    "src/cxx/common_event_notify.cpp",
-    "src/cxx/get_calling_bundle.cpp",
     "src/cxx/get_proxy.cpp",
-    "src/cxx/get_top_bundle.cpp",
     "src/cxx/network.cpp",
     "src/cxx/request_cert_mgr_adapter.cpp",
+    "src/cxx/request_utils.cpp",
     "src/cxx/url_policy.cpp",
   ]
   sources += get_target_outputs(":download_server_cxx_gen")
