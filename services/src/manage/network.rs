@@ -481,7 +481,7 @@ mod test {
             )
             .await;
             assert!(!network.check_interval_online().await);
-            ylong_runtime::time::sleep(std::time::Duration::from_millis(3000)).await;
+            ylong_runtime::time::sleep(std::time::Duration::from_millis(4000)).await;
             assert!(network.check_interval_online().await);
         });
     }

@@ -20,6 +20,7 @@
 #include "ability_manager_client.h"
 #include "access_token.h"
 #include "accesstoken_kit.h"
+#include "app_mgr_client.h"
 #include "common_event_data.h"
 #include "common_event_manager.h"
 #include "common_event_publish_info.h"
@@ -41,11 +42,19 @@ using namespace OHOS::Notification;
 using namespace OHOS::EventFwk;
 static constexpr uint8_t DOWNLOAD_ACTION = 0;
 
-rust::string GetTopBundleName()
+int GetTopUid(int &uid)
 {
-    OHOS::AppExecFwk::ElementName elementName = OHOS::AAFwk::AbilityManagerClient::GetInstance()->GetTopAbility();
-    std::string bundleName = elementName.GetBundleName();
-    return rust::string(bundleName);
+    sptr<IRemoteObject> token;
+    auto ret = OHOS::AAFwk::AbilityManagerClient::GetInstance()->GetTopAbility(token);
+    if (ret != 0) {
+        REQUEST_HILOGE("GetTopUid failed, ret: %{public}d", ret);
+        return ret;
+    }
+    auto info = OHOS::AppExecFwk::RunningProcessInfo();
+    AppExecFwk::AppMgrClient().GetRunningProcessInfoByToken(token, info);
+
+    uid = info.uid_;
+    return 0;
 }
 
 rust::string GetCallingBundle(rust::u64 tokenId)

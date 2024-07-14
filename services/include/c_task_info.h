@@ -111,11 +111,6 @@ struct TaskQosInfo {
     uint32_t priority;
 };
 
-struct AppInfo {
-    uint64_t uid;
-    CStringWrapper bundle;
-};
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -126,7 +121,6 @@ void DeleteCStringPtr(CStringWrapper *ptr);
 void DeleteCEachFileStatus(CEachFileStatus *ptr);
 void DeleteCTaskInfo(CTaskInfo *ptr);
 void DeleteTaskQosInfo(TaskQosInfo *ptr);
-void DeleteAppInfo(AppInfo *ptr);
 
 #ifdef __cplusplus
 }

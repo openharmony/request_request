@@ -19,4 +19,3 @@ void DeleteCTaskConfig(CTaskConfig *ptr)
 {
     delete[] ptr;
 }
-

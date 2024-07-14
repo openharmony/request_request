@@ -21,7 +21,7 @@
 namespace OHOS::Request {
 struct RequestTaskMsg;
 
-rust::string GetTopBundleName();
+int GetTopUid(int &uid);
 rust::string GetCallingBundle(rust::u64 tokenId);
 bool IsSystemAPI(uint64_t tokenId);
 bool CheckPermission(uint64_t tokenId, rust::str permission);

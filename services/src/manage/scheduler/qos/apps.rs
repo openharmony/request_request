@@ -12,13 +12,14 @@
 // limitations under the License.
 
 use std::cmp;
+use std::collections::HashSet;
 use std::ops::Deref;
 
 use crate::manage::account::is_foreground_user;
-use crate::manage::database::{Database, TaskQosInfo};
+use crate::manage::database::{Database, RequestDb, TaskQosInfo};
 use crate::task::config::{Action, Mode};
 use crate::task::info::ApplicationState;
-use crate::utils::query_top_bundle;
+use crate::utils::query_app_state;
 
 /// List of sorted apps.
 pub(crate) struct SortedApps {
@@ -32,12 +33,7 @@ impl SortedApps {
         }
     }
 
-    pub(crate) fn change_network(&mut self) {
-        // Then, we need to reload the app based on the current status of all tasks.
-        self.inner = reload_all_app_from_database();
-    }
-
-    pub(crate) fn change_user(&mut self) {
+    pub(crate) fn reload_all_tasks(&mut self) {
         self.inner = reload_all_app_from_database();
     }
 
@@ -250,13 +246,9 @@ impl<T: Ord> Binary<T> for Vec<T> {
 
 fn reload_all_app_from_database() -> Vec<App> {
     let mut inner = Vec::new();
-    let top_bundle = query_top_bundle();
-    for (uid, bundle) in reload_app_list_from_database() {
-        let state = if top_bundle == bundle {
-            ApplicationState::Foreground
-        } else {
-            ApplicationState::Background
-        };
+    for uid in reload_app_list_from_database() {
+        let state = query_app_state(uid);
+
         let mut tasks = reload_tasks_of_app_from_database(uid);
         // Ensure that tasks are arranged in order
         tasks.sort();
@@ -280,15 +272,35 @@ fn reload_tasks_of_app_from_database(uid: u64) -> Vec<Task> {
         .collect()
 }
 
-fn reload_app_list_from_database() -> Vec<(u64, String)> {
-    Database::get_instance().get_app_infos()
+fn reload_app_list_from_database() -> HashSet<u64> {
+    RequestDb::get_instance()
+        .get_app_infos()
+        .into_iter()
+        .collect()
+}
+
+impl RequestDb {
+    fn get_app_infos(&mut self) -> Vec<u64> {
+        let sql = "SELECT DISTINCT uid FROM request_task ";
+        match self.query_integer(sql) {
+            Ok(v) => v,
+            Err((v, e)) => {
+                error!("RequestDb get_app_infos error: {}", e);
+                v
+            }
+        }
+    }
 }
 
 #[cfg(test)]
 mod ut_manage_scheduler_qos_apps {
     use super::{App, Task};
+    use crate::manage::database::RequestDb;
     use crate::task::config::Mode;
     use crate::task::info::ApplicationState;
+    use crate::tests::test_init;
+    use crate::utils::get_current_timestamp;
+    use crate::utils::task_id_generator::TaskIdGenerator;
     impl Task {
         fn new(task_id: u32, mode: Mode, priority: u32) -> Self {
             Self {
@@ -394,5 +406,25 @@ mod ut_manage_scheduler_qos_apps {
         assert!(task2 < task3);
         assert!(task2 < task4);
         assert!(task3 < task4);
+    }
+
+    #[test]
+    fn ut_database_app_info() {
+        test_init();
+        let mut db = RequestDb::get_instance();
+        let uid = get_current_timestamp();
+
+        for i in 0..10 {
+            db.execute_sql(&format!(
+                "INSERT INTO request_task (task_id, uid, bundle) VALUES ({}, {}, '{}')",
+                TaskIdGenerator::generate(),
+                uid + i / 5,
+                "test_bundle",
+            ))
+            .unwrap();
+        }
+        let v = db.get_app_infos();
+        assert_eq!(v.iter().filter(|a| **a == uid).count(), 1);
+        assert_eq!(v.iter().filter(|a| **a == uid + 1).count(), 1);
     }
 }

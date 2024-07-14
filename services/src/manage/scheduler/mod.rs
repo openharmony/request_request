@@ -14,6 +14,8 @@
 mod qos;
 mod queue;
 
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 
 use qos::Qos;
@@ -186,8 +188,7 @@ impl Scheduler {
 
     pub(crate) async fn on_network_online(&mut self) {
         self.running_queue.clear();
-        let changes = self.qos.change_network();
-        self.reschedule(changes).await;
+        self.reload_all_tasks().await;
     }
 
     pub(crate) async fn on_app_state_change(&mut self, uid: u64, state: ApplicationState) {
@@ -195,9 +196,17 @@ impl Scheduler {
         self.reschedule(changes).await;
     }
 
+    pub(crate) fn reload_all_tasks<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + Sync + 'a>> {
+        let changes = self.qos.reload_all_tasks();
+        Box::pin(async move {
+            self.reschedule(changes).await;
+        })
+    }
+
     pub(crate) async fn on_user_change(&mut self) {
-        let changes = self.qos.change_user();
-        self.reschedule(changes).await;
+        self.reload_all_tasks().await;
     }
 
     pub(crate) async fn on_rss_change(&mut self, level: i32) {
@@ -207,7 +216,16 @@ impl Scheduler {
     }
 
     async fn reschedule(&mut self, changes: QosChanges) {
-        self.running_queue.reschedule(changes).await;
+        let mut qos_remove_queue = vec![];
+        self.running_queue
+            .reschedule(changes, &mut qos_remove_queue)
+            .await;
+        for (uid, task_id) in qos_remove_queue.iter() {
+            self.qos.apps.remove_task(*uid, *task_id);
+        }
+        if !qos_remove_queue.is_empty() {
+            self.reload_all_tasks().await;
+        }
     }
 }
 

@@ -17,10 +17,10 @@ use crate::manage::app_state::AppState;
 use crate::manage::database::Database;
 use crate::manage::TaskManager;
 use crate::task::config::{Mode, TaskConfig};
-use crate::task::info::{ApplicationState, State};
+use crate::task::info::State;
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
-use crate::utils::query_top_bundle;
+use crate::utils::query_app_state;
 use crate::utils::task_id_generator::TaskIdGenerator;
 
 const MAX_BACKGROUND_TASK: usize = 1000;
@@ -56,22 +56,10 @@ impl TaskManager {
                 }
             }
         }
-
+        let state = query_app_state(uid);
         // Here we don not need to run the task, just add it to database.
-        let top_bundle = query_top_bundle();
-        let app_state = if top_bundle == config.bundle {
-            AppState::new(
-                uid,
-                ApplicationState::Foreground,
-                self.app_state_manager.clone(),
-            )
-        } else {
-            AppState::new(
-                uid,
-                ApplicationState::Background,
-                self.app_state_manager.clone(),
-            )
-        };
+        let app_state = AppState::new(uid, state, self.app_state_manager.clone());
+
         let system_config = unsafe { SYSTEM_CONFIG_MANAGER.assume_init_ref().system_config() };
         let task = match RequestTask::new(
             config,

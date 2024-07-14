@@ -189,7 +189,6 @@ void UpdateTaskStateOnAppStateChange(uint64_t uid, uint8_t appState);
 
 void GetTaskQosInfo(uint64_t uid, uint32_t taskId, TaskQosInfo **info);
 void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len);
-void GetAppArray(AppInfo **apps, size_t *len);
 
 #ifdef __cplusplus
 }

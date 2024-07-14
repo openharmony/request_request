@@ -33,17 +33,15 @@ use ylong_runtime::sync::oneshot;
 use ylong_runtime::task::JoinHandle;
 use ylong_runtime::time::sleep;
 
-use super::database::RequestDb;
 use super::task_manager::TaskManagerTx;
 use crate::manage::events::{StateEvent, TaskManagerEvent};
 use crate::service::client::ClientManagerEntry;
 use crate::task::info::ApplicationState;
-use crate::utils::{query_top_bundle, runtime_spawn};
+use crate::utils::{query_app_state, runtime_spawn};
 
 const BACKGROUND_TASK_STOP_INTERVAL: u64 = 60;
 
 pub(crate) struct AppStateManager {
-    top_bundle: String,
     app_state: HashMap<u64, AppStateInfo>,
     tx: AppStateManagerTx,
     rx: AppStateManagerRx,
@@ -61,7 +59,6 @@ impl AppStateManager {
 
         let manager = Self {
             task_manager,
-            top_bundle: query_top_bundle(),
             app_state: HashMap::new(),
             tx: tx.clone(),
             rx,
@@ -102,15 +99,13 @@ impl AppStateManager {
 
     fn get_app_state(&mut self, uid: u64, tx: oneshot::Sender<AppState>) {
         // Everytime we get app state, update app state right now.
-        self.top_bundle = query_top_bundle();
 
         if let Some(app) = self.app_state.get(&uid) {
             let _ = tx.send(app.state.clone());
             return;
         }
 
-        let bundle = RequestDb::get_instance().app_bundle(uid);
-        let state = ApplicationState::from_bundles(self.top_bundle.as_str(), bundle.as_str());
+        let state = query_app_state(uid);
 
         let app = AppStateInfo::new(AppState::new(uid, state, self.tx.clone()));
         let state = app.state.clone();
@@ -122,15 +117,12 @@ impl AppStateManager {
 
     fn get_app_raw_state(&mut self, uid: u64, tx: oneshot::Sender<ApplicationState>) {
         // Everytime we get app state, update app state right now.
-        self.top_bundle = query_top_bundle();
-
         if let Some(app) = self.app_state.get(&uid) {
             let _ = tx.send(app.state.state());
             return;
         }
 
-        let bundle = RequestDb::get_instance().app_bundle(uid);
-        let state = ApplicationState::from_bundles(self.top_bundle.as_str(), bundle.as_str());
+        let state = query_app_state(uid);
 
         let _ = tx.send(state);
     }
@@ -321,51 +313,4 @@ impl Inner {
 async fn update_background_app(uid: u64, state: ApplicationState, tx: AppStateManagerTx) {
     sleep(Duration::from_secs(BACKGROUND_TASK_STOP_INTERVAL)).await;
     tx.trigger_app_state_change(uid, state);
-}
-
-impl RequestDb {
-    fn app_bundle(&mut self, uid: u64) -> String {
-        let sql = format!(
-            "SELECT bundle FROM request_task WHERE uid = {} ORDER BY ctime DESC LIMIT 1",
-            uid
-        );
-        match self.query_text(&sql) {
-            Ok(mut bundle) => bundle.pop().unwrap_or_default(),
-            Err(e) => {
-                error!("Query app bundle error: {:?}", e);
-                "".to_string()
-            }
-        }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::utils::get_current_timestamp;
-    use crate::utils::task_id_generator::TaskIdGenerator;
-    #[test]
-    fn ut_database_app_bundle() {
-        let task_id = TaskIdGenerator::generate();
-        let uid = get_current_timestamp();
-        let bundle_name_1 = "example_bundle_1".to_string();
-        let mut db = RequestDb::get_instance();
-        let ctime = get_current_timestamp();
-        db.execute_sql(&format!(
-            "INSERT INTO request_task (task_id, uid, bundle, ctime) VALUES ({}, {}, '{}', {})",
-            task_id, uid, bundle_name_1, ctime
-        ))
-        .unwrap();
-
-        let task_id = TaskIdGenerator::generate();
-        let bundle_name_2 = "example_bundle_2".to_string();
-        let ctime = get_current_timestamp();
-        db.execute_sql(&format!(
-            "INSERT INTO request_task (task_id, uid, bundle, ctime) VALUES ({}, {}, '{}', {})",
-            task_id, uid, bundle_name_2, ctime
-        ))
-        .unwrap();
-
-        assert_eq!(db.app_bundle(uid), bundle_name_2);
-    }
 }

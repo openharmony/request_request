@@ -30,7 +30,6 @@ use crate::task::config::{Mode, TaskConfig};
 use crate::task::ffi::{CTaskConfig, CTaskInfo, CUpdateInfo, CUpdateStateInfo};
 use crate::task::info::{ApplicationState, State, TaskInfo};
 use crate::task::request_task::RequestTask;
-use crate::utils::c_wrapper::CStringWrapper;
 use crate::utils::hashmap_to_string;
 
 pub(crate) struct Database {
@@ -228,23 +227,6 @@ impl Database {
         res
     }
 
-    pub(crate) fn get_app_infos(&self) -> Vec<(u64, String)> {
-        let mut array = null_mut::<AppInfo>();
-        let mut len = 0;
-        unsafe { GetAppArray(&mut array as *mut *mut AppInfo, &mut len as *mut usize) };
-
-        let mut vec = Vec::new();
-        if array.is_null() {
-            return vec;
-        }
-
-        for info in unsafe { slice::from_raw_parts(array as *const AppInfo, len) } {
-            vec.push((info.uid, info.bundle.to_string()));
-        }
-        unsafe { DeleteAppInfo(array) };
-        vec
-    }
-
     pub(crate) async fn get_task(
         &self,
         task_id: u32,
@@ -304,13 +286,6 @@ pub(crate) struct TaskQosInfo {
     pub(crate) priority: u32,
 }
 
-#[derive(Clone, Debug)]
-#[repr(C)]
-pub(crate) struct AppInfo {
-    pub(crate) uid: u64,
-    pub(crate) bundle: CStringWrapper,
-}
-
 #[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     fn DeleteCTaskConfig(ptr: *const CTaskConfig);
@@ -327,9 +302,7 @@ extern "C" {
     fn UpdateTaskStateOnAppStateChange(uid: u64, app_state: u8) -> c_void;
     fn GetTaskQosInfo(uid: u64, task_id: u32, info: *mut *mut TaskQosInfo) -> c_void;
     fn GetAppTaskQosInfos(uid: u64, array: *mut *mut TaskQosInfo, len: *mut usize) -> c_void;
-    fn GetAppArray(apps: *mut *mut AppInfo, len: *mut usize) -> c_void;
     fn DeleteTaskQosInfo(ptr: *const TaskQosInfo) -> c_void;
-    fn DeleteAppInfo(ptr: *const AppInfo) -> c_void;
 }
 
 pub(crate) struct RequestDb {
@@ -360,26 +333,30 @@ impl RequestDb {
     pub(crate) fn query_integer<T: TryFrom<i64> + Default>(
         &mut self,
         sql: &str,
-    ) -> Result<Vec<T>, i32>
+    ) -> Result<Vec<T>, (Vec<T>, i32)>
     where
         T::Error: Display,
     {
         let mut v = vec![];
         let ret = unsafe { Pin::new_unchecked(&mut *self.inner).QueryInteger(sql, &mut v) };
-        if ret == 0 {
-            Ok(v.into_iter()
-                .map(|a| {
-                    a.try_into().unwrap_or_else(|e| {
-                        error!("query_integer failed, value: {}", e);
-                        Default::default()
-                    })
+        let v = v
+            .into_iter()
+            .map(|a| {
+                a.try_into().unwrap_or_else(|e| {
+                    error!("query_integer failed, value: {}", e);
+                    Default::default()
                 })
-                .collect())
+            })
+            .collect();
+
+        if ret == 0 {
+            Ok(v)
         } else {
-            Err(ret)
+            Err((v, ret))
         }
     }
 
+    #[allow(unused)]
     pub(crate) fn query_text(&mut self, sql: &str) -> Result<Vec<String>, i32> {
         let mut v = vec![];
         let ret = unsafe { Pin::new_unchecked(&mut *self.inner).QueryText(sql, &mut v) };
