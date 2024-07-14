@@ -189,16 +189,6 @@ pub(crate) enum ApplicationState {
     Terminated = 5,
 }
 
-impl ApplicationState {
-    pub(crate) fn from_bundles(top: &str, target: &str) -> Self {
-        if top == target {
-            ApplicationState::Foreground
-        } else {
-            ApplicationState::Background
-        }
-    }
-}
-
 impl From<u8> for ApplicationState {
     fn from(value: u8) -> Self {
         match value {

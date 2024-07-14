@@ -1423,38 +1423,3 @@ void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len)
         BuildTaskQosInfo(&(*array)[i], resultSet);
     }
 }
-
-void GetAppArray(AppInfo **apps, size_t *len)
-{
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.Distinct();
-
-    *apps = nullptr;
-    *len = 0;
-
-    auto resultSet =
-        OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME).Query(rdbPredicates, { "uid", "bundle" });
-    int rowCount = 0;
-    if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("GetAppArray result set is nullptr or get row count failed");
-    }
-
-    if (rowCount == 0) {
-        return;
-    }
-
-    *apps = new AppInfo[rowCount];
-    *len = rowCount;
-    for (auto i = 0; i < rowCount; i++) {
-        if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
-            REQUEST_HILOGE("GetAppArray result set go to %{public}d row failed", i);
-            *len = i; // Here `rowCount` can be wrong.
-            return;
-        }
-
-        std::string temp = "";
-        resultSet->GetString(1, temp);                                 // Line 1 is 'bundle'
-        (*apps)[i].uid = static_cast<uint32_t>(GetLong(resultSet, 0)); // Line 0 is 'uid'
-        (*apps)[i].bundle = WrapperCString(temp);
-    }
-}

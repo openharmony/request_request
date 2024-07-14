@@ -24,6 +24,8 @@ pub(crate) use ffi::RequestTaskMsg;
 use ylong_runtime::sync::oneshot::Receiver;
 use ylong_runtime::task::JoinHandle;
 
+use crate::task::info::ApplicationState;
+
 pub(crate) struct Recv<T> {
     rx: Receiver<T>,
 }
@@ -94,8 +96,33 @@ pub(crate) fn runtime_spawn<F: Future<Output = ()> + Send + Sync + 'static>(
     ))
 }
 
-pub(crate) fn query_top_bundle() -> String {
-    ffi::GetTopBundleName()
+pub(crate) fn query_app_state(uid: u64) -> ApplicationState {
+    let top_uid = query_top_uid();
+    match top_uid {
+        Some(top_uid) => {
+            if top_uid == uid {
+                ApplicationState::Foreground
+            } else {
+                ApplicationState::Background
+            }
+        }
+        None => ApplicationState::Foreground,
+    }
+}
+
+fn query_top_uid() -> Option<u64> {
+    let mut uid = 0;
+    for i in 0..10 {
+        let ret = ffi::GetTopUid(&mut uid);
+        if ret != 0 || uid == 0 {
+            error!("GetTopUid failed, ret: {} retry time: {}", ret, i);
+            std::thread::sleep(std::time::Duration::from_millis(200));
+        } else {
+            return Some(uid as u64);
+        }
+    }
+    error!("GetTopUid failed");
+    None
 }
 
 pub(crate) fn query_calling_bundle() -> String {
@@ -158,7 +185,7 @@ mod ffi {
             percent: u32,
         ) -> i32;
 
-        fn GetTopBundleName() -> String;
+        fn GetTopUid(uid: &mut i32) -> i32;
         fn GetCallingBundle(token_id: u64) -> String;
         fn IsSystemAPI(token_id: u64) -> bool;
         fn CheckPermission(token_id: u64, permission: &str) -> bool;
@@ -171,10 +198,8 @@ mod test {
     use crate::tests::test_init;
     #[test]
     fn ut_utils_oh() {
-        test_init();
         assert!(!is_system_api());
         assert_eq!(query_calling_bundle(), "");
-        assert!(!query_top_bundle().is_empty());
     }
 
     #[test]
@@ -234,8 +259,15 @@ mod test {
             "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS"
         ));
         assert!(check_permission("ohos.permission.MANAGE_LOCAL_ACCOUNTS"));
+        assert!(check_permission("ohos.permission.GET_RUNNING_INFO"));
         assert!(!check_permission(
             "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS_EXTENSION"
         ));
+    }
+
+    #[test]
+    fn ut_utils_query_app_state() {
+        test_init();
+        assert_eq!(query_app_state(0), ApplicationState::Foreground);
     }
 }

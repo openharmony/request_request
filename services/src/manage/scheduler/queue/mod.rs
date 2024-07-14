@@ -26,7 +26,6 @@ use crate::ability::SYSTEM_CONFIG_MANAGER;
 use crate::error::ErrorCode;
 use crate::manage::app_state::AppStateManagerTx;
 use crate::manage::database::Database;
-use crate::manage::events::{TaskEvent, TaskManagerEvent};
 use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::qos::{QosChanges, QosDirection};
 use crate::manage::scheduler::queue::running_task::RunningTask;
@@ -124,12 +123,18 @@ impl RunningQueue {
         }
     }
 
-    pub(crate) async fn reschedule(&mut self, qos: QosChanges) {
+    pub(crate) async fn reschedule(
+        &mut self,
+        qos: QosChanges,
+        qos_remove_queue: &mut Vec<(u64, u32)>,
+    ) {
         if let Some(vec) = qos.download {
-            self.download_queue = self.reschedule_inner(Action::Download, vec).await;
+            self.reschedule_inner(Action::Download, vec, qos_remove_queue)
+                .await;
         }
         if let Some(vec) = qos.upload {
-            self.upload_queue = self.reschedule_inner(Action::Upload, vec).await;
+            self.reschedule_inner(Action::Upload, vec, qos_remove_queue)
+                .await;
         }
     }
 
@@ -137,8 +142,9 @@ impl RunningQueue {
         &mut self,
         action: Action,
         qos_vec: Vec<QosDirection>,
-    ) -> HashMap<(u64, u32), Arc<RequestTask>> {
-        let mut satisfied_tasks = HashMap::new();
+        qos_remove_queue: &mut Vec<(u64, u32)>,
+    ) {
+        let mut new_queue = HashMap::new();
 
         let queue = if action == Action::Download {
             &mut self.download_queue
@@ -156,7 +162,7 @@ impl RunningQueue {
                 // we just need to adjust its rate.
                 task.speed_limit(qos_direction.direction() as u64);
                 // Then we put it into `satisfied_tasks`.
-                satisfied_tasks.insert((uid, task_id), task);
+                new_queue.insert((uid, task_id), task);
                 continue;
             }
 
@@ -190,9 +196,8 @@ impl RunningQueue {
                             notify_data,
                         );
                     }
+                    qos_remove_queue.push((uid, task_id));
 
-                    self.tx
-                        .send_event(TaskManagerEvent::Task(TaskEvent::Finished(task_id, uid)));
                     continue;
                 }
             };
@@ -201,7 +206,7 @@ impl RunningQueue {
             let tx = self.tx.clone();
             let runcount_manager = self.runcount_manager.clone();
             task.speed_limit(qos_direction.direction() as u64);
-            satisfied_tasks.insert((uid, task_id), task.clone());
+            new_queue.insert((uid, task_id), task.clone());
             let task = RunningTask::new(runcount_manager, task, tx, keeper);
             if !task.satisfied() {
                 continue;
@@ -218,7 +223,7 @@ impl RunningQueue {
                 task.set_status(State::Waiting, Reason::RunningTaskMeetLimits);
             }
         }
-        satisfied_tasks
+        *queue = new_queue;
     }
 
     pub(crate) fn modify_task_state_by_user(

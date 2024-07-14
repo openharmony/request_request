@@ -57,18 +57,13 @@ impl Qos {
         }
     }
 
-    pub(crate) fn change_network(&mut self) -> QosChanges {
-        self.apps.change_network();
+    pub(crate) fn reload_all_tasks(&mut self) -> QosChanges {
+        self.apps.reload_all_tasks();
         self.reschedule(Action::Any)
     }
 
     pub(crate) fn change_app_state(&mut self, uid: u64, state: ApplicationState) -> QosChanges {
         self.apps.change_app_state(uid, state);
-        self.reschedule(Action::Any)
-    }
-
-    pub(crate) fn change_user(&mut self) -> QosChanges {
-        self.apps.change_user();
         self.reschedule(Action::Any)
     }
 
