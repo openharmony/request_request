@@ -483,12 +483,13 @@ void RequestDBUpdateInvalidRecords(OHOS::NativeRdb::RdbStore &store)
     // Tasks in `WAITING` and `PAUSED` states need to be resumed,
     // so they are not processed.
     int changedRows = 0;
+    const uint8_t oldCreated = 0x60;
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("state", static_cast<uint8_t>(State::Running))
         ->Or()
         ->EqualTo("state", static_cast<uint8_t>(State::Retrying))
         ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(State::Created));
+        ->EqualTo("state", oldCreated);
 
     if (store.Update(changedRows, values, rdbPredicates) != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("Updates all invalid task to `FAILED` state failed");
@@ -1071,11 +1072,6 @@ CTaskInfo *GetTaskInfo(uint32_t taskId)
     return BuildCTaskInfo(taskInfo);
 }
 
-void DeleteCVectorWrapper(uint32_t *ptr)
-{
-    delete[] ptr;
-}
-
 uint32_t QueryAppUncompletedTasksNum(uint64_t uid, uint8_t mode)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
@@ -1101,28 +1097,6 @@ uint32_t QueryAppUncompletedTasksNum(uint64_t uid, uint8_t mode)
     }
 
     return rowCount;
-}
-
-bool HasTaskConfigRecord(uint32_t taskId)
-{
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.EqualTo("task_id", std::to_string(taskId));
-    auto resultSet =
-        OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME).Query(rdbPredicates, { "task_id" });
-    if (resultSet == nullptr) {
-        REQUEST_HILOGE("TaskConfig result set is nullptr");
-        return false;
-    }
-    int rowCount = 0;
-    if (resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("TaskConfig result count row failed");
-        return false;
-    }
-    if (rowCount == 0) {
-        return false;
-    }
-    REQUEST_HILOGI("has the task record in request_task database");
-    return true;
 }
 
 CTaskConfig **QueryAllTaskConfig(uint32_t &len)

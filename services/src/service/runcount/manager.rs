@@ -91,8 +91,8 @@ impl RunCountManager {
         let subclient = SubClient::new(obj);
 
         subclient.notify_runcount(self.runcount);
-        if self.remotes.get(&subkey).is_none() {
-            self.remotes.insert(subkey, subclient);
+        if let std::collections::hash_map::Entry::Vacant(e) = self.remotes.entry(subkey) {
+            e.insert(subclient);
             debug!("RunCountManager has inserted subkey: {:?}", subkey);
         }
 

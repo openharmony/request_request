@@ -70,7 +70,7 @@ pub(crate) fn hashmap_to_string(map: &HashMap<String, String>) -> String {
     unsafe { String::from_utf8_unchecked(res) }
 }
 
-pub(crate) fn string_to_hashmap(str: &mut String) -> HashMap<String, String> {
+pub(crate) fn string_to_hashmap(str: &mut str) -> HashMap<String, String> {
     let mut map = HashMap::<String, String>::new();
     if str.is_empty() {
         return map;
@@ -118,6 +118,7 @@ fn query_top_uid() -> Option<u64> {
             error!("GetTopUid failed, ret: {} retry time: {}", ret, i);
             std::thread::sleep(std::time::Duration::from_millis(200));
         } else {
+            debug!("GetTopUid ok: {}", uid);
             return Some(uid as u64);
         }
     }

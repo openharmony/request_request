@@ -18,6 +18,7 @@ use std::sync::Arc;
 
 use ylong_runtime::io::AsyncSeekExt;
 
+use crate::manage::database::Database;
 use crate::manage::events::{TaskEvent, TaskManagerEvent};
 use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::queue::keeper::SAKeeper;
@@ -26,7 +27,7 @@ use crate::manage::task_manager::TaskManagerTx;
 use crate::service::runcount::{RunCountEvent, RunCountManagerEntry};
 use crate::task::config::Action;
 use crate::task::download::download;
-use crate::task::info::State;
+use crate::task::info::{State, UpdateInfo};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::task::upload::upload;
@@ -48,29 +49,73 @@ impl RunningTask {
     ) -> Self {
         // Task start to run, then running count +1.
         runcount_manager.send_event(RunCountEvent::change_runcount(1));
-
-        let (state, reason) = {
-            let status = task.status.lock().unwrap();
-            (status.state, status.reason)
-        };
-        if state == State::Waiting
-            && (reason == Reason::NetworkOffline || reason == Reason::UnsupportedNetworkType)
         {
-            info!(
-                "Retry a waiting task with NetworkOffline/UnsupportedNetworkType, uid:{}, task_id:{}",
-                task.conf.common_data.uid, task.conf.common_data.task_id
-            );
-            task.retry.store(true, Ordering::SeqCst);
-            task.tries.fetch_add(1, Ordering::SeqCst);
-            task.set_status(State::Retrying, Reason::Default);
-        } else {
-            if state == State::Paused {
-                let notify_data = task.build_notify_data();
-                Notifier::resume(&task.client_manager, notify_data);
+            let mut task_status = task.status.lock().unwrap();
+            let from_state = task_status.state;
+            if from_state == State::Waiting
+                && (task_status.reason == Reason::NetworkOffline
+                    || task_status.reason == Reason::UnsupportedNetworkType)
+            {
+                info!(
+                    "Retry a waiting task with NetworkOffline/UnsupportedNetworkType, 
+                    uid:{}, task_id:{}",
+                    task.conf.common_data.uid, task.conf.common_data.task_id
+                );
+                task.retry.store(true, Ordering::SeqCst);
+                task.tries.fetch_add(1, Ordering::SeqCst);
+                let mut progress = task.progress.lock().unwrap();
+                RequestTask::change_status(
+                    &mut task_status,
+                    &mut progress,
+                    State::Retrying,
+                    Reason::Default,
+                );
+                task.set_code(progress.common_data.index, Reason::Default, false);
+                task.resume.store(true, Ordering::SeqCst);
+                let codes_guard = task.code.lock().unwrap();
+                let update_info = UpdateInfo {
+                    mtime: task_status.mtime,
+                    reason: task_status.reason.repr,
+                    progress: progress.clone(),
+                    each_file_status: RequestTask::get_each_file_status_by_code(
+                        &codes_guard,
+                        &task.conf.file_specs,
+                    ),
+                    tries: task.tries.load(Ordering::SeqCst),
+                    mime_type: task.mime_type.lock().unwrap().clone(),
+                };
+                Database::get_instance().update_task(task.task_id(), update_info);
+            } else {
+                if from_state == State::Paused {
+                    let notify_data = task.build_notify_data();
+                    Notifier::resume(&task.client_manager, notify_data);
+                }
+                let mut progress = task.progress.lock().unwrap();
+                RequestTask::change_status(
+                    &mut task_status,
+                    &mut progress,
+                    State::Running,
+                    Reason::Default,
+                );
+                task.set_code(progress.common_data.index, Reason::Default, false);
+                if from_state.check_resume() {
+                    task.resume.store(true, Ordering::SeqCst);
+                }
+                let codes_guard = task.code.lock().unwrap();
+                let update_info = UpdateInfo {
+                    mtime: task_status.mtime,
+                    reason: task_status.reason.repr,
+                    progress: progress.clone(),
+                    each_file_status: RequestTask::get_each_file_status_by_code(
+                        &codes_guard,
+                        &task.conf.file_specs,
+                    ),
+                    tries: task.tries.load(Ordering::SeqCst),
+                    mime_type: task.mime_type.lock().unwrap().clone(),
+                };
+                Database::get_instance().update_task(task.task_id(), update_info);
             }
-            task.set_status(State::Running, Reason::Default);
         }
-
         Self {
             runcount_manager,
             task: NotifyTask::new(task),
@@ -87,18 +132,42 @@ impl RunningTask {
         let action = task.conf.common_data.action;
         match action {
             Action::Download => loop {
-                task.reset_code(0);
+                task.set_code(0, Reason::Default, true);
 
                 download(task.task.clone()).await;
 
-                let state = task.status.lock().unwrap().state;
-                if state != State::Running && state != State::Retrying {
+                let mut task_status = task.status.lock().unwrap();
+                if !task_status.state.is_doing() {
                     break;
                 }
-                let code = task.code.lock().unwrap()[0];
-                if code != Reason::Default {
-                    task.set_status(State::Failed, code);
-                    break;
+                let mut progress = self.progress.lock().unwrap();
+                let codes_guard = task.code.lock().unwrap();
+                let reason = codes_guard.first();
+                match reason {
+                    Some(reason) => {
+                        if *reason != Reason::Default {
+                            RequestTask::change_status(
+                                &mut task_status,
+                                &mut progress,
+                                State::Failed,
+                                *reason,
+                            );
+                            let update_info = UpdateInfo {
+                                mtime: task_status.mtime,
+                                reason: task_status.reason.repr,
+                                progress: progress.clone(),
+                                each_file_status: RequestTask::get_each_file_status_by_code(
+                                    &codes_guard,
+                                    &task.conf.file_specs,
+                                ),
+                                tries: task.tries.load(Ordering::SeqCst),
+                                mime_type: task.mime_type.lock().unwrap().clone(),
+                            };
+                            Database::get_instance().update_task(task.task_id(), update_info);
+                            break;
+                        }
+                    }
+                    None => break,
                 }
             },
             Action::Upload => {
@@ -119,7 +188,7 @@ impl RunningTask {
                         begins = 0;
                     }
                     if let Err(e) = file.seek(SeekFrom::Start(begins)).await {
-                        task.set_code(index, Reason::IoError);
+                        task.set_code(index, Reason::IoError, false);
                         error!("seek err is {:?}", e);
                     }
                 }

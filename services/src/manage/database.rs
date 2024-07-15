@@ -28,7 +28,7 @@ use crate::manage::{Network, SystemConfig};
 use crate::service::client::ClientManagerEntry;
 use crate::task::config::{Mode, TaskConfig};
 use crate::task::ffi::{CTaskConfig, CTaskInfo, CUpdateInfo, CUpdateStateInfo};
-use crate::task::info::{ApplicationState, State, TaskInfo};
+use crate::task::info::{ApplicationState, State, TaskInfo, UpdateInfo};
 use crate::task::request_task::RequestTask;
 use crate::utils::hashmap_to_string;
 
@@ -54,7 +54,7 @@ impl Database {
         unsafe { HasRequestTaskRecord(task_id) }
     }
 
-    pub(crate) fn insert_task(&self, task: RequestTask) {
+    pub(crate) fn insert_task(&self, task: RequestTask) -> bool {
         let task_id = task.task_id();
         let uid = task.uid();
 
@@ -64,7 +64,7 @@ impl Database {
         );
 
         if self.contains_task(task_id) {
-            return;
+            return false;
         }
 
         let task_config = task.config();
@@ -85,23 +85,15 @@ impl Database {
                 .lock()
                 .unwrap()
                 .insert(task.task_id(), Arc::new(task));
-        }
+        };
+        true
     }
 
-    pub(crate) fn update_task(&self, task: &RequestTask) {
-        let task_id = task.task_id();
-        let uid = task.uid();
-
-        debug!(
-            "Update task in database, uid: {}, task_id: {}",
-            uid, task_id
-        );
-
+    pub(crate) fn update_task(&self, task_id: u32, update_info: UpdateInfo) {
+        debug!("Update task in database, task_id: {}", task_id);
         if !self.contains_task(task_id) {
             return;
         }
-
-        let update_info = task.update_info();
         let sizes = format!("{:?}", update_info.progress.sizes);
         let processed = format!("{:?}", update_info.progress.processed);
         let extras = hashmap_to_string(&update_info.progress.extras);
@@ -241,37 +233,40 @@ impl Database {
         }
 
         // 此处需要根据 task_id 从数据库构造指定的任务。
-        if let Some(config) = self.get_task_config(task_id) {
-            let uid = config.common_data.uid;
-            let task_id = config.common_data.task_id;
-            if let Some(task_info) = self.get_task_info(task_id) {
-                let state = State::from(task_info.progress.common_data.state);
-                debug!("get_task {} state is {:?}", task_id, state);
-                if state == State::Removed {
-                    error!("get_task state is Removed, {}", task_id);
-                    return Err(ErrorCode::TaskStateErr);
-                }
+        let config = match self.get_task_config(task_id) {
+            Some(config) => config,
+            None => return Err(ErrorCode::TaskNotFound),
+        };
+        let uid = config.common_data.uid;
+        let task_id = config.common_data.task_id;
 
-                let app_state = app_state_manager.get_app_state(uid).await;
-                match RequestTask::new(
-                    config,
-                    system,
-                    app_state,
-                    Some(task_info),
-                    client_manager.clone(),
-                    network.clone(),
-                ) {
-                    Ok(task) => {
-                        return Ok(Arc::new(task));
-                    }
-                    Err(e) => {
-                        error!("new RequestTask failed {}, err: {:?}", task_id, e);
-                        return Err(e);
-                    }
-                }
+        let task_info = match self.get_task_info(task_id) {
+            Some(info) => info,
+            None => return Err(ErrorCode::TaskNotFound),
+        };
+
+        let state = State::from(task_info.progress.common_data.state);
+        debug!("get_task {} state is {:?}", task_id, state);
+        if state == State::Removed {
+            error!("get_task state is Removed, {}", task_id);
+            return Err(ErrorCode::TaskStateErr);
+        }
+
+        let app_state = app_state_manager.get_app_state(uid).await;
+        match RequestTask::new_by_info(
+            config,
+            system,
+            app_state,
+            task_info,
+            client_manager.clone(),
+            network.clone(),
+        ) {
+            Ok(task) => Ok(Arc::new(task)),
+            Err(e) => {
+                error!("new RequestTask failed {}, err: {:?}", task_id, e);
+                Err(e)
             }
         }
-        Err(ErrorCode::TaskNotFound)
     }
 }
 
