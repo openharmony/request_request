@@ -113,7 +113,7 @@ fn build_stream_request(task: Arc<RequestTask>, index: usize) -> Option<Request>
 
     match task.build_request_builder() {
         Ok(mut request_builder) => {
-            if task.conf.headers.get("Content-Type").is_none() {
+            if !task.conf.headers.contains_key("Content-Type") {
                 request_builder =
                     request_builder.header("Content-Type", "application/octet-stream");
             }
@@ -171,7 +171,7 @@ fn build_multipart_request(task: Arc<RequestTask>, index: usize) -> Option<Reque
 
 fn build_request_common(
     task: &Arc<RequestTask>,
-    index: usize,
+    _index: usize,
     request: Result<Request, HttpClientError>,
 ) -> Option<Request> {
     match request {
@@ -184,16 +184,7 @@ fn build_request_common(
         }
         Err(e) => {
             error!("build upload request error is {:?}", e);
-            {
-                // `unwrap` for propagating panics among threads.
-                let mut codes_guard = task.code.lock().unwrap();
-                for (i, code) in codes_guard.iter_mut().enumerate() {
-                    if i >= index {
-                        *code = Reason::BuildRequestFailed;
-                    }
-                }
-            }
-            task.set_status(State::Failed, Reason::BuildRequestFailed);
+            task.change_task_status(State::Failed, Reason::BuildRequestFailed);
             None
         }
     }
@@ -211,45 +202,44 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
     }
 
     let size = task.conf.file_specs.len();
-    let index = task.progress.lock().unwrap().common_data.index;
-    debug!("index is {}", index);
-    for i in index..size {
-        task.progress.lock().unwrap().common_data.index = i;
-        let result: bool;
-        match task.conf.headers.get("Content-Type") {
-            None => {
-                if task.conf.method.to_uppercase().eq("POST") {
-                    result = upload_one_file(task.clone(), i, build_multipart_request).await;
-                } else {
-                    result = upload_one_file(task.clone(), i, build_stream_request).await;
-                }
-            }
-            Some(v) => {
-                if v == "multipart/form-data" {
-                    result = upload_one_file(task.clone(), i, build_multipart_request).await;
-                } else {
-                    result = upload_one_file(task.clone(), i, build_stream_request).await;
-                }
-            }
-        }
+    loop {
+        let index = task.progress.lock().unwrap().common_data.index;
+        let is_multipart = match task.conf.headers.get("Content-Type") {
+            Some(s) => s.eq("multipart/form-data"),
+            None => task.conf.method.to_uppercase().eq("POST"),
+        };
+
+        let result = if is_multipart {
+            upload_one_file(task.clone(), index, build_multipart_request).await
+        } else {
+            upload_one_file(task.clone(), index, build_stream_request).await
+        };
+
         if result {
             info!(
                 "upload one file success, tid: {}, index is {}",
-                task.conf.common_data.task_id, i
+                task.conf.common_data.task_id, index
             );
             task.upload_counts.fetch_add(1, Ordering::SeqCst);
         }
         let state = task.status.lock().unwrap().state;
+
         if state != State::Running && state != State::Retrying {
             return;
         }
+        let mut progress = task.progress.lock().unwrap();
+        task.notify_header_receive();
+        if index + 1 == size {
+            break;
+        }
+        progress.common_data.index += 1;
     }
 
     let uploaded = task.upload_counts.load(Ordering::SeqCst);
     if uploaded == size {
-        task.set_status(State::Completed, Reason::Default);
+        task.change_task_status(State::Completed, Reason::Default);
     } else {
-        task.set_status(State::Failed, Reason::UploadFileError);
+        task.change_task_status(State::Failed, Reason::UploadFileError);
 
         use hisysevent::{build_number_param, build_str_param};
 
@@ -297,8 +287,8 @@ where
     }
 
     loop {
-        task.reset_code(index);
-        let request = build_upload_request(task.clone(), index);
+        task.set_code(index, Reason::Default, true);
+        let request: Option<Request> = build_upload_request(task.clone(), index);
         if request.is_none() {
             return false;
         }
@@ -330,7 +320,7 @@ where
                 index, code.repr as u32
             );
             if code != Reason::UserOperation {
-                task.set_status(State::Failed, code);
+                task.change_task_status(State::Failed, code);
             }
             return false;
         }

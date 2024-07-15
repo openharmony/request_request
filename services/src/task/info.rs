@@ -97,8 +97,40 @@ mod ffi {
         Completed = 0x40,
         Failed = 0x41,
         Removed = 0x50,
-        Created = 0x60,
         Any = 0x61,
+    }
+}
+
+impl State {
+    pub(crate) fn is_doing(&self) -> bool {
+        *self == State::Running || *self == State::Retrying
+    }
+
+    pub(crate) fn check_change(from: State, to: State) -> bool {
+        match to {
+            State::Initialized | State::Any => false,
+            State::Paused | State::Stopped => from.is_doing() || from == State::Waiting,
+            State::Completed => from.is_doing(),
+            State::Failed => {
+                from != State::Completed && from != State::Removed && from != State::Stopped
+            }
+            State::Waiting => from.is_doing(),
+            State::Running | State::Retrying => {
+                from == State::Waiting
+                    || from == State::Paused
+                    || from == State::Stopped
+                    || from == State::Failed
+            }
+            State::Removed => from != State::Removed,
+            _ => false,
+        }
+    }
+
+    pub(crate) fn check_resume(&self) -> bool {
+        *self == State::Waiting
+            || *self == State::Paused
+            || *self == State::Failed
+            || *self == State::Stopped
     }
 }
 
@@ -123,7 +155,6 @@ impl From<u8> for State {
             64 => State::Completed,
             65 => State::Failed,
             80 => State::Removed,
-            96 => State::Created,
             _ => State::Any,
         }
     }
@@ -215,7 +246,6 @@ mod test {
         assert_eq!(State::Completed.repr, 64);
         assert_eq!(State::Failed.repr, 65);
         assert_eq!(State::Removed.repr, 80);
-        assert_eq!(State::Created.repr, 96);
         assert_eq!(State::Any.repr, 97);
     }
 
@@ -225,5 +255,4 @@ mod test {
         assert_eq!(ApplicationState::Background as u8, 4);
         assert_eq!(ApplicationState::Terminated as u8, 5);
     }
-    
 }

@@ -280,7 +280,7 @@ impl Scheduler {
         }
 
         let system_config = unsafe { SYSTEM_CONFIG_MANAGER.assume_init_ref().system_config() };
-        match database
+        let task = match database
             .get_task(
                 task_id,
                 system_config,
@@ -290,17 +290,17 @@ impl Scheduler {
             )
             .await
         {
-            Ok(task) => {
-                // TODO: do not use get_task, only check and change database.
-                if task.set_status(state, Reason::UserOperation) {
-                    // Here we use the `drop` method of `NotifyTask` to notify apps.
-                    let _ = NotifyTask::new(task);
-                    ErrorCode::ErrOk
-                } else {
-                    ErrorCode::TaskStateErr
-                }
-            }
-            Err(e) => e,
+            Ok(task) => task,
+            Err(e) => return e,
+        };
+
+        // TODO: do not use get_task, only check and change database.
+        let code = task.change_task_status(state, Reason::UserOperation);
+        if code != ErrorCode::ErrOk {
+            return code;
         }
+        // Here we use the `drop` method of `NotifyTask` to notify apps.
+        let _ = NotifyTask::new(task);
+        ErrorCode::ErrOk
     }
 }

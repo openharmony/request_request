@@ -117,7 +117,7 @@ impl RunningQueue {
 
         for task in self.tasks() {
             if current_time - task.ctime > MILLISECONDS_IN_ONE_MONTH {
-                task.set_status(State::Stopped, Reason::TaskSurvivalOneMonth);
+                task.change_task_status(State::Stopped, Reason::TaskSurvivalOneMonth);
                 continue;
             }
         }
@@ -217,11 +217,7 @@ impl RunningQueue {
         }
         // every satisfied tasks in running has been moved, set left tasks to Waiting
         for task in queue.values_mut() {
-            let state = task.status.lock().unwrap().state;
-            if state == State::Running {
-                info!("task {} is running, set it to waiting", task.task_id());
-                task.set_status(State::Waiting, Reason::RunningTaskMeetLimits);
-            }
+            task.change_task_status(State::Waiting, Reason::RunningTaskMeetLimits);
         }
         *queue = new_queue;
     }
@@ -249,8 +245,9 @@ fn set_task_state_by_user(
     task: Arc<RequestTask>,
     state: State,
 ) -> ErrorCode {
-    if !task.set_status(state, Reason::UserOperation) {
-        return ErrorCode::TaskStateErr;
+    let code = task.change_task_status(state, Reason::UserOperation);
+    if code != ErrorCode::ErrOk {
+        return code;
     }
     if state == State::Removed {
         Notifier::remove(client_manager, task.build_notify_data());

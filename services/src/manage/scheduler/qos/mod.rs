@@ -24,7 +24,6 @@ use crate::task::config::Action;
 use crate::task::info::ApplicationState;
 
 pub(crate) struct Qos {
-    // should not pub
     pub(crate) apps: SortedApps,
     capacity: RssCapacity,
 }

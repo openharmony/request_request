@@ -74,7 +74,8 @@ impl TaskOperator {
 
         if self.task.conf.common_data.mode == Mode::BackGround && !is_active_user(self.task.uid()) {
             info!("pause for user stopped, tid: {}", self.task.task_id());
-            self.task.set_status(State::Waiting, Reason::AccountStopped);
+            self.task
+                .change_task_status(State::Waiting, Reason::AccountStopped);
             return Poll::Ready(Err(HttpClientError::user_aborted()));
         }
 

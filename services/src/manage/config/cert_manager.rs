@@ -65,7 +65,7 @@ fn update_system_cert(info: &Arc<RwLock<CertInfo>>) {
         let certs = unsafe { &*c_certs_ptr };
         let c_cert_list_ptr =
             unsafe { std::slice::from_raw_parts(certs.cert_data_list, certs.len as usize) };
-        for (_, item) in c_cert_list_ptr.iter().enumerate() {
+        for item in c_cert_list_ptr.iter() {
             let cert = unsafe { &**item };
             let cert_slice = unsafe { std::slice::from_raw_parts(cert.data, cert.size as usize) };
             match Certificate::from_pem(cert_slice) {

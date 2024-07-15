@@ -81,7 +81,12 @@ pub(crate) async fn download(task: Arc<RequestTask>) {
     use crate::sys_event::SysEvent;
     // `unwrap` for propagating panics among threads.
 
-    let reason = *task.code.lock().unwrap().get(0).unwrap_or(&Reason::Default);
+    let reason = *task
+        .code
+        .lock()
+        .unwrap()
+        .first()
+        .unwrap_or(&Reason::Default);
     // If `Reason` is not `Default`a records this sys event.
 
     if reason != Reason::Default {
@@ -150,5 +155,5 @@ async fn download_inner(task: Arc<RequestTask>) {
     if let Some(file) = task.files.get(0) {
         let _ = file.sync_all().await;
     }
-    task.set_status(State::Completed, Reason::Default);
+    task.change_task_status(State::Completed, Reason::Default);
 }
