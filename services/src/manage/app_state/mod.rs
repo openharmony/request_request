@@ -106,6 +106,7 @@ impl AppStateManager {
         }
 
         let state = query_app_state(uid);
+        debug!("uid is {},app state is {:?}", uid, state);
 
         let app = AppStateInfo::new(AppState::new(uid, state, self.tx.clone()));
         let state = app.state.clone();
