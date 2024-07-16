@@ -582,6 +582,7 @@ ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config
             REQUEST_HILOGD("CJTask config is not firstInit");
             return error;
         }
+        close(fd);
         ExceptionErrorCode code = ExceptionErrorCode::E_FILE_IO;
         return {
             .code = code,
