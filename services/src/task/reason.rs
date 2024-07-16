@@ -20,19 +20,15 @@ mod ffi {
     pub(crate) enum Reason {
         Default = 0,
         TaskSurvivalOneMonth,
-        WaitingNetworkOneDay,  // unused
-        StoppedByNewFrontTask, // unused
-        RunningTaskMeetLimits,
+        RunningTaskMeetLimits = 4,
         UserOperation,
         AppBackgroundOrTerminate,
         NetworkOffline,
         UnsupportedNetworkType,
-        BuildClientFailed, // unused
-        BuildRequestFailed,
+        BuildRequestFailed = 10,
         GetFileSizeFailed,
-        ContinuousTaskTimeout,
-        ConnectError, // unused
-        RequestError,
+        ContinuousTaskTimeout = 12,
+        RequestError = 14,
         UploadFileError,
         RedirectError,
         ProtocolError,
@@ -52,18 +48,14 @@ impl From<u8> for Reason {
         match value {
             0 => Reason::Default,
             1 => Reason::TaskSurvivalOneMonth,
-            2 => Reason::WaitingNetworkOneDay,
-            3 => Reason::StoppedByNewFrontTask,
             4 => Reason::RunningTaskMeetLimits,
             5 => Reason::UserOperation,
             6 => Reason::AppBackgroundOrTerminate,
             7 => Reason::NetworkOffline,
             8 => Reason::UnsupportedNetworkType,
-            9 => Reason::BuildClientFailed,
             10 => Reason::BuildRequestFailed,
             11 => Reason::GetFileSizeFailed,
             12 => Reason::ContinuousTaskTimeout,
-            13 => Reason::ConnectError,
             14 => Reason::RequestError,
             15 => Reason::UploadFileError,
             16 => Reason::RedirectError,
@@ -85,18 +77,14 @@ impl Reason {
         match self {
             Reason::Default => "",
             Reason::TaskSurvivalOneMonth => "The task has not been completed for a month yet",
-            Reason::WaitingNetworkOneDay => "The task waiting for network recovery has not been completed for a day yet",
-            Reason::StoppedByNewFrontTask => "Stopped by a new front task",
             Reason::RunningTaskMeetLimits => "Too many task in running state",
             Reason::UserOperation => "User operation",
             Reason::AppBackgroundOrTerminate => "The app is background or terminate",
             Reason::NetworkOffline => "NetWork is offline",
             Reason::UnsupportedNetworkType => "NetWork type not meet the task config",
-            Reason::BuildClientFailed => "Build client error",
             Reason::BuildRequestFailed => "Build request error",
             Reason::GetFileSizeFailed => "Failed because cannot get the file size from the server and the precise is setted true by user",
             Reason::ContinuousTaskTimeout => "Continuous processing task time out",
-            Reason::ConnectError => "Connect error",
             Reason::RequestError => "Request error",
             Reason::UploadFileError => "There are some files upload failed",
             Reason::RedirectError => "Redirect error",
@@ -121,18 +109,14 @@ mod test {
     fn ut_enum_reason() {
         assert_eq!(Reason::Default.repr, 0);
         assert_eq!(Reason::TaskSurvivalOneMonth.repr, 1);
-        assert_eq!(Reason::WaitingNetworkOneDay.repr, 2);
-        assert_eq!(Reason::StoppedByNewFrontTask.repr, 3);
         assert_eq!(Reason::RunningTaskMeetLimits.repr, 4);
         assert_eq!(Reason::UserOperation.repr, 5);
         assert_eq!(Reason::AppBackgroundOrTerminate.repr, 6);
         assert_eq!(Reason::NetworkOffline.repr, 7);
         assert_eq!(Reason::UnsupportedNetworkType.repr, 8);
-        assert_eq!(Reason::BuildClientFailed.repr, 9);
         assert_eq!(Reason::BuildRequestFailed.repr, 10);
         assert_eq!(Reason::GetFileSizeFailed.repr, 11);
         assert_eq!(Reason::ContinuousTaskTimeout.repr, 12);
-        assert_eq!(Reason::ConnectError.repr, 13);
         assert_eq!(Reason::RequestError.repr, 14);
         assert_eq!(Reason::UploadFileError.repr, 15);
         assert_eq!(Reason::RedirectError.repr, 16);

@@ -15,10 +15,12 @@ pub(crate) mod client;
 /// request task config
 pub mod config;
 
+/// request task info
+pub mod info;
+
 pub(crate) mod download;
 pub(crate) mod ffi;
 pub(crate) mod files;
-pub(crate) mod info;
 pub(crate) mod notify;
 mod operator;
 pub(crate) mod reason;

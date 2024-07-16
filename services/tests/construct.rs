@@ -12,35 +12,10 @@
 // limitations under the License.
 
 use download_server::config::ConfigBuilder;
-use download_server::interface;
-use ipc::parcel::MsgParcel;
-use ipc::remote::RemoteObj;
-const SERVICE_TOKEN: &str = "OHOS.Download.RequestServiceInterface";
-
-fn test_init() -> RemoteObj {
-    #[cfg(gn_test)]
-    {
-        use super::test_init;
-        test_init()
-    }
-    #[cfg(not(gn_test))]
-    {
-        let ptr = std::ptr::null_mut::<ipc::cxx_share::IRemoteObject>();
-        unsafe { RemoteObj::from_ciremote(ptr).unwrap() }
-    }
-}
-
+use test_common::test_init;
 #[test]
 fn sdv_construct_basic() {
-    let download_server = test_init();
-
+    let agent = test_init();
     let config = ConfigBuilder::new().build();
-    let mut data = MsgParcel::new();
-    data.write_interface_token(SERVICE_TOKEN).unwrap();
-    data.write(&config).unwrap();
-    let mut reply = download_server
-        .send_request(interface::CONSTRUCT, &mut data)
-        .unwrap();
-    let ret: i32 = reply.read().unwrap();
-    assert_eq!(ret, 5);
+    let _task_id = agent.construct(config);
 }
