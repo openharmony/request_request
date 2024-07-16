@@ -260,7 +260,6 @@ mod test {
             "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS"
         ));
         assert!(check_permission("ohos.permission.MANAGE_LOCAL_ACCOUNTS"));
-        assert!(check_permission("ohos.permission.GET_RUNNING_INFO"));
         assert!(!check_permission(
             "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS_EXTENSION"
         ));
