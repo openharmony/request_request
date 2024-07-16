@@ -11,7 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::os::fd::RawFd;
+use std::fs::File;
+use std::os::fd::{AsRawFd, RawFd};
 
 /// File Spec
 #[derive(Clone, Debug)]
@@ -28,6 +29,20 @@ pub struct FileSpec {
     pub is_user_file: bool,
     /// Only for user file.
     pub fd: Option<RawFd>,
+}
+
+impl FileSpec {
+    /// Create a new file spec with user file.
+    pub fn user_file(f: &File) -> Self {
+        Self {
+            name: "".to_string(),
+            path: "".to_string(),
+            file_name: "".to_string(),
+            mime_type: "".to_string(),
+            is_user_file: true,
+            fd: Some(f.as_raw_fd()),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]

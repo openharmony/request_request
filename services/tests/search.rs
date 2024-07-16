@@ -11,33 +11,64 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use download_server::config::ConfigBuilder;
-use ipc::parcel::MsgParcel;
-use ipc::remote::RemoteObj;
-const SERVICE_TOKEN: &str = "OHOS.Download.RequestServiceInterface";
+use std::time::{SystemTime, UNIX_EPOCH};
 
-fn test_init() -> RemoteObj {
-    #[cfg(gn_test)]
-    {
-        use super::test_init;
-        test_init()
-    }
-    #[cfg(not(gn_test))]
-    {
-        let ptr = std::ptr::null_mut::<ipc::cxx_share::IRemoteObject>();
-        unsafe { RemoteObj::from_ciremote(ptr).unwrap() }
+use download_server::config::{Action, ConfigBuilder, Mode};
+use download_server::info::State;
+use test_common::test_init;
+
+fn get_current_timestamp() -> u64 {
+    match SystemTime::now().duration_since(UNIX_EPOCH) {
+        Ok(n) => n.as_millis() as u64,
+        Err(_) => panic!("SystemTime before UNIX EPOCH!"),
     }
 }
 
 #[test]
 fn sdv_search_user() {
-    let download_server = test_init();
+    let agent = test_init();
 
-    let config = ConfigBuilder::new().build();
-    let mut data = MsgParcel::new();
-    data.write_interface_token(SERVICE_TOKEN).unwrap();
-    data.write(&config).unwrap();
-    let mut reply = download_server.send_request(0, &mut data).unwrap();
-    let ret: i32 = reply.read().unwrap();
-    assert_eq!(ret, 0);
+    let config = ConfigBuilder::new()
+        .action(Action::Download)
+        .mode(Mode::FrontEnd)
+        .build();
+    let task_id = agent.construct(config);
+    let current = get_current_timestamp() as i64;
+    let v = agent.search(current, current - 3000, State::Any, Action::Any, Mode::Any);
+    assert!(v.contains(&task_id));
+    let v = agent.search(current + 3000, current, State::Any, Action::Any, Mode::Any);
+    assert!(!v.contains(&task_id));
+    let v = agent.search(
+        current,
+        current - 3000,
+        State::Initialized,
+        Action::Download,
+        Mode::FrontEnd,
+    );
+    assert!(v.contains(&task_id));
+    let v = agent.search(
+        current,
+        current - 3000,
+        State::Running,
+        Action::Download,
+        Mode::FrontEnd,
+    );
+    assert!(!v.contains(&task_id));
+    let v = agent.search(
+        current,
+        current - 3000,
+        State::Initialized,
+        Action::Upload,
+        Mode::FrontEnd,
+    );
+    assert!(!v.contains(&task_id));
+
+    let v = agent.search(
+        current,
+        current - 3000,
+        State::Initialized,
+        Action::Download,
+        Mode::BackGround,
+    );
+    assert!(!v.contains(&task_id));
 }

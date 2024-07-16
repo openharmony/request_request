@@ -241,10 +241,10 @@ impl Default for TaskConfig {
                 mode: Mode::BackGround,
                 cover: false,
                 network_config: NetworkConfig::Wifi,
-                metered: false,
+                metered: true,
                 roaming: false,
                 retry: false,
-                redirect: false,
+                redirect: true,
                 index: 0,
                 begins: 0,
                 ends: -1,
@@ -325,6 +325,12 @@ impl ConfigBuilder {
     /// build
     pub fn build(&mut self) -> TaskConfig {
         self.inner.clone()
+    }
+
+    /// redirect
+    pub fn redirect(&mut self, redirect: bool) -> &mut Self {
+        self.inner.common_data.redirect = redirect;
+        self
     }
 }
 

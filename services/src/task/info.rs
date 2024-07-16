@@ -13,7 +13,7 @@
 
 use std::collections::HashMap;
 
-pub(crate) use ffi::State;
+pub use ffi::State;
 
 use super::ffi::CEachFileStatus;
 use super::notify::{EachFileStatus, NotifyData, Progress};
@@ -87,16 +87,27 @@ pub(crate) struct InfoSet {
 mod ffi {
     #[derive(Clone, Copy, PartialEq, Debug)]
     #[repr(u8)]
-    enum State {
+    /// Task state
+    pub enum State {
+        /// Initialized
         Initialized = 0x00,
+        /// Waiting
         Waiting = 0x10,
+        /// Running
         Running = 0x20,
+        /// Retrying
         Retrying = 0x21,
+        /// Paused
         Paused = 0x30,
+        /// Stopped
         Stopped = 0x31,
+        /// Completed
         Completed = 0x40,
+        /// Failed
         Failed = 0x41,
+        /// Removed
         Removed = 0x50,
+        /// Any
         Any = 0x61,
     }
 }

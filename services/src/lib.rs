@@ -37,7 +37,7 @@ mod trace;
 mod utils;
 
 pub use service::interface;
-pub use task::config;
+pub use task::{config, info};
 pub use utils::form_item::FileSpec;
 
 #[cfg(not(test))]

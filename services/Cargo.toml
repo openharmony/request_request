@@ -39,3 +39,6 @@ cxx = "1.0.115"
 system_ability_fwk = { git = "https://gitee.com/openharmony/systemabilitymgr_safwk" }
 samgr = { git = "https://gitee.com/openharmony/systemabilitymgr_samgr" }
 ipc = { git = "https://gitee.com/openharmony/communication_ipc" }
+
+[dev-dependencies]
+test_common = { path = "../test/rustest" }

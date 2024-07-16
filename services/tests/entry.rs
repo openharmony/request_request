@@ -13,28 +13,6 @@
 
 #![cfg(gn_test)]
 
-use ipc::remote::RemoteObj;
-use samgr::definition::DOWNLOAD_SERVICE_ID;
-use samgr::manage::SystemAbilityManager;
-mod basic;
 mod construct;
-/// test init
-pub fn test_init() -> RemoteObj {
-    unsafe { SetAccessTokenPermission() };
-    let mut count = 0;
-    loop {
-        if let Some(download_server) =
-            SystemAbilityManager::check_system_ability(DOWNLOAD_SERVICE_ID)
-        {
-            return download_server;
-        }
-        SystemAbilityManager::load_system_ability(DOWNLOAD_SERVICE_ID, 15000).unwrap();
-        std::thread::sleep(std::time::Duration::from_secs(1));
-        count += 1;
-        println!("load download service {} seconds", count);
-    }
-}
-
-extern "C" {
-    fn SetAccessTokenPermission();
-}
+mod search;
+mod start;

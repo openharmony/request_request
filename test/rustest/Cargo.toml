@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Copyright (C) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,8 +11,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[workspace]
-resolver = "2"
-members = [
-    "services", "test/rustest",
-]
+[package]
+name = "test_common"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+ylong_runtime = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime", features = ["full"] }
+download_server = { path = "../../services/" }
+system_ability_fwk = { git = "https://gitee.com/openharmony/systemabilitymgr_safwk" }
+samgr = { git = "https://gitee.com/openharmony/systemabilitymgr_samgr" }
+ipc = { git = "https://gitee.com/openharmony/communication_ipc" }
+once_cell = "1.17.0"
