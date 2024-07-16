@@ -217,18 +217,21 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
 
         if result {
             info!(
-                "upload one file success, tid: {}, index is {}",
-                task.conf.common_data.task_id, index
+                "upload one file success, tid: {}, index is {}, size is {}",
+                task.conf.common_data.task_id, index, size
             );
             task.upload_counts.fetch_add(1, Ordering::SeqCst);
         }
-        let state = task.status.lock().unwrap().state;
 
-        if state != State::Running && state != State::Retrying {
-            return;
+        {
+            let task_status = task.status.lock().unwrap();
+            if !task_status.state.is_doing() {
+                return;
+            }
         }
-        let mut progress = task.progress.lock().unwrap();
+
         task.notify_header_receive();
+        let mut progress = task.progress.lock().unwrap();
         if index + 1 == size {
             break;
         }
