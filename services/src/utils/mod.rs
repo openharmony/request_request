@@ -116,7 +116,7 @@ fn query_top_uid() -> Option<u64> {
         let ret = ffi::GetTopUid(&mut uid);
         if ret != 0 || uid == 0 {
             error!("GetTopUid failed, ret: {} retry time: {}", ret, i);
-            std::thread::sleep(std::time::Duration::from_millis(200));
+            std::thread::sleep(std::time::Duration::from_millis(500));
         } else {
             debug!("GetTopUid ok: {}", uid);
             return Some(uid as u64);

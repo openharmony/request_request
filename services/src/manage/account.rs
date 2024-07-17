@@ -12,8 +12,8 @@
 // limitations under the License.
 
 use std::pin::Pin;
-use std::sync::atomic::{AtomicI32, Ordering};
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
+use std::sync::{Mutex, Once};
 
 pub(crate) use ffi::*;
 
@@ -21,24 +21,24 @@ use super::database::RequestDb;
 use super::TaskManager;
 use crate::manage::events::TaskManagerEvent;
 use crate::manage::task_manager::TaskManagerTx;
+use crate::utils::runtime_spawn;
 
 #[derive(Debug)]
 pub(crate) enum AccountEvent {
-    Switch,
-    Active,
-    Stop,
     Remove(i32),
+    Changed,
 }
 
-static FOREGROUND_ACCOUNT: AtomicI32 = AtomicI32::new(-1);
+static FOREGROUND_ACCOUNT: AtomicI32 = AtomicI32::new(0);
 static BACKGROUND_ACCOUNTS: Mutex<Option<Vec<i32>>> = Mutex::new(None);
+static UPDATE_FLAG: AtomicBool = AtomicBool::new(false);
+static mut TASK_MANAGER_TX: Option<TaskManagerTx> = None;
 
 impl TaskManager {
     pub(crate) async fn handle_account_event(&mut self, event: AccountEvent) {
-        update_accounts();
         match event {
             AccountEvent::Remove(user_id) => remove_account_tasks(user_id),
-            _ => self.scheduler.on_user_change().await,
+            AccountEvent::Changed => self.scheduler.on_user_change().await,
         }
     }
 }
@@ -54,11 +54,13 @@ pub(crate) fn remove_account_tasks(user_id: i32) {
 }
 
 pub(crate) fn is_foreground_user(uid: u64) -> bool {
-    let foreground = FOREGROUND_ACCOUNT.load(Ordering::Acquire);
-    if foreground == -1 {
-        error!("foreground account is empty update accounts first");
-        update_accounts();
-        return is_foreground_user(uid);
+    let foreground = FOREGROUND_ACCOUNT.load(Ordering::SeqCst);
+    if foreground == 0 {
+        error!("foreground account is none");
+        if let Some(tx) = unsafe { TASK_MANAGER_TX.as_ref() } {
+            update_accounts(tx.clone());
+        }
+        return true;
     }
     get_user_id_from_uid(uid) == foreground
 }
@@ -68,9 +70,11 @@ pub(crate) fn is_background_user(uid: u64) -> bool {
     match background.as_ref() {
         Some(accounts) => accounts.contains(&get_user_id_from_uid(uid)),
         None => {
-            error!("background accounts is empty update accounts first");
-            update_accounts();
-            is_background_user(uid)
+            error!("background accounts is empty");
+            if let Some(tx) = unsafe { TASK_MANAGER_TX.as_ref() } {
+                update_accounts(tx.clone());
+            }
+            true
         }
     }
 }
@@ -84,41 +88,114 @@ pub(crate) fn is_active_user(uid: u64) -> bool {
 }
 
 fn get_user_id_from_uid(uid: u64) -> i32 {
+    const SYSTEM_USER_ID: i32 = 0;
     let mut user_id = 0;
     let res = GetOsAccountLocalIdFromUid(uid as i32, &mut user_id);
     if res != 0 {
-        error!("GetOsAccountLocalIdFromUid failed: {} retry", res);
-        return get_user_id_from_uid(uid);
+        // When uid as i32 gets a negative number, it can goes to this branch.
+        // maybe there's a memory problem happen.
+        error!("GetOsAccountLocalIdFromUid failed: {}", res);
+        return SYSTEM_USER_ID;
     }
     user_id
 }
 
-pub(crate) fn update_accounts() {
+pub(crate) fn update_accounts(task_manager: TaskManagerTx) {
+    if UPDATE_FLAG
+        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        .is_ok()
+    {
+        runtime_spawn(AccountUpdater::new(task_manager).update());
+    }
+}
+
+struct AccountUpdater {
+    change_flag: bool,
+    task_manager: TaskManagerTx,
+}
+
+impl AccountUpdater {
+    fn new(task_manager: TaskManagerTx) -> Self {
+        Self {
+            change_flag: false,
+            task_manager,
+        }
+    }
+
+    async fn update(mut self) {
+        info!("AccountUpdate Start");
+        let old_forground = FOREGROUND_ACCOUNT.load(Ordering::SeqCst);
+        let old_background = BACKGROUND_ACCOUNTS.lock().unwrap().clone();
+
+        if let Some(foreground_account) = get_foreground_account().await {
+            if old_forground != foreground_account {
+                self.change_flag = true;
+                FOREGROUND_ACCOUNT.store(foreground_account, Ordering::SeqCst);
+                let request_db = RequestDb::get_instance();
+                request_db.on_account_change(foreground_account);
+            }
+        }
+
+        if let Some(background_accounts) = get_background_accounts().await {
+            if !old_background.is_some_and(|old_background| old_background == background_accounts) {
+                self.change_flag = true;
+                let request_db = RequestDb::get_instance();
+                for account in background_accounts.iter() {
+                    request_db.on_account_change(*account);
+                }
+                *BACKGROUND_ACCOUNTS.lock().unwrap() = Some(background_accounts);
+            }
+        }
+    }
+}
+
+impl Drop for AccountUpdater {
+    fn drop(&mut self) {
+        info!("AccountUpdate Finished");
+        UPDATE_FLAG.store(false, Ordering::SeqCst);
+        if self.change_flag {
+            info!("AccountInfo changed notify task manager");
+            self.task_manager
+                .send_event(TaskManagerEvent::Account(AccountEvent::Changed));
+        }
+    }
+}
+
+async fn get_foreground_account() -> Option<i32> {
     let mut foreground_account = 0;
-    let res = GetForegroundOsAccount(&mut foreground_account);
-    if res != 0 {
-        error!("GetForegroundOsAccount failed: {} retry", res);
-        return update_accounts();
+    for i in 0..10 {
+        let res = GetForegroundOsAccount(&mut foreground_account);
+        if res == 0 {
+            return Some(foreground_account);
+        } else {
+            error!("GetForegroundOsAccount failed: {} retry {} times", res, i);
+            ylong_runtime::time::sleep(std::time::Duration::from_millis(500));
+        }
     }
-    FOREGROUND_ACCOUNT.store(foreground_account, Ordering::Release);
+    None
+}
 
-    let request_db = RequestDb::get_instance();
-    request_db.on_account_change(foreground_account);
-
-    let mut new_accounts = vec![];
-    let res = GetBackgroundOsAccounts(&mut new_accounts);
-    if res != 0 {
-        error!("GetBackgroundOsAccount failed: {} retry", res);
-        return update_accounts();
+async fn get_background_accounts() -> Option<Vec<i32>> {
+    for i in 0..10 {
+        let mut accounts = vec![];
+        let res = GetBackgroundOsAccounts(&mut accounts);
+        if res == 0 {
+            return Some(accounts);
+        } else {
+            error!("GetBackgroundOsAccounts failed: {} retry {} times", res, i);
+            ylong_runtime::time::sleep(std::time::Duration::from_millis(500));
+        }
     }
-
-    for account in new_accounts.iter() {
-        request_db.on_account_change(*account);
-    }
-    *BACKGROUND_ACCOUNTS.lock().unwrap() = Some(new_accounts);
+    None
 }
 
 pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
+    static ONCE: Once = Once::new();
+
+    ONCE.call_once(|| unsafe {
+        TASK_MANAGER_TX = Some(task_manager.clone());
+    });
+
     info!("registry_account_subscribe");
 
     loop {
@@ -126,9 +203,7 @@ pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
             OS_ACCOUNT_SUBSCRIBE_TYPE::SWITCHED,
             Box::new(task_manager.clone()),
             |_, _| {},
-            |_new_id, _old_id, task_manager| {
-                task_manager.send_event(TaskManagerEvent::Account(AccountEvent::Switch));
-            },
+            |_new_id, _old_id, task_manager| update_accounts(task_manager.clone()),
         );
 
         if ret != 0 {
@@ -146,9 +221,7 @@ pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
         let ret = RegistryAccountSubscriber(
             OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVED,
             Box::new(task_manager.clone()),
-            |_id, task_manager| {
-                task_manager.send_event(TaskManagerEvent::Account(AccountEvent::Active));
-            },
+            |_id, task_manager| update_accounts(task_manager.clone()),
             |_, _, _| {},
         );
 
@@ -188,9 +261,7 @@ pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
         let ret = RegistryAccountSubscriber(
             OS_ACCOUNT_SUBSCRIBE_TYPE::STOPPED,
             Box::new(task_manager.clone()),
-            |_id, task_manager| {
-                task_manager.send_event(TaskManagerEvent::Account(AccountEvent::Stop));
-            },
+            |_id, task_manager| update_accounts(task_manager.clone()),
             |_, _, _| {},
         );
 
@@ -205,7 +276,7 @@ pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
         }
     }
 
-    update_accounts();
+    update_accounts(task_manager.clone());
 }
 
 impl RequestDb {
@@ -288,15 +359,55 @@ mod test {
     #[test]
     fn ut_account_check_oh() {
         test_init();
-        assert_eq!(-1, FOREGROUND_ACCOUNT.load(Ordering::SeqCst));
+
+        assert_eq!(0, FOREGROUND_ACCOUNT.load(Ordering::SeqCst));
         assert!(BACKGROUND_ACCOUNTS.lock().unwrap().is_none());
         assert!(is_foreground_user(USER_100));
         assert!(is_system_user(USER_SYSTEM));
-        assert!(!is_background_user(USER_101));
-        assert!(BACKGROUND_ACCOUNTS.lock().unwrap().is_some());
 
-        let (tx, _rx) = mpsc::unbounded_channel();
+        let (tx, mut rx) = mpsc::unbounded_channel();
         let task_manager = TaskManagerTx { tx };
-        registry_account_subscribe(task_manager)
+        registry_account_subscribe(task_manager);
+        ylong_runtime::block_on(async {
+            let msg = rx.recv().await.unwrap();
+            assert!(matches!(
+                msg,
+                TaskManagerEvent::Account(AccountEvent::Changed)
+            ));
+            assert_ne!(FOREGROUND_ACCOUNT.load(Ordering::SeqCst), 0);
+            assert!(BACKGROUND_ACCOUNTS.lock().unwrap().is_some());
+        })
+    }
+
+    #[test]
+    fn ut_account_update() {
+        test_init();
+        ylong_runtime::block_on(async {
+            let (tx, mut rx) = mpsc::unbounded_channel();
+            let task_manager = TaskManagerTx { tx };
+            let updater = AccountUpdater::new(task_manager.clone());
+            drop(updater);
+            ylong_runtime::time::sleep(std::time::Duration::from_secs(2)).await;
+            assert!(rx.is_empty());
+            let mut updater = AccountUpdater::new(task_manager);
+            updater.change_flag = true;
+            drop(updater);
+            let msg = rx.recv().await.unwrap();
+            assert!(matches!(
+                msg,
+                TaskManagerEvent::Account(AccountEvent::Changed)
+            ));
+        })
+    }
+
+    #[test]
+    fn ut_account_update_branch() {
+        let old_background = Option::<Vec<i32>>::None;
+        let background_accounts = vec![100];
+        assert!(!old_background.is_some_and(|old_background| old_background == background_accounts));
+        let old_background = Option::<Vec<i32>>::Some(vec![101]);
+        assert!(!old_background.is_some_and(|old_background| old_background == background_accounts));
+        let old_background = Option::<Vec<i32>>::Some(vec![100]);
+        assert!(old_background.is_some_and(|old_background| old_background == background_accounts));
     }
 }

@@ -42,13 +42,13 @@ SubscriberWrapper::~SubscriberWrapper()
 
 void SubscriberWrapper::OnAccountsChanged(const int &id)
 {
-    REQUEST_HILOGI("SubscriberWrapper::resume account tasks=%{public}d", id);
+    REQUEST_HILOGI("Account Change to %{public}d", id);
     on_accounts_changed_(id, *task_manager_);
 }
 
 void SubscriberWrapper::OnAccountsSwitch(const int &newId, const int &oldId)
 {
-    REQUEST_HILOGI("SubscriberWrapper::OnAccountsSwitch newId=%{public}d, oldId=%{public}d", newId, oldId);
+    REQUEST_HILOGI("AccountsSwitch newAccount=%{public}d, oldAccount=%{public}d", newId, oldId);
     on_accounts_switch_(newId, oldId, *task_manager_);
 }
 
