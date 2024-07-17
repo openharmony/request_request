@@ -20,70 +20,20 @@ use super::QosLevel;
 pub(crate) struct RssCapacity(usize, usize, usize, QosLevel, QosLevel, QosLevel);
 
 impl RssCapacity {
-    pub(crate) const LEVEL0: Self = Self(
-        8,
-        32,
-        8,
-        QosLevel::FullSpeed,
-        QosLevel::MiddleSpeed,
-        QosLevel::MiddleSpeed,
-    );
-    pub(crate) const LEVEL1: Self = Self(
-        8,
-        32,
-        8,
-        QosLevel::FullSpeed,
-        QosLevel::MiddleSpeed,
-        QosLevel::MiddleSpeed,
-    );
-    pub(crate) const LEVEL2: Self = Self(
-        8,
-        32,
-        8,
-        QosLevel::FullSpeed,
-        QosLevel::MiddleSpeed,
-        QosLevel::MiddleSpeed,
-    );
-    pub(crate) const LEVEL3: Self = Self(
-        8,
-        16,
-        4,
-        QosLevel::FullSpeed,
-        QosLevel::LowSpeed,
-        QosLevel::LowSpeed,
-    );
-    pub(crate) const LEVEL4: Self = Self(
-        4,
-        8,
-        2,
-        QosLevel::HighSpeed,
-        QosLevel::LowSpeed,
-        QosLevel::LowSpeed,
-    );
-    pub(crate) const LEVEL5: Self = Self(
-        4,
-        4,
-        0,
-        QosLevel::HighSpeed,
-        QosLevel::LowSpeed,
-        QosLevel::Shutdown,
-    );
-    pub(crate) const LEVEL6: Self = Self(
-        2,
-        0,
-        0,
-        QosLevel::HighSpeed,
-        QosLevel::Shutdown,
-        QosLevel::Shutdown,
-    );
-    pub(crate) const LEVEL7: Self = Self(
-        2,
-        0,
-        0,
-        QosLevel::MiddleSpeed,
-        QosLevel::Shutdown,
-        QosLevel::Shutdown,
-    );
+    pub(crate) const LEVEL0: Self =
+        Self(8, 32, 8, QosLevel::High, QosLevel::Middle, QosLevel::Middle);
+    pub(crate) const LEVEL1: Self =
+        Self(8, 32, 8, QosLevel::High, QosLevel::Middle, QosLevel::Middle);
+    pub(crate) const LEVEL2: Self =
+        Self(8, 32, 8, QosLevel::High, QosLevel::Middle, QosLevel::Middle);
+    pub(crate) const LEVEL3: Self =
+        Self(8, 16, 4, QosLevel::High, QosLevel::Middle, QosLevel::Middle);
+    pub(crate) const LEVEL4: Self =
+        Self(4, 16, 4, QosLevel::High, QosLevel::Middle, QosLevel::Middle);
+    pub(crate) const LEVEL5: Self =
+        Self(4, 8, 4, QosLevel::High, QosLevel::Middle, QosLevel::Middle);
+    pub(crate) const LEVEL6: Self = Self(4, 8, 2, QosLevel::High, QosLevel::Low, QosLevel::Low);
+    pub(crate) const LEVEL7: Self = Self(4, 4, 2, QosLevel::High, QosLevel::Low, QosLevel::Low);
 
     pub(crate) fn new(level: i32) -> Self {
         match level {
@@ -121,5 +71,58 @@ impl RssCapacity {
 
     pub(crate) fn m3_speed(&self) -> QosLevel {
         self.5
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    fn is_rss_equal(rss1: RssCapacity, rss2: RssCapacity) -> bool {
+        rss1.m1() == rss2.m1()
+            && rss1.m2() == rss2.m2()
+            && rss1.m3() == rss2.m3()
+            && rss1.m1_speed() == rss2.m1_speed()
+            && rss1.m2_speed() == rss2.m2_speed()
+            && rss1.m2_speed() == rss2.m2_speed()
+    }
+
+    #[test]
+    fn ut_rss_capacity() {
+        assert_eq!(QosLevel::High as u64, 0u64);
+        assert_eq!(QosLevel::Middle as u64, 800u64);
+        assert_eq!(QosLevel::Low as u64, 400u64);
+        assert!(is_rss_equal(
+            RssCapacity::new(0),
+            RssCapacity(8, 32, 8, QosLevel::High, QosLevel::Middle, QosLevel::Middle,)
+        ));
+        assert!(is_rss_equal(
+            RssCapacity::new(1),
+            RssCapacity(8, 32, 8, QosLevel::High, QosLevel::Middle, QosLevel::Middle,)
+        ));
+        assert!(is_rss_equal(
+            RssCapacity::new(2),
+            RssCapacity(8, 32, 8, QosLevel::High, QosLevel::Middle, QosLevel::Middle,)
+        ));
+        assert!(is_rss_equal(
+            RssCapacity::new(3),
+            RssCapacity(8, 16, 4, QosLevel::High, QosLevel::Middle, QosLevel::Middle,)
+        ));
+        assert!(is_rss_equal(
+            RssCapacity::new(4),
+            RssCapacity(4, 16, 4, QosLevel::High, QosLevel::Middle, QosLevel::Middle,)
+        ));
+        assert!(is_rss_equal(
+            RssCapacity::new(5),
+            RssCapacity(4, 8, 4, QosLevel::High, QosLevel::Middle, QosLevel::Middle,)
+        ));
+        assert!(is_rss_equal(
+            RssCapacity::new(6),
+            RssCapacity(4, 8, 2, QosLevel::High, QosLevel::Low, QosLevel::Low,)
+        ));
+        assert!(is_rss_equal(
+            RssCapacity::new(7),
+            RssCapacity(4, 4, 2, QosLevel::High, QosLevel::Low, QosLevel::Low,)
+        ));
     }
 }
