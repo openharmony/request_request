@@ -354,7 +354,7 @@ impl Take<HashMap<String, String>> for &[u8] {
 
 impl Take<String> for &[u8] {
     fn take_value(&mut self) -> String {
-        let len = self.iter().position(|c| *c == b'\0' as u8).unwrap();
+        let len = self.iter().position(|c| *c == b'\0').unwrap();
         let (left, right) = self.split_at(len + 1);
         *self = right;
         CString::from_vec_with_nul(left.to_vec())

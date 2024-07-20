@@ -108,7 +108,7 @@ impl RequestTask {
     }
 
     pub(crate) fn satisfied(&self) -> bool {
-        if !self.net_work_online() || !self.check_net_work_status() {
+        if !self.network_online() || !self.check_network_status() {
             error!("check network failed, tid: {}", self.task_id());
             false
         } else {
@@ -263,7 +263,7 @@ impl RequestTask {
         }
     }
 
-    pub(crate) fn check_net_work_status(&self) -> bool {
+    pub(crate) fn check_network_status(&self) -> bool {
         if !self.is_satisfied_configuration() {
             if !(self.conf.version == Version::API10
                 && self.conf.common_data.mode == Mode::BackGround
@@ -289,7 +289,7 @@ impl RequestTask {
         }
     }
 
-    pub(crate) fn net_work_online(&self) -> bool {
+    pub(crate) fn network_online(&self) -> bool {
         if !self.network.is_online() {
             if self.conf.version == Version::API10
                 && self.conf.common_data.mode == Mode::BackGround

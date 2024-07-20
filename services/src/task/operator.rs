@@ -62,7 +62,7 @@ impl TaskOperator {
 
         let state = self.task.status.lock().unwrap().state;
         if (state != State::Running && state != State::Retrying)
-            || (self.task.conf.version == Version::API10 && !self.task.check_net_work_status())
+            || (self.task.conf.version == Version::API10 && !self.task.check_network_status())
         {
             info!("pause the task, tid: {}", self.task.task_id());
             return Poll::Ready(Err(HttpClientError::user_aborted()));

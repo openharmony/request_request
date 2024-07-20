@@ -48,16 +48,21 @@ impl Network {
 
     pub(crate) fn satisfied_state(&self, config: &TaskConfig) -> bool {
         match &*self.state() {
+            // Handles in `RequestTask::network_online`.
             NetworkState::Offline => true,
-            NetworkState::Online(info) => match config.common_data.network_config {
-                NetworkConfig::Any => true,
-                NetworkConfig::Wifi if info.network_type == NetworkType::Cellular => false,
-                NetworkConfig::Cellular if info.network_type == NetworkType::Wifi => false,
-                _ => {
-                    (config.common_data.roaming || !info.is_roaming)
-                        && (config.common_data.metered || !info.is_metered)
+            NetworkState::Online(info) => {
+                let cellular_satisfy = (config.common_data.roaming || !info.is_roaming)
+                    && (config.common_data.metered || !info.is_metered);
+                match config.common_data.network_config {
+                    NetworkConfig::Wifi => info.network_type == NetworkType::Wifi,
+                    NetworkConfig::Cellular => {
+                        info.network_type == NetworkType::Cellular && cellular_satisfy
+                    }
+                    NetworkConfig::Any => {
+                        info.network_type != NetworkType::Cellular || cellular_satisfy
+                    }
                 }
-            },
+            }
         }
     }
 
