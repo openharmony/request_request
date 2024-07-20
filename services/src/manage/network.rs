@@ -153,7 +153,6 @@ impl NetworkInner {
 
             *state = Online(info.clone());
 
-            #[cfg(not(test))]
             self.update_database(Online(info));
         } else {
             info!("Network change with the same: {:?}", info);
@@ -197,7 +196,7 @@ impl RequestDb {
         if info.is_roaming {
             sql.push_str(" AND roaming = 1");
         }
-        if let Err(e) = self.execute_sql(&sql) {
+        if let Err(e) = self.execute(&sql) {
             error!("update_for_network_available sql failed: {}", e);
         };
     }
@@ -237,7 +236,7 @@ impl RequestDb {
         if !sql_1.is_empty() {
             sql = format!("{} AND ({})", sql, sql_1);
         }
-        if let Err(e) = self.execute_sql(&sql) {
+        if let Err(e) = self.execute(&sql) {
             error!("update_for_network_unavailable sql failed: {}", e);
         }
     }
@@ -252,7 +251,7 @@ impl RequestDb {
             State::Running.repr,
             State::Retrying.repr,
         );
-        if let Err(e) = self.execute_sql(&sql) {
+        if let Err(e) = self.execute(&sql) {
             error!("update_for_network_offline sql failed: {}", e);
         }
     }
@@ -310,11 +309,14 @@ mod test {
 
     use super::*;
     use crate::manage::events::StateEvent;
-    use crate::tests::test_init;
+    use crate::tests::{test_init, DB_LOCK};
     use crate::utils::task_id_generator::TaskIdGenerator;
 
     #[test]
     fn ut_network() {
+        test_init();
+        let _lock = DB_LOCK.lock().unwrap();
+
         let notifier = NetworkInner::new();
         let network = Network {
             inner: notifier.clone(),
@@ -429,6 +431,9 @@ mod test {
 
     #[test]
     fn ut_network_notify() {
+        test_init();
+        let _lock = DB_LOCK.lock().unwrap();
+
         let notifier = NetworkInner::new();
 
         notifier.notify_offline();
@@ -458,6 +463,8 @@ mod test {
 
     #[test]
     fn ut_network_online_interval() {
+        test_init();
+
         ylong_runtime::block_on(async {
             let notifier = NetworkInner::new();
 
@@ -472,6 +479,7 @@ mod test {
                 },
                 async {
                     ylong_runtime::time::sleep(std::time::Duration::from_millis(500)).await;
+                    let _lock = DB_LOCK.lock().unwrap();
                     notifier.notify_online(NetworkInfo {
                         network_type: NetworkType::Wifi,
                         is_metered: false,
@@ -489,9 +497,11 @@ mod test {
     #[test]
     fn ut_network_database_available() {
         test_init();
+        let _lock = DB_LOCK.lock().unwrap();
+
         let task_id = TaskIdGenerator::generate();
         let mut db = RequestDb::get_instance();
-        db.execute_sql(&format!(
+        db.execute(&format!(
             "INSERT INTO request_task (task_id, state, reason, network,  metered, roaming) VALUES ({}, {}, {}, {}, 0, 0)",
             task_id,
             State::Waiting.repr,
@@ -506,22 +516,22 @@ mod test {
             is_roaming: false,
         });
 
-        let v = db
-            .query_integer(&format!(
-                "SELECT task_id from request_task WHERE state = {} AND reason = {}",
-                State::Waiting.repr,
-                Reason::RunningTaskMeetLimits.repr
-            ))
-            .unwrap();
+        let v = db.query_integer(&format!(
+            "SELECT task_id from request_task WHERE state = {} AND reason = {}",
+            State::Waiting.repr,
+            Reason::RunningTaskMeetLimits.repr
+        ));
         assert!(v.contains(&task_id));
     }
 
     #[test]
     fn ut_network_database_unavailable() {
         test_init();
+        let _lock = DB_LOCK.lock().unwrap();
+
         let task_id = TaskIdGenerator::generate();
         let mut db = RequestDb::get_instance();
-        db.execute_sql(&format!(
+        db.execute(&format!(
             "INSERT INTO request_task (task_id, state, reason, network, metered, roaming) VALUES ({}, {}, {}, {}, 1, 1)",
             task_id,
             State::Waiting.repr,
@@ -536,13 +546,11 @@ mod test {
             is_roaming: true,
         });
 
-        let v = db
-            .query_integer(&format!(
-                "SELECT task_id from request_task WHERE state = {} AND reason = {}",
-                State::Waiting.repr,
-                Reason::UnsupportedNetworkType.repr
-            ))
-            .unwrap();
+        let v = db.query_integer(&format!(
+            "SELECT task_id from request_task WHERE state = {} AND reason = {}",
+            State::Waiting.repr,
+            Reason::UnsupportedNetworkType.repr
+        ));
         assert!(!v.contains(&task_id));
 
         db.update_for_network_unavailable(&NetworkInfo {
@@ -551,22 +559,22 @@ mod test {
             is_roaming: true,
         });
 
-        let v = db
-            .query_integer(&format!(
-                "SELECT task_id from request_task WHERE state = {} AND reason = {}",
-                State::Waiting.repr,
-                Reason::UnsupportedNetworkType.repr
-            ))
-            .unwrap();
+        let v = db.query_integer(&format!(
+            "SELECT task_id from request_task WHERE state = {} AND reason = {}",
+            State::Waiting.repr,
+            Reason::UnsupportedNetworkType.repr
+        ));
         assert!(v.contains(&task_id));
     }
 
     #[test]
     fn ut_network_database_offline() {
         test_init();
+        let _lock = DB_LOCK.lock().unwrap();
+
         let task_id = TaskIdGenerator::generate();
         let mut db = RequestDb::get_instance();
-        db.execute_sql(&format!(
+        db.execute(&format!(
             "INSERT INTO request_task (task_id, state, reason, network, metered, roaming) VALUES ({}, {}, {}, {}, 1, 1)",
             task_id,
             State::Waiting.repr,
@@ -577,13 +585,11 @@ mod test {
 
         db.update_for_network_offline();
 
-        let v = db
-            .query_integer(&format!(
-                "SELECT task_id from request_task WHERE state = {} AND reason = {}",
-                State::Waiting.repr,
-                Reason::UnsupportedNetworkType.repr
-            ))
-            .unwrap();
+        let v = db.query_integer(&format!(
+            "SELECT task_id from request_task WHERE state = {} AND reason = {}",
+            State::Waiting.repr,
+            Reason::UnsupportedNetworkType.repr
+        ));
         assert!(v.contains(&task_id));
     }
 }

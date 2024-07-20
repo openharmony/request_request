@@ -19,7 +19,7 @@ use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedS
 use ylong_runtime::time::sleep;
 
 use super::app_state::AppStateManagerTx;
-// use super::app_state::AppStateManager;
+use super::database::RequestDb;
 use super::events::{ScheduleEvent, ServiceEvent, StateEvent, TaskEvent, TaskManagerEvent};
 use super::network::Network;
 use crate::ability::PANIC_INFO;
@@ -259,10 +259,10 @@ impl TaskManager {
     }
 
     fn check_subscriber(&self, task_id: u32, token_id: u64) -> ErrorCode {
-        match Database::get_instance().get_token_id(task_id) {
-            Some(id) if id == token_id => ErrorCode::ErrOk,
-            Some(_) => ErrorCode::Permission,
-            None => ErrorCode::TaskNotFound,
+        match RequestDb::get_instance().query_task_token_id(task_id) {
+            Ok(id) if id == token_id => ErrorCode::ErrOk,
+            Ok(_) => ErrorCode::Permission,
+            Err(_) => ErrorCode::TaskNotFound,
         }
     }
 

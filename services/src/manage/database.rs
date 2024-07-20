@@ -51,7 +51,7 @@ impl Database {
     }
 
     pub(crate) fn contains_task(&self, task_id: u32) -> bool {
-        unsafe { HasRequestTaskRecord(task_id) }
+        RequestDb::get_instance().contains_task(task_id)
     }
 
     pub(crate) fn insert_task(&self, task: RequestTask) -> bool {
@@ -130,15 +130,6 @@ impl Database {
         Some(task_info)
     }
 
-    pub(crate) fn app_uncompleted_tasks_num(&self, uid: u64, mode: Mode) -> usize {
-        let result = unsafe { QueryAppUncompletedTasksNum(uid, mode.repr) as usize };
-        debug!(
-            "App uid {} uncompleted tasks in mode {:?} number is {}",
-            uid, mode, result
-        );
-        result
-    }
-
     pub(crate) fn get_task_config(&self, task_id: u32) -> Option<TaskConfig> {
         debug!("query single task config in database");
         let c_task_config = unsafe { QueryTaskConfig(task_id) };
@@ -167,11 +158,6 @@ impl Database {
         }
 
         debug!("Deletes early records end");
-    }
-
-    pub(crate) fn get_token_id(&self, task_id: u32) -> Option<u64> {
-        let mut token_id = 0;
-        unsafe { QueryTaskTokenId(task_id, &mut token_id as *mut u64) }.then_some(token_id)
     }
 
     pub(crate) fn update_on_app_state_change(&self, uid: u64, state: ApplicationState) {
@@ -286,10 +272,7 @@ extern "C" {
     fn DeleteCTaskConfig(ptr: *const CTaskConfig);
     fn DeleteCTaskInfo(ptr: *const CTaskInfo);
     fn GetTaskInfo(task_id: u32) -> *const CTaskInfo;
-    fn HasRequestTaskRecord(id: u32) -> bool;
-    fn QueryAppUncompletedTasksNum(uid: u64, mode: u8) -> u32;
     fn QueryTaskConfig(task_id: u32) -> *const CTaskConfig;
-    fn QueryTaskTokenId(task_id: u32, token_id: *mut u64) -> bool;
     fn RecordRequestTask(info: *const CTaskInfo, config: *const CTaskConfig) -> bool;
     fn RequestDBRemoveRecordsFromTime(time: u64);
     fn UpdateRequestTask(id: u32, info: *const CUpdateInfo) -> bool;
@@ -316,7 +299,7 @@ impl RequestDb {
         Self { inner }
     }
 
-    pub(crate) fn execute_sql(&mut self, sql: &str) -> Result<(), i32> {
+    pub(crate) fn execute(&mut self, sql: &str) -> Result<(), i32> {
         let ret = unsafe { Pin::new_unchecked(&mut *self.inner).ExecuteSql(sql) };
         if ret == 0 {
             Ok(())
@@ -325,10 +308,7 @@ impl RequestDb {
         }
     }
 
-    pub(crate) fn query_integer<T: TryFrom<i64> + Default>(
-        &mut self,
-        sql: &str,
-    ) -> Result<Vec<T>, (Vec<T>, i32)>
+    pub(crate) fn query_integer<T: TryFrom<i64> + Default>(&mut self, sql: &str) -> Vec<T>
     where
         T::Error: Display,
     {
@@ -344,11 +324,10 @@ impl RequestDb {
             })
             .collect();
 
-        if ret == 0 {
-            Ok(v)
-        } else {
-            Err((v, ret))
+        if ret != 0 {
+            error!("query integer err:{}", ret);
         }
+        v
     }
 
     #[allow(unused)]
@@ -360,6 +339,61 @@ impl RequestDb {
         } else {
             Err(ret)
         }
+    }
+
+    pub(crate) fn contains_task(&mut self, task_id: u32) -> bool {
+        let sql = format!(
+            "SELECT COUNT(*) FROM request_task WHERE task_id = {}",
+            task_id
+        );
+        let v = self.query_integer::<u32>(&sql);
+
+        if v.is_empty() {
+            error!("contains_task check failed, empty result");
+            false
+        } else {
+            v[0] == 1
+        }
+    }
+
+    pub(crate) fn query_task_token_id(&mut self, task_id: u32) -> Result<u64, i32> {
+        let sql = format!(
+            "SELECT token_id FROM request_task WHERE task_id = {}",
+            task_id
+        );
+        let v = self.query_integer::<u64>(&sql);
+        if v.is_empty() {
+            error!("query_task_token_id failed, empty result");
+            Err(-1)
+        } else {
+            Ok(v[0])
+        }
+    }
+
+    pub(crate) fn query_app_uncompleted_task_num(&mut self, uid: u64, mode: Mode) -> usize {
+        let sql = format!(
+            "SELECT COUNT(*) FROM request_task WHERE uid = {} AND mode = {} AND (state = {} OR state = {} OR state = {} OR state = {} OR state = {})",
+            uid, mode.repr,
+            State::Waiting.repr,
+            State::Paused.repr,
+            State::Initialized.repr,
+            State::Running.repr,
+            State::Retrying.repr,
+        );
+        let v = self.query_integer::<usize>(&sql);
+
+        if v.is_empty() {
+            error!("query_app_uncompleted_task_num failed, empty result");
+            0
+        } else {
+            v[0]
+        }
+    }
+
+    #[allow(unused)]
+    pub(crate) fn remove_timeout(&mut self, time: u64) -> Result<(), i32> {
+        let sql = format!("DELETE from request_task WHERE mtime < {} ", time);
+        self.execute(&sql)
     }
 }
 
@@ -378,23 +412,134 @@ mod ffi {
 #[cfg(test)]
 mod test {
     use super::RequestDb;
-    use crate::tests::test_init;
+    use crate::config::Mode;
+    use crate::task::info::State;
+    use crate::tests::{test_init, DB_LOCK};
     use crate::utils::task_id_generator::TaskIdGenerator;
 
     #[test]
     fn ut_database_base() {
         test_init();
+        let _lock = DB_LOCK.lock().unwrap();
+
         let task_id = TaskIdGenerator::generate();
         let mut db = RequestDb::get_instance();
-        db.execute_sql(&format!(
+        db.execute(&format!(
             "INSERT INTO request_task (task_id, bundle) VALUES ({}, 'example_bundle')",
             task_id
         ))
         .unwrap();
 
-        let tasks = db
-            .query_integer("SELECT task_id FROM request_task WHERE bundle = 'example_bundle'")
-            .unwrap();
+        let tasks =
+            db.query_integer("SELECT task_id FROM request_task WHERE bundle = 'example_bundle'");
         assert!(tasks.contains(&task_id));
+    }
+
+    #[test]
+    fn ut_database_contains_task() {
+        test_init();
+        let _lock = DB_LOCK.lock().unwrap();
+
+        let task_id = TaskIdGenerator::generate();
+        let mut db = RequestDb::get_instance();
+        db.execute(&format!(
+            "INSERT INTO request_task (task_id, bundle) VALUES ({}, 'example_bundle')",
+            task_id
+        ))
+        .unwrap();
+
+        assert!(db.contains_task(task_id));
+    }
+
+    #[test]
+    fn ut_database_query_task_token_id() {
+        test_init();
+        let _lock = DB_LOCK.lock().unwrap();
+
+        let task_id = TaskIdGenerator::generate();
+        let token_id = 123456789;
+        let mut db = RequestDb::get_instance();
+        db.execute(&format!(
+            "INSERT INTO request_task (task_id, token_id) VALUES ({}, {})",
+            task_id, token_id
+        ))
+        .unwrap();
+
+        assert_eq!(db.query_task_token_id(task_id).unwrap(), token_id);
+    }
+
+    #[test]
+    fn ut_database_query_app_uncompleted_task_num() {
+        test_init();
+        let _lock = DB_LOCK.lock().unwrap();
+
+        let uid = 123456789;
+        let mut db = RequestDb::get_instance();
+        db.execute(&format!(
+            "INSERT INTO request_task (task_id, uid, state, mode) VALUES ({}, {}, {}, {})",
+            TaskIdGenerator::generate(),
+            uid,
+            State::Waiting.repr,
+            Mode::BackGround.repr,
+        ))
+        .unwrap();
+
+        db.execute(&format!(
+            "INSERT INTO request_task (task_id, uid, state, mode) VALUES ({}, {}, {}, {})",
+            TaskIdGenerator::generate(),
+            uid,
+            State::Paused.repr,
+            Mode::BackGround.repr,
+        ))
+        .unwrap();
+
+        db.execute(&format!(
+            "INSERT INTO request_task (task_id, uid, state, mode) VALUES ({}, {}, {}, {})",
+            TaskIdGenerator::generate(),
+            uid,
+            State::Initialized.repr,
+            Mode::BackGround.repr,
+        ))
+        .unwrap();
+
+        db.execute(&format!(
+            "INSERT INTO request_task (task_id, uid, state, mode) VALUES ({}, {}, {}, {})",
+            TaskIdGenerator::generate(),
+            uid,
+            State::Running.repr,
+            Mode::BackGround.repr,
+        ))
+        .unwrap();
+
+        db.execute(&format!(
+            "INSERT INTO request_task (task_id, uid, state, mode) VALUES ({}, {}, {}, {})",
+            TaskIdGenerator::generate(),
+            uid,
+            State::Retrying.repr,
+            Mode::BackGround.repr,
+        ))
+        .unwrap();
+
+        assert_eq!(db.query_app_uncompleted_task_num(uid, Mode::BackGround), 5);
+    }
+
+    #[test]
+    fn ut_database_remove_timeout() {
+        test_init();
+        let _lock = DB_LOCK.lock().unwrap();
+
+        let mut db = RequestDb::get_instance();
+        let task_id = TaskIdGenerator::generate();
+        let time = 1000;
+        db.execute(&format!(
+            "INSERT INTO request_task (task_id, mtime) VALUES ({}, {})",
+            task_id,
+            time - 100
+        ))
+        .unwrap();
+
+        assert!(db.contains_task(task_id));
+        db.remove_timeout(time).unwrap();
+        assert!(!db.contains_task(task_id));
     }
 }

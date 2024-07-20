@@ -282,13 +282,7 @@ fn reload_app_list_from_database() -> HashSet<u64> {
 impl RequestDb {
     fn get_app_infos(&mut self) -> Vec<u64> {
         let sql = "SELECT DISTINCT uid FROM request_task ";
-        match self.query_integer(sql) {
-            Ok(v) => v,
-            Err((v, e)) => {
-                error!("RequestDb get_app_infos error: {}", e);
-                v
-            }
-        }
+        self.query_integer(sql)
     }
 }
 
@@ -415,7 +409,7 @@ mod ut_manage_scheduler_qos_apps {
         let uid = get_current_timestamp();
 
         for i in 0..10 {
-            db.execute_sql(&format!(
+            db.execute(&format!(
                 "INSERT INTO request_task (task_id, uid, bundle) VALUES ({}, {}, '{}')",
                 TaskIdGenerator::generate(),
                 uid + i / 5,

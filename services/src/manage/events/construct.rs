@@ -15,7 +15,7 @@ use crate::ability::SYSTEM_CONFIG_MANAGER;
 use crate::config::Mode;
 use crate::error::ErrorCode;
 use crate::manage::app_state::AppState;
-use crate::manage::database::Database;
+use crate::manage::database::{Database, RequestDb};
 use crate::manage::TaskManager;
 use crate::task::config::TaskConfig;
 use crate::task::request_task::{check_config, RequestTask};
@@ -38,22 +38,27 @@ impl TaskManager {
             uid, task_id, version
         );
 
-        let database = Database::get_instance();
+        let mut database = RequestDb::get_instance();
 
-        if config.common_data.mode == Mode::BackGround
-            && database.app_uncompleted_tasks_num(uid, Mode::BackGround) == MAX_BACKGROUND_TASK
-        {
-            debug!("TaskManager background enqueue error, tid: {}", task_id);
-            return Err(ErrorCode::TaskEnqueueErr);
+        match config.common_data.mode {
+            Mode::BackGround => {
+                if database.query_app_uncompleted_task_num(uid, Mode::BackGround)
+                    >= MAX_BACKGROUND_TASK
+                {
+                    debug!("TaskManager background enqueue error");
+                    return Err(ErrorCode::TaskEnqueueErr);
+                }
+            }
+            _ => {
+                if database.query_app_uncompleted_task_num(uid, Mode::FrontEnd) >= MAX_FRONTEND_TASK
+                {
+                    debug!("TaskManager frontend enqueue error");
+                    return Err(ErrorCode::TaskEnqueueErr);
+                }
+            }
         }
-        if config.common_data.mode == Mode::FrontEnd
-            && database.app_uncompleted_tasks_num(uid, Mode::FrontEnd) == MAX_FRONTEND_TASK
-        {
-            debug!("TaskManager frontend enqueue error, tid: {}", task_id);
-            return Err(ErrorCode::TaskEnqueueErr);
-        }
+
         let state = query_app_state(uid);
-        // Here we don not need to run the task, just add it to database.
         let app_state = AppState::new(uid, state, self.app_state_manager.clone());
 
         let system_config = unsafe { SYSTEM_CONFIG_MANAGER.assume_init_ref().system_config() };
@@ -68,7 +73,8 @@ impl TaskManager {
             self.network.clone(),
         );
         // New task: State::Initialized, Reason::Default
-        database.insert_task(task);
+
+        Database::get_instance().insert_task(task);
         Ok(task_id)
     }
 }
