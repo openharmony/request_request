@@ -24,6 +24,7 @@
 #include "net_conn_callback_stub.h"
 #include "net_conn_client.h"
 #include "net_specifier.h"
+#include "refbase.h"
 
 #ifdef REQUEST_TELEPHONY_CORE_SERVICE
 #include "cellular_data_client.h"
@@ -59,6 +60,58 @@ RequestNetCallbackStub::~RequestNetCallbackStub()
     rust::Box<NetworkTaskManagerTx>::from_raw(task_manager_);
 }
 
+void RequestNetCallbackStub::HandleNetCap(const sptr<NetAllCapabilities> &netAllCap)
+{
+    if (netAllCap->netCaps_.find(NetCap::NET_CAPABILITY_VALIDATED) == netAllCap->netCaps_.end()) {
+        networkNotifier_->notify_offline();
+        notifyTaskManagerOffline_(*task_manager_);
+        return;
+    }
+
+    for (auto bearerType : netAllCap->bearerTypes_) {
+        auto networkInfo = NetworkInfo();
+        if (bearerType == NetManagerStandard::NetBearType::BEARER_WIFI) {
+            networkInfo.network_type = NetworkType::Wifi;
+            networkInfo.is_metered = false;
+            networkInfo.is_roaming = false;
+
+            if (networkNotifier_->notify_online(networkInfo)) {
+                notifyTaskManagerOnline_(*task_manager_);
+            }
+            return;
+        } else if (bearerType == NetManagerStandard::NetBearType::BEARER_CELLULAR) {
+            networkInfo.network_type = NetworkType::Cellular;
+            networkInfo.is_metered = true;
+            networkInfo.is_roaming = this->IsRoaming();
+
+            if (networkNotifier_->notify_online(networkInfo)) {
+                notifyTaskManagerOnline_(*task_manager_);
+            }
+            return;
+        };
+    }
+    if (networkNotifier_->notify_online(NetworkInfo{
+            .network_type = NetworkType::Other,
+            .is_metered = false,
+            .is_roaming = false,
+        })) {
+        notifyTaskManagerOnline_(*task_manager_);
+    }
+    return;
+}
+
+int32_t RequestNetCallbackStub::NetAvailable(sptr<NetHandle> &netHandle)
+{
+    sptr<NetAllCapabilities> netAllCap = sptr<NetAllCapabilities>::MakeSptr();
+    int32_t ret = NetConnClient::GetInstance().GetNetCapabilities(*netHandle, *netAllCap);
+    if (ret != 0) {
+        REQUEST_HILOGE("GetNetCapabilities failed, ret = %{public}d", ret);
+        return ret;
+    }
+    this->HandleNetCap(netAllCap);
+    return 0;
+}
+
 int32_t RequestNetCallbackStub::NetLost(sptr<NetHandle> &netHandle)
 {
     networkNotifier_->notify_offline();
@@ -77,39 +130,7 @@ int32_t RequestNetCallbackStub::NetCapabilitiesChange(
     sptr<NetHandle> &netHandle, const sptr<NetAllCapabilities> &netAllCap)
 {
     REQUEST_HILOGI("NetCapabilitiesChange");
-    if (netAllCap->netCaps_.find(NetCap::NET_CAPABILITY_VALIDATED) == netAllCap->netCaps_.end()) {
-        networkNotifier_->notify_offline();
-        return 0;
-    }
-
-    for (auto bearerType : netAllCap->bearerTypes_) {
-        if (bearerType == NetManagerStandard::NetBearType::BEARER_WIFI) {
-            if (networkNotifier_->notify_online(NetworkInfo{
-                    .network_type = NetworkType::Wifi,
-                    .is_metered = false,
-                    .is_roaming = false,
-                })) {
-                notifyTaskManagerOnline_(*task_manager_);
-            }
-            return 0;
-        } else if (bearerType == NetManagerStandard::NetBearType::BEARER_CELLULAR) {
-            if (networkNotifier_->notify_online(NetworkInfo{
-                    .network_type = NetworkType::Cellular,
-                    .is_metered = true,
-                    .is_roaming = this->IsRoaming(),
-                })) {
-                notifyTaskManagerOnline_(*task_manager_);
-            }
-            return 0;
-        };
-    }
-    if (networkNotifier_->notify_online(NetworkInfo{
-            .network_type = NetworkType::Other,
-            .is_metered = false,
-            .is_roaming = false,
-        })) {
-        notifyTaskManagerOnline_(*task_manager_);
-    }
+    this->HandleNetCap(netAllCap);
     return 0;
 }
 

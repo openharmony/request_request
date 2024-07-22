@@ -21,6 +21,7 @@ use std::sync::Arc;
 
 use keeper::SAKeeper;
 pub(crate) use notify_task::NotifyTask;
+use ylong_runtime::sync::oneshot;
 
 use crate::ability::SYSTEM_CONFIG_MANAGER;
 use crate::error::ErrorCode;
@@ -52,6 +53,7 @@ pub(crate) struct RunningQueue {
     runcount_manager: RunCountManagerEntry,
     client_manager: ClientManagerEntry,
     network: Network,
+    locks: HashMap<u32, oneshot::Receiver<()>>,
 }
 
 impl RunningQueue {
@@ -80,6 +82,7 @@ impl RunningQueue {
             runcount_manager,
             client_manager,
             network,
+            locks: HashMap::new(),
         }
     }
 
@@ -169,6 +172,11 @@ impl RunningQueue {
             // If the task is not in the current running queue, retrieve
             // the corresponding task from the database and start it.
             let system_config = unsafe { SYSTEM_CONFIG_MANAGER.assume_init_ref().system_config() };
+
+            if let Some(recv) = self.locks.remove(&task_id) {
+                let _ = recv.await;
+            }
+
             let task = match Database::get_instance()
                 .get_task(
                     task_id,
@@ -201,14 +209,15 @@ impl RunningQueue {
                     continue;
                 }
             };
-
+            let (lock, rx) = oneshot::channel();
+            self.locks.insert(task_id, rx);
             let keeper = self.keeper.clone();
             let tx = self.tx.clone();
             let runcount_manager = self.runcount_manager.clone();
             task.speed_limit(qos_direction.direction() as u64);
             new_queue.insert((uid, task_id), task.clone());
-            let task = RunningTask::new(runcount_manager, task, tx, keeper);
-            if !task.satisfied() {
+            let task = RunningTask::new(runcount_manager, task, tx, keeper, lock);
+            if !task.satisfied().await {
                 continue;
             }
             self.join_handles.push(runtime_spawn(async move {

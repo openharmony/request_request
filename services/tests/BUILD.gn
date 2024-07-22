@@ -44,7 +44,10 @@ ohos_rust_unittest("rust_request_ut_test") {
 ohos_rust_unittest("rust_request_sdv_test") {
   module_out_path = "request/request_rust"
 
-  rustflags = [ "--cfg=gn_test" ]
+  rustflags = [
+    "--cfg=gn_test",
+    "--cfg=feature=\"oh\"",
+  ]
 
   sources = [ "entry.rs" ]
 

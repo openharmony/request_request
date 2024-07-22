@@ -22,24 +22,32 @@
     clippy::enum_variant_names,
     clippy::clone_on_copy
 )]
-#[macro_use]
-mod hilog;
 
-pub mod ability;
+#[macro_use]
+mod macros;
+
+#[cfg(not(feature = "oh"))]
+#[macro_use]
+extern crate log;
+
+cfg_oh! {
+    #[macro_use]
+    mod hilog;
+    mod trace;
+    mod service;
+    pub mod ability;
+    mod sys_event;
+    pub use service::interface;
+    pub use utils::form_item::FileSpec;
+}
+
 mod error;
 mod manage;
-mod service;
-mod sys_event;
 mod task;
-
-#[cfg(feature = "oh")]
-mod trace;
 mod utils;
-
-pub use service::interface;
 pub use task::{config, info};
-pub use utils::form_item::FileSpec;
 
+cfg_oh! {
 #[cfg(not(test))]
 const LOG_LABEL: hilog_rust::HiLogLabel = hilog_rust::HiLogLabel {
     log_type: hilog_rust::LogType::LogCore,
@@ -67,4 +75,5 @@ mod tests {
     extern "C" {
         fn SetAccessTokenPermission();
     }
+}
 }

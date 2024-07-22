@@ -13,14 +13,17 @@
 
 pub(crate) mod c_wrapper;
 pub(crate) mod form_item;
-pub(crate) mod task_id_generator;
-pub(crate) mod url_policy;
 use std::collections::HashMap;
 use std::future::Future;
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub(crate) use ffi::RequestTaskMsg;
+cfg_oh! {
+    pub(crate) use ffi::RequestTaskMsg;
+    pub(crate) mod url_policy;
+    pub(crate) mod task_id_generator;
+}
+
 use ylong_runtime::sync::oneshot::Receiver;
 use ylong_runtime::task::JoinHandle;
 
@@ -96,6 +99,7 @@ pub(crate) fn runtime_spawn<F: Future<Output = ()> + Send + Sync + 'static>(
     ))
 }
 
+#[cfg(feature = "oh")]
 pub(crate) fn query_app_state(uid: u64) -> ApplicationState {
     let top_uid = query_top_uid();
     match top_uid {
@@ -110,6 +114,7 @@ pub(crate) fn query_app_state(uid: u64) -> ApplicationState {
     }
 }
 
+#[cfg(feature = "oh")]
 fn query_top_uid() -> Option<u64> {
     let mut uid = 0;
     for i in 0..10 {
@@ -126,21 +131,25 @@ fn query_top_uid() -> Option<u64> {
     None
 }
 
+#[cfg(feature = "oh")]
 pub(crate) fn query_calling_bundle() -> String {
     let token_id = ipc::Skeleton::calling_full_token_id();
     ffi::GetCallingBundle(token_id)
 }
 
+#[cfg(feature = "oh")]
 pub(crate) fn is_system_api() -> bool {
     let token_id = ipc::Skeleton::calling_full_token_id();
     ffi::IsSystemAPI(token_id)
 }
 
+#[cfg(feature = "oh")]
 pub(crate) fn check_permission(permission: &str) -> bool {
     let token_id = ipc::Skeleton::calling_full_token_id();
     ffi::CheckPermission(token_id, permission)
 }
 
+#[cfg(feature = "oh")]
 pub(crate) fn publish_state_change_event(
     bundle_name: &str,
     task_id: u32,
@@ -152,6 +161,7 @@ pub(crate) fn publish_state_change_event(
     }
 }
 
+#[cfg(feature = "oh")]
 pub(crate) fn request_background_notify(
     msg: RequestTaskMsg,
     wrapped_path: &str,
@@ -163,16 +173,13 @@ pub(crate) fn request_background_notify(
         code => Err(code),
     }
 }
-
 #[cxx::bridge(namespace = "OHOS::Request")]
 mod ffi {
-    pub(crate) struct RequestTaskMsg {
+    struct RequestTaskMsg {
         pub(crate) task_id: u32,
         pub(crate) uid: i32,
         pub(crate) action: u8,
     }
-
-    unsafe extern "C++" {}
 
     unsafe extern "C++" {
         include!("request_utils.h");
@@ -193,6 +200,7 @@ mod ffi {
     }
 }
 
+#[cfg(feature = "oh")]
 #[cfg(test)]
 mod test {
     use super::*;

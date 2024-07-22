@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#![cfg(feature = "oh")]
 use download_server::config::ConfigBuilder;
 use test_common::test_init;
 #[test]

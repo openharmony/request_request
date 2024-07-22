@@ -21,7 +21,7 @@ ohos_rust_static_library("rust_request_test_common") {
     "./c:request_test",
     "//third_party/rust/crates/once_cell:lib",
   ]
-
+  features = [ "oh" ]
   external_deps = [
     "ipc:ipc_rust",
     "safwk:system_ability_fwk_rust",

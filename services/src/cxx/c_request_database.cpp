@@ -16,10 +16,13 @@
 #include "c_request_database.h"
 
 #include <securec.h>
+#include <stdint.h>
 
 #include <algorithm>
 #include <cstdint>
+#include <iostream>
 #include <string>
+#include <vector>
 
 #include "base/request/request/common/include/log.h"
 #include "cxx.h"

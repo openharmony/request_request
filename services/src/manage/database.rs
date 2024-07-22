@@ -267,7 +267,8 @@ pub(crate) struct TaskQosInfo {
     pub(crate) priority: u32,
 }
 
-#[link(name = "download_server_cxx", kind = "static")]
+#[cfg(feature = "oh")]
+
 extern "C" {
     fn DeleteCTaskConfig(ptr: *const CTaskConfig);
     fn DeleteCTaskInfo(ptr: *const CTaskInfo);
@@ -415,6 +416,7 @@ mod test {
     use crate::config::Mode;
     use crate::task::info::State;
     use crate::tests::{test_init, DB_LOCK};
+    use crate::utils::get_current_timestamp;
     use crate::utils::task_id_generator::TaskIdGenerator;
 
     #[test]
@@ -473,8 +475,9 @@ mod test {
         test_init();
         let _lock = DB_LOCK.lock().unwrap();
 
-        let uid = 123456789;
+        let uid = get_current_timestamp() as u64;
         let mut db = RequestDb::get_instance();
+
         db.execute(&format!(
             "INSERT INTO request_task (task_id, uid, state, mode) VALUES ({}, {}, {}, {})",
             TaskIdGenerator::generate(),

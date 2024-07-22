@@ -18,11 +18,12 @@ use std::sync::Arc;
 use std::task::{Context, Poll};
 
 use ylong_http_client::async_impl::{Body, MultiPart, Part, Request, UploadOperator, Uploader};
-use ylong_http_client::HttpClientError;
-use ylong_runtime::io::{AsyncRead, AsyncSeek, ReadBuf};
+use ylong_http_client::{ErrorKind, HttpClientError};
+use ylong_runtime::io::{AsyncRead, AsyncSeek, AsyncSeekExt, ReadBuf};
 
 use super::operator::TaskOperator;
 use super::reason::Reason;
+use super::request_task::{TaskError, TaskPhase};
 use crate::task::info::State;
 use crate::task::request_task::RequestTask;
 #[cfg(feature = "oh")]
@@ -30,11 +31,12 @@ use crate::trace::Trace;
 
 struct TaskReader {
     pub(crate) task: Arc<RequestTask>,
+    pub(crate) index: usize,
 }
 
 impl TaskReader {
-    pub(crate) fn new(task: Arc<RequestTask>) -> Self {
-        Self { task }
+    pub(crate) fn new(task: Arc<RequestTask>, index: usize) -> Self {
+        Self { task, index }
     }
 }
 
@@ -44,7 +46,7 @@ impl AsyncRead for TaskReader {
         cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<std::io::Result<()>> {
-        let index = self.task.progress.lock().unwrap().common_data.index;
+        let index = self.index;
         let file = self.task.files.get_mut(index).unwrap();
         let (is_partial_upload, total_upload_bytes) = self.task.get_upload_info(index);
         let mut progress_guard = self.task.progress.lock().unwrap();
@@ -108,7 +110,7 @@ impl UploadOperator for TaskOperator {
 
 fn build_stream_request(task: Arc<RequestTask>, index: usize) -> Option<Request> {
     debug!("build stream request");
-    let task_reader = TaskReader::new(task.clone());
+    let task_reader = TaskReader::new(task.clone(), index);
     let task_operator = TaskOperator::new(task.clone());
 
     match task.build_request_builder() {
@@ -135,7 +137,7 @@ fn build_stream_request(task: Arc<RequestTask>, index: usize) -> Option<Request>
 
 fn build_multipart_request(task: Arc<RequestTask>, index: usize) -> Option<Request> {
     debug!("build multipart request");
-    let task_reader = TaskReader::new(task.clone());
+    let task_reader = TaskReader::new(task.clone(), index);
     let task_operator = TaskOperator::new(task.clone());
     let mut multi_part = MultiPart::new();
     for item in task.conf.form_items.iter() {
@@ -190,8 +192,46 @@ fn build_request_common(
     }
 }
 
+impl RequestTask {
+    fn prepare_single_upload(&self, index: usize) -> bool {
+        if let Some(file) = self.files.get_mut(index) {
+            let mut progress = self.progress.lock().unwrap();
+            progress.common_data.index = index;
+            progress.common_data.total_processed = 0;
+            progress.processed[index] = 0;
+            file.seek(SeekFrom::Start(0));
+            true
+        } else {
+            error!("task {} file {} not found", self.task_id(), index);
+            false
+        }
+    }
+}
+
 pub(crate) async fn upload(task: Arc<RequestTask>) {
-    debug!("begin upload task, tid: {}", task.conf.common_data.task_id);
+    loop {
+        if let Err(e) = upload_inner(task.clone()).await {
+            match e {
+                TaskError::Failed(reason) => {
+                    task.change_task_status(State::Failed, reason);
+                }
+                TaskError::Waiting(phase) => match phase {
+                    TaskPhase::NeedRetry => {
+                        continue;
+                    }
+                    TaskPhase::UserAbort => {}
+                    TaskPhase::NetworkOffline => {}
+                },
+            }
+        }
+        break;
+    }
+}
+
+async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
+    task.prepare_running();
+
+    info!("upload task {} start running", task.task_id());
 
     #[cfg(feature = "oh")]
     {
@@ -202,81 +242,44 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
     }
 
     let size = task.conf.file_specs.len();
-    loop {
-        let index = task.progress.lock().unwrap().common_data.index;
+    let start = task.progress.lock().unwrap().common_data.index;
+
+    for index in start..size {
+        if !task.prepare_single_upload(index) {
+            return Err(TaskError::Failed(Reason::OthersError));
+        }
         let is_multipart = match task.conf.headers.get("Content-Type") {
             Some(s) => s.eq("multipart/form-data"),
             None => task.conf.method.to_uppercase().eq("POST"),
         };
 
-        let result = if is_multipart {
-            upload_one_file(task.clone(), index, build_multipart_request).await
+        if is_multipart {
+            upload_one_file(task.clone(), index, build_multipart_request).await?
         } else {
-            upload_one_file(task.clone(), index, build_stream_request).await
+            upload_one_file(task.clone(), index, build_stream_request).await?
         };
-
-        if result {
-            info!(
-                "upload one file success, tid: {}, index is {}, size is {}",
-                task.conf.common_data.task_id, index, size
-            );
-            task.upload_counts.fetch_add(1, Ordering::SeqCst);
-        }
-
-        {
-            let task_status = task.status.lock().unwrap();
-            if !task_status.state.is_doing() {
-                return;
-            }
-        }
-
-        task.notify_header_receive();
         let mut progress = task.progress.lock().unwrap();
-        if index + 1 == size {
-            break;
-        }
-        progress.common_data.index += 1;
+        progress.common_data.index = 0;
+        #[cfg(feature = "oh")]
+        task.notify_header_receive();
     }
 
-    let uploaded = task.upload_counts.load(Ordering::SeqCst);
-    if uploaded == size {
-        task.change_task_status(State::Completed, Reason::Default);
-    } else {
-        task.change_task_status(State::Failed, Reason::UploadFileError);
-
-        use hisysevent::{build_number_param, build_str_param};
-
-        use crate::sys_event::SysEvent;
-        // Records sys event.
-
-        SysEvent::task_fault()
-            .param(build_str_param!(crate::sys_event::TASKS_TYPE, "UPLOAD"))
-            .param(build_number_param!(crate::sys_event::TOTAL_FILE_NUM, size))
-            .param(build_number_param!(
-                crate::sys_event::FAIL_FILE_NUM,
-                size - uploaded
-            ))
-            .param(build_number_param!(
-                crate::sys_event::SUCCESS_FILE_NUM,
-                uploaded
-            ))
-            .param(build_number_param!(
-                crate::sys_event::ERROR_INFO,
-                Reason::UploadFileError.repr as i32
-            ))
-            .write();
-    }
-
-    debug!("upload end, tid: {}", task.conf.common_data.task_id);
+    task.change_task_status(State::Completed, Reason::Default);
+    info!("task {} upload success", task.task_id());
+    Ok(())
 }
 
-async fn upload_one_file<F>(task: Arc<RequestTask>, index: usize, build_upload_request: F) -> bool
+async fn upload_one_file<F>(
+    task: Arc<RequestTask>,
+    index: usize,
+    build_upload_request: F,
+) -> Result<(), TaskError>
 where
     F: Fn(Arc<RequestTask>, usize) -> Option<Request>,
 {
     info!(
         "begin upload one file, tid: {}, index is {}",
-        task.conf.common_data.task_id, index
+        task.conf.common_data.task_id, index,
     );
 
     // Ensures `_trace` can only be freed when this function exits.
@@ -289,43 +292,148 @@ where
         ));
     }
 
-    loop {
-        task.set_code(index, Reason::Default, true);
-        let request: Option<Request> = build_upload_request(task.clone(), index);
-        if request.is_none() {
-            return false;
-        }
-        let response = task.client.request(request.unwrap()).await;
-        if task.handle_response_error(&response).await {
-            // `unwrap` for propagating panics among threads.
-            if let Some(code) = task.code.lock().unwrap().get_mut(index) {
-                *code = Reason::Default;
-            }
-            task.record_upload_response(index, response).await;
-            return true;
-        }
-        task.record_upload_response(index, response).await;
-        // `unwrap` for propagating panics among threads.
+    let Some(request) = build_upload_request(task.clone(), index) else {
+        return Err(TaskError::Failed(Reason::BuildRequestFailed));
+    };
 
-        let state = task.status.lock().unwrap().state;
-        if state != State::Running && state != State::Retrying {
-            return false;
-        }
-        let code = *task
-            .code
-            .lock()
-            .unwrap()
-            .get(index)
-            .unwrap_or(&Reason::OthersError);
-        if code != Reason::Default {
-            error!(
-                "upload {} file fail, which reason is {}",
-                index, code.repr as u32
+    let response = task.client.request(request).await;
+    match response.as_ref() {
+        Ok(response) => {
+            let status_code = response.status();
+            info!(
+                "task {} get http response code {}",
+                task.conf.common_data.task_id, status_code,
             );
-            if code != Reason::UserOperation {
-                task.change_task_status(State::Failed, code);
+            if status_code.is_server_error()
+                || (status_code.as_u16() != 408 && status_code.is_client_error())
+                || status_code.is_redirection()
+            {
+                return Err(TaskError::Failed(Reason::ProtocolError));
             }
-            return false;
+            if status_code.as_u16() == 408 {
+                if task.tries.load(Ordering::SeqCst) < 2 {
+                    task.tries.fetch_add(1, Ordering::SeqCst);
+                    info!("task {} server timeout", task.task_id());
+                    return Err(TaskError::Waiting(TaskPhase::NeedRetry));
+                } else {
+                    info!("task {} retry 3 times", task.task_id());
+                    return Err(TaskError::Failed(Reason::ProtocolError));
+                }
+            }
         }
+        Err(e) => {
+            error!("Task {} {:?}", task.task_id(), e);
+
+            match e.error_kind() {
+                ErrorKind::Timeout => return Err(TaskError::Failed(Reason::ContinuousTaskTimeout)),
+                ErrorKind::Request => return Err(TaskError::Failed(Reason::RequestError)),
+                ErrorKind::Redirect => return Err(TaskError::Failed(Reason::RedirectError)),
+                ErrorKind::Connect | ErrorKind::ConnectionUpgrade => {
+                    if task.tries.load(Ordering::SeqCst) < 2 {
+                        task.tries.fetch_add(1, Ordering::SeqCst);
+                        return Err(TaskError::Waiting(TaskPhase::NeedRetry));
+                    }
+                    info!("task {} retry 3 times", task.task_id());
+                    if e.is_dns_error() {
+                        return Err(TaskError::Failed(Reason::Dns));
+                    } else if e.is_tls_error() {
+                        return Err(TaskError::Failed(Reason::Ssl));
+                    } else {
+                        return Err(TaskError::Failed(Reason::Tcp));
+                    }
+                }
+                ErrorKind::BodyTransfer => return task.handle_body_transfer_error().await,
+                ErrorKind::UserAborted => return Err(TaskError::Waiting(TaskPhase::UserAbort)),
+                _ => {
+                    if format!("{}", e).contains("No space left on device") {
+                        return Err(TaskError::Failed(Reason::InsufficientSpace));
+                    } else {
+                        return Err(TaskError::Failed(Reason::OthersError));
+                    }
+                }
+            };
+        }
+    };
+    task.record_upload_response(index, response).await;
+    Ok(())
+}
+
+#[cfg(not(feature = "oh"))]
+#[cfg(test)]
+mod test {
+    use std::fs::File;
+    use std::io::{BufRead, BufReader, Write};
+    use std::net::{TcpListener, TcpStream};
+    use std::sync::Arc;
+
+    use crate::config::{Action, ConfigBuilder, Mode, TaskConfig};
+    use crate::info::State;
+    use crate::manage::Network;
+    use crate::task::request_task::{check_config, RequestTask, TaskError, TaskPhase};
+    use crate::task::upload::upload_inner;
+
+    fn build_task(config: TaskConfig) -> Arc<RequestTask> {
+        let (files, client) = check_config(&config).unwrap();
+        let network = Network::new();
+        let task = Arc::new(RequestTask::new(config, files, client, network));
+        task.status.lock().unwrap().state = State::Initialized;
+        task
+    }
+
+    fn init() {
+        let _ = env_logger::builder().is_test(true).try_init();
+        let _ = std::fs::create_dir("test_files/");
+        static ONCE: std::sync::Once = std::sync::Once::new();
+        ONCE.call_once(|| {
+            info!("server start 127.0.0.1:7878");
+            std::thread::spawn(|| {
+                let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+                for stream in listener.incoming() {
+                    std::thread::sleep(std::time::Duration::from_secs(2));
+                    let stream = stream.unwrap();
+                    handle_connection(stream);
+                }
+            });
+        })
+    }
+
+    fn handle_connection(mut stream: TcpStream) {
+        let buf_reader = BufReader::new(&mut stream);
+        let http_request: Vec<_> = buf_reader
+            .lines()
+            .map(|result| result.unwrap())
+            .take_while(|line| !line.is_empty())
+            .collect();
+        debug!("http request: {:#?}", http_request);
+        let response = "HTTP/1.1 200 OK\r\n\r\n";
+        stream.write_all(response.as_bytes()).unwrap();
+    }
+
+    #[test]
+    fn ut_upload_basic() {
+        init();
+        let file_path = "test_files/ut_upload_basic.txt";
+
+        let file = File::options()
+            .read(true)
+            .write(true)
+            .create(true)
+            .open(file_path)
+            .unwrap();
+        file.set_len(100000).unwrap();
+
+        let config = ConfigBuilder::new()
+            .action(Action::Upload)
+            .method("POST")
+            .mode(Mode::BackGround)
+            .file_spec(file)
+            .url("http://127.0.0.1:7878/")
+            .redirect(true)
+            .build();
+        let task = build_task(config);
+
+        ylong_runtime::block_on(async {
+            upload_inner(task).await.unwrap();
+        })
     }
 }

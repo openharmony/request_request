@@ -18,8 +18,8 @@ use download_server::config::{Action, ConfigBuilder, Mode};
 use test_common::test_init;
 
 #[test]
-fn sdv_start_basic() {
-    let file_path = "sdv_network_resume.txt";
+fn sdv_start_resume() {
+    let file_path = "sdv_start_resume.txt";
 
     let agent = test_init();
     let file = File::create(file_path).unwrap();
@@ -33,6 +33,9 @@ fn sdv_start_basic() {
     let task_id = agent.construct(config);
     agent.start(task_id);
     agent.subscribe(task_id);
+    agent.pause(task_id);
+    std::thread::sleep(std::time::Duration::from_secs(1));
+    agent.resume(task_id);
     ylong_runtime::block_on(async {
         'main: loop {
             let messages = agent.pop_task_info(task_id);

@@ -295,7 +295,6 @@ impl RequestDb {
 
 #[cxx::bridge(namespace = "OHOS::Request")]
 mod ffi {
-
     #[repr(i32)]
     enum OS_ACCOUNT_SUBSCRIBE_TYPE {
         INVALID_TYPE = -1,

@@ -18,9 +18,12 @@ use super::info::{CommonTaskInfo, InfoSet, TaskInfo, UpdateInfo};
 use super::notify::{CommonProgress, EachFileStatus, Progress};
 use super::reason::Reason;
 use crate::task::info::State;
-use crate::utils::c_wrapper::{
-    CFileSpec, CFormItem, CStringWrapper, DeleteCFileSpec, DeleteCFormItem, DeleteCStringPtr,
-};
+use crate::utils::c_wrapper::{CFileSpec, CFormItem, CStringWrapper};
+
+cfg_oh! {
+    use crate::utils::c_wrapper::{DeleteCFileSpec, DeleteCFormItem, DeleteCStringPtr};
+}
+
 use crate::utils::form_item::{FileSpec, FormItem};
 use crate::utils::{build_vec, get_current_timestamp, split_string, string_to_hashmap};
 
@@ -214,9 +217,12 @@ impl TaskInfo {
             common_data: c_struct.common_data,
         };
 
-        unsafe { DeleteCFormItem(c_struct.form_items_ptr) };
-        unsafe { DeleteCFileSpec(c_struct.file_specs_ptr) };
-        unsafe { DeleteCEachFileStatus(c_struct.each_file_status_ptr) };
+        #[cfg(feature = "oh")]
+        {
+            unsafe { DeleteCFormItem(c_struct.form_items_ptr) };
+            unsafe { DeleteCFileSpec(c_struct.file_specs_ptr) };
+            unsafe { DeleteCEachFileStatus(c_struct.each_file_status_ptr) };
+        }
         task_info
     }
 }
@@ -374,15 +380,20 @@ impl TaskConfig {
                 background: c_struct.common_data.background,
             },
         };
-        unsafe { DeleteCFormItem(c_struct.form_items_ptr) };
-        unsafe { DeleteCFileSpec(c_struct.file_specs_ptr) };
-        unsafe { DeleteCStringPtr(c_struct.body_file_names_ptr) };
-        unsafe { DeleteCStringPtr(c_struct.certs_path_ptr) };
+
+        #[cfg(feature = "oh")]
+        {
+            unsafe { DeleteCFormItem(c_struct.form_items_ptr) };
+            unsafe { DeleteCFileSpec(c_struct.file_specs_ptr) };
+            unsafe { DeleteCStringPtr(c_struct.body_file_names_ptr) };
+            unsafe { DeleteCStringPtr(c_struct.certs_path_ptr) };
+        }
+
         task_config
     }
 }
+#[cfg(feature = "oh")]
 
-#[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     pub(crate) fn DeleteCEachFileStatus(ptr: *const CEachFileStatus);
 }

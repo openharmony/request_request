@@ -18,18 +18,20 @@ use ylong_http_client::{
     Certificate, HttpClientError, Proxy, PubKeyPins, Redirect, Timeout, TlsVersion,
 };
 
-use crate::manage::SystemConfig;
+cfg_oh! {
+    use crate::manage::SystemConfig;
+    use crate::utils::url_policy::check_url_domain;
+}
 use crate::task::config::{Action, TaskConfig};
 use crate::task::files::{check_atomic_convert_path, convert_path};
 use crate::task::ATOMIC_SERVICE;
-use crate::utils::url_policy::check_url_domain;
 
 const CONNECT_TIMEOUT: u64 = 60;
 const SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
 
 pub(crate) fn build_client(
     config: &TaskConfig,
-    mut system: SystemConfig,
+    #[cfg(feature = "oh")] mut system: SystemConfig,
 ) -> Result<Client, Box<dyn Error + Send + Sync>> {
     let mut client = Client::builder()
         .connect_timeout(Timeout::from_secs(CONNECT_TIMEOUT))
@@ -45,6 +47,7 @@ pub(crate) fn build_client(
     }
 
     // Set HTTP proxy.
+    #[cfg(feature = "oh")]
     if let Some(proxy) = build_task_proxy(config)? {
         client = client.proxy(proxy);
     } else if let Some(proxy) = build_system_proxy(&system)? {
@@ -55,6 +58,7 @@ pub(crate) fn build_client(
     // redirected to HTTPS.
 
     // Set system certs.
+    #[cfg(feature = "oh")]
     if let Some(certs) = system.certs.take() {
         for cert in certs.into_iter() {
             client = client.add_root_certificate(cert)
@@ -79,6 +83,7 @@ pub(crate) fn build_client(
             "ApiPolicy Domain check, task_id is {}, bundle is {}, domian_type is {}, url is {}",
             config.common_data.task_id, &config.bundle, &domain_type, &config.url
         );
+        #[cfg(feature = "oh")]
         if let Some(is_accessed) = check_url_domain(&config.bundle, &domain_type, &config.url) {
             if !is_accessed {
                 error!(
@@ -96,8 +101,12 @@ pub(crate) fn build_client(
             );
         }
 
-        let interceptors = DomainInterceptor::new(config.bundle.clone(), domain_type);
-        client = client.interceptor(interceptors);
+        #[cfg(feature = "oh")]
+        {
+            let interceptors = DomainInterceptor::new(config.bundle.clone(), domain_type);
+            client = client.interceptor(interceptors);
+        }
+
         info!(
             "add interceptor domain check, tid: {}",
             config.common_data.task_id
@@ -138,6 +147,7 @@ fn build_task_certificate_pins(
     )))
 }
 
+#[cfg(feature = "oh")]
 fn build_system_proxy(
     system: &SystemConfig,
 ) -> Result<Option<Proxy>, Box<dyn Error + Send + Sync>> {
@@ -207,6 +217,7 @@ impl DomainInterceptor {
     }
 }
 
+#[cfg(feature = "oh")]
 impl Interceptor for DomainInterceptor {
     /// Intercepts the redirect request.
     fn intercept_redirect_request(&self, request: &Request) -> Result<(), HttpClientError> {

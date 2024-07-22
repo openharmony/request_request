@@ -56,7 +56,8 @@ pub(crate) struct Progress {
     pub(crate) extras: HashMap<String, String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[repr(C)]
 pub(crate) struct EachFileStatus {
     pub(crate) path: String,
     pub(crate) reason: Reason,

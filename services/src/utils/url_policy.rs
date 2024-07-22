@@ -21,7 +21,6 @@ pub(crate) fn check_url_domain(app_id: &str, domain_type: &str, url: &str) -> Op
     }
 }
 
-#[link(name = "download_server_cxx", kind = "static")]
 extern "C" {
     pub(crate) fn PolicyCheckUrlDomain(
         app_id: CStringWrapper,

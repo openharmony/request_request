@@ -12,7 +12,7 @@
 // limitations under the License.
 
 use std::fs::File;
-use std::os::fd::{AsRawFd, RawFd};
+use std::os::fd::{IntoRawFd, RawFd};
 
 /// File Spec
 #[derive(Clone, Debug)]
@@ -33,14 +33,14 @@ pub struct FileSpec {
 
 impl FileSpec {
     /// Create a new file spec with user file.
-    pub fn user_file(f: &File) -> Self {
+    pub fn user_file(file: File) -> Self {
         Self {
             name: "".to_string(),
             path: "".to_string(),
             file_name: "".to_string(),
             mime_type: "".to_string(),
             is_user_file: true,
-            fd: Some(f.as_raw_fd()),
+            fd: Some(file.into_raw_fd()),
         }
     }
 }

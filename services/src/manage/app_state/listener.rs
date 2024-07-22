@@ -75,7 +75,7 @@ extern "C" fn process_state_change_callback(uid: i32, state: i32, pid: i32) {
     }
 }
 
-#[link(name = "download_server_cxx", kind = "static")]
+#[cfg(feature = "oh")]
 extern "C" {
     fn RegisterAPPStateCallback(f: extern "C" fn(i32, i32, i32));
     fn RegisterProcessStateCallback(f: extern "C" fn(i32, i32, i32));
