@@ -125,23 +125,17 @@ impl State {
             State::Failed => {
                 from != State::Completed && from != State::Removed && from != State::Stopped
             }
-            State::Waiting => from.is_doing(),
+            State::Waiting => from.is_doing() || from == State::Initialized,
             State::Running | State::Retrying => {
                 from == State::Waiting
                     || from == State::Paused
                     || from == State::Stopped
                     || from == State::Failed
+                    || from == State::Initialized
             }
             State::Removed => from != State::Removed,
             _ => false,
         }
-    }
-
-    pub(crate) fn check_resume(&self) -> bool {
-        *self == State::Waiting
-            || *self == State::Paused
-            || *self == State::Failed
-            || *self == State::Stopped
     }
 }
 

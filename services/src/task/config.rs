@@ -16,7 +16,10 @@ use std::fs::File;
 use std::os::fd::FromRawFd;
 
 pub use ffi::{Action, Mode};
-use ipc::parcel::Serialize;
+
+cfg_oh! {
+    use ipc::parcel::Serialize;
+}
 
 use crate::utils::c_wrapper::{CFileSpec, CFormItem, CStringWrapper};
 use crate::utils::form_item::{FileSpec, FormItem};
@@ -227,7 +230,7 @@ impl Default for TaskConfig {
             token: "xxx".to_string(),
             proxy: "".to_string(),
             extras: Default::default(),
-            version: Version::API9,
+            version: Version::API10,
             form_items: vec![],
             file_specs: vec![],
             body_file_paths: vec![],
@@ -240,8 +243,8 @@ impl Default for TaskConfig {
                 action: Action::Download,
                 mode: Mode::BackGround,
                 cover: false,
-                network_config: NetworkConfig::Wifi,
-                metered: true,
+                network_config: NetworkConfig::Any,
+                metered: false,
                 roaming: false,
                 retry: false,
                 redirect: true,
@@ -275,9 +278,15 @@ impl ConfigBuilder {
         self
     }
 
+    /// set version
+    pub fn version(&mut self, version: u8) -> &mut Self {
+        self.inner.version = version.into();
+        self
+    }
+
     /// Set title
-    pub fn file_spec<F: Fn(&mut Vec<FileSpec>)>(&mut self, op: F) -> &mut Self {
-        op(&mut self.inner.file_specs);
+    pub fn file_spec(&mut self, file: File) -> &mut Self {
+        self.inner.file_specs.push(FileSpec::user_file(file));
         self
     }
     /// Set action
@@ -332,8 +341,33 @@ impl ConfigBuilder {
         self.inner.common_data.redirect = redirect;
         self
     }
+
+    /// begins
+    pub fn begins(&mut self, begins: u64) -> &mut Self {
+        self.inner.common_data.begins = begins;
+        self
+    }
+
+    /// ends
+    pub fn ends(&mut self, ends: u64) -> &mut Self {
+        self.inner.common_data.ends = ends as i64;
+        self
+    }
+
+    /// method
+    pub fn method(&mut self, metered: &str) -> &mut Self {
+        self.inner.method = metered.to_string();
+        self
+    }
+
+    /// retry
+    pub fn retry(&mut self, retry: bool) -> &mut Self {
+        self.inner.common_data.retry = retry;
+        self
+    }
 }
 
+#[cfg(feature = "oh")]
 impl Serialize for TaskConfig {
     fn serialize(&self, parcel: &mut ipc::parcel::MsgParcel) -> ipc::IpcResult<()> {
         parcel.write(&(self.common_data.action.repr as u32))?;

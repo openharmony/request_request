@@ -16,11 +16,20 @@ name = "test_common"
 version = "0.1.0"
 edition = "2021"
 
-[dependencies]
+[features]
+default = []
 
+oh = [
+    "samgr",
+    "ipc",
+    "system_ability_fwk",
+    "download_server",
+]
+
+[dependencies]
 ylong_runtime = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime", features = ["full"] }
-download_server = { path = "../../services/" }
-system_ability_fwk = { git = "https://gitee.com/openharmony/systemabilitymgr_safwk" }
-samgr = { git = "https://gitee.com/openharmony/systemabilitymgr_samgr" }
-ipc = { git = "https://gitee.com/openharmony/communication_ipc" }
+download_server = { path = "../../services/", optional = true }
+system_ability_fwk = { git = "https://gitee.com/openharmony/systemabilitymgr_safwk", optional = true }
+samgr = { git = "https://gitee.com/openharmony/systemabilitymgr_samgr", optional = true }
+ipc = { git = "https://gitee.com/openharmony/communication_ipc", optional = true }
 once_cell = "1.17.0"

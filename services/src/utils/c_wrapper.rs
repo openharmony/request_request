@@ -40,12 +40,18 @@ impl From<&String> for CStringWrapper {
 impl ToString for CStringWrapper {
     fn to_string(&self) -> String {
         if self.c_str.is_null() || self.len == 0 {
-            unsafe { DeleteChar(self.c_str) };
+            #[cfg(feature = "oh")]
+            unsafe {
+                DeleteChar(self.c_str)
+            };
             return String::new();
         }
         let bytes = unsafe { slice::from_raw_parts(self.c_str as *const u8, self.len as usize) };
         let str = unsafe { String::from_utf8_unchecked(bytes.to_vec()) };
-        unsafe { DeleteChar(self.c_str) };
+        #[cfg(feature = "oh")]
+        unsafe {
+            DeleteChar(self.c_str)
+        };
         str
     }
 }
@@ -104,7 +110,7 @@ impl FormItem {
     }
 }
 
-#[link(name = "download_server_cxx", kind = "static")]
+#[cfg(feature = "oh")]
 extern "C" {
     pub(crate) fn DeleteChar(ptr: *const c_char);
     pub(crate) fn DeleteCFormItem(ptr: *const CFormItem);

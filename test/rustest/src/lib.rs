@@ -25,6 +25,7 @@
 // limitations under the License.
 #![allow(unused)]
 #![allow(missing_docs)]
+#![cfg(feature = "oh")]
 
 use std::collections::HashMap;
 use std::ffi::{c_char, CString};
@@ -117,6 +118,31 @@ impl RequestAgent {
         let mut reply = self
             .remote
             .send_request(interface::START, &mut data)
+            .unwrap();
+        let ret: i32 = reply.read().unwrap();
+        assert_eq!(ret, 0);
+    }
+
+    pub fn pause(&self, task_id: u32) {
+        let mut data = MsgParcel::new();
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+        data.write(&0u32);
+        data.write(&format!("{}", task_id)).unwrap();
+        let mut reply = self
+            .remote
+            .send_request(interface::PAUSE, &mut data)
+            .unwrap();
+        let ret: i32 = reply.read().unwrap();
+        assert_eq!(ret, 0);
+    }
+
+    pub fn resume(&self, task_id: u32) {
+        let mut data = MsgParcel::new();
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+        data.write(&format!("{}", task_id)).unwrap();
+        let mut reply = self
+            .remote
+            .send_request(interface::RESUME, &mut data)
             .unwrap();
         let ret: i32 = reply.read().unwrap();
         assert_eq!(ret, 0);

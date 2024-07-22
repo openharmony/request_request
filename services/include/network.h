@@ -34,11 +34,14 @@ public:
         rust::fn<void(const NetworkTaskManagerTx &task_manager)> notifyTaskManagerOnline,
         rust::fn<void(const NetworkTaskManagerTx &task_manager)> notifyTaskManagerOffline);
     ~RequestNetCallbackStub();
+
+    int32_t NetAvailable(sptr<NetHandle> &netHandle) override;
     int32_t NetLost(sptr<NetHandle> &netHandle) override;
     int32_t NetUnavailable() override;
     int32_t NetCapabilitiesChange(sptr<NetHandle> &netHandle, const sptr<NetAllCapabilities> &netAllCap) override;
 
 private:
+    void HandleNetCap(const sptr<NetAllCapabilities> &netAllCap);
     bool IsRoaming();
     NetworkInner *networkNotifier_;
     NetworkTaskManagerTx *task_manager_;

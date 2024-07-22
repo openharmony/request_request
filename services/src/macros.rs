@@ -11,23 +11,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::manage::database::Database;
-use crate::manage::TaskManager;
-use crate::task::info::TaskInfo;
+macro_rules! cfg_oh {
+    ($($item:item)*) => {
+        $(
+            #[cfg(feature = "oh")]
+            $item
+        )*
+    }
+}
 
-impl TaskManager {
-    pub(crate) fn show(&self, uid: u64, task_id: u32) -> Option<TaskInfo> {
-        debug!("TaskManager Show, uid: {}, task_id: {}", uid, task_id);
+macro_rules! cfg_not_oh {
+    ($($item:item)*) => {
+        $(
+            #[cfg(not(feature = "oh"))]
+            $item
+        )*
+    }
+}
 
-        match Database::get_instance().get_task_info(task_id) {
-            Some(info) if info.uid() == uid => {
-                info!("TaskManager Show: task info is {:?}", info);
-                Some(info)
-            }
-            _ => {
-                info!("TaskManger Show: no task found in database");
-                None
+#[cfg(not(feature = "oh"))]
+macro_rules! cvt_res_error {
+    ($res: expr, $($args:tt)*) => {{
+        match $res {
+            Ok(value) => value,
+            Err(e) => {
+                error!($($args)*);
+                error!("Error msg: {:?}", e);
+                return Err(e);
             }
         }
-    }
+    }}
 }

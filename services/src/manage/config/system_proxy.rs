@@ -37,7 +37,7 @@ impl SystemProxyManager {
     }
 }
 
-#[link(name = "download_server_cxx", kind = "static")]
+#[cfg(feature = "oh")]
 extern "C" {
     pub(crate) fn RegisterProxySubscriber();
     pub(crate) fn GetHost() -> CStringWrapper;

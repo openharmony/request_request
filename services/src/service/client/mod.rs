@@ -221,7 +221,6 @@ impl Client {
                         .await;
                 }
             }
-
             debug!("Client handle message done");
         }
     }

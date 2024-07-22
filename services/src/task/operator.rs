@@ -22,12 +22,15 @@ use ylong_http_client::HttpClientError;
 use ylong_runtime::io::AsyncWrite;
 use ylong_runtime::time::{sleep, Sleep};
 
-use super::config::Mode;
-use crate::manage::account::is_active_user;
-use crate::manage::notifier::Notifier;
+cfg_oh! {
+    use crate::manage::account::is_active_user;
+    use crate::manage::notifier::Notifier;
+    use super::config::Mode;
+    use crate::task::reason::Reason;
+}
+
+use crate::info::State;
 use crate::task::config::Version;
-use crate::task::info::State;
-use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::utils::get_current_timestamp;
 
@@ -61,30 +64,40 @@ impl TaskOperator {
         let current = get_current_timestamp();
 
         let state = self.task.status.lock().unwrap().state;
-        if (state != State::Running && state != State::Retrying)
-            || (self.task.conf.version == Version::API10 && !self.task.check_network_status())
-        {
-            info!("pause the task, tid: {}", self.task.task_id());
-            return Poll::Ready(Err(HttpClientError::user_aborted()));
-        }
-        if !self.task.check_app_state() {
-            info!("pause for app state, tid: {}", self.task.task_id());
+        if state != State::Running && state != State::Retrying {
+            info!("pause task {} new state {:?} ", self.task.task_id(), state);
             return Poll::Ready(Err(HttpClientError::user_aborted()));
         }
 
-        if self.task.conf.common_data.mode == Mode::BackGround && !is_active_user(self.task.uid()) {
-            info!("pause for user stopped, tid: {}", self.task.task_id());
-            self.task
-                .change_task_status(State::Waiting, Reason::AccountStopped);
+        if self.task.conf.version == Version::API10 && !self.task.check_network_status() {
+            info!("pause for network status, tid: {}", self.task.task_id());
             return Poll::Ready(Err(HttpClientError::user_aborted()));
+        }
+
+        #[cfg(feature = "oh")]
+        {
+            if !self.task.check_app_state() {
+                info!("pause for app state, tid: {}", self.task.task_id());
+                return Poll::Ready(Err(HttpClientError::user_aborted()));
+            }
+
+            if self.task.conf.common_data.mode == Mode::BackGround
+                && !is_active_user(self.task.uid())
+            {
+                info!("pause for user stopped, tid: {}", self.task.task_id());
+                self.task
+                    .change_task_status(State::Waiting, Reason::AccountStopped);
+                return Poll::Ready(Err(HttpClientError::user_aborted()));
+            }
+
+            if current >= self.task.last_notify.load(Ordering::SeqCst) + FRONT_NOTIFY_INTERVAL {
+                let notify_data = self.task.build_notify_data();
+                self.task.last_notify.store(current, Ordering::SeqCst);
+                Notifier::progress(&self.task.client_manager, notify_data);
+            }
         }
 
         let version = self.task.conf.version;
-        if current >= self.task.last_notify.load(Ordering::SeqCst) + FRONT_NOTIFY_INTERVAL {
-            let notify_data = self.task.build_notify_data();
-            self.task.last_notify.store(current, Ordering::SeqCst);
-            Notifier::progress(&self.task.client_manager, notify_data);
-        }
 
         let gauge = self.task.conf.common_data.gauge;
         if version == Version::API9 || gauge {
@@ -144,38 +157,6 @@ impl TaskOperator {
             }
         }
         Poll::Ready(Ok(()))
-    }
-
-    pub(crate) fn poll_write_partial_file(
-        &self,
-        cx: &mut Context<'_>,
-        data: &[u8],
-        begins: u64,
-        ends: i64,
-    ) -> Poll<Result<usize, HttpClientError>> {
-        let data_size = data.len();
-        let skip_size = self.task.skip_bytes.load(Ordering::SeqCst);
-        if skip_size + data_size as u64 <= begins {
-            self.task
-                .skip_bytes
-                .fetch_add(data_size as u64, Ordering::SeqCst);
-            return Poll::Ready(Ok(data_size));
-        }
-        let remain_skip_bytes = (begins - skip_size) as usize;
-        let mut data = &data[remain_skip_bytes..];
-        self.task.skip_bytes.store(begins, Ordering::SeqCst);
-        if ends >= 0 {
-            let total_bytes = ends as u64 - begins + 1;
-            let written_bytes = self.task.progress.lock().unwrap().processed[0] as u64;
-            if written_bytes == total_bytes {
-                return Poll::Ready(Err(HttpClientError::user_aborted()));
-            }
-            if data.len() as u64 + written_bytes >= total_bytes {
-                let remain_bytes = (total_bytes - written_bytes) as usize;
-                data = &data[..remain_bytes];
-            }
-        }
-        self.poll_write_file(cx, data, remain_skip_bytes)
     }
 
     pub(crate) fn poll_write_file(

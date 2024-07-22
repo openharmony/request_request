@@ -96,7 +96,7 @@ fn update_system_cert(info: &Arc<RwLock<CertInfo>>) {
     };
 }
 
-#[link(name = "download_server_cxx", kind = "static")]
+#[cfg(feature = "oh")]
 extern "C" {
     pub(crate) fn GetUserCertsData() -> *const CRequestCerts;
     pub(crate) fn FreeCertDataList(certs: *const CRequestCerts);
