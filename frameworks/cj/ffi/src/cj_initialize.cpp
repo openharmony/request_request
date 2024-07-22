@@ -779,4 +779,4 @@ bool CJInitialize::FindDir(const std::string &pathDir)
 }
 
 
-} //namespace OHOS::CJSystemapi::Request
+} // namespace OHOS::CJSystemapi::Request

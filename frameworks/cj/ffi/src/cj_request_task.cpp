@@ -406,4 +406,4 @@ void CJTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls
     }
 }
 
-} //namespace OHOS::CJSystemapi::Request
+} // namespace OHOS::CJSystemapi::Request
