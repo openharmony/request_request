@@ -14,38 +14,32 @@
 /// hilog label.
 
 macro_rules! debug {
-    ($($args:tt)*) => {{
+    ($fmt: literal $(, $args:expr)* $(,)?) => {{
         use hilog_rust::hilog;
         use std::ffi::{c_char, CString};
         use $crate::LOG_LABEL;
 
-        let log = format!($($args)*);
-
-        hilog_rust::debug!(LOG_LABEL,"{}",@public(log));
+        hilog_rust::debug!(LOG_LABEL, $fmt $(, @public($args))*);
     }}
 }
 
 macro_rules! info {
-    ($($args:tt)*) => {{
+    ($fmt: literal $(, $args:expr)* $(,)?) => {{
         use hilog_rust::hilog;
         use std::ffi::{c_char, CString};
         use $crate::LOG_LABEL;
 
-        let log = format!($($args)*);
-
-        hilog_rust::info!(LOG_LABEL,"{}",@public(log));
+        hilog_rust::info!(LOG_LABEL, $fmt $(, @public($args))*);
     }}
 }
 
 macro_rules! error {
-    ($($args:tt)*) => {{
+    ($fmt: literal $(, $args:expr)* $(,)?) => {{
         use hilog_rust::hilog;
         use std::ffi::{c_char, CString};
         use $crate::LOG_LABEL;
 
-        let log = format!($($args)*);
-
-        hilog_rust::error!(LOG_LABEL,"{}",@public(log));
+        hilog_rust::error!(LOG_LABEL, $fmt $(, @public($args))*);
     }}
 }
 
