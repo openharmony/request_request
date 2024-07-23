@@ -245,6 +245,7 @@ async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
     let start = task.progress.lock().unwrap().common_data.index;
 
     for index in start..size {
+        task.progress.lock().unwrap().common_data.index = index;
         if !task.prepare_single_upload(index) {
             return Err(TaskError::Failed(Reason::OthersError));
         }
@@ -258,9 +259,6 @@ async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
         } else {
             upload_one_file(task.clone(), index, build_stream_request).await?
         };
-        let mut progress = task.progress.lock().unwrap();
-        progress.common_data.index = 0;
-        #[cfg(feature = "oh")]
         task.notify_header_receive();
     }
 
@@ -366,16 +364,28 @@ mod test {
     use std::net::{TcpListener, TcpStream};
     use std::sync::Arc;
 
+    use once_cell::sync::Lazy;
+
     use crate::config::{Action, ConfigBuilder, Mode, TaskConfig};
     use crate::info::State;
     use crate::manage::Network;
+    use crate::service::client::{ClientManager, ClientManagerEntry};
     use crate::task::request_task::{check_config, RequestTask, TaskError, TaskPhase};
     use crate::task::upload::upload_inner;
 
+    const SERVER_ADDR: &str = "127.0.0.1:8989";
+
     fn build_task(config: TaskConfig) -> Arc<RequestTask> {
+        static CLIENT: Lazy<ClientManagerEntry> = Lazy::new(|| ClientManager::init());
         let (files, client) = check_config(&config).unwrap();
         let network = Network::new();
-        let task = Arc::new(RequestTask::new(config, files, client, network));
+        let task = Arc::new(RequestTask::new(
+            config,
+            files,
+            client,
+            CLIENT.clone(),
+            network,
+        ));
         task.status.lock().unwrap().state = State::Initialized;
         task
     }
@@ -385,9 +395,9 @@ mod test {
         let _ = std::fs::create_dir("test_files/");
         static ONCE: std::sync::Once = std::sync::Once::new();
         ONCE.call_once(|| {
-            info!("server start 127.0.0.1:7878");
+            info!("server start {}", SERVER_ADDR);
             std::thread::spawn(|| {
-                let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+                let listener = TcpListener::bind(SERVER_ADDR).unwrap();
                 for stream in listener.incoming() {
                     std::thread::sleep(std::time::Duration::from_secs(2));
                     let stream = stream.unwrap();
@@ -427,8 +437,9 @@ mod test {
             .method("POST")
             .mode(Mode::BackGround)
             .file_spec(file)
-            .url("http://127.0.0.1:7878/")
+            .url(&format!("http://{}/", SERVER_ADDR))
             .redirect(true)
+            .version(1)
             .build();
         let task = build_task(config);
 

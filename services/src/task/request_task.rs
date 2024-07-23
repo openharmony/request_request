@@ -23,9 +23,7 @@ use ylong_runtime::io::{AsyncSeekExt, AsyncWriteExt};
 cfg_oh! {
     use crate::manage::app_state::AppState;
     use crate::manage::database::Database;
-    use crate::manage::notifier::Notifier;
     use crate::manage::SystemConfig;
-    use crate::service::client::ClientManagerEntry;
     use super::info::UpdateInfo;
     use crate::utils::publish_state_change_event;
     use crate::utils::{request_background_notify, RequestTaskMsg};
@@ -36,6 +34,8 @@ use super::info::{CommonTaskInfo, State, TaskInfo};
 use super::notify::{EachFileStatus, NotifyData, Progress};
 use super::reason::Reason;
 use crate::error::ErrorCode;
+use crate::manage::notifier::Notifier;
+use crate::service::client::ClientManagerEntry;
 use crate::task::client::build_client;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::files::{AttachedFiles, Files};
@@ -70,10 +70,9 @@ pub(crate) struct RequestTask {
     pub(crate) rate_limiting: AtomicU64,
     pub(crate) last_notify: AtomicU64,
     pub(crate) network: crate::manage::Network,
+    pub(crate) client_manager: ClientManagerEntry,
     #[cfg(feature = "oh")]
     pub(crate) app_state: AppState,
-    #[cfg(feature = "oh")]
-    pub(crate) client_manager: ClientManagerEntry,
 }
 
 impl RequestTask {
@@ -129,7 +128,7 @@ impl RequestTask {
         #[cfg(feature = "oh")] app_state: AppState,
         files: AttachedFiles,
         client: Client,
-        #[cfg(feature = "oh")] client_manager: ClientManagerEntry,
+        client_manager: ClientManagerEntry,
         network: crate::manage::Network,
     ) -> RequestTask {
         let file_len = files.files.len();
@@ -178,7 +177,6 @@ impl RequestTask {
             rate_limiting: AtomicU64::new(0),
             last_notify: AtomicU64::new(time),
             network,
-            #[cfg(feature = "oh")]
             client_manager,
             #[cfg(feature = "oh")]
             app_state,
@@ -190,7 +188,7 @@ impl RequestTask {
         #[cfg(feature = "oh")] system: SystemConfig,
         #[cfg(feature = "oh")] app_state: AppState,
         info: TaskInfo,
-        #[cfg(feature = "oh")] client_manager: ClientManagerEntry,
+        client_manager: ClientManagerEntry,
         network: crate::manage::Network,
     ) -> Result<RequestTask, ErrorCode> {
         #[cfg(feature = "oh")]
@@ -255,7 +253,6 @@ impl RequestTask {
             rate_limiting: AtomicU64::new(0),
             last_notify: AtomicU64::new(time),
             network,
-            #[cfg(feature = "oh")]
             client_manager,
             #[cfg(feature = "oh")]
             app_state,
@@ -899,7 +896,6 @@ impl RequestTask {
         (is_partial_upload, upload_file_length)
     }
 
-    #[cfg(feature = "oh")]
     pub(crate) fn notify_header_receive(&self) {
         if self.conf.version == Version::API9 && self.conf.common_data.action == Action::Upload {
             let notify_data = self.build_notify_data();
