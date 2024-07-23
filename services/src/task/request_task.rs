@@ -317,7 +317,7 @@ impl RequestTask {
                     if self.network.is_online() {
                         return true;
                     }
-                    ylong_runtime::time::sleep(Duration::from_millis(RETRY_INTERVAL));
+                    ylong_runtime::time::sleep(Duration::from_millis(RETRY_INTERVAL)).await;
                 }
                 self.change_task_status(State::Failed, Reason::NetworkOffline);
             }

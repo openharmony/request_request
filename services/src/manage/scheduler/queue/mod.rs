@@ -209,6 +209,11 @@ impl RunningQueue {
                     continue;
                 }
             };
+
+            // every task cannot be running when network is error
+            if !task.satisfied().await {
+                continue;
+            }
             let (lock, rx) = oneshot::channel();
             self.locks.insert(task_id, rx);
             let keeper = self.keeper.clone();
@@ -217,9 +222,6 @@ impl RunningQueue {
             task.speed_limit(qos_direction.direction() as u64);
             new_queue.insert((uid, task_id), task.clone());
             let task = RunningTask::new(runcount_manager, task, tx, keeper, lock);
-            if !task.satisfied().await {
-                continue;
-            }
             self.join_handles.push(runtime_spawn(async move {
                 task.run().await;
             }));
