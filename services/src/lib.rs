@@ -34,7 +34,6 @@ cfg_oh! {
     #[macro_use]
     mod hilog;
     mod trace;
-    mod service;
     pub mod ability;
     mod sys_event;
     pub use service::interface;
@@ -43,6 +42,7 @@ cfg_oh! {
 
 mod error;
 mod manage;
+mod service;
 mod task;
 mod utils;
 pub use task::{config, info};

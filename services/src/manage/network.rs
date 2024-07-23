@@ -640,12 +640,14 @@ mod test {
     use std::sync::Arc;
 
     use mockall_double::double;
+    use once_cell::sync::Lazy;
     use ylong_runtime::io::AsyncSeekExt;
 
     use super::NetworkType;
     use crate::config::{Action, ConfigBuilder, Mode, TaskConfig};
     use crate::info::State;
     use crate::manage::Network;
+    use crate::service::client::{ClientManager, ClientManagerEntry};
     use crate::task::download;
     use crate::task::download::download_inner;
     use crate::task::reason::Reason;
@@ -656,8 +658,15 @@ mod test {
     const FS_FILE_LEN: u64 = 274619168;
 
     fn build_task(config: TaskConfig, network: Network) -> Arc<RequestTask> {
+        static CLIENT: Lazy<ClientManagerEntry> = Lazy::new(|| ClientManager::init());
         let (files, client) = check_config(&config).unwrap();
-        let task = Arc::new(RequestTask::new(config, files, client, network));
+        let task = Arc::new(RequestTask::new(
+            config,
+            files,
+            client,
+            CLIENT.clone(),
+            network,
+        ));
         task.status.lock().unwrap().state = State::Initialized;
         task
     }

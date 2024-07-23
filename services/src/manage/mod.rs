@@ -17,7 +17,6 @@ cfg_oh! {
     pub(crate) mod config;
     pub(crate) mod database;
     pub(crate) mod events;
-    pub(crate) mod notifier;
     pub(crate) mod scheduler;
     pub(crate) mod task_manager;
     pub(crate) use config::{SystemConfig, SystemConfigManager};
@@ -25,5 +24,6 @@ cfg_oh! {
 }
 
 mod network;
+pub(crate) mod notifier;
 
 pub(crate) use network::Network;

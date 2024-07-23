@@ -17,7 +17,10 @@ use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedS
 use ylong_runtime::sync::oneshot::Sender;
 
 use super::{Client, ClientEvent};
-use crate::ability::PANIC_INFO;
+
+cfg_oh! {
+    use crate::ability::PANIC_INFO;
+}
 use crate::error::ErrorCode;
 use crate::utils::runtime_spawn;
 
@@ -33,6 +36,7 @@ impl ClientManagerEntry {
 
     pub(crate) fn send_event(&self, event: ClientEvent) -> bool {
         if self.tx.send(event).is_err() {
+            #[cfg(feature = "oh")]
             unsafe {
                 if let Some(e) = PANIC_INFO.as_ref() {
                     error!("Sends ClientManager event failed {}", e);

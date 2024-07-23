@@ -252,11 +252,13 @@ mod test {
     use std::io::{Seek, SeekFrom, Write};
     use std::sync::Arc;
 
+    use once_cell::sync::Lazy;
     use ylong_runtime::io::AsyncSeekExt;
 
     use crate::config::{Action, ConfigBuilder, Mode, TaskConfig};
     use crate::info::State;
     use crate::manage::Network;
+    use crate::service::client::{ClientManager, ClientManagerEntry};
     use crate::task::download::{download_inner, TaskPhase};
     use crate::task::reason::Reason;
     use crate::task::request_task::{check_config, RequestTask, TaskError};
@@ -265,9 +267,18 @@ mod test {
     const FS_FILE_LEN: u64 = 274619168;
 
     fn build_task(config: TaskConfig) -> Arc<RequestTask> {
+        static CLIENT: Lazy<ClientManagerEntry> = Lazy::new(|| ClientManager::init());
+
         let (files, client) = check_config(&config).unwrap();
         let network = Network::new();
-        let task = Arc::new(RequestTask::new(config, files, client, network));
+
+        let task = Arc::new(RequestTask::new(
+            config,
+            files,
+            client,
+            CLIENT.clone(),
+            network,
+        ));
         task.status.lock().unwrap().state = State::Initialized;
         task
     }
