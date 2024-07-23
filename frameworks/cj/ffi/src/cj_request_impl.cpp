@@ -102,7 +102,7 @@ void CJRequestImpl::Convert2Config(CConfig *config, Config &out)
 {
     out.action = static_cast<OHOS::Request::Action>(config->action);
     out.url = config->url;
-    out.version = Version::API10;  //CJ only support API10
+    out.version = Version::API10;  // CJ only support API10
     out.mode = static_cast<OHOS::Request::Mode>(config->mode);
     out.network = static_cast<OHOS::Request::Network>(config->network);
     out.index = config->index;
@@ -147,6 +147,7 @@ RetReqData CJRequestImpl::CreateTask(OHOS::AbilityRuntime::Context* context, CCo
     result = task->Create(context, config);
     if (result.code != 0) {
         REQUEST_HILOGE("[CJRequestImpl] task create failed, ret:%{public}d.", result.code);
+        delete task;
         return {
             .err = Convert2RetErr(result)
         };
@@ -256,4 +257,4 @@ RetError CJRequestImpl::TaskStop(int32_t taskId)
 {
     return CJRequestImpl::TaskExec(FUNCTION_STOP, taskId);
 }
-} //namespace OHOS::CJSystemapi::Request
+} // namespace OHOS::CJSystemapi::Request

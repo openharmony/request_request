@@ -118,8 +118,8 @@ CProgress Convert2CProgress(const Progress &in)
     out.state = static_cast<int32_t>(in.state);
     out.index = in.index;
     out.processed = in.processed;
-    out.sizeArrLen = static_cast<int64_t>(in.sizes.size());
-    if (out.sizeArrLen > 0) {
+    
+    if (in.sizes.size() > 0) {
         out.sizeArr = static_cast<int64_t *>(malloc(sizeof(int64_t) * in.sizes.size()));
         if (out.sizeArr == nullptr) {
             return out;
@@ -127,14 +127,14 @@ CProgress Convert2CProgress(const Progress &in)
         for (std::vector<long>::size_type i = 0; i < in.sizes.size(); ++i) {
             out.sizeArr[i] = in.sizes[i];
         }
+        out.sizeArrLen = static_cast<int64_t>(in.sizes.size());
     }
 
-    out.extras.size = static_cast<int64_t>(in.extras.size());
-    if (out.extras.size <= 0) {
+    if (in.extras.size() <= 0) {
         return out;
     }
 
-    out.extras.headers = static_cast<CHashStrPair *>(malloc(sizeof(CHashStrPair) * out.extras.size));
+    out.extras.headers = static_cast<CHashStrPair *>(malloc(sizeof(CHashStrPair) * in.extras.size()));
     if (out.extras.headers == nullptr) {
         return out;
     }
@@ -145,6 +145,7 @@ CProgress Convert2CProgress(const Progress &in)
         elem->key = MallocCString(iter->first);
         elem->value = MallocCString(iter->second);
     }
+    out.extras.size = static_cast<int64_t>(in.extras.size());
     return out;
 }
 
@@ -157,4 +158,4 @@ void RemoveFile(const std::string &filePath)
     ffrt::submit(removeFile, {}, {}, ffrt::task_attr().name("Os_Request_Rm").qos(ffrt::qos_default));
 }
 
-} //namespace OHOS::CJSystemapi::Request
+} // namespace OHOS::CJSystemapi::Request
