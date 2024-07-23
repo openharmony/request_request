@@ -26,7 +26,7 @@ const MAX_BACKGROUND_TASK: usize = 1000;
 const MAX_FRONTEND_TASK: usize = 2000;
 
 impl TaskManager {
-    pub(crate) async fn create(&mut self, mut config: TaskConfig) -> Result<u32, ErrorCode> {
+    pub(crate) fn create(&mut self, mut config: TaskConfig) -> Result<u32, ErrorCode> {
         let task_id = TaskIdGenerator::generate();
         config.common_data.task_id = task_id;
 

@@ -164,7 +164,7 @@ impl TaskManager {
 
         match event {
             ServiceEvent::Construct(msg, tx) => {
-                let _ = tx.send(self.create(msg.config).await);
+                let _ = tx.send(self.create(msg.config));
             }
             ServiceEvent::Start(uid, task_id, tx) => {
                 let _ = tx.send(self.start(uid, task_id).await);

@@ -150,7 +150,12 @@ impl Eq for App {}
 
 impl Ord for App {
     fn cmp(&self, other: &Self) -> cmp::Ordering {
-        self.partial_cmp(other).unwrap()
+        let self_is_foreground = is_foreground_user(self.uid);
+        let other_is_foreground = is_foreground_user(other.uid);
+        self_is_foreground
+            .cmp(&other_is_foreground)
+            .reverse()
+            .then(self.state.cmp(&other.state))
     }
 }
 
@@ -162,14 +167,7 @@ impl PartialEq for App {
 
 impl PartialOrd for App {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
-        let self_is_foreground = is_foreground_user(self.uid);
-        let other_is_foreground = is_foreground_user(other.uid);
-        Some(
-            self_is_foreground
-                .cmp(&other_is_foreground)
-                .reverse()
-                .then(self.state.cmp(&other.state)),
-        )
+        Some(self.cmp(other))
     }
 }
 
@@ -211,7 +209,9 @@ impl Eq for Task {}
 
 impl Ord for Task {
     fn cmp(&self, other: &Self) -> cmp::Ordering {
-        self.partial_cmp(other).unwrap()
+        self.mode
+            .cmp(&other.mode)
+            .then(self.priority.cmp(&other.priority))
     }
 }
 
@@ -223,11 +223,7 @@ impl PartialEq for Task {
 
 impl PartialOrd for Task {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
-        Some(
-            self.mode
-                .cmp(&other.mode)
-                .then(self.priority.cmp(&other.priority)),
-        )
+        Some(self.cmp(other))
     }
 }
 

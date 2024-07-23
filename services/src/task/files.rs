@@ -144,7 +144,6 @@ fn open_file_readwrite(uid: u64, bundle: &str, path: &str) -> io::Result<File> {
     Ok(cvt_res_error!(
         OpenOptions::new()
             .read(true)
-            .write(true)
             .append(true)
             .open(convert_path(uid, bundle, path)),
         "open_file_readwrite failed"

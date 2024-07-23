@@ -261,7 +261,7 @@ impl UpdateInfo {
         sizes: &str,
         processed: &str,
         extras: &str,
-        each_file_status: &Vec<CEachFileStatus>,
+        each_file_status: &[CEachFileStatus],
     ) -> CUpdateInfo {
         CUpdateInfo {
             mtime: self.mtime,

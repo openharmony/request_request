@@ -27,7 +27,7 @@ use crate::error::ErrorCode;
 use crate::manage::{Network, SystemConfig};
 use crate::service::client::ClientManagerEntry;
 use crate::task::config::{Mode, TaskConfig};
-use crate::task::ffi::{CTaskConfig, CTaskInfo, CUpdateInfo, CUpdateStateInfo};
+use crate::task::ffi::{CEachFileStatus, CTaskConfig, CTaskInfo, CUpdateInfo, CUpdateStateInfo};
 use crate::task::info::{ApplicationState, State, TaskInfo, UpdateInfo};
 use crate::task::request_task::RequestTask;
 use crate::utils::hashmap_to_string;
@@ -40,7 +40,6 @@ impl Database {
     pub(crate) fn get_instance() -> &'static Self {
         static mut DATABASE: MaybeUninit<Database> = MaybeUninit::uninit();
         static ONCE: Once = Once::new();
-
         ONCE.call_once(|| unsafe {
             DATABASE.write(Database {
                 user_file_tasks: Mutex::new(HashMap::new()),
@@ -97,7 +96,7 @@ impl Database {
         let sizes = format!("{:?}", update_info.progress.sizes);
         let processed = format!("{:?}", update_info.progress.processed);
         let extras = hashmap_to_string(&update_info.progress.extras);
-        let each_file_status = update_info
+        let each_file_status: Vec<CEachFileStatus> = update_info
             .each_file_status
             .iter()
             .map(|x| x.to_c_struct())
