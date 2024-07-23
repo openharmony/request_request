@@ -165,7 +165,7 @@ async fn get_foreground_account() -> Option<i32> {
             return Some(foreground_account);
         } else {
             error!("GetForegroundOsAccount failed: {} retry {} times", res, i);
-            ylong_runtime::time::sleep(std::time::Duration::from_millis(500));
+            ylong_runtime::time::sleep(std::time::Duration::from_millis(500)).await;
         }
     }
     None
@@ -179,7 +179,7 @@ async fn get_background_accounts() -> Option<Vec<i32>> {
             return Some(accounts);
         } else {
             error!("GetBackgroundOsAccounts failed: {} retry {} times", res, i);
-            ylong_runtime::time::sleep(std::time::Duration::from_millis(500));
+            ylong_runtime::time::sleep(std::time::Duration::from_millis(500)).await;
         }
     }
     None

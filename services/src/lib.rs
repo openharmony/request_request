@@ -20,7 +20,8 @@
     missing_docs,
     clippy::redundant_static_lifetimes,
     clippy::enum_variant_names,
-    clippy::clone_on_copy
+    clippy::clone_on_copy,
+    clippy::unused_async
 )]
 
 #[macro_use]

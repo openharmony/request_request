@@ -692,7 +692,7 @@ mod test {
         .build();
         let network = Network::new();
         network.inner.notify_online(super::NetworkInfo {
-            network_type: NetworkType::Wifi,
+            network_type: NetworkType::Cellular,
             is_metered: true,
             is_roaming: false,
         });
