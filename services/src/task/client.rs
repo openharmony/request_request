@@ -34,6 +34,7 @@ pub(crate) fn build_client(
     #[cfg(feature = "oh")] mut system: SystemConfig,
 ) -> Result<Client, Box<dyn Error + Send + Sync>> {
     let mut client = Client::builder()
+        .http1_only()
         .connect_timeout(Timeout::from_secs(CONNECT_TIMEOUT))
         .request_timeout(Timeout::from_secs(SECONDS_IN_ONE_WEEK))
         .min_tls_version(TlsVersion::TLS_1_2);
