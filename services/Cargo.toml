@@ -24,8 +24,8 @@ oh = [
     "hilog_rust",
     "hisysevent",
     "hitrace_meter_rust",
-    "samgr",
     "ipc",
+    "samgr",
     "system_ability_fwk",
 ]
 
@@ -41,11 +41,11 @@ ylong_http_client = { git = "https://gitee.com/openharmony/commonlibrary_rust_yl
 hilog_rust = { git = "https://gitee.com/openharmony/hiviewdfx_hilog", optional = true }
 hisysevent = { git = "https://gitee.com/openharmony/hiviewdfx_hisysevent", optional = true }
 hitrace_meter_rust = { git = "https://gitee.com/openharmony/hiviewdfx_hitrace", optional = true }
-cxx = "1.0.115"
-
-system_ability_fwk = { git = "https://gitee.com/openharmony/systemabilitymgr_safwk", optional = true }
-samgr = { git = "https://gitee.com/openharmony/systemabilitymgr_samgr", optional = true }
 ipc = { git = "https://gitee.com/openharmony/communication_ipc", optional = true }
+samgr = { git = "https://gitee.com/openharmony/systemabilitymgr_samgr", optional = true }
+system_ability_fwk = { git = "https://gitee.com/openharmony/systemabilitymgr_safwk", optional = true }
+
+cxx = "1.0.115"
 log = "0.4.22"
 env_logger = "0.11.3"
 mockall = { version = "0.12.1", features = ["nightly"] }
