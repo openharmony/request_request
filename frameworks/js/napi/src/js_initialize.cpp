@@ -246,6 +246,9 @@ bool JsInitialize::GetFD(const std::string &path, const Config &config, int32_t 
             REQUEST_HILOGD("Task config is not firstInit");
             return true;
         }
+        if (chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP) != 0) {
+            REQUEST_HILOGE("GetFd file chmod clear failed: %{public}s", path.c_str());
+        }
         close(fd);
         error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
         error.errInfo = "GetFd File already exists";
