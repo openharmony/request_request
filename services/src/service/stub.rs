@@ -168,7 +168,6 @@ pub(crate) fn serialize_task_config(config: TaskConfig, reply: &mut MsgParcel) -
     reply.write(&(config.common_data.action.repr as u32))?;
     reply.write(&(config.common_data.mode.repr as u32))?;
     reply.write(&(config.bundle_type))?;
-    reply.write(&(config.atomic_account))?;
     reply.write(&(config.common_data.cover))?;
     reply.write(&(config.common_data.network_config as u32))?;
     reply.write(&(config.common_data.metered))?;
