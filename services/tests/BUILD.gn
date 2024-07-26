@@ -69,8 +69,12 @@ ohos_rust_unittest("rust_request_sdv_test") {
 
 group("unittest") {
   testonly = true
-  deps = [
-    ":rust_request_sdv_test",
-    ":rust_request_ut_test",
-  ]
+  deps = []
+
+  if (!use_clang_coverage) {
+    deps = [
+      ":rust_request_sdv_test",
+      ":rust_request_ut_test",
+    ]
+  }
 }
