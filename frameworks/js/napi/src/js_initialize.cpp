@@ -229,6 +229,11 @@ bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &con
 
 bool JsInitialize::GetFD(const std::string &path, const Config &config, int32_t &fd, ExceptionError &error)
 {
+    if (JsInitialize::FindDir(path) && config.action == Action::DOWNLOAD && config.firstInit && !config.overwrite) {
+        error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
+        error.errInfo = "GetFd File already exists";
+        return false;
+    }
     fd = config.action == Action::UPLOAD ? open(path.c_str(), O_RDONLY) : open(path.c_str(), O_TRUNC | O_RDWR);
     if (fd >= 0) {
         REQUEST_HILOGD("File already exists");
@@ -251,7 +256,7 @@ bool JsInitialize::GetFD(const std::string &path, const Config &config, int32_t 
         }
         close(fd);
         error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
-        error.errInfo = "GetFd File already exists";
+        error.errInfo = "GetFd File exists and other error";
         return false;
     } else {
         if (config.action == Action::UPLOAD) {
