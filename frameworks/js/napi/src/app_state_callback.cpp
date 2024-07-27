@@ -26,12 +26,21 @@ void AppStateCallback::OnAbilityForeground(const std::shared_ptr<NativeReference
     if (RequestManager::GetInstance()->IsSaReady()) {
         return;
     }
-    for (auto task = JsTask::taskMap_.begin(); task != JsTask::taskMap_.end(); ++task) {
-        if (task->second->config_.mode == Mode::FOREGROUND) {
-            RequestManager::GetInstance()->LoadRequestServer();
-            return;
+    bool hasForeground = false;
+    {
+        std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
+        for (auto task = JsTask::taskMap_.begin(); task != JsTask::taskMap_.end(); ++task) {
+            if (task->second->config_.mode == Mode::FOREGROUND) {
+                hasForeground = true;
+                break;
+            }
         }
     }
+    if (hasForeground) {
+        RequestManager::GetInstance()->LoadRequestServer();
+        return;
+    }
+
     JsTask::register_ = false;
     auto context = AbilityRuntime::ApplicationContext::GetInstance();
     if (context == nullptr) {

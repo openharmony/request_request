@@ -159,8 +159,7 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
         }
         napi_status status = napi_get_reference_value(context->env_, context->taskRef, result);
         context->task->SetTid(context->tid);
-        JsTask::AddTaskMap(context->tid, context->task);
-        JsTask::AddTaskContextMap(context->tid, context);
+        JsTask::AddTask(context);
         napi_value config = nullptr;
         napi_get_reference_value(context->env_, context->jsConfig, &config);
         JsInitialize::CreatProperties(context->env_, *result, config, context->task);
@@ -171,6 +170,18 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
     AsyncCall asyncCall(env, info, context);
     asyncCall.SetQosLevel(napi_qos_utility);
     return asyncCall.Call(context, "create");
+}
+
+void JsTask::AddTask(std::shared_ptr<ContextInfo> context)
+{
+    {
+        std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
+        JsTask::AddTaskMap(context->tid, context->task);
+    }
+    {
+        std::lock_guard<std::mutex> lockGuard(JsTask::taskContextMutex_);
+        JsTask::AddTaskContextMap(context->tid, context);
+    }
 }
 
 int32_t JsTask::CreateExec(const std::shared_ptr<ContextInfo> &context, int32_t seq)
@@ -382,23 +393,30 @@ void JsTask::GetTaskExecution(std::shared_ptr<ContextInfo> context)
 
 bool JsTask::GetTaskOutput(std::shared_ptr<ContextInfo> context)
 {
+    std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
     std::string tid = context->tid;
-    if (taskMap_.find(tid) == taskMap_.end()) {
-        napi_value config = NapiUtils::Convert2JSValue(context->env_, context->config);
-        napi_create_reference(context->env_, config, 1, &(context->jsConfig));
-        napi_value ctor = GetTaskCtor(context->env_);
-        napi_value jsTask = nullptr;
-        napi_value baseCtx = nullptr;
-        napi_get_reference_value(context->env_, context->baseContext, &baseCtx);
-        napi_value args[2] = { baseCtx, config };
-        napi_status status = napi_new_instance(context->env_, ctor, 2, args, &jsTask);
-        if (jsTask == nullptr || status != napi_ok) {
-            REQUEST_HILOGE("Get task failed, reason: %{public}d", status);
-            return false;
-        }
-        napi_unwrap(context->env_, jsTask, reinterpret_cast<void **>(&context->task));
-        napi_create_reference(context->env_, jsTask, 1, &(context->taskRef));
-        JsTask::AddTaskMap(tid, context->task);
+
+    if (taskMap_.find(tid) != taskMap_.end()) {
+        return true;
+    }
+
+    napi_value config = NapiUtils::Convert2JSValue(context->env_, context->config);
+    napi_create_reference(context->env_, config, 1, &(context->jsConfig));
+    napi_value ctor = GetTaskCtor(context->env_);
+    napi_value jsTask = nullptr;
+    napi_value baseCtx = nullptr;
+    napi_get_reference_value(context->env_, context->baseContext, &baseCtx);
+    napi_value args[2] = { baseCtx, config };
+    napi_status status = napi_new_instance(context->env_, ctor, 2, args, &jsTask);
+    if (jsTask == nullptr || status != napi_ok) {
+        REQUEST_HILOGE("Get task failed, reason: %{public}d", status);
+        return false;
+    }
+    napi_unwrap(context->env_, jsTask, reinterpret_cast<void **>(&context->task));
+    napi_create_reference(context->env_, jsTask, 1, &(context->taskRef));
+    JsTask::AddTaskMap(tid, context->task);
+    {
+        std::lock_guard<std::mutex> lockGuardContext(JsTask::taskContextMutex_);
         JsTask::AddTaskContextMap(tid, context);
     }
     return true;
@@ -864,7 +882,6 @@ void JsTask::SetTid(std::string &tid)
 
 void JsTask::AddTaskMap(const std::string &key, JsTask *task)
 {
-    std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
     JsTask::taskMap_[key] = task;
 
     if (!JsTask::taskMap_.empty()) {
@@ -874,7 +891,6 @@ void JsTask::AddTaskMap(const std::string &key, JsTask *task)
 
 void JsTask::AddTaskContextMap(const std::string &key, std::shared_ptr<ContextInfo> context)
 {
-    std::lock_guard<std::mutex> lockGuard(JsTask::taskContextMutex_);
     JsTask::taskContextMap_[key] = context;
 }
 

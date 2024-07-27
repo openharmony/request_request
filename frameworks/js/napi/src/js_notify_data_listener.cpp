@@ -66,7 +66,9 @@ bool JSNotifyDataListener::IsHeaderReceive(const std::shared_ptr<NotifyData> &no
 
 void JSNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData> &notifyData)
 {
-    JsTask *task = nullptr;
+    uint32_t index = notifyData->progress.index;
+    size_t len = 0;
+    std::string filePath;
     {
         std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
         auto item = JsTask::taskMap_.find(std::to_string(notifyData->taskId));
@@ -74,18 +76,18 @@ void JSNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData
             REQUEST_HILOGE("Task ID not found");
             return;
         }
-        task = item->second;
+        JsTask *task = item->second;
+        len = task->config_.bodyFileNames.size();
+        if (index >= len) {
+            return;
+        }
+        filePath = task->config_.bodyFileNames[index];
     }
 
-    uint32_t index = notifyData->progress.index;
-    size_t len = task->config_.bodyFileNames.size();
-    if (index < len) {
-        std::string &filePath = task->config_.bodyFileNames[index];
-        NapiUtils::ReadBytesFromFile(filePath, notifyData->progress.bodyBytes);
-        // Waiting for "complete" to read and delete.
-        if (!(notifyData->version == Version::API10 && index + 1 == len && notifyData->type == SubscribeType::PROGRESS)) {
-            NapiUtils::RemoveFile(filePath);
-        }
+    NapiUtils::ReadBytesFromFile(filePath, notifyData->progress.bodyBytes);
+    // Waiting for "complete" to read and delete.
+    if (!(notifyData->version == Version::API10 && index + 1 == len && notifyData->type == SubscribeType::PROGRESS)) {
+        NapiUtils::RemoveFile(filePath);
     }
 }
 
