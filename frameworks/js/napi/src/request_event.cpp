@@ -376,11 +376,14 @@ int32_t RequestEvent::StartExec(const std::shared_ptr<ExecContext> &context)
         }
     }
     std::string tid = context->task->GetTid();
-    const auto it = JsTask::taskMap_.find(tid);
-    if (it == JsTask::taskMap_.end()) {
-        REQUEST_HILOGE("Can not find task in JsTask::taskMap_ by tid: %{public}s.", tid.c_str());
-        // In JS d.ts, only can throw 201/13400003/21900007（E_TASK_STATE）
-        return E_TASK_STATE;
+    {
+        std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
+        const auto it = JsTask::taskMap_.find(tid);
+        if (it == JsTask::taskMap_.end()) {
+            REQUEST_HILOGE("Can not find task in JsTask::taskMap_ by tid: %{public}s.", tid.c_str());
+            // In JS d.ts, only can throw 201/13400003/21900007（E_TASK_STATE）
+            return E_TASK_STATE;
+        }
     }
 
     int32_t ret = RequestManager::GetInstance()->Start(tid);
