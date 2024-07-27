@@ -19,9 +19,9 @@ use apps::SortedApps;
 pub(crate) use direction::{QosChanges, QosDirection, QosLevel};
 pub(crate) use rss::RssCapacity;
 
+use super::state;
 use crate::manage::database::TaskQosInfo;
 use crate::task::config::Action;
-use crate::task::info::ApplicationState;
 
 pub(crate) struct Qos {
     pub(crate) apps: SortedApps,
@@ -40,45 +40,40 @@ impl Qos {
     pub(crate) fn start_task(
         &mut self,
         uid: u64,
-        state: ApplicationState,
         task: TaskQosInfo,
+        state: &state::Handler,
     ) -> QosChanges {
         // Only tasks that can run automatically can be added to the qos queue.
-        self.apps.insert_task(uid, state, task);
-        self.reschedule(Action::from(task.action))
+        self.apps.insert_task(uid, task);
+        self.reschedule(Action::from(task.action), state)
     }
 
-    pub(crate) fn finish_task(&mut self, uid: u64, task_id: u32) -> QosChanges {
-        if let Some(task) = self.apps.remove_task(uid, task_id) {
-            self.reschedule(task.action())
-        } else {
-            self.reschedule(Action::Any)
-        }
+    pub(crate) fn remove_task(
+        &mut self,
+        uid: u64,
+        task_id: u32,
+        state: &state::Handler,
+    ) -> Option<QosChanges> {
+        self.apps
+            .remove_task(uid, task_id)
+            .map(|task| self.reschedule(task.action(), state))
     }
 
-    pub(crate) fn reload_all_tasks(&mut self) -> QosChanges {
+    pub(crate) fn reload_all_tasks(&mut self, state: &state::Handler) -> QosChanges {
         self.apps.reload_all_tasks();
-        self.reschedule(Action::Any)
+        self.reschedule(Action::Any, state)
     }
 
-    pub(crate) fn change_app_state(&mut self, uid: u64, state: ApplicationState) -> QosChanges {
-        self.apps.change_app_state(uid, state);
-        self.reschedule(Action::Any)
-    }
-
-    pub(crate) fn change_rss(&mut self, rss: RssCapacity) -> QosChanges {
+    pub(crate) fn change_rss(&mut self, rss: RssCapacity, state: &state::Handler) -> QosChanges {
         self.capacity = rss;
-        self.reschedule(Action::Any)
-    }
-
-    pub(crate) fn contains_task(&mut self, uid: u64, task_id: u32) -> bool {
-        self.apps.contains_task(uid, task_id)
+        self.reschedule(Action::Any, state)
     }
 }
 
 impl Qos {
     // Reschedule qos queue and get directions.
-    pub(crate) fn reschedule(&mut self, action: Action) -> QosChanges {
+    pub(crate) fn reschedule(&mut self, action: Action, state: &state::Handler) -> QosChanges {
+        self.apps.sort(state.top_uid(), state.top_user());
         let mut changes = QosChanges::new();
         match action {
             Action::Any => {
@@ -190,10 +185,8 @@ impl Qos {
             } else {
                 return qos_vec;
             }
-
             count += 1;
         }
-
         qos_vec
     }
 }

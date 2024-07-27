@@ -13,28 +13,22 @@
 
 use std::fmt::Debug;
 
-pub(crate) use search::{SearchMethod, TaskFilter};
 use ylong_runtime::sync::oneshot::{channel, Sender};
 
 use super::account::AccountEvent;
 use crate::error::ErrorCode;
-use crate::task::config::{Action, TaskConfig};
-use crate::task::info::{ApplicationState, DumpAllInfo, DumpOneInfo, TaskInfo};
+use crate::task::config::TaskConfig;
+use crate::task::info::{DumpAllInfo, DumpOneInfo};
+use crate::task::reason::Reason;
 use crate::utils::Recv;
 
 mod construct;
 mod dump;
-mod get_task;
 mod pause;
-mod query;
-mod query_mime_type;
 mod remove;
 mod resume;
-mod search;
-mod show;
 mod start;
 mod stop;
-mod touch;
 
 #[derive(Debug)]
 pub(crate) enum TaskManagerEvent {
@@ -66,22 +60,6 @@ impl TaskManagerEvent {
         )
     }
 
-    pub(crate) fn query(task_id: u32, action: Action) -> (Self, Recv<Option<TaskInfo>>) {
-        let (tx, rx) = channel::<Option<TaskInfo>>();
-        (
-            Self::Service(ServiceEvent::Query(task_id, action, tx)),
-            Recv::new(rx),
-        )
-    }
-
-    pub(crate) fn query_mime_type(uid: u64, task_id: u32) -> (Self, Recv<String>) {
-        let (tx, rx) = channel::<String>();
-        (
-            Self::Service(ServiceEvent::QueryMimeType(uid, task_id, tx)),
-            Recv::new(rx),
-        )
-    }
-
     pub(crate) fn start(uid: u64, task_id: u32) -> (Self, Recv<ErrorCode>) {
         let (tx, rx) = channel::<ErrorCode>();
         (
@@ -94,42 +72,6 @@ impl TaskManagerEvent {
         let (tx, rx) = channel::<ErrorCode>();
         (
             Self::Service(ServiceEvent::Stop(uid, task_id, tx)),
-            Recv::new(rx),
-        )
-    }
-
-    pub(crate) fn show(uid: u64, task_id: u32) -> (Self, Recv<Option<TaskInfo>>) {
-        let (tx, rx) = channel::<Option<TaskInfo>>();
-        (
-            Self::Service(ServiceEvent::Show(uid, task_id, tx)),
-            Recv::new(rx),
-        )
-    }
-
-    pub(crate) fn search(filter: TaskFilter, method: SearchMethod) -> (Self, Recv<Vec<u32>>) {
-        let (tx, rx) = channel::<Vec<u32>>();
-        (
-            Self::Service(ServiceEvent::Search(filter, method, tx)),
-            Recv::new(rx),
-        )
-    }
-
-    pub(crate) fn touch(uid: u64, task_id: u32, token: String) -> (Self, Recv<Option<TaskInfo>>) {
-        let (tx, rx) = channel::<Option<TaskInfo>>();
-        (
-            Self::Service(ServiceEvent::Touch(uid, task_id, token, tx)),
-            Recv::new(rx),
-        )
-    }
-
-    pub(crate) fn get_task(
-        uid: u64,
-        task_id: u32,
-        token: String,
-    ) -> (Self, Recv<Option<TaskConfig>>) {
-        let (tx, rx) = channel::<Option<TaskConfig>>();
-        (
-            Self::Service(ServiceEvent::GetTask(uid, task_id, token, tx)),
             Recv::new(rx),
         )
     }
@@ -163,12 +105,8 @@ impl TaskManagerEvent {
         )
     }
 
-    pub(crate) fn network_online() -> Self {
-        Self::State(StateEvent::NetworkOnline)
-    }
-
-    pub(crate) fn network_offline() -> Self {
-        Self::State(StateEvent::NetworkOffline)
+    pub(crate) fn network() -> Self {
+        Self::State(StateEvent::Network)
     }
 
     pub(crate) fn subscribe(task_id: u32, token_id: u64) -> (Self, Recv<ErrorCode>) {
@@ -183,29 +121,28 @@ impl TaskManagerEvent {
 pub(crate) enum ServiceEvent {
     Construct(Box<ConstructMessage>, Sender<Result<u32, ErrorCode>>),
     Pause(u64, u32, Sender<ErrorCode>),
-    QueryMimeType(u64, u32, Sender<String>),
     Start(u64, u32, Sender<ErrorCode>),
     Stop(u64, u32, Sender<ErrorCode>),
-    Show(u64, u32, Sender<Option<TaskInfo>>),
     Remove(u64, u32, Sender<ErrorCode>),
     Resume(u64, u32, Sender<ErrorCode>),
-    Touch(u64, u32, String, Sender<Option<TaskInfo>>),
-    Query(u32, Action, Sender<Option<TaskInfo>>),
-    GetTask(u64, u32, String, Sender<Option<TaskConfig>>),
     DumpOne(u32, Sender<Option<DumpOneInfo>>),
-    Search(TaskFilter, SearchMethod, Sender<Vec<u32>>),
     DumpAll(Sender<DumpAllInfo>),
 }
 
+#[derive(Debug)]
 pub(crate) enum TaskEvent {
-    Finished(u32, u64),
+    Completed(u32, u64),
+    Failed(u32, u64, Reason),
+    Offline(u32, u64),
+    Running(u32, u64),
     Subscribe(u32, u64, Sender<ErrorCode>),
 }
 
+#[derive(Debug)]
 pub(crate) enum StateEvent {
-    NetworkOnline,
-    NetworkOffline,
-    AppStateChange(u64, ApplicationState),
+    Network,
+    ForegroundApp(u64),
+    BackgroundTimeout(u64),
 }
 
 pub(crate) struct ConstructMessage {
@@ -233,11 +170,6 @@ impl Debug for ServiceEvent {
                 .field("uid", uid)
                 .field("task_id", task_id)
                 .finish(),
-            Self::QueryMimeType(uid, task_id, _) => f
-                .debug_struct("QueryMimeType")
-                .field("uid", uid)
-                .field("task_id", task_id)
-                .finish(),
             Self::Start(uid, task_id, _) => f
                 .debug_struct("Start")
                 .field("uid", uid)
@@ -245,11 +177,6 @@ impl Debug for ServiceEvent {
                 .finish(),
             Self::Stop(uid, task_id, _) => f
                 .debug_struct("Stop")
-                .field("uid", uid)
-                .field("task_id", task_id)
-                .finish(),
-            Self::Show(uid, task_id, _) => f
-                .debug_struct("Show")
                 .field("uid", uid)
                 .field("task_id", task_id)
                 .finish(),
@@ -263,63 +190,11 @@ impl Debug for ServiceEvent {
                 .field("uid", uid)
                 .field("task_id", task_id)
                 .finish(),
-            Self::Touch(uid, task_id, token, _) => f
-                .debug_struct("Touch")
-                .field("uid", uid)
-                .field("task_id", task_id)
-                .field("token", token)
-                .finish(),
-            Self::Query(task_id, action, _) => f
-                .debug_struct("Query")
-                .field("task_id", task_id)
-                .field("action", action)
-                .finish(),
-            Self::GetTask(uid, task_id, token, _) => f
-                .debug_struct("GetTask")
-                .field("uid", uid)
-                .field("task_id", task_id)
-                .field("token", token)
-                .finish(),
             Self::DumpOne(task_id, _) => {
                 f.debug_struct("DumpOne").field("task_id", task_id).finish()
             }
-            Self::Search(filter, method, _) => f
-                .debug_struct("Search")
-                .field("method", method)
-                .field("filter", filter)
-                .finish(),
+
             Self::DumpAll(_) => f.debug_struct("DumpAll").finish(),
-        }
-    }
-}
-
-impl Debug for TaskEvent {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Finished(task_id, uid) => f
-                .debug_struct("Finished")
-                .field("uid", uid)
-                .field("task_id", task_id)
-                .finish(),
-            Self::Subscribe(task_id, token_id, _) => f
-                .debug_struct("Subscribe")
-                .field("task_id", task_id)
-                .field("token_id", token_id)
-                .finish(),
-        }
-    }
-}
-
-impl Debug for StateEvent {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::NetworkOnline => f.pad("NetworkChange"),
-            Self::NetworkOffline => f.pad("NetworkOffline"),
-            Self::AppStateChange(uid, state) => f
-                .debug_struct("AppStateChange")
-                .field("uid", uid)
-                .field("state", state)
-                .finish(),
         }
     }
 }
@@ -330,4 +205,132 @@ pub(crate) enum ScheduleEvent {
     LogTasks,
     RestoreAllTasks,
     Unload,
+}
+
+#[cfg(not(feature = "oh"))]
+#[cfg(test)]
+mod test {
+    use core::time;
+    use std::fs::File;
+
+    use once_cell::sync::Lazy;
+
+    use super::TaskManagerEvent;
+    use crate::config::{Action, ConfigBuilder, Mode};
+    use crate::error::ErrorCode;
+    use crate::manage::network::Network;
+    use crate::manage::task_manager::TaskManagerTx;
+    use crate::manage::TaskManager;
+    use crate::service::client::{ClientManager, ClientManagerEntry};
+    use crate::service::run_count::{RunCountManager, RunCountManagerEntry};
+
+    static CLIENT: Lazy<ClientManagerEntry> = Lazy::new(|| ClientManager::init());
+    static RUN_COUNT_MANAGER: Lazy<RunCountManagerEntry> = Lazy::new(|| RunCountManager::init());
+    static NETWORK: Lazy<Network> = Lazy::new(|| Network::new());
+
+    static TASK_MANGER: Lazy<TaskManagerTx> =
+        Lazy::new(|| TaskManager::init(RUN_COUNT_MANAGER.clone(), CLIENT.clone(), NETWORK.clone()));
+    fn build_task() {}
+
+    fn init() {
+        let _ = env_logger::builder().is_test(true).try_init();
+        let _ = std::fs::create_dir("test_files/");
+    }
+
+    #[test]
+    fn ut_task_manager_construct() {
+        init();
+        let file_path = "test_files/ut_task_manager_construct.txt";
+
+        let file = File::create(file_path).unwrap();
+        let config = ConfigBuilder::new()
+        .action(Action::Download)
+        .mode(Mode::BackGround)
+        .file_spec(file)
+        .url("https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt")
+        .redirect(true)
+        .build();
+        let (event, rx) = TaskManagerEvent::construct(config);
+        TASK_MANGER.send_event(event);
+        rx.get().unwrap().unwrap();
+    }
+
+    #[test]
+    fn ut_task_manager_start() {
+        init();
+        let file_path = "test_files/ut_task_manager_construct.txt";
+
+        let file = File::create(file_path).unwrap();
+        let uid = 111;
+        let config = ConfigBuilder::new()
+        .action(Action::Download)
+        .mode(Mode::BackGround)
+        .file_spec(file)
+        .url("https://sf3-cn.feishucdn.com/obj/ee-appcenter/47273f95/Feishu-win32_ia32-7.9.7-signed.exe")
+        .redirect(true)
+        .uid(uid)
+        .build();
+        let (event, rx) = TaskManagerEvent::construct(config.clone());
+        TASK_MANGER.send_event(event);
+        let task_id = rx.get().unwrap().unwrap();
+        let (event, rx) = TaskManagerEvent::start(uid, task_id);
+        TASK_MANGER.send_event(event);
+        let res = rx.get().unwrap();
+        assert_eq!(res, ErrorCode::ErrOk);
+        std::thread::sleep(time::Duration::from_secs(10));
+    }
+
+    #[test]
+    fn ut_task_manager_pause_resume() {
+        init();
+        let file_path = "test_files/ut_task_manager_pause_resume.txt";
+
+        let file = File::create(file_path).unwrap();
+        let uid = 111;
+        let config = ConfigBuilder::new()
+        .action(Action::Download)
+        .mode(Mode::BackGround)
+        .file_spec(file)
+        .url("https://sf3-cn.feishucdn.com/obj/ee-appcenter/47273f95/Feishu-win32_ia32-7.9.7-signed.exe")
+        .redirect(true)
+        .uid(uid)
+        .build();
+        let (event, rx) = TaskManagerEvent::construct(config.clone());
+        TASK_MANGER.send_event(event);
+        let task_id = rx.get().unwrap().unwrap();
+        let (event, _rx) = TaskManagerEvent::start(uid, task_id);
+        TASK_MANGER.send_event(event);
+        let (event, _rx) = TaskManagerEvent::pause(uid, task_id);
+        TASK_MANGER.send_event(event);
+        let (event, _rx) = TaskManagerEvent::resume(uid, task_id);
+        TASK_MANGER.send_event(event);
+        std::thread::sleep(time::Duration::from_secs(20));
+    }
+
+    #[test]
+    fn ut_task_manager_stop_resume() {
+        init();
+        let file_path = "test_files/ut_task_manager_pause_resume.txt";
+
+        let file = File::create(file_path).unwrap();
+        let uid = 111;
+        let config = ConfigBuilder::new()
+        .action(Action::Download)
+        .mode(Mode::BackGround)
+        .file_spec(file)
+        .url("https://sf3-cn.feishucdn.com/obj/ee-appcenter/47273f95/Feishu-win32_ia32-7.9.7-signed.exe")
+        .redirect(true)
+        .uid(uid)
+        .build();
+        let (event, rx) = TaskManagerEvent::construct(config.clone());
+        TASK_MANGER.send_event(event);
+        let task_id = rx.get().unwrap().unwrap();
+        let (event, _rx) = TaskManagerEvent::start(uid, task_id);
+        TASK_MANGER.send_event(event);
+        let (event, _rx) = TaskManagerEvent::stop(uid, task_id);
+        TASK_MANGER.send_event(event);
+        let (event, _rx) = TaskManagerEvent::resume(uid, task_id);
+        TASK_MANGER.send_event(event);
+        std::thread::sleep(time::Duration::from_secs(20));
+    }
 }

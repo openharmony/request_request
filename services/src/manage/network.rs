@@ -18,18 +18,14 @@ pub(crate) use ffi::{NetworkInfo, NetworkType};
 use NetworkState::{Offline, Online};
 
 cfg_oh! {
-    use super::database::RequestDb;
     use super::events::TaskManagerEvent;
     use super::task_manager::TaskManagerTx;
 }
-
 cfg_not_oh! {
     use mockall::automock;
 }
 
 use crate::task::config::{NetworkConfig, TaskConfig};
-use crate::task::info::State;
-use crate::task::reason::Reason;
 use crate::utils::get_current_timestamp;
 
 #[derive(Clone)]
@@ -111,14 +107,10 @@ pub(crate) fn register_network_change(
             inner: task_manager.clone(),
         }),
         |task_manager| {
-            task_manager
-                .inner
-                .send_event(TaskManagerEvent::network_online());
+            task_manager.inner.send_event(TaskManagerEvent::network());
         },
         |task_manager| {
-            task_manager
-                .inner
-                .send_event(TaskManagerEvent::network_offline());
+            task_manager.inner.send_event(TaskManagerEvent::network());
         },
     );
     #[cfg(feature = "oh")]
@@ -161,129 +153,19 @@ impl NetworkInner {
         if *state != Offline {
             info!("network is offline");
             *self.last_notify_time.write().unwrap() = get_current_timestamp();
-
             *state = Offline;
-
-            #[cfg(feature = "oh")]
-            self.update_database(NetworkState::Offline);
         }
     }
 
     fn notify_online(&self, info: NetworkInfo) -> bool {
         let mut state = self.state.write().unwrap();
-        let ret =
-            !matches!(&*state, Online(old_info) if old_info.network_type == info.network_type);
         if !matches!(&*state, Online(old_info) if old_info == &info  ) {
             info!("Network is online: {:?}", info);
             *self.last_notify_time.write().unwrap() = get_current_timestamp();
-
             *state = Online(info.clone());
-
-            #[cfg(feature = "oh")]
-            self.update_database(Online(info));
+            true
         } else {
-            info!("Network change with the same: {:?}", info);
-        }
-        ret
-    }
-
-    #[cfg(feature = "oh")]
-    fn update_database(&self, state: NetworkState) {
-        let mut database = RequestDb::get_instance();
-        match state {
-            Offline => database.update_for_network_offline(),
-            Online(info) => {
-                database.update_for_network_available(&info);
-                database.update_for_network_unavailable(&info)
-            }
-        }
-    }
-}
-
-#[cfg(feature = "oh")]
-impl RequestDb {
-    fn update_for_network_available(&mut self, info: &NetworkInfo) {
-        let mut sql = format!(
-            "UPDATE request_task SET reason = {} WHERE state = {} AND (reason = {} OR reason = {})",
-            Reason::RunningTaskMeetLimits.repr,
-            State::Waiting.repr,
-            Reason::UnsupportedNetworkType.repr,
-            Reason::NetworkOffline.repr,
-        );
-
-        if info.network_type != NetworkType::Other {
-            sql.push_str(&format!(
-                " AND (network = {} OR network = 0)",
-                info.network_type.repr
-            ));
-        }
-
-        if info.is_metered {
-            sql.push_str(" AND metered = 1");
-        }
-
-        if info.is_roaming {
-            sql.push_str(" AND roaming = 1");
-        }
-        if let Err(e) = self.execute(&sql) {
-            error!("update_for_network_available sql failed: {}", e);
-        };
-    }
-
-    fn update_for_network_unavailable(&mut self, info: &NetworkInfo) {
-        let mut sql = format!(
-            "UPDATE request_task SET state = {}, retry = {}, reason = {} WHERE ((state = {} AND reason = {} ) OR state = {} OR state = {})",
-            State::Waiting.repr,
-            1,
-            Reason::UnsupportedNetworkType.repr,
-            State::Waiting.repr,
-            Reason::RunningTaskMeetLimits.repr,
-            State::Running.repr,
-            State::Retrying.repr,
-        );
-
-        let mut sql_1 = String::new();
-        if info.network_type != NetworkType::Other {
-            sql_1.push_str(&format!(
-                "(network != {} AND network != 0)",
-                info.network_type.repr
-            ));
-        }
-
-        if info.is_metered {
-            if !sql_1.is_empty() {
-                sql_1.push_str(" OR ");
-            }
-            sql_1.push_str("metered = 0");
-        }
-
-        if info.is_roaming {
-            if !sql_1.is_empty() {
-                sql_1.push_str(" OR ");
-            }
-            sql_1.push_str("roaming = 0");
-        }
-        if !sql_1.is_empty() {
-            sql = format!("{} AND ({})", sql, sql_1);
-        }
-        if let Err(e) = self.execute(&sql) {
-            error!("update_for_network_unavailable sql failed: {}", e);
-        }
-    }
-
-    fn update_for_network_offline(&mut self) {
-        let sql = format!(
-            "UPDATE request_task SET state = {}, retry = {}, reason = {} WHERE (state = {} AND reason = {}  OR state = {} OR state = {})",
-            State::Waiting.repr,
-            1,
-            Reason::UnsupportedNetworkType.repr,
-            State::Waiting.repr,
-            Reason::RunningTaskMeetLimits.repr,
-            State::Running.repr,
-            State::Retrying.repr,
-        );
-        if let Err(e) = self.execute(&sql) {
-            error!("update_for_network_offline sql failed: {}", e);
+            false
         }
     }
 }
@@ -342,7 +224,6 @@ mod test {
     use super::*;
     use crate::manage::events::StateEvent;
     use crate::tests::{test_init, DB_LOCK};
-    use crate::utils::task_id_generator::TaskIdGenerator;
 
     #[test]
     fn ut_network() {
@@ -411,10 +292,7 @@ mod test {
 
         loop {
             if let Ok(msg) = rx.try_recv() {
-                assert!(matches!(
-                    msg,
-                    TaskManagerEvent::State(StateEvent::NetworkOnline)
-                ));
+                assert!(matches!(msg, TaskManagerEvent::State(StateEvent::Network)));
                 break;
             }
             std::thread::sleep(time::Duration::from_millis(100));
@@ -523,185 +401,6 @@ mod test {
             assert!(!network.check_interval_online().await);
             ylong_runtime::time::sleep(std::time::Duration::from_millis(4000)).await;
             assert!(network.check_interval_online().await);
-        });
-    }
-
-    #[test]
-    fn ut_network_database_available() {
-        test_init();
-        let _lock = DB_LOCK.lock().unwrap();
-
-        let task_id = TaskIdGenerator::generate();
-        let mut db = RequestDb::get_instance();
-        db.execute(&format!(
-            "INSERT INTO request_task (task_id, state, reason, network,  metered, roaming) VALUES ({}, {}, {}, {}, 0, 0)",
-            task_id,
-            State::Waiting.repr,
-            Reason::UnsupportedNetworkType.repr,
-            NetworkType::Wifi.repr,
-        ))
-        .unwrap();
-
-        db.update_for_network_available(&NetworkInfo {
-            network_type: NetworkType::Wifi,
-            is_metered: false,
-            is_roaming: false,
-        });
-
-        let v = db.query_integer(&format!(
-            "SELECT task_id from request_task WHERE state = {} AND reason = {}",
-            State::Waiting.repr,
-            Reason::RunningTaskMeetLimits.repr
-        ));
-        assert!(v.contains(&task_id));
-    }
-
-    #[test]
-    fn ut_network_database_unavailable() {
-        test_init();
-        let _lock = DB_LOCK.lock().unwrap();
-
-        let task_id = TaskIdGenerator::generate();
-        let mut db = RequestDb::get_instance();
-        db.execute(&format!(
-            "INSERT INTO request_task (task_id, state, reason, network, metered, roaming) VALUES ({}, {}, {}, {}, 1, 1)",
-            task_id,
-            State::Waiting.repr,
-            Reason::RunningTaskMeetLimits.repr,
-            NetworkType::Wifi.repr,
-        ))
-        .unwrap();
-
-        db.update_for_network_unavailable(&NetworkInfo {
-            network_type: NetworkType::Wifi,
-            is_metered: true,
-            is_roaming: true,
-        });
-
-        let v = db.query_integer(&format!(
-            "SELECT task_id from request_task WHERE state = {} AND reason = {}",
-            State::Waiting.repr,
-            Reason::UnsupportedNetworkType.repr
-        ));
-        assert!(!v.contains(&task_id));
-
-        db.update_for_network_unavailable(&NetworkInfo {
-            network_type: NetworkType::Cellular,
-            is_metered: true,
-            is_roaming: true,
-        });
-
-        let v = db.query_integer(&format!(
-            "SELECT task_id from request_task WHERE state = {} AND reason = {}",
-            State::Waiting.repr,
-            Reason::UnsupportedNetworkType.repr
-        ));
-        assert!(v.contains(&task_id));
-    }
-
-    #[test]
-    fn ut_network_database_offline() {
-        test_init();
-        let _lock = DB_LOCK.lock().unwrap();
-
-        let task_id = TaskIdGenerator::generate();
-        let mut db = RequestDb::get_instance();
-        db.execute(&format!(
-            "INSERT INTO request_task (task_id, state, reason, network, metered, roaming) VALUES ({}, {}, {}, {}, 1, 1)",
-            task_id,
-            State::Waiting.repr,
-            Reason::RunningTaskMeetLimits.repr,
-            NetworkType::Wifi.repr,
-        ))
-        .unwrap();
-
-        db.update_for_network_offline();
-
-        let v = db.query_integer(&format!(
-            "SELECT task_id from request_task WHERE state = {} AND reason = {}",
-            State::Waiting.repr,
-            Reason::UnsupportedNetworkType.repr
-        ));
-        assert!(v.contains(&task_id));
-    }
-}
-
-#[cfg(not(feature = "oh"))]
-#[cfg(test)]
-mod test {
-    use core::{net, time};
-    use std::fs::File;
-    use std::future::join;
-    use std::io::{Seek, SeekFrom, Write};
-    use std::sync::Arc;
-
-    use mockall_double::double;
-    use once_cell::sync::Lazy;
-    use ylong_runtime::io::AsyncSeekExt;
-
-    use super::NetworkType;
-    use crate::config::{Action, ConfigBuilder, Mode, TaskConfig};
-    use crate::info::State;
-    use crate::manage::Network;
-    use crate::service::client::{ClientManager, ClientManagerEntry};
-    use crate::task::download;
-    use crate::task::download::download_inner;
-    use crate::task::reason::Reason;
-    use crate::task::request_task::{check_config, RequestTask, TaskError, TaskPhase};
-    use crate::utils::form_item::FileSpec;
-
-    const GITEE_FILE_LEN: u64 = 1042003;
-    const FS_FILE_LEN: u64 = 274619168;
-
-    fn build_task(config: TaskConfig, network: Network) -> Arc<RequestTask> {
-        static CLIENT: Lazy<ClientManagerEntry> = Lazy::new(|| ClientManager::init());
-        let (files, client) = check_config(&config).unwrap();
-        let task = Arc::new(RequestTask::new(
-            config,
-            files,
-            client,
-            CLIENT.clone(),
-            network,
-        ));
-        task.status.lock().unwrap().state = State::Initialized;
-        task
-    }
-
-    fn init() {
-        let _ = env_logger::builder().is_test(true).try_init();
-        std::fs::create_dir("test_files/");
-    }
-    #[test]
-    fn ut_network_status_error() {
-        init();
-        let file_path = "test_files/ut_network_status_error.txt";
-
-        let file = File::create(file_path).unwrap();
-        let config = ConfigBuilder::new()
-        .action(Action::Download)
-        .mode(Mode::BackGround)
-        .file_spec(file)
-        .url("https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt")
-        .redirect(true)
-        .metered(false)
-        .retry(true)
-        .build();
-        let network = Network::new();
-        network.inner.notify_online(super::NetworkInfo {
-            network_type: NetworkType::Cellular,
-            is_metered: true,
-            is_roaming: false,
-        });
-
-        let task = build_task(config, network);
-        ylong_runtime::block_on(async {
-            let err = download_inner(task.clone()).await.unwrap_err();
-            assert_eq!(task.status.lock().unwrap().state, State::Waiting);
-            assert_eq!(
-                task.status.lock().unwrap().reason,
-                Reason::UnsupportedNetworkType
-            );
-            assert_eq!(err, TaskError::Waiting(TaskPhase::UserAbort));
         });
     }
 }

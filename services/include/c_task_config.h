@@ -16,8 +16,6 @@
 #ifndef C_TASK_CONFIG_H
 #define C_TASK_CONFIG_H
 
-#include <stdint.h>
-
 #include <cstdint>
 #include <map>
 #include <string>

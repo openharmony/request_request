@@ -21,6 +21,7 @@ cfg_oh! {
     use ipc::parcel::Serialize;
 }
 
+use crate::manage::network::{NetworkState, NetworkType};
 use crate::utils::c_wrapper::{CFileSpec, CFormItem, CStringWrapper};
 use crate::utils::form_item::{FileSpec, FormItem};
 use crate::utils::hashmap_to_string;
@@ -115,6 +116,27 @@ pub struct TaskConfig {
     pub(crate) body_file_paths: Vec<String>,
     pub(crate) certs_path: Vec<String>,
     pub(crate) common_data: CommonTaskConfig,
+}
+
+impl TaskConfig {
+    pub(crate) fn satisfy_network(&self, network: &NetworkState) -> bool {
+        match network {
+            NetworkState::Offline => false,
+            NetworkState::Online(info) => match self.common_data.network_config {
+                NetworkConfig::Any => true,
+                NetworkConfig::Wifi if info.network_type == NetworkType::Cellular => false,
+                NetworkConfig::Cellular if info.network_type == NetworkType::Wifi => false,
+                _ => {
+                    (self.common_data.roaming || !info.is_roaming)
+                        && (self.common_data.metered || !info.is_metered)
+                }
+            },
+        }
+    }
+
+    pub(crate) fn satisfy_foreground(&self, top_uid: u64) -> bool {
+        self.common_data.mode == Mode::BackGround || self.common_data.uid == top_uid
+    }
 }
 
 pub(crate) struct ConfigSet {

@@ -14,24 +14,24 @@
 use std::ops::{Deref, DerefMut};
 use std::time::Duration;
 
-use samgr::manage::SystemAbilityManager;
 use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 use ylong_runtime::time::sleep;
 
-use super::app_state::AppStateManagerTx;
+cfg_oh! {
+    use samgr::manage::SystemAbilityManager;
+    use crate::ability::PANIC_INFO;
+    use crate::manage::account::registry_account_subscribe;
+}
+use super::account::{remove_account_tasks, AccountEvent};
 use super::database::RequestDb;
 use super::events::{ScheduleEvent, ServiceEvent, StateEvent, TaskEvent, TaskManagerEvent};
 use super::network::Network;
-use crate::ability::PANIC_INFO;
 use crate::error::ErrorCode;
-use crate::manage::account::registry_account_subscribe;
-use crate::manage::app_state::AppStateManager;
-use crate::manage::database::Database;
 use crate::manage::network::register_network_change;
+use crate::manage::scheduler::state::Handler;
 use crate::manage::scheduler::Scheduler;
 use crate::service::client::ClientManagerEntry;
-use crate::service::runcount::RunCountManagerEntry;
-use crate::task::info::ApplicationState;
+use crate::service::run_count::RunCountManagerEntry;
 use crate::utils::runtime_spawn;
 
 const CLEAR_INTERVAL: u64 = 30 * 60;
@@ -55,7 +55,6 @@ const RESTORE_ALL_TASKS_INTERVAL: u64 = 10;
 pub(crate) struct TaskManager {
     pub(crate) scheduler: Scheduler,
     pub(crate) rx: TaskManagerRx,
-    pub(crate) app_state_manager: AppStateManagerTx,
     pub(crate) client_manager: ClientManagerEntry,
     pub(crate) network: Network,
 }
@@ -64,6 +63,7 @@ impl TaskManager {
     pub(crate) fn init(
         runcount_manager: RunCountManagerEntry,
         client_manager: ClientManagerEntry,
+        #[cfg(not(feature = "oh"))] network: Network,
     ) -> TaskManagerTx {
         debug!("TaskManager init");
 
@@ -71,19 +71,13 @@ impl TaskManager {
         let tx = TaskManagerTx::new(tx);
         let rx = TaskManagerRx::new(rx);
 
-        let app_state_manager = AppStateManager::init(client_manager.clone(), tx.clone());
-
+        #[cfg(feature = "oh")]
         registry_account_subscribe(tx.clone());
+
+        #[cfg(feature = "oh")]
         let network = register_network_change(tx.clone());
 
-        let task_manager = Self::new(
-            tx.clone(),
-            rx,
-            network,
-            runcount_manager,
-            app_state_manager,
-            client_manager,
-        );
+        let task_manager = Self::new(tx.clone(), rx, runcount_manager, client_manager, network);
 
         // Performance optimization tips for task restoring:
         //
@@ -109,23 +103,20 @@ impl TaskManager {
     pub(crate) fn new(
         tx: TaskManagerTx,
         rx: TaskManagerRx,
-        network: Network,
-        runcount_manager: RunCountManagerEntry,
-        app_state_manager: AppStateManagerTx,
+        run_count_manager: RunCountManagerEntry,
         client_manager: ClientManagerEntry,
+        network: Network,
     ) -> Self {
         Self {
             scheduler: Scheduler::init(
-                tx,
-                runcount_manager,
-                app_state_manager.clone(),
+                tx.clone(),
+                run_count_manager,
                 client_manager.clone(),
                 network.clone(),
             ),
-            network,
             rx,
-            app_state_manager,
             client_manager,
+            network,
         }
     }
 
@@ -140,26 +131,33 @@ impl TaskManager {
             };
 
             match event {
-                TaskManagerEvent::Service(event) => self.handle_service_event(event).await,
-                TaskManagerEvent::State(event) => self.handle_state_event(event).await,
-                TaskManagerEvent::Task(event) => self.handle_task_event(event).await,
+                TaskManagerEvent::Service(event) => self.handle_service_event(event),
+                TaskManagerEvent::State(event) => self.handle_state_event(event),
+                TaskManagerEvent::Task(event) => self.handle_task_event(event),
                 TaskManagerEvent::Schedule(event) => {
-                    if self.handle_schedule_event(event).await {
+                    if self.handle_schedule_event(event) {
                         info!("TaskManager unload succeed");
                         // If unload_sa success, can not breaks this loop.
                     }
                 }
                 TaskManagerEvent::Device(level) => {
-                    self.scheduler.on_rss_change(level).await;
+                    self.scheduler.on_rss_change(level);
                 }
-                TaskManagerEvent::Account(event) => self.handle_account_event(event).await,
+                TaskManagerEvent::Account(event) => self.handle_account_event(event),
             }
 
             debug!("TaskManager handles events finished");
         }
     }
 
-    async fn handle_service_event(&mut self, event: ServiceEvent) {
+    pub(crate) fn handle_account_event(&mut self, event: AccountEvent) {
+        match event {
+            AccountEvent::Remove(user_id) => remove_account_tasks(user_id),
+            AccountEvent::Changed => self.scheduler.on_state_change(Handler::update_account, ()),
+        }
+    }
+
+    fn handle_service_event(&mut self, event: ServiceEvent) {
         debug!("TaskManager handles service event {:?}", event);
 
         match event {
@@ -167,37 +165,19 @@ impl TaskManager {
                 let _ = tx.send(self.create(msg.config));
             }
             ServiceEvent::Start(uid, task_id, tx) => {
-                let _ = tx.send(self.start(uid, task_id).await);
+                let _ = tx.send(self.start(uid, task_id));
             }
             ServiceEvent::Stop(uid, task_id, tx) => {
-                let _ = tx.send(self.stop(uid, task_id).await);
+                let _ = tx.send(self.stop(uid, task_id));
             }
             ServiceEvent::Pause(uid, task_id, tx) => {
-                let _ = tx.send(self.pause(uid, task_id).await);
+                let _ = tx.send(self.pause(uid, task_id));
             }
             ServiceEvent::Resume(uid, task_id, tx) => {
-                let _ = tx.send(self.resume(uid, task_id).await);
+                let _ = tx.send(self.resume(uid, task_id));
             }
             ServiceEvent::Remove(uid, task_id, tx) => {
-                let _ = tx.send(self.remove(uid, task_id).await);
-            }
-            ServiceEvent::Show(uid, task_id, tx) => {
-                let _ = tx.send(self.show(uid, task_id));
-            }
-            ServiceEvent::Touch(uid, task_id, token, tx) => {
-                let _ = tx.send(self.touch(uid, task_id, token));
-            }
-            ServiceEvent::Query(task_id, action, tx) => {
-                let _ = tx.send(self.query(task_id, action));
-            }
-            ServiceEvent::QueryMimeType(uid, task_id, tx) => {
-                let _ = tx.send(self.query_mime_type(uid, task_id));
-            }
-            ServiceEvent::Search(filter, method, tx) => {
-                let _ = tx.send(self.search(filter, method));
-            }
-            ServiceEvent::GetTask(uid, task_id, token, tx) => {
-                let _ = tx.send(self.get_task(uid, task_id, token));
+                let _ = tx.send(self.remove(uid, task_id));
             }
             ServiceEvent::DumpAll(tx) => {
                 let _ = tx.send(self.query_all_task());
@@ -208,54 +188,55 @@ impl TaskManager {
         }
     }
 
-    async fn handle_state_event(&mut self, event: StateEvent) {
+    fn handle_state_event(&mut self, event: StateEvent) {
         debug!("TaskManager handles state event {:?}", event);
 
         match event {
-            StateEvent::NetworkOnline => {
-                self.scheduler.on_network_online().await;
-            }
-            StateEvent::NetworkOffline => {
-                self.scheduler.on_network_offline();
+            StateEvent::Network => {
+                self.scheduler.on_state_change(Handler::update_network, ());
             }
 
-            StateEvent::AppStateChange(uid, state) => {
-                self.handle_app_state_change(uid, state).await;
+            StateEvent::ForegroundApp(uid) => {
+                self.scheduler.on_state_change(Handler::update_top_uid, uid);
             }
+            StateEvent::BackgroundTimeout(uid) => self
+                .scheduler
+                .on_state_change(Handler::update_background_timeout, uid),
         }
     }
 
-    async fn handle_task_event(&mut self, event: TaskEvent) {
+    fn handle_task_event(&mut self, event: TaskEvent) {
         debug!("TaskManager handles task event {:?}", event);
 
         match event {
-            TaskEvent::Finished(task_id, uid) => {
-                self.handle_finished_task(uid, task_id).await;
+            TaskEvent::Completed(task_id, uid) => {
+                self.scheduler.task_completed(uid, task_id);
             }
             TaskEvent::Subscribe(task_id, token_id, tx) => {
                 let _ = tx.send(self.check_subscriber(task_id, token_id));
             }
+            TaskEvent::Running(task_id, uid) => {
+                self.scheduler.task_cancel(uid, task_id);
+            }
+            TaskEvent::Failed(task_id, uid, reason) => {
+                self.scheduler.task_failed(uid, task_id, reason);
+            }
+            TaskEvent::Offline(task_id, uid) => {
+                self.scheduler.task_cancel(uid, task_id);
+            }
         }
     }
 
-    async fn handle_schedule_event(&mut self, message: ScheduleEvent) -> bool {
+    fn handle_schedule_event(&mut self, message: ScheduleEvent) -> bool {
         debug!("TaskManager handle scheduled_message {:?}", message);
 
         match message {
             ScheduleEvent::ClearTimeoutTasks => self.clear_timeout_tasks(),
             ScheduleEvent::LogTasks => self.log_all_task_info(),
-            ScheduleEvent::RestoreAllTasks => self.restore_all_tasks().await,
+            ScheduleEvent::RestoreAllTasks => self.restore_all_tasks(),
             ScheduleEvent::Unload => return self.unload_sa(),
         }
         false
-    }
-
-    async fn handle_app_state_change(&mut self, uid: u64, state: ApplicationState) {
-        self.scheduler.on_app_state_change(uid, state).await;
-    }
-
-    async fn handle_finished_task(&mut self, uid: u64, task_id: u32) {
-        self.scheduler.finish_task(uid, task_id).await;
     }
 
     fn check_subscriber(&self, task_id: u32, token_id: u64) -> ErrorCode {
@@ -274,8 +255,8 @@ impl TaskManager {
         self.scheduler.dump_tasks();
     }
 
-    async fn restore_all_tasks(&mut self) {
-        self.scheduler.restore_all_tasks().await;
+    fn restore_all_tasks(&mut self) {
+        self.scheduler.restore_all_tasks();
     }
 
     fn unload_sa(&mut self) -> bool {
@@ -293,9 +274,8 @@ impl TaskManager {
             );
             return false;
         }
-
-        Database::get_instance().delete_early_records();
-
+        
+        RequestDb::get_instance().delete_early_records();
         // check rx again for there may be new message arrive.
         if !self.rx.is_empty() {
             return false;
@@ -304,6 +284,7 @@ impl TaskManager {
         info!("unload SA");
 
         // failed logic?
+        #[cfg(feature = "oh")]
         let _ = SystemAbilityManager::unload_system_ability(REQUEST_SERVICE_ID);
 
         true
@@ -323,6 +304,7 @@ impl TaskManagerTx {
 
     pub(crate) fn send_event(&self, event: TaskManagerEvent) -> bool {
         if self.tx.send(event).is_err() {
+            #[cfg(feature = "oh")]
             unsafe {
                 if let Some(e) = PANIC_INFO.as_ref() {
                     error!("Sends TaskManager event failed {}", e);
@@ -333,6 +315,14 @@ impl TaskManagerTx {
             return false;
         }
         true
+    }
+
+    pub(crate) fn notify_foreground_app_change(&self, uid: u64) {
+        let _ = self.send_event(TaskManagerEvent::State(StateEvent::ForegroundApp(uid)));
+    }
+
+    pub(crate) fn trigger_background_timeout(&self, uid: u64) {
+        let _ = self.send_event(TaskManagerEvent::State(StateEvent::BackgroundTimeout(uid)));
     }
 }
 

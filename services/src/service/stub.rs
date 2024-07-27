@@ -22,7 +22,7 @@ use system_ability_fwk::ability::Handler;
 
 use super::client::ClientManagerEntry;
 use super::interface;
-use super::runcount::RunCountManagerEntry;
+use super::run_count::RunCountManagerEntry;
 use crate::manage::task_manager::TaskManagerTx;
 use crate::task::config::TaskConfig;
 use crate::task::info::TaskInfo;

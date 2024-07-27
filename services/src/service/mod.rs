@@ -20,7 +20,6 @@ pub mod interface;
 
 cfg_oh! {
     pub(crate) mod permission;
-    pub(crate) mod runcount;
     pub(crate) mod command;
 
     mod stub;
@@ -28,3 +27,5 @@ cfg_oh! {
     pub(crate) use stub::serialize_task_info;
     pub(crate) use stub::serialize_task_config;
 }
+
+pub(crate) mod run_count;

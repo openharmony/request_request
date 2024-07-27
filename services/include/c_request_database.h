@@ -16,8 +16,6 @@
 #ifndef C_REQUEST_DATABASE_H
 #define C_REQUEST_DATABASE_H
 
-#include <stdint.h>
-
 #include <cstdint>
 #include <vector>
 
@@ -116,6 +114,7 @@ constexpr const char *REQUEST_TASK_TABLE_ADD_ATOMIC_ACCOUNT = "ALTER TABLE reque
 
 struct TaskFilter;
 struct NetworkInfo;
+struct TaskQosInfo;
 class RequestDataBase {
 public:
     static RequestDataBase &GetInstance(std::string path);
@@ -129,6 +128,8 @@ public:
     int ExecuteSql(rust::str sql);
     int QueryInteger(rust::str sql, rust::vec<rust::i64> &res);
     int QueryText(rust::str sql, rust::vec<rust::string> &res);
+    int GetAppTaskQosInfos(rust::str sql, rust::vec<TaskQosInfo> &res);
+    int GetTaskQosInfo(rust::str sql, TaskQosInfo &res);
 
 private:
     RequestDataBase(std::string path);
@@ -167,10 +168,6 @@ bool UpdateRequestTaskState(uint32_t taskId, CUpdateStateInfo *updateStateInfo);
 void RequestDBRemoveRecordsFromTime(uint64_t time);
 CTaskInfo *GetTaskInfo(uint32_t taskId);
 CTaskConfig *QueryTaskConfig(uint32_t taskId);
-void UpdateTaskStateOnAppStateChange(uint64_t uid, uint8_t appState);
-
-void GetTaskQosInfo(uint64_t uid, uint32_t taskId, TaskQosInfo **info);
-void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len);
 
 #ifdef __cplusplus
 }

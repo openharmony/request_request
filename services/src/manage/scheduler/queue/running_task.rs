@@ -14,41 +14,42 @@
 use std::ops::Deref;
 use std::sync::Arc;
 
-use ylong_runtime::sync::oneshot;
-
 use crate::manage::events::{TaskEvent, TaskManagerEvent};
+use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::queue::keeper::SAKeeper;
-use crate::manage::scheduler::queue::notify_task::NotifyTask;
 use crate::manage::task_manager::TaskManagerTx;
-use crate::service::runcount::{RunCountEvent, RunCountManagerEntry};
 use crate::task::config::Action;
 use crate::task::download::download;
+use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::task::upload::upload;
 
+cfg_oh! {
+    use crate::service::run_count::{RunCountEvent, RunCountManagerEntry};
+}
 pub(crate) struct RunningTask {
+    #[cfg(feature = "oh")]
     runcount_manager: RunCountManagerEntry,
-    task: NotifyTask,
+    task: Arc<RequestTask>,
     tx: TaskManagerTx,
-    lock: Option<oneshot::Sender<()>>,
     // `_keeper` is never used when executing the task.
     _keeper: SAKeeper,
 }
 
 impl RunningTask {
     pub(crate) fn new(
-        runcount_manager: RunCountManagerEntry,
+        #[cfg(feature = "oh")] runcount_manager: RunCountManagerEntry,
         task: Arc<RequestTask>,
         tx: TaskManagerTx,
         keeper: SAKeeper,
-        lock: oneshot::Sender<()>,
     ) -> Self {
         // Task start to run, then running count +1.
+        #[cfg(feature = "oh")]
         runcount_manager.send_event(RunCountEvent::change_runcount(1));
         Self {
+            #[cfg(feature = "oh")]
             runcount_manager,
-            task: NotifyTask::new(task),
-            lock: Some(lock),
+            task,
             tx,
             _keeper: keeper,
         }
@@ -78,15 +79,44 @@ impl Deref for RunningTask {
 
 impl Drop for RunningTask {
     fn drop(&mut self) {
-        info!("Task {} drop", self.task_id());
+        self.task.update_progress_in_database();
+        self.task.background_notify();
+        Notifier::progress(&self.client_manager, self.build_notify_data());
+        match *self.task.running_result.lock().unwrap() {
+            Some(res) => match res {
+                Ok(()) => {
+                    self.tx
+                        .send_event(TaskManagerEvent::Task(TaskEvent::Completed(
+                            self.task_id(),
+                            self.uid(),
+                        )));
+                }
+                Err(e) if e == Reason::NetworkOffline => {
+                    self.tx
+                        .send_event(TaskManagerEvent::Task(TaskEvent::Offline(
+                            self.task_id(),
+                            self.uid(),
+                        )));
+                }
+                Err(e) => {
+                    self.tx.send_event(TaskManagerEvent::Task(TaskEvent::Failed(
+                        self.task_id(),
+                        self.uid(),
+                        e,
+                    )));
+                }
+            },
+            None => {
+                self.tx
+                    .send_event(TaskManagerEvent::Task(TaskEvent::Running(
+                        self.task_id(),
+                        self.uid(),
+                    )));
+            }
+        }
 
-        self.tx
-            .send_event(TaskManagerEvent::Task(TaskEvent::Finished(
-                self.task_id(),
-                self.uid(),
-            )));
-        self.lock.take().unwrap().send(()).unwrap();
         // Task finishes running, then running count -1.
+        #[cfg(feature = "oh")]
         self.runcount_manager
             .send_event(RunCountEvent::change_runcount(-1));
     }

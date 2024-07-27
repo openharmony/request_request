@@ -17,11 +17,8 @@ use std::sync::{Mutex, Once};
 pub(crate) use ffi::*;
 
 use super::database::RequestDb;
-use super::TaskManager;
-use crate::info::State;
 use crate::manage::events::TaskManagerEvent;
 use crate::manage::task_manager::TaskManagerTx;
-use crate::task::reason::Reason;
 use crate::utils::runtime_spawn;
 
 #[derive(Debug)]
@@ -30,71 +27,15 @@ pub(crate) enum AccountEvent {
     Changed,
 }
 
-static FOREGROUND_ACCOUNT: AtomicI32 = AtomicI32::new(0);
-static BACKGROUND_ACCOUNTS: Mutex<Option<Vec<i32>>> = Mutex::new(None);
+pub(crate) static FOREGROUND_ACCOUNT: AtomicI32 = AtomicI32::new(0);
+pub(crate) static BACKGROUND_ACCOUNTS: Mutex<Option<Vec<i32>>> = Mutex::new(None);
 static UPDATE_FLAG: AtomicBool = AtomicBool::new(false);
 static mut TASK_MANAGER_TX: Option<TaskManagerTx> = None;
 
-impl TaskManager {
-    pub(crate) async fn handle_account_event(&mut self, event: AccountEvent) {
-        match event {
-            AccountEvent::Remove(user_id) => remove_account_tasks(user_id),
-            AccountEvent::Changed => self.scheduler.on_user_change().await,
-        }
-    }
-}
-
 pub(crate) fn remove_account_tasks(user_id: i32) {
     info!("delete database task by user_id: {}", user_id);
-    let mut request_db = RequestDb::get_instance();
+    let request_db = RequestDb::get_instance();
     request_db.delete_all_account_tasks(user_id);
-}
-
-pub(crate) fn is_foreground_user(uid: u64) -> bool {
-    let foreground = FOREGROUND_ACCOUNT.load(Ordering::SeqCst);
-    if foreground == 0 {
-        error!("foreground account is none");
-        if let Some(tx) = unsafe { TASK_MANAGER_TX.as_ref() } {
-            update_accounts(tx.clone());
-        }
-        return true;
-    }
-    get_user_id_from_uid(uid) == foreground
-}
-
-pub(crate) fn is_background_user(uid: u64) -> bool {
-    let background = BACKGROUND_ACCOUNTS.lock().unwrap();
-    match background.as_ref() {
-        Some(accounts) => accounts.contains(&get_user_id_from_uid(uid)),
-        None => {
-            error!("background accounts is empty");
-            if let Some(tx) = unsafe { TASK_MANAGER_TX.as_ref() } {
-                update_accounts(tx.clone());
-            }
-            true
-        }
-    }
-}
-
-pub(crate) fn is_system_user(uid: u64) -> bool {
-    get_user_id_from_uid(uid) <= 100
-}
-
-pub(crate) fn is_active_user(uid: u64) -> bool {
-    is_foreground_user(uid) || is_background_user(uid) || is_system_user(uid)
-}
-
-fn get_user_id_from_uid(uid: u64) -> i32 {
-    const SYSTEM_USER_ID: i32 = 0;
-    let mut user_id = 0;
-    let res = GetOsAccountLocalIdFromUid(uid as i32, &mut user_id);
-    if res != 0 {
-        // When uid as i32 gets a negative number, it can goes to this branch.
-        // maybe there's a memory problem happen.
-        error!("GetOsAccountLocalIdFromUid failed: {}", res);
-        return SYSTEM_USER_ID;
-    }
-    user_id
 }
 
 pub(crate) fn update_accounts(task_manager: TaskManagerTx) {
@@ -119,26 +60,24 @@ impl AccountUpdater {
         }
     }
 
+    #[cfg_attr(not(feature = "oh"), allow(unused))]
     async fn update(mut self) {
         info!("AccountUpdate Start");
         let old_foreground = FOREGROUND_ACCOUNT.load(Ordering::SeqCst);
         let old_background = BACKGROUND_ACCOUNTS.lock().unwrap().clone();
 
+        #[cfg(feature = "oh")]
         if let Some(foreground_account) = get_foreground_account().await {
             if old_foreground != foreground_account {
                 self.change_flag = true;
                 FOREGROUND_ACCOUNT.store(foreground_account, Ordering::SeqCst);
-                RequestDb::get_instance().on_account_active(foreground_account);
             }
         }
 
+        #[cfg(feature = "oh")]
         if let Some(background_accounts) = get_background_accounts().await {
             if !old_background.is_some_and(|old_background| old_background == background_accounts) {
                 self.change_flag = true;
-                let mut request_db = RequestDb::get_instance();
-                for account in background_accounts.iter() {
-                    request_db.on_account_active(*account);
-                }
                 *BACKGROUND_ACCOUNTS.lock().unwrap() = Some(background_accounts);
             }
         }
@@ -150,13 +89,14 @@ impl Drop for AccountUpdater {
         info!("AccountUpdate Finished");
         UPDATE_FLAG.store(false, Ordering::SeqCst);
         if self.change_flag {
-            info!("AccountInfo changed notify task manager");
+            info!("AccountInfo changed, notify task manager");
             self.task_manager
                 .send_event(TaskManagerEvent::Account(AccountEvent::Changed));
         }
     }
 }
 
+#[cfg(feature = "oh")]
 async fn get_foreground_account() -> Option<i32> {
     let mut foreground_account = 0;
     for i in 0..10 {
@@ -171,6 +111,7 @@ async fn get_foreground_account() -> Option<i32> {
     None
 }
 
+#[cfg(feature = "oh")]
 async fn get_background_accounts() -> Option<Vec<i32>> {
     for i in 0..10 {
         let mut accounts = vec![];
@@ -185,6 +126,7 @@ async fn get_background_accounts() -> Option<Vec<i32>> {
     None
 }
 
+#[cfg(feature = "oh")]
 pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
     static ONCE: Once = Once::new();
 
@@ -276,16 +218,7 @@ pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
 }
 
 impl RequestDb {
-    pub(crate) fn on_account_active(&mut self, user_id: i32) {
-        let sql =  format!("UPDATE request_task SET reason = {} WHERE uid/200000 = {} AND state = {} AND reason = {}", 
-        Reason::RunningTaskMeetLimits.repr,user_id, State::Waiting.repr, Reason::AccountStopped.repr);
-
-        if let Err(e) = self.execute(&sql) {
-            error!("on_account_change failed: {}", e);
-        };
-    }
-
-    pub(crate) fn delete_all_account_tasks(&mut self, user_id: i32) {
+    pub(crate) fn delete_all_account_tasks(&self, user_id: i32) {
         let sql = format!("DELETE from request_task WHERE uid/200000 = {}", user_id);
         if let Err(e) = self.execute(&sql) {
             error!("delete_all_account_tasks failed: {}", e);
@@ -321,7 +254,6 @@ mod ffi {
         type OS_ACCOUNT_SUBSCRIBE_TYPE;
         fn GetForegroundOsAccount(account: &mut i32) -> i32;
         fn GetBackgroundOsAccounts(accounts: &mut Vec<i32>) -> i32;
-        fn GetOsAccountLocalIdFromUid(uid: i32, user_id: &mut i32) -> i32;
 
         fn RegistryAccountSubscriber(
             subscribe_type: OS_ACCOUNT_SUBSCRIBE_TYPE,
@@ -334,24 +266,13 @@ mod ffi {
     }
 }
 
+#[cfg(feature = "oh")]
 #[cfg(test)]
 mod test {
     use ylong_runtime::sync::mpsc;
 
     use super::*;
-    use crate::tests::{test_init, DB_LOCK};
-    use crate::utils::task_id_generator::TaskIdGenerator;
-
-    const USER_100: u64 = 20012345;
-    const USER_101: u64 = 20212345;
-    const USER_SYSTEM: u64 = 2021234;
-
-    #[test]
-    fn ut_account_user_id() {
-        assert_eq!(100, get_user_id_from_uid(USER_100));
-        assert_eq!(101, get_user_id_from_uid(USER_101));
-        assert_eq!(10, get_user_id_from_uid(USER_SYSTEM));
-    }
+    use crate::tests::test_init;
 
     #[test]
     fn ut_account_check_oh() {
@@ -359,8 +280,6 @@ mod test {
 
         assert_eq!(0, FOREGROUND_ACCOUNT.load(Ordering::SeqCst));
         assert!(BACKGROUND_ACCOUNTS.lock().unwrap().is_none());
-        assert!(is_foreground_user(USER_100));
-        assert!(is_system_user(USER_SYSTEM));
 
         let (tx, mut rx) = mpsc::unbounded_channel();
         let task_manager = TaskManagerTx { tx };
@@ -406,59 +325,5 @@ mod test {
         assert!(!old_background.is_some_and(|old_background| old_background == background_accounts));
         let old_background = Option::<Vec<i32>>::Some(vec![100]);
         assert!(old_background.is_some_and(|old_background| old_background == background_accounts));
-    }
-
-    #[test]
-    fn ut_database_on_account_change() {
-        test_init();
-        let _lock = DB_LOCK.lock().unwrap();
-
-        let task_id = TaskIdGenerator::generate();
-        let uid = 20210000;
-        assert_eq!(101, get_user_id_from_uid(uid));
-        let mut db = RequestDb::get_instance();
-        db.execute(&format!(
-            "INSERT INTO request_task (task_id, uid, state, reason) VALUES ({}, {}, {}, {})",
-            task_id,
-            uid,
-            State::Waiting.repr,
-            Reason::AccountStopped.repr,
-        ))
-        .unwrap();
-        let v = db.query_integer(&format!(
-            "SELECT task_id from request_task WHERE uid = {} AND state = {} AND reason = {}",
-            uid,
-            State::Waiting.repr,
-            Reason::RunningTaskMeetLimits.repr,
-        ));
-        assert!(!v.contains(&task_id));
-
-        db.on_account_active(101);
-
-        let v = db.query_integer(&format!(
-            "SELECT task_id from request_task WHERE uid = {} AND state = {} AND reason = {}",
-            uid,
-            State::Waiting.repr,
-            Reason::RunningTaskMeetLimits.repr
-        ));
-        assert!(v.contains(&task_id));
-    }
-
-    #[test]
-    fn ut_delete_all_account_tasks() {
-        test_init();
-
-        let task_id = TaskIdGenerator::generate();
-        let uid = 20210000;
-        assert_eq!(101, get_user_id_from_uid(uid));
-        let mut db = RequestDb::get_instance();
-        db.execute(&format!(
-            "INSERT INTO request_task (task_id, uid, state, reason) VALUES ({}, {}, {}, {})",
-            task_id,
-            uid,
-            State::Waiting.repr,
-            Reason::AccountStopped.repr,
-        ))
-        .unwrap();
     }
 }

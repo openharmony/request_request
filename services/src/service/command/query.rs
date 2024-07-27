@@ -15,7 +15,7 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::manage::events::TaskManagerEvent;
+use crate::manage::query;
 use crate::service::permission::{PermissionChecker, QueryPermission};
 use crate::service::{serialize_task_info, RequestServiceStub};
 use crate::task::config::Action;
@@ -45,27 +45,17 @@ impl RequestServiceStub {
         match id.parse::<u32>() {
             Ok(id) => {
                 debug!("Service query: u32 tid: {}", id);
-                let (event, rx) = TaskManagerEvent::query(id, action);
-                if !self.task_manager.lock().unwrap().send_event(event) {
-                    return Err(IpcStatusCode::Failed);
-                }
-                match rx.get() {
-                    Some(Some(info)) => {
+                let info = query::query(id, action);
+                match info {
+                    Some(info) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;
                         debug!("End Service query ok, tid: {}", id);
                         serialize_task_info(info, reply)?;
                         Ok(())
                     }
-                    Some(None) => {
+                    None => {
                         error!("End Service query, failed: task_id not found, tid: {}", id);
                         reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                        Err(IpcStatusCode::Failed)
-                    }
-                    None => {
-                        error!(
-                            "End Service query, tid: {}, failed: receives task_info failed",
-                            id
-                        );
                         Err(IpcStatusCode::Failed)
                     }
                 }

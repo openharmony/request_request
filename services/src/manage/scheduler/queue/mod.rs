@@ -12,28 +12,25 @@
 // limitations under the License.
 
 mod keeper;
-mod notify_task;
 mod running_task;
-
 use std::collections::HashMap;
-use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
 use keeper::SAKeeper;
-pub(crate) use notify_task::NotifyTask;
-use ylong_runtime::sync::oneshot;
 
-use crate::ability::SYSTEM_CONFIG_MANAGER;
+cfg_oh! {
+    use crate::ability::SYSTEM_CONFIG_MANAGER;
+}
+use ylong_runtime::task::JoinHandle;
+
 use crate::error::ErrorCode;
-use crate::manage::app_state::AppStateManagerTx;
-use crate::manage::database::Database;
-use crate::manage::notifier::Notifier;
+use crate::manage::database::RequestDb;
+use crate::manage::network::Network;
 use crate::manage::scheduler::qos::{QosChanges, QosDirection};
 use crate::manage::scheduler::queue::running_task::RunningTask;
 use crate::manage::task_manager::TaskManagerTx;
-use crate::manage::Network;
 use crate::service::client::ClientManagerEntry;
-use crate::service::runcount::RunCountManagerEntry;
+use crate::service::run_count::RunCountManagerEntry;
 use crate::task::config::Action;
 use crate::task::ffi::CUpdateStateInfo;
 use crate::task::info::State;
@@ -46,29 +43,18 @@ const MILLISECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
 pub(crate) struct RunningQueue {
     download_queue: HashMap<(u64, u32), Arc<RequestTask>>,
     upload_queue: HashMap<(u64, u32), Arc<RequestTask>>,
-    join_handles: Vec<ylong_runtime::task::JoinHandle<()>>,
+    running_tasks: HashMap<(u64, u32), Option<JoinHandle<()>>>,
     keeper: SAKeeper,
     tx: TaskManagerTx,
-    app_state_manager: AppStateManagerTx,
-    runcount_manager: RunCountManagerEntry,
+    run_count_manager: RunCountManagerEntry,
     client_manager: ClientManagerEntry,
     network: Network,
-    locks: HashMap<u32, oneshot::Receiver<()>>,
 }
 
 impl RunningQueue {
-    pub(crate) fn clear(&mut self) {
-        self.join_handles.drain(..).for_each(|h| {
-            h.cancel();
-        });
-        self.download_queue.clear();
-        self.upload_queue.clear();
-    }
-
     pub(crate) fn new(
         tx: TaskManagerTx,
-        runcount_manager: RunCountManagerEntry,
-        app_state_manager: AppStateManagerTx,
+        run_count_manager: RunCountManagerEntry,
         client_manager: ClientManagerEntry,
         network: Network,
     ) -> Self {
@@ -77,12 +63,40 @@ impl RunningQueue {
             upload_queue: HashMap::new(),
             keeper: SAKeeper::new(tx.clone()),
             tx,
-            join_handles: vec![],
-            app_state_manager,
-            runcount_manager,
+            running_tasks: HashMap::new(),
+            run_count_manager,
             client_manager,
             network,
-            locks: HashMap::new(),
+        }
+    }
+
+    pub(crate) fn task_finish(&mut self, uid: u64, task_id: u32) {
+        self.running_tasks.remove(&(uid, task_id));
+    }
+
+    pub(crate) fn try_restart(&mut self, uid: u64, task_id: u32) -> bool {
+        if let Some(task) = self
+            .download_queue
+            .get(&(uid, task_id))
+            .or(self.upload_queue.get(&(uid, task_id)))
+        {
+            info!("{} restart running", task_id);
+            let running_task = RunningTask::new(
+                #[cfg(feature = "oh")]
+                self.run_count_manager.clone(),
+                task.clone(),
+                self.tx.clone(),
+                self.keeper.clone(),
+            );
+            let join_handle = runtime_spawn(async move {
+                running_task.run().await;
+            });
+            let uid = task.uid();
+            let task_id = task.task_id();
+            self.running_tasks.insert((uid, task_id), Some(join_handle));
+            true
+        } else {
+            false
         }
     }
 
@@ -90,12 +104,6 @@ impl RunningQueue {
         self.download_queue
             .values()
             .chain(self.upload_queue.values())
-    }
-
-    pub(crate) fn get_task(&self, uid: u64, task_id: u32) -> Option<&Arc<RequestTask>> {
-        self.download_queue
-            .get(&(uid, task_id))
-            .or(self.upload_queue.get(&(uid, task_id)))
     }
 
     pub(crate) fn running_tasks(&self) -> usize {
@@ -126,27 +134,22 @@ impl RunningQueue {
         }
     }
 
-    pub(crate) async fn reschedule(
-        &mut self,
-        qos: QosChanges,
-        qos_remove_queue: &mut Vec<(u64, u32)>,
-    ) {
+    pub(crate) fn reschedule(&mut self, qos: QosChanges, qos_remove_queue: &mut Vec<(u64, u32)>) {
         if let Some(vec) = qos.download {
             self.reschedule_inner(Action::Download, vec, qos_remove_queue)
-                .await;
         }
         if let Some(vec) = qos.upload {
             self.reschedule_inner(Action::Upload, vec, qos_remove_queue)
-                .await;
         }
     }
 
-    pub(crate) async fn reschedule_inner(
+    pub(crate) fn reschedule_inner(
         &mut self,
         action: Action,
         qos_vec: Vec<QosDirection>,
         qos_remove_queue: &mut Vec<(u64, u32)>,
     ) {
+        info!("reschedule_inner action: {:?}", action);
         let mut new_queue = HashMap::new();
 
         let queue = if action == Action::Download {
@@ -171,27 +174,22 @@ impl RunningQueue {
 
             // If the task is not in the current running queue, retrieve
             // the corresponding task from the database and start it.
+
+            #[cfg(feature = "oh")]
             let system_config = unsafe { SYSTEM_CONFIG_MANAGER.assume_init_ref().system_config() };
 
-            if let Some(recv) = self.locks.remove(&task_id) {
-                let _ = recv.await;
-            }
-
-            let task = match Database::get_instance()
-                .get_task(
-                    task_id,
-                    system_config,
-                    self.network.clone(),
-                    &self.app_state_manager,
-                    &self.client_manager,
-                )
-                .await
-            {
+            let task = match RequestDb::get_instance().get_task(
+                task_id,
+                #[cfg(feature = "oh")]
+                system_config,
+                &self.client_manager,
+                self.network.clone(),
+            ) {
                 Ok(task) => task,
                 Err(ErrorCode::TaskNotFound) => continue, // If we cannot find the task, skip it.
                 Err(ErrorCode::TaskStateErr) => continue, // If we cannot find the task, skip it.
                 Err(e) => {
-                    let database = Database::get_instance();
+                    let database = RequestDb::get_instance();
                     let state_info = CUpdateStateInfo::new(State::Failed, Reason::OthersError);
                     if !database.update_task_state(task_id, &state_info) {
                         error!("{} update_task_state error: {:?}", task_id, e);
@@ -209,60 +207,39 @@ impl RunningQueue {
                     continue;
                 }
             };
+            task.speed_limit(qos_direction.direction() as u64);
 
-            // every task cannot be running when network is error
-            if !task.satisfied().await {
+            new_queue.insert((uid, task_id), task.clone());
+
+            if self.running_tasks.contains_key(&(uid, task_id)) {
+                info!("{} has running task not finished", task_id);
                 continue;
             }
-            let (lock, rx) = oneshot::channel();
-            self.locks.insert(task_id, rx);
-            let keeper = self.keeper.clone();
-            let tx = self.tx.clone();
-            let runcount_manager = self.runcount_manager.clone();
-            task.speed_limit(qos_direction.direction() as u64);
-            new_queue.insert((uid, task_id), task.clone());
-            let task = RunningTask::new(runcount_manager, task, tx, keeper, lock);
-            self.join_handles.push(runtime_spawn(async move {
-                task.run().await;
-            }));
+
+            info!("{} create running task", task_id);
+            let running_task = RunningTask::new(
+                #[cfg(feature = "oh")]
+                self.run_count_manager.clone(),
+                task.clone(),
+                self.tx.clone(),
+                self.keeper.clone(),
+            );
+            let join_handle = runtime_spawn(async move {
+                running_task.run().await;
+            });
+            let uid = task.uid();
+            let task_id = task.task_id();
+            self.running_tasks.insert((uid, task_id), Some(join_handle));
         }
         // every satisfied tasks in running has been moved, set left tasks to Waiting
-        for task in queue.values_mut() {
-            task.change_task_status(State::Waiting, Reason::RunningTaskMeetLimits);
+
+        for task in queue.values() {
+            if let Some(join_handle) = self.running_tasks.get_mut(&(task.uid(), task.task_id())) {
+                if let Some(join_handle) = join_handle.take() {
+                    join_handle.cancel();
+                };
+            }
         }
         *queue = new_queue;
     }
-
-    pub(crate) fn modify_task_state_by_user(
-        &mut self,
-        uid: u64,
-        task_id: u32,
-        state: State,
-    ) -> ErrorCode {
-        if let Some(task) = self
-            .download_queue
-            .remove(&(uid, task_id))
-            .or(self.upload_queue.remove(&(uid, task_id)))
-        {
-            set_task_state_by_user(&self.client_manager, task, state)
-        } else {
-            ErrorCode::TaskNotFound
-        }
-    }
-}
-
-fn set_task_state_by_user(
-    client_manager: &ClientManagerEntry,
-    task: Arc<RequestTask>,
-    state: State,
-) -> ErrorCode {
-    let code = task.change_task_status(state, Reason::UserOperation);
-    if code != ErrorCode::ErrOk {
-        return code;
-    }
-    if state == State::Removed {
-        Notifier::remove(client_manager, task.build_notify_data());
-    }
-    task.resume.store(false, Ordering::SeqCst);
-    ErrorCode::ErrOk
 }

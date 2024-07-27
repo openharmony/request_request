@@ -12,47 +12,187 @@
 // limitations under the License.
 
 use std::collections::HashMap;
-use std::ffi::c_void;
 use std::fmt::Display;
 use std::mem::MaybeUninit;
 use std::pin::Pin;
-use std::ptr::null_mut;
-use std::slice;
 use std::sync::{Arc, Mutex, Once};
 
 pub(crate) use ffi::*;
 
-use super::app_state::AppStateManagerTx;
+cfg_oh! {
+    use crate::manage::SystemConfig;
+}
+
+cfg_not_oh! {
+    use rusqlite::Connection;
+    const CREATE_TABLE: &'static str = "CREATE TABLE IF NOT EXISTS request_task (task_id INTEGER PRIMARY KEY, uid INTEGER, token_id INTEGER, action INTEGER, mode INTEGER, cover INTEGER, network INTEGER, metered INTEGER, roaming INTEGER, ctime INTEGER, mtime INTEGER, reason INTEGER, gauge INTEGER, retry INTEGER, redirect INTEGER, tries INTEGER, version INTEGER, config_idx INTEGER, begins INTEGER, ends INTEGER, precise INTEGER, priority INTEGER, background INTEGER, bundle TEXT, url TEXT, data TEXT, token TEXT, title TEXT, description TEXT, method TEXT, headers TEXT, config_extras TEXT, mime_type TEXT, state INTEGER, idx INTEGER, total_processed INTEGER, sizes TEXT, processed TEXT, extras TEXT, form_items BLOB, file_specs BLOB, each_file_status BLOB, body_file_names BLOB, certs_paths BLOB)";
+}
+use super::network::Network;
 use crate::error::ErrorCode;
-use crate::manage::{Network, SystemConfig};
 use crate::service::client::ClientManagerEntry;
 use crate::task::config::{Mode, TaskConfig};
 use crate::task::ffi::{CEachFileStatus, CTaskConfig, CTaskInfo, CUpdateInfo, CUpdateStateInfo};
-use crate::task::info::{ApplicationState, State, TaskInfo, UpdateInfo};
+use crate::task::info::{State, TaskInfo, UpdateInfo};
+use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
-use crate::utils::hashmap_to_string;
+use crate::utils::{get_current_timestamp, hashmap_to_string};
 
-pub(crate) struct Database {
+pub(crate) struct RequestDb {
     user_file_tasks: Mutex<HashMap<u32, Arc<RequestTask>>>,
+    #[cfg(feature = "oh")]
+    pub(crate) inner: *mut RequestDataBase,
+    #[cfg(not(feature = "oh"))]
+    pub(crate) inner: Connection,
 }
 
-impl Database {
+impl RequestDb {
+    #[cfg(feature = "oh")]
     pub(crate) fn get_instance() -> &'static Self {
-        static mut DATABASE: MaybeUninit<Database> = MaybeUninit::uninit();
+        static mut DB: MaybeUninit<RequestDb> = MaybeUninit::uninit();
         static ONCE: Once = Once::new();
-        ONCE.call_once(|| unsafe {
-            DATABASE.write(Database {
-                user_file_tasks: Mutex::new(HashMap::new()),
-            });
+        ONCE.call_once(|| {
+            let path = if cfg!(test) {
+                "/data/test/request.db"
+            } else {
+                "/data/service/el1/public/database/request/request.db"
+            };
+
+            let inner = GetDatabaseInstance(path);
+            unsafe {
+                DB.write(RequestDb {
+                    inner,
+                    user_file_tasks: Mutex::new(HashMap::new()),
+                });
+            }
+        });
+        unsafe { DB.assume_init_mut() }
+    }
+
+    #[cfg(not(feature = "oh"))]
+    pub(crate) fn get_instance() -> &'static Self {
+        static mut DATABASE: MaybeUninit<RequestDb> = MaybeUninit::uninit();
+        static ONCE: Once = Once::new();
+        ONCE.call_once(|| {
+            let inner = Connection::open_in_memory().unwrap();
+            inner.execute(&CREATE_TABLE, ()).unwrap();
+            unsafe {
+                DATABASE.write(RequestDb {
+                    inner,
+                    user_file_tasks: Mutex::new(HashMap::new()),
+                })
+            };
         });
 
         unsafe { DATABASE.assume_init_ref() }
     }
 
-    pub(crate) fn contains_task(&self, task_id: u32) -> bool {
-        RequestDb::get_instance().contains_task(task_id)
+    #[cfg(feature = "oh")]
+    pub(crate) fn execute(&self, sql: &str) -> Result<(), i32> {
+        let ret = unsafe { Pin::new_unchecked(&mut *self.inner).ExecuteSql(sql) };
+        if ret == 0 {
+            Ok(())
+        } else {
+            error!("execute sql failed: {}", ret);
+            Err(ret)
+        }
     }
 
+    #[cfg(not(feature = "oh"))]
+    pub(crate) fn execute(&self, sql: &str) -> Result<(), i32> {
+        let res = self.inner.execute(sql, ());
+
+        self.inner.execute(sql, ()).map(|_| ()).map_err(|e| {
+            error!("execute sql failed: {}", e);
+            e.sqlite_error_code().unwrap() as u32 as i32
+        })
+    }
+
+    #[cfg(feature = "oh")]
+    pub(crate) fn query_integer<T: TryFrom<i64> + Default>(&self, sql: &str) -> Vec<T>
+    where
+        T::Error: Display,
+    {
+        let mut v = vec![];
+        let ret = unsafe { Pin::new_unchecked(&mut *self.inner).QueryInteger(sql, &mut v) };
+        let v = v
+            .into_iter()
+            .map(|a| {
+                a.try_into().unwrap_or_else(|e| {
+                    error!("query_integer failed, value: {}", e);
+                    Default::default()
+                })
+            })
+            .collect();
+
+        if ret != 0 {
+            error!("query integer err:{}", ret);
+        }
+        v
+    }
+
+    #[cfg(not(feature = "oh"))]
+    pub(crate) fn query_integer<T: TryFrom<i64> + Default>(&self, sql: &str) -> Vec<T>
+    where
+        T::Error: Display,
+    {
+        let mut stmt = self.inner.prepare(sql).unwrap();
+        let rows = stmt.query_map([], |row| Ok(row.get(0).unwrap())).unwrap();
+        let v: Vec<i64> = rows.into_iter().map(|a| a.unwrap()).collect();
+        v.into_iter()
+            .map(|a| a.try_into().unwrap_or_else(|_| Default::default()))
+            .collect()
+    }
+
+    pub(crate) fn contains_task(&self, task_id: u32) -> bool {
+        let sql = format!(
+            "SELECT COUNT(*) FROM request_task WHERE task_id = {}",
+            task_id
+        );
+        let v = self.query_integer::<u32>(&sql);
+
+        if v.is_empty() {
+            error!("contains_task check failed, empty result");
+            false
+        } else {
+            v[0] == 1
+        }
+    }
+
+    pub(crate) fn query_task_token_id(&self, task_id: u32) -> Result<u64, i32> {
+        let sql = format!(
+            "SELECT token_id FROM request_task WHERE task_id = {}",
+            task_id
+        );
+        let v = self.query_integer::<u64>(&sql);
+        if v.is_empty() {
+            error!("query_task_token_id failed, empty result");
+            Err(-1)
+        } else {
+            Ok(v[0])
+        }
+    }
+
+    pub(crate) fn query_app_uncompleted_task_num(&self, uid: u64, mode: Mode) -> usize {
+        let sql = format!(
+            "SELECT COUNT(*) FROM request_task WHERE uid = {} AND mode = {} AND (state = {} OR state = {} OR state = {} OR state = {} OR state = {})",
+            uid, mode.repr,
+            State::Waiting.repr,
+            State::Paused.repr,
+            State::Initialized.repr,
+            State::Running.repr,
+            State::Retrying.repr,
+        );
+        let v = self.query_integer::<usize>(&sql);
+
+        if v.is_empty() {
+            error!("query_app_uncompleted_task_num failed, empty result");
+            0
+        } else {
+            v[0]
+        }
+    }
+
+    #[cfg(feature = "oh")]
     pub(crate) fn insert_task(&self, task: RequestTask) -> bool {
         let task_id = task.task_id();
         let uid = task.uid();
@@ -88,6 +228,72 @@ impl Database {
         true
     }
 
+    #[cfg(not(feature = "oh"))]
+    pub(crate) fn insert_task(&self, task: RequestTask) -> bool {
+        use crate::task::reason::Reason;
+        use crate::utils::get_current_timestamp;
+
+        let task_id = task.task_id();
+        let uid = task.uid();
+        info!(
+            "Insert task to database, uid: {}, task_id: {}",
+            uid, task_id
+        );
+        if self.contains_task(task_id) {
+            return false;
+        }
+
+        let config = task.config();
+        let sql = format!(
+            "INSERT OR REPLACE INTO request_task (task_id, uid, token_id, action, mode, cover, network, metered, roaming, ctime, gauge, retry, redirect, version, config_idx, begins, ends, precise, priority, background, bundle, url, data, token, title, description, method, headers, config_extras, mtime, reason, tries, state)
+            VALUES ({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', {}, {}, {}, {})",
+            config.common_data.task_id,
+            config.common_data.uid,
+            config.common_data.token_id,
+            config.common_data.action.repr,
+            config.common_data.mode.repr,
+            config.common_data.cover,
+            config.common_data.network_config as u8,
+            config.common_data.metered as u8,
+            config.common_data.roaming as u8,
+            get_current_timestamp(),
+            config.common_data.gauge,
+            config.common_data.retry,
+            config.common_data.redirect,
+            config.version as u8,
+            config.common_data.index,
+            config.common_data.begins,
+            config.common_data.ends,
+            config.common_data.precise,
+            config.common_data.priority,
+            config.common_data.background as u8,
+            config.bundle,
+            config.url,
+            config.data,
+            config.token,
+            config.title,
+            config.description,
+            config.method,
+            hashmap_to_string(&config.headers),
+            hashmap_to_string(&config.extras),
+            get_current_timestamp(),
+            Reason::Default.repr,
+            0,
+            State::Initialized.repr,
+        );
+        self.execute(&sql).unwrap();
+
+        // For some tasks contains user_file, we must save it to map first.
+        if task.conf.contains_user_file() {
+            self.user_file_tasks
+                .lock()
+                .unwrap()
+                .insert(task.task_id(), Arc::new(task));
+        };
+        true
+    }
+
+    #[cfg(feature = "oh")]
     pub(crate) fn update_task(&self, task_id: u32, update_info: UpdateInfo) {
         debug!("Update task in database, task_id: {}", task_id);
         if !self.contains_task(task_id) {
@@ -106,15 +312,31 @@ impl Database {
         debug!("Update task in database, ret is {}", ret);
     }
 
-    pub(crate) fn update_task_state(&self, task_id: u32, info: &CUpdateStateInfo) -> bool {
+    #[cfg(not(feature = "oh"))]
+    pub(crate) fn update_task(&self, task_id: u32, update_info: UpdateInfo) {
         if !self.contains_task(task_id) {
-            return false;
+            return;
         }
-        let ret: bool = unsafe { UpdateRequestTaskState(task_id, info) };
-        debug!("Update task state in database, ret is {}", ret);
-        ret
+        let sql = format!(
+            "UPDATE request_task SET sizes = {:?}, processed = {:?}, extras = {} WHERE task_id = {}",
+            update_info.progress.sizes, update_info.progress.processed, hashmap_to_string(&update_info.progress.extras),
+            task_id,
+        );
+        self.execute(&sql).unwrap();
     }
 
+    pub(crate) fn update_task_state(&self, task_id: u32, info: &CUpdateStateInfo) -> bool {
+        let sql = format!(
+            "UPDATE request_task SET state = {}, mtime = {}, reason = {} WHERE task_id = {}",
+            info.state,
+            get_current_timestamp(),
+            info.reason,
+            task_id
+        );
+        self.execute(&sql).is_ok()
+    }
+
+    #[cfg(feature = "oh")]
     pub(crate) fn get_task_info(&self, task_id: u32) -> Option<TaskInfo> {
         debug!("Get task info from database");
         let c_task_info = unsafe { GetTaskInfo(task_id) };
@@ -129,6 +351,49 @@ impl Database {
         Some(task_info)
     }
 
+    #[cfg(not(feature = "oh"))]
+    pub(crate) fn get_task_info(&self, task_id: u32) -> Option<TaskInfo> {
+        use crate::info::CommonTaskInfo;
+        use crate::task::notify::Progress;
+
+        let sql = format!("SELECT task_id, uid, action, mode, mtime, reason, gauge, retry, version, priority, ctime, tries, url, data, token, state, idx from request_task where task_id = {}", task_id);
+        let mut stmt = self.inner.prepare(&sql).unwrap();
+        let mut row = stmt
+            .query_map([], |row| {
+                Ok(TaskInfo {
+                    common_data: CommonTaskInfo {
+                        task_id: row.get(0).unwrap(),
+                        uid: row.get(1).unwrap(),
+                        action: row.get(2).unwrap(),
+                        mode: row.get(3).unwrap(),
+                        mtime: row.get(4).unwrap(),
+                        reason: row.get(5).unwrap(),
+                        gauge: row.get(6).unwrap(),
+                        retry: row.get(7).unwrap(),
+                        version: row.get(8).unwrap(),
+                        priority: row.get(9).unwrap(),
+                        ctime: row.get(10).unwrap(),
+                        tries: row.get(11).unwrap(),
+                    },
+                    url: row.get(12).unwrap(),
+                    data: row.get(13).unwrap(),
+                    token: row.get(14).unwrap(),
+                    bundle: "".to_string(),
+                    title: "".to_string(),
+                    description: "".to_string(),
+                    mime_type: "".to_string(),
+                    extras: HashMap::new(),
+                    each_file_status: vec![],
+                    form_items: vec![],
+                    file_specs: vec![],
+                    progress: Progress::new(vec![]),
+                })
+            })
+            .unwrap();
+        row.next().map(|info| info.unwrap())
+    }
+
+    #[cfg(feature = "oh")]
     pub(crate) fn get_task_config(&self, task_id: u32) -> Option<TaskConfig> {
         debug!("query single task config in database");
         let c_task_config = unsafe { QueryTaskConfig(task_id) };
@@ -142,75 +407,164 @@ impl Database {
         }
     }
 
+    #[cfg(not(feature = "oh"))]
+    pub(crate) fn get_task_config(&self, task_id: u32) -> Option<TaskConfig> {
+        use crate::config::{Action, CommonTaskConfig, NetworkConfig};
+
+        debug!("query single task config in database");
+        let sql = format!("SELECT url, title, description, method, data, token, version from request_task where task_id = {}", task_id);
+        let mut stmt = self.inner.prepare(&sql).unwrap();
+        let mut row = stmt
+            .query_map([], |row| {
+                let version: u8 = row.get(6).unwrap();
+                Ok(TaskConfig {
+                    url: row.get(0).unwrap(),
+                    title: row.get(1).unwrap(),
+                    description: row.get(2).unwrap(),
+                    method: row.get(3).unwrap(),
+                    data: row.get(4).unwrap(),
+                    token: row.get(5).unwrap(),
+                    version: version.into(),
+                    common_data: CommonTaskConfig {
+                        task_id,
+                        uid: 0,
+                        token_id: 0,
+                        action: Action::Download,
+                        mode: Mode::BackGround,
+                        cover: true,
+                        network_config: NetworkConfig::Any,
+                        metered: true,
+                        roaming: true,
+                        gauge: true,
+                        retry: true,
+                        redirect: true,
+                        index: 0,
+                        begins: 0,
+                        ends: 0,
+                        precise: true,
+                        priority: 0,
+                        background: true,
+                    },
+                    headers: Default::default(),
+                    extras: Default::default(),
+                    form_items: Default::default(),
+                    file_specs: Default::default(),
+                    bundle: Default::default(),
+                    bundle_type: 0,
+                    body_file_paths: vec![],
+                    certs_path: vec![],
+                    proxy: Default::default(),
+                    certificate_pins: Default::default(),
+                    atomic_account: Default::default(),
+                })
+            })
+            .unwrap();
+        row.next().map(|config| config.unwrap())
+    }
+
     /// Removes task records from a week ago before unloading.
     pub(crate) fn delete_early_records(&self) {
         use std::time::{SystemTime, UNIX_EPOCH};
 
         const MILLIS_IN_A_WEEK: u64 = 7 * 24 * 60 * 60 * 1000;
-
-        debug!("Starts to delete early records");
-
         if let Ok(time) = SystemTime::now().duration_since(UNIX_EPOCH) {
-            unsafe {
-                RequestDBRemoveRecordsFromTime(time.as_millis() as u64 - MILLIS_IN_A_WEEK);
-            }
+            let sql = format!(
+                "DELETE from request_task WHERE mtime < {} ",
+                time.as_millis() as u64 - MILLIS_IN_A_WEEK
+            );
+            let _ = self.execute(&sql);
         }
-
-        debug!("Deletes early records end");
     }
 
-    pub(crate) fn update_on_app_state_change(&self, uid: u64, state: ApplicationState) {
-        unsafe { UpdateTaskStateOnAppStateChange(uid, state as u8) };
+    #[cfg(feature = "oh")]
+    pub(crate) fn get_task_qos_info(&self, task_id: u32) -> Option<TaskQosInfo> {
+        #[cfg(feature = "oh")]
+        {
+            let mut info = TaskQosInfo {
+                task_id,
+                action: 0,
+                mode: 0,
+                state: 0,
+                priority: 0,
+            };
+            let sql = format!(
+                "SELECT action, mode, state, priority FROM request_task WHERE task_id = {}",
+                task_id
+            );
+            let ret =
+                unsafe { Pin::new_unchecked(&mut *self.inner).GetTaskQosInfo(&sql, &mut info) };
+            if ret == 0 {
+                Some(info)
+            } else {
+                None
+            }
+        }
     }
 
-    pub(crate) fn get_task_qos_info(&self, uid: u64, task_id: u32) -> Option<TaskQosInfo> {
-        let mut info: *mut TaskQosInfo = null_mut::<TaskQosInfo>();
-        unsafe { GetTaskQosInfo(uid, task_id, &mut info as *mut *mut TaskQosInfo) };
-        if info.is_null() {
-            return None;
-        }
+    #[cfg(not(feature = "oh"))]
+    pub(crate) fn get_task_qos_info(&self, task_id: u32) -> Option<TaskQosInfo> {
+        let sql = format!(
+            "SELECT action, mode, state, priority FROM request_task WHERE task_id = {}",
+            task_id,
+        );
+        let mut stmt = self.inner.prepare(&sql).unwrap();
+        let mut rows = stmt
+            .query_map([], |row| {
+                Ok(TaskQosInfo {
+                    task_id: task_id,
+                    action: row.get::<_, u8>(0).unwrap().into(),
+                    mode: row.get::<_, u8>(1).unwrap().into(),
+                    state: row.get(2).unwrap(),
+                    priority: row.get(3).unwrap(),
+                })
+            })
+            .unwrap();
+        rows.next().map(|info| info.unwrap())
+    }
 
-        let res = unsafe {
-            TaskQosInfo {
-                uid: (*info).uid,
-                task_id: (*info).task_id,
-                action: (*info).action,
-                mode: (*info).mode,
-                state: (*info).state,
-                priority: (*info).priority,
-            }
-        };
-        unsafe { DeleteTaskQosInfo(info) };
-        Some(res)
+    pub(crate) fn get_app_task_qos_infos_inner(&self, sql: &str) -> Vec<TaskQosInfo> {
+        #[cfg(feature = "oh")]
+        {
+            let mut v = vec![];
+            let _ = unsafe { Pin::new_unchecked(&mut *self.inner).GetAppTaskQosInfos(sql, &mut v) };
+            v
+        }
+        #[cfg(not(feature = "oh"))]
+        {
+            let mut stmt = self.inner.prepare(&sql).unwrap();
+            let rows = stmt
+                .query_map([], |row| {
+                    Ok(TaskQosInfo {
+                        task_id: row.get(0).unwrap(),
+                        action: row.get::<_, u8>(1).unwrap().into(),
+                        mode: row.get::<_, u8>(2).unwrap().into(),
+                        state: row.get(3).unwrap(),
+                        priority: row.get(4).unwrap(),
+                    })
+                })
+                .unwrap();
+            rows.into_iter().map(|info| info.unwrap()).collect()
+        }
     }
 
     pub(crate) fn get_app_task_qos_infos(&self, uid: u64) -> Vec<TaskQosInfo> {
-        let mut array = null_mut::<TaskQosInfo>();
-        let mut len = 0;
-        unsafe {
-            GetAppTaskQosInfos(
-                uid,
-                &mut array as *mut *mut TaskQosInfo,
-                &mut len as *mut usize,
-            )
-        };
-
-        if array.is_null() {
-            return Vec::new();
-        }
-
-        let res = unsafe { slice::from_raw_parts(array as *const TaskQosInfo, len) }.to_vec();
-        unsafe { DeleteTaskQosInfo(array) };
-        res
+        let sql = format!(
+            "SELECT task_id, action, mode, state, priority FROM request_task WHERE uid = {} AND ((state = {} AND reason = {}) OR state = {} OR state = {})",
+            uid,
+            State::Waiting.repr,
+            Reason::RunningTaskMeetLimits.repr,
+            State::Running.repr,
+            State::Retrying.repr,
+        );
+        self.get_app_task_qos_infos_inner(&sql)
     }
 
-    pub(crate) async fn get_task(
+    pub(crate) fn get_task(
         &self,
         task_id: u32,
-        system: SystemConfig,
-        network: Network,
-        app_state_manager: &AppStateManagerTx,
+        #[cfg(feature = "oh")] system: SystemConfig,
         client_manager: &ClientManagerEntry,
+        network: Network,
     ) -> Result<Arc<RequestTask>, ErrorCode> {
         // If this task exists in `user_file_map`，get it from this map.
         if let Some(task) = self.user_file_tasks.lock().unwrap().get(&task_id) {
@@ -222,7 +576,6 @@ impl Database {
             Some(config) => config,
             None => return Err(ErrorCode::TaskNotFound),
         };
-        let uid = config.common_data.uid;
         let task_id = config.common_data.task_id;
 
         let task_info = match self.get_task_info(task_id) {
@@ -237,14 +590,13 @@ impl Database {
             return Err(ErrorCode::TaskStateErr);
         }
 
-        let app_state = app_state_manager.get_app_state(uid).await;
         match RequestTask::new_by_info(
             config,
+            #[cfg(feature = "oh")]
             system,
-            app_state,
             task_info,
             client_manager.clone(),
-            network.clone(),
+            network,
         ) {
             Ok(task) => Ok(Arc::new(task)),
             Err(e) => {
@@ -255,16 +607,8 @@ impl Database {
     }
 }
 
-#[derive(Clone, Debug, Copy)]
-#[repr(C)]
-pub(crate) struct TaskQosInfo {
-    pub(crate) uid: u64,
-    pub(crate) task_id: u32,
-    pub(crate) action: u8,
-    pub(crate) mode: u8,
-    pub(crate) state: u8,
-    pub(crate) priority: u32,
-}
+unsafe impl Send for RequestDb {}
+unsafe impl Sync for RequestDb {}
 
 #[cfg(feature = "oh")]
 
@@ -274,145 +618,41 @@ extern "C" {
     fn GetTaskInfo(task_id: u32) -> *const CTaskInfo;
     fn QueryTaskConfig(task_id: u32) -> *const CTaskConfig;
     fn RecordRequestTask(info: *const CTaskInfo, config: *const CTaskConfig) -> bool;
-    fn RequestDBRemoveRecordsFromTime(time: u64);
     fn UpdateRequestTask(id: u32, info: *const CUpdateInfo) -> bool;
-    fn UpdateRequestTaskState(id: u32, info: *const CUpdateStateInfo) -> bool;
-    fn UpdateTaskStateOnAppStateChange(uid: u64, app_state: u8) -> c_void;
-    fn GetTaskQosInfo(uid: u64, task_id: u32, info: *mut *mut TaskQosInfo) -> c_void;
-    fn GetAppTaskQosInfos(uid: u64, array: *mut *mut TaskQosInfo, len: *mut usize) -> c_void;
-    fn DeleteTaskQosInfo(ptr: *const TaskQosInfo) -> c_void;
-}
-
-pub(crate) struct RequestDb {
-    pub(crate) inner: *mut RequestDataBase,
-}
-
-impl RequestDb {
-    pub(crate) fn get_instance() -> Self {
-        let path = if cfg!(test) {
-            "/data/test/request.db"
-        } else {
-            "/data/service/el1/public/database/request/request.db"
-        };
-
-        let inner = GetDatabaseInstance(path);
-        Self { inner }
-    }
-
-    pub(crate) fn execute(&mut self, sql: &str) -> Result<(), i32> {
-        let ret = unsafe { Pin::new_unchecked(&mut *self.inner).ExecuteSql(sql) };
-        if ret == 0 {
-            Ok(())
-        } else {
-            Err(ret)
-        }
-    }
-
-    pub(crate) fn query_integer<T: TryFrom<i64> + Default>(&mut self, sql: &str) -> Vec<T>
-    where
-        T::Error: Display,
-    {
-        let mut v = vec![];
-        let ret = unsafe { Pin::new_unchecked(&mut *self.inner).QueryInteger(sql, &mut v) };
-        let v = v
-            .into_iter()
-            .map(|a| {
-                a.try_into().unwrap_or_else(|e| {
-                    error!("query_integer failed, value: {}", e);
-                    Default::default()
-                })
-            })
-            .collect();
-
-        if ret != 0 {
-            error!("query integer err:{}", ret);
-        }
-        v
-    }
-
-    #[allow(unused)]
-    pub(crate) fn query_text(&mut self, sql: &str) -> Result<Vec<String>, i32> {
-        let mut v = vec![];
-        let ret = unsafe { Pin::new_unchecked(&mut *self.inner).QueryText(sql, &mut v) };
-        if ret == 0 {
-            Ok(v)
-        } else {
-            Err(ret)
-        }
-    }
-
-    pub(crate) fn contains_task(&mut self, task_id: u32) -> bool {
-        let sql = format!(
-            "SELECT COUNT(*) FROM request_task WHERE task_id = {}",
-            task_id
-        );
-        let v = self.query_integer::<u32>(&sql);
-
-        if v.is_empty() {
-            error!("contains_task check failed, empty result");
-            false
-        } else {
-            v[0] == 1
-        }
-    }
-
-    pub(crate) fn query_task_token_id(&mut self, task_id: u32) -> Result<u64, i32> {
-        let sql = format!(
-            "SELECT token_id FROM request_task WHERE task_id = {}",
-            task_id
-        );
-        let v = self.query_integer::<u64>(&sql);
-        if v.is_empty() {
-            error!("query_task_token_id failed, empty result");
-            Err(-1)
-        } else {
-            Ok(v[0])
-        }
-    }
-
-    pub(crate) fn query_app_uncompleted_task_num(&mut self, uid: u64, mode: Mode) -> usize {
-        let sql = format!(
-            "SELECT COUNT(*) FROM request_task WHERE uid = {} AND mode = {} AND (state = {} OR state = {} OR state = {} OR state = {} OR state = {})",
-            uid, mode.repr,
-            State::Waiting.repr,
-            State::Paused.repr,
-            State::Initialized.repr,
-            State::Running.repr,
-            State::Retrying.repr,
-        );
-        let v = self.query_integer::<usize>(&sql);
-
-        if v.is_empty() {
-            error!("query_app_uncompleted_task_num failed, empty result");
-            0
-        } else {
-            v[0]
-        }
-    }
-
-    #[allow(unused)]
-    pub(crate) fn remove_timeout(&mut self, time: u64) -> Result<(), i32> {
-        let sql = format!("DELETE from request_task WHERE mtime < {} ", time);
-        self.execute(&sql)
-    }
 }
 
 #[cxx::bridge(namespace = "OHOS::Request")]
 mod ffi {
+    #[derive(Clone, Debug, Copy)]
+    pub(crate) struct TaskQosInfo {
+        pub(crate) task_id: u32,
+        pub(crate) action: u8,
+        pub(crate) mode: u8,
+        pub(crate) state: u8,
+        pub(crate) priority: u32,
+    }
+
     unsafe extern "C++" {
         include!("c_request_database.h");
         type RequestDataBase;
         fn GetDatabaseInstance(path: &str) -> *mut RequestDataBase;
         fn ExecuteSql(self: Pin<&mut RequestDataBase>, sql: &str) -> i32;
         fn QueryInteger(self: Pin<&mut RequestDataBase>, sql: &str, v: &mut Vec<i64>) -> i32;
-        fn QueryText(self: Pin<&mut RequestDataBase>, sql: &str, v: &mut Vec<String>) -> i32;
+        fn GetAppTaskQosInfos(
+            self: Pin<&mut RequestDataBase>,
+            sql: &str,
+            v: &mut Vec<TaskQosInfo>,
+        ) -> i32;
+        fn GetTaskQosInfo(self: Pin<&mut RequestDataBase>, sql: &str, res: &mut TaskQosInfo)
+            -> i32;
     }
 }
 
+#[cfg(feature = "oh")]
 #[cfg(test)]
 mod test {
     use super::RequestDb;
-    use crate::config::Mode;
+    use crate::config::{Action, Mode};
     use crate::task::info::State;
     use crate::tests::{test_init, DB_LOCK};
     use crate::utils::get_current_timestamp;
@@ -424,7 +664,7 @@ mod test {
         let _lock = DB_LOCK.lock().unwrap();
 
         let task_id = TaskIdGenerator::generate();
-        let mut db = RequestDb::get_instance();
+        let db = RequestDb::get_instance();
         db.execute(&format!(
             "INSERT INTO request_task (task_id, bundle) VALUES ({}, 'example_bundle')",
             task_id
@@ -442,7 +682,7 @@ mod test {
         let _lock = DB_LOCK.lock().unwrap();
 
         let task_id = TaskIdGenerator::generate();
-        let mut db = RequestDb::get_instance();
+        let db = RequestDb::get_instance();
         db.execute(&format!(
             "INSERT INTO request_task (task_id, bundle) VALUES ({}, 'example_bundle')",
             task_id
@@ -459,7 +699,7 @@ mod test {
 
         let task_id = TaskIdGenerator::generate();
         let token_id = 123456789;
-        let mut db = RequestDb::get_instance();
+        let db = RequestDb::get_instance();
         db.execute(&format!(
             "INSERT INTO request_task (task_id, token_id) VALUES ({}, {})",
             task_id, token_id
@@ -470,12 +710,37 @@ mod test {
     }
 
     #[test]
+    fn ut_database_app_task_qos_info() {
+        test_init();
+        let _lock = DB_LOCK.lock().unwrap();
+
+        let task_id = TaskIdGenerator::generate();
+        let db = RequestDb::get_instance();
+        db.execute(&format!(
+            "INSERT INTO request_task (task_id, uid, action, mode, state, priority) VALUES ({}, {}, {}, {}, {}, {})",
+            task_id,
+            0,
+            Action::Download.repr,
+            Mode::FrontEnd.repr,
+            State::Completed.repr,
+            0,
+        ))
+        .unwrap();
+
+        let sql = "SELECT task_id, action, mode, state, priority FROM request_task";
+        let v = db.get_app_task_qos_infos_inner(sql);
+        let info = db.get_task_qos_info(task_id).unwrap();
+        println!("{:?}", v);
+        println!("qos info {:?}", info);
+    }
+
+    #[test]
     fn ut_database_query_app_uncompleted_task_num() {
         test_init();
         let _lock = DB_LOCK.lock().unwrap();
 
         let uid = get_current_timestamp() as u64;
-        let mut db = RequestDb::get_instance();
+        let db = RequestDb::get_instance();
 
         db.execute(&format!(
             "INSERT INTO request_task (task_id, uid, state, mode) VALUES ({}, {}, {}, {})",
@@ -523,25 +788,5 @@ mod test {
         .unwrap();
 
         assert_eq!(db.query_app_uncompleted_task_num(uid, Mode::BackGround), 5);
-    }
-
-    #[test]
-    fn ut_database_remove_timeout() {
-        test_init();
-        let _lock = DB_LOCK.lock().unwrap();
-
-        let mut db = RequestDb::get_instance();
-        let task_id = TaskIdGenerator::generate();
-        let time = 1000;
-        db.execute(&format!(
-            "INSERT INTO request_task (task_id, mtime) VALUES ({}, {})",
-            task_id,
-            time - 100
-        ))
-        .unwrap();
-
-        assert!(db.contains_task(task_id));
-        db.remove_timeout(time).unwrap();
-        assert!(!db.contains_task(task_id));
     }
 }

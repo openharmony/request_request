@@ -22,14 +22,7 @@ use ylong_http_client::HttpClientError;
 use ylong_runtime::io::AsyncWrite;
 use ylong_runtime::time::{sleep, Sleep};
 
-cfg_oh! {
-    use crate::manage::account::is_active_user;
-    use crate::manage::notifier::Notifier;
-    use super::config::Mode;
-    use crate::task::reason::Reason;
-}
-
-use crate::info::State;
+use crate::manage::notifier::Notifier;
 use crate::task::config::Version;
 use crate::task::request_task::RequestTask;
 use crate::utils::get_current_timestamp;
@@ -63,44 +56,15 @@ impl TaskOperator {
     ) -> Poll<Result<(), HttpClientError>> {
         let current = get_current_timestamp();
 
-        let state = self.task.status.lock().unwrap().state;
-        if state != State::Running && state != State::Retrying {
-            info!("pause task {} new state {:?} ", self.task.task_id(), state);
-            return Poll::Ready(Err(HttpClientError::user_aborted()));
+        if current >= self.task.last_notify.load(Ordering::SeqCst) + FRONT_NOTIFY_INTERVAL {
+            let notify_data = self.task.build_notify_data();
+            self.task.last_notify.store(current, Ordering::SeqCst);
+            Notifier::progress(&self.task.client_manager, notify_data);
         }
-
-        if self.task.conf.version == Version::API10 && !self.task.check_network_status() {
-            info!("pause for network status, tid: {}", self.task.task_id());
-            return Poll::Ready(Err(HttpClientError::user_aborted()));
-        }
-
-        #[cfg(feature = "oh")]
-        {
-            if !self.task.check_app_state() {
-                info!("pause for app state, tid: {}", self.task.task_id());
-                return Poll::Ready(Err(HttpClientError::user_aborted()));
-            }
-
-            if self.task.conf.common_data.mode == Mode::BackGround
-                && !is_active_user(self.task.uid())
-            {
-                info!("pause for user stopped, tid: {}", self.task.task_id());
-                self.task
-                    .change_task_status(State::Waiting, Reason::AccountStopped);
-                return Poll::Ready(Err(HttpClientError::user_aborted()));
-            }
-
-            if current >= self.task.last_notify.load(Ordering::SeqCst) + FRONT_NOTIFY_INTERVAL {
-                let notify_data = self.task.build_notify_data();
-                self.task.last_notify.store(current, Ordering::SeqCst);
-                Notifier::progress(&self.task.client_manager, notify_data);
-            }
-        }
-
-        let version = self.task.conf.version;
 
         let gauge = self.task.conf.common_data.gauge;
-        if version == Version::API9 || gauge {
+
+        if self.task.conf.version == Version::API9 || gauge {
             let last_background_notify_time =
                 self.task.background_notify_time.load(Ordering::SeqCst);
             if get_current_timestamp() - last_background_notify_time >= BACKGROUND_NOTIFY_INTERVAL {

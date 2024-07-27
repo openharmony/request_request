@@ -12,18 +12,17 @@
 // limitations under the License.
 
 cfg_oh! {
-    pub(crate) mod account;
-    pub(crate) mod app_state;
     pub(crate) mod config;
-    pub(crate) mod database;
-    pub(crate) mod events;
-    pub(crate) mod scheduler;
-    pub(crate) mod task_manager;
     pub(crate) use config::{SystemConfig, SystemConfigManager};
-    pub(crate) use task_manager::TaskManager;
+    pub(crate) mod query;
 }
 
-mod network;
+pub(crate) mod account;
+pub(crate) mod app_state;
+pub(crate) mod database;
+pub(crate) mod events;
+pub(crate) use task_manager::TaskManager;
+pub(crate) mod network;
 pub(crate) mod notifier;
-
-pub(crate) use network::Network;
+pub(crate) mod scheduler;
+pub(crate) mod task_manager;

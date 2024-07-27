@@ -16,8 +16,6 @@
 #ifndef C_TASK_INFO_H
 #define C_TASK_INFO_H
 
-#include <stdint.h>
-
 #include <cstdint>
 #include <string>
 #include <vector>

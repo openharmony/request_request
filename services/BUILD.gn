@@ -18,8 +18,8 @@ rust_cxx("download_server_cxx_gen") {
   sources = [
     "src/manage/account.rs",
     "src/manage/database.rs",
-    "src/manage/events/search.rs",
     "src/manage/network.rs",
+    "src/manage/query.rs",
     "src/task/config.rs",
     "src/task/info.rs",
     "src/task/reason.rs",

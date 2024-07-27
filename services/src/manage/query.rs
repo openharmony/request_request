@@ -15,36 +15,105 @@ pub(crate) use ffi::TaskFilter;
 
 use crate::config::{Action, Mode};
 use crate::manage::database::RequestDb;
-use crate::manage::TaskManager;
-use crate::task::info::State;
+use crate::task::config::TaskConfig;
+use crate::task::info::{State, TaskInfo};
 
-impl TaskManager {
-    pub(crate) fn search(&self, filter: TaskFilter, method: SearchMethod) -> Vec<u32> {
-        info!("Search task by filter: {:?} method: {:?}", filter, method);
+pub(crate) fn get_task(uid: u64, task_id: u32, token: String) -> Option<TaskConfig> {
+    debug!("TaskManager get a task, uid:{}, task_id:{}", uid, task_id);
+    
+    if let Some(config) = RequestDb::get_instance().get_task_config(task_id) {
+        debug!("found single task in database, task_id:{}", task_id);
+        if config.token.eq(token.as_str()) {
+            return Some(config);
+        }
+        debug!("get task token not equal");
+        return None;
+    }
+    debug!("get task not found");
+    None
+}
 
-        let mut database = RequestDb::get_instance();
+pub(crate) fn query(task_id: u32, action: Action) -> Option<TaskInfo> {
+    debug!(
+        "TaskManager Query, task_id: {}, query_action: {:?}",
+        task_id, action
+    );
 
-        let res = match method {
-            SearchMethod::User(uid) => database.search_task(filter, uid),
-            SearchMethod::System(bundle_name) => database.system_search_task(filter, bundle_name),
-        };
-        info!("Search task result: {:?}", res);
-        res
+    let mut info = match RequestDb::get_instance().get_task_info(task_id) {
+        Some(info) => info,
+        None => {
+            info!("TaskManger Query: no task found");
+            return None;
+        }
+    };
+
+    if info.action() == action || action == Action::Any {
+        info.data = "".to_string();
+        info.url = "".to_string();
+        debug!("TaskManager Query, query task info is {:?}", info);
+        Some(info)
+    } else {
+        info!("TaskManger Query: no task found");
+        None
+    }
+}
+
+pub(crate) fn search(filter: TaskFilter, method: SearchMethod) -> Vec<u32> {
+    info!("Search task by filter: {:?} method: {:?}", filter, method);
+
+    let database = RequestDb::get_instance();
+
+    let res = match method {
+        SearchMethod::User(uid) => database.search_task(filter, uid),
+        SearchMethod::System(bundle_name) => database.system_search_task(filter, bundle_name),
+    };
+    info!("Search task result: {:?}", res);
+    res
+}
+
+pub(crate) fn show(uid: u64, task_id: u32) -> Option<TaskInfo> {
+    debug!("TaskManager Show, uid: {}, task_id: {}", uid, task_id);
+
+    match RequestDb::get_instance().get_task_info(task_id) {
+        Some(info) if info.uid() == uid => {
+            info!("TaskManager Show: task info is {:?}", info);
+            Some(info)
+        }
+        _ => {
+            info!("TaskManger Show: no task found in database");
+            None
+        }
+    }
+}
+
+pub(crate) fn touch(uid: u64, task_id: u32, token: String) -> Option<TaskInfo> {
+    debug!("TaskManager Touch, uid: {}, task_id: {}", uid, task_id);
+
+    let mut info = match RequestDb::get_instance().get_task_info(task_id) {
+        Some(info) => info,
+        None => {
+            info!("TaskManger Touch: no task found");
+            return None;
+        }
+    };
+
+    if info.uid() == uid && info.token() == token {
+        info.bundle = "".to_string();
+        Some(info)
+    } else {
+        info!("TaskManger Touch: no task found");
+        None
     }
 }
 
 impl RequestDb {
-    pub(crate) fn search_task(&mut self, filter: TaskFilter, uid: u64) -> Vec<u32> {
+    pub(crate) fn search_task(&self, filter: TaskFilter, uid: u64) -> Vec<u32> {
         let mut sql = format!("SELECT task_id from request_task WHERE uid = {} AND ", uid);
         Self::search_filter(&mut sql, &filter);
         self.query_integer(&sql)
     }
 
-    pub(crate) fn system_search_task(
-        &mut self,
-        filter: TaskFilter,
-        bundle_name: String,
-    ) -> Vec<u32> {
+    pub(crate) fn system_search_task(&self, filter: TaskFilter, bundle_name: String) -> Vec<u32> {
         let mut sql = "SELECT task_id from request_task WHERE ".to_string();
         if bundle_name != "*" {
             sql.push_str(&format!("bundle = '{}' AND ", bundle_name));
@@ -66,6 +135,25 @@ impl RequestDb {
         }
         if filter.mode != Mode::Any.repr {
             sql.push_str(&format!("AND mode = {} ", filter.mode));
+        }
+    }
+}
+
+pub(crate) fn query_mime_type(uid: u64, task_id: u32) -> String {
+    debug!(
+        "TaskManager QueryMimeType, uid: {}, task_id: {}",
+        uid, task_id
+    );
+
+    match RequestDb::get_instance().get_task_info(task_id) {
+        Some(info) if info.uid() == uid => {
+            let mime_type = info.mime_type();
+            debug!("TaskManager QueryMimeType: mime_type is {:?}", mime_type);
+            mime_type
+        }
+        _ => {
+            info!("TaskManger QueryMimeType: no task found in database");
+            "".into()
         }
     }
 }
@@ -97,7 +185,7 @@ mod test {
 
     #[test]
     fn ut_search_user() {
-        let mut db = RequestDb::get_instance();
+        let db = RequestDb::get_instance();
         let task_id = TaskIdGenerator::generate();
         let uid = get_current_timestamp();
         db.execute(&format!(
@@ -173,7 +261,7 @@ mod test {
 
     #[test]
     fn ut_search_system() {
-        let mut db = RequestDb::get_instance();
+        let db = RequestDb::get_instance();
         let task_id = TaskIdGenerator::generate();
         let bundle_name = "com.ohos.app";
         db.execute(&format!(

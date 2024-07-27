@@ -16,8 +16,7 @@
 #ifndef REQUEST_APPLICATION_STATE_OBSERVER_H
 #define REQUEST_APPLICATION_STATE_OBSERVER_H
 
-#include <stdint.h>
-
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <string>

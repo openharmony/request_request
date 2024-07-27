@@ -15,7 +15,7 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::service::runcount::RunCountEvent;
+use crate::service::run_count::RunCountEvent;
 use crate::service::RequestServiceStub;
 
 impl RequestServiceStub {

@@ -13,9 +13,11 @@
 
 mod manager;
 
-use ipc::parcel::MsgParcel;
-use ipc::remote::RemoteObj;
-use ipc::IpcResult;
+cfg_oh! {
+    use ipc::parcel::MsgParcel;
+    use ipc::remote::RemoteObj;
+    use ipc::IpcResult;
+}
 pub(crate) use manager::{RunCountManager, RunCountManagerEntry};
 use ylong_runtime::sync::oneshot::{channel, Sender};
 
@@ -24,15 +26,26 @@ use crate::error::ErrorCode;
 use crate::utils::Recv;
 
 pub(crate) enum RunCountEvent {
-    Sub(SubKey, RemoteObj, Sender<ErrorCode>),
+    Sub(SubKey, #[cfg(feature = "oh")] RemoteObj, Sender<ErrorCode>),
     Unsub(SubKey, Sender<ErrorCode>),
     Change(i64),
 }
 
 impl RunCountEvent {
-    pub(crate) fn sub_runcount(pid: u64, obj: RemoteObj) -> (Self, Recv<ErrorCode>) {
+    pub(crate) fn sub_runcount(
+        pid: u64,
+        #[cfg(feature = "oh")] obj: RemoteObj,
+    ) -> (Self, Recv<ErrorCode>) {
         let (tx, rx) = channel::<ErrorCode>();
-        (Self::Sub(SubKey::new(pid), obj, tx), Recv::new(rx))
+        (
+            Self::Sub(
+                SubKey::new(pid),
+                #[cfg(feature = "oh")]
+                obj,
+                tx,
+            ),
+            Recv::new(rx),
+        )
     }
 
     pub(crate) fn unsub_runcount(pid: u64) -> (Self, Recv<ErrorCode>) {
@@ -57,34 +70,43 @@ impl SubKey {
 }
 
 struct SubClient {
+    #[cfg(feature = "oh")]
     obj: RemoteObj,
 }
 
 impl SubClient {
-    fn new(obj: RemoteObj) -> Self {
-        Self { obj }
+    fn new(#[cfg(feature = "oh")] obj: RemoteObj) -> Self {
+        Self {
+            #[cfg(feature = "oh")]
+            obj,
+        }
     }
 
+    #[cfg_attr(not(feature = "oh"), allow(unused_variables))]
     fn notify_runcount(&self, runcount: i64) {
-        debug!("notify runcount in");
-        let mut parcel = MsgParcel::new();
-
-        if self.write_parcel_runcount(&mut parcel, runcount).is_err() {
-            error!("During notify_runcount: ipc write failed");
-            return;
-        }
-
-        debug!("During notify_runcount: send request");
-        if let Err(e) = self
-            .obj
-            .send_request(interface::NOTIFY_RUN_COUNT, &mut parcel)
+        #[cfg(feature = "oh")]
         {
-            error!("During notify_runcount: send request failed {:?}", e);
-            return;
+            debug!("notify runcount in");
+            let mut parcel = MsgParcel::new();
+
+            if self.write_parcel_runcount(&mut parcel, runcount).is_err() {
+                error!("During notify_runcount: ipc write failed");
+                return;
+            }
+
+            debug!("During notify_runcount: send request");
+            if let Err(e) = self
+                .obj
+                .send_request(interface::NOTIFY_RUN_COUNT, &mut parcel)
+            {
+                error!("During notify_runcount: send request failed {:?}", e);
+                return;
+            }
+            debug!("During notify_runcount: send request success");
         }
-        debug!("During notify_runcount: send request success");
     }
 
+    #[cfg(feature = "oh")]
     fn write_parcel_runcount(&self, parcel: &mut MsgParcel, runcount: i64) -> IpcResult<()> {
         parcel.write_interface_token("OHOS.Download.NotifyInterface")?;
         parcel.write(&(runcount))?;

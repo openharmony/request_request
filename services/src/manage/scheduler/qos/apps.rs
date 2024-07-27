@@ -15,11 +15,8 @@ use std::cmp;
 use std::collections::HashSet;
 use std::ops::Deref;
 
-use crate::manage::account::is_foreground_user;
-use crate::manage::database::{Database, RequestDb, TaskQosInfo};
+use crate::manage::database::{RequestDb, TaskQosInfo};
 use crate::task::config::{Action, Mode};
-use crate::task::info::ApplicationState;
-use crate::utils::query_app_state;
 
 /// List of sorted apps.
 pub(crate) struct SortedApps {
@@ -33,33 +30,35 @@ impl SortedApps {
         }
     }
 
+    pub(crate) fn sort(&mut self, top_uid: u64, top_user: u64) {
+        self.inner.sort_by(|a, b| {
+            (a.uid / 200000 == top_user)
+                .cmp(&(b.uid / 200000 == top_user))
+                .then((a.uid == top_uid).cmp(&(b.uid == top_uid)))
+        })
+    }
+
     pub(crate) fn reload_all_tasks(&mut self) {
         self.inner = reload_all_app_from_database();
     }
 
-    pub(crate) fn change_app_state(&mut self, uid: u64, state: ApplicationState) {
-        if let Some(app) = self.inner.iter_mut().find(|app| app.uid == uid) {
-            Database::get_instance().update_on_app_state_change(uid, state);
-
-            let tasks = reload_tasks_of_app_from_database(uid);
-            if !tasks.is_empty() {
-                app.state = state;
-                app.tasks = tasks;
-            }
-        }
-    }
-
-    pub(crate) fn insert_task(&mut self, uid: u64, state: ApplicationState, task: TaskQosInfo) {
-        let task = Task::from(task);
+    pub(crate) fn insert_task(&mut self, uid: u64, task: TaskQosInfo) {
+        let task = Task {
+            uid,
+            task_id: task.task_id,
+            mode: Mode::from(task.mode),
+            action: Action::from(task.action),
+            priority: task.priority,
+        };
 
         if let Some(app) = self.inner.iter_mut().find(|app| app.uid == uid) {
             app.insert(task);
             return;
         }
 
-        let mut app = App::new(uid, state);
+        let mut app = App::new(uid);
         app.insert(task);
-        self.inner.binary_insert(app);
+        self.inner.push(app);
     }
 
     pub(crate) fn remove_task(&mut self, uid: u64, task_id: u32) -> Option<Task> {
@@ -70,14 +69,6 @@ impl SortedApps {
         }
 
         task
-    }
-
-    pub(crate) fn contains_task(&mut self, uid: u64, task_id: u32) -> bool {
-        if let Some(app) = self.inner.iter().find(|app| app.uid == uid) {
-            app.contains(task_id)
-        } else {
-            false
-        }
     }
 }
 
@@ -92,21 +83,19 @@ impl Deref for SortedApps {
 /// An independent app.
 pub(crate) struct App {
     pub(crate) uid: u64,
-    state: ApplicationState,
     tasks: Vec<Task>,
 }
 
 impl App {
-    fn new(uid: u64, state: ApplicationState) -> Self {
+    fn new(uid: u64) -> Self {
         Self {
             uid,
-            state,
             tasks: Vec::new(),
         }
     }
 
-    fn from_raw(uid: u64, state: ApplicationState, tasks: Vec<Task>) -> Self {
-        Self { uid, state, tasks }
+    fn from_raw(uid: u64, tasks: Vec<Task>) -> Self {
+        Self { uid, tasks }
     }
 
     pub(crate) fn is_empty(&self) -> bool {
@@ -129,13 +118,6 @@ impl App {
             None
         }
     }
-
-    fn contains(&self, task_id: u32) -> bool {
-        if self.tasks.iter().any(|task| task.task_id == task_id) {
-            return true;
-        }
-        false
-    }
 }
 
 impl Deref for App {
@@ -143,31 +125,6 @@ impl Deref for App {
 
     fn deref(&self) -> &Self::Target {
         &self.tasks
-    }
-}
-
-impl Eq for App {}
-
-impl Ord for App {
-    fn cmp(&self, other: &Self) -> cmp::Ordering {
-        let self_is_foreground = is_foreground_user(self.uid);
-        let other_is_foreground = is_foreground_user(other.uid);
-        self_is_foreground
-            .cmp(&other_is_foreground)
-            .reverse()
-            .then(self.state.cmp(&other.state))
-    }
-}
-
-impl PartialEq for App {
-    fn eq(&self, other: &Self) -> bool {
-        self.state == other.state
-    }
-}
-
-impl PartialOrd for App {
-    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
-        Some(self.cmp(other))
     }
 }
 
@@ -190,18 +147,6 @@ impl Task {
 
     pub(crate) fn action(&self) -> Action {
         self.action
-    }
-}
-
-impl From<TaskQosInfo> for Task {
-    fn from(value: TaskQosInfo) -> Self {
-        Self {
-            uid: value.uid,
-            task_id: value.task_id,
-            mode: Mode::from(value.mode),
-            action: Action::from(value.action),
-            priority: value.priority,
-        }
     }
 }
 
@@ -243,23 +188,20 @@ impl<T: Ord> Binary<T> for Vec<T> {
 fn reload_all_app_from_database() -> Vec<App> {
     let mut inner = Vec::new();
     for uid in reload_app_list_from_database() {
-        let state = query_app_state(uid);
-
         let mut tasks = reload_tasks_of_app_from_database(uid);
         // Ensure that tasks are arranged in order
         tasks.sort();
-        inner.push(App::from_raw(uid, state, tasks));
+        inner.push(App::from_raw(uid, tasks));
     }
-    inner.sort();
     inner
 }
 
 fn reload_tasks_of_app_from_database(uid: u64) -> Vec<Task> {
-    Database::get_instance()
+    RequestDb::get_instance()
         .get_app_task_qos_infos(uid)
         .iter()
         .map(|info| Task {
-            uid: info.uid,
+            uid,
             task_id: info.task_id,
             mode: Mode::from(info.mode),
             action: Action::from(info.action),
@@ -276,18 +218,18 @@ fn reload_app_list_from_database() -> HashSet<u64> {
 }
 
 impl RequestDb {
-    fn get_app_infos(&mut self) -> Vec<u64> {
-        let sql = "SELECT DISTINCT uid FROM request_task ";
+    fn get_app_infos(&self) -> Vec<u64> {
+        let sql = "SELECT DISTINCT uid FROM request_task";
         self.query_integer(sql)
     }
 }
 
+#[cfg(feature = "oh")]
 #[cfg(test)]
 mod ut_manage_scheduler_qos_apps {
     use super::{App, Task};
     use crate::manage::database::RequestDb;
     use crate::task::config::Mode;
-    use crate::task::info::ApplicationState;
     use crate::tests::test_init;
     use crate::utils::get_current_timestamp;
     use crate::utils::task_id_generator::TaskIdGenerator;
@@ -305,10 +247,9 @@ mod ut_manage_scheduler_qos_apps {
 
     #[test]
     fn ut_app_insert() {
-        let mut app = App::new(1, ApplicationState::Foreground);
+        let mut app = App::new(1);
         assert!(app.tasks.is_empty());
         assert_eq!(app.uid, 1);
-        assert_eq!(app.state, ApplicationState::Foreground);
 
         app.insert(Task::new(1, Mode::FrontEnd, 0));
         assert_eq!(app.tasks[0].task_id, 1);
@@ -348,7 +289,7 @@ mod ut_manage_scheduler_qos_apps {
 
     #[test]
     fn ut_app_remove() {
-        let mut app = App::new(1, ApplicationState::Foreground);
+        let mut app = App::new(1);
         for i in 0..5 {
             app.insert(Task::new(i, Mode::FrontEnd, i));
         }
@@ -378,13 +319,6 @@ mod ut_manage_scheduler_qos_apps {
     }
 
     #[test]
-    fn ut_app_partial_ord() {
-        let app1 = App::new(1, ApplicationState::Foreground);
-        let app2 = App::new(2, ApplicationState::Background);
-        assert!(app1 < app2);
-    }
-
-    #[test]
     fn ut_task_partial_ord() {
         let task1 = Task::new(1, Mode::FrontEnd, 0);
         let task2 = Task::new(2, Mode::FrontEnd, 1);
@@ -401,7 +335,7 @@ mod ut_manage_scheduler_qos_apps {
     #[test]
     fn ut_database_app_info() {
         test_init();
-        let mut db = RequestDb::get_instance();
+        let db = RequestDb::get_instance();
         let uid = get_current_timestamp();
 
         for i in 0..10 {

@@ -11,14 +11,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::atomic::{AtomicU32, Ordering};
-use std::time::{SystemTime, UNIX_EPOCH};
-
-use crate::manage::database::Database;
+cfg_oh! {
+    use std::sync::atomic::{AtomicU32, Ordering};
+    use std::time::{SystemTime, UNIX_EPOCH};
+    use crate::manage::database::RequestDb;
+}
 
 pub(crate) struct TaskIdGenerator;
 
 impl TaskIdGenerator {
+    #[cfg(feature = "oh")]
     pub(crate) fn generate() -> u32 {
         loop {
             debug!("generate task_id");
@@ -30,9 +32,13 @@ impl TaskIdGenerator {
                     ID.fetch_add(1, Ordering::Relaxed)
                 }
             };
-            if !Database::get_instance().contains_task(task_id) {
+            if !RequestDb::get_instance().contains_task(task_id) {
                 return task_id;
             }
         }
+    }
+    #[cfg(not(feature = "oh"))]
+    pub(crate) fn generate() -> u32 {
+        rand::random()
     }
 }

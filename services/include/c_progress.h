@@ -16,8 +16,6 @@
 #ifndef C_PROGRESS_H
 #define C_PROGRESS_H
 
-#include <stdint.h>
-
 #include <cstdint>
 #include <string>
 

@@ -17,13 +17,13 @@
 #define REQUEST_CERT_MGR_ADAPTER
 
 #include <securec.h>
-#include <stdint.h>
 
 #include <cstdint>
 #include <vector>
 
 #include "cert_manager_api.h"
 #include "cm_type.h"
+
 
 struct CRequestCert {
     uint32_t size;

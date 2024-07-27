@@ -13,50 +13,44 @@
 
 use std::mem::MaybeUninit;
 
-use super::AppStateManagerTx;
+use super::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
-use crate::task::info::ApplicationState;
 
 pub(crate) struct AppStateListener {
     client_manager: ClientManagerEntry,
-    app_state_manager: AppStateManagerTx,
+    task_manager: TaskManagerTx,
 }
 
 static mut APP_STATE_LISTENER: MaybeUninit<AppStateListener> = MaybeUninit::uninit();
 
 impl AppStateListener {
-    pub(crate) fn init(client_manager: ClientManagerEntry, app_state_manager: AppStateManagerTx) {
+    pub(crate) fn init(client_manager: ClientManagerEntry, task_manager: TaskManagerTx) {
         info!("AppStateListener prepares to be inited");
         unsafe {
             APP_STATE_LISTENER.write(AppStateListener {
                 client_manager,
-                app_state_manager,
+                task_manager,
             });
-            RegisterAPPStateCallback(app_state_change_callback);
-            RegisterProcessStateCallback(process_state_change_callback);
+            #[cfg(feature = "oh")]
+            {
+                RegisterAPPStateCallback(app_state_change_callback);
+                RegisterProcessStateCallback(process_state_change_callback);
+            }
         }
-
         info!("AppStateListener is inited");
     }
 }
 
-extern "C" fn app_state_change_callback(uid: i32, state: i32, pid: i32) {
-    info!(
-        "Receives app state change callback, uid is {}, pid is {}, state is {}",
-        uid, pid, state
-    );
-    let state = match state {
-        2 => ApplicationState::Foreground,
-        4 => ApplicationState::Background,
-        5 => ApplicationState::Terminated,
-        _ => return,
-    };
+extern "C" fn app_state_change_callback(uid: i32, state: i32, _pid: i32) {
+    if state != 2 {
+        return;
+    }
 
     unsafe {
         APP_STATE_LISTENER
             .assume_init_ref()
-            .app_state_manager
-            .change_app_state(uid as u64, state)
+            .task_manager
+            .notify_foreground_app_change(uid as u64)
     };
 }
 

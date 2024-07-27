@@ -21,13 +21,12 @@ use std::time::{SystemTime, UNIX_EPOCH};
 cfg_oh! {
     pub(crate) use ffi::RequestTaskMsg;
     pub(crate) mod url_policy;
-    pub(crate) mod task_id_generator;
+    pub(crate) use ffi::GetTopUid;
 }
 
+pub(crate) mod task_id_generator;
 use ylong_runtime::sync::oneshot::Receiver;
 use ylong_runtime::task::JoinHandle;
-
-use crate::task::info::ApplicationState;
 
 pub(crate) struct Recv<T> {
     rx: Receiver<T>,
@@ -97,38 +96,6 @@ pub(crate) fn runtime_spawn<F: Future<Output = ()> + Send + Sync + 'static>(
     ylong_runtime::spawn(Box::into_pin(
         Box::new(fut) as Box<dyn Future<Output = ()> + Send + Sync>
     ))
-}
-
-#[cfg(feature = "oh")]
-pub(crate) fn query_app_state(uid: u64) -> ApplicationState {
-    let top_uid = query_top_uid();
-    match top_uid {
-        Some(top_uid) => {
-            if top_uid == uid {
-                ApplicationState::Foreground
-            } else {
-                ApplicationState::Background
-            }
-        }
-        None => ApplicationState::Foreground,
-    }
-}
-
-#[cfg(feature = "oh")]
-fn query_top_uid() -> Option<u64> {
-    let mut uid = 0;
-    for i in 0..10 {
-        let ret = ffi::GetTopUid(&mut uid);
-        if ret != 0 || uid == 0 {
-            error!("GetTopUid failed, ret: {} retry time: {}", ret, i);
-            std::thread::sleep(std::time::Duration::from_millis(500));
-        } else {
-            debug!("GetTopUid ok: {}", uid);
-            return Some(uid as u64);
-        }
-    }
-    error!("GetTopUid failed");
-    None
 }
 
 #[cfg(feature = "oh")]
@@ -271,11 +238,5 @@ mod test {
         assert!(!check_permission(
             "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS_EXTENSION"
         ));
-    }
-
-    #[test]
-    fn ut_utils_query_app_state() {
-        test_init();
-        assert_eq!(query_app_state(0), ApplicationState::Foreground);
     }
 }
