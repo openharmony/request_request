@@ -16,6 +16,7 @@ use std::pin::Pin;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::task::{Context, Poll};
+use std::time::Duration;
 
 use ylong_http_client::async_impl::{DownloadOperator, Downloader, Response};
 use ylong_http_client::{ErrorKind, HttpClientError, SpeedLimit, Timeout};
@@ -75,18 +76,17 @@ pub(crate) async fn download(task: Arc<RequestTask>) {
                     TaskPhase::NeedRetry => {
                         continue;
                     }
-                    TaskPhase::UserAbort => {
-                        let state = task.status.lock().unwrap().state;
-                        if state == State::Running {
-                            error!("task {} state is running with user abort", task.task_id());
-                        }
+                    TaskPhase::UserAbort => {}
+                    TaskPhase::NetworkOffline => {
+                        *task.running_result.lock().unwrap() = Some(Err(Reason::NetworkOffline));
                     }
-                    TaskPhase::NetworkOffline => {}
                 },
                 TaskError::Failed(reason) => {
-                    task.change_task_status(State::Failed, reason);
+                    *task.running_result.lock().unwrap() = Some(Err(reason));
                 }
             }
+        } else {
+            *task.running_result.lock().unwrap() = Some(Ok(()));
         }
         break;
     }
@@ -196,7 +196,12 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
                 ErrorKind::Connect | ErrorKind::ConnectionUpgrade => {
                     if task.tries.load(Ordering::SeqCst) < 2 {
                         task.tries.fetch_add(1, Ordering::SeqCst);
-                        return Err(TaskError::Waiting(TaskPhase::NeedRetry));
+                        if !task.network.is_online() {
+                            return Err(TaskError::Waiting(TaskPhase::NetworkOffline));
+                        } else {
+                            ylong_runtime::time::sleep(Duration::from_millis(500)).await;
+                            return Err(TaskError::Waiting(TaskPhase::NeedRetry));
+                        }
                     }
                     info!("task {} retry 3 times", task.task_id());
                     if e.is_dns_error() {
@@ -207,7 +212,9 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
                         return Err(TaskError::Failed(Reason::Tcp));
                     }
                 }
-                ErrorKind::BodyTransfer => return task.handle_body_transfer_error().await,
+                ErrorKind::BodyTransfer => {
+                    return Err(TaskError::Waiting(TaskPhase::NetworkOffline))
+                }
                 _ => {
                     if format!("{}", e).contains("No space left on device") {
                         return Err(TaskError::Failed(Reason::InsufficientSpace));
@@ -224,22 +231,25 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
         let mut guard = task.progress.lock().unwrap();
         guard.extras.clear();
         for (k, v) in response.headers() {
+            if k.to_string() != "etag" && k.to_string() != "last-modified" {
+                continue;
+            }
             if let Ok(value) = v.to_string() {
                 guard.extras.insert(k.to_string().to_lowercase(), value);
             }
         }
     }
     task.get_file_info(&response)?;
+    task.update_progress_in_database();
 
     let mut downloader = build_downloader(task.clone(), response);
 
     if let Err(e) = downloader.download().await {
-        return task.handle_download_error(e).await;
+        return task.handle_download_error(e);
     }
     let file = task.files.get_mut(0).unwrap();
     file.sync_all().await?;
 
-    task.change_task_status(State::Completed, Reason::Default);
     info!("task {} download success", task.task_id());
     Ok(())
 }
@@ -249,7 +259,7 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
 mod test {
     use core::time;
     use std::fs::File;
-    use std::io::{Seek, SeekFrom, Write};
+    use std::io::{SeekFrom, Write};
     use std::sync::Arc;
 
     use once_cell::sync::Lazy;
@@ -257,8 +267,11 @@ mod test {
 
     use crate::config::{Action, ConfigBuilder, Mode, TaskConfig};
     use crate::info::State;
-    use crate::manage::Network;
+    use crate::manage::network::Network;
+    use crate::manage::task_manager::TaskManagerTx;
+    use crate::manage::TaskManager;
     use crate::service::client::{ClientManager, ClientManagerEntry};
+    use crate::service::run_count::{RunCountManager, RunCountManagerEntry};
     use crate::task::download::{download_inner, TaskPhase};
     use crate::task::reason::Reason;
     use crate::task::request_task::{check_config, RequestTask, TaskError};
@@ -268,16 +281,21 @@ mod test {
 
     fn build_task(config: TaskConfig) -> Arc<RequestTask> {
         static CLIENT: Lazy<ClientManagerEntry> = Lazy::new(|| ClientManager::init());
+        static RUN_COUNT_MANAGER: Lazy<RunCountManagerEntry> =
+            Lazy::new(|| RunCountManager::init());
+        static NETWORK: Lazy<Network> = Lazy::new(|| Network::new());
 
+        static TASK_MANGER: Lazy<TaskManagerTx> = Lazy::new(|| {
+            TaskManager::init(RUN_COUNT_MANAGER.clone(), CLIENT.clone(), NETWORK.clone())
+        });
         let (files, client) = check_config(&config).unwrap();
-        let network = Network::new();
 
         let task = Arc::new(RequestTask::new(
             config,
             files,
             client,
             CLIENT.clone(),
-            network,
+            NETWORK.clone(),
         ));
         task.status.lock().unwrap().state = State::Initialized;
         task
@@ -539,7 +557,7 @@ mod test {
             download_inner(task.clone()).await.unwrap();
             let file = File::open(file_path).unwrap();
             assert_eq!(GITEE_FILE_LEN, file.metadata().unwrap().len());
-
+            
             assert_eq!(State::Completed, task.status.lock().unwrap().state);
             assert_eq!(0, task.progress.lock().unwrap().common_data.index);
             assert_eq!(

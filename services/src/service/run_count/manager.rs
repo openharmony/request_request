@@ -13,12 +13,14 @@
 
 use std::collections::HashMap;
 
-use ipc::remote::RemoteObj;
 use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 use ylong_runtime::sync::oneshot::Sender;
+cfg_oh! {
+    use ipc::remote::RemoteObj;
+    use crate::ability::PANIC_INFO;
+}
 
 use super::{RunCountEvent, SubClient, SubKey};
-use crate::ability::PANIC_INFO;
 use crate::error::ErrorCode;
 use crate::utils::runtime_spawn;
 
@@ -34,6 +36,7 @@ impl RunCountManagerEntry {
 
     pub(crate) fn send_event(&self, event: RunCountEvent) -> bool {
         if self.tx.send(event).is_err() {
+            #[cfg(feature = "oh")]
             unsafe {
                 if let Some(e) = PANIC_INFO.as_ref() {
                     error!("Sends RunCountManager event failed {}", e);
@@ -77,7 +80,10 @@ impl RunCountManager {
             };
 
             match recv {
+                #[cfg(feature = "oh")]
                 RunCountEvent::Sub(subkey, obj, tx) => self.handle_sub_runcount(subkey, obj, tx),
+                #[cfg(not(feature = "oh"))]
+                RunCountEvent::Sub(subkey, tx) => self.handle_sub_runcount(subkey, tx),
                 RunCountEvent::Unsub(subkey, tx) => self.handle_unsub_runcount(subkey, tx),
                 RunCountEvent::Change(change) => self.handle_change_runcount(change),
             }
@@ -86,10 +92,20 @@ impl RunCountManager {
         }
     }
 
-    fn handle_sub_runcount(&mut self, subkey: SubKey, obj: RemoteObj, tx: Sender<ErrorCode>) {
+    fn handle_sub_runcount(
+        &mut self,
+        subkey: SubKey,
+        #[cfg(feature = "oh")] obj: RemoteObj,
+        tx: Sender<ErrorCode>,
+    ) {
         debug!("handle sub runcount in");
-        let subclient = SubClient::new(obj);
 
+        let subclient = SubClient::new(
+            #[cfg(feature = "oh")]
+            obj,
+        );
+
+        #[cfg(feature = "oh")]
         subclient.notify_runcount(self.runcount);
         if let std::collections::hash_map::Entry::Vacant(e) = self.remotes.entry(subkey) {
             e.insert(subclient);

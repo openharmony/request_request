@@ -213,16 +213,20 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
         if let Err(e) = upload_inner(task.clone()).await {
             match e {
                 TaskError::Failed(reason) => {
-                    task.change_task_status(State::Failed, reason);
+                    *task.running_result.lock().unwrap() = Some(Err(reason));
                 }
                 TaskError::Waiting(phase) => match phase {
                     TaskPhase::NeedRetry => {
                         continue;
                     }
                     TaskPhase::UserAbort => {}
-                    TaskPhase::NetworkOffline => {}
+                    TaskPhase::NetworkOffline => {
+                        task.change_task_status(State::Failed, Reason::NetworkOffline);
+                    }
                 },
             }
+        } else {
+            *task.running_result.lock().unwrap() = Some(Ok(()));
         }
         break;
     }
@@ -262,7 +266,6 @@ async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
         task.notify_header_receive();
     }
 
-    task.change_task_status(State::Completed, Reason::Default);
     info!("task {} upload success", task.task_id());
     Ok(())
 }
@@ -298,6 +301,8 @@ where
     match response.as_ref() {
         Ok(response) => {
             let status_code = response.status();
+            #[cfg(feature = "oh")]
+            task.notify_response(response);
             info!(
                 "task {} get http response code {}",
                 task.conf.common_data.task_id, status_code,
@@ -340,7 +345,9 @@ where
                         return Err(TaskError::Failed(Reason::Tcp));
                     }
                 }
-                ErrorKind::BodyTransfer => return task.handle_body_transfer_error().await,
+                ErrorKind::BodyTransfer => {
+                    return Err(TaskError::Waiting(TaskPhase::NetworkOffline))
+                }
                 ErrorKind::UserAborted => return Err(TaskError::Waiting(TaskPhase::UserAbort)),
                 _ => {
                     if format!("{}", e).contains("No space left on device") {
@@ -368,23 +375,33 @@ mod test {
 
     use crate::config::{Action, ConfigBuilder, Mode, TaskConfig};
     use crate::info::State;
-    use crate::manage::Network;
+    use crate::manage::network::Network;
+    use crate::manage::task_manager::TaskManagerTx;
+    use crate::manage::TaskManager;
     use crate::service::client::{ClientManager, ClientManagerEntry};
-    use crate::task::request_task::{check_config, RequestTask, TaskError, TaskPhase};
+    use crate::service::run_count::{RunCountManager, RunCountManagerEntry};
+    use crate::task::request_task::{check_config, RequestTask};
     use crate::task::upload::upload_inner;
-
     const SERVER_ADDR: &str = "127.0.0.1:8989";
 
     fn build_task(config: TaskConfig) -> Arc<RequestTask> {
         static CLIENT: Lazy<ClientManagerEntry> = Lazy::new(|| ClientManager::init());
+        static RUN_COUNT_MANAGER: Lazy<RunCountManagerEntry> =
+            Lazy::new(|| RunCountManager::init());
+        static NETWORK: Lazy<Network> = Lazy::new(|| Network::new());
+
+        static TASK_MANGER: Lazy<TaskManagerTx> = Lazy::new(|| {
+            TaskManager::init(RUN_COUNT_MANAGER.clone(), CLIENT.clone(), NETWORK.clone())
+        });
+
         let (files, client) = check_config(&config).unwrap();
-        let network = Network::new();
+
         let task = Arc::new(RequestTask::new(
             config,
             files,
             client,
             CLIENT.clone(),
-            network,
+            NETWORK.clone(),
         ));
         task.status.lock().unwrap().state = State::Initialized;
         task

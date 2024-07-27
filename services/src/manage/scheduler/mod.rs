@@ -13,29 +13,28 @@
 
 mod qos;
 mod queue;
-
-use std::future::Future;
-use std::pin::Pin;
+pub(crate) mod state;
 use std::sync::Arc;
-
+mod sql;
 use qos::Qos;
-use queue::{NotifyTask, RunningQueue};
+use queue::RunningQueue;
+use state::sql::SqlList;
 
-use super::app_state::AppStateManagerTx;
-use super::Network;
-use crate::ability::SYSTEM_CONFIG_MANAGER;
+use super::network::Network;
 use crate::error::ErrorCode;
-use crate::manage::database::Database;
+use crate::manage::database::RequestDb;
 use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::qos::{QosChanges, RssCapacity};
 use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
-use crate::service::runcount::RunCountManagerEntry;
-use crate::task::config::{Action, Mode};
+use crate::service::run_count::RunCountManagerEntry;
+use crate::task::config::Action;
 use crate::task::ffi::CUpdateStateInfo;
-use crate::task::info::{ApplicationState, State};
+use crate::task::info::State;
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
+#[cfg(feature = "oh")]
+use crate::utils::publish_state_change_event;
 
 // Scheduler 的基本处理逻辑如下：
 // 1. Scheduler 维护一个当前所有 运行中 和
@@ -55,40 +54,41 @@ use crate::task::request_task::RequestTask;
 pub(crate) struct Scheduler {
     qos: Qos,
     running_queue: RunningQueue,
-    app_state_manager: AppStateManagerTx,
     client_manager: ClientManagerEntry,
-    network: Network,
+    state_handler: state::Handler,
 }
 
 impl Scheduler {
     pub(crate) fn init(
         tx: TaskManagerTx,
         runcount_manager: RunCountManagerEntry,
-        app_state_manager: AppStateManagerTx,
         client_manager: ClientManagerEntry,
         network: Network,
     ) -> Scheduler {
+        let mut state_handler = state::Handler::new(network.clone(), tx.clone());
+        let sql_list = state_handler.init();
+        let db = RequestDb::get_instance();
+        for sql in sql_list {
+            if let Err(e) = db.execute(&sql) {
+                error!("TaskManager update network failed {:?}", e);
+            };
+        }
+
         Self {
             qos: Qos::new(),
             running_queue: RunningQueue::new(
-                tx,
+                tx.clone(),
                 runcount_manager,
-                app_state_manager.clone(),
                 client_manager.clone(),
-                network.clone(),
+                network,
             ),
-            app_state_manager,
             client_manager,
-            network,
+            state_handler,
         }
     }
 
     pub(crate) fn tasks(&self) -> impl Iterator<Item = &Arc<RequestTask>> {
         self.running_queue.tasks()
-    }
-
-    pub(crate) fn get_task(&self, uid: u64, task_id: u32) -> Option<&Arc<RequestTask>> {
-        self.running_queue.get_task(uid, task_id)
     }
 
     pub(crate) fn running_tasks(&self) -> usize {
@@ -99,208 +99,261 @@ impl Scheduler {
         self.running_queue.dump_tasks();
     }
 
-    pub(crate) async fn start_task(&mut self, uid: u64, task_id: u32) -> ErrorCode {
-        let database = Database::get_instance();
-        if let Some(task) = database.get_task_qos_info(uid, task_id) {
-            let action = Action::from(task.action);
-            let task_state = State::from(task.state);
-            let app_state = self.app_state_manager.get_app_state(uid).await;
-            let raw_state = app_state.state();
-            if task_state == State::Initialized
-                || ((task_state == State::Failed || task_state == State::Stopped)
-                    && action == Action::Download)
-            {
-                if Mode::from(task.mode) != Mode::FrontEnd
-                    || raw_state == ApplicationState::Foreground
-                {
-                    let changes = self.qos.start_task(uid, raw_state, task);
-                    self.reschedule(changes).await;
-                } else {
-                    info!("task {} started, waiting for app state", task_id);
-                    // to insert app, further optimization will be carried out in the future
-                    self.qos.apps.insert_task(uid, raw_state, task);
+    pub(crate) fn restore_all_tasks(&mut self) {
+        info!("Reschedule tasks restore all tasks");
+        // Reschedule tasks based on the current `QOS` status.
+        let changes = self.qos.reschedule(Action::Any, &self.state_handler);
+        self.reschedule(changes);
+    }
+
+    pub(crate) fn start_task(&mut self, uid: u64, task_id: u32) -> Result<(), ErrorCode> {
+        let database = RequestDb::get_instance();
+        database.change_status(task_id, State::Running)?;
+
+        if !self.check_config_satisfy(task_id)? {
+            return Ok(());
+        };
+
+        let qos_info = database
+            .get_task_qos_info(task_id)
+            .ok_or(ErrorCode::TaskNotFound)?;
+        let changes = self.qos.start_task(uid, qos_info, &self.state_handler);
+        self.reschedule(changes);
+        Ok(())
+    }
+
+    pub(crate) fn resume_task(&mut self, uid: u64, task_id: u32) -> Result<(), ErrorCode> {
+        let database = RequestDb::get_instance();
+        database.change_status(task_id, State::Retrying)?;
+
+        if !self.check_config_satisfy(task_id)? {
+            return Ok(());
+        };
+        let info = database
+            .get_task_info(task_id)
+            .ok_or(ErrorCode::TaskNotFound)?;
+
+        let changes = self
+            .qos
+            .start_task(uid, info.qos_info(), &self.state_handler);
+
+        self.reschedule(changes);
+
+        Ok(())
+    }
+
+    pub(crate) fn pause_task(&mut self, uid: u64, task_id: u32) -> Result<(), ErrorCode> {
+        let database = RequestDb::get_instance();
+        database.change_status(task_id, State::Paused)?;
+
+        if let Some(qos_changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
+            self.reschedule(qos_changes);
+        }
+        Ok(())
+    }
+
+    pub(crate) fn remove_task(&mut self, uid: u64, task_id: u32) -> Result<(), ErrorCode> {
+        let database = RequestDb::get_instance();
+        database.change_status(task_id, State::Removed)?;
+        let info = database
+            .get_task_info(task_id)
+            .ok_or(ErrorCode::TaskNotFound)?;
+
+        Notifier::remove(&self.client_manager, info.build_notify_data());
+
+        if let Some(qos_changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
+            self.reschedule(qos_changes);
+        }
+        Ok(())
+    }
+
+    pub(crate) fn stop_task(&mut self, uid: u64, task_id: u32) -> Result<(), ErrorCode> {
+        let database = RequestDb::get_instance();
+        database.change_status(task_id, State::Stopped)?;
+
+        if let Some(qos_changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
+            self.reschedule(qos_changes);
+        }
+        Ok(())
+    }
+
+    pub(crate) fn task_completed(&mut self, uid: u64, task_id: u32) {
+        info!("Scheduler notify task {} completed", task_id);
+        self.running_queue.task_finish(uid, task_id);
+
+        let database = RequestDb::get_instance();
+        let _ = database.execute(&sql::task_completed(task_id));
+
+        if let Some(info) = database.get_task_info(task_id) {
+            Notifier::complete(&self.client_manager, info.build_notify_data());
+            #[cfg(feature = "oh")]
+            let _ = publish_state_change_event(
+                info.bundle.as_str(),
+                info.common_data.task_id,
+                State::Completed.repr as i32,
+            );
+        }
+
+        if let Some(changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
+            self.reschedule(changes);
+        }
+
+        if let Some(changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
+            self.reschedule(changes);
+        }
+    }
+
+    pub(crate) fn task_cancel(&mut self, uid: u64, task_id: u32) {
+        info!("Scheduler notify task {} canceled", task_id);
+        self.running_queue.task_finish(uid, task_id);
+
+        let database = RequestDb::get_instance();
+        let Some(info) = database.get_task_info(task_id) else {
+            error!("task {} not found in database", task_id);
+            return;
+        };
+        match State::from(info.progress.common_data.state) {
+            State::Paused => {
+                Notifier::pause(&self.client_manager, info.build_notify_data());
+            }
+            State::Running | State::Retrying => {
+                if !self.running_queue.try_restart(uid, task_id) {
+                    info!("task {} waiting for task limits", task_id);
                     let state_info =
-                        CUpdateStateInfo::new(State::Paused, Reason::AppBackgroundOrTerminate);
-                    database.update_task_state(task_id, &state_info);
-                    self.qos.apps.remove_task(uid, task_id);
+                        CUpdateStateInfo::new(State::Waiting, Reason::RunningTaskMeetLimits);
+                    if !RequestDb::get_instance().update_task_state(task_id, &state_info) {
+                        error!("{} update_task_state error", task_id);
+                    }
                 }
-                return ErrorCode::ErrOk;
             }
-            return ErrorCode::TaskStateErr;
-        }
-        ErrorCode::TaskNotFound
-    }
-
-    pub(crate) async fn resume_task(
-        &mut self,
-        uid: u64,
-        task_id: u32,
-        app_state_manager: AppStateManagerTx,
-    ) -> ErrorCode {
-        let database = Database::get_instance();
-        if let Some(task) = database.get_task_qos_info(uid, task_id) {
-            let task_state = State::from(task.state);
-            let app_state = app_state_manager.get_app_raw_state(uid).await;
-            if task_state == State::Paused {
-                let changes = self.qos.start_task(uid, app_state, task);
-                self.reschedule(changes).await;
-                return ErrorCode::ErrOk;
+            state => {
+                info!("task {} cancel with state {:?}", task_id, state);
             }
-            return ErrorCode::TaskStateErr;
         }
-        ErrorCode::TaskNotFound
     }
 
-    pub(crate) async fn pause_task(&mut self, uid: u64, task_id: u32) -> ErrorCode {
-        self.modify_task_state_by_user(uid, task_id, State::Paused)
-            .await
+    pub(crate) fn task_failed(&mut self, uid: u64, task_id: u32, reason: Reason) {
+        info!("Scheduler notify task {} failed", task_id);
+        self.running_queue.task_finish(uid, task_id);
+
+        let database = RequestDb::get_instance();
+        let _ = database.execute(&sql::task_failed(task_id, reason));
+
+        if let Some(info) = database.get_task_info(task_id) {
+            Notifier::fail(&self.client_manager, info.build_notify_data());
+            #[cfg(feature = "oh")]
+            let _ = publish_state_change_event(
+                info.bundle.as_str(),
+                info.common_data.task_id,
+                State::Failed.repr as i32,
+            );
+        }
+
+        if let Some(changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
+            self.reschedule(changes);
+        }
     }
 
-    pub(crate) async fn remove_task(&mut self, uid: u64, task_id: u32) -> ErrorCode {
-        self.modify_task_state_by_user(uid, task_id, State::Removed)
-            .await
+    pub(crate) fn on_state_change<T, F>(&mut self, f: F, t: T)
+    where
+        F: FnOnce(&mut state::Handler, T) -> Option<SqlList>,
+    {
+        let Some(sql_list) = f(&mut self.state_handler, t) else {
+            return;
+        };
+        let db = RequestDb::get_instance();
+        for sql in sql_list {
+            if let Err(e) = db.execute(&sql) {
+                error!("TaskManager update network failed {:?}", e);
+            };
+        }
+        self.reload_all_tasks();
     }
 
-    pub(crate) async fn stop_task(&mut self, uid: u64, task_id: u32) -> ErrorCode {
-        self.modify_task_state_by_user(uid, task_id, State::Stopped)
-            .await
+    pub(crate) fn reload_all_tasks(&mut self) {
+        let changes = self.qos.reload_all_tasks(&self.state_handler);
+        self.reschedule(changes);
+    }
+
+    pub(crate) fn on_rss_change(&mut self, level: i32) {
+        let new_rss = RssCapacity::new(level);
+        let changes = self.qos.change_rss(new_rss, &self.state_handler);
+        self.reschedule(changes);
+    }
+
+    fn reschedule(&mut self, changes: QosChanges) {
+        info!("{:?}", changes.download);
+        let mut qos_remove_queue = vec![];
+        self.running_queue
+            .reschedule(changes, &mut qos_remove_queue);
+        for (uid, task_id) in qos_remove_queue.iter() {
+            self.qos.apps.remove_task(*uid, *task_id);
+        }
+        if !qos_remove_queue.is_empty() {
+            self.reload_all_tasks();
+        }
+    }
+
+    pub(crate) fn check_config_satisfy(&self, task_id: u32) -> Result<bool, ErrorCode> {
+        let database = RequestDb::get_instance();
+        let config = database
+            .get_task_config(task_id)
+            .ok_or(ErrorCode::TaskNotFound)?;
+
+        if !config.satisfy_network(self.state_handler.network()) {
+            info!("task {} started, waiting for network", task_id);
+            let state_info = CUpdateStateInfo::new(State::Waiting, Reason::UnsupportedNetworkType);
+            database.update_task_state(task_id, &state_info);
+            return Ok(false);
+        }
+
+        if !config.satisfy_foreground(self.state_handler.top_uid()) {
+            info!("task {} started, waiting for app state", task_id);
+            let state_info =
+                CUpdateStateInfo::new(State::Waiting, Reason::AppBackgroundOrTerminate);
+            database.update_task_state(task_id, &state_info);
+            return Ok(false);
+        }
+        Ok(true)
     }
 
     pub(crate) fn clear_timeout_tasks(&mut self) {
         self.running_queue.clear_timeout_tasks();
     }
-
-    pub(crate) async fn restore_all_tasks(&mut self) {
-        info!("Reschedule tasks restore all tasks");
-        // Reschedule tasks based on the current `QOS` status.
-        let changes = self.qos.reschedule(Action::Any);
-        self.reschedule(changes).await;
-    }
-
-    pub(crate) async fn finish_task(&mut self, uid: u64, task_id: u32) {
-        let changes = self.qos.finish_task(uid, task_id);
-        self.reschedule(changes).await;
-    }
-
-    pub(crate) fn on_network_offline(&mut self) {
-        self.running_queue.clear();
-    }
-
-    pub(crate) async fn on_network_online(&mut self) {
-        self.running_queue.clear();
-        self.reload_all_tasks().await;
-    }
-
-    pub(crate) async fn on_app_state_change(&mut self, uid: u64, state: ApplicationState) {
-        let changes = self.qos.change_app_state(uid, state);
-        self.reschedule(changes).await;
-    }
-
-    pub(crate) fn reload_all_tasks<'a>(
-        &'a mut self,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + Sync + 'a>> {
-        let changes = self.qos.reload_all_tasks();
-        Box::pin(async move {
-            self.reschedule(changes).await;
-        })
-    }
-
-    pub(crate) async fn on_user_change(&mut self) {
-        self.reload_all_tasks().await;
-    }
-
-    pub(crate) async fn on_rss_change(&mut self, level: i32) {
-        let new_rss = RssCapacity::new(level);
-        let changes = self.qos.change_rss(new_rss);
-        self.reschedule(changes).await;
-    }
-
-    async fn reschedule(&mut self, changes: QosChanges) {
-        let mut qos_remove_queue = vec![];
-        self.running_queue
-            .reschedule(changes, &mut qos_remove_queue)
-            .await;
-        for (uid, task_id) in qos_remove_queue.iter() {
-            self.qos.apps.remove_task(*uid, *task_id);
-        }
-        if !qos_remove_queue.is_empty() {
-            self.reload_all_tasks().await;
-        }
-    }
 }
 
-impl Scheduler {
-    async fn modify_task_state_by_user(
-        &mut self,
-        uid: u64,
-        task_id: u32,
-        state: State,
-    ) -> ErrorCode {
-        // If the task currently exists in the running queue, simply manipulate
-        // the task status directly.
-        if self
-            .running_queue
-            .modify_task_state_by_user(uid, task_id, state)
-            == ErrorCode::ErrOk
-        {
-            let _ = self.qos.finish_task(uid, task_id);
-            return ErrorCode::ErrOk;
-        }
-
-        // If the task is not in the running queue but exists in qos, we need to
-        // update task status in the database.
-        if self.qos.contains_task(uid, task_id) {
-            // If task is not running, we need not to reschedule the running queue,
-            // also we need to delete it from qos.
-            let _ = self.qos.finish_task(uid, task_id);
-        }
-        let database = Database::get_instance();
-        let mut info = match database.get_task_info(task_id) {
-            Some(info) => info,
-            None => return ErrorCode::TaskNotFound,
-        };
-        if state == State::Removed {
-            if State::from(info.progress.common_data.state) == State::Removed {
-                error!(
-                    "TaskManager remove a task, uid:{}, task_id:{} removed already",
-                    uid, task_id
-                );
-                return ErrorCode::TaskNotFound;
+impl RequestDb {
+    fn change_status(&self, task_id: u32, state: State) -> Result<(), ErrorCode> {
+        let info = RequestDb::get_instance()
+            .get_task_info(task_id)
+            .ok_or(ErrorCode::TaskNotFound)?;
+        if info.progress.common_data.state == state.repr {
+            if state == State::Removed {
+                return Err(ErrorCode::TaskNotFound);
+            } else {
+                return Err(ErrorCode::TaskStateErr);
             }
-            debug!(
-                "TaskManager remove a task, uid:{}, task_id:{} success",
-                uid, task_id
-            );
-            let state_info = CUpdateStateInfo::new(State::Removed, Reason::UserOperation);
-            database.update_task_state(task_id, &state_info);
-            info.progress.common_data.state = State::Removed.repr;
-            let notify_data = info.build_notify_data();
-            Notifier::remove(&self.client_manager, notify_data);
-            return ErrorCode::ErrOk;
         }
-
-        let system_config = unsafe { SYSTEM_CONFIG_MANAGER.assume_init_ref().system_config() };
-        let task = match database
-            .get_task(
-                task_id,
-                system_config,
-                self.network.clone(),
-                &self.app_state_manager,
-                &self.client_manager,
-            )
-            .await
-        {
-            Ok(task) => task,
-            Err(e) => return e,
+        let sql = match state {
+            State::Paused => sql::pause_task(task_id),
+            State::Running => sql::start_task(task_id),
+            State::Stopped => sql::stop_task(task_id),
+            State::Removed => sql::remove_task(task_id),
+            State::Retrying => sql::resume_task(task_id),
+            _ => return Err(ErrorCode::Other),
         };
 
-        // TODO: do not use get_task, only check and change database.
-        let code = task.change_task_status(state, Reason::UserOperation);
-        if code != ErrorCode::ErrOk {
-            return code;
+        RequestDb::get_instance()
+            .execute(&sql)
+            .map_err(|_| ErrorCode::SystemApi)?;
+
+        let info = RequestDb::get_instance()
+            .get_task_info(task_id)
+            .ok_or(ErrorCode::SystemApi)?;
+        if info.progress.common_data.state != state.repr {
+            Err(ErrorCode::TaskStateErr)
+        } else {
+            Ok(())
         }
-        // Here we use the `drop` method of `NotifyTask` to notify apps.
-        let _ = NotifyTask::new(task);
-        ErrorCode::ErrOk
     }
 }

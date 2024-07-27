@@ -19,9 +19,10 @@ use std::sync::{Arc, Mutex};
 use hisysevent::{build_number_param, write, EventType};
 use system_ability_fwk::ability::{Ability, Handler};
 
+use crate::manage::app_state::AppStateListener;
 use crate::manage::{account, SystemConfigManager, TaskManager};
 use crate::service::client::ClientManager;
-use crate::service::runcount::RunCountManager;
+use crate::service::run_count::RunCountManager;
 pub(crate) static mut PANIC_INFO: Option<String> = None;
 use crate::manage::events::TaskManagerEvent;
 use crate::manage::task_manager::TaskManagerTx;
@@ -90,7 +91,7 @@ impl RequestAbility {
 
         info!("task_manager init succeed");
 
-        info!("network_change_listener init succeed");
+        AppStateListener::init(client_manger.clone(), task_manager.clone());
 
         let stub = RequestServiceStub::new(
             handler.clone(),

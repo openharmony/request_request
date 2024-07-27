@@ -16,7 +16,6 @@
 #include "c_request_database.h"
 
 #include <securec.h>
-#include <stdint.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -25,10 +24,12 @@
 #include <vector>
 
 #include "base/request/request/common/include/log.h"
+#include "c_task_info.h"
 #include "cxx.h"
 #include "log.h"
-#include "manage/events/search.rs.h"
+#include "manage/database.rs.h"
 #include "manage/network.rs.h"
+#include "manage/query.rs.h"
 #include "rdb_errno.h"
 #include "task/config.rs.h"
 #include "task/info.rs.h"
@@ -118,8 +119,9 @@ int RequestDataBase::QueryInteger(rust::str sql, rust::vec<rust::i64> &res)
 
     queryRet->GetRowCount(rowCount);
     for (int i = 0; i < rowCount; i++) {
-        if (queryRet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
-            REQUEST_HILOGE("result set go to %{public}d row failed", i);
+        auto code = queryRet->GoToRow(i);
+        if (code != OHOS::NativeRdb::E_OK) {
+            REQUEST_HILOGE("result set go to %{public}d row failed %{public}d", i, code);
             return -1;
         }
         int64_t value = 0;
@@ -164,6 +166,72 @@ bool RequestDataBase::Delete(const OHOS::NativeRdb::AbsRdbPredicates &predicates
     int ret = store_->Delete(deletedRows, predicates);
     REQUEST_HILOGD("Request databases delete rows, rows: %{public}d, ret: %{public}d", ret, deletedRows);
     return ret == OHOS::NativeRdb::E_OK;
+}
+
+int RequestDataBase::GetAppTaskQosInfos(rust::str sql, rust::vec<TaskQosInfo> &res)
+{
+    if (store_ == nullptr) {
+        return -1;
+    }
+    auto queryRet = store_->QueryByStep(std::string(sql));
+    int rowCount = 0;
+
+    if (queryRet == nullptr || queryRet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("GetRunningTasksArray result set is nullptr or get row count failed");
+        return -1;
+    }
+
+    if (rowCount == 0) {
+        return -1;
+    }
+
+    for (auto i = 0; i < rowCount; i++) {
+        if (queryRet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
+            REQUEST_HILOGE("GetRunningTasksArray result set go to %{public}d row failed", i);
+            return -1;
+        }
+        int taskId, action, mode, state, priority;
+        queryRet->GetInt(0, taskId);   // Line 0 is 'task_id'
+        queryRet->GetInt(1, action);   // Line 1 is 'action'
+        queryRet->GetInt(2, mode);     // Line 2 is 'mode'
+        queryRet->GetInt(3, state);    // Line 3 is 'state'
+        queryRet->GetInt(4, priority); // Line 4 is 'priority'
+        res.push_back(TaskQosInfo{ taskId, action, mode, state, priority });
+    }
+    return 0;
+}
+
+int RequestDataBase::GetTaskQosInfo(rust::str sql, TaskQosInfo &res)
+{
+    if (store_ == nullptr) {
+        return -1;
+    }
+    auto queryRet = store_->QueryByStep(std::string(sql));
+    int rowCount = 0;
+
+    if (queryRet == nullptr || queryRet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("GetTaskQosInfo result set is nullptr or get row count failed");
+        return -1;
+    }
+
+    if (rowCount == 0) {
+        return -1;
+    }
+
+    if (queryRet->GoToRow(0) != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("GetTaskQosInfo result set go to 0 row failed");
+        return -1;
+    }
+    int action, mode, state, priority;
+    queryRet->GetInt(0, action);   // Line 0 is 'action'
+    queryRet->GetInt(1, mode);     // Line 1 is 'mode'
+    queryRet->GetInt(2, state);    // Line 2 is 'state'
+    queryRet->GetInt(3, priority); // Line 3 is 'priority'
+    res.action = action;
+    res.mode = mode;
+    res.state = state;
+    res.priority = priority;
+    return 0;
 }
 
 int RequestDBOpenCallback::OnCreate(OHOS::NativeRdb::RdbStore &store)
@@ -907,12 +975,17 @@ bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo)
     REQUEST_HILOGD("update request_task");
     OHOS::NativeRdb::ValuesBucket values;
     values.PutLong("mtime", updateInfo->mtime);
-    values.PutInt("reason", updateInfo->reason);
     values.PutLong("tries", updateInfo->tries);
-    if (!WriteUpdateData(values, updateInfo)) {
-        REQUEST_HILOGE("update blob data failed");
-        return false;
-    }
+    std::vector<uint8_t> eachFileStatusBlob =
+        CEachFileStatusToBlob(updateInfo->eachFileStatusPtr, updateInfo->eachFileStatusLen);
+    // write to insertValues
+    values.PutString("mime_type", std::string(updateInfo->mimeType.cStr, updateInfo->mimeType.len));
+    values.PutLong("idx", updateInfo->progress.commonData.index);
+    values.PutLong("total_processed", updateInfo->progress.commonData.totalProcessed);
+    values.PutString("sizes", std::string(updateInfo->progress.sizes.cStr, updateInfo->progress.sizes.len));
+    values.PutString("processed", std::string(updateInfo->progress.processed.cStr, updateInfo->progress.processed.len));
+    values.PutString("extras", std::string(updateInfo->progress.extras.cStr, updateInfo->progress.extras.len));
+    values.PutBlob("each_file_status", eachFileStatusBlob);
 
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
@@ -1064,128 +1137,4 @@ CTaskConfig *QueryTaskConfig(uint32_t taskId)
     CTaskConfig *cTaskConfig = new CTaskConfig;
     BuildCTaskConfig(cTaskConfig, taskConfig);
     return cTaskConfig;
-}
-
-void RequestDBRemoveRecordsFromTime(uint64_t time)
-{
-    OHOS::NativeRdb::RdbPredicates predicates("request_task");
-    predicates.LessThan("mtime", std::to_string(time));
-
-    if (OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME).Delete(predicates)) {
-        REQUEST_HILOGI("request_task table deletes records before one week success");
-        return;
-    }
-    REQUEST_HILOGE("request_task table deletes records before one week failed");
-    return;
-}
-
-void UpdateTaskStateOnAppStateChange(uint64_t uid, uint8_t appState)
-{
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    if (appState == 2) { // 2 means ApplicationState::Foreground
-        rdbPredicates.EqualTo("uid", std::to_string(uid));
-        rdbPredicates.EqualTo("mode", static_cast<uint8_t>(OHOS::Request::Mode::FrontEnd));
-        rdbPredicates.EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Paused));
-        rdbPredicates.EqualTo("reason", static_cast<uint8_t>(6)); // 6 means Reason::AppBackgroundOrTerminate.
-
-        OHOS::NativeRdb::ValuesBucket values;
-        values.PutInt("state", static_cast<uint8_t>(OHOS::Request::State::Waiting));
-        values.PutInt("reason", static_cast<uint8_t>(4)); // 4 means Reason::RunningTaskMeetLimits.
-
-        if (!OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME).Update(values, rdbPredicates)) {
-            REQUEST_HILOGE("Change request_task state to WaitingForQos on app state change to foreground failed");
-            return;
-        }
-    } else {
-        rdbPredicates.EqualTo("uid", std::to_string(uid));
-        rdbPredicates.EqualTo("mode", static_cast<uint8_t>(OHOS::Request::Mode::FrontEnd));
-        rdbPredicates.EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Waiting));
-        rdbPredicates.EqualTo("reason", static_cast<uint8_t>(4)); // 4 means Reason::RunningTaskMeetLimits.
-
-        OHOS::NativeRdb::ValuesBucket values;
-        values.PutInt("state", static_cast<uint8_t>(OHOS::Request::State::Paused));
-        values.PutInt("reason", static_cast<uint8_t>(6)); // 6 means Reason::AppBackgroundOrTerminate.
-
-        if (!OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME).Update(values, rdbPredicates)) {
-            REQUEST_HILOGE("Change request_task state to WaitingForQos on app state change to background failed");
-            return;
-        }
-    }
-}
-
-void BuildTaskQosInfo(TaskQosInfo *info, std::shared_ptr<OHOS::NativeRdb::ResultSet> set)
-{
-    info->uid = static_cast<uint64_t>(GetLong(set, 0));      // Line 0 is 'uid'
-    info->taskId = static_cast<uint32_t>(GetLong(set, 1));   // Line 1 is 'task_id'
-    info->action = static_cast<uint8_t>(GetInt(set, 2));     // Line 2 is 'action'
-    info->mode = static_cast<uint8_t>(GetInt(set, 3));       // Line 3 is 'mode'
-    info->state = static_cast<uint8_t>(GetInt(set, 4));      // Line 4 is 'state'
-    info->priority = static_cast<uint32_t>(GetLong(set, 5)); // Line 5 is 'priority'
-}
-
-void GetTaskQosInfo(uint64_t uid, uint32_t taskId, TaskQosInfo **info)
-{
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.EqualTo("uid", std::to_string(uid))->And()->EqualTo("task_id", std::to_string(taskId));
-
-    auto resultSet = OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME)
-                         .Query(rdbPredicates, { "uid", "task_id", "action", "mode", "state", "priority" });
-    int rowCount = 0;
-    if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("GetRunningTasksArray result set is nullptr or get row count failed");
-        return;
-    }
-
-    if (resultSet->GoToRow(0) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("GetRunningTasksArray result set go to 0 row failed");
-        return;
-    }
-
-    *info = new TaskQosInfo;
-    BuildTaskQosInfo(*info, resultSet);
-}
-
-void GetAppTaskQosInfos(uint64_t uid, TaskQosInfo **array, size_t *len)
-{
-    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
-    rdbPredicates.EqualTo("uid", std::to_string(uid))
-        ->And()
-        ->BeginWrap()
-        ->BeginWrap()
-        ->EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Waiting))
-        ->And()
-        ->EqualTo("reason", static_cast<uint8_t>(OHOS::Request::Reason::RunningTaskMeetLimits))
-        ->EndWrap()
-        ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Running))
-        ->Or()
-        ->EqualTo("state", static_cast<uint8_t>(OHOS::Request::State::Retrying))
-        ->EndWrap();
-
-    *array = nullptr;
-    *len = 0;
-
-    auto resultSet = OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME)
-                         .Query(rdbPredicates, { "uid", "task_id", "action", "mode", "state", "priority" });
-    int rowCount = 0;
-    if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("GetRunningTasksArray result set is nullptr or get row count failed");
-        return;
-    }
-
-    if (rowCount == 0) {
-        return;
-    }
-
-    *array = new TaskQosInfo[rowCount];
-    *len = rowCount;
-    for (auto i = 0; i < rowCount; i++) {
-        if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
-            REQUEST_HILOGE("GetRunningTasksArray result set go to %{public}d row failed", i);
-            *len = i; // Here `rowCount` can be wrong.
-            return;
-        }
-
-        BuildTaskQosInfo(&(*array)[i], resultSet);
-    }
 }

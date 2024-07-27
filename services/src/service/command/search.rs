@@ -12,9 +12,9 @@
 // limitations under the License.
 
 use ipc::parcel::MsgParcel;
-use ipc::{IpcResult, IpcStatusCode};
+use ipc::IpcResult;
 
-use crate::manage::events::{SearchMethod, TaskFilter, TaskManagerEvent};
+use crate::manage::query::{self, SearchMethod, TaskFilter};
 use crate::service::RequestServiceStub;
 use crate::utils::is_system_api;
 
@@ -50,17 +50,8 @@ impl RequestServiceStub {
             action: action as u8,
             mode: mode as u8,
         };
-        let (event, rx) = TaskManagerEvent::search(filter, method);
-        if !self.task_manager.lock().unwrap().send_event(event) {
-            return Err(IpcStatusCode::Failed);
-        }
-        let ids = match rx.get() {
-            Some(ids) => ids,
-            None => {
-                error!("End Service search, failed: receives ids failed");
-                return Err(IpcStatusCode::Failed);
-            }
-        };
+
+        let ids = query::search(filter, method);
         debug!("End Service search ok: search task ids is {:?}", ids);
         reply.write(&(ids.len() as u32))?;
         for it in ids.iter() {

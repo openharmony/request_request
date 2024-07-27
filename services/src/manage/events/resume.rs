@@ -15,10 +15,11 @@ use crate::error::ErrorCode;
 use crate::manage::TaskManager;
 
 impl TaskManager {
-    pub(crate) async fn resume(&mut self, uid: u64, task_id: u32) -> ErrorCode {
+    pub(crate) fn resume(&mut self, uid: u64, task_id: u32) -> ErrorCode {
         debug!("TaskManager resume, uid:{}, task_id:{}", uid, task_id);
-        self.scheduler
-            .resume_task(uid, task_id, self.app_state_manager.clone())
-            .await
+        match self.scheduler.resume_task(uid, task_id) {
+            Ok(_) => ErrorCode::ErrOk,
+            Err(e) => e,
+        }
     }
 }

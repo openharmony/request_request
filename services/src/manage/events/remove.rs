@@ -15,8 +15,11 @@ use crate::error::ErrorCode;
 use crate::manage::TaskManager;
 
 impl TaskManager {
-    pub(crate) async fn remove(&mut self, uid: u64, task_id: u32) -> ErrorCode {
+    pub(crate) fn remove(&mut self, uid: u64, task_id: u32) -> ErrorCode {
         debug!("TaskManager Remove, uid: {}, task_id: {}", uid, task_id);
-        self.scheduler.remove_task(uid, task_id).await
+        match self.scheduler.remove_task(uid, task_id) {
+            Ok(_) => ErrorCode::ErrOk,
+            Err(e) => e,
+        }
     }
 }

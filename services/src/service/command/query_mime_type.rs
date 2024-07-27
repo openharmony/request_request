@@ -15,7 +15,7 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::manage::events::TaskManagerEvent;
+use crate::manage::query;
 use crate::service::permission::PermissionChecker;
 use crate::service::RequestServiceStub;
 
@@ -39,20 +39,8 @@ impl RequestServiceStub {
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service query mime type: uid is {}", uid);
 
-                let (event, rx) = TaskManagerEvent::query_mime_type(uid, id);
-                if !self.task_manager.lock().unwrap().send_event(event) {
-                    return Err(IpcStatusCode::Failed);
-                }
-                let mime = match rx.get() {
-                    Some(mime) => mime,
-                    None => {
-                        error!(
-                            "End Service query mime type, tid: {}, failed: receive mime failed",
-                            id
-                        );
-                        return Err(IpcStatusCode::Failed);
-                    }
-                };
+                let mime = query::query_mime_type(uid, id);
+
                 debug!("Service query mime type: {}", mime);
                 debug!("End Service query mime type ok: tid: {}", id);
                 reply.write(&(ErrorCode::ErrOk as i32))?;

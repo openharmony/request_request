@@ -15,8 +15,7 @@
 
 #ifndef REQUEST_RUN_COUNT_OBSERVER_H
 #define REQUEST_RUN_COUNT_OBSERVER_H
-#include <stdint.h>
-
+#include <cstdint>
 #include <functional>
 
 namespace OHOS::Request {

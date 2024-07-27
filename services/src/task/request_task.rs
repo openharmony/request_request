@@ -14,26 +14,24 @@
 use std::io::{self, SeekFrom};
 use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Mutex, MutexGuard};
-use std::time::Duration;
 
 use ylong_http_client::async_impl::{Body, Client, Request, RequestBuilder, Response};
 use ylong_http_client::{ErrorKind, HttpClientError};
 use ylong_runtime::io::{AsyncSeekExt, AsyncWriteExt};
 
 cfg_oh! {
-    use crate::manage::app_state::AppState;
-    use crate::manage::database::Database;
     use crate::manage::SystemConfig;
-    use super::info::UpdateInfo;
     use crate::utils::publish_state_change_event;
     use crate::utils::{request_background_notify, RequestTaskMsg};
 }
 
 use super::config::{Mode, Version};
-use super::info::{CommonTaskInfo, State, TaskInfo};
+use super::info::{CommonTaskInfo, State, TaskInfo, UpdateInfo};
 use super::notify::{EachFileStatus, NotifyData, Progress};
 use super::reason::Reason;
 use crate::error::ErrorCode;
+use crate::manage::database::RequestDb;
+use crate::manage::network::Network;
 use crate::manage::notifier::Notifier;
 use crate::service::client::ClientManagerEntry;
 use crate::task::client::build_client;
@@ -41,6 +39,8 @@ use crate::task::config::{Action, TaskConfig};
 use crate::task::files::{AttachedFiles, Files};
 use crate::utils::form_item::FileSpec;
 use crate::utils::get_current_timestamp;
+
+#[allow(unused)]
 const RETRY_INTERVAL: u64 = 200;
 
 #[allow(unused)]
@@ -69,10 +69,9 @@ pub(crate) struct RequestTask {
     pub(crate) upload_counts: AtomicUsize,
     pub(crate) rate_limiting: AtomicU64,
     pub(crate) last_notify: AtomicU64,
-    pub(crate) network: crate::manage::Network,
     pub(crate) client_manager: ClientManagerEntry,
-    #[cfg(feature = "oh")]
-    pub(crate) app_state: AppState,
+    pub(crate) running_result: Mutex<Option<Result<(), Reason>>>,
+    pub(crate) network: Network,
 }
 
 impl RequestTask {
@@ -88,6 +87,7 @@ impl RequestTask {
         &self.conf
     }
 
+    #[allow(unused)]
     // only use for download task
     pub(crate) fn mime_type(&self) -> String {
         self.mime_type.lock().unwrap().clone()
@@ -111,25 +111,15 @@ impl RequestTask {
             info!("task {} speed_limit {}", self.task_id(), limit);
         }
     }
-
-    pub(crate) async fn satisfied(&self) -> bool {
-        if !self.network_online().await || !self.check_network_status() {
-            error!("check network failed, tid: {}", self.task_id());
-            false
-        } else {
-            true
-        }
-    }
 }
 
 impl RequestTask {
     pub(crate) fn new(
         config: TaskConfig,
-        #[cfg(feature = "oh")] app_state: AppState,
         files: AttachedFiles,
         client: Client,
         client_manager: ClientManagerEntry,
-        network: crate::manage::Network,
+        network: Network,
     ) -> RequestTask {
         let file_len = files.files.len();
         let action = config.common_data.action;
@@ -176,20 +166,18 @@ impl RequestTask {
             upload_counts: AtomicUsize::new(0),
             rate_limiting: AtomicU64::new(0),
             last_notify: AtomicU64::new(time),
-            network,
             client_manager,
-            #[cfg(feature = "oh")]
-            app_state,
+            running_result: Mutex::new(None),
+            network,
         }
     }
 
     pub(crate) fn new_by_info(
         config: TaskConfig,
         #[cfg(feature = "oh")] system: SystemConfig,
-        #[cfg(feature = "oh")] app_state: AppState,
         info: TaskInfo,
         client_manager: ClientManagerEntry,
-        network: crate::manage::Network,
+        network: Network,
     ) -> Result<RequestTask, ErrorCode> {
         #[cfg(feature = "oh")]
         let (files, client) = check_config(&config, system)?;
@@ -252,10 +240,9 @@ impl RequestTask {
             upload_counts: AtomicUsize::new(upload_counts),
             rate_limiting: AtomicU64::new(0),
             last_notify: AtomicU64::new(time),
-            network,
             client_manager,
-            #[cfg(feature = "oh")]
-            app_state,
+            running_result: Mutex::new(None),
+            network,
         })
     }
 
@@ -273,71 +260,35 @@ impl RequestTask {
         }
     }
 
-    pub(crate) fn check_network_status(&self) -> bool {
-        if !self.is_satisfied_configuration() {
-            if !(self.conf.version == Version::API10
-                && self.conf.common_data.mode == Mode::BackGround
-                && self.conf.common_data.retry)
-            {
-                self.change_task_status(State::Failed, Reason::UnsupportedNetworkType);
-            } else {
-                self.change_task_status(State::Waiting, Reason::UnsupportedNetworkType);
-            }
-            return false;
-        }
-        true
-    }
-    #[cfg(feature = "oh")]
-    pub(crate) fn check_app_state(&self) -> bool {
-        if self.conf.common_data.mode == Mode::FrontEnd && !self.app_state.is_foreground() {
-            if self.conf.common_data.action == Action::Upload {
-                self.change_task_status(State::Failed, Reason::AppBackgroundOrTerminate);
-            } else if self.conf.common_data.action == Action::Download {
-                self.change_task_status(State::Paused, Reason::AppBackgroundOrTerminate);
-            }
-            false
-        } else {
-            true
-        }
-    }
-
-    pub(crate) async fn network_online(&self) -> bool {
-        if !self.network.is_online() {
-            if self.conf.version == Version::API10
-                && self.conf.common_data.mode == Mode::BackGround
-                && self.conf.common_data.retry
-            {
-                self.change_task_status(State::Waiting, Reason::NetworkOffline);
-            } else {
-                let retry_times = 3;
-                for _ in 0..retry_times {
-                    if self.network.is_online() {
-                        return true;
-                    }
-                    ylong_runtime::time::sleep(Duration::from_millis(RETRY_INTERVAL)).await;
-                }
-                self.change_task_status(State::Failed, Reason::NetworkOffline);
-            }
-            return false;
-        }
-        true
+    pub(crate) fn update_progress_in_database(&self) {
+        let mtime = self.status.lock().unwrap().mtime;
+        let reason = self.status.lock().unwrap().reason;
+        let progress = self.progress.lock().unwrap().clone();
+        let update_info = UpdateInfo {
+            mtime,
+            reason: reason.repr,
+            progress,
+            each_file_status: RequestTask::get_each_file_status_by_code(
+                &self.code.lock().unwrap(),
+                &self.conf.file_specs,
+            ),
+            tries: self.tries.load(Ordering::SeqCst),
+            mime_type: self.mime_type(),
+        };
+        RequestDb::get_instance().update_task(self.task_id(), update_info);
     }
 
     pub(crate) fn prepare_running(&self) {
-        let old_state = self.status.lock().unwrap().state;
         info!(
-            "task {} prepare running, action: {:?}, state :{:?}",
+            "task {} prepare running, action: {:?}",
             self.task_id(),
             self.action(),
-            old_state,
         );
-        #[cfg(feature = "oh")]
-        if old_state == State::Paused {
+
+        if self.status.lock().unwrap().state == State::Retrying {
             let notify_data = self.build_notify_data();
             Notifier::resume(&self.client_manager, notify_data);
         }
-
-        self.change_task_status(State::Running, Reason::Default);
     }
 
     pub(crate) fn build_request_builder(&self) -> Result<RequestBuilder, HttpClientError> {
@@ -497,39 +448,14 @@ impl RequestTask {
         Ok(())
     }
 
-    pub(crate) async fn handle_body_transfer_error(&self) -> Result<(), TaskError> {
-        #[cfg(feature = "oh")]
-        if self.network.check_interval_online().await {
-            return Err(TaskError::Failed(Reason::OthersError));
-        } else {
-            match self.conf.version {
-                Version::API9 => {
-                    if self.conf.common_data.action == Action::Upload {
-                        return Err(TaskError::Failed(Reason::NetworkOffline));
-                    }
-                }
-                Version::API10 => {
-                    if self.conf.common_data.mode == Mode::FrontEnd || !self.conf.common_data.retry
-                    {
-                        return Err(TaskError::Failed(Reason::NetworkOffline));
-                    }
-                }
-            }
-        }
-        Err(TaskError::Waiting(TaskPhase::NetworkOffline))
-    }
-
-    pub(crate) async fn handle_download_error(
-        &self,
-        err: HttpClientError,
-    ) -> Result<(), TaskError> {
+    pub(crate) fn handle_download_error(&self, err: HttpClientError) -> Result<(), TaskError> {
         error!("download err is {:?}", err);
         match err.error_kind() {
             ErrorKind::Timeout => Err(TaskError::Failed(Reason::ContinuousTaskTimeout)),
             // user triggered
             ErrorKind::UserAborted => Err(TaskError::Waiting(TaskPhase::UserAbort)),
             ErrorKind::BodyTransfer | ErrorKind::BodyDecode => {
-                self.handle_body_transfer_error().await
+                Err(TaskError::Waiting(TaskPhase::NetworkOffline))
             }
             _ => {
                 if format!("{}", err).contains("No space left on device") {
@@ -644,70 +570,9 @@ impl RequestTask {
         } else {
             self.set_code(index, to_reason, false);
         }
-        #[cfg(feature = "oh")]
-        {
-            let codes_guard = self.code.lock().unwrap();
-            let update_info = UpdateInfo {
-                mtime: task_status.mtime,
-                reason: task_status.reason.repr,
-                progress: progress.clone(),
-                each_file_status: RequestTask::get_each_file_status_by_code(
-                    &codes_guard,
-                    &self.conf.file_specs,
-                ),
-                tries: self.tries.load(Ordering::SeqCst),
-                mime_type: self.mime_type.lock().unwrap().clone(),
-            };
-            Database::get_instance().update_task(self.task_id(), update_info);
-        }
-
         ErrorCode::ErrOk
     }
 
-    #[cfg(feature = "oh")]
-    pub(crate) fn state_change_notify(&self) {
-        let state = self.status.lock().unwrap().state;
-        let total_processed = self.progress.lock().unwrap().common_data.total_processed;
-
-        if state == State::Initialized
-            || (total_processed == 0 && (state == State::Running || state == State::Retrying))
-        {
-            return;
-        }
-
-        debug!("state change notification");
-        let notify_data = self.build_notify_data();
-
-        Notifier::progress(&self.client_manager, notify_data.clone());
-        match state {
-            State::Completed => {
-                let _ = publish_state_change_event(
-                    self.conf.bundle.as_str(),
-                    self.conf.common_data.task_id,
-                    State::Completed.repr as i32,
-                );
-
-                Notifier::complete(&self.client_manager, notify_data)
-            }
-            State::Failed => {
-                let _ = publish_state_change_event(
-                    self.conf.bundle.as_str(),
-                    self.conf.common_data.task_id,
-                    State::Failed.repr as i32,
-                );
-
-                Notifier::fail(&self.client_manager, notify_data)
-            }
-            State::Paused | State::Waiting => Notifier::pause(&self.client_manager, notify_data),
-            State::Removed => {
-                Notifier::remove(&self.client_manager, notify_data);
-            }
-            _ => {}
-        }
-        self.background_notify();
-    }
-
-    #[cfg(feature = "oh")]
     pub(crate) fn state_change_notify_of_no_run(
         client_manager: &ClientManagerEntry,
         notify_data: NotifyData,
@@ -723,6 +588,7 @@ impl RequestTask {
         Notifier::progress(client_manager, notify_data.clone());
         match state {
             State::Completed => {
+                #[cfg(feature = "oh")]
                 let _ = publish_state_change_event(
                     notify_data.bundle.as_str(),
                     notify_data.task_id,
@@ -731,6 +597,7 @@ impl RequestTask {
                 Notifier::complete(client_manager, notify_data)
             }
             State::Failed => {
+                #[cfg(feature = "oh")]
                 let _ = publish_state_change_event(
                     notify_data.bundle.as_str(),
                     notify_data.task_id,
@@ -823,10 +690,6 @@ impl RequestTask {
                 priority: self.conf.common_data.priority,
             },
         }
-    }
-
-    pub(crate) fn is_satisfied_configuration(&self) -> bool {
-        self.network.satisfied_state(&self.conf)
     }
 
     pub(crate) fn background_notify(&self) {

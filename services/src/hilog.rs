@@ -18,7 +18,6 @@ macro_rules! debug {
         use hilog_rust::hilog;
         use std::ffi::{c_char, CString};
         use $crate::LOG_LABEL;
-
         hilog_rust::debug!(LOG_LABEL, $fmt $(, @public($args))*);
     }}
 }

@@ -15,7 +15,7 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::manage::events::TaskManagerEvent;
+use crate::manage::query;
 use crate::service::{serialize_task_info, RequestServiceStub};
 
 impl RequestServiceStub {
@@ -28,30 +28,20 @@ impl RequestServiceStub {
                 let token: String = data.read()?;
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service touch: uid is {}", uid);
-                let (event, rx) = TaskManagerEvent::touch(uid, id, token);
-                if !self.task_manager.lock().unwrap().send_event(event) {
-                    return Err(IpcStatusCode::Failed);
-                }
-                match rx.get() {
-                    Some(Some(info)) => {
+                let info = query::touch(uid, id, token);
+                match info {
+                    Some(info) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;
                         serialize_task_info(info, reply)?;
                         debug!("End Service touch ok: tid: {}", id);
                         Ok(())
                     }
-                    Some(None) => {
+                    None => {
                         error!(
                             "End Service touch, tid: {}, failed: task_id or token not found",
                             id
                         );
                         reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                        Err(IpcStatusCode::Failed)
-                    }
-                    None => {
-                        error!(
-                            "End Service touch, tid: {}, failed: receives task_info failed",
-                            id
-                        );
                         Err(IpcStatusCode::Failed)
                     }
                 }
