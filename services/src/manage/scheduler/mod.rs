@@ -228,6 +228,7 @@ impl Scheduler {
             }
             state => {
                 info!("task {} cancel with state {:?}", task_id, state);
+                self.running_queue.try_restart(uid, task_id);
             }
         }
     }
