@@ -988,12 +988,15 @@ bool JsTask::SetPathPermission(const std::string &filepath)
     }
 
     AddPathMap(filepath, baseDir);
-    for (auto it : pathMap_) {
-        if (it.second <= 0) {
-            continue;
-        }
-        if (AclSetAccess(it.first, SA_PERMISSION_X) != ACL_SUCC) {
-            REQUEST_HILOGD("AclSetAccess Parent Dir Failed: %{public}s", it.first.c_str());
+    {
+        std::lock_guard<std::mutex> lockGuard(JsTask::pathMutex_);
+        for (auto it : pathMap_) {
+            if (it.second <= 0) {
+                continue;
+            }
+            if (AclSetAccess(it.first, SA_PERMISSION_X) != ACL_SUCC) {
+                REQUEST_HILOGD("AclSetAccess Parent Dir Failed: %{public}s", it.first.c_str());
+            }
         }
     }
 
