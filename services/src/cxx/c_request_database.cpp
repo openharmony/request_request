@@ -222,15 +222,15 @@ int RequestDataBase::GetTaskQosInfo(rust::str sql, TaskQosInfo &res)
         REQUEST_HILOGE("GetTaskQosInfo result set go to 0 row failed");
         return -1;
     }
-    int action, mode, state, priority;
-    queryRet->GetInt(0, action);   // Line 0 is 'action'
-    queryRet->GetInt(1, mode);     // Line 1 is 'mode'
-    queryRet->GetInt(2, state);    // Line 2 is 'state'
-    queryRet->GetInt(3, priority); // Line 3 is 'priority'
-    res.action = action;
-    res.mode = mode;
-    res.state = state;
-    res.priority = priority;
+    int64_t action, mode, state, priority;
+    queryRet->GetLong(0, action);   // Line 0 is 'action'
+    queryRet->GetLong(1, mode);     // Line 1 is 'mode'
+    queryRet->GetLong(2, state);    // Line 2 is 'state'
+    queryRet->GetLong(3, priority); // Line 3 is 'priority'
+    res.action = static_cast<uint8_t>(action);
+    res.mode = static_cast<uint8_t>(mode);
+    res.state = static_cast<uint8_t>(state);
+    res.priority = static_cast<uint32_t>(priority);
     return 0;
 }
 
