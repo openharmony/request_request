@@ -681,10 +681,7 @@ impl RequestTask {
                 mtime: status.mtime,
                 reason: status.reason.repr,
                 gauge: self.conf.common_data.gauge,
-                retry: match self.conf.common_data.mode {
-                    Mode::FrontEnd => false,
-                    _ => self.conf.common_data.retry,
-                },
+                retry: self.conf.common_data.retry,
                 tries: self.tries.load(Ordering::SeqCst),
                 version: self.conf.version as u8,
                 priority: self.conf.common_data.priority,
