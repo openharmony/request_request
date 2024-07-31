@@ -226,6 +226,10 @@ impl Scheduler {
                     }
                 }
             }
+            State::Failed => {
+                info!("task {} cancel with state Failed", task_id);
+                Notifier::fail(&self.client_manager, info.build_notify_data());
+            }
             state => {
                 info!("task {} cancel with state {:?}", task_id, state);
                 self.running_queue.try_restart(uid, task_id);

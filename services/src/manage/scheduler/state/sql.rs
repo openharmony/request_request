@@ -32,9 +32,11 @@ impl SqlList {
             NetworkState::Online(info) => {
                 self.sqls.push(network_available(info));
                 self.sqls.push(network_unavailable(info));
+                self.sqls.push(network_unavailable_failed(info));
             }
             NetworkState::Offline => {
                 self.sqls.push(network_offline());
+                self.sqls.push(network_offline_failed());
             }
         }
     }
@@ -130,26 +132,80 @@ pub(super) fn account_available(active_accounts: &HashSet<u64>) -> String {
 
 pub(super) fn network_offline() -> String {
     format!(
-            "UPDATE request_task SET state = {}, reason = {} WHERE (state = {} AND reason = {}  OR state = {} OR state = {})",
-            State::Waiting.repr,
-            Reason::NetworkOffline.repr,
-            State::Waiting.repr,
-            Reason::RunningTaskMeetLimits.repr,
-            State::Running.repr,
-            State::Retrying.repr,
-        )
+        "UPDATE request_task SET state = {}, reason = {} WHERE (state = {} AND reason = {} OR state = {} OR state = {}) AND retry = {}",
+        State::Waiting.repr,
+        Reason::NetworkOffline.repr,
+        State::Waiting.repr,
+        Reason::RunningTaskMeetLimits.repr,
+        State::Running.repr,
+        State::Retrying.repr,
+        true,
+    )
+}
+
+pub(super) fn network_offline_failed() -> String {
+    format!(
+        "UPDATE request_task SET state = {}, reason = {} WHERE (state = {} AND reason = {} OR state = {} OR state = {}) AND retry != {}",
+        State::Failed.repr,
+        Reason::NetworkOffline.repr,
+        State::Waiting.repr,
+        Reason::RunningTaskMeetLimits.repr,
+        State::Running.repr,
+        State::Retrying.repr,
+        true,
+    )
 }
 
 pub(super) fn network_unavailable(info: &NetworkInfo) -> String {
     let mut sql = format!(
-            "UPDATE request_task SET state = {}, reason = {} WHERE ((state = {} AND reason = {} ) OR state = {} OR state = {})",
-            State::Waiting.repr,
-            Reason::UnsupportedNetworkType.repr,
-            State::Waiting.repr,
-            Reason::RunningTaskMeetLimits.repr,
-            State::Running.repr,
-            State::Retrying.repr,
-        );
+        "UPDATE request_task SET state = {}, reason = {} WHERE ((state = {} AND reason = {} ) OR state = {} OR state = {}) AND retry = {}",
+        State::Waiting.repr,
+        Reason::UnsupportedNetworkType.repr,
+        State::Waiting.repr,
+        Reason::RunningTaskMeetLimits.repr,
+        State::Running.repr,
+        State::Retrying.repr,
+        true,
+    );
+
+    let mut sql_1 = String::new();
+    if info.network_type != NetworkType::Other {
+        sql_1.push_str(&format!(
+            "(network != {} AND network != 0)",
+            info.network_type.repr
+        ));
+    }
+
+    if info.is_metered {
+        if !sql_1.is_empty() {
+            sql_1.push_str(" OR ");
+        }
+        sql_1.push_str("metered = 0");
+    }
+
+    if info.is_roaming {
+        if !sql_1.is_empty() {
+            sql_1.push_str(" OR ");
+        }
+        sql_1.push_str("roaming = 0");
+    }
+    if !sql_1.is_empty() {
+        sql = format!("{} AND ({})", sql, sql_1);
+    }
+    sql
+}
+
+pub(super) fn network_unavailable_failed(info: &NetworkInfo) -> String {
+    let mut sql = format!(
+        "UPDATE request_task SET state = {}, reason = {} WHERE ((state = {} AND reason = {}) OR state = {} OR state = {}) AND retry != {}",
+        State::Failed.repr,
+        Reason::UnsupportedNetworkType.repr,
+        State::Waiting.repr,
+        Reason::RunningTaskMeetLimits.repr,
+        State::Running.repr,
+        State::Retrying.repr,
+        true,
+    );
 
     let mut sql_1 = String::new();
     if info.network_type != NetworkType::Other {
@@ -423,8 +479,8 @@ mod test {
         .unwrap();
         db.execute(
             &format!(
-                "INSERT INTO request_task (task_id, state, reason, network,
-    metered, roaming) VALUES ({}, {}, {}, {}, 1, 1)",
+                "INSERT INTO request_task (task_id, state, reason, network, retry,
+    metered, roaming) VALUES ({}, {}, {}, {}, 1, 1, 1)",
                 task_id,
                 State::Waiting.repr,
                 Reason::RunningTaskMeetLimits.repr,
@@ -474,6 +530,67 @@ mod test {
     }
 
     #[test]
+    fn ut_network_database_unavailable_failed() {
+        let task_id: u32 = rand::random();
+        let db = Connection::open_in_memory().unwrap();
+        db.execute(
+            &CREATE,
+            (), // empty list of parameters.
+        )
+        .unwrap();
+        db.execute(
+            &format!(
+                "INSERT INTO request_task (task_id, state, reason, network, retry,
+    metered, roaming) VALUES ({}, {}, {}, {}, 0, 1, 1)",
+                task_id,
+                State::Waiting.repr,
+                Reason::RunningTaskMeetLimits.repr,
+                NetworkType::Wifi.repr,
+            ),
+            (),
+        )
+        .unwrap();
+
+        let info = NetworkInfo {
+            network_type: NetworkType::Wifi,
+            is_metered: true,
+            is_roaming: true,
+        };
+        db.execute(&&network_unavailable_failed(&info), ()).unwrap();
+
+        let mut stmt = db
+            .prepare(&format!(
+                "SELECT task_id from request_task WHERE state = {} AND reason =
+    {}",
+                State::Failed.repr,
+                Reason::UnsupportedNetworkType.repr
+            ))
+            .unwrap();
+        let mut rows = stmt
+            .query_map([], |row| Ok(row.get::<_, u32>(0).unwrap()))
+            .unwrap();
+        assert!(rows.next().is_none());
+
+        let info = NetworkInfo {
+            network_type: NetworkType::Cellular,
+            is_metered: true,
+            is_roaming: true,
+        };
+
+        db.execute(&&network_unavailable_failed(&info), ()).unwrap();
+
+        let mut stmt = db
+            .prepare(&format!(
+                "SELECT task_id from request_task WHERE state = {} AND reason = {}",
+                State::Failed.repr,
+                Reason::UnsupportedNetworkType.repr
+            ))
+            .unwrap();
+        let mut rows = stmt.query_map([], |row| Ok(row.get(0).unwrap())).unwrap();
+        assert_eq!(task_id, rows.next().unwrap().unwrap());
+    }
+
+    #[test]
     fn ut_network_database_offline() {
         let task_id: u32 = rand::random();
         let db = Connection::open_in_memory().unwrap();
@@ -483,7 +600,7 @@ mod test {
         )
         .unwrap();
         db.execute(
-            &format!("INSERT INTO request_task (task_id, state, reason, network, metered, roaming) VALUES ({}, {}, {}, {}, 1, 1)",
+            &format!("INSERT INTO request_task (task_id, state, reason, network, metered, roaming, retry) VALUES ({}, {}, {}, {}, 1, 1, 1)",
                 task_id,
                 State::Waiting.repr,
                 Reason::RunningTaskMeetLimits.repr,
@@ -499,6 +616,40 @@ mod test {
             .prepare(&format!(
                 "SELECT task_id from request_task WHERE state = {} AND reason = {}",
                 State::Waiting.repr,
+                Reason::NetworkOffline.repr
+            ))
+            .unwrap();
+
+        let mut rows = stmt.query_map([], |row| Ok(row.get(0).unwrap())).unwrap();
+        assert_eq!(task_id, rows.next().unwrap().unwrap());
+    }
+
+    #[test]
+    fn ut_network_database_offline_failed() {
+        let task_id: u32 = rand::random();
+        let db = Connection::open_in_memory().unwrap();
+        db.execute(
+            &CREATE,
+            (), // empty list of parameters.
+        )
+        .unwrap();
+        db.execute(
+            &format!("INSERT INTO request_task (task_id, state, reason, network, metered, roaming, retry) VALUES ({}, {}, {}, {}, 1, 1, 0)",
+                task_id,
+                State::Waiting.repr,
+                Reason::RunningTaskMeetLimits.repr,
+                NetworkType::Wifi.repr,
+            ),
+            (),
+        )
+        .unwrap();
+
+        db.execute(&network_offline_failed(), ()).unwrap();
+
+        let mut stmt = db
+            .prepare(&format!(
+                "SELECT task_id from request_task WHERE state = {} AND reason = {}",
+                State::Failed.repr,
                 Reason::NetworkOffline.repr
             ))
             .unwrap();
