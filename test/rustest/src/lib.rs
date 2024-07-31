@@ -29,6 +29,8 @@
 
 use std::collections::HashMap;
 use std::ffi::{c_char, CString};
+use std::fmt::format;
+use std::fs::File;
 use std::os::fd::{AsRawFd, FromRawFd, IntoRawFd};
 use std::os::unix::net::UnixDatagram;
 use std::sync::{Arc, Mutex, Once};
@@ -111,26 +113,69 @@ impl RequestAgent {
         reply.read::<i32>().unwrap() as u32
     }
 
-    pub fn start(&self, task_id: u32) {
+    pub fn pause(&self, task_id: u32) {
+        self.pause_version(1u32, task_id);
+    }
+
+    pub fn pause_v10(&self, task_id: u32) {
+        self.pause_version(2u32, task_id);
+    }
+
+    pub(crate) fn pause_version(&self, version: u32, task_id: u32) {
         let mut data = MsgParcel::new();
         data.write_interface_token(SERVICE_TOKEN).unwrap();
+        data.write(&version);
         data.write(&format!("{}", task_id)).unwrap();
         let mut reply = self
             .remote
-            .send_request(interface::START, &mut data)
+            .send_request(interface::PAUSE, &mut data)
             .unwrap();
         let ret: i32 = reply.read().unwrap();
         assert_eq!(ret, 0);
     }
 
-    pub fn pause(&self, task_id: u32) {
+    pub fn query(&self, task_id: u32) {
         let mut data = MsgParcel::new();
         data.write_interface_token(SERVICE_TOKEN).unwrap();
-        data.write(&0u32);
         data.write(&format!("{}", task_id)).unwrap();
         let mut reply = self
             .remote
-            .send_request(interface::PAUSE, &mut data)
+            .send_request(interface::QUERY, &mut data)
+            .unwrap();
+        let ret: i32 = reply.read().unwrap();
+        assert_eq!(ret, 0);
+    }
+
+    pub fn query_mime_type(&self, task_id: u32) -> String {
+        let mut data = MsgParcel::new();
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+        data.write(&format!("{}", task_id)).unwrap();
+        let mut reply = self
+            .remote
+            .send_request(interface::QUERY_MIME_TYPE, &mut data)
+            .unwrap();
+        let ret: i32 = reply.read().unwrap();
+        assert_eq!(ret, 0);
+        let mime: String = reply.read().unwrap();
+        mime
+    }
+
+    pub fn remove(&self, task_id: u32) {
+        self.remove_version(1u32, task_id);
+    }
+
+    pub fn remove_v10(&self, task_id: u32) {
+        self.remove_version(2u32, task_id);
+    }
+
+    pub(crate) fn remove_version(&self, version: u32, task_id: u32) {
+        let mut data = MsgParcel::new();
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+        data.write(&version).unwrap();
+        data.write(&format!("{}", task_id)).unwrap();
+        let mut reply = self
+            .remote
+            .send_request(interface::REMOVE, &mut data)
             .unwrap();
         let ret: i32 = reply.read().unwrap();
         assert_eq!(ret, 0);
@@ -143,6 +188,55 @@ impl RequestAgent {
         let mut reply = self
             .remote
             .send_request(interface::RESUME, &mut data)
+            .unwrap();
+        let ret: i32 = reply.read().unwrap();
+        assert_eq!(ret, 0);
+    }
+
+    pub fn start(&self, task_id: u32) {
+        let mut data = MsgParcel::new();
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+        data.write(&format!("{}", task_id)).unwrap();
+        let mut reply = self
+            .remote
+            .send_request(interface::START, &mut data)
+            .unwrap();
+        let ret: i32 = reply.read().unwrap();
+        assert_eq!(ret, 0);
+    }
+
+    pub fn stop(&self, task_id: u32) {
+        let mut data = MsgParcel::new();
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+        data.write(&format!("{}", task_id)).unwrap();
+        let mut reply = self
+            .remote
+            .send_request(interface::STOP, &mut data)
+            .unwrap();
+        let ret: i32 = reply.read().unwrap();
+        assert_eq!(ret, 0);
+    }
+
+    pub fn show(&self, task_id: u32) {
+        let mut data = MsgParcel::new();
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+        data.write(&format!("{}", task_id)).unwrap();
+        let mut reply = self
+            .remote
+            .send_request(interface::SHOW, &mut data)
+            .unwrap();
+        let ret: i32 = reply.read().unwrap();
+        assert_eq!(ret, 0);
+    }
+
+    pub fn touch(&self, task_id: u32, token: String) {
+        let mut data = MsgParcel::new();
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+        data.write(&format!("{}", task_id)).unwrap();
+        data.write(&token).unwrap();
+        let mut reply = self
+            .remote
+            .send_request(interface::TOUCH, &mut data)
             .unwrap();
         let ret: i32 = reply.read().unwrap();
         assert_eq!(ret, 0);
@@ -178,6 +272,32 @@ impl RequestAgent {
         ans
     }
 
+    pub fn get_task(&self, task_id: u32, token: String) {
+        let mut data = MsgParcel::new();
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+        data.write(&format!("{}", task_id)).unwrap();
+        data.write(&token).unwrap();
+        let mut reply = self
+            .remote
+            .send_request(interface::GET_TASK, &mut data)
+            .unwrap();
+        let ret: i32 = reply.read().unwrap();
+        assert_eq!(0, ret);
+    }
+
+    pub fn open_channel(&self) -> File {
+        let mut data = MsgParcel::new();
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+        let mut reply = self
+            .remote
+            .send_request(interface::OPEN_CHANNEL, &mut data)
+            .unwrap();
+        let ret: i32 = reply.read().unwrap();
+        assert_eq!(0, ret);
+        let file = reply.read_file().unwrap();
+        file
+    }
+
     pub fn subscribe(&self, task_id: u32) {
         let mut data = MsgParcel::new();
         data.write_interface_token(SERVICE_TOKEN).unwrap();
@@ -185,6 +305,39 @@ impl RequestAgent {
         let mut reply = self
             .remote
             .send_request(interface::SUBSCRIBE, &mut data)
+            .unwrap();
+        let ret: i32 = reply.read().unwrap();
+        assert_eq!(0, ret);
+    }
+
+    pub fn unsubscribe(&self, task_id: u32) {
+        let mut data = MsgParcel::new();
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+        data.write(&format!("{}", task_id)).unwrap();
+        let mut reply = self
+            .remote
+            .send_request(interface::UNSUBSCRIBE, &mut data)
+            .unwrap();
+        let ret: i32 = reply.read().unwrap();
+        assert_eq!(0, ret);
+    }
+
+    pub fn sub_run_count(&self, obj: RemoteObj) {
+        let mut data = MsgParcel::new();
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+        let mut reply = obj
+            .send_request(interface::SUB_RUN_COUNT, &mut data)
+            .unwrap();
+        let ret: i32 = reply.read().unwrap();
+        assert_eq!(0, ret);
+    }
+
+    pub fn unsub_run_count(&self) {
+        let mut data = MsgParcel::new();
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+        let mut reply = self
+            .remote
+            .send_request(interface::UNSUB_RUN_COUNT, &mut data)
             .unwrap();
         let ret: i32 = reply.read().unwrap();
         assert_eq!(0, ret);
