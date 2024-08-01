@@ -132,7 +132,7 @@ pub(super) fn account_available(active_accounts: &HashSet<u64>) -> String {
 
 pub(super) fn network_offline() -> String {
     format!(
-        "UPDATE request_task SET state = {}, reason = {} WHERE (state = {} AND reason = {} OR state = {} OR state = {}) AND retry = {}",
+        "UPDATE request_task SET state = {}, reason = {} WHERE (state = {} AND reason = {} OR state = {} OR state = {}) AND (retry = {} AND mode = {})",
         State::Waiting.repr,
         Reason::NetworkOffline.repr,
         State::Waiting.repr,
@@ -140,12 +140,13 @@ pub(super) fn network_offline() -> String {
         State::Running.repr,
         State::Retrying.repr,
         true,
+        Mode::BackGround.repr,
     )
 }
 
 pub(super) fn network_offline_failed() -> String {
     format!(
-        "UPDATE request_task SET state = {}, reason = {} WHERE (state = {} AND reason = {} OR state = {} OR state = {}) AND retry != {}",
+        "UPDATE request_task SET state = {}, reason = {} WHERE (state = {} AND reason = {} OR state = {} OR state = {}) AND (retry != {} OR mode != {})",
         State::Failed.repr,
         Reason::NetworkOffline.repr,
         State::Waiting.repr,
@@ -153,12 +154,13 @@ pub(super) fn network_offline_failed() -> String {
         State::Running.repr,
         State::Retrying.repr,
         true,
+        Mode::BackGround.repr,
     )
 }
 
 pub(super) fn network_unavailable(info: &NetworkInfo) -> String {
     let mut sql = format!(
-        "UPDATE request_task SET state = {}, reason = {} WHERE ((state = {} AND reason = {} ) OR state = {} OR state = {}) AND retry = {}",
+        "UPDATE request_task SET state = {}, reason = {} WHERE ((state = {} AND reason = {} ) OR state = {} OR state = {}) AND (retry = {} AND mode = {})",
         State::Waiting.repr,
         Reason::UnsupportedNetworkType.repr,
         State::Waiting.repr,
@@ -166,6 +168,7 @@ pub(super) fn network_unavailable(info: &NetworkInfo) -> String {
         State::Running.repr,
         State::Retrying.repr,
         true,
+        Mode::BackGround.repr
     );
 
     let mut sql_1 = String::new();
@@ -197,7 +200,7 @@ pub(super) fn network_unavailable(info: &NetworkInfo) -> String {
 
 pub(super) fn network_unavailable_failed(info: &NetworkInfo) -> String {
     let mut sql = format!(
-        "UPDATE request_task SET state = {}, reason = {} WHERE ((state = {} AND reason = {}) OR state = {} OR state = {}) AND retry != {}",
+        "UPDATE request_task SET state = {}, reason = {} WHERE ((state = {} AND reason = {}) OR state = {} OR state = {}) AND (retry != {} OR mode != {})",
         State::Failed.repr,
         Reason::UnsupportedNetworkType.repr,
         State::Waiting.repr,
@@ -205,6 +208,7 @@ pub(super) fn network_unavailable_failed(info: &NetworkInfo) -> String {
         State::Running.repr,
         State::Retrying.repr,
         true,
+        Mode::BackGround.repr
     );
 
     let mut sql_1 = String::new();
@@ -479,8 +483,8 @@ mod test {
         .unwrap();
         db.execute(
             &format!(
-                "INSERT INTO request_task (task_id, state, reason, network, retry,
-    metered, roaming) VALUES ({}, {}, {}, {}, 1, 1, 1)",
+                "INSERT INTO request_task (task_id, state, reason, network, retry, mode,
+    metered, roaming) VALUES ({}, {}, {}, {}, 1, 0, 1, 1)",
                 task_id,
                 State::Waiting.repr,
                 Reason::RunningTaskMeetLimits.repr,
@@ -540,8 +544,8 @@ mod test {
         .unwrap();
         db.execute(
             &format!(
-                "INSERT INTO request_task (task_id, state, reason, network, retry,
-    metered, roaming) VALUES ({}, {}, {}, {}, 0, 1, 1)",
+                "INSERT INTO request_task (task_id, state, reason, network, retry, mode,
+    metered, roaming) VALUES ({}, {}, {}, {}, 1, 1, 1, 1)",
                 task_id,
                 State::Waiting.repr,
                 Reason::RunningTaskMeetLimits.repr,
@@ -600,7 +604,7 @@ mod test {
         )
         .unwrap();
         db.execute(
-            &format!("INSERT INTO request_task (task_id, state, reason, network, metered, roaming, retry) VALUES ({}, {}, {}, {}, 1, 1, 1)",
+            &format!("INSERT INTO request_task (task_id, state, reason, network, metered, roaming, retry, mode) VALUES ({}, {}, {}, {}, 1, 1, 1, 0)",
                 task_id,
                 State::Waiting.repr,
                 Reason::RunningTaskMeetLimits.repr,
@@ -634,7 +638,7 @@ mod test {
         )
         .unwrap();
         db.execute(
-            &format!("INSERT INTO request_task (task_id, state, reason, network, metered, roaming, retry) VALUES ({}, {}, {}, {}, 1, 1, 0)",
+            &format!("INSERT INTO request_task (task_id, state, reason, network, metered, roaming, retry, mode) VALUES ({}, {}, {}, {}, 1, 1, 0, 0)",
                 task_id,
                 State::Waiting.repr,
                 Reason::RunningTaskMeetLimits.repr,
