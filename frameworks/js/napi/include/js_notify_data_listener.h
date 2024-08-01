@@ -17,6 +17,7 @@
 #define OHOS_REQUEST_JS_NOTIFY_DATA_LISTENER_H
 
 #include "i_notify_data_listener.h"
+#include "js_common.h"
 #include "listener_list.h"
 
 namespace OHOS::Request {
@@ -38,6 +39,7 @@ private:
     bool IsHeaderReceive(const std::shared_ptr<NotifyData> &notifyData);
     void ProcessHeaderReceive(const std::shared_ptr<NotifyData> &notifyData);
     void NotifyDataProcess(const std::shared_ptr<NotifyData> &notifyData, napi_value *value, uint32_t &paramNumber);
+    void DoJSTask(const std::shared_ptr<NotifyData> &notifyData);
 };
 
 struct NotifyDataPtr {

@@ -12,7 +12,6 @@
 // limitations under the License.
 
 //! This create implement the request proxy and stub
-#![cfg_attr(feature = "oh", feature(io_error_other))]
 #![cfg_attr(test, feature(future_join))]
 #![cfg_attr(test, allow(clippy::redundant_clone))]
 #![allow(unreachable_pub, clippy::new_without_default)]

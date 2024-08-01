@@ -229,24 +229,6 @@ pub(crate) struct DumpOneInfo {
     pub(crate) url: String,
 }
 
-#[derive(Clone, Copy, PartialEq, Debug, Eq, PartialOrd, Ord)]
-pub(crate) enum ApplicationState {
-    Foreground = 2,
-    Background = 4,
-    Terminated = 5,
-}
-
-impl From<u8> for ApplicationState {
-    fn from(value: u8) -> Self {
-        match value {
-            2 => ApplicationState::Foreground,
-            4 => ApplicationState::Background,
-            5 => ApplicationState::Terminated,
-            _ => panic!("wrong application value"),
-        }
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -263,12 +245,5 @@ mod test {
         assert_eq!(State::Failed.repr, 65);
         assert_eq!(State::Removed.repr, 80);
         assert_eq!(State::Any.repr, 97);
-    }
-
-    #[test]
-    fn ut_enum_application_state() {
-        assert_eq!(ApplicationState::Foreground as u8, 2);
-        assert_eq!(ApplicationState::Background as u8, 4);
-        assert_eq!(ApplicationState::Terminated as u8, 5);
     }
 }

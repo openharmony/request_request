@@ -268,7 +268,7 @@ export default function requestSystemQueryTest() {
         expect(info.gauge).assertEqual(false);
         expect(typeof info.ctime).assertEqual("number");
         expect(typeof info.mtime).assertEqual("number");
-        expect(info.retry).assertEqual(false);
+        expect(info.retry).assertEqual(true);
         expect(info.tries).assertEqual(0);
         expect(typeof info.reason).assertEqual("string");
         await request.agent.remove(task.tid);

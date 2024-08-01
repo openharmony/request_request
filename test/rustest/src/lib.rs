@@ -46,6 +46,7 @@ use samgr::manage::SystemAbilityManager;
 const SERVICE_TOKEN: &str = "OHOS.Download.RequestServiceInterface";
 pub const CHANNEL_MAGIC_NUM: u32 = 0x43434646;
 
+#[allow(clippy::type_complexity)]
 static MESSAGES: OnceCell<Arc<Mutex<HashMap<u32, Vec<MessageInfo>>>>> = OnceCell::new();
 
 pub fn test_init() -> RequestAgent {
