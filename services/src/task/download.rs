@@ -557,7 +557,7 @@ mod test {
             download_inner(task.clone()).await.unwrap();
             let file = File::open(file_path).unwrap();
             assert_eq!(GITEE_FILE_LEN, file.metadata().unwrap().len());
-            
+
             assert_eq!(State::Completed, task.status.lock().unwrap().state);
             assert_eq!(0, task.progress.lock().unwrap().common_data.index);
             assert_eq!(

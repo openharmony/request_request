@@ -279,6 +279,12 @@ enum DownloadStatus {
     SESSION_UNKNOWN,
 };
 
+enum RemoveTaskChecker {
+    DoNothing,
+    ClearFile,
+    ClearFileAndRemoveTask,
+};
+
 struct DownloadInfo {
     uint32_t downloadId;
     DownloadErrorCode failedReason;
