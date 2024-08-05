@@ -287,7 +287,7 @@ impl Scheduler {
     }
 
     fn reschedule(&mut self, changes: QosChanges) {
-        info!("{:?}", changes.download);
+        debug!("{:?}", changes.download);
         let mut qos_remove_queue = vec![];
         self.running_queue
             .reschedule(changes, &mut qos_remove_queue);

@@ -59,26 +59,18 @@ pub(crate) fn query(task_id: u32, action: Action) -> Option<TaskInfo> {
 }
 
 pub(crate) fn search(filter: TaskFilter, method: SearchMethod) -> Vec<u32> {
-    info!("Search task by filter: {:?} method: {:?}", filter, method);
-
     let database = RequestDb::get_instance();
 
     let res = match method {
         SearchMethod::User(uid) => database.search_task(filter, uid),
         SearchMethod::System(bundle_name) => database.system_search_task(filter, bundle_name),
     };
-    info!("Search task result: {:?}", res);
     res
 }
 
 pub(crate) fn show(uid: u64, task_id: u32) -> Option<TaskInfo> {
-    debug!("TaskManager Show, uid: {}, task_id: {}", uid, task_id);
-
     match RequestDb::get_instance().get_task_info(task_id) {
-        Some(info) if info.uid() == uid => {
-            info!("TaskManager Show: task info is {:?}", info);
-            Some(info)
-        }
+        Some(info) if info.uid() == uid => Some(info),
         _ => {
             info!("TaskManger Show: no task found in database");
             None
@@ -87,8 +79,6 @@ pub(crate) fn show(uid: u64, task_id: u32) -> Option<TaskInfo> {
 }
 
 pub(crate) fn touch(uid: u64, task_id: u32, token: String) -> Option<TaskInfo> {
-    debug!("TaskManager Touch, uid: {}, task_id: {}", uid, task_id);
-
     let mut info = match RequestDb::get_instance().get_task_info(task_id) {
         Some(info) => info,
         None => {

@@ -149,7 +149,6 @@ impl RunningQueue {
         qos_vec: Vec<QosDirection>,
         qos_remove_queue: &mut Vec<(u64, u32)>,
     ) {
-        info!("reschedule_inner action: {:?}", action);
         let mut new_queue = HashMap::new();
 
         let queue = if action == Action::Download {
