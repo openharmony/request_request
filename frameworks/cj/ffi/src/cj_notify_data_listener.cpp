@@ -74,7 +74,7 @@ void CJNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData
         std::string &filePath = task->config_.bodyFileNames[index];
         ReadBytesFromFile(filePath, notifyData->progress.bodyBytes);
         // Waiting for "complete" to read and delete.
-        if (!(notifyData->version == Version::API10 && index == len - 1 &&
+        if (!(notifyData->version == Version::API10 && index + 1 == len &&
               notifyData->type == SubscribeType::PROGRESS)) {
             RemoveFile(filePath);
         }
