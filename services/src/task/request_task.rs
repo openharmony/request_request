@@ -279,12 +279,6 @@ impl RequestTask {
     }
 
     pub(crate) fn prepare_running(&self) {
-        info!(
-            "task {} prepare running, action: {:?}",
-            self.task_id(),
-            self.action(),
-        );
-
         if self.status.lock().unwrap().state == State::Retrying {
             let notify_data = self.build_notify_data();
             Notifier::resume(&self.client_manager, notify_data);
