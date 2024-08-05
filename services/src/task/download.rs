@@ -90,33 +90,6 @@ pub(crate) async fn download(task: Arc<RequestTask>) {
         }
         break;
     }
-
-    #[cfg(feature = "oh")]
-    {
-        use hisysevent::{build_number_param, build_str_param};
-
-        use crate::sys_event::SysEvent;
-        let reason = *task
-            .code
-            .lock()
-            .unwrap()
-            .first()
-            .unwrap_or(&Reason::Default);
-        // If `Reason` is not `Default`a records this sys event.
-
-        if reason != Reason::Default {
-            SysEvent::task_fault()
-                .param(build_str_param!(crate::sys_event::TASKS_TYPE, "DOWNLOAD"))
-                .param(build_number_param!(crate::sys_event::TOTAL_FILE_NUM, 1))
-                .param(build_number_param!(crate::sys_event::FAIL_FILE_NUM, 1))
-                .param(build_number_param!(crate::sys_event::SUCCESS_FILE_NUM, 0))
-                .param(build_number_param!(
-                    crate::sys_event::ERROR_INFO,
-                    reason.repr as i32
-                ))
-                .write();
-        }
-    }
 }
 
 impl RequestTask {

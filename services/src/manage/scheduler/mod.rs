@@ -22,6 +22,7 @@ use state::sql::SqlList;
 
 use super::network::Network;
 use crate::error::ErrorCode;
+use crate::info::TaskInfo;
 use crate::manage::database::RequestDb;
 use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::qos::{QosChanges, RssCapacity};
@@ -229,6 +230,11 @@ impl Scheduler {
             State::Failed => {
                 info!("task {} cancel with state Failed", task_id);
                 Notifier::fail(&self.client_manager, info.build_notify_data());
+                #[cfg(feature = "oh")]
+                {
+                    let reason = Reason::from(info.common_data.reason);
+                    Self::sys_event(info, reason);
+                }
             }
             state => {
                 info!("task {} cancel with state {:?}", task_id, state);
@@ -252,11 +258,49 @@ impl Scheduler {
                 info.common_data.task_id,
                 State::Failed.repr as i32,
             );
+            #[cfg(feature = "oh")]
+            {
+                Self::sys_event(info, reason);
+            }
         }
 
         if let Some(changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
             self.reschedule(changes);
         }
+    }
+    #[cfg(feature = "oh")]
+    pub(crate) fn sys_event(info: TaskInfo, reason: Reason) {
+        use hisysevent::{build_number_param, build_str_param};
+
+        use crate::sys_event::SysEvent;
+
+        let index = info.progress.common_data.index;
+        let size = info.file_specs.len();
+        let action = match info.action() {
+            Action::Download => "DOWNLOAD",
+            Action::Upload => "UPLOAD",
+            _ => "UNKNOWN",
+        };
+
+        SysEvent::task_fault()
+            .param(build_str_param!(crate::sys_event::TASKS_TYPE, action))
+            .param(build_number_param!(
+                crate::sys_event::TOTAL_FILE_NUM,
+                size as i32
+            ))
+            .param(build_number_param!(
+                crate::sys_event::FAIL_FILE_NUM,
+                (size - index) as i32
+            ))
+            .param(build_number_param!(
+                crate::sys_event::SUCCESS_FILE_NUM,
+                index as i32
+            ))
+            .param(build_number_param!(
+                crate::sys_event::ERROR_INFO,
+                reason.repr as i32
+            ))
+            .write();
     }
 
     pub(crate) fn on_state_change<T, F>(&mut self, f: F, t: T)
