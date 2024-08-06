@@ -50,7 +50,6 @@ pub(crate) fn query(task_id: u32, action: Action) -> Option<TaskInfo> {
     if info.action() == action || action == Action::Any {
         info.data = "".to_string();
         info.url = "".to_string();
-        debug!("TaskManager Query, query task info is {:?}", info);
         Some(info)
     } else {
         info!("TaskManger Query: no task found");
