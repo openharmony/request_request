@@ -70,6 +70,12 @@ impl RunningQueue {
         }
     }
 
+    pub(crate) fn get_task(&self, uid: u64, task_id: u32) -> Option<&Arc<RequestTask>> {
+        self.download_queue
+            .get(&(uid, task_id))
+            .or_else(|| self.upload_queue.get(&(uid, task_id)))
+    }
+
     pub(crate) fn task_finish(&mut self, uid: u64, task_id: u32) {
         self.running_tasks.remove(&(uid, task_id));
     }

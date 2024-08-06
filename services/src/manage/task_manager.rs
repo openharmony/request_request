@@ -15,6 +15,7 @@ use std::ops::{Deref, DerefMut};
 use std::time::Duration;
 
 use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
+use ylong_runtime::sync::oneshot;
 use ylong_runtime::time::sleep;
 
 cfg_oh! {
@@ -24,9 +25,13 @@ cfg_oh! {
 }
 use super::account::{remove_account_tasks, AccountEvent};
 use super::database::RequestDb;
-use super::events::{ScheduleEvent, ServiceEvent, StateEvent, TaskEvent, TaskManagerEvent};
+use super::events::{
+    QueryEvent, ScheduleEvent, ServiceEvent, StateEvent, TaskEvent, TaskManagerEvent,
+};
 use super::network::Network;
+use crate::config::Action;
 use crate::error::ErrorCode;
+use crate::info::TaskInfo;
 use crate::manage::network::register_network_change;
 use crate::manage::scheduler::state::Handler;
 use crate::manage::scheduler::Scheduler;
@@ -144,6 +149,7 @@ impl TaskManager {
                     self.scheduler.on_rss_change(level);
                 }
                 TaskManagerEvent::Account(event) => self.handle_account_event(event),
+                TaskManagerEvent::Query(query) => self.handle_query_event(query),
             }
 
             debug!("TaskManager handles events finished");
@@ -323,6 +329,27 @@ impl TaskManagerTx {
 
     pub(crate) fn trigger_background_timeout(&self, uid: u64) {
         let _ = self.send_event(TaskManagerEvent::State(StateEvent::BackgroundTimeout(uid)));
+    }
+
+    pub(crate) fn show(&self, uid: u64, task_id: u32) -> Option<TaskInfo> {
+        let (tx, rx) = oneshot::channel();
+        let event = QueryEvent::Show(task_id, uid, tx);
+        let _ = self.send_event(TaskManagerEvent::Query(event));
+        ylong_runtime::block_on(rx).unwrap()
+    }
+
+    pub(crate) fn query(&self, task_id: u32, action: Action) -> Option<TaskInfo> {
+        let (tx, rx) = oneshot::channel();
+        let event = QueryEvent::Query(task_id, action, tx);
+        let _ = self.send_event(TaskManagerEvent::Query(event));
+        ylong_runtime::block_on(rx).unwrap()
+    }
+
+    pub(crate) fn touch(&self, uid: u64, task_id: u32, token: String) -> Option<TaskInfo> {
+        let (tx, rx) = oneshot::channel();
+        let event = QueryEvent::Touch(task_id, uid, token, tx);
+        let _ = self.send_event(TaskManagerEvent::Query(event));
+        ylong_runtime::block_on(rx).unwrap()
     }
 }
 

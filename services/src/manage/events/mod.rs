@@ -16,7 +16,9 @@ use std::fmt::Debug;
 use ylong_runtime::sync::oneshot::{channel, Sender};
 
 use super::account::AccountEvent;
+use crate::config::Action;
 use crate::error::ErrorCode;
+use crate::info::TaskInfo;
 use crate::task::config::TaskConfig;
 use crate::task::info::{DumpAllInfo, DumpOneInfo};
 use crate::task::reason::Reason;
@@ -38,6 +40,7 @@ pub(crate) enum TaskManagerEvent {
     Task(TaskEvent),
     Device(i32),
     Account(AccountEvent),
+    Query(QueryEvent),
 }
 
 impl TaskManagerEvent {
@@ -116,6 +119,13 @@ impl TaskManagerEvent {
             Recv::new(rx),
         )
     }
+}
+
+#[derive(Debug)]
+pub(crate) enum QueryEvent {
+    Query(u32, Action, Sender<Option<TaskInfo>>),
+    Show(u32, u64, Sender<Option<TaskInfo>>),
+    Touch(u32, u64, String, Sender<Option<TaskInfo>>),
 }
 
 pub(crate) enum ServiceEvent {

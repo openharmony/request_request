@@ -88,6 +88,10 @@ impl Scheduler {
         }
     }
 
+    pub(crate) fn get_task(&self, uid: u64, task_id: u32) -> Option<&Arc<RequestTask>> {
+        self.running_queue.get_task(uid, task_id)
+    }
+
     pub(crate) fn tasks(&self) -> impl Iterator<Item = &Arc<RequestTask>> {
         self.running_queue.tasks()
     }

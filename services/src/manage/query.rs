@@ -13,48 +13,21 @@
 
 pub(crate) use ffi::TaskFilter;
 
+use super::events::QueryEvent;
+use super::TaskManager;
 use crate::config::{Action, Mode};
 use crate::manage::database::RequestDb;
 use crate::task::config::TaskConfig;
 use crate::task::info::{State, TaskInfo};
 
-pub(crate) fn get_task(uid: u64, task_id: u32, token: String) -> Option<TaskConfig> {
-    debug!("TaskManager get a task, uid:{}, task_id:{}", uid, task_id);
-    
+pub(crate) fn get_task(task_id: u32, token: String) -> Option<TaskConfig> {
     if let Some(config) = RequestDb::get_instance().get_task_config(task_id) {
-        debug!("found single task in database, task_id:{}", task_id);
         if config.token.eq(token.as_str()) {
             return Some(config);
         }
-        debug!("get task token not equal");
         return None;
     }
-    debug!("get task not found");
     None
-}
-
-pub(crate) fn query(task_id: u32, action: Action) -> Option<TaskInfo> {
-    debug!(
-        "TaskManager Query, task_id: {}, query_action: {:?}",
-        task_id, action
-    );
-
-    let mut info = match RequestDb::get_instance().get_task_info(task_id) {
-        Some(info) => info,
-        None => {
-            info!("TaskManger Query: no task found");
-            return None;
-        }
-    };
-
-    if info.action() == action || action == Action::Any {
-        info.data = "".to_string();
-        info.url = "".to_string();
-        Some(info)
-    } else {
-        info!("TaskManger Query: no task found");
-        None
-    }
 }
 
 pub(crate) fn search(filter: TaskFilter, method: SearchMethod) -> Vec<u32> {
@@ -67,31 +40,86 @@ pub(crate) fn search(filter: TaskFilter, method: SearchMethod) -> Vec<u32> {
     res
 }
 
-pub(crate) fn show(uid: u64, task_id: u32) -> Option<TaskInfo> {
-    match RequestDb::get_instance().get_task_info(task_id) {
-        Some(info) if info.uid() == uid => Some(info),
-        _ => {
-            info!("TaskManger Show: no task found in database");
+impl TaskManager {
+    pub(crate) fn handle_query_event(&self, event: QueryEvent) {
+        let (info, tx) = match event {
+            QueryEvent::Show(task_id, uid, tx) => {
+                let info = self.show(uid, task_id);
+                (info, tx)
+            }
+            QueryEvent::Query(task_id, action, tx) => {
+                let info = self.query(task_id, action);
+                (info, tx)
+            }
+            QueryEvent::Touch(task_id, uid, token, tx) => {
+                let info = self.touch(uid, task_id, token);
+                (info, tx)
+            }
+        };
+        let _ = tx.send(info);
+    }
+
+    pub(crate) fn show(&self, uid: u64, task_id: u32) -> Option<TaskInfo> {
+        if let Some(task) = self.scheduler.get_task(uid, task_id) {
+            task.update_progress_in_database()
+        }
+
+        match RequestDb::get_instance().get_task_info(task_id) {
+            Some(info) if info.uid() == uid => Some(info),
+            _ => {
+                info!("TaskManger Show: no task found in database");
+                None
+            }
+        }
+    }
+
+    pub(crate) fn touch(&self, uid: u64, task_id: u32, token: String) -> Option<TaskInfo> {
+        if let Some(task) = self.scheduler.get_task(uid, task_id) {
+            task.update_progress_in_database()
+        }
+
+        let mut info = match RequestDb::get_instance().get_task_info(task_id) {
+            Some(info) => info,
+            None => {
+                info!("TaskManger Touch: no task found");
+                return None;
+            }
+        };
+
+        if info.uid() == uid && info.token() == token {
+            info.bundle = "".to_string();
+            Some(info)
+        } else {
+            info!("TaskManger Touch: no task found");
             None
         }
     }
-}
 
-pub(crate) fn touch(uid: u64, task_id: u32, token: String) -> Option<TaskInfo> {
-    let mut info = match RequestDb::get_instance().get_task_info(task_id) {
-        Some(info) => info,
-        None => {
-            info!("TaskManger Touch: no task found");
-            return None;
+    pub(crate) fn query(&self, task_id: u32, action: Action) -> Option<TaskInfo> {
+        if let Some(task) = self
+            .scheduler
+            .tasks()
+            .find(|task| task.task_id() == task_id)
+        {
+            task.update_progress_in_database()
         }
-    };
 
-    if info.uid() == uid && info.token() == token {
-        info.bundle = "".to_string();
-        Some(info)
-    } else {
-        info!("TaskManger Touch: no task found");
-        None
+        let mut info = match RequestDb::get_instance().get_task_info(task_id) {
+            Some(info) => info,
+            None => {
+                info!("TaskManger Query: no task found");
+                return None;
+            }
+        };
+
+        if info.action() == action || action == Action::Any {
+            info.data = "".to_string();
+            info.url = "".to_string();
+            Some(info)
+        } else {
+            info!("TaskManger Query: no task found");
+            None
+        }
     }
 }
 
@@ -129,17 +157,8 @@ impl RequestDb {
 }
 
 pub(crate) fn query_mime_type(uid: u64, task_id: u32) -> String {
-    debug!(
-        "TaskManager QueryMimeType, uid: {}, task_id: {}",
-        uid, task_id
-    );
-
     match RequestDb::get_instance().get_task_info(task_id) {
-        Some(info) if info.uid() == uid => {
-            let mime_type = info.mime_type();
-            debug!("TaskManager QueryMimeType: mime_type is {:?}", mime_type);
-            mime_type
-        }
+        Some(info) if info.uid() == uid => info.mime_type(),
         _ => {
             info!("TaskManger QueryMimeType: no task found in database");
             "".into()
