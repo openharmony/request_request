@@ -470,7 +470,6 @@ bool JsInitialize::ParseSaveas(napi_env env, napi_value jsConfig, Config &config
         }
         return result;
     }
-    temp = std::string(temp, 0, temp.find_last_not_of(' ') + 1);
     if (temp.size() == 0 || temp[temp.size() - 1] == '/') {
         errInfo = "Parameter verification failed, config.saveas parse error";
         return false;
@@ -521,7 +520,8 @@ std::map<std::string, std::string> JsInitialize::ParseMap(
 {
     std::map<std::string, std::string> result;
     napi_value jsValue = NapiUtils::GetNamedProperty(env, jsConfig, propertyName);
-    if (jsValue == nullptr) {
+    napi_valuetype jsType = NapiUtils::GetValueType(env, jsValue);
+    if (jsType == napi_undefined) {
         return result;
     }
     auto names = NapiUtils::GetPropertyNames(env, jsValue);
