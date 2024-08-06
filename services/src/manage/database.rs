@@ -346,7 +346,6 @@ impl RequestDb {
         }
         let c_task_info = unsafe { &*c_task_info };
         let task_info = TaskInfo::from_c_struct(c_task_info);
-        debug!("Task info is {:?}", task_info);
         unsafe { DeleteCTaskInfo(c_task_info) };
         Some(task_info)
     }
