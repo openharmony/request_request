@@ -16,7 +16,7 @@ use std::time::Duration;
 
 use download_server::config::{Action, ConfigBuilder, Mode};
 use test_common::test_init;
-const FILE_SIZE: u64 =1042003;
+const FILE_SIZE: u64 = 1042003;
 
 #[test]
 fn sdv_start_basic() {

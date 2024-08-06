@@ -15,7 +15,6 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::manage::query;
 use crate::service::permission::{PermissionChecker, QueryPermission};
 use crate::service::{serialize_task_info, RequestServiceStub};
 use crate::task::config::Action;
@@ -45,7 +44,7 @@ impl RequestServiceStub {
         match id.parse::<u32>() {
             Ok(id) => {
                 debug!("Service query: u32 tid: {}", id);
-                let info = query::query(id, action);
+                let info = self.task_manager.lock().unwrap().query(id, action);
                 match info {
                     Some(info) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;
