@@ -18,6 +18,7 @@
 #define protected public
 
 #include <gtest/gtest.h>
+#include <sys/socket.h>
 
 #include <cstdint>
 #include <memory>
@@ -27,6 +28,7 @@
 #include "js_common.h"
 #include "log.h"
 #include "request_manager_impl.h"
+#include "request_service_proxy.h"
 #include "system_ability_definition.h"
 
 using namespace testing::ext;
@@ -488,4 +490,86 @@ HWTEST_F(RequestManagerImplTest, OnRemoveSystemAbility001, TestSize.Level1)
         RequestManagerImpl::SystemAbilityStatusChangeListener();
     listener.OnRemoveSystemAbility(OHOS::DOWNLOAD_SERVICE_ID, deviceId);
     listener.OnRemoveSystemAbility(OHOS::PRINT_SERVICE_ID, deviceId);
+}
+
+/**
+ * @tc.name: GetVectorData001
+ * @tc.desc: Test GetVectorData001 interface base function - GetVectorData
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, GetVectorData001, TestSize.Level1)
+{
+    int32_t fd[2] = { -1, -1 }; // 4 socket for socketpair
+    Config config;
+    OHOS::MessageParcel data;
+    EXPECT_TRUE(socketpair(AF_UNIX, SOCK_STREAM, 0, fd) >= 0);
+    RequestServiceProxy::GetVectorData(config, data);
+    EXPECT_EQ(data.ReadUint32(), 0);
+    EXPECT_EQ(data.ReadUint32(), 0);
+    EXPECT_EQ(data.ReadUint32(), 0);
+    EXPECT_EQ(data.ReadUint32(), 0);
+    EXPECT_EQ(data.ReadUint32(), 0);
+    EXPECT_EQ(data.ReadUint32(), 0);
+
+    config.certsPath.push_back("certsPath");
+    FormItem form = { .name = "name", .value = "value" };
+    config.forms.push_back(form);
+    FileSpec file0 = {
+        .name = "file0",
+        .uri = "uri0",
+        .filename = "filename0",
+        .type = "type0",
+        .isUserFile = false,
+    };
+    FileSpec file1 = {
+        .name = "file1",
+        .uri = "uri1",
+        .filename = "filename1",
+        .type = "type1",
+        .isUserFile = true,
+        .fd = fd[0],
+    };
+    config.files.push_back(file0);
+    config.files.push_back(file1);
+    config.bodyFds.push_back(-1);
+    config.bodyFds.push_back(fd[1]);
+
+    config.bodyFileNames.push_back("bodyFileName");
+
+    config.headers.emplace("first0", "second0");
+
+    config.extras.emplace("first1", "second1");
+
+    RequestServiceProxy::GetVectorData(config, data);
+
+    EXPECT_EQ(data.ReadUint32(), 1);
+    EXPECT_EQ(data.ReadString(), "certsPath");
+
+    EXPECT_EQ(data.ReadUint32(), 1);
+    EXPECT_EQ(data.ReadString(), "name");
+    EXPECT_EQ(data.ReadString(), "value");
+
+    EXPECT_EQ(data.ReadUint32(), 2);
+    EXPECT_EQ(data.ReadString(), "file0");
+    EXPECT_EQ(data.ReadString(), "uri0");
+    EXPECT_EQ(data.ReadString(), "filename0");
+    EXPECT_EQ(data.ReadString(), "type0");
+    EXPECT_EQ(data.ReadBool(), false);
+    EXPECT_EQ(data.ReadString(), "file1");
+    EXPECT_EQ(data.ReadString(), "uri1");
+    EXPECT_EQ(data.ReadString(), "filename1");
+    EXPECT_EQ(data.ReadString(), "type1");
+    EXPECT_EQ(data.ReadBool(), true);
+    EXPECT_EQ(data.ReadFileDescriptor(), fd[0]);
+
+    EXPECT_EQ(data.ReadUint32(), 2);
+    EXPECT_EQ(data.ReadString(), "bodyFileName");
+
+    EXPECT_EQ(data.ReadUint32(), 1);
+    EXPECT_EQ(data.ReadString(), "first0");
+    EXPECT_EQ(data.ReadString(), "second0");
+    EXPECT_EQ(data.ReadUint32(), 1);
+    EXPECT_EQ(data.ReadString(), "first1");
+    EXPECT_EQ(data.ReadString(), "second1");
 }
