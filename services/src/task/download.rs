@@ -111,6 +111,7 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
     // Ensures `_trace` can only be freed when this function exits.
     #[cfg(feature = "oh")]
     let _trace = Trace::new("download file");
+
     task.prepare_running();
     task.prepare_download().await?;
 
@@ -215,6 +216,14 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
     task.get_file_info(&response)?;
     task.update_progress_in_database();
 
+    let size = task.progress.lock().unwrap().sizes[0];
+    let processed = task.progress.lock().unwrap().processed[0];
+
+    #[cfg(feature = "oh")]
+    let _trace = Trace::new(&format!(
+        "download file name: {} size:{} downloaded size: {}",
+        task.conf.file_specs[0].path, size, processed
+    ));
     let mut downloader = build_downloader(task.clone(), response);
 
     if let Err(e) = downloader.download().await {
