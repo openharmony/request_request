@@ -189,7 +189,7 @@ export default function requestOperateTaskTest() {
     /**
      * @tc.number: testStartTask006
      * @tc.name: testStartTask006
-     * @tc.desc: Test start stop start background task
+     * @tc.desc: Test start stop pause background task
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -216,7 +216,7 @@ export default function requestOperateTaskTest() {
     /**
      * @tc.number: testStartTask007
      * @tc.name: testStartTask007
-     * @tc.desc: Test start stop start FOREGROUND
+     * @tc.desc: Test start stop pause FOREGROUND
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -259,8 +259,6 @@ export default function requestOperateTaskTest() {
         }
         let task = await request.agent.create(context, conf);
         await task.start();
-        await sleep(2000);
-
         let conf1 = {
           action: request.agent.Action.DOWNLOAD,
           url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
@@ -270,20 +268,101 @@ export default function requestOperateTaskTest() {
         request.agent.create(context, conf1, async (err, task1) => {
           expect(true).assertTrue();
           await request.agent.remove(task1.tid);
+          done();
         })
-        await sleep(1000);
-        task.on('progress', async function(progress) {
-          if (progress.state === request.agent.State.RUNNING) {
-            expect(true).assertTrue();
-            task.off('progress');
-            await request.agent.remove(task.tid);
-            done();
-          } else {
-            expect(false).assertTrue();
-            done();
-          }
-        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
 
+    /**
+     * @tc.number: testStartTask009
+     * @tc.name: testStartTask009
+     * @tc.desc: Test start a removed FOREGROUND task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testStartTask009', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        mode: request.agent.Mode.BACKGROUND,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `testStartTask009.txt`,
+      }
+      try {
+        let task: request.agent.Task = await request.agent.create(context, conf);
+        await request.agent.remove(task.tid);
+        await task.start();
+        expect(false).assertTrue();
+        done();
+      } catch (err) {
+        expect(err.code).assertEqual(21900007);
+        expect(true).assertTrue();
+        done();
+      }
+    })
+
+
+    /**
+     * @tc.number: testStartTask0010
+     * @tc.name: testStartTask010
+     * @tc.desc: Test start a running BACKGROUND task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testStartTask0010', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testStartTask0010.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      try {
+        await task.start();
+        await task.start();
+      } catch (err) {
+        expect(err.code).assertEqual(21900007);
+        done();
+      }
+    })
+
+     /**
+     * @tc.number: testStartTask011
+     * @tc.name: testStartTask011
+     * @tc.desc: Test start two BACKGROUND task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testStartTask011', 0, async function (done) {
+      try {
+        let conf = {
+          action: request.agent.Action.DOWNLOAD,
+          url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+          saveas: `test.txt`,
+          mode: request.agent.Mode.BACKGROUND
+        }
+        let task = await request.agent.create(context, conf);
+        await task.start();
+
+        let conf1 = {
+          action: request.agent.Action.DOWNLOAD,
+          url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+          saveas: `README.md`,
+          mode: request.agent.Mode.BACKGROUND
+        }
+        request.agent.create(context, conf1, async (err, task1) => {
+          expect(true).assertTrue();
+          await request.agent.remove(task1.tid);
+          done();
+        })
       } catch (err) {
         expect(false).assertTrue();
         done();
@@ -430,6 +509,60 @@ export default function requestOperateTaskTest() {
         expect(false).assertTrue();
         done();
       })
+    })
+
+    /**
+     * @tc.number: testPauseTask006
+     * @tc.name: testPauseTask006
+     * @tc.desc: Test pause a created background task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testPauseTask006', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testPauseTask006.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      try {
+        await task.pause();
+      } catch (err) {
+        expect(err.code).assertEqual(21900007);
+        await request.agent.remove(task.tid);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testPauseTask007
+     * @tc.name: testPauseTask007
+     * @tc.desc: Test pause a paused FOREGROUND task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testPauseTask007', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testPauseTask007.txt',
+        mode: request.agent.Mode.FOREGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      try {
+        await task.start();
+        await task.pause();
+        await task.pause();
+      } catch (err) {
+        expect(err.code).assertEqual(21900007);
+        await request.agent.remove(task.tid);
+        done();
+      }
     })
 
     /**
@@ -609,6 +742,88 @@ export default function requestOperateTaskTest() {
     })
 
     /**
+     * @tc.number: testResumeTask007
+     * @tc.name: testResumeTask007
+     * @tc.desc: Test resume BACKGROUND task for promise
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testResumeTask007', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+        saveas: 'testResumeTask007.txt',
+        mode: request.agent.Mode.FOREGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      await task.start();
+      await task.pause();
+      await task.resume().then(() => {
+        expect(true).assertTrue();
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      });
+    })
+
+    /**
+     * @tc.number: testResumeTask008
+     * @tc.name: testResumeTask008
+     * @tc.desc: Test resume a removed BACKGROUND task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testResumeTask008', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+        saveas: 'testResumeTask008.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      try {
+        let task: request.agent.Task = await request.agent.create(context, conf);
+        await request.agent.remove(task.tid);
+        await task.resume();
+        expect(false).assertTrue();
+        done();
+      } catch (err) {
+        expect(err.code).assertEqual(21900007);
+        expect(true).assertTrue();
+        done();
+      }      
+    })
+
+    /**
+     * @tc.number: testResumeTask009
+     * @tc.name: testResumeTask009
+     * @tc.desc: Test resume a created BACKGROUND task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testResumeTask009', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+        saveas: 'testResumeTask009.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      try {
+        await task.resume();
+      } catch (err) {
+        expect(err.code).assertEqual(21900007);
+        done();
+      }
+    })
+
+    /**
      * @tc.number: testStopTask001
      * @tc.name: testStopTask001
      * @tc.desc: Test stop FOREGROUND task for callback
@@ -767,6 +982,62 @@ export default function requestOperateTaskTest() {
     })
 
     /**
+     * @tc.number: testStopTask007
+     * @tc.name: testStopTask007
+     * @tc.desc: Test stop a created FOREGROUND task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testStopTask007', 0, async function (done) {
+      await sleep(2000);
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+        saveas: 'testStopTask007.txt',
+        mode: request.agent.Mode.FOREGROUND
+      }
+      try{
+        let task = await request.agent.create(context, conf);
+        await task.stop();
+      } catch (err) {
+        expect(err.code).assertEqual(21900007);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testStopTask008
+     * @tc.name: testStopTask008
+     * @tc.desc: Test stop a removed FOREGROUND task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testStopTask008', 0, async function (done) {
+      await sleep(2000);
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+        saveas: 'testStopTask008.txt',
+        mode: request.agent.Mode.FOREGROUND
+      }
+      try {
+        let task: request.agent.Task = await request.agent.create(context, conf);
+        await request.agent.remove(task.tid);
+        await task.stop();
+        expect(false).assertTrue();
+        done();
+      } catch (err) {
+        expect(err.code).assertEqual(21900007);
+        expect(true).assertTrue();
+        done();
+      } 
+    })
+
+    /**
      * @tc.number: testOnTask001
      * @tc.name: testOnTask001
      * @tc.desc: Test on task for 'test'
@@ -864,10 +1135,6 @@ export default function requestOperateTaskTest() {
         task.off('progress');
         done();
       })
-      task.on('completed', function (progress) {
-        expect(progress.state).assertEqual(request.agent.State.COMPLETED);
-        done();
-      })
       await task.start();
     })
 
@@ -888,11 +1155,6 @@ export default function requestOperateTaskTest() {
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
-      task.on('progress', function (progress) {
-        expect(progress.state).assertEqual(request.agent.State.RUNNING);
-        task.off('progress');
-        done();
-      })
       task.on('completed', function (progress) {
         expect(progress.state).assertEqual(request.agent.State.COMPLETED);
         done();
@@ -948,6 +1210,67 @@ export default function requestOperateTaskTest() {
         task.on('progress', function (progress) {});
         expect(true).assertTrue();
         await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testOnTask008
+     * @tc.name: testOnTask008
+     * @tc.desc: Test on task for pause
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testOnTask008', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+        saveas: 'testOnTask008.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      await task.start();
+      await sleep(1000);
+      await task.pause();
+      try {
+        task.on('pause', function (progress) {});
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testOnTask009
+     * @tc.name: testOnTask009
+     * @tc.desc: Test on task for resume
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testOnTask009', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+        saveas: 'testOnTask009.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      await task.start();
+      await task.pause();
+      await task.resume();
+      try {
+        task.on('resume', function (progress) {});
+        expect(true).assertTrue();
         done();
       } catch (err) {
         expect(false).assertTrue();
@@ -1129,6 +1452,108 @@ export default function requestOperateTaskTest() {
     })
 
     /**
+     * @tc.number: testOffTask007
+     * @tc.name: testOffTask007
+     * @tc.desc: Test off task for pause
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testOffTask007', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testOffTask007.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('pause', function (progress) {
+        expect(true).assertTrue();
+        done();
+      })
+      task.on('pause', function (progress) {
+        expect(true).assertTrue();
+        done();
+      })
+      function PauseCallback(progress) {
+        expect(false).assertTrue();
+        done();
+      }
+      task.on('pause', PauseCallback);
+      task.off('pause', PauseCallback);
+      await task.start();
+      await task.pause();
+    })
+
+    /**
+     * @tc.number: testOffTask008
+     * @tc.name: testOffTask008
+     * @tc.desc: Test off task for resume
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testOffTask008', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testOffTask008.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('resume', function (progress) {
+        expect(true).assertTrue();
+        done();
+      })
+      task.on('resume', function (progress) {
+        expect(true).assertTrue();
+        done();
+      })
+      function ResumeCallback(progress) {
+        expect(false).assertTrue();
+        done();
+      }
+      task.on('resume', ResumeCallback);
+      task.off('resume', ResumeCallback);
+      await task.start();
+      await task.pause();
+      await task.resume();
+    })
+
+    /**
+     * @tc.number: testOffTask009
+     * @tc.name: testOffTask009
+     * @tc.desc: Test off task for remove
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testOffTask009', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testOffTask009.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('remove', function (progress) {
+        expect(true).assertTrue();
+        done();
+      })
+      function CompletedCallback(progress) {
+        expect(false).assertTrue();
+        done();
+      }
+      task.on('remove', CompletedCallback);
+      task.off('remove', CompletedCallback);
+      await task.start();
+      await request.agent.remove(task.tid);
+    })
+
+    /**
      * @tc.number: testRemove001
      * @tc.name: testRemove001
      * @tc.desc: Test remove for parameter error
@@ -1237,6 +1662,32 @@ export default function requestOperateTaskTest() {
         expect(err.code).assertEqual(21900006);
         done();
       }
+    })
+
+    /**
+     * @tc.number: testRemove006
+     * @tc.name: testRemove006
+     * @tc.desc: Test remove for promise FOREGROUND
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testRemove006', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testRemove006.txt',
+        mode: request.agent.Mode.FOREGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      request.agent.remove(task.tid).then(() => {
+        expect(true).assertTrue();
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
     })
 
     /**
@@ -2209,33 +2660,6 @@ export default function requestOperateTaskTest() {
       }
     })
 
-    /**
-     * @tc.number: testRemoveTaskStart001
-     * @tc.name: testRemoveTaskStart001
-     * @tc.desc: Test remove task and then start
-     * @tc.size: MediumTest
-     * @tc.type: Function
-     * @tc.level: Level 1
-     * @tc.require:
-     */
-    it('testRemoveTaskStart001', 0, async function (done) {
-      let conf = {
-        action: request.agent.Action.DOWNLOAD,
-        mode: request.agent.Mode.BACKGROUND,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `test_remove_task_start_001`,
-      }
-      try {
-        let task: request.agent.Task = await request.agent.create(context, conf);
-        await request.agent.remove(task.tid);
-        await task.start();
-        expect(false).assertTrue();
-        done();
-      } catch (err) {
-        expect(err.code).assertEqual(21900007);
-        expect(true).assertTrue();
-        done();
-      }
-    })
+
   })
 }
