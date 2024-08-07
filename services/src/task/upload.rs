@@ -238,17 +238,24 @@ async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
     info!("upload task {} start running", task.task_id());
 
     #[cfg(feature = "oh")]
-    {
-        // Ensures `_trace` can only be freed when this function exits.
-        let url = task.conf.url.as_str();
-        let num = task.conf.file_specs.len();
-        let _trace = Trace::new(&format!("exec upload task url: {url} file num: {num}"));
-    }
+    let _trace = Trace::new(&format!(
+        "exec upload task url: {} file num: {}",
+        task.conf.url,
+        task.conf.file_specs.len()
+    ));
 
     let size = task.conf.file_specs.len();
     let start = task.progress.lock().unwrap().common_data.index;
 
     for index in start..size {
+        #[cfg(feature = "oh")]
+        let _trace = Trace::new(&format!(
+            "upload file name:{} index:{} size:{}",
+            task.conf.file_specs[index].file_name,
+            index,
+            task.get_upload_info(index).1
+        ));
+
         task.progress.lock().unwrap().common_data.index = index;
         if !task.prepare_single_upload(index) {
             return Err(TaskError::Failed(Reason::OthersError));
@@ -282,16 +289,6 @@ where
         "begin upload one file, tid: {}, index is {}",
         task.conf.common_data.task_id, index,
     );
-
-    // Ensures `_trace` can only be freed when this function exits.
-    #[cfg(feature = "oh")]
-    {
-        let (_, size) = task.get_upload_info(index);
-        let name = task.conf.file_specs[index].file_name.as_str();
-        let _trace = Trace::new(&format!(
-            "upload file name:{name} index:{index} size:{size}"
-        ));
-    }
 
     let Some(request) = build_upload_request(task.clone(), index) else {
         return Err(TaskError::Failed(Reason::BuildRequestFailed));
