@@ -15,7 +15,7 @@
 
 #include "cj_request_event.h"
 
-#include "cj_request_log.h"
+#include "log.h"
 #include "request_manager.h"
 #include "cj_initialize.h"
 

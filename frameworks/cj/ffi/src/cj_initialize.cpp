@@ -25,7 +25,7 @@
 #include "securec.h"
 #include "constant.h"
 #include "js_common.h"
-#include "cj_request_log.h"
+#include "log.h"
 #include "request_manager.h"
 #include "cj_request_common.h"
 #include "net_conn_client.h"
@@ -40,8 +40,6 @@ using OHOS::Request::FormItem;
 using OHOS::Request::ExceptionErrorCode;
 using OHOS::AbilityRuntime::Context;
 
-static constexpr uint32_t TOKEN_MAX_BYTES = 2048;
-static constexpr uint32_t TOKEN_MIN_BYTES = 8;
 static constexpr uint32_t URL_MAXIMUM = 2048;
 static constexpr uint32_t TITLE_MAXIMUM = 256;
 static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
@@ -240,7 +238,7 @@ bool CJInitialize::ParseTitle(Config &config)
     return true;
 }
 
-bool CJInitialize::ParseToken(Config &config)
+bool CJInitialize::ParseToken(Config &config, std::string &errInfo)
 {
     if (config.token.empty()) {
         config.token = "null";
@@ -248,6 +246,7 @@ bool CJInitialize::ParseToken(Config &config)
     }
     size_t len = config.token.length();
     if (len < TOKEN_MIN_BYTES || len > TOKEN_MAX_BYTES) {
+        errInfo = "Parameter verification failed, the length of token should between 8 and 2048 bytes";
         return false;
     }
 
@@ -752,8 +751,11 @@ ExceptionError CJInitialize::ParseConfig(OHOS::AbilityRuntime::Context *stageCon
         return ret;
     }
 
+    if (!ParseToken(config, ret.errInfo)) {
+        return ret;
+    }
+
     if (!ParseTitle(config) ||
-        !ParseToken(config) ||
         !ParseDescription(config.description)) {
         ret.errInfo = "Exceeding maximum length";
         return ret;

@@ -28,6 +28,13 @@ namespace OHOS::CJSystemapi::Request {
 using OHOS::Request::ExceptionError;
 using OHOS::Request::ExceptionErrorCode;
 using OHOS::Request::Config;
+using OHOS::Request::TaskInfo;
+using OHOS::Request::Filter;
+using OHOS::Request::State;
+using OHOS::Request::Action;
+using OHOS::Request::Mode;
+using OHOS::Request::FileSpec;
+using OHOS::Request::FormItem;
 
 class CJRequestImpl {
 public:
@@ -35,8 +42,14 @@ public:
     ~CJRequestImpl() = default;
 
     static RetReqData CreateTask(OHOS::AbilityRuntime::Context* context, CConfig *ffiConfig);
-    static RetError RemoveTask(std::string taskId);
+    static RetTask GetTask(OHOS::AbilityRuntime::Context* context, std::string taskId,
+        RequestNativeOptionCString &cToken);
     static void FreeTask(std::string taskId);
+    static RetError RemoveTask(std::string taskId);
+    static RetTaskInfo ShowTask(std::string taskId);
+    static RetTaskInfo TouchTask(std::string taskId, const char* token);
+    static RetTaskArr SearchTask(CFilter &filter);
+    static ExceptionError Convert2Filter(CFilter &filter, Filter &out);
     static RetError ProgressOn(char *event, std::string taskId, void (*callback)(CProgress progress));
     static RetError ProgressOff(char *event, std::string taskId, void *callback);
     static RetError TaskStart(std::string taskId);
@@ -48,6 +61,21 @@ public:
     static RetError Convert2RetErr(ExceptionError &err);
     static std::map<std::string, std::string> ConvertCArr2Map(const CHashStrArr *cheaders);
     static void Convert2Config(CConfig *config, Config &out);
+    static CTaskInfo Convert2CTaskInfo(TaskInfo &task);
+    static RequestCArrString Convert2CStringArray(std::vector<std::string> &tids);
+
+    static Filter Convert2Filter(CFilter &filter);
+    static void Convert2CConfig(Config &config, CConfig &out);
+    static CConfigDataTypeUion Convert2RequestData(Action action, std::string &data,
+        const std::vector<FileSpec> &files, const std::vector<FormItem> &forms);
+    static std::string ParseBundle(RequestNativeOptionCString &bundle);
+    static int64_t ParseBefore(RequestNativeOptionInt64 &before);
+    static int64_t ParseAfter(RequestNativeOptionInt64 &after, int64_t before);
+    static State ParseState(RequestNativeOptionUInt32 &state);
+    static Action ParseAction(RequestNativeOptionUInt32 &action);
+    static Mode ParseMode(RequestNativeOptionUInt32 &mode);
+
+    static ExceptionError ParseToken(RequestNativeOptionCString &cToken, std::string &out);
 private:
     static RetError TaskExec(std::string execType, std::string taskId);
 };

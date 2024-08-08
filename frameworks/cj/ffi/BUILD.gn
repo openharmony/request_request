@@ -31,65 +31,47 @@ ohos_shared_library("cj_request_ffi") {
     "-fvisibility=hidden",
   ]
 
-  if (!defined(defines)) {
-    defines = []
-  }
-
   include_dirs = [
     "include",
+    "../../../common/include",
     "../../native/include",
     "../../js/napi/include",
   ]
 
-  if (!build_ohos_sdk) {
-    deps = [
-      "../../../common:request_common_static",
-      "../../native:request_native",
-    ]
+  deps = [ "../../native:request_native" ]
 
-    external_deps = [
-      "ability_base:zuri",
-      "ability_runtime:abilitykit_native",
-      "ability_runtime:app_context",
-      "ability_runtime:data_ability_helper",
-      "ability_runtime:napi_base_context",
-      "c_utils:utils",
-      "ffrt:libffrt",
-      "hilog:libhilog",
-      "ipc:ipc_single",
-      "napi:ace_napi",
-      "napi:cj_bind_ffi",
-      "napi:cj_bind_native",
-      "netmanager_base:net_conn_manager_if",
-      "openssl:libssl_shared",
-      "storage_service:storage_manager_acl",
-    ]
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:data_ability_helper",
+    "ability_runtime:napi_base_context",
+    "c_utils:utils",
+    "ffrt:libffrt",
+    "hilog:libhilog",
+    "init:libbegetutil",
+    "ipc:ipc_single",
+    "napi:ace_napi",
+    "napi:cj_bind_ffi",
+    "napi:cj_bind_native",
+    "netmanager_base:net_conn_manager_if",
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
+    "storage_service:storage_manager_acl",
+  ]
 
-    sources = [
-      "src/cj_app_state_callback.cpp",
-      "src/cj_initialize.cpp",
-      "src/cj_listener_list.cpp",
-      "src/cj_notify_data_listener.cpp",
-      "src/cj_request_common.cpp",
-      "src/cj_request_event.cpp",
-      "src/cj_request_ffi.cpp",
-      "src/cj_request_impl.cpp",
-      "src/cj_request_task.cpp",
-      "src/cj_response_listener.cpp",
-    ]
-  } else {
-    defines += [ "PREVIEWER" ]
-    sources = [ "src/request_mock.cpp" ]
-    external_deps = [ "napi:cj_bind_ffi" ]
-  }
-
-  if (is_ohos) {
-    defines += [ "OHOS_PLATFORM" ]
-  }
-
-  if (is_mingw) {
-    defines += [ "WINDOWS_PLATFORM" ]
-  }
+  sources = [
+    "src/cj_app_state_callback.cpp",
+    "src/cj_initialize.cpp",
+    "src/cj_listener_list.cpp",
+    "src/cj_notify_data_listener.cpp",
+    "src/cj_request_common.cpp",
+    "src/cj_request_event.cpp",
+    "src/cj_request_ffi.cpp",
+    "src/cj_request_impl.cpp",
+    "src/cj_request_task.cpp",
+    "src/cj_response_listener.cpp",
+  ]
 
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "request"
