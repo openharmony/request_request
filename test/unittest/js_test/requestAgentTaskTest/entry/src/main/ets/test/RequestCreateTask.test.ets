@@ -62,7 +62,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskAction001', 0, function (done)  {
+    it('testTaskAction001', 0, function (done) {
       let conf = {
         url: 'http://127.0.0.1',
       }
@@ -86,7 +86,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskAction002', 0, async function (done)  {
+    it('testTaskAction002', 0, async function (done) {
       let conf = {
         action: 'UPLOAD',
         url: 'http://127.0.0.1'
@@ -111,7 +111,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskAction003', 0, function (done)  {
+    it('testTaskAction003', 0, function (done) {
       let conf = {
         action: 2,
         url: 'http://127.0.0.1'
@@ -136,7 +136,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskAction004', 0, function (done)  {
+    it('testTaskAction004', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -160,7 +160,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskAction005', 0, function (done)  {
+    it('testTaskAction005', 0, function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
@@ -188,7 +188,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskUrl001', 0, function (done)  {
+    it('testTaskUrl001', 0, function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
       }
@@ -212,7 +212,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskUrl002', 0, function (done)  {
+    it('testTaskUrl002', 0, function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: '',
@@ -237,7 +237,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskUrl003', 0, function (done)  {
+    it('testTaskUrl003', 0, function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/openharmony/request_request',
@@ -258,7 +258,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskUrl004', 0, function (done)  {
+    it('testTaskUrl004', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -282,7 +282,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskUrl005', 0, function (done)  {
+    it('testTaskUrl005', 0, function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'admin://127.0.0.1',
@@ -307,7 +307,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskUrl006', 0, function (done)  {
+    it('testTaskUrl006', 0, function (done) {
 
       let conf = {
         action: request.agent.Action.DOWNLOAD,
@@ -781,11 +781,11 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./test.txt`
-                 },
-               }],
+          name: 'file',
+          value: {
+            path: `./test.txt`
+          },
+        }],
         method: 'POST'
       }
       let task = await request.agent.create(context, conf);
@@ -895,11 +895,11 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./test.txt`
-                 },
-               }],
+          name: 'file',
+          value: {
+            path: `./test.txt`
+          },
+        }],
         method: 'GET'
       }
       let task = await request.agent.create(context, conf);
@@ -957,7 +957,7 @@ export default function requestCreateTaskTest() {
         saveas: 123
       }
       let task = await request.agent.create(context, conf);
-      task.on('completed', function() {
+      task.on('completed', function () {
         if (fs.accessSync(`${cacheDir}/test.txt`)) {
           expect(true).assertTrue();
           done();
@@ -983,7 +983,7 @@ export default function requestCreateTaskTest() {
       }
       try {
         let task = await request.agent.create(context, conf);
-        task.on('completed', function() {
+        task.on('completed', function () {
           if (fs.accessSync(`${cacheDir}/test.txt`)) {
             expect(true).assertTrue();
             done();
@@ -1008,17 +1008,17 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData001', 0, function (done)  {
+    it('testTaskData001', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 value: {
-                   path: `./test.txt`
-                 },
-               }]
+          value: {
+            path: `./test.txt`
+          },
+        }]
       }
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -1040,18 +1040,18 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData002', 0, function (done)  {
+    it('testTaskData002', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 123,
-                 value: {
-                   path: `./test.txt`
-                 }
-               }]
+          name: 123,
+          value: {
+            path: `./test.txt`
+          }
+        }]
       }
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -1073,15 +1073,15 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData003', 0, function (done)  {
+    it('testTaskData003', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'test'
-               }]
+          name: 'test'
+        }]
       }
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -1103,16 +1103,16 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData004', 0, function (done)  {
+    it('testTaskData004', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: 123
-               }]
+          name: 'file',
+          value: 123
+        }]
       }
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -1134,18 +1134,18 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData005', 0, function (done)  {
+    it('testTaskData005', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: ''
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: ''
+          }
+        }]
       }
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -1167,18 +1167,18 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData006', 0, function (done)  {
+    it('testTaskData006', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: 123
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: 123
+          }
+        }]
       }
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -1200,18 +1200,18 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData007', 0, function (done)  {
+    it('testTaskData007', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `${cacheDir}/test.txt`
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: `${cacheDir}/test.txt`
+          }
+        }]
       }
       try {
         request.agent.create(context, conf, (err) => {
@@ -1233,19 +1233,19 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData008', 0, function (done)  {
+    it('testTaskData008', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./test.txt`,
-                   filename: 123
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: `./test.txt`,
+            filename: 123
+          }
+        }]
       }
       request.agent.create(context, conf, async (err, data) => {
         expect(err === null).assertTrue();
@@ -1263,19 +1263,19 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData009', 0, function (done)  {
+    it('testTaskData009', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./test.txt`,
-                   mimeType: 123
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: `./test.txt`,
+            mimeType: 123
+          }
+        }]
       }
       request.agent.create(context, conf, async (err, data) => {
         expect(err === null).assertTrue();
@@ -1293,19 +1293,19 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData010', 0, function (done)  {
+    it('testTaskData010', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./test.txt`,
-                   filename: 'a.txt'
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: `./test.txt`,
+            filename: 'a.txt'
+          }
+        }]
       }
       request.agent.create(context, conf, async (err, data) => {
         expect(err === null).assertTrue();
@@ -1323,23 +1323,23 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData011', 0, function (done)  {
+    it('testTaskData011', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-         name: 'file',
-         value: [
-           {
-             path: `./test.txt`,
-           },
-           {
-             path: `./test.txt`,
-           }
-         ]
-       }]
+          name: 'file',
+          value: [
+            {
+              path: `./test.txt`,
+            },
+            {
+              path: `./test.txt`,
+            }
+          ]
+        }]
       }
       request.agent.create(context, conf, async (err, data) => {
         expect(err === null).assertTrue();
@@ -1357,16 +1357,16 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData012', 0, function (done)  {
+    it('testTaskData012', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'test',
-                 value: 'test'
-               }]
+          name: 'test',
+          value: 'test'
+        }]
       }
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -1389,19 +1389,19 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData013', 0, function (done)  {
+    it('testTaskData013', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./test.txt`,
-                   filename: 'test.txt'
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: `./test.txt`,
+            filename: 'test.txt'
+          }
+        }]
       }
       request.agent.create(context, conf, async (err, data) => {
         expect(err === null).assertTrue();
@@ -1426,11 +1426,11 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./test.txt`,
-                 }
-               }],
+          name: 'file',
+          value: {
+            path: `./test.txt`,
+          }
+        }],
         network: 3
       }
       request.agent.create(context, conf).then(async (data) => {
@@ -1511,11 +1511,11 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./test.txt`,
-                 }
-               }],
+          name: 'file',
+          value: {
+            path: `./test.txt`,
+          }
+        }],
         network: request.agent.Network.WIFI
       }
       let task = await request.agent.create(context, conf);
@@ -1544,12 +1544,14 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./test.txt`
-                 },
-               }],
-        headers: {'content-type': 'application/json'},
+          name: 'file',
+          value: {
+            path: `./test.txt`
+          },
+        }],
+        headers: {
+          'content-type': 'application/json'
+        },
       }
       let task = await request.agent.create(context, conf);
       task.start().then(() => {
@@ -1577,11 +1579,11 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./test.txt`
-                 },
-               }],
+          name: 'file',
+          value: {
+            path: `./test.txt`
+          },
+        }],
       }
       let task = await request.agent.create(context, conf);
       task.start().then(() => {
@@ -1767,7 +1769,7 @@ export default function requestCreateTaskTest() {
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
-      task.on('completed', function() {
+      task.on('completed', function () {
         expect(true).assertTrue();
         done();
       })
@@ -1855,7 +1857,7 @@ export default function requestCreateTaskTest() {
         gauge: true
       }
       let task = await request.agent.create(context, conf);
-      task.on('completed', function(progress) {
+      task.on('completed', function (progress) {
         expect(progress.state).assertEqual(0x40);
         expect(progress.index).assertEqual(0);
         expect(progress.processed).assertEqual(6);
@@ -1881,11 +1883,11 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./test.txt`,
-                 }
-               }],
+          name: 'file',
+          value: {
+            path: `./test.txt`,
+          }
+        }],
         begins: 5,
         ends: 10
       }
@@ -1918,7 +1920,7 @@ export default function requestCreateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start();
-      task.on('failed', function(progress) {
+      task.on('failed', function (progress) {
         expect(true).assertTrue();
         done();
       })
@@ -1940,11 +1942,11 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./test.txt`,
-                 }
-               }],
+          name: 'file',
+          value: {
+            path: `./test.txt`,
+          }
+        }],
         begins: 5,
       }
       let task = await request.agent.create(context, conf);
@@ -1978,7 +1980,7 @@ export default function requestCreateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       await task.start();
-      task.on('completed', function(progress) {
+      task.on('completed', function (progress) {
         expect(progress.sizes[0]).assertEqual(11);
         done();
       })
@@ -2000,11 +2002,11 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./test.txt`,
-                 }
-               }],
+          name: 'file',
+          value: {
+            path: `./test.txt`,
+          }
+        }],
         ends: 10
       }
       let task = await request.agent.create(context, conf);
@@ -2035,18 +2037,18 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [
-        {
-          name: 'file',
-          value: [
           {
-            path: `./test1.txt`,
-            filename: 'test1.txt'
-          },
-          {
-            path: `./test2.txt`,
-            filename: 'test2.txt'
-          }]
-        }],
+            name: 'file',
+            value: [
+              {
+                path: `./test1.txt`,
+                filename: 'test1.txt'
+              },
+              {
+                path: `./test2.txt`,
+                filename: 'test2.txt'
+              }]
+          }],
         index: 1,
       }
       let task = await request.agent.create(context, conf);
@@ -2079,7 +2081,8 @@ export default function requestCreateTaskTest() {
         request.agent.create(context, conf).then((data) => {
           expect(false).assertTrue();
           done();
-        }).catch((err) => {})
+        }).catch((err) => {
+        })
       } catch (err) {
         expect(err.code).assertEqual(401);
         done();
@@ -2106,7 +2109,8 @@ export default function requestCreateTaskTest() {
         request.agent.create(context, conf).then((data) => {
           expect(false).assertTrue();
           done();
-        }).catch((err) => {})
+        }).catch((err) => {
+        })
       } catch (err) {
         expect(err.code).assertEqual(401);
         done();

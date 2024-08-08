@@ -53,7 +53,7 @@ export default function requestOperateTaskTest() {
     }
     let formItem = [{
       name: 'file',
-      value: [ fileSpec ]
+      value: [fileSpec]
     }]
 
     /**
@@ -332,7 +332,7 @@ export default function requestOperateTaskTest() {
       }
     })
 
-     /**
+    /**
      * @tc.number: testStartTask011
      * @tc.name: testStartTask011
      * @tc.desc: Test start two BACKGROUND task
@@ -795,7 +795,7 @@ export default function requestOperateTaskTest() {
         expect(err.code).assertEqual(21900007);
         expect(true).assertTrue();
         done();
-      }      
+      }
     })
 
     /**
@@ -942,7 +942,7 @@ export default function requestOperateTaskTest() {
         saveas: 'testStopTask005.txt',
         mode: request.agent.Mode.BACKGROUND
       }
-      try{
+      try {
         let task = await request.agent.create(context, conf);
         await task.start();
         await task.stop();
@@ -970,7 +970,7 @@ export default function requestOperateTaskTest() {
         saveas: 'testStopTask006.txt',
         mode: request.agent.Mode.BACKGROUND
       }
-      try{
+      try {
         let task = await request.agent.create(context, conf);
         await task.start();
         await task.stop();
@@ -998,7 +998,7 @@ export default function requestOperateTaskTest() {
         saveas: 'testStopTask007.txt',
         mode: request.agent.Mode.FOREGROUND
       }
-      try{
+      try {
         let task = await request.agent.create(context, conf);
         await task.stop();
       } catch (err) {
@@ -1034,7 +1034,7 @@ export default function requestOperateTaskTest() {
         expect(err.code).assertEqual(21900007);
         expect(true).assertTrue();
         done();
-      } 
+      }
     })
 
     /**
@@ -1055,7 +1055,8 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       try {
-        task.on('test', function (progress) {})
+        task.on('test', function (progress) {
+        })
       } catch (err) {
         expect(err.code).assertEqual(401);
         await request.agent.remove(task.tid);
@@ -1081,7 +1082,8 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       try {
-        task.on(123, function (progress) {})
+        task.on(123, function (progress) {
+        })
       } catch (err) {
         expect(err.code).assertEqual(401);
         await request.agent.remove(task.tid);
@@ -1206,8 +1208,10 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       try {
-        task.on('progress', function (progress) {});
-        task.on('progress', function (progress) {});
+        task.on('progress', function (progress) {
+        });
+        task.on('progress', function (progress) {
+        });
         expect(true).assertTrue();
         await request.agent.remove(task.tid);
         done();
@@ -1238,7 +1242,8 @@ export default function requestOperateTaskTest() {
       await sleep(1000);
       await task.pause();
       try {
-        task.on('pause', function (progress) {});
+        task.on('pause', function (progress) {
+        });
         expect(true).assertTrue();
         await request.agent.remove(task.tid);
         done();
@@ -1269,7 +1274,8 @@ export default function requestOperateTaskTest() {
       await task.pause();
       await task.resume();
       try {
-        task.on('resume', function (progress) {});
+        task.on('resume', function (progress) {
+        });
         expect(true).assertTrue();
         done();
       } catch (err) {
@@ -1296,7 +1302,8 @@ export default function requestOperateTaskTest() {
       }
       let task = await request.agent.create(context, conf);
       try {
-        task.off('test', function() {});
+        task.off('test', function () {
+        });
       } catch (err) {
         expect(err.code).assertEqual(401);
         await request.agent.remove(task.tid);
@@ -1347,7 +1354,7 @@ export default function requestOperateTaskTest() {
         mode: request.agent.Mode.BACKGROUND
       }
       let task = await request.agent.create(context, conf);
-      task.on('failed', function() {
+      task.on('failed', function () {
         expect(false).assertTrue();
         done();
       })
@@ -1379,10 +1386,12 @@ export default function requestOperateTaskTest() {
         expect(true).assertTrue();
         done();
       })
+
       function CompletedCallback(progress) {
         expect(false).assertTrue();
         done();
       }
+
       task.on('completed', CompletedCallback);
       task.off('completed', CompletedCallback);
       await task.start();
@@ -1413,10 +1422,12 @@ export default function requestOperateTaskTest() {
         expect(true).assertTrue();
         done();
       })
+
       function ProgressCallback(progress) {
         expect(false).assertTrue();
         done();
       }
+
       task.on('progress', ProgressCallback);
       task.off('progress', ProgressCallback);
       await task.start();
@@ -1476,10 +1487,12 @@ export default function requestOperateTaskTest() {
         expect(true).assertTrue();
         done();
       })
+
       function PauseCallback(progress) {
         expect(false).assertTrue();
         done();
       }
+
       task.on('pause', PauseCallback);
       task.off('pause', PauseCallback);
       await task.start();
@@ -1511,10 +1524,12 @@ export default function requestOperateTaskTest() {
         expect(true).assertTrue();
         done();
       })
+
       function ResumeCallback(progress) {
         expect(false).assertTrue();
         done();
       }
+
       task.on('resume', ResumeCallback);
       task.off('resume', ResumeCallback);
       await task.start();
@@ -1543,10 +1558,12 @@ export default function requestOperateTaskTest() {
         expect(true).assertTrue();
         done();
       })
+
       function CompletedCallback(progress) {
         expect(false).assertTrue();
         done();
       }
+
       task.on('remove', CompletedCallback);
       task.off('remove', CompletedCallback);
       await task.start();
@@ -1760,8 +1777,8 @@ export default function requestOperateTaskTest() {
       let task = await request.agent.create(context, conf);
       task.on('response', (response: request.agent.HttpResponse) => {
         expect(response.statusCode).assertEqual(200);
-		    expect(response.version).assertEqual("HTTP/1.1");
-		    expect(response.reason).assertEqual("OK");
+        expect(response.version).assertEqual("HTTP/1.1");
+        expect(response.reason).assertEqual("OK");
         done();
       })
       await task.start();
@@ -1784,13 +1801,13 @@ export default function requestOperateTaskTest() {
         mode: request.agent.Mode.BACKGROUND,
         overwrite: true,
       }
-	    let callback = (response: request.agent.HttpResponse) => {
+      let callback = (response: request.agent.HttpResponse) => {
         expect(false).assertTrue();
         done();
       };
       let task = await request.agent.create(context, conf);
       task.on('response', callback)
-	    task.off('response', callback);
+      task.off('response', callback);
       task.on('completed', function (progress) {
         expect(progress.state).assertEqual(request.agent.State.COMPLETED);
         done();
@@ -1820,12 +1837,12 @@ export default function requestOperateTaskTest() {
         expect(false).assertTrue();
         done();
       })
-	    task.on('response', function (response: request.agent.HttpResponse) {
-		    expect(response.statusCode).assertEqual(200);
+      task.on('response', function (response: request.agent.HttpResponse) {
+        expect(response.statusCode).assertEqual(200);
         expect(false).assertTrue();
         done();
       })
-	    task.off('response');
+      task.off('response');
       task.on('completed', function (progress) {
         expect(progress.state).assertEqual(request.agent.State.COMPLETED);
         done();
@@ -1851,7 +1868,7 @@ export default function requestOperateTaskTest() {
         overwrite: true,
       }
       let task = await request.agent.create(context, conf);
-	    task.off('response');
+      task.off('response');
       task.on('completed', function (progress) {
         expect(progress.state).assertEqual(request.agent.State.COMPLETED);
         done();
@@ -1879,8 +1896,8 @@ export default function requestOperateTaskTest() {
       let task = await request.agent.create(context, conf);
       task.on('response', function (response: request.agent.HttpResponse) {
         expect(response.statusCode).assertEqual(404);
-		    expect(response.version).assertEqual("HTTP/1.1");
-		    expect(response.reason).assertEqual("Not Found");
+        expect(response.version).assertEqual("HTTP/1.1");
+        expect(response.reason).assertEqual("Not Found");
         task.off('response');
         done();
       })
@@ -2282,11 +2299,11 @@ export default function requestOperateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./upload_001`
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: `./upload_001`
+          }
+        }]
       }
       try {
         await request.agent.create(context, conf).then(async () => {
@@ -2323,11 +2340,11 @@ export default function requestOperateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./upload_002`
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: `./upload_002`
+          }
+        }]
       }
       try {
         await request.agent.create(context, conf).then(async () => {
@@ -2364,11 +2381,11 @@ export default function requestOperateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `internal://cache/upload_003`
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: `internal://cache/upload_003`
+          }
+        }]
       }
       try {
         await request.agent.create(context, conf).then(async () => {
@@ -2405,11 +2422,11 @@ export default function requestOperateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `internal://files/upload_004`
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: `internal://files/upload_004`
+          }
+        }]
       }
       try {
         await request.agent.create(context, conf).then(async () => {
@@ -2446,11 +2463,11 @@ export default function requestOperateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: dir + `/upload_005`
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: dir + `/upload_005`
+          }
+        }]
       }
       try {
         await request.agent.create(context, conf).then(async () => {
@@ -2483,11 +2500,11 @@ export default function requestOperateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `/data/storage/upload_006`
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: `/data/storage/upload_006`
+          }
+        }]
       }
       try {
         await request.agent.create(context, conf).then(async () => {
@@ -2521,11 +2538,11 @@ export default function requestOperateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: '/data/storage/../../data/storage/el1/../el2/base/cache/upload_007'
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: '/data/storage/../../data/storage/el1/../el2/base/cache/upload_007'
+          }
+        }]
       }
       try {
         await request.agent.create(context, conf).then(async () => {
@@ -2558,11 +2575,11 @@ export default function requestOperateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: '/data/storage/../../el2/base/upload_008'
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: '/data/storage/../../el2/base/upload_008'
+          }
+        }]
       }
       try {
         await request.agent.create(context, conf).then(async () => {
@@ -2596,11 +2613,11 @@ export default function requestOperateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: 'file://com.acts.request/data/storage/el2/base/cache/upload_009'
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: 'file://com.acts.request/data/storage/el2/base/cache/upload_009'
+          }
+        }]
       }
       try {
         await request.agent.create(context, conf).then(async () => {
@@ -2637,11 +2654,11 @@ export default function requestOperateTaskTest() {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: 'file://com.acts.request1111/data/storage/el2/base/cache/upload_010'
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: 'file://com.acts.request1111/data/storage/el2/base/cache/upload_010'
+          }
+        }]
       }
       try {
         await request.agent.create(context, conf).then(async () => {
