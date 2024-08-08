@@ -16,24 +16,22 @@
 #ifndef OHOS_REQUEST_CJ_NOTIFY_DATA_LISTENER_H
 #define OHOS_REQUEST_CJ_NOTIFY_DATA_LISTENER_H
 
-#include "i_notify_data_listener.h"
 #include "cj_listener_list.h"
+#include "i_notify_data_listener.h"
 
 namespace OHOS::CJSystemapi::Request {
 using OHOS::Request::INotifyDataListener;
 using OHOS::Request::NotifyData;
 using OHOS::Request::SubscribeType;
 
-class CJNotifyDataListener
-    : public INotifyDataListener,
-      public ListenerList,
-      public std::enable_shared_from_this<CJNotifyDataListener> {
+class CJNotifyDataListener : public INotifyDataListener,
+                             public ListenerList,
+                             public std::enable_shared_from_this<CJNotifyDataListener> {
 public:
-    CJNotifyDataListener(const std::string &taskId, const SubscribeType &type)
-        : ListenerList(taskId, type)
+    CJNotifyDataListener(const std::string &taskId, const SubscribeType &type) : ListenerList(taskId, type)
     {
     }
-    void AddListener(ProgressOnCallBackType cb, CFunc cbId);
+    void AddListener(std::function<void(CProgress)> cb, CFunc cbId);
     void RemoveListener(CFunc cbId = nullptr);
     void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData) override;
 
@@ -43,6 +41,6 @@ private:
     void NotifyDataProcess(const std::shared_ptr<NotifyData> &notifyData);
 };
 
-} // namespace OHOS::Request
+} // namespace OHOS::CJSystemapi::Request
 
 #endif // OHOS_REQUEST_JS_NOTIFY_DATA_LISTENER_H

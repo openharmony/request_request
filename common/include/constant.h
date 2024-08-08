@@ -50,7 +50,7 @@ enum ExceptionErrorCode : int32_t {
 };
 
 struct ExceptionError {
-    ExceptionErrorCode code;
+    ExceptionErrorCode code = E_OK;
     std::string errInfo;
 };
 

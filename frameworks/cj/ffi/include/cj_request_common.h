@@ -18,22 +18,33 @@
 
 #include <string>
 #include <vector>
+#include "cj_request_ffi.h"
 #include "constant.h"
 #include "js_common.h"
-#include "cj_request_ffi.h"
 
 namespace OHOS::CJSystemapi::Request {
-using OHOS::Request::Progress;
+using OHOS::Request::Action;
 using OHOS::Request::ExceptionError;
+using OHOS::Request::FileSpec;
+using OHOS::Request::FormItem;
+using OHOS::Request::Progress;
+using OHOS::Request::Reason;
+using OHOS::Request::Response;
 
 void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileData);
-char* MallocCString(const std::string& origin);
+char *MallocCString(const std::string &origin);
 bool IsPathValid(const std::string &filePath);
 std::string SHA256(const char *str, size_t len);
 ExceptionError ConvertError(int32_t errorCode);
 void RemoveFile(const std::string &filePath);
 
 CProgress Convert2CProgress(const Progress &in);
+CResponse Convert2CResponse(const std::shared_ptr<Response> &in);
+std::string GetSaveas(const std::vector<FileSpec> &files, Action action);
+uint32_t Convert2Broken(Reason code);
+std::string Convert2ReasonMsg(Reason code);
+CHashStrArr Convert2CHashStrArr(const std::map<std::string, std::string> &extras);
+CFormItemArr Convert2CFormItemArr(const std::vector<FileSpec> &files, const std::vector<FormItem> &forms);
 
 } // namespace OHOS::CJSystemapi::Request
 
