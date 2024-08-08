@@ -14,6 +14,7 @@
 use std::io::{self, SeekFrom};
 use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Mutex, MutexGuard};
+use std::time::Duration;
 
 use ylong_http_client::async_impl::{Body, Client, Request, RequestBuilder, Response};
 use ylong_http_client::{ErrorKind, HttpClientError};
@@ -40,8 +41,8 @@ use crate::task::files::{AttachedFiles, Files};
 use crate::utils::form_item::FileSpec;
 use crate::utils::get_current_timestamp;
 
-#[allow(unused)]
-const RETRY_INTERVAL: u64 = 200;
+const RETRY_TIMES: u32 = 4;
+const RETRY_INTERVAL: u64 = 400;
 
 #[allow(unused)]
 pub(crate) struct RequestTask {
@@ -72,6 +73,7 @@ pub(crate) struct RequestTask {
     pub(crate) client_manager: ClientManagerEntry,
     pub(crate) running_result: Mutex<Option<Result<(), Reason>>>,
     pub(crate) network: Network,
+    pub(crate) timeout_tries: AtomicU32,
 }
 
 impl RequestTask {
@@ -110,6 +112,19 @@ impl RequestTask {
         if old != limit {
             info!("task {} speed_limit {}", self.task_id(), limit);
         }
+    }
+
+    pub(crate) async fn network_retry(&self) -> Result<(), TaskError> {
+        if self.tries.load(Ordering::SeqCst) < RETRY_TIMES {
+            self.tries.fetch_add(1, Ordering::SeqCst);
+            if !self.network.is_online() {
+                return Err(TaskError::Waiting(TaskPhase::NetworkOffline));
+            } else {
+                ylong_runtime::time::sleep(Duration::from_millis(RETRY_INTERVAL)).await;
+                return Err(TaskError::Waiting(TaskPhase::NeedRetry));
+            }
+        }
+        Ok(())
     }
 }
 
@@ -169,6 +184,7 @@ impl RequestTask {
             client_manager,
             running_result: Mutex::new(None),
             network,
+            timeout_tries: AtomicU32::new(0),
         }
     }
 
@@ -243,6 +259,7 @@ impl RequestTask {
             client_manager,
             running_result: Mutex::new(None),
             network,
+            timeout_tries: AtomicU32::new(0),
         })
     }
 
@@ -442,14 +459,18 @@ impl RequestTask {
         Ok(())
     }
 
-    pub(crate) fn handle_download_error(&self, err: HttpClientError) -> Result<(), TaskError> {
+    pub(crate) async fn handle_download_error(
+        &self,
+        err: HttpClientError,
+    ) -> Result<(), TaskError> {
         error!("download err is {:?}", err);
         match err.error_kind() {
             ErrorKind::Timeout => Err(TaskError::Failed(Reason::ContinuousTaskTimeout)),
             // user triggered
             ErrorKind::UserAborted => Err(TaskError::Waiting(TaskPhase::UserAbort)),
             ErrorKind::BodyTransfer | ErrorKind::BodyDecode => {
-                Err(TaskError::Waiting(TaskPhase::NetworkOffline))
+                self.network_retry().await?;
+                Err(TaskError::Failed(Reason::OthersError))
             }
             _ => {
                 if format!("{}", err).contains("No space left on device") {

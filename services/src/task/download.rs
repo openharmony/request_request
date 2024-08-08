@@ -16,7 +16,6 @@ use std::pin::Pin;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::task::{Context, Poll};
-use std::time::Duration;
 
 use ylong_http_client::async_impl::{DownloadOperator, Downloader, Response};
 use ylong_http_client::{ErrorKind, HttpClientError, SpeedLimit, Timeout};
@@ -69,6 +68,7 @@ pub(crate) fn build_downloader(
 }
 
 pub(crate) async fn download(task: Arc<RequestTask>) {
+    task.tries.store(0, Ordering::SeqCst);
     loop {
         if let Err(e) = download_inner(task.clone()).await {
             match e {
@@ -138,14 +138,14 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
                 return Err(TaskError::Failed(Reason::ProtocolError));
             }
             if status_code.as_u16() == 408 {
-                if task.tries.load(Ordering::SeqCst) < 2 {
-                    task.tries.fetch_add(1, Ordering::SeqCst);
-                    info!("task {} server timeout", task.task_id());
+                if task.timeout_tries.load(Ordering::SeqCst) < 2 {
+                    task.timeout_tries.fetch_add(1, Ordering::SeqCst);
                     return Err(TaskError::Waiting(TaskPhase::NeedRetry));
                 } else {
-                    info!("task {} retry 3 times", task.task_id());
                     return Err(TaskError::Failed(Reason::ProtocolError));
                 }
+            } else {
+                task.timeout_tries.store(0, Ordering::SeqCst);
             }
             if status_code.as_u16() == 200 {
                 if task.require_range() {
@@ -168,16 +168,7 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
                 ErrorKind::Request => return Err(TaskError::Failed(Reason::RequestError)),
                 ErrorKind::Redirect => return Err(TaskError::Failed(Reason::RedirectError)),
                 ErrorKind::Connect | ErrorKind::ConnectionUpgrade => {
-                    if task.tries.load(Ordering::SeqCst) < 2 {
-                        task.tries.fetch_add(1, Ordering::SeqCst);
-                        if !task.network.is_online() {
-                            return Err(TaskError::Waiting(TaskPhase::NetworkOffline));
-                        } else {
-                            ylong_runtime::time::sleep(Duration::from_millis(500)).await;
-                            return Err(TaskError::Waiting(TaskPhase::NeedRetry));
-                        }
-                    }
-                    info!("task {} retry 3 times", task.task_id());
+                    task.network_retry().await?;
                     if e.is_dns_error() {
                         return Err(TaskError::Failed(Reason::Dns));
                     } else if e.is_tls_error() {
@@ -187,7 +178,8 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
                     }
                 }
                 ErrorKind::BodyTransfer => {
-                    return Err(TaskError::Waiting(TaskPhase::NetworkOffline))
+                    task.network_retry().await?;
+                    return Err(TaskError::Failed(Reason::OthersError));
                 }
                 _ => {
                     if format!("{}", e).contains("No space left on device") {
@@ -227,7 +219,7 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
     let mut downloader = build_downloader(task.clone(), response);
 
     if let Err(e) = downloader.download().await {
-        return task.handle_download_error(e);
+        return task.handle_download_error(e).await;
     }
     let file = task.files.get_mut(0).unwrap();
     file.sync_all().await?;
