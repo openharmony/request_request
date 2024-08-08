@@ -21,6 +21,7 @@ cfg_oh! {
     use ipc::parcel::Serialize;
 }
 
+use super::reason::Reason;
 use crate::manage::network::{NetworkState, NetworkType};
 use crate::utils::c_wrapper::{CFileSpec, CFormItem, CStringWrapper};
 use crate::utils::form_item::{FileSpec, FormItem};
@@ -119,16 +120,25 @@ pub struct TaskConfig {
 }
 
 impl TaskConfig {
-    pub(crate) fn satisfy_network(&self, network: &NetworkState) -> bool {
+    pub(crate) fn satisfy_network(&self, network: &NetworkState) -> Result<(), Reason> {
         match network {
-            NetworkState::Offline => false,
+            NetworkState::Offline => Err(Reason::NetworkOffline),
             NetworkState::Online(info) => match self.common_data.network_config {
-                NetworkConfig::Any => true,
-                NetworkConfig::Wifi if info.network_type == NetworkType::Cellular => false,
-                NetworkConfig::Cellular if info.network_type == NetworkType::Wifi => false,
+                NetworkConfig::Any => Ok(()),
+                NetworkConfig::Wifi if info.network_type == NetworkType::Cellular => {
+                    Err(Reason::UnsupportedNetworkType)
+                }
+                NetworkConfig::Cellular if info.network_type == NetworkType::Wifi => {
+                    Err(Reason::UnsupportedNetworkType)
+                }
                 _ => {
-                    (self.common_data.roaming || !info.is_roaming)
+                    if (self.common_data.roaming || !info.is_roaming)
                         && (self.common_data.metered || !info.is_metered)
+                    {
+                        Ok(())
+                    } else {
+                        Err(Reason::UnsupportedNetworkType)
+                    }
                 }
             },
         }

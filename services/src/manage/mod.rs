@@ -14,13 +14,13 @@
 cfg_oh! {
     pub(crate) mod config;
     pub(crate) use config::{SystemConfig, SystemConfigManager};
-    pub(crate) mod query;
 }
 
 pub(crate) mod account;
 pub(crate) mod app_state;
 pub(crate) mod database;
 pub(crate) mod events;
+pub(crate) mod query;
 pub(crate) use task_manager::TaskManager;
 pub(crate) mod network;
 pub(crate) mod notifier;

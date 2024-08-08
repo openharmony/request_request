@@ -21,12 +21,6 @@ cfg_oh! {
     use super::events::TaskManagerEvent;
     use super::task_manager::TaskManagerTx;
 }
-cfg_not_oh! {
-    use mockall::automock;
-}
-
-use crate::task::config::{NetworkConfig, TaskConfig};
-use crate::utils::get_current_timestamp;
 
 #[derive(Clone)]
 pub struct Network {
@@ -42,57 +36,12 @@ pub(crate) enum NetworkState {
 }
 
 impl Network {
-    #![allow(unused)]
-    pub(crate) fn new() -> Self {
-        Self {
-            inner: NetworkInner::new(),
-            #[cfg(feature = "oh")]
-            _registry: Arc::new(UniquePtr::null()),
-        }
-    }
-
     pub(crate) fn is_online(&self) -> bool {
         matches!(*self.inner.state.read().unwrap(), Online(_))
     }
 
     pub(crate) fn state(&self) -> NetworkState {
         self.inner.state.read().unwrap().clone()
-    }
-
-    pub(crate) fn satisfied_state(&self, config: &TaskConfig) -> bool {
-        match self.state() {
-            // Handles in `RequestTask::network_online`.
-            NetworkState::Offline => true,
-            NetworkState::Online(info) => match config.common_data.network_config {
-                NetworkConfig::Any => true,
-                NetworkConfig::Wifi if info.network_type == NetworkType::Cellular => false,
-                NetworkConfig::Cellular if info.network_type == NetworkType::Wifi => false,
-                _ => {
-                    (config.common_data.roaming || !info.is_roaming)
-                        && (config.common_data.metered || !info.is_metered)
-                }
-            },
-        }
-    }
-
-    pub(crate) async fn check_interval_online(&self) -> bool {
-        const NOTIFY_INTERVAL: u64 = 3000;
-        let current_time = get_current_timestamp();
-        if current_time - self.last_notify_time() < NOTIFY_INTERVAL {
-            return false;
-        }
-
-        for _ in 0..3 {
-            if !self.is_online() || self.last_notify_time() > current_time {
-                return false;
-            }
-            ylong_runtime::time::sleep(std::time::Duration::from_secs(1)).await;
-        }
-        true
-    }
-
-    fn last_notify_time(&self) -> u64 {
-        *self.inner.last_notify_time.read().unwrap()
     }
 }
 
@@ -132,7 +81,6 @@ pub(crate) fn register_network_change(
 #[derive(Clone)]
 pub struct NetworkInner {
     state: Arc<RwLock<NetworkState>>,
-    last_notify_time: Arc<RwLock<u64>>,
 }
 
 pub struct NetworkTaskManagerTx {
@@ -144,7 +92,6 @@ impl NetworkInner {
     fn new() -> Self {
         Self {
             state: Arc::new(RwLock::new(NetworkState::Offline)),
-            last_notify_time: Arc::new(RwLock::new(get_current_timestamp())),
         }
     }
 
@@ -152,7 +99,6 @@ impl NetworkInner {
         let mut state = self.state.write().unwrap();
         if *state != Offline {
             info!("network is offline");
-            *self.last_notify_time.write().unwrap() = get_current_timestamp();
             *state = Offline;
         }
     }
@@ -161,7 +107,6 @@ impl NetworkInner {
         let mut state = self.state.write().unwrap();
         if !matches!(&*state, Online(old_info) if old_info == &info  ) {
             info!("Network is online: {:?}", info);
-            *self.last_notify_time.write().unwrap() = get_current_timestamp();
             *state = Online(info.clone());
             true
         } else {
@@ -217,7 +162,6 @@ mod ffi {
 mod test {
 
     use core::time;
-    use std::future::join;
 
     use ylong_runtime::sync::mpsc;
 
@@ -300,46 +244,6 @@ mod test {
     }
 
     #[test]
-    fn ut_network_satisfied_state() {
-        let mut config = TaskConfig::default();
-        config.common_data.network_config = NetworkConfig::Cellular;
-        config.common_data.roaming = true;
-        config.common_data.metered = true;
-
-        let notifier = NetworkInner::new();
-        let network = Network {
-            inner: notifier.clone(),
-            _registry: Arc::new(UniquePtr::null()),
-        };
-
-        notifier.notify_online(NetworkInfo {
-            network_type: NetworkType::Cellular,
-            is_metered: true,
-            is_roaming: true,
-        });
-
-        assert!(network.satisfied_state(&config));
-
-        config.common_data.roaming = false;
-        assert!(!network.satisfied_state(&config));
-
-        config.common_data.roaming = true;
-        config.common_data.metered = false;
-        assert!(!network.satisfied_state(&config));
-
-        config.common_data.metered = true;
-        notifier.notify_online(NetworkInfo {
-            network_type: NetworkType::Wifi,
-            is_metered: false,
-            is_roaming: false,
-        });
-        assert!(!network.satisfied_state(&config));
-
-        config.common_data.network_config = NetworkConfig::Wifi;
-        assert!(network.satisfied_state(&config));
-    }
-
-    #[test]
     fn ut_network_notify() {
         test_init();
         let _lock = DB_LOCK.lock().unwrap();
@@ -369,38 +273,5 @@ mod test {
             is_metered: false,
             is_roaming: true,
         }));
-    }
-
-    #[test]
-    fn ut_network_online_interval() {
-        test_init();
-
-        ylong_runtime::block_on(async {
-            let notifier = NetworkInner::new();
-
-            let network = Network {
-                inner: notifier.clone(),
-                _registry: Arc::new(UniquePtr::null()),
-            };
-            assert!(!network.check_interval_online().await);
-            join!(
-                async {
-                    assert!(!network.check_interval_online().await);
-                },
-                async {
-                    ylong_runtime::time::sleep(std::time::Duration::from_millis(500)).await;
-                    let _lock = DB_LOCK.lock().unwrap();
-                    notifier.notify_online(NetworkInfo {
-                        network_type: NetworkType::Wifi,
-                        is_metered: false,
-                        is_roaming: false,
-                    });
-                }
-            )
-            .await;
-            assert!(!network.check_interval_online().await);
-            ylong_runtime::time::sleep(std::time::Duration::from_millis(4000)).await;
-            assert!(network.check_interval_online().await);
-        });
     }
 }

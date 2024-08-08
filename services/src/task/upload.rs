@@ -209,6 +209,7 @@ impl RequestTask {
 }
 
 pub(crate) async fn upload(task: Arc<RequestTask>) {
+    task.tries.store(0, Ordering::SeqCst);
     loop {
         if let Err(e) = upload_inner(task.clone()).await {
             match e {
@@ -221,7 +222,7 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
                     }
                     TaskPhase::UserAbort => {}
                     TaskPhase::NetworkOffline => {
-                        task.change_task_status(State::Failed, Reason::NetworkOffline);
+                        *task.running_result.lock().unwrap() = Some(Err(Reason::NetworkOffline));
                     }
                 },
             }
@@ -311,14 +312,14 @@ where
                 return Err(TaskError::Failed(Reason::ProtocolError));
             }
             if status_code.as_u16() == 408 {
-                if task.tries.load(Ordering::SeqCst) < 2 {
-                    task.tries.fetch_add(1, Ordering::SeqCst);
-                    info!("task {} server timeout", task.task_id());
+                if task.timeout_tries.load(Ordering::SeqCst) < 2 {
+                    task.timeout_tries.fetch_add(1, Ordering::SeqCst);
                     return Err(TaskError::Waiting(TaskPhase::NeedRetry));
                 } else {
-                    info!("task {} retry 3 times", task.task_id());
                     return Err(TaskError::Failed(Reason::ProtocolError));
                 }
+            } else {
+                task.timeout_tries.store(0, Ordering::SeqCst);
             }
         }
         Err(e) => {
@@ -329,11 +330,7 @@ where
                 ErrorKind::Request => return Err(TaskError::Failed(Reason::RequestError)),
                 ErrorKind::Redirect => return Err(TaskError::Failed(Reason::RedirectError)),
                 ErrorKind::Connect | ErrorKind::ConnectionUpgrade => {
-                    if task.tries.load(Ordering::SeqCst) < 2 {
-                        task.tries.fetch_add(1, Ordering::SeqCst);
-                        return Err(TaskError::Waiting(TaskPhase::NeedRetry));
-                    }
-                    info!("task {} retry 3 times", task.task_id());
+                    task.network_retry().await?;
                     if e.is_dns_error() {
                         return Err(TaskError::Failed(Reason::Dns));
                     } else if e.is_tls_error() {
@@ -343,7 +340,8 @@ where
                     }
                 }
                 ErrorKind::BodyTransfer => {
-                    return Err(TaskError::Waiting(TaskPhase::NetworkOffline))
+                    task.network_retry().await?;
+                    return Err(TaskError::Failed(Reason::OthersError));
                 }
                 ErrorKind::UserAborted => return Err(TaskError::Waiting(TaskPhase::UserAbort)),
                 _ => {
