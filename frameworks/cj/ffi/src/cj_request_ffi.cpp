@@ -23,37 +23,37 @@
 namespace OHOS::CJSystemapi::Request {
 
 extern "C" {
-    void FfiOHOSRequestFreeTask(int32_t taskId)
+    void FfiOHOSRequestFreeTask(const char *taskId)
     {
         CJRequestImpl::FreeTask(taskId);
     }
 
-    RetError FfiOHOSRequestTaskProgressOn(char *event, int32_t taskId, void (*callback)(CProgress progress))
+    RetError FfiOHOSRequestTaskProgressOn(char *event, const char *taskId, void (*callback)(CProgress progress))
     {
         return CJRequestImpl::ProgressOn(event, taskId, callback);
     }
 
-    RetError FfiOHOSRequestTaskProgressOff(char *event, int32_t taskId, void *callback)
+    RetError FfiOHOSRequestTaskProgressOff(char *event, const char *taskId, void *callback)
     {
         return CJRequestImpl::ProgressOff(event, taskId, callback);
     }
 
-    RetError FfiOHOSRequestTaskStart(int32_t taskId)
+    RetError FfiOHOSRequestTaskStart(const char *taskId)
     {
         return CJRequestImpl::TaskStart(taskId);
     }
 
-    RetError FfiOHOSRequestTaskPause(int32_t taskId)
+    RetError FfiOHOSRequestTaskPause(const char *taskId)
     {
         return CJRequestImpl::TaskPause(taskId);
     }
 
-    RetError FfiOHOSRequestTaskResume(int32_t taskId)
+    RetError FfiOHOSRequestTaskResume(const char *taskId)
     {
         return CJRequestImpl::TaskResume(taskId);
     }
 
-    RetError FfiOHOSRequestTaskStop(int32_t taskId)
+    RetError FfiOHOSRequestTaskStop(const char *taskId)
     {
         return CJRequestImpl::TaskStop(taskId);
     }
@@ -63,7 +63,7 @@ extern "C" {
         return CJRequestImpl::CreateTask((OHOS::AbilityRuntime::Context *)context, &config);
     }
 
-    RetError FfiOHOSRequestRemoveTask(int32_t taskId)
+    RetError FfiOHOSRequestRemoveTask(const char *taskId)
     {
         return CJRequestImpl::RemoveTask(taskId);
     }

@@ -105,6 +105,7 @@ ExceptionError ConvertError(int32_t errorCode)
             generateError(ExceptionErrorCode::E_TASK_NOT_FOUND, "Task index out of range.");
             break;
         default:
+            generateError(static_cast<ExceptionErrorCode>(errorCode), "");
             break;
     }
 

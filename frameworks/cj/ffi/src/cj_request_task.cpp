@@ -83,12 +83,12 @@ void CJTask::AddTaskMap(const std::string &key, CJTask *task)
     CJTask::taskMap_[key] = task;
 }
 
-CJTask* CJTask::FindTaskById(int32_t taskId)
+CJTask* CJTask::FindTaskById(std::string &taskId)
 {
     CJTask *task = nullptr;
     {
         std::lock_guard<std::mutex> lockGuard(CJTask::taskMutex_);
-        auto item = CJTask::taskMap_.find(std::to_string(taskId));
+        auto item = CJTask::taskMap_.find(taskId);
         if (item == CJTask::taskMap_.end()) {
             return nullptr;
         }
@@ -322,7 +322,7 @@ void CJTask::ReloadListener()
     }
 }
 
-ExceptionError CJTask::On(std::string type, int32_t taskId, void (*callback)(CProgress progress))
+ExceptionError CJTask::On(std::string type, std::string &taskId, void (*callback)(CProgress progress))
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin task on, seq: %{public}d", seq);

@@ -35,21 +35,21 @@ public:
     ~CJRequestImpl() = default;
 
     static RetReqData CreateTask(OHOS::AbilityRuntime::Context* context, CConfig *ffiConfig);
-    static RetError RemoveTask(int32_t taskId);
-    static void FreeTask(int32_t taskId);
-    static RetError ProgressOn(char *event, int32_t taskId, void (*callback)(CProgress progress));
-    static RetError ProgressOff(char *event, int32_t taskId, void *callback);
-    static RetError TaskStart(int32_t taskId);
-    static RetError TaskPause(int32_t taskId);
-    static RetError TaskResume(int32_t taskId);
-    static RetError TaskStop(int32_t taskId);
+    static RetError RemoveTask(std::string taskId);
+    static void FreeTask(std::string taskId);
+    static RetError ProgressOn(char *event, std::string taskId, void (*callback)(CProgress progress));
+    static RetError ProgressOff(char *event, std::string taskId, void *callback);
+    static RetError TaskStart(std::string taskId);
+    static RetError TaskPause(std::string taskId);
+    static RetError TaskResume(std::string taskId);
+    static RetError TaskStop(std::string taskId);
 
     static RetError Convert2RetErr(ExceptionErrorCode code);
     static RetError Convert2RetErr(ExceptionError &err);
     static std::map<std::string, std::string> ConvertCArr2Map(const CHashStrArr *cheaders);
     static void Convert2Config(CConfig *config, Config &out);
 private:
-    static RetError TaskExec(std::string execType, int32_t taskId);
+    static RetError TaskExec(std::string execType, std::string taskId);
 };
 
 } // namespace OHOS::CJSystemapi::Request
