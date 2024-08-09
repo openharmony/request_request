@@ -205,6 +205,9 @@ impl TaskManager {
             StateEvent::ForegroundApp(uid) => {
                 self.scheduler.on_state_change(Handler::update_top_uid, uid);
             }
+            StateEvent::Background(uid) => self
+                .scheduler
+                .on_state_change(Handler::update_background, uid),
             StateEvent::BackgroundTimeout(uid) => self
                 .scheduler
                 .on_state_change(Handler::update_background_timeout, uid),
@@ -325,6 +328,10 @@ impl TaskManagerTx {
 
     pub(crate) fn notify_foreground_app_change(&self, uid: u64) {
         let _ = self.send_event(TaskManagerEvent::State(StateEvent::ForegroundApp(uid)));
+    }
+
+    pub(crate) fn notify_app_background(&self, uid: u64) {
+        let _ = self.send_event(TaskManagerEvent::State(StateEvent::Background(uid)));
     }
 
     pub(crate) fn trigger_background_timeout(&self, uid: u64) {

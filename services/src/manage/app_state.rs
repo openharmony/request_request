@@ -42,16 +42,21 @@ impl AppStateListener {
 }
 
 extern "C" fn app_state_change_callback(uid: i32, state: i32, _pid: i32) {
-    if state != 2 {
-        return;
+    if state == 2 {
+        unsafe {
+            APP_STATE_LISTENER
+                .assume_init_ref()
+                .task_manager
+                .notify_foreground_app_change(uid as u64)
+        };
+    } else if state == 4 {
+        unsafe {
+            APP_STATE_LISTENER
+                .assume_init_ref()
+                .task_manager
+                .notify_app_background(uid as u64)
+        };
     }
-
-    unsafe {
-        APP_STATE_LISTENER
-            .assume_init_ref()
-            .task_manager
-            .notify_foreground_app_change(uid as u64)
-    };
 }
 
 extern "C" fn process_state_change_callback(uid: i32, state: i32, pid: i32) {

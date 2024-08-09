@@ -152,6 +152,7 @@ pub(crate) enum TaskEvent {
 pub(crate) enum StateEvent {
     Network,
     ForegroundApp(u64),
+    Background(u64),
     BackgroundTimeout(u64),
 }
 
