@@ -17,7 +17,10 @@
       "SystemCapability.MiscServices.Upload",
       "SystemCapability.Request.FileTransferAgent"
     ],
-    "features": [],
+    "features": [
+      "request_telephony_core_service",
+      "request_telephony_cellular_data"
+    ],
     "adapted_system_type": [
       "standard"
     ],
