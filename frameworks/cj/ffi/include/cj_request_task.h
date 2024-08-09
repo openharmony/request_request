@@ -52,7 +52,7 @@ public:
     static std::mutex taskMutex_;
     static std::map<std::string, CJTask *> taskMap_;
     static void AddTaskMap(const std::string &key, CJTask *task);
-    static CJTask* FindTaskById(int32_t taskId);
+    static CJTask* FindTaskById(std::string &taskId);
     static CJTask* ClearTaskMap(const std::string &key);
     static void ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls);
 
@@ -73,7 +73,7 @@ public:
     void SetTid();
 
     ExceptionError Create(OHOS::AbilityRuntime::Context* context, Config &config);
-    ExceptionError On(std::string type, int32_t taskId, void (*callback)(CProgress progress));
+    ExceptionError On(std::string type, std::string &taskId, void (*callback)(CProgress progress));
     ExceptionError Off(std::string event, CFunc callback);
 
     static void ReloadListener();

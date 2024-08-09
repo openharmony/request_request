@@ -153,22 +153,16 @@ RetReqData CJRequestImpl::CreateTask(OHOS::AbilityRuntime::Context* context, CCo
         };
     }
 
-    ret.taskId = std::stoi(task->taskId_);
+    ret.taskId = MallocCString(task->taskId_);
     
     REQUEST_HILOGD("[CJRequestImpl] CreateTask end");
     return ret;
 }
 
-RetError CJRequestImpl::RemoveTask(int32_t taskId)
+RetError CJRequestImpl::RemoveTask(std::string taskId)
 {
     RetError ret{};
-    CJTask *task = CJTask::FindTaskById(taskId);
-    if (task == nullptr) {
-        REQUEST_HILOGE("[CJRequestImpl] Fail to find task, id:%{public}d.", taskId);
-        return Convert2RetErr(ExceptionErrorCode::E_TASK_NOT_FOUND);
-    }
-
-    ExceptionError result = CJTask::Remove(task->GetTidStr());
+    ExceptionError result = CJTask::Remove(taskId);
     if (result.code != ExceptionErrorCode::E_OK) {
         return Convert2RetErr(result);
     }
@@ -176,19 +170,19 @@ RetError CJRequestImpl::RemoveTask(int32_t taskId)
     return ret;
 }
 
-void CJRequestImpl::FreeTask(int32_t taskId)
+void CJRequestImpl::FreeTask(std::string taskId)
 {
     REQUEST_HILOGD("[CJRequestImpl] FreeTask start");
-    delete CJTask::ClearTaskMap(std::to_string(taskId));
+    delete CJTask::ClearTaskMap(taskId);
 }
 
-RetError CJRequestImpl::ProgressOn(char *event, int32_t taskId, void (*callback)(CProgress progress))
+RetError CJRequestImpl::ProgressOn(char *event, std::string taskId, void (*callback)(CProgress progress))
 {
     REQUEST_HILOGD("[CJRequestImpl] ProgressOn start");
     RetError ret{};
     CJTask *task = CJTask::FindTaskById(taskId);
     if (task == nullptr) {
-        REQUEST_HILOGE("[CJRequestImpl] Fail to find task, id:%{public}d.", taskId);
+        REQUEST_HILOGE("[CJRequestImpl] Fail to find task, id:%{public}s.", taskId.c_str());
         return Convert2RetErr(ExceptionErrorCode::E_TASK_NOT_FOUND);
     }
 
@@ -201,13 +195,13 @@ RetError CJRequestImpl::ProgressOn(char *event, int32_t taskId, void (*callback)
     return ret;
 }
 
-RetError CJRequestImpl::ProgressOff(char *event, int32_t taskId, void *callback)
+RetError CJRequestImpl::ProgressOff(char *event, std::string taskId, void *callback)
 {
     REQUEST_HILOGD("[CJRequestImpl] ProgressOff start");
     RetError ret{};
     CJTask *task = CJTask::FindTaskById(taskId);
     if (task == nullptr) {
-        REQUEST_HILOGE("[CJRequestImpl] Fail to find task, id:%{public}d.", taskId);
+        REQUEST_HILOGE("[CJRequestImpl] Fail to find task, id:%{public}s.", taskId.c_str());
         return ret;
     }
 
@@ -220,13 +214,13 @@ RetError CJRequestImpl::ProgressOff(char *event, int32_t taskId, void *callback)
     return ret;
 }
 
-RetError CJRequestImpl::TaskExec(std::string execType, int32_t taskId)
+RetError CJRequestImpl::TaskExec(std::string execType, std::string taskId)
 {
     REQUEST_HILOGD("[CJRequestImpl] TaskExec start");
     RetError ret{};
     CJTask *task = CJTask::FindTaskById(taskId);
     if (task == nullptr) {
-        REQUEST_HILOGE("[CJRequestImpl] Fail to find task, id:%{public}d.", taskId);
+        REQUEST_HILOGE("[CJRequestImpl] Fail to find task, id:%{public}s.", taskId.c_str());
         return Convert2RetErr(ExceptionErrorCode::E_TASK_NOT_FOUND);
     }
     
@@ -238,22 +232,22 @@ RetError CJRequestImpl::TaskExec(std::string execType, int32_t taskId)
     return ret;
 }
 
-RetError CJRequestImpl::TaskStart(int32_t taskId)
+RetError CJRequestImpl::TaskStart(std::string taskId)
 {
     return CJRequestImpl::TaskExec(FUNCTION_START, taskId);
 }
 
-RetError CJRequestImpl::TaskPause(int32_t taskId)
+RetError CJRequestImpl::TaskPause(std::string taskId)
 {
     return CJRequestImpl::TaskExec(FUNCTION_PAUSE, taskId);
 }
 
-RetError CJRequestImpl::TaskResume(int32_t taskId)
+RetError CJRequestImpl::TaskResume(std::string taskId)
 {
     return CJRequestImpl::TaskExec(FUNCTION_RESUME, taskId);
 }
 
-RetError CJRequestImpl::TaskStop(int32_t taskId)
+RetError CJRequestImpl::TaskStop(std::string taskId)
 {
     return CJRequestImpl::TaskExec(FUNCTION_STOP, taskId);
 }
