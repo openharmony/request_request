@@ -30,11 +30,11 @@ impl SortedApps {
         }
     }
 
-    pub(crate) fn sort(&mut self, top_uid: u64, top_user: u64) {
+    pub(crate) fn sort(&mut self, top_uid: Option<u64>, top_user: u64) {
         self.inner.sort_by(|a, b| {
             (a.uid / 200000 == top_user)
                 .cmp(&(b.uid / 200000 == top_user))
-                .then((a.uid == top_uid).cmp(&(b.uid == top_uid)))
+                .then((Some(a.uid) == top_uid).cmp(&(Some(b.uid) == top_uid)))
         })
     }
 
