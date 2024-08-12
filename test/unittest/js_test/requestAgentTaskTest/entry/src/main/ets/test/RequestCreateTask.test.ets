@@ -766,6 +766,35 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskOverwrite009
+     * @tc.name: testTaskOverwrite009
+     * @tc.desc: Test create task when overwrite is true and saveas is dir not file
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskOverwrite009', 0, async function (done) {
+      let dirPath = cacheDir + '/dir-test.txt';
+      fs.mkdirSync(dirPath);
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        overwrite: true,
+        saveas: './dir-test.txt'
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(13400001)
+        done();
+      }
+    })
+
+    /**
      * @tc.number: testTaskMethod001
      * @tc.name: testTaskMethod001
      * @tc.desc: Test create task when method is POST for upload
