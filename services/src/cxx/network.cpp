@@ -62,12 +62,6 @@ RequestNetCallbackStub::~RequestNetCallbackStub()
 
 void RequestNetCallbackStub::HandleNetCap(const sptr<NetAllCapabilities> &netAllCap)
 {
-    if (netAllCap->netCaps_.find(NetCap::NET_CAPABILITY_VALIDATED) == netAllCap->netCaps_.end()) {
-        networkNotifier_->notify_offline();
-        notifyTaskManagerOffline_(*task_manager_);
-        return;
-    }
-
     for (auto bearerType : netAllCap->bearerTypes_) {
         auto networkInfo = NetworkInfo();
         if (bearerType == NetManagerStandard::NetBearType::BEARER_WIFI) {
