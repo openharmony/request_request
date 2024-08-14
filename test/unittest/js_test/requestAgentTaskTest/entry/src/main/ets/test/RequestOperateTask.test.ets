@@ -566,6 +566,33 @@ export default function requestOperateTaskTest() {
     })
 
     /**
+     * @tc.number: testPauseTask008
+     * @tc.name: testPauseTask008
+     * @tc.desc: Test pause a removed FOREGROUND task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testPauseTask008', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testPauseTask008.txt',
+        mode: request.agent.Mode.FOREGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      try {
+        await task.start();
+        await request.agent.remove(task.tid);
+        await task.pause();
+      } catch (err) {
+        expect(err.code).assertEqual(21900007);
+        done();
+      }
+    })
+
+    /**
      * @tc.number: testResumeTask001
      * @tc.name: testResumeTask001
      * @tc.desc: Test start resume FOREGROUND task
@@ -1708,6 +1735,92 @@ export default function requestOperateTaskTest() {
     })
 
     /**
+     * @tc.number: testRemove007
+     * @tc.name: testRemove007
+     * @tc.desc: Test remove a running task 
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testRemove007', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testRemove007.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      try {
+        await task.start();
+        await request.agent.remove(task.tid);
+        expect(true).assertTrue();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testRemove008
+     * @tc.name: testRemove008
+     * @tc.desc: Test remove a paused task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testRemove008', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testRemove008.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      try {
+        await task.start();
+        await task.pause();
+        await request.agent.remove(task.tid);
+        expect(true).assertTrue();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testRemove009
+     * @tc.name: testRemove009
+     * @tc.desc: Test remove a stopped task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testRemove009', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testRemove009.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      try {
+        await task.start();
+        await task.stop();
+        await request.agent.remove(task.tid);
+        expect(true).assertTrue();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    }) 
+
+    /**
      * @tc.number: testRedirect001
      * @tc.name: testRedirect001
      * @tc.desc: Test redirect enable
@@ -2677,6 +2790,51 @@ export default function requestOperateTaskTest() {
       }
     })
 
+    /**
+     * @tc.number: testGetTaskId001
+     * @tc.name: testGetTaskId001
+     * @tc.desc: Tests whether an exception is thrown when task_id is illegal
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+     it('testTaskId001', 0, async function (done) {
+       let conf = {
+         action: request.agent.Action.DOWNLOAD,
+         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+         saveas: `test_get_task_id_001`,
+       }
+       try {
+         await request.agent.getTask(context, "3424657889323469022694654311244554");
+       } catch (err) {
+         expect(err.code).assertEqual(21900006);
+         done();
+       }
+     })
 
+    /**
+     * @tc.number: testGetTaskId002
+     * @tc.name: testGetTaskId002
+     * @tc.desc: Tests whether an exception is thrown when task_id is illegal
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+     it('testTaskId002', 0, async function (done) {
+       let conf = {
+         action: request.agent.Action.DOWNLOAD,
+         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+         saveas: `test_get_task_id_002`,
+       }
+       try {
+         await request.agent.getTask(context, "avbdfdf");
+       } catch (err) {
+         expect(err.code).assertEqual(21900006);
+         done();
+       }
+     })
+     
   })
 }

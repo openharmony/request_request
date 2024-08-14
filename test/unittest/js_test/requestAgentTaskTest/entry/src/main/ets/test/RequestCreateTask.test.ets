@@ -180,6 +180,34 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskAction006
+     * @tc.name: testTaskAction006
+     * @tc.desc: Test create task when action is DOWNLOAD
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskAction006', 0, function (done) {
+      let conf = {
+        action: 0
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `./`,
+        gauge: true
+      }
+      request.agent.create(context, conf).then(async (data) => {
+        if (fs.accessSync(`${cacheDir}/test.txt`)) {
+          expect(true).assertTrue();
+          await request.agent.remove(data.tid);
+          done();
+        }
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })
+
+    /**
      * @tc.number: testTaskUrl001
      * @tc.name: testTaskUrl001
      * @tc.desc: Test create task when lack url
@@ -325,6 +353,32 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskUrl007
+     * @tc.name: testTaskUrl007
+     * @tc.desc: Test create task when url length is 2048.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskUrl007', 0, function (done)  {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'http://127.0.0.1/' + 'a'.repeat(2031),
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(13400001);
+        done();
+      }
+    })
+
+
+    /**
      * @tc.number: testTaskTitle001
      * @tc.name: testTaskTitle001
      * @tc.desc: Test create task when title is given
@@ -394,6 +448,31 @@ export default function requestCreateTaskTest() {
         done();
       }
     })
+
+    /**
+     * @tc.number: testTaskTitle004
+     * @tc.name: testTaskTitle004
+     * @tc.desc: Test create task when title length is 256
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskTitle004', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        title: 'a'.repeat(256),
+        saveas: 'testTaskTitle004.txt',
+      }
+      try {
+        let task = await request.agent.create(context, conf);
+        done();
+      } catch (err) {
+        expect(true).assertTrue();
+        done();
+      }
+    })   
 
     /**
      * @tc.number: testTaskDescription001
@@ -468,6 +547,29 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskDescription004
+     * @tc.name: testTaskDescription004
+     * @tc.desc: Test create task when description length is 1024
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskDescription004', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        description: 'a'.repeat(1024),
+        saveas: 'testTaskDescription004.txt',
+      }
+      request.agent.create(context, conf, async (err, data) => {
+        expect(err===null).assertTrue();
+        await request.agent.remove(data.tid);
+        done();
+      })
+    })    
+
+    /**
      * @tc.number: testTaskMode001
      * @tc.name: testTaskMode001
      * @tc.desc: Test create task when mode is FOREGROUND
@@ -520,7 +622,7 @@ export default function requestCreateTaskTest() {
     })
 
     /**
-     * @tc.number: testTaskMode002
+     * @tc.number: testTaskMode003
      * @tc.name: testTaskMode003
      * @tc.desc: Test create task when mode is string
      * @tc.size: MediumTest
@@ -1440,6 +1542,126 @@ export default function requestCreateTaskTest() {
     })
 
     /**
+     * @tc.number: testTaskData014
+     * @tc.name: testTaskData014
+     * @tc.desc: Test create download task when data is string
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskData014', 0, function (done)  {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskData014.txt',
+        mode: request.agent.Mode.FOREGROUND
+        data:'aaaaa',
+      }
+      request.agent.create(context, conf, async (err, data) => {
+        expect(err === null).assertTrue();
+        await request.agent.remove(data.tid);
+        done();
+      })
+    })
+
+    /**
+     * @tc.number: testTaskData015
+     * @tc.name: testTaskData015
+     * @tc.desc: Test create upload task when data is string
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskData015', 0, function (done)  {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data:'aaaaa',
+      }
+      try{
+        request.agent.create(context, conf, (err, data) => {
+        expect(false).assertTrue();
+        done();
+      })
+      }catch(err){
+        expect(err.code).assertEqual(401);
+        done();
+      }
+      
+    })
+
+    /**
+     * @tc.number: testTaskData016
+     * @tc.name: testTaskData016
+     * @tc.desc: Test create task when data path is `zcszczvxdvvadZ`
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskData016', 0, function (done)  {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+                 name: 'file',
+                 value: {
+                   path: `zcszczvxdvvadZ`,
+                   filename: 'test.txt'
+                 }
+               }]
+      }
+      try{
+        request.agent.create(context, conf, (err, data) => {
+        expect(false).assertTrue();
+        done();
+      })
+      }catch(err){
+        expect(err.code).assertEqual(13400001);
+        done();
+      }
+    })    
+
+    /**
+     * @tc.number: testTaskData017
+     * @tc.name: testTaskData017
+     * @tc.desc: Test create download task when data is string
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskData017', 0, function (done)  {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskData017.txt',
+        mode: request.agent.Mode.FOREGROUND
+        data: [{
+                 name: 'file',
+                 value: {
+                   path: `./test.txt`,
+                   filename: 'test.txt'
+                 }
+               }]
+      }
+      try{
+        request.agent.create(context, conf, (err, data) => {
+        expect(false).assertTrue();
+        done();
+      })
+      }catch(err){
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
      * @tc.number: testTaskNetwork001
      * @tc.name: testTaskNetwork001
      * @tc.desc: Test create task when network is 3
@@ -1649,6 +1871,33 @@ export default function requestCreateTaskTest() {
         done();
       })
     })
+
+    /**
+     * @tc.number: testTaskHeaders004
+     * @tc.name: testTaskHeaders004
+     * @tc.desc: Test create task when headers content-type is multipart/form-data but data is file for download
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskHeaders004', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `README.md`,
+        mode: request.agent.Mode.BACKGROUND
+        headers: {'content-type': 'multipart/form-data'},
+      }
+      let task = await request.agent.create(context, conf);
+      task.start().then(() => {
+        expect(true).assertTrue();
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })    
 
     /**
      * @tc.number: testTaskRetry001
@@ -2187,6 +2436,32 @@ export default function requestCreateTaskTest() {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: 'testTaskToken004.txt',
         token: 'a'.padStart(2048, 'a')
+      }
+      request.agent.create(context, conf).then(async (data) => {
+        expect(true).assertTrue();
+        await request.agent.remove(data.tid);
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })
+
+    /**
+     * @tc.number: testTaskToken005
+     * @tc.name: testTaskToken005
+     * @tc.desc: Test create task when token is 8 bytes
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskToken005', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskToken005.txt',
+        token: '11111111'
       }
       request.agent.create(context, conf).then(async (data) => {
         expect(true).assertTrue();
