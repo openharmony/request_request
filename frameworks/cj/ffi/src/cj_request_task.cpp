@@ -19,6 +19,7 @@
 #include <filesystem>
 #include <fstream>
 #include <regex>
+#include <string>
 #include <sys/stat.h>
 #include "securec.h"
 #include "application_context.h"
@@ -30,7 +31,7 @@
 #include "cj_lambda.h"
 #include "cj_request_common.h"
 #include "cj_request_event.h"
-#include "cj_request_log.h"
+#include "log.h"
 
 namespace OHOS::CJSystemapi::Request {
 namespace fs = std::filesystem;
@@ -38,6 +39,7 @@ using OHOS::AbilityRuntime::Context;
 using OHOS::Request::Version;
 using OHOS::Request::ExceptionErrorCode;
 using OHOS::Request::Action;
+using OHOS::Request::TaskInfo;
 using OHOS::Request::RequestManager;
 using OHOS::StorageDaemon::AclSetAccess;
 
@@ -58,12 +60,12 @@ CJTask::CJTask()
 {
     config_.version = Version::API10;
     config_.action = Action::ANY;
-    REQUEST_HILOGI("construct CJTask()");
+    REQUEST_HILOGD("construct CJTask()");
 }
 
 CJTask::~CJTask()
 {
-    REQUEST_HILOGI("~CJTask()");
+    REQUEST_HILOGD("~CJTask()");
     RequestManager::GetInstance()->RemoveAllListeners(GetTidStr());
 }
 
@@ -300,9 +302,38 @@ ExceptionError CJTask::Create(Context* context, Config &config)
     };
 }
 
+ExceptionError CJTask::GetTask(OHOS::AbilityRuntime::Context* context, std::string &taskId, std::string &token,
+    Config &config)
+{
+    ExceptionError ret = { .code = ExceptionErrorCode::E_OK };
+    int32_t seq = RequestManager::GetInstance()->GetNextSeq();
+    REQUEST_HILOGI("Begin get task, seq: %{public}d", seq);
+
+    if (!RequestManager::GetInstance()->LoadRequestServer()) {
+        return {
+            .code = ExceptionErrorCode::E_SERVICE_ERROR
+        };
+    }
+
+    CJTask *task = CJTask::FindTaskById(taskId);
+    if (task != nullptr) {
+        if (task->config_.token != token) {
+            return ConvertError(ExceptionErrorCode::E_TASK_NOT_FOUND);
+        }
+        config = task->config_;
+        return ret;
+    }
+
+    int32_t result = RequestManager::GetInstance()->GetTask(taskId, token, config);
+    if (result != ExceptionErrorCode::E_OK) {
+        return ConvertError(result);
+    }
+    return ret;
+}
+
 ExceptionError CJTask::Remove(const std::string &tid)
 {
-    int result = RequestManager::GetInstance()->Remove(tid, Version::API10);
+    int32_t result = RequestManager::GetInstance()->Remove(tid, Version::API10);
     if (result != ExceptionErrorCode::E_OK) {
         return ConvertError(result);
     }
@@ -310,6 +341,39 @@ ExceptionError CJTask::Remove(const std::string &tid)
     return {
         .code = ExceptionErrorCode::E_OK
     };
+}
+
+ExceptionError CJTask::Touch(const std::string &tid, TaskInfo &task, const std::string &token)
+{
+    ExceptionError ret = { .code = ExceptionErrorCode::E_OK };
+    if (!RequestManager::GetInstance()->LoadRequestServer()) {
+        return {
+            .code = ExceptionErrorCode::E_SERVICE_ERROR
+        };
+    }
+
+    int32_t result = RequestManager::GetInstance()->Touch(tid, token, task);
+    if (result != ExceptionErrorCode::E_OK) {
+        return ConvertError(result);
+    }
+    return ret;
+}
+
+ExceptionError CJTask::Search(const Filter &filter, std::vector<std::string> &tids)
+{
+    ExceptionError ret = { .code = ExceptionErrorCode::E_OK };
+    if (!RequestManager::GetInstance()->LoadRequestServer()) {
+        return {
+            .code = ExceptionErrorCode::E_SERVICE_ERROR
+        };
+    }
+
+    int32_t result = RequestManager::GetInstance()->Search(filter, tids);
+    if (result != ExceptionErrorCode::E_OK) {
+        return ConvertError(result);
+    }
+
+    return ret;
 }
 
 void CJTask::ReloadListener()

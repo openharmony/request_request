@@ -18,13 +18,51 @@
 #include <cstdlib>
 #include <sstream>
 #include <fstream>
+#include "cj_request_ffi.h"
 #include "ffrt.h"
-#include "cj_request_log.h"
+#include "js_common.h"
+#include "parameter.h"
+#include "log.h"
 #include "securec.h"
 #include "openssl/sha.h"
 
 namespace OHOS::CJSystemapi::Request {
 using OHOS::Request::ExceptionErrorCode;
+using OHOS::Request::FileSpec;
+using OHOS::Request::Action;
+using OHOS::Request::Reason;
+using OHOS::Request::Faults;
+using OHOS::Request::FormItem;
+
+static constexpr const char *REASON_OK_INFO = "Task successful";
+static constexpr const char *TASK_SURVIVAL_ONE_MONTH_INFO = "The task has not been completed for a month yet";
+static constexpr const char *WAITTING_NETWORK_ONE_DAY_INFO = "The task waiting for network recovery has not been "
+                                                             "completed for a day yet";
+static constexpr const char *STOPPED_NEW_FRONT_TASK_INFO = "Stopped by a new front task";
+static constexpr const char *RUNNING_TASK_MEET_LIMITS_INFO = "Too many task in running state";
+static constexpr const char *USER_OPERATION_INFO = "User operation";
+static constexpr const char *APP_BACKGROUND_OR_TERMINATE_INFO = "The app is background or terminate";
+static constexpr const char *NETWORK_OFFLINE_INFO = "NetWork is offline";
+static constexpr const char *UNSUPPORTED_NETWORK_TYPE_INFO = "NetWork type not meet the task config";
+static constexpr const char *BUILD_CLIENT_FAILED_INFO = "Build client error";
+static constexpr const char *BUILD_REQUEST_FAILED_INFO = "Build request error";
+static constexpr const char *GET_FILESIZE_FAILED_INFO = "Failed because cannot get the file size from the server and "
+                                                        "the precise is setted true by user";
+static constexpr const char *CONTINUOUS_TASK_TIMEOUT_INFO = "Continuous processing task time out";
+static constexpr const char *CONNECT_ERROR_INFO = "Connect error";
+static constexpr const char *REQUEST_ERROR_INFO = "Request error";
+static constexpr const char *UPLOAD_FILE_ERROR_INFO = "There are some files upload failed";
+static constexpr const char *REDIRECT_ERROR_INFO = "Redirect error";
+static constexpr const char *PROTOCOL_ERROR_INFO = "Http protocol error";
+static constexpr const char *IO_ERROR_INFO = "Io Error";
+static constexpr const char *UNSUPPORT_RANGE_REQUEST_INFO = "Range request not supported";
+static constexpr const char *OTHERS_ERROR_INFO = "Some other error occured";
+static constexpr const char *ACCOUNT_STOPPED_INFO = "Account stopped";
+static constexpr const char *NETWORK_CHANGED_INFO = "Network changed";
+static constexpr const char *DNS_INFO = "DNS error";
+static constexpr const char *TCP_INFO = "TCP error";
+static constexpr const char *SSL_INFO = "TSL/SSL error";
+static constexpr const char *INSUFFICIENT_SPACE_INFO = "Insufficient space error";
 
 void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileData)
 {
@@ -112,11 +150,10 @@ ExceptionError ConvertError(int32_t errorCode)
     return err;
 }
 
-
 CProgress Convert2CProgress(const Progress &in)
 {
     CProgress out = { 0 };
-    out.state = static_cast<int32_t>(in.state);
+    out.state = static_cast<uint32_t>(in.state);
     out.index = in.index;
     out.processed = in.processed;
     
@@ -157,6 +194,160 @@ void RemoveFile(const std::string &filePath)
         return;
     };
     ffrt::submit(removeFile, {}, {}, ffrt::task_attr().name("Os_Request_Rm").qos(ffrt::qos_default));
+}
+
+std::string GetSaveas(const std::vector<FileSpec> &files, Action action)
+{
+    if (action == Action::UPLOAD) {
+        return "";
+    }
+    if (files.empty()) {
+        return "";
+    }
+    return files[0].uri;
+}
+
+uint32_t Convert2Broken(Reason code)
+{
+    static std::map<Reason, Faults> InnerCodeToBroken = {
+        { Reason::REASON_OK, Faults::OTHERS },
+        { Reason::TASK_SURVIVAL_ONE_MONTH, Faults::OTHERS },
+        { Reason::WAITTING_NETWORK_ONE_DAY, Faults::OTHERS },
+        { Reason::STOPPED_NEW_FRONT_TASK, Faults::OTHERS },
+        { Reason::RUNNING_TASK_MEET_LIMITS, Faults::OTHERS },
+        { Reason::USER_OPERATION, Faults::OTHERS },
+        { Reason::APP_BACKGROUND_OR_TERMINATE, Faults::OTHERS },
+        { Reason::NETWORK_OFFLINE, Faults::DISCONNECTED },
+        { Reason::UNSUPPORTED_NETWORK_TYPE, Faults::OTHERS },
+        { Reason::BUILD_CLIENT_FAILED, Faults::PARAM },
+        { Reason::BUILD_REQUEST_FAILED, Faults::PARAM },
+        { Reason::GET_FILESIZE_FAILED, Faults::FSIO },
+        { Reason::CONTINUOUS_TASK_TIMEOUT, Faults::OTHERS },
+        { Reason::CONNECT_ERROR, Faults::TCP },
+        { Reason::REQUEST_ERROR, Faults::PROTOCOL },
+        { Reason::UPLOAD_FILE_ERROR, Faults::OTHERS },
+        { Reason::REDIRECT_ERROR, Faults::REDIRECT },
+        { Reason::PROTOCOL_ERROR, Faults::PROTOCOL },
+        { Reason::IO_ERROR, Faults::FSIO },
+        { Reason::UNSUPPORT_RANGE_REQUEST, Faults::PROTOCOL },
+        { Reason::OTHERS_ERROR, Faults::OTHERS },
+        { Reason::ACCOUNT_STOPPED, Faults::OTHERS },
+        { Reason::NETWORK_CHANGED, Faults::OTHERS },
+        { Reason::DNS, Faults::DNS },
+        { Reason::TCP, Faults::TCP },
+        { Reason::SSL, Faults::SSL },
+        { Reason::INSUFFICIENT_SPACE, Faults::OTHERS },
+    };
+    constexpr const int32_t detailVersion = 12;
+    auto iter = InnerCodeToBroken.find(code);
+    if (iter != InnerCodeToBroken.end()) {
+        int32_t sdkVersion = GetSdkApiVersion();
+        REQUEST_HILOGD("GetSdkApiVersion %{public}d", sdkVersion);
+        if (sdkVersion < detailVersion
+            && (iter->second == Faults::PARAM || iter->second == Faults::DNS || iter->second == Faults::TCP
+                || iter->second == Faults::SSL || iter->second == Faults::REDIRECT)) {
+            return static_cast<uint32_t>(Faults::OTHERS);
+        }
+        return static_cast<uint32_t>(iter->second);
+    }
+    return 0;
+}
+
+std::string Convert2ReasonMsg(Reason code)
+{
+    static std::map<Reason, std::string> ReasonMsg = {
+        { Reason::REASON_OK, REASON_OK_INFO },
+        { Reason::TASK_SURVIVAL_ONE_MONTH, TASK_SURVIVAL_ONE_MONTH_INFO },
+        { Reason::WAITTING_NETWORK_ONE_DAY, WAITTING_NETWORK_ONE_DAY_INFO },
+        { Reason::STOPPED_NEW_FRONT_TASK, STOPPED_NEW_FRONT_TASK_INFO },
+        { Reason::RUNNING_TASK_MEET_LIMITS, RUNNING_TASK_MEET_LIMITS_INFO },
+        { Reason::USER_OPERATION, USER_OPERATION_INFO },
+        { Reason::APP_BACKGROUND_OR_TERMINATE, APP_BACKGROUND_OR_TERMINATE_INFO },
+        { Reason::NETWORK_OFFLINE, NETWORK_OFFLINE_INFO },
+        { Reason::UNSUPPORTED_NETWORK_TYPE, UNSUPPORTED_NETWORK_TYPE_INFO },
+        { Reason::BUILD_CLIENT_FAILED, BUILD_CLIENT_FAILED_INFO },
+        { Reason::BUILD_REQUEST_FAILED, BUILD_REQUEST_FAILED_INFO },
+        { Reason::GET_FILESIZE_FAILED, GET_FILESIZE_FAILED_INFO },
+        { Reason::CONTINUOUS_TASK_TIMEOUT, CONTINUOUS_TASK_TIMEOUT_INFO },
+        { Reason::CONNECT_ERROR, CONNECT_ERROR_INFO },
+        { Reason::REQUEST_ERROR, REQUEST_ERROR_INFO },
+        { Reason::UPLOAD_FILE_ERROR, UPLOAD_FILE_ERROR_INFO },
+        { Reason::REDIRECT_ERROR, REDIRECT_ERROR_INFO },
+        { Reason::PROTOCOL_ERROR, PROTOCOL_ERROR_INFO },
+        { Reason::IO_ERROR, IO_ERROR_INFO },
+        { Reason::UNSUPPORT_RANGE_REQUEST, UNSUPPORT_RANGE_REQUEST_INFO },
+        { Reason::OTHERS_ERROR, OTHERS_ERROR_INFO },
+        { Reason::ACCOUNT_STOPPED, ACCOUNT_STOPPED_INFO },
+        { Reason::NETWORK_CHANGED, NETWORK_CHANGED_INFO },
+        { Reason::DNS, DNS_INFO },
+        { Reason::TCP, TCP_INFO },
+        { Reason::SSL, SSL_INFO },
+        { Reason::INSUFFICIENT_SPACE, INSUFFICIENT_SPACE_INFO },
+    };
+    auto iter = ReasonMsg.find(code);
+    if (iter != ReasonMsg.end()) {
+        return iter->second;
+    }
+    return "unknown";
+}
+
+CHashStrArr Convert2CHashStrArr(const std::map<std::string, std::string> &extras)
+{
+    CHashStrArr out = { NULL };
+    size_t size = extras.size();
+    if (size == 0 ||
+        size > std::numeric_limits<size_t>::max() / sizeof(CHashStrPair)) {
+        return out;
+    }
+
+    out.headers = static_cast<CHashStrPair *>(malloc(sizeof(CHashStrPair) * size));
+    if (out.headers == nullptr) {
+        return out;
+    }
+
+    size_t i = 0;
+    for (const auto &it : extras) {
+        out.headers[i].key = MallocCString(it.first);
+        out.headers[i].value = MallocCString(it.second);
+        ++i;
+    }
+    out.size = i;
+    return out;
+}
+
+CFormItemArr Convert2CFormItemArr(const std::vector<FileSpec> &files, const std::vector<FormItem> &forms)
+{
+    CFormItemArr out = { NULL };
+    size_t filesLen = files.size();
+    size_t formsLen = forms.size();
+    size_t len = filesLen + formsLen;
+    if (len == 0) {
+        return out;
+    }
+
+    out.head = static_cast<CFormItem *>(malloc(sizeof(CFormItem) * len));
+    if (out.head == NULL) {
+        return out;
+    }
+    memset_s(out.head, sizeof(CFormItem) * len, 0, sizeof(CFormItem) * len);
+    size_t i = 0;
+    for (; i < formsLen; ++i) {
+        out.head[i].name = MallocCString(forms[i].name);
+        out.head[i].value.str = MallocCString(forms[i].value);
+        out.head[i].value.type = CFORM_ITEM_VALUE_TYPE_STRING;
+    }
+
+    for (size_t j = 0; j < filesLen;  ++j) {
+        out.head[i].name = MallocCString(files[j].name);
+        out.head[i].value.file.path = MallocCString(files[j].uri);
+        out.head[i].value.file.mimeType = MallocCString(files[j].type);
+        out.head[i].value.file.filename = MallocCString(files[j].filename);
+        out.head[i].value.type = CFORM_ITEM_VALUE_TYPE_FILE;
+        ++i;
+    }
+
+    out.size = i;
+    return out;
 }
 
 } // namespace OHOS::CJSystemapi::Request

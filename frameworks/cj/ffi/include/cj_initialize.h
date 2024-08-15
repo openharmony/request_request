@@ -29,10 +29,13 @@ using OHOS::Request::ExceptionError;
 using OHOS::Request::Config;
 using OHOS::Request::FormItem;
 using OHOS::Request::FileSpec;
-using OHOS::Request::Action;
 using OHOS::Request::Network;
 using OHOS::Request::Mode;
 using OHOS::AbilityRuntime::Context;
+
+static constexpr uint32_t TOKEN_MAX_BYTES = 2048;
+static constexpr uint32_t TOKEN_MIN_BYTES = 8;
+
 class CJInitialize {
 public:
     CJInitialize() = default;
@@ -53,7 +56,7 @@ public:
     static bool ParseIndex(Config &config);
     static int64_t ParseBegins(int64_t &begins);
     static bool ParseTitle(Config &config);
-    static bool ParseToken(Config &config);
+    static bool ParseToken(Config &config, std::string &errInfo);
     static bool ParseDescription(std::string &description);
     static bool ParseSaveas(Config &config);
     static void ParseMethod(Config &config);

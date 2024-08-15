@@ -15,7 +15,7 @@
 
 #include "cj_request_ffi.h"
 #include <cinttypes>
-#include "cj_request_log.h"
+#include "log.h"
 #include "cj_request_task.h"
 #include "cj_request_common.h"
 #include "cj_request_impl.h"
@@ -63,9 +63,29 @@ extern "C" {
         return CJRequestImpl::CreateTask((OHOS::AbilityRuntime::Context *)context, &config);
     }
 
+    RetTask FfiOHOSRequestGetTask(void* context, const char *taskId, RequestNativeOptionCString token)
+    {
+        return CJRequestImpl::GetTask((OHOS::AbilityRuntime::Context *)context, taskId, token);
+    }
+
     RetError FfiOHOSRequestRemoveTask(const char *taskId)
     {
         return CJRequestImpl::RemoveTask(taskId);
+    }
+
+    RetTaskInfo FfiOHOSRequestShowTask(const char *taskId)
+    {
+        return CJRequestImpl::ShowTask(taskId);
+    }
+
+    RetTaskInfo FfiOHOSRequestTouchTask(const char *taskId, char *token)
+    {
+        return CJRequestImpl::TouchTask(taskId, token);
+    }
+
+    RetTaskArr FfiOHOSRequestSearchTask(CFilter filter)
+    {
+        return CJRequestImpl::SearchTask(filter);
     }
 }
 }
