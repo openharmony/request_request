@@ -49,10 +49,17 @@ typedef struct {
     int64_t size;
 } CFileSpecArr;
 
+enum CFormItemValueType {
+    CFORM_ITEM_VALUE_TYPE_STRING = 0U,
+    CFORM_ITEM_VALUE_TYPE_FILE,
+    CFORM_ITEM_VALUE_TYPE_FILES,
+};
+
 typedef struct {
     char *str;
     CFileSpec file;
     CFileSpecArr files;
+    uint32_t type;
 } CFormItemValueTypeUion;
 
 typedef struct {
@@ -70,13 +77,12 @@ typedef struct {
     CFormItemArr formItems;
 } CConfigDataTypeUion;
 
-
 typedef struct {
-    int64_t action;
+    uint32_t action;
     char *url;
     char *title;
     char *description;
-    int64_t mode;
+    uint32_t mode;
     bool overwrite;
     char *method;
     CHashStrArr headers;
@@ -98,7 +104,7 @@ typedef struct {
 } CConfig;
 
 typedef struct {
-    int32_t state;
+    uint32_t state;
     uint32_t index;
     int64_t processed;
     int64_t *sizeArr;
@@ -113,18 +119,18 @@ typedef struct {
 
 typedef struct {
     int64_t instanceId;
-    int32_t taskId;
+    const char *taskId;
     RetError err;
 } RetReqData;
 
-FFI_EXPORT void FfiOHOSRequestFreeTask(int32_t taskId);
-FFI_EXPORT RetError FfiOHOSRequestTaskProgressOn(char *event, int32_t taskId, void (*callback)(CProgress progress));
-FFI_EXPORT RetError FfiOHOSRequestTaskProgressOff(char *event, int32_t taskId, void *callback);
-FFI_EXPORT RetError FfiOHOSRequestTaskStart(int32_t taskId);
-FFI_EXPORT RetError FfiOHOSRequestTaskPause(int32_t taskId);
-FFI_EXPORT RetError FfiOHOSRequestTaskResume(int32_t taskId);
-FFI_EXPORT RetError FfiOHOSRequestTaskStop(int32_t taskId);
+FFI_EXPORT void FfiOHOSRequestFreeTask(const char *taskId);
+FFI_EXPORT RetError FfiOHOSRequestTaskProgressOn(char *event, const char *taskId, void (*callback)(CProgress progress));
+FFI_EXPORT RetError FfiOHOSRequestTaskProgressOff(char *event, const char *taskId, void *callback);
+FFI_EXPORT RetError FfiOHOSRequestTaskStart(const char *taskId);
+FFI_EXPORT RetError FfiOHOSRequestTaskPause(const char *taskId);
+FFI_EXPORT RetError FfiOHOSRequestTaskResume(const char *taskId);
+FFI_EXPORT RetError FfiOHOSRequestTaskStop(const char *taskId);
 FFI_EXPORT RetReqData FfiOHOSRequestCreateTask(void* context, CConfig config);
-FFI_EXPORT RetError FfiOHOSRequestRemoveTask(int32_t taskId);
+FFI_EXPORT RetError FfiOHOSRequestRemoveTask(const char *taskId);
 }
 #endif
