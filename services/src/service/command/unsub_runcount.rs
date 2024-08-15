@@ -15,31 +15,19 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::service::run_count::RunCountEvent;
 use crate::service::RequestServiceStub;
 
 impl RequestServiceStub {
-    pub(crate) fn unsub_runcount(&self, reply: &mut MsgParcel) -> IpcResult<()> {
+    pub(crate) fn unsubscribe_run_count(&self, reply: &mut MsgParcel) -> IpcResult<()> {
         let pid = ipc::Skeleton::calling_pid();
-        // let uid = ipc::Skeleton::calling_uid();
-        info!("Service runcount unsubscribe: pid is {}", pid);
+        info!("Service run_count unsubscribe: pid is {}", pid);
 
-        let (event, rx) = RunCountEvent::unsub_runcount(pid);
-        self.runcount_manager.send_event(event);
-
-        let ret = match rx.get() {
-            Some(ret) => ret,
-            None => {
-                error!("End Service runcount unsubscribe, failed: receives ret failed");
-                return Err(IpcStatusCode::Failed);
-            }
-        };
+        let ret = self.run_count_manager.unsubscribe_run_count(pid);
         reply.write(&(ret as i32))?;
         if ret != ErrorCode::ErrOk {
-            error!("End Service runcount unsubscribe, failed: {}", ret as i32);
+            error!("End Service run_count unsubscribe, failed: {}", ret as i32);
             return Err(IpcStatusCode::Failed);
         }
-        debug!("End Service runcount ok: pid is {}", pid);
         Ok(())
     }
 }

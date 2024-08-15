@@ -14,6 +14,8 @@
 use std::ops::Deref;
 use std::sync::Arc;
 
+use crate::info::State;
+use crate::manage::database::RequestDb;
 use crate::manage::events::{TaskEvent, TaskManagerEvent};
 use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::queue::keeper::SAKeeper;
@@ -24,12 +26,7 @@ use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::task::upload::upload;
 
-cfg_oh! {
-    use crate::service::run_count::{RunCountEvent, RunCountManagerEntry};
-}
 pub(crate) struct RunningTask {
-    #[cfg(feature = "oh")]
-    runcount_manager: RunCountManagerEntry,
     task: Arc<RequestTask>,
     tx: TaskManagerTx,
     // `_keeper` is never used when executing the task.
@@ -37,18 +34,8 @@ pub(crate) struct RunningTask {
 }
 
 impl RunningTask {
-    pub(crate) fn new(
-        #[cfg(feature = "oh")] runcount_manager: RunCountManagerEntry,
-        task: Arc<RequestTask>,
-        tx: TaskManagerTx,
-        keeper: SAKeeper,
-    ) -> Self {
-        // Task start to run, then running count +1.
-        #[cfg(feature = "oh")]
-        runcount_manager.send_event(RunCountEvent::change_runcount(1));
+    pub(crate) fn new(task: Arc<RequestTask>, tx: TaskManagerTx, keeper: SAKeeper) -> Self {
         Self {
-            #[cfg(feature = "oh")]
-            runcount_manager,
             task,
             tx,
             _keeper: keeper,
@@ -57,6 +44,11 @@ impl RunningTask {
 
     pub(crate) async fn run(self) {
         let action = self.conf.common_data.action;
+        RequestDb::get_instance().update_task_state(
+            self.task_id(),
+            State::Running,
+            Reason::OthersError,
+        );
         match action {
             Action::Download => {
                 download(self.task.clone()).await;
@@ -114,10 +106,5 @@ impl Drop for RunningTask {
                     )));
             }
         }
-
-        // Task finishes running, then running count -1.
-        #[cfg(feature = "oh")]
-        self.runcount_manager
-            .send_event(RunCountEvent::change_runcount(-1));
     }
 }

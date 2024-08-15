@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::info::State;
 use crate::service::client::ClientManagerEntry;
 use crate::task::notify::{NotifyData, SubscribeType};
 
@@ -18,10 +19,22 @@ pub(crate) struct Notifier;
 
 impl Notifier {
     pub(crate) fn complete(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
+        #[cfg(feature = "oh")]
+        let _ = publish_state_change_event(
+            notify_data.bundle.as_str(),
+            notify_data.task_id,
+            State::Completed.repr as i32,
+        );
         client_manager.send_notify_data(SubscribeType::Complete, notify_data)
     }
 
     pub(crate) fn fail(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
+        #[cfg(feature = "oh")]
+        let _ = publish_state_change_event(
+            notify_data.bundle.as_str(),
+            notify_data.task_id,
+            State::Failed.repr as i32,
+        );
         client_manager.send_notify_data(SubscribeType::Fail, notify_data)
     }
 
@@ -50,5 +63,17 @@ impl Notifier {
         let task_id = notify_data.task_id;
         client_manager.send_notify_data(SubscribeType::Remove, notify_data);
         client_manager.notify_task_finished(task_id);
+    }
+}
+
+#[cfg(feature = "oh")]
+pub(crate) fn publish_state_change_event(
+    bundle_name: &str,
+    task_id: u32,
+    state: i32,
+) -> Result<(), ()> {
+    match crate::utils::PublishStateChangeEvent(bundle_name, task_id, state) {
+        true => Ok(()),
+        false => Err(()),
     }
 }

@@ -26,19 +26,17 @@ use ylong_runtime::task::JoinHandle;
 use crate::error::ErrorCode;
 use crate::manage::database::RequestDb;
 use crate::manage::network::Network;
+use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::qos::{QosChanges, QosDirection};
 use crate::manage::scheduler::queue::running_task::RunningTask;
 use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
 use crate::service::run_count::RunCountManagerEntry;
 use crate::task::config::Action;
-use crate::task::ffi::CUpdateStateInfo;
 use crate::task::info::State;
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
-use crate::utils::{get_current_timestamp, runtime_spawn};
-
-const MILLISECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
+use crate::utils::runtime_spawn;
 
 pub(crate) struct RunningQueue {
     download_queue: HashMap<(u64, u32), Arc<RequestTask>>,
@@ -87,13 +85,7 @@ impl RunningQueue {
             .or(self.upload_queue.get(&(uid, task_id)))
         {
             info!("{} restart running", task_id);
-            let running_task = RunningTask::new(
-                #[cfg(feature = "oh")]
-                self.run_count_manager.clone(),
-                task.clone(),
-                self.tx.clone(),
-                self.keeper.clone(),
-            );
+            let running_task = RunningTask::new(task.clone(), self.tx.clone(), self.keeper.clone());
             let join_handle = runtime_spawn(async move {
                 running_task.run().await;
             });
@@ -126,17 +118,6 @@ impl RunningQueue {
             let task_status = task.status.lock().unwrap();
             info!("dump task message, uid:{}, task_id:{}, action:{}, mode:{}, bundle name:{}, task_status:{:?}",
                 uid, task_id, task.action().repr, task.mode().repr, task.bundle(), *task_status);
-        }
-    }
-
-    pub(crate) fn clear_timeout_tasks(&mut self) {
-        let current_time = get_current_timestamp();
-
-        for task in self.tasks() {
-            if current_time - task.ctime > MILLISECONDS_IN_ONE_MONTH {
-                task.change_task_status(State::Stopped, Reason::TaskSurvivalOneMonth);
-                continue;
-            }
         }
     }
 
@@ -194,18 +175,12 @@ impl RunningQueue {
                 Err(ErrorCode::TaskNotFound) => continue, // If we cannot find the task, skip it.
                 Err(ErrorCode::TaskStateErr) => continue, // If we cannot find the task, skip it.
                 Err(e) => {
+                    info!("Get task failed, task_id: {}, error: {:?}", task_id, e);
                     let database = RequestDb::get_instance();
-                    let state_info = CUpdateStateInfo::new(State::Failed, Reason::OthersError);
-                    if !database.update_task_state(task_id, &state_info) {
-                        error!("{} update_task_state error: {:?}", task_id, e);
-                    }
-
+                    database.update_task_state(task_id, State::Failed, Reason::OthersError);
                     if let Some(info) = database.get_task_info(task_id) {
                         let notify_data = info.build_notify_data();
-                        RequestTask::state_change_notify_of_no_run(
-                            &self.client_manager,
-                            notify_data,
-                        );
+                        Notifier::fail(&self.client_manager, notify_data);
                     }
                     qos_remove_queue.push((uid, task_id));
 
@@ -220,15 +195,8 @@ impl RunningQueue {
                 info!("{} has running task not finished", task_id);
                 continue;
             }
-
             info!("{} create running task", task_id);
-            let running_task = RunningTask::new(
-                #[cfg(feature = "oh")]
-                self.run_count_manager.clone(),
-                task.clone(),
-                self.tx.clone(),
-                self.keeper.clone(),
-            );
+            let running_task = RunningTask::new(task.clone(), self.tx.clone(), self.keeper.clone());
             let join_handle = runtime_spawn(async move {
                 running_task.run().await;
             });
@@ -246,5 +214,9 @@ impl RunningQueue {
             }
         }
         *queue = new_queue;
+
+        #[cfg(feature = "oh")]
+        self.run_count_manager
+            .notify_run_count(self.download_queue.len() + self.upload_queue.len());
     }
 }

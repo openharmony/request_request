@@ -31,12 +31,12 @@ use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
 use crate::service::run_count::RunCountManagerEntry;
 use crate::task::config::Action;
-use crate::task::ffi::CUpdateStateInfo;
 use crate::task::info::State;
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
-#[cfg(feature = "oh")]
-use crate::utils::publish_state_change_event;
+use crate::utils::get_current_timestamp;
+
+const MILLISECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
 
 // Scheduler 的基本处理逻辑如下：
 // 1. Scheduler 维护一个当前所有 运行中 和
@@ -122,16 +122,23 @@ impl Scheduler {
 
     fn start_inner(&mut self, uid: u64, task_id: u32, is_resume: bool) -> Result<(), ErrorCode> {
         let database = RequestDb::get_instance();
+        let info = RequestDb::get_instance()
+            .get_task_info(task_id)
+            .ok_or(ErrorCode::TaskNotFound)?;
+
+        if (is_resume && info.progress.common_data.state != State::Paused.repr)
+            || (!is_resume && info.progress.common_data.state == State::Paused.repr)
+        {
+            return Err(ErrorCode::TaskStateErr);
+        }
+        database.change_status(task_id, State::Waiting)?;
         if is_resume {
-            database.change_status(task_id, State::Retrying)?;
-        } else {
-            database.change_status(task_id, State::Running)?;
+            Notifier::resume(&self.client_manager, info.build_notify_data());
         }
 
         if !self.check_config_satisfy(task_id)? {
             return Ok(());
         };
-
         let qos_info = database
             .get_task_qos_info(task_id)
             .ok_or(ErrorCode::TaskNotFound)?;
@@ -144,6 +151,9 @@ impl Scheduler {
         let database = RequestDb::get_instance();
         database.change_status(task_id, State::Paused)?;
 
+        if let Some(info) = database.get_task_info(task_id) {
+            Notifier::pause(&self.client_manager, info.build_notify_data());
+        }
         if let Some(qos_changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
             self.reschedule(qos_changes);
         }
@@ -180,16 +190,10 @@ impl Scheduler {
         self.running_queue.task_finish(uid, task_id);
 
         let database = RequestDb::get_instance();
-        let _ = database.execute(&sql::task_completed(task_id));
+        database.update_task_state(task_id, State::Completed, Reason::Default);
 
         if let Some(info) = database.get_task_info(task_id) {
             Notifier::complete(&self.client_manager, info.build_notify_data());
-            #[cfg(feature = "oh")]
-            let _ = publish_state_change_event(
-                info.bundle.as_str(),
-                info.common_data.task_id,
-                State::Completed.repr as i32,
-            );
         }
 
         if let Some(changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
@@ -211,17 +215,14 @@ impl Scheduler {
             return;
         };
         match State::from(info.progress.common_data.state) {
-            State::Paused => {
-                Notifier::pause(&self.client_manager, info.build_notify_data());
-            }
             State::Running | State::Retrying => {
                 if !self.running_queue.try_restart(uid, task_id) {
                     info!("task {} waiting for task limits", task_id);
-                    let state_info =
-                        CUpdateStateInfo::new(State::Waiting, Reason::RunningTaskMeetLimits);
-                    if !RequestDb::get_instance().update_task_state(task_id, &state_info) {
-                        error!("{} update_task_state error", task_id);
-                    }
+                    RequestDb::get_instance().update_task_state(
+                        task_id,
+                        State::Waiting,
+                        Reason::RunningTaskMeetLimits,
+                    );
                 }
             }
             State::Failed => {
@@ -245,20 +246,12 @@ impl Scheduler {
         self.running_queue.task_finish(uid, task_id);
 
         let database = RequestDb::get_instance();
-        let _ = database.execute(&sql::task_failed(task_id, reason));
+        database.update_task_state(task_id, State::Failed, reason);
 
         if let Some(info) = database.get_task_info(task_id) {
             Notifier::fail(&self.client_manager, info.build_notify_data());
             #[cfg(feature = "oh")]
-            let _ = publish_state_change_event(
-                info.bundle.as_str(),
-                info.common_data.task_id,
-                State::Failed.repr as i32,
-            );
-            #[cfg(feature = "oh")]
-            {
-                Self::sys_event(info, reason);
-            }
+            Self::sys_event(info, reason);
         }
 
         if let Some(changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
@@ -352,22 +345,22 @@ impl Scheduler {
                 task_id,
                 self.state_handler.network()
             );
-            let state_info = match config.version {
+            let state = match config.version {
                 Version::API9 => match config.common_data.action {
-                    Action::Download => CUpdateStateInfo::new(State::Waiting, reason),
-                    Action::Upload => CUpdateStateInfo::new(State::Failed, reason),
+                    Action::Download => State::Waiting,
+                    Action::Upload => State::Failed,
                     _ => unreachable!(),
                 },
                 Version::API10 => {
                     if config.common_data.mode == Mode::BackGround && config.common_data.retry {
-                        CUpdateStateInfo::new(State::Waiting, reason)
+                        State::Waiting
                     } else {
-                        CUpdateStateInfo::new(State::Failed, reason)
+                        State::Failed
                     }
                 }
             };
-            database.update_task_state(task_id, &state_info);
-            if state_info.state == State::Failed.repr {
+            database.update_task_state(task_id, state, reason);
+            if state == State::Failed {
                 if let Some(info) = database.get_task_info(task_id) {
                     Notifier::fail(&self.client_manager, info.build_notify_data());
                 }
@@ -377,16 +370,33 @@ impl Scheduler {
 
         if !config.satisfy_foreground(self.state_handler.top_uid()) {
             info!("task {} started, waiting for app state", task_id);
-            let state_info =
-                CUpdateStateInfo::new(State::Waiting, Reason::AppBackgroundOrTerminate);
-            database.update_task_state(task_id, &state_info);
+            database.update_task_state(task_id, State::Waiting, Reason::AppBackgroundOrTerminate);
             return Ok(false);
         }
         Ok(true)
     }
 
     pub(crate) fn clear_timeout_tasks(&mut self) {
-        self.running_queue.clear_timeout_tasks();
+        let current_time = get_current_timestamp();
+        let timeout_tasks = self
+            .tasks()
+            .filter(|task| current_time - task.ctime > MILLISECONDS_IN_ONE_MONTH)
+            .cloned()
+            .collect::<Vec<_>>();
+        if timeout_tasks.is_empty() {
+            return;
+        }
+        let database = RequestDb::get_instance();
+        for task in timeout_tasks {
+            if database
+                .change_status(task.task_id(), State::Stopped)
+                .is_ok()
+            {
+                self.qos.apps.remove_task(task.uid(), task.task_id());
+            }
+        }
+        let changes = self.qos.reschedule(Action::Any, &self.state_handler);
+        self.reschedule(changes);
     }
 }
 
@@ -407,7 +417,7 @@ impl RequestDb {
             State::Running => sql::start_task(task_id),
             State::Stopped => sql::stop_task(task_id),
             State::Removed => sql::remove_task(task_id),
-            State::Retrying => sql::resume_task(task_id),
+            State::Waiting => sql::start_task(task_id),
             _ => return Err(ErrorCode::Other),
         };
 

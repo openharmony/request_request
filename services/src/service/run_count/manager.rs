@@ -14,13 +14,13 @@
 use std::collections::HashMap;
 
 use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
-use ylong_runtime::sync::oneshot::Sender;
+use ylong_runtime::sync::oneshot::{self, Sender};
 cfg_oh! {
     use ipc::remote::RemoteObj;
     use crate::ability::PANIC_INFO;
 }
 
-use super::{RunCountEvent, SubClient, SubKey};
+use super::{Client, RunCountEvent};
 use crate::error::ErrorCode;
 use crate::utils::runtime_spawn;
 
@@ -48,11 +48,31 @@ impl RunCountManagerEntry {
         }
         true
     }
+    #[cfg(feature = "oh")]
+    pub(crate) fn subscribe_run_count(&self, pid: u64, obj: RemoteObj) -> ErrorCode {
+        let (tx, rx) = oneshot::channel::<ErrorCode>();
+        let event = RunCountEvent::Subscribe(pid, obj, tx);
+        self.send_event(event);
+        ylong_runtime::block_on(rx).unwrap()
+    }
+
+    pub(crate) fn unsubscribe_run_count(&self, pid: u64) -> ErrorCode {
+        let (tx, rx) = oneshot::channel::<ErrorCode>();
+        let event = RunCountEvent::Unsubscribe(pid, tx);
+        self.send_event(event);
+        ylong_runtime::block_on(rx).unwrap()
+    }
+
+    #[cfg(feature = "oh")]
+    pub(crate) fn notify_run_count(&self, new_count: usize) {
+        let event = RunCountEvent::Change(new_count);
+        self.send_event(event);
+    }
 }
 
 pub(crate) struct RunCountManager {
-    runcount: i64,
-    remotes: HashMap<SubKey, SubClient>,
+    count: usize,
+    remotes: HashMap<u64, Client>,
     rx: UnboundedReceiver<RunCountEvent>,
 }
 
@@ -60,12 +80,12 @@ impl RunCountManager {
     pub(crate) fn init() -> RunCountManagerEntry {
         debug!("RunCountManager init");
         let (tx, rx) = unbounded_channel();
-        let runcount_manager = RunCountManager {
-            runcount: 0,
+        let run_count_manager = RunCountManager {
+            count: 0,
             remotes: HashMap::new(),
             rx,
         };
-        runtime_spawn(runcount_manager.run());
+        runtime_spawn(run_count_manager.run());
         RunCountManagerEntry::new(tx)
     }
 
@@ -81,64 +101,41 @@ impl RunCountManager {
 
             match recv {
                 #[cfg(feature = "oh")]
-                RunCountEvent::Sub(subkey, obj, tx) => self.handle_sub_runcount(subkey, obj, tx),
-                #[cfg(not(feature = "oh"))]
-                RunCountEvent::Sub(subkey, tx) => self.handle_sub_runcount(subkey, tx),
-                RunCountEvent::Unsub(subkey, tx) => self.handle_unsub_runcount(subkey, tx),
-                RunCountEvent::Change(change) => self.handle_change_runcount(change),
+                RunCountEvent::Subscribe(pid, obj, tx) => self.subscribe_run_count(pid, obj, tx),
+                RunCountEvent::Unsubscribe(pid, tx) => self.unsubscribe_run_count(pid, tx),
+                #[cfg(feature = "oh")]
+                RunCountEvent::Change(change) => self.change_run_count(change),
             }
 
             debug!("RunCountManager handle message done");
         }
     }
 
-    fn handle_sub_runcount(
-        &mut self,
-        subkey: SubKey,
-        #[cfg(feature = "oh")] obj: RemoteObj,
-        tx: Sender<ErrorCode>,
-    ) {
-        debug!("handle sub runcount in");
+    #[cfg(feature = "oh")]
+    fn subscribe_run_count(&mut self, pid: u64, obj: RemoteObj, tx: Sender<ErrorCode>) {
+        let client = Client::new(obj);
 
-        let subclient = SubClient::new(
-            #[cfg(feature = "oh")]
-            obj,
-        );
-
-        #[cfg(feature = "oh")]
-        subclient.notify_runcount(self.runcount);
-        if let std::collections::hash_map::Entry::Vacant(e) = self.remotes.entry(subkey) {
-            e.insert(subclient);
-            debug!("RunCountManager has inserted subkey: {:?}", subkey);
-        }
+        let _ = client.notify_run_count(self.count as i64);
+        self.remotes.insert(pid, client);
 
         let _ = tx.send(ErrorCode::ErrOk);
-        // Need to notify client immediately, then client get runcount by its
-        // callback
     }
 
-    fn handle_unsub_runcount(&mut self, subkey: SubKey, tx: Sender<ErrorCode>) {
-        if self.remotes.remove(&subkey).is_some() {
-            debug!("RunCountManager removes subkey: {:?}", subkey);
-            // Sends error code immediately, ignore the result.
+    fn unsubscribe_run_count(&mut self, subscribe_pid: u64, tx: Sender<ErrorCode>) {
+        if self.remotes.remove(&subscribe_pid).is_some() {
             let _ = tx.send(ErrorCode::ErrOk);
         } else {
-            error!("RunCountManager removes subkey failed: {:?}", subkey);
-            // Sends error code immediately, ignore the result.
             let _ = tx.send(ErrorCode::Other);
         }
     }
 
-    fn handle_change_runcount(&mut self, change: i64) {
-        debug!("handle change runcount in");
-        self.runcount += change;
-        self.handle_notify_runcount();
-    }
-
-    fn handle_notify_runcount(&self) {
-        debug!("handle notify runcount to all subclient");
-        for (_, subclient) in self.remotes.iter() {
-            subclient.notify_runcount(self.runcount)
+    #[cfg(feature = "oh")]
+    fn change_run_count(&mut self, new_count: usize) {
+        if self.count == new_count {
+            return;
         }
+        self.count = new_count;
+        self.remotes
+            .retain(|_, remote| remote.notify_run_count(self.count as i64).is_ok());
     }
 }

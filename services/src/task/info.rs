@@ -112,33 +112,6 @@ mod ffi {
     }
 }
 
-impl State {
-    pub(crate) fn is_doing(&self) -> bool {
-        *self == State::Running || *self == State::Retrying
-    }
-
-    pub(crate) fn check_change(from: State, to: State) -> bool {
-        match to {
-            State::Initialized | State::Any => false,
-            State::Paused | State::Stopped => from.is_doing() || from == State::Waiting,
-            State::Completed => from.is_doing(),
-            State::Failed => {
-                from != State::Completed && from != State::Removed && from != State::Stopped
-            }
-            State::Waiting => from.is_doing() || from == State::Initialized,
-            State::Running | State::Retrying => {
-                from == State::Waiting
-                    || from == State::Paused
-                    || from == State::Stopped
-                    || from == State::Failed
-                    || from == State::Initialized
-            }
-            State::Removed => from != State::Removed,
-            _ => false,
-        }
-    }
-}
-
 #[derive(Debug)]
 pub(crate) struct UpdateInfo {
     pub(crate) mtime: u64,

@@ -17,11 +17,12 @@ use crate::task::reason::Reason;
 
 pub(super) fn start_task(task_id: u32) -> String {
     format!(
-        "UPDATE request_task SET state = {}, reason = {} where task_id = {} AND (state = {} OR (action = {} AND (state = {} OR state = {} )))",
-        State::Running.repr,
-        Reason::Default.repr,
+        "UPDATE request_task SET state = {}, reason = {} where task_id = {} AND (state = {} OR state = {} OR (action = {} AND (state = {} OR state = {} )))",
+        State::Waiting.repr,
+        Reason::RunningTaskMeetLimits.repr,
         task_id,
         State::Initialized.repr,
+        State::Paused.repr,
         Action::Download.repr,
         State::Failed.repr,
         State::Stopped.repr,
@@ -58,36 +59,6 @@ pub(super) fn remove_task(task_id: u32) -> String {
         State::Removed.repr,
         Reason::UserOperation.repr,
         task_id,
-    )
-}
-
-pub(super) fn resume_task(task_id: u32) -> String {
-    format!(
-        "UPDATE request_task SET state = {}, reason = {} where task_id = {} AND state = {}",
-        State::Retrying.repr,
-        Reason::Default.repr,
-        task_id,
-        State::Paused.repr,
-    )
-}
-
-pub(super) fn task_completed(task_id: u32) -> String {
-    format!(
-        "UPDATE request_task SET state = {}, reason = {} where task_id = {} AND state != {}",
-        State::Completed.repr,
-        Reason::Default.repr,
-        task_id,
-        State::Removed.repr
-    )
-}
-
-pub(super) fn task_failed(task_id: u32, reason: Reason) -> String {
-    format!(
-        "UPDATE request_task SET state = {}, reason = {} where task_id = {} AND state != {}",
-        State::Failed.repr,
-        reason.repr,
-        task_id,
-        State::Removed.repr
     )
 }
 
