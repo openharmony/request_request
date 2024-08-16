@@ -112,7 +112,6 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
     #[cfg(feature = "oh")]
     let _trace = Trace::new("download file");
 
-    task.prepare_running();
     task.prepare_download().await?;
 
     info!("download task {} start running", task.task_id());

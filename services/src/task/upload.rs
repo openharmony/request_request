@@ -24,7 +24,6 @@ use ylong_runtime::io::{AsyncRead, AsyncSeek, AsyncSeekExt, ReadBuf};
 use super::operator::TaskOperator;
 use super::reason::Reason;
 use super::request_task::{TaskError, TaskPhase};
-use crate::task::info::State;
 use crate::task::request_task::RequestTask;
 #[cfg(feature = "oh")]
 use crate::trace::Trace;
@@ -186,7 +185,6 @@ fn build_request_common(
         }
         Err(e) => {
             error!("build upload request error is {:?}", e);
-            task.change_task_status(State::Failed, Reason::BuildRequestFailed);
             None
         }
     }
@@ -234,8 +232,6 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
 }
 
 async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
-    task.prepare_running();
-
     info!("upload task {} start running", task.task_id());
 
     #[cfg(feature = "oh")]

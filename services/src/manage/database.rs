@@ -31,7 +31,7 @@ use super::network::Network;
 use crate::error::ErrorCode;
 use crate::service::client::ClientManagerEntry;
 use crate::task::config::{Mode, TaskConfig};
-use crate::task::ffi::{CEachFileStatus, CTaskConfig, CTaskInfo, CUpdateInfo, CUpdateStateInfo};
+use crate::task::ffi::{CEachFileStatus, CTaskConfig, CTaskInfo, CUpdateInfo};
 use crate::task::info::{State, TaskInfo, UpdateInfo};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
@@ -92,7 +92,7 @@ impl RequestDb {
         if ret == 0 {
             Ok(())
         } else {
-            error!("execute sql failed: {}", ret);
+            error!("execute {} failed: {}", sql, ret);
             Err(ret)
         }
     }
@@ -325,15 +325,15 @@ impl RequestDb {
         self.execute(&sql).unwrap();
     }
 
-    pub(crate) fn update_task_state(&self, task_id: u32, info: &CUpdateStateInfo) -> bool {
+    pub(crate) fn update_task_state(&self, task_id: u32, state: State, reason: Reason) {
         let sql = format!(
             "UPDATE request_task SET state = {}, mtime = {}, reason = {} WHERE task_id = {}",
-            info.state,
+            state.repr,
             get_current_timestamp(),
-            info.reason,
+            reason.repr,
             task_id
         );
-        self.execute(&sql).is_ok()
+        let _ = self.execute(&sql);
     }
 
     #[cfg(feature = "oh")]

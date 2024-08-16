@@ -22,7 +22,6 @@ use ylong_runtime::io::{AsyncSeekExt, AsyncWriteExt};
 
 cfg_oh! {
     use crate::manage::SystemConfig;
-    use crate::utils::publish_state_change_event;
     use crate::utils::{request_background_notify, RequestTaskMsg};
 }
 
@@ -223,7 +222,6 @@ impl RequestTask {
         let tries = info.common_data.tries;
         let upload_counts = info.progress.common_data.index;
         let status = TaskStatus {
-            waiting_network_time: None,
             mtime: time,
             state: State::from(info.progress.common_data.state),
             reason: Reason::from(info.common_data.reason),
@@ -293,13 +291,6 @@ impl RequestTask {
             mime_type: self.mime_type(),
         };
         RequestDb::get_instance().update_task(self.task_id(), update_info);
-    }
-
-    pub(crate) fn prepare_running(&self) {
-        if self.status.lock().unwrap().state == State::Retrying {
-            let notify_data = self.build_notify_data();
-            Notifier::resume(&self.client_manager, notify_data);
-        }
     }
 
     pub(crate) fn build_request_builder(&self) -> Result<RequestBuilder, HttpClientError> {
@@ -533,101 +524,6 @@ impl RequestTask {
         }
     }
 
-    pub(crate) fn set_code(&self, index: usize, code: Reason, is_force: bool) {
-        // `unwrap` for propagating panics among threads.
-        let mut codes_guard = self.code.lock().unwrap();
-        match codes_guard.get_mut(index) {
-            Some(reason) => {
-                if is_force || *reason == Reason::Default {
-                    *reason = code;
-                }
-            }
-            None => {
-                error!(
-                    "set code index error; tid: {}, index: {}, code: {:?}",
-                    self.conf.common_data.task_id, index, code
-                );
-            }
-        }
-    }
-
-    pub(crate) fn change_status(
-        task_status: &mut MutexGuard<TaskStatus>,
-        progress: &mut MutexGuard<Progress>,
-        state: State,
-        reason: Reason,
-    ) {
-        let time = get_current_timestamp();
-        // TODO: other reason for waiting?
-        if state == State::Waiting {
-            task_status.waiting_network_time = Some(time);
-        }
-        task_status.mtime = time;
-        task_status.state = state;
-        task_status.reason = reason;
-        progress.common_data.state = state.repr;
-        debug!("current state is {:?}, reason is {:?}", state, reason);
-    }
-
-    pub(crate) fn change_task_status(&self, to_state: State, to_reason: Reason) -> ErrorCode {
-        let mut task_status = self.status.lock().unwrap();
-        let mut progress = self.progress.lock().unwrap();
-        if !State::check_change(task_status.state, to_state) {
-            return ErrorCode::TaskStateErr;
-        }
-        RequestTask::change_status(&mut task_status, &mut progress, to_state, to_reason);
-        let index: usize = progress.common_data.index;
-        if to_state == State::Failed {
-            let file_counts = self.conf.file_specs.len();
-            for i in index..file_counts {
-                self.set_code(i, to_reason, false);
-            }
-        } else {
-            self.set_code(index, to_reason, false);
-        }
-        ErrorCode::ErrOk
-    }
-
-    pub(crate) fn state_change_notify_of_no_run(
-        client_manager: &ClientManagerEntry,
-        notify_data: NotifyData,
-    ) {
-        let state = State::from(notify_data.progress.common_data.state);
-        let total_processed = notify_data.progress.common_data.total_processed;
-        if state == State::Initialized
-            || (total_processed == 0 && (state == State::Running || state == State::Retrying))
-        {
-            return;
-        }
-        debug!("no run task state change notification: {:?}", state);
-        Notifier::progress(client_manager, notify_data.clone());
-        match state {
-            State::Completed => {
-                #[cfg(feature = "oh")]
-                let _ = publish_state_change_event(
-                    notify_data.bundle.as_str(),
-                    notify_data.task_id,
-                    State::Completed.repr as i32,
-                );
-                Notifier::complete(client_manager, notify_data)
-            }
-            State::Failed => {
-                #[cfg(feature = "oh")]
-                let _ = publish_state_change_event(
-                    notify_data.bundle.as_str(),
-                    notify_data.task_id,
-                    State::Failed.repr as i32,
-                );
-                Notifier::fail(client_manager, notify_data)
-            }
-            State::Paused | State::Waiting => Notifier::pause(client_manager, notify_data),
-            State::Removed => {
-                Notifier::remove(client_manager, notify_data);
-            }
-            _ => {}
-        }
-    }
-
     pub(crate) fn get_each_file_status(&self) -> Vec<EachFileStatus> {
         let mut vec = Vec::new();
         // `unwrap` for propagating panics among threads.
@@ -782,7 +678,6 @@ impl RequestTask {
 
 #[derive(Clone, Debug)]
 pub(crate) struct TaskStatus {
-    pub(crate) waiting_network_time: Option<u64>,
     pub(crate) mtime: u64,
     pub(crate) state: State,
     pub(crate) reason: Reason,
@@ -791,7 +686,6 @@ pub(crate) struct TaskStatus {
 impl TaskStatus {
     pub(crate) fn new(mtime: u64) -> Self {
         TaskStatus {
-            waiting_network_time: None,
             mtime,
             state: State::Initialized,
             reason: Reason::Default,

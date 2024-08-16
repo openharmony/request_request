@@ -263,7 +263,7 @@ mod test {
             is_roaming: true,
         }));
 
-        assert!(!notifier.notify_online(NetworkInfo {
+        assert!(notifier.notify_online(NetworkInfo {
             network_type: NetworkType::Wifi,
             is_metered: false,
             is_roaming: true,

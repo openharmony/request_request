@@ -31,7 +31,7 @@ pub(crate) struct RequestServiceStub {
     pub(crate) task_manager: Mutex<TaskManagerTx>,
     pub(crate) sa_handler: Handler,
     pub(crate) client_manager: ClientManagerEntry,
-    pub(crate) runcount_manager: RunCountManagerEntry,
+    pub(crate) run_count_manager: RunCountManagerEntry,
     pub(crate) remote_busy: Arc<AtomicBool>,
 }
 
@@ -40,14 +40,14 @@ impl RequestServiceStub {
         sa_handler: Handler,
         task_manager: TaskManagerTx,
         client_manager: ClientManagerEntry,
-        runcount_manager: RunCountManagerEntry,
+        run_count_manager: RunCountManagerEntry,
         remote_busy: Arc<AtomicBool>,
     ) -> Self {
         Self {
             task_manager: Mutex::new(task_manager),
             sa_handler,
             client_manager,
-            runcount_manager,
+            run_count_manager,
             remote_busy,
         }
     }
@@ -83,8 +83,8 @@ impl RemoteStub for RequestServiceStub {
             interface::OPEN_CHANNEL => self.open_channel(reply),
             interface::SUBSCRIBE => self.subscribe(data, reply),
             interface::UNSUBSCRIBE => self.unsubscribe(data, reply),
-            interface::SUB_RUN_COUNT => self.sub_runcount(data, reply),
-            interface::UNSUB_RUN_COUNT => self.unsub_runcount(reply),
+            interface::SUB_RUN_COUNT => self.subscribe_run_count(data, reply),
+            interface::UNSUB_RUN_COUNT => self.unsubscribe_run_count(reply),
             _ => return IpcStatusCode::Failed as i32,
         };
 
