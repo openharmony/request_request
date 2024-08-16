@@ -17,7 +17,6 @@ pub use ffi::State;
 
 use super::ffi::CEachFileStatus;
 use super::notify::{EachFileStatus, NotifyData, Progress};
-use crate::manage::database::TaskQosInfo;
 use crate::task::config::{Action, Version};
 use crate::task::reason::Reason;
 use crate::utils::c_wrapper::{CFileSpec, CFormItem};
@@ -55,16 +54,6 @@ impl TaskInfo {
 
     pub(crate) fn token(&self) -> String {
         self.token.clone()
-    }
-
-    pub(crate) fn qos_info(&self) -> TaskQosInfo {
-        TaskQosInfo {
-            task_id: self.common_data.task_id,
-            action: self.common_data.action,
-            mode: self.common_data.mode,
-            state: self.progress.common_data.state,
-            priority: self.common_data.priority,
-        }
     }
 }
 
@@ -150,6 +139,7 @@ impl State {
     }
 }
 
+#[derive(Debug)]
 pub(crate) struct UpdateInfo {
     pub(crate) mtime: u64,
     pub(crate) reason: u8,

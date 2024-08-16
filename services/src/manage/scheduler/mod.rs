@@ -21,6 +21,7 @@ use queue::RunningQueue;
 use state::sql::SqlList;
 
 use super::network::Network;
+use crate::config::{Mode, Version};
 use crate::error::ErrorCode;
 use crate::manage::database::RequestDb;
 use crate::manage::notifier::Notifier;
@@ -107,8 +108,20 @@ impl Scheduler {
     }
 
     pub(crate) fn start_task(&mut self, uid: u64, task_id: u32) -> Result<(), ErrorCode> {
+        self.start_inner(uid, task_id, false)
+    }
+
+    pub(crate) fn resume_task(&mut self, uid: u64, task_id: u32) -> Result<(), ErrorCode> {
+        self.start_inner(uid, task_id, true)
+    }
+
+    fn start_inner(&mut self, uid: u64, task_id: u32, is_resume: bool) -> Result<(), ErrorCode> {
         let database = RequestDb::get_instance();
-        database.change_status(task_id, State::Running)?;
+        if is_resume {
+            database.change_status(task_id, State::Retrying)?;
+        } else {
+            database.change_status(task_id, State::Running)?;
+        }
 
         if !self.check_config_satisfy(task_id)? {
             return Ok(());
@@ -119,26 +132,6 @@ impl Scheduler {
             .ok_or(ErrorCode::TaskNotFound)?;
         let changes = self.qos.start_task(uid, qos_info, &self.state_handler);
         self.reschedule(changes);
-        Ok(())
-    }
-
-    pub(crate) fn resume_task(&mut self, uid: u64, task_id: u32) -> Result<(), ErrorCode> {
-        let database = RequestDb::get_instance();
-        database.change_status(task_id, State::Retrying)?;
-
-        if !self.check_config_satisfy(task_id)? {
-            return Ok(());
-        };
-        let info = database
-            .get_task_info(task_id)
-            .ok_or(ErrorCode::TaskNotFound)?;
-
-        let changes = self
-            .qos
-            .start_task(uid, info.qos_info(), &self.state_handler);
-
-        self.reschedule(changes);
-
         Ok(())
     }
 
@@ -305,10 +298,32 @@ impl Scheduler {
             .get_task_config(task_id)
             .ok_or(ErrorCode::TaskNotFound)?;
 
-        if !config.satisfy_network(self.state_handler.network()) {
-            info!("task {} started, waiting for network", task_id);
-            let state_info = CUpdateStateInfo::new(State::Waiting, Reason::UnsupportedNetworkType);
+        if let Err(reason) = config.satisfy_network(self.state_handler.network()) {
+            info!(
+                "task {} not satisfy network {:?}",
+                task_id,
+                self.state_handler.network()
+            );
+            let state_info = match config.version {
+                Version::API9 => match config.common_data.action {
+                    Action::Download => CUpdateStateInfo::new(State::Waiting, reason),
+                    Action::Upload => CUpdateStateInfo::new(State::Failed, reason),
+                    _ => unreachable!(),
+                },
+                Version::API10 => {
+                    if config.common_data.mode == Mode::BackGround && config.common_data.retry {
+                        CUpdateStateInfo::new(State::Waiting, reason)
+                    } else {
+                        CUpdateStateInfo::new(State::Failed, reason)
+                    }
+                }
+            };
             database.update_task_state(task_id, &state_info);
+            if state_info.state == State::Failed.repr {
+                if let Some(info) = database.get_task_info(task_id) {
+                    Notifier::fail(&self.client_manager, info.build_notify_data());
+                }
+            }
             return Ok(false);
         }
 

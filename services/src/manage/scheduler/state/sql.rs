@@ -13,7 +13,7 @@
 
 use std::collections::HashSet;
 
-use crate::config::Mode;
+use crate::config::{Action, Mode, Version};
 use crate::info::State;
 use crate::manage::network::{NetworkInfo, NetworkState, NetworkType};
 use crate::task::reason::Reason;
@@ -31,8 +31,12 @@ impl SqlList {
         match info {
             NetworkState::Online(info) => {
                 self.sqls.push(network_available(info));
-                self.sqls.push(network_unavailable(info));
-                self.sqls.push(network_unavailable_failed(info));
+                if let Some(sql) = network_unavailable(info) {
+                    self.sqls.push(sql);
+                }
+                if let Some(sql) = network_unavailable_failed(info) {
+                    self.sqls.push(sql);
+                }
             }
             NetworkState::Offline => {
                 self.sqls.push(network_offline());
@@ -132,7 +136,7 @@ pub(super) fn account_available(active_accounts: &HashSet<u64>) -> String {
 
 pub(super) fn network_offline() -> String {
     format!(
-        "UPDATE request_task SET state = {}, reason = {} WHERE (state = {} AND reason = {} OR state = {} OR state = {}) AND (retry = {} AND mode = {})",
+        "UPDATE request_task SET state = {}, reason = {} WHERE (state = {} AND reason = {} OR state = {} OR state = {}) AND retry = {} AND mode = {} AND (action = {} OR version = {})",
         State::Waiting.repr,
         Reason::NetworkOffline.repr,
         State::Waiting.repr,
@@ -141,12 +145,14 @@ pub(super) fn network_offline() -> String {
         State::Retrying.repr,
         true,
         Mode::BackGround.repr,
+        Action::Download.repr,
+        Version::API10 as u8,
     )
 }
 
 pub(super) fn network_offline_failed() -> String {
     format!(
-        "UPDATE request_task SET state = {}, reason = {} WHERE (state = {} AND reason = {} OR state = {} OR state = {}) AND (retry != {} OR mode != {})",
+        "UPDATE request_task SET state = {}, reason = {} WHERE (state = {} AND reason = {} OR state = {} OR state = {}) AND (retry != {} OR mode != {} OR (action != {} AND version != {}))",
         State::Failed.repr,
         Reason::NetworkOffline.repr,
         State::Waiting.repr,
@@ -155,12 +161,18 @@ pub(super) fn network_offline_failed() -> String {
         State::Retrying.repr,
         true,
         Mode::BackGround.repr,
+        Action::Download.repr,
+        Version::API10 as u8,
     )
 }
 
-pub(super) fn network_unavailable(info: &NetworkInfo) -> String {
-    let mut sql = format!(
-        "UPDATE request_task SET state = {}, reason = {} WHERE ((state = {} AND reason = {} ) OR state = {} OR state = {}) AND (retry = {} AND mode = {})",
+pub(super) fn network_unavailable(info: &NetworkInfo) -> Option<String> {
+    if info.network_type == NetworkType::Other {
+        return None;
+    }
+
+    let sql = format!(
+        "UPDATE request_task SET state = {}, reason = {} WHERE ((state = {} AND reason = {} ) OR state = {} OR state = {}) AND retry = {} AND mode = {} AND (action = {} OR version = {}) AND network != 0",
         State::Waiting.repr,
         Reason::UnsupportedNetworkType.repr,
         State::Waiting.repr,
@@ -168,39 +180,30 @@ pub(super) fn network_unavailable(info: &NetworkInfo) -> String {
         State::Running.repr,
         State::Retrying.repr,
         true,
-        Mode::BackGround.repr
+        Mode::BackGround.repr,
+        Action::Download.repr,
+        Version::API10 as u8,
     );
 
     let mut sql_1 = String::new();
-    if info.network_type != NetworkType::Other {
-        sql_1.push_str(&format!(
-            "(network != {} AND network != 0)",
-            info.network_type.repr
-        ));
-    }
+    sql_1.push_str(&format!("network != {}", info.network_type.repr));
 
     if info.is_metered {
-        if !sql_1.is_empty() {
-            sql_1.push_str(" OR ");
-        }
-        sql_1.push_str("metered = 0");
+        sql_1.push_str(" OR metered = 0");
     }
-
     if info.is_roaming {
-        if !sql_1.is_empty() {
-            sql_1.push_str(" OR ");
-        }
-        sql_1.push_str("roaming = 0");
+        sql_1.push_str(" OR roaming = 0");
     }
-    if !sql_1.is_empty() {
-        sql = format!("{} AND ({})", sql, sql_1);
-    }
-    sql
+    Some(format!("{} AND ({})", sql, sql_1))
 }
 
-pub(super) fn network_unavailable_failed(info: &NetworkInfo) -> String {
-    let mut sql = format!(
-        "UPDATE request_task SET state = {}, reason = {} WHERE ((state = {} AND reason = {}) OR state = {} OR state = {}) AND (retry != {} OR mode != {})",
+pub(super) fn network_unavailable_failed(info: &NetworkInfo) -> Option<String> {
+    if info.network_type == NetworkType::Other {
+        return None;
+    }
+
+    let sql = format!(
+        "UPDATE request_task SET state = {}, reason = {} WHERE ((state = {} AND reason = {}) OR state = {} OR state = {}) AND (retry != {} OR mode != {} OR (action != {} AND version != {})) AND network != 0",
         State::Failed.repr,
         Reason::UnsupportedNetworkType.repr,
         State::Waiting.repr,
@@ -208,34 +211,22 @@ pub(super) fn network_unavailable_failed(info: &NetworkInfo) -> String {
         State::Running.repr,
         State::Retrying.repr,
         true,
-        Mode::BackGround.repr
+        Mode::BackGround.repr,
+        Action::Download.repr,
+        Version::API10 as u8,
     );
 
     let mut sql_1 = String::new();
-    if info.network_type != NetworkType::Other {
-        sql_1.push_str(&format!(
-            "(network != {} AND network != 0)",
-            info.network_type.repr
-        ));
-    }
+    sql_1.push_str(&format!("network != {}", info.network_type.repr));
 
     if info.is_metered {
-        if !sql_1.is_empty() {
-            sql_1.push_str(" OR ");
-        }
-        sql_1.push_str("metered = 0");
+        sql_1.push_str(" OR metered = 0");
     }
 
     if info.is_roaming {
-        if !sql_1.is_empty() {
-            sql_1.push_str(" OR ");
-        }
-        sql_1.push_str("roaming = 0");
+        sql_1.push_str(" OR roaming = 0");
     }
-    if !sql_1.is_empty() {
-        sql = format!("{} AND ({})", sql, sql_1);
-    }
-    sql
+    Some(format!("{} AND ({})", sql, sql_1))
 }
 
 pub(super) fn network_available(info: &NetworkInfo) -> String {
@@ -247,12 +238,14 @@ pub(super) fn network_available(info: &NetworkInfo) -> String {
         Reason::NetworkOffline.repr,
     );
 
-    if info.network_type != NetworkType::Other {
-        sql.push_str(&format!(
-            " AND (network = {} OR network = 0)",
-            info.network_type.repr
-        ));
+    if info.network_type == NetworkType::Other {
+        return sql;
     }
+
+    sql.push_str(&format!(
+        " AND (network = 0 OR network = {}",
+        info.network_type.repr
+    ));
 
     if info.is_metered {
         sql.push_str(" AND metered = 1");
@@ -261,6 +254,7 @@ pub(super) fn network_available(info: &NetworkInfo) -> String {
     if info.is_roaming {
         sql.push_str(" AND roaming = 1");
     }
+    sql.push(')');
     sql
 }
 
@@ -270,6 +264,7 @@ mod test {
 
     const CREATE: &'static str = "CREATE TABLE IF NOT EXISTS request_task (task_id INTEGER PRIMARY KEY, uid INTEGER, token_id INTEGER, action INTEGER, mode INTEGER, cover INTEGER, network INTEGER, metered INTEGER, roaming INTEGER, ctime INTEGER, mtime INTEGER, reason INTEGER, gauge INTEGER, retry INTEGER, redirect INTEGER, tries INTEGER, version INTEGER, config_idx INTEGER, begins INTEGER, ends INTEGER, precise INTEGER, priority INTEGER, background INTEGER, bundle TEXT, url TEXT, data TEXT, token TEXT, title TEXT, description TEXT, method TEXT, headers TEXT, config_extras TEXT, mime_type TEXT, state INTEGER, idx INTEGER, total_processed INTEGER, sizes TEXT, processed TEXT, extras TEXT, form_items BLOB, file_specs BLOB, each_file_status BLOB, body_file_names BLOB, certs_paths BLOB)";
     use super::*;
+    use crate::config::NetworkConfig;
     use crate::info::State;
     use crate::manage::network::{NetworkInfo, NetworkType};
     use crate::task::reason::Reason;
@@ -437,6 +432,76 @@ mod test {
     }
 
     #[test]
+    fn ut_network_database_any() {
+        let task_id: u32 = rand::random();
+        let db = Connection::open_in_memory().unwrap();
+        db.execute(
+            &CREATE,
+            (), // empty list of parameters.
+        )
+        .unwrap();
+        db.execute(&format!(
+            "INSERT INTO request_task (task_id, state, reason, network,  metered, roaming) VALUES ({}, {}, {}, {}, 0, 0)",
+            task_id,
+            State::Waiting.repr,
+            Reason::RunningTaskMeetLimits.repr,
+            NetworkConfig::Any as u8,
+        ),())
+        .unwrap();
+
+        let info = NetworkInfo {
+            network_type: NetworkType::Cellular,
+            is_metered: true,
+            is_roaming: true,
+        };
+
+        db.execute(&network_unavailable(&info).unwrap(), ())
+            .unwrap();
+        db.execute(&&network_unavailable_failed(&info).unwrap(), ())
+            .unwrap();
+        let mut stmt = db
+            .prepare(&format!(
+                "SELECT task_id from request_task where state = {} AND reason = {}",
+                State::Waiting.repr,
+                Reason::UnsupportedNetworkType.repr
+            ))
+            .unwrap();
+        let mut rows = stmt
+            .query_map([], |row| Ok(row.get::<_, u32>(0).unwrap()))
+            .unwrap();
+        assert!(rows.next().is_none());
+
+        let task_id: u32 = rand::random();
+        db.execute(&format!(
+            "INSERT INTO request_task (task_id, state, reason, network,  metered, roaming) VALUES ({}, {}, {}, {}, 0, 0)",
+            task_id,
+            State::Waiting.repr,
+            Reason::UnsupportedNetworkType.repr,
+            NetworkConfig::Any as u8,
+        ),())
+        .unwrap();
+
+        let info = NetworkInfo {
+            network_type: NetworkType::Cellular,
+            is_metered: true,
+            is_roaming: true,
+        };
+
+        db.execute(&network_available(&info), ()).unwrap();
+        let mut stmt = db
+            .prepare(&format!(
+                "SELECT task_id from request_task where state = {} AND reason = {}",
+                State::Waiting.repr,
+                Reason::RunningTaskMeetLimits.repr
+            ))
+            .unwrap();
+        let mut rows = stmt
+            .query_map([], |row| Ok(row.get::<_, u32>(0).unwrap()))
+            .unwrap();
+        let tasks: Vec<u32> = rows.next().into_iter().map(|a| a.unwrap()).collect();
+        assert!(tasks.contains(&task_id));
+    }
+    #[test]
     fn ut_network_database_available() {
         let task_id: u32 = rand::random();
         let db = Connection::open_in_memory().unwrap();
@@ -499,7 +564,8 @@ mod test {
             is_metered: true,
             is_roaming: true,
         };
-        db.execute(&network_unavailable(&info), ()).unwrap();
+        db.execute(&network_unavailable(&info).unwrap(), ())
+            .unwrap();
 
         let mut stmt = db
             .prepare(&format!(
@@ -520,7 +586,8 @@ mod test {
             is_roaming: true,
         };
 
-        db.execute(&network_unavailable(&info), ()).unwrap();
+        db.execute(&network_unavailable(&info).unwrap(), ())
+            .unwrap();
 
         let mut stmt = db
             .prepare(&format!(
@@ -560,7 +627,8 @@ mod test {
             is_metered: true,
             is_roaming: true,
         };
-        db.execute(&&network_unavailable_failed(&info), ()).unwrap();
+        db.execute(&&network_unavailable_failed(&info).unwrap(), ())
+            .unwrap();
 
         let mut stmt = db
             .prepare(&format!(
@@ -581,7 +649,8 @@ mod test {
             is_roaming: true,
         };
 
-        db.execute(&&network_unavailable_failed(&info), ()).unwrap();
+        db.execute(&&network_unavailable_failed(&info).unwrap(), ())
+            .unwrap();
 
         let mut stmt = db
             .prepare(&format!(
