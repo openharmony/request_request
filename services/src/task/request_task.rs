@@ -12,7 +12,7 @@
 // limitations under the License.
 
 use std::io::{self, SeekFrom};
-use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, Ordering};
 use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
@@ -43,7 +43,6 @@ use crate::utils::get_current_timestamp;
 const RETRY_TIMES: u32 = 4;
 const RETRY_INTERVAL: u64 = 400;
 
-#[allow(unused)]
 pub(crate) struct RequestTask {
     pub(crate) conf: TaskConfig,
     pub(crate) client: Client,
@@ -55,18 +54,11 @@ pub(crate) struct RequestTask {
     pub(crate) status: Mutex<TaskStatus>,
     pub(crate) code: Mutex<Vec<Reason>>,
     pub(crate) tries: AtomicU32,
-    pub(crate) get_file_info: AtomicBool,
-    pub(crate) retry: AtomicBool,
-    pub(crate) retry_for_request: AtomicBool,
     pub(crate) background_notify_time: AtomicU64,
     pub(crate) file_total_size: AtomicI64,
-    pub(crate) resume: AtomicBool,
     pub(crate) seek_flag: AtomicBool,
     pub(crate) range_request: AtomicBool,
     pub(crate) range_response: AtomicBool,
-    pub(crate) restored: AtomicBool,
-    pub(crate) skip_bytes: AtomicU64,
-    pub(crate) upload_counts: AtomicUsize,
     pub(crate) rate_limiting: AtomicU64,
     pub(crate) last_notify: AtomicU64,
     pub(crate) client_manager: ClientManagerEntry,
@@ -88,7 +80,6 @@ impl RequestTask {
         &self.conf
     }
 
-    #[allow(unused)]
     // only use for download task
     pub(crate) fn mime_type(&self) -> String {
         self.mime_type.lock().unwrap().clone()
@@ -165,19 +156,12 @@ impl RequestTask {
             progress: Mutex::new(progress),
             tries: AtomicU32::new(0),
             status: Mutex::new(status),
-            retry: AtomicBool::new(false),
-            get_file_info: AtomicBool::new(false),
-            retry_for_request: AtomicBool::new(false),
             code: Mutex::new(vec![Reason::Default; file_len]),
             background_notify_time: AtomicU64::new(time),
             file_total_size: AtomicI64::new(file_total_size),
-            resume: AtomicBool::new(false),
             seek_flag: AtomicBool::new(false),
             range_request: AtomicBool::new(false),
             range_response: AtomicBool::new(false),
-            restored: AtomicBool::new(false),
-            skip_bytes: AtomicU64::new(0),
-            upload_counts: AtomicUsize::new(0),
             rate_limiting: AtomicU64::new(0),
             last_notify: AtomicU64::new(time),
             client_manager,
@@ -220,13 +204,11 @@ impl RequestTask {
         let ctime = info.common_data.ctime;
         let mime_type = info.mime_type.clone();
         let tries = info.common_data.tries;
-        let upload_counts = info.progress.common_data.index;
         let status = TaskStatus {
             mtime: time,
             state: State::from(info.progress.common_data.state),
             reason: Reason::from(info.common_data.reason),
         };
-        let retry = info.common_data.retry;
         let progress = info.progress;
 
         Ok(RequestTask {
@@ -239,19 +221,12 @@ impl RequestTask {
             progress: Mutex::new(progress),
             tries: AtomicU32::new(tries),
             status: Mutex::new(status),
-            retry: AtomicBool::new(retry),
-            get_file_info: AtomicBool::new(false),
-            retry_for_request: AtomicBool::new(false),
             code: Mutex::new(vec![Reason::Default; file_len]),
             background_notify_time: AtomicU64::new(time),
             file_total_size: AtomicI64::new(file_total_size),
-            resume: AtomicBool::new(false),
             seek_flag: AtomicBool::new(false),
             range_request: AtomicBool::new(false),
             range_response: AtomicBool::new(false),
-            restored: AtomicBool::new(false),
-            skip_bytes: AtomicU64::new(0),
-            upload_counts: AtomicUsize::new(upload_counts),
             rate_limiting: AtomicU64::new(0),
             last_notify: AtomicU64::new(time),
             client_manager,

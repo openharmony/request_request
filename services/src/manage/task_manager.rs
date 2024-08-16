@@ -41,8 +41,6 @@ use crate::utils::runtime_spawn;
 
 const CLEAR_INTERVAL: u64 = 30 * 60;
 const LOG_INTERVAL: u64 = 5 * 60;
-#[allow(dead_code)]
-const MILLISECONDS_IN_ONE_DAY: u64 = 24 * 60 * 60 * 1000;
 const RESTORE_ALL_TASKS_INTERVAL: u64 = 10;
 
 // TaskManager 的初始化逻辑：
