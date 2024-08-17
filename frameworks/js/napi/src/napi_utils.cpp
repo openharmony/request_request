@@ -419,7 +419,7 @@ napi_value Convert2JSValue(napi_env env, TaskInfo &taskInfo)
     return value;
 }
 
-napi_value Convert2JSValue(napi_env env, Config &config)
+napi_value Convert2JSValueConfig(napi_env env, Config &config)
 {
     napi_value value = nullptr;
     napi_create_object(env, &value);
@@ -436,7 +436,7 @@ napi_value Convert2JSValue(napi_env env, Config &config)
     } else {
         napi_set_named_property(env, value, "data", Convert2JSValue(env, config.files, config.forms));
     }
-    napi_set_named_property(env, value, "saveas", Convert2JSValue(env, std::string{}));
+    napi_set_named_property(env, value, "saveas", Convert2JSValue(env, config.saveas));
     napi_set_named_property(env, value, "network", Convert2JSValue(env, static_cast<uint32_t>(config.network)));
     napi_set_named_property(env, value, "metered", Convert2JSValue(env, config.metered));
     napi_set_named_property(env, value, "roaming", Convert2JSValue(env, config.roaming));
