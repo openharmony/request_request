@@ -10,7 +10,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#![allow(unused)]
 use std::collections::HashSet;
 
 use super::sql::SqlList;
@@ -76,6 +75,7 @@ impl StateRecord {
         let mut sql_list = SqlList::new();
         sql_list.add_account_change(&active_accounts);
         self.active_accounts = active_accounts;
+        self.top_user = foreground_account;
         Some(sql_list)
     }
 
