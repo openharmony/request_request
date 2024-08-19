@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fs;
 use std::io::SeekFrom;
 use std::pin::Pin;
 use std::sync::atomic::Ordering;
@@ -25,10 +24,8 @@ use ylong_runtime::io::AsyncSeekExt;
 use super::operator::TaskOperator;
 use super::reason::Reason;
 use super::request_task::{TaskError, TaskPhase};
-use crate::task::files::{check_atomic_convert_path, convert_path};
 use crate::task::info::State;
 use crate::task::request_task::RequestTask;
-use crate::task::ATOMIC_SERVICE;
 #[cfg(feature = "oh")]
 use crate::trace::Trace;
 
@@ -223,16 +220,17 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
     let file = task.files.get_mut(0).unwrap();
     file.sync_all().await?;
 
-    if check_file_err(&task) {
-        error!("download local file be destroyed");
-        return Err(TaskError::Failed(Reason::IoError));
-    }
+    #[cfg(not(test))]
+    check_file_exist(&task)?;
 
     info!("task {} download success", task.task_id());
     Ok(())
 }
 
-fn check_file_err(task: &Arc<RequestTask>) -> bool {
+#[cfg(not(test))]
+fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
+    use crate::task::files::{check_atomic_convert_path, convert_path};
+    use crate::task::ATOMIC_SERVICE;
     let config = task.config();
     let uid = config.common_data.uid;
     let bundle = config.bundle.as_str();
@@ -240,17 +238,13 @@ fn check_file_err(task: &Arc<RequestTask>) -> bool {
     let atomic_account = config.atomic_account.as_str();
     let bundle_and_account = check_atomic_convert_path(is_account, bundle, atomic_account);
     let real_path = convert_path(uid, &bundle_and_account, &config.file_specs[0].path);
-    match fs::metadata(real_path) {
-        Ok(metadata) => {
-            if task.file_total_size.load(Ordering::SeqCst) != metadata.len() as i64 {
-                return true;
-            }
-        }
-        Err(_) => {
-            return true;
-        }
-    }
-    false
+    // Cannot compare param because file_total_size will be changed when resume task
+    std::fs::metadata(real_path)
+        .map_err(|e| {
+            error!("local file not exist:{}", e);
+            TaskError::Failed(Reason::IoError)
+        })
+        .map(|_a| ())
 }
 
 #[cfg(not(feature = "oh"))]
