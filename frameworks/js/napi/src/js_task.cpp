@@ -384,7 +384,12 @@ void JsTask::GetTaskExecution(std::shared_ptr<ContextInfo> context)
         context->innerCode_ = E_OK;
         return;
     } else {
-        context->innerCode_ = RequestManager::GetInstance()->GetTask(tid, context->token, context->config);
+        Config &config = context->config;
+        context->innerCode_ = RequestManager::GetInstance()->GetTask(tid, context->token, config);
+        if (config.action == Action::DOWNLOAD && config.files.size() != 0) {
+            config.saveas = config.files[0].uri;
+            REQUEST_HILOGD("GetTaskExecution saveas: %{public}s", config.saveas.c_str());
+        }
     }
     if (context->config.version != Version::API10) {
         context->innerCode_ = E_TASK_NOT_FOUND;
@@ -400,7 +405,7 @@ bool JsTask::GetTaskOutput(std::shared_ptr<ContextInfo> context)
         return true;
     }
 
-    napi_value config = NapiUtils::Convert2JSValue(context->env_, context->config);
+    napi_value config = NapiUtils::Convert2JSValueConfig(context->env_, context->config);
     napi_create_reference(context->env_, config, 1, &(context->jsConfig));
     napi_value ctor = GetTaskCtor(context->env_);
     napi_value jsTask = nullptr;
