@@ -223,9 +223,6 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
         let mut guard = task.progress.lock().unwrap();
         guard.extras.clear();
         for (k, v) in response.headers() {
-            if k.to_string() != "etag" && k.to_string() != "last-modified" {
-                continue;
-            }
             if let Ok(value) = v.to_string() {
                 guard.extras.insert(k.to_string().to_lowercase(), value);
             }

@@ -516,6 +516,16 @@ impl RequestTask {
         response: Result<Response, HttpClientError>,
     ) {
         if let Ok(mut r) = response {
+            {
+                let mut guard = self.progress.lock().unwrap();
+                guard.extras.clear();
+                for (k, v) in r.headers() {
+                    if let Ok(value) = v.to_string() {
+                        guard.extras.insert(k.to_string().to_lowercase(), value);
+                    }
+                }
+            }
+
             let file = match self.body_files.get_mut(index) {
                 Some(file) => file,
                 None => return,
