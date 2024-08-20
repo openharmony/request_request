@@ -239,12 +239,20 @@ fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
     let bundle_and_account = check_atomic_convert_path(is_account, bundle, atomic_account);
     let real_path = convert_path(uid, &bundle_and_account, &config.file_specs[0].path);
     // Cannot compare param because file_total_size will be changed when resume task
-    std::fs::metadata(real_path)
-        .map_err(|e| {
+    match std::fs::metadata(real_path) {
+        Ok(metadata) => {
+            if metadata.is_file() {
+                Ok(())
+            } else {
+                error!("local download not a file");
+                Err(TaskError::Failed(Reason::IoError))
+            }
+        }
+        Err(e) => {
             error!("local file not exist:{}", e);
-            TaskError::Failed(Reason::IoError)
-        })
-        .map(|_a| ())
+            Err(TaskError::Failed(Reason::IoError))
+        }
+    }
 }
 
 #[cfg(not(feature = "oh"))]
