@@ -353,9 +353,8 @@ RequestCArrString CJRequestImpl::Convert2CStringArray(std::vector<std::string> &
     if (!res.head) {
         return res;
     }
-    res.size = tids.size();
 
-    size_t i = 0;
+    int64_t i = 0;
     for (; i < size; ++i) {
         res.head[i] = MallocCString(tids[i]);
     }
