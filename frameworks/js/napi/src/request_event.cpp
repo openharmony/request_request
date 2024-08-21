@@ -15,6 +15,7 @@
 
 #include "request_event.h"
 
+#include "constant.h"
 #include "js_initialize.h"
 #include "log.h"
 #include "request_manager.h"
@@ -68,6 +69,7 @@ std::map<std::string, uint32_t> RequestEvent::resMap_ = {
     { FUNCTION_REMOVE, BOOL_RES },
     { FUNCTION_RESUME, BOOL_RES },
     { FUNCTION_START, BOOL_RES },
+    { FUNCTION_STOP, BOOL_RES },
 };
 
 std::map<State, DownloadStatus> RequestEvent::stateMap_ = {
@@ -342,13 +344,17 @@ napi_status RequestEvent::ParseInputParameters(
 napi_status RequestEvent::GetResult(
     napi_env env, const std::shared_ptr<ExecContext> &context, const std::string &execType, napi_value &result)
 {
-    if (resMap_[execType] == BOOL_RES) {
+    auto res = resMap_.find(execType);
+    if (res == resMap_.end()) {
+        return napi_generic_failure;
+    }
+    if (res->second == BOOL_RES) {
         return NapiUtils::Convert2JSValue(env, context->boolRes, result);
     }
-    if (resMap_[execType] == STR_RES) {
+    if (res->second == STR_RES) {
         return NapiUtils::Convert2JSValue(env, context->strRes, result);
     }
-    if (resMap_[execType] == INFO_RES) {
+    if (res->second == INFO_RES) {
         return NapiUtils::Convert2JSValue(env, context->infoRes, result);
     }
     return napi_generic_failure;

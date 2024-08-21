@@ -62,7 +62,7 @@ public:
 
 private:
     FwkRunningTaskCountManager() = default;
-    bool saIsOnline_;
+    std::atomic<bool> saIsOnline_ = false;
     int count_ = 0;
     std::mutex observersLock_;
     std::mutex countLock_;
