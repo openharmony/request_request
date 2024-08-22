@@ -347,4 +347,80 @@ mod test {
             assert_eq!(data.progress.common_data.total_processed, 0);
         })
     }
+
+    #[test]
+    fn ut_notify_pause_resume_completed() {
+        test_init();
+        let _lock = lock_database();
+        let (mut manager, mut client_rx) = init_manager();
+
+        let file_path = "test_files/ut_notify";
+
+        let file = File::create(file_path).unwrap();
+        let config = ConfigBuilder::new()
+        .action(Action::Download)
+        .retry(true)
+        .mode(Mode::BackGround)
+        .file_spec(file)
+        .url("https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt")
+        .redirect(true)
+        .build();
+        let uid = config.common_data.uid;
+        let task_id = manager.create(config).unwrap();
+        manager.start(uid, task_id);
+        manager.pause(uid, task_id);
+        manager.scheduler.task_completed(uid, task_id);
+        manager.resume(uid, task_id);
+        ylong_runtime::block_on(async {
+            let info = client_rx.recv().await.unwrap();
+            let ClientEvent::SendNotifyData(subscribe_type, data) = info else {
+                panic!("unexpected event: {:?}", info);
+            };
+            assert_eq!(subscribe_type, SubscribeType::Pause);
+            let info = client_rx.recv().await.unwrap();
+            let ClientEvent::SendNotifyData(subscribe_type, data) = info else {
+                panic!("unexpected event: {:?}", info);
+            };
+            assert_eq!(subscribe_type, SubscribeType::Resume);
+            assert!(client_rx.is_empty());
+        })
+    }
+
+    #[test]
+    fn ut_notify_pause_resume_failed() {
+        test_init();
+        let _lock = lock_database();
+        let (mut manager, mut client_rx) = init_manager();
+
+        let file_path = "test_files/ut_notify";
+
+        let file = File::create(file_path).unwrap();
+        let config = ConfigBuilder::new()
+        .action(Action::Download)
+        .retry(true)
+        .mode(Mode::BackGround)
+        .file_spec(file)
+        .url("https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt")
+        .redirect(true)
+        .build();
+        let uid = config.common_data.uid;
+        let task_id = manager.create(config).unwrap();
+        manager.start(uid, task_id);
+        manager.pause(uid, task_id);
+        manager.scheduler.task_failed(uid, task_id, Reason::IoError);
+        manager.resume(uid, task_id);
+        ylong_runtime::block_on(async {
+            let info = client_rx.recv().await.unwrap();
+            let ClientEvent::SendNotifyData(subscribe_type, data) = info else {
+                panic!("unexpected event: {:?}", info);
+            };
+            assert_eq!(subscribe_type, SubscribeType::Pause);
+            let info = client_rx.recv().await.unwrap();
+            let ClientEvent::SendNotifyData(subscribe_type, data) = info else {
+                panic!("unexpected event: {:?}", info);
+            };
+            assert_eq!(subscribe_type, SubscribeType::Resume);
+            assert!(client_rx.is_empty());
+        })
+    }
 }
