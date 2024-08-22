@@ -24,9 +24,9 @@ cfg_oh! {
 
 #[derive(Clone)]
 pub struct Network {
-    inner: NetworkInner,
+    pub(crate) inner: NetworkInner,
     #[cfg(feature = "oh")]
-    _registry: Arc<UniquePtr<NetworkRegistry>>,
+    pub(crate) _registry: Arc<UniquePtr<NetworkRegistry>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -89,13 +89,13 @@ pub struct NetworkTaskManagerTx {
 }
 
 impl NetworkInner {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             state: Arc::new(RwLock::new(NetworkState::Offline)),
         }
     }
 
-    fn notify_offline(&self) {
+    pub(crate) fn notify_offline(&self) {
         let mut state = self.state.write().unwrap();
         if *state != Offline {
             info!("network is offline");
@@ -103,7 +103,7 @@ impl NetworkInner {
         }
     }
 
-    fn notify_online(&self, info: NetworkInfo) -> bool {
+    pub(crate) fn notify_online(&self, info: NetworkInfo) -> bool {
         let mut state = self.state.write().unwrap();
         if !matches!(&*state, Online(old_info) if old_info == &info  ) {
             info!("Network is online: {:?}", info);
@@ -161,25 +161,20 @@ mod ffi {
 #[cfg(test)]
 mod test {
 
-    use core::time;
-
     use ylong_runtime::sync::mpsc;
 
     use super::*;
     use crate::manage::events::StateEvent;
-    use crate::tests::{test_init, DB_LOCK};
+    use crate::tests::test_init;
 
     #[test]
     fn ut_network() {
         test_init();
-        let _lock = DB_LOCK.lock().unwrap();
-
         let notifier = NetworkInner::new();
         let network = Network {
             inner: notifier.clone(),
             _registry: Arc::new(UniquePtr::null()),
         };
-
         assert!(!network.is_online());
 
         notifier.notify_online(NetworkInfo {
@@ -187,7 +182,6 @@ mod test {
             is_metered: false,
             is_roaming: false,
         });
-
         assert!(network.is_online());
         assert_eq!(
             network.state(),
@@ -198,15 +192,12 @@ mod test {
             })
         );
         notifier.notify_offline();
-
         assert!(!network.is_online());
-
         notifier.notify_online(NetworkInfo {
             network_type: NetworkType::Cellular,
             is_metered: true,
             is_roaming: true,
         });
-
         assert!(network.is_online());
         assert_eq!(
             network.state(),
@@ -233,36 +224,27 @@ mod test {
                 is_roaming: false
             })
         );
-
-        loop {
-            if let Ok(msg) = rx.try_recv() {
-                assert!(matches!(msg, TaskManagerEvent::State(StateEvent::Network)));
-                break;
-            }
-            std::thread::sleep(time::Duration::from_millis(100));
-        }
+        ylong_runtime::block_on(async {
+            let msg = rx.recv().await.unwrap();
+            assert!(matches!(msg, TaskManagerEvent::State(StateEvent::Network)));
+        });
     }
 
     #[test]
     fn ut_network_notify() {
         test_init();
-        let _lock = DB_LOCK.lock().unwrap();
-
         let notifier = NetworkInner::new();
-
         notifier.notify_offline();
         assert!(notifier.notify_online(NetworkInfo {
             network_type: NetworkType::Wifi,
             is_metered: true,
             is_roaming: true,
         }));
-
         assert!(!notifier.notify_online(NetworkInfo {
             network_type: NetworkType::Wifi,
             is_metered: true,
             is_roaming: true,
         }));
-
         assert!(notifier.notify_online(NetworkInfo {
             network_type: NetworkType::Wifi,
             is_metered: false,

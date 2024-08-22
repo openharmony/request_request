@@ -20,13 +20,13 @@ use qos::Qos;
 use queue::RunningQueue;
 use state::sql::SqlList;
 
+use super::events::TaskManagerEvent;
 use super::network::Network;
 use crate::config::{Mode, Version};
 use crate::error::ErrorCode;
 use crate::info::TaskInfo;
 use crate::manage::database::RequestDb;
 use crate::manage::notifier::Notifier;
-use crate::manage::scheduler::qos::{QosChanges, RssCapacity};
 use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
 use crate::service::run_count::RunCountManagerEntry;
@@ -58,6 +58,8 @@ pub(crate) struct Scheduler {
     running_queue: RunningQueue,
     client_manager: ClientManagerEntry,
     state_handler: state::Handler,
+    pub(crate) resort_scheduled: bool,
+    task_manager: TaskManagerTx,
 }
 
 impl Scheduler {
@@ -86,6 +88,8 @@ impl Scheduler {
             ),
             client_manager,
             state_handler,
+            resort_scheduled: false,
+            task_manager: tx,
         }
     }
 
@@ -108,8 +112,7 @@ impl Scheduler {
     pub(crate) fn restore_all_tasks(&mut self) {
         info!("Reschedule tasks restore all tasks");
         // Reschedule tasks based on the current `QOS` status.
-        let changes = self.qos.reschedule(Action::Any, &self.state_handler);
-        self.reschedule(changes);
+        self.schedule_if_not_scheduled();
     }
 
     pub(crate) fn start_task(&mut self, uid: u64, task_id: u32) -> Result<(), ErrorCode> {
@@ -132,6 +135,10 @@ impl Scheduler {
             return Err(ErrorCode::TaskStateErr);
         }
         database.change_status(task_id, State::Waiting)?;
+
+        let info = RequestDb::get_instance()
+            .get_task_info(task_id)
+            .ok_or(ErrorCode::TaskNotFound)?;
         if is_resume {
             Notifier::resume(&self.client_manager, info.build_notify_data());
         }
@@ -142,8 +149,8 @@ impl Scheduler {
         let qos_info = database
             .get_task_qos_info(task_id)
             .ok_or(ErrorCode::TaskNotFound)?;
-        let changes = self.qos.start_task(uid, qos_info, &self.state_handler);
-        self.reschedule(changes);
+        self.qos.start_task(uid, qos_info);
+        self.schedule_if_not_scheduled();
         Ok(())
     }
 
@@ -154,8 +161,8 @@ impl Scheduler {
         if let Some(info) = database.get_task_info(task_id) {
             Notifier::pause(&self.client_manager, info.build_notify_data());
         }
-        if let Some(qos_changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
-            self.reschedule(qos_changes);
+        if self.qos.remove_task(uid, task_id) {
+            self.schedule_if_not_scheduled();
         }
         Ok(())
     }
@@ -169,8 +176,8 @@ impl Scheduler {
 
         Notifier::remove(&self.client_manager, info.build_notify_data());
 
-        if let Some(qos_changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
-            self.reschedule(qos_changes);
+        if self.qos.remove_task(uid, task_id) {
+            self.schedule_if_not_scheduled();
         }
         Ok(())
     }
@@ -179,8 +186,8 @@ impl Scheduler {
         let database = RequestDb::get_instance();
         database.change_status(task_id, State::Stopped)?;
 
-        if let Some(qos_changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
-            self.reschedule(qos_changes);
+        if self.qos.remove_task(uid, task_id) {
+            self.schedule_if_not_scheduled();
         }
         Ok(())
     }
@@ -190,18 +197,13 @@ impl Scheduler {
         self.running_queue.task_finish(uid, task_id);
 
         let database = RequestDb::get_instance();
-        database.update_task_state(task_id, State::Completed, Reason::Default);
+        if self.qos.remove_task(uid, task_id) {
+            self.schedule_if_not_scheduled();
+        }
 
+        database.update_task_state(task_id, State::Completed, Reason::Default);
         if let Some(info) = database.get_task_info(task_id) {
             Notifier::complete(&self.client_manager, info.build_notify_data());
-        }
-
-        if let Some(changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
-            self.reschedule(changes);
-        }
-
-        if let Some(changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
-            self.reschedule(changes);
         }
     }
 
@@ -246,16 +248,17 @@ impl Scheduler {
         self.running_queue.task_finish(uid, task_id);
 
         let database = RequestDb::get_instance();
+
+        if self.qos.remove_task(uid, task_id) {
+            self.schedule_if_not_scheduled();
+        }
+
         database.update_task_state(task_id, State::Failed, reason);
 
         if let Some(info) = database.get_task_info(task_id) {
             Notifier::fail(&self.client_manager, info.build_notify_data());
             #[cfg(feature = "oh")]
             Self::sys_event(info, reason);
-        }
-
-        if let Some(changes) = self.qos.remove_task(uid, task_id, &self.state_handler) {
-            self.reschedule(changes);
         }
     }
     #[cfg(feature = "oh")]
@@ -310,18 +313,29 @@ impl Scheduler {
     }
 
     pub(crate) fn reload_all_tasks(&mut self) {
-        let changes = self.qos.reload_all_tasks(&self.state_handler);
-        self.reschedule(changes);
+        self.qos.reload_all_tasks();
+        self.schedule_if_not_scheduled();
     }
 
     pub(crate) fn on_rss_change(&mut self, level: i32) {
-        let new_rss = RssCapacity::new(level);
-        let changes = self.qos.change_rss(new_rss, &self.state_handler);
-        self.reschedule(changes);
+        if let Some(new_rss) = self.state_handler.update_rss_level(level) {
+            self.qos.change_rss(new_rss);
+            self.schedule_if_not_scheduled();
+        }
     }
 
-    fn reschedule(&mut self, changes: QosChanges) {
-        debug!("{:?}", changes.download);
+    fn schedule_if_not_scheduled(&mut self) {
+        if self.resort_scheduled {
+            return;
+        }
+        self.resort_scheduled = true;
+        let task_manager = self.task_manager.clone();
+        task_manager.send_event(TaskManagerEvent::Reschedule);
+    }
+
+    pub(crate) fn reschedule(&mut self) {
+        self.resort_scheduled = false;
+        let changes = self.qos.reschedule(&self.state_handler);
         let mut qos_remove_queue = vec![];
         self.running_queue
             .reschedule(changes, &mut qos_remove_queue);
@@ -395,8 +409,7 @@ impl Scheduler {
                 self.qos.apps.remove_task(task.uid(), task.task_id());
             }
         }
-        let changes = self.qos.reschedule(Action::Any, &self.state_handler);
-        self.reschedule(changes);
+        self.schedule_if_not_scheduled();
     }
 }
 

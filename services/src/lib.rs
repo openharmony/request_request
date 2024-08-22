@@ -47,32 +47,70 @@ mod utils;
 pub use task::{config, info};
 
 cfg_oh! {
-#[cfg(not(test))]
-const LOG_LABEL: hilog_rust::HiLogLabel = hilog_rust::HiLogLabel {
-    log_type: hilog_rust::LogType::LogCore,
-    domain: 0xD001C50,
-    tag: "RequestService",
-};
+    #[cfg(not(test))]
+    const LOG_LABEL: hilog_rust::HiLogLabel = hilog_rust::HiLogLabel {
+        log_type: hilog_rust::LogType::LogCore,
+        domain: 0xD001C50,
+        tag: "RequestService",
+    };
 
-#[cfg(test)]
-const LOG_LABEL: hilog_rust::HiLogLabel = hilog_rust::HiLogLabel {
-    log_type: hilog_rust::LogType::LogCore,
-    domain: 0xD001C50,
-    tag: "RequestUtTest",
-};
+    #[cfg(test)]
+    const LOG_LABEL: hilog_rust::HiLogLabel = hilog_rust::HiLogLabel {
+        log_type: hilog_rust::LogType::LogCore,
+        domain: 0xD001C50,
+        tag: "RequestUtTest",
+    };
+}
 
+#[cfg(feature = "oh")]
 #[cfg(test)]
 mod tests {
-
+    use super::manage::database::RequestDb;
+    use super::manage::SystemConfigManager;
+    use crate::ability::SYSTEM_CONFIG_MANAGER;
     /// test init
     pub(crate) fn test_init() {
+        static ONCE: std::sync::Once = std::sync::Once::new();
+        ONCE.call_once(|| {
+            unsafe { SYSTEM_CONFIG_MANAGER.write(SystemConfigManager::init()) };
+        });
+
+        let _ = std::fs::create_dir("test_files/");
+
         unsafe { SetAccessTokenPermission() };
     }
 
-    pub(crate) static DB_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    pub(crate) fn lock_database<'a>() -> DatabaseLock<'a> {
+        let _inner = unsafe {
+            match DB_LOCK.lock() {
+                Ok(inner) => inner,
+                Err(_) => {
+                    RequestDb::get_instance()
+                        .execute("DELETE FROM request_task")
+                        .unwrap();
+                    DB_LOCK = std::sync::Mutex::new(());
+                    DB_LOCK.lock().unwrap()
+                }
+            }
+        };
+        DatabaseLock { _inner }
+    }
+
+    pub(crate) struct DatabaseLock<'a> {
+        _inner: std::sync::MutexGuard<'a, ()>,
+    }
+
+    impl<'a> Drop for DatabaseLock<'a> {
+        fn drop(&mut self) {
+            RequestDb::get_instance()
+                .execute("DELETE FROM request_task")
+                .unwrap();
+        }
+    }
+
+    static mut DB_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
     extern "C" {
         fn SetAccessTokenPermission();
     }
-}
 }

@@ -32,13 +32,8 @@
 #include "value_object.h"
 
 namespace OHOS::Request {
-#ifndef REQUEST_DATABASE_TEST
 constexpr const char *DB_NAME = "/data/service/el1/public/database/request/request.db";
 constexpr int DATABASE_VERSION = 1;
-#else
-constexpr const char *DB_NAME = "/data/test/request.db";
-constexpr int DATABASE_VERSION = 2;
-#endif
 constexpr const char *REQUEST_DATABASE_VERSION_4_1_RELEASE = "API11_4.1-release";
 constexpr const char *REQUEST_DATABASE_VERSION = "API12_5.0-release";
 constexpr const char *REQUEST_TASK_TABLE_NAME = "request_task";
@@ -117,7 +112,7 @@ struct NetworkInfo;
 struct TaskQosInfo;
 class RequestDataBase {
 public:
-    static RequestDataBase &GetInstance(std::string path);
+    static RequestDataBase &GetInstance(std::string path, bool encryptStatus);
     RequestDataBase(const RequestDataBase &) = delete;
     RequestDataBase &operator=(const RequestDataBase &) = delete;
     bool Insert(const std::string &table, const OHOS::NativeRdb::ValuesBucket &insertValues);
@@ -132,15 +127,15 @@ public:
     int GetTaskQosInfo(rust::str sql, TaskQosInfo &res);
 
 private:
-    RequestDataBase(std::string path);
+    RequestDataBase(std::string path, bool encryptStatus);
 
 private:
     std::shared_ptr<OHOS::NativeRdb::RdbStore> store_;
 };
 
-inline RequestDataBase *GetDatabaseInstance(rust::str path)
+inline RequestDataBase *GetDatabaseInstance(rust::str path, bool encryptStatus)
 {
-    return &RequestDataBase::GetInstance(std::string(path));
+    return &RequestDataBase::GetInstance(std::string(path), encryptStatus);
 }
 
 class RequestDBOpenCallback : public OHOS::NativeRdb::RdbOpenCallback {

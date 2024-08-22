@@ -17,9 +17,11 @@ use std::time::Duration;
 use sql::SqlList;
 use ylong_runtime::task::JoinHandle;
 
+use super::qos::RssCapacity;
 use crate::manage::network::{Network, NetworkState};
 use crate::manage::task_manager::TaskManagerTx;
 #[cfg(feature = "oh")]
+#[cfg(not(test))]
 use crate::utils::GetTopUid;
 
 mod recorder;
@@ -46,7 +48,11 @@ impl Handler {
     pub(crate) fn init(&mut self) -> SqlList {
         let network_info = self.updater.query_network();
         let (foreground_account, active_accounts) = self.updater.query_active_accounts();
+
+        #[allow(unused_mut)]
         let mut top_uid = 0;
+
+        #[cfg(not(test))]
         #[cfg(feature = "oh")]
         {
             for _ in 0..10 {
@@ -64,6 +70,10 @@ impl Handler {
         };
         self.recorder
             .init(network_info, top_uid, foreground_account, active_accounts)
+    }
+
+    pub(crate) fn update_rss_level(&mut self, level: i32) -> Option<RssCapacity> {
+        self.recorder.update_rss_level(level)
     }
 
     pub(crate) fn update_network(&mut self, _a: ()) -> Option<SqlList> {

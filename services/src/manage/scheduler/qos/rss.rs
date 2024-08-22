@@ -17,6 +17,7 @@ use super::QosLevel;
 /// `m1` represents the size of the full-speed zone.
 /// `m2` represents the size of the low-speed zone.
 /// `m3` represents the size of the fair-adjustment zone.
+#[derive(PartialEq, Eq)]
 pub(crate) struct RssCapacity(usize, usize, usize, QosLevel, QosLevel, QosLevel);
 
 impl RssCapacity {

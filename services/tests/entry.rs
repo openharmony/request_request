@@ -12,6 +12,7 @@
 // limitations under the License.
 
 mod construct;
-mod resume;
 mod search;
-mod start;
+// no selinux right now
+// mod start;
+// mod resume;

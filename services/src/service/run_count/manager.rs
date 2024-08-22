@@ -30,7 +30,7 @@ pub(crate) struct RunCountManagerEntry {
 }
 
 impl RunCountManagerEntry {
-    fn new(tx: UnboundedSender<RunCountEvent>) -> Self {
+    pub(crate) fn new(tx: UnboundedSender<RunCountEvent>) -> Self {
         Self { tx }
     }
 

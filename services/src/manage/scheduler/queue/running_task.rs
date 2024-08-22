@@ -47,7 +47,7 @@ impl RunningTask {
         RequestDb::get_instance().update_task_state(
             self.task_id(),
             State::Running,
-            Reason::OthersError,
+            Reason::Default,
         );
         match action {
             Action::Download => {

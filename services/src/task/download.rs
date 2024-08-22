@@ -116,8 +116,6 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
 
     info!("download task {} start running", task.task_id());
 
-    task.range_response.store(false, Ordering::SeqCst);
-    task.range_request.store(false, Ordering::SeqCst);
     let request = task.build_download_request().await?;
 
     let response = task.client.request(request).await;
@@ -222,6 +220,10 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
 
     #[cfg(not(test))]
     check_file_exist(&task)?;
+    {
+        let mut guard = task.progress.lock().unwrap();
+        guard.sizes = vec![guard.processed[0] as i64];
+    }
 
     info!("task {} download success", task.task_id());
     Ok(())
@@ -231,6 +233,7 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
 fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
     use crate::task::files::{check_atomic_convert_path, convert_path};
     use crate::task::ATOMIC_SERVICE;
+
     let config = task.config();
     let uid = config.common_data.uid;
     let bundle = config.bundle.as_str();

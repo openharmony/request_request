@@ -14,12 +14,14 @@ use std::collections::HashSet;
 
 use super::sql::SqlList;
 use crate::manage::network::NetworkState;
+use crate::manage::scheduler::qos::RssCapacity;
 
 pub(super) struct StateRecord {
     pub(super) top_uid: Option<u64>,
     pub(super) top_user: u64,
     pub(super) network: NetworkState,
     pub(super) active_accounts: HashSet<u64>,
+    pub(super) rss_level: i32,
 }
 
 impl StateRecord {
@@ -29,6 +31,7 @@ impl StateRecord {
             top_user: 0,
             network: NetworkState::Offline,
             active_accounts: HashSet::new(),
+            rss_level: 0,
         }
     }
 
@@ -50,6 +53,14 @@ impl StateRecord {
         self.active_accounts = active_accounts;
         self.network = network;
         sql_list
+    }
+
+    pub(crate) fn update_rss_level(&mut self, rss_level: i32) -> Option<RssCapacity> {
+        if rss_level == self.rss_level {
+            return None;
+        }
+        self.rss_level = rss_level;
+        Some(RssCapacity::new(rss_level))
     }
 
     pub(crate) fn update_network(&mut self, info: NetworkState) -> Option<SqlList> {

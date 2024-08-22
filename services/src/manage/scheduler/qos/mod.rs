@@ -37,57 +37,31 @@ impl Qos {
     }
 
     // qos 里包含upload和download，通过empty确认哪些需要更新。
-    pub(crate) fn start_task(
-        &mut self,
-        uid: u64,
-        task: TaskQosInfo,
-        state: &state::Handler,
-    ) -> QosChanges {
+    pub(crate) fn start_task(&mut self, uid: u64, task: TaskQosInfo) {
         // Only tasks that can run automatically can be added to the qos queue.
         self.apps.insert_task(uid, task);
-        self.reschedule(Action::from(task.action), state)
     }
 
-    pub(crate) fn remove_task(
-        &mut self,
-        uid: u64,
-        task_id: u32,
-        state: &state::Handler,
-    ) -> Option<QosChanges> {
-        self.apps
-            .remove_task(uid, task_id)
-            .map(|task| self.reschedule(task.action(), state))
+    pub(crate) fn remove_task(&mut self, uid: u64, task_id: u32) -> bool {
+        self.apps.remove_task(uid, task_id)
     }
 
-    pub(crate) fn reload_all_tasks(&mut self, state: &state::Handler) -> QosChanges {
+    pub(crate) fn reload_all_tasks(&mut self) {
         self.apps.reload_all_tasks();
-        self.reschedule(Action::Any, state)
     }
 
-    pub(crate) fn change_rss(&mut self, rss: RssCapacity, state: &state::Handler) -> QosChanges {
+    pub(crate) fn change_rss(&mut self, rss: RssCapacity) {
         self.capacity = rss;
-        self.reschedule(Action::Any, state)
     }
 }
 
 impl Qos {
     // Reschedule qos queue and get directions.
-    pub(crate) fn reschedule(&mut self, action: Action, state: &state::Handler) -> QosChanges {
+    pub(crate) fn reschedule(&mut self, state: &state::Handler) -> QosChanges {
         self.apps.sort(state.top_uid(), state.top_user());
         let mut changes = QosChanges::new();
-        match action {
-            Action::Any => {
-                changes.download = Some(self.reschedule_inner(Action::Download));
-                changes.upload = Some(self.reschedule_inner(Action::Upload));
-            }
-            Action::Download => {
-                changes.download = Some(self.reschedule_inner(Action::Download));
-            }
-            Action::Upload => {
-                changes.upload = Some(self.reschedule_inner(Action::Upload));
-            }
-            _ => unreachable!(),
-        }
+        changes.download = Some(self.reschedule_inner(Action::Download));
+        changes.upload = Some(self.reschedule_inner(Action::Upload));
         changes
     }
 
