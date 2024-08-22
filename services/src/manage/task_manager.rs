@@ -148,6 +148,7 @@ impl TaskManager {
                 }
                 TaskManagerEvent::Account(event) => self.handle_account_event(event),
                 TaskManagerEvent::Query(query) => self.handle_query_event(query),
+                TaskManagerEvent::Reschedule => self.scheduler.reschedule(),
             }
 
             debug!("TaskManager handles events finished");
@@ -363,7 +364,7 @@ pub(crate) struct TaskManagerRx {
 }
 
 impl TaskManagerRx {
-    fn new(rx: UnboundedReceiver<TaskManagerEvent>) -> Self {
+    pub(crate) fn new(rx: UnboundedReceiver<TaskManagerEvent>) -> Self {
         Self { rx }
     }
 }

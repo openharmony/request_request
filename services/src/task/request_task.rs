@@ -12,7 +12,7 @@
 // limitations under the License.
 
 use std::io::{self, SeekFrom};
-use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicI64, AtomicU32, AtomicU64, Ordering};
 use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
@@ -56,9 +56,6 @@ pub(crate) struct RequestTask {
     pub(crate) tries: AtomicU32,
     pub(crate) background_notify_time: AtomicU64,
     pub(crate) file_total_size: AtomicI64,
-    pub(crate) seek_flag: AtomicBool,
-    pub(crate) range_request: AtomicBool,
-    pub(crate) range_response: AtomicBool,
     pub(crate) rate_limiting: AtomicU64,
     pub(crate) last_notify: AtomicU64,
     pub(crate) client_manager: ClientManagerEntry,
@@ -142,9 +139,24 @@ impl RequestTask {
             _ => unreachable!("Action::Any in RequestTask::new never reach"),
         };
 
+        let mut sizes = files.sizes.clone();
+        if action == Action::Upload
+            && config.common_data.index < sizes.len() as u32
+            && sizes[config.common_data.index as usize] > 0
+            && config.common_data.begins < sizes[config.common_data.index as usize] as u64 - 1
+            && config.common_data.ends >= 0
+            && config.common_data.begins <= config.common_data.ends as u64
+        {
+            let ends = config
+                .common_data
+                .ends
+                .min(sizes[config.common_data.index as usize] - 1);
+            sizes[config.common_data.index as usize] = ends - config.common_data.begins as i64 + 1;
+        }
+
         let time = get_current_timestamp();
         let status = TaskStatus::new(time);
-        let progress = Progress::new(files.sizes);
+        let progress = Progress::new(sizes);
 
         RequestTask {
             conf: config,
@@ -159,9 +171,6 @@ impl RequestTask {
             code: Mutex::new(vec![Reason::Default; file_len]),
             background_notify_time: AtomicU64::new(time),
             file_total_size: AtomicI64::new(file_total_size),
-            seek_flag: AtomicBool::new(false),
-            range_request: AtomicBool::new(false),
-            range_response: AtomicBool::new(false),
             rate_limiting: AtomicU64::new(0),
             last_notify: AtomicU64::new(time),
             client_manager,
@@ -224,9 +233,6 @@ impl RequestTask {
             code: Mutex::new(vec![Reason::Default; file_len]),
             background_notify_time: AtomicU64::new(time),
             file_total_size: AtomicI64::new(file_total_size),
-            seek_flag: AtomicBool::new(false),
-            range_request: AtomicBool::new(false),
-            range_response: AtomicBool::new(false),
             rate_limiting: AtomicU64::new(0),
             last_notify: AtomicU64::new(time),
             client_manager,
@@ -246,7 +252,6 @@ impl RequestTask {
             version: self.conf.version,
             each_file_status: vec,
             task_id: self.conf.common_data.task_id,
-            _uid: self.conf.common_data.uid,
         }
     }
 
@@ -625,31 +630,6 @@ impl RequestTask {
             let file_name = self.conf.file_specs[index].file_name.as_str();
             let _ = request_background_notify(task_msg, path, file_name, percent as u32);
         }
-    }
-
-    pub(crate) fn get_upload_info(&self, index: usize) -> (bool, u64) {
-        let guard = self.progress.lock().unwrap();
-
-        let file_size = guard.sizes[index];
-        let mut is_partial_upload = false;
-        let mut upload_file_length: u64 = file_size as u64 - guard.processed[index] as u64;
-        if file_size == 0 {
-            return (is_partial_upload, upload_file_length);
-        }
-        if index as u32 != self.conf.common_data.index {
-            return (is_partial_upload, upload_file_length);
-        }
-        let begins = self.conf.common_data.begins;
-        let mut ends = self.conf.common_data.ends;
-        if ends < 0 || ends >= file_size {
-            ends = file_size - 1;
-        }
-        if begins >= file_size as u64 || begins > ends as u64 {
-            return (is_partial_upload, upload_file_length);
-        }
-        is_partial_upload = true;
-        upload_file_length = ends as u64 - begins + 1 - guard.processed[index] as u64;
-        (is_partial_upload, upload_file_length)
     }
 
     pub(crate) fn notify_header_receive(&self) {

@@ -30,7 +30,7 @@ pub(crate) struct ClientManagerEntry {
 }
 
 impl ClientManagerEntry {
-    fn new(tx: UnboundedSender<ClientEvent>) -> Self {
+    pub(crate) fn new(tx: UnboundedSender<ClientEvent>) -> Self {
         Self { tx }
     }
 

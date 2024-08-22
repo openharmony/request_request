@@ -36,13 +36,15 @@
 #include "task/reason.rs.h"
 namespace OHOS::Request {
 
-RequestDataBase::RequestDataBase(std::string path)
+RequestDataBase::RequestDataBase(std::string path, bool encryptStatus)
 {
     REQUEST_HILOGI("Process Get request database");
     int errCode = OHOS::NativeRdb::E_OK;
     OHOS::NativeRdb::RdbStoreConfig config(path);
-    config.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
-    config.SetEncryptStatus(true);
+    if (encryptStatus) {
+        config.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
+        config.SetEncryptStatus(true);
+    }
     RequestDBOpenCallback requestDBOpenCallback;
     // retry 10 times
     for (int index = 0; index < 10; ++index) {
@@ -57,9 +59,9 @@ RequestDataBase::RequestDataBase(std::string path)
     }
 }
 
-RequestDataBase &RequestDataBase::GetInstance(std::string path)
+RequestDataBase &RequestDataBase::GetInstance(std::string path, bool encryptStatus)
 {
-    static RequestDataBase requestDataBase(path);
+    static RequestDataBase requestDataBase(path, encryptStatus);
     return requestDataBase;
 }
 
@@ -961,7 +963,7 @@ bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
         REQUEST_HILOGE("write blob data failed");
         return false;
     }
-    if (!OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME)
+    if (!OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true)
              .Insert(std::string("request_task"), insertValues)) {
         REQUEST_HILOGE("insert to request_task failed, task_id: %{public}d", taskConfig->commonData.taskId);
         return false;
@@ -989,7 +991,7 @@ bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo)
 
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
-    if (!OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME).Update(values, rdbPredicates)) {
+    if (!OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true).Update(values, rdbPredicates)) {
         REQUEST_HILOGE("update table1 failed, task_id: %{public}d", taskId);
         return false;
     }
@@ -1006,7 +1008,7 @@ bool UpdateRequestTaskState(uint32_t taskId, CUpdateStateInfo *updateStateInfo)
 
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
-    if (!OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME).Update(values, rdbPredicates)) {
+    if (!OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true).Update(values, rdbPredicates)) {
         REQUEST_HILOGE("Change request_task state failed, taskid: %{public}d", taskId);
         return false;
     }
@@ -1016,7 +1018,7 @@ bool UpdateRequestTaskState(uint32_t taskId, CUpdateStateInfo *updateStateInfo)
 int GetTaskInfoInner(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo)
 {
     auto resultSet =
-        OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME)
+        OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true)
             .Query(rdbPredicates, { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry",
                                       "tries", "version", "priority", "bundle", "url", "data", "token", "title",
                                       "description", "mime_type", "state", "idx", "total_processed", "sizes",
@@ -1106,7 +1108,7 @@ CTaskConfig *QueryTaskConfig(uint32_t taskId)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
-    auto resultSet = OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME)
+    auto resultSet = OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true)
                          .Query(rdbPredicates,
                              { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming",
                                  "retry", "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority",

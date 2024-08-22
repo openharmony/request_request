@@ -41,6 +41,7 @@ pub(crate) enum TaskManagerEvent {
     Device(i32),
     Account(AccountEvent),
     Query(QueryEvent),
+    Reschedule,
 }
 
 impl TaskManagerEvent {

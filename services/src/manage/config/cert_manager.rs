@@ -114,6 +114,7 @@ pub(crate) struct CRequestCerts {
     pub(crate) len: u32,
 }
 
+#[cfg(feature = "oh")]
 #[cfg(test)]
 mod test {
     use super::*;

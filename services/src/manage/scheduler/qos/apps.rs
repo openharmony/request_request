@@ -61,14 +61,13 @@ impl SortedApps {
         self.inner.push(app);
     }
 
-    pub(crate) fn remove_task(&mut self, uid: u64, task_id: u32) -> Option<Task> {
-        let mut task = None;
+    pub(crate) fn remove_task(&mut self, uid: u64, task_id: u32) -> bool {
         // Remove target task in target app.
         if let Some(app) = self.inner.iter_mut().find(|app| app.uid == uid) {
-            task = app.remove(task_id);
+            app.remove(task_id)
+        } else {
+            false
         }
-
-        task
     }
 }
 
@@ -106,16 +105,17 @@ impl App {
         self.tasks.binary_insert(task)
     }
 
-    fn remove(&mut self, task_id: u32) -> Option<Task> {
+    fn remove(&mut self, task_id: u32) -> bool {
         if let Some((i, _)) = self
             .tasks
             .iter()
             .enumerate()
             .find(|(_, task)| task.task_id == task_id)
         {
-            Some(self.tasks.remove(i))
+            self.tasks.remove(i);
+            true
         } else {
-            None
+            false
         }
     }
 }

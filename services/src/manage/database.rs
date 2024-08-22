@@ -51,13 +51,13 @@ impl RequestDb {
         static mut DB: MaybeUninit<RequestDb> = MaybeUninit::uninit();
         static ONCE: Once = Once::new();
         ONCE.call_once(|| {
-            let path = if cfg!(test) {
-                "/data/test/request.db"
+            let (path, encrypt) = if cfg!(test) {
+                ("/data/test/request.db", false)
             } else {
-                "/data/service/el1/public/database/request/request.db"
+                ("/data/service/el1/public/database/request/request.db", true)
             };
 
-            let inner = GetDatabaseInstance(path);
+            let inner = GetDatabaseInstance(path, encrypt);
             unsafe {
                 DB.write(RequestDb {
                     inner,
@@ -634,7 +634,7 @@ mod ffi {
     unsafe extern "C++" {
         include!("c_request_database.h");
         type RequestDataBase;
-        fn GetDatabaseInstance(path: &str) -> *mut RequestDataBase;
+        fn GetDatabaseInstance(path: &str, encrypt: bool) -> *mut RequestDataBase;
         fn ExecuteSql(self: Pin<&mut RequestDataBase>, sql: &str) -> i32;
         fn QueryInteger(self: Pin<&mut RequestDataBase>, sql: &str, v: &mut Vec<i64>) -> i32;
         fn GetAppTaskQosInfos(
@@ -653,14 +653,14 @@ mod test {
     use super::RequestDb;
     use crate::config::{Action, Mode};
     use crate::task::info::State;
-    use crate::tests::{test_init, DB_LOCK};
+    use crate::tests::{lock_database, test_init};
     use crate::utils::get_current_timestamp;
     use crate::utils::task_id_generator::TaskIdGenerator;
 
     #[test]
     fn ut_database_base() {
         test_init();
-        let _lock = DB_LOCK.lock().unwrap();
+        let _lock = lock_database();
 
         let task_id = TaskIdGenerator::generate();
         let db = RequestDb::get_instance();
@@ -678,8 +678,7 @@ mod test {
     #[test]
     fn ut_database_contains_task() {
         test_init();
-        let _lock = DB_LOCK.lock().unwrap();
-
+        let _lock = lock_database();
         let task_id = TaskIdGenerator::generate();
         let db = RequestDb::get_instance();
         db.execute(&format!(
@@ -694,7 +693,7 @@ mod test {
     #[test]
     fn ut_database_query_task_token_id() {
         test_init();
-        let _lock = DB_LOCK.lock().unwrap();
+        let _lock = lock_database();
 
         let task_id = TaskIdGenerator::generate();
         let token_id = 123456789;
@@ -711,32 +710,32 @@ mod test {
     #[test]
     fn ut_database_app_task_qos_info() {
         test_init();
-        let _lock = DB_LOCK.lock().unwrap();
-
+        let _lock = lock_database();
         let task_id = TaskIdGenerator::generate();
         let db = RequestDb::get_instance();
+        let priority = get_current_timestamp() as u32;
         db.execute(&format!(
-            "INSERT INTO request_task (task_id, uid, action, mode, state, priority) VALUES ({}, {}, {}, {}, {}, {})",
+            "INSERT INTO request_task (task_id, action, mode, state, priority) VALUES ({}, {}, {}, {}, {})",
             task_id,
-            0,
             Action::Download.repr,
             Mode::FrontEnd.repr,
             State::Completed.repr,
-            0,
+            priority,
         ))
         .unwrap();
 
-        let sql = "SELECT task_id, action, mode, state, priority FROM request_task";
-        let v = db.get_app_task_qos_infos_inner(sql);
         let info = db.get_task_qos_info(task_id).unwrap();
-        println!("{:?}", v);
-        println!("qos info {:?}", info);
+        assert_eq!(info.task_id, task_id);
+        assert_eq!(info.action, Action::Download.repr);
+        assert_eq!(info.mode, Mode::FrontEnd.repr);
+        assert_eq!(info.state, State::Completed.repr);
+        assert_eq!(info.priority, priority);
     }
 
     #[test]
     fn ut_database_query_app_uncompleted_task_num() {
         test_init();
-        let _lock = DB_LOCK.lock().unwrap();
+        let _lock = lock_database();
 
         let uid = get_current_timestamp() as u64;
         let db = RequestDb::get_instance();

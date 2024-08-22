@@ -23,6 +23,7 @@ pub(crate) use ffi::PublishStateChangeEvent;
 cfg_oh! {
     pub(crate) use ffi::RequestTaskMsg;
     pub(crate) mod url_policy;
+    #[cfg(not(test))]
     pub(crate) use ffi::GetTopUid;
 }
 
@@ -130,6 +131,7 @@ pub(crate) fn request_background_notify(
         code => Err(code),
     }
 }
+#[allow(unused)]
 #[cxx::bridge(namespace = "OHOS::Request")]
 mod ffi {
     struct RequestTaskMsg {

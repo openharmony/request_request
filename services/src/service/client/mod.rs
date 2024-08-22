@@ -31,6 +31,7 @@ const REQUEST_MAGIC_NUM: u32 = 0x43434646;
 const HEADERS_MAX_SIZE: u16 = 8 * 1024;
 const POSITION_OF_LENGTH: u32 = 10;
 
+#[derive(Debug)]
 pub(crate) enum ClientEvent {
     OpenChannel(u64, Sender<Result<i32, ErrorCode>>),
     Subscribe(u32, u64, u64, u64, Sender<ErrorCode>),
