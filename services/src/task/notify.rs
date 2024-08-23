@@ -77,4 +77,9 @@ impl Progress {
             extras: HashMap::<String, String>::new(),
         }
     }
+
+    pub(crate) fn is_finish(&self) -> bool {
+        self.sizes.iter().all(|a| *a != -1)
+            && self.processed.iter().sum::<usize>() == self.sizes.iter().sum::<i64>() as usize
+    }
 }

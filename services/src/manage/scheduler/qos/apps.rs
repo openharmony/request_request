@@ -230,7 +230,7 @@ mod ut_manage_scheduler_qos_apps {
     use super::{App, Task};
     use crate::manage::database::RequestDb;
     use crate::task::config::Mode;
-    use crate::tests::test_init;
+    use crate::tests::{lock_database, test_init};
     use crate::utils::get_current_timestamp;
     use crate::utils::task_id_generator::TaskIdGenerator;
     impl Task {
@@ -336,6 +336,7 @@ mod ut_manage_scheduler_qos_apps {
     fn ut_database_app_info() {
         test_init();
         let db = RequestDb::get_instance();
+        let _lock = lock_database();
         let uid = get_current_timestamp();
 
         for i in 0..10 {

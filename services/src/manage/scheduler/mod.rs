@@ -143,6 +143,13 @@ impl Scheduler {
             Notifier::resume(&self.client_manager, info.build_notify_data());
         }
 
+        if info.progress.is_finish() {
+            database.update_task_state(task_id, State::Completed, Reason::Default);
+            if let Some(info) = database.get_task_info(task_id) {
+                Notifier::complete(&self.client_manager, info.build_notify_data());
+            }
+        }
+
         if !self.check_config_satisfy(task_id)? {
             return Ok(());
         };
@@ -201,6 +208,12 @@ impl Scheduler {
             self.schedule_if_not_scheduled();
         }
 
+        if let Some(info) = database.get_task_qos_info(task_id) {
+            if info.state != State::Running.repr && info.state != State::Waiting.repr {
+                return;
+            }
+        }
+
         database.update_task_state(task_id, State::Completed, Reason::Default);
         if let Some(info) = database.get_task_info(task_id) {
             Notifier::complete(&self.client_manager, info.build_notify_data());
@@ -251,6 +264,12 @@ impl Scheduler {
 
         if self.qos.remove_task(uid, task_id) {
             self.schedule_if_not_scheduled();
+        }
+
+        if let Some(info) = database.get_task_qos_info(task_id) {
+            if info.state != State::Running.repr && info.state != State::Waiting.repr {
+                return;
+            }
         }
 
         database.update_task_state(task_id, State::Failed, reason);
