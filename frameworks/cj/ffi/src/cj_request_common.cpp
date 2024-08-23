@@ -311,7 +311,7 @@ CHashStrArr Convert2CHashStrArr(const std::map<std::string, std::string> &extras
         out.headers[i].value = MallocCString(it.second);
         ++i;
     }
-    out.size = i;
+    out.size = static_cast<int64_t>(i);
     return out;
 }
 
@@ -330,14 +330,14 @@ CFormItemArr Convert2CFormItemArr(const std::vector<FileSpec> &files, const std:
         return out;
     }
     memset_s(out.head, sizeof(CFormItem) * len, 0, sizeof(CFormItem) * len);
-    int64_t i = 0;
+    size_t i = 0;
     for (; i < formsLen; ++i) {
         out.head[i].name = MallocCString(forms[i].name);
         out.head[i].value.str = MallocCString(forms[i].value);
         out.head[i].value.type = CFORM_ITEM_VALUE_TYPE_STRING;
     }
 
-    for (int64_t j = 0; j < filesLen;  ++j) {
+    for (size_t j = 0; j < filesLen;  ++j) {
         out.head[i].name = MallocCString(files[j].name);
         out.head[i].value.file.path = MallocCString(files[j].uri);
         out.head[i].value.file.mimeType = MallocCString(files[j].type);
@@ -346,7 +346,7 @@ CFormItemArr Convert2CFormItemArr(const std::vector<FileSpec> &files, const std:
         ++i;
     }
 
-    out.size = i;
+    out.size = static_cast<int64_t>(i);
     return out;
 }
 
