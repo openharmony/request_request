@@ -188,11 +188,14 @@ mod ffi {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::tests::{lock_database, test_init};
     use crate::utils::get_current_timestamp;
     use crate::utils::task_id_generator::TaskIdGenerator;
 
     #[test]
     fn ut_search_user() {
+        test_init();
+        let _lock = lock_database();
         let db = RequestDb::get_instance();
         let task_id = TaskIdGenerator::generate();
         let uid = get_current_timestamp();
@@ -269,7 +272,9 @@ mod test {
 
     #[test]
     fn ut_search_system() {
+        test_init();
         let db = RequestDb::get_instance();
+        let _lock = lock_database();
         let task_id = TaskIdGenerator::generate();
         let bundle_name = "com.ohos.app";
         db.execute(&format!(

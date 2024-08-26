@@ -14,8 +14,6 @@
 use std::ops::Deref;
 use std::sync::Arc;
 
-use crate::info::State;
-use crate::manage::database::RequestDb;
 use crate::manage::events::{TaskEvent, TaskManagerEvent};
 use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::queue::keeper::SAKeeper;
@@ -43,13 +41,7 @@ impl RunningTask {
     }
 
     pub(crate) async fn run(self) {
-        let action = self.conf.common_data.action;
-        RequestDb::get_instance().update_task_state(
-            self.task_id(),
-            State::Running,
-            Reason::Default,
-        );
-        match action {
+        match self.conf.common_data.action {
             Action::Download => {
                 download(self.task.clone()).await;
             }

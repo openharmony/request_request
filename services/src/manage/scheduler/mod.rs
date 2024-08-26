@@ -22,7 +22,6 @@ use state::sql::SqlList;
 
 use super::events::TaskManagerEvent;
 use super::network::Network;
-use crate::config::{Mode, Version};
 use crate::error::ErrorCode;
 use crate::info::TaskInfo;
 use crate::manage::database::RequestDb;
@@ -250,7 +249,12 @@ impl Scheduler {
                 }
             }
             state => {
-                info!("task {} cancel with state {:?}", task_id, state);
+                info!(
+                    "task {} cancel with state {:?} reason {:?}",
+                    task_id,
+                    state,
+                    Reason::from(info.common_data.reason)
+                );
                 self.running_queue.try_restart(uid, task_id);
             }
         }
@@ -374,30 +378,12 @@ impl Scheduler {
 
         if let Err(reason) = config.satisfy_network(self.state_handler.network()) {
             info!(
-                "task {} not satisfy network {:?}",
+                "task {} started, waiting for network {:?}",
                 task_id,
                 self.state_handler.network()
             );
-            let state = match config.version {
-                Version::API9 => match config.common_data.action {
-                    Action::Download => State::Waiting,
-                    Action::Upload => State::Failed,
-                    _ => unreachable!(),
-                },
-                Version::API10 => {
-                    if config.common_data.mode == Mode::BackGround && config.common_data.retry {
-                        State::Waiting
-                    } else {
-                        State::Failed
-                    }
-                }
-            };
-            database.update_task_state(task_id, state, reason);
-            if state == State::Failed {
-                if let Some(info) = database.get_task_info(task_id) {
-                    Notifier::fail(&self.client_manager, info.build_notify_data());
-                }
-            }
+
+            database.update_task_state(task_id, State::Waiting, reason);
             return Ok(false);
         }
 
