@@ -252,8 +252,8 @@ async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
 
     #[cfg(feature = "oh")]
     let _trace = Trace::new(&format!(
-        "exec upload task url: {} file num: {}",
-        task.conf.url,
+        "exec upload task:{} file num:{}",
+        task.task_id(),
         task.conf.file_specs.len()
     ));
 
@@ -262,12 +262,7 @@ async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
 
     for index in start..size {
         #[cfg(feature = "oh")]
-        let _trace = Trace::new(&format!(
-            "upload file name:{} index:{} size:{}",
-            task.conf.file_specs[index].file_name,
-            index,
-            task.progress.lock().unwrap().sizes[index]
-        ));
+        let _trace = Trace::new(&format!("upload file:{} index:{}", task.task_id(), index));
 
         if !task.prepare_single_upload(index).await {
             return Err(TaskError::Failed(Reason::OthersError));

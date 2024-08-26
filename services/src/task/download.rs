@@ -203,12 +203,12 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
     task.update_progress_in_database();
 
     let size = task.progress.lock().unwrap().sizes[0];
-    let processed = task.progress.lock().unwrap().processed[0];
 
     #[cfg(feature = "oh")]
     let _trace = Trace::new(&format!(
-        "download file name: {} size:{} downloaded size: {}",
-        task.conf.file_specs[0].path, size, processed
+        "download file tid:{} size:{}",
+        task.task_id(),
+        size
     ));
     let mut downloader = build_downloader(task.clone(), response);
 

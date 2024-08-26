@@ -11,8 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::atomic::Ordering;
-
 use crate::manage::TaskManager;
 use crate::task::info::{DumpAllEachInfo, DumpAllInfo, DumpOneInfo};
 
@@ -23,15 +21,11 @@ impl TaskManager {
             .find(|task| task.task_id() == task_id)
             .map(|task| {
                 let status = task.status.lock().unwrap();
-                let tran_size = task.progress.lock().unwrap().common_data.total_processed;
                 DumpOneInfo {
                     task_id: task.conf.common_data.task_id,
                     action: task.conf.common_data.action,
                     state: status.state,
                     reason: status.reason,
-                    total_size: task.file_total_size.load(Ordering::SeqCst),
-                    tran_size,
-                    url: task.conf.url.clone(),
                 }
             })
     }
