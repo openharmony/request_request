@@ -186,9 +186,6 @@ pub(crate) struct DumpOneInfo {
     pub(crate) action: Action,
     pub(crate) state: State,
     pub(crate) reason: Reason,
-    pub(crate) total_size: i64,
-    pub(crate) tran_size: usize,
-    pub(crate) url: String,
 }
 
 #[cfg(test)]
