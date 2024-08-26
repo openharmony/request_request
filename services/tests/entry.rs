@@ -11,8 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod construct;
-mod search;
 // no selinux right now
+// mod construct;
+// mod search;
 // mod start;
 // mod resume;
