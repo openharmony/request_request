@@ -102,12 +102,12 @@ bool FwkRunningTaskCountManager::HasObserver()
 
 bool FwkRunningTaskCountManager::SaIsOnline()
 {
-    return saIsOnline_;
+    return saIsOnline_.load();
 }
 
 void FwkRunningTaskCountManager::SetSaStatus(bool isOnline)
 {
-    saIsOnline_ = isOnline;
+    saIsOnline_.store(isOnline);
 }
 
 void FwkRunningTaskCountManager::NotifyAllObservers()
