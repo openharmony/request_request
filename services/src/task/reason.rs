@@ -40,6 +40,10 @@ mod ffi {
         Tcp,
         Ssl,
         InsufficientSpace,
+        NetworkApp = 27,
+        NetworkAccount = 28,
+        AppAccount = 29,
+        NetworkAppAccount = 30,
     }
 }
 
@@ -67,6 +71,10 @@ impl From<u8> for Reason {
             24 => Reason::Tcp,
             25 => Reason::Ssl,
             26 => Reason::InsufficientSpace,
+            27 => Reason::NetworkApp,
+            28 => Reason::NetworkAccount,
+            29 => Reason::AppAccount,
+            30 => Reason::NetworkAppAccount,
             _ => Reason::OthersError,
         }
     }
@@ -97,6 +105,10 @@ impl Reason {
             Reason::Tcp => "TCP error",
             Reason::Ssl => "TSL/SSL error",
             Reason::InsufficientSpace => "Insufficient space",
+            Reason::NetworkApp => "NetWork is offline and the app is background or terminate",
+            Reason::NetworkAccount => "NetWork is offline and the account is stopped",
+            Reason::AppAccount => "The app is background or terminate and the account is stopped",
+            Reason::NetworkAppAccount => "NetWork is offline and the app is background or terminate and the account is stopped",
             _ => "unknown error",
         }
     }
@@ -129,5 +141,9 @@ mod test {
         assert_eq!(Reason::Tcp.repr, 24);
         assert_eq!(Reason::Ssl.repr, 25);
         assert_eq!(Reason::InsufficientSpace.repr, 26);
+        assert_eq!(Reason::NetworkApp.repr, 27);
+        assert_eq!(Reason::NetworkAccount.repr, 28);
+        assert_eq!(Reason::AppAccount.repr, 29);
+        assert_eq!(Reason::NetworkAppAccount.repr, 30);
     }
 }
