@@ -16,7 +16,7 @@ use std::fmt::Debug;
 use ylong_runtime::sync::oneshot::{channel, Sender};
 
 use super::account::AccountEvent;
-use crate::config::Action;
+use crate::config::{Action, Mode};
 use crate::error::ErrorCode;
 use crate::info::TaskInfo;
 use crate::task::config::TaskConfig;
@@ -142,10 +142,10 @@ pub(crate) enum ServiceEvent {
 
 #[derive(Debug)]
 pub(crate) enum TaskEvent {
-    Completed(u32, u64),
-    Failed(u32, u64, Reason),
-    Offline(u32, u64),
-    Running(u32, u64),
+    Completed(u32, u64, Mode),
+    Failed(u32, u64, Reason, Mode),
+    Offline(u32, u64, Mode),
+    Running(u32, u64, Mode),
     Subscribe(u32, u64, Sender<ErrorCode>),
 }
 

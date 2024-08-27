@@ -14,6 +14,7 @@
 mod qos;
 mod queue;
 pub(crate) mod state;
+use std::collections::HashMap;
 use std::sync::Arc;
 mod sql;
 use qos::Qos;
@@ -22,6 +23,7 @@ use state::sql::SqlList;
 
 use super::events::TaskManagerEvent;
 use super::network::Network;
+use crate::config::Mode;
 use crate::error::ErrorCode;
 use crate::info::TaskInfo;
 use crate::manage::database::RequestDb;
@@ -219,7 +221,13 @@ impl Scheduler {
         }
     }
 
-    pub(crate) fn task_cancel(&mut self, uid: u64, task_id: u32) {
+    pub(crate) fn task_cancel(
+        &mut self,
+        uid: u64,
+        task_id: u32,
+        mode: Mode,
+        task_count: &mut HashMap<u64, (usize, usize)>,
+    ) {
         info!("Scheduler notify task {} canceled", task_id);
         self.running_queue.task_finish(uid, task_id);
 
@@ -241,6 +249,20 @@ impl Scheduler {
             }
             State::Failed => {
                 info!("task {} cancel with state Failed", task_id);
+                if let Some((front, back)) = task_count.get_mut(&uid) {
+                    match mode {
+                        Mode::FrontEnd => {
+                            if *front > 0 {
+                                *front -= 1;
+                            }
+                        }
+                        _ => {
+                            if *back > 0 {
+                                *back -= 1;
+                            }
+                        }
+                    }
+                }
                 Notifier::fail(&self.client_manager, info.build_notify_data());
                 #[cfg(feature = "oh")]
                 {

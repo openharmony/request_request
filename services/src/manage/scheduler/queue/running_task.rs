@@ -73,6 +73,7 @@ impl Drop for RunningTask {
                         .send_event(TaskManagerEvent::Task(TaskEvent::Completed(
                             self.task_id(),
                             self.uid(),
+                            self.mode(),
                         )));
                 }
                 Err(e) if e == Reason::NetworkOffline => {
@@ -80,6 +81,7 @@ impl Drop for RunningTask {
                         .send_event(TaskManagerEvent::Task(TaskEvent::Offline(
                             self.task_id(),
                             self.uid(),
+                            self.mode(),
                         )));
                 }
                 Err(e) => {
@@ -87,6 +89,7 @@ impl Drop for RunningTask {
                         self.task_id(),
                         self.uid(),
                         e,
+                        self.mode(),
                     )));
                 }
             },
@@ -95,6 +98,7 @@ impl Drop for RunningTask {
                     .send_event(TaskManagerEvent::Task(TaskEvent::Running(
                         self.task_id(),
                         self.uid(),
+                        self.mode(),
                     )));
             }
         }

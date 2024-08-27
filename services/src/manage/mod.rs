@@ -187,7 +187,7 @@ mod test {
             let msg = manager.rx.recv().await.unwrap();
             assert!(matches!(
                 msg,
-                TaskManagerEvent::Task(TaskEvent::Completed(info_task_id, info_uid)) if uid == info_uid && task_id == info_task_id
+                TaskManagerEvent::Task(TaskEvent::Completed(info_task_id, info_uid,Mode::BackGround)) if uid == info_uid && task_id == info_task_id
             ));
             let file = File::open(file_path).unwrap();
             assert_eq!(file.metadata().unwrap().len(), GITEE_FILE_LEN);

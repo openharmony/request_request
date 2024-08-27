@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 use std::time::Duration;
 
@@ -29,7 +30,7 @@ use super::events::{
     QueryEvent, ScheduleEvent, ServiceEvent, StateEvent, TaskEvent, TaskManagerEvent,
 };
 use super::network::Network;
-use crate::config::Action;
+use crate::config::{Action, Mode};
 use crate::error::ErrorCode;
 use crate::info::TaskInfo;
 use crate::manage::network::register_network_change;
@@ -60,6 +61,8 @@ pub(crate) struct TaskManager {
     pub(crate) rx: TaskManagerRx,
     pub(crate) client_manager: ClientManagerEntry,
     pub(crate) network: Network,
+    // first usize for foreground , seconde for background
+    pub(crate) task_count: HashMap<u64, (usize, usize)>,
 }
 
 impl TaskManager {
@@ -120,6 +123,7 @@ impl TaskManager {
             rx,
             client_manager,
             network,
+            task_count: HashMap::new(),
         }
     }
 
@@ -217,22 +221,52 @@ impl TaskManager {
         debug!("TaskManager handles task event {:?}", event);
 
         match event {
-            TaskEvent::Completed(task_id, uid) => {
+            TaskEvent::Completed(task_id, uid, mode) => {
+                if let Some((front, back)) = self.task_count.get_mut(&uid) {
+                    match mode {
+                        Mode::FrontEnd => {
+                            if *front > 0 {
+                                *front -= 1;
+                            }
+                        }
+                        _ => {
+                            if *back > 0 {
+                                *back -= 1;
+                            }
+                        }
+                    }
+                }
                 self.scheduler.task_completed(uid, task_id);
             }
             TaskEvent::Subscribe(task_id, token_id, tx) => {
                 let _ = tx.send(self.check_subscriber(task_id, token_id));
             }
-            TaskEvent::Running(task_id, uid) => {
-                self.scheduler.task_cancel(uid, task_id);
+            TaskEvent::Running(task_id, uid, mode) => {
+                self.scheduler
+                    .task_cancel(uid, task_id, mode, &mut self.task_count);
             }
-            TaskEvent::Failed(task_id, uid, reason) => {
+            TaskEvent::Failed(task_id, uid, reason, mode) => {
+                if let Some((front, back)) = self.task_count.get_mut(&uid) {
+                    match mode {
+                        Mode::FrontEnd => {
+                            if *front > 0 {
+                                *front -= 1;
+                            }
+                        }
+                        _ => {
+                            if *back > 0 {
+                                *back -= 1;
+                            }
+                        }
+                    }
+                }
                 self.scheduler.task_failed(uid, task_id, reason);
             }
-            TaskEvent::Offline(task_id, uid) => {
-                self.scheduler.task_cancel(uid, task_id);
+            TaskEvent::Offline(task_id, uid, mode) => {
+                self.scheduler
+                    .task_cancel(uid, task_id, mode, &mut self.task_count);
             }
-        }
+        };
     }
 
     fn handle_schedule_event(&mut self, message: ScheduleEvent) -> bool {
