@@ -13,21 +13,14 @@
  * limitations under the License.
  */
 
-#define USE_OPENSSL
+#include "module_init.h"
 
-#include <curl/curl.h>
-#include <pthread.h>
-
-#include <cstddef>
-
-#include "log.h"
-
+namespace OHOS::Request {
 static pthread_mutex_t *g_lockArray = nullptr;
 
 #ifdef USE_OPENSSL
-#include <openssl/crypto.h>
 
-static void LockCallback(int mode, int type, char *file, int line)
+void ModuleInit::LockCallback(int mode, int type, char *file, int line)
 {
     (void)file;
     (void)line;
@@ -38,7 +31,7 @@ static void LockCallback(int mode, int type, char *file, int line)
     }
 }
 
-static unsigned long ThreadIdCallback(void)
+unsigned long ModuleInit::ThreadIdCallback(void)
 {
     unsigned long ret = static_cast<unsigned long>(pthread_self());
     return ret;
@@ -46,12 +39,12 @@ static unsigned long ThreadIdCallback(void)
 
 using THREAD_ID_CALLBACK = unsigned long (*)(void);
 using LOCK_CALLBACK = void (*)(int mode, int type, char *file, int line);
-static void InitLocks(void)
+void ModuleInit::InitLocks(void)
 {
     THREAD_ID_CALLBACK threadIdCallback;
     LOCK_CALLBACK lockCallback;
-    threadIdCallback = ThreadIdCallback;
-    lockCallback = LockCallback;
+    threadIdCallback = ModuleInit::ThreadIdCallback;
+    lockCallback = ModuleInit::LockCallback;
     g_lockArray = reinterpret_cast<pthread_mutex_t *>(OPENSSL_malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t)));
     if (g_lockArray == nullptr) {
         REQUEST_HILOGE("failed to create openssl lock");
@@ -64,7 +57,7 @@ static void InitLocks(void)
     CRYPTO_set_locking_callback(lockCallback);
 }
 
-static void KillLocks(void)
+void ModuleInit::KillLocks(void)
 {
     int i;
     CRYPTO_set_locking_callback(NULL);
@@ -74,12 +67,6 @@ static void KillLocks(void)
     OPENSSL_free(g_lockArray);
 }
 #endif
-
-class ModuleInit {
-public:
-    ModuleInit() noexcept;
-    virtual ~ModuleInit();
-};
 
 ModuleInit::ModuleInit() noexcept
 {
@@ -98,3 +85,4 @@ ModuleInit::~ModuleInit()
 }
 
 static ModuleInit mi;
+} // namespace OHOS::Request
