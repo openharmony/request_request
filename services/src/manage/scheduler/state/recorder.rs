@@ -10,46 +10,57 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#![allow(unused)]
 use std::collections::HashSet;
 
 use super::sql::SqlList;
 use crate::manage::network::NetworkState;
+use crate::manage::scheduler::qos::RssCapacity;
 
 pub(super) struct StateRecord {
-    pub(super) top_uid: u64,
+    pub(super) top_uid: Option<u64>,
     pub(super) top_user: u64,
     pub(super) network: NetworkState,
     pub(super) active_accounts: HashSet<u64>,
+    pub(super) rss_level: i32,
 }
 
 impl StateRecord {
     pub(crate) fn new() -> Self {
         StateRecord {
-            top_uid: 0,
+            top_uid: None,
             top_user: 0,
             network: NetworkState::Offline,
             active_accounts: HashSet::new(),
+            rss_level: 0,
         }
     }
 
     pub(super) fn init(
         &mut self,
         network: NetworkState,
-        top_uid: u64,
+        top_uid: Option<u64>,
         foreground_account: u64,
         active_accounts: HashSet<u64>,
     ) -> SqlList {
         let mut sql_list = SqlList::new();
         sql_list.add_network_change(&network);
         sql_list.add_account_change(&active_accounts);
-        sql_list.add_app_state_available(top_uid);
-
+        if let Some(top_uid) = top_uid {
+            sql_list.add_app_state_available(top_uid);
+        }
         self.top_user = foreground_account;
         self.top_uid = top_uid;
         self.active_accounts = active_accounts;
         self.network = network;
         sql_list
+    }
+
+    pub(crate) fn update_rss_level(&mut self, rss_level: i32) -> Option<RssCapacity> {
+        if rss_level == self.rss_level {
+            return None;
+        }
+        self.rss_level = rss_level;
+        Some(RssCapacity::new(rss_level))
     }
 
     pub(crate) fn update_network(&mut self, info: NetworkState) -> Option<SqlList> {
@@ -75,6 +86,7 @@ impl StateRecord {
         let mut sql_list = SqlList::new();
         sql_list.add_account_change(&active_accounts);
         self.active_accounts = active_accounts;
+        self.top_user = foreground_account;
         Some(sql_list)
     }
 
@@ -82,12 +94,19 @@ impl StateRecord {
         info!("update top uid to {}", uid);
         let mut sql_list = SqlList::new();
         sql_list.add_app_state_available(uid);
-        self.top_uid = uid;
+        self.top_uid = Some(uid);
         Some(sql_list)
     }
 
+    pub(crate) fn update_background(&mut self) {
+        if let Some(uid) = self.top_uid {
+            info!("{} turn to background", uid);
+        }
+        self.top_uid = None;
+    }
+
     pub(crate) fn update_background_timeout(&self, uid: u64) -> Option<SqlList> {
-        if self.top_uid == uid {
+        if self.top_uid == Some(uid) {
             return None;
         }
         info!("{} background timeout", uid);

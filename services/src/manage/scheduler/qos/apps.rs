@@ -30,11 +30,11 @@ impl SortedApps {
         }
     }
 
-    pub(crate) fn sort(&mut self, top_uid: u64, top_user: u64) {
+    pub(crate) fn sort(&mut self, top_uid: Option<u64>, top_user: u64) {
         self.inner.sort_by(|a, b| {
             (a.uid / 200000 == top_user)
                 .cmp(&(b.uid / 200000 == top_user))
-                .then((a.uid == top_uid).cmp(&(b.uid == top_uid)))
+                .then((Some(a.uid) == top_uid).cmp(&(Some(b.uid) == top_uid)))
         })
     }
 
@@ -61,14 +61,13 @@ impl SortedApps {
         self.inner.push(app);
     }
 
-    pub(crate) fn remove_task(&mut self, uid: u64, task_id: u32) -> Option<Task> {
-        let mut task = None;
+    pub(crate) fn remove_task(&mut self, uid: u64, task_id: u32) -> bool {
         // Remove target task in target app.
         if let Some(app) = self.inner.iter_mut().find(|app| app.uid == uid) {
-            task = app.remove(task_id);
+            app.remove(task_id)
+        } else {
+            false
         }
-
-        task
     }
 }
 
@@ -106,16 +105,17 @@ impl App {
         self.tasks.binary_insert(task)
     }
 
-    fn remove(&mut self, task_id: u32) -> Option<Task> {
+    fn remove(&mut self, task_id: u32) -> bool {
         if let Some((i, _)) = self
             .tasks
             .iter()
             .enumerate()
             .find(|(_, task)| task.task_id == task_id)
         {
-            Some(self.tasks.remove(i))
+            self.tasks.remove(i);
+            true
         } else {
-            None
+            false
         }
     }
 }
@@ -230,7 +230,7 @@ mod ut_manage_scheduler_qos_apps {
     use super::{App, Task};
     use crate::manage::database::RequestDb;
     use crate::task::config::Mode;
-    use crate::tests::test_init;
+    use crate::tests::{lock_database, test_init};
     use crate::utils::get_current_timestamp;
     use crate::utils::task_id_generator::TaskIdGenerator;
     impl Task {
@@ -336,6 +336,7 @@ mod ut_manage_scheduler_qos_apps {
     fn ut_database_app_info() {
         test_init();
         let db = RequestDb::get_instance();
+        let _lock = lock_database();
         let uid = get_current_timestamp();
 
         for i in 0..10 {

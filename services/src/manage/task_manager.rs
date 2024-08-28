@@ -15,6 +15,7 @@ use std::ops::{Deref, DerefMut};
 use std::time::Duration;
 
 use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
+use ylong_runtime::sync::oneshot;
 use ylong_runtime::time::sleep;
 
 cfg_oh! {
@@ -24,9 +25,13 @@ cfg_oh! {
 }
 use super::account::{remove_account_tasks, AccountEvent};
 use super::database::RequestDb;
-use super::events::{ScheduleEvent, ServiceEvent, StateEvent, TaskEvent, TaskManagerEvent};
+use super::events::{
+    QueryEvent, ScheduleEvent, ServiceEvent, StateEvent, TaskEvent, TaskManagerEvent,
+};
 use super::network::Network;
+use crate::config::Action;
 use crate::error::ErrorCode;
+use crate::info::TaskInfo;
 use crate::manage::network::register_network_change;
 use crate::manage::scheduler::state::Handler;
 use crate::manage::scheduler::Scheduler;
@@ -36,8 +41,6 @@ use crate::utils::runtime_spawn;
 
 const CLEAR_INTERVAL: u64 = 30 * 60;
 const LOG_INTERVAL: u64 = 5 * 60;
-#[allow(dead_code)]
-const MILLISECONDS_IN_ONE_DAY: u64 = 24 * 60 * 60 * 1000;
 const RESTORE_ALL_TASKS_INTERVAL: u64 = 10;
 
 // TaskManager 的初始化逻辑：
@@ -144,6 +147,8 @@ impl TaskManager {
                     self.scheduler.on_rss_change(level);
                 }
                 TaskManagerEvent::Account(event) => self.handle_account_event(event),
+                TaskManagerEvent::Query(query) => self.handle_query_event(query),
+                TaskManagerEvent::Reschedule => self.scheduler.reschedule(),
             }
 
             debug!("TaskManager handles events finished");
@@ -199,6 +204,9 @@ impl TaskManager {
             StateEvent::ForegroundApp(uid) => {
                 self.scheduler.on_state_change(Handler::update_top_uid, uid);
             }
+            StateEvent::Background(uid) => self
+                .scheduler
+                .on_state_change(Handler::update_background, uid),
             StateEvent::BackgroundTimeout(uid) => self
                 .scheduler
                 .on_state_change(Handler::update_background_timeout, uid),
@@ -321,8 +329,33 @@ impl TaskManagerTx {
         let _ = self.send_event(TaskManagerEvent::State(StateEvent::ForegroundApp(uid)));
     }
 
+    pub(crate) fn notify_app_background(&self, uid: u64) {
+        let _ = self.send_event(TaskManagerEvent::State(StateEvent::Background(uid)));
+    }
+
     pub(crate) fn trigger_background_timeout(&self, uid: u64) {
         let _ = self.send_event(TaskManagerEvent::State(StateEvent::BackgroundTimeout(uid)));
+    }
+
+    pub(crate) fn show(&self, uid: u64, task_id: u32) -> Option<TaskInfo> {
+        let (tx, rx) = oneshot::channel();
+        let event = QueryEvent::Show(task_id, uid, tx);
+        let _ = self.send_event(TaskManagerEvent::Query(event));
+        ylong_runtime::block_on(rx).unwrap()
+    }
+
+    pub(crate) fn query(&self, task_id: u32, action: Action) -> Option<TaskInfo> {
+        let (tx, rx) = oneshot::channel();
+        let event = QueryEvent::Query(task_id, action, tx);
+        let _ = self.send_event(TaskManagerEvent::Query(event));
+        ylong_runtime::block_on(rx).unwrap()
+    }
+
+    pub(crate) fn touch(&self, uid: u64, task_id: u32, token: String) -> Option<TaskInfo> {
+        let (tx, rx) = oneshot::channel();
+        let event = QueryEvent::Touch(task_id, uid, token, tx);
+        let _ = self.send_event(TaskManagerEvent::Query(event));
+        ylong_runtime::block_on(rx).unwrap()
     }
 }
 
@@ -331,7 +364,7 @@ pub(crate) struct TaskManagerRx {
 }
 
 impl TaskManagerRx {
-    fn new(rx: UnboundedReceiver<TaskManagerEvent>) -> Self {
+    pub(crate) fn new(rx: UnboundedReceiver<TaskManagerEvent>) -> Self {
         Self { rx }
     }
 }

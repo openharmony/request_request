@@ -17,9 +17,11 @@ use std::time::Duration;
 use sql::SqlList;
 use ylong_runtime::task::JoinHandle;
 
+use super::qos::RssCapacity;
 use crate::manage::network::{Network, NetworkState};
 use crate::manage::task_manager::TaskManagerTx;
 #[cfg(feature = "oh")]
+#[cfg(not(test))]
 use crate::utils::GetTopUid;
 
 mod recorder;
@@ -46,7 +48,11 @@ impl Handler {
     pub(crate) fn init(&mut self) -> SqlList {
         let network_info = self.updater.query_network();
         let (foreground_account, active_accounts) = self.updater.query_active_accounts();
+
+        #[allow(unused_mut)]
         let mut top_uid = 0;
+
+        #[cfg(not(test))]
         #[cfg(feature = "oh")]
         {
             for _ in 0..10 {
@@ -57,12 +63,17 @@ impl Handler {
                 }
             }
         }
-        self.recorder.init(
-            network_info,
-            top_uid as u64,
-            foreground_account,
-            active_accounts,
-        )
+        let top_uid = if top_uid == 0 {
+            None
+        } else {
+            Some(top_uid as u64)
+        };
+        self.recorder
+            .init(network_info, top_uid, foreground_account, active_accounts)
+    }
+
+    pub(crate) fn update_rss_level(&mut self, level: i32) -> Option<RssCapacity> {
+        self.recorder.update_rss_level(level)
     }
 
     pub(crate) fn update_network(&mut self, _a: ()) -> Option<SqlList> {
@@ -77,30 +88,39 @@ impl Handler {
     }
 
     pub(crate) fn update_top_uid(&mut self, top_uid: u64) -> Option<SqlList> {
-        let old_top_uid = self.top_uid();
-        if old_top_uid == top_uid {
+        if self.top_uid() == Some(top_uid) {
             return None;
         }
-
+        if let Some(uid) = self.top_uid() {
+            self.update_background(uid);
+        }
         if let Some(handle) = self.background_timeout.remove(&top_uid) {
             handle.cancel();
         }
+        self.recorder.update_top_uid(top_uid)
+    }
+
+    pub(crate) fn update_background(&mut self, uid: u64) -> Option<SqlList> {
+        if Some(uid) != self.top_uid() {
+            return None;
+        }
         let task_manager = self.task_manager.clone();
         self.background_timeout.insert(
-            self.top_uid(),
+            uid,
             ylong_runtime::spawn(async move {
                 ylong_runtime::time::sleep(Duration::from_secs(60)).await;
-                task_manager.trigger_background_timeout(old_top_uid);
+                task_manager.trigger_background_timeout(uid);
             }),
         );
-        self.recorder.update_top_uid(top_uid)
+        self.recorder.update_background();
+        None
     }
 
     pub(crate) fn update_background_timeout(&mut self, uid: u64) -> Option<SqlList> {
         self.recorder.update_background_timeout(uid)
     }
 
-    pub(crate) fn top_uid(&self) -> u64 {
+    pub(crate) fn top_uid(&self) -> Option<u64> {
         self.recorder.top_uid
     }
 

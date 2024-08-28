@@ -19,12 +19,11 @@ use std::task::{Context, Poll};
 
 use ylong_http_client::async_impl::{Body, MultiPart, Part, Request, UploadOperator, Uploader};
 use ylong_http_client::{ErrorKind, HttpClientError};
-use ylong_runtime::io::{AsyncRead, AsyncSeek, AsyncSeekExt, ReadBuf};
+use ylong_runtime::io::{AsyncRead, AsyncSeekExt, ReadBuf};
 
 use super::operator::TaskOperator;
 use super::reason::Reason;
 use super::request_task::{TaskError, TaskPhase};
-use crate::task::info::State;
 use crate::task::request_task::RequestTask;
 #[cfg(feature = "oh")]
 use crate::trace::Trace;
@@ -48,34 +47,15 @@ impl AsyncRead for TaskReader {
     ) -> Poll<std::io::Result<()>> {
         let index = self.index;
         let file = self.task.files.get_mut(index).unwrap();
-        let (is_partial_upload, total_upload_bytes) = self.task.get_upload_info(index);
         let mut progress_guard = self.task.progress.lock().unwrap();
-        if !is_partial_upload {
-            let filled_len = buf.filled().len();
-            match Pin::new(file).poll_read(cx, buf) {
-                Poll::Ready(Ok(_)) => {
-                    let current_filled_len = buf.filled().len();
-                    let upload_size = current_filled_len - filled_len;
-                    progress_guard.processed[index] += upload_size;
-                    progress_guard.common_data.total_processed += upload_size;
-                    Poll::Ready(Ok(()))
-                }
-                Poll::Pending => Poll::Pending,
-                Poll::Ready(Err(e)) => Poll::Ready(Err(e)),
-            }
-        } else {
-            let begins = self.task.conf.common_data.begins;
-            if !self.task.seek_flag.load(Ordering::SeqCst) {
-                match Pin::new(file).poll_seek(cx, SeekFrom::Start(begins)) {
-                    Poll::Ready(Err(e)) => {
-                        error!("seek err is {:?}", e);
-                        return Poll::Ready(Err(e));
-                    }
-                    _ => self.task.seek_flag.store(true, Ordering::SeqCst),
-                }
-            }
+
+        if self.task.conf.common_data.index == index as u32 || progress_guard.processed[index] != 0
+        {
+            let total_upload_bytes =
+                progress_guard.sizes[index] as usize - progress_guard.processed[index];
+
             let buf_filled_len = buf.filled().len();
-            let mut read_buf = buf.take(total_upload_bytes as usize);
+            let mut read_buf = buf.take(total_upload_bytes);
             let filled_len = read_buf.filled().len();
             let file = self.task.files.get_mut(index).unwrap();
             match Pin::new(file).poll_read(cx, &mut read_buf) {
@@ -85,6 +65,19 @@ impl AsyncRead for TaskReader {
                     // need update buf.filled and buf.initialized
                     buf.assume_init(upload_size);
                     buf.set_filled(buf_filled_len + upload_size);
+                    progress_guard.processed[index] += upload_size;
+                    progress_guard.common_data.total_processed += upload_size;
+                    Poll::Ready(Ok(()))
+                }
+                Poll::Pending => Poll::Pending,
+                Poll::Ready(Err(e)) => Poll::Ready(Err(e)),
+            }
+        } else {
+            let filled_len = buf.filled().len();
+            match Pin::new(file).poll_read(cx, buf) {
+                Poll::Ready(Ok(_)) => {
+                    let current_filled_len = buf.filled().len();
+                    let upload_size = current_filled_len - filled_len;
                     progress_guard.processed[index] += upload_size;
                     progress_guard.common_data.total_processed += upload_size;
                     Poll::Ready(Ok(()))
@@ -119,7 +112,11 @@ fn build_stream_request(task: Arc<RequestTask>, index: usize) -> Option<Request>
                 request_builder =
                     request_builder.header("Content-Type", "application/octet-stream");
             }
-            let (_, upload_length) = task.get_upload_info(index);
+            let upload_length;
+            {
+                let progress = task.progress.lock().unwrap();
+                upload_length = progress.sizes[index] as u64 - progress.processed[index] as u64;
+            }
             debug!("upload length is {}", upload_length);
             request_builder =
                 request_builder.header("Content-Length", upload_length.to_string().as_str());
@@ -146,7 +143,11 @@ fn build_multipart_request(task: Arc<RequestTask>, index: usize) -> Option<Reque
             .body(item.value.as_str());
         multi_part = multi_part.part(part);
     }
-    let (_, upload_length) = task.get_upload_info(index);
+    let upload_length;
+    {
+        let progress = task.progress.lock().unwrap();
+        upload_length = progress.sizes[index] as u64 - progress.processed[index] as u64;
+    }
     debug!("upload length is {}", upload_length);
     let part = Part::new()
         .name(task.conf.file_specs[index].name.as_str())
@@ -186,20 +187,33 @@ fn build_request_common(
         }
         Err(e) => {
             error!("build upload request error is {:?}", e);
-            task.change_task_status(State::Failed, Reason::BuildRequestFailed);
             None
         }
     }
 }
 
 impl RequestTask {
-    fn prepare_single_upload(&self, index: usize) -> bool {
+    async fn prepare_single_upload(&self, index: usize) -> bool {
         if let Some(file) = self.files.get_mut(index) {
-            let mut progress = self.progress.lock().unwrap();
-            progress.common_data.index = index;
-            progress.common_data.total_processed = 0;
-            progress.processed[index] = 0;
-            file.seek(SeekFrom::Start(0));
+            let size;
+            {
+                let mut progress = self.progress.lock().unwrap();
+                progress.common_data.index = index;
+                progress.processed[index] = 0;
+                progress.common_data.total_processed = progress.processed.iter().take(index).sum();
+                size = progress.sizes[index] as u64;
+            }
+            if self.conf.common_data.index == index as u32 {
+                let Ok(metadata) = file.metadata().await else {
+                    error!("get file metadata failed");
+                    return false;
+                };
+                if metadata.len() > size {
+                    file.seek(SeekFrom::Start(self.conf.common_data.begins));
+                }
+            } else {
+                file.seek(SeekFrom::Start(0));
+            }
             true
         } else {
             error!("task {} file {} not found", self.task_id(), index);
@@ -234,24 +248,23 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
 }
 
 async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
-    task.prepare_running();
-
     info!("upload task {} start running", task.task_id());
 
     #[cfg(feature = "oh")]
-    {
-        // Ensures `_trace` can only be freed when this function exits.
-        let url = task.conf.url.as_str();
-        let num = task.conf.file_specs.len();
-        let _trace = Trace::new(&format!("exec upload task url: {url} file num: {num}"));
-    }
+    let _trace = Trace::new(&format!(
+        "exec upload task:{} file num:{}",
+        task.task_id(),
+        task.conf.file_specs.len()
+    ));
 
     let size = task.conf.file_specs.len();
     let start = task.progress.lock().unwrap().common_data.index;
 
     for index in start..size {
-        task.progress.lock().unwrap().common_data.index = index;
-        if !task.prepare_single_upload(index) {
+        #[cfg(feature = "oh")]
+        let _trace = Trace::new(&format!("upload file:{} index:{}", task.task_id(), index));
+
+        if !task.prepare_single_upload(index).await {
             return Err(TaskError::Failed(Reason::OthersError));
         }
         let is_multipart = match task.conf.headers.get("Content-Type") {
@@ -280,19 +293,11 @@ where
     F: Fn(Arc<RequestTask>, usize) -> Option<Request>,
 {
     info!(
-        "begin upload one file, tid: {}, index is {}",
-        task.conf.common_data.task_id, index,
+        "begin upload one file, tid: {}, index is {}, sizes {}",
+        task.conf.common_data.task_id,
+        index,
+        task.progress.lock().unwrap().sizes[index]
     );
-
-    // Ensures `_trace` can only be freed when this function exits.
-    #[cfg(feature = "oh")]
-    {
-        let (_, size) = task.get_upload_info(index);
-        let name = task.conf.file_specs[index].file_name.as_str();
-        let _trace = Trace::new(&format!(
-            "upload file name:{name} index:{index} size:{size}"
-        ));
-    }
 
     let Some(request) = build_upload_request(task.clone(), index) else {
         return Err(TaskError::Failed(Reason::BuildRequestFailed));

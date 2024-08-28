@@ -30,7 +30,7 @@ pub(crate) struct ClientManagerEntry {
 }
 
 impl ClientManagerEntry {
-    fn new(tx: UnboundedSender<ClientEvent>) -> Self {
+    pub(crate) fn new(tx: UnboundedSender<ClientEvent>) -> Self {
         Self { tx }
     }
 
@@ -80,9 +80,7 @@ impl ClientManager {
             };
 
             match recv {
-                ClientEvent::OpenChannel(pid, uid, token_id, tx) => {
-                    self.handle_open_channel(pid, uid, token_id, tx)
-                }
+                ClientEvent::OpenChannel(pid, tx) => self.handle_open_channel(pid, tx),
                 ClientEvent::Subscribe(tid, pid, uid, token_id, tx) => {
                     self.handle_subscribe(tid, pid, uid, token_id, tx)
                 }
@@ -130,29 +128,21 @@ impl ClientManager {
         }
     }
 
-    fn handle_open_channel(
-        &mut self,
-        pid: u64,
-        uid: u64,
-        token_id: u64,
-        tx: Sender<Result<i32, ErrorCode>>,
-    ) {
+    fn handle_open_channel(&mut self, pid: u64, tx: Sender<Result<i32, ErrorCode>>) {
         match self.clients.entry(pid) {
             std::collections::hash_map::Entry::Occupied(o) => {
                 let (_, fd) = o.get();
                 let _ = tx.send(Ok(*fd));
             }
-            std::collections::hash_map::Entry::Vacant(v) => {
-                match Client::constructor(pid, uid, token_id) {
-                    Some((client, fd)) => {
-                        let _ = tx.send(Ok(fd));
-                        v.insert((client, fd));
-                    }
-                    None => {
-                        let _ = tx.send(Err(ErrorCode::Other));
-                    }
+            std::collections::hash_map::Entry::Vacant(v) => match Client::constructor(pid) {
+                Some((client, fd)) => {
+                    let _ = tx.send(Ok(fd));
+                    v.insert((client, fd));
                 }
-            }
+                None => {
+                    let _ = tx.send(Err(ErrorCode::Other));
+                }
+            },
         }
     }
 
