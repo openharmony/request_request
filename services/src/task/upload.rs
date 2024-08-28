@@ -199,7 +199,11 @@ impl RequestTask {
             {
                 let mut progress = self.progress.lock().unwrap();
                 progress.common_data.index = index;
-                progress.processed[index] = 0;
+                if !self.upload_resume.load(Ordering::SeqCst) {
+                    progress.processed[index] = 0;
+                    self.upload_resume.store(false, Ordering::SeqCst);
+                }
+                
                 progress.common_data.total_processed = progress.processed.iter().take(index).sum();
                 size = progress.sizes[index] as u64;
             }
@@ -211,9 +215,10 @@ impl RequestTask {
                 if metadata.len() > size {
                     file.seek(SeekFrom::Start(self.conf.common_data.begins));
                 }
-            } else {
-                file.seek(SeekFrom::Start(0));
             }
+            file.seek(SeekFrom::Start(
+                self.progress.lock().unwrap().processed[index] as u64,
+            ));
             true
         } else {
             error!("task {} file {} not found", self.task_id(), index);

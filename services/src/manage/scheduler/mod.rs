@@ -169,6 +169,7 @@ impl Scheduler {
         if let Some(info) = database.get_task_info(task_id) {
             Notifier::pause(&self.client_manager, info.build_notify_data());
         }
+        self.running_queue.upload_resume.insert(task_id);
         if self.qos.remove_task(uid, task_id) {
             self.schedule_if_not_scheduled();
         }
