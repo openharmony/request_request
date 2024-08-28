@@ -121,14 +121,12 @@ pub struct TaskConfig {
 
 impl TaskConfig {
     pub(crate) fn satisfy_network(&self, network: &NetworkState) -> Result<(), Reason> {
+        // NetworkConfig::Cellular with NetworkType::Wifi is allowed
         match network {
             NetworkState::Offline => Err(Reason::NetworkOffline),
             NetworkState::Online(info) => match self.common_data.network_config {
                 NetworkConfig::Any => Ok(()),
                 NetworkConfig::Wifi if info.network_type == NetworkType::Cellular => {
-                    Err(Reason::UnsupportedNetworkType)
-                }
-                NetworkConfig::Cellular if info.network_type == NetworkType::Wifi => {
                     Err(Reason::UnsupportedNetworkType)
                 }
                 _ => {
