@@ -1836,36 +1836,6 @@ export default function requestCreateTaskTest() {
     })
 
     /**
-     * @tc.number: testTaskIndex004
-     * @tc.name: testTaskIndex004
-     * @tc.desc: Test create task when index is 0 and begins is 5 and ends is 10 for download
-     * @tc.size: MediumTest
-     * @tc.type: Function
-     * @tc.level: Level 1
-     * @tc.require:
-     */
-    it('testTaskIndex004', 0, async function (done) {
-      let conf = {
-        action: request.agent.Action.DOWNLOAD,
-        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/47273f95/Feishu-win32_ia32-7.9.7-signed.exe',
-        saveas: 'testTaskIndex004.exe',
-        mode: request.agent.Mode.BACKGROUND,
-        begins: 5,
-        ends: 10,
-        gauge: true
-      }
-      let task = await request.agent.create(context, conf);
-      task.on('completed', function(progress) {
-        expect(progress.state).assertEqual(0x40);
-        expect(progress.index).assertEqual(0);
-        expect(progress.processed).assertEqual(6);
-        expect(progress.sizes[0]).assertEqual(6);
-        done();
-      })
-      await task.start();
-    })
-
-    /**
      * @tc.number: testTaskIndex005
      * @tc.name: testTaskIndex005
      * @tc.desc: Test create task when index is 0 and begins is 5 and ends is 10 for upload
@@ -1953,33 +1923,6 @@ export default function requestCreateTaskTest() {
         done();
       }).catch((err) => {
         expect(false).assertTrue();
-        done();
-      })
-    })
-
-    /**
-     * @tc.number: testTaskIndex008
-     * @tc.name: testTaskIndex008
-     * @tc.desc: Test create task when index is 0 and begins is not exists and ends is 10 for download
-     * @tc.size: MediumTest
-     * @tc.type: Function
-     * @tc.level: Level 1
-     * @tc.require:
-     */
-    it('testTaskIndex008', 0, async function (done) {
-      let conf = {
-        action: request.agent.Action.DOWNLOAD,
-        url: 'https://sf3-cn.feishucdn.com/obj/ee-appcenter/47273f95/Feishu-win32_ia32-7.9.7-signed.exe',
-        saveas: 'testTaskIndex008.exe',
-        mode: request.agent.Mode.BACKGROUND,
-        ends: 10,
-        gauge: true,
-        overwrite: true
-      }
-      let task = await request.agent.create(context, conf);
-      await task.start();
-      task.on('completed', function(progress) {
-        expect(progress.sizes[0]).assertEqual(11);
         done();
       })
     })

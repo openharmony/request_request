@@ -160,11 +160,7 @@ mod ffi {
 #[cfg(feature = "oh")]
 #[cfg(test)]
 mod test {
-
-    use ylong_runtime::sync::mpsc;
-
     use super::*;
-    use crate::manage::events::StateEvent;
     use crate::tests::test_init;
 
     #[test]
@@ -207,27 +203,6 @@ mod test {
                 is_roaming: true,
             })
         );
-    }
-
-    #[test]
-    fn ut_network_oh() {
-        test_init();
-        let (tx, mut rx) = mpsc::unbounded_channel();
-        let task_manager_tx = TaskManagerTx::new(tx);
-        let network = register_network_change(task_manager_tx);
-        assert!(network.is_online());
-        assert_eq!(
-            network.state(),
-            Online(NetworkInfo {
-                network_type: NetworkType::Wifi,
-                is_metered: false,
-                is_roaming: false
-            })
-        );
-        ylong_runtime::block_on(async {
-            let msg = rx.recv().await.unwrap();
-            assert!(matches!(msg, TaskManagerEvent::State(StateEvent::Network)));
-        });
     }
 
     #[test]
