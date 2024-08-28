@@ -24,9 +24,7 @@ impl RequestServiceStub {
     pub(crate) fn open_channel(&self, reply: &mut MsgParcel) -> IpcResult<()> {
         let pid = ipc::Skeleton::calling_pid();
         info!("Service open channel, pid: {}", pid);
-        let uid = ipc::Skeleton::calling_uid();
-        let token_id = ipc::Skeleton::calling_full_token_id();
-        match self.client_manager.open_channel(pid, uid, token_id) {
+        match self.client_manager.open_channel(pid) {
             Ok(fd) => {
                 info!("End Service open channel ok, fd is {}", fd);
                 let file = unsafe { File::from_raw_fd(fd) };

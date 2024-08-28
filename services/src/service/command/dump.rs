@@ -112,21 +112,18 @@ impl RequestServiceStub {
         if let Some(task) = task {
             let _ = file.write(
                 format!(
-                    "{:<20}{:<12}{:<12}{:<12}{:<12}{:<12}{}\n",
-                    "id", "action", "state", "reason", "total_size", "tran_size", "url"
+                    "{:<20}{:<12}{:<12}{:<12}\n",
+                    "id", "action", "state", "reason"
                 )
                 .as_bytes(),
             );
             let _ = file.write(
                 format!(
-                    "{:<20}{:<12}{:<12}{:<12}{:<12}{:<12}{}\n",
+                    "{:<20}{:<12}{:<12}{:<12}\n",
                     task.task_id,
                     task.action.repr,
                     task.state.repr,
-                    task.reason.repr,
-                    task.total_size,
-                    task.tran_size,
-                    task.url
+                    task.reason.repr
                 )
                 .as_bytes(),
             );

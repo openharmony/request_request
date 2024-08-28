@@ -15,7 +15,6 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::manage::query;
 use crate::service::{serialize_task_info, RequestServiceStub};
 
 impl RequestServiceStub {
@@ -28,7 +27,7 @@ impl RequestServiceStub {
                 let token: String = data.read()?;
                 let uid = ipc::Skeleton::calling_uid();
                 debug!("Service touch: uid is {}", uid);
-                let info = query::touch(uid, id, token);
+                let info = self.task_manager.lock().unwrap().touch(uid, id, token);
                 match info {
                     Some(info) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;

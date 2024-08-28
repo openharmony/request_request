@@ -37,7 +37,6 @@ pub(crate) struct NotifyData {
     pub(crate) version: Version,
     pub(crate) each_file_status: Vec<EachFileStatus>,
     pub(crate) task_id: u32,
-    pub(crate) _uid: u64,
 }
 
 #[repr(C)]
@@ -77,5 +76,10 @@ impl Progress {
             processed: vec![0; len],
             extras: HashMap::<String, String>::new(),
         }
+    }
+
+    pub(crate) fn is_finish(&self) -> bool {
+        self.sizes.iter().all(|a| *a != -1)
+            && self.processed.iter().sum::<usize>() == self.sizes.iter().sum::<i64>() as usize
     }
 }

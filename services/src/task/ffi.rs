@@ -25,7 +25,7 @@ cfg_oh! {
 }
 
 use crate::utils::form_item::{FileSpec, FormItem};
-use crate::utils::{build_vec, get_current_timestamp, split_string, string_to_hashmap};
+use crate::utils::{build_vec, split_string, string_to_hashmap};
 
 #[repr(C)]
 pub(crate) struct CTaskConfig {
@@ -236,23 +236,6 @@ pub(crate) struct CUpdateInfo {
     pub(crate) progress: CProgress,
     pub(crate) each_file_status_ptr: *const CEachFileStatus,
     pub(crate) each_file_status_len: u32,
-}
-
-#[repr(C)]
-pub(crate) struct CUpdateStateInfo {
-    pub(crate) mtime: u64,
-    pub(crate) state: u8,
-    pub(crate) reason: u8,
-}
-
-impl CUpdateStateInfo {
-    pub(crate) fn new(state: State, reason: Reason) -> Self {
-        Self {
-            mtime: get_current_timestamp(),
-            state: state.repr,
-            reason: reason.repr,
-        }
-    }
 }
 
 impl UpdateInfo {

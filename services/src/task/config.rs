@@ -144,8 +144,8 @@ impl TaskConfig {
         }
     }
 
-    pub(crate) fn satisfy_foreground(&self, top_uid: u64) -> bool {
-        self.common_data.mode == Mode::BackGround || self.common_data.uid == top_uid
+    pub(crate) fn satisfy_foreground(&self, top_uid: Option<u64>) -> bool {
+        self.common_data.mode == Mode::BackGround || Some(self.common_data.uid) == top_uid
     }
 }
 

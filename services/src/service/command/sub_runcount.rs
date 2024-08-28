@@ -16,37 +16,25 @@ use ipc::remote::RemoteObj;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
-use crate::service::run_count::RunCountEvent;
 use crate::service::RequestServiceStub;
 
 impl RequestServiceStub {
-    pub(crate) fn sub_runcount(
+    pub(crate) fn subscribe_run_count(
         &self,
         data: &mut MsgParcel,
         reply: &mut MsgParcel,
     ) -> IpcResult<()> {
         let pid = ipc::Skeleton::calling_pid();
-        info!("Service runcount subscribe: pid is {}", pid);
+        info!("Service run_count subscribe: pid is {}", pid);
 
         let obj: RemoteObj = data.read_remote()?;
-        debug!("read obj from data success!");
-        let (event, rx) = RunCountEvent::sub_runcount(pid, obj);
-        self.runcount_manager.send_event(event);
-        debug!("send event sub runcount success!");
+        let ret = self.run_count_manager.subscribe_run_count(pid, obj);
 
-        let ret = match rx.get() {
-            Some(ret) => ret,
-            None => {
-                error!("End Service runcount subscribe, failed: receives ret failed");
-                return Err(IpcStatusCode::Failed);
-            }
-        };
         reply.write(&(ret as i32))?;
         if ret != ErrorCode::ErrOk {
-            error!("End Service runcount subscribe, failed:{}", ret as i32);
+            error!("End Service run_count subscribe, failed:{}", ret as i32);
             return Err(IpcStatusCode::Failed);
         }
-        debug!("End Service runcount subscribe ok: pid is {}", pid);
         Ok(())
     }
 }

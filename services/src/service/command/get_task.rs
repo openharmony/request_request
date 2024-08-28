@@ -26,9 +26,7 @@ impl RequestServiceStub {
             Ok(tid) => {
                 debug!("Service getTask: u32 tid: {}", tid);
                 let token: String = data.read()?;
-                let uid = ipc::Skeleton::calling_uid();
-                debug!("Service getTask: uid is {}", uid);
-                let config = query::get_task(uid, tid, token);
+                let config = query::get_task(tid, token);
                 match config {
                     Some(config) => {
                         reply.write(&(ErrorCode::ErrOk as i32))?;

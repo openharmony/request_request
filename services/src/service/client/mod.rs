@@ -31,8 +31,9 @@ const REQUEST_MAGIC_NUM: u32 = 0x43434646;
 const HEADERS_MAX_SIZE: u16 = 8 * 1024;
 const POSITION_OF_LENGTH: u32 = 10;
 
+#[derive(Debug)]
 pub(crate) enum ClientEvent {
-    OpenChannel(u64, u64, u64, Sender<Result<i32, ErrorCode>>),
+    OpenChannel(u64, Sender<Result<i32, ErrorCode>>),
     Subscribe(u32, u64, u64, u64, Sender<ErrorCode>),
     Unsubscribe(u32, Sender<ErrorCode>),
     TaskFinished(u32),
@@ -48,9 +49,9 @@ pub(crate) enum MessageType {
 }
 
 impl ClientManagerEntry {
-    pub(crate) fn open_channel(&self, pid: u64, uid: u64, token_id: u64) -> Result<i32, ErrorCode> {
+    pub(crate) fn open_channel(&self, pid: u64) -> Result<i32, ErrorCode> {
         let (tx, rx) = channel::<Result<i32, ErrorCode>>();
-        let event = ClientEvent::OpenChannel(pid, uid, token_id, tx);
+        let event = ClientEvent::OpenChannel(pid, tx);
         if !self.send_event(event) {
             return Err(ErrorCode::Other);
         }
@@ -136,11 +137,8 @@ impl ClientManagerEntry {
 }
 
 // uid and token_id will be used later
-#[allow(dead_code)]
 pub(crate) struct Client {
     pub(crate) pid: u64,
-    pub(crate) uid: u64,
-    pub(crate) token_id: u64,
     pub(crate) message_id: u32,
     pub(crate) server_sock_fd: UnixDatagram,
     pub(crate) client_sock_fd: UnixDatagram,
@@ -148,11 +146,7 @@ pub(crate) struct Client {
 }
 
 impl Client {
-    pub(crate) fn constructor(
-        pid: u64,
-        uid: u64,
-        token_id: u64,
-    ) -> Option<(UnboundedSender<ClientEvent>, i32)> {
+    pub(crate) fn constructor(pid: u64) -> Option<(UnboundedSender<ClientEvent>, i32)> {
         let (tx, rx) = unbounded_channel();
         let (server_sock_fd, client_sock_fd) = match UnixDatagram::pair() {
             Ok((server_sock_fd, client_sock_fd)) => (server_sock_fd, client_sock_fd),
@@ -163,8 +157,6 @@ impl Client {
         };
         let client = Client {
             pid,
-            uid,
-            token_id,
             message_id: 1,
             server_sock_fd,
             client_sock_fd,

@@ -90,33 +90,6 @@ pub(crate) async fn download(task: Arc<RequestTask>) {
         }
         break;
     }
-
-    #[cfg(feature = "oh")]
-    {
-        use hisysevent::{build_number_param, build_str_param};
-
-        use crate::sys_event::SysEvent;
-        let reason = *task
-            .code
-            .lock()
-            .unwrap()
-            .first()
-            .unwrap_or(&Reason::Default);
-        // If `Reason` is not `Default`a records this sys event.
-
-        if reason != Reason::Default {
-            SysEvent::task_fault()
-                .param(build_str_param!(crate::sys_event::TASKS_TYPE, "DOWNLOAD"))
-                .param(build_number_param!(crate::sys_event::TOTAL_FILE_NUM, 1))
-                .param(build_number_param!(crate::sys_event::FAIL_FILE_NUM, 1))
-                .param(build_number_param!(crate::sys_event::SUCCESS_FILE_NUM, 0))
-                .param(build_number_param!(
-                    crate::sys_event::ERROR_INFO,
-                    reason.repr as i32
-                ))
-                .write();
-        }
-    }
 }
 
 impl RequestTask {
@@ -138,13 +111,11 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
     // Ensures `_trace` can only be freed when this function exits.
     #[cfg(feature = "oh")]
     let _trace = Trace::new("download file");
-    task.prepare_running();
+
     task.prepare_download().await?;
 
     info!("download task {} start running", task.task_id());
 
-    task.range_response.store(false, Ordering::SeqCst);
-    task.range_request.store(false, Ordering::SeqCst);
     let request = task.build_download_request().await?;
 
     let response = task.client.request(request).await;
@@ -231,6 +202,14 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
     task.get_file_info(&response)?;
     task.update_progress_in_database();
 
+    let size = task.progress.lock().unwrap().sizes[0];
+
+    #[cfg(feature = "oh")]
+    let _trace = Trace::new(&format!(
+        "download file tid:{} size:{}",
+        task.task_id(),
+        size
+    ));
     let mut downloader = build_downloader(task.clone(), response);
 
     if let Err(e) = downloader.download().await {

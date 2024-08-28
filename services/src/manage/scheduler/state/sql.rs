@@ -55,7 +55,8 @@ impl SqlList {
     }
 
     pub(crate) fn add_app_state_unavailable(&mut self, uid: u64) {
-        self.sqls.push(app_state_unavailable(uid));
+        self.sqls.push(app_state_unavailable_download(uid));
+        self.sqls.push(app_state_unavailable_upload(uid));
     }
 }
 
@@ -67,13 +68,29 @@ impl Iterator for SqlList {
     }
 }
 
-pub(crate) fn app_state_unavailable(uid: u64) -> String {
+pub(crate) fn app_state_unavailable_download(uid: u64) -> String {
     format!(
-        "UPDATE request_task SET state = {}, reason = {} WHERE uid = {} AND mode = {} AND (state = {} AND reason = {} OR state = {} OR state = {})",
+        "UPDATE request_task SET state = {}, reason = {} WHERE uid = {} AND mode = {} AND action = {} AND (state = {} AND reason = {} OR state = {} OR state = {})",
         State::Waiting.repr,
         Reason::AppBackgroundOrTerminate.repr,
         uid,
         Mode::FrontEnd.repr,
+        Action::Download.repr,
+        State::Waiting.repr,
+        Reason::RunningTaskMeetLimits.repr,
+        State::Running.repr,
+        State::Retrying.repr,
+    )
+}
+
+pub(crate) fn app_state_unavailable_upload(uid: u64) -> String {
+    format!(
+        "UPDATE request_task SET state = {}, reason = {} WHERE uid = {} AND mode = {} AND action = {} AND (state = {} AND reason = {} OR state = {} OR state = {})",
+        State::Failed.repr,
+        Reason::AppBackgroundOrTerminate.repr,
+        uid,
+        Mode::FrontEnd.repr,
+        Action::Upload.repr,
         State::Waiting.repr,
         Reason::RunningTaskMeetLimits.repr,
         State::Running.repr,

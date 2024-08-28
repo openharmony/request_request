@@ -18,9 +18,12 @@ use std::future::Future;
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+pub(crate) use ffi::PublishStateChangeEvent;
+
 cfg_oh! {
     pub(crate) use ffi::RequestTaskMsg;
     pub(crate) mod url_policy;
+    #[cfg(not(test))]
     pub(crate) use ffi::GetTopUid;
 }
 
@@ -117,18 +120,6 @@ pub(crate) fn check_permission(permission: &str) -> bool {
 }
 
 #[cfg(feature = "oh")]
-pub(crate) fn publish_state_change_event(
-    bundle_name: &str,
-    task_id: u32,
-    state: i32,
-) -> Result<(), ()> {
-    match ffi::PublishStateChangeEvent(bundle_name, task_id, state) {
-        true => Ok(()),
-        false => Err(()),
-    }
-}
-
-#[cfg(feature = "oh")]
 pub(crate) fn request_background_notify(
     msg: RequestTaskMsg,
     wrapped_path: &str,
@@ -140,6 +131,7 @@ pub(crate) fn request_background_notify(
         code => Err(code),
     }
 }
+#[allow(unused)]
 #[cxx::bridge(namespace = "OHOS::Request")]
 mod ffi {
     struct RequestTaskMsg {
@@ -176,12 +168,6 @@ mod test {
     fn ut_utils_oh() {
         assert!(!is_system_api());
         assert_eq!(query_calling_bundle(), "");
-    }
-
-    #[test]
-    fn ut_utils_publish_state_change_event() {
-        test_init();
-        publish_state_change_event("com.ohos.request", 1, 1).unwrap();
     }
 
     #[test]
