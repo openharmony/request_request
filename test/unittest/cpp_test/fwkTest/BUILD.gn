@@ -38,6 +38,7 @@ ohos_unittest("fwkTest") {
     "../../../../frameworks/native/src/request_sync_load_callback.cpp",
     "../../../../frameworks/native/src/response_message_receiver.cpp",
     "../../../../frameworks/native/src/runcount_notify_stub.cpp",
+    "src/module_init_test.cpp",
     "src/parcel_helper_test.cpp",
     "src/request_manager_impl_test.cpp",
     "src/request_manager_test.cpp",
