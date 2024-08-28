@@ -12,7 +12,7 @@
 // limitations under the License.
 
 use std::io::{self, SeekFrom};
-use std::sync::atomic::{AtomicI64, AtomicU32, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, Ordering};
 use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
@@ -62,6 +62,7 @@ pub(crate) struct RequestTask {
     pub(crate) running_result: Mutex<Option<Result<(), Reason>>>,
     pub(crate) network: Network,
     pub(crate) timeout_tries: AtomicU32,
+    pub(crate) upload_resume: AtomicBool,
 }
 
 impl RequestTask {
@@ -122,6 +123,7 @@ impl RequestTask {
         client: Client,
         client_manager: ClientManagerEntry,
         network: Network,
+        upload_resume: bool,
     ) -> RequestTask {
         let file_len = files.files.len();
         let action = config.common_data.action;
@@ -177,6 +179,7 @@ impl RequestTask {
             running_result: Mutex::new(None),
             network,
             timeout_tries: AtomicU32::new(0),
+            upload_resume: AtomicBool::new(upload_resume),
         }
     }
 
@@ -186,6 +189,7 @@ impl RequestTask {
         info: TaskInfo,
         client_manager: ClientManagerEntry,
         network: Network,
+        upload_resume: bool,
     ) -> Result<RequestTask, ErrorCode> {
         #[cfg(feature = "oh")]
         let (files, client) = check_config(&config, system)?;
@@ -239,6 +243,7 @@ impl RequestTask {
             running_result: Mutex::new(None),
             network,
             timeout_tries: AtomicU32::new(0),
+            upload_resume: AtomicBool::new(upload_resume),
         })
     }
 
