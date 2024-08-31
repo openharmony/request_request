@@ -203,7 +203,7 @@ impl RequestTask {
                     progress.processed[index] = 0;
                     self.upload_resume.store(false, Ordering::SeqCst);
                 }
-                
+
                 progress.common_data.total_processed = progress.processed.iter().take(index).sum();
                 size = progress.sizes[index] as u64;
             }
