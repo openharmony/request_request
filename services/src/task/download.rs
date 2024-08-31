@@ -202,13 +202,11 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
     task.get_file_info(&response)?;
     task.update_progress_in_database();
 
-    let size = task.progress.lock().unwrap().sizes[0];
-
     #[cfg(feature = "oh")]
     let _trace = Trace::new(&format!(
         "download file tid:{} size:{}",
         task.task_id(),
-        size
+        task.progress.lock().unwrap().sizes[0]
     ));
     let mut downloader = build_downloader(task.clone(), response);
 
@@ -235,24 +233,28 @@ fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
     use crate::task::ATOMIC_SERVICE;
 
     let config = task.config();
-    let uid = config.common_data.uid;
-    let bundle = config.bundle.as_str();
-    let is_account = config.bundle_type == ATOMIC_SERVICE;
-    let atomic_account = config.atomic_account.as_str();
-    let bundle_and_account = check_atomic_convert_path(is_account, bundle, atomic_account);
-    let real_path = convert_path(uid, &bundle_and_account, &config.file_specs[0].path);
+    let bundle_and_account = check_atomic_convert_path(
+        config.bundle_type == ATOMIC_SERVICE,
+        config.bundle.as_str(),
+        config.atomic_account.as_str(),
+    );
+    let real_path = convert_path(
+        config.common_data.uid,
+        &bundle_and_account,
+        &config.file_specs[0].path,
+    );
     // Cannot compare param because file_total_size will be changed when resume task
     match std::fs::metadata(real_path) {
         Ok(metadata) => {
             if metadata.is_file() {
                 Ok(())
             } else {
-                error!("local download not a file");
+                error!("task {} local not file", task.task_id());
                 Err(TaskError::Failed(Reason::IoError))
             }
         }
         Err(e) => {
-            error!("local file not exist:{}", e);
+            error!("task {} local not exist:{}", task.task_id(), e);
             Err(TaskError::Failed(Reason::IoError))
         }
     }
