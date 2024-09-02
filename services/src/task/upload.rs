@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::future::Future;
 use std::io::SeekFrom;
 use std::pin::Pin;
 use std::sync::atomic::Ordering;
@@ -18,7 +19,7 @@ use std::sync::Arc;
 use std::task::{Context, Poll};
 
 use ylong_http_client::async_impl::{Body, MultiPart, Part, Request, UploadOperator, Uploader};
-use ylong_http_client::{ErrorKind, HttpClientError};
+use ylong_http_client::{ErrorKind, HttpClientError, ReusableReader};
 use ylong_runtime::io::{AsyncRead, AsyncSeekExt, ReadBuf};
 
 use super::operator::TaskOperator;
@@ -31,42 +32,58 @@ use crate::trace::Trace;
 struct TaskReader {
     pub(crate) task: Arc<RequestTask>,
     pub(crate) index: usize,
+    pub(crate) reused: Option<usize>,
 }
 
 impl TaskReader {
     pub(crate) fn new(task: Arc<RequestTask>, index: usize) -> Self {
-        Self { task, index }
+        Self {
+            task,
+            index,
+            reused: None,
+        }
     }
 }
 
 impl AsyncRead for TaskReader {
     fn poll_read(
-        self: Pin<&mut Self>,
+        mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<std::io::Result<()>> {
         let index = self.index;
-        let file = self.task.files.get_mut(index).unwrap();
+        let file = self
+            .task
+            .files
+            .get_mut(index)
+            .ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?;
         let mut progress_guard = self.task.progress.lock().unwrap();
 
         if self.task.conf.common_data.index == index as u32 || progress_guard.processed[index] != 0
         {
-            let total_upload_bytes =
-                progress_guard.sizes[index] as usize - progress_guard.processed[index];
-
+            let total_upload_bytes = if let Some(uploaded) = self.reused {
+                progress_guard.sizes[index] as usize - uploaded
+            } else {
+                progress_guard.sizes[index] as usize - progress_guard.processed[index]
+            };
             let buf_filled_len = buf.filled().len();
             let mut read_buf = buf.take(total_upload_bytes);
-            let filled_len = read_buf.filled().len();
-            let file = self.task.files.get_mut(index).unwrap();
             match Pin::new(file).poll_read(cx, &mut read_buf) {
                 Poll::Ready(Ok(_)) => {
-                    let current_filled_len = read_buf.filled().len();
-                    let upload_size = current_filled_len - filled_len;
+                    let upload_size = read_buf.filled().len();
                     // need update buf.filled and buf.initialized
                     buf.assume_init(upload_size);
                     buf.set_filled(buf_filled_len + upload_size);
-                    progress_guard.processed[index] += upload_size;
-                    progress_guard.common_data.total_processed += upload_size;
+                    match self.reused {
+                        None => {
+                            progress_guard.processed[index] += upload_size;
+                            progress_guard.common_data.total_processed += upload_size;
+                        }
+                        Some(uploaded) => {
+                            drop(progress_guard);
+                            self.reused = Some(uploaded + upload_size);
+                        }
+                    }
                     Poll::Ready(Ok(()))
                 }
                 Poll::Pending => Poll::Pending,
@@ -86,6 +103,23 @@ impl AsyncRead for TaskReader {
                 Poll::Ready(Err(e)) => Poll::Ready(Err(e)),
             }
         }
+    }
+}
+
+impl ReusableReader for TaskReader {
+    fn reuse<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = std::io::Result<()>> + Send + Sync + 'a>>
+    where
+        Self: 'a,
+    {
+        self.reused = Some(0);
+        let index = self.index;
+        let optional_file = self.task.files.get_mut(index);
+        Box::pin(async {
+            let file = optional_file.ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?;
+            file.rewind().await.map(|_| ())
+        })
     }
 }
 
