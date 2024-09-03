@@ -39,24 +39,39 @@ impl TaskManager {
             uid, task_id, version
         );
 
-        let database = RequestDb::get_instance();
+        let (frontend, background) = self
+            .task_count
+            .entry(config.common_data.uid)
+            .or_insert_with(|| {
+                let database = RequestDb::get_instance();
+                (
+                    database.query_app_uncompleted_task_num(uid, Mode::FrontEnd),
+                    database.query_app_uncompleted_task_num(uid, Mode::BackGround),
+                )
+            });
 
-        match config.common_data.mode {
-            Mode::BackGround => {
-                if database.query_app_uncompleted_task_num(uid, Mode::BackGround)
-                    >= MAX_BACKGROUND_TASK
-                {
-                    debug!("TaskManager background enqueue error");
+        let (task_count, mode, limit) = match config.common_data.mode {
+            Mode::FrontEnd => (frontend, Mode::FrontEnd, MAX_FRONTEND_TASK),
+            _ => (background, Mode::BackGround, MAX_BACKGROUND_TASK),
+        };
+
+        if *task_count > limit {
+            let real_task_count =
+                RequestDb::get_instance().query_app_uncompleted_task_num(uid, mode);
+            if real_task_count != *task_count {
+                error!(
+                    "uid {} {:?} enqueue error real_task_count:{} task_count:{}",
+                    uid, mode, real_task_count, *task_count
+                );
+                *task_count = real_task_count;
+                if *task_count > limit {
                     return Err(ErrorCode::TaskEnqueueErr);
                 }
+            } else {
+                return Err(ErrorCode::TaskEnqueueErr);
             }
-            _ => {
-                if database.query_app_uncompleted_task_num(uid, Mode::FrontEnd) >= MAX_FRONTEND_TASK
-                {
-                    debug!("TaskManager frontend enqueue error");
-                    return Err(ErrorCode::TaskEnqueueErr);
-                }
-            }
+        } else {
+            *task_count += 1;
         }
 
         #[cfg(feature = "oh")]

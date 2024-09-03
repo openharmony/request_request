@@ -195,8 +195,14 @@ impl RunningQueue {
                 info!("{} has running task not finished", task_id);
                 continue;
             }
+
             info!("{} create running task", task_id);
             let running_task = RunningTask::new(task.clone(), self.tx.clone(), self.keeper.clone());
+            RequestDb::get_instance().update_task_state(
+                running_task.task_id(),
+                State::Running,
+                Reason::Default,
+            );
             let join_handle = runtime_spawn(async move {
                 running_task.run().await;
             });

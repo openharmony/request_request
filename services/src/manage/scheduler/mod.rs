@@ -14,6 +14,7 @@
 mod qos;
 mod queue;
 pub(crate) mod state;
+use std::collections::HashMap;
 use std::sync::Arc;
 mod sql;
 use qos::Qos;
@@ -22,7 +23,7 @@ use state::sql::SqlList;
 
 use super::events::TaskManagerEvent;
 use super::network::Network;
-use crate::config::{Mode, Version};
+use crate::config::Mode;
 use crate::error::ErrorCode;
 use crate::info::TaskInfo;
 use crate::manage::database::RequestDb;
@@ -220,7 +221,13 @@ impl Scheduler {
         }
     }
 
-    pub(crate) fn task_cancel(&mut self, uid: u64, task_id: u32) {
+    pub(crate) fn task_cancel(
+        &mut self,
+        uid: u64,
+        task_id: u32,
+        mode: Mode,
+        task_count: &mut HashMap<u64, (usize, usize)>,
+    ) {
         info!("Scheduler notify task {} canceled", task_id);
         self.running_queue.task_finish(uid, task_id);
 
@@ -242,6 +249,20 @@ impl Scheduler {
             }
             State::Failed => {
                 info!("task {} cancel with state Failed", task_id);
+                if let Some((front, back)) = task_count.get_mut(&uid) {
+                    match mode {
+                        Mode::FrontEnd => {
+                            if *front > 0 {
+                                *front -= 1;
+                            }
+                        }
+                        _ => {
+                            if *back > 0 {
+                                *back -= 1;
+                            }
+                        }
+                    }
+                }
                 Notifier::fail(&self.client_manager, info.build_notify_data());
                 #[cfg(feature = "oh")]
                 {
@@ -250,7 +271,12 @@ impl Scheduler {
                 }
             }
             state => {
-                info!("task {} cancel with state {:?}", task_id, state);
+                info!(
+                    "task {} cancel with state {:?} reason {:?}",
+                    task_id,
+                    state,
+                    Reason::from(info.common_data.reason)
+                );
                 self.running_queue.try_restart(uid, task_id);
             }
         }
@@ -374,30 +400,12 @@ impl Scheduler {
 
         if let Err(reason) = config.satisfy_network(self.state_handler.network()) {
             info!(
-                "task {} not satisfy network {:?}",
+                "task {} started, waiting for network {:?}",
                 task_id,
                 self.state_handler.network()
             );
-            let state = match config.version {
-                Version::API9 => match config.common_data.action {
-                    Action::Download => State::Waiting,
-                    Action::Upload => State::Failed,
-                    _ => unreachable!(),
-                },
-                Version::API10 => {
-                    if config.common_data.mode == Mode::BackGround && config.common_data.retry {
-                        State::Waiting
-                    } else {
-                        State::Failed
-                    }
-                }
-            };
-            database.update_task_state(task_id, state, reason);
-            if state == State::Failed {
-                if let Some(info) = database.get_task_info(task_id) {
-                    Notifier::fail(&self.client_manager, info.build_notify_data());
-                }
-            }
+
+            database.update_task_state(task_id, State::Waiting, reason);
             return Ok(false);
         }
 

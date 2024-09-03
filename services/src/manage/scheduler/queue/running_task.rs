@@ -14,8 +14,6 @@
 use std::ops::Deref;
 use std::sync::Arc;
 
-use crate::info::State;
-use crate::manage::database::RequestDb;
 use crate::manage::events::{TaskEvent, TaskManagerEvent};
 use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::queue::keeper::SAKeeper;
@@ -43,13 +41,7 @@ impl RunningTask {
     }
 
     pub(crate) async fn run(self) {
-        let action = self.conf.common_data.action;
-        RequestDb::get_instance().update_task_state(
-            self.task_id(),
-            State::Running,
-            Reason::Default,
-        );
-        match action {
+        match self.conf.common_data.action {
             Action::Download => {
                 download(self.task.clone()).await;
             }
@@ -81,6 +73,7 @@ impl Drop for RunningTask {
                         .send_event(TaskManagerEvent::Task(TaskEvent::Completed(
                             self.task_id(),
                             self.uid(),
+                            self.mode(),
                         )));
                 }
                 Err(e) if e == Reason::NetworkOffline => {
@@ -88,6 +81,7 @@ impl Drop for RunningTask {
                         .send_event(TaskManagerEvent::Task(TaskEvent::Offline(
                             self.task_id(),
                             self.uid(),
+                            self.mode(),
                         )));
                 }
                 Err(e) => {
@@ -95,6 +89,7 @@ impl Drop for RunningTask {
                         self.task_id(),
                         self.uid(),
                         e,
+                        self.mode(),
                     )));
                 }
             },
@@ -103,6 +98,7 @@ impl Drop for RunningTask {
                     .send_event(TaskManagerEvent::Task(TaskEvent::Running(
                         self.task_id(),
                         self.uid(),
+                        self.mode(),
                     )));
             }
         }
