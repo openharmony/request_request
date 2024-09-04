@@ -59,6 +59,11 @@ static constexpr const char *DNS_INFO = "DNS error";
 static constexpr const char *TCP_INFO = "TCP error";
 static constexpr const char *SSL_INFO = "TSL/SSL error";
 static constexpr const char *INSUFFICIENT_SPACE_INFO = "Insufficient space error";
+static constexpr const char *NETWORK_APP_INFO = "NetWork is offline and the app is background or terminate";
+static constexpr const char *NETWORK_ACCOUNT_INFO = "NetWork is offline and the account is stopped";
+static constexpr const char *APP_ACCOUNT_INFO = "The account is stopped and the app is background or terminate";
+static constexpr const char *NETWORK_ACCOUNT_APP_INFO = "NetWork is offline and the account is stopped and the app is "
+                                                        "background or terminate";
 static constexpr const char *NOT_SYSTEM_APP = "permission verification failed, application which is not a system "
                                               "application uses system API";
 
@@ -319,6 +324,10 @@ uint32_t Convert2Broken(Reason code)
         { TCP, Faults::TCP },
         { SSL, Faults::SSL },
         { INSUFFICIENT_SPACE, Faults::OTHERS },
+        { NETWORK_APP, Faults::DISCONNECTED },
+        { NETWORK_ACCOUNT, Faults::DISCONNECTED },
+        { APP_ACCOUNT, Faults::OTHERS },
+        { NETWORK_APP_ACCOUNT, Faults::DISCONNECTED },
     };
     constexpr const int32_t detailVersion = 12;
     auto iter = InnerCodeToBroken.find(code);
@@ -365,6 +374,10 @@ std::string Convert2ReasonMsg(Reason code)
         { TCP, TCP_INFO },
         { SSL, SSL_INFO },
         { INSUFFICIENT_SPACE, INSUFFICIENT_SPACE_INFO },
+        { NETWORK_APP, NETWORK_APP_INFO },
+        { NETWORK_ACCOUNT, NETWORK_ACCOUNT_INFO },
+        { APP_ACCOUNT, APP_ACCOUNT_INFO },
+        { NETWORK_APP_ACCOUNT, NETWORK_ACCOUNT_APP_INFO },
     };
     auto iter = ReasonMsg.find(code);
     if (iter != ReasonMsg.end()) {

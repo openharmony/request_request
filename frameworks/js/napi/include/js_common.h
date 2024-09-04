@@ -77,6 +77,10 @@ enum Reason : uint32_t {
     TCP,
     SSL,
     INSUFFICIENT_SPACE,
+    NETWORK_APP,
+    NETWORK_ACCOUNT,
+    APP_ACCOUNT,
+    NETWORK_APP_ACCOUNT,
 };
 
 enum class SubscribeType : uint32_t {
