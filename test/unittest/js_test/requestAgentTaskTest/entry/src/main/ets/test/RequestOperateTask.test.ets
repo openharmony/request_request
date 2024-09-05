@@ -161,7 +161,7 @@ export default function requestOperateTaskTest() {
     /**
      * @tc.number: testStartTask005
      * @tc.name: testStartTask005
-     * @tc.desc: Test start pause start background task
+     * @tc.desc: Test start pause start background task as Start a pause task
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -189,7 +189,7 @@ export default function requestOperateTaskTest() {
     /**
      * @tc.number: testStartTask006
      * @tc.name: testStartTask006
-     * @tc.desc: Test start stop pause background task
+     * @tc.desc: Test start stop pause background task as Pause a stop task
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -216,7 +216,7 @@ export default function requestOperateTaskTest() {
     /**
      * @tc.number: testStartTask007
      * @tc.name: testStartTask007
-     * @tc.desc: Test start stop pause FOREGROUND
+     * @tc.desc: Test start stop pause FOREGROUND as Pause a stop task
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -1145,7 +1145,7 @@ export default function requestOperateTaskTest() {
     /**
      * @tc.number: testOnTask004
      * @tc.name: testOnTask004
-     * @tc.desc: Test on task for completed
+     * @tc.desc: Test on task for progress
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
