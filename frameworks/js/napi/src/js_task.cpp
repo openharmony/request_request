@@ -927,6 +927,7 @@ void JsTask::ReloadListener()
         }
     }
     for (const auto &it : tids) {
+        REQUEST_HILOGD("ReloadListener tid: %{public}s", it.c_str());
         RequestManager::GetInstance()->Subscribe(it);
     }
 }

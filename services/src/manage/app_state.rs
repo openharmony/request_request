@@ -60,6 +60,10 @@ extern "C" fn app_state_change_callback(uid: i32, state: i32, _pid: i32) {
 }
 
 extern "C" fn process_state_change_callback(uid: i32, state: i32, pid: i32) {
+    debug!(
+        "Receives process change notify, uid is {}, pid is {}, state is {}",
+        uid, pid, state
+    );
     if state == 5 {
         info!(
             "Receives process died notify, uid is {}, pid is {}",

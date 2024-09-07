@@ -25,51 +25,49 @@ impl RequestServiceStub {
         let pid = ipc::Skeleton::calling_pid();
         let uid = ipc::Skeleton::calling_uid();
         let token_id = ipc::Skeleton::calling_full_token_id();
-        match tid.parse::<u32>() {
-            Ok(tid) => {
-                let (event, rx) = TaskManagerEvent::subscribe(tid, token_id);
-                if !self.task_manager.lock().unwrap().send_event(event) {
-                    reply.write(&(ErrorCode::Other as i32))?;
-                    error!(
-                        "End Service subscribe, tid: {}, failed: send event failed",
-                        tid
-                    );
-                    return Err(IpcStatusCode::Failed);
-                }
-                let ret = match rx.get() {
-                    Some(ret) => ret,
-                    None => {
-                        error!(
-                            "End Service subscribe, tid: {}, failed: receives ret failed",
-                            tid
-                        );
-                        reply.write(&(ErrorCode::Other as i32))?;
-                        return Err(IpcStatusCode::Failed);
-                    }
-                };
 
-                if ret != ErrorCode::ErrOk {
-                    error!("End Service subscribe, tid: {}, failed: {:?}", tid, ret);
-                    reply.write(&(ret as i32))?;
-                    return Err(IpcStatusCode::Failed);
-                }
+        let tid = tid.parse::<u32>().map_err(|_e| {
+            error!("End Service subscribe, failed: task_id not valid");
+            let _ = reply.write(&(ErrorCode::TaskNotFound as i32));
+            IpcStatusCode::Failed
+        })?;
 
-                let ret = self.client_manager.subscribe(tid, pid, uid, token_id);
-                if ret == ErrorCode::ErrOk {
-                    reply.write(&(ErrorCode::ErrOk as i32))?;
-                    debug!("End Service subscribe ok: tid: {}", tid);
-                    Ok(())
-                } else {
-                    error!("End Service subscribe, tid: {}, failed: {:?}", tid, ret);
-                    reply.write(&(ret as i32))?;
-                    Err(IpcStatusCode::Failed)
-                }
+        let (event, rx) = TaskManagerEvent::subscribe(tid, token_id);
+        if !self.task_manager.lock().unwrap().send_event(event) {
+            reply.write(&(ErrorCode::Other as i32))?;
+            error!(
+                "End Service subscribe, tid: {}, failed: send event failed",
+                tid
+            );
+            return Err(IpcStatusCode::Failed);
+        }
+        let ret = match rx.get() {
+            Some(ret) => ret,
+            None => {
+                error!(
+                    "End Service subscribe, tid: {}, failed: receives ret failed",
+                    tid
+                );
+                reply.write(&(ErrorCode::Other as i32))?;
+                return Err(IpcStatusCode::Failed);
             }
-            _ => {
-                error!("End Service subscribe, failed: task_id not valid");
-                reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                Err(IpcStatusCode::Failed)
-            }
+        };
+
+        if ret != ErrorCode::ErrOk {
+            error!("End Service subscribe, tid: {}, failed: {:?}", tid, ret);
+            reply.write(&(ret as i32))?;
+            return Err(IpcStatusCode::Failed);
+        }
+
+        let ret = self.client_manager.subscribe(tid, pid, uid, token_id);
+        if ret == ErrorCode::ErrOk {
+            reply.write(&(ErrorCode::ErrOk as i32))?;
+            debug!("End Service subscribe ok: tid: {}", tid);
+            Ok(())
+        } else {
+            error!("End Service subscribe, tid: {}, failed: {:?}", tid, ret);
+            reply.write(&(ret as i32))?;
+            Err(IpcStatusCode::Failed)
         }
     }
 }

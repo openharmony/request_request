@@ -33,11 +33,10 @@ pub(crate) fn get_task(task_id: u32, token: String) -> Option<TaskConfig> {
 pub(crate) fn search(filter: TaskFilter, method: SearchMethod) -> Vec<u32> {
     let database = RequestDb::get_instance();
 
-    let res = match method {
+    match method {
         SearchMethod::User(uid) => database.search_task(filter, uid),
         SearchMethod::System(bundle_name) => database.system_search_task(filter, bundle_name),
-    };
-    res
+    }
 }
 
 impl TaskManager {
