@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::HashMap;
+use std::collections::{hash_map, HashMap};
 
 use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 use ylong_runtime::sync::oneshot::Sender;
@@ -89,8 +89,8 @@ impl ClientManager {
                 ClientEvent::Terminate(pid, tx) => self.handle_process_terminated(pid, tx),
                 ClientEvent::SendResponse(tid, version, status_code, reason, headers) => {
                     if let Some(&pid) = self.pid_map.get(&tid) {
-                        if let Some((rx, _fd)) = self.clients.get_mut(&pid) {
-                            if let Err(err) = rx.send(ClientEvent::SendResponse(
+                        if let Some((tx, _fd)) = self.clients.get_mut(&pid) {
+                            if let Err(err) = tx.send(ClientEvent::SendResponse(
                                 tid,
                                 version,
                                 status_code,
@@ -108,9 +108,9 @@ impl ClientManager {
                 }
                 ClientEvent::SendNotifyData(subscribe_type, notify_data) => {
                     if let Some(&pid) = self.pid_map.get(&(notify_data.task_id)) {
-                        if let Some((rx, _fd)) = self.clients.get_mut(&pid) {
+                        if let Some((tx, _fd)) = self.clients.get_mut(&pid) {
                             if let Err(err) =
-                                rx.send(ClientEvent::SendNotifyData(subscribe_type, notify_data))
+                                tx.send(ClientEvent::SendNotifyData(subscribe_type, notify_data))
                             {
                                 error!("send notify data error, {}", err);
                             }
@@ -130,11 +130,11 @@ impl ClientManager {
 
     fn handle_open_channel(&mut self, pid: u64, tx: Sender<Result<i32, ErrorCode>>) {
         match self.clients.entry(pid) {
-            std::collections::hash_map::Entry::Occupied(o) => {
+            hash_map::Entry::Occupied(o) => {
                 let (_, fd) = o.get();
                 let _ = tx.send(Ok(*fd));
             }
-            std::collections::hash_map::Entry::Vacant(v) => match Client::constructor(pid) {
+            hash_map::Entry::Vacant(v) => match Client::constructor(pid) {
                 Some((client, fd)) => {
                     let _ = tx.send(Ok(fd));
                     v.insert((client, fd));

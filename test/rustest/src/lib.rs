@@ -295,8 +295,7 @@ impl RequestAgent {
             .unwrap();
         let ret: i32 = reply.read().unwrap();
         assert_eq!(0, ret);
-        let file = reply.read_file().unwrap();
-        file
+        reply.read_file().unwrap()
     }
 
     pub fn subscribe(&self, task_id: u32) {

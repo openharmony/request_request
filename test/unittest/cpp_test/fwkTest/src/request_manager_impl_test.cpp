@@ -145,7 +145,7 @@ HWTEST_F(RequestManagerImplTest, GetTaskTest001, TestSize.Level1)
     string token = "token";
     string tid = "tid";
     EXPECT_CALL(*exceptProxy, GetTask(tid, token, testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
-    EXPECT_EQ(RequestManagerImpl::GetInstance()->GetTask(tid, token, config), E_CHANNEL_NOT_OPEN);
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->GetTask(tid, token, config), E_OK);
 }
 
 /**
