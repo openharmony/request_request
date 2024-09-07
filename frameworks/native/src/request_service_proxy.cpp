@@ -147,13 +147,13 @@ int32_t RequestServiceProxy::GetTask(const std::string &tid, const std::string &
         return E_SERVICE_ERROR;
     }
     int32_t errCode = reply.ReadInt32();
-    if (errCode != E_OK) {
-        REQUEST_HILOGE("End Request GetTask, tid: %{public}s, failed: %{public}d", tid.c_str(), errCode);
+    if (errCode != E_OK && errCode != E_CHANNEL_NOT_OPEN) {
+        REQUEST_HILOGE("End Request GetTask, failed: %{public}d", errCode);
         return errCode;
     }
     ParcelHelper::UnMarshalConfig(reply, config);
     REQUEST_HILOGD("End Request GetTask ok, tid: %{public}s", tid.c_str());
-    return E_OK;
+    return errCode;
 }
 
 int32_t RequestServiceProxy::Start(const std::string &tid)
