@@ -88,7 +88,7 @@ export default function requestQueryTest() {
 
     /**
      * @tc.name: testShowTask003
-     * @tc.desc: Test show task for tid is "123"
+     * @tc.desc: Test show task for callback when tid is "123"
      * @tc.type: FUNC
      * @tc.require:
      */
@@ -101,7 +101,7 @@ export default function requestQueryTest() {
 
     /**
      * @tc.name: testShowTask004
-     * @tc.desc: Test show task for tid is "123"
+     * @tc.desc: Test show task for promise when tid is "123"
      * @tc.type: FUNC
      * @tc.require:
      */
@@ -117,7 +117,7 @@ export default function requestQueryTest() {
 
     /**
      * @tc.name: testShowTask005
-     * @tc.desc: Test show task
+     * @tc.desc: Test show task when lack tid
      * @tc.type: FUNC
      * @tc.require:
      */
@@ -132,7 +132,7 @@ export default function requestQueryTest() {
 
     /**
      * @tc.name: testShowTask006
-     * @tc.desc: Test show task
+     * @tc.desc: Test show task for promise when correct param
      * @tc.type: FUNC
      * @tc.require:
      */
@@ -178,7 +178,7 @@ export default function requestQueryTest() {
 
     /**
      * @tc.name: testShowTask007
-     * @tc.desc: Test show task
+     * @tc.desc: Test show task for callback when correct param
      * @tc.type: FUNC
      * @tc.require:
      */
@@ -219,7 +219,7 @@ export default function requestQueryTest() {
 
     /**
      * @tc.name: testShowTask008
-     * @tc.desc: Test show task
+     * @tc.desc: Test show task for promise when token exist
      * @tc.type: FUNC
      * @tc.require:
      */

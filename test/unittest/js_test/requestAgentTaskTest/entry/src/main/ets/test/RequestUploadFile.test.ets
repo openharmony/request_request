@@ -822,13 +822,36 @@ export default function RequestUploadFileTest() {
     /**
      * @tc.number: testUploadFileTask001
      * @tc.name: testUploadFileTask001
-     * @tc.desc: Test upload when data is empty
+     * @tc.desc: Test upload when param conf error
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
      * @tc.require:
      */
     it('testUploadFileTask001', 0, function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      try {
+        request.uploadFile(context, "conf", (err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadFileTask002
+     * @tc.name: testUploadFileTask002
+     * @tc.desc: Test upload for callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadFileTask002', 0, function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -841,12 +864,48 @@ export default function RequestUploadFileTest() {
         data: [RequestData]
       };
       try {
-        request.uploadFile(context, "conf", (err) => {
-          expect(false).assertTrue();
+        request.uploadFile(context, conf, async (err, data) => {
+          expect(true).assertTrue();
+          let task = data;
+          await task.delete();
           done();
         })
       } catch (err) {
-        expect(err.code).assertEqual(401);
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadFileTask003
+     * @tc.name: testUploadFileTask003
+     * @tc.desc: Test upload for promise
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadFileTask003', 0, function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        url: 'http://127.0.0.1',
+        header: {
+          'Accept': '*/*'
+        },
+        method: 'POST',
+        files: [File],
+        data: [RequestData]
+      };
+      try {
+        request.uploadFile(context, conf).then(async (data) => {
+          expect(true).assertTrue();
+          let task = data;
+          await task.delete();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
         done();
       }
     })
@@ -911,6 +970,39 @@ export default function RequestUploadFileTest() {
       } catch (err) {
         expect(true).assertTrue();
         await task.delete();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadFileTaskOn003
+     * @tc.name: testUploadFileTaskOn003
+     * @tc.desc: Test uploadFile on task for fail
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadFileTaskOn002', 0, async function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        url: 'http://127.0.0.1',
+        header: {
+          'Accept': '*/*'
+        },
+        method: 'POST',
+        files: [File],
+        data: [RequestData]
+      };
+      let task = await request.uploadFile(context, conf);
+      try {
+        task.on('fail', function () {
+          expect(true).assertTrue();
+          done();
+        });
+      } catch (err) {
+        expect(false).assertTrue();
         done();
       }
     })
