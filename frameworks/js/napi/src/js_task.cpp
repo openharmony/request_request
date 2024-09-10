@@ -483,7 +483,7 @@ ExceptionError JsTask::ParseGetTask(napi_env env, size_t argc, napi_value *argv,
             err.errInfo = "Parameter verification failed, the length of token should between 8 and 2048 bytes";
             return err;
         }
-        context->token = NapiUtils::SHA256(token.get(), len);
+        context->token = std::string(token.get(), len);
         memset_s(token.get(), bufferLen, 0, bufferLen);
     }
     return err;
@@ -668,7 +668,7 @@ ExceptionError JsTask::ParseTouch(napi_env env, size_t argc, napi_value *argv, s
         err.errInfo = "Parameter verification failed, the length of token should between 8 and 2048 bytes";
         return err;
     }
-    context->token = NapiUtils::SHA256(token, len);
+    context->token = std::string(token, len);
     memset_s(token, bufferLen, 0, bufferLen);
     delete[] token;
     return err;
