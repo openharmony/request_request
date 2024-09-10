@@ -14,6 +14,7 @@
  */
 
 #include "constant.h"
+#include "refbase.h"
 #define private public
 #define protected public
 
@@ -28,6 +29,7 @@
 #include "js_common.h"
 #include "log.h"
 #include "request_manager_impl.h"
+#include "request_running_task_count.h"
 #include "request_service_proxy.h"
 #include "system_ability_definition.h"
 
@@ -141,11 +143,18 @@ HWTEST_F(RequestManagerImplTest, CreateTest001, TestSize.Level1)
 HWTEST_F(RequestManagerImplTest, GetTaskTest001, TestSize.Level1)
 {
     Config config;
-    config.version = Version::API9;
     string token = "token";
     string tid = "tid";
-    EXPECT_CALL(*exceptProxy, GetTask(tid, token, testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    RequestManagerImpl::GetInstance()->OnChannelBroken();
+    EXPECT_CALL(*exceptProxy, OpenChannel(testing::_)).WillRepeatedly(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, Subscribe(testing::_)).WillOnce(testing::Return(E_OK));
+    EXPECT_CALL(*exceptProxy, GetTask(tid, token, testing::_))
+        .WillOnce(testing::Return(E_UNLOADING_SA))
+        .WillOnce(testing::Return(E_CHANNEL_NOT_OPEN))
+        .WillOnce(testing::Return(E_OTHER));
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->GetTask(tid, token, config), E_UNLOADING_SA);
     EXPECT_EQ(RequestManagerImpl::GetInstance()->GetTask(tid, token, config), E_OK);
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->GetTask(tid, token, config), E_OTHER);
 }
 
 /**
@@ -424,8 +433,8 @@ HWTEST_F(RequestManagerImplTest, OnRemoteDiedTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: Retry001
- * @tc.desc: Test Retry001 interface base function - Retry
+ * @tc.name: RetryTest001
+ * @tc.desc: Test RetryTest001 interface base function - Retry
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -572,4 +581,217 @@ HWTEST_F(RequestManagerImplTest, GetVectorData001, TestSize.Level1)
     EXPECT_EQ(data.ReadUint32(), 1);
     EXPECT_EQ(data.ReadString(), "first1");
     EXPECT_EQ(data.ReadString(), "second1");
+}
+
+/**
+ * @tc.name: CreateTest002
+ * @tc.desc: Test CreateTest002 interface base function - Create
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, CreateTest002, TestSize.Level1)
+{
+    RequestManagerImpl::GetInstance()->OnChannelBroken();
+    EXPECT_CALL(*exceptProxy, OpenChannel(testing::_)).WillRepeatedly(testing::Return(E_TASK_STATE));
+    Config config;
+    config.version = Version::API10;
+    int32_t seq = 1;
+    std::string tid = "1";
+    EXPECT_CALL(*exceptProxy, Create(testing::_, tid))
+        .WillOnce(testing::Return(E_FILE_PATH))
+        .WillOnce(testing::Return(E_OK))
+        .WillOnce(testing::Return(E_UNLOADING_SA));
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->Create(config, seq, tid), E_FILE_PATH);
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->Create(config, seq, tid), E_OK);
+    RequestManagerImpl::GetInstance()->Create(config, seq, tid);
+    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
+    EXPECT_TRUE(proxy != (static_cast<OHOS::sptr<RequestServiceInterface>>(exceptProxy)));
+}
+
+/**
+ * @tc.name: RetryTest002
+ * @tc.desc: Test RetryTest002 interface base function - Retry
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, RetryTest002, TestSize.Level1)
+{
+    Config config;
+    config.action = Action::DOWNLOAD;
+    int32_t errCode = E_FILE_PATH;
+    std::string tid = "1";
+    RequestManagerImpl::GetInstance()->Retry(tid, config, errCode);
+    FileSpec file0 = {
+        .name = "file0",
+        .uri = "uri0",
+        .filename = "filename0",
+        .type = "type0",
+        .isUserFile = false,
+    };
+    config.files.push_back(file0);
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->Retry(tid, config, errCode), errCode);
+    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
+    EXPECT_TRUE(proxy == (static_cast<OHOS::sptr<RequestServiceInterface>>(exceptProxy)));
+    errCode = E_UNLOADING_SA;
+    RequestManagerImpl::GetInstance()->Retry(tid, config, errCode);
+    proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
+    EXPECT_TRUE(proxy != (static_cast<OHOS::sptr<RequestServiceInterface>>(exceptProxy)));
+}
+
+/**
+ * @tc.name: RetryTest003
+ * @tc.desc: Test RetryTest003 interface base function - Retry
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, RetryTest003, TestSize.Level1)
+{
+    Config config;
+    config.action = Action::UPLOAD;
+    int32_t errCode = E_OK;
+    std::string tid = "1";
+    FileSpec file0 = {
+        .name = "file0",
+        .uri = "uri0",
+        .filename = "filename0",
+        .type = "type0",
+        .isUserFile = false,
+    };
+    config.files.push_back(file0);
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->Retry(tid, config, errCode), errCode);
+    errCode = E_FILE_PATH;
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->Retry(tid, config, errCode), errCode);
+    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
+    EXPECT_TRUE(proxy == (static_cast<OHOS::sptr<RequestServiceInterface>>(exceptProxy)));
+    errCode = E_UNLOADING_SA;
+    RequestManagerImpl::GetInstance()->Retry(tid, config, errCode);
+    proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
+    EXPECT_TRUE(proxy != (static_cast<OHOS::sptr<RequestServiceInterface>>(exceptProxy)));
+}
+
+/**
+ * @tc.name: SubscribeTest002
+ * @tc.desc: Test SubscribeTest002 interface base function - Subscribe
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, SubscribeTest002, TestSize.Level1)
+{
+    string taskId = "taskId";
+    RequestManagerImpl::GetInstance()->OnChannelBroken();
+    EXPECT_CALL(*exceptProxy, OpenChannel(testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_CALL(*exceptProxy, Subscribe(taskId)).WillOnce(testing::Return(E_OK));
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->Subscribe(taskId), E_OK);
+}
+
+/**
+ * @tc.name: EnsureChannelOpenTest002
+ * @tc.desc: Test EnsureChannelOpenTest002 interface base function - EnsureChannelOpen
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, EnsureChannelOpenTest002, TestSize.Level1)
+{
+    RequestManagerImpl::GetInstance()->msgReceiver_ =
+        std::make_shared<ResponseMessageReceiver>(RequestManagerImpl::GetInstance().get(), -1);
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->EnsureChannelOpen(), E_OK);
+    RequestManagerImpl::GetInstance()->OnChannelBroken();
+}
+
+/**
+ * @tc.name: GetTaskTest002
+ * @tc.desc: Test GetTaskTest002 interface base function - GetTask
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, GetTaskTest002, TestSize.Level1)
+{
+    string taskId = "taskId";
+    std::map<std::string, std::shared_ptr<Request>> tasks = RequestManagerImpl::GetInstance()->tasks_;
+    tasks.erase(taskId);
+    std::shared_ptr<Request> task = RequestManagerImpl::GetInstance()->GetTask(taskId);
+    EXPECT_NE(task.get(), nullptr);
+    task = RequestManagerImpl::GetInstance()->GetTask(taskId);
+    EXPECT_NE(task.get(), nullptr);
+    tasks.erase(taskId);
+}
+
+/**
+ * @tc.name: SubscribeSATest001
+ * @tc.desc: Test SubscribeSATest001 interface base function - SubscribeSA
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, SubscribeSATest001, TestSize.Level1)
+{
+    RequestManagerImpl::GetInstance()->saChangeListener_ = nullptr;
+    RequestManagerImpl::GetInstance()->SubscribeSA();
+    EXPECT_NE(RequestManagerImpl::GetInstance()->saChangeListener_, nullptr);
+    RequestManagerImpl::GetInstance()->SubscribeSA();
+}
+
+/**
+ * @tc.name: RestoreSubRunCountTest002
+ * @tc.desc: Test RestoreSubRunCountTest002 interface base function - RestoreSubRunCount
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, RestoreSubRunCountTest002, TestSize.Level1)
+{
+    EXPECT_NE(exceptProxy, nullptr);
+    OHOS::sptr<NotifyInterface> listener(nullptr);
+    EXPECT_CALL(*exceptProxy, SubRunCount(testing::_)).WillOnce(testing::Return(E_OK));
+    RequestManagerImpl::GetInstance()->SetRequestServiceProxy(exceptProxy);
+    RequestManagerImpl::GetInstance()->RestoreSubRunCount();
+}
+
+/**
+ * @tc.name: OnAddSystemAbility002
+ * @tc.desc: Test OnAddSystemAbility002 interface base function - OnAddSystemAbility
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, OnAddSystemAbility002, TestSize.Level1)
+{
+    EXPECT_NE(exceptProxy, nullptr);
+    string deviceId = "deviceId";
+    RequestManagerImpl::GetInstance()->RestoreListener(nullptr);
+    EXPECT_FALSE(FwkRunningTaskCountManager::GetInstance()->HasObserver());
+    auto pNewFwkOb = std::make_shared<FwkIRunningTaskObserver>(nullptr);
+    FwkRunningTaskCountManager::GetInstance()->observers_.push_back(pNewFwkOb);
+    EXPECT_TRUE(FwkRunningTaskCountManager::GetInstance()->HasObserver());
+    EXPECT_CALL(*exceptProxy, SubRunCount(testing::_)).WillOnce(testing::Return(E_OK));
+    RequestManagerImpl::SystemAbilityStatusChangeListener listener =
+        RequestManagerImpl::SystemAbilityStatusChangeListener();
+    listener.OnAddSystemAbility(OHOS::PRINT_SERVICE_ID, deviceId);
+    FwkRunningTaskCountManager::GetInstance()->observers_.clear();
+}
+
+/**
+ * @tc.name: LoadRequestServer001
+ * @tc.desc: Test LoadRequestServer001 interface base function - LoadRequestServer
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, LoadRequestServer001, TestSize.Level1)
+{
+    RequestManagerImpl::GetInstance()->ready_ = true;
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->LoadRequestServer(), true);
+    RequestManagerImpl::GetInstance()->ready_ = false;
+    RequestManagerImpl::GetInstance()->LoadRequestServer();
+}
+
+/**
+ * @tc.name: ReopenChannel001
+ * @tc.desc: Test ReopenChannel001 interface base function - ReopenChannel
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, ReopenChannel001, TestSize.Level1)
+{
+    EXPECT_NE(exceptProxy, nullptr);
+    RequestManagerImpl::GetInstance()->msgReceiver_ =
+        std::make_shared<ResponseMessageReceiver>(RequestManagerImpl::GetInstance().get(), -1);
+    EXPECT_CALL(*exceptProxy, OpenChannel(testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    RequestManagerImpl::GetInstance()->ReopenChannel();
 }
