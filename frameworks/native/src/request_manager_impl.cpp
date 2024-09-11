@@ -123,10 +123,28 @@ int32_t RequestManagerImpl::GetTask(const std::string &tid, const std::string &t
     REQUEST_HILOGD("GetTask in");
     auto proxy = GetRequestServiceProxy();
     if (proxy == nullptr) {
+        REQUEST_HILOGE("GetRequestServiceProxy fail, tid: %{public}s", tid.c_str());
         return E_SERVICE_ERROR;
     }
+    REQUEST_HILOGD("Request getTask, tid: %{public}s", tid.c_str());
+    this->EnsureChannelOpen();
+    int32_t ret = proxy->GetTask(tid, token, config);
+    if (ret == E_UNLOADING_SA) {
+        REQUEST_HILOGE("End Request getTask, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
+        return ret;
+    }
+    if (ret == E_CHANNEL_NOT_OPEN) {
+        this->ReopenChannel();
+        ret = proxy->Subscribe(tid);
+    }
 
-    return proxy->GetTask(tid, token, config);
+    if (ret != E_OK) {
+        REQUEST_HILOGE("Request getTask, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
+    } else {
+        REQUEST_HILOGD("End Request getTask ok, tid: %{public}s, ret: %{public}d", tid.c_str(), ret);
+    }
+
+    return ret;
 }
 
 int32_t RequestManagerImpl::Start(const std::string &tid)
@@ -380,6 +398,7 @@ int32_t RequestManagerImpl::EnsureChannelOpen()
         REQUEST_HILOGE("EnsureChannelOpen failed: %{public}d", ret);
         return ret;
     }
+    REQUEST_HILOGD("EnsureChannelOpen ok: %{public}d", sockFd);
     msgReceiver_ = std::make_shared<ResponseMessageReceiver>(this, sockFd);
     msgReceiver_->BeginReceive();
     return E_OK;
@@ -524,6 +543,7 @@ RequestManagerImpl::SystemAbilityStatusChangeListener::SystemAbilityStatusChange
 {
 }
 
+// Sometimes too slow to return.
 void RequestManagerImpl::SystemAbilityStatusChangeListener::OnAddSystemAbility(
     int32_t saId, const std::string &deviceId)
 {
