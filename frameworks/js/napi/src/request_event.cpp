@@ -132,7 +132,7 @@ napi_value RequestEvent::Stop(napi_env env, napi_callback_info info)
 napi_value RequestEvent::On(napi_env env, napi_callback_info info)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
-    REQUEST_HILOGI("Begin task on, seq: %{public}d", seq);
+    REQUEST_HILOGD("Begin task on, seq: %{public}d", seq);
     JsParam jsParam;
     ExceptionError err = ParseOnOffParameters(env, info, true, jsParam);
     if (err.code != E_OK) {

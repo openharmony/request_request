@@ -411,7 +411,10 @@ impl Scheduler {
         }
 
         if !config.satisfy_foreground(self.state_handler.top_uid()) {
-            info!("task {} started, waiting for app state", task_id);
+            info!(
+                "task {} started, waiting for app {} state",
+                task_id, config.common_data.uid
+            );
             database.update_task_state(task_id, State::Waiting, Reason::AppBackgroundOrTerminate);
             return Ok(false);
         }
