@@ -22,7 +22,6 @@ use ylong_runtime::io::{AsyncSeekExt, AsyncWriteExt};
 
 cfg_oh! {
     use crate::manage::SystemConfig;
-    use crate::utils::{request_background_notify, RequestTaskMsg};
 }
 
 use super::config::{Mode, Version};
@@ -592,48 +591,6 @@ impl RequestTask {
                 version: self.conf.version as u8,
                 priority: self.conf.common_data.priority,
             },
-        }
-    }
-
-    pub(crate) fn background_notify(&self) {
-        if self.conf.version == Version::API9 && !self.conf.common_data.background {
-            return;
-        }
-        if self.conf.version == Version::API10 && self.conf.common_data.mode == Mode::FrontEnd {
-            return;
-        }
-        let mut file_total_size = self.file_total_size.load(Ordering::SeqCst);
-        let total_processed = self.progress.lock().unwrap().common_data.total_processed as u64;
-        if file_total_size <= 0 || total_processed == 0 {
-            return;
-        }
-        if self.conf.common_data.action == Action::Download {
-            if self.conf.common_data.ends < 0 {
-                file_total_size -= self.conf.common_data.begins as i64;
-            } else {
-                file_total_size =
-                    self.conf.common_data.ends - self.conf.common_data.begins as i64 + 1;
-            }
-        }
-        self.background_notify_time
-            .store(get_current_timestamp(), Ordering::SeqCst);
-        let index = self.progress.lock().unwrap().common_data.index;
-        if index >= self.conf.file_specs.len() {
-            return;
-        }
-
-        #[cfg(feature = "oh")]
-        {
-            let percent = total_processed * 100 / (file_total_size as u64);
-            let task_msg = RequestTaskMsg {
-                task_id: self.conf.common_data.task_id,
-                uid: self.conf.common_data.uid as i32,
-                action: self.conf.common_data.action.repr,
-            };
-
-            let path = self.conf.file_specs[index].path.as_str();
-            let file_name = self.conf.file_specs[index].file_name.as_str();
-            let _ = request_background_notify(task_msg, path, file_name, percent as u32);
         }
     }
 

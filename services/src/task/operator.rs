@@ -23,13 +23,12 @@ use ylong_runtime::io::AsyncWrite;
 use ylong_runtime::time::{sleep, Sleep};
 
 use crate::manage::notifier::Notifier;
-use crate::task::config::Version;
+use crate::service::notification_bar::publish_progress_notification;
 use crate::task::request_task::RequestTask;
 use crate::utils::get_current_timestamp;
 
 const SPEED_LIMIT_INTERVAL: u64 = 1000;
 const FRONT_NOTIFY_INTERVAL: u64 = 1000;
-const BACKGROUND_NOTIFY_INTERVAL: u64 = 3000;
 
 pub(crate) struct TaskOperator {
     pub(crate) sleep: Option<Pin<Box<Sleep>>>,
@@ -61,16 +60,7 @@ impl TaskOperator {
             self.task.last_notify.store(current, Ordering::SeqCst);
             Notifier::progress(&self.task.client_manager, notify_data);
         }
-
-        let gauge = self.task.conf.common_data.gauge;
-
-        if self.task.conf.version == Version::API9 || gauge {
-            let last_background_notify_time =
-                self.task.background_notify_time.load(Ordering::SeqCst);
-            if get_current_timestamp() - last_background_notify_time >= BACKGROUND_NOTIFY_INTERVAL {
-                self.task.background_notify();
-            }
-        }
+        publish_progress_notification(&self.task);
 
         let total_processed = self
             .task

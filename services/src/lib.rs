@@ -22,6 +22,7 @@
     clippy::clone_on_copy,
     clippy::unused_async
 )]
+
 #[macro_use]
 mod macros;
 
