@@ -30,6 +30,7 @@ use crate::manage::database::RequestDb;
 use crate::manage::notifier::Notifier;
 use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
+use crate::service::notification_bar::{publish_failed_notification, publish_success_notification};
 use crate::service::run_count::RunCountManagerEntry;
 use crate::task::config::Action;
 use crate::task::info::State;
@@ -219,6 +220,7 @@ impl Scheduler {
         database.update_task_state(task_id, State::Completed, Reason::Default);
         if let Some(info) = database.get_task_info(task_id) {
             Notifier::complete(&self.client_manager, info.build_notify_data());
+            publish_success_notification(&info);
         }
     }
 
@@ -265,6 +267,7 @@ impl Scheduler {
                     }
                 }
                 Notifier::fail(&self.client_manager, info.build_notify_data());
+                publish_failed_notification(&info);
                 #[cfg(feature = "oh")]
                 {
                     let reason = Reason::from(info.common_data.reason);
@@ -300,9 +303,9 @@ impl Scheduler {
         }
 
         database.update_task_state(task_id, State::Failed, reason);
-
         if let Some(info) = database.get_task_info(task_id) {
             Notifier::fail(&self.client_manager, info.build_notify_data());
+            publish_failed_notification(&info);
             #[cfg(feature = "oh")]
             Self::sys_event(info, reason);
         }

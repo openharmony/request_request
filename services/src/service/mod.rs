@@ -21,7 +21,7 @@ pub mod interface;
 cfg_oh! {
     pub(crate) mod permission;
     pub(crate) mod command;
-
+    pub(crate) mod notification_bar;
     mod stub;
     pub(crate) use stub::RequestServiceStub;
     pub(crate) use stub::serialize_task_info;

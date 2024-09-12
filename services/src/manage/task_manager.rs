@@ -37,6 +37,7 @@ use crate::manage::network::register_network_change;
 use crate::manage::scheduler::state::Handler;
 use crate::manage::scheduler::Scheduler;
 use crate::service::client::ClientManagerEntry;
+use crate::service::notification_bar::subscribe_notification_bar;
 use crate::service::run_count::RunCountManagerEntry;
 use crate::utils::runtime_spawn;
 
@@ -82,6 +83,7 @@ impl TaskManager {
 
         #[cfg(feature = "oh")]
         let network = register_network_change(tx.clone());
+        subscribe_notification_bar(tx.clone());
 
         let task_manager = Self::new(tx.clone(), rx, runcount_manager, client_manager, network);
 

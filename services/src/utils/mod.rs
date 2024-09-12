@@ -21,7 +21,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub(crate) use ffi::PublishStateChangeEvent;
 
 cfg_oh! {
-    pub(crate) use ffi::RequestTaskMsg;
     pub(crate) mod url_policy;
     #[cfg(not(test))]
     pub(crate) use ffi::GetTopUid;
@@ -119,38 +118,14 @@ pub(crate) fn check_permission(permission: &str) -> bool {
     ffi::CheckPermission(token_id, permission)
 }
 
-#[cfg(feature = "oh")]
-pub(crate) fn request_background_notify(
-    msg: RequestTaskMsg,
-    wrapped_path: &str,
-    wrapped_file_name: &str,
-    percent: u32,
-) -> Result<(), i32> {
-    match ffi::RequestBackgroundNotify(msg, wrapped_path, wrapped_file_name, percent) {
-        0 => Ok(()),
-        code => Err(code),
-    }
-}
 #[allow(unused)]
 #[cxx::bridge(namespace = "OHOS::Request")]
 mod ffi {
-    struct RequestTaskMsg {
-        pub(crate) task_id: u32,
-        pub(crate) uid: i32,
-        pub(crate) action: u8,
-    }
 
     unsafe extern "C++" {
         include!("request_utils.h");
 
         fn PublishStateChangeEvent(bundleName: &str, taskId: u32, state: i32) -> bool;
-
-        fn RequestBackgroundNotify(
-            msg: RequestTaskMsg,
-            wrapped_path: &str,
-            wrapped_file_name: &str,
-            percent: u32,
-        ) -> i32;
 
         fn GetTopUid(uid: &mut i32) -> i32;
         fn GetCallingBundle(token_id: u64) -> String;
@@ -168,22 +143,6 @@ mod test {
     fn ut_utils_oh() {
         assert!(!is_system_api());
         assert_eq!(query_calling_bundle(), "");
-    }
-
-    #[test]
-    fn ut_utils_request_background_notify() {
-        test_init();
-        request_background_notify(
-            RequestTaskMsg {
-                task_id: 1,
-                uid: 1,
-                action: 1,
-            },
-            "path",
-            "file",
-            1,
-        )
-        .unwrap();
     }
 
     #[test]

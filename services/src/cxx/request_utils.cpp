@@ -27,20 +27,13 @@
 #include "cxx.h"
 #include "int_wrapper.h"
 #include "log.h"
-#include "notification.h"
-#include "notification_constant.h"
-#include "notification_content.h"
-#include "notification_helper.h"
 #include "string_wrapper.h"
 #include "tokenid_kit.h"
 #include "utils/mod.rs.h"
-#include "want_params.h"
 
 namespace OHOS::Request {
 using namespace OHOS::Security::AccessToken;
-using namespace OHOS::Notification;
 using namespace OHOS::EventFwk;
-static constexpr uint8_t DOWNLOAD_ACTION = 0;
 
 int GetTopUid(int &uid)
 {
@@ -92,39 +85,6 @@ bool CheckPermission(uint64_t tokenId, rust::str permission)
         return false;
     }
     return true;
-}
-
-int RequestBackgroundNotify(RequestTaskMsg msg, rust::str filePath, rust::str fileName, uint32_t percent)
-{
-    REQUEST_HILOGD("Background Notification, percent is %{public}d", percent);
-    auto requestTemplate = std::make_shared<NotificationTemplate>();
-
-    requestTemplate->SetTemplateName("downloadTemplate");
-    OHOS::AAFwk::WantParams wantParams;
-    wantParams.SetParam("progressValue", OHOS::AAFwk::Integer::Box(percent));
-    wantParams.SetParam("fileName", OHOS::AAFwk::String::Box(std::string(fileName)));
-    std::shared_ptr<NotificationNormalContent> normalContent = std::make_shared<NotificationNormalContent>();
-    if (msg.action == DOWNLOAD_ACTION) {
-        wantParams.SetParam("title", OHOS::AAFwk::String::Box("下载"));
-        normalContent->SetTitle("下载");
-    } else {
-        wantParams.SetParam("title", OHOS::AAFwk::String::Box("上传"));
-        normalContent->SetTitle("上传");
-    }
-    requestTemplate->SetTemplateData(std::make_shared<OHOS::AAFwk::WantParams>(wantParams));
-    normalContent->SetText(std::string(fileName));
-
-    auto content = std::make_shared<NotificationContent>(normalContent);
-    NotificationRequest req(msg.task_id);
-    req.SetCreatorUid(msg.uid);
-    req.SetContent(content);
-    req.SetTemplate(requestTemplate);
-    req.SetSlotType(NotificationConstant::OTHER);
-    OHOS::ErrCode errCode = NotificationHelper::PublishNotification(req);
-    if (errCode != OHOS::ERR_OK) {
-        REQUEST_HILOGE("notification errCode: %{public}d", errCode);
-    }
-    return errCode;
 }
 
 bool PublishStateChangeEvent(rust::str bundleName, uint32_t taskId, int32_t state)

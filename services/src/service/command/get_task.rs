@@ -42,7 +42,7 @@ impl RequestServiceStub {
             let _ = reply.write(&(ErrorCode::TaskNotFound as i32));
             IpcStatusCode::Failed
         })?;
-        
+
         debug!("End Service getTask ok: tid: {}", tid);
 
         let uid = ipc::Skeleton::calling_uid();
