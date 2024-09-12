@@ -411,7 +411,7 @@ bool JsInitialize::ParseToken(napi_env env, napi_value jsConfig, Config &config,
         delete[] token;
         return false;
     }
-    config.token = NapiUtils::SHA256(token, len);
+    config.token = std::string(token, len);
     memset_s(token, bufferLen, 0, bufferLen);
     delete[] token;
     return true;
