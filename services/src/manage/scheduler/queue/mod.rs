@@ -23,10 +23,11 @@ cfg_oh! {
 }
 use ylong_runtime::task::JoinHandle;
 
+use crate::config::Mode;
 use crate::error::ErrorCode;
 use crate::manage::database::RequestDb;
+use crate::manage::events::{TaskEvent, TaskManagerEvent};
 use crate::manage::network::Network;
-use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::qos::{QosChanges, QosDirection};
 use crate::manage::scheduler::queue::running_task::RunningTask;
 use crate::manage::task_manager::TaskManagerTx;
@@ -181,14 +182,15 @@ impl RunningQueue {
                 Err(ErrorCode::TaskStateErr) => continue, // If we cannot find the task, skip it.
                 Err(e) => {
                     info!("Get task failed, task_id: {}, error: {:?}", task_id, e);
-                    let database = RequestDb::get_instance();
-                    database.update_task_state(task_id, State::Failed, Reason::OthersError);
-                    if let Some(info) = database.get_task_info(task_id) {
-                        let notify_data = info.build_notify_data();
-                        Notifier::fail(&self.client_manager, notify_data);
+                    if let Some(info) = RequestDb::get_instance().get_task_qos_info(task_id) {
+                        self.tx.send_event(TaskManagerEvent::Task(TaskEvent::Failed(
+                            task_id,
+                            uid,
+                            Reason::OthersError,
+                            Mode::from(info.mode),
+                        )));
                     }
                     qos_remove_queue.push((uid, task_id));
-
                     continue;
                 }
             };
