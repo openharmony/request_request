@@ -131,7 +131,10 @@ pub(crate) fn app_state_available(uid: u64) -> String {
 pub(super) fn account_unavailable(active_accounts: &HashSet<u64>) -> String {
     let mut sql = format!(
         "UPDATE request_task SET 
-            state = {WAITING},
+            state = CASE
+                WHEN state = {RUNNING} OR state = {RETRYING} THEN {WAITING}
+                ELSE state
+            END,
             reason = CASE
                 WHEN (state = {RUNNING} OR state = {RETRYING}) THEN {ACCOUNT_STOPPED}
                 WHEN state = {WAITING} THEN 
@@ -286,6 +289,9 @@ mod test {
     use crate::utils::get_current_timestamp;
     use crate::utils::task_id_generator::TaskIdGenerator;
 
+    const COMPLETED: u8 = State::Completed.repr;
+    const PAUSED: u8 = State::Paused.repr;
+    const INIT: u8 = State::Initialized.repr;
     const WIFI: u8 = NetworkConfig::Wifi as u8;
     const CELLULAR: u8 = NetworkConfig::Cellular as u8;
 
@@ -647,6 +653,22 @@ mod test {
             assert_eq!(state, WAITING);
             assert_eq!(reason, ACCOUNT_STOPPED);
             hash_set.insert(user + i as u64 + 1);
+        }
+        let states = [COMPLETED, FAILED, PAUSED, INIT];
+        for state in states.into_iter() {
+            db.execute(&format!(
+            "INSERT OR REPLACE INTO request_task (task_id, uid, state, reason) VALUES ({task_id}, {uid}, {state}, {RUNNING_TASK_MEET_LIMITS})"
+        )).unwrap();
+            db.execute(&account_unavailable(&hash_set)).unwrap();
+            let change_state: u8 = db.query_integer(&format!(
+                "SELECT state FROM request_task where task_id = {task_id}"
+            ))[0];
+
+            assert_eq!(change_state, state);
+            let reason: u8 = db.query_integer(&format!(
+                "SELECT reason FROM request_task where task_id = {task_id}"
+            ))[0];
+            assert_eq!(reason, RUNNING_TASK_MEET_LIMITS);
         }
     }
 
