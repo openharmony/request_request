@@ -75,10 +75,10 @@ trait NotificationCheck {
 
 impl NotificationCheck for RequestTask {
     fn notification_check(&self) -> bool {
-        if !(self.conf.version == Version::API9 && self.conf.common_data.background
-            || self.conf.version == Version::API10
-                && self.conf.common_data.gauge
-                && self.conf.common_data.mode == Mode::BackGround)
+        if !(self.conf.version == Version::API10
+            && self.conf.common_data.gauge
+            && self.conf.common_data.mode == Mode::BackGround
+            || self.conf.version == Version::API9 && self.conf.common_data.background)
         {
             return false;
         }
@@ -94,10 +94,11 @@ impl NotificationCheck for RequestTask {
 
 impl NotificationCheck for TaskInfo {
     fn notification_check(&self) -> bool {
-        Version::from(self.common_data.version) == Version::API9 && !self.common_data.gauge
-            || Version::from(self.common_data.version) == Version::API10
-                && self.common_data.gauge
-                && self.common_data.mode == Mode::BackGround.repr
+        Version::from(self.common_data.version) == Version::API10
+            && self.common_data.gauge
+            && self.common_data.mode == Mode::BackGround.repr
+            || Version::from(self.common_data.version) == Version::API9
+                && RequestDb::get_instance().query_task_background(self.common_data.task_id)
     }
 }
 
@@ -168,6 +169,17 @@ impl RequestDb {
         self.query_integer(&sql)
             .first()
             .map(|uid: &u32| *uid as u64)
+    }
+
+    fn query_task_background(&self, task_id: u32) -> bool {
+        let sql = format!(
+            "SELECT background FROM request_task WHERE task_id = {}",
+            task_id
+        );
+        self.query_integer(&sql)
+            .first()
+            .map(|background: &i32| *background == 1)
+            .unwrap_or(false)
     }
 }
 
