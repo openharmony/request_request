@@ -128,6 +128,8 @@ impl TaskManager {
     }
 
     async fn run(mut self) {
+        let db = RequestDb::get_instance();
+        db.clear_invalid_records();
         loop {
             let event = match self.rx.recv().await {
                 Ok(event) => event,

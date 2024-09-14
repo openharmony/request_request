@@ -17,6 +17,7 @@ use crate::manage::TaskManager;
 impl TaskManager {
     pub(crate) fn start(&mut self, uid: u64, task_id: u32) -> ErrorCode {
         debug!("TaskManager start, tid: {}", task_id);
+
         match self.scheduler.start_task(uid, task_id) {
             Ok(_) => ErrorCode::ErrOk,
             Err(e) => e,
