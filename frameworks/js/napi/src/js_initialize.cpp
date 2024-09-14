@@ -1266,27 +1266,11 @@ bool JsInitialize::CheckBelongAppBaseDir(const std::string &filepath, std::strin
     if (!JsInitialize::GetAppBaseDir(baseDir)) {
         return false;
     }
-    if (filepath.find(baseDir) == 0) {
+    if ((filepath.find(AREA1) == 0) || filepath.find(AREA2) == 0 || filepath.find(AREA5) == 0) {
         return true;
-    }
-    // check baseDir replaced with el2
-    if (baseDir.find(AREA1) != std::string::npos) {
-        baseDir = baseDir.replace(baseDir.find(AREA1), AREA1.length(), AREA2);
-        if (filepath.find(baseDir) == 0) {
-            return true;
-        }
+    } else {
         REQUEST_HILOGE("File dir not include base dir: %{public}s", baseDir.c_str());
         return false;
     }
-    // check baseDir replaced with el1
-    if (baseDir.find(AREA2) != std::string::npos) {
-        baseDir = baseDir.replace(baseDir.find(AREA2), AREA2.length(), AREA1);
-        if (filepath.find(baseDir) == 0) {
-            return true;
-        }
-        REQUEST_HILOGE("File dir not include base dir: %{public}s", baseDir.c_str());
-        return false;
-    }
-    return false;
 }
 } // namespace OHOS::Request

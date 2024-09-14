@@ -29,8 +29,10 @@ static constexpr int ACL_SUCC = 0;
 static const std::string SA_PERMISSION_RWX = "g:3815:rwx";
 static const std::string SA_PERMISSION_X = "g:3815:x";
 static const std::string SA_PERMISSION_CLEAN = "g:3815:---";
-static const std::string AREA1 = "el1";
-static const std::string AREA2 = "el2";
+static const std::string AREA1 = "/data/storage/el1/base";
+static const std::string AREA2 = "/data/storage/el2/base";
+static const std::string AREA5 = "/data/storage/el5/base";
+
 class JsInitialize {
 public:
     JsInitialize() = default;
