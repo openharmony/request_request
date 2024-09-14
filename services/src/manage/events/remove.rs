@@ -12,11 +12,31 @@
 // limitations under the License.
 
 use crate::error::ErrorCode;
+use crate::info::State;
+use crate::manage::database::RequestDb;
 use crate::manage::TaskManager;
 
 impl TaskManager {
     pub(crate) fn remove(&mut self, uid: u64, task_id: u32) -> ErrorCode {
         debug!("TaskManager Remove, uid: {}, task_id: {}", uid, task_id);
+        let db = RequestDb::get_instance();
+        if let Some(info) = db.get_task_qos_info(task_id) {
+            if info.state != State::Failed.repr
+                && info.state != State::Completed.repr
+                && info.state != State::Removed.repr
+            {
+                if let Some(count) = self.task_count.get_mut(&uid) {
+                    let count = match info.mode {
+                        1 => &mut count.0,
+                        _ => &mut count.1,
+                    };
+                    if *count > 0 {
+                        *count -= 1;
+                    }
+                }
+            }
+        }
+
         match self.scheduler.remove_task(uid, task_id) {
             Ok(_) => ErrorCode::ErrOk,
             Err(e) => e,
