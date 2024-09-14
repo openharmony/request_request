@@ -42,34 +42,19 @@ impl TaskManager {
         let (frontend, background) = self
             .task_count
             .entry(config.common_data.uid)
-            .or_insert_with(|| {
-                let database = RequestDb::get_instance();
-                (
-                    database.query_app_uncompleted_task_num(uid, Mode::FrontEnd),
-                    database.query_app_uncompleted_task_num(uid, Mode::BackGround),
-                )
-            });
+            .or_insert((0, 0));
 
-        let (task_count, mode, limit) = match config.common_data.mode {
-            Mode::FrontEnd => (frontend, Mode::FrontEnd, MAX_FRONTEND_TASK),
-            _ => (background, Mode::BackGround, MAX_BACKGROUND_TASK),
+        let (task_count, limit) = match config.common_data.mode {
+            Mode::FrontEnd => (frontend, MAX_FRONTEND_TASK),
+            _ => (background, MAX_BACKGROUND_TASK),
         };
 
         if *task_count > limit {
-            let real_task_count =
-                RequestDb::get_instance().query_app_uncompleted_task_num(uid, mode);
-            if real_task_count != *task_count {
-                error!(
-                    "uid {} {:?} enqueue error real_task_count:{} task_count:{}",
-                    uid, mode, real_task_count, *task_count
-                );
-                *task_count = real_task_count;
-                if *task_count > limit {
-                    return Err(ErrorCode::TaskEnqueueErr);
-                }
-            } else {
-                return Err(ErrorCode::TaskEnqueueErr);
-            }
+            error!(
+                "{} task count {} exceeds the limit {}",
+                uid, task_count, limit
+            );
+            return Err(ErrorCode::TaskEnqueueErr);
         } else {
             *task_count += 1;
         }
