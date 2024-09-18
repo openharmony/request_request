@@ -23,6 +23,7 @@ use system_ability_fwk::ability::Handler;
 use super::client::ClientManagerEntry;
 use super::interface;
 use super::run_count::RunCountManagerEntry;
+use crate::manage::database::RequestDb;
 use crate::manage::task_manager::TaskManagerTx;
 use crate::task::config::TaskConfig;
 use crate::task::info::TaskInfo;
@@ -50,6 +51,11 @@ impl RequestServiceStub {
             run_count_manager,
             remote_busy,
         }
+    }
+
+    pub(crate) fn check_task_uid(&self, task_id: u32, uid: u64) -> bool {
+        let db = RequestDb::get_instance();
+        db.query_task_uid(task_id) == Some(uid)
     }
 }
 

@@ -23,49 +23,51 @@ use crate::task::config::Version;
 impl RequestServiceStub {
     pub(crate) fn pause(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         let version: u32 = data.read()?;
-        debug!("Service pause: version {}", version);
         if Version::from(version as u8) == Version::API9 && !PermissionChecker::check_internet() {
             error!("Service pause: no INTERNET permission");
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
         }
 
-        let id: String = data.read()?;
-        info!("Service pause: tid: {}", id);
-        match id.parse::<u32>() {
-            Ok(id) => {
-                debug!("Service pause: u32 tid: {}", id);
+        let task_id: String = data.read()?;
+        info!("Service pause: tid: {}", task_id);
+        let Ok(task_id) = task_id.parse::<u32>() else {
+            error!(
+                "End Service pause, tid: {}, failed: task_id not valid",
+                task_id
+            );
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            return Err(IpcStatusCode::Failed);
+        };
+        let uid = ipc::Skeleton::calling_uid();
 
-                let uid = ipc::Skeleton::calling_uid();
-                debug!("Service pause: uid is {}", uid);
+        if !self.check_task_uid(task_id, uid) {
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            return Err(IpcStatusCode::Failed);
+        };
 
-                let (event, rx) = TaskManagerEvent::pause(uid, id);
-                if !self.task_manager.lock().unwrap().send_event(event) {
-                    return Err(IpcStatusCode::Failed);
-                }
-                let ret = match rx.get() {
-                    Some(ret) => ret,
-                    None => {
-                        error!(
-                            "End Service pause, tid: {}, failed: receives ret failed",
-                            id
-                        );
-                        return Err(IpcStatusCode::Failed);
-                    }
-                };
-                reply.write(&(ret as i32))?;
-                if ret != ErrorCode::ErrOk {
-                    error!("End Service pause, tid: {}, failed: {}", id, ret as u32);
-                    return Err(IpcStatusCode::Failed);
-                }
-                debug!("End Service pause ok: tid: {}", id);
-                Ok(())
-            }
-            _ => {
-                error!("End Service pause, tid: {}, failed: task_id not valid", id);
-                reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                Err(IpcStatusCode::Failed)
-            }
+        let (event, rx) = TaskManagerEvent::pause(uid, task_id);
+        if !self.task_manager.lock().unwrap().send_event(event) {
+            return Err(IpcStatusCode::Failed);
         }
+        let ret = match rx.get() {
+            Some(ret) => ret,
+            None => {
+                error!(
+                    "End Service pause, tid: {}, failed: receives ret failed",
+                    task_id
+                );
+                return Err(IpcStatusCode::Failed);
+            }
+        };
+        reply.write(&(ret as i32))?;
+        if ret != ErrorCode::ErrOk {
+            error!(
+                "End Service pause, tid: {}, failed: {}",
+                task_id, ret as u32
+            );
+            return Err(IpcStatusCode::Failed);
+        }
+        Ok(())
     }
 }

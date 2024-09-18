@@ -39,28 +39,30 @@ impl RequestServiceStub {
             QueryPermission::QueryAll => Action::Any,
         };
 
-        let id: String = data.read()?;
-        info!("Service query: tid: {}", id);
-        match id.parse::<u32>() {
-            Ok(id) => {
-                debug!("Service query: u32 tid: {}", id);
-                let info = self.task_manager.lock().unwrap().query(id, action);
-                match info {
-                    Some(info) => {
-                        reply.write(&(ErrorCode::ErrOk as i32))?;
-                        debug!("End Service query ok, tid: {}", id);
-                        serialize_task_info(info, reply)?;
-                        Ok(())
-                    }
-                    None => {
-                        error!("End Service query, failed: task_id not found, tid: {}", id);
-                        reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                        Err(IpcStatusCode::Failed)
-                    }
-                }
+        let task_id: String = data.read()?;
+        info!("Service query: tid: {}", task_id);
+
+        let Ok(task_id) = task_id.parse::<u32>() else {
+            error!(
+                "End Service query, tid: {}, failed: task_id not valid",
+                task_id
+            );
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            return Err(IpcStatusCode::Failed);
+        };
+
+        let info = self.task_manager.lock().unwrap().query(task_id, action);
+        match info {
+            Some(info) => {
+                reply.write(&(ErrorCode::ErrOk as i32))?;
+                serialize_task_info(info, reply)?;
+                Ok(())
             }
-            _ => {
-                error!("End Service query, tid: {}, failed: task_id not valid", id);
+            None => {
+                error!(
+                    "End Service query, failed: task_id not found, tid: {}",
+                    task_id
+                );
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }
