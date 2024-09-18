@@ -19,25 +19,27 @@ use crate::service::RequestServiceStub;
 
 impl RequestServiceStub {
     pub(crate) fn unsubscribe(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        let tid: String = data.read()?;
-        info!("Service unsubscribe: tid: {}", tid);
-        match tid.parse::<u32>() {
-            Ok(tid) => {
-                if self.client_manager.unsubscribe(tid) == ErrorCode::ErrOk {
-                    reply.write(&(ErrorCode::ErrOk as i32))?;
-                    debug!("End Service unsubscribe ok: tid: {}", tid);
-                    Ok(())
-                } else {
-                    debug!("unsubscribe failed, tid: {}", tid);
-                    reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                    Err(IpcStatusCode::Failed)
-                }
-            }
-            _ => {
-                error!("End Service unsubscribe, failed: task_id not valid");
-                reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                Err(IpcStatusCode::Failed)
-            }
+        let task_id: String = data.read()?;
+        info!("Service unsubscribe: tid: {}", task_id);
+
+        let Ok(task_id) = task_id.parse::<u32>() else {
+            error!("End Service unsubscribe, failed: task_id not valid");
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            return Err(IpcStatusCode::Failed);
+        };
+        let uid = ipc::Skeleton::calling_uid();
+
+        if !self.check_task_uid(task_id, uid) {
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            return Err(IpcStatusCode::Failed);
+        }
+
+        if self.client_manager.unsubscribe(task_id) == ErrorCode::ErrOk {
+            reply.write(&(ErrorCode::ErrOk as i32))?;
+            Ok(())
+        } else {
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            Err(IpcStatusCode::Failed)
         }
     }
 }

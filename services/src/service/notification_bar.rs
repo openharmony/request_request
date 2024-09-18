@@ -164,13 +164,6 @@ pub(crate) fn subscribe_notification_bar(task_manager: TaskManagerTx) {
 }
 
 impl RequestDb {
-    fn query_task_uid(&self, task_id: u32) -> Option<u64> {
-        let sql = format!("SELECT uid FROM request_task WHERE task_id = {}", task_id);
-        self.query_integer(&sql)
-            .first()
-            .map(|uid: &u32| *uid as u64)
-    }
-
     fn query_task_background(&self, task_id: u32) -> bool {
         let sql = format!(
             "SELECT background FROM request_task WHERE task_id = {}",
