@@ -628,7 +628,11 @@ fn check_file_specs(file_specs: &[FileSpec]) -> bool {
     let mut result = true;
     for (idx, spec) in file_specs.iter().enumerate() {
         let path = &spec.path;
-        if !spec.is_user_file && !path.starts_with(EL1) && !path.starts_with(EL2) && !path.starts_with(EL5) {
+        if !spec.is_user_file
+            && !path.starts_with(EL1)
+            && !path.starts_with(EL2)
+            && !path.starts_with(EL5)
+        {
             error!("File path invalid - path: {}, idx: {}", path, idx);
             result = false;
             break;
