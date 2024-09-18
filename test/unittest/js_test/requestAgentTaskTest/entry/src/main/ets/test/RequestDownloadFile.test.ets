@@ -273,15 +273,15 @@ export default function requestDownloadFileTest() {
     })
 
     /**
-     * @tc.number: testDownloadFile004
-     * @tc.name: testDownloadFile004
+     * @tc.number: testDownloadFile0031
+     * @tc.name: testDownloadFile0031
      * @tc.desc: Test create for downloadfile correctly for callback
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testDownloadFile004', 0, async function (done) {
+    it('testDownloadFile0031', 0, async function (done) {
       let conf = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         filePath: 'testV9_file04.txt'
@@ -1054,15 +1054,15 @@ export default function requestDownloadFileTest() {
     })
 
     /**
-     * @tc.number: testDownloadTaskRestore001
-     * @tc.name: testDownloadTaskRestore001
+     * @tc.number: testDownloadTaskRestore0011
+     * @tc.name: testDownloadTaskRestore0011
      * @tc.desc: Test downloadTask restore for callback
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testDownloadTaskRestore001', 0, async function (done) {
+    it('testDownloadTaskRestore0011', 0, async function (done) {
       let filePath = cacheDir + '/test.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
@@ -1112,6 +1112,10 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadTaskDelete002', 0, async function (done) {
+      let filePath = cacheDir + '/test.txt';
+      if (fs.accessSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
       let conf = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
       }
@@ -1126,15 +1130,19 @@ export default function requestDownloadFileTest() {
     })
 
     /**
-     * @tc.number: testDownloadTaskDelete003
-     * @tc.name: testDownloadTaskDelete003
+     * @tc.number: testDownloadTaskDelete0021
+     * @tc.name: testDownloadTaskDelete0021
      * @tc.desc: Test downloadTask delete for callback
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testDownloadTaskDelete003', 0, async function (done) {
+    it('testDownloadTaskDelete0021', 0, async function (done) {
+      let filePath = cacheDir + '/test.txt';
+      if (fs.accessSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
       let conf = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
       }
@@ -1150,6 +1158,289 @@ export default function requestDownloadFileTest() {
       }
     })
 
+    /**
+     * @tc.number: testDownloadGetTaskInfo001
+     * @tc.name: testDownloadGetTaskInfo001
+     * @tc.desc: Test downloadTask for promise when completed
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadGetTaskInfo001', 0, async function (done) {
+      let filePath = cacheDir + '/test.txt';
+      if (fs.accessSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      let conf = {
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+      }
+      let task = await request.downloadFile(context, conf);
+      try {
+
+        function CompletedCallback() {
+          task.getTaskInfo().then((downloadInfo) => {
+            expect(downloadInfo.status).assertEqual(0);
+            done();
+          }).catch((err) => {
+            expect(false).assertTrue();
+            done();
+          })
+        }
+
+        task.on('complete', CompletedCallback)
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testDownloadGetTaskInfo0011
+     * @tc.name: testDownloadGetTaskInfo0011
+     * @tc.desc: Test downloadTask for callback when completed
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadGetTaskInfo0011', 0, async function (done) {
+      let filePath = cacheDir + '/test.txt';
+      if (fs.accessSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      let conf = {
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+      }
+      let task = await request.downloadFile(context, conf);
+      try {
+
+        function CompletedCallback() {
+          task.getTaskInfo((err, downloadInfo) => {
+            expect(downloadInfo.status).assertEqual(0);
+            done();
+          })
+        }
+
+        task.on('complete', CompletedCallback)
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testDownloadGetTaskInfo002
+     * @tc.name: testDownloadGetTaskInfo002
+     * @tc.desc: Test downloadTask for promise when pause
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadGetTaskInfo002', 0, async function (done) {
+      let filePath = cacheDir + '/test.txt';
+      if (fs.accessSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      let conf = {
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+      }
+      let task = await request.downloadFile(context, conf);
+      await task.suspend();
+
+      try {
+        task.getTaskInfo().then((downloadInfo) => {
+          expect(downloadInfo.status).assertEqual(3);
+          task.delete();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testDownloadGetTaskInfo0021
+     * @tc.name: testDownloadGetTaskInfo0021
+     * @tc.desc: Test downloadTask for callback when pause
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadGetTaskInfo0021', 0, async function (done) {
+      let filePath = cacheDir + '/test.txt';
+      if (fs.accessSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      let conf = {
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+      }
+      let task = await request.downloadFile(context, conf);
+      await task.suspend();
+
+      try {
+        task.getTaskInfo((err, downloadInfo) => {
+          expect(downloadInfo.status).assertEqual(3);
+          task.delete();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testDownloadGetTaskInfo003
+     * @tc.name: testDownloadGetTaskInfo003
+     * @tc.desc: Test downloadTask for promise when progress
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadGetTaskInfo003', 0, async function (done) {
+      let filePath = cacheDir + '/test.txt';
+      if (fs.accessSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      let conf = {
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+      }
+      let task = await request.downloadFile(context, conf);
+      try {
+
+        function ProgressCallback() {
+          task.getTaskInfo().then((downloadInfo) => {
+            expect(downloadInfo.status).assertEqual(1);
+            task.delete();
+            done();
+          }).catch((err) => {
+            expect(false).assertTrue();
+            done();
+          })
+        }
+
+        task.on('progress', ProgressCallback)
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testDownloadGetTaskInfo0031
+     * @tc.name: testDownloadGetTaskInfo0031
+     * @tc.desc: Test downloadTask for callback when progress
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadGetTaskInfo0031', 0, async function (done) {
+      let filePath = cacheDir + '/test.txt';
+      if (fs.accessSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      let conf = {
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+      }
+      let task = await request.downloadFile(context, conf);
+      try {
+
+        function PauseCallback() {
+          task.getTaskInfo((err, downloadInfo) => {
+            expect(downloadInfo.status).assertEqual(1);
+            task.delete();
+            done();
+          })
+        }
+
+        task.on('progress', PauseCallback)
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testDownloadGetTaskInfo004
+     * @tc.name: testDownloadGetTaskInfo004
+     * @tc.desc: Test downloadTask for promise when fail
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadGetTaskInfo004', 0, async function (done) {
+      let filePath = cacheDir + '/test.txt';
+      if (fs.accessSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      let conf = {
+        url: 'https://www.aaaaaaa.com/test.txt',
+      }
+      let task = await request.downloadFile(context, conf);
+      try {
+
+        function FailCallback() {
+          task.getTaskInfo().then((downloadInfo) => {
+            expect(downloadInfo.status).assertEqual(4);
+            task.delete();
+            done();
+          }).catch((err) => {
+            expect(false).assertTrue();
+            done();
+          })
+        }
+
+        task.on('fail', FailCallback)
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testDownloadGetTaskInfo0041
+     * @tc.name: testDownloadGetTaskInfo0041
+     * @tc.desc: Test downloadTask for callback when fail
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadGetTaskInfo0041', 0, async function (done) {
+      let filePath = cacheDir + '/test.txt';
+      if (fs.accessSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      let conf = {
+        url: 'https://www.aaaaaaa.com/test.txt',
+      }
+      let task = await request.downloadFile(context, conf);
+      try {
+
+        function FailCallback() {
+          task.getTaskInfo((err, downloadInfo) => {
+            expect(downloadInfo.status).assertEqual(4);
+            task.delete();
+            done();
+          })
+        }
+
+        task.on('fail', FailCallback)
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
 
   })
 }
