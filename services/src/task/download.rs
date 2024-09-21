@@ -24,6 +24,7 @@ use ylong_runtime::io::AsyncSeekExt;
 use super::operator::TaskOperator;
 use super::reason::Reason;
 use super::request_task::{TaskError, TaskPhase};
+use crate::manage::database::RequestDb;
 use crate::task::info::State;
 use crate::task::request_task::RequestTask;
 #[cfg(feature = "oh")]
@@ -201,6 +202,8 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
     }
     task.get_file_info(&response)?;
     task.update_progress_in_database();
+    RequestDb::get_instance()
+        .update_task_sizes(task.task_id(), &task.progress.lock().unwrap().sizes);
 
     #[cfg(feature = "oh")]
     let _trace = Trace::new(&format!(

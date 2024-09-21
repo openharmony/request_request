@@ -331,6 +331,14 @@ impl RequestDb {
         let _ = self.execute(&sql);
     }
 
+    pub(crate) fn update_task_sizes(&self, task_id: u32, sizes: &Vec<i64>) {
+        let sql = format!(
+            "UPDATE request_task SET sizes = '{:?}' WHERE task_id = {}",
+            sizes, task_id
+        );
+        let _ = self.execute(&sql);
+    }
+
     #[cfg(feature = "oh")]
     pub(crate) fn get_task_info(&self, task_id: u32) -> Option<TaskInfo> {
         debug!("Get task info from database");
