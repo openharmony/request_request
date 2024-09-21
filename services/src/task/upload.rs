@@ -25,6 +25,7 @@ use ylong_runtime::io::{AsyncRead, AsyncSeekExt, ReadBuf};
 use super::operator::TaskOperator;
 use super::reason::Reason;
 use super::request_task::{TaskError, TaskPhase};
+use crate::manage::database::RequestDb;
 use crate::task::request_task::RequestTask;
 #[cfg(feature = "oh")]
 use crate::trace::Trace;
@@ -262,6 +263,9 @@ impl RequestTask {
 }
 
 pub(crate) async fn upload(task: Arc<RequestTask>) {
+    RequestDb::get_instance()
+        .update_task_sizes(task.task_id(), &task.progress.lock().unwrap().sizes);
+    
     task.tries.store(0, Ordering::SeqCst);
     loop {
         if let Err(e) = upload_inner(task.clone()).await {
