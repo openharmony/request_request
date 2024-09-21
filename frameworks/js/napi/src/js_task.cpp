@@ -202,6 +202,12 @@ int32_t JsTask::CreateExec(const std::shared_ptr<ContextInfo> &context, int32_t 
         REQUEST_HILOGE("End create task in JsTask CreateExec, seq: %{public}d, failed: %{public}d", seq, ret);
         return ret;
     }
+    JsTask::AddRemoveListener(context);
+    return ret;
+}
+
+void JsTask::AddRemoveListener(const std::shared_ptr<ContextInfo> &context)
+{
     std::string tid = context->tid;
     context->task->listenerMutex_.lock();
     context->task->notifyDataListenerMap_[SubscribeType::REMOVE] =
@@ -209,7 +215,6 @@ int32_t JsTask::CreateExec(const std::shared_ptr<ContextInfo> &context, int32_t 
     context->task->listenerMutex_.unlock();
     RequestManager::GetInstance()->AddListener(
         tid, SubscribeType::REMOVE, context->task->notifyDataListenerMap_[SubscribeType::REMOVE]);
-    return ret;
 }
 
 napi_value JsTask::GetCtor(napi_env env, Version version)
@@ -424,6 +429,7 @@ bool JsTask::GetTaskOutput(std::shared_ptr<ContextInfo> context)
         std::lock_guard<std::mutex> lockGuardContext(JsTask::taskContextMutex_);
         JsTask::AddTaskContextMap(tid, context);
     }
+    JsTask::AddRemoveListener(context);
     return true;
 }
 
