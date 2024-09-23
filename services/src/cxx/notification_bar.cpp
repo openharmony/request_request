@@ -44,9 +44,9 @@ namespace OHOS::Request {
 static constexpr int32_t REQUEST_SERVICE_ID = 3815;
 static constexpr int32_t REQUEST_STYLE = 13;
 
-static constexpr int32_t BINARY_SCALE = 1024;
-static constexpr int32_t PERCENT = 100;
-static constexpr int32_t FRONT_ZERO = 10;
+static constexpr uint32_t BINARY_SCALE = 1024;
+static constexpr uint32_t PERCENT = 100;
+static constexpr uint32_t FRONT_ZERO = 10;
 
 void RequestNotifyProgress(RequestTaskMsg msg)
 {
