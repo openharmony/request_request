@@ -984,7 +984,6 @@ bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo)
     values.PutString("mime_type", std::string(updateInfo->mimeType.cStr, updateInfo->mimeType.len));
     values.PutLong("idx", updateInfo->progress.commonData.index);
     values.PutLong("total_processed", updateInfo->progress.commonData.totalProcessed);
-    values.PutString("sizes", std::string(updateInfo->progress.sizes.cStr, updateInfo->progress.sizes.len));
     values.PutString("processed", std::string(updateInfo->progress.processed.cStr, updateInfo->progress.processed.len));
     values.PutString("extras", std::string(updateInfo->progress.extras.cStr, updateInfo->progress.extras.len));
     values.PutBlob("each_file_status", eachFileStatusBlob);
