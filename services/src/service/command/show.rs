@@ -25,31 +25,33 @@ impl RequestServiceStub {
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
         }
-        let id: String = data.read()?;
-        info!("Service show: tid: {}", id);
-        match id.parse::<u32>() {
-            Ok(id) => {
-                debug!("Service show: u32 tid: {}", id);
-                let uid = ipc::Skeleton::calling_uid();
-                debug!("Service show: uid is {}", uid);
+        let task_id: String = data.read()?;
+        info!("Service show: tid: {}", task_id);
 
-                let info = self.task_manager.lock().unwrap().show(uid, id);
-                match info {
-                    Some(info) => {
-                        reply.write(&(ErrorCode::ErrOk as i32))?;
-                        debug!("End Service show ok, tid: {}", id);
-                        serialize_task_info(info, reply)?;
-                        Ok(())
-                    }
-                    None => {
-                        error!("End Service show, failed: task_id not found, tid: {}", id);
-                        reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                        Err(IpcStatusCode::Failed)
-                    }
-                }
+        let Ok(task_id) = task_id.parse::<u32>() else {
+            error!("End Service show, failed: task_id not valid");
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            return Err(IpcStatusCode::Failed);
+        };
+
+        let uid = ipc::Skeleton::calling_uid();
+        if !self.check_task_uid(task_id, uid) {
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            return Err(IpcStatusCode::Failed);
+        }
+
+        let info = self.task_manager.lock().unwrap().show(uid, task_id);
+        match info {
+            Some(info) => {
+                reply.write(&(ErrorCode::ErrOk as i32))?;
+                serialize_task_info(info, reply)?;
+                Ok(())
             }
-            _ => {
-                error!("End Service show, failed: task_id not valid");
+            None => {
+                error!(
+                    "End Service show, failed: task_id not found, tid: {}",
+                    task_id
+                );
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

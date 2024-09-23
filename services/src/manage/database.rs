@@ -302,6 +302,11 @@ impl RequestDb {
         let _ = self.execute(&sql);
     }
 
+    pub(crate) fn query_task_uid(&self, task_id: u32) -> Option<u64> {
+        let sql = format!("SELECT uid FROM request_task WHERE task_id = {}", task_id);
+        self.query_integer(&sql).first().copied()
+    }
+
     #[cfg(not(feature = "oh"))]
     pub(crate) fn update_task(&self, task_id: u32, update_info: UpdateInfo) {
         if !self.contains_task(task_id) {
