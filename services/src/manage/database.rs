@@ -177,10 +177,7 @@ impl RequestDb {
         let task_id = task.task_id();
         let uid = task.uid();
 
-        debug!(
-            "Insert task to database, uid: {}, task_id: {}",
-            uid, task_id
-        );
+        debug!("Insert task to database, uid: {}, tid: {}", uid, task_id);
 
         if self.contains_task(task_id) {
             return false;
@@ -195,7 +192,7 @@ impl RequestDb {
         let c_task_info = task_info.to_c_struct(&info_set);
 
         if !unsafe { RecordRequestTask(&c_task_info, &c_task_config) } {
-            info!("Insert task {} to database failed", task_id);
+            info!("task {} insert database fail", task_id);
         }
 
         // For some tasks contains user_file, we must save it to map first.
@@ -215,10 +212,7 @@ impl RequestDb {
 
         let task_id = task.task_id();
         let uid = task.uid();
-        info!(
-            "Insert task to database, uid: {}, task_id: {}",
-            uid, task_id
-        );
+        info!("insert database, uid {} tid {}", uid, task_id);
         if self.contains_task(task_id) {
             return false;
         }

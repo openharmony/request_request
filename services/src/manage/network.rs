@@ -106,7 +106,7 @@ impl NetworkInner {
     pub(crate) fn notify_online(&self, info: NetworkInfo) -> bool {
         let mut state = self.state.write().unwrap();
         if !matches!(&*state, Online(old_info) if old_info == &info  ) {
-            info!("Network is online: {:?}", info);
+            info!("network online {:?}", info);
             *state = Online(info.clone());
             true
         } else {

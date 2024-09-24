@@ -78,16 +78,16 @@ pub(crate) fn build_client(
 
     const ATOMIC_SERVICE: u32 = 1;
     if config.bundle_type == ATOMIC_SERVICE {
-        let domain_type = action_to_domian_type(config.common_data.action);
+        let domain_type = action_to_domain_type(config.common_data.action);
         info!(
-            "ApiPolicy Domain check, task_id is {}, bundle is {}, domian_type is {}, url is {}",
+            "ApiPolicy Domain check, tid {}, bundle {}, domain_type {}, url {}",
             config.common_data.task_id, &config.bundle, &domain_type, &config.url
         );
         #[cfg(feature = "oh")]
         if let Some(is_accessed) = check_url_domain(&config.bundle, &domain_type, &config.url) {
             if !is_accessed {
                 error!(
-                    "Intercept request by domain check, task_id is {}, bundle is {}, domian_type is {}, url is {}",
+                    "Intercept request by domain check, tid {}, bundle {}, domain_type {}, url {}",
                     config.common_data.task_id, &config.bundle, &domain_type, &config.url
                 );
                 return Err(Box::new(HttpClientError::other(
@@ -96,7 +96,7 @@ pub(crate) fn build_client(
             }
         } else {
             info!(
-                "Intercept request by domain check, task_id is {}, domian_type is {}, url is {}",
+                "Intercept request by domain check, tid {}, domain_type {}, url {}",
                 config.common_data.task_id, &domain_type, &config.url
             );
         }
@@ -108,7 +108,7 @@ pub(crate) fn build_client(
         }
 
         info!(
-            "add interceptor domain check, tid: {}",
+            "add interceptor domain check, tid {}",
             config.common_data.task_id
         );
     }
@@ -194,7 +194,7 @@ fn build_task_certs(config: &TaskConfig) -> Result<Vec<Certificate>, Box<dyn Err
     Ok(certs)
 }
 
-fn action_to_domian_type(action: Action) -> String {
+fn action_to_domain_type(action: Action) -> String {
     match action {
         Action::Download => "download".to_string(),
         Action::Upload => "upload".to_string(),
@@ -223,7 +223,7 @@ impl Interceptor for DomainInterceptor {
     fn intercept_redirect_request(&self, request: &Request) -> Result<(), HttpClientError> {
         let url = &request.uri().to_string();
         info!(
-            "ApiPolicy Domain check redirect, bundle is {}, domian_type is {}, url is {}",
+            "ApiPolicy Domain check redirect, bundle {}, domain_type {}, url {}",
             &self.app_id, &self.domain_type, &url
         );
         match check_url_domain(&self.app_id, &self.domain_type, url).unwrap_or(true) {

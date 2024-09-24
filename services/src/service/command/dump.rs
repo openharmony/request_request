@@ -58,7 +58,7 @@ impl RequestServiceStub {
     }
 
     fn dump_all_task_info(&self, mut file: File) {
-        info!("Service dump: dump all task info");
+        info!("Service dump all task info");
 
         let (event, rx) = TaskManagerEvent::dump_all();
         if !self.task_manager.lock().unwrap().send_event(event) {
@@ -95,7 +95,7 @@ impl RequestServiceStub {
     }
 
     fn dump_one_task_info(&self, mut file: File, task_id: u32) {
-        info!("Service dump: dump one task info");
+        info!("Service dump one task info");
 
         let (event, rx) = TaskManagerEvent::dump_one(task_id);
         if !self.task_manager.lock().unwrap().send_event(event) {

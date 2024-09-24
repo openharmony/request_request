@@ -168,15 +168,15 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
         }
     }
 
-    REQUEST_HILOGI("End task on %{public}s ok, seq: %{public}d, tid: %{public}s", jsParam.type.c_str(), seq,
-        jsParam.task->GetTid().c_str());
+    REQUEST_HILOGI("End task %{public}s on %{public}s seq %{public}d", jsParam.task->GetTid().c_str(),
+        jsParam.type.c_str(), seq);
     return nullptr;
 }
 
 napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
-    REQUEST_HILOGD("Begin task off, seq: %{public}d", seq);
+    REQUEST_HILOGD("Begin task off, seq %{public}d", seq);
     JsParam jsParam;
     ExceptionError err = ParseOnOffParameters(env, info, false, jsParam);
     if (err.code != E_OK) {
@@ -212,7 +212,7 @@ napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
         }
     }
 
-    REQUEST_HILOGD("End task off %{public}s ok, seq: %{public}d, tid: %{public}s", jsParam.type.c_str(), seq,
+    REQUEST_HILOGD("End task off %{public}s ok, seq %{public}d tid %{public}s", jsParam.type.c_str(), seq,
         jsParam.task->GetTid().c_str());
     return nullptr;
 }
@@ -297,7 +297,7 @@ ExceptionError RequestEvent::ParseOnOffParameters(
 napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, const std::string &execType)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
-    REQUEST_HILOGI("Begin task %{public}s, seq: %{public}d", execType.c_str(), seq);
+    REQUEST_HILOGI("Begin task %{public}s seq %{public}d", execType.c_str(), seq);
     auto context = std::make_shared<ExecContext>();
     auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
         return ParseInputParameters(context->env_, argc, self, context);
@@ -314,7 +314,7 @@ napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, const std::
             REQUEST_HILOGE("End task %{public}s in AsyncCall output, seq: %{public}d, failed: %{public}d",
                 execType.c_str(), seq, status);
         } else {
-            REQUEST_HILOGI("End task %{public}s ok, seq: %{public}d", execType.c_str(), seq);
+            REQUEST_HILOGI("End task %{public}s ok seq %{public}d", execType.c_str(), seq);
         }
         return status;
     };

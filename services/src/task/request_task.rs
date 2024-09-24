@@ -337,7 +337,7 @@ impl RequestTask {
         let begins = self.conf.common_data.begins;
         let ends = self.conf.common_data.ends;
 
-        info!(
+        debug!(
             "task {} build download request, resume_download: {}, require_range: {}",
             self.task_id(),
             resume_download,
@@ -399,7 +399,7 @@ impl RequestTask {
             support_range = true;
         }
         if !support_range {
-            info!("task {} does not support range request", self.task_id());
+            info!("task {} not support range", self.task_id());
         }
         (request_builder, support_range)
     }

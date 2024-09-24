@@ -25,7 +25,7 @@ impl RequestServiceStub {
         reply: &mut MsgParcel,
     ) -> IpcResult<()> {
         let pid = ipc::Skeleton::calling_pid();
-        info!("Service run_count subscribe: pid is {}", pid);
+        info!("Service run_count subscribe pid {}", pid);
 
         let obj: RemoteObj = data.read_remote()?;
         let ret = self.run_count_manager.subscribe_run_count(pid, obj);

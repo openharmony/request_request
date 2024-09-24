@@ -21,7 +21,7 @@ use crate::service::RequestServiceStub;
 impl RequestServiceStub {
     pub(crate) fn subscribe(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         let task_id: String = data.read()?;
-        info!("Service subscribe: tid: {}", task_id);
+        info!("Service subscribe tid {}", task_id);
 
         let Ok(task_id) = task_id.parse::<u32>() else {
             error!("End Service subscribe, failed: task_id not valid");

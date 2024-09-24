@@ -20,7 +20,7 @@ use crate::service::{serialize_task_info, RequestServiceStub};
 impl RequestServiceStub {
     pub(crate) fn touch(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         let task_id: String = data.read()?;
-        info!("Service touch: tid: {}", task_id);
+        info!("Service touch tid {}", task_id);
 
         let Ok(task_id) = task_id.parse::<u32>() else {
             error!("End Service touch, failed: task_id or token not valid");

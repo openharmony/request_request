@@ -112,7 +112,7 @@ impl Scheduler {
     }
 
     pub(crate) fn restore_all_tasks(&mut self) {
-        info!("Reschedule tasks restore all tasks");
+        info!("reschedule restore all tasks");
         // Reschedule tasks based on the current `QOS` status.
         self.schedule_if_not_scheduled();
     }
@@ -203,7 +203,7 @@ impl Scheduler {
     }
 
     pub(crate) fn task_completed(&mut self, uid: u64, task_id: u32) {
-        info!("Scheduler notify task {} completed", task_id);
+        info!("scheduler task {} completed", task_id);
         self.running_queue.task_finish(uid, task_id);
 
         let database = RequestDb::get_instance();
@@ -231,7 +231,7 @@ impl Scheduler {
         mode: Mode,
         task_count: &mut HashMap<u64, (usize, usize)>,
     ) {
-        info!("Scheduler notify task {} canceled", task_id);
+        info!("scheduler task {} canceled", task_id);
         self.running_queue.task_finish(uid, task_id);
 
         let database = RequestDb::get_instance();
@@ -276,7 +276,7 @@ impl Scheduler {
             }
             state => {
                 info!(
-                    "task {} cancel with state {:?} reason {:?}",
+                    "task {} cancel state {:?} reason {:?}",
                     task_id,
                     state,
                     Reason::from(info.common_data.reason)
@@ -287,7 +287,7 @@ impl Scheduler {
     }
 
     pub(crate) fn task_failed(&mut self, uid: u64, task_id: u32, reason: Reason) {
-        info!("Scheduler notify task {} failed", task_id);
+        info!("scheduler task {} failed", task_id);
         self.running_queue.task_finish(uid, task_id);
 
         let database = RequestDb::get_instance();
@@ -415,7 +415,7 @@ impl Scheduler {
 
         if !config.satisfy_foreground(self.state_handler.top_uid()) {
             info!(
-                "task {} started, waiting for app {} state",
+                "task {} started, waiting for app {}",
                 task_id, config.common_data.uid
             );
             database.update_task_state(task_id, State::Waiting, Reason::AppBackgroundOrTerminate);

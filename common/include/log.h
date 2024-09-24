@@ -51,11 +51,11 @@ static constexpr OHOS::HiviewDFX::HiLogLabel REQUEST_LOG_LABEL = { LOG_CORE, REQ
 
 #define REQUEST_HILOGE(fmt, ...)                                                           \
     (void)HILOG_IMPL(LOG_CORE, LOG_ERROR, REQUEST_LOG_LABEL.domain, REQUEST_LOG_LABEL.tag, \
-        "[%{public}s %{public}s %{public}d] " fmt, MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+        "[%{public}s %{public}d] " fmt, MAKE_FILE_NAME, __LINE__, ##__VA_ARGS__)
 
 #define REQUEST_HILOGW(fmt, ...)                                                          \
     (void)HILOG_IMPL(LOG_CORE, LOG_WARN, REQUEST_LOG_LABEL.domain, REQUEST_LOG_LABEL.tag, \
-        "[%{public}s %{public}s %{public}d] " fmt, MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+        "[%{public}s %{public}d] " fmt, MAKE_FILE_NAME, __LINE__, ##__VA_ARGS__)
 
 #define REQUEST_HILOGD(fmt, ...)                                                           \
     (void)HILOG_IMPL(LOG_CORE, LOG_DEBUG, REQUEST_LOG_LABEL.domain, REQUEST_LOG_LABEL.tag, \
@@ -63,7 +63,7 @@ static constexpr OHOS::HiviewDFX::HiLogLabel REQUEST_LOG_LABEL = { LOG_CORE, REQ
 
 #define REQUEST_HILOGI(fmt, ...)                                                          \
     (void)HILOG_IMPL(LOG_CORE, LOG_INFO, REQUEST_LOG_LABEL.domain, REQUEST_LOG_LABEL.tag, \
-        "[%{public}s %{public}s %{public}d] " fmt, MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+        "[%{public}s %{public}d] " fmt, MAKE_FILE_NAME, __LINE__, ##__VA_ARGS__)
 
 #else
 

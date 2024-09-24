@@ -24,7 +24,6 @@
 #include "cert_manager_api.h"
 #include "cm_type.h"
 
-
 struct CRequestCert {
     uint32_t size;
     uint8_t *data;
