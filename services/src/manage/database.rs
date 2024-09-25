@@ -30,7 +30,7 @@ cfg_not_oh! {
 use super::network::Network;
 use crate::error::ErrorCode;
 use crate::service::client::ClientManagerEntry;
-use crate::task::config::{Mode, TaskConfig};
+use crate::task::config::TaskConfig;
 use crate::task::ffi::{CEachFileStatus, CTaskConfig, CTaskInfo, CUpdateInfo};
 use crate::task::info::{State, TaskInfo, UpdateInfo};
 use crate::task::reason::Reason;
@@ -172,26 +172,6 @@ impl RequestDb {
         }
     }
 
-    pub(crate) fn query_app_uncompleted_task_num(&self, uid: u64, mode: Mode) -> usize {
-        let sql = format!(
-            "SELECT COUNT(*) FROM request_task WHERE uid = {} AND mode = {} AND (state = {} OR state = {} OR state = {} OR state = {} OR state = {})",
-            uid, mode.repr,
-            State::Waiting.repr,
-            State::Paused.repr,
-            State::Initialized.repr,
-            State::Running.repr,
-            State::Retrying.repr,
-        );
-        let v = self.query_integer::<usize>(&sql);
-
-        if v.is_empty() {
-            error!("query_app_uncompleted_task_num failed, empty result");
-            0
-        } else {
-            v[0]
-        }
-    }
-
     #[cfg(feature = "oh")]
     pub(crate) fn insert_task(&self, task: RequestTask) -> bool {
         let task_id = task.task_id();
@@ -310,6 +290,16 @@ impl RequestDb {
         let c_update_info = update_info.to_c_struct(&sizes, &processed, &extras, &each_file_status);
         let ret = unsafe { UpdateRequestTask(task_id, &c_update_info) };
         debug!("Update task in database, ret is {}", ret);
+    }
+
+    pub(crate) fn clear_invalid_records(&self) {
+        let sql = format!(
+            "UPDATE request_task SET state = {} WHERE state = {} AND reason = {}",
+            State::Failed.repr,
+            State::Waiting.repr,
+            Reason::Default.repr,
+        );
+        let _ = self.execute(&sql);
     }
 
     #[cfg(not(feature = "oh"))]
@@ -738,61 +728,5 @@ mod test {
         assert_eq!(info.mode, Mode::FrontEnd.repr);
         assert_eq!(info.state, State::Completed.repr);
         assert_eq!(info.priority, priority);
-    }
-
-    #[test]
-    fn ut_database_query_app_uncompleted_task_num() {
-        test_init();
-        let _lock = lock_database();
-
-        let uid = get_current_timestamp() as u64;
-        let db = RequestDb::get_instance();
-
-        db.execute(&format!(
-            "INSERT INTO request_task (task_id, uid, state, mode) VALUES ({}, {}, {}, {})",
-            TaskIdGenerator::generate(),
-            uid,
-            State::Waiting.repr,
-            Mode::BackGround.repr,
-        ))
-        .unwrap();
-
-        db.execute(&format!(
-            "INSERT INTO request_task (task_id, uid, state, mode) VALUES ({}, {}, {}, {})",
-            TaskIdGenerator::generate(),
-            uid,
-            State::Paused.repr,
-            Mode::BackGround.repr,
-        ))
-        .unwrap();
-
-        db.execute(&format!(
-            "INSERT INTO request_task (task_id, uid, state, mode) VALUES ({}, {}, {}, {})",
-            TaskIdGenerator::generate(),
-            uid,
-            State::Initialized.repr,
-            Mode::BackGround.repr,
-        ))
-        .unwrap();
-
-        db.execute(&format!(
-            "INSERT INTO request_task (task_id, uid, state, mode) VALUES ({}, {}, {}, {})",
-            TaskIdGenerator::generate(),
-            uid,
-            State::Running.repr,
-            Mode::BackGround.repr,
-        ))
-        .unwrap();
-
-        db.execute(&format!(
-            "INSERT INTO request_task (task_id, uid, state, mode) VALUES ({}, {}, {}, {})",
-            TaskIdGenerator::generate(),
-            uid,
-            State::Retrying.repr,
-            Mode::BackGround.repr,
-        ))
-        .unwrap();
-
-        assert_eq!(db.query_app_uncompleted_task_num(uid, Mode::BackGround), 5);
     }
 }
