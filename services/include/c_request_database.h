@@ -107,6 +107,7 @@ constexpr const char *REQUEST_TASK_TABLE_ADD_BUNDLE_TYPE = "ALTER TABLE request_
 constexpr const char *REQUEST_TASK_TABLE_ADD_ATOMIC_ACCOUNT = "ALTER TABLE request_task ADD COLUMN atomic_account "
                                                               "TEXT";
 
+constexpr const char *REQUEST_TASK_TABLE_ADD_UID_INDEX = "CREATE INDEX uid_index on request_task(uid)";
 struct TaskFilter;
 struct NetworkInfo;
 struct TaskQosInfo;
@@ -125,6 +126,7 @@ public:
     int QueryText(rust::str sql, rust::vec<rust::string> &res);
     int GetAppTaskQosInfos(rust::str sql, rust::vec<TaskQosInfo> &res);
     int GetTaskQosInfo(rust::str sql, TaskQosInfo &res);
+    void CheckAndRebuildDataBase(int errCode);
 
 private:
     RequestDataBase(std::string path, bool encryptStatus);
