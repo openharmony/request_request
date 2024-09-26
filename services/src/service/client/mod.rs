@@ -189,7 +189,7 @@ impl Client {
                         let _ = self.client_sock_fd.shutdown(Shutdown::Both);
                         let _ = self.server_sock_fd.shutdown(Shutdown::Both);
                         self.rx.close();
-                        info!("client terminate, pid: {}", self.pid);
+                        info!("client terminate, pid {}", self.pid);
                         return;
                     }
                     ClientEvent::SendResponse(tid, version, status_code, reason, headers) => {
@@ -335,13 +335,13 @@ impl Client {
         let size = message.len() as u16;
         if subscribe_type == SubscribeType::Progress {
             debug!(
-                "send notify data, type: {:?}, tid: {}, size: {}",
-                subscribe_type, notify_data.task_id, size
+                "send tid {} {:?} size {}",
+                notify_data.task_id, subscribe_type, size
             );
         } else {
             info!(
-                "send notify data, type: {:?}, tid: {}, size: {}",
-                subscribe_type, notify_data.task_id, size
+                "send tid {} {:?} size {}",
+                notify_data.task_id, subscribe_type, size
             );
         }
 

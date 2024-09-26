@@ -67,7 +67,7 @@ impl StateRecord {
         if info == self.network {
             return None;
         }
-        info!("update network state to {:?}", info);
+        info!("update network to {:?}", info);
         let mut sql_list = SqlList::new();
         sql_list.add_network_change(&info);
         self.network = info;
@@ -82,7 +82,7 @@ impl StateRecord {
         if self.active_accounts == active_accounts {
             return None;
         }
-        info!("update active accounts : {:?}", active_accounts);
+        info!("update active accounts {:?}", active_accounts);
         let mut sql_list = SqlList::new();
         sql_list.add_account_change(&active_accounts);
         self.active_accounts = active_accounts;
@@ -91,7 +91,7 @@ impl StateRecord {
     }
 
     pub(crate) fn update_top_uid(&mut self, uid: u64) -> Option<SqlList> {
-        info!("update top uid to {}", uid);
+        info!("update top uid {}", uid);
         let mut sql_list = SqlList::new();
         sql_list.add_app_state_available(uid);
         self.top_uid = Some(uid);

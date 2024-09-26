@@ -21,7 +21,7 @@ use crate::service::{serialize_task_config, RequestServiceStub};
 impl RequestServiceStub {
     pub(crate) fn get_task(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         let task_id: String = data.read()?;
-        info!("Service getTask, tid: {}", task_id);
+        info!("Service getTask tid {}", task_id);
 
         let Ok(task_id) = task_id.parse::<u32>() else {
             error!(

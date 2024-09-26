@@ -115,7 +115,7 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
 
     task.prepare_download().await?;
 
-    info!("download task {} start running", task.task_id());
+    info!("download task {} running", task.task_id());
 
     let request = task.build_download_request().await?;
 
@@ -126,8 +126,8 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
             #[cfg(feature = "oh")]
             task.notify_response(response);
             info!(
-                "task {} get http response code {}",
-                task.conf.common_data.task_id, status_code,
+                "task {} get response {}",
+                task.conf.common_data.task_id, status_code
             );
             if status_code.is_server_error()
                 || (status_code.as_u16() != 408 && status_code.is_client_error())
@@ -147,7 +147,7 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
             }
             if status_code.as_u16() == 200 {
                 if task.require_range() {
-                    info!("task {} server not support range request", task.task_id());
+                    info!("task {} server not support range", task.task_id());
                     return Err(TaskError::Failed(Reason::UnsupportedRangeRequest));
                 }
                 let file = task.files.get(0).unwrap();
@@ -226,7 +226,7 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
         guard.sizes = vec![guard.processed[0] as i64];
     }
 
-    info!("task {} download success", task.task_id());
+    info!("task {} download ok", task.task_id());
     Ok(())
 }
 

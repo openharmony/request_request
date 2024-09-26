@@ -25,7 +25,7 @@ static mut APP_STATE_LISTENER: MaybeUninit<AppStateListener> = MaybeUninit::unin
 
 impl AppStateListener {
     pub(crate) fn init(client_manager: ClientManagerEntry, task_manager: TaskManagerTx) {
-        info!("AppStateListener prepares to be inited");
+        info!("AppStateListener init");
         unsafe {
             APP_STATE_LISTENER.write(AppStateListener {
                 client_manager,
@@ -37,7 +37,7 @@ impl AppStateListener {
                 RegisterProcessStateCallback(process_state_change_callback);
             }
         }
-        info!("AppStateListener is inited");
+        info!("AppStateListener init ok");
     }
 }
 
@@ -61,14 +61,11 @@ extern "C" fn app_state_change_callback(uid: i32, state: i32, _pid: i32) {
 
 extern "C" fn process_state_change_callback(uid: i32, state: i32, pid: i32) {
     debug!(
-        "Receives process change notify, uid is {}, pid is {}, state is {}",
+        "Receives process change, uid {} pid {} state {}",
         uid, pid, state
     );
     if state == 5 {
-        info!(
-            "Receives process died notify, uid is {}, pid is {}",
-            uid, pid
-        );
+        info!("Receives process died, uid {} pid {}", uid, pid);
         unsafe {
             APP_STATE_LISTENER
                 .assume_init_ref()

@@ -20,7 +20,6 @@
 
 namespace OHOS::Request {
 
-
 int GetTopUid(int &uid);
 rust::string GetCallingBundle(rust::u64 tokenId);
 bool IsSystemAPI(uint64_t tokenId);

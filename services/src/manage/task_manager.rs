@@ -147,7 +147,7 @@ impl TaskManager {
                 TaskManagerEvent::Task(event) => self.handle_task_event(event),
                 TaskManagerEvent::Schedule(event) => {
                     if self.handle_schedule_event(event) {
-                        info!("TaskManager unload succeed");
+                        info!("TaskManager unload ok");
                         // If unload_sa success, can not breaks this loop.
                     }
                 }
@@ -314,10 +314,7 @@ impl TaskManager {
 
         let running_tasks = self.scheduler.running_tasks();
         if running_tasks != 0 {
-            info!(
-                "Running tasks num is {} when trying to unload SA",
-                running_tasks,
-            );
+            info!("running {} tasks when unload SA", running_tasks,);
             return false;
         }
 

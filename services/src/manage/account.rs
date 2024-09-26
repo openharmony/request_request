@@ -33,7 +33,7 @@ static UPDATE_FLAG: AtomicBool = AtomicBool::new(false);
 static mut TASK_MANAGER_TX: Option<TaskManagerTx> = None;
 
 pub(crate) fn remove_account_tasks(user_id: i32) {
-    info!("delete database task by user_id: {}", user_id);
+    info!("delete database task, uid {}", user_id);
     let request_db = RequestDb::get_instance();
     request_db.delete_all_account_tasks(user_id);
 }
