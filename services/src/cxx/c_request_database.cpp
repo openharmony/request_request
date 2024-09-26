@@ -26,6 +26,7 @@
 #include "base/request/request/common/include/log.h"
 #include "c_task_info.h"
 #include "cxx.h"
+#include "errors.h"
 #include "log.h"
 #include "manage/database.rs.h"
 #include "manage/network.rs.h"
@@ -36,9 +37,8 @@
 #include "task/reason.rs.h"
 namespace OHOS::Request {
 
-RequestDataBase::RequestDataBase(std::string path, bool encryptStatus)
+void BuildDatabase(std::string path, bool encryptStatus, std::shared_ptr<OHOS::NativeRdb::RdbStore> &store)
 {
-    REQUEST_HILOGI("Process Get request database");
     int errCode = OHOS::NativeRdb::E_OK;
     OHOS::NativeRdb::RdbStoreConfig config(path);
     if (encryptStatus) {
@@ -48,14 +48,33 @@ RequestDataBase::RequestDataBase(std::string path, bool encryptStatus)
     RequestDBOpenCallback requestDBOpenCallback;
     // retry 10 times
     for (int index = 0; index < 10; ++index) {
-        store_ = OHOS::NativeRdb::RdbHelper::GetRdbStore(config, DATABASE_VERSION, requestDBOpenCallback, errCode);
-        if (store_ == nullptr) {
+        store = OHOS::NativeRdb::RdbHelper::GetRdbStore(config, DATABASE_VERSION, requestDBOpenCallback, errCode);
+        if (store == nullptr) {
             REQUEST_HILOGE("GetRdbStore failed: %{public}d, try DeleteRdbStore", errCode);
             OHOS::NativeRdb::RdbHelper::DeleteRdbStore(path);
         } else {
             REQUEST_HILOGI("End get request database successful");
             return;
         }
+    }
+}
+
+RequestDataBase::RequestDataBase(std::string path, bool encryptStatus)
+{
+    REQUEST_HILOGI("Process Get request database");
+    BuildDatabase(path, encryptStatus, store_);
+}
+
+void RequestDataBase::CheckAndRebuildDataBase(int errCode)
+{
+    if (errCode == OHOS::NativeRdb::E_SQLITE_CORRUPT) {
+        REQUEST_HILOGE("Database corruption : %{public}d", errCode);
+        int errCode = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(OHOS::Request::DB_NAME);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            REQUEST_HILOGE("delete database failed: %{public}d", errCode);
+            return;
+        }
+        BuildDatabase(OHOS::Request::DB_NAME, true, store_);
     }
 }
 
@@ -119,7 +138,12 @@ int RequestDataBase::QueryInteger(rust::str sql, rust::vec<rust::i64> &res)
     }
     int rowCount = 0;
 
-    queryRet->GetRowCount(rowCount);
+    int errCode = queryRet->GetRowCount(rowCount);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("GetRowCount failed: %{public}d", errCode);
+        CheckAndRebuildDataBase(errCode);
+        return -1;
+    }
     for (int i = 0; i < rowCount; i++) {
         auto code = queryRet->GoToRow(i);
         if (code != OHOS::NativeRdb::E_OK) {
@@ -145,7 +169,12 @@ int RequestDataBase::QueryText(rust::str sql, rust::vec<rust::String> &res)
     }
     int rowCount = 0;
 
-    queryRet->GetRowCount(rowCount);
+    int errCode = queryRet->GetRowCount(rowCount);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("GetRowCount failed: %{public}d", errCode);
+        CheckAndRebuildDataBase(errCode);
+        return -1;
+    }
     for (int i = 0; i < rowCount; i++) {
         if (queryRet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
             REQUEST_HILOGE("result set go to %{public}d row failed", i);
@@ -178,8 +207,15 @@ int RequestDataBase::GetAppTaskQosInfos(rust::str sql, rust::vec<TaskQosInfo> &r
     auto queryRet = store_->QueryByStep(std::string(sql));
     int rowCount = 0;
 
-    if (queryRet == nullptr || queryRet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("GetRunningTasksArray result set is nullptr or get row count failed");
+    if (queryRet == nullptr) {
+        REQUEST_HILOGE("GetRunningTasksArray result set is nullptr");
+        return -1;
+    }
+
+    int errCode = queryRet->GetRowCount(rowCount);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("GetRowCount failed: %{public}d", errCode);
+        CheckAndRebuildDataBase(errCode);
         return -1;
     }
 
@@ -211,8 +247,15 @@ int RequestDataBase::GetTaskQosInfo(rust::str sql, TaskQosInfo &res)
     auto queryRet = store_->QueryByStep(std::string(sql));
     int rowCount = 0;
 
-    if (queryRet == nullptr || queryRet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
-        REQUEST_HILOGE("GetTaskQosInfo result set is nullptr or get row count failed");
+    if (queryRet == nullptr) {
+        REQUEST_HILOGE("GetTaskQosInfo result set is nullptr");
+        return -1;
+    }
+
+    int errCode = queryRet->GetRowCount(rowCount);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("GetRowCount failed: %{public}d", errCode);
+        CheckAndRebuildDataBase(errCode);
         return -1;
     }
 
@@ -1107,20 +1150,22 @@ CTaskConfig *QueryTaskConfig(uint32_t taskId)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
-    auto resultSet = OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true)
-                         .Query(rdbPredicates,
-                             { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming",
-                                 "retry", "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority",
-                                 "background", "bundle", "url", "title", "description", "method", "headers", "data",
-                                 "token", "config_extras", "version", "form_items", "file_specs", "body_file_names",
-                                 "certs_paths", "proxy", "certificate_pins", "bundle_type", "atomic_account" });
+    OHOS::Request::RequestDataBase &database =
+        OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true);
+    auto resultSet = database.Query(rdbPredicates,
+        { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming", "retry", "redirect",
+            "config_idx", "begins", "ends", "gauge", "precise", "priority", "background", "bundle", "url", "title",
+            "description", "method", "headers", "data", "token", "config_extras", "version", "form_items", "file_specs",
+            "body_file_names", "certs_paths", "proxy", "certificate_pins", "bundle_type", "atomic_account" });
     int rowCount = 0;
     if (resultSet == nullptr) {
         REQUEST_HILOGE("QuerySingleTaskConfig failed: result set is nullptr");
         return nullptr;
     }
-    if (resultSet->GetRowCount(rowCount) != OHOS::NativeRdb::E_OK) {
+    int errCode = resultSet->GetRowCount(rowCount);
+    if (errCode != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("TaskConfig result count row failed");
+        database.CheckAndRebuildDataBase(errCode);
         return nullptr;
     }
     if (rowCount == 0) {

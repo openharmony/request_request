@@ -125,6 +125,7 @@ public:
     int QueryText(rust::str sql, rust::vec<rust::string> &res);
     int GetAppTaskQosInfos(rust::str sql, rust::vec<TaskQosInfo> &res);
     int GetTaskQosInfo(rust::str sql, TaskQosInfo &res);
+    void CheckAndRebuildDataBase(int errCode);
 
 private:
     RequestDataBase(std::string path, bool encryptStatus);
