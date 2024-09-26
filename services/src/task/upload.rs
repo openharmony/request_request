@@ -229,43 +229,44 @@ fn build_request_common(
 
 impl RequestTask {
     async fn prepare_single_upload(&self, index: usize) -> bool {
-        if let Some(file) = self.files.get_mut(index) {
-            let size;
-            {
-                let mut progress = self.progress.lock().unwrap();
-                progress.common_data.index = index;
-                if !self.upload_resume.load(Ordering::SeqCst) {
-                    progress.processed[index] = 0;
-                    self.upload_resume.store(false, Ordering::SeqCst);
-                }
-
-                progress.common_data.total_processed = progress.processed.iter().take(index).sum();
-                size = progress.sizes[index] as u64;
-            }
-            if self.conf.common_data.index == index as u32 {
-                let Ok(metadata) = file.metadata().await else {
-                    error!("get file metadata failed");
-                    return false;
-                };
-                if metadata.len() > size {
-                    file.seek(SeekFrom::Start(self.conf.common_data.begins));
-                }
-            }
-            file.seek(SeekFrom::Start(
-                self.progress.lock().unwrap().processed[index] as u64,
-            ));
-            true
-        } else {
+        let Some(file) = self.files.get_mut(index) else {
             error!("task {} file {} not found", self.task_id(), index);
-            false
+            return false;
+        };
+        {
+            let mut progress = self.progress.lock().unwrap();
+            if self.upload_resume.load(Ordering::SeqCst) {
+                self.upload_resume.store(false, Ordering::SeqCst);
+            } else {
+                progress.processed[index] = 0;
+            }
+
+            progress.common_data.total_processed = progress.processed.iter().take(index).sum();
         }
+
+        let processed = self.progress.lock().unwrap().processed[index] as u64;
+        if self.conf.common_data.index == index as u32 {
+            let Ok(metadata) = file.metadata().await else {
+                error!("get file metadata failed");
+                return false;
+            };
+            if metadata.len() > self.progress.lock().unwrap().sizes[index] as u64 {
+                file.seek(SeekFrom::Start(self.conf.common_data.begins + processed))
+                    .await
+            } else {
+                file.seek(SeekFrom::Start(processed)).await
+            }
+        } else {
+            file.seek(SeekFrom::Start(processed)).await
+        }
+        .is_ok()
     }
 }
 
 pub(crate) async fn upload(task: Arc<RequestTask>) {
     RequestDb::get_instance()
         .update_task_sizes(task.task_id(), &task.progress.lock().unwrap().sizes);
-    
+
     task.tries.store(0, Ordering::SeqCst);
     loop {
         if let Err(e) = upload_inner(task.clone()).await {

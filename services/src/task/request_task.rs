@@ -115,6 +115,16 @@ impl RequestTask {
     }
 }
 
+pub(crate) fn change_upload_size(begins: u64, mut ends: i64, size: i64) -> i64 {
+    if ends < 0 || ends >= size {
+        ends = size - 1;
+    }
+    if begins as i64 > ends {
+        return size;
+    }
+    ends - begins as i64 + 1
+}
+
 impl RequestTask {
     pub(crate) fn new(
         config: TaskConfig,
@@ -141,18 +151,13 @@ impl RequestTask {
         };
 
         let mut sizes = files.sizes.clone();
-        if action == Action::Upload
-            && config.common_data.index < sizes.len() as u32
-            && sizes[config.common_data.index as usize] > 0
-            && config.common_data.begins < sizes[config.common_data.index as usize] as u64 - 1
-            && config.common_data.ends >= 0
-            && config.common_data.begins <= config.common_data.ends as u64
-        {
-            let ends = config
-                .common_data
-                .ends
-                .min(sizes[config.common_data.index as usize] - 1);
-            sizes[config.common_data.index as usize] = ends - config.common_data.begins as i64 + 1;
+
+        if action == Action::Upload && config.common_data.index < sizes.len() as u32 {
+            sizes[config.common_data.index as usize] = change_upload_size(
+                config.common_data.begins,
+                config.common_data.ends,
+                sizes[config.common_data.index as usize],
+            );
         }
 
         let time = get_current_timestamp();
@@ -681,4 +686,20 @@ pub enum TaskPhase {
 pub enum TaskError {
     Failed(Reason),
     Waiting(TaskPhase),
+}
+
+#[cfg(test)]
+mod test {
+    use crate::task::request_task::change_upload_size;
+
+    #[test]
+    fn ut_upload_size() {
+        assert_eq!(change_upload_size(0, -1, 30), 30);
+        assert_eq!(change_upload_size(10, -1, 30), 20);
+        assert_eq!(change_upload_size(0, 10, 30), 11);
+        assert_eq!(change_upload_size(10, 10, 100), 1);
+        assert_eq!(change_upload_size(0, 30, 30), 30);
+        assert_eq!(change_upload_size(0, 0, 0), 0);
+        assert_eq!(change_upload_size(10, 9, 100), 100);
+    }
 }
