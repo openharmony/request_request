@@ -14,7 +14,9 @@
 use std::mem::MaybeUninit;
 
 use super::task_manager::TaskManagerTx;
+use crate::manage::events::{StateEvent, TaskManagerEvent};
 use crate::service::client::ClientManagerEntry;
+use crate::utils::{CommonEventSubscriber, CommonEventWant};
 
 pub(crate) struct AppStateListener {
     client_manager: ClientManagerEntry,
@@ -72,6 +74,28 @@ extern "C" fn process_state_change_callback(uid: i32, state: i32, pid: i32) {
                 .client_manager
                 .notify_process_terminate(pid as u64)
         };
+    }
+}
+
+pub(crate) struct AppUninstallSubscriber {
+    task_manager: TaskManagerTx,
+}
+
+impl AppUninstallSubscriber {
+    pub(crate) fn new(task_manager: TaskManagerTx) -> Self {
+        Self { task_manager }
+    }
+}
+
+impl CommonEventSubscriber for AppUninstallSubscriber {
+    fn on_receive_event(&self, _code: i32, _data: String, want: CommonEventWant) {
+        if let Some(uid) = want.get_int_param("uid") {
+            info!("Receive app uninstall event, uid: {}", uid);
+            self.task_manager
+                .send_event(TaskManagerEvent::State(StateEvent::AppUninstall(
+                    uid as u64,
+                )));
+        }
     }
 }
 
