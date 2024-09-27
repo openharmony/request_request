@@ -96,7 +96,7 @@ pub(crate) async fn download(task: Arc<RequestTask>) {
 impl RequestTask {
     async fn prepare_download(&self) -> Result<(), TaskError> {
         let file = self.files.get_mut(0).unwrap();
-        file.seek(SeekFrom::End(0));
+        file.seek(SeekFrom::End(0)).await?;
         let downloaded = file.metadata().await?.len() as usize;
         let mut progress = self.progress.lock().unwrap();
         progress.common_data.index = 0;
