@@ -112,23 +112,6 @@ impl RunningQueue {
         self.download_queue.len() + self.upload_queue.len()
     }
 
-    pub(crate) fn dump_tasks(&self) {
-        info!("dump all running {}", self.running_tasks());
-
-        for ((uid, task_id), task) in self.download_queue.iter().chain(self.upload_queue.iter()) {
-            let task_status = task.status.lock().unwrap();
-            info!(
-                "dump task {}, uid {}, action {}, mode {}, bundle {}, status {:?}",
-                task_id,
-                uid,
-                task.action().repr,
-                task.mode().repr,
-                task.bundle(),
-                *task_status
-            );
-        }
-    }
-
     pub(crate) fn reschedule(&mut self, qos: QosChanges, qos_remove_queue: &mut Vec<(u64, u32)>) {
         if let Some(vec) = qos.download {
             self.reschedule_inner(Action::Download, vec, qos_remove_queue)

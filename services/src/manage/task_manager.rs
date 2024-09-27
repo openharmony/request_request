@@ -42,7 +42,6 @@ use crate::service::run_count::RunCountManagerEntry;
 use crate::utils::runtime_spawn;
 
 const CLEAR_INTERVAL: u64 = 30 * 60;
-const LOG_INTERVAL: u64 = 5 * 60;
 const RESTORE_ALL_TASKS_INTERVAL: u64 = 10;
 
 // TaskManager 的初始化逻辑：
@@ -103,7 +102,6 @@ impl TaskManager {
         runtime_spawn(restore_all_tasks(tx.clone()));
 
         runtime_spawn(clear_timeout_tasks(tx.clone()));
-        runtime_spawn(log_all_task_info(tx.clone()));
         runtime_spawn(task_manager.run());
         tx
     }
@@ -278,7 +276,6 @@ impl TaskManager {
 
         match message {
             ScheduleEvent::ClearTimeoutTasks => self.clear_timeout_tasks(),
-            ScheduleEvent::LogTasks => self.log_all_task_info(),
             ScheduleEvent::RestoreAllTasks => self.restore_all_tasks(),
             ScheduleEvent::Unload => return self.unload_sa(),
         }
@@ -295,10 +292,6 @@ impl TaskManager {
 
     fn clear_timeout_tasks(&mut self) {
         self.scheduler.clear_timeout_tasks();
-    }
-
-    fn log_all_task_info(&self) {
-        self.scheduler.dump_tasks();
     }
 
     fn restore_all_tasks(&mut self) {
@@ -427,12 +420,5 @@ async fn clear_timeout_tasks(tx: TaskManagerTx) {
     loop {
         sleep(Duration::from_secs(CLEAR_INTERVAL)).await;
         let _ = tx.send_event(TaskManagerEvent::Schedule(ScheduleEvent::ClearTimeoutTasks));
-    }
-}
-
-async fn log_all_task_info(tx: TaskManagerTx) {
-    loop {
-        sleep(Duration::from_secs(LOG_INTERVAL)).await;
-        let _ = tx.send_event(TaskManagerEvent::Schedule(ScheduleEvent::LogTasks));
     }
 }

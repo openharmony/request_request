@@ -107,10 +107,6 @@ impl Scheduler {
         self.running_queue.running_tasks()
     }
 
-    pub(crate) fn dump_tasks(&self) {
-        self.running_queue.dump_tasks();
-    }
-
     pub(crate) fn restore_all_tasks(&mut self) {
         info!("reschedule restore all tasks");
         // Reschedule tasks based on the current `QOS` status.
