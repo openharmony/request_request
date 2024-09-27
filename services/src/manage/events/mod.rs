@@ -214,7 +214,6 @@ impl Debug for ServiceEvent {
 #[derive(Debug)]
 pub(crate) enum ScheduleEvent {
     ClearTimeoutTasks,
-    LogTasks,
     RestoreAllTasks,
     Unload,
 }

@@ -90,10 +90,6 @@ impl RequestTask {
         self.conf.common_data.mode
     }
 
-    pub(crate) fn bundle(&self) -> &str {
-        self.conf.bundle.as_str()
-    }
-
     pub(crate) fn speed_limit(&self, limit: u64) {
         let old = self.rate_limiting.swap(limit, Ordering::SeqCst);
         if old != limit {
