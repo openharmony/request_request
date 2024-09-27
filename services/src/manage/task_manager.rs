@@ -33,13 +33,14 @@ use super::network::Network;
 use crate::config::{Action, Mode};
 use crate::error::ErrorCode;
 use crate::info::TaskInfo;
+use crate::manage::app_state::AppUninstallSubscriber;
 use crate::manage::network::register_network_change;
 use crate::manage::scheduler::state::Handler;
 use crate::manage::scheduler::Scheduler;
 use crate::service::client::ClientManagerEntry;
 use crate::service::notification_bar::subscribe_notification_bar;
 use crate::service::run_count::RunCountManagerEntry;
-use crate::utils::runtime_spawn;
+use crate::utils::{runtime_spawn, subscribe_common_event};
 
 const CLEAR_INTERVAL: u64 = 30 * 60;
 const LOG_INTERVAL: u64 = 5 * 60;
@@ -84,6 +85,17 @@ impl TaskManager {
         #[cfg(feature = "oh")]
         let network = register_network_change(tx.clone());
         subscribe_notification_bar(tx.clone());
+
+        if let Err(e) = subscribe_common_event(
+            vec![
+                "usual.event.PACKAGE_REMOVED",
+                "usual.event.BUNDLE_REMOVED",
+                "usual.event.PACKAGE_FULLY_REMOVED",
+            ],
+            AppUninstallSubscriber::new(tx.clone()),
+        ) {
+            error!("Subscribe app uninstall event failed: {}", e);
+        }
 
         let task_manager = Self::new(tx.clone(), rx, runcount_manager, client_manager, network);
 
@@ -218,6 +230,9 @@ impl TaskManager {
             StateEvent::BackgroundTimeout(uid) => self
                 .scheduler
                 .on_state_change(Handler::update_background_timeout, uid),
+            StateEvent::AppUninstall(uid) => {
+                self.scheduler.on_state_change(Handler::app_uninstall, uid);
+            }
         }
     }
 

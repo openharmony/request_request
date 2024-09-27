@@ -24,6 +24,7 @@ rust_cxx("download_server_cxx_gen") {
     "src/task/config.rs",
     "src/task/info.rs",
     "src/task/reason.rs",
+    "src/utils/common_event.rs",
     "src/utils/mod.rs",
   ]
 }
@@ -55,6 +56,7 @@ ohos_static_library("download_server_cxx") {
     "src/cxx/c_string_wrapper.cpp",
     "src/cxx/c_task_config.cpp",
     "src/cxx/c_task_info.cpp",
+    "src/cxx/common_event.cpp",
     "src/cxx/get_proxy.cpp",
     "src/cxx/network.cpp",
     "src/cxx/notification_bar.cpp",

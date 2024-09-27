@@ -77,6 +77,10 @@ impl SqlList {
     pub(crate) fn add_app_state_unavailable(&mut self, uid: u64) {
         self.sqls.push(app_state_unavailable(uid));
     }
+
+    pub(crate) fn add_app_uninstall(&mut self, uid: u64) {
+        self.sqls.push(app_uninstall(uid));
+    }
 }
 
 impl Iterator for SqlList {
@@ -85,6 +89,10 @@ impl Iterator for SqlList {
     fn next(&mut self) -> Option<Self::Item> {
         self.sqls.pop()
     }
+}
+
+pub(crate) fn app_uninstall(uid: u64) -> String {
+    format!("DELETE FROM request_task WHERE uid = {}", uid)
 }
 
 pub(crate) fn app_state_unavailable(uid: u64) -> String {

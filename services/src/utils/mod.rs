@@ -12,12 +12,16 @@
 // limitations under the License.
 
 pub(crate) mod c_wrapper;
+pub(crate) mod common_event;
 pub(crate) mod form_item;
 use std::collections::HashMap;
 use std::future::Future;
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+pub(crate) use common_event::{
+    subscribe_common_event, CommonEventSubscriber, Want as CommonEventWant,
+};
 pub(crate) use ffi::PublishStateChangeEvent;
 
 cfg_oh! {
@@ -126,7 +130,6 @@ mod ffi {
         include!("request_utils.h");
 
         fn PublishStateChangeEvent(bundleName: &str, taskId: u32, state: i32) -> bool;
-
         fn GetTopUid(uid: &mut i32) -> i32;
         fn GetCallingBundle(token_id: u64) -> String;
         fn IsSystemAPI(token_id: u64) -> bool;
