@@ -152,7 +152,7 @@ impl Ability for RequestAbility {
 #[used]
 #[link_section = ".init_array"]
 static A: extern "C" fn() = {
-    #[link_section = "..text.startup"]
+    #[link_section = ".text.startup"]
     extern "C" fn init() {
         info!("begin request service init");
         let system_ability = RequestAbility::new()
