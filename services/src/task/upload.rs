@@ -240,7 +240,7 @@ impl RequestTask {
             } else {
                 progress.processed[index] = 0;
             }
-
+            progress.common_data.index = index;
             progress.common_data.total_processed = progress.processed.iter().take(index).sum();
         }
 
