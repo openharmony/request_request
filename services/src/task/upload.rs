@@ -22,6 +22,7 @@ use ylong_http_client::async_impl::{Body, MultiPart, Part, Request, UploadOperat
 use ylong_http_client::{ErrorKind, HttpClientError, ReusableReader};
 use ylong_runtime::io::{AsyncRead, AsyncSeekExt, ReadBuf};
 
+use super::info::State;
 use super::operator::TaskOperator;
 use super::reason::Reason;
 use super::request_task::{TaskError, TaskPhase};
@@ -266,7 +267,7 @@ impl RequestTask {
 pub(crate) async fn upload(task: Arc<RequestTask>) {
     RequestDb::get_instance()
         .update_task_sizes(task.task_id(), &task.progress.lock().unwrap().sizes);
-
+    task.progress.lock().unwrap().common_data.state = State::Running.repr;
     task.tries.store(0, Ordering::SeqCst);
     loop {
         if let Err(e) = upload_inner(task.clone()).await {
