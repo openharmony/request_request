@@ -227,14 +227,50 @@ bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &con
     return true;
 }
 
-bool JsInitialize::GetFD(const std::string &path, const Config &config, int32_t &fd, ExceptionError &error)
+bool JsInitialize::CheckPathIsFile(const std::string &path, ExceptionError &error)
+{
+    std::error_code err;
+    if (!std::filesystem::exists(path, err)) {
+        error.code = E_FILE_IO;
+        error.errInfo = "Path not exists: " + err.message();
+        return false;
+    }
+    if (std::filesystem::is_directory(path, err)) {
+        error.code = E_FILE_IO;
+        error.errInfo = "Path not File: " + err.message();
+        return false;
+    }
+    return true;
+}
+
+bool JsInitialize::GetFdDownload(const std::string &path, const Config &config, int32_t &fd, ExceptionError &error)
 {
     if (JsInitialize::FindDir(path) && config.action == Action::DOWNLOAD && config.firstInit && !config.overwrite) {
         error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
         error.errInfo = "GetFd File already exists";
         return false;
     }
-    fd = config.action == Action::UPLOAD ? open(path.c_str(), O_RDONLY) : open(path.c_str(), O_TRUNC | O_RDWR);
+    if (config.firstInit) {
+        fd = open(path.c_str(), O_TRUNC | O_RDWR);
+    } else {
+        fd = open(path.c_str(), O_APPEND | O_RDWR);
+    }
+    return JsInitialize::GetFdInner(path, config, fd, error);
+}
+
+bool JsInitialize::GetFdUpload(const std::string &path, const Config &config, int32_t &fd, ExceptionError &error)
+{
+    if (!JsInitialize::CheckPathIsFile(path, error)) {
+        error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
+        return false;
+    }
+
+    fd = open(path.c_str(), O_RDONLY);
+    return JsInitialize::GetFdInner(path, config, fd, error);
+}
+
+bool JsInitialize::GetFdInner(const std::string &path, const Config &config, int32_t &fd, ExceptionError &error)
+{
     if (fd >= 0) {
         REQUEST_HILOGD("File already exists");
         if (config.action == Action::UPLOAD) {
@@ -1034,12 +1070,12 @@ bool JsInitialize::CheckUploadFileSpec(const std::shared_ptr<OHOS::AbilityRuntim
     }
     REQUEST_HILOGD("CheckUploadFileSpec path: %{public}s", path.c_str());
     file.uri = path;
+    if (!GetFdUpload(path, config, file.fd, error)) {
+        return false;
+    }
     if (!JsTask::SetPathPermission(file.uri)) {
         error.code = E_FILE_IO;
         error.errInfo = "set path permission fail";
-        return false;
-    }
-    if (!GetFD(path, config, file.fd, error)) {
         return false;
     }
     StandardizeFileSpec(file);
@@ -1064,15 +1100,18 @@ bool JsInitialize::CheckDownloadFile(
             return false;
         }
     }
+    FileSpec file = { .uri = config.saveas, .isUserFile = false };
+    StandardizeFileSpec(file);
+    config.files.push_back(file);
+    if (!GetFdDownload(file.uri, config, file.fd, error)) {
+        return false;
+    }
     if (!JsTask::SetPathPermission(config.saveas)) {
         error.code = E_FILE_IO;
         error.errInfo = "set path permission fail, download";
         return false;
     }
-    FileSpec file = { .uri = config.saveas, .isUserFile = false };
-    StandardizeFileSpec(file);
-    config.files.push_back(file);
-    return GetFD(file.uri, config, file.fd, error);
+    return true;
 }
 
 bool JsInitialize::CheckDownloadFilePath(
@@ -1085,7 +1124,7 @@ bool JsInitialize::CheckDownloadFilePath(
     }
     // pop filename.
     pathVec.pop_back();
-    if (!CreateDirs(pathVec)) {
+    if (!JsInitialize::CreateDirs(pathVec)) {
         REQUEST_HILOGE("CreateDirs Err: %{public}s", path.c_str());
         errInfo = "Parameter verification failed, this is fail saveas path";
         return false;
@@ -1097,9 +1136,9 @@ bool JsInitialize::CheckDownloadFilePath(
 bool JsInitialize::CreateDirs(const std::vector<std::string> &pathDirs)
 {
     std::string path;
+    std::error_code err;
     for (auto elem : pathDirs) {
         path += "/" + elem;
-        std::error_code err;
         if (std::filesystem::exists(path, err)) {
             continue;
         }
