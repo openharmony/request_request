@@ -17,6 +17,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use hisysevent::{build_number_param, write, EventType};
+use samgr::definition::APP_MGR_SERVICE_ID;
+use samgr::manage::SystemAbilityManager;
 use system_ability_fwk::ability::{Ability, Handler};
 
 use crate::manage::app_state::AppStateListener;
@@ -92,6 +94,17 @@ impl RequestAbility {
         info!("task_manager init succeed");
 
         AppStateListener::init(client_manger.clone(), task_manager.clone());
+
+        SystemAbilityManager::subscribe_system_ability(
+            APP_MGR_SERVICE_ID,
+            |_, _| {
+                info!("app manager service init");
+                AppStateListener::register();
+            },
+            |_, _| {
+                error!("app Manager service died");
+            },
+        );
 
         let stub = RequestServiceStub::new(
             handler.clone(),
