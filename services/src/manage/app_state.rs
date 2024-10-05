@@ -12,6 +12,7 @@
 // limitations under the License.
 
 use std::mem::MaybeUninit;
+use std::sync::Once;
 
 use super::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
@@ -22,22 +23,29 @@ pub(crate) struct AppStateListener {
 }
 
 static mut APP_STATE_LISTENER: MaybeUninit<AppStateListener> = MaybeUninit::uninit();
+static ONCE: Once = Once::new();
 
 impl AppStateListener {
     pub(crate) fn init(client_manager: ClientManagerEntry, task_manager: TaskManagerTx) {
-        info!("AppStateListener prepares to be inited");
         unsafe {
-            APP_STATE_LISTENER.write(AppStateListener {
-                client_manager,
-                task_manager,
+            ONCE.call_once(|| {
+                APP_STATE_LISTENER.write(AppStateListener {
+                    client_manager,
+                    task_manager,
+                });
             });
-            #[cfg(feature = "oh")]
-            {
+            RegisterAPPStateCallback(app_state_change_callback);
+            RegisterProcessStateCallback(process_state_change_callback);
+        }
+    }
+
+    pub(crate) fn register() {
+        if ONCE.is_completed() {
+            unsafe {
                 RegisterAPPStateCallback(app_state_change_callback);
                 RegisterProcessStateCallback(process_state_change_callback);
             }
         }
-        info!("AppStateListener is inited");
     }
 }
 
