@@ -800,11 +800,13 @@ std::vector<FileSpec> Convert2FileVector(napi_env env, napi_value jsFiles, const
         napi_open_handle_scope(env, &scope);
         napi_get_element(env, jsFiles, i, &jsFile);
         if (jsFile == nullptr) {
+            napi_close_handle_scope(env, scope);
             continue;
         }
         FileSpec file;
         bool ret = Convert2File(env, jsFile, file);
         if (!ret) {
+            napi_close_handle_scope(env, scope);
             continue;
         }
         files.push_back(file);
