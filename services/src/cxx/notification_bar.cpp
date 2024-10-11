@@ -19,60 +19,62 @@
 #include <cstdint>
 #include <string>
 
-#include "account.h"
-#include "ans_convert_enum.h"
 #include "cxx.h"
-#include "image_type.h"
-#include "int_wrapper.h"
+#include "image_source.h"
 #include "log.h"
 #include "notification.h"
-#include "notification_constant.h"
+#include "notification_action_button.h"
 #include "notification_content.h"
 #include "notification_helper.h"
 #include "notification_local_live_view_button.h"
 #include "notification_local_live_view_content.h"
-#include "notification_local_live_view_subscriber.h"
-#include "notification_progress.h"
-#include "notification_request.h"
-#include "notification_subscriber.h"
-#include "pixel_map.h"
-#include "resource_manager.h"
 #include "service/notification_bar.rs.h"
 #include "string_wrapper.h"
 #include "task/config.rs.h"
 namespace OHOS::Request {
 static constexpr int32_t REQUEST_SERVICE_ID = 3815;
-static constexpr int32_t REQUEST_STYLE = 13;
+
+static constexpr int32_t REQUEST_STYLE_SIMPLE = 8;
+static constexpr int32_t REQUEST_STYLE_WITH_PAUSE_BUTTON = 13;
 
 static constexpr uint32_t BINARY_SCALE = 1024;
 static constexpr uint32_t PERCENT = 100;
 static constexpr uint32_t FRONT_ZERO = 10;
 
-void RequestNotifyProgress(RequestTaskMsg msg)
+static const std::string CLOSE_ICON_PATH = "/etc/request/xmark.svg";
+
+std::shared_ptr<Media::PixelMap> CreatePixelMap()
 {
-    Notification::NotificationRequest request(msg.task_id);
-    std::shared_ptr<Notification::NotificationLocalLiveViewContent> localLiveViewContent =
-        std::make_shared<Notification::NotificationLocalLiveViewContent>();
+    static std::shared_ptr<Media::PixelMap> pixelMap = nullptr;
+    static std::once_flag flag;
 
-    // basic settings
-    BasicRequestSettings(request, localLiveViewContent, msg.uid);
-    request.SetInProgress(true);
-    localLiveViewContent->addFlag(Notification::NotificationLocalLiveViewContent::LiveViewContentInner::BUTTON);
-    localLiveViewContent->addFlag(Notification::NotificationLocalLiveViewContent::LiveViewContentInner::PROGRESS);
+    std::call_once(flag, []() {
+        uint32_t errorCode = 0;
+        Media::SourceOptions opts;
+        auto source = Media::ImageSource::CreateImageSource(CLOSE_ICON_PATH, opts, errorCode);
+        if (source == nullptr) {
+            REQUEST_HILOGE("create image source failed");
+            return;
+        }
+        Media::DecodeOptions decodeOpts;
+        std::unique_ptr<Media::PixelMap> pixel = source->CreatePixelMap(decodeOpts, errorCode);
+        if (pixel == nullptr) {
+            REQUEST_HILOGE("create pixel map failed");
+            return;
+        }
+        pixelMap = std::move(pixel);
+    });
+    return pixelMap;
+}
 
-    // set text
-    localLiveViewContent->SetText(std::string(msg.file_name));
-
-    // set button
-    Notification::NotificationLocalLiveViewButton button;
-    localLiveViewContent->SetButton(button);
-
-    // set title and progress
+void SetProgress(
+    std::shared_ptr<Notification::NotificationLocalLiveViewContent> &localLiveViewContent, RequestTaskMsg msg)
+{
     std::string title;
     Notification::NotificationProgress progress;
     progress.SetIsPercentage(true);
     if (msg.action == static_cast<uint8_t>(Action::Download)) {
-        title = "已下载 ";
+        title = "下载文件 ";
         progress.SetCurrentValue(msg.processed[0] / BINARY_SCALE);
         if (msg.sizes[0] == -1) {
             TitleWithProgressSized(title, msg.processed[0]);
@@ -81,7 +83,7 @@ void RequestNotifyProgress(RequestTaskMsg msg)
             TitleWithProgressPercentage(title, msg.processed[0], msg.sizes[0]);
         }
     } else {
-        title = "已上传 ";
+        title = "上传文件 ";
         if (msg.sizes.size() > 1) {
             progress.SetCurrentValue(msg.index);
             progress.SetMaxValue(msg.sizes.size());
@@ -94,6 +96,45 @@ void RequestNotifyProgress(RequestTaskMsg msg)
     }
     localLiveViewContent->SetTitle(title);
     localLiveViewContent->SetProgress(progress);
+}
+
+void RequestProgressNotification(RequestTaskMsg msg)
+{
+    Notification::NotificationRequest request(msg.task_id);
+    std::shared_ptr<Notification::NotificationLocalLiveViewContent> localLiveViewContent =
+        std::make_shared<Notification::NotificationLocalLiveViewContent>();
+
+    // basic settings
+    request.SetSlotType(Notification::NotificationConstant::SlotType::LIVE_VIEW);
+    localLiveViewContent->SetContentType(
+        static_cast<int32_t>(Notification::NotificationContent::Type::LOCAL_LIVE_VIEW));
+
+    BasicRequestSettings(request, msg.uid);
+
+    request.SetInProgress(true);
+    if (msg.support_range && msg.action == static_cast<uint8_t>(Action::Download)) {
+        localLiveViewContent->SetType(REQUEST_STYLE_WITH_PAUSE_BUTTON);
+    } else {
+        localLiveViewContent->SetType(REQUEST_STYLE_SIMPLE);
+    }
+
+    localLiveViewContent->addFlag(Notification::NotificationLocalLiveViewContent::LiveViewContentInner::BUTTON);
+    localLiveViewContent->addFlag(Notification::NotificationLocalLiveViewContent::LiveViewContentInner::PROGRESS);
+
+    // set text
+    localLiveViewContent->SetText(std::string(msg.file_name));
+
+    // set button
+    auto button = localLiveViewContent->GetButton();
+    auto icon = CreatePixelMap();
+    if (icon != nullptr) {
+        button.addSingleButtonName("cancel");
+        button.addSingleButtonIcon(icon);
+        localLiveViewContent->SetButton(button);
+    }
+
+    // set title and progress
+    SetProgress(localLiveViewContent, msg);
 
     // set content
     auto content = std::make_shared<Notification::NotificationContent>(localLiveViewContent);
@@ -105,29 +146,37 @@ void RequestNotifyProgress(RequestTaskMsg msg)
     }
 }
 
-void RequestNotifyCompleted(uint8_t action, uint32_t taskId, int32_t uid, rust::string fileName)
+void RequestCompletedNotification(uint8_t action, uint32_t taskId, int32_t uid, rust::string fileName, bool isSucceed)
 {
     Notification::NotificationRequest request(taskId);
-    std::shared_ptr<Notification::NotificationLocalLiveViewContent> localLiveViewContent =
-        std::make_shared<Notification::NotificationLocalLiveViewContent>();
+    std::shared_ptr<Notification::NotificationNormalContent> normalContent =
+        std::make_shared<Notification::NotificationNormalContent>();
 
     // basic settings
-    BasicRequestSettings(request, localLiveViewContent, uid);
+    BasicRequestSettings(request, uid);
 
     // set text
-    localLiveViewContent->SetText(std::string(fileName));
+    normalContent->SetText(std::string(fileName));
 
-    // set title and progress
+    // set title
     std::string title;
     if (action == static_cast<uint8_t>(Action::Download)) {
-        title = "下载成功";
+        if (isSucceed) {
+            title = "下载成功";
+        } else {
+            title = "下载失败";
+        }
     } else {
-        title = "上传成功";
+        if (isSucceed) {
+            title = "上传成功";
+        } else {
+            title = "上传失败";
+        }
     }
-    localLiveViewContent->SetTitle(title);
+    normalContent->SetTitle(title);
 
     // set content
-    auto content = std::make_shared<Notification::NotificationContent>(localLiveViewContent);
+    auto content = std::make_shared<Notification::NotificationContent>(normalContent);
     request.SetContent(content);
 
     OHOS::ErrCode errCode = Notification::NotificationHelper::PublishNotification(request);
@@ -136,49 +185,12 @@ void RequestNotifyCompleted(uint8_t action, uint32_t taskId, int32_t uid, rust::
     }
 }
 
-void RequestNotifyFailed(uint8_t action, uint32_t taskId, int32_t uid, rust::string fileName)
-{
-    Notification::NotificationRequest request(taskId);
-    std::shared_ptr<Notification::NotificationLocalLiveViewContent> localLiveViewContent =
-        std::make_shared<Notification::NotificationLocalLiveViewContent>();
-
-    // basic settings
-    BasicRequestSettings(request, localLiveViewContent, uid);
-
-    // set text
-    localLiveViewContent->SetText(std::string(fileName));
-
-    // set title and progress
-    std::string title;
-    if (action == static_cast<uint8_t>(Action::Download)) {
-        title = "下载失败";
-    } else {
-        title = "上传失败";
-    }
-    localLiveViewContent->SetTitle(title);
-
-    // set content
-    auto content = std::make_shared<Notification::NotificationContent>(localLiveViewContent);
-    request.SetContent(content);
-
-    OHOS::ErrCode errCode = Notification::NotificationHelper::PublishNotification(request);
-    if (errCode != OHOS::ERR_OK) {
-        REQUEST_HILOGE("%{public}d publish notification error %{public}d", taskId, errCode);
-    }
-}
-
-void BasicRequestSettings(Notification::NotificationRequest &request,
-    std::shared_ptr<Notification::NotificationLocalLiveViewContent> &localLiveViewContent, int32_t uid)
+void BasicRequestSettings(Notification::NotificationRequest &request, int32_t uid)
 {
     // basic settings
-    request.SetSlotType(Notification::NotificationConstant::SlotType::LIVE_VIEW);
     request.SetCreatorUid(REQUEST_SERVICE_ID);
     request.SetOwnerUid(uid);
     request.SetIsAgentNotification(true);
-    localLiveViewContent->SetType(REQUEST_STYLE);
-    localLiveViewContent->SetContentType(
-        static_cast<int32_t>(Notification::NotificationContent::Type::LOCAL_LIVE_VIEW));
-    localLiveViewContent->addFlag(Notification::NotificationLocalLiveViewContent::LiveViewContentInner::TIME);
 }
 
 void TitleWithProgressNum(std::string &title, std::size_t uploaded, std::size_t total)
@@ -248,6 +260,9 @@ void NotificationSubscriber::OnResponse(
         this->_taskManager->pause_task(static_cast<uint32_t>(notificationId));
     } else if (buttonOption->GetButtonName() == "start") {
         this->_taskManager->resume_task(static_cast<uint32_t>(notificationId));
+    } else if (buttonOption->GetButtonName() == "cancel") {
+        this->_taskManager->stop_task(static_cast<uint32_t>(notificationId));
+        Notification::NotificationHelper::CancelNotification(notificationId);
     }
 };
 

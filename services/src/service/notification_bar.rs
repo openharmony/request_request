@@ -27,7 +27,7 @@ use crate::utils::{get_current_timestamp, Recv};
 const NOTIFY_PROGRESS_INTERVAL: u64 = 3000;
 
 pub(crate) fn publish_progress_notification(task: &RequestTask) {
-    if !task.notification_check() {
+    if !task.notification_check(false) {
         return;
     }
     let index = task.progress.lock().unwrap().common_data.index;
@@ -38,48 +38,52 @@ pub(crate) fn publish_progress_notification(task: &RequestTask) {
         task.conf.file_specs[index].file_name.clone(),
         task.progress.lock().unwrap().clone(),
     );
-    ffi::RequestNotifyProgress(msg);
+    ffi::RequestProgressNotification(msg);
 }
 
 pub(crate) fn publish_success_notification(info: &TaskInfo) {
-    if !info.notification_check() {
+    if !info.notification_check(true) {
         return;
     }
-    ffi::RequestNotifyCompleted(
+    ffi::RequestCompletedNotification(
         info.action().repr,
         info.common_data.task_id,
         info.common_data.uid as i32,
         info.file_specs[info.progress.common_data.index]
             .file_name
             .clone(),
+        true,
     );
 }
 
 pub(crate) fn publish_failed_notification(info: &TaskInfo) {
-    if !info.notification_check() {
+    if !info.notification_check(true) {
         return;
     }
-    ffi::RequestNotifyFailed(
+    ffi::RequestCompletedNotification(
         info.action().repr,
         info.common_data.task_id,
         info.common_data.uid as i32,
         info.file_specs[info.progress.common_data.index]
             .file_name
             .clone(),
+        false,
     );
 }
 
 trait NotificationCheck {
-    fn notification_check(&self) -> bool;
+    fn notification_check(&self, completed_notify: bool) -> bool;
 }
 
 impl NotificationCheck for RequestTask {
-    fn notification_check(&self) -> bool {
-        if !(self.conf.version == Version::API10
-            && self.conf.common_data.gauge
-            && self.conf.common_data.mode == Mode::BackGround
-            || self.conf.version == Version::API9 && self.conf.common_data.background)
-        {
+    fn notification_check(&self, completed_notify: bool) -> bool {
+        if !notification_check(
+            self.conf.version,
+            self.conf.common_data.gauge,
+            self.conf.common_data.mode,
+            self.conf.common_data.background,
+            completed_notify,
+        ) {
             return false;
         }
         let last_background_notify_time = self.background_notify_time.load(Ordering::SeqCst);
@@ -93,13 +97,26 @@ impl NotificationCheck for RequestTask {
 }
 
 impl NotificationCheck for TaskInfo {
-    fn notification_check(&self) -> bool {
-        Version::from(self.common_data.version) == Version::API10
-            && self.common_data.gauge
-            && self.common_data.mode == Mode::BackGround.repr
-            || Version::from(self.common_data.version) == Version::API9
-                && RequestDb::get_instance().query_task_background(self.common_data.task_id)
+    fn notification_check(&self, completed_notify: bool) -> bool {
+        notification_check(
+            Version::from(self.common_data.version),
+            self.common_data.gauge,
+            Mode::from(self.common_data.mode),
+            RequestDb::get_instance().query_task_background(self.common_data.task_id),
+            completed_notify,
+        )
     }
+}
+
+fn notification_check(
+    version: Version,
+    gauge: bool,
+    mode: Mode,
+    background: bool,
+    completed_notify: bool,
+) -> bool {
+    version == Version::API10 && mode == Mode::BackGround && (gauge || completed_notify)
+        || version == Version::API9 && (background || completed_notify)
 }
 
 impl RequestTaskMsg {
@@ -110,6 +127,8 @@ impl RequestTaskMsg {
         file_name: String,
         progress: Progress,
     ) -> Self {
+        let extras = progress.extras;
+        let support_range = extras.contains_key("etag") || extras.contains_key("last-modified");
         Self {
             task_id,
             uid: uid as i32,
@@ -118,6 +137,7 @@ impl RequestTaskMsg {
             index: progress.common_data.index,
             processed: progress.processed,
             sizes: progress.sizes,
+            support_range,
         }
     }
 }
@@ -137,6 +157,10 @@ impl TaskManagerWrapper {
 
     fn resume_task(&self, task_id: u32) -> bool {
         self.event_inner(task_id, TaskManagerEvent::resume)
+    }
+
+    fn stop_task(&self, task_id: u32) -> bool {
+        self.event_inner(task_id, TaskManagerEvent::stop)
     }
 
     fn event_inner<F>(&self, task_id: u32, f: F) -> bool
@@ -183,6 +207,7 @@ mod ffi {
         type TaskManagerWrapper;
         fn pause_task(&self, task_id: u32) -> bool;
         fn resume_task(&self, task_id: u32) -> bool;
+        fn stop_task(&self, task_id: u32) -> bool;
     }
 
     #[derive(Debug)]
@@ -194,13 +219,19 @@ mod ffi {
         pub(crate) index: usize,
         pub(crate) processed: Vec<usize>,
         pub(crate) sizes: Vec<i64>,
+        pub(crate) support_range: bool,
     }
 
     unsafe extern "C++" {
         include!("notification_bar.h");
-        fn RequestNotifyProgress(msg: RequestTaskMsg);
-        fn RequestNotifyFailed(action: u8, task_id: u32, uid: i32, file_name: String);
-        fn RequestNotifyCompleted(action: u8, task_id: u32, uid: i32, file_name: String);
+        fn RequestProgressNotification(msg: RequestTaskMsg);
+        fn RequestCompletedNotification(
+            action: u8,
+            task_id: u32,
+            uid: i32,
+            file_name: String,
+            is_succeed: bool,
+        );
         fn SubscribeNotification(task_manager: Box<TaskManagerWrapper>);
     }
 }
