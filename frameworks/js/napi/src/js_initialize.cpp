@@ -807,11 +807,13 @@ bool JsInitialize::Convert2FormItems(
         if (jsVal == nullptr) {
             REQUEST_HILOGE("Get element jsVal failed");
             errInfo = "Missing mandatory parameters, Get element jsVal failed";
+            napi_close_handle_scope(env, scope);
             return false;
         }
         if (!GetFormItems(env, jsVal, forms, files)) {
             REQUEST_HILOGE("Get formItems failed");
             errInfo = "Missing mandatory parameters, Get formItems failed";
+            napi_close_handle_scope(env, scope);
             return false;
         }
         napi_close_handle_scope(env, scope);
@@ -835,11 +837,13 @@ bool JsInitialize::Convert2FileSpecs(
         napi_open_handle_scope(env, &scope);
         napi_get_element(env, jsValue, i, &jsVal);
         if (jsVal == nullptr) {
+            napi_close_handle_scope(env, scope);
             return false;
         }
         FileSpec file;
         bool ret = Convert2FileSpec(env, jsVal, name, file);
         if (!ret) {
+            napi_close_handle_scope(env, scope);
             return false;
         }
         files.push_back(file);
