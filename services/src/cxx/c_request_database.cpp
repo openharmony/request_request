@@ -93,6 +93,7 @@ bool RequestDataBase::Insert(const std::string &table, const OHOS::NativeRdb::Va
     int64_t outRowId = 0;
     int ret = store_->Insert(outRowId, table, insertValues);
     REQUEST_HILOGD("Request databases insert values, ret: %{public}d", ret);
+    CheckAndRebuildDataBase(ret);
     return ret == OHOS::NativeRdb::E_OK;
 }
 
@@ -106,6 +107,7 @@ bool RequestDataBase::Update(
     int changedRows = 0;
     int ret = store_->Update(changedRows, values, predicates);
     REQUEST_HILOGD("Request databases update, changedRows: %{public}d, ret: %{public}d", changedRows, ret);
+    CheckAndRebuildDataBase(ret);
     return ret == OHOS::NativeRdb::E_OK;
 }
 
@@ -123,7 +125,9 @@ int RequestDataBase::ExecuteSql(rust::str sql)
     if (store_ == nullptr) {
         return -1;
     }
-    return store_->ExecuteSql(std::string(sql));
+    int ret = store_->ExecuteSql(std::string(sql));
+    CheckAndRebuildDataBase(ret);
+    return ret;
 }
 
 int RequestDataBase::QueryInteger(rust::str sql, rust::vec<rust::i64> &res)
@@ -196,6 +200,7 @@ bool RequestDataBase::Delete(const OHOS::NativeRdb::AbsRdbPredicates &predicates
     int deletedRows = 0;
     int ret = store_->Delete(deletedRows, predicates);
     REQUEST_HILOGD("Request databases delete rows, rows: %{public}d, ret: %{public}d", ret, deletedRows);
+    CheckAndRebuildDataBase(ret);
     return ret == OHOS::NativeRdb::E_OK;
 }
 
@@ -450,6 +455,12 @@ int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store)
         REQUEST_HILOGE("add column atomic_account failed, ret: %{public}d", ret);
         return ret;
     }
+
+    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_UID_INDEX);
+    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+        REQUEST_HILOGE("add uid index failed, ret: %{public}d", ret);
+        return ret;
+    }
     return ret;
 }
 
@@ -461,6 +472,7 @@ void RequestDBUpgradeFrom50(OHOS::NativeRdb::RdbStore &store)
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CERTIFICATE_PINS);
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_BUNDLE_TYPE);
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_ATOMIC_ACCOUNT);
+    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_UID_INDEX);
 }
 
 int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
