@@ -93,6 +93,7 @@ ohos_static_library("download_server_cxx") {
 
   deps = [
     ":download_server_cxx_gen",
+    "../etc/icon:request_notificaton_xmark_icon",
     "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
 
