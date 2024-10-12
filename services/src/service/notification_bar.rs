@@ -24,7 +24,7 @@ use crate::manage::task_manager::TaskManagerTx;
 use crate::task::notify::Progress;
 use crate::task::request_task::RequestTask;
 use crate::utils::{get_current_timestamp, Recv};
-const NOTIFY_PROGRESS_INTERVAL: u64 = 3000;
+const NOTIFY_PROGRESS_INTERVAL: u64 = 200;
 
 pub(crate) fn publish_progress_notification(task: &RequestTask) {
     if !task.notification_check(false) {
@@ -116,7 +116,7 @@ fn notification_check(
     completed_notify: bool,
 ) -> bool {
     version == Version::API10 && mode == Mode::BackGround && (gauge || completed_notify)
-        || version == Version::API9 && (background || completed_notify)
+        || version == Version::API9 && background
 }
 
 impl RequestTaskMsg {
