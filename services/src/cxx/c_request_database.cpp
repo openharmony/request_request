@@ -713,6 +713,9 @@ std::vector<FormItem> VecToFormItem(const std::vector<CFormItem> &cvec)
         formItem.name = std::string(obj.name.cStr, obj.name.len);
         formItem.value = std::string(obj.value.cStr, obj.value.len);
         vec.push_back(std::move(formItem));
+        //release memory of obj(new)
+        delete[] obj.name.cStr;
+        delete[] obj.value.cStr;
     }
     return vec;
 }
@@ -729,6 +732,11 @@ std::vector<FileSpec> VecToFileSpec(const std::vector<CFileSpec> &cvec)
         fileSpec.mimeType = std::string(obj.mimeType.cStr, obj.mimeType.len);
         fileSpec.is_user_file = obj.is_user_file;
         vec.push_back(std::move(fileSpec));
+        //release memory of obj(new)
+        delete[] obj.name.cStr;
+        delete[] obj.path.cStr;
+        delete[] obj.fileName.cStr;
+        delete[] obj.mimeType.cStr;
     }
     return vec;
 }
@@ -743,6 +751,9 @@ std::vector<EachFileStatus> VecToEachFileStatus(const std::vector<CEachFileStatu
         eachFileStatus.reason = obj.reason;
         eachFileStatus.message = std::string(obj.message.cStr, obj.message.len);
         vec.push_back(std::move(eachFileStatus));
+        //release memory of obj(new)
+        delete[] obj.path.cStr;
+        delete[] obj.message.cStr;
     }
     return vec;
 }
