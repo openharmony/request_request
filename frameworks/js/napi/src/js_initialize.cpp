@@ -803,6 +803,9 @@ bool JsInitialize::Convert2FormItems(
         napi_value jsVal = nullptr;
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(env, &scope);
+        if (scope == nullptr) {
+            return false;
+        }
         napi_get_element(env, jsValue, i, &jsVal);
         if (jsVal == nullptr) {
             REQUEST_HILOGE("Get element jsVal failed");
@@ -835,6 +838,9 @@ bool JsInitialize::Convert2FileSpecs(
         napi_value jsVal = nullptr;
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(env, &scope);
+        if (scope == nullptr) {
+            return false;
+        }
         napi_get_element(env, jsValue, i, &jsVal);
         if (jsVal == nullptr) {
             napi_close_handle_scope(env, scope);

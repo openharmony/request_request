@@ -798,6 +798,9 @@ std::vector<FileSpec> Convert2FileVector(napi_env env, napi_value jsFiles, const
         napi_value jsFile = nullptr;
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(env, &scope);
+        if (scope == nullptr) {
+            continue;
+        }
         napi_get_element(env, jsFiles, i, &jsFile);
         if (jsFile == nullptr) {
             napi_close_handle_scope(env, scope);
