@@ -21,17 +21,20 @@
 
 #include "cxx.h"
 #include "image_source.h"
+#include "locale_config.h"
 #include "log.h"
 #include "notification.h"
-#include "notification_action_button.h"
 #include "notification_content.h"
 #include "notification_helper.h"
 #include "notification_local_live_view_button.h"
 #include "notification_local_live_view_content.h"
+#include "resource_manager.h"
 #include "service/notification_bar.rs.h"
-#include "string_wrapper.h"
 #include "task/config.rs.h"
+
 namespace OHOS::Request {
+using namespace Global;
+
 static constexpr int32_t REQUEST_SERVICE_ID = 3815;
 
 static constexpr int32_t REQUEST_STYLE_SIMPLE = 8;
@@ -41,7 +44,39 @@ static constexpr uint32_t BINARY_SCALE = 1024;
 static constexpr uint32_t PERCENT = 100;
 static constexpr uint32_t FRONT_ZERO = 10;
 
+constexpr const char *DOWNLOAD_FILE = "ohos_id_text_save_button_description_download_file";
+constexpr const char *DOWNLOAD_SUCCESS = "request_agent_download_success";
+constexpr const char *DOWNLOAD_FAIL = "request_agent_download_fail";
+constexpr const char *UPLOAD_FILE = "request_agent_upload_file";
+constexpr const char *UPLOAD_SUCCESS = "request_agent_upload_success";
+constexpr const char *UPLOAD_FAIL = "request_agent_upload_fail";
+
 static const std::string CLOSE_ICON_PATH = "/etc/request/xmark.svg";
+
+std::string GetSystemResourceString(const char *name)
+{
+    auto resourceMgr = Resource::GetSystemResourceManagerNoSandBox();
+    if (resourceMgr == nullptr) {
+        REQUEST_HILOGE("GetSystemResourceManagerNoSandBox failed");
+        return "";
+    }
+    std::unique_ptr<Resource::ResConfig> config(Resource::CreateResConfig());
+    if (config == nullptr) {
+        REQUEST_HILOGE("Create ResConfig failed");
+        return "";
+    }
+    UErrorCode status = U_ZERO_ERROR;
+    icu::Locale locale = icu::Locale::forLanguageTag(I18n::LocaleConfig::GetSystemLanguage(), status);
+    config->SetLocaleInfo(locale);
+    resourceMgr->UpdateResConfig(*config);
+
+    std::string outValue;
+    auto ret = resourceMgr->GetStringByName(name, outValue);
+    if (ret != Resource::RState::SUCCESS) {
+        REQUEST_HILOGE("GetStringById failed: %{public}d", ret);
+    }
+    return outValue;
+}
 
 std::shared_ptr<Media::PixelMap> CreatePixelMap()
 {
@@ -72,18 +107,22 @@ void SetProgress(
 {
     std::string title;
     Notification::NotificationProgress progress;
-    progress.SetIsPercentage(true);
     if (msg.action == static_cast<uint8_t>(Action::Download)) {
-        title = "下载文件 ";
-        progress.SetCurrentValue(msg.processed[0] / BINARY_SCALE);
+        title = GetSystemResourceString(DOWNLOAD_FILE);
+        title.push_back(' ');
         if (msg.sizes[0] == -1) {
             TitleWithProgressSized(title, msg.processed[0]);
+            localLiveViewContent->SetTitle(title);
+            return;
         } else {
+            progress.SetIsPercentage(true);
+            progress.SetCurrentValue(msg.processed[0] / BINARY_SCALE);
             progress.SetMaxValue(msg.sizes[0] / BINARY_SCALE);
             TitleWithProgressPercentage(title, msg.processed[0], msg.sizes[0]);
         }
     } else {
-        title = "上传文件 ";
+        title = GetSystemResourceString(UPLOAD_FILE);
+        title.push_back(' ');
         if (msg.sizes.size() > 1) {
             progress.SetCurrentValue(msg.index);
             progress.SetMaxValue(msg.sizes.size());
@@ -162,15 +201,15 @@ void RequestCompletedNotification(uint8_t action, uint32_t taskId, int32_t uid, 
     std::string title;
     if (action == static_cast<uint8_t>(Action::Download)) {
         if (isSucceed) {
-            title = "下载成功";
+            title = GetSystemResourceString(DOWNLOAD_SUCCESS);
         } else {
-            title = "下载失败";
+            title = GetSystemResourceString(DOWNLOAD_FAIL);
         }
     } else {
         if (isSucceed) {
-            title = "上传成功";
+            title = GetSystemResourceString(UPLOAD_SUCCESS);
         } else {
-            title = "上传失败";
+            title = GetSystemResourceString(UPLOAD_FAIL);
         }
     }
     normalContent->SetTitle(title);

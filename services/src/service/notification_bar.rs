@@ -77,7 +77,7 @@ trait NotificationCheck {
 
 impl NotificationCheck for RequestTask {
     fn notification_check(&self, completed_notify: bool) -> bool {
-        if !notification_check(
+        if !notification_check_common(
             self.conf.version,
             self.conf.common_data.gauge,
             self.conf.common_data.mode,
@@ -98,7 +98,7 @@ impl NotificationCheck for RequestTask {
 
 impl NotificationCheck for TaskInfo {
     fn notification_check(&self, completed_notify: bool) -> bool {
-        notification_check(
+        notification_check_common(
             Version::from(self.common_data.version),
             self.common_data.gauge,
             Mode::from(self.common_data.mode),
@@ -108,7 +108,7 @@ impl NotificationCheck for TaskInfo {
     }
 }
 
-fn notification_check(
+fn notification_check_common(
     version: Version,
     gauge: bool,
     mode: Mode,
