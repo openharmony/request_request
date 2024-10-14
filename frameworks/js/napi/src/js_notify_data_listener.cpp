@@ -235,6 +235,11 @@ void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
             NotifyDataPtr *ptr = static_cast<NotifyDataPtr *>(work->data);
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(ptr->listener->env_, &scope);
+            if (scope == nullptr) {
+                delete work;
+                delete ptr;
+                return;
+            }
             ptr->listener->DoJSTask(ptr->notifyData);
             napi_close_handle_scope(ptr->listener->env_, scope);
             delete work;
