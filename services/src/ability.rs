@@ -22,6 +22,7 @@ use samgr::manage::SystemAbilityManager;
 use system_ability_fwk::ability::{Ability, Handler};
 
 use crate::manage::app_state::AppStateListener;
+use crate::manage::database::RequestDb;
 use crate::manage::{account, SystemConfigManager, TaskManager};
 use crate::service::client::ClientManager;
 use crate::service::run_count::RunCountManager;
@@ -146,6 +147,7 @@ impl Ability for RequestAbility {
             -1
         } else {
             info!("remote not busy accept idle");
+            RequestDb::get_instance().delete_early_records();
             0
         }
     }

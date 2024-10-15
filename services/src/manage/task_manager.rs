@@ -326,7 +326,6 @@ impl TaskManager {
             return false;
         }
 
-        RequestDb::get_instance().delete_early_records();
         // check rx again for there may be new message arrive.
         if !self.rx.is_empty() {
             return false;
