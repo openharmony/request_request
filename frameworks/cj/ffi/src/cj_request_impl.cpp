@@ -17,67 +17,67 @@
 
 #include <cstdint>
 #include <string>
-#include "cj_request_ffi.h"
-#include "constant.h"
-#include "cj_request_task.h"
-#include "cj_request_common.h"
-#include "log.h"
-#include "cj_request_event.h"
 #include "cj_initialize.h"
+#include "cj_request_common.h"
+#include "cj_request_event.h"
+#include "cj_request_ffi.h"
+#include "cj_request_task.h"
+#include "constant.h"
+#include "log.h"
 
 namespace OHOS::CJSystemapi::Request {
-using OHOS::Request::ExceptionErrorCode;
-using OHOS::Request::Version;
-using OHOS::Request::TaskInfo;
-using OHOS::Request::Reason;
-using OHOS::Request::Filter;
-using OHOS::Request::E_OK_INFO;
-using OHOS::Request::E_PERMISSION_INFO;
-using OHOS::Request::E_PARAMETER_CHECK_INFO;
-using OHOS::Request::E_UNSUPPORTED_INFO;
 using OHOS::Request::E_FILE_IO_INFO;
 using OHOS::Request::E_FILE_PATH_INFO;
+using OHOS::Request::E_OK_INFO;
+using OHOS::Request::E_OTHER_INFO;
+using OHOS::Request::E_PARAMETER_CHECK_INFO;
+using OHOS::Request::E_PERMISSION_INFO;
 using OHOS::Request::E_SERVICE_ERROR_INFO;
-using OHOS::Request::E_TASK_QUEUE_INFO;
 using OHOS::Request::E_TASK_MODE_INFO;
 using OHOS::Request::E_TASK_NOT_FOUND_INFO;
+using OHOS::Request::E_TASK_QUEUE_INFO;
 using OHOS::Request::E_TASK_STATE_INFO;
-using OHOS::Request::E_OTHER_INFO;
+using OHOS::Request::E_UNSUPPORTED_INFO;
+using OHOS::Request::ExceptionErrorCode;
+using OHOS::Request::Filter;
 using OHOS::Request::FUNCTION_PAUSE;
 using OHOS::Request::FUNCTION_RESUME;
 using OHOS::Request::FUNCTION_START;
 using OHOS::Request::FUNCTION_STOP;
+using OHOS::Request::Reason;
+using OHOS::Request::TaskInfo;
+using OHOS::Request::Version;
 
 static constexpr const char *NOT_SYSTEM_APP = "permission verification failed, application which is not a system "
                                               "application uses system API";
 static const std::map<ExceptionErrorCode, std::string> ErrorCodeToMsg{
-    { ExceptionErrorCode::E_OK, E_OK_INFO },
-    { ExceptionErrorCode::E_PERMISSION, E_PERMISSION_INFO },
-    { ExceptionErrorCode::E_PARAMETER_CHECK, E_PARAMETER_CHECK_INFO },
-    { ExceptionErrorCode::E_UNSUPPORTED, E_UNSUPPORTED_INFO },
-    { ExceptionErrorCode::E_FILE_IO, E_FILE_IO_INFO },
-    { ExceptionErrorCode::E_FILE_PATH, E_FILE_PATH_INFO },
-    { ExceptionErrorCode::E_SERVICE_ERROR, E_SERVICE_ERROR_INFO },
-    { ExceptionErrorCode::E_TASK_QUEUE, E_TASK_QUEUE_INFO },
-    { ExceptionErrorCode::E_TASK_MODE, E_TASK_MODE_INFO },
-    { ExceptionErrorCode::E_TASK_NOT_FOUND, E_TASK_NOT_FOUND_INFO },
-    { ExceptionErrorCode::E_TASK_STATE, E_TASK_STATE_INFO },
-    { ExceptionErrorCode::E_OTHER, E_OTHER_INFO },
-    { ExceptionErrorCode::E_NOT_SYSTEM_APP, NOT_SYSTEM_APP }
-};
+    {ExceptionErrorCode::E_OK, E_OK_INFO},
+    {ExceptionErrorCode::E_PERMISSION, E_PERMISSION_INFO},
+    {ExceptionErrorCode::E_PARAMETER_CHECK, E_PARAMETER_CHECK_INFO},
+    {ExceptionErrorCode::E_UNSUPPORTED, E_UNSUPPORTED_INFO},
+    {ExceptionErrorCode::E_FILE_IO, E_FILE_IO_INFO},
+    {ExceptionErrorCode::E_FILE_PATH, E_FILE_PATH_INFO},
+    {ExceptionErrorCode::E_SERVICE_ERROR, E_SERVICE_ERROR_INFO},
+    {ExceptionErrorCode::E_TASK_QUEUE, E_TASK_QUEUE_INFO},
+    {ExceptionErrorCode::E_TASK_MODE, E_TASK_MODE_INFO},
+    {ExceptionErrorCode::E_TASK_NOT_FOUND, E_TASK_NOT_FOUND_INFO},
+    {ExceptionErrorCode::E_TASK_STATE, E_TASK_STATE_INFO},
+    {ExceptionErrorCode::E_OTHER, E_OTHER_INFO},
+    {ExceptionErrorCode::E_NOT_SYSTEM_APP, NOT_SYSTEM_APP}};
 
 RetError CJRequestImpl::Convert2RetErr(ExceptionErrorCode code)
 {
+    RetError ret = { 0 };
     auto iter = ErrorCodeToMsg.find(code);
     std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "");
-    return {
-        .errCode = code,
-        .errMsg = MallocCString(strMsg)
-    };
+    ret.errCode = code;
+    ret.errMsg = MallocCString(strMsg);
+    return ret;
 }
 
 RetError CJRequestImpl::Convert2RetErr(ExceptionError &err)
 {
+    RetError ret = { 0 };
     auto iter = ErrorCodeToMsg.find(err.code);
     std::string strMsg;
     if (err.errInfo.empty()) {
@@ -85,10 +85,9 @@ RetError CJRequestImpl::Convert2RetErr(ExceptionError &err)
     } else {
         strMsg = (iter != ErrorCodeToMsg.end() ? iter->second + "   " : "") + err.errInfo;
     }
-    return {
-        .errCode = err.code,
-        .errMsg = MallocCString(strMsg)
-    };
+    ret.errCode = err.code;
+    ret.errMsg = MallocCString(strMsg);
+    return ret;
 }
 
 std::map<std::string, std::string> CJRequestImpl::ConvertCArr2Map(const CHashStrArr *cheaders)
@@ -106,7 +105,7 @@ void CJRequestImpl::Convert2Config(CConfig *config, Config &out)
 {
     out.action = static_cast<OHOS::Request::Action>(config->action);
     out.url = config->url;
-    out.version = Version::API10;  // CJ only support API10
+    out.version = Version::API10; // CJ only support API10
     out.mode = static_cast<OHOS::Request::Mode>(config->mode);
     out.network = static_cast<OHOS::Request::Network>(config->network);
     out.index = config->index;
@@ -125,12 +124,13 @@ void CJRequestImpl::Convert2Config(CConfig *config, Config &out)
     out.method = config->method;
     out.token = config->token;
     out.description = config->description;
-    out.headers =  ConvertCArr2Map(&config->headers);
+    out.headers = ConvertCArr2Map(&config->headers);
     out.extras = ConvertCArr2Map(&config->extras);
 }
 
 CConfigDataTypeUion CJRequestImpl::Convert2RequestData(Action action, std::string &data,
-    const std::vector<FileSpec> &files, const std::vector<FormItem> &forms)
+                                                       const std::vector<FileSpec> &files,
+                                                       const std::vector<FormItem> &forms)
 {
     CConfigDataTypeUion res{};
     if (action == Action::DOWNLOAD) {
@@ -143,12 +143,12 @@ CConfigDataTypeUion CJRequestImpl::Convert2RequestData(Action action, std::strin
 
 CTaskInfo CJRequestImpl::Convert2CTaskInfo(TaskInfo &task)
 {
-    CTaskInfo out = { NULL };
+    CTaskInfo out = {NULL};
 
     if (task.withSystem) {
         out.uid = MallocCString(task.uid);
         out.bundle = MallocCString(task.bundle);
-        task.url  = "";
+        task.url = "";
         task.data = "";
         if (task.action == Action::UPLOAD) {
             task.files.clear();
@@ -178,7 +178,7 @@ CTaskInfo CJRequestImpl::Convert2CTaskInfo(TaskInfo &task)
     out.mtime = task.mtime;
     out.retry = task.retry;
     out.tries = task.tries;
-    
+
     if (task.code != Reason::REASON_OK) {
         out.faults = Convert2Broken(task.code);
     }
@@ -189,19 +189,18 @@ CTaskInfo CJRequestImpl::Convert2CTaskInfo(TaskInfo &task)
     return out;
 }
 
-RetReqData CJRequestImpl::CreateTask(OHOS::AbilityRuntime::Context* context, CConfig *ffiConfig)
+RetReqData CJRequestImpl::CreateTask(OHOS::AbilityRuntime::Context *context, CConfig *ffiConfig)
 {
     REQUEST_HILOGD("[CJRequestImpl] CreateTask start");
     Config config{};
+    RetReqData ret{};
     Convert2Config(ffiConfig, config);
     ExceptionError result = CJInitialize::ParseConfig(context, ffiConfig, config);
     if (result.code != 0) {
-        return {
-            .err = Convert2RetErr(result)
-        };
+        ret.err = Convert2RetErr(result);
+        return ret;
     }
 
-    RetReqData ret{};
     CJTask *task = new (std::nothrow) CJTask();
     if (task == nullptr) {
         REQUEST_HILOGE("[CJRequestImpl] Fail to create task.");
@@ -212,20 +211,19 @@ RetReqData CJRequestImpl::CreateTask(OHOS::AbilityRuntime::Context* context, CCo
     if (result.code != 0) {
         REQUEST_HILOGE("[CJRequestImpl] task create failed, ret:%{public}d.", result.code);
         delete task;
-        return {
-            .err = Convert2RetErr(result)
-        };
+        ret.err =Convert2RetErr(result);
+        return ret;
     }
 
     ret.taskId = MallocCString(task->taskId_);
-    
+
     REQUEST_HILOGD("[CJRequestImpl] CreateTask end");
     return ret;
 }
 
 ExceptionError CJRequestImpl::ParseToken(RequestNativeOptionCString &cToken, std::string &out)
 {
-    ExceptionError err = { .code = ExceptionErrorCode::E_OK };
+    ExceptionError err = {.code = ExceptionErrorCode::E_OK};
     if (!cToken.hasValue) {
         out = "null";
         return err;
@@ -268,8 +266,8 @@ void CJRequestImpl::Convert2CConfig(Config &in, CConfig &out)
     out.extras = Convert2CHashStrArr(in.extras);
 }
 
-RetTask CJRequestImpl::GetTask(OHOS::AbilityRuntime::Context* context, std::string taskId,
-    RequestNativeOptionCString &cToken)
+RetTask CJRequestImpl::GetTask(OHOS::AbilityRuntime::Context *context, std::string taskId,
+                               RequestNativeOptionCString &cToken)
 {
     RetTask ret{};
     std::string token = "null";
@@ -315,7 +313,7 @@ RetTaskInfo CJRequestImpl::ShowTask(std::string taskId)
     return ret;
 }
 
-RetTaskInfo CJRequestImpl::TouchTask(std::string taskId, const char* cToken)
+RetTaskInfo CJRequestImpl::TouchTask(std::string taskId, const char *cToken)
 {
     RetTaskInfo ret{};
     TaskInfo task{};
@@ -345,8 +343,7 @@ RequestCArrString CJRequestImpl::Convert2CStringArray(std::vector<std::string> &
     }
 
     size_t size = tids.size();
-    if (size == 0 ||
-        size > std::numeric_limits<size_t>::max() / sizeof(char *)) {
+    if (size == 0 || size > std::numeric_limits<size_t>::max() / sizeof(char *)) {
         return res;
     }
     res.head = static_cast<char **>(malloc(sizeof(char *) * size));
@@ -399,7 +396,7 @@ Mode CJRequestImpl::ParseMode(RequestNativeOptionUInt32 &mode)
 
 ExceptionError CJRequestImpl::Convert2Filter(CFilter &filter, Filter &out)
 {
-    ExceptionError err = { .code = ExceptionErrorCode::E_OK };
+    ExceptionError err = {.code = ExceptionErrorCode::E_OK};
     out.bundle = ParseBundle(filter.bundle);
     out.before = ParseBefore(filter.before);
     out.after = ParseAfter(filter.after, out.before);
@@ -490,7 +487,7 @@ RetError CJRequestImpl::TaskExec(std::string execType, std::string taskId)
         REQUEST_HILOGE("[CJRequestImpl] Fail to find task, id:%{public}s.", taskId.c_str());
         return Convert2RetErr(ExceptionErrorCode::E_TASK_NOT_FOUND);
     }
-    
+
     ExceptionErrorCode code = CJRequestEvent::Exec(execType, task);
     if (code != ExceptionErrorCode::E_OK) {
         return Convert2RetErr(code);

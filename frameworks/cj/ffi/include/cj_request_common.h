@@ -18,20 +18,20 @@
 
 #include <string>
 #include <vector>
+#include "cj_request_ffi.h"
 #include "constant.h"
 #include "js_common.h"
-#include "cj_request_ffi.h"
 
 namespace OHOS::CJSystemapi::Request {
-using OHOS::Request::Progress;
+using OHOS::Request::Action;
 using OHOS::Request::ExceptionError;
 using OHOS::Request::FileSpec;
-using OHOS::Request::Action;
-using OHOS::Request::Reason;
 using OHOS::Request::FormItem;
+using OHOS::Request::Progress;
+using OHOS::Request::Reason;
 
 void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileData);
-char* MallocCString(const std::string& origin);
+char *MallocCString(const std::string &origin);
 bool IsPathValid(const std::string &filePath);
 std::string SHA256(const char *str, size_t len);
 ExceptionError ConvertError(int32_t errorCode);

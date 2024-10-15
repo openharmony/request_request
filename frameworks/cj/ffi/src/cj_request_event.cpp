@@ -15,18 +15,18 @@
 
 #include "cj_request_event.h"
 
+#include "cj_initialize.h"
 #include "log.h"
 #include "request_manager.h"
-#include "cj_initialize.h"
 
 namespace OHOS::CJSystemapi::Request {
+using OHOS::Request::Action;
+using OHOS::Request::Config;
+using OHOS::Request::FileSpec;
 using OHOS::Request::FUNCTION_PAUSE;
 using OHOS::Request::FUNCTION_RESUME;
 using OHOS::Request::FUNCTION_START;
 using OHOS::Request::FUNCTION_STOP;
-using OHOS::Request::Action;
-using OHOS::Request::Config;
-using OHOS::Request::FileSpec;
 using OHOS::Request::RequestManager;
 using OHOS::Request::Version;
 
@@ -39,13 +39,10 @@ static constexpr const char *EVENT_PROGRESS = "progress";
 static constexpr const char *EVENT_RESPONSE = "response";
 
 std::map<std::string, SubscribeType> CJRequestEvent::supportEventsV10_ = {
-    { EVENT_PROGRESS, SubscribeType::PROGRESS },
-    { EVENT_COMPLETED, SubscribeType::COMPLETED },
-    { EVENT_FAILED, SubscribeType::FAILED },
-    { EVENT_PAUSE, SubscribeType::PAUSE },
-    { EVENT_RESUME, SubscribeType::RESUME },
-    { EVENT_REMOVE, SubscribeType::REMOVE },
-    { EVENT_RESPONSE, SubscribeType::RESPONSE },
+    {EVENT_PROGRESS, SubscribeType::PROGRESS}, {EVENT_COMPLETED, SubscribeType::COMPLETED},
+    {EVENT_FAILED, SubscribeType::FAILED},     {EVENT_PAUSE, SubscribeType::PAUSE},
+    {EVENT_RESUME, SubscribeType::RESUME},     {EVENT_REMOVE, SubscribeType::REMOVE},
+    {EVENT_RESPONSE, SubscribeType::RESPONSE},
 };
 
 SubscribeType CJRequestEvent::StringToSubscribeType(const std::string &type)
@@ -58,14 +55,13 @@ SubscribeType CJRequestEvent::StringToSubscribeType(const std::string &type)
 }
 
 std::map<std::string, CJRequestEvent::Event> CJRequestEvent::requestEvent_ = {
-    { FUNCTION_PAUSE, CJRequestEvent::PauseExec },
-    { FUNCTION_RESUME, CJRequestEvent::ResumeExec },
-    { FUNCTION_START, CJRequestEvent::StartExec },
-    { FUNCTION_STOP, CJRequestEvent::StopExec },
+    {FUNCTION_PAUSE, CJRequestEvent::PauseExec},
+    {FUNCTION_RESUME, CJRequestEvent::ResumeExec},
+    {FUNCTION_START, CJRequestEvent::StartExec},
+    {FUNCTION_STOP, CJRequestEvent::StopExec},
 };
 
-
-ExceptionErrorCode CJRequestEvent::Exec(std::string execType,  const CJTask *task)
+ExceptionErrorCode CJRequestEvent::Exec(std::string execType, const CJTask *task)
 {
     auto handle = requestEvent_.find(execType);
     if (handle == requestEvent_.end()) {

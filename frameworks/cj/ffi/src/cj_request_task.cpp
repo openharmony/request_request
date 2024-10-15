@@ -21,30 +21,30 @@
 #include <regex>
 #include <string>
 #include <sys/stat.h>
-#include "securec.h"
 #include "application_context.h"
-#include "storage_acl.h"
-#include "constant.h"
-#include "request_manager.h"
 #include "cj_app_state_callback.h"
 #include "cj_initialize.h"
 #include "cj_lambda.h"
 #include "cj_request_common.h"
 #include "cj_request_event.h"
+#include "constant.h"
 #include "log.h"
+#include "request_manager.h"
+#include "securec.h"
+#include "storage_acl.h"
 
 namespace OHOS::CJSystemapi::Request {
 namespace fs = std::filesystem;
 using OHOS::AbilityRuntime::Context;
-using OHOS::Request::Version;
-using OHOS::Request::ExceptionErrorCode;
 using OHOS::Request::Action;
-using OHOS::Request::TaskInfo;
+using OHOS::Request::ExceptionErrorCode;
 using OHOS::Request::RequestManager;
+using OHOS::Request::TaskInfo;
+using OHOS::Request::Version;
 using OHOS::StorageDaemon::AclSetAccess;
 
 std::mutex CJTask::taskMutex_;
-std::map<std::string, CJTask*> CJTask::taskMap_;
+std::map<std::string, CJTask *> CJTask::taskMap_;
 
 std::mutex CJTask::pathMutex_;
 std::map<std::string, int32_t> CJTask::pathMap_;
@@ -85,7 +85,7 @@ void CJTask::AddTaskMap(const std::string &key, CJTask *task)
     CJTask::taskMap_[key] = task;
 }
 
-CJTask* CJTask::FindTaskById(std::string &taskId)
+CJTask *CJTask::FindTaskById(std::string &taskId)
 {
     CJTask *task = nullptr;
     {
@@ -99,7 +99,7 @@ CJTask* CJTask::FindTaskById(std::string &taskId)
     return task;
 }
 
-CJTask* CJTask::ClearTaskMap(const std::string &key)
+CJTask *CJTask::ClearTaskMap(const std::string &key)
 {
     std::lock_guard<std::mutex> lockGuard(CJTask::taskMutex_);
     auto it = taskMap_.find(key);
@@ -128,7 +128,7 @@ bool CJTask::SetPathPermission(const std::string &filepath)
             return false;
         }
     }
-    
+
     std::string childDir = filepath.substr(0, filepath.rfind("/"));
     if (AclSetAccess(childDir, SA_PERMISSION_RWX) != ACL_SUCC) {
         REQUEST_HILOGE("AclSetAccess Child Dir Failed.");
@@ -179,7 +179,6 @@ bool CJTask::SetDirsPermission(std::vector<std::string> &dirs)
 
     return true;
 }
-
 
 void CJTask::AddPathMap(const std::string &filepath, const std::string &baseDir)
 {
@@ -263,28 +262,27 @@ void CJTask::RegisterForegroundResume()
     REQUEST_HILOGD("Register foreground resume callback success");
 }
 
-ExceptionError CJTask::Create(Context* context, Config &config)
+ExceptionError CJTask::Create(Context *context, Config &config)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin task create, seq: %{public}d", seq);
     config_ = config;
+    ExceptionError err;
     RequestManager::GetInstance()->RestoreListener(CJTask::ReloadListener);
     if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        return {
-            .code = ExceptionErrorCode::E_SERVICE_ERROR
-        };
+        err.code = ExceptionErrorCode::E_SERVICE_ERROR;
+        return err;
     }
 
     if (config.mode == Mode::FOREGROUND) {
         RegisterForegroundResume();
     }
 
-    int32_t err = RequestManager::GetInstance()->Create(config_, seq, taskId_);
-    if (err != ExceptionErrorCode::E_OK) {
+    int32_t ret = RequestManager::GetInstance()->Create(config_, seq, taskId_);
+    if (ret != ExceptionErrorCode::E_OK) {
         REQUEST_HILOGE("Create task failed, in");
-        return {
-            .code = (ExceptionErrorCode)err
-        };
+        err.code = static_cast<ExceptionErrorCode>(ret);
+        return err;
     }
 
     SetTid();
@@ -292,27 +290,24 @@ ExceptionError CJTask::Create(Context* context, Config &config)
     notifyDataListenerMap_[SubscribeType::REMOVE] =
         std::make_shared<CJNotifyDataListener>(GetTidStr(), SubscribeType::REMOVE);
     listenerMutex_.unlock();
-    RequestManager::GetInstance()->AddListener(
-        GetTidStr(), SubscribeType::REMOVE, notifyDataListenerMap_[SubscribeType::REMOVE]);
+    RequestManager::GetInstance()->AddListener(GetTidStr(), SubscribeType::REMOVE,
+                                               notifyDataListenerMap_[SubscribeType::REMOVE]);
 
     AddTaskMap(GetTidStr(), this);
 
-    return {
-        .code = ExceptionErrorCode::E_OK
-    };
+    return err;
 }
 
-ExceptionError CJTask::GetTask(OHOS::AbilityRuntime::Context* context, std::string &taskId, std::string &token,
-    Config &config)
+ExceptionError CJTask::GetTask(OHOS::AbilityRuntime::Context *context, std::string &taskId, std::string &token,
+                               Config &config)
 {
-    ExceptionError ret = { .code = ExceptionErrorCode::E_OK };
+    ExceptionError err;
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin get task, seq: %{public}d", seq);
 
     if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        return {
-            .code = ExceptionErrorCode::E_SERVICE_ERROR
-        };
+        err.code = ExceptionErrorCode::E_SERVICE_ERROR;
+        return err;
     }
 
     CJTask *task = CJTask::FindTaskById(taskId);
@@ -321,51 +316,48 @@ ExceptionError CJTask::GetTask(OHOS::AbilityRuntime::Context* context, std::stri
             return ConvertError(ExceptionErrorCode::E_TASK_NOT_FOUND);
         }
         config = task->config_;
-        return ret;
+        return err;
     }
 
     int32_t result = RequestManager::GetInstance()->GetTask(taskId, token, config);
     if (result != ExceptionErrorCode::E_OK) {
         return ConvertError(result);
     }
-    return ret;
+    return err;
 }
 
 ExceptionError CJTask::Remove(const std::string &tid)
 {
+    
     int32_t result = RequestManager::GetInstance()->Remove(tid, Version::API10);
     if (result != ExceptionErrorCode::E_OK) {
         return ConvertError(result);
     }
 
-    return {
-        .code = ExceptionErrorCode::E_OK
-    };
+    return ExceptionError();
 }
 
 ExceptionError CJTask::Touch(const std::string &tid, TaskInfo &task, const std::string &token)
 {
-    ExceptionError ret = { .code = ExceptionErrorCode::E_OK };
+    ExceptionError err;
     if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        return {
-            .code = ExceptionErrorCode::E_SERVICE_ERROR
-        };
+        err.code = ExceptionErrorCode::E_SERVICE_ERROR;
+        return err;
     }
 
     int32_t result = RequestManager::GetInstance()->Touch(tid, token, task);
     if (result != ExceptionErrorCode::E_OK) {
         return ConvertError(result);
     }
-    return ret;
+    return err;
 }
 
 ExceptionError CJTask::Search(const Filter &filter, std::vector<std::string> &tids)
 {
-    ExceptionError ret = { .code = ExceptionErrorCode::E_OK };
+    ExceptionError err;
     if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        return {
-            .code = ExceptionErrorCode::E_SERVICE_ERROR
-        };
+        err.code = ExceptionErrorCode::E_SERVICE_ERROR;
+        return err;
     }
 
     int32_t result = RequestManager::GetInstance()->Search(filter, tids);
@@ -373,7 +365,7 @@ ExceptionError CJTask::Search(const Filter &filter, std::vector<std::string> &ti
         return ConvertError(result);
     }
 
-    return ret;
+    return err;
 }
 
 void CJTask::ReloadListener()
@@ -391,29 +383,26 @@ ExceptionError CJTask::On(std::string type, std::string &taskId, void (*callback
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin task on, seq: %{public}d", seq);
 
+    ExceptionError err;
     SubscribeType subscribeType = CJRequestEvent::StringToSubscribeType(type);
     if (subscribeType == SubscribeType::BUTT) {
-        return {
-            .code = ExceptionErrorCode::E_PARAMETER_CHECK, .errInfo = "First parameter error"
-        };
+        err.code = ExceptionErrorCode::E_PARAMETER_CHECK;
+        err.errInfo = "First parameter error";
+        return err;
     }
 
     listenerMutex_.lock();
     auto listener = notifyDataListenerMap_.find(subscribeType);
     if (listener == notifyDataListenerMap_.end()) {
-        notifyDataListenerMap_[subscribeType] =
-            std::make_shared<CJNotifyDataListener>(GetTidStr(), subscribeType);
+        notifyDataListenerMap_[subscribeType] = std::make_shared<CJNotifyDataListener>(GetTidStr(), subscribeType);
     }
     listenerMutex_.unlock();
-    notifyDataListenerMap_[subscribeType]->AddListener(CJLambda::Create(callback),
-        (CFunc)callback);
+    notifyDataListenerMap_[subscribeType]->AddListener(CJLambda::Create(callback), (CFunc)callback);
 
     REQUEST_HILOGI("End task on event %{public}s successfully, seq: %{public}d, tid: %{public}s", type.c_str(), seq,
-        GetTidStr().c_str());
+                   GetTidStr().c_str());
 
-    return {
-        .code = ExceptionErrorCode::E_OK
-    };
+    return err;
 }
 
 ExceptionError CJTask::Off(std::string event, CFunc callback)
@@ -421,26 +410,23 @@ ExceptionError CJTask::Off(std::string event, CFunc callback)
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin task off, seq: %{public}d", seq);
 
+    ExceptionError err;
     SubscribeType subscribeType = CJRequestEvent::StringToSubscribeType(event);
     if (subscribeType == SubscribeType::BUTT) {
-        return {
-            .code = ExceptionErrorCode::E_PARAMETER_CHECK,
-            .errInfo = "First parameter error"
-        };
+        err.code = ExceptionErrorCode::E_PARAMETER_CHECK;
+        err.errInfo ="First parameter error";
+        return err;
     }
 
     listenerMutex_.lock();
     auto listener = notifyDataListenerMap_.find(subscribeType);
     if (listener == notifyDataListenerMap_.end()) {
-        notifyDataListenerMap_[subscribeType] =
-            std::make_shared<CJNotifyDataListener>(GetTidStr(), subscribeType);
+        notifyDataListenerMap_[subscribeType] = std::make_shared<CJNotifyDataListener>(GetTidStr(), subscribeType);
     }
     listenerMutex_.unlock();
     notifyDataListenerMap_[subscribeType]->RemoveListener((CFunc)callback);
 
-    return {
-        .code = ExceptionErrorCode::E_OK
-    };
+    return err;
 }
 
 void CJTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls)

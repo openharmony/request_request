@@ -23,10 +23,10 @@
 #include "request_manager.h"
 
 namespace OHOS::CJSystemapi::Request {
-using OHOS::Request::RequestManager;
-using OHOS::Request::Version;
 using OHOS::Request::Action;
+using OHOS::Request::RequestManager;
 using OHOS::Request::State;
+using OHOS::Request::Version;
 
 void CJNotifyDataListener::AddListener(ProgressOnCallBackType cb, CFunc cbId)
 {
@@ -109,4 +109,4 @@ void CJNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
     RemoveJSTask(notifyData);
 }
 
-} // namespace OHOS::Request
+} // namespace OHOS::CJSystemapi::Request

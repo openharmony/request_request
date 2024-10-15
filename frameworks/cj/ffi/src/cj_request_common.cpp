@@ -16,23 +16,23 @@
 #include "cj_request_common.h"
 
 #include <cstdlib>
-#include <sstream>
 #include <fstream>
+#include <sstream>
 #include "cj_request_ffi.h"
 #include "ffrt.h"
 #include "js_common.h"
-#include "parameter.h"
 #include "log.h"
-#include "securec.h"
 #include "openssl/sha.h"
+#include "parameter.h"
+#include "securec.h"
 
 namespace OHOS::CJSystemapi::Request {
-using OHOS::Request::ExceptionErrorCode;
-using OHOS::Request::FileSpec;
 using OHOS::Request::Action;
-using OHOS::Request::Reason;
+using OHOS::Request::ExceptionErrorCode;
 using OHOS::Request::Faults;
+using OHOS::Request::FileSpec;
 using OHOS::Request::FormItem;
+using OHOS::Request::Reason;
 
 static constexpr const char *REASON_OK_INFO = "Task successful";
 static constexpr const char *TASK_SURVIVAL_ONE_MONTH_INFO = "The task has not been completed for a month yet";
@@ -80,13 +80,13 @@ void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileDa
     return;
 }
 
-char* MallocCString(const std::string& origin)
+char *MallocCString(const std::string &origin)
 {
     if (origin.empty()) {
         return nullptr;
     }
     auto len = origin.length() + 1;
-    char* res = static_cast<char *>(malloc(sizeof(char) * len));
+    char *res = static_cast<char *>(malloc(sizeof(char) * len));
     if (res == nullptr) {
         return nullptr;
     }
@@ -96,7 +96,7 @@ char* MallocCString(const std::string& origin)
 bool IsPathValid(const std::string &filePath)
 {
     auto path = filePath.substr(0, filePath.rfind('/'));
-    char resolvedPath[PATH_MAX + 1] = { 0 };
+    char resolvedPath[PATH_MAX + 1] = {0};
     if (path.length() > PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr ||
         strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
         REQUEST_HILOGE("invalid file path!");
@@ -122,7 +122,7 @@ std::string SHA256(const char *str, size_t len)
 
 ExceptionError ConvertError(int32_t errorCode)
 {
-    ExceptionError err{};
+    ExceptionError err;
     auto generateError = [&err](ExceptionErrorCode errorCode, const std::string &info) {
         err.code = errorCode;
         err.errInfo = info;
@@ -130,21 +130,21 @@ ExceptionError ConvertError(int32_t errorCode)
     };
 
     switch (errorCode) {
-        case ExceptionErrorCode::E_UNLOADING_SA:
-            generateError(ExceptionErrorCode::E_SERVICE_ERROR, "Service ability is quitting.");
-            break;
-        case ExceptionErrorCode::E_IPC_SIZE_TOO_LARGE:
-            generateError(ExceptionErrorCode::E_SERVICE_ERROR, "Ipc error.");
-            break;
-        case ExceptionErrorCode::E_MIMETYPE_NOT_FOUND:
-            generateError(ExceptionErrorCode::E_OTHER, "Mimetype not found.");
-            break;
-        case ExceptionErrorCode::E_TASK_INDEX_TOO_LARGE:
-            generateError(ExceptionErrorCode::E_TASK_NOT_FOUND, "Task index out of range.");
-            break;
-        default:
-            generateError(static_cast<ExceptionErrorCode>(errorCode), "");
-            break;
+    case ExceptionErrorCode::E_UNLOADING_SA:
+        generateError(ExceptionErrorCode::E_SERVICE_ERROR, "Service ability is quitting.");
+        break;
+    case ExceptionErrorCode::E_IPC_SIZE_TOO_LARGE:
+        generateError(ExceptionErrorCode::E_SERVICE_ERROR, "Ipc error.");
+        break;
+    case ExceptionErrorCode::E_MIMETYPE_NOT_FOUND:
+        generateError(ExceptionErrorCode::E_OTHER, "Mimetype not found.");
+        break;
+    case ExceptionErrorCode::E_TASK_INDEX_TOO_LARGE:
+        generateError(ExceptionErrorCode::E_TASK_NOT_FOUND, "Task index out of range.");
+        break;
+    default:
+        generateError(static_cast<ExceptionErrorCode>(errorCode), "");
+        break;
     }
 
     return err;
@@ -152,11 +152,11 @@ ExceptionError ConvertError(int32_t errorCode)
 
 CProgress Convert2CProgress(const Progress &in)
 {
-    CProgress out = { 0 };
+    CProgress out = {0};
     out.state = static_cast<uint32_t>(in.state);
     out.index = in.index;
     out.processed = in.processed;
-    
+
     if (in.sizes.size() > 0) {
         out.sizeArr = static_cast<int64_t *>(malloc(sizeof(int64_t) * in.sizes.size()));
         if (out.sizeArr == nullptr) {
@@ -210,42 +210,42 @@ std::string GetSaveas(const std::vector<FileSpec> &files, Action action)
 uint32_t Convert2Broken(Reason code)
 {
     static std::map<Reason, Faults> InnerCodeToBroken = {
-        { Reason::REASON_OK, Faults::OTHERS },
-        { Reason::TASK_SURVIVAL_ONE_MONTH, Faults::OTHERS },
-        { Reason::WAITTING_NETWORK_ONE_DAY, Faults::OTHERS },
-        { Reason::STOPPED_NEW_FRONT_TASK, Faults::OTHERS },
-        { Reason::RUNNING_TASK_MEET_LIMITS, Faults::OTHERS },
-        { Reason::USER_OPERATION, Faults::OTHERS },
-        { Reason::APP_BACKGROUND_OR_TERMINATE, Faults::OTHERS },
-        { Reason::NETWORK_OFFLINE, Faults::DISCONNECTED },
-        { Reason::UNSUPPORTED_NETWORK_TYPE, Faults::OTHERS },
-        { Reason::BUILD_CLIENT_FAILED, Faults::PARAM },
-        { Reason::BUILD_REQUEST_FAILED, Faults::PARAM },
-        { Reason::GET_FILESIZE_FAILED, Faults::FSIO },
-        { Reason::CONTINUOUS_TASK_TIMEOUT, Faults::OTHERS },
-        { Reason::CONNECT_ERROR, Faults::TCP },
-        { Reason::REQUEST_ERROR, Faults::PROTOCOL },
-        { Reason::UPLOAD_FILE_ERROR, Faults::OTHERS },
-        { Reason::REDIRECT_ERROR, Faults::REDIRECT },
-        { Reason::PROTOCOL_ERROR, Faults::PROTOCOL },
-        { Reason::IO_ERROR, Faults::FSIO },
-        { Reason::UNSUPPORT_RANGE_REQUEST, Faults::PROTOCOL },
-        { Reason::OTHERS_ERROR, Faults::OTHERS },
-        { Reason::ACCOUNT_STOPPED, Faults::OTHERS },
-        { Reason::NETWORK_CHANGED, Faults::OTHERS },
-        { Reason::DNS, Faults::DNS },
-        { Reason::TCP, Faults::TCP },
-        { Reason::SSL, Faults::SSL },
-        { Reason::INSUFFICIENT_SPACE, Faults::OTHERS },
+        {Reason::REASON_OK, Faults::OTHERS},
+        {Reason::TASK_SURVIVAL_ONE_MONTH, Faults::OTHERS},
+        {Reason::WAITTING_NETWORK_ONE_DAY, Faults::OTHERS},
+        {Reason::STOPPED_NEW_FRONT_TASK, Faults::OTHERS},
+        {Reason::RUNNING_TASK_MEET_LIMITS, Faults::OTHERS},
+        {Reason::USER_OPERATION, Faults::OTHERS},
+        {Reason::APP_BACKGROUND_OR_TERMINATE, Faults::OTHERS},
+        {Reason::NETWORK_OFFLINE, Faults::DISCONNECTED},
+        {Reason::UNSUPPORTED_NETWORK_TYPE, Faults::OTHERS},
+        {Reason::BUILD_CLIENT_FAILED, Faults::PARAM},
+        {Reason::BUILD_REQUEST_FAILED, Faults::PARAM},
+        {Reason::GET_FILESIZE_FAILED, Faults::FSIO},
+        {Reason::CONTINUOUS_TASK_TIMEOUT, Faults::OTHERS},
+        {Reason::CONNECT_ERROR, Faults::TCP},
+        {Reason::REQUEST_ERROR, Faults::PROTOCOL},
+        {Reason::UPLOAD_FILE_ERROR, Faults::OTHERS},
+        {Reason::REDIRECT_ERROR, Faults::REDIRECT},
+        {Reason::PROTOCOL_ERROR, Faults::PROTOCOL},
+        {Reason::IO_ERROR, Faults::FSIO},
+        {Reason::UNSUPPORT_RANGE_REQUEST, Faults::PROTOCOL},
+        {Reason::OTHERS_ERROR, Faults::OTHERS},
+        {Reason::ACCOUNT_STOPPED, Faults::OTHERS},
+        {Reason::NETWORK_CHANGED, Faults::OTHERS},
+        {Reason::DNS, Faults::DNS},
+        {Reason::TCP, Faults::TCP},
+        {Reason::SSL, Faults::SSL},
+        {Reason::INSUFFICIENT_SPACE, Faults::OTHERS},
     };
     constexpr const int32_t detailVersion = 12;
     auto iter = InnerCodeToBroken.find(code);
     if (iter != InnerCodeToBroken.end()) {
         int32_t sdkVersion = GetSdkApiVersion();
         REQUEST_HILOGD("GetSdkApiVersion %{public}d", sdkVersion);
-        if (sdkVersion < detailVersion
-            && (iter->second == Faults::PARAM || iter->second == Faults::DNS || iter->second == Faults::TCP
-                || iter->second == Faults::SSL || iter->second == Faults::REDIRECT)) {
+        if (sdkVersion < detailVersion &&
+            (iter->second == Faults::PARAM || iter->second == Faults::DNS || iter->second == Faults::TCP ||
+             iter->second == Faults::SSL || iter->second == Faults::REDIRECT)) {
             return static_cast<uint32_t>(Faults::OTHERS);
         }
         return static_cast<uint32_t>(iter->second);
@@ -256,33 +256,33 @@ uint32_t Convert2Broken(Reason code)
 std::string Convert2ReasonMsg(Reason code)
 {
     static std::map<Reason, std::string> ReasonMsg = {
-        { Reason::REASON_OK, REASON_OK_INFO },
-        { Reason::TASK_SURVIVAL_ONE_MONTH, TASK_SURVIVAL_ONE_MONTH_INFO },
-        { Reason::WAITTING_NETWORK_ONE_DAY, WAITTING_NETWORK_ONE_DAY_INFO },
-        { Reason::STOPPED_NEW_FRONT_TASK, STOPPED_NEW_FRONT_TASK_INFO },
-        { Reason::RUNNING_TASK_MEET_LIMITS, RUNNING_TASK_MEET_LIMITS_INFO },
-        { Reason::USER_OPERATION, USER_OPERATION_INFO },
-        { Reason::APP_BACKGROUND_OR_TERMINATE, APP_BACKGROUND_OR_TERMINATE_INFO },
-        { Reason::NETWORK_OFFLINE, NETWORK_OFFLINE_INFO },
-        { Reason::UNSUPPORTED_NETWORK_TYPE, UNSUPPORTED_NETWORK_TYPE_INFO },
-        { Reason::BUILD_CLIENT_FAILED, BUILD_CLIENT_FAILED_INFO },
-        { Reason::BUILD_REQUEST_FAILED, BUILD_REQUEST_FAILED_INFO },
-        { Reason::GET_FILESIZE_FAILED, GET_FILESIZE_FAILED_INFO },
-        { Reason::CONTINUOUS_TASK_TIMEOUT, CONTINUOUS_TASK_TIMEOUT_INFO },
-        { Reason::CONNECT_ERROR, CONNECT_ERROR_INFO },
-        { Reason::REQUEST_ERROR, REQUEST_ERROR_INFO },
-        { Reason::UPLOAD_FILE_ERROR, UPLOAD_FILE_ERROR_INFO },
-        { Reason::REDIRECT_ERROR, REDIRECT_ERROR_INFO },
-        { Reason::PROTOCOL_ERROR, PROTOCOL_ERROR_INFO },
-        { Reason::IO_ERROR, IO_ERROR_INFO },
-        { Reason::UNSUPPORT_RANGE_REQUEST, UNSUPPORT_RANGE_REQUEST_INFO },
-        { Reason::OTHERS_ERROR, OTHERS_ERROR_INFO },
-        { Reason::ACCOUNT_STOPPED, ACCOUNT_STOPPED_INFO },
-        { Reason::NETWORK_CHANGED, NETWORK_CHANGED_INFO },
-        { Reason::DNS, DNS_INFO },
-        { Reason::TCP, TCP_INFO },
-        { Reason::SSL, SSL_INFO },
-        { Reason::INSUFFICIENT_SPACE, INSUFFICIENT_SPACE_INFO },
+        {Reason::REASON_OK, REASON_OK_INFO},
+        {Reason::TASK_SURVIVAL_ONE_MONTH, TASK_SURVIVAL_ONE_MONTH_INFO},
+        {Reason::WAITTING_NETWORK_ONE_DAY, WAITTING_NETWORK_ONE_DAY_INFO},
+        {Reason::STOPPED_NEW_FRONT_TASK, STOPPED_NEW_FRONT_TASK_INFO},
+        {Reason::RUNNING_TASK_MEET_LIMITS, RUNNING_TASK_MEET_LIMITS_INFO},
+        {Reason::USER_OPERATION, USER_OPERATION_INFO},
+        {Reason::APP_BACKGROUND_OR_TERMINATE, APP_BACKGROUND_OR_TERMINATE_INFO},
+        {Reason::NETWORK_OFFLINE, NETWORK_OFFLINE_INFO},
+        {Reason::UNSUPPORTED_NETWORK_TYPE, UNSUPPORTED_NETWORK_TYPE_INFO},
+        {Reason::BUILD_CLIENT_FAILED, BUILD_CLIENT_FAILED_INFO},
+        {Reason::BUILD_REQUEST_FAILED, BUILD_REQUEST_FAILED_INFO},
+        {Reason::GET_FILESIZE_FAILED, GET_FILESIZE_FAILED_INFO},
+        {Reason::CONTINUOUS_TASK_TIMEOUT, CONTINUOUS_TASK_TIMEOUT_INFO},
+        {Reason::CONNECT_ERROR, CONNECT_ERROR_INFO},
+        {Reason::REQUEST_ERROR, REQUEST_ERROR_INFO},
+        {Reason::UPLOAD_FILE_ERROR, UPLOAD_FILE_ERROR_INFO},
+        {Reason::REDIRECT_ERROR, REDIRECT_ERROR_INFO},
+        {Reason::PROTOCOL_ERROR, PROTOCOL_ERROR_INFO},
+        {Reason::IO_ERROR, IO_ERROR_INFO},
+        {Reason::UNSUPPORT_RANGE_REQUEST, UNSUPPORT_RANGE_REQUEST_INFO},
+        {Reason::OTHERS_ERROR, OTHERS_ERROR_INFO},
+        {Reason::ACCOUNT_STOPPED, ACCOUNT_STOPPED_INFO},
+        {Reason::NETWORK_CHANGED, NETWORK_CHANGED_INFO},
+        {Reason::DNS, DNS_INFO},
+        {Reason::TCP, TCP_INFO},
+        {Reason::SSL, SSL_INFO},
+        {Reason::INSUFFICIENT_SPACE, INSUFFICIENT_SPACE_INFO},
     };
     auto iter = ReasonMsg.find(code);
     if (iter != ReasonMsg.end()) {
@@ -293,10 +293,9 @@ std::string Convert2ReasonMsg(Reason code)
 
 CHashStrArr Convert2CHashStrArr(const std::map<std::string, std::string> &extras)
 {
-    CHashStrArr out = { NULL };
+    CHashStrArr out = {NULL};
     size_t size = extras.size();
-    if (size == 0 ||
-        size > std::numeric_limits<size_t>::max() / sizeof(CHashStrPair)) {
+    if (size == 0 || size > std::numeric_limits<size_t>::max() / sizeof(CHashStrPair)) {
         return out;
     }
 
@@ -317,7 +316,7 @@ CHashStrArr Convert2CHashStrArr(const std::map<std::string, std::string> &extras
 
 CFormItemArr Convert2CFormItemArr(const std::vector<FileSpec> &files, const std::vector<FormItem> &forms)
 {
-    CFormItemArr out = { NULL };
+    CFormItemArr out = {NULL};
     size_t filesLen = files.size();
     size_t formsLen = forms.size();
     size_t len = filesLen + formsLen;
@@ -337,7 +336,7 @@ CFormItemArr Convert2CFormItemArr(const std::vector<FileSpec> &files, const std:
         out.head[i].value.type = CFORM_ITEM_VALUE_TYPE_STRING;
     }
 
-    for (size_t j = 0; j < filesLen;  ++j) {
+    for (size_t j = 0; j < filesLen; ++j) {
         out.head[i].name = MallocCString(files[j].name);
         out.head[i].value.file.path = MallocCString(files[j].uri);
         out.head[i].value.file.mimeType = MallocCString(files[j].type);

@@ -23,11 +23,12 @@
 #include "i_response_listener.h"
 
 namespace OHOS::CJSystemapi::Request {
-class CJResponseListener
-    : public OHOS::Request::IResponseListener,
-      public std::enable_shared_from_this<CJResponseListener> {
+class CJResponseListener : public OHOS::Request::IResponseListener,
+                           public std::enable_shared_from_this<CJResponseListener> {
 public:
-    explicit CJResponseListener(const std::string &taskId) : taskId_(taskId) {}
+    explicit CJResponseListener(const std::string &taskId) : taskId_(taskId)
+    {
+    }
 
 private:
     const std::string taskId_;

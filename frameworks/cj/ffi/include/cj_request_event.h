@@ -32,7 +32,7 @@ public:
     CJRequestEvent(CJRequestEvent &&) = delete;
     CJRequestEvent &operator=(CJRequestEvent &&) = delete;
 
-    static ExceptionErrorCode Exec(std::string execType,  const CJTask *task);
+    static ExceptionErrorCode Exec(std::string execType, const CJTask *task);
     static SubscribeType StringToSubscribeType(const std::string &type);
 
 private:
