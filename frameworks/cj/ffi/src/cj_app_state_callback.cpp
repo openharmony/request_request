@@ -29,13 +29,13 @@ void CJAppStateCallback::OnAbilityForeground(const std::shared_ptr<NativeReferen
     if (RequestManager::GetInstance()->IsSaReady()) {
         return;
     }
-    for (auto task = CJTask::taskMap_.begin(); task != CJTask::taskMap_.end(); ++task) {
+    for (auto task = CJRequestTask::taskMap_.begin(); task != CJRequestTask::taskMap_.end(); ++task) {
         if (task->second->config_.mode == Mode::FOREGROUND) {
             RequestManager::GetInstance()->LoadRequestServer();
             return;
         }
     }
-    CJTask::register_ = false;
+    CJRequestTask::register_ = false;
     auto context = AbilityRuntime::ApplicationContext::GetInstance();
     if (context == nullptr) {
         REQUEST_HILOGE("Get ApplicationContext failed");

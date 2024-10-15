@@ -61,7 +61,7 @@ std::map<std::string, CJRequestEvent::Event> CJRequestEvent::requestEvent_ = {
     {FUNCTION_STOP, CJRequestEvent::StopExec},
 };
 
-ExceptionErrorCode CJRequestEvent::Exec(std::string execType, const CJTask *task)
+ExceptionErrorCode CJRequestEvent::Exec(std::string execType, const CJRequestTask *task)
 {
     auto handle = requestEvent_.find(execType);
     if (handle == requestEvent_.end()) {
@@ -71,7 +71,7 @@ ExceptionErrorCode CJRequestEvent::Exec(std::string execType, const CJTask *task
     return (ExceptionErrorCode)handle->second(task);
 }
 
-ExceptionErrorCode CJRequestEvent::StartExec(const CJTask *task)
+ExceptionErrorCode CJRequestEvent::StartExec(const CJRequestTask *task)
 {
     REQUEST_HILOGD("RequestEvent::StartExec in");
     Config config = task->config_;
@@ -85,7 +85,7 @@ ExceptionErrorCode CJRequestEvent::StartExec(const CJTask *task)
         if (chmod(file.uri.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH) != 0) {
             REQUEST_HILOGD("File add OTH access Failed.");
         }
-        if (!CJTask::SetPathPermission(file.uri)) {
+        if (!CJRequestTask::SetPathPermission(file.uri)) {
             REQUEST_HILOGE("Set path permission fail.");
             return ExceptionErrorCode::E_FILE_IO;
         }
@@ -94,17 +94,17 @@ ExceptionErrorCode CJRequestEvent::StartExec(const CJTask *task)
     return (ExceptionErrorCode)RequestManager::GetInstance()->Start(task->GetTidStr());
 }
 
-ExceptionErrorCode CJRequestEvent::StopExec(const CJTask *task)
+ExceptionErrorCode CJRequestEvent::StopExec(const CJRequestTask *task)
 {
     return (ExceptionErrorCode)RequestManager::GetInstance()->Stop(task->GetTidStr());
 }
 
-ExceptionErrorCode CJRequestEvent::PauseExec(const CJTask *task)
+ExceptionErrorCode CJRequestEvent::PauseExec(const CJRequestTask *task)
 {
     return (ExceptionErrorCode)RequestManager::GetInstance()->Pause(task->GetTidStr(), Version::API10);
 }
 
-ExceptionErrorCode CJRequestEvent::ResumeExec(const CJTask *task)
+ExceptionErrorCode CJRequestEvent::ResumeExec(const CJRequestTask *task)
 {
     if (!RequestManager::GetInstance()->LoadRequestServer()) {
         return ExceptionErrorCode::E_SERVICE_ERROR;

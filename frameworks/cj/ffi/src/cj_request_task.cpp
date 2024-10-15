@@ -43,55 +43,55 @@ using OHOS::Request::TaskInfo;
 using OHOS::Request::Version;
 using OHOS::StorageDaemon::AclSetAccess;
 
-std::mutex CJTask::taskMutex_;
-std::map<std::string, CJTask *> CJTask::taskMap_;
+std::mutex CJRequestTask::taskMutex_;
+std::map<std::string, CJRequestTask *> CJRequestTask::taskMap_;
 
-std::mutex CJTask::pathMutex_;
-std::map<std::string, int32_t> CJTask::pathMap_;
+std::mutex CJRequestTask::pathMutex_;
+std::map<std::string, int32_t> CJRequestTask::pathMap_;
 
-bool CJTask::register_ = false;
+bool CJRequestTask::register_ = false;
 
 static constexpr int ACL_SUCC = 0;
 static const std::string SA_PERMISSION_RWX = "g:3815:rwx";
 static const std::string SA_PERMISSION_X = "g:3815:x";
 static const std::string SA_PERMISSION_CLEAN = "g:3815:---";
 
-CJTask::CJTask()
+CJRequestTask::CJRequestTask()
 {
     config_.version = Version::API10;
     config_.action = Action::ANY;
-    REQUEST_HILOGD("construct CJTask()");
+    REQUEST_HILOGD("construct CJRequestTask()");
 }
 
-CJTask::~CJTask()
+CJRequestTask::~CJRequestTask()
 {
-    REQUEST_HILOGD("~CJTask()");
+    REQUEST_HILOGD("~CJRequestTask()");
     RequestManager::GetInstance()->RemoveAllListeners(GetTidStr());
 }
 
-std::string CJTask::GetTidStr() const
+std::string CJRequestTask::GetTidStr() const
 {
     return tid_;
 }
 
-void CJTask::SetTid()
+void CJRequestTask::SetTid()
 {
     tid_ = taskId_;
 }
 
-void CJTask::AddTaskMap(const std::string &key, CJTask *task)
+void CJRequestTask::AddTaskMap(const std::string &key, CJRequestTask *task)
 {
-    std::lock_guard<std::mutex> lockGuard(CJTask::taskMutex_);
-    CJTask::taskMap_[key] = task;
+    std::lock_guard<std::mutex> lockGuard(CJRequestTask::taskMutex_);
+    CJRequestTask::taskMap_[key] = task;
 }
 
-CJTask *CJTask::FindTaskById(std::string &taskId)
+CJRequestTask *CJRequestTask::FindTaskById(std::string &taskId)
 {
-    CJTask *task = nullptr;
+    CJRequestTask *task = nullptr;
     {
-        std::lock_guard<std::mutex> lockGuard(CJTask::taskMutex_);
-        auto item = CJTask::taskMap_.find(taskId);
-        if (item == CJTask::taskMap_.end()) {
+        std::lock_guard<std::mutex> lockGuard(CJRequestTask::taskMutex_);
+        auto item = CJRequestTask::taskMap_.find(taskId);
+        if (item == CJRequestTask::taskMap_.end()) {
             return nullptr;
         }
         task = item->second;
@@ -99,9 +99,9 @@ CJTask *CJTask::FindTaskById(std::string &taskId)
     return task;
 }
 
-CJTask *CJTask::ClearTaskMap(const std::string &key)
+CJRequestTask *CJRequestTask::ClearTaskMap(const std::string &key)
 {
-    std::lock_guard<std::mutex> lockGuard(CJTask::taskMutex_);
+    std::lock_guard<std::mutex> lockGuard(CJRequestTask::taskMutex_);
     auto it = taskMap_.find(key);
     if (it == taskMap_.end()) {
         return nullptr;
@@ -110,7 +110,7 @@ CJTask *CJTask::ClearTaskMap(const std::string &key)
     return it->second;
 }
 
-bool CJTask::SetPathPermission(const std::string &filepath)
+bool CJRequestTask::SetPathPermission(const std::string &filepath)
 {
     std::string baseDir;
     if (!CJInitialize::GetBaseDir(baseDir) || filepath.find(baseDir) == std::string::npos) {
@@ -137,7 +137,7 @@ bool CJTask::SetPathPermission(const std::string &filepath)
     return true;
 }
 
-bool CJTask::SetDirsPermission(std::vector<std::string> &dirs)
+bool CJRequestTask::SetDirsPermission(std::vector<std::string> &dirs)
 {
     if (dirs.empty()) {
         return true;
@@ -166,7 +166,7 @@ bool CJTask::SetDirsPermission(std::vector<std::string> &dirs)
                 REQUEST_HILOGD("File add OTH access Failed.");
             }
             REQUEST_HILOGD("current filePath is %{public}s", newfilePath.c_str());
-            if (!CJTask::SetPathPermission(newfilePath)) {
+            if (!CJRequestTask::SetPathPermission(newfilePath)) {
                 REQUEST_HILOGE("Set path permission fail.");
                 return false;
             }
@@ -180,13 +180,13 @@ bool CJTask::SetDirsPermission(std::vector<std::string> &dirs)
     return true;
 }
 
-void CJTask::AddPathMap(const std::string &filepath, const std::string &baseDir)
+void CJRequestTask::AddPathMap(const std::string &filepath, const std::string &baseDir)
 {
     std::string childDir(filepath);
     std::string parentDir;
     while (childDir.length() > baseDir.length()) {
         parentDir = childDir.substr(0, childDir.rfind("/"));
-        std::lock_guard<std::mutex> lockGuard(CJTask::pathMutex_);
+        std::lock_guard<std::mutex> lockGuard(CJRequestTask::pathMutex_);
         auto it = pathMap_.find(parentDir);
         if (it == pathMap_.end()) {
             pathMap_[parentDir] = 1;
@@ -197,7 +197,7 @@ void CJTask::AddPathMap(const std::string &filepath, const std::string &baseDir)
     }
 }
 
-void CJTask::ResetDirAccess(const std::string &filepath)
+void CJRequestTask::ResetDirAccess(const std::string &filepath)
 {
     int ret = AclSetAccess(filepath, SA_PERMISSION_CLEAN);
     if (ret != ACL_SUCC) {
@@ -205,7 +205,7 @@ void CJTask::ResetDirAccess(const std::string &filepath)
     }
 }
 
-void CJTask::RemovePathMap(const std::string &filepath)
+void CJRequestTask::RemovePathMap(const std::string &filepath)
 {
     std::string baseDir;
     if (!CJInitialize::GetBaseDir(baseDir) || filepath.find(baseDir) == std::string::npos) {
@@ -221,7 +221,7 @@ void CJTask::RemovePathMap(const std::string &filepath)
     std::string parentDir;
     while (childDir.length() > baseDir.length()) {
         parentDir = childDir.substr(0, childDir.rfind("/"));
-        std::lock_guard<std::mutex> lockGuard(CJTask::pathMutex_);
+        std::lock_guard<std::mutex> lockGuard(CJRequestTask::pathMutex_);
         auto it = pathMap_.find(parentDir);
         if (it != pathMap_.end()) {
             if (pathMap_[parentDir] <= 1) {
@@ -235,7 +235,7 @@ void CJTask::RemovePathMap(const std::string &filepath)
     }
 }
 
-void CJTask::RemoveDirsPermission(const std::vector<std::string> &dirs)
+void CJRequestTask::RemoveDirsPermission(const std::vector<std::string> &dirs)
 {
     for (const auto &folderPath : dirs) {
         fs::path folder = folderPath;
@@ -247,7 +247,7 @@ void CJTask::RemoveDirsPermission(const std::vector<std::string> &dirs)
     }
 }
 
-void CJTask::RegisterForegroundResume()
+void CJRequestTask::RegisterForegroundResume()
 {
     if (register_) {
         return;
@@ -262,13 +262,13 @@ void CJTask::RegisterForegroundResume()
     REQUEST_HILOGD("Register foreground resume callback success");
 }
 
-ExceptionError CJTask::Create(Context *context, Config &config)
+ExceptionError CJRequestTask::Create(Context *context, Config &config)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin task create, seq: %{public}d", seq);
     config_ = config;
     ExceptionError err;
-    RequestManager::GetInstance()->RestoreListener(CJTask::ReloadListener);
+    RequestManager::GetInstance()->RestoreListener(CJRequestTask::ReloadListener);
     if (!RequestManager::GetInstance()->LoadRequestServer()) {
         err.code = ExceptionErrorCode::E_SERVICE_ERROR;
         return err;
@@ -298,8 +298,8 @@ ExceptionError CJTask::Create(Context *context, Config &config)
     return err;
 }
 
-ExceptionError CJTask::GetTask(OHOS::AbilityRuntime::Context *context, std::string &taskId, std::string &token,
-                               Config &config)
+ExceptionError CJRequestTask::GetTask(OHOS::AbilityRuntime::Context *context, std::string &taskId, std::string &token,
+                                      Config &config)
 {
     ExceptionError err;
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
@@ -310,7 +310,7 @@ ExceptionError CJTask::GetTask(OHOS::AbilityRuntime::Context *context, std::stri
         return err;
     }
 
-    CJTask *task = CJTask::FindTaskById(taskId);
+    CJRequestTask *task = CJRequestTask::FindTaskById(taskId);
     if (task != nullptr) {
         if (task->config_.token != token) {
             return ConvertError(ExceptionErrorCode::E_TASK_NOT_FOUND);
@@ -326,9 +326,8 @@ ExceptionError CJTask::GetTask(OHOS::AbilityRuntime::Context *context, std::stri
     return err;
 }
 
-ExceptionError CJTask::Remove(const std::string &tid)
+ExceptionError CJRequestTask::Remove(const std::string &tid)
 {
-    
     int32_t result = RequestManager::GetInstance()->Remove(tid, Version::API10);
     if (result != ExceptionErrorCode::E_OK) {
         return ConvertError(result);
@@ -337,7 +336,7 @@ ExceptionError CJTask::Remove(const std::string &tid)
     return ExceptionError();
 }
 
-ExceptionError CJTask::Touch(const std::string &tid, TaskInfo &task, const std::string &token)
+ExceptionError CJRequestTask::Touch(const std::string &tid, TaskInfo &task, const std::string &token)
 {
     ExceptionError err;
     if (!RequestManager::GetInstance()->LoadRequestServer()) {
@@ -352,7 +351,7 @@ ExceptionError CJTask::Touch(const std::string &tid, TaskInfo &task, const std::
     return err;
 }
 
-ExceptionError CJTask::Search(const Filter &filter, std::vector<std::string> &tids)
+ExceptionError CJRequestTask::Search(const Filter &filter, std::vector<std::string> &tids)
 {
     ExceptionError err;
     if (!RequestManager::GetInstance()->LoadRequestServer()) {
@@ -368,17 +367,17 @@ ExceptionError CJTask::Search(const Filter &filter, std::vector<std::string> &ti
     return err;
 }
 
-void CJTask::ReloadListener()
+void CJRequestTask::ReloadListener()
 {
     REQUEST_HILOGD("ReloadListener in");
-    std::lock_guard<std::mutex> lockGuard(CJTask::taskMutex_);
+    std::lock_guard<std::mutex> lockGuard(CJRequestTask::taskMutex_);
     RequestManager::GetInstance()->ReopenChannel();
     for (const auto &it : taskMap_) {
         RequestManager::GetInstance()->Subscribe(it.first);
     }
 }
 
-ExceptionError CJTask::On(std::string type, std::string &taskId, void (*callback)(CProgress progress))
+ExceptionError CJRequestTask::On(std::string type, std::string &taskId, void (*callback)(CProgress progress))
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin task on, seq: %{public}d", seq);
@@ -405,7 +404,7 @@ ExceptionError CJTask::On(std::string type, std::string &taskId, void (*callback
     return err;
 }
 
-ExceptionError CJTask::Off(std::string event, CFunc callback)
+ExceptionError CJRequestTask::Off(std::string event, CFunc callback)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin task off, seq: %{public}d", seq);
@@ -414,7 +413,7 @@ ExceptionError CJTask::Off(std::string event, CFunc callback)
     SubscribeType subscribeType = CJRequestEvent::StringToSubscribeType(event);
     if (subscribeType == SubscribeType::BUTT) {
         err.code = ExceptionErrorCode::E_PARAMETER_CHECK;
-        err.errInfo ="First parameter error";
+        err.errInfo = "First parameter error";
         return err;
     }
 
@@ -429,11 +428,11 @@ ExceptionError CJTask::Off(std::string event, CFunc callback)
     return err;
 }
 
-void CJTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls)
+void CJRequestTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls)
 {
-    std::lock_guard<std::mutex> lockGuard(CJTask::taskMutex_);
-    auto item = CJTask::taskMap_.find(tid);
-    if (item == CJTask::taskMap_.end()) {
+    std::lock_guard<std::mutex> lockGuard(CJRequestTask::taskMutex_);
+    auto item = CJRequestTask::taskMap_.find(tid);
+    if (item == CJRequestTask::taskMap_.end()) {
         REQUEST_HILOGD("Clear task tmp files, not find task");
         return;
     }

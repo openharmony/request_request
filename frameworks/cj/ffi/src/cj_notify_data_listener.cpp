@@ -57,12 +57,12 @@ bool CJNotifyDataListener::IsHeaderReceive(const std::shared_ptr<NotifyData> &no
 
 void CJNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData> &notifyData)
 {
-    CJTask *task = nullptr;
+    CJRequestTask *task = nullptr;
     {
-        std::lock_guard<std::mutex> lockGuard(CJTask::taskMutex_);
-        auto item = CJTask::taskMap_.find(std::to_string(notifyData->taskId));
-        if (item == CJTask::taskMap_.end()) {
-            REQUEST_HILOGE("CJTask ID not found");
+        std::lock_guard<std::mutex> lockGuard(CJRequestTask::taskMutex_);
+        auto item = CJRequestTask::taskMap_.find(std::to_string(notifyData->taskId));
+        if (item == CJRequestTask::taskMap_.end()) {
+            REQUEST_HILOGE("CJRequestTask ID not found");
             return;
         }
         task = item->second;
@@ -93,11 +93,11 @@ static void RemoveJSTask(const std::shared_ptr<NotifyData> &notifyData)
     std::string tid = std::to_string(notifyData->taskId);
     if (notifyData->version == Version::API10) {
         if (notifyData->type == SubscribeType::REMOVE) {
-            CJTask::ClearTaskTemp(tid, true, true, true);
-            CJTask::ClearTaskMap(tid);
+            CJRequestTask::ClearTaskTemp(tid, true, true, true);
+            CJRequestTask::ClearTaskMap(tid);
             REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
         } else if (notifyData->type == SubscribeType::COMPLETED || notifyData->type == SubscribeType::FAILED) {
-            CJTask::ClearTaskTemp(tid, true, false, false);
+            CJRequestTask::ClearTaskTemp(tid, true, false, false);
         }
     }
 }

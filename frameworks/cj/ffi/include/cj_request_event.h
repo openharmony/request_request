@@ -32,17 +32,17 @@ public:
     CJRequestEvent(CJRequestEvent &&) = delete;
     CJRequestEvent &operator=(CJRequestEvent &&) = delete;
 
-    static ExceptionErrorCode Exec(std::string execType, const CJTask *task);
+    static ExceptionErrorCode Exec(std::string execType, const CJRequestTask *task);
     static SubscribeType StringToSubscribeType(const std::string &type);
 
 private:
-    using Event = std::function<int32_t(const CJTask *)>;
+    using Event = std::function<int32_t(const CJRequestTask *)>;
     static std::map<std::string, Event> requestEvent_;
 
-    static ExceptionErrorCode StartExec(const CJTask *task);
-    static ExceptionErrorCode StopExec(const CJTask *task);
-    static ExceptionErrorCode PauseExec(const CJTask *task);
-    static ExceptionErrorCode ResumeExec(const CJTask *task);
+    static ExceptionErrorCode StartExec(const CJRequestTask *task);
+    static ExceptionErrorCode StopExec(const CJRequestTask *task);
+    static ExceptionErrorCode PauseExec(const CJRequestTask *task);
+    static ExceptionErrorCode ResumeExec(const CJRequestTask *task);
     static std::map<std::string, SubscribeType> supportEventsV10_;
 };
 

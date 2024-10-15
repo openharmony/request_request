@@ -55,7 +55,7 @@ ExceptionError CJInitialize::ParseBundleName(const std::shared_ptr<OHOS::Ability
     ExceptionError err;
     if (context->GetApplicationInfo() == nullptr) {
         err.code = ExceptionErrorCode::E_OTHER;
-        err.errInfo ="ApplicationInfo is null";
+        err.errInfo = "ApplicationInfo is null";
         return err;
     }
 
@@ -570,7 +570,7 @@ ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config
             return err;
         }
         if (!config.firstInit) {
-            REQUEST_HILOGD("CJTask config is not firstInit");
+            REQUEST_HILOGD("CJRequestTask config is not firstInit");
             return err;
         }
         close(fd);
@@ -651,7 +651,7 @@ ExceptionError CJInitialize::CheckFileSpec(const std::shared_ptr<OHOS::AbilityRu
             file.name = "file";
         }
 
-        if (!CJTask::SetPathPermission(file.uri)) {
+        if (!CJRequestTask::SetPathPermission(file.uri)) {
             err.code = ExceptionErrorCode::E_FILE_IO;
             err.errInfo = "set path permission fail";
             return err;
@@ -684,7 +684,7 @@ ExceptionError CJInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRu
         return err;
     }
 
-    if (!CJTask::SetDirsPermission(config.certsPath)) {
+    if (!CJRequestTask::SetDirsPermission(config.certsPath)) {
         err.code = ExceptionErrorCode::E_FILE_IO;
         err.errInfo = "set files of directors permission fail";
         return err;

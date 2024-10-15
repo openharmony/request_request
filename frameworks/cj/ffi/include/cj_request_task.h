@@ -33,10 +33,10 @@ using OHOS::Request::Filter;
 using OHOS::Request::SubscribeType;
 using OHOS::Request::TaskInfo;
 
-class CJTask {
+class CJRequestTask {
 public:
-    CJTask();
-    ~CJTask();
+    CJRequestTask();
+    ~CJRequestTask();
 
     static ExceptionError Remove(const std::string &tid);
     static ExceptionError Touch(const std::string &tid, TaskInfo &task, const std::string &token = "null");
@@ -49,12 +49,12 @@ public:
     std::string taskId_{};
 
     static std::mutex taskMutex_;
-    static std::map<std::string, CJTask *> taskMap_;
-    static void AddTaskMap(const std::string &key, CJTask *task);
-    static CJTask *FindTaskById(std::string &taskId);
+    static std::map<std::string, CJRequestTask *> taskMap_;
+    static void AddTaskMap(const std::string &key, CJRequestTask *task);
+    static CJRequestTask *FindTaskById(std::string &taskId);
     static ExceptionError GetTask(OHOS::AbilityRuntime::Context *context, std::string &taskId, std::string &token,
                                   Config &config);
-    static CJTask *ClearTaskMap(const std::string &key);
+    static CJRequestTask *ClearTaskMap(const std::string &key);
     static void ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls);
 
     static std::mutex pathMutex_;

@@ -130,21 +130,21 @@ ExceptionError ConvertError(int32_t errorCode)
     };
 
     switch (errorCode) {
-    case ExceptionErrorCode::E_UNLOADING_SA:
-        generateError(ExceptionErrorCode::E_SERVICE_ERROR, "Service ability is quitting.");
-        break;
-    case ExceptionErrorCode::E_IPC_SIZE_TOO_LARGE:
-        generateError(ExceptionErrorCode::E_SERVICE_ERROR, "Ipc error.");
-        break;
-    case ExceptionErrorCode::E_MIMETYPE_NOT_FOUND:
-        generateError(ExceptionErrorCode::E_OTHER, "Mimetype not found.");
-        break;
-    case ExceptionErrorCode::E_TASK_INDEX_TOO_LARGE:
-        generateError(ExceptionErrorCode::E_TASK_NOT_FOUND, "Task index out of range.");
-        break;
-    default:
-        generateError(static_cast<ExceptionErrorCode>(errorCode), "");
-        break;
+        case ExceptionErrorCode::E_UNLOADING_SA:
+            generateError(ExceptionErrorCode::E_SERVICE_ERROR, "Service ability is quitting.");
+            break;
+        case ExceptionErrorCode::E_IPC_SIZE_TOO_LARGE:
+            generateError(ExceptionErrorCode::E_SERVICE_ERROR, "Ipc error.");
+            break;
+        case ExceptionErrorCode::E_MIMETYPE_NOT_FOUND:
+            generateError(ExceptionErrorCode::E_OTHER, "Mimetype not found.");
+            break;
+        case ExceptionErrorCode::E_TASK_INDEX_TOO_LARGE:
+            generateError(ExceptionErrorCode::E_TASK_NOT_FOUND, "Task index out of range.");
+            break;
+        default:
+            generateError(static_cast<ExceptionErrorCode>(errorCode), "");
+            break;
     }
 
     return err;
