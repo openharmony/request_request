@@ -58,7 +58,9 @@
         "ffrt",
         "openssl",
         "curl",
-        "libuv"
+        "libuv",
+        "resource_management",
+        "i18n"
       ],
       "third_party": []
     },
