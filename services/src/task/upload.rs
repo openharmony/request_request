@@ -14,7 +14,7 @@
 use std::future::Future;
 use std::io::SeekFrom;
 use std::pin::Pin;
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
@@ -137,10 +137,14 @@ impl UploadOperator for TaskOperator {
     }
 }
 
-fn build_stream_request(task: Arc<RequestTask>, index: usize) -> Option<Request> {
+fn build_stream_request(
+    task: Arc<RequestTask>,
+    index: usize,
+    abort_flag: Arc<AtomicBool>,
+) -> Option<Request> {
     debug!("build stream request");
     let task_reader = TaskReader::new(task.clone(), index);
-    let task_operator = TaskOperator::new(task.clone());
+    let task_operator = TaskOperator::new(task.clone(), abort_flag);
 
     match task.build_request_builder() {
         Ok(mut request_builder) => {
@@ -168,10 +172,14 @@ fn build_stream_request(task: Arc<RequestTask>, index: usize) -> Option<Request>
     }
 }
 
-fn build_multipart_request(task: Arc<RequestTask>, index: usize) -> Option<Request> {
+fn build_multipart_request(
+    task: Arc<RequestTask>,
+    index: usize,
+    abort_flag: Arc<AtomicBool>,
+) -> Option<Request> {
     debug!("build multipart request");
     let task_reader = TaskReader::new(task.clone(), index);
-    let task_operator = TaskOperator::new(task.clone());
+    let task_operator = TaskOperator::new(task.clone(), abort_flag);
     let mut multi_part = MultiPart::new();
     for item in task.conf.form_items.iter() {
         let part = Part::new()
@@ -264,13 +272,13 @@ impl RequestTask {
     }
 }
 
-pub(crate) async fn upload(task: Arc<RequestTask>) {
+pub(crate) async fn upload(task: Arc<RequestTask>, abort_flag: Arc<AtomicBool>) {
     RequestDb::get_instance()
         .update_task_sizes(task.task_id(), &task.progress.lock().unwrap().sizes);
     task.progress.lock().unwrap().common_data.state = State::Running.repr;
     task.tries.store(0, Ordering::SeqCst);
     loop {
-        if let Err(e) = upload_inner(task.clone()).await {
+        if let Err(e) = upload_inner(task.clone(), abort_flag.clone()).await {
             match e {
                 TaskError::Failed(reason) => {
                     *task.running_result.lock().unwrap() = Some(Err(reason));
@@ -292,7 +300,10 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
     }
 }
 
-async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
+async fn upload_inner(
+    task: Arc<RequestTask>,
+    abort_flag: Arc<AtomicBool>,
+) -> Result<(), TaskError> {
     info!("upload task {} running", task.task_id());
 
     #[cfg(feature = "oh")]
@@ -318,9 +329,21 @@ async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
         };
 
         if is_multipart {
-            upload_one_file(task.clone(), index, build_multipart_request).await?
+            upload_one_file(
+                task.clone(),
+                index,
+                abort_flag.clone(),
+                build_multipart_request,
+            )
+            .await?
         } else {
-            upload_one_file(task.clone(), index, build_stream_request).await?
+            upload_one_file(
+                task.clone(),
+                index,
+                abort_flag.clone(),
+                build_stream_request,
+            )
+            .await?
         };
         task.notify_header_receive();
     }
@@ -332,10 +355,11 @@ async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
 async fn upload_one_file<F>(
     task: Arc<RequestTask>,
     index: usize,
+    abort_flag: Arc<AtomicBool>,
     build_upload_request: F,
 ) -> Result<(), TaskError>
 where
-    F: Fn(Arc<RequestTask>, usize) -> Option<Request>,
+    F: Fn(Arc<RequestTask>, usize, Arc<AtomicBool>) -> Option<Request>,
 {
     info!(
         "begin 1 upload tid {} index {} sizes {}",
@@ -344,7 +368,7 @@ where
         task.progress.lock().unwrap().sizes[index]
     );
 
-    let Some(request) = build_upload_request(task.clone(), index) else {
+    let Some(request) = build_upload_request(task.clone(), index, abort_flag) else {
         return Err(TaskError::Failed(Reason::BuildRequestFailed));
     };
 
@@ -376,7 +400,9 @@ where
             }
         }
         Err(e) => {
-            error!("Task {} {:?}", task.task_id(), e);
+            if e.error_kind() != ErrorKind::UserAborted {
+                error!("Task {} {:?}", task.task_id(), e);
+            }
 
             match e.error_kind() {
                 ErrorKind::Timeout => return Err(TaskError::Failed(Reason::ContinuousTaskTimeout)),
