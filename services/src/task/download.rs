@@ -13,7 +13,7 @@
 
 use std::io::SeekFrom;
 use std::pin::Pin;
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
@@ -57,8 +57,9 @@ impl DownloadOperator for TaskOperator {
 pub(crate) fn build_downloader(
     task: Arc<RequestTask>,
     response: Response,
+    abort_flag: Arc<AtomicBool>,
 ) -> Downloader<TaskOperator> {
-    let task_operator = TaskOperator::new(task);
+    let task_operator = TaskOperator::new(task, abort_flag);
 
     Downloader::builder()
         .body(response)
@@ -68,10 +69,10 @@ pub(crate) fn build_downloader(
         .build()
 }
 
-pub(crate) async fn download(task: Arc<RequestTask>) {
+pub(crate) async fn download(task: Arc<RequestTask>, abort_flag: Arc<AtomicBool>) {
     task.tries.store(0, Ordering::SeqCst);
     loop {
-        if let Err(e) = download_inner(task.clone()).await {
+        if let Err(e) = download_inner(task.clone(), abort_flag.clone()).await {
             match e {
                 TaskError::Waiting(phase) => match phase {
                     TaskPhase::NeedRetry => {
@@ -108,7 +109,10 @@ impl RequestTask {
     }
 }
 
-pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
+pub(crate) async fn download_inner(
+    task: Arc<RequestTask>,
+    abort_flag: Arc<AtomicBool>,
+) -> Result<(), TaskError> {
     // Ensures `_trace` can only be freed when this function exits.
     #[cfg(feature = "oh")]
     let _trace = Trace::new("download file");
@@ -211,7 +215,7 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
         task.task_id(),
         task.progress.lock().unwrap().sizes[0]
     ));
-    let mut downloader = build_downloader(task.clone(), response);
+    let mut downloader = build_downloader(task.clone(), response, abort_flag);
 
     if let Err(e) = downloader.download().await {
         return task.handle_download_error(e).await;

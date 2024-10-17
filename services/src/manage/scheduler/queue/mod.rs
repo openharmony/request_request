@@ -14,6 +14,7 @@
 mod keeper;
 mod running_task;
 use std::collections::{HashMap, HashSet};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use keeper::SAKeeper;
@@ -42,7 +43,7 @@ use crate::utils::runtime_spawn;
 pub(crate) struct RunningQueue {
     download_queue: HashMap<(u64, u32), Arc<RequestTask>>,
     upload_queue: HashMap<(u64, u32), Arc<RequestTask>>,
-    running_tasks: HashMap<(u64, u32), Option<JoinHandle<()>>>,
+    running_tasks: HashMap<(u64, u32), Option<AbortHandle>>,
     keeper: SAKeeper,
     tx: TaskManagerTx,
     run_count_manager: RunCountManagerEntry,
@@ -90,12 +91,17 @@ impl RunningQueue {
         {
             info!("{} restart running", task_id);
             let running_task = RunningTask::new(task.clone(), self.tx.clone(), self.keeper.clone());
+            let abort_flag = Arc::new(AtomicBool::new(false));
+            let abort_flag_clone = abort_flag.clone();
             let join_handle = runtime_spawn(async move {
-                running_task.run().await;
+                running_task.run(abort_flag_clone.clone()).await;
             });
             let uid = task.uid();
             let task_id = task.task_id();
-            self.running_tasks.insert((uid, task_id), Some(join_handle));
+            self.running_tasks.insert(
+                (uid, task_id),
+                Some(AbortHandle::new(abort_flag, join_handle)),
+            );
             true
         } else {
             false
@@ -197,12 +203,18 @@ impl RunningQueue {
                 State::Running,
                 Reason::Default,
             );
+            let abort_flag = Arc::new(AtomicBool::new(false));
+            let abort_flag_clone = abort_flag.clone();
             let join_handle = runtime_spawn(async move {
-                running_task.run().await;
+                running_task.run(abort_flag_clone).await;
             });
+
             let uid = task.uid();
             let task_id = task.task_id();
-            self.running_tasks.insert((uid, task_id), Some(join_handle));
+            self.running_tasks.insert(
+                (uid, task_id),
+                Some(AbortHandle::new(abort_flag, join_handle)),
+            );
         }
         // every satisfied tasks in running has been moved, set left tasks to Waiting
 
@@ -218,5 +230,23 @@ impl RunningQueue {
         #[cfg(feature = "oh")]
         self.run_count_manager
             .notify_run_count(self.download_queue.len() + self.upload_queue.len());
+    }
+}
+
+struct AbortHandle {
+    abort_flag: Arc<AtomicBool>,
+    join_handle: JoinHandle<()>,
+}
+
+impl AbortHandle {
+    fn new(abort_flag: Arc<AtomicBool>, join_handle: JoinHandle<()>) -> Self {
+        Self {
+            abort_flag,
+            join_handle,
+        }
+    }
+    fn cancel(self) {
+        self.abort_flag.store(true, Ordering::Release);
+        self.join_handle.cancel();
     }
 }

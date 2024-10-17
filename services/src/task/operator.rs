@@ -13,7 +13,7 @@
 
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::task::{Context, Poll};
 use std::time::Duration;
@@ -36,16 +36,18 @@ pub(crate) struct TaskOperator {
     pub(crate) last_time: u64,
     pub(crate) last_size: u64,
     pub(crate) more_sleep_time: u64,
+    pub(crate) abort_flag: Arc<AtomicBool>,
 }
 
 impl TaskOperator {
-    pub(crate) fn new(task: Arc<RequestTask>) -> Self {
+    pub(crate) fn new(task: Arc<RequestTask>, abort_flag: Arc<AtomicBool>) -> Self {
         Self {
             sleep: None,
             task,
             last_time: 0,
             last_size: 0,
             more_sleep_time: 0,
+            abort_flag,
         }
     }
 
@@ -53,6 +55,9 @@ impl TaskOperator {
         &mut self,
         cx: &mut Context<'_>,
     ) -> Poll<Result<(), HttpClientError>> {
+        if self.abort_flag.load(Ordering::Acquire) {
+            return Poll::Ready(Err(HttpClientError::user_aborted()));
+        }
         let current = get_current_timestamp();
 
         if current >= self.task.last_notify.load(Ordering::SeqCst) + FRONT_NOTIFY_INTERVAL {

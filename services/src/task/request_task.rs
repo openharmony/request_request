@@ -439,7 +439,9 @@ impl RequestTask {
         &self,
         err: HttpClientError,
     ) -> Result<(), TaskError> {
-        error!("download err is {:?}", err);
+        if err.error_kind() != ErrorKind::UserAborted {
+            error!("Task {} {:?}", self.task_id(), err);
+        }
         match err.error_kind() {
             ErrorKind::Timeout => Err(TaskError::Failed(Reason::ContinuousTaskTimeout)),
             // user triggered
