@@ -29,6 +29,7 @@ using OHOS::Request::FileSpec;
 using OHOS::Request::FormItem;
 using OHOS::Request::Progress;
 using OHOS::Request::Reason;
+using OHOS::Request::Response;
 
 void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileData);
 char *MallocCString(const std::string &origin);
@@ -38,6 +39,7 @@ ExceptionError ConvertError(int32_t errorCode);
 void RemoveFile(const std::string &filePath);
 
 CProgress Convert2CProgress(const Progress &in);
+CResponse Convert2CResponse(const std::shared_ptr<Response> &in);
 std::string GetSaveas(const std::vector<FileSpec> &files, Action action);
 uint32_t Convert2Broken(Reason code);
 std::string Convert2ReasonMsg(Reason code);

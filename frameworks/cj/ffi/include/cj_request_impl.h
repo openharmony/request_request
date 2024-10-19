@@ -50,7 +50,7 @@ public:
     static RetTaskInfo TouchTask(std::string taskId, const char *token);
     static RetTaskArr SearchTask(CFilter &filter);
     static ExceptionError Convert2Filter(CFilter &filter, Filter &out);
-    static RetError ProgressOn(char *event, std::string taskId, void (*callback)(CProgress progress));
+    static RetError ProgressOn(char *event, std::string taskId, void *callback);
     static RetError ProgressOff(char *event, std::string taskId, void *callback);
     static RetError TaskStart(std::string taskId);
     static RetError TaskPause(std::string taskId);

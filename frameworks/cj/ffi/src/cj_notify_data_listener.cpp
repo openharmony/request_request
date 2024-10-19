@@ -16,7 +16,6 @@
 #include "cj_notify_data_listener.h"
 
 #include <numeric>
-
 #include "cj_request_common.h"
 #include "cj_request_task.h"
 #include "log.h"
@@ -28,7 +27,7 @@ using OHOS::Request::RequestManager;
 using OHOS::Request::State;
 using OHOS::Request::Version;
 
-void CJNotifyDataListener::AddListener(ProgressOnCallBackType cb, CFunc cbId)
+void CJNotifyDataListener::AddListener(std::function<void(CProgress)> cb, CFunc cbId)
 {
     this->AddListenerInner(cb, cbId);
     /* remove listener must be subscribed to free task */
