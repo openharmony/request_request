@@ -42,7 +42,12 @@ public:
                 ContextNapiHolder *holder = static_cast<ContextNapiHolder *>(work->data);
                 napi_handle_scope scope = nullptr;
                 napi_open_handle_scope(holder->env, &scope);
-                if (scope == nullptr || holder->env == nullptr || holder->work == nullptr || holder->self == nullptr) {
+                if (scope == nullptr) {
+                    delete holder;
+                    delete work;
+                    return;
+                } else if (holder->env == nullptr || holder->work == nullptr || holder->self == nullptr) {
+                    napi_close_handle_scope(holder->env, scope);
                     delete holder;
                     delete work;
                     return;
