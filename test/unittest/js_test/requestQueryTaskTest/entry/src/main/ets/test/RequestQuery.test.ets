@@ -613,6 +613,7 @@ export default function requestQueryTest() {
         saveas: `testSearchTask008.txt`,
       }
       let task = await request.agent.create(context, conf);
+      await sleep(1000);
       let filter = {
         before: Date.parse(new Date()),
       }
