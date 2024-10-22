@@ -116,7 +116,7 @@ ExceptionError ConvertError(int32_t errorCode)
 CProgress Convert2CProgress(const Progress &in)
 {
     CProgress out = { 0 };
-    out.state = static_cast<int32_t>(in.state);
+    out.state = static_cast<uint32_t>(in.state);
     out.index = in.index;
     out.processed = in.processed;
     
