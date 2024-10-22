@@ -272,7 +272,7 @@ bool CJInitialize::ParseSaveas(Config &config)
         return InterceptData("/", config.url, config.saveas);
     }
     temp = std::string(temp, 0, temp.find_last_not_of(' ') + 1);
-    if (temp[temp.size() - 1] == '/') {
+    if (temp.size() == 0 || temp[temp.size() - 1] == '/') {
         return false;
     }
     config.saveas = temp;
@@ -555,7 +555,7 @@ bool CJInitialize::InterceptData(const std::string &str, const std::string &in, 
     std::string tmpStr = std::string(in, 0, in.find_last_not_of(' ') + 1);
     std::size_t position = tmpStr.find_last_of(str);
     // when the str at last index, will error.
-    if (position == std::string::npos || position >= tmpStr.size() - 1) {
+    if (position == std::string::npos || position + 1 >= tmpStr.size()) {
         return false;
     }
     out = std::string(tmpStr, position + 1);
