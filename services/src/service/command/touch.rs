@@ -19,34 +19,35 @@ use crate::service::{serialize_task_info, RequestServiceStub};
 
 impl RequestServiceStub {
     pub(crate) fn touch(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        let id: String = data.read()?;
-        info!("Service touch: tid: {}", id);
-        match id.parse::<u32>() {
-            Ok(id) => {
-                debug!("Service touch: u32 tid: {}", id);
-                let token: String = data.read()?;
-                let uid = ipc::Skeleton::calling_uid();
-                debug!("Service touch: uid is {}", uid);
-                let info = self.task_manager.lock().unwrap().touch(uid, id, token);
-                match info {
-                    Some(info) => {
-                        reply.write(&(ErrorCode::ErrOk as i32))?;
-                        serialize_task_info(info, reply)?;
-                        debug!("End Service touch ok: tid: {}", id);
-                        Ok(())
-                    }
-                    None => {
-                        error!(
-                            "End Service touch, tid: {}, failed: task_id or token not found",
-                            id
-                        );
-                        reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                        Err(IpcStatusCode::Failed)
-                    }
-                }
+        let task_id: String = data.read()?;
+        info!("Service touch: tid: {}", task_id);
+
+        let Ok(task_id) = task_id.parse::<u32>() else {
+            error!("End Service touch, failed: task_id or token not valid");
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            return Err(IpcStatusCode::Failed);
+        };
+
+        let token: String = data.read()?;
+        let uid = ipc::Skeleton::calling_uid();
+
+        if !self.check_task_uid(task_id, uid) {
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            return Err(IpcStatusCode::Failed);
+        }
+        let info = self.task_manager.lock().unwrap().touch(uid, task_id, token);
+
+        match info {
+            Some(info) => {
+                reply.write(&(ErrorCode::ErrOk as i32))?;
+                serialize_task_info(info, reply)?;
+                Ok(())
             }
-            _ => {
-                error!("End Service touch, failed: task_id or token not valid");
+            None => {
+                error!(
+                    "End Service touch, tid: {}, failed: task_id or token not found",
+                    task_id
+                );
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 Err(IpcStatusCode::Failed)
             }

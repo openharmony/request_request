@@ -73,6 +73,7 @@ impl TaskManager {
             client,
             self.client_manager.clone(),
             self.network.clone(),
+            false,
         );
         // New task: State::Initialized, Reason::Default
 

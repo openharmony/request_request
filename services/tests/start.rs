@@ -16,6 +16,7 @@ use std::time::Duration;
 
 use download_server::config::{Action, ConfigBuilder, Mode};
 use test_common::test_init;
+const FILE_SIZE: u64 =1042003;
 
 #[test]
 fn sdv_start_basic() {
@@ -45,6 +46,6 @@ fn sdv_start_basic() {
             ylong_runtime::time::sleep(Duration::from_secs(1)).await;
         }
         let file = File::open(file_path).unwrap();
-        assert_eq!(1042003, file.metadata().unwrap().len());
-    })
+        assert_eq!(FILE_SIZE, file.metadata().unwrap().len());
+    });
 }

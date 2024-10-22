@@ -16,6 +16,7 @@ use std::time::Duration;
 
 use download_server::config::{Action, ConfigBuilder, Mode};
 use test_common::test_init;
+const FILE_SIZE: u64 =1042003;
 
 #[test]
 fn sdv_start_resume() {
@@ -33,7 +34,7 @@ fn sdv_start_resume() {
     let task_id = agent.construct(config);
     agent.start(task_id);
     agent.subscribe(task_id);
-    agent.pause(task_id);
+    agent.pause_v10(task_id);
     std::thread::sleep(std::time::Duration::from_secs(1));
     agent.resume(task_id);
     ylong_runtime::block_on(async {
@@ -48,6 +49,6 @@ fn sdv_start_resume() {
             ylong_runtime::time::sleep(Duration::from_secs(1)).await;
         }
         let file = File::open(file_path).unwrap();
-        assert_eq!(1042003, file.metadata().unwrap().len());
+        assert_eq!(FILE_SIZE, file.metadata().unwrap().len());
     })
 }
