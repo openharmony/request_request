@@ -20,8 +20,8 @@
 
 #include "cxx.h"
 #include "notification_button_option.h"
+#include "notification_helper.h"
 #include "notification_local_live_view_subscriber.h"
-
 namespace OHOS::Request {
 
 struct RequestTaskMsg;
@@ -50,6 +50,11 @@ private:
 };
 
 void SubscribeNotification(rust::Box<TaskManagerWrapper> taskManager);
+
+inline int32_t CancelNotification(uint32_t notificationId)
+{
+    return Notification::NotificationHelper::CancelNotification(notificationId);
+}
 
 } // namespace OHOS::Request
 

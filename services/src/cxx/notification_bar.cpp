@@ -25,7 +25,7 @@
 #include "log.h"
 #include "notification.h"
 #include "notification_content.h"
-#include "notification_helper.h"
+
 #include "notification_local_live_view_button.h"
 #include "notification_local_live_view_content.h"
 #include "resource_manager.h"
