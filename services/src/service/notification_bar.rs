@@ -71,6 +71,20 @@ pub(crate) fn publish_failed_notification(info: &TaskInfo) {
     );
 }
 
+pub(crate) fn cancel_progress_notification(info: &TaskInfo) {
+    if !info.notification_check(false) {
+        return;
+    }
+    force_cancel_progress_notification(info.common_data.task_id);
+}
+
+pub(crate) fn force_cancel_progress_notification(task_id: u32) {
+    let ret = ffi::CancelNotification(task_id);
+    if ret != 0 {
+        error!("cancel notification failed {}", ret);
+    }
+}
+
 trait NotificationCheck {
     fn notification_check(&self, completed_notify: bool) -> bool;
 }
@@ -225,6 +239,7 @@ mod ffi {
     unsafe extern "C++" {
         include!("notification_bar.h");
         fn RequestProgressNotification(msg: RequestTaskMsg);
+        fn CancelNotification(notificationId: u32) -> i32;
         fn RequestCompletedNotification(
             action: u8,
             task_id: u32,
