@@ -30,28 +30,25 @@ impl RequestServiceStub {
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
         }
-        let id: String = data.read()?;
-        info!("Service query mime type: tid: {}", id);
-        match id.parse::<u32>() {
-            Ok(id) => {
-                debug!("Service query mime type: u32 tid: {}", id);
+        let task_id: String = data.read()?;
+        info!("Service query mime type: tid: {}", task_id);
 
-                let uid = ipc::Skeleton::calling_uid();
-                debug!("Service query mime type: uid is {}", uid);
+        let Ok(task_id) = task_id.parse::<u32>() else {
+            error!("End Service query mime type, failed: task_id not valid");
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            return Err(IpcStatusCode::Failed);
+        };
 
-                let mime = query::query_mime_type(uid, id);
-
-                debug!("Service query mime type: {}", mime);
-                debug!("End Service query mime type ok: tid: {}", id);
-                reply.write(&(ErrorCode::ErrOk as i32))?;
-                reply.write(&mime)?;
-                Ok(())
-            }
-            _ => {
-                error!("End Service query mime type, failed: task_id not valid");
-                reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                Err(IpcStatusCode::Failed)
-            }
+        let uid = ipc::Skeleton::calling_uid();
+        if !self.check_task_uid(task_id, uid) {
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            return Err(IpcStatusCode::Failed);
         }
+
+        let mime = query::query_mime_type(uid, task_id);
+
+        reply.write(&(ErrorCode::ErrOk as i32))?;
+        reply.write(&mime)?;
+        Ok(())
     }
 }

@@ -20,37 +20,40 @@ use crate::service::RequestServiceStub;
 
 impl RequestServiceStub {
     pub(crate) fn stop(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        let id: String = data.read()?;
-        info!("Service stop: tid: {}", id);
-        match id.parse::<u32>() {
-            Ok(id) => {
-                debug!("Service stop: u32 tid: {}", id);
-                let uid = ipc::Skeleton::calling_uid();
-                debug!("Service stop: uid is {}", uid);
-                let (event, rx) = TaskManagerEvent::stop(uid, id);
-                if !self.task_manager.lock().unwrap().send_event(event) {
-                    return Err(IpcStatusCode::Failed);
-                }
-                let ret = match rx.get() {
-                    Some(ret) => ret,
-                    None => {
-                        error!("End Service stop, tid: {}, failed: receives ret failed", id);
-                        return Err(IpcStatusCode::Failed);
-                    }
-                };
-                reply.write(&(ret as i32))?;
-                if ret != ErrorCode::ErrOk {
-                    error!("End Service stop, tid: {}, failed: {}", id, ret as i32);
-                    return Err(IpcStatusCode::Failed);
-                }
-                debug!("End Service stop ok: tid: {}", id);
-                Ok(())
-            }
-            _ => {
-                error!("End Service stop, failed: task_id not valid");
-                reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                Err(IpcStatusCode::Failed)
-            }
+        let task_id: String = data.read()?;
+        info!("Service stop: tid: {}", task_id);
+
+        let Ok(task_id) = task_id.parse::<u32>() else {
+            error!("End Service stop, failed: task_id not valid");
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            return Err(IpcStatusCode::Failed);
+        };
+        let uid = ipc::Skeleton::calling_uid();
+
+        if !self.check_task_uid(task_id, uid) {
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            return Err(IpcStatusCode::Failed);
         }
+
+        let (event, rx) = TaskManagerEvent::stop(uid, task_id);
+        if !self.task_manager.lock().unwrap().send_event(event) {
+            return Err(IpcStatusCode::Failed);
+        }
+        let ret = match rx.get() {
+            Some(ret) => ret,
+            None => {
+                error!(
+                    "End Service stop, tid: {}, failed: receives ret failed",
+                    task_id
+                );
+                return Err(IpcStatusCode::Failed);
+            }
+        };
+        reply.write(&(ret as i32))?;
+        if ret != ErrorCode::ErrOk {
+            error!("End Service stop, tid: {}, failed: {}", task_id, ret as i32);
+            return Err(IpcStatusCode::Failed);
+        }
+        Ok(())
     }
 }

@@ -96,7 +96,7 @@ pub(crate) async fn download(task: Arc<RequestTask>) {
 impl RequestTask {
     async fn prepare_download(&self) -> Result<(), TaskError> {
         let file = self.files.get_mut(0).unwrap();
-        file.seek(SeekFrom::End(0));
+        file.seek(SeekFrom::End(0)).await?;
         let downloaded = file.metadata().await?.len() as usize;
         let mut progress = self.progress.lock().unwrap();
         progress.common_data.index = 0;
@@ -205,13 +205,11 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
     RequestDb::get_instance()
         .update_task_sizes(task.task_id(), &task.progress.lock().unwrap().sizes);
 
-    let size = task.progress.lock().unwrap().sizes[0];
-
     #[cfg(feature = "oh")]
     let _trace = Trace::new(&format!(
         "download file tid:{} size:{}",
         task.task_id(),
-        size
+        task.progress.lock().unwrap().sizes[0]
     ));
     let mut downloader = build_downloader(task.clone(), response);
 
@@ -221,8 +219,48 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
     let file = task.files.get_mut(0).unwrap();
     file.sync_all().await?;
 
+    #[cfg(not(test))]
+    check_file_exist(&task)?;
+    {
+        let mut guard = task.progress.lock().unwrap();
+        guard.sizes = vec![guard.processed[0] as i64];
+    }
+
     info!("task {} download success", task.task_id());
     Ok(())
+}
+
+#[cfg(not(test))]
+fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
+    use crate::task::files::{check_atomic_convert_path, convert_path};
+    use crate::task::ATOMIC_SERVICE;
+
+    let config = task.config();
+    let bundle_and_account = check_atomic_convert_path(
+        config.bundle_type == ATOMIC_SERVICE,
+        config.bundle.as_str(),
+        config.atomic_account.as_str(),
+    );
+    let real_path = convert_path(
+        config.common_data.uid,
+        &bundle_and_account,
+        &config.file_specs[0].path,
+    );
+    // Cannot compare param because file_total_size will be changed when resume task
+    match std::fs::metadata(real_path) {
+        Ok(metadata) => {
+            if metadata.is_file() {
+                Ok(())
+            } else {
+                error!("task {} local not file", task.task_id());
+                Err(TaskError::Failed(Reason::IoError))
+            }
+        }
+        Err(e) => {
+            error!("task {} local not exist:{}", task.task_id(), e);
+            Err(TaskError::Failed(Reason::IoError))
+        }
+    }
 }
 
 #[cfg(not(feature = "oh"))]

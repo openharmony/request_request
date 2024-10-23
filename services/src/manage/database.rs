@@ -302,6 +302,11 @@ impl RequestDb {
         let _ = self.execute(&sql);
     }
 
+    pub(crate) fn query_task_uid(&self, task_id: u32) -> Option<u64> {
+        let sql = format!("SELECT uid FROM request_task WHERE task_id = {}", task_id);
+        self.query_integer(&sql).first().copied()
+    }
+
     #[cfg(not(feature = "oh"))]
     pub(crate) fn update_task(&self, task_id: u32, update_info: UpdateInfo) {
         if !self.contains_task(task_id) {
@@ -562,6 +567,7 @@ impl RequestDb {
         #[cfg(feature = "oh")] system: SystemConfig,
         client_manager: &ClientManagerEntry,
         network: Network,
+        upload_resume: bool,
     ) -> Result<Arc<RequestTask>, ErrorCode> {
         // If this task exists in `user_file_map`，get it from this map.
         if let Some(task) = self.user_file_tasks.lock().unwrap().get(&task_id) {
@@ -594,6 +600,7 @@ impl RequestDb {
             task_info,
             client_manager.clone(),
             network,
+            upload_resume,
         ) {
             Ok(task) => Ok(Arc::new(task)),
             Err(e) => {

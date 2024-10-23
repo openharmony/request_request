@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdint>
 #include <cstring>
 #define private public
 #define protected public
@@ -309,4 +310,226 @@ HWTEST_F(ParcelHelperTest, UnMarshalConfigBodyFileName001, TestSize.Level1)
     EXPECT_TRUE(ParcelHelper::UnMarshalConfigBodyFileName(data, config));
     EXPECT_EQ(config.bodyFds[0], 0);
     EXPECT_EQ(config.bodyFileNames[0], "name");
+}
+
+void MarshalBase(OHOS::MessageParcel &data)
+{
+    TaskInfo info;
+    data.WriteBool(info.gauge);
+    data.WriteBool(info.retry);
+    data.WriteUint32(static_cast<uint32_t>(info.action));
+    data.WriteUint32(static_cast<uint32_t>(info.mode));
+    data.WriteUint32(info.code);
+    data.WriteUint32(info.tries);
+    data.WriteString("uid");
+    data.WriteString("bundle");
+    data.WriteString(info.url);
+    data.WriteString("tid");
+    data.WriteString(info.title);
+    data.WriteString("mimeType");
+    data.WriteUint64(info.ctime);
+    data.WriteUint64(info.mtime);
+    data.WriteString(info.data);
+    data.WriteString(info.description);
+    data.WriteUint32(info.priority);
+}
+
+void MarshalProgress(OHOS::MessageParcel &data)
+{
+    State state = State::DEFAULT;
+    uint32_t index = 0;
+    uint64_t progress = 0;
+    uint64_t totalProgress = 0;
+    std::vector<int64_t> val;
+    val.push_back(1);
+    data.WriteUint32(static_cast<uint32_t>(state));
+    data.WriteUint32(index);
+    data.WriteUint64(progress);
+    data.WriteUint64(totalProgress);
+    data.WriteInt64Vector(val);
+}
+
+/**
+ * @tc.name: UnMarshal001
+ * @tc.desc: Test UnMarshal001 interface base function - UnMarshal
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(ParcelHelperTest, UnMarshal001, TestSize.Level1)
+{
+    OHOS::MessageParcel data;
+    TaskInfo info;
+    Version version = Version::API10;
+
+    MarshalBase(data);
+    uint32_t formItemSize = 1;
+    data.WriteUint32(formItemSize);
+    ParcelHelper::UnMarshal(data, info);
+
+    MarshalBase(data);
+    formItemSize = 0;
+    uint32_t fileSpecSize = 1;
+    data.WriteUint32(formItemSize);
+    data.WriteUint32(fileSpecSize);
+    ParcelHelper::UnMarshal(data, info);
+
+    MarshalBase(data);
+    fileSpecSize = 0;
+    data.WriteUint32(formItemSize);
+    data.WriteUint32(fileSpecSize);
+    MarshalProgress(data);
+    uint32_t progressExtrasSize = 1;
+    data.WriteUint32(progressExtrasSize);
+    ParcelHelper::UnMarshal(data, info);
+
+    MarshalBase(data);
+    data.WriteUint32(formItemSize);
+    data.WriteUint32(fileSpecSize);
+    MarshalProgress(data);
+    progressExtrasSize = 0;
+    uint32_t mapExtrasSize = 1;
+    data.WriteUint32(progressExtrasSize);
+    data.WriteUint32(mapExtrasSize);
+    ParcelHelper::UnMarshal(data, info);
+
+    MarshalBase(data);
+    data.WriteUint32(formItemSize);
+    data.WriteUint32(fileSpecSize);
+    MarshalProgress(data);
+    mapExtrasSize = 0;
+    uint32_t taskStateSize = 1;
+    data.WriteUint32(progressExtrasSize);
+    data.WriteUint32(mapExtrasSize);
+    data.WriteUint32(static_cast<uint32_t>(version));
+    data.WriteUint32(taskStateSize);
+    ParcelHelper::UnMarshal(data, info);
+
+    MarshalBase(data);
+    data.WriteUint32(formItemSize);
+    data.WriteUint32(fileSpecSize);
+    MarshalProgress(data);
+    taskStateSize = 0;
+    data.WriteUint32(progressExtrasSize);
+    data.WriteUint32(mapExtrasSize);
+    data.WriteUint32(static_cast<uint32_t>(version));
+    data.WriteUint32(taskStateSize);
+    ParcelHelper::UnMarshal(data, info);
+
+    EXPECT_EQ(info.version, Version::API10);
+    EXPECT_EQ(info.uid, "uid");
+    EXPECT_EQ(info.bundle, "bundle");
+    EXPECT_EQ(info.tid, "tid");
+    EXPECT_EQ(info.mimeType, "mimeType");
+    EXPECT_EQ(info.progress.sizes.size(), 1);
+    EXPECT_EQ(info.progress.sizes[0], 1);
+}
+
+void MarshalConfigBase(OHOS::MessageParcel &data)
+{
+    Config config;
+    data.WriteUint32(static_cast<uint32_t>(config.action));
+    data.WriteUint32(static_cast<uint32_t>(config.mode));
+    data.WriteUint32(config.bundleType);
+    data.WriteBool(config.overwrite);
+    data.WriteUint32(static_cast<uint32_t>(config.network));
+    config.metered = data.WriteBool(config.metered);
+    data.WriteBool(config.roaming);
+    data.WriteBool(config.retry);
+    data.WriteBool(config.redirect);
+    data.WriteUint32(config.index);
+    data.WriteInt64(config.begins);
+    data.WriteInt64(config.ends);
+    data.WriteBool(config.gauge);
+    data.WriteBool(config.precise);
+    data.WriteUint32(config.priority);
+    data.WriteBool(config.background);
+    data.WriteString("bundleName");
+    data.WriteString("url");
+    data.WriteString("title");
+    data.WriteString("description");
+    data.WriteString("method");
+}
+
+/**
+ * @tc.name: UnMarshalConfig001
+ * @tc.desc: Test UnMarshalConfig001 interface base function - UnMarshalConfig
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(ParcelHelperTest, UnMarshalConfig001, TestSize.Level1)
+{
+    Config config;
+    OHOS::MessageParcel data;
+    Version version = Version::API10;
+
+    MarshalConfigBase(data);
+    uint32_t configHeadersSize = 1;
+    data.WriteUint32(configHeadersSize);
+    ParcelHelper::UnMarshalConfig(data, config);
+
+    MarshalConfigBase(data);
+    configHeadersSize = 0;
+    data.WriteUint32(configHeadersSize);
+    data.WriteString("data");
+    data.WriteString("token");
+    uint32_t configExtrasSize = 1;
+    data.WriteUint32(configExtrasSize);
+    ParcelHelper::UnMarshalConfig(data, config);
+
+    MarshalConfigBase(data);
+    configExtrasSize = 0;
+    data.WriteUint32(configHeadersSize);
+    data.WriteString("data");
+    data.WriteString("token");
+    data.WriteUint32(configExtrasSize);
+    data.WriteUint32(static_cast<uint32_t>(version));
+    uint32_t configFormItemSize = 1;
+    data.WriteUint32(configFormItemSize);
+    ParcelHelper::UnMarshalConfig(data, config);
+
+    MarshalConfigBase(data);
+    data.WriteUint32(configHeadersSize);
+    data.WriteString("data");
+    data.WriteString("token");
+    data.WriteUint32(configExtrasSize);
+    data.WriteUint32(static_cast<uint32_t>(version));
+    configFormItemSize = 0;
+    data.WriteUint32(configFormItemSize);
+    uint32_t configFileSpecSize = 1;
+    data.WriteUint32(configFileSpecSize);
+    ParcelHelper::UnMarshalConfig(data, config);
+
+    MarshalConfigBase(data);
+    data.WriteUint32(configHeadersSize);
+    data.WriteString("data");
+    data.WriteString("token");
+    data.WriteUint32(configExtrasSize);
+    data.WriteUint32(static_cast<uint32_t>(version));
+    data.WriteUint32(configFormItemSize);
+    configFileSpecSize = 0;
+    data.WriteUint32(configFileSpecSize);
+    uint32_t configBodyFileNameSize = 1;
+    data.WriteUint32(configBodyFileNameSize);
+    ParcelHelper::UnMarshalConfig(data, config);
+
+    MarshalConfigBase(data);
+    data.WriteUint32(configHeadersSize);
+    data.WriteString("data");
+    data.WriteString("token");
+    data.WriteUint32(configExtrasSize);
+    data.WriteUint32(static_cast<uint32_t>(version));
+    data.WriteUint32(configFormItemSize);
+    data.WriteUint32(configFileSpecSize);
+    configBodyFileNameSize = 0;
+    data.WriteUint32(configBodyFileNameSize);
+    ParcelHelper::UnMarshalConfig(data, config);
+
+    EXPECT_EQ(config.version, Version::API10);
+    EXPECT_EQ(config.bundleName, "bundleName");
+    EXPECT_EQ(config.url, "url");
+    EXPECT_EQ(config.title, "title");
+    EXPECT_EQ(config.description, "description");
+    EXPECT_EQ(config.method, "method");
+    EXPECT_EQ(config.data, "data");
+    EXPECT_EQ(config.token, "token");
 }

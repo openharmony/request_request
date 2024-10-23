@@ -29,40 +29,47 @@ impl RequestServiceStub {
             return Err(IpcStatusCode::Failed);
         }
 
-        let id: String = data.read()?;
-        info!("Service remove: tid: {}", id);
-        match id.parse::<u32>() {
-            Ok(id) => {
-                debug!("Service remove: u32 tid: {}", id);
-                let uid = ipc::Skeleton::calling_uid();
-                debug!("Service remove: uid is {}", uid);
-                let (event, rx) = TaskManagerEvent::remove(uid, id);
-                if !self.task_manager.lock().unwrap().send_event(event) {
-                    return Err(IpcStatusCode::Failed);
-                }
-                let ret = match rx.get() {
-                    Some(ret) => ret,
-                    None => {
-                        error!(
-                            "End Service remove, tid: {}, failed: receives ret failed",
-                            id
-                        );
-                        return Err(IpcStatusCode::Failed);
-                    }
-                };
-                reply.write(&(ret as i32))?;
-                if ret != ErrorCode::ErrOk {
-                    error!("End Service remove, tid: {}, failed: {}", id, ret as i32);
-                    return Err(IpcStatusCode::Failed);
-                }
-                debug!("End Service remove ok, tid: {}", id);
-                Ok(())
-            }
-            _ => {
-                error!("End Service remove, tid: {}, failed: task_id not valid", id);
-                reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                Err(IpcStatusCode::Failed)
-            }
+        let task_id: String = data.read()?;
+        info!("Service remove: tid: {}", task_id);
+
+        let Ok(task_id) = task_id.parse::<u32>() else {
+            error!(
+                "End Service remove, tid: {}, failed: task_id not valid",
+                task_id
+            );
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            return Err(IpcStatusCode::Failed);
+        };
+
+        let uid = ipc::Skeleton::calling_uid();
+
+        if !self.check_task_uid(task_id, uid) {
+            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+            return Err(IpcStatusCode::Failed);
         }
+
+        let (event, rx) = TaskManagerEvent::remove(uid, task_id);
+        if !self.task_manager.lock().unwrap().send_event(event) {
+            return Err(IpcStatusCode::Failed);
+        }
+        let ret = match rx.get() {
+            Some(ret) => ret,
+            None => {
+                error!(
+                    "End Service remove, tid: {}, failed: receives ret failed",
+                    task_id
+                );
+                return Err(IpcStatusCode::Failed);
+            }
+        };
+        reply.write(&(ret as i32))?;
+        if ret != ErrorCode::ErrOk {
+            error!(
+                "End Service remove, tid: {}, failed: {}",
+                task_id, ret as i32
+            );
+            return Err(IpcStatusCode::Failed);
+        }
+        Ok(())
     }
 }

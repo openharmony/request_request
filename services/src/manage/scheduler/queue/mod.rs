@@ -13,7 +13,7 @@
 
 mod keeper;
 mod running_task;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use keeper::SAKeeper;
@@ -48,6 +48,8 @@ pub(crate) struct RunningQueue {
     run_count_manager: RunCountManagerEntry,
     client_manager: ClientManagerEntry,
     network: Network,
+    // paused and then resume upload task need to upload from the breakpoint
+    pub(crate) upload_resume: HashSet<u32>,
 }
 
 impl RunningQueue {
@@ -66,6 +68,7 @@ impl RunningQueue {
             run_count_manager,
             client_manager,
             network,
+            upload_resume: HashSet::new(),
         }
     }
 
@@ -164,6 +167,7 @@ impl RunningQueue {
 
             #[cfg(feature = "oh")]
             let system_config = unsafe { SYSTEM_CONFIG_MANAGER.assume_init_ref().system_config() };
+            let upload_resume = self.upload_resume.remove(&task_id);
 
             let task = match RequestDb::get_instance().get_task(
                 task_id,
@@ -171,6 +175,7 @@ impl RunningQueue {
                 system_config,
                 &self.client_manager,
                 self.network.clone(),
+                upload_resume,
             ) {
                 Ok(task) => task,
                 Err(ErrorCode::TaskNotFound) => continue, // If we cannot find the task, skip it.
