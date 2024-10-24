@@ -38,7 +38,6 @@ using namespace Global;
 static constexpr int32_t REQUEST_SERVICE_ID = 3815;
 
 static constexpr int32_t REQUEST_STYLE_SIMPLE = 8;
-static constexpr int32_t REQUEST_STYLE_WITH_PAUSE_BUTTON = 13;
 
 static constexpr uint32_t BINARY_SCALE = 1024;
 static constexpr uint32_t PERCENT = 100;
@@ -115,12 +114,15 @@ void SetProgress(
             localLiveViewContent->SetTitle(title);
             return;
         } else {
+            localLiveViewContent->addFlag(
+                Notification::NotificationLocalLiveViewContent::LiveViewContentInner::PROGRESS);
             progress.SetIsPercentage(true);
             progress.SetCurrentValue(msg.processed[0] / BINARY_SCALE);
             progress.SetMaxValue(msg.sizes[0] / BINARY_SCALE);
             TitleWithProgressPercentage(title, msg.processed[0], msg.sizes[0]);
         }
     } else {
+        localLiveViewContent->addFlag(Notification::NotificationLocalLiveViewContent::LiveViewContentInner::PROGRESS);
         title = GetSystemResourceString(UPLOAD_FILE);
         title.push_back(' ');
         if (msg.sizes.size() > 1) {
@@ -151,14 +153,9 @@ void RequestProgressNotification(RequestTaskMsg msg)
     BasicRequestSettings(request, msg.uid);
 
     request.SetInProgress(true);
-    if (msg.support_range && msg.action == static_cast<uint8_t>(Action::Download)) {
-        localLiveViewContent->SetType(REQUEST_STYLE_WITH_PAUSE_BUTTON);
-    } else {
-        localLiveViewContent->SetType(REQUEST_STYLE_SIMPLE);
-    }
+    localLiveViewContent->SetType(REQUEST_STYLE_SIMPLE);
 
     localLiveViewContent->addFlag(Notification::NotificationLocalLiveViewContent::LiveViewContentInner::BUTTON);
-    localLiveViewContent->addFlag(Notification::NotificationLocalLiveViewContent::LiveViewContentInner::PROGRESS);
 
     // set text
     localLiveViewContent->SetText(std::string(msg.file_name));
