@@ -11,11 +11,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[workspace]
-resolver = "2"
-members = [
-    "pre_download/native",
-    "pre_download/netstack_rs", "request_utils",
-    "services",
-    "test/rustest",
-]
+import("//base/request/request/request_aafwk.gni")
+import("//build/test.gni")
+
+ohos_rust_static_library("request_utils") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  sources = [ "src/lib.rs" ]
+
+  external_deps = [ "hilog:hilog_rust" ]
+
+  subsystem_name = "request"
+  part_name = "request"
+}

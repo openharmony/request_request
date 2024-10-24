@@ -11,11 +11,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[workspace]
-resolver = "2"
-members = [
-    "pre_download/native",
-    "pre_download/netstack_rs", "request_utils",
-    "services",
-    "test/rustest",
-]
+import("//build/ohos.gni")
+
+ohos_shared_library("request_predownload") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  stack_protector_ret = true
+
+  include_dirs = [ "include" ]
+
+  sources = [ "src/a.cpp" ]
+  deps = [
+    "../../native:request_predownload_native",
+    "//third_party/rust/crates/cxx:cxx_cppdeps",
+  ]
+
+  subsystem_name = "request"
+  part_name = "request"
+}
