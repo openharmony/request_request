@@ -47,7 +47,7 @@ impl Client {
 
     #[cfg(feature = "oh")]
     fn notify_run_count(&self, run_count: i64) -> IpcResult<()> {
-        info!("notify_run_count: run_count is {}", run_count);
+        info!("notify run_count is {}", run_count);
         #[cfg(feature = "oh")]
         {
             let mut parcel = MsgParcel::new();

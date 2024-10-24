@@ -26,7 +26,7 @@ impl RequestServiceStub {
             return Err(IpcStatusCode::Failed);
         }
         let task_id: String = data.read()?;
-        info!("Service show: tid: {}", task_id);
+        info!("Service show tid {}", task_id);
 
         let Ok(task_id) = task_id.parse::<u32>() else {
             error!("End Service show, failed: task_id not valid");

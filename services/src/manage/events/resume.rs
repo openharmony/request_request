@@ -16,7 +16,7 @@ use crate::manage::TaskManager;
 
 impl TaskManager {
     pub(crate) fn resume(&mut self, uid: u64, task_id: u32) -> ErrorCode {
-        debug!("TaskManager resume, uid:{}, task_id:{}", uid, task_id);
+        debug!("TaskManager resume, uid{} tid{}", uid, task_id);
         match self.scheduler.resume_task(uid, task_id) {
             Ok(_) => ErrorCode::ErrOk,
             Err(e) => e,

@@ -158,7 +158,7 @@ impl ClientManager {
             self.pid_map.insert(tid, pid);
             let _ = tx.send(ErrorCode::ErrOk);
         } else {
-            info!("channel not open, pid: {}", pid);
+            info!("channel not open, pid {}", pid);
             let _ = tx.send(ErrorCode::ChannelNotOpen);
         }
     }

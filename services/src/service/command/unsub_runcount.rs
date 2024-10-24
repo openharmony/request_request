@@ -20,7 +20,7 @@ use crate::service::RequestServiceStub;
 impl RequestServiceStub {
     pub(crate) fn unsubscribe_run_count(&self, reply: &mut MsgParcel) -> IpcResult<()> {
         let pid = ipc::Skeleton::calling_pid();
-        info!("Service run_count unsubscribe: pid is {}", pid);
+        info!("Service run_count unsubscribe pid {}", pid);
 
         let ret = self.run_count_manager.unsubscribe_run_count(pid);
         reply.write(&(ret as i32))?;

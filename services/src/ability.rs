@@ -77,22 +77,22 @@ impl RequestAbility {
             .worker_num(4)
             .build_global()
             .unwrap();
-        info!("ylong_runtime init succeed");
+        info!("ylong_runtime init ok");
 
         let runcount_manager = RunCountManager::init();
-        info!("runcount_manager init succeed");
+        info!("runcount_manager init ok");
 
         let client_manger = ClientManager::init();
-        info!("client_manger init succeed");
+        info!("client_manger init ok");
 
         unsafe { SYSTEM_CONFIG_MANAGER.write(SystemConfigManager::init()) };
-        info!("system_config_manager init succeed");
+        info!("system_config_manager init ok");
 
         let task_manager = TaskManager::init(runcount_manager.clone(), client_manger.clone());
 
         *self.task_manager.lock().unwrap() = Some(task_manager.clone());
 
-        info!("task_manager init succeed");
+        info!("task_manager init ok");
 
         AppStateListener::init(client_manger.clone(), task_manager.clone());
 
@@ -116,7 +116,6 @@ impl RequestAbility {
         );
 
         info!("ability init succeed");
-        info!("ability publish succeed");
         if !handler.publish(stub) {
             service_start_fault();
         }
@@ -145,7 +144,7 @@ impl Ability for RequestAbility {
 
     fn on_idle(&self, _reason: system_ability_fwk::cxx_share::SystemAbilityOnDemandReason) -> i32 {
         if self.remote_busy.load(Ordering::Acquire) {
-            info!("remote is busy, reject idle");
+            info!("remote is busy reject idle");
             -1
         } else {
             info!("remote is not busy, accept idle");
@@ -156,7 +155,7 @@ impl Ability for RequestAbility {
 
     fn on_device_level_changed(&self, change_type: i32, level: i32, action: String) {
         info!(
-            "on_device_level_changed change_type: {}, level: {}, action: {}",
+            "on_device_level_changed type {} level {} action {}",
             change_type, level, action
         );
         if let Some(task_manager) = self.task_manager.lock().unwrap().as_ref() {

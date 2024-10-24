@@ -35,7 +35,7 @@ impl TaskManager {
         let version = config.version;
 
         debug!(
-            "TaskManager Construct, uid:{}, task_id:{}, version:{:?}",
+            "TaskManager construct uid{} tid{}, version:{:?}",
             uid, task_id, version
         );
 
