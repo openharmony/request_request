@@ -246,21 +246,23 @@ fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
         &bundle_and_account,
         &config.file_specs[0].path,
     );
-    // Cannot compare param because file_total_size will be changed when resume task
+    // Cannot compare because file_total_size will be changed when resume task.
     match std::fs::metadata(real_path) {
         Ok(metadata) => {
-            if metadata.is_file() {
-                Ok(())
-            } else {
-                error!("task {} local not file", task.task_id());
-                Err(TaskError::Failed(Reason::IoError))
+            if !metadata.is_file() {
+                error!("task {} check local not file", task.task_id());
+                return Err(TaskError::Failed(Reason::IoError));
             }
         }
         Err(e) => {
-            error!("task {} local not exist:{}", task.task_id(), e);
-            Err(TaskError::Failed(Reason::IoError))
+            // Skip this situation when we loss some permission.
+            if e.kind() == std::io::ErrorKind::NotFound {
+                error!("task {} check local not exist", task.task_id());
+                return Err(TaskError::Failed(Reason::IoError));
+            }
         }
     }
+    Ok(())
 }
 
 #[cfg(not(feature = "oh"))]
