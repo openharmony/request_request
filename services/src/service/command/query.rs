@@ -40,7 +40,7 @@ impl RequestServiceStub {
         };
 
         let task_id: String = data.read()?;
-        info!("Service query: tid: {}", task_id);
+        info!("Service query tid {}", task_id);
 
         let Ok(task_id) = task_id.parse::<u32>() else {
             error!(

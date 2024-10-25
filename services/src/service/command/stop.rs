@@ -21,7 +21,7 @@ use crate::service::RequestServiceStub;
 impl RequestServiceStub {
     pub(crate) fn stop(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         let task_id: String = data.read()?;
-        info!("Service stop: tid: {}", task_id);
+        info!("Service stop tid {}", task_id);
 
         let Ok(task_id) = task_id.parse::<u32>() else {
             error!("End Service stop, failed: task_id not valid");

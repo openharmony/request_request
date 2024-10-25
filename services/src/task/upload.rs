@@ -266,7 +266,7 @@ impl RequestTask {
 pub(crate) async fn upload(task: Arc<RequestTask>) {
     RequestDb::get_instance()
         .update_task_sizes(task.task_id(), &task.progress.lock().unwrap().sizes);
-    
+
     task.tries.store(0, Ordering::SeqCst);
     loop {
         if let Err(e) = upload_inner(task.clone()).await {
@@ -292,7 +292,7 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
 }
 
 async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
-    info!("upload task {} start running", task.task_id());
+    info!("upload task {} running", task.task_id());
 
     #[cfg(feature = "oh")]
     let _trace = Trace::new(&format!(
@@ -324,7 +324,7 @@ async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
         task.notify_header_receive();
     }
 
-    info!("task {} upload success", task.task_id());
+    info!("task {} upload ok", task.task_id());
     Ok(())
 }
 
@@ -337,7 +337,7 @@ where
     F: Fn(Arc<RequestTask>, usize) -> Option<Request>,
 {
     info!(
-        "begin upload one file, tid: {}, index is {}, sizes {}",
+        "begin 1 upload tid {} index {} sizes {}",
         task.conf.common_data.task_id,
         index,
         task.progress.lock().unwrap().sizes[index]
@@ -354,7 +354,7 @@ where
             #[cfg(feature = "oh")]
             task.notify_response(response);
             info!(
-                "task {} get http response code {}",
+                "task {} get response {}",
                 task.conf.common_data.task_id, status_code,
             );
             if status_code.is_server_error()

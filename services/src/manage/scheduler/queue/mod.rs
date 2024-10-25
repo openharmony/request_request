@@ -113,15 +113,19 @@ impl RunningQueue {
     }
 
     pub(crate) fn dump_tasks(&self) {
-        info!(
-            "dump all task info, running tasks count: {}",
-            self.running_tasks()
-        );
+        info!("dump all running {}", self.running_tasks());
 
         for ((uid, task_id), task) in self.download_queue.iter().chain(self.upload_queue.iter()) {
             let task_status = task.status.lock().unwrap();
-            info!("dump task message, uid:{}, task_id:{}, action:{}, mode:{}, bundle name:{}, task_status:{:?}",
-                uid, task_id, task.action().repr, task.mode().repr, task.bundle(), *task_status);
+            info!(
+                "dump task {}, uid {}, action {}, mode {}, bundle {}, status {:?}",
+                task_id,
+                uid,
+                task.action().repr,
+                task.mode().repr,
+                task.bundle(),
+                *task_status
+            );
         }
     }
 
@@ -181,7 +185,7 @@ impl RunningQueue {
                 Err(ErrorCode::TaskNotFound) => continue, // If we cannot find the task, skip it.
                 Err(ErrorCode::TaskStateErr) => continue, // If we cannot find the task, skip it.
                 Err(e) => {
-                    info!("Get task failed, task_id: {}, error: {:?}", task_id, e);
+                    info!("get task {} error:{:?}", task_id, e);
                     if let Some(info) = RequestDb::get_instance().get_task_qos_info(task_id) {
                         self.tx.send_event(TaskManagerEvent::Task(TaskEvent::Failed(
                             task_id,
@@ -199,11 +203,11 @@ impl RunningQueue {
             new_queue.insert((uid, task_id), task.clone());
 
             if self.running_tasks.contains_key(&(uid, task_id)) {
-                info!("{} has running task not finished", task_id);
+                info!("task {} not finished", task_id);
                 continue;
             }
 
-            info!("{} create running task", task_id);
+            info!("{} create running", task_id);
             let running_task = RunningTask::new(task.clone(), self.tx.clone(), self.keeper.clone());
             RequestDb::get_instance().update_task_state(
                 running_task.task_id(),

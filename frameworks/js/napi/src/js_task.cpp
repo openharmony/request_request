@@ -87,7 +87,7 @@ JsTask::~JsTask()
 napi_value JsTask::JsUpload(napi_env env, napi_callback_info info)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
-    REQUEST_HILOGI("Begin JsUpload, seq: %{public}d", seq);
+    REQUEST_HILOGI("JsUpload seq %{public}d", seq);
     std::shared_ptr<Upload::UploadTaskNapiV5> proxy = std::make_shared<Upload::UploadTaskNapiV5>(env);
     if (proxy->ParseCallback(env, info)) {
         return proxy->JsUpload(env, info);
@@ -100,7 +100,7 @@ napi_value JsTask::JsUpload(napi_env env, napi_callback_info info)
 napi_value JsTask::JsDownload(napi_env env, napi_callback_info info)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
-    REQUEST_HILOGI("Begin JsDownload, seq: %{public}d", seq);
+    REQUEST_HILOGI("JsDownload seq %{public}d", seq);
     if (Legacy::RequestManager::IsLegacy(env, info)) {
         return Legacy::RequestManager::Download(env, info);
     }
@@ -110,14 +110,14 @@ napi_value JsTask::JsDownload(napi_env env, napi_callback_info info)
 napi_value JsTask::JsRequestFile(napi_env env, napi_callback_info info)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
-    REQUEST_HILOGI("Begin JsRequestFile, seq: %{public}d", seq);
+    REQUEST_HILOGI("JsRequestFile seq %{public}d", seq);
     return JsMain(env, info, Version::API9, seq);
 }
 
 napi_value JsTask::JsCreate(napi_env env, napi_callback_info info)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
-    REQUEST_HILOGI("Begin task create, seq: %{public}d", seq);
+    REQUEST_HILOGI("create seq %{public}d", seq);
     return JsMain(env, info, Version::API10, seq);
 }
 
@@ -163,7 +163,7 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
         napi_value config = nullptr;
         napi_get_reference_value(context->env_, context->jsConfig, &config);
         JsInitialize::CreatProperties(context->env_, *result, config, context->task);
-        REQUEST_HILOGI("End create task ok, seq: %{public}d, tid: %{public}s", seq, context->tid.c_str());
+        REQUEST_HILOGI("End create seq %{public}d, tid %{public}s", seq, context->tid.c_str());
         return status;
     };
     context->SetInput(input).SetOutput(output).SetExec(exec);
@@ -328,7 +328,7 @@ napi_value JsTask::GetTaskCreate(napi_env env, napi_callback_info info)
 napi_value JsTask::GetTask(napi_env env, napi_callback_info info)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
-    REQUEST_HILOGI("Begin get task, seq: %{public}d", seq);
+    REQUEST_HILOGI("GetTask seq %{public}d", seq);
     auto context = std::make_shared<ContextInfo>();
     context->withErrCode_ = true;
     context->version_ = Version::API10;
@@ -357,7 +357,7 @@ napi_value JsTask::GetTask(napi_env env, napi_callback_info info)
         napi_value conf = nullptr;
         napi_get_reference_value(context->env_, context->jsConfig, &conf);
         JsInitialize::CreatProperties(context->env_, *result, conf, context->task);
-        REQUEST_HILOGI("End get task ok, seq: %{public}d", seq);
+        REQUEST_HILOGI("End GetTask seq %{public}d", seq);
         return res;
     };
     auto exec = [context]() {
@@ -498,7 +498,7 @@ ExceptionError JsTask::ParseGetTask(napi_env env, size_t argc, napi_value *argv,
 napi_value JsTask::Remove(napi_env env, napi_callback_info info)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
-    REQUEST_HILOGI("Begin task remove, seq: %{public}d", seq);
+    REQUEST_HILOGI("Begin remove seq %{public}d", seq);
     struct RemoveContext : public AsyncCall::Context {
         std::string tid;
         bool res = false;
@@ -523,7 +523,7 @@ napi_value JsTask::Remove(napi_env env, napi_callback_info info)
                 "End task remove in AsyncCall output, seq: %{public}d, failed: %{public}d", seq, context->innerCode_);
             return napi_generic_failure;
         }
-        REQUEST_HILOGI("End task remove ok, seq: %{public}d", seq);
+        REQUEST_HILOGI("End remove seq %{public}d", seq);
         return NapiUtils::Convert2JSValue(context->env_, context->res, *result);
     };
     auto exec = [context]() {
@@ -561,7 +561,7 @@ ExceptionError JsTask::ParseTid(napi_env env, size_t argc, napi_value *argv, std
 napi_value JsTask::Show(napi_env env, napi_callback_info info)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
-    REQUEST_HILOGI("Begin task show, seq: %{public}d", seq);
+    REQUEST_HILOGI("Begin show seq %{public}d", seq);
     auto context = std::make_shared<TouchContext>();
     auto input = [context, seq](size_t argc, napi_value *argv, napi_value self) -> napi_status {
         ExceptionError err = ParseTid(context->env_, argc, argv, context->tid);
@@ -584,7 +584,7 @@ napi_value JsTask::Show(napi_env env, napi_callback_info info)
 napi_value JsTask::Touch(napi_env env, napi_callback_info info)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
-    REQUEST_HILOGI("Begin task touch, seq: %{public}d", seq);
+    REQUEST_HILOGI("Begin touch seq %{public}d", seq);
     auto context = std::make_shared<TouchContext>();
     auto input = [context, seq](size_t argc, napi_value *argv, napi_value self) -> napi_status {
         ExceptionError err = ParseTouch(context->env_, argc, argv, context);
@@ -610,7 +610,7 @@ napi_value JsTask::TouchInner(napi_env env, napi_callback_info info, AsyncCall::
             return napi_generic_failure;
         }
         *result = NapiUtils::Convert2JSValue(context->env_, context->taskInfo);
-        REQUEST_HILOGI("End task show ok, seq: %{public}d", seq);
+        REQUEST_HILOGI("End show seq %{public}d", seq);
         return napi_ok;
     };
     auto exec = [context]() {
@@ -797,7 +797,7 @@ int64_t JsTask::ParseAfter(napi_env env, napi_value value, int64_t before)
 napi_value JsTask::Search(napi_env env, napi_callback_info info)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
-    REQUEST_HILOGI("Begin task search, seq: %{public}d", seq);
+    REQUEST_HILOGI("Begin search seq %{public}d", seq);
     struct SearchContext : public AsyncCall::Context {
         Filter filter;
         std::vector<std::string> tids;
@@ -822,7 +822,7 @@ napi_value JsTask::Search(napi_env env, napi_callback_info info)
             return napi_generic_failure;
         }
         *result = NapiUtils::Convert2JSValue(context->env_, context->tids);
-        REQUEST_HILOGI("End task search ok, seq: %{public}d", seq);
+        REQUEST_HILOGI("End search seq %{public}d", seq);
         return napi_ok;
     };
     auto exec = [context]() {
@@ -840,7 +840,7 @@ napi_value JsTask::Search(napi_env env, napi_callback_info info)
 napi_value JsTask::Query(napi_env env, napi_callback_info info)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
-    REQUEST_HILOGI("Begin task query, seq: %{public}d", seq);
+    REQUEST_HILOGI("Begin query seq %{public}d", seq);
     struct QueryContext : public AsyncCall::Context {
         std::string tid;
         TaskInfo taskInfo;
@@ -866,7 +866,7 @@ napi_value JsTask::Query(napi_env env, napi_callback_info info)
         }
         context->taskInfo.withSystem = true;
         *result = NapiUtils::Convert2JSValue(context->env_, context->taskInfo);
-        REQUEST_HILOGI("End task query ok, seq: %{public}d", seq);
+        REQUEST_HILOGI("End query seq %{public}d", seq);
         return napi_ok;
     };
     auto exec = [context]() {
@@ -1184,7 +1184,7 @@ void JsTask::UvUnrefTaskContext(uv_work_t *work, int status)
     if (data->context->version_ == Version::API10) {
         u_int32_t configRefCount = 0;
         napi_reference_unref(data->context->env_, data->context->jsConfig, &configRefCount);
-        REQUEST_HILOGI("Unref task config ref, count is %{public}d", configRefCount);
+        REQUEST_HILOGI("Unref task config ref, count %{public}d", configRefCount);
         if (configRefCount == 0) {
             napi_delete_reference(data->context->env_, data->context->jsConfig);
         }

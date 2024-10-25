@@ -66,7 +66,7 @@ impl TaskManager {
         match RequestDb::get_instance().get_task_info(task_id) {
             Some(info) if info.uid() == uid => Some(info),
             _ => {
-                info!("TaskManger Show: no task found in database");
+                info!("TaskManger Show: no task found");
                 None
             }
         }
@@ -159,7 +159,7 @@ pub(crate) fn query_mime_type(uid: u64, task_id: u32) -> String {
     match RequestDb::get_instance().get_task_info(task_id) {
         Some(info) if info.uid() == uid => info.mime_type(),
         _ => {
-            info!("TaskManger QueryMimeType: no task found in database");
+            info!("TaskManger QueryMimeType: no task found");
             "".into()
         }
     }

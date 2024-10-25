@@ -30,7 +30,7 @@ impl RequestServiceStub {
         }
 
         let task_id: String = data.read()?;
-        info!("Service pause: tid: {}", task_id);
+        info!("Service pause tid {}", task_id);
         let Ok(task_id) = task_id.parse::<u32>() else {
             error!(
                 "End Service pause, tid: {}, failed: task_id not valid",

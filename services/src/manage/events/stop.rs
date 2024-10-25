@@ -18,7 +18,7 @@ use crate::manage::TaskManager;
 
 impl TaskManager {
     pub(crate) fn stop(&mut self, uid: u64, task_id: u32) -> ErrorCode {
-        debug!("stop task, tid: {}", task_id);
+        debug!("TaskManager stop, tid{}", task_id);
         let db = RequestDb::get_instance();
         if let Some(info) = db.get_task_qos_info(task_id) {
             if info.state == State::Running.repr
