@@ -28,7 +28,6 @@ use crate::config::Mode;
 use crate::error::ErrorCode;
 use crate::manage::database::RequestDb;
 use crate::manage::events::{TaskEvent, TaskManagerEvent};
-use crate::manage::network::Network;
 use crate::manage::scheduler::qos::{QosChanges, QosDirection};
 use crate::manage::scheduler::queue::running_task::RunningTask;
 use crate::manage::task_manager::TaskManagerTx;
@@ -48,7 +47,6 @@ pub(crate) struct RunningQueue {
     tx: TaskManagerTx,
     run_count_manager: RunCountManagerEntry,
     client_manager: ClientManagerEntry,
-    network: Network,
     // paused and then resume upload task need to upload from the breakpoint
     pub(crate) upload_resume: HashSet<u32>,
 }
@@ -58,7 +56,6 @@ impl RunningQueue {
         tx: TaskManagerTx,
         run_count_manager: RunCountManagerEntry,
         client_manager: ClientManagerEntry,
-        network: Network,
     ) -> Self {
         Self {
             download_queue: HashMap::new(),
@@ -68,7 +65,6 @@ impl RunningQueue {
             running_tasks: HashMap::new(),
             run_count_manager,
             client_manager,
-            network,
             upload_resume: HashSet::new(),
         }
     }
@@ -167,7 +163,6 @@ impl RunningQueue {
                 #[cfg(feature = "oh")]
                 system_config,
                 &self.client_manager,
-                self.network.clone(),
                 upload_resume,
             ) {
                 Ok(task) => task,

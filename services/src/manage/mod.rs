@@ -23,6 +23,7 @@ pub(crate) mod events;
 pub(crate) mod query;
 pub(crate) use task_manager::TaskManager;
 pub(crate) mod network;
+pub(crate) mod network_manager;
 pub(crate) mod notifier;
 pub(crate) mod scheduler;
 pub(crate) mod task_manager;
@@ -30,14 +31,12 @@ pub(crate) mod task_manager;
 #[cfg(test)]
 mod test {
     use std::fs::File;
-    use std::sync::Arc;
     use std::time::Duration;
 
-    use cxx::UniquePtr;
     use ylong_runtime::sync::mpsc::unbounded_channel;
 
     use super::database::RequestDb;
-    use super::network::{Network, NetworkInfo, NetworkInner, NetworkType};
+    use super::network::{NetworkInfo, NetworkInner, NetworkType};
     use super::TaskManager;
     use crate::config::{Action, ConfigBuilder, Mode};
     use crate::error::ErrorCode;
@@ -61,15 +60,11 @@ mod test {
             is_metered: false,
             is_roaming: false,
         });
-        let network = Network {
-            inner,
-            _registry: Arc::new(UniquePtr::null()),
-        };
         let (tx, _rx) = unbounded_channel();
         let run_count = RunCountManagerEntry::new(tx);
         let (tx, _rx) = unbounded_channel();
         let client = ClientManagerEntry::new(tx);
-        TaskManager::new(task_manager_tx, rx, run_count, client, network)
+        TaskManager::new(task_manager_tx, rx, run_count, client)
     }
 
     fn task_into(task_id: u32) -> TaskInfo {

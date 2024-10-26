@@ -445,12 +445,11 @@ mod test {
     use std::sync::atomic::AtomicBool;
     use std::sync::Arc;
 
-    use cxx::UniquePtr;
     use ylong_runtime::sync::mpsc::unbounded_channel;
 
     use crate::ability::SYSTEM_CONFIG_MANAGER;
     use crate::config::{Action, ConfigBuilder, Mode, TaskConfig};
-    use crate::manage::network::{Network, NetworkInfo, NetworkInner, NetworkType};
+    use crate::manage::network::{NetworkInfo, NetworkInner, NetworkType};
     use crate::service::client::ClientManagerEntry;
     use crate::task::request_task::{check_config, RequestTask};
     use crate::task::upload::upload;
@@ -468,10 +467,6 @@ mod test {
             is_metered: false,
             is_roaming: false,
         });
-        let network = Network {
-            inner,
-            _registry: Arc::new(UniquePtr::null()),
-        };
 
         let (files, client) = check_config(
             &config,
@@ -485,7 +480,6 @@ mod test {
             files,
             client,
             client_manager,
-            network,
             false,
         ));
         task

@@ -30,7 +30,7 @@ use super::notify::{EachFileStatus, NotifyData, Progress};
 use super::reason::Reason;
 use crate::error::ErrorCode;
 use crate::manage::database::RequestDb;
-use crate::manage::network::Network;
+use crate::manage::network_manager::NetworkManager;
 use crate::manage::notifier::Notifier;
 use crate::service::client::ClientManagerEntry;
 use crate::task::client::build_client;
@@ -59,7 +59,6 @@ pub(crate) struct RequestTask {
     pub(crate) last_notify: AtomicU64,
     pub(crate) client_manager: ClientManagerEntry,
     pub(crate) running_result: Mutex<Option<Result<(), Reason>>>,
-    pub(crate) network: Network,
     pub(crate) timeout_tries: AtomicU32,
     pub(crate) upload_resume: AtomicBool,
 }
@@ -100,7 +99,7 @@ impl RequestTask {
     pub(crate) async fn network_retry(&self) -> Result<(), TaskError> {
         if self.tries.load(Ordering::SeqCst) < RETRY_TIMES {
             self.tries.fetch_add(1, Ordering::SeqCst);
-            if !self.network.is_online() {
+            if !NetworkManager::is_online() {
                 return Err(TaskError::Waiting(TaskPhase::NetworkOffline));
             } else {
                 ylong_runtime::time::sleep(Duration::from_millis(RETRY_INTERVAL)).await;
@@ -127,7 +126,6 @@ impl RequestTask {
         files: AttachedFiles,
         client: Client,
         client_manager: ClientManagerEntry,
-        network: Network,
         upload_resume: bool,
     ) -> RequestTask {
         let file_len = files.files.len();
@@ -177,7 +175,6 @@ impl RequestTask {
             last_notify: AtomicU64::new(time),
             client_manager,
             running_result: Mutex::new(None),
-            network,
             timeout_tries: AtomicU32::new(0),
             upload_resume: AtomicBool::new(upload_resume),
         }
@@ -188,7 +185,6 @@ impl RequestTask {
         #[cfg(feature = "oh")] system: SystemConfig,
         info: TaskInfo,
         client_manager: ClientManagerEntry,
-        network: Network,
         upload_resume: bool,
     ) -> Result<RequestTask, ErrorCode> {
         #[cfg(feature = "oh")]
@@ -241,7 +237,6 @@ impl RequestTask {
             last_notify: AtomicU64::new(time),
             client_manager,
             running_result: Mutex::new(None),
-            network,
             timeout_tries: AtomicU32::new(0),
             upload_resume: AtomicBool::new(upload_resume),
         })

@@ -93,6 +93,7 @@ mod test {
     use crate::manage::database::RequestDb;
     use crate::manage::events::{TaskEvent, TaskManagerEvent};
     use crate::manage::network::{Network, NetworkInfo, NetworkInner, NetworkType};
+    use crate::manage::network_manager::NetworkManager;
     use crate::manage::task_manager::{TaskManagerRx, TaskManagerTx};
     use crate::manage::TaskManager;
     use crate::service::client::{ClientEvent, ClientManager, ClientManagerEntry};
@@ -107,22 +108,21 @@ mod test {
         let (tx, rx) = unbounded_channel();
         let task_manager_tx = TaskManagerTx::new(tx);
         let rx = TaskManagerRx::new(rx);
-        let inner = NetworkInner::new();
-        inner.notify_online(NetworkInfo {
-            network_type: NetworkType::Wifi,
-            is_metered: false,
-            is_roaming: false,
-        });
-        let network = Network {
-            inner,
-            _registry: Arc::new(UniquePtr::null()),
-        };
+        {
+            let network_manager = NetworkManager::get_instance().lock().unwrap();
+            let notifier = network_manager.network.inner.clone();
+            notifier.notify_online(NetworkInfo {
+                network_type: NetworkType::Wifi,
+                is_metered: false,
+                is_roaming: false,
+            });
+        }
         let (tx, _rx) = unbounded_channel();
         let run_count = RunCountManagerEntry::new(tx);
         let (tx, client_rx) = unbounded_channel();
         let client = ClientManagerEntry::new(tx);
         (
-            TaskManager::new(task_manager_tx, rx, run_count, client, network),
+            TaskManager::new(task_manager_tx, rx, run_count, client),
             client_rx,
         )
     }
