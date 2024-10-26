@@ -1,4 +1,4 @@
-// Copyright (C) 2023 Huawei Device Co., Ltd.
+// Copyright (C) 2024 Huawei Device Co., Ltd.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,21 +11,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// request task config
-pub mod config;
+#[allow(unused)]
+#[cxx::bridge(namespace = "OHOS::Request")]
+mod ffi {
+    struct AppInfo {
+        ret: bool,
+        index: i32,
+        name: String,
+    }
 
-/// request task info
-pub mod info;
-pub(crate) mod reason;
+    unsafe extern "C++" {
+        include!("bundle.h");
+        fn GetNameAndIndex(uid: i32) -> AppInfo;
+    }
+}
 
-pub(crate) mod download;
-pub(crate) mod files;
-pub(crate) mod notify;
-mod operator;
-pub(crate) mod request_task;
-pub(crate) const ATOMIC_SERVICE: u32 = 1;
-pub(crate) mod client;
-
-pub(crate) mod bundle;
-pub(crate) mod ffi;
-pub(crate) mod upload;
+pub(crate) fn get_name_and_index(uid: i32) -> Option<(i32, String)> {
+    let app_info = ffi::GetNameAndIndex(uid);
+    match app_info.ret {
+        true => Some((app_info.index, app_info.name)),
+        false => None,
+    }
+}

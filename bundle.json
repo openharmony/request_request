@@ -55,7 +55,8 @@
         "ffrt",
         "openssl",
         "curl",
-        "libuv"
+        "libuv",
+        "bundle_framework"
       ],
       "third_party": []
     },
