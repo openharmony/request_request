@@ -60,7 +60,8 @@
         "curl",
         "libuv",
         "resource_management",
-        "i18n"
+        "i18n",
+        "bundle_framework"
       ],
       "third_party": []
     },
