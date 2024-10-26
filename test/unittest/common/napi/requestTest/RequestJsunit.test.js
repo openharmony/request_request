@@ -37,7 +37,6 @@ describe('RequestTest', function () {
     })
     console.log(TAG + "*************Unit Test Begin*************");
 
-    let downloadTask;
     let downloadConfig;
     let globalDownloadConf = {
         url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
@@ -67,7 +66,7 @@ describe('RequestTest', function () {
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0001.txt'
         request.download(downloadConfig, (err, data) => {
             try {
-                downloadTask = data;
+                let downloadTask = data;
                 console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0001 downloadTask: " + JSON.stringify(downloadTask));
                 expect(true).assertEqual(downloadTask != undefined);
                 downloadTask.on('progress', (data1, data2) => {
@@ -106,7 +105,7 @@ describe('RequestTest', function () {
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0002 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0002.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0002 downloadTask: " + downloadTask);
             try {
                 expect(true).assertEqual(downloadTask != undefined);
@@ -140,7 +139,7 @@ describe('RequestTest', function () {
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003 downloadTask: " + downloadTask);
             try {
                 expect(true).assertEqual(downloadTask != undefined);
@@ -179,7 +178,7 @@ describe('RequestTest', function () {
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0004 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0004.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0004 downloadTask: " + downloadTask);
             try {
                 expect(downloadTask != undefined).assertEqual(true);
@@ -219,7 +218,7 @@ describe('RequestTest', function () {
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005.txt'
         downloadConfig.url += '123456'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005 downloadTask: " + downloadTask);
             try {
                 expect(downloadTask != undefined).assertEqual(true);
@@ -253,7 +252,7 @@ describe('RequestTest', function () {
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001.txt'
         request.download(downloadConfig, (err, data) => {
             try {
-                downloadTask = data;
+                let downloadTask = data;
                 console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0001 downloadTask: " + downloadTask);
                 expect(downloadTask != undefined).assertEqual(true);
                 downloadTask.on('progress', async (data1, data2) => { });
@@ -279,7 +278,7 @@ describe('RequestTest', function () {
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0002 downloadTask: " + downloadTask);
             try {
                 expect(downloadTask != undefined).assertEqual(true);
@@ -306,7 +305,7 @@ describe('RequestTest', function () {
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0003 downloadTask: " + downloadTask);
             try {
                 expect(downloadTask != undefined).assertEqual(true);
@@ -334,7 +333,7 @@ describe('RequestTest', function () {
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0004 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0004.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0004 downloadTask: " + downloadTask);
             try {
                 expect(downloadTask != undefined).assertEqual(true);
@@ -362,7 +361,7 @@ describe('RequestTest', function () {
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_OFF_0005 downloadTask: " + downloadTask);
             try {
                 expect(downloadTask != undefined).assertEqual(true);
@@ -390,7 +389,7 @@ describe('RequestTest', function () {
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_REMOVE_0001 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_REMOVE_0001.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_REMOVE_0001 downloadTask: " + downloadTask);
             try {
                 expect(downloadTask != undefined).assertEqual(true);
@@ -432,7 +431,7 @@ describe('RequestTest', function () {
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_REMOVE_0002 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_REMOVE_0002.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_REMOVE_0002 downloadTask: " + downloadTask);
             try {
                 expect(downloadTask != undefined).assertEqual(true);
@@ -469,7 +468,7 @@ describe('RequestTest', function () {
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_PAUSE_0001 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_PAUSE_0001.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_PAUSE_0001 downloadTask: " + downloadTask);
             expect(downloadTask != undefined).assertEqual(true);
             try {
@@ -502,7 +501,7 @@ describe('RequestTest', function () {
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_PAUSE_0002 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_PAUSE_0002.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_PAUSE_0002 downloadTask: " + downloadTask);
             try {
                 expect(downloadTask != undefined).assertEqual(true);
@@ -534,7 +533,7 @@ describe('RequestTest', function () {
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_REMUSE_0001 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_REMUSE_0001.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_REMUSE_0001 downloadTask: " + downloadTask);
             expect(downloadTask != undefined).assertEqual(true);
             try {
@@ -568,7 +567,7 @@ describe('RequestTest', function () {
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_REMUSE_0002 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_REMUSE_0002.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_REMUSE_0002 downloadTask: " + downloadTask);
             try {
                 expect(downloadTask != undefined).assertEqual(true);
@@ -601,7 +600,7 @@ describe('RequestTest', function () {
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_QUERY_0001 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_QUERY_0001.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_QUERY_0001 downloadTask: " + downloadTask);
             try {
                 expect(downloadTask != undefined).assertEqual(true);
@@ -649,7 +648,7 @@ describe('RequestTest', function () {
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_QUERY_0002 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_QUERY_0002.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_QUERY_0002 downloadTask: " + downloadTask);
             try {
                 expect(downloadTask != undefined).assertEqual(true);
@@ -702,7 +701,7 @@ describe('RequestTest', function () {
         console.info("====>---------------------SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 is starting---------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0001 downloadTask: " + downloadTask);
             try {
                 expect(downloadTask != undefined).assertEqual(true);
@@ -753,7 +752,7 @@ describe('RequestTest', function () {
         console.info("====>-------------------SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002 is starting----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002.txt'
         request.download(downloadConfig, (err, data) => {
-            downloadTask = data;
+            let downloadTask = data;
             console.info("====>SUB_REQUEST_DOWNLOAD_API_QUERYMINETYPE_0002 downloadTask: " + downloadTask);
             try {
                 expect(downloadTask != undefined).assertEqual(true);

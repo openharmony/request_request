@@ -43,7 +43,6 @@ describe('RequestUploadTest', async function () {
 
     let cacheDir = await featureAbility.getContext().getCacheDir();
 
-    let uploadTask;
     let RequestData = {
       name: 'name',
       value: '123'
@@ -279,7 +278,7 @@ describe('RequestUploadTest', async function () {
         try {
           console.info("SUB_REQUEST_UPLOAD_API_CALLBACK_0001 uploadConfig: " + JSON.stringify(uploadConfig1));
           request.upload(uploadConfig1, (err, data) => {
-            uploadTask = data;
+            let uploadTask = data;
             console.info("SUB_REQUEST_UPLOAD_API_CALLBACK_0001 progress uploadTask: " + JSON.stringify(uploadTask));
             expect(uploadTask !== undefined).assertEqual(true);
 
@@ -319,7 +318,7 @@ describe('RequestUploadTest', async function () {
         try {
           console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0001 UploadConfig: " + JSON.stringify(uploadConfig1));
           request.upload(uploadConfig1).then((data) => {
-            uploadTask = data;
+            let uploadTask = data;
             console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0001 uploadTask: " + uploadTask);
             expect(true).assertEqual((uploadTask !== undefined) || (uploadTask !== "") || (uploadTask !== {}));
             function HeaderReceiveCallback(header) {
@@ -357,7 +356,7 @@ describe('RequestUploadTest', async function () {
         try {
           console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0002 UploadConfig: " + JSON.stringify(uploadConfig));
           request.upload(uploadConfig).then((data) => {
-            uploadTask = data;
+            let uploadTask = data;
             console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0002 uploadTask: " + uploadTask);
             expect(true).assertEqual((uploadTask !== undefined) || (uploadTask !== "") || (uploadTask !== {}));
             uploadTask.on('fail', (TaskState) => {
@@ -392,7 +391,7 @@ describe('RequestUploadTest', async function () {
         try {
           console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0003 UploadConfig: " + JSON.stringify(uploadConfig));
           request.upload(uploadConfig).then((data) => {
-            uploadTask = data;
+            let uploadTask = data;
             console.info("SUB_REQUEST_UPLOAD_API_PROMISE_0003 uploadTask: " + uploadTask);
             expect(true).assertEqual((uploadTask !== undefined) || (uploadTask !== "") || (uploadTask !== {}));
   
