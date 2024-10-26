@@ -232,18 +232,13 @@ pub(crate) async fn download_inner(task: Arc<RequestTask>) -> Result<(), TaskErr
 
 #[cfg(not(test))]
 fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
-    use crate::task::files::{check_atomic_convert_path, convert_path};
-    use crate::task::ATOMIC_SERVICE;
+    use crate::task::files::{convert_bundle_name, convert_path};
 
     let config = task.config();
-    let bundle_and_account = check_atomic_convert_path(
-        config.bundle_type == ATOMIC_SERVICE,
-        config.bundle.as_str(),
-        config.atomic_account.as_str(),
-    );
+    let bundle_name = convert_bundle_name(config);
     let real_path = convert_path(
         config.common_data.uid,
-        &bundle_and_account,
+        &bundle_name,
         &config.file_specs[0].path,
     );
     // Cannot compare because file_total_size will be changed when resume task.
