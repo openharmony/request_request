@@ -13,9 +13,9 @@
 
 use std::error::Error;
 
-use ylong_http_client::async_impl::{Client, Interceptor, Request};
+use ylong_http_client::async_impl::{Client, Request};
 use ylong_http_client::{
-    Certificate, HttpClientError, Proxy, PubKeyPins, Redirect, Timeout, TlsVersion,
+    Certificate, HttpClientError, Interceptor, Proxy, PubKeyPins, Redirect, Timeout, TlsVersion,
 };
 
 cfg_oh! {
