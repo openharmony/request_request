@@ -30,11 +30,12 @@ void OnCallback(std::shared_ptr<HttpClientTask> task, rust::Box<CallbackWrapper>
     task->OnSuccess(
         [shared](const HttpClientRequest &, const HttpClientResponse &response) { shared->on_success(response); });
     task->OnFail([shared](const HttpClientRequest &, const HttpClientResponse &response,
-                     const HttpClientError &error) { shared->on_fail(response, error); });
+                     const HttpClientError &error) { shared->on_fail(error); });
     task->OnCancel(
         [shared](const HttpClientRequest &, const HttpClientResponse &response) { shared->on_cancel(response); });
-    task->OnDataReceive(
-        [shared](const HttpClientRequest &, const uint8_t *data, size_t size) { shared->on_data_receive(data, size); });
+    task->OnDataReceive([shared, task](const HttpClientRequest &, const uint8_t *data, size_t size) {
+        shared->on_data_receive(task, data, size);
+    });
     task->OnProgress([shared](const HttpClientRequest &, u_long dlTotal, u_long dlNow, u_long ulTotal, u_long ulNow) {
         shared->on_progress(dlTotal, dlNow, ulTotal, ulNow);
     });

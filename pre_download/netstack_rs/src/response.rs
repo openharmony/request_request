@@ -12,6 +12,7 @@
 // limitations under the License.
 
 use std::default;
+use std::fmt::Display;
 
 use crate::wrapper::ffi::HttpClientResponse;
 
@@ -22,7 +23,7 @@ pub struct Response<'a> {
 
 impl<'a> Response<'a> {
     /// Get Response Code
-    pub fn code(&self) -> ResponseCode {
+    pub fn status(&self) -> ResponseCode {
         self.inner
             .GetResponseCode()
             .try_into()
@@ -30,12 +31,16 @@ impl<'a> Response<'a> {
             .unwrap_or_default()
     }
 
+    pub fn headers(&self) -> String {
+        self.inner.GetHeader().to_string()
+    }
+
     pub(crate) fn from_ffi(inner: &'a HttpClientResponse) -> Self {
         Self { inner }
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub enum ResponseCode {
     #[default]
     None = 0,
@@ -74,4 +79,11 @@ pub enum ResponseCode {
     Unavailable,
     GatewayTimeout,
     Version,
+}
+
+impl Display for ResponseCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let code = self.clone() as i32;
+        write!(f, "{} {:?}", code, self)
+    }
 }

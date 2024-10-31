@@ -17,13 +17,17 @@ use std::pin::Pin;
 use cxx::SharedPtr;
 
 use crate::request::{Request, RequestCallback};
+use crate::response::Response;
 use crate::wrapper::ffi::{HttpClientRequest, HttpClientTask, NewHttpClientTask, OnCallback};
 use crate::wrapper::CallbackWrapper;
 
 /// RequestTask
+#[derive(Clone)]
 pub struct RequestTask {
     inner: SharedPtr<HttpClientTask>,
 }
+
+unsafe impl Send for RequestTask {}
 
 /// RequestTask status
 #[derive(Debug, Default)]
@@ -40,6 +44,10 @@ impl RequestTask {
         Self {
             inner: NewHttpClientTask(request),
         }
+    }
+
+    pub(crate) fn from_ffi(inner: SharedPtr<HttpClientTask>) -> Self {
+        Self { inner }
     }
 
     /// start the request task
@@ -59,6 +67,14 @@ impl RequestTask {
             .try_into()
             .map_err(|e| {})
             .unwrap_or_default()
+    }
+
+    pub fn response(&mut self) -> Response {
+        Response::from_ffi(self.pin_mut().GetResponse().into_ref().get_ref())
+    }
+
+    pub fn headers(&mut self) -> String {
+        self.response().headers()
     }
 
     pub(crate) fn callback(&mut self, callback: impl RequestCallback + 'static) {

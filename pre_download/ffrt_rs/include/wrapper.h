@@ -13,10 +13,15 @@
 * limitations under the License.
 */
 
-#include "a.h"
+#ifndef REQUEST_FFRT_WRAPPER_H
+#define REQUEST_FFRT_WRAPPER_H
 
-#include "download/wrapper.rs.h"
-#include "pre_download.h"
+#include "cpp/task.h"
+#include "cxx.h"
+#include "ffrt.h"
 
-namespace OHOS::Request {
-} // namespace OHOS::Request
+struct ClosureWrapper;
+
+void FfrtSpawn(rust::Box<ClosureWrapper> closure);
+
+#endif

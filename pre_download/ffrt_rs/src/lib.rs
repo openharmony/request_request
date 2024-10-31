@@ -11,28 +11,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Request utils
-
-#![warn(missing_docs)]
-#![allow(clippy::crate_in_macro_def)]
 #![allow(missing_docs)]
 #![allow(unused)]
+mod wrapper;
 
-#[macro_use]
-mod macros;
+use wrapper::{ClosureWrapper, FfrtSpawn};
 
-pub mod fastrand;
-pub mod queue_map;
-
-cfg_not_ohos! {
-    #[macro_use]
-    pub use log::{debug, error, info};
+pub fn ffrt_spawn<F>(f: F)
+where
+    F: FnOnce() + 'static,
+{
+    FfrtSpawn(ClosureWrapper::new(f));
 }
 
-cfg_ohos! {
-    #[macro_use]
-    mod hilog;
+#[cfg(test)]
+mod tests {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
 
-    mod wrapper;
-    pub use wrapper::{hilog_print, LogLevel, LogType};
+    use super::*;
+
+    #[test]
+    fn test_spawn() {
+        let flag = Arc::new(AtomicUsize::new(0));
+        let flag_clone = flag.clone();
+        ffrt_spawn(move || {
+            flag_clone.fetch_add(1, Ordering::SeqCst);
+        });
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        assert_eq!(flag.load(Ordering::SeqCst), 1);
+    }
 }

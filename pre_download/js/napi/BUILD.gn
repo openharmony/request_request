@@ -13,7 +13,7 @@
 
 import("//build/ohos.gni")
 
-ohos_shared_library("request_predownload") {
+ohos_shared_library("predownload") {
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -26,12 +26,30 @@ ohos_shared_library("request_predownload") {
 
   include_dirs = [ "include" ]
 
-  sources = [ "src/a.cpp" ]
+  sources = [
+    "src/pre_download_module.cpp",
+    "src/predownload.cpp",
+  ]
   deps = [
-    "../../native:request_predownload_native",
+    "../../native:predownload_native",
     "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
 
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:data_ability_helper",
+    "ability_runtime:extensionkit_native",
+    "ability_runtime:napi_base_context",
+    "c_utils:utils",
+    "curl:curl_shared",
+    "hilog:libhilog",
+    "init:libbegetutil",
+    "napi:ace_napi",
+  ]
+
+  relative_install_dir = "module"
   subsystem_name = "request"
   part_name = "request"
 }
