@@ -11,27 +11,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod common;
-mod error;
-
-cfg_ohos! {
-    mod netstack;
-    use netstack_rs::task::RequestTask;
-    pub use netstack::CancelHandle;
-    use netstack::DownloadTask;
-    use netstack_rs::request::RequestCallback;
-    use netstack_rs::response::Response;
-    use netstack_rs::error::HttpClientError;
+#[macro_export]
+macro_rules! cfg_test {
+    ($($item:item)*) => {
+        $(
+            #[cfg(test)]
+            $item
+        )*
+    }
 }
 
-cfg_not_ohos! {
-    mod ylong;
-    pub use ylong::CancelHandle;
-    pub use ylong::RequestTask;
-    use ylong::DownloadTask;
-    use ylong::RequestCallback;
-    use ylong::Response;
-    use ylong_http_client::HttpClientError;
+#[macro_use]
+#[macro_export]
+macro_rules! cfg_ohos {
+    ($($item:item)*) => {
+        $(
+            #[cfg(feature = "ohos")]
+            $item
+        )*
+    }
 }
 
-pub(crate) use common::{download, TaskHandle};
+#[macro_use]
+#[macro_export]
+macro_rules! cfg_not_ohos {
+    ($($item:item)*) => {
+        $(
+            #[cfg(not(feature = "ohos"))]
+            $item
+        )*
+    }
+}

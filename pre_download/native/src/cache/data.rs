@@ -13,179 +13,89 @@
 
 use std::fs::{File, OpenOptions};
 use std::io::{self, Cursor, Read, Seek, Write};
+use std::sync::Arc;
 
-pub(crate) struct Cache {
-    data: CacheData,
-    known_size: bool,
-    size: Option<usize>,
-}
+use super::CacheManager;
 
-enum CacheData {
-    Ram(Vec<u8>),
-    File(File),
+pub struct Cache {
+    task_id: u64,
+    data: Vec<u8>,
+    ram_applied: bool,
 }
 
 impl Cache {
-    pub(super) fn new_ram(size: Option<usize>) -> Self {
-        if let Some(size) = size {
-            Self {
-                data: CacheData::Ram(Vec::with_capacity(size)),
-                known_size: true,
-                size: Some(size),
-            }
-        } else {
-            Self {
-                data: CacheData::Ram(Vec::new()),
-                known_size: false,
-                size: None,
-            }
+    pub(super) fn new(task_id: u64, applied_size: Option<usize>) -> Self {
+        let (data, ram_applied) = match applied_size {
+            Some(size) => (Vec::with_capacity(size), true),
+            None => (Vec::new(), false),
+        };
+        Self {
+            task_id,
+            data,
+            ram_applied,
         }
     }
 
-    pub(crate) fn reader(&self) -> CacheReader {
-        match &self.data {
-            CacheData::Ram(v) => CacheReader {
-                inner: ReaderData::Cursor(Cursor::new(v)),
-            },
-            CacheData::File(f) => {
-                let mut file = f.try_clone().unwrap();
-                file.rewind().unwrap();
-                CacheReader {
-                    inner: ReaderData::File(file),
-                }
-            }
+    pub(crate) fn cursor(&self) -> Cursor<&[u8]> {
+        Cursor::new(&self.data)
+    }
+
+    pub(crate) fn complete_write(self) -> Arc<Self> {
+        if !self.ram_applied {
+            CacheManager::get_instance().apply_ram_size(self.data.len());
         }
+        let me = Arc::new(self);
+        CacheManager::get_instance().update_cache(me.task_id, me.clone());
+        me
     }
 
-    pub(crate) fn update_cache_size(&mut self) -> bool {
-        if self.size.is_none() {
-            self.size = Some(self.data.size());
-            true
-        } else {
-            false
-        }
-    }
-
-    pub(super) fn turn_to_file(&mut self) -> bool {
-        todo!()
-    }
-
-    pub(super) fn is_ram(&self) -> bool {
-        match &self.data {
-            CacheData::Ram(_) => true,
-            CacheData::File(_) => false,
-        }
-    }
-
-    pub(super) fn is_valid(&self) -> bool {
-        if let Some(size) = self.size {
-            return size == self.data.size();
-        }
-        false
-    }
-
-    pub(super) fn size(&self) -> Option<usize> {
-        self.size
-    }
-
-    pub(super) fn known_size(&self) -> bool {
-        self.known_size
-    }
-
-    pub(super) fn create_file_cache(&self, path: &str) -> Result<Cache, io::Error> {
+    pub(super) fn create_file_cache(&self, task_id: u64) -> Result<File, io::Error> {
         let mut file = OpenOptions::new()
             .write(true)
             .read(true)
             .create(true)
             .truncate(true)
-            .open(path)?;
-        io::copy(&mut self.reader(), &mut file);
+            .open(task_id.to_string())?;
+        io::copy(&mut self.cursor(), &mut file)?;
         file.rewind()?;
-        Ok(Cache {
-            data: CacheData::File(file),
-            known_size: self.known_size,
-            size: self.size,
-        })
+        Ok(file)
     }
-}
 
-impl CacheData {
-    fn size(&self) -> usize {
-        match self {
-            CacheData::Ram(v) => v.len(),
-            CacheData::File(f) => f.metadata().unwrap().len() as usize,
-        }
+    pub(crate) fn size(&self) -> usize {
+        self.data.len()
     }
 }
 
 impl Write for Cache {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        match self.data {
-            CacheData::Ram(ref mut v) => v.write(buf),
-            CacheData::File(ref mut f) => f.write(buf),
-        }
+        self.data.write(buf)
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
-        match self.data {
-            CacheData::Ram(ref mut v) => v.flush(),
-            CacheData::File(ref mut f) => f.flush(),
-        }
-    }
-}
-
-pub(crate) struct CacheReader<'a> {
-    inner: ReaderData<'a>,
-}
-
-enum ReaderData<'a> {
-    Cursor(Cursor<&'a [u8]>),
-    File(File),
-}
-
-impl<'a> Read for CacheReader<'a> {
-    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        match &mut self.inner {
-            ReaderData::Cursor(c) => c.read(buf),
-            ReaderData::File(f) => f.read(buf),
-        }
-    }
-}
-
-impl<'a> Seek for CacheReader<'a> {
-    fn seek(&mut self, pos: std::io::SeekFrom) -> std::io::Result<u64> {
-        match &mut self.inner {
-            ReaderData::Cursor(c) => c.seek(pos),
-            ReaderData::File(f) => f.seek(pos),
-        }
+        self.data.flush()
     }
 }
 
 #[cfg(test)]
 mod test {
-    use std::fs::read;
+
+    use request_utils::fastrand::fast_random;
 
     use super::*;
-    const TEST_URL: &str = "小心猴子";
     const TEST_STRING: &str = "你这猴子真让我欢喜";
 
     #[test]
     fn ut_cache_write_read() {
-        let mut cache = Cache::new_ram(Some(TEST_STRING.len()));
+        let task_id = fast_random();
+
+        let mut cache = Cache::new(task_id, Some(TEST_STRING.len()));
         cache.write_all(TEST_STRING.as_bytes()).unwrap();
         let mut buf = String::new();
-        cache.reader().read_to_string(&mut buf);
+        cache.cursor().read_to_string(&mut buf).unwrap();
         assert_eq!(buf, TEST_STRING);
 
         let mut buf = String::new();
-        cache.reader().read_to_string(&mut buf);
-        assert_eq!(buf, TEST_STRING);
-
-        let new_cache = cache.create_file_cache(TEST_URL).unwrap();
-        assert!(new_cache.is_valid());
-
-        let mut buf = String::new();
-        new_cache.reader().read_to_string(&mut buf).unwrap();
+        cache.cursor().read_to_string(&mut buf).unwrap();
         assert_eq!(buf, TEST_STRING);
     }
 }

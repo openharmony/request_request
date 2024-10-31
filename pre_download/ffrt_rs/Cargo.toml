@@ -12,18 +12,10 @@
 # limitations under the License.
 
 [package]
-name = "request_utils"
+name = "ffrt_rs"
 version = "0.1.0"
 edition = "2021"
 
-[features]
-default = []
-
-ohos = [
-    "cxx",
-]
-
 [dependencies]
-
-cxx = { version = "1.0.115", optional = true }
-log = "0.4.22"
+cxx = "1.0.115"
+request_utils = { path = "../../request_utils" }

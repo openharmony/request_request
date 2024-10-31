@@ -13,31 +13,3 @@
 * limitations under the License.
 */
 
-#ifndef REQUEST_PRE_DOWNLOAD_H
-#define REQUEST_PRE_DOWNLOAD_H
-
-#include <memory>
-
-namespace OHOS::Request {
-struct DownloadAgent;
-
-class PreDownloadCallback {
-public:
-    PreDownloadCallback() = default;
-    virtual ~PreDownloadCallback();
-    virtual void OnSuccess() const = 0;
-    virtual void OnFail() const = 0;
-    virtual void OnCancel() const = 0;
-};
-
-class PreDownloadAgent {
-public:
-    PreDownloadAgent();
-
-private:
-    static DownloadAgent &_agent;
-};
-
-} // namespace OHOS::Request
-
-#endif // REQUEST_PRE_DOWNLOAD_H

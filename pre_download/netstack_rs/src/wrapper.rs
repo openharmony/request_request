@@ -13,10 +13,12 @@
 
 use std::ffi::c_void;
 
+use cxx::SharedPtr;
+
 use crate::error::{HttpClientError, HttpErrorCode};
 use crate::request::{Request, RequestCallback};
 use crate::response::{self, Response, ResponseCode};
-use crate::task::TaskStatus;
+use crate::task::{RequestTask, TaskStatus};
 
 pub struct CallbackWrapper {
     inner: Box<dyn RequestCallback>,
@@ -36,19 +38,23 @@ impl CallbackWrapper {
         self.inner.on_success(response);
     }
 
-    fn on_fail(&mut self, response: &ffi::HttpClientResponse, error: &ffi::HttpClientError) {
-        let response = Response::from_ffi(response);
+    fn on_fail(&mut self, error: &ffi::HttpClientError) {
         let error = HttpClientError::from_ffi(error);
-        self.inner.on_fail(response, error);
+        self.inner.on_fail(error);
     }
 
     fn on_cancel(&mut self, response: &ffi::HttpClientResponse) {
-        let response = Response::from_ffi(response);
-        self.inner.on_cancel(response);
+        self.inner.on_cancel();
     }
-    fn on_data_receive(&mut self, data: *const u8, size: usize) {
+    fn on_data_receive(
+        &mut self,
+        task: SharedPtr<ffi::HttpClientTask>,
+        data: *const u8,
+        size: usize,
+    ) {
         let data = unsafe { std::slice::from_raw_parts(data, size) };
-        self.inner.on_data_receive(data);
+        let task = RequestTask::from_ffi(task);
+        self.inner.on_data_receive(data, task);
     }
     fn on_progress(&mut self, dl_total: u64, dl_now: u64, ul_total: u64, ul_now: u64) {
         self.inner.on_progress(dl_total, dl_now, ul_total, ul_now);
@@ -60,13 +66,14 @@ pub(crate) mod ffi {
     extern "Rust" {
         type CallbackWrapper;
         fn on_success(self: &mut CallbackWrapper, response: &HttpClientResponse);
-        fn on_fail(
-            self: &mut CallbackWrapper,
-            response: &HttpClientResponse,
-            error: &HttpClientError,
-        );
+        fn on_fail(self: &mut CallbackWrapper, error: &HttpClientError);
         fn on_cancel(self: &mut CallbackWrapper, response: &HttpClientResponse);
-        unsafe fn on_data_receive(self: &mut CallbackWrapper, data: *const u8, size: usize);
+        unsafe fn on_data_receive(
+            self: &mut CallbackWrapper,
+            task: SharedPtr<HttpClientTask>,
+            data: *const u8,
+            size: usize,
+        );
         fn on_progress(
             self: &mut CallbackWrapper,
             dl_total: u64,
@@ -105,6 +112,7 @@ pub(crate) mod ffi {
         type HttpClientTask;
 
         fn NewHttpClientTask(request: &HttpClientRequest) -> SharedPtr<HttpClientTask>;
+        fn GetResponse(self: Pin<&mut HttpClientTask>) -> Pin<&mut HttpClientResponse>;
         fn Start(self: Pin<&mut HttpClientTask>) -> bool;
         fn Cancel(self: Pin<&mut HttpClientTask>);
         fn GetStatus(self: Pin<&mut HttpClientTask>) -> TaskStatus;

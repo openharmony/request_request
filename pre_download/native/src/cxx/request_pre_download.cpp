@@ -13,9 +13,14 @@
 * limitations under the License.
 */
 
-#include "pre_download.h"
+#include "request_pre_download.h"
 
-#include "download/wrapper.rs.h"
+#include "wrapper.rs.h"
 
 namespace OHOS::Request {
+
+PreDownloadAgent::PreDownloadAgent()
+{
+}
+
 } // namespace OHOS::Request

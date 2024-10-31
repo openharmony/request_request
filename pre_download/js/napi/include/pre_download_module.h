@@ -13,8 +13,12 @@
 * limitations under the License.
 */
 
-#include "download/wrapper.rs.h"
-#include "pre_download.h"
-namespace OHOS::Request {
-    
-} // namespace OHOS::Request
+#ifndef REQUEST_PRE_DOWNLOAD_H
+#define REQUEST_PRE_DOWNLOAD_H
+
+#include "base/request/request/common/include/log.h"
+#include "napi/native_api.h"
+#include "napi/native_common.h"
+#include "napi/native_node_api.h"
+
+#endif

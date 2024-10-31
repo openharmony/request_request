@@ -13,11 +13,11 @@
 
 import("//build/ohos.gni")
 import("//build/test.gni")
-rust_cxx("request_predownload_native_rust_gen") {
-  sources = [ "src/download/wrapper.rs" ]
+rust_cxx("predownload_native_rust_gen") {
+  sources = [ "src/wrapper.rs" ]
 }
 
-ohos_rust_static_ffi("request_predownload_native_rust") {
+ohos_rust_static_ffi("predownload_native_rust") {
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -31,6 +31,7 @@ ohos_rust_static_ffi("request_predownload_native_rust") {
   sources = [ "src/lib.rs" ]
   deps = [
     "../../request_utils:request_utils",
+    "../ffrt_rs:ffrt_rs",
     "../netstack_rs:netstack_rs",
     "//third_party/rust/crates/cxx:lib",
   ]
@@ -40,7 +41,7 @@ ohos_rust_static_ffi("request_predownload_native_rust") {
   part_name = "request"
 }
 
-config("request_predownload_native_config") {
+config("predownload_native_config") {
   include_dirs = [
     "include",
     "${target_gen_dir}/src",
@@ -48,7 +49,7 @@ config("request_predownload_native_config") {
   ]
 }
 
-ohos_shared_library("request_predownload_native") {
+ohos_shared_library("predownload_native") {
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -59,21 +60,23 @@ ohos_shared_library("request_predownload_native") {
   }
   stack_protector_ret = true
 
-  public_configs = [ ":request_predownload_native_config" ]
+  public_configs = [ ":predownload_native_config" ]
 
-  sources = [ "src/cxx/pre_download.cpp" ]
-  sources += get_target_outputs(":request_predownload_native_rust_gen")
+  sources = [ "src/cxx/request_pre_download.cpp" ]
+  sources += get_target_outputs(":predownload_native_rust_gen")
   deps = [
-    ":request_predownload_native_rust",
-    ":request_predownload_native_rust_gen",
+    ":predownload_native_rust",
+    ":predownload_native_rust_gen",
     "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
+
+  innerapi_tags = [ "platformsdk" ]
 
   subsystem_name = "request"
   part_name = "request"
 }
 
-ohos_static_library("request_predownload_native_static") {
+ohos_static_library("predownload_native_static") {
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -84,12 +87,12 @@ ohos_static_library("request_predownload_native_static") {
   }
   stack_protector_ret = true
 
-  public_configs = [ ":request_predownload_native_config" ]
+  public_configs = [ ":predownload_native_config" ]
 
-  sources = [ "src/cxx/pre_download.cpp" ]
-  sources += get_target_outputs(":request_predownload_native_rust_gen")
+  sources = [ "src/cxx/request_pre_download.cpp" ]
+  sources += get_target_outputs(":predownload_native_rust_gen")
   deps = [
-    ":request_predownload_native_rust_gen",
+    ":predownload_native_rust_gen",
     "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
 
@@ -97,7 +100,7 @@ ohos_static_library("request_predownload_native_static") {
   part_name = "request"
 }
 
-ohos_rust_unittest("rust_request_predownload_native_ut_test") {
+ohos_rust_unittest("rust_predownload_native_ut_test") {
   module_out_path = "request/predownload"
 
   sources = [ "src/lib.rs" ]
@@ -107,8 +110,9 @@ ohos_rust_unittest("rust_request_predownload_native_ut_test") {
   rustflags = [ "--cfg=feature=\"ohos\"" ]
 
   deps = [
-    ":request_predownload_native_static",
+    ":predownload_native_static",
     "../../request_utils:request_utils",
+    "../ffrt_rs:ffrt_rs",
     "../netstack_rs:netstack_rs",
     "//third_party/rust/crates/cxx:lib",
   ]

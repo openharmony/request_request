@@ -16,15 +16,11 @@
 use std::time::Duration;
 
 use netstack_rs::request::{Request, RequestCallback};
+use netstack_rs::response::Response;
 
 struct Callback {}
 impl RequestCallback for Callback {
-    fn on_fail(
-        &mut self,
-        response: netstack_rs::response::Response,
-        error: netstack_rs::error::HttpClientError,
-    ) {
-    }
+    fn on_fail(&mut self, error: netstack_rs::error::HttpClientError) {}
 }
 
 #[test]

@@ -17,4 +17,7 @@ mod manage;
 mod update;
 
 pub(crate) use data::Cache;
+pub(crate) use fetch::Fetcher;
 pub(crate) use manage::CacheManager;
+pub(crate) use update::Updater;
+

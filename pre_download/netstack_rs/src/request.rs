@@ -95,11 +95,11 @@ pub trait RequestCallback {
     /// Called when the request is successful.
     fn on_success(&mut self, response: Response) {}
     /// Called when the request fails.
-    fn on_fail(&mut self, response: Response, error: HttpClientError) {}
+    fn on_fail(&mut self, error: HttpClientError) {}
     /// Called when the request is canceled.
-    fn on_cancel(&mut self, response: Response) {}
+    fn on_cancel(&mut self) {}
     /// Called when data is received.
-    fn on_data_receive(&mut self, data: &[u8]) {}
+    fn on_data_receive(&mut self, data: &[u8], task: RequestTask) {}
     /// Called when progress is made.
     fn on_progress(&mut self, dl_total: u64, dl_now: u64, ul_total: u64, ul_now: u64) {}
 }

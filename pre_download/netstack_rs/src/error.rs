@@ -50,12 +50,7 @@ impl Display for HttpClientError {
 
 impl Debug for HttpClientError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "HttpClientError: code {:?} msg {}",
-            self.code(),
-            self.msg()
-        )
+        write!(f, "code {:?}, msg {}", self.code(), self.msg())
     }
 }
 

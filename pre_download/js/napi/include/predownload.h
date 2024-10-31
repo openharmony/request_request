@@ -16,30 +16,9 @@
 #ifndef REQUEST_PRE_DOWNLOAD_H
 #define REQUEST_PRE_DOWNLOAD_H
 
-#include <memory>
-
-#include "cxx.h"
-
+#include "download/wrapper.rs.h"
+#include "pre_download.h"
 namespace OHOS::Request {
-struct DownloadAgent;
-
-class PreDownloadCallback {
-public:
-    PreDownloadCallback() = default;
-    virtual ~PreDownloadCallback();
-    virtual void OnSuccess() const = 0;
-    virtual void OnFail() const = 0;
-    virtual void OnCancel() const = 0;
-};
-
-class PreDownloadAgent {
-public:
-    PreDownloadAgent();
-    void preDownload(std::string url, std::unique_ptr<PreDownloadCallback> callback) const;
-
-private:
-    DownloadAgent *_agent;
-};
 
 } // namespace OHOS::Request
 
