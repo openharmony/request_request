@@ -92,7 +92,7 @@ mod test {
     use crate::info::{State, TaskInfo};
     use crate::manage::database::RequestDb;
     use crate::manage::events::{TaskEvent, TaskManagerEvent};
-    use crate::manage::network::{Network, NetworkInfo, NetworkInner, NetworkType};
+    use crate::manage::network::{Network, NetworkInfo, NetworkInner, NetworkState, NetworkType};
     use crate::manage::network_manager::NetworkManager;
     use crate::manage::task_manager::{TaskManagerRx, TaskManagerTx};
     use crate::manage::TaskManager;
@@ -125,6 +125,76 @@ mod test {
             TaskManager::new(task_manager_tx, rx, run_count, client),
             client_rx,
         )
+    }
+
+    #[cfg(feature = "oh")]
+    #[test]
+    fn ut_network() {
+        test_init();
+        let notifier;
+        {
+            let network_manager = NetworkManager::get_instance().lock().unwrap();
+            notifier = network_manager.network.inner.clone();
+        }
+
+        notifier.notify_online(NetworkInfo {
+            network_type: NetworkType::Wifi,
+            is_metered: false,
+            is_roaming: false,
+        });
+        assert!(NetworkManager::is_online());
+        assert_eq!(
+            NetworkManager::query_network(),
+            NetworkState::Online(NetworkInfo {
+                network_type: NetworkType::Wifi,
+                is_metered: false,
+                is_roaming: false,
+            })
+        );
+        notifier.notify_offline();
+        assert!(!NetworkManager::is_online());
+        notifier.notify_online(NetworkInfo {
+            network_type: NetworkType::Cellular,
+            is_metered: true,
+            is_roaming: true,
+        });
+        assert!(NetworkManager::is_online());
+        assert_eq!(
+            NetworkManager::query_network(),
+            NetworkState::Online(NetworkInfo {
+                network_type: NetworkType::Cellular,
+                is_metered: true,
+                is_roaming: true,
+            })
+        );
+    }
+
+    #[cfg(feature = "oh")]
+    #[test]
+    fn ut_network_notify() {
+        test_init();
+        let notifier = NetworkInner::new();
+        notifier.notify_offline();
+        assert!(notifier.notify_online(NetworkInfo {
+            network_type: NetworkType::Wifi,
+            is_metered: true,
+            is_roaming: true,
+        }));
+        assert!(!notifier.notify_online(NetworkInfo {
+            network_type: NetworkType::Wifi,
+            is_metered: true,
+            is_roaming: true,
+        }));
+        assert!(notifier.notify_online(NetworkInfo {
+            network_type: NetworkType::Wifi,
+            is_metered: false,
+            is_roaming: true,
+        }));
+        assert!(notifier.notify_online(NetworkInfo {
+            network_type: NetworkType::Cellular,
+            is_metered: false,
+            is_roaming: true,
+        }));
     }
 
     #[test]
