@@ -30,10 +30,10 @@ struct TaskManagerWrapper;
 void RequestProgressNotification(RequestTaskMsg msg);
 void RequestCompletedNotification(uint8_t action, uint32_t taskId, int32_t uid, rust::string fileName, bool isSucceed);
 
-void TitleWithProgressNum(std::string &title, std::size_t uploaded, std::size_t total);
-void TitleWithProgressSized(std::string &title, std::size_t processed);
-void TitleWithProgressPercentage(std::string &title, std::size_t processed, std::size_t size);
-void WithRemainder(std::string &title, size_t processed, size_t remainder);
+std::string ProgressNum(std::size_t uploaded, std::size_t total);
+std::string ProgressSized(std::size_t processed);
+std::string ProgressPercentage(std::size_t processed, std::size_t size);
+void WithRemainder(std::string &content, size_t processed, size_t remainder);
 
 void BasicRequestSettings(Notification::NotificationRequest &request, int32_t uid);
 
