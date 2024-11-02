@@ -25,7 +25,6 @@
 #include "log.h"
 #include "notification.h"
 #include "notification_content.h"
-
 #include "notification_local_live_view_button.h"
 #include "notification_local_live_view_content.h"
 #include "resource_manager.h"
@@ -42,6 +41,7 @@ static constexpr int32_t REQUEST_STYLE_SIMPLE = 8;
 static constexpr uint32_t BINARY_SCALE = 1024;
 static constexpr uint32_t PERCENT = 100;
 static constexpr uint32_t FRONT_ZERO = 10;
+static constexpr size_t PLACEHOLDER_LENGTH = 2;
 
 constexpr const char *DOWNLOAD_FILE = "ohos_id_text_save_button_description_download_file";
 constexpr const char *DOWNLOAD_SUCCESS = "request_agent_download_success";
@@ -110,7 +110,7 @@ void SetProgress(
         title = GetSystemResourceString(DOWNLOAD_FILE);
         title.push_back(' ');
         if (msg.sizes[0] == -1) {
-            TitleWithProgressSized(title, msg.processed[0]);
+            title += ProgressSized(msg.processed[0]);
             localLiveViewContent->SetTitle(title);
             return;
         } else {
@@ -119,20 +119,31 @@ void SetProgress(
             progress.SetIsPercentage(true);
             progress.SetCurrentValue(msg.processed[0] / BINARY_SCALE);
             progress.SetMaxValue(msg.sizes[0] / BINARY_SCALE);
-            TitleWithProgressPercentage(title, msg.processed[0], msg.sizes[0]);
+            title += ProgressPercentage(msg.processed[0], msg.sizes[0]);
         }
     } else {
         localLiveViewContent->addFlag(Notification::NotificationLocalLiveViewContent::LiveViewContentInner::PROGRESS);
         title = GetSystemResourceString(UPLOAD_FILE);
-        title.push_back(' ');
         if (msg.sizes.size() > 1) {
             progress.SetCurrentValue(msg.index);
             progress.SetMaxValue(msg.sizes.size());
-            TitleWithProgressNum(title, msg.index, msg.sizes.size());
+            size_t pos = title.find("%d");
+            if (pos != std::string::npos) {
+                title.replace(pos, PLACEHOLDER_LENGTH, ProgressNum(msg.index, msg.sizes.size()));
+            } else {
+                title.push_back(' ');
+                title += ProgressNum(msg.index, msg.sizes.size());
+            }
         } else {
             progress.SetCurrentValue(msg.processed[0] / BINARY_SCALE);
             progress.SetMaxValue(msg.sizes[0] / BINARY_SCALE);
-            TitleWithProgressPercentage(title, msg.processed[0], msg.sizes[0]);
+            size_t pos = title.find("%d");
+            if (pos != std::string::npos) {
+                title.replace(pos, PLACEHOLDER_LENGTH, ProgressPercentage(msg.processed[0], msg.sizes[0]));
+            } else {
+                title.push_back(' ');
+                title += ProgressPercentage(msg.processed[0], msg.sizes[0]);
+            }
         }
     }
     localLiveViewContent->SetTitle(title);
@@ -229,58 +240,64 @@ void BasicRequestSettings(Notification::NotificationRequest &request, int32_t ui
     request.SetIsAgentNotification(true);
 }
 
-void TitleWithProgressNum(std::string &title, std::size_t uploaded, std::size_t total)
+std::string ProgressNum(std::size_t uploaded, std::size_t total)
 {
-    title += std::to_string(uploaded);
-    title += "/";
-    title += std::to_string(total);
+    std::string content;
+    content += std::to_string(uploaded);
+    content += "/";
+    content += std::to_string(total);
+    return content;
 }
 
-void TitleWithProgressPercentage(std::string &title, std::size_t processed, std::size_t size)
+std::string ProgressPercentage(std::size_t processed, std::size_t size)
 {
+    std::string content;
     if (size == 0) {
-        title += "100";
+        content += "100";
     } else {
-        title += std::to_string(processed * PERCENT / size);
+        content += std::to_string(processed * PERCENT / size);
     }
-    title += "%";
+    content += "%";
+    return content;
 }
 
-void TitleWithProgressSized(std::string &title, std::size_t processed)
+std::string ProgressSized(std::size_t processed)
 {
+    std::string content;
     if (processed < BINARY_SCALE) {
-        title += std::to_string(processed);
-        title += "b";
-        return;
+        content += std::to_string(processed);
+        content += "b";
+        return content;
     }
     int remainder = (processed % BINARY_SCALE) * PERCENT / BINARY_SCALE;
     processed /= BINARY_SCALE;
     if (processed < BINARY_SCALE) {
-        WithRemainder(title, processed, remainder);
-        title += "kb";
-        return;
+        WithRemainder(content, processed, remainder);
+        content += "kb";
+        return content;
     }
     remainder = (processed % BINARY_SCALE) * PERCENT / BINARY_SCALE;
     processed /= BINARY_SCALE;
     if (processed < BINARY_SCALE) {
-        WithRemainder(title, processed, remainder);
-        title += "mb";
+        WithRemainder(content, processed, remainder);
+        content += "mb";
     } else {
         remainder = (processed % BINARY_SCALE) * PERCENT / BINARY_SCALE;
         processed = processed / BINARY_SCALE;
-        WithRemainder(title, processed, remainder);
-        title += "G";
+        WithRemainder(content, processed, remainder);
+        content += "G";
     }
+    return content;
 }
 
-void WithRemainder(std::string &title, size_t processed, size_t remainder)
+void WithRemainder(std::string &content, size_t processed, size_t remainder)
 {
-    title += std::to_string(processed);
-    title += ".";
+    content += std::to_string(processed);
+    content += ".";
     if (remainder < FRONT_ZERO) {
-        title += "0";
+        content += "0";
     }
-    title += std::to_string(remainder);
+    content += std::to_string(remainder);
 }
 
 NotificationSubscriber::NotificationSubscriber(rust::Box<TaskManagerWrapper> taskManager)
