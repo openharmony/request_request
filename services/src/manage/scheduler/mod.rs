@@ -446,18 +446,20 @@ impl Scheduler {
 }
 
 impl RequestDb {
-    fn change_status(&self, task_id: u32, state: State) -> Result<(), ErrorCode> {
+    fn change_status(&self, task_id: u32, new_state: State) -> Result<(), ErrorCode> {
         let info = RequestDb::get_instance()
             .get_task_info(task_id)
             .ok_or(ErrorCode::TaskNotFound)?;
-        if info.progress.common_data.state == state.repr {
-            if state == State::Removed {
+
+        let old_state = info.progress.common_data.state;
+        if old_state == new_state.repr {
+            if new_state == State::Removed {
                 return Err(ErrorCode::TaskNotFound);
             } else {
                 return Err(ErrorCode::TaskStateErr);
             }
         }
-        let sql = match state {
+        let sql = match new_state {
             State::Paused => sql::pause_task(task_id),
             State::Running => sql::start_task(task_id),
             State::Stopped => sql::stop_task(task_id),
@@ -473,10 +475,15 @@ impl RequestDb {
         let info = RequestDb::get_instance()
             .get_task_info(task_id)
             .ok_or(ErrorCode::SystemApi)?;
-        if info.progress.common_data.state != state.repr {
-            Err(ErrorCode::TaskStateErr)
-        } else {
-            Ok(())
+        if info.progress.common_data.state != new_state.repr {
+            return Err(ErrorCode::TaskStateErr);
         }
+
+        if (old_state == State::Waiting.repr || old_state == State::Paused.repr)
+            && (new_state == State::Stopped || new_state == State::Removed)
+        {
+            cancel_progress_notification(&info);
+        }
+        Ok(())
     }
 }
