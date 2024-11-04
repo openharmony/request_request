@@ -22,9 +22,9 @@ cfg_oh! {
     use crate::manage::SystemConfig;
     use crate::utils::url_policy::check_url_domain;
 }
+
 use crate::task::config::{Action, TaskConfig};
-use crate::task::files::{check_atomic_convert_path, convert_path};
-use crate::task::ATOMIC_SERVICE;
+use crate::task::files::{convert_bundle_name, convert_path};
 
 const CONNECT_TIMEOUT: u64 = 60;
 const SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
@@ -175,15 +175,12 @@ fn build_system_proxy(
 
 fn build_task_certs(config: &TaskConfig) -> Result<Vec<Certificate>, Box<dyn Error + Send + Sync>> {
     let uid = config.common_data.uid;
-    let bundle = config.bundle.as_str();
     let paths = config.certs_path.as_slice();
-    let is_account = config.bundle_type == ATOMIC_SERVICE;
-    let atomic_account = config.atomic_account.as_str();
-    let bundle_and_account = check_atomic_convert_path(is_account, bundle, atomic_account);
+    let bundle_name = convert_bundle_name(config);
 
     let mut certs = Vec::new();
     for (idx, path) in paths.iter().enumerate() {
-        let path = convert_path(uid, &bundle_and_account, path);
+        let path = convert_path(uid, &bundle_name, path);
         let cert = cvt_res_error!(
             Certificate::from_path(&path).map_err(Box::new),
             "Parse task cert failed - idx: {}, path: {}",
