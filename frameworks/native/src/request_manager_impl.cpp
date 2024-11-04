@@ -659,7 +659,9 @@ void RequestManagerImpl::LoadServerSuccess()
 
 void RequestManagerImpl::LoadServerFail()
 {
+    std::unique_lock<std::mutex> lock(conditionMutex_);
     ready_.store(false);
+    syncCon_.notify_one();
     REQUEST_HILOGE("load download server fail");
 }
 
