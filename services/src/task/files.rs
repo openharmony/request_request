@@ -30,19 +30,8 @@ pub(crate) struct AttachedFiles {
 
 impl AttachedFiles {
     pub(crate) fn open(config: &TaskConfig) -> io::Result<AttachedFiles> {
-        let tid = config.common_data.task_id;
-        let (files, sizes) = cvt_res_error!(
-            open_task_files(config),
-            "open task files failed - task_id: {}",
-            tid
-        );
-
-        let body_files = cvt_res_error!(
-            open_body_files(config),
-            "open body files failed - task_id: {}",
-            tid
-        );
-
+        let (files, sizes) = open_task_files(config)?;
+        let body_files = open_body_files(config)?;
         Ok(Self {
             files,
             sizes,
@@ -71,12 +60,7 @@ fn open_task_files(config: &TaskConfig) -> io::Result<(Files, Vec<i64>)> {
                         }
                     }
                 } else {
-                    cvt_res_error!(
-                        open_file_readonly(uid, &bundle_name, &fs.path),
-                        "Open file RO failed - task_id: {}, idx: {}",
-                        tid,
-                        idx
-                    )
+                    open_file_readonly(uid, &bundle_name, &fs.path)?
                 };
                 let size = cvt_res_error!(
                     file.metadata().map(|data| data.len()),
@@ -101,12 +85,7 @@ fn open_task_files(config: &TaskConfig) -> io::Result<(Files, Vec<i64>)> {
                         }
                     }
                 } else {
-                    cvt_res_error!(
-                        open_file_readwrite(uid, &bundle_name, &fs.path),
-                        "Open file RW failed - task_id: {}, idx: {}",
-                        tid,
-                        idx
-                    )
+                    open_file_readwrite(uid, &bundle_name, &fs.path)?
                 };
                 files.push(AsyncFile::new(file));
                 sizes.push(-1)
@@ -124,12 +103,11 @@ fn open_body_files(config: &TaskConfig) -> io::Result<Files> {
 
     let mut body_files = Vec::new();
     for (idx, path) in config.body_file_paths.iter().enumerate() {
-        let file = cvt_res_error!(
-            open_file_readwrite(uid, &bundle_name, path),
-            "Open body_file failed - task_id: {}, idx: {}",
-            tid,
-            idx
-        );
+        let file = open_file_readwrite(uid, &bundle_name, path)
+            .map_err(|e| {
+                error!("Open body_file failed - task_id: {}, idx: {}", tid, idx);
+                e
+            })?;
         body_files.push(AsyncFile::new(file))
     }
     Ok(Files::new(body_files))
@@ -210,4 +188,5 @@ impl Files {
 }
 
 unsafe impl Sync for Files {}
+
 unsafe impl Send for Files {}
