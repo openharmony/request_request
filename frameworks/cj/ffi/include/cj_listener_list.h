@@ -16,25 +16,23 @@
 #ifndef OHOS_REQUEST_CJ_LISTENER_LIST_H
 #define OHOS_REQUEST_CJ_LISTENER_LIST_H
 
+#include <functional>
 #include <list>
 #include <mutex>
 #include <string>
-#include <functional>
-#include "js_common.h"
 #include "cj_request_ffi.h"
+#include "js_common.h"
 
 namespace OHOS::CJSystemapi::Request {
-using OHOS::Request::SubscribeType;
-using OHOS::Request::ExceptionErrorCode;
 using OHOS::Request::NotifyData;
+using OHOS::Request::SubscribeType;
 
 using CFunc = void *;
-using ProgressOnCallBackType  = std::function<void(CProgress)>;
+using ProgressOnCallBackType = std::function<void(CProgress)>;
 
 class ListenerList {
 public:
-    ListenerList(const std::string &taskId, const SubscribeType &type)
-        : taskId_(taskId), type_(type)
+    ListenerList(const std::string &taskId, const SubscribeType &type) : taskId_(taskId), type_(type)
     {
     }
     bool HasListener();
@@ -42,8 +40,9 @@ public:
         ProgressOnCallBackType cb_;
         CFunc cbId_ = nullptr;
 
-        CallBackInfo(ProgressOnCallBackType cb, CFunc cbId)
-            : cb_(cb), cbId_(cbId) {}
+        CallBackInfo(ProgressOnCallBackType cb, CFunc cbId) : cb_(cb), cbId_(cbId)
+        {
+        }
     };
 
 protected:
@@ -58,7 +57,7 @@ protected:
 
     std::recursive_mutex allCbMutex_;
     std::list<std::pair<bool, std::shared_ptr<CallBackInfo>>> allCb_;
-    std::atomic<uint32_t> validCbNum{ 0 };
+    std::atomic<uint32_t> validCbNum{0};
 };
 } // namespace OHOS::CJSystemapi::Request
 #endif // OHOS_REQUEST_CJ_LISTENER_LIST_H

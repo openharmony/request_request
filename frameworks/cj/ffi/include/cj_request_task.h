@@ -21,23 +21,22 @@
 #include <mutex>
 #include <vector>
 #include "ability_context.h"
-#include "constant.h"
-#include "js_common.h"
 #include "cj_notify_data_listener.h"
 #include "cj_request_ffi.h"
+#include "constant.h"
+#include "js_common.h"
 
 namespace OHOS::CJSystemapi::Request {
 using OHOS::Request::Config;
-using OHOS::Request::TaskInfo;
 using OHOS::Request::ExceptionError;
+using OHOS::Request::Filter;
 using OHOS::Request::SubscribeType;
 using OHOS::Request::TaskInfo;
-using OHOS::Request::Filter;
 
-class CJTask {
+class CJRequestTask {
 public:
-    CJTask();
-    ~CJTask();
+    CJRequestTask();
+    ~CJRequestTask();
 
     static ExceptionError Remove(const std::string &tid);
     static ExceptionError Touch(const std::string &tid, TaskInfo &task, const std::string &token = "null");
@@ -47,15 +46,15 @@ public:
     std::map<SubscribeType, std::shared_ptr<CJNotifyDataListener>> notifyDataListenerMap_;
 
     Config config_;
-    std::string taskId_{ };
+    std::string taskId_{};
 
     static std::mutex taskMutex_;
-    static std::map<std::string, CJTask *> taskMap_;
-    static void AddTaskMap(const std::string &key, CJTask *task);
-    static CJTask* FindTaskById(std::string &taskId);
-    static ExceptionError GetTask(OHOS::AbilityRuntime::Context* context, std::string &taskId, std::string &token,
-        Config &config);
-    static CJTask* ClearTaskMap(const std::string &key);
+    static std::map<std::string, CJRequestTask *> taskMap_;
+    static void AddTaskMap(const std::string &key, CJRequestTask *task);
+    static CJRequestTask *FindTaskById(std::string &taskId);
+    static ExceptionError GetTask(OHOS::AbilityRuntime::Context *context, std::string &taskId, std::string &token,
+                                  Config &config);
+    static CJRequestTask *ClearTaskMap(const std::string &key);
     static void ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls);
 
     static std::mutex pathMutex_;
@@ -74,7 +73,7 @@ public:
     std::string GetTidStr() const;
     void SetTid();
 
-    ExceptionError Create(OHOS::AbilityRuntime::Context* context, Config &config);
+    ExceptionError Create(OHOS::AbilityRuntime::Context *context, Config &config);
     ExceptionError On(std::string type, std::string &taskId, void (*callback)(CProgress progress));
     ExceptionError Off(std::string event, CFunc callback);
 
@@ -84,5 +83,5 @@ private:
     std::string tid_;
 };
 
-}
+} // namespace OHOS::CJSystemapi::Request
 #endif

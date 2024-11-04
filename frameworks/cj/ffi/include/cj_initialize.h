@@ -18,20 +18,20 @@
 
 #include <vector>
 #include "ability.h"
-#include "directory_ex.h"
+#include "cj_request_ffi.h"
 #include "constant.h"
+#include "directory_ex.h"
 #include "js_common.h"
 #include "napi_base_context.h"
-#include "cj_request_ffi.h"
 
 namespace OHOS::CJSystemapi::Request {
-using OHOS::Request::ExceptionError;
-using OHOS::Request::Config;
-using OHOS::Request::FormItem;
-using OHOS::Request::FileSpec;
-using OHOS::Request::Network;
-using OHOS::Request::Mode;
 using OHOS::AbilityRuntime::Context;
+using OHOS::Request::Config;
+using OHOS::Request::ExceptionError;
+using OHOS::Request::FileSpec;
+using OHOS::Request::FormItem;
+using OHOS::Request::Mode;
+using OHOS::Request::Network;
 
 static constexpr uint32_t TOKEN_MAX_BYTES = 2048;
 static constexpr uint32_t TOKEN_MIN_BYTES = 8;
@@ -43,10 +43,10 @@ public:
 
     static void StringSplit(const std::string &str, const char delim, std::vector<std::string> &elems);
     static bool GetBaseDir(std::string &baseDir);
-    
+
     static ExceptionError ParseConfig(OHOS::AbilityRuntime::Context *context, const CConfig *ffiConfig, Config &config);
     static ExceptionError ParseBundleName(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
-        std::string &config);
+                                          std::string &config);
     static bool ParseUrl(std::string &url);
     static bool ParseCertsPath(std::string &url, std::vector<std::string> &certsPath);
     static bool ParseFormItems(const CFormItemArr *cForms, std::vector<FormItem> &forms, std::vector<FileSpec> &files);
@@ -69,21 +69,23 @@ public:
     static bool CreateDirs(const std::vector<std::string> &pathDirs);
     static bool InterceptData(const std::string &str, const std::string &in, std::string &out);
     static bool GetInternalPath(const std::string &fileUri,
-        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, std::string &filePath);
+                                const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config,
+                                std::string &filePath);
     static ExceptionError GetFD(const std::string &path, const Config &config, int32_t &fd);
     static bool FindDir(const std::string &pathDir);
+
 private:
-    static bool CheckDownloadFilePath(
-        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, std::string &errInfo);
-    static bool StandardizePath(
-        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path);
+    static bool CheckDownloadFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config,
+                                      std::string &errInfo);
+    static bool StandardizePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
+                                std::string &path);
     static bool CacheToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, std::string &path);
     static bool FileToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
-        std::string &path);
+                            std::string &path);
     static bool PathVecToNormal(const std::vector<std::string> &in, std::vector<std::string> &out);
     static bool WholeToNormal(const std::string &wholePath, std::string &normalPath, std::vector<std::string> &out);
     static ExceptionError CheckUploadBodyFiles(Config &config, const std::string &filePath);
     static ExceptionError UploadBodyFileProc(std::string &fileName, Config &config);
 };
-} // OHOS::CJSystemapi::Request
+} // namespace OHOS::CJSystemapi::Request
 #endif // CJ_INITIALIZE_H

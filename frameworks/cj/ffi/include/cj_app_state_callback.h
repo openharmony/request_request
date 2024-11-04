@@ -23,23 +23,23 @@ class CJAppStateCallback : public OHOS::AbilityRuntime::AbilityLifecycleCallback
 public:
     void OnAbilityCreate(const std::shared_ptr<NativeReference> &ability) override{};
 
-    void OnWindowStageCreate(
-        const std::shared_ptr<NativeReference> &ability, const std::shared_ptr<NativeReference> &windowStage) override
+    void OnWindowStageCreate(const std::shared_ptr<NativeReference> &ability,
+                             const std::shared_ptr<NativeReference> &windowStage) override
     {
     }
 
-    void OnWindowStageDestroy(
-        const std::shared_ptr<NativeReference> &ability, const std::shared_ptr<NativeReference> &windowStage) override
+    void OnWindowStageDestroy(const std::shared_ptr<NativeReference> &ability,
+                              const std::shared_ptr<NativeReference> &windowStage) override
     {
     }
 
-    void OnWindowStageActive(
-        const std::shared_ptr<NativeReference> &ability, const std::shared_ptr<NativeReference> &windowStage) override
+    void OnWindowStageActive(const std::shared_ptr<NativeReference> &ability,
+                             const std::shared_ptr<NativeReference> &windowStage) override
     {
     }
 
-    void OnWindowStageInactive(
-        const std::shared_ptr<NativeReference> &ability, const std::shared_ptr<NativeReference> &windowStage) override
+    void OnWindowStageInactive(const std::shared_ptr<NativeReference> &ability,
+                               const std::shared_ptr<NativeReference> &windowStage) override
     {
     }
 
@@ -57,5 +57,5 @@ public:
     {
     }
 };
-} // OHOS::CJSystemapi::Request
+} // namespace OHOS::CJSystemapi::Request
 #endif

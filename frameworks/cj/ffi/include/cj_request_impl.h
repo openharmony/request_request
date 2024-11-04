@@ -16,38 +16,38 @@
 #ifndef OHOS_REQUEST_CJ_REQUEST_IMPL_H
 #define OHOS_REQUEST_CJ_REQUEST_IMPL_H
 
-#include <string>
 #include <map>
-#include "napi_base_context.h"
+#include <string>
 #include "cj_request_ffi.h"
 #include "constant.h"
 #include "js_common.h"
+#include "napi_base_context.h"
 
 namespace OHOS::CJSystemapi::Request {
 
+using OHOS::Request::Action;
+using OHOS::Request::Config;
 using OHOS::Request::ExceptionError;
 using OHOS::Request::ExceptionErrorCode;
-using OHOS::Request::Config;
-using OHOS::Request::TaskInfo;
-using OHOS::Request::Filter;
-using OHOS::Request::State;
-using OHOS::Request::Action;
-using OHOS::Request::Mode;
 using OHOS::Request::FileSpec;
+using OHOS::Request::Filter;
 using OHOS::Request::FormItem;
+using OHOS::Request::Mode;
+using OHOS::Request::State;
+using OHOS::Request::TaskInfo;
 
 class CJRequestImpl {
 public:
     CJRequestImpl() = default;
     ~CJRequestImpl() = default;
 
-    static RetReqData CreateTask(OHOS::AbilityRuntime::Context* context, CConfig *ffiConfig);
-    static RetTask GetTask(OHOS::AbilityRuntime::Context* context, std::string taskId,
-        RequestNativeOptionCString &cToken);
+    static RetReqData CreateTask(OHOS::AbilityRuntime::Context *context, CConfig *ffiConfig);
+    static RetTask GetTask(OHOS::AbilityRuntime::Context *context, std::string taskId,
+                           RequestNativeOptionCString &cToken);
     static void FreeTask(std::string taskId);
     static RetError RemoveTask(std::string taskId);
     static RetTaskInfo ShowTask(std::string taskId);
-    static RetTaskInfo TouchTask(std::string taskId, const char* token);
+    static RetTaskInfo TouchTask(std::string taskId, const char *token);
     static RetTaskArr SearchTask(CFilter &filter);
     static ExceptionError Convert2Filter(CFilter &filter, Filter &out);
     static RetError ProgressOn(char *event, std::string taskId, void (*callback)(CProgress progress));
@@ -66,8 +66,8 @@ public:
 
     static Filter Convert2Filter(CFilter &filter);
     static void Convert2CConfig(Config &config, CConfig &out);
-    static CConfigDataTypeUion Convert2RequestData(Action action, std::string &data,
-        const std::vector<FileSpec> &files, const std::vector<FormItem> &forms);
+    static CConfigDataTypeUion Convert2RequestData(Action action, std::string &data, const std::vector<FileSpec> &files,
+                                                   const std::vector<FormItem> &forms);
     static std::string ParseBundle(RequestNativeOptionCString &bundle);
     static int64_t ParseBefore(RequestNativeOptionInt64 &before);
     static int64_t ParseAfter(RequestNativeOptionInt64 &after, int64_t before);
@@ -76,6 +76,7 @@ public:
     static Mode ParseMode(RequestNativeOptionUInt32 &mode);
 
     static ExceptionError ParseToken(RequestNativeOptionCString &cToken, std::string &out);
+
 private:
     static RetError TaskExec(std::string execType, std::string taskId);
 };

@@ -16,16 +16,10 @@
 #ifndef UTF8_UTILS_H
 #define UTF8_UTILS_H
 
-#include <cstddef>
 #include <cstdint>
 #include <vector>
 
 namespace OHOS::Request::Utf8Utils {
-size_t Utf8CharWidth(uint8_t b);
-bool GetNextByte(const std::vector<uint8_t> &v, size_t &index, uint8_t &next);
-bool Check2Bytes(const std::vector<uint8_t> &v, size_t &index);
-bool Check3Bytes(const std::vector<uint8_t> &v, const size_t &first, size_t &index);
-bool Check4Bytes(const std::vector<uint8_t> &v, const size_t &first, size_t &index);
 bool RunUtf8Validation(const std::vector<uint8_t> &v);
 } // namespace OHOS::Request::Utf8Utils
 #endif // UV_QUEUE_H

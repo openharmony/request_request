@@ -16,10 +16,20 @@
 #include "utf8_utils.h"
 
 namespace OHOS::Request::Utf8Utils {
-
+namespace {
 static constexpr size_t TWO_OCTET = 2;
 static constexpr size_t THREE_OCTET = 3;
 static constexpr size_t FOUR_OCTET = 4;
+
+bool GetNextByte(const std::vector<uint8_t> &v, size_t &index, uint8_t &next)
+{
+    index += 1;
+    if (index >= v.size()) {
+        return false;
+    }
+    next = v[index];
+    return true;
+}
 
 // Given a first byte, determines how many bytes are in this UTF-8 character.
 size_t Utf8CharWidth(uint8_t b)
@@ -45,16 +55,6 @@ size_t Utf8CharWidth(uint8_t b)
         4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // F
     };
     return UTF8_CHAR_WIDTH[b];
-}
-
-bool GetNextByte(const std::vector<uint8_t> &v, size_t &index, uint8_t &next)
-{
-    index += 1;
-    if (index >= v.size()) {
-        return false;
-    }
-    next = v[index];
-    return true;
 }
 
 // https://tools.ietf.org/html/rfc3629
@@ -106,6 +106,7 @@ bool Check4Bytes(const std::vector<uint8_t> &v, const size_t &first, size_t &ind
 
     return Check2Bytes(v, index) && Check2Bytes(v, index);
 }
+} // namespace
 
 bool RunUtf8Validation(const std::vector<uint8_t> &v)
 {

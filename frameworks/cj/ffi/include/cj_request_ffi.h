@@ -138,7 +138,7 @@ typedef struct {
 
 typedef struct {
     bool hasValue;
-    const char* value;
+    const char *value;
 } RequestNativeOptionCString;
 
 typedef struct {
@@ -161,7 +161,7 @@ typedef struct {
 } CFilter;
 
 typedef struct {
-    char** head;
+    char **head;
     int64_t size;
 } RequestCArrString;
 
@@ -203,8 +203,8 @@ FFI_EXPORT RetError FfiOHOSRequestTaskStart(const char *taskId);
 FFI_EXPORT RetError FfiOHOSRequestTaskPause(const char *taskId);
 FFI_EXPORT RetError FfiOHOSRequestTaskResume(const char *taskId);
 FFI_EXPORT RetError FfiOHOSRequestTaskStop(const char *taskId);
-FFI_EXPORT RetReqData FfiOHOSRequestCreateTask(void* context, CConfig config);
-FFI_EXPORT RetTask FfiOHOSRequestGetTask(void* context, const char *taskId, RequestNativeOptionCString token);
+FFI_EXPORT RetReqData FfiOHOSRequestCreateTask(void *context, CConfig config);
+FFI_EXPORT RetTask FfiOHOSRequestGetTask(void *context, const char *taskId, RequestNativeOptionCString token);
 FFI_EXPORT RetError FfiOHOSRequestRemoveTask(const char *taskId);
 FFI_EXPORT RetTaskInfo FfiOHOSRequestShowTask(const char *taskId);
 FFI_EXPORT RetTaskInfo FfiOHOSRequestTouchTask(const char *taskId, char *token);
