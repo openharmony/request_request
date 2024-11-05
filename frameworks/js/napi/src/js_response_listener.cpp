@@ -16,8 +16,8 @@
 #include "js_response_listener.h"
 
 #include "log.h"
+#include "napi/native_node_api.h"
 #include "request_manager.h"
-#include "uv_queue.h"
 
 namespace OHOS::Request {
 
@@ -47,39 +47,30 @@ napi_status JSResponseListener::RemoveListener(napi_value cb)
 
 void JSResponseListener::OnResponseReceive(const std::shared_ptr<Response> &response)
 {
-    REQUEST_HILOGI("OnRespRecv tid %{public}s", response->taskId.c_str());
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(this->env_, &loop);
-    if (loop == nullptr) {
-        REQUEST_HILOGE("napi_get_uv_event_loop failed");
-        return;
-    }
-    uv_work_t *work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        REQUEST_HILOGE("uv_work_t new failed");
-        return;
-    }
+    REQUEST_HILOGI("OnResponseReceive, tid: %{public}s", response->taskId.c_str());
+
     {
         std::lock_guard<std::mutex> lock(this->responseMutex_);
         this->response_ = response;
     }
-    work->data = reinterpret_cast<void *>(this);
-    uv_queue_work(
-        loop, work, [](uv_work_t *work) {},
-        [](uv_work_t *work, int status) {
-            JSResponseListener *listener = static_cast<JSResponseListener *>(work->data);
+    std::shared_ptr<JSResponseListener> listener = shared_from_this();
+    int32_t ret = napi_send_event(
+        listener->env_,
+        [listener]() {
             std::lock_guard<std::mutex> lock(listener->responseMutex_);
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(listener->env_, &scope);
             if (scope == nullptr) {
-                delete work;
                 return;
             }
             napi_value value = NapiUtils::Convert2JSValue(listener->env_, listener->response_);
             listener->OnMessageReceive(&value, 1);
             napi_close_handle_scope(listener->env_, scope);
-            delete work;
-        });
+        },
+        napi_eprio_high);
+    if (ret != napi_ok) {
+        REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
+    }
 }
 
 } // namespace OHOS::Request

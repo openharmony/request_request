@@ -24,7 +24,6 @@
 #include "log.h"
 #include "napi_base_context.h"
 #include "napi_utils.h"
-#include "uv.h"
 
 namespace OHOS::Request::Legacy {
 std::map<std::string, RequestManager::DownloadDescriptor> RequestManager::downloadDescriptors_;
@@ -50,33 +49,19 @@ std::string RequestManager::GetTaskToken()
 
 void RequestManager::CallFunctionAsync(napi_env env, napi_ref func, const ArgsGenerator &generator)
 {
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env, &loop);
-    if (loop == nullptr) {
-        REQUEST_HILOGE("Failed to get uv event loop");
-        return;
-    }
-    auto *work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        REQUEST_HILOGE("Failed to create uv work");
-        return;
-    }
     auto *data = new (std::nothrow) CallFunctionData;
     if (data == nullptr) {
         REQUEST_HILOGE("Failed to create CallFunctionData");
-        delete work;
         return;
     }
     data->env_ = env;
     data->func_ = func;
     data->generator_ = generator;
-    work->data = data;
 
-    uv_queue_work(
-        loop, work, [](uv_work_t *work) {},
-        [](uv_work_t *work, int st) {
+    int32_t ret = napi_send_event(
+        env,
+        [data]() {
             int argc{};
-            auto data = static_cast<CallFunctionData *>(work->data);
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(data->env_, &scope);
             napi_value argv[MAX_CB_ARGS]{};
@@ -91,9 +76,13 @@ void RequestManager::CallFunctionAsync(napi_env env, napi_ref func, const ArgsGe
             napi_delete_reference(data->env_, data->func_);
             napi_delete_reference(data->env_, recv);
             napi_close_handle_scope(data->env_, scope);
-            delete work;
             delete data;
-        });
+        },
+        napi_eprio_high);
+    if (ret != napi_ok) {
+        REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
+        delete data;
+    }
 }
 
 void RequestManager::OnTaskDone(const std::string &token, bool successful, const std::string &errMsg)
