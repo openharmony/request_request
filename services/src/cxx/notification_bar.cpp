@@ -266,26 +266,26 @@ std::string ProgressSized(std::size_t processed)
     std::string content;
     if (processed < BINARY_SCALE) {
         content += std::to_string(processed);
-        content += "b";
+        content += "B";
         return content;
     }
     int remainder = (processed % BINARY_SCALE) * PERCENT / BINARY_SCALE;
     processed /= BINARY_SCALE;
     if (processed < BINARY_SCALE) {
         WithRemainder(content, processed, remainder);
-        content += "kb";
+        content += "KB";
         return content;
     }
     remainder = (processed % BINARY_SCALE) * PERCENT / BINARY_SCALE;
     processed /= BINARY_SCALE;
     if (processed < BINARY_SCALE) {
         WithRemainder(content, processed, remainder);
-        content += "mb";
+        content += "MB";
     } else {
         remainder = (processed % BINARY_SCALE) * PERCENT / BINARY_SCALE;
         processed = processed / BINARY_SCALE;
         WithRemainder(content, processed, remainder);
-        content += "G";
+        content += "GB";
     }
     return content;
 }
