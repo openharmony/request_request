@@ -14,6 +14,7 @@
 mod keeper;
 mod running_task;
 use std::collections::{HashMap, HashSet};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use keeper::SAKeeper;
@@ -27,7 +28,6 @@ use crate::config::Mode;
 use crate::error::ErrorCode;
 use crate::manage::database::RequestDb;
 use crate::manage::events::{TaskEvent, TaskManagerEvent};
-use crate::manage::network::Network;
 use crate::manage::scheduler::qos::{QosChanges, QosDirection};
 use crate::manage::scheduler::queue::running_task::RunningTask;
 use crate::manage::task_manager::TaskManagerTx;
@@ -42,12 +42,11 @@ use crate::utils::runtime_spawn;
 pub(crate) struct RunningQueue {
     download_queue: HashMap<(u64, u32), Arc<RequestTask>>,
     upload_queue: HashMap<(u64, u32), Arc<RequestTask>>,
-    running_tasks: HashMap<(u64, u32), Option<JoinHandle<()>>>,
+    running_tasks: HashMap<(u64, u32), Option<AbortHandle>>,
     keeper: SAKeeper,
     tx: TaskManagerTx,
     run_count_manager: RunCountManagerEntry,
     client_manager: ClientManagerEntry,
-    network: Network,
     // paused and then resume upload task need to upload from the breakpoint
     pub(crate) upload_resume: HashSet<u32>,
 }
@@ -57,7 +56,6 @@ impl RunningQueue {
         tx: TaskManagerTx,
         run_count_manager: RunCountManagerEntry,
         client_manager: ClientManagerEntry,
-        network: Network,
     ) -> Self {
         Self {
             download_queue: HashMap::new(),
@@ -67,7 +65,6 @@ impl RunningQueue {
             running_tasks: HashMap::new(),
             run_count_manager,
             client_manager,
-            network,
             upload_resume: HashSet::new(),
         }
     }
@@ -90,12 +87,17 @@ impl RunningQueue {
         {
             info!("{} restart running", task_id);
             let running_task = RunningTask::new(task.clone(), self.tx.clone(), self.keeper.clone());
+            let abort_flag = Arc::new(AtomicBool::new(false));
+            let abort_flag_clone = abort_flag.clone();
             let join_handle = runtime_spawn(async move {
-                running_task.run().await;
+                running_task.run(abort_flag_clone.clone()).await;
             });
             let uid = task.uid();
             let task_id = task.task_id();
-            self.running_tasks.insert((uid, task_id), Some(join_handle));
+            self.running_tasks.insert(
+                (uid, task_id),
+                Some(AbortHandle::new(abort_flag, join_handle)),
+            );
             true
         } else {
             false
@@ -178,7 +180,6 @@ impl RunningQueue {
                 #[cfg(feature = "oh")]
                 system_config,
                 &self.client_manager,
-                self.network.clone(),
                 upload_resume,
             ) {
                 Ok(task) => task,
@@ -214,12 +215,18 @@ impl RunningQueue {
                 State::Running,
                 Reason::Default,
             );
+            let abort_flag = Arc::new(AtomicBool::new(false));
+            let abort_flag_clone = abort_flag.clone();
             let join_handle = runtime_spawn(async move {
-                running_task.run().await;
+                running_task.run(abort_flag_clone).await;
             });
+
             let uid = task.uid();
             let task_id = task.task_id();
-            self.running_tasks.insert((uid, task_id), Some(join_handle));
+            self.running_tasks.insert(
+                (uid, task_id),
+                Some(AbortHandle::new(abort_flag, join_handle)),
+            );
         }
         // every satisfied tasks in running has been moved, set left tasks to Waiting
 
@@ -235,5 +242,23 @@ impl RunningQueue {
         #[cfg(feature = "oh")]
         self.run_count_manager
             .notify_run_count(self.download_queue.len() + self.upload_queue.len());
+    }
+}
+
+struct AbortHandle {
+    abort_flag: Arc<AtomicBool>,
+    join_handle: JoinHandle<()>,
+}
+
+impl AbortHandle {
+    fn new(abort_flag: Arc<AtomicBool>, join_handle: JoinHandle<()>) -> Self {
+        Self {
+            abort_flag,
+            join_handle,
+        }
+    }
+    fn cancel(self) {
+        self.abort_flag.store(true, Ordering::Release);
+        self.join_handle.cancel();
     }
 }

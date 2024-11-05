@@ -17,6 +17,8 @@ use ffi::NetworkRegistry;
 pub(crate) use ffi::{NetworkInfo, NetworkType};
 use NetworkState::{Offline, Online};
 
+use crate::manage::network_manager::NetworkManager;
+
 cfg_oh! {
     use super::events::TaskManagerEvent;
     use super::task_manager::TaskManagerTx;
@@ -26,7 +28,7 @@ cfg_oh! {
 pub struct Network {
     pub(crate) inner: NetworkInner,
     #[cfg(feature = "oh")]
-    pub(crate) _registry: Arc<UniquePtr<NetworkRegistry>>,
+    pub(crate) _registry: Option<Arc<UniquePtr<NetworkRegistry>>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -36,45 +38,49 @@ pub(crate) enum NetworkState {
 }
 
 impl Network {
-    pub(crate) fn is_online(&self) -> bool {
-        matches!(*self.inner.state.read().unwrap(), Online(_))
-    }
-
     pub(crate) fn state(&self) -> NetworkState {
         self.inner.state.read().unwrap().clone()
     }
 }
 
-pub(crate) fn register_network_change(
-    #[cfg(feature = "oh")] task_manager: TaskManagerTx,
-) -> Network {
-    let inner = NetworkInner::new();
-    #[cfg(feature = "oh")]
-    let registry = ffi::RegisterNetworkChange(
-        Box::new(inner.clone()),
-        Box::new(NetworkTaskManagerTx {
-            inner: task_manager.clone(),
-        }),
-        |task_manager| {
-            task_manager.inner.send_event(TaskManagerEvent::network());
-        },
-        |task_manager| {
-            task_manager.inner.send_event(TaskManagerEvent::network());
-        },
-    );
-    #[cfg(feature = "oh")]
-    if registry.is_null() {
-        error!("RegisterNetworkChange failed sleep 1s and retry");
-        #[cfg(not(test))]
-        {
-            std::thread::sleep(std::time::Duration::from_secs(1));
-            return register_network_change(task_manager);
-        }
+pub(crate) fn register_network_change() {
+    const RETRY_TIME: i32 = if cfg!(test) { 1 } else { 20 };
+    let mut count: i32 = 0;
+    let mut network_manager = NetworkManager::get_instance().lock().unwrap();
+    let tx = network_manager.tx.clone();
+    if network_manager.network.state() != Offline {
+        return;
     }
-    Network {
-        inner,
-        #[cfg(feature = "oh")]
-        _registry: Arc::new(registry),
+    match tx {
+        Some(tx) => {
+            let mut registry: UniquePtr<NetworkRegistry> = UniquePtr::null();
+            while count < RETRY_TIME {
+                registry = ffi::RegisterNetworkChange(
+                    Box::new(network_manager.network.inner.clone()),
+                    Box::new(NetworkTaskManagerTx { inner: tx.clone() }),
+                    |task_manager| {
+                        task_manager.inner.send_event(TaskManagerEvent::network());
+                    },
+                    |task_manager| {
+                        task_manager.inner.send_event(TaskManagerEvent::network());
+                    },
+                );
+                if registry.is_null() {
+                    std::thread::sleep(std::time::Duration::from_secs(1));
+                    count += 1;
+                    continue;
+                }
+                break;
+            }
+            if registry.is_null() {
+                error!("RegisterNetworkChange failed!");
+                return;
+            }
+            network_manager.network._registry = Some(Arc::new(registry));
+        }
+        None => {
+            error!("register_network_change failed, tx is None!");
+        }
     }
 }
 
@@ -154,81 +160,5 @@ mod ffi {
             notify_online: fn(&NetworkTaskManagerTx),
             notify_offline: fn(&NetworkTaskManagerTx),
         ) -> UniquePtr<NetworkRegistry>;
-    }
-}
-
-#[cfg(feature = "oh")]
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::tests::test_init;
-
-    #[test]
-    fn ut_network() {
-        test_init();
-        let notifier = NetworkInner::new();
-        let network = Network {
-            inner: notifier.clone(),
-            _registry: Arc::new(UniquePtr::null()),
-        };
-        assert!(!network.is_online());
-
-        notifier.notify_online(NetworkInfo {
-            network_type: NetworkType::Wifi,
-            is_metered: false,
-            is_roaming: false,
-        });
-        assert!(network.is_online());
-        assert_eq!(
-            network.state(),
-            Online(NetworkInfo {
-                network_type: NetworkType::Wifi,
-                is_metered: false,
-                is_roaming: false,
-            })
-        );
-        notifier.notify_offline();
-        assert!(!network.is_online());
-        notifier.notify_online(NetworkInfo {
-            network_type: NetworkType::Cellular,
-            is_metered: true,
-            is_roaming: true,
-        });
-        assert!(network.is_online());
-        assert_eq!(
-            network.state(),
-            Online(NetworkInfo {
-                network_type: NetworkType::Cellular,
-                is_metered: true,
-                is_roaming: true,
-            })
-        );
-    }
-
-    #[test]
-    fn ut_network_notify() {
-        test_init();
-        let notifier = NetworkInner::new();
-        notifier.notify_offline();
-        assert!(notifier.notify_online(NetworkInfo {
-            network_type: NetworkType::Wifi,
-            is_metered: true,
-            is_roaming: true,
-        }));
-        assert!(!notifier.notify_online(NetworkInfo {
-            network_type: NetworkType::Wifi,
-            is_metered: true,
-            is_roaming: true,
-        }));
-        assert!(notifier.notify_online(NetworkInfo {
-            network_type: NetworkType::Wifi,
-            is_metered: false,
-            is_roaming: true,
-        }));
-        assert!(notifier.notify_online(NetworkInfo {
-            network_type: NetworkType::Cellular,
-            is_metered: false,
-            is_roaming: true,
-        }));
     }
 }

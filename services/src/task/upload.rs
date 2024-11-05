@@ -14,7 +14,7 @@
 use std::future::Future;
 use std::io::SeekFrom;
 use std::pin::Pin;
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
@@ -137,10 +137,14 @@ impl UploadOperator for TaskOperator {
     }
 }
 
-fn build_stream_request(task: Arc<RequestTask>, index: usize) -> Option<Request> {
+fn build_stream_request(
+    task: Arc<RequestTask>,
+    index: usize,
+    abort_flag: Arc<AtomicBool>,
+) -> Option<Request> {
     debug!("build stream request");
     let task_reader = TaskReader::new(task.clone(), index);
-    let task_operator = TaskOperator::new(task.clone());
+    let task_operator = TaskOperator::new(task.clone(), abort_flag);
 
     match task.build_request_builder() {
         Ok(mut request_builder) => {
@@ -168,10 +172,14 @@ fn build_stream_request(task: Arc<RequestTask>, index: usize) -> Option<Request>
     }
 }
 
-fn build_multipart_request(task: Arc<RequestTask>, index: usize) -> Option<Request> {
+fn build_multipart_request(
+    task: Arc<RequestTask>,
+    index: usize,
+    abort_flag: Arc<AtomicBool>,
+) -> Option<Request> {
     debug!("build multipart request");
     let task_reader = TaskReader::new(task.clone(), index);
-    let task_operator = TaskOperator::new(task.clone());
+    let task_operator = TaskOperator::new(task.clone(), abort_flag);
     let mut multi_part = MultiPart::new();
     for item in task.conf.form_items.iter() {
         let part = Part::new()
@@ -264,13 +272,13 @@ impl RequestTask {
     }
 }
 
-pub(crate) async fn upload(task: Arc<RequestTask>) {
+pub(crate) async fn upload(task: Arc<RequestTask>, abort_flag: Arc<AtomicBool>) {
     RequestDb::get_instance()
         .update_task_sizes(task.task_id(), &task.progress.lock().unwrap().sizes);
     task.progress.lock().unwrap().common_data.state = State::Running.repr;
     task.tries.store(0, Ordering::SeqCst);
     loop {
-        if let Err(e) = upload_inner(task.clone()).await {
+        if let Err(e) = upload_inner(task.clone(), abort_flag.clone()).await {
             match e {
                 TaskError::Failed(reason) => {
                     *task.running_result.lock().unwrap() = Some(Err(reason));
@@ -292,7 +300,10 @@ pub(crate) async fn upload(task: Arc<RequestTask>) {
     }
 }
 
-async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
+async fn upload_inner(
+    task: Arc<RequestTask>,
+    abort_flag: Arc<AtomicBool>,
+) -> Result<(), TaskError> {
     info!("upload task {} running", task.task_id());
 
     #[cfg(feature = "oh")]
@@ -318,9 +329,21 @@ async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
         };
 
         if is_multipart {
-            upload_one_file(task.clone(), index, build_multipart_request).await?
+            upload_one_file(
+                task.clone(),
+                index,
+                abort_flag.clone(),
+                build_multipart_request,
+            )
+            .await?
         } else {
-            upload_one_file(task.clone(), index, build_stream_request).await?
+            upload_one_file(
+                task.clone(),
+                index,
+                abort_flag.clone(),
+                build_stream_request,
+            )
+            .await?
         };
         task.notify_header_receive();
     }
@@ -332,10 +355,11 @@ async fn upload_inner(task: Arc<RequestTask>) -> Result<(), TaskError> {
 async fn upload_one_file<F>(
     task: Arc<RequestTask>,
     index: usize,
+    abort_flag: Arc<AtomicBool>,
     build_upload_request: F,
 ) -> Result<(), TaskError>
 where
-    F: Fn(Arc<RequestTask>, usize) -> Option<Request>,
+    F: Fn(Arc<RequestTask>, usize, Arc<AtomicBool>) -> Option<Request>,
 {
     info!(
         "begin 1 upload tid {} index {} sizes {}",
@@ -344,7 +368,7 @@ where
         task.progress.lock().unwrap().sizes[index]
     );
 
-    let Some(request) = build_upload_request(task.clone(), index) else {
+    let Some(request) = build_upload_request(task.clone(), index, abort_flag) else {
         return Err(TaskError::Failed(Reason::BuildRequestFailed));
     };
 
@@ -376,7 +400,9 @@ where
             }
         }
         Err(e) => {
-            error!("Task {} {:?}", task.task_id(), e);
+            if e.error_kind() != ErrorKind::UserAborted {
+                error!("Task {} {:?}", task.task_id(), e);
+            }
 
             match e.error_kind() {
                 ErrorKind::Timeout => return Err(TaskError::Failed(Reason::ContinuousTaskTimeout)),
@@ -411,105 +437,243 @@ where
     Ok(())
 }
 
-#[cfg(not(feature = "oh"))]
 #[cfg(test)]
 mod test {
     use std::fs::File;
     use std::io::{BufRead, BufReader, Write};
     use std::net::{TcpListener, TcpStream};
+    use std::sync::atomic::AtomicBool;
     use std::sync::Arc;
 
-    use once_cell::sync::Lazy;
+    use ylong_runtime::sync::mpsc::unbounded_channel;
 
+    use crate::ability::SYSTEM_CONFIG_MANAGER;
     use crate::config::{Action, ConfigBuilder, Mode, TaskConfig};
-    use crate::info::State;
-    use crate::manage::network::Network;
-    use crate::manage::task_manager::TaskManagerTx;
-    use crate::manage::TaskManager;
-    use crate::service::client::{ClientManager, ClientManagerEntry};
-    use crate::service::run_count::{RunCountManager, RunCountManagerEntry};
+    use crate::manage::network::{NetworkInfo, NetworkInner, NetworkType};
+    use crate::service::client::ClientManagerEntry;
     use crate::task::request_task::{check_config, RequestTask};
-    use crate::task::upload::upload_inner;
-    const SERVER_ADDR: &str = "127.0.0.1:8989";
+    use crate::task::upload::upload;
+    use crate::tests::test_init;
+
+    const TEST_CONTENT: &str = "12345678910";
 
     fn build_task(config: TaskConfig) -> Arc<RequestTask> {
-        static CLIENT: Lazy<ClientManagerEntry> = Lazy::new(|| ClientManager::init());
-        static RUN_COUNT_MANAGER: Lazy<RunCountManagerEntry> =
-            Lazy::new(|| RunCountManager::init());
-        static NETWORK: Lazy<Network> = Lazy::new(|| Network::new());
-
-        static TASK_MANGER: Lazy<TaskManagerTx> = Lazy::new(|| {
-            TaskManager::init(RUN_COUNT_MANAGER.clone(), CLIENT.clone(), NETWORK.clone())
+        let (tx, _) = unbounded_channel();
+        let client_manager = ClientManagerEntry::new(tx);
+        let system_config = unsafe { SYSTEM_CONFIG_MANAGER.assume_init_ref().system_config() };
+        let inner = NetworkInner::new();
+        inner.notify_online(NetworkInfo {
+            network_type: NetworkType::Wifi,
+            is_metered: false,
+            is_roaming: false,
         });
 
-        let (files, client) = check_config(&config).unwrap();
+        let (files, client) = check_config(
+            &config,
+            #[cfg(feature = "oh")]
+            system_config,
+        )
+        .unwrap();
 
         let task = Arc::new(RequestTask::new(
             config,
             files,
             client,
-            CLIENT.clone(),
-            NETWORK.clone(),
+            client_manager,
+            false,
         ));
-        task.status.lock().unwrap().state = State::Initialized;
         task
     }
 
-    fn init() {
-        let _ = env_logger::builder().is_test(true).try_init();
-        let _ = std::fs::create_dir("test_files/");
-        static ONCE: std::sync::Once = std::sync::Once::new();
-        ONCE.call_once(|| {
-            info!("server start {}", SERVER_ADDR);
-            std::thread::spawn(|| {
-                let listener = TcpListener::bind(SERVER_ADDR).unwrap();
-                for stream in listener.incoming() {
-                    std::thread::sleep(std::time::Duration::from_secs(2));
-                    let stream = stream.unwrap();
-                    handle_connection(stream);
-                }
-            });
-        })
+    fn test_server(test_body: Vec<Vec<String>>) -> String {
+        let server = "127.0.0.1";
+        let mut port = 7878;
+        let listener = loop {
+            match TcpListener::bind((server, port)) {
+                Ok(listener) => break listener,
+                Err(_) => port += 1,
+            }
+        };
+        std::thread::spawn(move || {
+            let test_body = test_body.clone();
+            for (stream, test_body) in listener.incoming().zip(test_body.iter()) {
+                std::thread::sleep(std::time::Duration::from_secs(2));
+                let stream = stream.unwrap();
+                handle_connection(stream, test_body);
+            }
+        });
+        format!("{}:{}", server, port)
     }
 
-    fn handle_connection(mut stream: TcpStream) {
+    fn handle_connection(mut stream: TcpStream, test_body: &Vec<String>) {
         let buf_reader = BufReader::new(&mut stream);
-        let http_request: Vec<_> = buf_reader
-            .lines()
-            .map(|result| result.unwrap())
-            .take_while(|line| !line.is_empty())
-            .collect();
-        debug!("http request: {:#?}", http_request);
-        let response = "HTTP/1.1 200 OK\r\n\r\n";
+        let mut lines = buf_reader.lines();
+        let mut body = vec![];
+        let mut count = 0;
+        for line in lines.by_ref() {
+            let line = line.unwrap();
+            if line.is_empty() {
+                count += 1;
+                continue;
+            }
+            if count != 2 {
+                continue;
+            }
+            if line.starts_with("--") {
+                break;
+            }
+            body.push(line);
+        }
+        let response = if &body == test_body {
+            "HTTP/1.1 200 OK\r\n\r\n"
+        } else {
+            "HTTP/1.1 400 Bad Request\r\n\r\n"
+        };
         stream.write_all(response.as_bytes()).unwrap();
+    }
+
+    fn create_file(path: &str) -> File {
+        File::options()
+            .read(true)
+            .write(true)
+            .truncate(true)
+            .create(true)
+            .open(path)
+            .unwrap()
+    }
+
+    fn config(server: String, files: Vec<File>) -> TaskConfig {
+        let mut builder = ConfigBuilder::new();
+        builder
+            .action(Action::Upload)
+            .method("POST")
+            .mode(Mode::BackGround)
+            .url(&format!("http://{}/", server))
+            .redirect(true)
+            .version(1);
+        for file in files {
+            builder.file_spec(file);
+        }
+        builder.build()
     }
 
     #[test]
     fn ut_upload_basic() {
-        init();
-        let file_path = "test_files/ut_upload_basic.txt";
+        test_init();
+        let server = test_server(vec![vec![TEST_CONTENT.to_string()]]);
+        let mut file = create_file("test_files/ut_upload_basic.txt");
 
-        let file = File::options()
-            .read(true)
-            .write(true)
-            .create(true)
-            .open(file_path)
-            .unwrap();
-        file.set_len(100000).unwrap();
+        file.write_all(TEST_CONTENT.as_bytes()).unwrap();
 
         let config = ConfigBuilder::new()
             .action(Action::Upload)
             .method("POST")
             .mode(Mode::BackGround)
             .file_spec(file)
-            .url(&format!("http://{}/", SERVER_ADDR))
+            .url(&format!("http://{}/", server))
             .redirect(true)
             .version(1)
             .build();
         let task = build_task(config);
-
         ylong_runtime::block_on(async {
-            upload_inner(task).await.unwrap();
-        })
+            upload(task.clone(), Arc::new(AtomicBool::new(false))).await;
+        });
+        assert!(task.running_result.lock().unwrap().unwrap().is_ok());
+    }
+
+    #[test]
+    fn ut_upload_begins() {
+        test_init();
+
+        let mut file = create_file("test_files/ut_upload_begins.txt");
+
+        file.write_all(TEST_CONTENT.as_bytes()).unwrap();
+
+        let (a, b) = TEST_CONTENT.split_at(2);
+        let server = test_server(vec![vec![b.to_string()]]);
+
+        let mut config = config(server, vec![file]);
+        config.common_data.begins = a.as_bytes().len() as u64;
+
+        let task = build_task(config);
+        ylong_runtime::block_on(async {
+            upload(task.clone(), Arc::new(AtomicBool::new(false))).await;
+        });
+        assert!(task.running_result.lock().unwrap().unwrap().is_ok());
+    }
+
+    #[test]
+    fn ut_upload_ends() {
+        test_init();
+        let mut file = create_file("test_files/ut_upload_ends.txt");
+
+        file.write_all(TEST_CONTENT.as_bytes()).unwrap();
+
+        let (a, _) = TEST_CONTENT.split_at(2);
+        let server = test_server(vec![vec![a.to_string()]]);
+
+        let mut config = config(server, vec![file]);
+        config.common_data.ends = a.as_bytes().len() as i64 - 1;
+
+        let task = build_task(config);
+        ylong_runtime::block_on(async {
+            upload(task.clone(), Arc::new(AtomicBool::new(false))).await;
+        });
+        assert!(task.running_result.lock().unwrap().unwrap().is_ok());
+    }
+
+    #[test]
+    fn ut_upload_range() {
+        test_init();
+        let mut file = create_file("test_files/ut_upload_range.txt");
+
+        file.write_all(TEST_CONTENT.as_bytes()).unwrap();
+
+        let (a, b) = TEST_CONTENT.split_at(2);
+        let (b, _) = b.split_at(3);
+        let server = test_server(vec![vec![b.to_string()]]);
+
+        let mut config = config(server, vec![file]);
+        config.common_data.begins = a.as_bytes().len() as u64;
+        config.common_data.ends = (a.as_bytes().len() + b.as_bytes().len()) as i64 - 1;
+
+        let task = build_task(config);
+        ylong_runtime::block_on(async {
+            upload(task.clone(), Arc::new(AtomicBool::new(false))).await;
+        });
+        assert!(task.running_result.lock().unwrap().unwrap().is_ok());
+    }
+
+    #[test]
+    fn ut_upload_index_range() {
+        test_init();
+
+        let mut files = vec![];
+        for _ in 0..5 {
+            let mut file = create_file("test_files/ut_upload_range_index0.txt");
+            file.write_all(TEST_CONTENT.as_bytes()).unwrap();
+            files.push(file);
+        }
+
+        let (a, b) = TEST_CONTENT.split_at(2);
+        let (b, _) = b.split_at(3);
+
+        let index = 2;
+
+        let mut test_body = vec![vec![TEST_CONTENT.to_string()]; 5];
+        test_body[index] = vec![b.to_string()];
+
+        let server = test_server(test_body);
+
+        let mut config = config(server, files);
+        config.common_data.begins = a.as_bytes().len() as u64;
+        config.common_data.ends = (a.as_bytes().len() + b.as_bytes().len()) as i64 - 1;
+        config.common_data.index = index as u32;
+
+        let task = build_task(config);
+        ylong_runtime::block_on(async {
+            upload(task.clone(), Arc::new(AtomicBool::new(false))).await;
+        });
+        assert!(task.running_result.lock().unwrap().unwrap().is_ok());
     }
 }

@@ -15,6 +15,7 @@ use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 use std::time::Duration;
 
+use samgr::definition::COMM_NET_CONN_MANAGER_SYS_ABILITY_ID;
 use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 use ylong_runtime::sync::oneshot;
 use ylong_runtime::time::sleep;
@@ -29,11 +30,11 @@ use super::database::RequestDb;
 use super::events::{
     QueryEvent, ScheduleEvent, ServiceEvent, StateEvent, TaskEvent, TaskManagerEvent,
 };
-use super::network::Network;
 use crate::config::{Action, Mode};
 use crate::error::ErrorCode;
 use crate::info::TaskInfo;
 use crate::manage::network::register_network_change;
+use crate::manage::network_manager::NetworkManager;
 use crate::manage::scheduler::state::Handler;
 use crate::manage::scheduler::Scheduler;
 use crate::service::client::ClientManagerEntry;
@@ -60,7 +61,6 @@ pub(crate) struct TaskManager {
     pub(crate) scheduler: Scheduler,
     pub(crate) rx: TaskManagerRx,
     pub(crate) client_manager: ClientManagerEntry,
-    pub(crate) network: Network,
     // first usize for foreground , seconde for background
     pub(crate) task_count: HashMap<u64, (usize, usize)>,
 }
@@ -81,9 +81,23 @@ impl TaskManager {
         registry_account_subscribe(tx.clone());
 
         #[cfg(feature = "oh")]
-        let network = register_network_change(tx.clone());
+        {
+            let mut network_manager = NetworkManager::get_instance().lock().unwrap();
+            network_manager.tx = Some(tx.clone());
+            SystemAbilityManager::subscribe_system_ability(
+                COMM_NET_CONN_MANAGER_SYS_ABILITY_ID,
+                |_, _| {
+                    register_network_change();
+                },
+                |_, _| {
+                    info!("network service died");
+                },
+            );
+        }
+        #[cfg(feature = "oh")]
+        register_network_change();
 
-        let task_manager = Self::new(tx.clone(), rx, runcount_manager, client_manager, network);
+        let task_manager = Self::new(tx.clone(), rx, runcount_manager, client_manager);
 
         // Performance optimization tips for task restoring:
         //
@@ -111,18 +125,11 @@ impl TaskManager {
         rx: TaskManagerRx,
         run_count_manager: RunCountManagerEntry,
         client_manager: ClientManagerEntry,
-        network: Network,
     ) -> Self {
         Self {
-            scheduler: Scheduler::init(
-                tx.clone(),
-                run_count_manager,
-                client_manager.clone(),
-                network.clone(),
-            ),
+            scheduler: Scheduler::init(tx.clone(), run_count_manager, client_manager.clone()),
             rx,
             client_manager,
-            network,
             task_count: HashMap::new(),
         }
     }

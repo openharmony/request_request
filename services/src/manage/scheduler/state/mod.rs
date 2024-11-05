@@ -18,7 +18,8 @@ use sql::SqlList;
 use ylong_runtime::task::JoinHandle;
 
 use super::qos::RssCapacity;
-use crate::manage::network::{Network, NetworkState};
+use crate::manage::network::NetworkState;
+use crate::manage::network_manager::NetworkManager;
 use crate::manage::task_manager::TaskManagerTx;
 #[cfg(feature = "oh")]
 #[cfg(not(test))]
@@ -26,28 +27,25 @@ use crate::utils::GetTopUid;
 
 mod recorder;
 pub(crate) mod sql;
-mod updater;
 
 pub(crate) struct Handler {
     recorder: recorder::StateRecord,
-    updater: updater::StateUpdater,
     background_timeout: HashMap<u64, JoinHandle<()>>,
     task_manager: TaskManagerTx,
 }
 
 impl Handler {
-    pub(crate) fn new(network: Network, task_manager: TaskManagerTx) -> Self {
+    pub(crate) fn new(task_manager: TaskManagerTx) -> Self {
         Handler {
             recorder: recorder::StateRecord::new(),
-            updater: updater::StateUpdater::new(network),
             background_timeout: HashMap::new(),
             task_manager,
         }
     }
 
     pub(crate) fn init(&mut self) -> SqlList {
-        let network_info = self.updater.query_network();
-        let (foreground_account, active_accounts) = self.updater.query_active_accounts();
+        let network_info = NetworkManager::query_network();
+        let (foreground_account, active_accounts) = NetworkManager::query_active_accounts();
 
         #[allow(unused_mut)]
         let mut top_uid = 0;
@@ -77,12 +75,12 @@ impl Handler {
     }
 
     pub(crate) fn update_network(&mut self, _a: ()) -> Option<SqlList> {
-        let network_info = self.updater.query_network();
+        let network_info = NetworkManager::query_network();
         self.recorder.update_network(network_info)
     }
 
     pub(crate) fn update_account(&mut self, _a: ()) -> Option<SqlList> {
-        let (foreground_account, active_accounts) = self.updater.query_active_accounts();
+        let (foreground_account, active_accounts) = NetworkManager::query_active_accounts();
         self.recorder
             .update_accounts(foreground_account, active_accounts)
     }
