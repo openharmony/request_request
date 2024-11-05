@@ -104,7 +104,6 @@ impl RequestTask {
         progress.common_data.total_processed = downloaded;
         progress.common_data.state = State::Running.repr;
         progress.processed = vec![downloaded];
-        progress.sizes = vec![-1];
         Ok(())
     }
 }
