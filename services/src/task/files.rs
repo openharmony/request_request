@@ -103,11 +103,10 @@ fn open_body_files(config: &TaskConfig) -> io::Result<Files> {
 
     let mut body_files = Vec::new();
     for (idx, path) in config.body_file_paths.iter().enumerate() {
-        let file = open_file_readwrite(uid, &bundle_name, path)
-            .map_err(|e| {
-                error!("Open body_file failed - task_id: {}, idx: {}", tid, idx);
-                e
-            })?;
+        let file = open_file_readwrite(uid, &bundle_name, path).map_err(|e| {
+            error!("Open body_file failed - task_id: {}, idx: {}", tid, idx);
+            e
+        })?;
         body_files.push(AsyncFile::new(file))
     }
     Ok(Files::new(body_files))
@@ -188,5 +187,4 @@ impl Files {
 }
 
 unsafe impl Sync for Files {}
-
 unsafe impl Send for Files {}

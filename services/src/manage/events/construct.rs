@@ -67,13 +67,7 @@ impl TaskManager {
             #[cfg(feature = "oh")]
             system_config,
         )?;
-        let task = RequestTask::new(
-            config,
-            files,
-            client,
-            self.client_manager.clone(),
-            false,
-        );
+        let task = RequestTask::new(config, files, client, self.client_manager.clone(), false);
         // New task: State::Initialized, Reason::Default
 
         RequestDb::get_instance().insert_task(task);
