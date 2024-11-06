@@ -27,7 +27,6 @@ cfg_not_oh! {
     use rusqlite::Connection;
     const CREATE_TABLE: &'static str = "CREATE TABLE IF NOT EXISTS request_task (task_id INTEGER PRIMARY KEY, uid INTEGER, token_id INTEGER, action INTEGER, mode INTEGER, cover INTEGER, network INTEGER, metered INTEGER, roaming INTEGER, ctime INTEGER, mtime INTEGER, reason INTEGER, gauge INTEGER, retry INTEGER, redirect INTEGER, tries INTEGER, version INTEGER, config_idx INTEGER, begins INTEGER, ends INTEGER, precise INTEGER, priority INTEGER, background INTEGER, bundle TEXT, url TEXT, data TEXT, token TEXT, title TEXT, description TEXT, method TEXT, headers TEXT, config_extras TEXT, mime_type TEXT, state INTEGER, idx INTEGER, total_processed INTEGER, sizes TEXT, processed TEXT, extras TEXT, form_items BLOB, file_specs BLOB, each_file_status BLOB, body_file_names BLOB, certs_paths BLOB)";
 }
-use super::network::Network;
 use crate::error::ErrorCode;
 use crate::service::client::ClientManagerEntry;
 use crate::task::config::TaskConfig;
@@ -560,7 +559,6 @@ impl RequestDb {
         task_id: u32,
         #[cfg(feature = "oh")] system: SystemConfig,
         client_manager: &ClientManagerEntry,
-        network: Network,
         upload_resume: bool,
     ) -> Result<Arc<RequestTask>, ErrorCode> {
         // If this task exists in `user_file_map`，get it from this map.
@@ -593,7 +591,6 @@ impl RequestDb {
             system,
             task_info,
             client_manager.clone(),
-            network,
             upload_resume,
         ) {
             Ok(task) => Ok(Arc::new(task)),

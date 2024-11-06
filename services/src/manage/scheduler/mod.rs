@@ -22,7 +22,6 @@ use queue::RunningQueue;
 use state::sql::SqlList;
 
 use super::events::TaskManagerEvent;
-use super::network::Network;
 use crate::config::Mode;
 use crate::error::ErrorCode;
 use crate::info::TaskInfo;
@@ -68,9 +67,8 @@ impl Scheduler {
         tx: TaskManagerTx,
         runcount_manager: RunCountManagerEntry,
         client_manager: ClientManagerEntry,
-        network: Network,
     ) -> Scheduler {
-        let mut state_handler = state::Handler::new(network.clone(), tx.clone());
+        let mut state_handler = state::Handler::new(tx.clone());
         let sql_list = state_handler.init();
         let db = RequestDb::get_instance();
         for sql in sql_list {
@@ -81,12 +79,7 @@ impl Scheduler {
 
         Self {
             qos: Qos::new(),
-            running_queue: RunningQueue::new(
-                tx.clone(),
-                runcount_manager,
-                client_manager.clone(),
-                network,
-            ),
+            running_queue: RunningQueue::new(tx.clone(), runcount_manager, client_manager.clone()),
             client_manager,
             state_handler,
             resort_scheduled: false,

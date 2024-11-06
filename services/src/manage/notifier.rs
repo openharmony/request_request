@@ -92,7 +92,8 @@ mod test {
     use crate::info::{State, TaskInfo};
     use crate::manage::database::RequestDb;
     use crate::manage::events::{TaskEvent, TaskManagerEvent};
-    use crate::manage::network::{Network, NetworkInfo, NetworkInner, NetworkType};
+    use crate::manage::network::{Network, NetworkInfo, NetworkInner, NetworkState, NetworkType};
+    use crate::manage::network_manager::NetworkManager;
     use crate::manage::task_manager::{TaskManagerRx, TaskManagerTx};
     use crate::manage::TaskManager;
     use crate::service::client::{ClientEvent, ClientManager, ClientManagerEntry};
@@ -107,24 +108,93 @@ mod test {
         let (tx, rx) = unbounded_channel();
         let task_manager_tx = TaskManagerTx::new(tx);
         let rx = TaskManagerRx::new(rx);
-        let inner = NetworkInner::new();
-        inner.notify_online(NetworkInfo {
-            network_type: NetworkType::Wifi,
-            is_metered: false,
-            is_roaming: false,
-        });
-        let network = Network {
-            inner,
-            _registry: Arc::new(UniquePtr::null()),
-        };
+        {
+            let network_manager = NetworkManager::get_instance().lock().unwrap();
+            let notifier = network_manager.network.inner.clone();
+            notifier.notify_online(NetworkInfo {
+                network_type: NetworkType::Wifi,
+                is_metered: false,
+                is_roaming: false,
+            });
+        }
         let (tx, _rx) = unbounded_channel();
         let run_count = RunCountManagerEntry::new(tx);
         let (tx, client_rx) = unbounded_channel();
         let client = ClientManagerEntry::new(tx);
         (
-            TaskManager::new(task_manager_tx, rx, run_count, client, network),
+            TaskManager::new(task_manager_tx, rx, run_count, client),
             client_rx,
         )
+    }
+
+    #[cfg(feature = "oh")]
+    #[test]
+    fn ut_network() {
+        test_init();
+        let notifier;
+        {
+            let network_manager = NetworkManager::get_instance().lock().unwrap();
+            notifier = network_manager.network.inner.clone();
+        }
+
+        notifier.notify_online(NetworkInfo {
+            network_type: NetworkType::Wifi,
+            is_metered: false,
+            is_roaming: false,
+        });
+        assert!(NetworkManager::is_online());
+        assert_eq!(
+            NetworkManager::query_network(),
+            NetworkState::Online(NetworkInfo {
+                network_type: NetworkType::Wifi,
+                is_metered: false,
+                is_roaming: false,
+            })
+        );
+        notifier.notify_offline();
+        assert!(!NetworkManager::is_online());
+        notifier.notify_online(NetworkInfo {
+            network_type: NetworkType::Cellular,
+            is_metered: true,
+            is_roaming: true,
+        });
+        assert!(NetworkManager::is_online());
+        assert_eq!(
+            NetworkManager::query_network(),
+            NetworkState::Online(NetworkInfo {
+                network_type: NetworkType::Cellular,
+                is_metered: true,
+                is_roaming: true,
+            })
+        );
+    }
+
+    #[cfg(feature = "oh")]
+    #[test]
+    fn ut_network_notify() {
+        test_init();
+        let notifier = NetworkInner::new();
+        notifier.notify_offline();
+        assert!(notifier.notify_online(NetworkInfo {
+            network_type: NetworkType::Wifi,
+            is_metered: true,
+            is_roaming: true,
+        }));
+        assert!(!notifier.notify_online(NetworkInfo {
+            network_type: NetworkType::Wifi,
+            is_metered: true,
+            is_roaming: true,
+        }));
+        assert!(notifier.notify_online(NetworkInfo {
+            network_type: NetworkType::Wifi,
+            is_metered: false,
+            is_roaming: true,
+        }));
+        assert!(notifier.notify_online(NetworkInfo {
+            network_type: NetworkType::Cellular,
+            is_metered: false,
+            is_roaming: true,
+        }));
     }
 
     #[test]

@@ -12,6 +12,7 @@
 // limitations under the License.
 
 use std::ops::Deref;
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use crate::manage::events::{TaskEvent, TaskManagerEvent};
@@ -40,13 +41,13 @@ impl RunningTask {
         }
     }
 
-    pub(crate) async fn run(self) {
+    pub(crate) async fn run(self, abort_flag: Arc<AtomicBool>) {
         match self.conf.common_data.action {
             Action::Download => {
-                download(self.task.clone()).await;
+                download(self.task.clone(), abort_flag).await;
             }
             Action::Upload => {
-                upload(self.task.clone()).await;
+                upload(self.task.clone(), abort_flag).await;
             }
             _ => {}
         }
