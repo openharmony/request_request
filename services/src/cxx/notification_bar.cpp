@@ -269,7 +269,7 @@ std::string ProgressSized(std::size_t processed)
         content += "b";
         return content;
     }
-    int remainder = (processed % BINARY_SCALE) * PERCENT / BINARY_SCALE;
+    size_t remainder = (processed % BINARY_SCALE) * PERCENT / BINARY_SCALE;
     processed /= BINARY_SCALE;
     if (processed < BINARY_SCALE) {
         WithRemainder(content, processed, remainder);
@@ -321,7 +321,7 @@ void NotificationSubscriber::OnResponse(
 
 void SubscribeNotification(rust::Box<TaskManagerWrapper> taskManager)
 {
-    auto subscriber = new NotificationSubscriber(std::move(taskManager));
+    auto subscriber = std::make_unique<NotificationSubscriber>(std::move(taskManager));
     Notification::NotificationHelper::SubscribeLocalLiveViewNotification(*subscriber);
 }
 
