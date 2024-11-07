@@ -58,6 +58,7 @@
         "ffrt",
         "openssl",
         "curl",
+        "libuv",
         "resource_management",
         "i18n",
         "bundle_framework"
