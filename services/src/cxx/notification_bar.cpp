@@ -321,7 +321,7 @@ void NotificationSubscriber::OnResponse(
 
 void SubscribeNotification(rust::Box<TaskManagerWrapper> taskManager)
 {
-    auto subscriber = std::make_unique<NotificationSubscriber>(std::move(taskManager));
+    static auto subscriber = std::make_unique<NotificationSubscriber>(std::move(taskManager));
     Notification::NotificationHelper::SubscribeLocalLiveViewNotification(*subscriber);
 }
 
