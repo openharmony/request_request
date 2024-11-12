@@ -73,7 +73,7 @@ void GrantNativePermission()
     delete[] perms;
 }
 
-void CreateRequestFuzzTest(const uint8_t *data, size_t size)
+void CreateRequestFuzzTest(size_t size)
 {
     Config config;
     auto tid = std::to_string(size);
@@ -962,7 +962,7 @@ void RequestSyncLoadFuzzTestOnLoadSystemAbility(const uint8_t *data, size_t size
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    OHOS::CreateRequestFuzzTest(data, size);
+    OHOS::CreateRequestFuzzTest(size);
     OHOS::StartRequestFuzzTest(data, size);
     OHOS::StopRequestFuzzTest(data, size);
     OHOS::ShowRequestFuzzTest(data, size);
