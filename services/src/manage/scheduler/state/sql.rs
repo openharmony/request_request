@@ -18,9 +18,12 @@ use crate::info::State;
 use crate::manage::network::{NetworkInfo, NetworkState, NetworkType};
 use crate::task::reason::Reason;
 
+const INITIALIZED: u8 = State::Initialized.repr;
 const RUNNING: u8 = State::Running.repr;
 const RETRYING: u8 = State::Retrying.repr;
 const WAITING: u8 = State::Waiting.repr;
+const PAUSED: u8 = State::Paused.repr;
+const STOPPED: u8 = State::Stopped.repr;
 const FAILED: u8 = State::Failed.repr;
 
 const APP_BACKGROUND_OR_TERMINATE: u8 = Reason::AppBackgroundOrTerminate.repr;
@@ -80,6 +83,9 @@ impl SqlList {
 
     pub(crate) fn add_app_uninstall(&mut self, uid: u64) {
         self.sqls.push(app_uninstall(uid));
+    }
+    pub(crate) fn add_special_process_terminate(&mut self, uid: u64) {
+        self.sqls.push(special_process_terminate(uid));
     }
 }
 
@@ -284,6 +290,25 @@ pub(super) fn network_available(info: &NetworkInfo) -> String {
     }
     sql.push(')');
     sql
+}
+
+pub(crate) fn special_process_terminate(uid: u64) -> String {
+    format!(
+        "UPDATE request_task
+        SET
+            state = {FAILED},
+            reason = {APP_BACKGROUND_OR_TERMINATE}
+        WHERE
+            uid = {uid}
+            AND (
+                state = {INITIALIZED}
+                OR state = {RUNNING}
+                OR state = {RETRYING}
+                OR state = {WAITING}
+                OR state = {PAUSED}
+                OR state = {STOPPED}
+            );",
+    )
 }
 
 #[cfg(feature = "oh")]
