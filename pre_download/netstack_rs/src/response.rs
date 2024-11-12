@@ -11,10 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::default;
+use std::collections::HashMap;
 use std::fmt::Display;
+use std::pin::Pin;
 
-use crate::wrapper::ffi::HttpClientResponse;
+use crate::wrapper::ffi::{GetHeaders, HttpClientResponse};
 
 /// http client response
 pub struct Response<'a> {
@@ -31,8 +32,22 @@ impl<'a> Response<'a> {
             .unwrap_or_default()
     }
 
-    pub fn headers(&self) -> String {
-        self.inner.GetHeader().to_string()
+    pub fn headers(&self) -> HashMap<String, String> {
+        let ptr = self.inner as *const HttpClientResponse as *mut HttpClientResponse;
+        let p = unsafe { Pin::new_unchecked(ptr.as_mut().unwrap()) };
+
+        let mut headers = GetHeaders(p).into_iter();
+        let mut ret = HashMap::new();
+        loop {
+            if let Some(key) = headers.next() {
+                if let Some(value) = headers.next() {
+                    ret.insert(key, value);
+                    continue;
+                }
+            }
+            break;
+        }
+        ret
     }
 
     pub(crate) fn from_ffi(inner: &'a HttpClientResponse) -> Self {

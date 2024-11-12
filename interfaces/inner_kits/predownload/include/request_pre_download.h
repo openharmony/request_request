@@ -16,26 +16,102 @@
 #ifndef REQUEST_PRE_DOWNLOAD_H
 #define REQUEST_PRE_DOWNLOAD_H
 
+#include <cstdint>
+#include <functional>
 #include <memory>
+#include <tuple>
+#include <vector>
+
+#include "cxx.h"
 
 namespace OHOS::Request {
+struct RustData;
+struct TaskHandle;
 struct DownloadAgent;
+struct DownloadError;
 
-class PreDownloadCallback {
+enum class PreDownloadState {
+    INIT,
+    RUNNING,
+    SUCCESS,
+    FAIL,
+    CANCEL,
+};
+
+class Data {
 public:
-    PreDownloadCallback() = default;
-    virtual ~PreDownloadCallback();
-    virtual void OnSuccess() const = 0;
-    virtual void OnFail() const = 0;
-    virtual void OnCancel() const = 0;
+    Data(rust::Box<RustData> data);
+    Data &operator=(const Data &) = delete;
+
+    ~Data();
+    rust::Slice<const uint8_t> bytes();
+
+private:
+    RustData *_data;
+};
+
+enum ErrorKind {
+    HTTP,
+    IO,
+    CACHE,
+};
+
+class PreDownloadError {
+public:
+    PreDownloadError(rust::Box<DownloadError> error);
+    PreDownloadError &operator=(const PreDownloadError &) = delete;
+    ~PreDownloadError();
+
+    int32_t GetCode() const;
+    std::string GetMessage() const;
+    ErrorKind GetErrorKind() const;
+
+private:
+    DownloadError *_error;
+};
+
+struct DownloadCallback {
+    std::function<void(const std::shared_ptr<Data> &&)> OnSuccess;
+    std::function<void(const PreDownloadError &)> OnFail;
+    std::function<void()> OnCancel;
+    std::function<void(uint64_t current, uint64_t total)> OnProgress;
+};
+
+class PreDownloadHandle {
+public:
+    PreDownloadHandle(rust::Box<TaskHandle>);
+    PreDownloadError &operator=(const PreDownloadError &) = delete;
+
+    ~PreDownloadHandle();
+    void Cancel();
+    std::string GetTaskId();
+    bool IsFinish();
+    PreDownloadState GetState();
+
+private:
+    TaskHandle *_handle;
+};
+
+struct PreDownloadOptions {
+    std::vector<std::tuple<std::string, std::string>> headers;
 };
 
 class PreDownloadAgent {
 public:
     PreDownloadAgent();
+    static PreDownloadAgent *GetInstance();
+    virtual ~PreDownloadAgent() = default;
+    void Cancel(std::string const &url);
+    void Remove(std::string const &url);
+
+    void SetRamCacheSize(uint64_t size);
+    void SetFileCacheSize(uint64_t size);
+
+    std::shared_ptr<PreDownloadHandle> Download(std::string const &url, std::unique_ptr<DownloadCallback>,
+        std::unique_ptr<PreDownloadOptions> options = nullptr);
 
 private:
-    static DownloadAgent &_agent;
+    const DownloadAgent *_agent;
 };
 
 } // namespace OHOS::Request

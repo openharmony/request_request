@@ -45,6 +45,8 @@ inline std::shared_ptr<HttpClientTask> NewHttpClientTask(const HttpClientRequest
     return session.CreateTask(request);
 }
 
+rust::vec<rust::string> GetHeaders(HttpClientResponse &response);
+
 } // namespace OHOS::Request
 
 #endif

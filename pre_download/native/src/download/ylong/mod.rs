@@ -13,6 +13,7 @@
 
 mod client;
 
+use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -25,11 +26,12 @@ use ylong_http_client::async_impl::{
 use ylong_http_client::{ErrorKind, HttpClientError, StatusCode};
 
 use super::common::DownloadCallback;
+use crate::agent::DownloadRequest;
 
 struct Operator<'a> {
     callback: &'a mut DownloadCallback,
     abort_flag: Arc<AtomicBool>,
-    headers: String,
+    headers: HashMap<String, String>,
 }
 
 impl<'a> DownloadOperator for Operator<'a> {
@@ -42,7 +44,7 @@ impl<'a> DownloadOperator for Operator<'a> {
         me.callback.on_data_receive(
             data,
             RequestTask {
-                headers: me.headers.clone(),
+                headers: &me.headers,
             },
         );
         Poll::Ready(Ok(data.len()))
@@ -65,21 +67,21 @@ impl<'a> DownloadOperator for Operator<'a> {
     }
 }
 
-pub struct RequestTask {
-    headers: String,
+pub struct RequestTask<'a> {
+    headers: &'a HashMap<String, String>,
 }
 
-impl RequestTask {
-    pub(crate) fn headers(&self) -> String {
-        self.headers.clone()
+impl<'a> RequestTask<'a> {
+    pub(crate) fn headers(&self) -> &'a HashMap<String, String> {
+        self.headers
     }
 }
 
 pub struct DownloadTask;
 
 impl DownloadTask {
-    pub(crate) fn run(url: &str, mut callback: DownloadCallback) -> CancelHandle {
-        let url = match PercentEncoder::encode(url) {
+    pub(crate) fn run(request: DownloadRequest, mut callback: DownloadCallback) -> CancelHandle {
+        let url = match PercentEncoder::encode(request.url) {
             Ok(url) => url,
             Err(e) => {
                 callback.on_fail(e);
@@ -88,12 +90,21 @@ impl DownloadTask {
                 };
             }
         };
+        callback.set_running();
         let flag = Arc::new(AtomicBool::new(false));
         let handle = CancelHandle {
             inner: flag.clone(),
         };
+        let mut headers = None;
+        if let Some(h) = request.headers {
+            headers = Some(
+                h.iter()
+                    .map(|a| (a.0.to_string(), a.1.to_string()))
+                    .collect(),
+            );
+        }
         ylong_runtime::spawn(async move {
-            if let Err(e) = download(url, &mut callback, flag).await {
+            if let Err(e) = download(url, headers, &mut callback, flag).await {
                 if e.error_kind() == ErrorKind::UserAborted {
                     callback.on_cancel();
                 } else {
@@ -107,20 +118,30 @@ impl DownloadTask {
 
 pub async fn download(
     url: String,
+    headers: Option<Vec<(String, String)>>,
     callback: &mut DownloadCallback,
     abort_flag: Arc<AtomicBool>,
 ) -> Result<(), HttpClientError> {
-    let request = RequestBuilder::new()
-        .url(url.as_str())
-        .method("GET")
-        .body(Body::empty())
-        .unwrap();
+    let mut request = RequestBuilder::new().url(url.as_str()).method("GET");
+
+    if let Some(header) = headers {
+        for (k, v) in header {
+            request = request.append_header(k.as_str(), v.as_str());
+        }
+    }
+    let request = request.body(Body::empty()).unwrap();
+
     let response = client().request(request).await?;
     let status = response.status();
+
     let operator = Operator {
         callback: callback,
         abort_flag: abort_flag,
-        headers: response.headers().to_string(),
+        headers: response
+            .headers()
+            .into_iter()
+            .map(|(key, value)| (key.to_string(), value.to_string().unwrap()))
+            .collect(),
     };
     let mut downloader = Downloader::builder()
         .body(response)
@@ -149,13 +170,13 @@ pub struct CancelHandle {
 }
 
 impl CancelHandle {
-    pub fn cancel(&mut self) {
+    pub fn cancel(self) {
         self.inner.store(true, Ordering::Release);
     }
 }
 
 /// RequestCallback
-#[allow(unused_variables)]
+#[allow(unused_variables, unused_mut)]
 pub trait RequestCallback {
     /// Called when the request is successful.
     fn on_success(&mut self, response: Response) {}

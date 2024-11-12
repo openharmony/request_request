@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Huawei Device Co., Ltd.
+// Copyright (c) 2023 Huawei Device Co., Ltd.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,31 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Request utils
+use super::wrapper::GetCacheDir;
 
-#![warn(missing_docs)]
-#![allow(clippy::crate_in_macro_def)]
-#![allow(missing_docs)]
-#![allow(unused)]
-
-#[macro_use]
-mod macros;
-
-pub mod fastrand;
-pub mod queue_map;
-
-cfg_not_ohos! {
-    #[macro_use]
-    pub use log::{debug, error, info};
-}
-
-cfg_ohos! {
-    #[macro_use]
-    mod hilog;
-
-    pub mod context;
-    mod wrapper;
-    mod sha256;
-    pub use sha256::sha256;
-    pub use wrapper::{hilog_print, LogLevel, LogType};
+#[inline]
+pub fn get_cache_dir() -> Option<String> {
+    let res = GetCacheDir();
+    if res.is_empty() {
+        None
+    } else {
+        Some(res)
+    }
 }

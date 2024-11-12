@@ -11,31 +11,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Request utils
-
-#![warn(missing_docs)]
-#![allow(clippy::crate_in_macro_def)]
-#![allow(missing_docs)]
-#![allow(unused)]
-
-#[macro_use]
-mod macros;
-
-pub mod fastrand;
-pub mod queue_map;
-
 cfg_not_ohos! {
-    #[macro_use]
-    pub use log::{debug, error, info};
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
 }
 
-cfg_ohos! {
-    #[macro_use]
-    mod hilog;
+#[cfg(not(feature = "ohos"))]
+pub(crate) fn url_hash(url: &str) -> String {
+    let mut hasher = DefaultHasher::new();
+    url.hash(&mut hasher);
+    hasher.finish().to_string()
+}
 
-    pub mod context;
-    mod wrapper;
-    mod sha256;
-    pub use sha256::sha256;
-    pub use wrapper::{hilog_print, LogLevel, LogType};
+#[cfg(feature = "ohos")]
+pub(crate) fn url_hash(url: &str) -> String {
+    request_utils::sha256(url)
 }

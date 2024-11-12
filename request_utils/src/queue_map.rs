@@ -11,9 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, HashSet,  VecDeque};
 use std::hash::Hash;
-
 pub struct QueueMap<K, V> {
     map: HashMap<K, V>,
     v: VecDeque<K>,
@@ -54,6 +53,10 @@ impl<K: Eq + Hash + Clone, V> QueueMap<K, V> {
         self.map.contains_key(k)
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.map.is_empty()
+    }
+
     pub fn remove(&mut self, k: &K) -> Option<V> {
         if let Some(t) = self.map.remove(k) {
             self.removed.insert(k.clone());
@@ -63,8 +66,18 @@ impl<K: Eq + Hash + Clone, V> QueueMap<K, V> {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.map.len()
+    }
+
     pub fn get_mut(&mut self, k: &K) -> Option<&mut V> {
         self.map.get_mut(k)
+    }
+}
+
+impl<K: Eq + Hash + Clone, V> Default for QueueMap<K, V> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

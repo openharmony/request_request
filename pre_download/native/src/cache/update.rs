@@ -11,16 +11,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::agent::CustomCallback;
-use crate::download::{download, CancelHandle, TaskHandle};
+use crate::agent::{CustomCallback, DownloadRequest, TaskId};
+use crate::download::{download, TaskHandle};
 
 pub(crate) struct Updater {
     handle: TaskHandle,
 }
 
 impl Updater {
-    pub(crate) fn new(task_id: u64, url: &str, callback: Box<dyn CustomCallback>) -> Self {
-        let task_handle = download(task_id, url, Some(callback));
+    pub(crate) fn new(
+        task_id: TaskId,
+        request: DownloadRequest,
+        callback: Box<dyn CustomCallback>,
+    ) -> Self {
+        let task_handle = download(task_id, request, Some(callback));
         Self {
             handle: task_handle,
         }
@@ -37,7 +41,7 @@ impl Updater {
         self.handle.cancel();
     }
 
-    pub(crate) fn cancel_handle(&self) -> CancelHandle {
-        self.handle.cancel_handle()
+    pub(crate) fn task_handle(&self) -> TaskHandle {
+        self.handle.clone()
     }
 }

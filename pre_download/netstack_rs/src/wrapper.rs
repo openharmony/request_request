@@ -11,13 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::ffi::c_void;
-
 use cxx::SharedPtr;
 
 use crate::error::{HttpClientError, HttpErrorCode};
-use crate::request::{Request, RequestCallback};
-use crate::response::{self, Response, ResponseCode};
+use crate::request::RequestCallback;
+use crate::response::{Response, ResponseCode};
 use crate::task::{RequestTask, TaskStatus};
 
 pub struct CallbackWrapper {
@@ -123,8 +121,8 @@ pub(crate) mod ffi {
         type HttpClientResponse;
 
         fn GetResponseCode(self: &HttpClientResponse) -> ResponseCode;
-        fn GetHeader(self: &HttpClientResponse) -> &CxxString;
         fn GetResult(self: &HttpClientResponse) -> &CxxString;
+        fn GetHeaders(response: Pin<&mut HttpClientResponse>) -> Vec<String>;
 
         #[namespace = "OHOS::NetStack::HttpClient"]
         type HttpClientError;
@@ -218,7 +216,6 @@ pub(crate) mod ffi {
         HTTP_REMOTE_FILE_EXISTS = 2300073,
         HTTP_SSL_CACERT_BADFILE = 2300077,
         HTTP_REMOTE_FILE_NOT_FOUND,
-        HTTP_SSL_PINNEDPUBKEYNOTMATCH = 2300090,
         HTTP_AUTH_ERROR = 2300094,
         HTTP_UNKNOWN_OTHER_ERROR = 2300999,
     }
@@ -330,9 +327,6 @@ impl TryFrom<ffi::HttpErrorCode> for HttpErrorCode {
             ffi::HttpErrorCode::HTTP_REMOTE_FILE_EXISTS => HttpErrorCode::HttpRemoteFileExists,
             ffi::HttpErrorCode::HTTP_SSL_CACERT_BADFILE => HttpErrorCode::HttpSslCacertBadfile,
             ffi::HttpErrorCode::HTTP_REMOTE_FILE_NOT_FOUND => HttpErrorCode::HttpRemoteFileNotFound,
-            ffi::HttpErrorCode::HTTP_SSL_PINNEDPUBKEYNOTMATCH => {
-                HttpErrorCode::HttpSslPinnedpubkeynotmatch
-            }
             ffi::HttpErrorCode::HTTP_AUTH_ERROR => HttpErrorCode::HttpAuthError,
             ffi::HttpErrorCode::HTTP_UNKNOWN_OTHER_ERROR => HttpErrorCode::HttpUnknownOtherError,
             _ => {

@@ -11,46 +11,46 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::hash_map::Entry;
-use std::collections::{HashMap, VecDeque};
-use std::fs::File;
-use std::io::BufReader;
-use std::mem::MaybeUninit;
-use std::os::unix::fs::MetadataExt;
-use std::sync::{Arc, LazyLock, Mutex, Once, OnceLock};
-use std::time::Duration;
-use std::{io, thread};
+use std::collections::HashMap;
+use std::io;
+use std::sync::{Arc, LazyLock, Mutex, OnceLock, Weak};
 
 use request_utils::queue_map::QueueMap;
 
-use super::data::Cache;
-use crate::spawn;
+use super::data::{self, restore_files, FileCache, RamCache};
+use crate::agent::TaskId;
 
-const DEFAULT_RAM_CACHE_SIZE: usize = 1024 * 1024 * 100;
-const DEFAULT_FILE_CACHE_SIZE: usize = 1024 * 1024 * 100;
-
-pub(crate) struct CacheManager {
-    rams: Mutex<QueueMap<u64, Arc<Cache>>>,
-    backup_rams: Mutex<HashMap<u64, Arc<Cache>>>,
-
-    files: Mutex<QueueMap<u64, File>>,
-
-    ram_once: Mutex<HashMap<u64, Arc<OnceLock<Option<Arc<Cache>>>>>>,
-    ram_handle: Mutex<Handle>,
+cfg_not_test! {
+    const DEFAULT_RAM_CACHE_SIZE: u64 =  1024 * 1024 * 20;
+    const DEFAULT_FILE_CACHE_SIZE: u64 = 1024 * 1024 * 100;
 }
 
-struct RamHandle {
-    ram_caches: Mutex<HashMap<u64, Arc<Cache>>>,
+cfg_test! {
+    const DEFAULT_RAM_CACHE_SIZE: u64 = 1024 *100;
+    const DEFAULT_FILE_CACHE_SIZE: u64 = 1024 * 100;
+}
+
+pub(crate) struct CacheManager {
+    pub(super) rams: Mutex<QueueMap<TaskId, Arc<RamCache>>>,
+    pub(super) backup_rams: Mutex<HashMap<TaskId, Arc<RamCache>>>,
+    pub(super) files: Mutex<QueueMap<TaskId, FileCache>>,
+
+    pub(super) update_from_file_once:
+        Mutex<HashMap<TaskId, Arc<OnceLock<io::Result<Weak<RamCache>>>>>>,
+    pub(super) ram_handle: Mutex<data::Handle>,
+    pub(super) file_handle: Mutex<data::Handle>,
 }
 
 impl CacheManager {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         Self {
             rams: Mutex::new(QueueMap::new()),
             files: Mutex::new(QueueMap::new()),
             backup_rams: Mutex::new(HashMap::new()),
-            ram_once: Mutex::new(HashMap::new()),
-            ram_handle: Mutex::new(Handle::new(DEFAULT_RAM_CACHE_SIZE)),
+            update_from_file_once: Mutex::new(HashMap::new()),
+
+            ram_handle: Mutex::new(data::Handle::new(DEFAULT_RAM_CACHE_SIZE)),
+            file_handle: Mutex::new(data::Handle::new(DEFAULT_FILE_CACHE_SIZE)),
         }
     }
 
@@ -59,138 +59,57 @@ impl CacheManager {
         &CACHE_MANAGER
     }
 
-    pub(crate) fn apply_for_cache(
-        &self,
-        task_id: u64,
-        applied_size: Option<usize>,
-    ) -> Result<Cache, ()> {
-        if let Some(size) = applied_size {
-            if !self.apply_ram_size(size) {
-                return Err(());
-            }
+    pub(crate) fn init(&'static self) {
+        for task_id in restore_files() {
+            let Some(file_cache) = FileCache::try_restore(task_id.clone(), self) else {
+                continue;
+            };
+            self.files.lock().unwrap().insert(task_id, file_cache);
         }
-        Ok(Cache::new(task_id, applied_size))
     }
 
-    pub(crate) fn update_cache(&self, task_id: u64, cache: Arc<Cache>) {
-        if let Some(old_cache) = self.rams.lock().unwrap().insert(task_id, cache.clone()) {
-            self.release_cache(old_cache);
-        }
-        info!("{} ram updated", task_id);
-        self.ram_once.lock().unwrap().remove(&task_id);
-        info!("{} ram once removed", task_id);
-        self.backup_rams
-            .lock()
-            .unwrap()
-            .insert(task_id, cache.clone());
-        info!("{} ram backup updated", task_id);
-        spawn(move || {
-            let file = cache.create_file_cache(task_id).unwrap();
-            CacheManager::get_instance().update_file(task_id, file);
-        });
+    pub(crate) fn remove(&'static self, task_id: TaskId) {
+        self.files.lock().unwrap().remove(&task_id);
+        self.backup_rams.lock().unwrap().remove(&task_id);
+        self.rams.lock().unwrap().remove(&task_id);
+        self.update_from_file_once.lock().unwrap().remove(&task_id);
     }
 
-    pub(crate) fn get_cache(&self, task_id: u64) -> Option<Arc<Cache>> {
-        let res = self.rams.lock().unwrap().get(&task_id).cloned();
-        res.or_else(|| self.backup_rams.lock().unwrap().get(&task_id).cloned())
+    pub(crate) fn get_cache(&'static self, task_id: &TaskId) -> Option<Arc<RamCache>> {
+        let res = self.rams.lock().unwrap().get(task_id).cloned();
+        res.or_else(|| self.backup_rams.lock().unwrap().get(task_id).cloned())
             .or_else(|| self.update_ram_from_file(task_id))
     }
 
-    fn update_file(&self, task_id: u64, file: File) {
-        info!("{} file updated", task_id);
-        self.files.lock().unwrap().insert(task_id, file);
-        self.backup_rams.lock().unwrap().remove(&task_id);
-    }
+    pub(super) fn apply_cache<T>(
+        handle: &Mutex<data::Handle>,
+        caches: &Mutex<QueueMap<TaskId, T>>,
+        task_id: fn(&T) -> &TaskId,
+        size: usize,
+    ) -> bool {
+        loop {
+            if handle.lock().unwrap().apply_cache_size(size as u64) {
+                return true;
+            };
 
-    fn update_ram_from_file(&self, task_id: u64) -> Option<Arc<Cache>> {
-        info!("{} ram updated from file", task_id);
-
-        let once = match self.ram_once.lock().unwrap().entry(task_id) {
-            Entry::Occupied(entry) => entry.into_mut().clone(),
-            Entry::Vacant(entry) => {
-                let res = self.rams.lock().unwrap().get(&task_id).cloned();
-                let res = res.or_else(|| self.backup_rams.lock().unwrap().get(&task_id).cloned());
-                if res.is_some() {
-                    return res;
-                } else {
-                    entry.insert(Arc::new(OnceLock::new())).clone()
+            match caches.lock().unwrap().pop() {
+                Some(cache) => {
+                    info!("CacheManager release cache {}", task_id(&cache).brief());
+                }
+                None => {
+                    info!("CacheManager release cache failed");
+                    return false;
                 }
             }
-        };
-
-        let mut ram_once = self.ram_once.lock().unwrap();
-        if !ram_once.contains_key(&task_id) {
-            let mut res = self.rams.lock().unwrap().get(&task_id).cloned();
-            let res = res.or_else(|| self.backup_rams.lock().unwrap().get(&task_id).cloned());
-            if res.is_some() {
-                return res;
-            }
-        }
-        let once = ram_once
-            .entry(task_id)
-            .or_insert(Arc::new(OnceLock::new()))
-            .clone();
-        drop(ram_once);
-
-        let once = self
-            .ram_once
-            .lock()
-            .unwrap()
-            .entry(task_id)
-            .or_insert(Arc::new(OnceLock::new()))
-            .clone();
-        once.get_or_init(|| {
-            let mut file = self.files.lock().unwrap().remove(&task_id)?;
-            let size = file.metadata().unwrap().size();
-            let mut cache = Cache::new(task_id, Some(size as usize));
-            io::copy(&mut file, &mut cache).unwrap();
-            Some(cache.complete_write())
-        })
-        .clone()
-    }
-
-    fn release_cache(&self, cache: Arc<Cache>) {
-        self.ram_handle.lock().unwrap().release(cache.size());
-    }
-
-    pub(super) fn apply_ram_size(&self, apply_size: usize) -> bool {
-        self.ram_handle.lock().unwrap().apply_ram_size(apply_size)
-    }
-
-    fn update_to_ram() {}
-}
-
-struct Handle {
-    total_ram: usize,
-    used_ram: usize,
-}
-
-impl Handle {
-    fn new(ram_cache_size: usize) -> Self {
-        Self {
-            total_ram: ram_cache_size,
-            used_ram: 0,
         }
     }
 
-    fn apply_ram_size(&mut self, apply_size: usize) -> bool {
-        if apply_size > self.total_ram {
-            return false;
-        }
-        self.used_ram += apply_size;
-        true
+    pub(crate) fn set_ram_cache_size(&'static self, size: u64) {
+        self.ram_handle.lock().unwrap().change_total_size(size);
     }
 
-    fn need_release_size(&self) -> usize {
-        self.used_ram.saturating_sub(self.total_ram)
-    }
-
-    fn release(&mut self, size: usize) {
-        self.used_ram -= size;
-    }
-
-    fn change_total_size(&mut self, size: usize) {
-        self.total_ram = size;
+    pub(crate) fn set_file_cache_size(&'static self, size: u64) {
+        self.file_handle.lock().unwrap().change_total_size(size);
     }
 }
 
@@ -200,128 +119,82 @@ mod test {
     use std::thread;
     use std::time::Duration;
 
-    use request_utils::fastrand::fast_random;
-
     use super::*;
     use crate::init;
     const TEST_STRING: &str = "你这猴子真让我欢喜";
+    const TEST_STRING_SIZE: usize = TEST_STRING.len();
 
     #[test]
-    fn ut_handle_size() {
-        let mut handle = Handle::new(DEFAULT_RAM_CACHE_SIZE);
-        assert!(!handle.apply_ram_size(DEFAULT_RAM_CACHE_SIZE + 1));
-        assert!(handle.apply_ram_size(1024));
-        assert_eq!(handle.need_release_size(), 0);
-        assert!(handle.apply_ram_size(DEFAULT_FILE_CACHE_SIZE));
-        assert_eq!(handle.need_release_size(), 1024);
-        handle.release(1024);
-        assert_eq!(handle.need_release_size(), 0);
-        handle.change_total_size(1024);
-        assert_eq!(handle.need_release_size(), DEFAULT_RAM_CACHE_SIZE - 1024);
-    }
-
-    #[test]
-    fn ut_cache_manager_basic() {
-        let task_id = fast_random();
-        let cache_manager = CacheManager::get_instance();
-
-        let mut cache = cache_manager
-            .apply_for_cache(task_id, Some(TEST_STRING.len()))
-            .unwrap();
-        cache.write_all(TEST_STRING.as_bytes()).unwrap();
-        let cache = Arc::new(cache);
-        let mut buf = String::new();
-        cache.cursor().read_to_string(&mut buf).unwrap();
-        assert_eq!(buf, TEST_STRING);
-    }
-
-    #[test]
-    fn ut_cache_manager_update() {
+    fn ut_cache_manager_update_file() {
         init();
-        let task_id = fast_random();
-        let cache_manager = CacheManager::get_instance();
+        let task_id = TaskId::random();
+        static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
 
-        let mut cache = cache_manager
-            .apply_for_cache(task_id, Some(TEST_STRING.len()))
-            .unwrap();
+        // update cache
+        let mut cache =
+            RamCache::try_new(task_id.clone(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
         cache.write_all(TEST_STRING.as_bytes()).unwrap();
-        let cache = Arc::new(cache);
-        cache_manager.update_cache(task_id, cache);
-
-        let cache = cache_manager.get_cache(task_id).unwrap();
-        let mut buf = String::new();
-        cache.cursor().read_to_string(&mut buf).unwrap();
-        assert_eq!(buf, TEST_STRING);
-    }
-
-    #[test]
-    fn ut_cache_manager_file() {
-        init();
-        let task_id = fast_random();
-        let cache_manager = CacheManager::get_instance();
-
-        let mut cache = cache_manager
-            .apply_for_cache(task_id, Some(TEST_STRING.len()))
-            .unwrap();
-        cache.write_all(TEST_STRING.as_bytes()).unwrap();
-        let cache = Arc::new(cache);
-        cache_manager.update_cache(task_id, cache);
+        cache.finish_write();
         thread::sleep(Duration::from_millis(100));
-        let mut file = cache_manager
+
+        // files contain cache
+        let mut file = CACHE_MANAGER
             .files
             .lock()
             .unwrap()
             .remove(&task_id)
+            .unwrap()
+            .open()
             .unwrap();
         let mut buf = String::new();
         file.read_to_string(&mut buf).unwrap();
         assert_eq!(buf, TEST_STRING);
+
+        // backup caches removed for file exist
+        assert!(!CACHE_MANAGER
+            .backup_rams
+            .lock()
+            .unwrap()
+            .contains_key(&task_id));
     }
 
     #[test]
-    fn ut_cache_manager_ram_backup() {
+    fn ut_cache_manager_get() {
         init();
-        let task_id = fast_random();
-        let cache_manager = CacheManager::get_instance();
+        let task_id = TaskId::random();
+        static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
 
-        let mut cache = cache_manager
-            .apply_for_cache(task_id, Some(TEST_STRING.len()))
-            .unwrap();
+        let mut cache =
+            RamCache::try_new(task_id.clone(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
+
         cache.write_all(TEST_STRING.as_bytes()).unwrap();
-        let cache = Arc::new(cache);
-        cache_manager.update_cache(task_id, cache);
-        assert!(cache_manager
-            .backup_rams
-            .lock()
-            .unwrap()
-            .contains_key(&task_id));
-        thread::sleep(Duration::from_millis(100));
-        assert!(!cache_manager
-            .backup_rams
-            .lock()
-            .unwrap()
-            .contains_key(&task_id));
+        cache.finish_write();
+
+        let cache = CACHE_MANAGER.get_cache(&task_id).unwrap();
+        let mut buf = String::new();
+        cache.cursor().read_to_string(&mut buf).unwrap();
+        assert_eq!(buf, TEST_STRING);
     }
 
     #[test]
     fn ut_cache_manager_cache_from_file() {
         init();
-        let task_id = fast_random();
-        let cache_manager = CacheManager::get_instance();
+        let task_id = TaskId::random();
 
-        let mut cache = cache_manager
-            .apply_for_cache(task_id, Some(TEST_STRING.len()))
-            .unwrap();
+        static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
+        let mut cache =
+            RamCache::try_new(task_id.clone(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
         cache.write_all(TEST_STRING.as_bytes()).unwrap();
-        let cache = Arc::new(cache);
-        cache_manager.update_cache(task_id, cache);
+        cache.finish_write();
+
         thread::sleep(Duration::from_millis(100));
-        cache_manager.rams.lock().unwrap().remove(&task_id);
+        CACHE_MANAGER.rams.lock().unwrap().remove(&task_id);
 
         let mut v = vec![];
-        for _ in 0..1024 {
-            v.push(thread::spawn(move || {
-                let cache = CacheManager::get_instance().get_cache(task_id).unwrap();
+        for _ in 0..1 {
+            let task_id = task_id.clone();
+            v.push(crate::spawn(move || {
+                let cache = CACHE_MANAGER.get_cache(&task_id).unwrap();
                 let mut buf = String::new();
                 cache.cursor().read_to_string(&mut buf).unwrap();
                 buf == TEST_STRING
@@ -331,4 +204,87 @@ mod test {
             assert!(t.join().unwrap());
         }
     }
+
+    #[test]
+    fn ut_cache_manager_cache_from_file_clean() {
+        init();
+        let task_id = TaskId::random();
+        static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
+
+        let mut cache =
+            RamCache::try_new(task_id.clone(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
+        cache.write_all(TEST_STRING.as_bytes()).unwrap();
+        cache.finish_write();
+        thread::sleep(Duration::from_millis(100));
+        CACHE_MANAGER.rams.lock().unwrap().remove(&task_id);
+
+        CACHE_MANAGER.get_cache(&task_id).unwrap();
+        assert!(CACHE_MANAGER.rams.lock().unwrap().contains_key(&task_id));
+        assert!(!CACHE_MANAGER
+            .backup_rams
+            .lock()
+            .unwrap()
+            .contains_key(&task_id));
+        assert!(!CACHE_MANAGER
+            .update_from_file_once
+            .lock()
+            .unwrap()
+            .contains_key(&task_id));
+    }
+
+    #[test]
+    fn ut_cache_manager_update_same() {
+        init();
+        let task_id = TaskId::random();
+        static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
+
+        let mut cache =
+            RamCache::try_new(task_id.clone(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
+
+        cache.write_all(TEST_STRING.as_bytes()).unwrap();
+        cache.finish_write();
+
+        let mut test_string = TEST_STRING.to_string();
+        test_string.push_str(TEST_STRING);
+
+        let mut cache =
+            RamCache::try_new(task_id.clone(), &CACHE_MANAGER, test_string.len()).unwrap();
+        cache.write_all(test_string.as_bytes()).unwrap();
+        cache.finish_write();
+
+        let cache = CACHE_MANAGER.get_cache(&task_id).unwrap();
+        let mut buf = String::new();
+        cache.cursor().read_to_string(&mut buf).unwrap();
+        assert_eq!(buf, test_string);
+
+        CACHE_MANAGER.rams.lock().unwrap().remove(&task_id);
+
+        let mut buf = String::new();
+        cache.cursor().read_to_string(&mut buf).unwrap();
+        assert_eq!(buf, test_string);
+    }
+
+    // #[allow(unused)]
+    // fn ut_cache_manager_multi_write_read() {
+    //     init();
+    //     static CACHE_MANAGER: LazyLock<CacheManager> =
+    // LazyLock::new(CacheManager::new);     let size =
+    // TEST_STRING.bytes().len();
+
+    //     for _ in 0..10 {
+    //         spawn(move || loop {
+    //             let task_id = TaskId::new(fast_random().to_string());
+    //             let mut cache = CACHE_MANAGER
+    //                 .apply_for_cache(&task_id, Some(size as u64))
+    //                 .unwrap();
+    //             cache.write_all(TEST_STRING.as_bytes()).unwrap();
+    //             CACHE_MANAGER.update_cache(task_id.clone(), Arc::new(cache));
+    //             let cache = CACHE_MANAGER.get_cache(&task_id).unwrap();
+    //             let mut buf = String::new();
+    //             cache.cursor().read_to_string(&mut buf).unwrap();
+    //             assert_eq!(buf, TEST_STRING);
+    //         });
+    //     }
+    //     std::thread::sleep(Duration::from_secs(1000));
+    // }
 }

@@ -38,3 +38,6 @@ request_utils = { path = "../../request_utils" }
 ffrt_rs = { path = "../ffrt_rs", optional = true }
 netstack_rs = { path = "../netstack_rs", optional = true }
 env_logger = "0.11.3"
+
+[dev-dependencies]
+criterion = { version = "0.4", features = ["html_reports"] }

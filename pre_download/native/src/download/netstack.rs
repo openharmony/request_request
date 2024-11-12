@@ -15,13 +15,20 @@ use netstack_rs::request::Request;
 use netstack_rs::task::RequestTask;
 
 use super::common::DownloadCallback;
+use crate::agent::DownloadRequest;
 
 pub(crate) struct DownloadTask;
 
 impl DownloadTask {
-    pub(crate) fn run(url: &str, callback: DownloadCallback) -> CancelHandle {
+    pub(crate) fn run(input: DownloadRequest, callback: DownloadCallback) -> CancelHandle {
         let mut request = Request::new();
-        request.url(url);
+        request.url(input.url);
+        if let Some(headers) = input.headers {
+            for (key, value) in headers {
+                request.header(key, value);
+            }
+        }
+        callback.set_running();
         request.callback(callback);
         let mut task = request.build();
         task.start();
@@ -35,7 +42,7 @@ pub struct CancelHandle {
 }
 
 impl CancelHandle {
-    pub(crate) fn cancel(&mut self) {
+    pub(crate) fn cancel(mut self) {
         self.inner.cancel();
     }
 }

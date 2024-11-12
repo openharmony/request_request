@@ -11,12 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::default;
 use std::error::Error;
 use std::fmt::{Debug, Display};
 
 use crate::wrapper::ffi;
 
+#[derive(Clone)]
 pub struct HttpClientError {
     code: HttpErrorCode,
     msg: String,
@@ -28,6 +28,10 @@ impl HttpClientError {
             .map_err(|e| {})
             .unwrap_or_default();
         let msg = inner.GetErrorMessage().to_string();
+        Self { code, msg }
+    }
+
+    pub fn new(code: HttpErrorCode, msg: String) -> Self {
         Self { code, msg }
     }
 
@@ -54,7 +58,7 @@ impl Debug for HttpClientError {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub enum HttpErrorCode {
     HttpNoneErr,
     HttpPermissionDeniedCode = 201,

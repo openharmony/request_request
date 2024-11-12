@@ -11,12 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::default;
+use std::collections::HashMap;
 use std::pin::Pin;
 
 use cxx::SharedPtr;
 
-use crate::request::{Request, RequestCallback};
+use crate::request::RequestCallback;
 use crate::response::Response;
 use crate::wrapper::ffi::{HttpClientRequest, HttpClientTask, NewHttpClientTask, OnCallback};
 use crate::wrapper::CallbackWrapper;
@@ -73,7 +73,7 @@ impl RequestTask {
         Response::from_ffi(self.pin_mut().GetResponse().into_ref().get_ref())
     }
 
-    pub fn headers(&mut self) -> String {
+    pub fn headers(&mut self) -> HashMap<String, String> {
         self.response().headers()
     }
 

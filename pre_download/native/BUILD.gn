@@ -35,7 +35,7 @@ ohos_rust_static_ffi("predownload_native_rust") {
     "../netstack_rs:netstack_rs",
     "//third_party/rust/crates/cxx:lib",
   ]
-  external_deps = [ "hilog:hilog_rust" ]
+  external_deps = [ "ability_runtime:app_context" ]
 
   subsystem_name = "request"
   part_name = "request"
@@ -62,7 +62,10 @@ ohos_shared_library("predownload_native") {
 
   public_configs = [ ":predownload_native_config" ]
 
-  sources = [ "src/cxx/request_pre_download.cpp" ]
+  sources = [
+    "src/cxx/pre_download_callback.cpp",
+    "src/cxx/request_pre_download.cpp",
+  ]
   sources += get_target_outputs(":predownload_native_rust_gen")
   deps = [
     ":predownload_native_rust",
@@ -70,7 +73,10 @@ ohos_shared_library("predownload_native") {
     "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
 
-  innerapi_tags = [ "platformsdk" ]
+  external_deps = [
+    "ability_runtime:app_context",
+    "netstack:http_client",
+  ]
 
   subsystem_name = "request"
   part_name = "request"
@@ -89,11 +95,19 @@ ohos_static_library("predownload_native_static") {
 
   public_configs = [ ":predownload_native_config" ]
 
-  sources = [ "src/cxx/request_pre_download.cpp" ]
+  sources = [
+    "src/cxx/pre_download_callback.cpp",
+    "src/cxx/request_pre_download.cpp",
+  ]
   sources += get_target_outputs(":predownload_native_rust_gen")
   deps = [
     ":predownload_native_rust_gen",
     "//third_party/rust/crates/cxx:cxx_cppdeps",
+  ]
+
+  external_deps = [
+    "ability_runtime:app_context",
+    "netstack:http_client",
   ]
 
   subsystem_name = "request"

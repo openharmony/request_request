@@ -12,132 +12,216 @@
 // limitations under the License.
 
 use std::collections::HashMap;
+use std::fmt::Display;
+use std::hash::Hash;
 use std::sync::{Arc, LazyLock, Mutex};
 
-use request_utils::fastrand::fast_random;
-
-use crate::cache::{Cache, CacheManager, Fetcher, Updater};
-use crate::download::CancelHandle;
+use crate::cache::{CacheManager, Fetcher, RamCache, Updater};
+use crate::download::TaskHandle;
+use crate::utils::url_hash;
+use crate::DownloadError;
 
 cfg_ohos! {
-    use crate::wrapper::ffi::PreDownloadCallback;
+    use crate::wrapper::ffi::{FfiPredownloadOptions,DownloadCallbackWrapper};
     use crate::wrapper::FfiCallback;
 }
 
 #[allow(unused_variables)]
 pub trait CustomCallback: Send {
-    fn on_success(&mut self, data: Arc<Cache>) {}
-    fn on_fail(&mut self, error: &str) {}
+    fn on_success(&mut self, data: Arc<RamCache>) {}
+    fn on_fail(&mut self, error: DownloadError) {}
     fn on_cancel(&mut self) {}
+    fn on_progress(&mut self, progress: u64, total: u64) {}
 }
 
 pub struct DownloadAgent {
-    tasks: Mutex<HashMap<String, u64>>,
-    running_tasks: Mutex<HashMap<u64, Updater>>,
+    running_tasks: Mutex<HashMap<TaskId, Updater>>,
+}
+
+pub struct DownloadRequest<'a> {
+    pub url: &'a str,
+    pub headers: Option<Vec<(&'a str, &'a str)>>,
+}
+
+impl<'a> DownloadRequest<'a> {
+    pub fn new(url: &'a str) -> Self {
+        Self { url, headers: None }
+    }
+
+    pub fn headers(&mut self, headers: Vec<(&'a str, &'a str)>) -> &mut Self {
+        self.headers = Some(headers);
+        self
+    }
+}
+
+#[derive(Hash, PartialEq, Eq, Clone)]
+pub(crate) struct TaskId {
+    hash: String,
+}
+
+impl TaskId {
+    pub fn new(hash: String) -> Self {
+        Self { hash }
+    }
+
+    pub fn from_url(url: &str) -> Self {
+        Self {
+            hash: url_hash(url),
+        }
+    }
+
+    pub fn brief(&self) -> &str {
+        let len = self.hash.len();
+        &self.hash.as_str()[..len / 4]
+    }
+
+    #[cfg(test)]
+    pub fn random() -> Self {
+        use request_utils::fastrand;
+        Self {
+            hash: url_hash(fastrand::fast_random().to_string().as_str()),
+        }
+    }
+}
+
+impl Display for TaskId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.hash)
+    }
 }
 
 impl DownloadAgent {
     fn new() -> Self {
         Self {
-            tasks: Mutex::new(HashMap::new()),
             running_tasks: Mutex::new(HashMap::new()),
         }
     }
 
     pub fn get_instance() -> &'static Self {
-        static CACHE_MANAGER: LazyLock<DownloadAgent> = LazyLock::new(DownloadAgent::new);
-        &CACHE_MANAGER
+        static DOWNLOAD_AGENT: LazyLock<DownloadAgent> = LazyLock::new(|| {
+            crate::spawn(|| CacheManager::get_instance().init());
+            DownloadAgent::new()
+        });
+
+        &DOWNLOAD_AGENT
     }
 
-    pub fn cancel(&self, url: String) {
-        if let Some(task_id) = self.tasks.lock().unwrap().get(&url) {
-            if let Some(updater) = self.running_tasks.lock().unwrap().get_mut(task_id) {
-                updater.cancel();
-            }
+    pub fn cancel(&self, url: &str) {
+        let task_id = TaskId::from_url(url);
+        if let Some(updater) = self.running_tasks.lock().unwrap().get_mut(&task_id) {
+            updater.cancel();
         }
     }
 
-    pub fn remove(&self, url: String) {
-        if let Some(task_id) = self.tasks.lock().unwrap().remove(&url) {
-            self.running_tasks.lock().unwrap().remove(&task_id);
+    pub fn remove(&self, url: &str) {
+        let task_id = TaskId::from_url(url);
+        if let Some(mut updater) = self.running_tasks.lock().unwrap().remove(&task_id) {
+            updater.cancel();
         }
+        CacheManager::get_instance().remove(task_id);
     }
 
     pub fn pre_download(
         &self,
-        url: String,
+        request: DownloadRequest,
         mut callback: Box<dyn CustomCallback>,
         update: bool,
-    ) -> Option<CancelHandle> {
-        let mut tasks = self.tasks.lock().unwrap();
+    ) -> TaskHandle {
+        let url = request.url;
         let mut running_tasks = self.running_tasks.lock().unwrap();
+        let task_id = TaskId::from_url(url);
 
-        if let Some(task_id) = tasks.get(&url) {
-            info!("task {} exist", task_id);
-            if let Some(updater) = running_tasks.get_mut(task_id) {
-                if let Err(ret) = updater.try_add_callback(callback) {
-                    info!("task {} completed", task_id);
-                    callback = ret;
-                } else {
-                    info!("task {} add callback success", task_id);
-                    return Some(updater.cancel_handle());
-                }
-            }
-            if !update {
-                if let Err(ret) = self.fetch(task_id, callback) {
-                    error!("{} fetch fail", task_id);
-                    callback = ret;
-                } else {
-                    info!("{} fetch success", task_id);
-                    return None;
-                }
+        if let Some(updater) = running_tasks.get_mut(&task_id) {
+            if let Err(ret) = updater.try_add_callback(callback) {
+                info!("task {} completed", task_id.brief());
+                callback = ret;
+            } else {
+                info!("task {} add callback success", task_id.brief());
+                return updater.task_handle();
             }
         }
 
-        let task_id = fast_random();
-        info!("new pre_download task {}", task_id);
+        if !update {
+            if let Err(ret) = self.fetch(&task_id, callback) {
+                error!("{} fetch fail", task_id.brief());
+                callback = ret;
+            } else {
+                info!("{} fetch success", task_id.brief());
+                let handle = TaskHandle::new(task_id);
+                handle.set_completed();
+                return handle;
+            }
+        }
 
-        let updater = Updater::new(task_id, &url, callback);
-        let handle = updater.cancel_handle();
-        tasks.insert(url, task_id);
+        info!("new pre_download task {}", task_id.brief());
+        let updater = Updater::new(task_id.clone(), request, callback);
+        let handle = updater.task_handle();
         running_tasks.insert(task_id, updater);
-        Some(handle)
+        handle
     }
 
     #[cfg(feature = "ohos")]
     pub(crate) fn ffi_pre_download(
         &self,
-        url: String,
-        callback: cxx::UniquePtr<PreDownloadCallback>,
+        url: &str,
+        callback: cxx::UniquePtr<DownloadCallbackWrapper>,
         update: bool,
-    ) {
+        options: &FfiPredownloadOptions,
+    ) -> Box<TaskHandle> {
         let Some(callback) = FfiCallback::from_ffi(callback) else {
             error!("ffi_pre_download callback is null");
-            return;
+            return Box::new(TaskHandle::new(TaskId::from_url(url)));
         };
-        let _ = self.pre_download(url, Box::new(callback), update);
+
+        let mut request = DownloadRequest::new(url);
+        if !options.headers.is_empty() {
+            let headers = options
+                .headers
+                .chunks(2)
+                .map(|a| (a[0], a[1]))
+                .collect::<Vec<(&str, &str)>>();
+            request.headers(headers);
+        }
+
+        Box::new(self.pre_download(request, Box::new(callback), update))
+    }
+
+    pub(crate) fn task_finish(&self, task_id: &TaskId) {
+        self.running_tasks.lock().unwrap().remove(task_id);
+    }
+
+    pub fn set_file_cache_size(&self, size: u64) {
+        CacheManager::get_instance().set_file_cache_size(size);
+    }
+
+    pub fn set_ram_cache_size(&self, size: u64) {
+        CacheManager::get_instance().set_ram_cache_size(size);
     }
 
     fn fetch(
         &self,
-        task_id: &u64,
+        task_id: &TaskId,
         callback: Box<dyn CustomCallback>,
     ) -> Result<(), Box<dyn CustomCallback>> {
-        let fetcher = Fetcher::new(*task_id);
+        let fetcher = Fetcher::new(task_id);
         fetcher.fetch_with_callback(callback)
     }
 }
 
 #[cfg(test)]
 mod test {
-    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::collections::HashSet;
+    use std::io::{BufReader, Lines};
+    use std::net::TcpStream;
+    use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
     use std::sync::Arc;
     use std::time::Duration;
 
     use super::*;
-    use crate::{init, TEST_URL};
+    use crate::{init, test_server, TEST_URL};
 
     const ERROR_IP: &str = "127.12.31.12";
+    const NO_DATA: usize = 1359;
 
     struct TestCallbackN;
     impl CustomCallback for TestCallbackN {}
@@ -147,9 +231,11 @@ mod test {
     }
 
     impl CustomCallback for TestCallbackS {
-        fn on_success(&mut self, data: Arc<Cache>) {
+        fn on_success(&mut self, data: Arc<RamCache>) {
             if data.size() != 0 {
                 self.flag.fetch_add(1, Ordering::SeqCst);
+            } else {
+                self.flag.store(NO_DATA, Ordering::SeqCst);
             }
         }
     }
@@ -159,8 +245,8 @@ mod test {
     }
 
     impl CustomCallback for TestCallbackF {
-        fn on_fail(&mut self, error: &str) {
-            self.flag.lock().unwrap().push_str(error);
+        fn on_fail(&mut self, error: DownloadError) {
+            *self.flag.lock().unwrap() = error.message().to_string();
         }
     }
 
@@ -182,7 +268,7 @@ mod test {
         let callback = Box::new(TestCallbackS {
             flag: success_flag.clone(),
         });
-        agent.pre_download(TEST_URL.to_string(), callback, false);
+        agent.pre_download(DownloadRequest::new(TEST_URL), callback, false);
         std::thread::sleep(Duration::from_secs(1));
         assert_eq!(success_flag.load(Ordering::SeqCst), 1);
     }
@@ -201,8 +287,8 @@ mod test {
             flag: success_flag_1.clone(),
         });
 
-        agent.pre_download(TEST_URL.to_string(), callback_0, false);
-        agent.pre_download(TEST_URL.to_string(), callback_1, false);
+        agent.pre_download(DownloadRequest::new(TEST_URL), callback_0, false);
+        agent.pre_download(DownloadRequest::new(TEST_URL), callback_1, false);
         std::thread::sleep(Duration::from_secs(1));
         assert_eq!(success_flag_0.load(Ordering::SeqCst), 1);
         assert_eq!(success_flag_1.load(Ordering::SeqCst), 1);
@@ -216,7 +302,7 @@ mod test {
         let callback = Box::new(TestCallbackF {
             flag: error.clone(),
         });
-        agent.pre_download(ERROR_IP.to_string(), callback, false);
+        agent.pre_download(DownloadRequest::new(ERROR_IP), callback, false);
         std::thread::sleep(Duration::from_secs(1));
         assert!(!error.lock().unwrap().as_str().is_empty());
     }
@@ -234,8 +320,8 @@ mod test {
             flag: error_1.clone(),
         });
 
-        agent.pre_download(ERROR_IP.to_string(), callback_0, false);
-        agent.pre_download(ERROR_IP.to_string(), callback_1, false);
+        agent.pre_download(DownloadRequest::new(ERROR_IP), callback_0, false);
+        agent.pre_download(DownloadRequest::new(ERROR_IP), callback_1, false);
         std::thread::sleep(Duration::from_secs(1));
         assert!(!error_0.lock().unwrap().as_str().is_empty());
         assert!(!error_1.lock().unwrap().as_str().is_empty());
@@ -249,9 +335,7 @@ mod test {
         let callback = Box::new(TestCallbackC {
             flag: cancel_flag.clone(),
         });
-        let mut handle = agent
-            .pre_download(TEST_URL.to_string(), callback, false)
-            .unwrap();
+        let mut handle = agent.pre_download(DownloadRequest::new(TEST_URL), callback, true);
         handle.cancel();
         std::thread::sleep(Duration::from_secs(1));
         assert_eq!(cancel_flag.load(Ordering::SeqCst), 1);
@@ -260,10 +344,8 @@ mod test {
         let callback = Box::new(TestCallbackC {
             flag: cancel_flag.clone(),
         });
-        agent
-            .pre_download(TEST_URL.to_string(), callback, false)
-            .unwrap();
-        agent.cancel(TEST_URL.to_string());
+        agent.pre_download(DownloadRequest::new(TEST_URL), callback, true);
+        agent.cancel(TEST_URL);
         std::thread::sleep(Duration::from_secs(1));
         assert_eq!(cancel_flag.load(Ordering::SeqCst), 1);
     }
@@ -281,12 +363,8 @@ mod test {
             flag: cancel_flag_1.clone(),
         });
 
-        let mut handle_0 = agent
-            .pre_download(TEST_URL.to_string(), callback_0, false)
-            .unwrap();
-        agent
-            .pre_download(TEST_URL.to_string(), callback_1, false)
-            .unwrap();
+        let mut handle_0 = agent.pre_download(DownloadRequest::new(TEST_URL), callback_0, false);
+        agent.pre_download(DownloadRequest::new(TEST_URL), callback_1, false);
         handle_0.cancel();
         std::thread::sleep(Duration::from_secs(1));
         assert_eq!(cancel_flag_0.load(Ordering::SeqCst), 1);
@@ -297,15 +375,62 @@ mod test {
     fn ut_pre_download_already_success() {
         init();
         let agent = DownloadAgent::new();
-        agent.pre_download(TEST_URL.to_string(), Box::new(TestCallbackN), false);
+        agent.pre_download(
+            DownloadRequest::new(TEST_URL),
+            Box::new(TestCallbackN),
+            false,
+        );
         std::thread::sleep(Duration::from_secs(1));
 
         let success_flag = Arc::new(AtomicUsize::new(0));
         let callback = Box::new(TestCallbackS {
             flag: success_flag.clone(),
         });
-        agent.pre_download(TEST_URL.to_string(), callback, false);
+        agent.pre_download(DownloadRequest::new(TEST_URL), callback, false);
         std::thread::sleep(Duration::from_millis(500));
         assert_eq!(success_flag.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn ut_predownload_local_headers() {
+        init();
+        let headers = vec![
+            ("User-Agent", "Mozilla/5.0"),
+            ("Accept", "text/html"),
+            ("Accept-Language", "en-US"),
+            ("Accept-Encoding", "gzip, deflate"),
+            ("Connection", "keep-alive"),
+        ];
+        let mut headers_clone: HashSet<String> = headers
+            .iter()
+            .map(|(k, v)| format!("{}:{}", k.to_ascii_lowercase(), v.to_ascii_lowercase()))
+            .collect();
+
+        let flag = Arc::new(AtomicBool::new(false));
+        let flag_clone = flag.clone();
+        let test_f = move |mut lines: Lines<BufReader<&mut TcpStream>>| {
+            for line in lines.by_ref() {
+                let line = line.unwrap();
+                let line = line.to_ascii_lowercase();
+                if line.is_empty() {
+                    break;
+                }
+                headers_clone.remove(&line);
+            }
+            if headers_clone.is_empty() {
+                flag_clone.store(true, Ordering::SeqCst);
+            }
+        };
+        let server = test_server(test_f);
+        let mut request = DownloadRequest::new(&server);
+        request.headers(headers);
+        let success_flag = Arc::new(AtomicUsize::new(0));
+        let callback = Box::new(TestCallbackS {
+            flag: success_flag.clone(),
+        });
+        DownloadAgent::new().pre_download(request, callback, true);
+        std::thread::sleep(Duration::from_millis(200));
+        assert!(flag.load(Ordering::SeqCst));
+        assert_eq!(success_flag.load(Ordering::SeqCst), NO_DATA);
     }
 }

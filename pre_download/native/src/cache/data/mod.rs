@@ -11,31 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Request utils
+mod file;
+mod ram;
+mod space;
 
-#![warn(missing_docs)]
-#![allow(clippy::crate_in_macro_def)]
-#![allow(missing_docs)]
-#![allow(unused)]
-
-#[macro_use]
-mod macros;
-
-pub mod fastrand;
-pub mod queue_map;
-
-cfg_not_ohos! {
-    #[macro_use]
-    pub use log::{debug, error, info};
-}
-
-cfg_ohos! {
-    #[macro_use]
-    mod hilog;
-
-    pub mod context;
-    mod wrapper;
-    mod sha256;
-    pub use sha256::sha256;
-    pub use wrapper::{hilog_print, LogLevel, LogType};
-}
+pub(crate) use file::{restore_files, FileCache};
+pub(crate) use ram::RamCache;
+pub(crate) use space::Handle;
