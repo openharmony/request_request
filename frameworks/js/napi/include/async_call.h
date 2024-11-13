@@ -23,8 +23,8 @@
 #include "js_common.h"
 #include "log.h"
 #include "napi/native_api.h"
+#include "napi/native_node_api.h"
 #include "napi_utils.h"
-#include "uv_queue.h"
 
 namespace OHOS::Request {
 class AsyncCall final {
@@ -37,19 +37,17 @@ public:
         Context() = default;
         virtual ~Context()
         {
-            auto afterCallback = [](uv_work_t *work, int status) {
-                // Can ensure that the `holder` is not nullptr.
-                ContextNapiHolder *holder = static_cast<ContextNapiHolder *>(work->data);
+            ContextNapiHolder *holder =
+                new ContextNapiHolder{ .env = env_, .callbackRef = callbackRef_, .self = self_, .work = work_ };
+            auto afterCallback = [holder]() {
                 napi_handle_scope scope = nullptr;
                 napi_open_handle_scope(holder->env, &scope);
                 if (scope == nullptr) {
                     delete holder;
-                    delete work;
                     return;
                 } else if (holder->env == nullptr || holder->work == nullptr || holder->self == nullptr) {
                     napi_close_handle_scope(holder->env, scope);
                     delete holder;
-                    delete work;
                     return;
                 }
                 napi_delete_async_work(holder->env, holder->work);
@@ -59,11 +57,10 @@ public:
                 }
                 napi_close_handle_scope(holder->env, scope);
                 delete holder;
-                delete work;
             };
-            ContextNapiHolder *holder =
-                new ContextNapiHolder{ .env = env_, .callbackRef = callbackRef_, .self = self_, .work = work_ };
-            if (!UvQueue::Call(env_, static_cast<void *>(holder), afterCallback)) {
+            int32_t ret = napi_send_event(env_, afterCallback, napi_eprio_high);
+            if (ret != napi_ok) {
+                REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
                 delete holder;
             }
         };

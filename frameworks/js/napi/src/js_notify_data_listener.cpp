@@ -19,10 +19,10 @@
 
 #include "js_task.h"
 #include "log.h"
+#include "napi/native_node_api.h"
 #include "napi_utils.h"
 #include "request_event.h"
 #include "request_manager.h"
-#include "uv_queue.h"
 
 namespace OHOS::Request {
 
@@ -206,44 +206,35 @@ void JSNotifyDataListener::DoJSTask(const std::shared_ptr<NotifyData> &notifyDat
 
 void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData)
 {
-    REQUEST_HILOGI("Notify %{public}s tid %{public}d", SubscribeTypeToString(notifyData->type).c_str(),
-        notifyData->taskId);
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(this->env_, &loop);
-    if (loop == nullptr) {
-        REQUEST_HILOGE("napi_get_uv_event_loop failed");
-        return;
-    }
-    uv_work_t *work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        REQUEST_HILOGE("uv_work_t new failed");
-        return;
-    }
+    REQUEST_HILOGI(
+        "Notify %{public}s tid %{public}d", SubscribeTypeToString(notifyData->type).c_str(), notifyData->taskId);
     NotifyDataPtr *ptr = new (std::nothrow) NotifyDataPtr;
     if (ptr == nullptr) {
         REQUEST_HILOGE("NotifyDataPtr new failed");
-        delete work;
         return;
     }
     ptr->listener = shared_from_this();
     ptr->notifyData = notifyData;
 
-    work->data = reinterpret_cast<void *>(ptr);
-    uv_queue_work(
-        loop, work, [](uv_work_t *work) {},
-        [](uv_work_t *work, int status) {
-            NotifyDataPtr *ptr = static_cast<NotifyDataPtr *>(work->data);
+    int32_t ret = napi_send_event(
+        this->env_,
+        [ptr]() {
+            uint32_t paramNumber = NapiUtils::ONE_ARG;
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(ptr->listener->env_, &scope);
             if (scope == nullptr) {
-                delete work;
                 delete ptr;
                 return;
             }
             ptr->listener->DoJSTask(ptr->notifyData);
             napi_close_handle_scope(ptr->listener->env_, scope);
-            delete work;
             delete ptr;
-        });
+        },
+        napi_eprio_high);
+    if (ret != napi_ok) {
+        REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
+        delete ptr;
+    }
 }
+
 } // namespace OHOS::Request

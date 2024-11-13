@@ -15,6 +15,7 @@
 
 #include "js_initialize.h"
 
+#include <fcntl.h>
 #include <securec.h>
 #include <sys/stat.h>
 
@@ -31,6 +32,7 @@
 #include "napi_utils.h"
 #include "net_conn_client.h"
 #include "request_manager.h"
+
 
 static constexpr const char *PARAM_KEY_DESCRIPTION = "description";
 static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";

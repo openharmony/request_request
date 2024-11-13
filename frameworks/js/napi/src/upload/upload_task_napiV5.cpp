@@ -15,13 +15,10 @@
 
 #include "upload/upload_task_napiV5.h"
 
-#include <uv.h>
-
 #include "ability.h"
 #include "js_initialize.h"
 #include "napi_base_context.h"
 #include "upload/js_util.h"
-#include "uv_queue.h"
 
 namespace OHOS::Request::Upload {
 constexpr int FIRST_ARGV = 0;
@@ -40,18 +37,20 @@ UploadTaskNapiV5::~UploadTaskNapiV5()
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create callbackData");
         return;
     }
-    uv_after_work_cb afterCallback = [](uv_work_t *work, int status) {
-        RecycleRef *callbackDataPtr = reinterpret_cast<RecycleRef *>(work->data);
-        if (callbackDataPtr != nullptr) {
+    auto afterCallback = [callbackData]() {
+        if (callbackData != nullptr) {
             UPLOAD_HILOGD(UPLOAD_MODULE_JS_NAPI, "~UploadTaskNapiV5 callbackDataPtr delete start");
-            napi_delete_reference(callbackDataPtr->env, callbackDataPtr->successRef);
-            napi_delete_reference(callbackDataPtr->env, callbackDataPtr->failRef);
-            napi_delete_reference(callbackDataPtr->env, callbackDataPtr->completeRef);
-            delete callbackDataPtr;
+            napi_delete_reference(callbackData->env, callbackData->successRef);
+            napi_delete_reference(callbackData->env, callbackData->failRef);
+            napi_delete_reference(callbackData->env, callbackData->completeRef);
+            delete callbackData;
         }
-        delete work;
     };
-    UvQueue::Call(env_, reinterpret_cast<void *>(callbackData), afterCallback);
+    int32_t ret = napi_send_event(env_, afterCallback, napi_eprio_high);
+    if (ret != napi_ok) {
+        REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
+        delete callbackData;
+    }
 }
 
 bool UploadTaskNapiV5::ParseCallback(napi_env env, napi_callback_info info)
@@ -114,8 +113,7 @@ void UploadTaskNapiV5::OnSystemSuccess(napi_env env, napi_ref ref, Upload::Uploa
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create successCallback");
         return;
     }
-    uv_after_work_cb afterCallback = [](uv_work_t *work, int status) {
-        SystemSuccessCallback *successCallback = reinterpret_cast<SystemSuccessCallback *>(work->data);
+    auto afterCallback = [successCallback]() {
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(successCallback->env, &scope);
         napi_value callback = nullptr;
@@ -128,9 +126,12 @@ void UploadTaskNapiV5::OnSystemSuccess(napi_env env, napi_ref ref, Upload::Uploa
         napi_call_function(successCallback->env, global, callback, PARAM_COUNT_ONE, args, &result);
         napi_close_handle_scope(successCallback->env, scope);
         delete successCallback;
-        delete work;
     };
-    UvQueue::Call(env, reinterpret_cast<void *>(successCallback), afterCallback);
+    int32_t ret = napi_send_event(env, afterCallback, napi_eprio_high);
+    if (ret != napi_ok) {
+        REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
+        delete successCallback;
+    }
 }
 
 void UploadTaskNapiV5::OnSystemFail(napi_env env, napi_ref ref, std::string &data, int32_t &code)
@@ -142,8 +143,7 @@ void UploadTaskNapiV5::OnSystemFail(napi_env env, napi_ref ref, std::string &dat
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create failCallback");
         return;
     }
-    uv_after_work_cb afterCallback = [](uv_work_t *work, int status) {
-        SystemFailCallback *failCallback = reinterpret_cast<SystemFailCallback *>(work->data);
+    auto afterCallback = [failCallback]() {
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(failCallback->env, &scope);
         napi_value callback = nullptr;
@@ -159,9 +159,12 @@ void UploadTaskNapiV5::OnSystemFail(napi_env env, napi_ref ref, std::string &dat
         napi_call_function(failCallback->env, global, callback, PARAM_COUNT_TWO, args, &result);
         napi_close_handle_scope(failCallback->env, scope);
         delete failCallback;
-        delete work;
     };
-    UvQueue::Call(env, reinterpret_cast<void *>(failCallback), afterCallback);
+    int32_t ret = napi_send_event(env, afterCallback, napi_eprio_high);
+    if (ret != napi_ok) {
+        REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
+        delete failCallback;
+    }
 }
 
 void UploadTaskNapiV5::OnSystemComplete(std::shared_ptr<Upload::UploadTaskNapiV5> proxy)
@@ -172,8 +175,7 @@ void UploadTaskNapiV5::OnSystemComplete(std::shared_ptr<Upload::UploadTaskNapiV5
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "Failed to create completeCallback");
         return;
     }
-    uv_after_work_cb afterCallback = [](uv_work_t *work, int status) {
-        SystemCompleteCallback *completeCallback = reinterpret_cast<SystemCompleteCallback *>(work->data);
+    auto afterCallback = [completeCallback]() {
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(completeCallback->proxy->env_, &scope);
         napi_value callback = nullptr;
@@ -190,8 +192,11 @@ void UploadTaskNapiV5::OnSystemComplete(std::shared_ptr<Upload::UploadTaskNapiV5
             UPLOAD_MODULE_JS_NAPI, "OnSystemComplete NapiV5Proxy: %{public}ld", completeCallback->proxy.use_count());
         napi_close_handle_scope(completeCallback->proxy->env_, scope);
         delete completeCallback;
-        delete work;
     };
-    UvQueue::Call(proxy->env_, reinterpret_cast<void *>(completeCallback), afterCallback);
+    int32_t ret = napi_send_event(completeCallback->proxy->env_, afterCallback, napi_eprio_high);
+    if (ret != napi_ok) {
+        REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
+        delete completeCallback;
+    }
 }
 } // namespace OHOS::Request::Upload
