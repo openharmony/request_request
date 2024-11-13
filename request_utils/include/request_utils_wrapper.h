@@ -13,3 +13,19 @@
 * limitations under the License.
 */
 
+#ifndef REQUEST_UTILS_WRAPPER_H
+#define REQUEST_UTILS_WRAPPER_H
+
+#include "application_context.h"
+#include "context.h"
+#include "cxx.h"
+
+namespace OHOS::Request {
+using namespace OHOS::AbilityRuntime;
+
+rust::string GetCacheDir();
+
+rust::string SHA256(rust::str input);
+
+} // namespace OHOS::Request
+#endif

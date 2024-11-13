@@ -12,13 +12,13 @@
 // limitations under the License.
 
 use super::CacheManager;
-use crate::agent::CustomCallback;
-pub(crate) struct Fetcher {
-    task_id: u64,
+use crate::agent::{CustomCallback, TaskId};
+pub(crate) struct Fetcher<'a> {
+    task_id: &'a TaskId,
 }
 
-impl Fetcher {
-    pub(crate) fn new(task_id: u64) -> Self {
+impl<'a> Fetcher<'a> {
+    pub(crate) fn new(task_id: &'a TaskId) -> Self {
         Self { task_id }
     }
 
@@ -27,12 +27,7 @@ impl Fetcher {
         mut callback: Box<dyn CustomCallback>,
     ) -> Result<(), Box<dyn CustomCallback>> {
         if let Some(cache) = CacheManager::get_instance().get_cache(self.task_id) {
-            #[cfg(feature = "ohos")]
-            ffrt_rs::ffrt_spawn(move || {
-                callback.on_success(cache);
-            });
-            #[cfg(not(feature = "ohos"))]
-            std::thread::spawn(move || {
+            crate::spawn(move || {
                 callback.on_success(cache);
             });
             Ok(())

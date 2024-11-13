@@ -21,6 +21,16 @@ macro_rules! cfg_test {
     }
 }
 
+#[macro_export]
+macro_rules! cfg_not_test {
+    ($($item:item)*) => {
+        $(
+            #[cfg(not(test))]
+            $item
+        )*
+    }
+}
+
 #[macro_use]
 #[macro_export]
 macro_rules! cfg_ohos {

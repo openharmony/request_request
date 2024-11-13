@@ -14,7 +14,8 @@
 use std::ffi::{c_char, CString};
 use std::ptr::null;
 
-pub use ffi::{LogLevel, LogType};
+use cxx::CxxString;
+pub use ffi::{GetCacheDir, LogLevel, LogType, SHA256};
 
 #[cxx::bridge]
 mod ffi {
@@ -57,6 +58,17 @@ mod ffi {
 
     unsafe extern "C++" {
         include!("hilog/log.h");
+        include!("request_utils_wrapper.h");
+        include!("application_context.h");
+
+        #[namespace = "OHOS::AbilityRuntime"]
+        type ApplicationContext;
+
+        #[namespace = "OHOS::Request"]
+        fn GetCacheDir() -> String;
+
+        #[namespace = "OHOS::Request"]
+        fn SHA256(input: &str) -> String;
 
         type LogType;
         type LogLevel;

@@ -69,7 +69,8 @@
       "group_type": {
         "base_group": [
           "//base/request/request/frameworks/js/napi:request",
-          "//base/request/request/frameworks/cj/ffi:cj_request_ffi"
+          "//base/request/request/frameworks/cj/ffi:cj_request_ffi",
+          "//base/request/request/pre_download/js/napi:predownload"
         ],
         "fwk_group": [
           "//base/request/request/frameworks/native:request_native"
@@ -99,6 +100,13 @@
         },
         {
           "name": "//base/request/request/frameworks/js/napi:request_static"
+        },
+        {
+          "name": "//base/request/request/pre_download/native:predownload_native",
+          "header": {
+            "header_files": [],
+            "header_base": "//base/request/request/interfaces/inner_kits/running_count/include"
+          }
         }
       ],
       "test": [
@@ -108,8 +116,13 @@
         "//base/request/request/test/unittest/js_test/requestQueryTaskTest:unittest",
         "//base/request/request/test/unittest/js_test/requestSystemQueryTest:unittest",
         "//base/request/request/test/unittest/cpp_test/saTest:unittest",
+        "//base/request/request/test/unittest/cpp_test/pre_download:unittest",
         "//base/request/request/test/unittest/cpp_test/fwkTest:unittest",
-        "//base/request/request/services/tests:unittest"
+        "//base/request/request/services/tests:unittest",
+        "//base/request/request/pre_download/netstack_rs/tests:unittest",
+        "//base/request/request/pre_download/native:rust_predownload_native_ut_test",
+        "//base/request/request/pre_download/ffrt_rs:rust_request_ffrt_rs_ut_test",
+        "//base/request/request/request_utils:rust_request_utils_ut_test"
       ]
     }
   }

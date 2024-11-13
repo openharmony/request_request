@@ -13,10 +13,9 @@
 * limitations under the License.
 */
 
-#ifndef REQUEST_PRE_DOWNLOAD_H
-#define REQUEST_PRE_DOWNLOAD_H
+#ifndef REQUEST_PRE_DOWNLOAD_MODULE_H
+#define REQUEST_PRE_DOWNLOAD_MODULE_H
 
-#include "base/request/request/common/include/log.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"

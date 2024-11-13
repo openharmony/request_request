@@ -27,8 +27,8 @@ ohos_shared_library("predownload") {
   include_dirs = [ "include" ]
 
   sources = [
+    "src/napi_utils.cpp",
     "src/pre_download_module.cpp",
-    "src/predownload.cpp",
   ]
   deps = [
     "../../native:predownload_native",

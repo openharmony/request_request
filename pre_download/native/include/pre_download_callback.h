@@ -13,34 +13,31 @@
 * limitations under the License.
 */
 
-#ifndef REQUEST_PRE_DOWNLOAD_H
-#define REQUEST_PRE_DOWNLOAD_H
-
+#ifndef REQUEST_PRE_DOWNLOAD_CALLBACK_H
+#define REQUEST_PRE_DOWNLOAD_CALLBACK_H
 #include <memory>
 
 #include "cxx.h"
+#include "request_pre_download.h"
 
 namespace OHOS::Request {
-struct DownloadAgent;
 
-class PreDownloadCallback {
+class DownloadCallbackWrapper {
 public:
-    PreDownloadCallback() = default;
-    virtual ~PreDownloadCallback();
-    virtual void OnSuccess() const = 0;
-    virtual void OnFail() const = 0;
-    virtual void OnCancel() const = 0;
-};
+    DownloadCallbackWrapper(std::unique_ptr<DownloadCallback> callback);
+    ~DownloadCallbackWrapper() = default;
 
-class PreDownloadAgent {
-public:
-    PreDownloadAgent();
-    void preDownload(std::string url, std::unique_ptr<PreDownloadCallback> callback) const;
+    void OnSuccess(const std::shared_ptr<Data> data) const;
+    void OnFail(rust::Box<DownloadError> error) const;
+    void OnCancel() const;
+    void OnProgress(uint64_t current, uint64_t total) const;
 
 private:
-    DownloadAgent *_agent;
+    std::unique_ptr<DownloadCallback> _callback;
 };
+
+std::shared_ptr<Data> BuildSharedData(rust::Box<RustData> data);
 
 } // namespace OHOS::Request
 
-#endif // REQUEST_PRE_DOWNLOAD_H
+#endif // REQUEST_PRE_DOWNLOAD_CALLBACK_H

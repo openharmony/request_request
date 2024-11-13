@@ -11,12 +11,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[workspace]
-resolver = "2"
-members = [
-    "pre_download/ffrt_rs",
-    "pre_download/native",
-    "pre_download/netstack_rs",
-    "request_utils",
-    "test/rustest",
-]
+import("//build/test.gni")
+module_output_path = "request/request"
+
+ohos_unittest("pre_download_test") {
+  module_out_path = module_output_path
+
+  include_dirs = [ "../../../../interfaces/inner_kits/predownload/include" ]
+
+  sources = [ "src/download.cpp" ]
+
+  deps = [
+    "../../../../pre_download/native:predownload_native",
+    "//third_party/rust/crates/cxx:cxx_cppdeps",
+  ]
+  external_deps = [
+    "googletest:gmock",
+    "googletest:gtest_main",
+  ]
+}
+
+group("unittest") {
+  testonly = true
+  deps = [ ":pre_download_test" ]
+}

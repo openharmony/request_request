@@ -29,18 +29,25 @@ ohos_static_library("request_utils_cxx") {
   }
   stack_protector_ret = true
 
-  include_dirs = [ "${target_gen_dir}/src" ]
+  include_dirs = [
+    "include",
+    "${target_gen_dir}/src",
+  ]
 
-  sources = []
+  sources = [ "src/cxx/request_utils_wrapper.cpp" ]
 
   sources += get_target_outputs(":request_utils_cxx_gen")
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "ability_runtime:app_context",
+    "hilog:libhilog",
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
+  ]
   deps = [
     ":request_utils_cxx_gen",
     "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
-
   subsystem_name = "request"
   part_name = "request"
 }
@@ -64,7 +71,6 @@ ohos_rust_static_library("request_utils") {
 
   external_deps = [ "hilog:libhilog" ]
   sources = [ "src/lib.rs" ]
-
   subsystem_name = "request"
   part_name = "request"
 }
@@ -81,7 +87,6 @@ ohos_rust_unittest("rust_request_utils_ut_test") {
     ":request_utils_cxx",
     "//third_party/rust/crates/cxx:lib",
   ]
-
   subsystem_name = "request"
   part_name = "request"
 }

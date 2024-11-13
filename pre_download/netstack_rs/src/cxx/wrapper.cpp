@@ -39,6 +39,21 @@ void OnCallback(std::shared_ptr<HttpClientTask> task, rust::Box<CallbackWrapper>
     task->OnProgress([shared](const HttpClientRequest &, u_long dlTotal, u_long dlNow, u_long ulTotal, u_long ulNow) {
         shared->on_progress(dlTotal, dlNow, ulTotal, ulNow);
     });
-}
+};
+
+rust::vec<rust::string> GetHeaders(HttpClientResponse &response)
+{
+    rust::vec<rust::string> ret;
+
+    if (response.GetHeaders().empty()) {
+        response.ParseHeaders();
+    }
+    std::map<std::string, std::string> headers = response.GetHeaders();
+    for (auto header : headers) {
+        ret.emplace_back(header.first);
+        ret.emplace_back(header.second);
+    }
+    return ret;
+};
 
 } // namespace OHOS::Request

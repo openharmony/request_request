@@ -15,22 +15,28 @@
 
 #![allow(missing_docs)]
 #![allow(stable_features)]
+#![deny(unused_must_use)]
 #![feature(lazy_cell)]
-#![allow(unused)]
 #[macro_use]
 extern crate request_utils;
 
 mod agent;
-pub use agent::{CustomCallback, DownloadAgent};
+pub use agent::{CustomCallback, DownloadAgent, DownloadRequest};
 
 mod cache;
 mod download;
+pub mod error;
+mod utils;
+pub use error::DownloadError;
 
 cfg_ohos! {
     mod wrapper;
     const TAG: &str = "PreDownloadNative\0";
     const DOMAIN: u32 = 0xD001C50;
+    #[cfg(not(test))]
     use ffrt_rs::ffrt_spawn as spawn;
+    #[cfg(test)]
+    use std::thread::spawn as spawn;
 }
 
 cfg_not_ohos! {
@@ -38,14 +44,8 @@ cfg_not_ohos! {
 }
 
 cfg_test! {
-    #[cfg(not(feature = "ohos"))]
-    fn init() {
-        let _ = env_logger::builder().is_test(true).format_timestamp_millis().try_init();
-    }
-
-    #[cfg(feature = "ohos")]
-    fn init() {}
-
-    const TEST_URL: &str =
-        "http://www.baidu.com";
+    mod test;
+    pub use test::init;
+    pub(crate) use test::TEST_URL;
+    pub use test::test_server;
 }
