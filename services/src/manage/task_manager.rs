@@ -41,6 +41,7 @@ use crate::manage::scheduler::Scheduler;
 use crate::service::client::ClientManagerEntry;
 use crate::service::notification_bar::subscribe_notification_bar;
 use crate::service::run_count::RunCountManagerEntry;
+use crate::task::bundle::get_name_and_index;
 use crate::utils::{runtime_spawn, subscribe_common_event};
 
 const CLEAR_INTERVAL: u64 = 30 * 60;
@@ -238,6 +239,10 @@ impl TaskManager {
             StateEvent::AppUninstall(uid) => {
                 self.scheduler.on_state_change(Handler::app_uninstall, uid);
             }
+            StateEvent::SpecialTerminate(uid) => {
+                self.scheduler
+                    .on_state_change(Handler::special_process_terminate, uid);
+            }
         }
     }
 
@@ -384,6 +389,15 @@ impl TaskManagerTx {
 
     pub(crate) fn trigger_background_timeout(&self, uid: u64) {
         let _ = self.send_event(TaskManagerEvent::State(StateEvent::BackgroundTimeout(uid)));
+    }
+
+    pub(crate) fn notify_process_terminate(&self, uid: u64, pid: u64) {
+        if let Some((_index, name)) = get_name_and_index(uid as i32) {
+            if name.starts_with("com.") && name.ends_with(".hmos.hiviewx") {
+                info!("hiviewx terminate. {:?}, {:?}", uid, pid);
+                let _ = self.send_event(TaskManagerEvent::State(StateEvent::SpecialTerminate(uid)));
+            }
+        }
     }
 
     pub(crate) fn show(&self, uid: u64, task_id: u32) -> Option<TaskInfo> {

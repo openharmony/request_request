@@ -124,6 +124,13 @@ impl Handler {
         Some(sql_list)
     }
 
+    pub(crate) fn special_process_terminate(&mut self, uid: u64) -> Option<SqlList> {
+        info!("hiviewx terminate handle. {:?}", uid);
+        let mut sql_list = SqlList::new();
+        sql_list.add_special_process_terminate(uid);
+        Some(sql_list)
+    }
+
     pub(crate) fn top_uid(&self) -> Option<u64> {
         self.recorder.top_uid
     }

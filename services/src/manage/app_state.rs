@@ -79,6 +79,11 @@ extern "C" fn process_state_change_callback(uid: i32, state: i32, pid: i32) {
         unsafe {
             APP_STATE_LISTENER
                 .assume_init_ref()
+                .task_manager
+                .notify_process_terminate(uid as u64, pid as u64);
+
+            APP_STATE_LISTENER
+                .assume_init_ref()
                 .client_manager
                 .notify_process_terminate(pid as u64)
         };
