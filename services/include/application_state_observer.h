@@ -22,15 +22,17 @@
 #include <string>
 
 #include "application_state_observer_stub.h"
+#include "c_string_wrapper.h"
 
 namespace OHOS::Request {
 class ApplicationStateObserver {
 public:
     ~ApplicationStateObserver();
     using RegCallBack = std::function<void(int32_t uid, int32_t state, int32_t pid)>;
+    using ProcessCallBack = std::function<void(int32_t uid, int32_t state, int32_t pid, CStringWrapper bundleName)>;
     static ApplicationStateObserver &GetInstance();
     bool RegisterAppStateChanged(RegCallBack &&callback);
-    void RegisterProcessStateChanged(RegCallBack &&callback);
+    void RegisterProcessDied(ProcessCallBack &&callback);
 
 public:
     class AppProcessState : public AppExecFwk::ApplicationStateObserverStub {
@@ -47,12 +49,12 @@ public:
 
     public:
         void RunAppStateCallback(int32_t uid, int32_t state, int32_t pid);
-        void RunProcessStateCallback(int32_t uid, int32_t state, int32_t pid);
+        void RunProcessDiedCallback(int32_t uid, int32_t state, int32_t pid, const std::string &bundleName);
         ApplicationStateObserver &appStateObserver_;
     };
     ApplicationStateObserver();
     RegCallBack appStateCallback_ = nullptr;
-    RegCallBack processCallback_ = nullptr;
+    ProcessCallBack processCallback_ = nullptr;
 };
 } // namespace OHOS::Request
 
@@ -61,8 +63,9 @@ extern "C" {
 #endif
 
 typedef void (*APPStateCallback)(int32_t, int32_t, int32_t);
+typedef void (*ProcessStateCallback)(int32_t, int32_t, int32_t, CStringWrapper);
 void RegisterAPPStateCallback(APPStateCallback fun);
-void RegisterProcessStateCallback(APPStateCallback fun);
+void RegisterProcessDiedCallback(ProcessStateCallback fun);
 
 #ifdef __cplusplus
 }
