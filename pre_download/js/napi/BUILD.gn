@@ -13,7 +13,7 @@
 
 import("//build/ohos.gni")
 
-ohos_shared_library("predownload") {
+ohos_shared_library("preload") {
   sanitize = {
     integer_overflow = true
     ubsan = true

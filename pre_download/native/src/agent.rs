@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::hash::Hash;
@@ -35,7 +36,7 @@ pub trait CustomCallback: Send {
 }
 
 pub struct DownloadAgent {
-    running_tasks: Mutex<HashMap<TaskId, Updater>>,
+    running_tasks: Mutex<HashMap<TaskId, Arc<Updater>>>,
 }
 
 pub struct DownloadRequest<'a> {
@@ -108,14 +109,14 @@ impl DownloadAgent {
 
     pub fn cancel(&self, url: &str) {
         let task_id = TaskId::from_url(url);
-        if let Some(updater) = self.running_tasks.lock().unwrap().get_mut(&task_id) {
+        if let Some(updater) = self.running_tasks.lock().unwrap().get(&task_id).cloned() {
             updater.cancel();
         }
     }
 
     pub fn remove(&self, url: &str) {
         let task_id = TaskId::from_url(url);
-        if let Some(mut updater) = self.running_tasks.lock().unwrap().remove(&task_id) {
+        if let Some(updater) = self.running_tasks.lock().unwrap().remove(&task_id) {
             updater.cancel();
         }
         CacheManager::get_instance().remove(task_id);
@@ -128,18 +129,7 @@ impl DownloadAgent {
         update: bool,
     ) -> TaskHandle {
         let url = request.url;
-        let mut running_tasks = self.running_tasks.lock().unwrap();
         let task_id = TaskId::from_url(url);
-
-        if let Some(updater) = running_tasks.get_mut(&task_id) {
-            if let Err(ret) = updater.try_add_callback(callback) {
-                info!("task {} completed", task_id.brief());
-                callback = ret;
-            } else {
-                info!("task {} add callback success", task_id.brief());
-                return updater.task_handle();
-            }
-        }
 
         if !update {
             if let Err(ret) = self.fetch(&task_id, callback) {
@@ -153,11 +143,33 @@ impl DownloadAgent {
             }
         }
 
-        info!("new pre_download task {}", task_id.brief());
-        let updater = Updater::new(task_id.clone(), request, callback);
-        let handle = updater.task_handle();
-        running_tasks.insert(task_id, updater);
-        handle
+        let updater = match self.running_tasks.lock().unwrap().entry(task_id.clone()) {
+            Entry::Occupied(entry) => entry.get().clone(),
+            Entry::Vacant(entry) => {
+                info!("new pre_download task {}", task_id.brief());
+                let updater = Arc::new(Updater::new(task_id.clone(), request, callback));
+                let handle = updater.task_handle();
+                entry.insert(updater);
+                return handle;
+            }
+        };
+
+        let mut handle = updater.handle.lock().unwrap();
+        match handle.try_add_callback(callback) {
+            Ok(()) => handle.clone(),
+            Err(callback) => {
+                if let Err(callback) = self.fetch(&task_id, callback) {
+                    error!("{} fetch fail", task_id.brief());
+                    *handle = Updater::new(task_id.clone(), request, callback).task_handle();
+                    handle.clone()
+                } else {
+                    info!("{} fetch success", task_id.brief());
+                    let handle = TaskHandle::new(task_id);
+                    handle.set_completed();
+                    handle
+                }
+            }
+        }
     }
 
     #[cfg(feature = "ohos")]
@@ -191,10 +203,12 @@ impl DownloadAgent {
     }
 
     pub fn set_file_cache_size(&self, size: u64) {
+        info!("set file cache size to {}", size);
         CacheManager::get_instance().set_file_cache_size(size);
     }
 
     pub fn set_ram_cache_size(&self, size: u64) {
+        info!("set ram cache size to {}", size);
         CacheManager::get_instance().set_ram_cache_size(size);
     }
 
@@ -328,7 +342,7 @@ mod test {
     }
 
     #[test]
-    fn ut_pre_download_cancel() {
+    fn ut_pre_download_cancel_0() {
         init();
         let agent = DownloadAgent::new();
         let cancel_flag = Arc::new(AtomicUsize::new(0));
@@ -339,7 +353,12 @@ mod test {
         handle.cancel();
         std::thread::sleep(Duration::from_secs(1));
         assert_eq!(cancel_flag.load(Ordering::SeqCst), 1);
+    }
 
+    #[test]
+    fn ut_pre_download_cancel_1() {
+        init();
+        let agent = DownloadAgent::new();
         let cancel_flag = Arc::new(AtomicUsize::new(0));
         let callback = Box::new(TestCallbackC {
             flag: cancel_flag.clone(),

@@ -69,15 +69,18 @@ impl DownloadCallback {
 
         let cache = match self.cache.take() {
             Some(cache) => cache.finish_write(),
-            None => Arc::new(
-                RamCache::try_new(self.task_id.clone(), CacheManager::get_instance(), 0).unwrap(),
-            ),
+            None => Arc::new(RamCache::temp(
+                self.task_id.clone(),
+                CacheManager::get_instance(),
+                Some(0),
+            )),
         };
         self.finish.store(true, Ordering::Release);
         let mut callbacks = self.callbacks.lock().unwrap();
         while let Some(mut callback) = callbacks.pop() {
             callback.on_success(cache.clone());
         }
+        drop(callbacks);
         self.notify_agent_finish();
     }
 
@@ -89,6 +92,7 @@ impl DownloadCallback {
         while let Some(mut callback) = callbacks.pop() {
             callback.on_fail(DownloadError::from(&error));
         }
+        drop(callbacks);
         self.notify_agent_finish();
     }
 
@@ -125,6 +129,7 @@ impl RequestCallback for DownloadCallback {
         while let Some(mut callback) = callbacks.pop() {
             callback.on_cancel();
         }
+        drop(callbacks);
         self.notify_agent_finish();
     }
 
@@ -200,7 +205,7 @@ impl TaskHandle {
         if let Some(handle) = self.cancel_handle.take() {
             handle.cancel();
         } else {
-            error!("cancel task {} not exist", self.task_id);
+            error!("cancel task {} not exist", self.task_id.brief());
         }
     }
 
@@ -227,6 +232,7 @@ impl TaskHandle {
     ) -> Result<(), Box<dyn CustomCallback>> {
         let mut callbacks = self.callbacks.lock().unwrap();
         if !self.finish.load(Ordering::Acquire) {
+            info!("add callback to task {}", self.task_id.brief());
             callbacks.push(callback);
             Ok(())
         } else {
