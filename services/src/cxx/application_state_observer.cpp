@@ -74,7 +74,7 @@ bool ApplicationStateObserver::RegisterAppStateChanged(RegCallBack &&callback)
     return false;
 }
 
-void ApplicationStateObserver::RegisterProcessStateChanged(RegCallBack &&callback)
+void ApplicationStateObserver::RegisterProcessDied(ProcessCallBack &&callback)
 {
     processCallback_ = callback;
 }
@@ -105,7 +105,8 @@ void ApplicationStateObserver::AppProcessState::OnProcessDied(const AppExecFwk::
 {
     REQUEST_HILOGD("OnProcessDied uid=%{public}d,  bundleName=%{public}s, state=%{public}d, pid=%{public}d",
         processData.uid, processData.bundleName.c_str(), static_cast<int32_t>(processData.state), processData.pid);
-    RunProcessStateCallback(processData.uid, static_cast<int32_t>(processData.state), processData.pid);
+    RunProcessDiedCallback(
+        processData.uid, static_cast<int32_t>(processData.state), processData.pid, processData.bundleName);
 }
 
 void ApplicationStateObserver::AppProcessState::RunAppStateCallback(int32_t uid, int32_t state, int32_t pid)
@@ -117,13 +118,15 @@ void ApplicationStateObserver::AppProcessState::RunAppStateCallback(int32_t uid,
     appStateObserver_.appStateCallback_(uid, state, pid);
 }
 
-void ApplicationStateObserver::AppProcessState::RunProcessStateCallback(int32_t uid, int32_t state, int32_t pid)
+void ApplicationStateObserver::AppProcessState::RunProcessDiedCallback(
+    int32_t uid, int32_t state, int32_t pid, const std::string &bundleName)
 {
     if (appStateObserver_.processCallback_ == nullptr) {
         REQUEST_HILOGE("processStateObserver callback is nullptr");
         return;
     }
-    appStateObserver_.processCallback_(uid, state, pid);
+    CStringWrapper name = WrapperCString(bundleName);
+    appStateObserver_.processCallback_(uid, state, pid, name);
 }
 } // namespace OHOS::Request
 
@@ -134,8 +137,8 @@ void RegisterAPPStateCallback(APPStateCallback fun)
     REQUEST_HILOGD("running RegisterAPPStateCallback");
 }
 
-void RegisterProcessStateCallback(APPStateCallback fun)
+void RegisterProcessDiedCallback(ProcessStateCallback fun)
 {
-    ApplicationStateObserver::GetInstance().RegisterProcessStateChanged(fun);
-    REQUEST_HILOGD("running RegisterProcessStateCallback");
+    ApplicationStateObserver::GetInstance().RegisterProcessDied(fun);
+    REQUEST_HILOGD("running RegisterProcessDiedCallback");
 }
