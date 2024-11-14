@@ -15,10 +15,8 @@
 
 #include "pre_download_module.h"
 
-#include <clocale>
 #include <unistd.h>
 
-#include <__tuple>
 #include <cstdint>
 #include <memory>
 
@@ -32,7 +30,7 @@
 
 namespace OHOS::Request {
 
-napi_value preDownload(napi_env env, napi_callback_info info)
+napi_value preload(napi_env env, napi_callback_info info)
 {
     size_t argc = 2;
     napi_value args[2] = { nullptr };
@@ -67,10 +65,70 @@ napi_value preDownload(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+napi_value cancel(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1] = { nullptr };
+
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+
+    napi_valuetype valuetype0;
+    NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
+    if (valuetype0 != napi_string) {
+        napi_throw_type_error(env, NULL, "Wrong arguments.");
+        return NULL;
+    }
+
+    std::string url = GetValueString(env, args[0]);
+    PreDownloadAgent::GetInstance()->Cancel(std::string(url));
+    return nullptr;
+}
+
+napi_value setMemoryCacheSize(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1] = { nullptr };
+
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+
+    napi_valuetype valuetype0;
+    NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
+    if (valuetype0 != napi_number) {
+        napi_throw_type_error(env, NULL, "Wrong arguments.");
+        return NULL;
+    }
+
+    uint32_t size = GetValueNum(env, args[0]);
+    PreDownloadAgent::GetInstance()->SetRamCacheSize(size);
+    return nullptr;
+}
+
+napi_value setFileCacheSize(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1] = { nullptr };
+
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+
+    napi_valuetype valuetype0;
+    NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
+    if (valuetype0 != napi_number) {
+        napi_throw_type_error(env, NULL, "Wrong arguments.");
+        return NULL;
+    }
+
+    uint32_t size = GetValueNum(env, args[0]);
+    PreDownloadAgent::GetInstance()->SetFileCacheSize(size);
+    return nullptr;
+}
+
 static napi_value registerFunc(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[]{
-        DECLARE_NAPI_FUNCTION("preDownload", preDownload),
+        DECLARE_NAPI_FUNCTION("preload", preload),
+        DECLARE_NAPI_FUNCTION("cancel", cancel),
+        DECLARE_NAPI_FUNCTION("setMemoryCacheSize", setMemoryCacheSize),
+        DECLARE_NAPI_FUNCTION("setFileCacheSize", setFileCacheSize),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc));
     return exports;
@@ -84,7 +142,7 @@ static __attribute__((constructor)) void RegisterModule()
         .nm_flags = 0,
         .nm_filename = nullptr,
         .nm_register_func = OHOS::Request::registerFunc,
-        .nm_modname = "predownload",
+        .nm_modname = "preload",
         .nm_priv = ((void *)0),
         .reserved = { 0 } };
     napi_module_register(&module);
