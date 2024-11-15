@@ -87,3 +87,8 @@ ohos_rust_unittest("rust_request_ffrt_rs_ut_test") {
   subsystem_name = "request"
   part_name = "request"
 }
+
+group("unittest") {
+  testonly = true
+  deps = [ ":rust_request_ffrt_rs_ut_test" ]
+}

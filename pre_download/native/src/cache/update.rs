@@ -11,13 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::Mutex;
-
 use crate::agent::{CustomCallback, DownloadRequest, TaskId};
 use crate::download::{download, TaskHandle};
 
 pub(crate) struct Updater {
-    pub(crate) handle: Mutex<TaskHandle>,
+    pub(crate) remove_flag: bool,
+    pub(crate) seq: usize,
+    pub(crate) handle: TaskHandle,
 }
 
 impl Updater {
@@ -25,18 +25,29 @@ impl Updater {
         task_id: TaskId,
         request: DownloadRequest,
         callback: Box<dyn CustomCallback>,
+        seq: usize,
     ) -> Self {
-        let task_handle = download(task_id, request, Some(callback));
+        info!("new pre_download task {} seq {}", task_id.brief(), seq);
+        let task_handle = download(task_id, request, Some(callback), seq);
         Self {
-            handle: Mutex::new(task_handle),
+            handle: task_handle,
+            remove_flag: false,
+            seq,
         }
     }
 
     pub(crate) fn cancel(&self) {
-        self.handle.lock().unwrap().cancel();
+        self.handle.cancel();
     }
 
     pub(crate) fn task_handle(&self) -> TaskHandle {
-        self.handle.lock().unwrap().clone()
+        self.handle.clone()
+    }
+
+    pub(crate) fn try_add_callback(
+        &mut self,
+        callback: Box<dyn CustomCallback>,
+    ) -> Result<(), Box<dyn CustomCallback>> {
+        self.handle.try_add_callback(callback)
     }
 }

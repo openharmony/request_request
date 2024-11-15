@@ -264,13 +264,16 @@ impl CacheManager {
 
             let size = file.metadata()?.size();
 
-            let mut cache = RamCache::try_new(task_id.clone(), self, size as usize)
-                .unwrap_or_else(|| RamCache::temp(task_id.clone(), self, Some(size as usize)));
+            let mut cache = RamCache::new(task_id.clone(), self, Some(size as usize));
             io::copy(&mut file, &mut cache).unwrap();
+
+            let is_cache = cache.check_size();
             let cache = Arc::new(cache);
-            if !cache.is_temp() {
-                self.update_from_file(task_id.clone(), cache.clone());
+
+            if is_cache {
+                self.update_ram_cache(cache.clone());
             }
+
             ret = Some(cache.clone());
             let weak_cache = Arc::downgrade(&cache);
             Ok(weak_cache)
@@ -320,7 +323,7 @@ mod test {
         for _ in 0..1000 {
             let task_id = TaskId::random();
             let mut ram_cache =
-                RamCache::temp(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
+                RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
             ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
             FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap();
         }
@@ -329,7 +332,7 @@ mod test {
         for _ in 0..1000 {
             let task_id = TaskId::random();
             let mut ram_cache =
-                RamCache::temp(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
+                RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
             ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
             let file_cache =
                 FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache))
@@ -353,7 +356,7 @@ mod test {
         while total < TEST_SIZE {
             let task_id = TaskId::random();
             let mut ram_cache =
-                RamCache::temp(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
+                RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
             ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
             v.push(
                 FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache))
@@ -362,14 +365,14 @@ mod test {
             total += TEST_STRING_SIZE as u64;
         }
         let task_id = TaskId::random();
-        let mut ram_cache = RamCache::temp(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
+        let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
         ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
         assert!(
             FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).is_none()
         );
         v.pop();
         let task_id = TaskId::random();
-        let mut ram_cache = RamCache::temp(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
+        let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
         ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
         FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap();
     }
@@ -381,7 +384,7 @@ mod test {
         CACHE_MANAGER.set_file_cache_size(TEST_SIZE);
 
         let task_id = TaskId::random();
-        let mut ram_cache = RamCache::temp(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
+        let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
         ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
         let file_cache =
             FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap();
@@ -400,7 +403,7 @@ mod test {
         CACHE_MANAGER.set_file_cache_size(TEST_SIZE);
 
         let task_id = TaskId::random();
-        let mut ram_cache = RamCache::temp(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
+        let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
         ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
         let file_cache =
             FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap();
@@ -450,7 +453,7 @@ mod test {
         CACHE_MANAGER.set_file_cache_size(TEST_SIZE);
 
         let task_id = TaskId::random();
-        let mut ram_cache = RamCache::temp(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
+        let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
         ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
         let file_cache =
             FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap();

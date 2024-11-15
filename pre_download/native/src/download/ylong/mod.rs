@@ -170,7 +170,7 @@ pub struct CancelHandle {
 }
 
 impl CancelHandle {
-    pub fn cancel(self) {
+    pub fn cancel(&self) {
         self.inner.store(true, Ordering::Release);
     }
 }

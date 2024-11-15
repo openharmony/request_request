@@ -36,7 +36,7 @@ pub trait CustomCallback: Send {
 }
 
 pub struct DownloadAgent {
-    running_tasks: Mutex<HashMap<TaskId, Arc<Updater>>>,
+    running_tasks: Mutex<HashMap<TaskId, Arc<Mutex<Updater>>>>,
 }
 
 pub struct DownloadRequest<'a> {
@@ -110,14 +110,14 @@ impl DownloadAgent {
     pub fn cancel(&self, url: &str) {
         let task_id = TaskId::from_url(url);
         if let Some(updater) = self.running_tasks.lock().unwrap().get(&task_id).cloned() {
-            updater.cancel();
+            updater.lock().unwrap().cancel();
         }
     }
 
     pub fn remove(&self, url: &str) {
         let task_id = TaskId::from_url(url);
         if let Some(updater) = self.running_tasks.lock().unwrap().remove(&task_id) {
-            updater.cancel();
+            updater.lock().unwrap().cancel();
         }
         CacheManager::get_instance().remove(task_id);
     }
@@ -143,32 +143,54 @@ impl DownloadAgent {
             }
         }
 
-        let updater = match self.running_tasks.lock().unwrap().entry(task_id.clone()) {
-            Entry::Occupied(entry) => entry.get().clone(),
-            Entry::Vacant(entry) => {
-                info!("new pre_download task {}", task_id.brief());
-                let updater = Arc::new(Updater::new(task_id.clone(), request, callback));
-                let handle = updater.task_handle();
-                entry.insert(updater);
-                return handle;
-            }
-        };
-
-        let mut handle = updater.handle.lock().unwrap();
-        match handle.try_add_callback(callback) {
-            Ok(()) => handle.clone(),
-            Err(callback) => {
-                if let Err(callback) = self.fetch(&task_id, callback) {
-                    error!("{} fetch fail", task_id.brief());
-                    *handle = Updater::new(task_id.clone(), request, callback).task_handle();
-                    handle.clone()
-                } else {
-                    info!("{} fetch success", task_id.brief());
-                    let handle = TaskHandle::new(task_id);
-                    handle.set_completed();
-                    handle
+        loop {
+            let cb = callback;
+            let updater = match self.running_tasks.lock().unwrap().entry(task_id.clone()) {
+                Entry::Occupied(entry) => entry.get().clone(),
+                Entry::Vacant(entry) => {
+                    let updater =
+                        Arc::new(Mutex::new(Updater::new(task_id.clone(), request, cb, 0)));
+                    let handle = updater.lock().unwrap().task_handle();
+                    entry.insert(updater);
+                    return handle;
                 }
-            }
+            };
+
+            let mut updater = updater.lock().unwrap();
+
+            let handle = match updater.try_add_callback(cb) {
+                Ok(()) => updater.task_handle(),
+                Err(cb) => {
+                    if let Err(cb) = self.fetch(&task_id, cb) {
+                        error!("{} fetch fail after update", task_id.brief());
+                        if !updater.remove_flag {
+                            let seq = updater.seq + 1;
+                            *updater = Updater::new(task_id.clone(), request, cb, seq);
+                            updater.task_handle()
+                        } else {
+                            callback = cb;
+                            continue;
+                        }
+                    } else {
+                        info!("{} fetch success", task_id.brief());
+                        let handle = TaskHandle::new(task_id);
+                        handle.set_completed();
+                        handle
+                    }
+                }
+            };
+            break handle;
+        }
+    }
+
+    pub(crate) fn task_finish(&self, task_id: &TaskId, seq: usize) {
+        let Some(updater) = self.running_tasks.lock().unwrap().get(task_id).cloned() else {
+            return;
+        };
+        let mut updater = updater.lock().unwrap();
+        if updater.seq == seq {
+            updater.remove_flag = true;
+            self.running_tasks.lock().unwrap().remove(task_id);
         }
     }
 
@@ -196,10 +218,6 @@ impl DownloadAgent {
         }
 
         Box::new(self.pre_download(request, Box::new(callback), update))
-    }
-
-    pub(crate) fn task_finish(&self, task_id: &TaskId) {
-        self.running_tasks.lock().unwrap().remove(task_id);
     }
 
     pub fn set_file_cache_size(&self, size: u64) {
@@ -349,7 +367,7 @@ mod test {
         let callback = Box::new(TestCallbackC {
             flag: cancel_flag.clone(),
         });
-        let mut handle = agent.pre_download(DownloadRequest::new(TEST_URL), callback, true);
+        let handle = agent.pre_download(DownloadRequest::new(TEST_URL), callback, true);
         handle.cancel();
         std::thread::sleep(Duration::from_secs(1));
         assert_eq!(cancel_flag.load(Ordering::SeqCst), 1);
@@ -382,7 +400,7 @@ mod test {
             flag: cancel_flag_1.clone(),
         });
 
-        let mut handle_0 = agent.pre_download(DownloadRequest::new(TEST_URL), callback_0, false);
+        let handle_0 = agent.pre_download(DownloadRequest::new(TEST_URL), callback_0, false);
         agent.pre_download(DownloadRequest::new(TEST_URL), callback_1, false);
         handle_0.cancel();
         std::thread::sleep(Duration::from_secs(1));
