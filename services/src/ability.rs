@@ -103,7 +103,7 @@ impl RequestAbility {
                 AppStateListener::register();
             },
             |_, _| {
-                error!("app Manager service died");
+                error!("app manager service died");
             },
         );
 

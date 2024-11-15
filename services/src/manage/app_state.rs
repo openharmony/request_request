@@ -16,6 +16,7 @@ use std::sync::Once;
 
 use super::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
+use crate::utils::c_wrapper::CStringWrapper;
 
 pub(crate) struct AppStateListener {
     client_manager: ClientManagerEntry,
@@ -35,7 +36,7 @@ impl AppStateListener {
                 });
             });
             RegisterAPPStateCallback(app_state_change_callback);
-            RegisterProcessStateCallback(process_state_change_callback);
+            RegisterProcessDiedCallback(process_died_callback);
         }
     }
 
@@ -43,7 +44,7 @@ impl AppStateListener {
         if ONCE.is_completed() {
             unsafe {
                 RegisterAPPStateCallback(app_state_change_callback);
-                RegisterProcessStateCallback(process_state_change_callback);
+                RegisterProcessDiedCallback(process_died_callback);
             }
         }
     }
@@ -67,11 +68,22 @@ extern "C" fn app_state_change_callback(uid: i32, state: i32, _pid: i32) {
     }
 }
 
-extern "C" fn process_state_change_callback(uid: i32, state: i32, pid: i32) {
+extern "C" fn process_died_callback(uid: i32, state: i32, pid: i32, bundle_name: CStringWrapper) {
     debug!(
         "Receives process change, uid {} pid {} state {}",
         uid, pid, state
     );
+    let name = bundle_name.to_string();
+    if name.starts_with("com.") && name.ends_with(".hmos.hiviewx") {
+        unsafe {
+            APP_STATE_LISTENER
+                .assume_init_ref()
+                .task_manager
+                .notify_special_process_terminate(uid as u64);
+        }
+        info!("hiviewx terminate. {:?}, {:?}", uid, pid);
+    }
+
     if state == 5 {
         info!("Receives process died, uid {} pid {}", uid, pid);
         unsafe {
@@ -86,5 +98,5 @@ extern "C" fn process_state_change_callback(uid: i32, state: i32, pid: i32) {
 #[cfg(feature = "oh")]
 extern "C" {
     fn RegisterAPPStateCallback(f: extern "C" fn(i32, i32, i32));
-    fn RegisterProcessStateCallback(f: extern "C" fn(i32, i32, i32));
+    fn RegisterProcessDiedCallback(f: extern "C" fn(i32, i32, i32, CStringWrapper));
 }

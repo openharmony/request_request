@@ -223,6 +223,10 @@ impl TaskManager {
             StateEvent::BackgroundTimeout(uid) => self
                 .scheduler
                 .on_state_change(Handler::update_background_timeout, uid),
+            StateEvent::SpecialTerminate(uid) => {
+                self.scheduler
+                    .on_state_change(Handler::special_process_terminate, uid);
+            }
         }
     }
 
@@ -374,6 +378,10 @@ impl TaskManagerTx {
 
     pub(crate) fn trigger_background_timeout(&self, uid: u64) {
         let _ = self.send_event(TaskManagerEvent::State(StateEvent::BackgroundTimeout(uid)));
+    }
+
+    pub(crate) fn notify_special_process_terminate(&self, uid: u64) {
+        let _ = self.send_event(TaskManagerEvent::State(StateEvent::SpecialTerminate(uid)));
     }
 
     pub(crate) fn show(&self, uid: u64, task_id: u32) -> Option<TaskInfo> {

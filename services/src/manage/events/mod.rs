@@ -155,6 +155,7 @@ pub(crate) enum StateEvent {
     ForegroundApp(u64),
     Background(u64),
     BackgroundTimeout(u64),
+    SpecialTerminate(u64),
 }
 
 pub(crate) struct ConstructMessage {
