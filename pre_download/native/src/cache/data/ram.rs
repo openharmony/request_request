@@ -25,8 +25,6 @@ pub struct RamCache {
     data: Vec<u8>,
     applied: u64,
     handle: &'static CacheManager,
-
-    is_temp: bool,
 }
 
 impl Drop for RamCache {
@@ -43,61 +41,53 @@ impl Drop for RamCache {
 }
 
 impl RamCache {
-    pub(crate) fn temp(
-        task_id: TaskId,
-        handle: &'static CacheManager,
-        size: Option<usize>,
-    ) -> Self {
+    pub(crate) fn new(task_id: TaskId, handle: &'static CacheManager, size: Option<usize>) -> Self {
+        let applied = match size {
+            Some(size) => {
+                if CacheManager::apply_cache(
+                    &handle.ram_handle,
+                    &handle.rams,
+                    |a| RamCache::task_id(a),
+                    size,
+                ) {
+                    info!(
+                        "apply ram cache {} for task {} success",
+                        size,
+                        task_id.brief()
+                    );
+                    size as u64
+                } else {
+                    error!(
+                        "apply ram cache {} for task {} failed",
+                        size,
+                        task_id.brief()
+                    );
+                    0
+                }
+            }
+            None => 0,
+        };
+
         Self {
             task_id,
             data: Vec::with_capacity(size.unwrap_or(DEFAULT_TRUNK_CAPACITY)),
-            applied: 0,
+            applied,
             handle,
-            is_temp: true,
         }
-    }
-
-    pub(crate) fn try_new(
-        task_id: TaskId,
-        handle: &'static CacheManager,
-        size: usize,
-    ) -> Option<Self> {
-        info!(
-            "try apply new ram cache {} for task {}",
-            size,
-            task_id.brief()
-        );
-
-        if !CacheManager::apply_cache(
-            &handle.ram_handle,
-            &handle.rams,
-            |a| RamCache::task_id(a),
-            size,
-        ) {
-            info!("apply ram cache for task {} failed", task_id.brief());
-            return None;
-        }
-
-        info!("apply ram cache for task {} success", task_id.brief());
-        Some(Self {
-            task_id,
-            data: Vec::with_capacity(size),
-            applied: size as u64,
-            handle,
-            is_temp: false,
-        })
     }
 
     pub(crate) fn finish_write(mut self) -> Arc<RamCache> {
-        if self.is_temp || !self.check_size() {
-            return Arc::new(self);
-        }
+        let is_cache = self.check_size();
         let me = Arc::new(self);
-        me.handle.update_cache(me.clone());
+
+        if is_cache {
+            me.handle.update_ram_cache(me.clone());
+        }
+        me.handle.update_file_cache(me.task_id.clone(), me.clone());
         me
     }
 
-    fn check_size(&mut self) -> bool {
+    pub(crate) fn check_size(&mut self) -> bool {
         match (self.data.len() as u64).cmp(&self.applied) {
             Ordering::Equal => true,
             Ordering::Greater => {
@@ -146,10 +136,6 @@ impl RamCache {
     pub(crate) fn cursor(&self) -> Cursor<&[u8]> {
         Cursor::new(&self.data)
     }
-
-    pub(super) fn is_temp(&self) -> bool {
-        self.is_temp
-    }
 }
 
 impl Write for RamCache {
@@ -163,15 +149,9 @@ impl Write for RamCache {
 }
 
 impl CacheManager {
-    fn update_cache(&'static self, cache: Arc<RamCache>) {
-        self.update_cache_inner(cache.task_id().clone(), cache, false);
-    }
+    pub(crate) fn update_ram_cache(&'static self, cache: Arc<RamCache>) {
+        let task_id = cache.task_id().clone();
 
-    pub(super) fn update_from_file(&'static self, task_id: TaskId, cache: Arc<RamCache>) {
-        self.update_cache_inner(task_id, cache, true);
-    }
-
-    fn update_cache_inner(&'static self, task_id: TaskId, cache: Arc<RamCache>, from_file: bool) {
         if self
             .rams
             .lock()
@@ -183,10 +163,6 @@ impl CacheManager {
             info!("{} old caches delete", task_id.brief());
         }
         self.update_from_file_once.lock().unwrap().remove(&task_id);
-        info!("{} ram cache updated", task_id.brief());
-        if !from_file {
-            self.update_file_cache(task_id, cache);
-        }
     }
 }
 
@@ -212,25 +188,23 @@ mod test {
         // cache not update
         for _ in 0..1000 {
             let task_id = TaskId::random();
-            let mut cache =
-                RamCache::try_new(task_id.clone(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
+            let mut cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
             cache.write_all(TEST_STRING.as_bytes()).unwrap();
         }
 
         // cache update
         for _ in 0..1000 {
             let task_id = TaskId::random();
-            let mut cache =
-                RamCache::try_new(task_id.clone(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
+            let mut cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
+
             cache.write_all(TEST_STRING.as_bytes()).unwrap();
-            CACHE_MANAGER.update_cache_inner(task_id, Arc::new(cache), true);
+            CACHE_MANAGER.update_ram_cache(Arc::new(cache));
         }
 
         // cache update and save to file
         for _ in 0..1000 {
             let task_id = TaskId::random();
-            let mut cache =
-                RamCache::try_new(task_id.clone(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
+            let mut cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
             cache.write_all(TEST_STRING.as_bytes()).unwrap();
             cache.finish_write();
             assert!(CACHE_MANAGER.rams.lock().unwrap().contains_key(&task_id));
@@ -248,12 +222,19 @@ mod test {
         let mut v = vec![];
         while total < TEST_SIZE {
             let task_id = TaskId::random();
-            v.push(RamCache::try_new(task_id.clone(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap());
+            v.push(RamCache::new(
+                task_id.clone(),
+                &CACHE_MANAGER,
+                Some(TEST_STRING_SIZE),
+            ));
             total += TEST_STRING_SIZE as u64;
         }
-        assert!(RamCache::try_new(TaskId::random(), &CACHE_MANAGER, TEST_STRING_SIZE).is_none());
+        assert_eq!(
+            RamCache::new(TaskId::random(), &CACHE_MANAGER, Some(TEST_STRING_SIZE)).applied,
+            0
+        );
         v.pop();
-        RamCache::try_new(TaskId::random(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
+        RamCache::new(TaskId::random(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
     }
     #[test]
     fn ut_cache_ram_drop() {
@@ -262,7 +243,7 @@ mod test {
         CACHE_MANAGER.set_ram_cache_size(TEST_SIZE);
 
         let task_id = TaskId::random();
-        let cache = RamCache::try_new(task_id.clone(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
+        let cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
         assert_eq!(
             CACHE_MANAGER.ram_handle.lock().unwrap().used_ram,
             TEST_STRING_SIZE as u64
@@ -276,27 +257,5 @@ mod test {
         init();
         static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
         CACHE_MANAGER.set_ram_cache_size(TEST_SIZE);
-
-        let task_id = TaskId::random();
-        let _cache = RamCache::try_new(task_id, &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
-        let task_id = TaskId::random();
-        let cache_temp = RamCache::temp(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
-
-        // temp cache do not apply or release ram size.
-        assert_eq!(
-            CACHE_MANAGER.ram_handle.lock().unwrap().used_ram,
-            TEST_STRING_SIZE as u64
-        );
-        drop(cache_temp);
-        assert_eq!(
-            CACHE_MANAGER.ram_handle.lock().unwrap().used_ram,
-            TEST_STRING_SIZE as u64
-        );
-
-        // temp cache do not update to cache manager.
-        let task_id = TaskId::random();
-        let cache_temp = RamCache::temp(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
-        cache_temp.finish_write();
-        assert!(!CACHE_MANAGER.rams.lock().unwrap().contains_key(&task_id));
     }
 }

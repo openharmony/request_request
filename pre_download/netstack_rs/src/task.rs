@@ -28,6 +28,7 @@ pub struct RequestTask {
 }
 
 unsafe impl Send for RequestTask {}
+unsafe impl Sync for RequestTask {}
 
 /// RequestTask status
 #[derive(Debug, Default)]
@@ -56,8 +57,8 @@ impl RequestTask {
     }
 
     /// cancel the request task
-    pub fn cancel(&mut self) {
-        self.pin_mut().Cancel()
+    pub fn cancel(&self) {
+        self.pin_mut().Cancel();
     }
 
     /// get the request task status
@@ -84,7 +85,7 @@ impl RequestTask {
         );
     }
 
-    fn pin_mut(&mut self) -> Pin<&mut HttpClientTask> {
+    fn pin_mut(&self) -> Pin<&mut HttpClientTask> {
         let ptr = self.inner.as_ref().unwrap() as *const HttpClientTask as *mut HttpClientTask;
         unsafe { Pin::new_unchecked(ptr.as_mut().unwrap()) }
     }

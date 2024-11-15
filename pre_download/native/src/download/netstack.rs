@@ -42,7 +42,7 @@ pub struct CancelHandle {
 }
 
 impl CancelHandle {
-    pub(crate) fn cancel(mut self) {
+    pub(crate) fn cancel(&self) {
         self.inner.cancel();
     }
 }

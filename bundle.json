@@ -119,10 +119,10 @@
         "//base/request/request/test/unittest/cpp_test/pre_download:unittest",
         "//base/request/request/test/unittest/cpp_test/fwkTest:unittest",
         "//base/request/request/services/tests:unittest",
-        "//base/request/request/pre_download/netstack_rs/tests:unittest",
-        "//base/request/request/pre_download/native:rust_predownload_native_ut_test",
-        "//base/request/request/pre_download/ffrt_rs:rust_request_ffrt_rs_ut_test",
-        "//base/request/request/request_utils:rust_request_utils_ut_test"
+        "//base/request/request/pre_download/netstack_rs:unittest",
+        "//base/request/request/pre_download/native:unittest",
+        "//base/request/request/pre_download/ffrt_rs:unittest",
+        "//base/request/request/request_utils:unittest"
       ]
     }
   }

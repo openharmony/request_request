@@ -131,8 +131,7 @@ mod test {
         static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
 
         // update cache
-        let mut cache =
-            RamCache::try_new(task_id.clone(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
+        let mut cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
         cache.write_all(TEST_STRING.as_bytes()).unwrap();
         cache.finish_write();
         thread::sleep(Duration::from_millis(100));
@@ -164,8 +163,7 @@ mod test {
         let task_id = TaskId::random();
         static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
 
-        let mut cache =
-            RamCache::try_new(task_id.clone(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
+        let mut cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
 
         cache.write_all(TEST_STRING.as_bytes()).unwrap();
         cache.finish_write();
@@ -182,8 +180,7 @@ mod test {
         let task_id = TaskId::random();
 
         static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
-        let mut cache =
-            RamCache::try_new(task_id.clone(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
+        let mut cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
         cache.write_all(TEST_STRING.as_bytes()).unwrap();
         cache.finish_write();
 
@@ -211,8 +208,7 @@ mod test {
         let task_id = TaskId::random();
         static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
 
-        let mut cache =
-            RamCache::try_new(task_id.clone(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
+        let mut cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
         cache.write_all(TEST_STRING.as_bytes()).unwrap();
         cache.finish_write();
         thread::sleep(Duration::from_millis(100));
@@ -238,8 +234,7 @@ mod test {
         let task_id = TaskId::random();
         static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
 
-        let mut cache =
-            RamCache::try_new(task_id.clone(), &CACHE_MANAGER, TEST_STRING_SIZE).unwrap();
+        let mut cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
 
         cache.write_all(TEST_STRING.as_bytes()).unwrap();
         cache.finish_write();
@@ -247,8 +242,7 @@ mod test {
         let mut test_string = TEST_STRING.to_string();
         test_string.push_str(TEST_STRING);
 
-        let mut cache =
-            RamCache::try_new(task_id.clone(), &CACHE_MANAGER, test_string.len()).unwrap();
+        let mut cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(test_string.len()));
         cache.write_all(test_string.as_bytes()).unwrap();
         cache.finish_write();
 

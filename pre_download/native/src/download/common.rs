@@ -38,6 +38,7 @@ pub(crate) struct DownloadCallback {
     state: Arc<AtomicUsize>,
     callbacks: Arc<Mutex<Vec<Box<dyn CustomCallback>>>>,
     processed: u64,
+    seq: usize,
 }
 
 impl DownloadCallback {
@@ -46,6 +47,7 @@ impl DownloadCallback {
         finish: Arc<AtomicBool>,
         callbacks: Arc<Mutex<Vec<Box<dyn CustomCallback>>>>,
         state: Arc<AtomicUsize>,
+        seq: usize,
     ) -> Self {
         Self {
             task_id,
@@ -54,6 +56,7 @@ impl DownloadCallback {
             finish,
             callbacks,
             processed: 0,
+            seq,
         }
     }
 
@@ -69,7 +72,7 @@ impl DownloadCallback {
 
         let cache = match self.cache.take() {
             Some(cache) => cache.finish_write(),
-            None => Arc::new(RamCache::temp(
+            None => Arc::new(RamCache::new(
                 self.task_id.clone(),
                 CacheManager::get_instance(),
                 Some(0),
@@ -97,7 +100,7 @@ impl DownloadCallback {
     }
 
     fn notify_agent_finish(&self) {
-        DownloadAgent::get_instance().task_finish(&self.task_id);
+        DownloadAgent::get_instance().task_finish(&self.task_id, self.seq);
     }
 }
 
@@ -117,11 +120,16 @@ impl RequestCallback for DownloadCallback {
     }
 
     fn on_fail(&mut self, error: HttpClientError) {
+        #[cfg(feature = "ohos")]
+        if *error.code() == HttpErrorCode::HttpWriteError {
+            self.on_cancel();
+            return;
+        }
         self.on_fail_inner(error);
     }
 
     fn on_cancel(&mut self) {
-        info!("{} cancel", self.task_id.brief());
+        info!("{} is cancel", self.task_id.brief());
         self.state.store(CANCEL, Ordering::Release);
 
         self.finish.store(true, Ordering::Release);
@@ -151,19 +159,9 @@ impl RequestCallback for DownloadCallback {
             };
 
             info!("{} content-length info {:?}", self.task_id.brief(), size);
-            let apply_cache = match size {
-                Some(size) => {
-                    RamCache::try_new(self.task_id.clone(), CacheManager::get_instance(), size)
-                        .unwrap_or_else(|| {
-                            RamCache::temp(
-                                self.task_id.clone(),
-                                CacheManager::get_instance(),
-                                Some(size),
-                            )
-                        })
-                }
-                None => RamCache::temp(self.task_id.clone(), CacheManager::get_instance(), None),
-            };
+            let apply_cache =
+                RamCache::new(self.task_id.clone(), CacheManager::get_instance(), size);
+
             self.cache = Some(apply_cache)
         }
         self.cache.as_mut().unwrap().write_all(data).unwrap();
@@ -201,8 +199,9 @@ impl TaskHandle {
             callbacks: Arc::new(Mutex::new(vec![])),
         }
     }
-    pub(crate) fn cancel(&mut self) {
-        if let Some(handle) = self.cancel_handle.take() {
+    pub(crate) fn cancel(&self) {
+        if let Some(handle) = self.cancel_handle.as_ref() {
+            info!("cancel task {}", self.task_id.brief());
             handle.cancel();
         } else {
             error!("cancel task {} not exist", self.task_id.brief());
@@ -265,6 +264,7 @@ pub(crate) fn download(
     task_id: TaskId,
     request: DownloadRequest,
     callback: Option<Box<dyn CustomCallback>>,
+    seq: usize,
 ) -> TaskHandle {
     let mut handle = TaskHandle::new(task_id.clone());
     if let Some(callback) = callback {
@@ -276,6 +276,7 @@ pub(crate) fn download(
         handle.finish_flag(),
         handle.callbacks(),
         handle.state_flag(),
+        seq,
     );
     let cancel_handle = DownloadTask::run(request, callback);
     handle.set_cancel_handle(cancel_handle);
@@ -317,6 +318,7 @@ mod test {
             Some(Box::new(TestCallback {
                 flag: success_flag.clone(),
             })),
+            0,
         );
         std::thread::sleep(Duration::from_secs(1));
         assert!(success_flag.load(Ordering::Acquire));
@@ -355,7 +357,7 @@ mod test {
         let server = test_server(test_f);
         let mut request = DownloadRequest::new(&server);
         request.headers(headers);
-        download(TaskId::from_url(&server), request, None);
+        download(TaskId::from_url(&server), request, None, 0);
         std::thread::sleep(Duration::from_millis(2000));
         assert!(flag.load(Ordering::SeqCst));
     }

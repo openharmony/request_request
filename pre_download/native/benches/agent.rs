@@ -64,5 +64,5 @@ fn config() -> Criterion {
     Criterion::default().sample_size(1000)
 }
 
-criterion_group! {name = agent; config = config();targets = predownload_benchmark_different_url, predownload_benchmark_same_url}
+criterion_group! {name = agent; config = config();targets =  predownload_benchmark_same_url}
 criterion_main!(agent);
