@@ -11,6 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::sync::atomic::AtomicUsize;
+use std::sync::Arc;
+
 use netstack_rs::request::Request;
 use netstack_rs::task::RequestTask;
 
@@ -20,7 +23,7 @@ use crate::agent::DownloadRequest;
 pub(crate) struct DownloadTask;
 
 impl DownloadTask {
-    pub(crate) fn run(input: DownloadRequest, callback: DownloadCallback) -> CancelHandle {
+    pub(super) fn run(input: DownloadRequest, callback: DownloadCallback) -> CancelHandle {
         let mut request = Request::new();
         request.url(input.url);
         if let Some(headers) = input.headers {
@@ -32,17 +35,33 @@ impl DownloadTask {
         request.callback(callback);
         let mut task = request.build();
         task.start();
-        CancelHandle { inner: task }
+        CancelHandle::new(task)
     }
 }
 
 #[derive(Clone)]
 pub struct CancelHandle {
     inner: RequestTask,
+    count: Arc<AtomicUsize>,
 }
 
 impl CancelHandle {
-    pub(crate) fn cancel(&self) {
-        self.inner.cancel();
+    fn new(inner: RequestTask) -> Self {
+        Self {
+            inner,
+            count: Arc::new(AtomicUsize::new(1)),
+        }
+    }
+
+    pub(super) fn add_count(&self) {
+        self.count.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    }
+}
+
+impl CancelHandle {
+    pub(super) fn cancel(&self) {
+        if self.count.fetch_sub(1, std::sync::atomic::Ordering::SeqCst) == 1 {
+            self.inner.cancel();
+        }
     }
 }

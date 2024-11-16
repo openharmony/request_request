@@ -19,8 +19,7 @@ cfg_ohos! {
     use netstack_rs::error::HttpErrorCode;
 }
 
-pub(crate) use super::CancelHandle;
-use super::{DownloadTask, HttpClientError, RequestCallback, RequestTask, Response};
+use super::{CancelHandle, DownloadTask, HttpClientError, RequestCallback, RequestTask, Response};
 use crate::agent::{CustomCallback, DownloadRequest, TaskId};
 use crate::cache::{CacheManager, RamCache};
 use crate::{DownloadAgent, DownloadError};
@@ -68,7 +67,6 @@ impl DownloadCallback {
 impl DownloadCallback {
     fn on_success_inner(&mut self) {
         info!("{} success", self.task_id.brief());
-        self.state.store(SUCCESS, Ordering::Release);
 
         let cache = match self.cache.take() {
             Some(cache) => cache.finish_write(),
@@ -78,6 +76,7 @@ impl DownloadCallback {
                 Some(0),
             )),
         };
+        self.state.store(SUCCESS, Ordering::Release);
         self.finish.store(true, Ordering::Release);
         let mut callbacks = self.callbacks.lock().unwrap();
         while let Some(mut callback) = callbacks.pop() {
@@ -199,8 +198,8 @@ impl TaskHandle {
             callbacks: Arc::new(Mutex::new(vec![])),
         }
     }
-    pub(crate) fn cancel(&self) {
-        if let Some(handle) = self.cancel_handle.as_ref() {
+    pub(crate) fn cancel(&mut self) {
+        if let Some(handle) = self.cancel_handle.take() {
             info!("cancel task {}", self.task_id.brief());
             handle.cancel();
         } else {
@@ -233,6 +232,9 @@ impl TaskHandle {
         if !self.finish.load(Ordering::Acquire) {
             info!("add callback to task {}", self.task_id.brief());
             callbacks.push(callback);
+            if let Some(handle) = self.cancel_handle.as_ref() {
+                handle.add_count();
+            }
             Ok(())
         } else {
             Err(callback)

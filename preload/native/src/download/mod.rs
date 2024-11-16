@@ -17,7 +17,7 @@ mod error;
 cfg_ohos! {
     mod netstack;
     use netstack_rs::task::RequestTask;
-    pub use netstack::CancelHandle;
+    use netstack::CancelHandle;
     use netstack::DownloadTask;
     use netstack_rs::request::RequestCallback;
     use netstack_rs::response::Response;
@@ -26,7 +26,7 @@ cfg_ohos! {
 
 cfg_not_ohos! {
     mod ylong;
-    pub use ylong::CancelHandle;
+    use ylong::CancelHandle;
     pub use ylong::RequestTask;
     use ylong::DownloadTask;
     use ylong::RequestCallback;
