@@ -14,7 +14,7 @@
 use std::sync::Arc;
 
 use cxx::UniquePtr;
-use ffi::DownloadCallbackWrapper;
+use ffi::PreloadCallbackWrapper;
 
 use crate::agent::DownloadAgent;
 use crate::cache::RamCache;
@@ -22,13 +22,13 @@ use crate::download::TaskHandle;
 use crate::{CustomCallback, DownloadError};
 
 pub(super) struct FfiCallback {
-    inner: UniquePtr<DownloadCallbackWrapper>,
+    inner: UniquePtr<PreloadCallbackWrapper>,
 }
 
 unsafe impl Send for FfiCallback {}
 
 impl FfiCallback {
-    pub(crate) fn from_ffi(ffi: UniquePtr<DownloadCallbackWrapper>) -> Option<Self> {
+    pub(crate) fn from_ffi(ffi: UniquePtr<PreloadCallbackWrapper>) -> Option<Self> {
         if ffi.is_null() {
             None
         } else {
@@ -52,14 +52,14 @@ impl RustData {
 }
 
 impl CustomCallback for FfiCallback {
-    fn on_success(&mut self, data: Arc<RamCache>) {
+    fn on_success(&mut self, data: Arc<RamCache>, task_id: &str) {
         let rust_data = RustData::new(data);
         let shared_data = ffi::BuildSharedData(Box::new(rust_data));
-        self.inner.OnSuccess(shared_data);
+        self.inner.OnSuccess(shared_data, task_id);
     }
 
-    fn on_fail(&mut self, error: DownloadError) {
-        self.inner.OnFail(Box::new(error));
+    fn on_fail(&mut self, error: DownloadError, task_id: &str) {
+        self.inner.OnFail(Box::new(error), task_id);
     }
 
     fn on_cancel(&mut self) {
@@ -77,7 +77,6 @@ fn download_agent() -> *const DownloadAgent {
 
 #[cxx::bridge(namespace = "OHOS::Request")]
 pub(crate) mod ffi {
-
     struct FfiPredownloadOptions<'a> {
         headers: Vec<&'a str>,
     }
@@ -92,7 +91,7 @@ pub(crate) mod ffi {
         fn ffi_pre_download(
             self: &DownloadAgent,
             url: &str,
-            mut callback: UniquePtr<DownloadCallbackWrapper>,
+            mut callback: UniquePtr<PreloadCallbackWrapper>,
             update: bool,
             options: &FfiPredownloadOptions,
         ) -> Box<TaskHandle>;
@@ -118,13 +117,13 @@ pub(crate) mod ffi {
         include!("request_pre_download.h");
         include!("context.h");
 
-        type DownloadCallbackWrapper;
+        type PreloadCallbackWrapper;
         type Data;
 
         fn BuildSharedData(data: Box<RustData>) -> SharedPtr<Data>;
-        fn OnSuccess(self: &DownloadCallbackWrapper, data: SharedPtr<Data>);
-        fn OnFail(self: &DownloadCallbackWrapper, error: Box<DownloadError>);
-        fn OnCancel(self: &DownloadCallbackWrapper);
-        fn OnProgress(self: &DownloadCallbackWrapper, progress: u64, total: u64);
+        fn OnSuccess(self: &PreloadCallbackWrapper, data: SharedPtr<Data>, task_id: &str);
+        fn OnFail(self: &PreloadCallbackWrapper, error: Box<DownloadError>, task_id: &str);
+        fn OnCancel(self: &PreloadCallbackWrapper);
+        fn OnProgress(self: &PreloadCallbackWrapper, progress: u64, total: u64);
     }
 }

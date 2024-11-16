@@ -36,40 +36,40 @@ rust::Slice<const uint8_t> Data::bytes()
     return this->_data->bytes();
 }
 
-PreDownloadError::PreDownloadError(rust::Box<DownloadError> error)
+PreloadError::PreloadError(rust::Box<DownloadError> error)
 {
     this->_error = error.into_raw();
 }
 
-PreDownloadError::~PreDownloadError()
+PreloadError::~PreloadError()
 {
     rust::Box<DownloadError>::from_raw(this->_error);
 }
 
-int32_t PreDownloadError::GetCode() const
+int32_t PreloadError::GetCode() const
 {
     return this->_error->code();
 }
 
-std::string PreDownloadError::GetMessage() const
+std::string PreloadError::GetMessage() const
 {
     return std::string(this->_error->message());
 }
 
-ErrorKind PreDownloadError::GetErrorKind() const
+ErrorKind PreloadError::GetErrorKind() const
 {
     return static_cast<ErrorKind>(this->_error->ffi_kind());
 }
 
-PreDownloadAgent::PreDownloadAgent()
+Preload::Preload()
 {
     this->_agent = download_agent();
 }
 
-std::shared_ptr<PreDownloadHandle> PreDownloadAgent::Download(
-    std::string const &url, std::unique_ptr<DownloadCallback> callback, std::unique_ptr<PreDownloadOptions> options)
+std::shared_ptr<PreloadHandle> Preload::load(
+    std::string const &url, std::unique_ptr<PreloadCallback> callback, std::unique_ptr<PreloadOptions> options)
 {
-    auto callback_wrapper = std::make_unique<DownloadCallbackWrapper>(std::move(callback));
+    auto callback_wrapper = std::make_unique<PreloadCallbackWrapper>(std::move(callback));
     FfiPredownloadOptions ffiOptions = { .headers = rust::Vec<rust::str>() };
     if (options != nullptr) {
         for (auto header : options->headers) {
@@ -78,62 +78,62 @@ std::shared_ptr<PreDownloadHandle> PreDownloadAgent::Download(
         }
     }
     auto taskHandle = this->_agent->ffi_pre_download(rust::str(url), std::move(callback_wrapper), false, ffiOptions);
-    return std::make_shared<PreDownloadHandle>(std::move(taskHandle));
+    return std::make_shared<PreloadHandle>(std::move(taskHandle));
 }
 
-void PreDownloadAgent::SetRamCacheSize(uint64_t size)
+void Preload::SetRamCacheSize(uint64_t size)
 {
     this->_agent->set_ram_cache_size(size);
 }
-void PreDownloadAgent::SetFileCacheSize(uint64_t size)
+void Preload::SetFileCacheSize(uint64_t size)
 {
     this->_agent->set_file_cache_size(size);
 }
 
-void PreDownloadAgent::Cancel(std::string const &url)
+void Preload::Cancel(std::string const &url)
 {
     this->_agent->cancel(rust::str(url));
 }
 
-void PreDownloadAgent::Remove(std::string const &url)
+void Preload::Remove(std::string const &url)
 {
     this->_agent->remove(rust::str(url));
 }
 
-PreDownloadAgent *PreDownloadAgent::GetInstance()
+Preload *Preload::GetInstance()
 {
-    static PreDownloadAgent agent;
+    static Preload agent;
     return &agent;
 }
 
-PreDownloadHandle::PreDownloadHandle(rust::Box<TaskHandle> handle)
+PreloadHandle::PreloadHandle(rust::Box<TaskHandle> handle)
 {
     this->_handle = handle.into_raw();
 }
 
-PreDownloadHandle::~PreDownloadHandle()
+PreloadHandle::~PreloadHandle()
 {
     rust::Box<TaskHandle>::from_raw(this->_handle);
 }
 
-void PreDownloadHandle::Cancel()
+void PreloadHandle::Cancel()
 {
     this->_handle->cancel();
 }
 
-std::string PreDownloadHandle::GetTaskId()
+std::string PreloadHandle::GetTaskId()
 {
     return std::string(this->_handle->task_id());
 }
 
-bool PreDownloadHandle::IsFinish()
+bool PreloadHandle::IsFinish()
 {
     return this->_handle->is_finish();
 }
 
-PreDownloadState PreDownloadHandle::GetState()
+PreloadState PreloadHandle::GetState()
 {
-    return static_cast<PreDownloadState>(this->_handle->state());
+    return static_cast<PreloadState>(this->_handle->state());
 }
 
 } // namespace OHOS::Request

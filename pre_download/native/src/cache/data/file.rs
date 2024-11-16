@@ -76,6 +76,7 @@ impl Drop for FileCache {
 }
 
 impl FileCache {
+    #[cfg(not(test))]
     pub(crate) fn try_restore(task_id: TaskId, handle: &'static CacheManager) -> Option<Self> {
         let metadata = fs::metadata(Self::path(&task_id)).ok()?;
         if !CacheManager::apply_cache(
@@ -151,6 +152,7 @@ impl FileCache {
     }
 }
 
+#[cfg(not(test))]
 pub(crate) fn restore_files() -> impl Iterator<Item = TaskId> {
     restore_files_inner(CACHE_DIR_PATH.as_path())
 }
@@ -196,9 +198,6 @@ fn filter_map_entry(
 impl CacheManager {
     pub(super) fn update_file_cache(&'static self, task_id: TaskId, cache: Arc<RamCache>) {
         self.update_from_file_once.lock().unwrap().remove(&task_id);
-        if self.files.lock().unwrap().contains_key(&task_id) {
-            return;
-        }
         spawn(move || {
             self.backup_rams
                 .lock()

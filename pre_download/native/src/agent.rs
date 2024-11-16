@@ -23,14 +23,14 @@ use crate::utils::url_hash;
 use crate::DownloadError;
 
 cfg_ohos! {
-    use crate::wrapper::ffi::{FfiPredownloadOptions,DownloadCallbackWrapper};
+    use crate::wrapper::ffi::{FfiPredownloadOptions,PreloadCallbackWrapper};
     use crate::wrapper::FfiCallback;
 }
 
 #[allow(unused_variables)]
 pub trait CustomCallback: Send {
-    fn on_success(&mut self, data: Arc<RamCache>) {}
-    fn on_fail(&mut self, error: DownloadError) {}
+    fn on_success(&mut self, data: Arc<RamCache>, task_id: &str) {}
+    fn on_fail(&mut self, error: DownloadError, task_id: &str) {}
     fn on_cancel(&mut self) {}
     fn on_progress(&mut self, progress: u64, total: u64) {}
 }
@@ -100,7 +100,8 @@ impl DownloadAgent {
 
     pub fn get_instance() -> &'static Self {
         static DOWNLOAD_AGENT: LazyLock<DownloadAgent> = LazyLock::new(|| {
-            crate::spawn(|| CacheManager::get_instance().init());
+            #[cfg(not(test))]
+            CacheManager::get_instance().init();
             DownloadAgent::new()
         });
 
@@ -198,7 +199,7 @@ impl DownloadAgent {
     pub(crate) fn ffi_pre_download(
         &self,
         url: &str,
-        callback: cxx::UniquePtr<DownloadCallbackWrapper>,
+        callback: cxx::UniquePtr<PreloadCallbackWrapper>,
         update: bool,
         options: &FfiPredownloadOptions,
     ) -> Box<TaskHandle> {
@@ -263,7 +264,7 @@ mod test {
     }
 
     impl CustomCallback for TestCallbackS {
-        fn on_success(&mut self, data: Arc<RamCache>) {
+        fn on_success(&mut self, data: Arc<RamCache>, _task_id: &str) {
             if data.size() != 0 {
                 self.flag.fetch_add(1, Ordering::SeqCst);
             } else {
@@ -277,7 +278,7 @@ mod test {
     }
 
     impl CustomCallback for TestCallbackF {
-        fn on_fail(&mut self, error: DownloadError) {
+        fn on_fail(&mut self, error: DownloadError, _task_id: &str) {
             *self.flag.lock().unwrap() = error.message().to_string();
         }
     }

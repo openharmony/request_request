@@ -27,8 +27,9 @@ impl<'a> Fetcher<'a> {
         mut callback: Box<dyn CustomCallback>,
     ) -> Result<(), Box<dyn CustomCallback>> {
         if let Some(cache) = CacheManager::get_instance().get_cache(self.task_id) {
+            let task_id = self.task_id.clone();
             crate::spawn(move || {
-                callback.on_success(cache);
+                callback.on_success(cache, task_id.brief());
             });
             Ok(())
         } else {

@@ -15,6 +15,9 @@ mod file;
 mod ram;
 mod space;
 
-pub(crate) use file::{restore_files, FileCache};
+cfg_not_test! {
+    pub(crate) use file::restore_files;
+}
+pub(crate) use file::FileCache;
 pub(crate) use ram::RamCache;
 pub(crate) use space::Handle;
