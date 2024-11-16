@@ -17,7 +17,10 @@ module_output_path = "request/request"
 ohos_unittest("preload_test") {
   module_out_path = module_output_path
 
-  include_dirs = [ "../../../../interfaces/inner_kits/preload/include" ]
+  include_dirs = [
+    "../../../../interfaces/inner_kits/predownload/include",
+    "../../../../common/include",
+  ]
 
   sources = [ "src/download.cpp" ]
 
@@ -28,6 +31,7 @@ ohos_unittest("preload_test") {
   external_deps = [
     "googletest:gmock",
     "googletest:gtest_main",
+    "hilog:libhilog",
   ]
 }
 

@@ -14,6 +14,7 @@
  */
 
 #include "c_string_wrapper.h"
+#include "log.h"
 
 #include <gtest/gtest.h>
 
@@ -41,6 +42,13 @@ void StringWrapperTest::TearDownTestCase(void)
 void StringWrapperTest::SetUp(void)
 {
     // input testcase setup step，setup invoked before each testcases
+    testing::UnitTest *test = testing::UnitTest::GetInstance();
+    ASSERT_NE(test, nullptr);
+    const testing::TestInfo *testInfo = test->current_test_info();
+    ASSERT_NE(testInfo, nullptr);
+    string testCaseName = string(testInfo->name());
+    REQUEST_HILOGI("[SetUp] %{public}s start", testCaseName.c_str());
+    GTEST_LOG_(INFO) << testCaseName.append(" start");
 }
 
 void StringWrapperTest::TearDown(void)

@@ -20,6 +20,7 @@
  * @tc.require: Issue Number
  */
 #include <gtest/gtest.h>
+#include "log.h"
 
 #include <atomic>
 #include <chrono>
@@ -66,6 +67,13 @@ void PreloadTest::TearDownTestCase(void)
 void PreloadTest::SetUp(void)
 {
     // input testcase setup step，setup invoked before each testcases
+    testing::UnitTest *test = testing::UnitTest::GetInstance();
+    ASSERT_NE(test, nullptr);
+    const testing::TestInfo *testInfo = test->current_test_info();
+    ASSERT_NE(testInfo, nullptr);
+    string testCaseName = string(testInfo->name());
+    REQUEST_HILOGI("[SetUp] %{public}s start", testCaseName.c_str());
+    GTEST_LOG_(INFO) << testCaseName.append(" start");
 }
 
 void PreloadTest::TearDown(void)
@@ -100,14 +108,24 @@ void DownloadSuccessTest(std::string url, uint64_t size)
     Preload::GetInstance()->Remove(TEST_URL_0);
 }
 
-// test success and progress callback
+/**
+ * @tc.name: PreloadTest_001
+ * @tc.desc: Test PreloadTest_001 interface base function - OnSuccess
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
 HWTEST_F(PreloadTest, PreloadTest_001, TestSize.Level1)
 {
     DownloadSuccessTest(TEST_URL_0, TEST_SIZE);
     DownloadSuccessTest(TEST_URL_4, TEST_SIZE_4);
 }
 
-// test cancel callback
+/**
+ * @tc.name: PreloadTest_002
+ * @tc.desc: Test PreloadTest_002 interface base function - OnCancel
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
 HWTEST_F(PreloadTest, PreloadTest_002, TestSize.Level1)
 {
     auto flag = std::make_shared<std::atomic_uint64_t>(0);
@@ -127,7 +145,12 @@ HWTEST_F(PreloadTest, PreloadTest_002, TestSize.Level1)
     Preload::GetInstance()->Remove(TEST_URL_1);
 }
 
-// test fail callback
+/**
+ * @tc.name: PreloadTest_003
+ * @tc.desc: Test PreloadTest_003 interface base function - OnFail
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
 HWTEST_F(PreloadTest, PreloadTest_003, TestSize.Level1)
 {
     auto flag = std::make_shared<std::atomic_uint64_t>(0);
@@ -145,7 +168,12 @@ HWTEST_F(PreloadTest, PreloadTest_003, TestSize.Level1)
     EXPECT_EQ(handle->GetState(), PreloadState::FAIL);
 }
 
-// test nullptr callback
+/**
+ * @tc.name: PreloadTest_004
+ * @tc.desc: Test PreloadTest_004 interface base function - nullCallback
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
 HWTEST_F(PreloadTest, PreloadTest_004, TestSize.Level1)
 {
     auto callback = PreloadCallback{
@@ -156,4 +184,77 @@ HWTEST_F(PreloadTest, PreloadTest_004, TestSize.Level1)
     };
 
     auto handle = Preload::GetInstance()->load(TEST_URL_1, std::make_unique<PreloadCallback>(callback));
+}
+
+/**
+ * @tc.name: PreloadTest_005
+ * @tc.desc: Test PreloadTest_005 interface base function - Cancel
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(PreloadTest, PreloadTest_005, TestSize.Level1)
+{
+    auto callback = PreloadCallback{
+        .OnSuccess = [](const std::shared_ptr<Data> &&data, const std::string &taskId) {},
+        .OnCancel = []() {},
+        .OnFail = [](const PreloadError &error, const std::string &taskId) {  },
+        .OnProgress = [](uint64_t current, uint64_t total) {},
+    };
+    Preload::GetInstance()->load(TEST_URL_1, std::make_unique<PreloadCallback>(callback));
+    Preload::GetInstance()->Cancel(TEST_URL_1);
+}
+
+/**
+ * @tc.name: PreloadTest_006
+ * @tc.desc: Test PreloadTest_006 interface base function - nullCallback
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(PreloadTest, PreloadTest_006, TestSize.Level1)
+{
+    auto callback = PreloadCallback{
+        .OnSuccess = [](const std::shared_ptr<Data> &&data, const std::string &taskId) {},
+        .OnCancel = []() {},
+        .OnFail = [](const PreloadError &error, const std::string &taskId) {  },
+        .OnProgress = [](uint64_t current, uint64_t total) {},
+    };
+    Preload::GetInstance()->load(TEST_URL_1, std::make_unique<PreloadCallback>(callback));
+    Preload::GetInstance()->Remove(TEST_URL_1);
+}
+
+/**
+ * @tc.name: PreloadTest_007
+ * @tc.desc: Test PreloadTest_007 interface base function - GetTaskId
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(PreloadTest, PreloadTest_007, TestSize.Level1)
+{
+    auto callback = PreloadCallback{
+        .OnSuccess = [](const std::shared_ptr<Data> &&data, const std::string &taskId) {},
+        .OnCancel = []() {},
+        .OnFail = [](const PreloadError &error, const std::string &taskId) {  },
+        .OnProgress = [](uint64_t current, uint64_t total) {},
+    };
+    auto handle = Preload::GetInstance()->load(TEST_URL_0, std::make_unique<PreloadCallback>(callback));
+    auto tid = handle->GetTaskId();
+}
+
+/**
+ * @tc.name: PreloadTest_008
+ * @tc.desc: Test PreloadTest_008 interface base function - GetCode
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(PreloadTest, PreloadTest_008, TestSize.Level1)
+{
+    auto err = std::make_shared<std::atomic_uint64_t>(0);
+    auto callback = PreloadCallback{
+        .OnSuccess = [](const std::shared_ptr<Data> &&data, const std::string &taskId) {},
+        .OnCancel = []() {},
+        .OnFail = [err](const PreloadError &error, const std::string &taskId) {  err->fetch_add(error.GetCode()); },
+        .OnProgress = [](uint64_t current, uint64_t total) {},
+    };
+    auto handle = Preload::GetInstance()->load(TEST_URL_2, std::make_unique<PreloadCallback>(callback));
+    EXPECT_NE(err->load(), -1);
 }
