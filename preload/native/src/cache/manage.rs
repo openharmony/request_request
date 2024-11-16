@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use std::io;
 use std::sync::{Arc, LazyLock, Mutex, OnceLock, Weak};
 
-use request_utils::queue_map::QueueMap;
+use request_utils::lru::LRUCache;
 
 use super::data::{self, FileCache, RamCache};
 use crate::agent::TaskId;
@@ -32,9 +32,9 @@ cfg_test! {
 }
 
 pub(crate) struct CacheManager {
-    pub(super) rams: Mutex<QueueMap<TaskId, Arc<RamCache>>>,
+    pub(super) rams: Mutex<LRUCache<TaskId, Arc<RamCache>>>,
     pub(super) backup_rams: Mutex<HashMap<TaskId, Arc<RamCache>>>,
-    pub(super) files: Mutex<QueueMap<TaskId, FileCache>>,
+    pub(super) files: Mutex<LRUCache<TaskId, FileCache>>,
 
     pub(super) update_from_file_once:
         Mutex<HashMap<TaskId, Arc<OnceLock<io::Result<Weak<RamCache>>>>>>,
@@ -45,8 +45,8 @@ pub(crate) struct CacheManager {
 impl CacheManager {
     pub(super) fn new() -> Self {
         Self {
-            rams: Mutex::new(QueueMap::new()),
-            files: Mutex::new(QueueMap::new()),
+            rams: Mutex::new(LRUCache::new()),
+            files: Mutex::new(LRUCache::new()),
             backup_rams: Mutex::new(HashMap::new()),
             update_from_file_once: Mutex::new(HashMap::new()),
 
@@ -85,7 +85,7 @@ impl CacheManager {
 
     pub(super) fn apply_cache<T>(
         handle: &Mutex<data::Handle>,
-        caches: &Mutex<QueueMap<TaskId, T>>,
+        caches: &Mutex<LRUCache<TaskId, T>>,
         task_id: fn(&T) -> &TaskId,
         size: usize,
     ) -> bool {
