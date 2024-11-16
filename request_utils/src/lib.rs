@@ -22,7 +22,7 @@
 mod macros;
 
 pub mod fastrand;
-pub mod queue_map;
+pub mod lru;
 
 cfg_not_ohos! {
     #[macro_use]
