@@ -15,7 +15,7 @@ mod client;
 
 use std::collections::HashMap;
 use std::pin::Pin;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
@@ -80,21 +80,17 @@ impl<'a> RequestTask<'a> {
 pub struct DownloadTask;
 
 impl DownloadTask {
-    pub(crate) fn run(request: DownloadRequest, mut callback: DownloadCallback) -> CancelHandle {
+    pub(super) fn run(request: DownloadRequest, mut callback: DownloadCallback) -> CancelHandle {
         let url = match PercentEncoder::encode(request.url) {
             Ok(url) => url,
             Err(e) => {
                 callback.on_fail(e);
-                return CancelHandle {
-                    inner: Arc::new(AtomicBool::new(false)),
-                };
+                return CancelHandle::new(Arc::new(AtomicBool::new(false)));
             }
         };
         callback.set_running();
         let flag = Arc::new(AtomicBool::new(false));
-        let handle = CancelHandle {
-            inner: flag.clone(),
-        };
+        let handle = CancelHandle::new(flag.clone());
         let mut headers = None;
         if let Some(h) = request.headers {
             headers = Some(
@@ -167,11 +163,27 @@ impl Response {
 #[derive(Clone)]
 pub struct CancelHandle {
     inner: Arc<AtomicBool>,
+    count: Arc<AtomicUsize>,
 }
 
 impl CancelHandle {
-    pub fn cancel(&self) {
-        self.inner.store(true, Ordering::Release);
+    fn new(inner: Arc<AtomicBool>) -> Self {
+        Self {
+            inner,
+            count: Arc::new(AtomicUsize::new(1)),
+        }
+    }
+
+    pub(super) fn add_count(&self) {
+        self.count.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    }
+}
+
+impl CancelHandle {
+    pub(super) fn cancel(&self) {
+        if self.count.fetch_sub(1, std::sync::atomic::Ordering::SeqCst) == 1 {
+            self.inner.store(true, Ordering::Release);
+        }
     }
 }
 

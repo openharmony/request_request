@@ -36,7 +36,7 @@ impl Updater {
         }
     }
 
-    pub(crate) fn cancel(&self) {
+    pub(crate) fn cancel(&mut self) {
         self.handle.cancel();
     }
 

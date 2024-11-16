@@ -368,7 +368,7 @@ mod test {
         let callback = Box::new(TestCallbackC {
             flag: cancel_flag.clone(),
         });
-        let handle = agent.preload(DownloadRequest::new(TEST_URL), callback, true);
+        let mut handle = agent.preload(DownloadRequest::new(TEST_URL), callback, true);
         handle.cancel();
         std::thread::sleep(Duration::from_secs(1));
         assert_eq!(cancel_flag.load(Ordering::SeqCst), 1);
@@ -401,9 +401,13 @@ mod test {
             flag: cancel_flag_1.clone(),
         });
 
-        let handle_0 = agent.preload(DownloadRequest::new(TEST_URL), callback_0, false);
-        agent.preload(DownloadRequest::new(TEST_URL), callback_1, false);
+        let mut handle_0 = agent.preload(DownloadRequest::new(TEST_URL), callback_0, false);
+        let mut handle_1 = agent.preload(DownloadRequest::new(TEST_URL), callback_1, false);
         handle_0.cancel();
+        handle_0.cancel();
+        assert_eq!(cancel_flag_0.load(Ordering::SeqCst), 0);
+        assert_eq!(cancel_flag_1.load(Ordering::SeqCst), 0);
+        handle_1.cancel();
         std::thread::sleep(Duration::from_secs(1));
         assert_eq!(cancel_flag_0.load(Ordering::SeqCst), 1);
         assert_eq!(cancel_flag_1.load(Ordering::SeqCst), 1);
