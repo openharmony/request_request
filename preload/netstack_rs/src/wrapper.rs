@@ -41,7 +41,7 @@ impl CallbackWrapper {
         self.inner.on_fail(error);
     }
 
-    fn on_cancel(&mut self, response: &ffi::HttpClientResponse) {
+    fn on_cancel(&mut self, _response: &ffi::HttpClientResponse) {
         self.inner.on_cancel();
     }
     fn on_data_receive(
@@ -115,13 +115,11 @@ pub(crate) mod ffi {
         fn Cancel(self: Pin<&mut HttpClientTask>);
         fn GetStatus(self: Pin<&mut HttpClientTask>) -> TaskStatus;
         fn OnCallback(task: SharedPtr<HttpClientTask>, callback: Box<CallbackWrapper>);
-        fn GetTaskId(self: Pin<&mut HttpClientTask>) -> u32;
 
         #[namespace = "OHOS::NetStack::HttpClient"]
         type HttpClientResponse;
 
         fn GetResponseCode(self: &HttpClientResponse) -> ResponseCode;
-        fn GetResult(self: &HttpClientResponse) -> &CxxString;
         fn GetHeaders(response: Pin<&mut HttpClientResponse>) -> Vec<String>;
 
         #[namespace = "OHOS::NetStack::HttpClient"]

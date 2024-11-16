@@ -21,7 +21,6 @@
     clippy::unused_async
 )]
 #![deny(unused_must_use)]
-#![allow(unused)]
 #![allow(missing_docs)]
 
 /// Request.
