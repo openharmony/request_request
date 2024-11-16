@@ -81,7 +81,7 @@ impl DownloadCallback {
         self.finish.store(true, Ordering::Release);
         let mut callbacks = self.callbacks.lock().unwrap();
         while let Some(mut callback) = callbacks.pop() {
-            callback.on_success(cache.clone());
+            callback.on_success(cache.clone(), self.task_id.brief());
         }
         drop(callbacks);
         self.notify_agent_finish();
@@ -93,7 +93,7 @@ impl DownloadCallback {
         self.finish.store(true, Ordering::Release);
         let mut callbacks = self.callbacks.lock().unwrap();
         while let Some(mut callback) = callbacks.pop() {
-            callback.on_fail(DownloadError::from(&error));
+            callback.on_fail(DownloadError::from(&error), self.task_id.brief());
         }
         drop(callbacks);
         self.notify_agent_finish();
@@ -301,7 +301,7 @@ mod test {
     }
 
     impl CustomCallback for TestCallback {
-        fn on_success(&mut self, data: Arc<RamCache>) {
+        fn on_success(&mut self, data: Arc<RamCache>, _task_id: &str) {
             if data.size() != 0 {
                 self.flag.store(true, Ordering::Release);
             }

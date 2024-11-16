@@ -17,12 +17,13 @@ use std::sync::{Arc, LazyLock, Mutex, OnceLock, Weak};
 
 use request_utils::queue_map::QueueMap;
 
-use super::data::{self, restore_files, FileCache, RamCache};
+use super::data::{self, FileCache, RamCache};
 use crate::agent::TaskId;
 
 cfg_not_test! {
     const DEFAULT_RAM_CACHE_SIZE: u64 =  1024 * 1024 * 20;
     const DEFAULT_FILE_CACHE_SIZE: u64 = 1024 * 1024 * 100;
+    use super::data::restore_files;
 }
 
 cfg_test! {
@@ -59,6 +60,7 @@ impl CacheManager {
         &CACHE_MANAGER
     }
 
+    #[cfg(not(test))]
     pub(crate) fn init(&'static self) {
         for task_id in restore_files() {
             let Some(file_cache) = FileCache::try_restore(task_id.clone(), self) else {

@@ -22,18 +22,18 @@
 
 namespace OHOS::Request {
 
-class DownloadCallbackWrapper {
+class PreloadCallbackWrapper {
 public:
-    DownloadCallbackWrapper(std::unique_ptr<DownloadCallback> callback);
-    ~DownloadCallbackWrapper() = default;
+    PreloadCallbackWrapper(std::unique_ptr<PreloadCallback> callback);
+    ~PreloadCallbackWrapper() = default;
 
-    void OnSuccess(const std::shared_ptr<Data> data) const;
-    void OnFail(rust::Box<DownloadError> error) const;
+    void OnSuccess(const std::shared_ptr<Data> data,  rust::str TaskId) const;
+    void OnFail(rust::Box<DownloadError> error,  rust::str TaskId) const;
     void OnCancel() const;
     void OnProgress(uint64_t current, uint64_t total) const;
 
 private:
-    std::unique_ptr<DownloadCallback> _callback;
+    std::unique_ptr<PreloadCallback> _callback;
 };
 
 std::shared_ptr<Data> BuildSharedData(rust::Box<RustData> data);

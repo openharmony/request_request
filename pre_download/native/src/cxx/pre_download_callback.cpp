@@ -21,36 +21,36 @@
 #include "request_pre_download.h"
 namespace OHOS::Request {
 
-DownloadCallbackWrapper::DownloadCallbackWrapper(std::unique_ptr<DownloadCallback> callback)
+PreloadCallbackWrapper::PreloadCallbackWrapper(std::unique_ptr<PreloadCallback> callback)
 {
     if (callback != nullptr) {
         this->_callback = std::move(callback);
     }
 }
 
-void DownloadCallbackWrapper::OnSuccess(const std::shared_ptr<Data> data) const
+void PreloadCallbackWrapper::OnSuccess(const std::shared_ptr<Data> data,  rust::str taskId) const
 {
     if (this->_callback != nullptr && this->_callback->OnSuccess != nullptr) {
-        this->_callback->OnSuccess(std::move(data));
+        this->_callback->OnSuccess(std::move(data), std::string(taskId));
     }
 }
 
-void DownloadCallbackWrapper::OnFail(rust::Box<DownloadError> error) const
+void PreloadCallbackWrapper::OnFail(rust::Box<DownloadError> error, rust::str taskId) const
 {
     if (this->_callback != nullptr && this->_callback->OnFail != nullptr) {
-        PreDownloadError preDownloadError(std::move(error));
-        this->_callback->OnFail(preDownloadError);
+        PreloadError preloadError(std::move(error));
+        this->_callback->OnFail(preloadError, std::string(taskId));
     }
 }
 
-void DownloadCallbackWrapper::OnCancel() const
+void PreloadCallbackWrapper::OnCancel() const
 {
     if (this->_callback != nullptr && this->_callback->OnCancel != nullptr) {
         this->_callback->OnCancel();
     }
 }
 
-void DownloadCallbackWrapper::OnProgress(uint64_t current, uint64_t total) const
+void PreloadCallbackWrapper::OnProgress(uint64_t current, uint64_t total) const
 {
     if (this->_callback != nullptr && this->_callback->OnProgress != nullptr) {
         this->_callback->OnProgress(current, total);

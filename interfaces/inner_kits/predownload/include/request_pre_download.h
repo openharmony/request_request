@@ -30,7 +30,7 @@ struct TaskHandle;
 struct DownloadAgent;
 struct DownloadError;
 
-enum class PreDownloadState {
+enum class PreloadState {
     INIT,
     RUNNING,
     SUCCESS,
@@ -56,11 +56,11 @@ enum ErrorKind {
     CACHE,
 };
 
-class PreDownloadError {
+class PreloadError {
 public:
-    PreDownloadError(rust::Box<DownloadError> error);
-    PreDownloadError &operator=(const PreDownloadError &) = delete;
-    ~PreDownloadError();
+    PreloadError(rust::Box<DownloadError> error);
+    PreloadError &operator=(const PreloadError &) = delete;
+    ~PreloadError();
 
     int32_t GetCode() const;
     std::string GetMessage() const;
@@ -70,45 +70,45 @@ private:
     DownloadError *_error;
 };
 
-struct DownloadCallback {
-    std::function<void(const std::shared_ptr<Data> &&)> OnSuccess;
-    std::function<void(const PreDownloadError &)> OnFail;
+struct PreloadCallback {
+    std::function<void(const std::shared_ptr<Data> &&, const std::string &TaskId)> OnSuccess;
+    std::function<void(const PreloadError &, const std::string &TaskId)> OnFail;
     std::function<void()> OnCancel;
     std::function<void(uint64_t current, uint64_t total)> OnProgress;
 };
 
-class PreDownloadHandle {
+class PreloadHandle {
 public:
-    PreDownloadHandle(rust::Box<TaskHandle>);
-    PreDownloadError &operator=(const PreDownloadError &) = delete;
+    PreloadHandle(rust::Box<TaskHandle>);
+    PreloadError &operator=(const PreloadError &) = delete;
 
-    ~PreDownloadHandle();
+    ~PreloadHandle();
     void Cancel();
     std::string GetTaskId();
     bool IsFinish();
-    PreDownloadState GetState();
+    PreloadState GetState();
 
 private:
     TaskHandle *_handle;
 };
 
-struct PreDownloadOptions {
+struct PreloadOptions {
     std::vector<std::tuple<std::string, std::string>> headers;
 };
 
-class PreDownloadAgent {
+class Preload {
 public:
-    PreDownloadAgent();
-    static PreDownloadAgent *GetInstance();
-    virtual ~PreDownloadAgent() = default;
+    Preload();
+    static Preload *GetInstance();
+    virtual ~Preload() = default;
     void Cancel(std::string const &url);
     void Remove(std::string const &url);
 
     void SetRamCacheSize(uint64_t size);
     void SetFileCacheSize(uint64_t size);
 
-    std::shared_ptr<PreDownloadHandle> Download(std::string const &url, std::unique_ptr<DownloadCallback>,
-        std::unique_ptr<PreDownloadOptions> options = nullptr);
+    std::shared_ptr<PreloadHandle> load(
+        std::string const &url, std::unique_ptr<PreloadCallback>, std::unique_ptr<PreloadOptions> options = nullptr);
 
 private:
     const DownloadAgent *_agent;

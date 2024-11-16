@@ -36,7 +36,7 @@
 using namespace testing::ext;
 using namespace OHOS::Request;
 
-class PreDownloadTest : public testing::Test {
+class PreloadTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -53,22 +53,22 @@ constexpr size_t INTERVAL = 500;
 constexpr uint64_t TEST_SIZE = 1042003;
 constexpr uint64_t TEST_SIZE_4 = 318465;
 
-void PreDownloadTest::SetUpTestCase(void)
+void PreloadTest::SetUpTestCase(void)
 {
     // input testsuit setup step，setup invoked before all testcases
 }
 
-void PreDownloadTest::TearDownTestCase(void)
+void PreloadTest::TearDownTestCase(void)
 {
     // input testsuit teardown step，teardown invoked after all testcases
 }
 
-void PreDownloadTest::SetUp(void)
+void PreloadTest::SetUp(void)
 {
     // input testcase setup step，setup invoked before each testcases
 }
 
-void PreDownloadTest::TearDown(void)
+void PreloadTest::TearDown(void)
 {
     // input testcase teardown step，teardown invoked after each testcases
 }
@@ -76,83 +76,84 @@ void PreDownloadTest::TearDown(void)
 void DownloadSuccessTest(std::string url, uint64_t size)
 {
     auto flagS = std::make_shared<std::atomic_uint64_t>(0);
-    PreDownloadOptions options = { .headers = std::vector<std::tuple<std::string, std::string>>() };
+    PreloadOptions options = { .headers = std::vector<std::tuple<std::string, std::string>>() };
     options.headers.push_back(std::tuple<std::string, std::string>("Accept", "text/html"));
 
     auto flagP = std::make_shared<std::atomic_int64_t>(0);
-    auto callback = DownloadCallback{
-        .OnSuccess = [flagS](const std::shared_ptr<Data> &&data) { flagS->store(data->bytes().size()); },
+    auto callback = PreloadCallback{
+        .OnSuccess = [flagS](const std::shared_ptr<Data> &&data,
+                         const std::string &taskId) { flagS->store(data->bytes().size()); },
         .OnCancel = []() {},
-        .OnFail = [](const PreDownloadError &error) {},
+        .OnFail = [](const PreloadError &error, const std::string &taskId) {},
         .OnProgress = [flagP](uint64_t current, uint64_t total) { flagP->fetch_add(1); },
     };
-    auto handle = PreDownloadAgent::GetInstance()->Download(TEST_URL_0, std::make_unique<DownloadCallback>(callback));
+    auto handle = Preload::GetInstance()->load(TEST_URL_0, std::make_unique<PreloadCallback>(callback));
     EXPECT_FALSE(handle->IsFinish());
-    EXPECT_EQ(handle->GetState(), PreDownloadState::RUNNING);
+    EXPECT_EQ(handle->GetState(), PreloadState::RUNNING);
 
     while (!handle->IsFinish()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(INTERVAL));
     }
     EXPECT_TRUE(flagP->load() > 0);
     EXPECT_EQ(flagS->load(), TEST_SIZE);
-    EXPECT_EQ(handle->GetState(), PreDownloadState::SUCCESS);
-    PreDownloadAgent::GetInstance()->Remove(TEST_URL_0);
+    EXPECT_EQ(handle->GetState(), PreloadState::SUCCESS);
+    Preload::GetInstance()->Remove(TEST_URL_0);
 }
 
 // test success and progress callback
-HWTEST_F(PreDownloadTest, PreDownloadTest_001, TestSize.Level1)
+HWTEST_F(PreloadTest, PreloadTest_001, TestSize.Level1)
 {
     DownloadSuccessTest(TEST_URL_0, TEST_SIZE);
     DownloadSuccessTest(TEST_URL_4, TEST_SIZE_4);
 }
 
 // test cancel callback
-HWTEST_F(PreDownloadTest, PreDownloadTest_002, TestSize.Level1)
+HWTEST_F(PreloadTest, PreloadTest_002, TestSize.Level1)
 {
     auto flag = std::make_shared<std::atomic_uint64_t>(0);
-    auto callback = DownloadCallback{
-        .OnSuccess = [](const std::shared_ptr<Data> &&data) {},
+    auto callback = PreloadCallback{
+        .OnSuccess = [](const std::shared_ptr<Data> &&data, const std::string &taskId) {},
         .OnCancel = [flag]() { flag->fetch_add(1); },
-        .OnFail = [](const PreDownloadError &error) {},
+        .OnFail = [](const PreloadError &error, const std::string &taskId) {},
         .OnProgress = [](uint64_t current, uint64_t total) {},
     };
 
-    auto handle = PreDownloadAgent::GetInstance()->Download(TEST_URL_1, std::make_unique<DownloadCallback>(callback));
+    auto handle = Preload::GetInstance()->load(TEST_URL_1, std::make_unique<PreloadCallback>(callback));
     handle->Cancel();
     std::this_thread::sleep_for(std::chrono::seconds(1));
     EXPECT_EQ(flag->load(), 1);
     EXPECT_TRUE(handle->IsFinish());
-    EXPECT_EQ(handle->GetState(), PreDownloadState::CANCEL);
-    PreDownloadAgent::GetInstance()->Remove(TEST_URL_1);
+    EXPECT_EQ(handle->GetState(), PreloadState::CANCEL);
+    Preload::GetInstance()->Remove(TEST_URL_1);
 }
 
 // test fail callback
-HWTEST_F(PreDownloadTest, PreDownloadTest_003, TestSize.Level1)
+HWTEST_F(PreloadTest, PreloadTest_003, TestSize.Level1)
 {
     auto flag = std::make_shared<std::atomic_uint64_t>(0);
-    auto callback = DownloadCallback{
-        .OnSuccess = [](const std::shared_ptr<Data> &&data) {},
+    auto callback = PreloadCallback{
+        .OnSuccess = [](const std::shared_ptr<Data> &&data, const std::string &taskId) {},
         .OnCancel = []() {},
-        .OnFail = [flag](const PreDownloadError &error) { flag->fetch_add(1); },
+        .OnFail = [flag](const PreloadError &error, const std::string &taskId) { flag->fetch_add(1); },
         .OnProgress = [](uint64_t current, uint64_t total) {},
     };
 
-    auto handle = PreDownloadAgent::GetInstance()->Download(TEST_URL_2, std::make_unique<DownloadCallback>(callback));
+    auto handle = Preload::GetInstance()->load(TEST_URL_2, std::make_unique<PreloadCallback>(callback));
     std::this_thread::sleep_for(std::chrono::seconds(1));
     EXPECT_EQ(flag->load(), 1);
     EXPECT_TRUE(handle->IsFinish());
-    EXPECT_EQ(handle->GetState(), PreDownloadState::FAIL);
+    EXPECT_EQ(handle->GetState(), PreloadState::FAIL);
 }
 
 // test nullptr callback
-HWTEST_F(PreDownloadTest, PreDownloadTest_004, TestSize.Level1)
+HWTEST_F(PreloadTest, PreloadTest_004, TestSize.Level1)
 {
-    auto callback = DownloadCallback{
+    auto callback = PreloadCallback{
         .OnSuccess = nullptr,
         .OnCancel = nullptr,
         .OnFail = nullptr,
         .OnProgress = nullptr,
     };
 
-    auto handle = PreDownloadAgent::GetInstance()->Download(TEST_URL_1, std::make_unique<DownloadCallback>(callback));
+    auto handle = Preload::GetInstance()->load(TEST_URL_1, std::make_unique<PreloadCallback>(callback));
 }

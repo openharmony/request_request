@@ -48,9 +48,9 @@ napi_value preload(napi_env env, napi_callback_info info)
 
     std::string url = GetValueString(env, args[0]);
 
-    std::unique_ptr<PreDownloadOptions> options = nullptr;
+    std::unique_ptr<PreloadOptions> options = nullptr;
     if (valuetype1 == napi_object) {
-        options = std::make_unique<PreDownloadOptions>();
+        options = std::make_unique<PreloadOptions>();
         napi_value headers = nullptr;
         NAPI_CALL(env, napi_get_named_property(env, args[1], "headers", &headers));
         if (headers != nullptr) {
@@ -61,7 +61,7 @@ napi_value preload(napi_env env, napi_callback_info info)
             }
         }
     }
-    PreDownloadAgent::GetInstance()->Download(std::string(url), nullptr, std::move(options));
+    Preload::GetInstance()->load(std::string(url), nullptr, std::move(options));
     return nullptr;
 }
 
@@ -80,7 +80,7 @@ napi_value cancel(napi_env env, napi_callback_info info)
     }
 
     std::string url = GetValueString(env, args[0]);
-    PreDownloadAgent::GetInstance()->Cancel(std::string(url));
+    Preload::GetInstance()->Cancel(std::string(url));
     return nullptr;
 }
 
@@ -99,7 +99,7 @@ napi_value setMemoryCacheSize(napi_env env, napi_callback_info info)
     }
 
     uint32_t size = GetValueNum(env, args[0]);
-    PreDownloadAgent::GetInstance()->SetRamCacheSize(size);
+    Preload::GetInstance()->SetRamCacheSize(size);
     return nullptr;
 }
 
@@ -118,7 +118,7 @@ napi_value setFileCacheSize(napi_env env, napi_callback_info info)
     }
 
     uint32_t size = GetValueNum(env, args[0]);
-    PreDownloadAgent::GetInstance()->SetFileCacheSize(size);
+    Preload::GetInstance()->SetFileCacheSize(size);
     return nullptr;
 }
 
