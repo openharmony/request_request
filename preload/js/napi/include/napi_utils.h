@@ -23,14 +23,9 @@
 #include "napi/native_common.h"
 namespace OHOS::Request {
 napi_valuetype GetValueType(napi_env env, napi_value value);
-
 std::string GetValueString(napi_env env, napi_value value);
-
 std::vector<std::string> GetPropertyNames(napi_env env, napi_value object);
-
 std::string GetPropertyValue(napi_env env, napi_value object, const std::string &propertyName);
-
 uint32_t GetValueNum(napi_env env, napi_value value);
-
 } // namespace OHOS::Request
 #endif

@@ -36,7 +36,7 @@ napi_valuetype GetValueType(napi_env env, napi_value value)
 std::string GetValueString(napi_env env, napi_value value)
 {
     size_t length;
-    NAPI_CALL(env, napi_get_value_string_utf8(env, value, NULL, 0, &length));
+    NAPI_CALL(env, napi_get_value_string_utf8(env, value, nullptr, 0, &length));
     char chars[length + 1];
     NAPI_CALL(env, napi_get_value_string_utf8(env, value, chars, sizeof(chars), &length));
     return std::string(chars);
@@ -45,7 +45,6 @@ std::string GetValueString(napi_env env, napi_value value)
 uint32_t GetValueNum(napi_env env, napi_value value)
 {
     uint32_t ret;
-
     NAPI_CALL_BASE(env, napi_get_value_uint32(env, value, &ret), 0);
     return ret;
 }
