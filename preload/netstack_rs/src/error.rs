@@ -24,9 +24,7 @@ pub struct HttpClientError {
 
 impl HttpClientError {
     pub(crate) fn from_ffi(inner: &ffi::HttpClientError) -> Self {
-        let code = HttpErrorCode::try_from(inner.GetErrorCode())
-            .map_err(|e| {})
-            .unwrap_or_default();
+        let code = HttpErrorCode::try_from(inner.GetErrorCode()).unwrap_or_default();
         let msg = inner.GetErrorMessage().to_string();
         Self { code, msg }
     }

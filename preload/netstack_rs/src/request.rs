@@ -83,7 +83,7 @@ impl<C: RequestCallback> Request<C> {
     pub fn build(mut self) -> RequestTask {
         let mut task = RequestTask::from_http_request(&self.inner);
         if let Some(callback) = self.callback.take() {
-            task.callback(callback);
+            task.set_callback(callback);
         }
         task
     }

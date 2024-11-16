@@ -25,11 +25,7 @@ pub struct Response<'a> {
 impl<'a> Response<'a> {
     /// Get Response Code
     pub fn status(&self) -> ResponseCode {
-        self.inner
-            .GetResponseCode()
-            .try_into()
-            .map_err(|e| {})
-            .unwrap_or_default()
+        self.inner.GetResponseCode().try_into().unwrap_or_default()
     }
 
     pub fn headers(&self) -> HashMap<String, String> {
