@@ -13,18 +13,18 @@
 * limitations under the License.
 */
 
+#include "preload_module.h"
+
 #include <unistd.h>
 
 #include <cstdint>
 #include <memory>
 
-#include "base/request/request/common/include/log.h"
 #include "js_native_api.h"
 #include "js_native_api_types.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
 #include "napi_utils.h"
-#include "preload_module.h"
 #include "request_preload.h"
 
 namespace OHOS::Request {
@@ -33,30 +33,25 @@ napi_value preload(napi_env env, napi_callback_info info)
 {
     size_t argc = 2;
     napi_value args[2] = { nullptr };
-
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-
     napi_valuetype valuetype0;
     NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
     napi_valuetype valuetype1;
     NAPI_CALL(env, napi_typeof(env, args[1], &valuetype1));
-    if (valuetype0 != napi_string || (valuetype1 != napi_object && valuetype1 != napi_undefined)) {
-        napi_throw_type_error(env, NULL, "Wrong arguments.");
-        return NULL;
+    if (valuetype0 != napi_string || (valuetype1 != napi_object)) {
+        napi_throw_type_error(env, nullptr, "Wrong arguments.");
+        return nullptr;
     }
 
     std::string url = GetValueString(env, args[0]);
-
-    std::unique_ptr<PreloadOptions> options = nullptr;
-    if (valuetype1 == napi_object) {
-        options = std::make_unique<PreloadOptions>();
-        napi_value headers = nullptr;
-        NAPI_CALL(env, napi_get_named_property(env, args[1], "headers", &headers));
+    std::unique_ptr<PreloadOptions> options = std::make_unique<PreloadOptions>();
+    napi_value headers = nullptr;
+    if (napi_get_named_property(env, args[1], "headers", &headers) == napi_ok) {
         if (headers != nullptr) {
             auto names = GetPropertyNames(env, headers);
             for (auto name : names) {
                 auto value = GetPropertyValue(env, headers, name);
-                options->headers.push_back(std::make_pair(name, value));
+                options->headers.emplace_back(std::make_pair(name, value));
             }
         }
     }
@@ -68,18 +63,15 @@ napi_value cancel(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value args[1] = { nullptr };
-
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-
     napi_valuetype valuetype0;
     NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
     if (valuetype0 != napi_string) {
-        napi_throw_type_error(env, NULL, "Wrong arguments.");
-        return NULL;
+        napi_throw_type_error(env, nullptr, "Wrong arguments.");
+        return nullptr;
     }
-
     std::string url = GetValueString(env, args[0]);
-    Preload::GetInstance()->Cancel(std::string(url));
+    Preload::GetInstance()->Cancel(url);
     return nullptr;
 }
 
@@ -87,16 +79,13 @@ napi_value setMemoryCacheSize(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value args[1] = { nullptr };
-
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-
     napi_valuetype valuetype0;
     NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
     if (valuetype0 != napi_number) {
-        napi_throw_type_error(env, NULL, "Wrong arguments.");
-        return NULL;
+        napi_throw_type_error(env, nullptr, "Wrong arguments.");
+        return nullptr;
     }
-
     uint32_t size = GetValueNum(env, args[0]);
     Preload::GetInstance()->SetRamCacheSize(size);
     return nullptr;
@@ -106,16 +95,13 @@ napi_value setFileCacheSize(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value args[1] = { nullptr };
-
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-
     napi_valuetype valuetype0;
     NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
     if (valuetype0 != napi_number) {
-        napi_throw_type_error(env, NULL, "Wrong arguments.");
-        return NULL;
+        napi_throw_type_error(env, nullptr, "Wrong arguments.");
+        return nullptr;
     }
-
     uint32_t size = GetValueNum(env, args[0]);
     Preload::GetInstance()->SetFileCacheSize(size);
     return nullptr;
