@@ -180,9 +180,12 @@ impl CancelHandle {
 }
 
 impl CancelHandle {
-    pub(super) fn cancel(&self) {
+    pub(super) fn cancel(&self) -> bool {
         if self.count.fetch_sub(1, std::sync::atomic::Ordering::SeqCst) == 1 {
             self.inner.store(true, Ordering::Release);
+            true
+        } else {
+            false
         }
     }
 }

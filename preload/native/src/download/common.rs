@@ -201,7 +201,10 @@ impl TaskHandle {
     pub(crate) fn cancel(&mut self) {
         if let Some(handle) = self.cancel_handle.take() {
             info!("cancel task {}", self.task_id.brief());
-            handle.cancel();
+            let _callback = self.callbacks.lock().unwrap();
+            if handle.cancel() {
+                self.finish.store(true, Ordering::Release);
+            }
         } else {
             error!("cancel task {} not exist", self.task_id.brief());
         }
