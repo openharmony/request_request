@@ -17,7 +17,7 @@ rust_cxx("preload_native_rust_gen") {
   sources = [ "src/wrapper.rs" ]
 }
 
-ohos_rust_static_ffi("preload_native_rust") {
+ohos_rust_shared_ffi("preload_native_rust") {
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -30,6 +30,7 @@ ohos_rust_static_ffi("preload_native_rust") {
 
   sources = [ "src/lib.rs" ]
   deps = [
+    ":preload_native_static",
     "../../request_utils:request_utils",
     "../ffrt_rs:ffrt_rs",
     "../netstack_rs:netstack_rs",

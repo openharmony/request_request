@@ -13,7 +13,8 @@
 
 use std::collections::HashMap;
 use std::io;
-use std::sync::{Arc, LazyLock, Mutex, OnceLock, Weak};
+use std::mem::MaybeUninit;
+use std::sync::{Arc, Mutex, Once, OnceLock, Weak};
 
 use request_utils::lru::LRUCache;
 
@@ -56,8 +57,12 @@ impl CacheManager {
     }
 
     pub(crate) fn get_instance() -> &'static Self {
-        static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
-        &CACHE_MANAGER
+        static mut CACHE_MANAGER: MaybeUninit<CacheManager> = MaybeUninit::uninit();
+        static ONCE: Once = Once::new();
+        ONCE.call_once(|| unsafe {
+            CACHE_MANAGER.write(CacheManager::new());
+        });
+        unsafe { CACHE_MANAGER.assume_init_ref() }
     }
 
     #[cfg(not(test))]
@@ -118,6 +123,7 @@ impl CacheManager {
 #[cfg(test)]
 mod test {
     use std::io::{Read, Write};
+    use std::sync::LazyLock;
     use std::thread;
     use std::time::Duration;
 

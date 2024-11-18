@@ -17,6 +17,7 @@
 #![allow(stable_features)]
 #![deny(unused_must_use)]
 #![feature(lazy_cell)]
+
 #[macro_use]
 extern crate request_utils;
 

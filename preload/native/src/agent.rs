@@ -15,7 +15,8 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::hash::Hash;
-use std::sync::{Arc, LazyLock, Mutex};
+use std::mem::MaybeUninit;
+use std::sync::{Arc, Mutex, Once};
 
 use crate::cache::{CacheManager, Fetcher, RamCache, Updater};
 use crate::download::TaskHandle;
@@ -99,13 +100,14 @@ impl DownloadAgent {
     }
 
     pub fn get_instance() -> &'static Self {
-        static DOWNLOAD_AGENT: LazyLock<DownloadAgent> = LazyLock::new(|| {
+        static mut DOWNLOAD_AGENT: MaybeUninit<DownloadAgent> = MaybeUninit::uninit();
+        static ONCE: Once = Once::new();
+        ONCE.call_once(|| {
             #[cfg(not(test))]
             CacheManager::get_instance().init();
-            DownloadAgent::new()
+            unsafe { DOWNLOAD_AGENT.write(DownloadAgent::new()) };
         });
-
-        &DOWNLOAD_AGENT
+        unsafe { DOWNLOAD_AGENT.assume_init_ref() }
     }
 
     pub fn cancel(&self, url: &str) {
@@ -131,6 +133,7 @@ impl DownloadAgent {
     ) -> TaskHandle {
         let url = request.url;
         let task_id = TaskId::from_url(url);
+        info!("preload task {}", task_id.brief());
 
         if !update {
             if let Err(ret) = self.fetch(&task_id, callback) {
