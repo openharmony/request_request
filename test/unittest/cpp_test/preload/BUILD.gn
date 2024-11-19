@@ -22,7 +22,14 @@ ohos_unittest("preload_test") {
     "../../../../common/include",
   ]
 
-  sources = [ "src/download.cpp" ]
+  sources = [
+    "src/abnormal.cpp",
+    "src/cancel.cpp",
+    "src/fail.cpp",
+    "src/info.cpp",
+    "src/progress.cpp",
+    "src/success.cpp",
+  ]
 
   deps = [
     "../../../../preload/native:preload_native",

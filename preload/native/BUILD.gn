@@ -61,8 +61,6 @@ ohos_shared_library("preload_native") {
   }
   stack_protector_ret = true
 
-  public_configs = [ ":preload_native_config" ]
-
   sources = [
     "src/cxx/preload_callback.cpp",
     "src/cxx/request_preload.cpp",
@@ -71,8 +69,9 @@ ohos_shared_library("preload_native") {
   deps = [
     ":preload_native_rust",
     ":preload_native_rust_gen",
-    "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
+  public_deps = [ "//third_party/rust/crates/cxx:cxx_cppdeps" ]
+  public_configs = [ ":preload_native_config" ]
 
   external_deps = [
     "ability_runtime:app_context",
