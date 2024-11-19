@@ -201,7 +201,13 @@ impl TaskHandle {
     pub(crate) fn cancel(&mut self) {
         if let Some(handle) = self.cancel_handle.take() {
             info!("cancel task {}", self.task_id.brief());
+            if self.finish.load(Ordering::Acquire) {
+                return;
+            }
             let _callback = self.callbacks.lock().unwrap();
+            if self.finish.load(Ordering::Acquire) {
+                return;
+            }
             if handle.cancel() {
                 self.finish.store(true, Ordering::Release);
             }
@@ -295,6 +301,7 @@ mod test {
     use std::net::TcpStream;
     use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::Arc;
+    use std::thread;
     use std::time::Duration;
 
     use super::*;
@@ -317,7 +324,7 @@ mod test {
     fn ut_preload() {
         let success_flag = Arc::new(AtomicBool::new(false));
         let request = DownloadRequest::new(TEST_URL);
-        download(
+        let handle = download(
             TaskId::from_url(TEST_URL),
             request,
             Some(Box::new(TestCallback {
@@ -325,7 +332,10 @@ mod test {
             })),
             0,
         );
-        std::thread::sleep(Duration::from_secs(1));
+        if !handle.is_finish() {
+            thread::sleep(Duration::from_millis(500));
+        }
+        thread::sleep(Duration::from_millis(10));
         assert!(success_flag.load(Ordering::Acquire));
     }
 
@@ -362,8 +372,11 @@ mod test {
         let server = test_server(test_f);
         let mut request = DownloadRequest::new(&server);
         request.headers(headers);
-        download(TaskId::from_url(&server), request, None, 0);
-        std::thread::sleep(Duration::from_millis(2000));
+        let handle = download(TaskId::from_url(&server), request, None, 0);
+        if !handle.is_finish() {
+            thread::sleep(Duration::from_millis(500));
+        }
+        thread::sleep(Duration::from_millis(10));
         assert!(flag.load(Ordering::SeqCst));
     }
 }

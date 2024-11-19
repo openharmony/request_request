@@ -251,6 +251,7 @@ mod test {
     use std::net::TcpStream;
     use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::thread;
     use std::time::Duration;
 
     use super::*;
@@ -304,8 +305,11 @@ mod test {
         let callback = Box::new(TestCallbackS {
             flag: success_flag.clone(),
         });
-        agent.preload(DownloadRequest::new(TEST_URL), callback, false);
-        std::thread::sleep(Duration::from_secs(1));
+        let handle = agent.preload(DownloadRequest::new(TEST_URL), callback, false);
+        if !handle.is_finish() {
+            thread::sleep(Duration::from_millis(500));
+        }
+        thread::sleep(Duration::from_millis(10));
         assert_eq!(success_flag.load(Ordering::SeqCst), 1);
     }
 
@@ -323,9 +327,12 @@ mod test {
             flag: success_flag_1.clone(),
         });
 
-        agent.preload(DownloadRequest::new(TEST_URL), callback_0, false);
+        let handle = agent.preload(DownloadRequest::new(TEST_URL), callback_0, false);
         agent.preload(DownloadRequest::new(TEST_URL), callback_1, false);
-        std::thread::sleep(Duration::from_secs(1));
+        if !handle.is_finish() {
+            thread::sleep(Duration::from_millis(500));
+        }
+        thread::sleep(Duration::from_millis(10));
         assert_eq!(success_flag_0.load(Ordering::SeqCst), 1);
         assert_eq!(success_flag_1.load(Ordering::SeqCst), 1);
     }
@@ -338,8 +345,11 @@ mod test {
         let callback = Box::new(TestCallbackF {
             flag: error.clone(),
         });
-        agent.preload(DownloadRequest::new(ERROR_IP), callback, false);
-        std::thread::sleep(Duration::from_secs(1));
+        let handle = agent.preload(DownloadRequest::new(ERROR_IP), callback, false);
+        if !handle.is_finish() {
+            thread::sleep(Duration::from_millis(500));
+        }
+        thread::sleep(Duration::from_millis(10));
         assert!(!error.lock().unwrap().as_str().is_empty());
     }
 
@@ -356,9 +366,13 @@ mod test {
             flag: error_1.clone(),
         });
 
-        agent.preload(DownloadRequest::new(ERROR_IP), callback_0, false);
+        let handle = agent.preload(DownloadRequest::new(ERROR_IP), callback_0, false);
         agent.preload(DownloadRequest::new(ERROR_IP), callback_1, false);
-        std::thread::sleep(Duration::from_secs(1));
+        if !handle.is_finish() {
+            thread::sleep(Duration::from_millis(500));
+        }
+        thread::sleep(Duration::from_millis(10));
+
         assert!(!error_0.lock().unwrap().as_str().is_empty());
         assert!(!error_1.lock().unwrap().as_str().is_empty());
     }
@@ -373,7 +387,7 @@ mod test {
         });
         let mut handle = agent.preload(DownloadRequest::new(TEST_URL), callback, true);
         handle.cancel();
-        std::thread::sleep(Duration::from_secs(1));
+        thread::sleep(Duration::from_secs(1));
         assert_eq!(cancel_flag.load(Ordering::SeqCst), 1);
     }
 
@@ -420,19 +434,21 @@ mod test {
     fn ut_preload_already_success() {
         init();
         let agent = DownloadAgent::new();
-        agent.preload(
+        let handle = agent.preload(
             DownloadRequest::new(TEST_URL),
             Box::new(TestCallbackN),
             false,
         );
-        std::thread::sleep(Duration::from_secs(1));
-
+        if !handle.is_finish() {
+            thread::sleep(Duration::from_millis(500));
+        }
+        thread::sleep(Duration::from_millis(10));
         let success_flag = Arc::new(AtomicUsize::new(0));
         let callback = Box::new(TestCallbackS {
             flag: success_flag.clone(),
         });
         agent.preload(DownloadRequest::new(TEST_URL), callback, false);
-        std::thread::sleep(Duration::from_millis(500));
+        std::thread::sleep(Duration::from_millis(100));
         assert_eq!(success_flag.load(Ordering::SeqCst), 1);
     }
 
@@ -473,8 +489,11 @@ mod test {
         let callback = Box::new(TestCallbackS {
             flag: success_flag.clone(),
         });
-        DownloadAgent::new().preload(request, callback, true);
-        std::thread::sleep(Duration::from_millis(200));
+        let handle = DownloadAgent::new().preload(request, callback, true);
+        if !handle.is_finish() {
+            thread::sleep(Duration::from_millis(500));
+        }
+        thread::sleep(Duration::from_millis(10));
         assert!(flag.load(Ordering::SeqCst));
         assert_eq!(success_flag.load(Ordering::SeqCst), NO_DATA);
     }

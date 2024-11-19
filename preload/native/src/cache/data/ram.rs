@@ -208,7 +208,7 @@ mod test {
             cache.write_all(TEST_STRING.as_bytes()).unwrap();
             cache.finish_write();
             assert!(CACHE_MANAGER.rams.lock().unwrap().contains_key(&task_id));
-            thread::sleep(Duration::from_millis(1));
+            thread::sleep(Duration::from_millis(5));
         }
     }
 
