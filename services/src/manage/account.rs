@@ -157,7 +157,7 @@ pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
 
     loop {
         let ret = RegistryAccountSubscriber(
-            OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVED,
+            OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVATED,
             Box::new(task_manager.clone()),
             |_id, task_manager| update_accounts(task_manager.clone()),
             |_, _, _| {},
@@ -231,7 +231,7 @@ mod ffi {
     #[repr(i32)]
     enum OS_ACCOUNT_SUBSCRIBE_TYPE {
         INVALID_TYPE = -1,
-        ACTIVED = 0,
+        ACTIVATED = 0,
         ACTIVATING,
         UNLOCKED,
         CREATED,
