@@ -58,9 +58,10 @@ void SysNetProxyManager::SubscriberEvent()
         REQUEST_HILOGE("Common Event is already subscribered.");
         return;
     }
-    g_proxyMutex.lock();
-    InitProxy(host_, port_, exclusionList_);
-    g_proxyMutex.unlock();
+    {
+        std::lock_guard<std::mutex> lock(proxyMutex);
+        InitProxy(host_, port_, exclusionList_);
+    }
     OHOS::EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_HTTP_PROXY_CHANGE);
     OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);

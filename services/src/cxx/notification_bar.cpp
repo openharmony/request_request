@@ -309,6 +309,10 @@ void NotificationSubscriber::OnDied(){};
 void NotificationSubscriber::OnResponse(
     int32_t notificationId, sptr<Notification::NotificationButtonOption> buttonOption)
 {
+    if (buttonOption == nullptr) {
+        REQUEST_HILOGE("buttonOption empty");
+        return;
+    }
     if (buttonOption->GetButtonName() == "stop") {
         this->_taskManager->pause_task(static_cast<uint32_t>(notificationId));
     } else if (buttonOption->GetButtonName() == "start") {
