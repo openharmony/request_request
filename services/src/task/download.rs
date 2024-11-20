@@ -238,7 +238,8 @@ fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
     use crate::task::files::{convert_bundle_name, convert_path};
 
     let config = task.config();
-    let bundle_name = convert_bundle_name(config);
+    let bundle_name =
+        convert_bundle_name(config).map_err(|_| TaskError::Failed(Reason::OthersError))?;
     let real_path = convert_path(
         config.common_data.uid,
         &bundle_name,
