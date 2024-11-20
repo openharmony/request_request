@@ -31,20 +31,26 @@
 #include <unordered_map>
 #include <vector>
 
+#include "common.h"
 #include "gmock/gmock.h"
 #include "log.h"
 #include "request_preload.h"
 using namespace testing::ext;
 using namespace OHOS::Request;
 
-static std::string TEST_URL_0 = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+static std::string TEST_URL_0 = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/"
+                                "test.txt";
+static std::string TEST_URL_1 = "https://www.gitee.com/fqwert/aaaaaa";
 
-class PreloadAbnormalTest : public testing::Test {
+constexpr size_t SLEEP_INTERVAL = 100;
+constexpr size_t ABNORMAL_INTERVAL = 24;
+
+class PreloadAbnormal : public testing::Test {
 public:
     void SetUp();
 };
 
-void PreloadAbnormalTest::SetUp(void)
+void PreloadAbnormal::SetUp(void)
 {
     // input testcase setup step，setup invoked before each testcases
     testing::UnitTest *test = testing::UnitTest::GetInstance();
@@ -57,12 +63,12 @@ void PreloadAbnormalTest::SetUp(void)
 }
 
 /**
- * @tc.name: PreloadAbnormalTest
- * @tc.desc: Test PreloadAbnormalTest interface base function - nullCallback
+ * @tc.name: NullptrTest
+ * @tc.desc: Test nullptr callback
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(PreloadAbnormalTest, PreloadAbnormalTest, TestSize.Level1)
+HWTEST_F(PreloadAbnormal, NullptrTest, TestSize.Level1)
 {
     auto callback = PreloadCallback{
         .OnSuccess = nullptr,
@@ -72,4 +78,106 @@ HWTEST_F(PreloadAbnormalTest, PreloadAbnormalTest, TestSize.Level1)
     };
     auto handle = Preload::GetInstance()->load(TEST_URL_0, std::make_unique<PreloadCallback>(callback));
     EXPECT_NE(handle, nullptr);
+}
+
+/**
+ * @tc.name: SuccessBlockCallbackTest
+ * @tc.desc: Test block callback not affect other callback
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(PreloadAbnormal, SuccessBlockCallbackTest, TestSize.Level1)
+{
+    auto url = TEST_URL_0;
+    Preload::GetInstance()->Remove(url);
+    auto abnormal_callback = PreloadCallback{
+        .OnSuccess =
+            [](const std::shared_ptr<Data> &&data, const std::string &taskId) {
+                std::this_thread::sleep_for(std::chrono::hours(ABNORMAL_INTERVAL));
+            },
+    };
+    auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(abnormal_callback));
+
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+    Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
+
+    while (!handle->IsFinish()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+    }
+
+    EXPECT_FALSE(flagF->load());
+    EXPECT_FALSE(flagC->load());
+    EXPECT_TRUE(flagP->load());
+    EXPECT_TRUE(flagS->load());
+    EXPECT_EQ(handle->GetState(), PreloadState::SUCCESS);
+    Preload::GetInstance()->Remove(url);
+}
+
+/**
+ * @tc.name: FailBlockCallbackTest
+ * @tc.desc: Test block callback not affect other callback
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(PreloadAbnormal, FailBlockCallbackTest, TestSize.Level1)
+{
+    auto url = TEST_URL_1;
+    Preload::GetInstance()->Remove(url);
+    auto abnormal_callback = PreloadCallback{
+        .OnFail =
+            [](const PreloadError &error, const std::string &taskId) {
+                std::this_thread::sleep_for(std::chrono::hours(ABNORMAL_INTERVAL));
+            },
+    };
+    auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(abnormal_callback));
+
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+    Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
+
+    while (!handle->IsFinish()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+    }
+
+    EXPECT_TRUE(flagF->load());
+    EXPECT_TRUE(flagP->load());
+    EXPECT_FALSE(flagC->load());
+    EXPECT_FALSE(flagS->load());
+    EXPECT_EQ(handle->GetState(), PreloadState::FAIL);
+    Preload::GetInstance()->Remove(url);
+}
+
+/**
+ * @tc.name: CancelBlockCallbackTest
+ * @tc.desc: Test block callback not affect other callback
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(PreloadAbnormal, CancelBlockCallbackTest, TestSize.Level1)
+{
+    auto url = TEST_URL_1;
+    Preload::GetInstance()->Remove(url);
+    auto abnormal_callback = PreloadCallback{
+        .OnCancel = []() { std::this_thread::sleep_for(std::chrono::hours(ABNORMAL_INTERVAL)); },
+    };
+    auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(abnormal_callback));
+
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+    auto handle_1 = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
+    handle->Cancel();
+    handle_1->Cancel();
+
+    while (!handle->IsFinish()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+
+    EXPECT_FALSE(flagF->load());
+    EXPECT_TRUE(flagC->load());
+    EXPECT_FALSE(flagP->load());
+    EXPECT_FALSE(flagS->load());
+    EXPECT_EQ(handle->GetState(), PreloadState::CANCEL);
+    Preload::GetInstance()->Remove(url);
 }
