@@ -440,7 +440,7 @@ size_t CUrlAdp::ReadCallback(char *buffer, size_t size, size_t nitems, void *arg
 {
     UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "size is %{public}zu, nitems is %{public}zu.", size, nitems);
     FileData *fData = static_cast<FileData *>(arg);
-    if (!CheckCUrlAdp(fData) || ferror(fData->fp)) {
+    if (!CheckCUrlAdp(fData) || fData->fp == nullptr || ferror(fData->fp)) {
         return CURL_READFUNC_ABORT;
     }
 

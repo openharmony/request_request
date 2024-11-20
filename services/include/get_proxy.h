@@ -62,6 +62,7 @@ private:
     std::string host_;
     std::string port_;
     std::string exclusionList_;
+    std::mutex proxyMutex;
 };
 std::shared_ptr<SysNetProxySubscriber> SysNetProxyManager::subscriber_ = nullptr;
 
