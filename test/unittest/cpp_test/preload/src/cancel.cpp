@@ -27,22 +27,21 @@
 #include <cstdint>
 #include <memory>
 #include <thread>
-#include <tuple>
-#include <unordered_map>
 #include <vector>
 
+#include "common.h"
 #include "gmock/gmock.h"
 #include "log.h"
 #include "request_preload.h"
 using namespace testing::ext;
 using namespace OHOS::Request;
-
-class PreloadCancelTest : public testing::Test {
+using namespace std;
+class PreloadCancel : public testing::Test {
 public:
     void SetUp();
 };
 
-void PreloadCancelTest::SetUp(void)
+void PreloadCancel::SetUp(void)
 {
     // input testcase setup step，setup invoked before each testcases
     testing::UnitTest *test = testing::UnitTest::GetInstance();
@@ -54,10 +53,12 @@ void PreloadCancelTest::SetUp(void)
     GTEST_LOG_(INFO) << testCaseName.append(" start");
 }
 
-static std::string TEST_URL_0 = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+static std::string TEST_URL_0 = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/"
+                                "test.txt";
 static std::string TEST_URL_1 = "https://www.w3cschool.cn/statics/demosource/movie.mp4";
 static std::string TEST_URL_2 = "https://www.baidu.com";
-static std::string TEST_URL_3 = "https://vd4.bdstatic.com/mda-pm7bte3t6fs50rsh/sc/cae_h264/1702057792414494257/"
+static std::string TEST_URL_3 = "https://vd4.bdstatic.com/mda-pm7bte3t6fs50rsh/sc/cae_h264/"
+                                "1702057792414494257/"
                                 "mda-pm7bte3t6fs50rsh.mp4?v_from_s=bdapp-author-nanjing";
 
 constexpr size_t SLEEP_INTERVAL = 100;
@@ -65,19 +66,13 @@ constexpr size_t SLEEP_INTERVAL = 100;
 void DownloadCancelTest(std::string url)
 {
     Preload::GetInstance()->Remove(url);
-    auto flagS = std::make_shared<std::atomic_bool>(false);
-    auto flagF = std::make_shared<std::atomic_bool>(false);
-    auto flagC = std::make_shared<std::atomic_bool>(false);
-    auto flagP = std::make_shared<std::atomic_int64_t>(0);
 
-    auto callback = PreloadCallback{
-        .OnSuccess = [flagS](const std::shared_ptr<Data> &&data, const std::string &taskId) { flagS->store(true); },
-        .OnCancel = [flagC]() { flagC->store(true); },
-        .OnFail = [flagF](const PreloadError &error, const std::string &taskId) { flagF->store(true); },
-        .OnProgress = [flagP](uint64_t current, uint64_t total) { flagP->fetch_add(1); },
-    };
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+
     auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
     EXPECT_FALSE(handle->IsFinish());
+    EXPECT_EQ(handle->GetState(), PreloadState::RUNNING);
 
     handle->Cancel();
     while (!handle->IsFinish()) {
@@ -88,16 +83,17 @@ void DownloadCancelTest(std::string url)
     EXPECT_FALSE(flagS->load());
     EXPECT_TRUE(flagC->load());
     EXPECT_EQ(flagP->load(), 0);
+    EXPECT_EQ(handle->GetState(), PreloadState::CANCEL);
     Preload::GetInstance()->Remove(url);
 }
 
 /**
- * @tc.name: PreloadTest_002
- * @tc.desc: Test PreloadTest_002 interface base function - OnCancel
+ * @tc.name: OnCancelTest
+ * @tc.desc: Test PreloadCancel interface base function - OnCancel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(PreloadCancelTest, PreloadCancel, TestSize.Level1)
+HWTEST_F(PreloadCancel, OnCancelTest, TestSize.Level1)
 {
     // chunk
     DownloadCancelTest(TEST_URL_0);
@@ -105,4 +101,122 @@ HWTEST_F(PreloadCancelTest, PreloadCancel, TestSize.Level1)
     DownloadCancelTest(TEST_URL_1);
     DownloadCancelTest(TEST_URL_2);
     DownloadCancelTest(TEST_URL_3);
+}
+
+/**
+ * @tc.name: OnCancelAddCallback_0
+ * @tc.desc: Test Add callback for same url on cancel
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(PreloadCancel, OnCancelAddCallback_0, TestSize.Level1)
+{
+    auto url = TEST_URL_0;
+    Preload::GetInstance()->Remove(url);
+
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+
+    auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
+
+    TestCallback test1;
+    auto &[flagS_1, flagF_1, flagC_1, flagP_1, callback_1] = test1;
+
+    auto handle_1 = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback_1));
+    handle->Cancel();
+    while (!handle->IsFinish()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+    }
+
+    EXPECT_FALSE(flagF->load());
+    EXPECT_FALSE(flagF_1->load());
+    EXPECT_FALSE(flagC->load());
+    EXPECT_FALSE(flagC_1->load());
+
+    EXPECT_TRUE(flagP->load());
+    EXPECT_TRUE(flagP_1->load());
+    EXPECT_TRUE(flagS->load());
+    EXPECT_TRUE(flagS_1->load());
+    Preload::GetInstance()->Remove(url);
+}
+
+/**
+ * @tc.name: PreloadCancel
+ * @tc.desc: Test Add callback for same url on cancel
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(PreloadCancel, OnCancelAddCallback_1, TestSize.Level1)
+{
+    auto url = TEST_URL_0;
+    Preload::GetInstance()->Remove(url);
+
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+
+    auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
+
+    TestCallback test1;
+    auto &[flagS_1, flagF_1, flagC_1, flagP_1, callback_1] = test1;
+
+    auto handle_1 = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback_1));
+    handle->Cancel();
+    handle_1->Cancel();
+
+    while (!handle->IsFinish()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+
+    EXPECT_FALSE(flagF->load());
+    EXPECT_FALSE(flagF_1->load());
+    EXPECT_FALSE(flagP->load());
+    EXPECT_FALSE(flagP_1->load());
+    EXPECT_FALSE(flagS->load());
+    EXPECT_FALSE(flagS_1->load());
+
+    EXPECT_TRUE(flagC->load());
+    EXPECT_TRUE(flagC_1->load());
+    Preload::GetInstance()->Remove(url);
+}
+
+/**
+ * @tc.name: PreloadCancel
+ * @tc.desc: Test Add callback for same url on cancel
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(PreloadCancel, OnCancelAddCallback_2, TestSize.Level1)
+{
+    auto url = TEST_URL_0;
+    Preload::GetInstance()->Remove(url);
+
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+
+    auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
+
+    handle->Cancel();
+
+    TestCallback test1;
+    auto &[flagS_1, flagF_1, flagC_1, flagP_1, callback_1] = test1;
+
+    auto handle_1 = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback_1));
+
+    while (!handle_1->IsFinish()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+    }
+
+    EXPECT_FALSE(flagF->load());
+    EXPECT_FALSE(flagF_1->load());
+
+    EXPECT_FALSE(flagP->load());
+    EXPECT_TRUE(flagP_1->load());
+
+    EXPECT_FALSE(flagS->load());
+    EXPECT_TRUE(flagS_1->load());
+
+    EXPECT_TRUE(flagC->load());
+    EXPECT_FALSE(flagC_1->load());
+    Preload::GetInstance()->Remove(url);
 }

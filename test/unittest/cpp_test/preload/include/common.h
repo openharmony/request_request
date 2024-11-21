@@ -12,3 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#ifndef REQUEST_PRELOAD_TEST_COMMON_H
+#define REQUEST_PRELOAD_TEST_COMMON_H
+
+#include <atomic>
+#include <memory>
+
+#include "request_preload.h"
+struct TestCallback {
+    TestCallback();
+    std::shared_ptr<std::atomic_bool> flagS;
+    std::shared_ptr<std::atomic_bool> flagF;
+    std::shared_ptr<std::atomic_bool> flagC;
+    std::shared_ptr<std::atomic_bool> flagP;
+    OHOS::Request::PreloadCallback callback;
+};
+
+#endif

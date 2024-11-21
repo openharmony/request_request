@@ -36,7 +36,6 @@ ohos_rust_shared_ffi("preload_native_rust") {
     "../netstack_rs:netstack_rs",
     "//third_party/rust/crates/cxx:lib",
   ]
-  external_deps = [ "ability_runtime:app_context" ]
 
   subsystem_name = "request"
   part_name = "request"
