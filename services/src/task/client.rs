@@ -175,7 +175,7 @@ fn build_system_proxy(
 fn build_task_certs(config: &TaskConfig) -> Result<Vec<Certificate>, Box<dyn Error + Send + Sync>> {
     let uid = config.common_data.uid;
     let paths = config.certs_path.as_slice();
-    let bundle_name = convert_bundle_name(config);
+    let bundle_name = convert_bundle_name(config)?;
 
     let mut certs = Vec::new();
     for (idx, path) in paths.iter().enumerate() {
