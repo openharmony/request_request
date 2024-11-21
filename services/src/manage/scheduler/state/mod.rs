@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::time::Duration;
 
 use sql::SqlList;
@@ -23,7 +23,7 @@ use crate::manage::network_manager::NetworkManager;
 use crate::manage::task_manager::TaskManagerTx;
 #[cfg(feature = "oh")]
 #[cfg(not(test))]
-use crate::utils::GetTopUid;
+use crate::utils::GetForegroundAbilities;
 
 mod recorder;
 pub(crate) mod sql;
@@ -48,26 +48,35 @@ impl Handler {
         let (foreground_account, active_accounts) = NetworkManager::query_active_accounts();
 
         #[allow(unused_mut)]
-        let mut top_uid = 0;
+        let mut foreground_abilities = vec![];
 
         #[cfg(not(test))]
         #[cfg(feature = "oh")]
         {
             for _ in 0..10 {
-                let res = GetTopUid(&mut top_uid);
-                if res != 0 || top_uid == 0 {
-                    error!("Get top uid failed, res: {}", top_uid);
+                let res = GetForegroundAbilities(&mut foreground_abilities);
+                if res != 0 {
+                    error!("Get top uid failed, res: {}", res);
                     std::thread::sleep(Duration::from_millis(500));
                 }
             }
         }
-        let top_uid = if top_uid == 0 {
+        let foreground_abilities = if foreground_abilities.is_empty() {
             None
         } else {
-            Some(top_uid as u64)
+            Some(
+                foreground_abilities
+                    .into_iter()
+                    .map(|a: i32| a as u64)
+                    .collect(),
+            )
         };
-        self.recorder
-            .init(network_info, top_uid, foreground_account, active_accounts)
+        self.recorder.init(
+            network_info,
+            foreground_abilities,
+            foreground_account,
+            active_accounts,
+        )
     }
 
     pub(crate) fn update_rss_level(&mut self, level: i32) -> Option<RssCapacity> {
@@ -86,11 +95,8 @@ impl Handler {
     }
 
     pub(crate) fn update_top_uid(&mut self, top_uid: u64) -> Option<SqlList> {
-        if self.top_uid() == Some(top_uid) {
+        if self.foreground_abilities().contains(&top_uid) {
             return None;
-        }
-        if let Some(uid) = self.top_uid() {
-            self.update_background(uid);
         }
         if let Some(handle) = self.background_timeout.remove(&top_uid) {
             handle.cancel();
@@ -99,7 +105,7 @@ impl Handler {
     }
 
     pub(crate) fn update_background(&mut self, uid: u64) -> Option<SqlList> {
-        if Some(uid) != self.top_uid() {
+        if !self.foreground_abilities().contains(&uid) {
             return None;
         }
         let task_manager = self.task_manager.clone();
@@ -110,7 +116,7 @@ impl Handler {
                 task_manager.trigger_background_timeout(uid);
             }),
         );
-        self.recorder.update_background();
+        self.recorder.update_background(uid);
         None
     }
 
@@ -131,8 +137,8 @@ impl Handler {
         Some(sql_list)
     }
 
-    pub(crate) fn top_uid(&self) -> Option<u64> {
-        self.recorder.top_uid
+    pub(crate) fn foreground_abilities(&self) -> &HashSet<u64> {
+        &self.recorder.foreground_abilities
     }
 
     pub(crate) fn top_user(&self) -> u64 {
