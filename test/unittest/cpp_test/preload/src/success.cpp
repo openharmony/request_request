@@ -31,6 +31,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "common.h"
 #include "gmock/gmock.h"
 #include "log.h"
 #include "request_preload.h"
@@ -39,21 +40,23 @@ using namespace OHOS::Request;
 
 constexpr size_t SLEEP_INTERVAL = 100;
 constexpr size_t FETCH_INTERVAL = 5;
-static std::string TEST_URL_0 = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+static std::string TEST_URL_0 = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/"
+                                "test.txt";
 static std::string TEST_URL_1 = "https://www.w3cschool.cn/statics/demosource/movie.mp4";
 static std::string TEST_URL_2 = "https://www.baidu.com";
-static std::string TEST_URL_3 = "https://vd4.bdstatic.com/mda-pm7bte3t6fs50rsh/sc/cae_h264/1702057792414494257/"
+static std::string TEST_URL_3 = "https://vd4.bdstatic.com/mda-pm7bte3t6fs50rsh/sc/cae_h264/"
+                                "1702057792414494257/"
                                 "mda-pm7bte3t6fs50rsh.mp4?v_from_s=bdapp-author-nanjing";
 
 constexpr uint64_t TEST_SIZE_0 = 1042003;
 constexpr uint64_t TEST_SIZE_1 = 318465;
 
-class PreloadSuccessTest : public testing::Test {
+class PreloadSuccess : public testing::Test {
 public:
     void SetUp();
 };
 
-void PreloadSuccessTest::SetUp(void)
+void PreloadSuccess::SetUp(void)
 {
     // input testcase setup step，setup invoked before each testcases
     testing::UnitTest *test = testing::UnitTest::GetInstance();
@@ -68,38 +71,32 @@ void PreloadSuccessTest::SetUp(void)
 void DownloadSuccessTest(std::string url, uint64_t size)
 {
     Preload::GetInstance()->Remove(url);
-    auto flagS = std::make_shared<std::atomic_uint64_t>(0);
-    auto flagF = std::make_shared<std::atomic_bool>(false);
-    auto flagC = std::make_shared<std::atomic_bool>(false);
-    auto flagP = std::make_shared<std::atomic_int64_t>(0);
 
-    auto callback = PreloadCallback{
-        .OnSuccess = [flagS](const std::shared_ptr<Data> &&data,
-                         const std::string &taskId) { flagS->store(data->bytes().size()); },
-        .OnCancel = [flagC]() { flagC->store(true); },
-        .OnFail = [flagF](const PreloadError &error, const std::string &taskId) { flagF->store(true); },
-        .OnProgress = [flagP](uint64_t current, uint64_t total) { flagP->fetch_add(1); },
-    };
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+
     auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
     EXPECT_FALSE(handle->IsFinish());
+    EXPECT_EQ(handle->GetState(), PreloadState::RUNNING);
 
     while (!handle->IsFinish()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
     EXPECT_FALSE(flagF->load());
     EXPECT_FALSE(flagC->load());
-    EXPECT_TRUE(flagP->load() > 0);
-    EXPECT_EQ(flagS->load(), size);
+    EXPECT_TRUE(flagP->load());
+    EXPECT_TRUE(flagS->load());
+    EXPECT_EQ(handle->GetState(), PreloadState::SUCCESS);
     Preload::GetInstance()->Remove(url);
 }
 
 /**
- * @tc.name: PreloadSuccessTest_001
- * @tc.desc: Test PreloadSuccessTest_001 interface base function - OnSuccess
+ * @tc.name:  OnSuccessTest
+ * @tc.desc: Test  OnSuccessTest interface base function - OnSuccess
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(PreloadSuccessTest, PreloadSuccessCallback, TestSize.Level1)
+HWTEST_F(PreloadSuccess, OnSuccessTest, TestSize.Level1)
 {
     // chunk
     DownloadSuccessTest(TEST_URL_0, TEST_SIZE_0);
@@ -108,42 +105,24 @@ HWTEST_F(PreloadSuccessTest, PreloadSuccessCallback, TestSize.Level1)
 }
 
 /**
- * @tc.name: PreloadSuccessAddCallback
- * @tc.desc: Test PreloadSuccessAddCallback interface base function - OnSuccess
+ * @tc.name: OnSuccessAddCallback
+ * @tc.desc: Test Add callback for same url on cancel
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
 
-HWTEST_F(PreloadSuccessTest, PreloadSuccessAddCallback, TestSize.Level1)
+HWTEST_F(PreloadSuccess, OnSuccessAddCallback, TestSize.Level1)
 {
     auto url = TEST_URL_2;
     Preload::GetInstance()->Remove(url);
 
-    auto flagS = std::make_shared<std::atomic_bool>(false);
-    auto flagF = std::make_shared<std::atomic_bool>(false);
-    auto flagC = std::make_shared<std::atomic_bool>(false);
-    auto flagP = std::make_shared<std::atomic_int64_t>(0);
-
-    auto callback = PreloadCallback{
-        .OnSuccess = [flagS](const std::shared_ptr<Data> &&data, const std::string &taskId) { flagS->store(true); },
-        .OnCancel = [flagC]() { flagC->store(true); },
-        .OnFail = [flagF](const PreloadError &error, const std::string &taskId) { flagF->store(true); },
-        .OnProgress = [flagP](uint64_t current, uint64_t total) { flagP->fetch_add(1); },
-    };
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
 
     auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
 
-    auto flagS_1 = std::make_shared<std::atomic_bool>(false);
-    auto flagF_1 = std::make_shared<std::atomic_bool>(false);
-    auto flagC_1 = std::make_shared<std::atomic_bool>(false);
-    auto flagP_1 = std::make_shared<std::atomic_int64_t>(0);
-
-    auto callback_1 = PreloadCallback{
-        .OnSuccess = [flagS_1](const std::shared_ptr<Data> &&data, const std::string &taskId) { flagS_1->store(true); },
-        .OnCancel = [flagC_1]() { flagC_1->store(true); },
-        .OnFail = [flagF_1](const PreloadError &error, const std::string &taskId) { flagF_1->store(true); },
-        .OnProgress = [flagP_1](uint64_t current, uint64_t total) { flagP_1->fetch_add(1); },
-    };
+    TestCallback test1;
+    auto &[flagS_1, flagF_1, flagC_1, flagP_1, callback_1] = test1;
 
     auto handle_1 = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback_1));
 
@@ -155,36 +134,28 @@ HWTEST_F(PreloadSuccessTest, PreloadSuccessAddCallback, TestSize.Level1)
     EXPECT_FALSE(flagF_1->load());
     EXPECT_FALSE(flagC->load());
     EXPECT_FALSE(flagC_1->load());
-    EXPECT_TRUE(flagP->load() > 0);
-    EXPECT_TRUE(flagP_1->load() > 0);
+
+    EXPECT_TRUE(flagP->load());
+    EXPECT_TRUE(flagP_1->load());
     EXPECT_TRUE(flagS->load());
     EXPECT_TRUE(flagS_1->load());
     Preload::GetInstance()->Remove(url);
 }
 
 /**
- * @tc.name: PreloadSuccessCache
- * @tc.desc: Test PreloadSuccessCache interface base function - OnSuccess
+ * @tc.name: OnSuccessCache
+ * @tc.desc: Test cached data
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
 
-HWTEST_F(PreloadSuccessTest, PreloadSuccessCache, TestSize.Level1)
+HWTEST_F(PreloadSuccess, OnSuccessCache, TestSize.Level1)
 {
     auto url = TEST_URL_3;
 
     Preload::GetInstance()->Remove(url);
-    auto flagS = std::make_shared<std::atomic_bool>(false);
-    auto flagF = std::make_shared<std::atomic_bool>(false);
-    auto flagC = std::make_shared<std::atomic_bool>(false);
-    auto flagP = std::make_shared<std::atomic_int64_t>(0);
-
-    auto callback = PreloadCallback{
-        .OnSuccess = [flagS](const std::shared_ptr<Data> &&data, const std::string &taskId) { flagS->store(true); },
-        .OnCancel = [flagC]() { flagC->store(true); },
-        .OnFail = [flagF](const PreloadError &error, const std::string &taskId) { flagF->store(true); },
-        .OnProgress = [flagP](uint64_t current, uint64_t total) { flagP->fetch_add(1); },
-    };
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
 
     auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
 
@@ -192,17 +163,8 @@ HWTEST_F(PreloadSuccessTest, PreloadSuccessCache, TestSize.Level1)
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
 
-    auto flagS_1 = std::make_shared<std::atomic_bool>(false);
-    auto flagF_1 = std::make_shared<std::atomic_bool>(false);
-    auto flagC_1 = std::make_shared<std::atomic_bool>(false);
-    auto flagP_1 = std::make_shared<std::atomic_int64_t>(0);
-
-    auto callback_1 = PreloadCallback{
-        .OnSuccess = [flagS_1](const std::shared_ptr<Data> &&data, const std::string &taskId) { flagS_1->store(true); },
-        .OnCancel = [flagC_1]() { flagC_1->store(true); },
-        .OnFail = [flagF_1](const PreloadError &error, const std::string &taskId) { flagF_1->store(true); },
-        .OnProgress = [flagP_1](uint64_t current, uint64_t total) { flagP_1->fetch_add(1); },
-    };
+    TestCallback test1;
+    auto &[flagS_1, flagF_1, flagC_1, flagP_1, callback_1] = test1;
 
     auto handle_1 = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback_1));
     std::this_thread::sleep_for(std::chrono::milliseconds(FETCH_INTERVAL));
@@ -211,8 +173,9 @@ HWTEST_F(PreloadSuccessTest, PreloadSuccessCache, TestSize.Level1)
     EXPECT_FALSE(flagF_1->load());
     EXPECT_FALSE(flagC->load());
     EXPECT_FALSE(flagC_1->load());
-    EXPECT_TRUE(flagP->load() > 0);
-    EXPECT_EQ(flagP_1->load(), 0);
+    EXPECT_FALSE(flagP_1->load());
+
+    EXPECT_TRUE(flagP->load());
     EXPECT_TRUE(flagS->load());
     EXPECT_TRUE(flagS_1->load());
     Preload::GetInstance()->Remove(url);

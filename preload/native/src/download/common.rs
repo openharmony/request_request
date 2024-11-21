@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::collections::VecDeque;
 use std::io::Write;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
@@ -30,21 +31,39 @@ const SUCCESS: usize = 2;
 const FAIL: usize = 3;
 const CANCEL: usize = 4;
 
+const PROGRESS_INTERVAL: usize = 8;
+
 pub(crate) struct DownloadCallback {
     task_id: TaskId,
     cache: Option<RamCache>,
     finish: Arc<AtomicBool>,
     state: Arc<AtomicUsize>,
-    callbacks: Arc<Mutex<Vec<Box<dyn CustomCallback>>>>,
-    processed: u64,
+    callbacks: Arc<Mutex<VecDeque<Box<dyn CustomCallback>>>>,
+    progress_restriction: ProgressRestriction,
     seq: usize,
+}
+
+struct ProgressRestriction {
+    processed: u64,
+    count: usize,
+    data_receive: bool,
+}
+
+impl ProgressRestriction {
+    fn new() -> Self {
+        Self {
+            processed: 0,
+            count: 0,
+            data_receive: false,
+        }
+    }
 }
 
 impl DownloadCallback {
     pub(crate) fn new(
         task_id: TaskId,
         finish: Arc<AtomicBool>,
-        callbacks: Arc<Mutex<Vec<Box<dyn CustomCallback>>>>,
+        callbacks: Arc<Mutex<VecDeque<Box<dyn CustomCallback>>>>,
         state: Arc<AtomicUsize>,
         seq: usize,
     ) -> Self {
@@ -54,7 +73,7 @@ impl DownloadCallback {
             cache: None,
             finish,
             callbacks,
-            processed: 0,
+            progress_restriction: ProgressRestriction::new(),
             seq,
         }
     }
@@ -79,9 +98,23 @@ impl DownloadCallback {
         self.state.store(SUCCESS, Ordering::Release);
         self.finish.store(true, Ordering::Release);
         let mut callbacks = self.callbacks.lock().unwrap();
-        while let Some(mut callback) = callbacks.pop() {
-            callback.on_success(cache.clone(), self.task_id.brief());
+
+        if callbacks.len() <= 1 {
+            if let Some(mut callback) = callbacks.pop_front() {
+                callback.on_progress(cache.size() as u64, cache.size() as u64);
+                callback.on_success(cache.clone(), self.task_id.brief());
+            }
+        } else {
+            while let Some(mut callback) = callbacks.pop_front() {
+                let clone_cache = cache.clone();
+                let task_id = self.task_id.brief().to_string();
+                crate::spawn(move || {
+                    callback.on_progress(clone_cache.size() as u64, clone_cache.size() as u64);
+                    callback.on_success(clone_cache, &task_id)
+                });
+            }
         }
+
         drop(callbacks);
         self.notify_agent_finish();
     }
@@ -91,9 +124,19 @@ impl DownloadCallback {
         self.state.store(FAIL, Ordering::Release);
         self.finish.store(true, Ordering::Release);
         let mut callbacks = self.callbacks.lock().unwrap();
-        while let Some(mut callback) = callbacks.pop() {
-            callback.on_fail(DownloadError::from(&error), self.task_id.brief());
+
+        if callbacks.len() <= 1 {
+            if let Some(mut callback) = callbacks.pop_front() {
+                callback.on_fail(DownloadError::from(&error), self.task_id.brief());
+            }
+        } else {
+            while let Some(mut callback) = callbacks.pop_front() {
+                let task_id = self.task_id.brief().to_string();
+                let error = DownloadError::from(&error);
+                crate::spawn(move || callback.on_fail(error, &task_id));
+            }
         }
+
         drop(callbacks);
         self.notify_agent_finish();
     }
@@ -133,9 +176,17 @@ impl RequestCallback for DownloadCallback {
 
         self.finish.store(true, Ordering::Release);
         let mut callbacks = self.callbacks.lock().unwrap();
-        while let Some(mut callback) = callbacks.pop() {
-            callback.on_cancel();
+
+        if callbacks.len() <= 1 {
+            if let Some(mut callback) = callbacks.pop_front() {
+                callback.on_cancel();
+            }
+        } else {
+            while let Some(mut callback) = callbacks.pop_front() {
+                crate::spawn(move || callback.on_cancel());
+            }
         }
+
         drop(callbacks);
         self.notify_agent_finish();
     }
@@ -143,6 +194,7 @@ impl RequestCallback for DownloadCallback {
     #[allow(unused_mut)]
     fn on_data_receive(&mut self, data: &[u8], mut task: RequestTask) {
         if self.cache.is_none() {
+            self.progress_restriction.data_receive = true;
             let headers = task.headers();
             let is_chunked = headers
                 .get("transfer-encoding")
@@ -167,11 +219,21 @@ impl RequestCallback for DownloadCallback {
     }
 
     fn on_progress(&mut self, dl_total: u64, dl_now: u64, _ul_total: u64, _ul_now: u64) {
-        if dl_now > self.processed {
-            self.processed = dl_now;
-        } else {
+        if !self.progress_restriction.data_receive
+            || dl_now == self.progress_restriction.processed
+            || dl_now == dl_total
+        {
             return;
         }
+        self.progress_restriction.processed = dl_now;
+
+        let count = self.progress_restriction.count;
+        self.progress_restriction.count += 1;
+        if count % PROGRESS_INTERVAL != 0 {
+            return;
+        }
+        self.progress_restriction.count = 1;
+
         let mut callbacks = self.callbacks.lock().unwrap();
         for callback in callbacks.iter_mut() {
             callback.on_progress(dl_now, dl_total);
@@ -185,7 +247,7 @@ pub struct TaskHandle {
     cancel_handle: Option<CancelHandle>,
     state: Arc<AtomicUsize>,
     finish: Arc<AtomicBool>,
-    callbacks: Arc<Mutex<Vec<Box<dyn CustomCallback>>>>,
+    callbacks: Arc<Mutex<VecDeque<Box<dyn CustomCallback>>>>,
 }
 
 impl TaskHandle {
@@ -195,7 +257,7 @@ impl TaskHandle {
             task_id,
             cancel_handle: None,
             finish: Arc::new(AtomicBool::new(false)),
-            callbacks: Arc::new(Mutex::new(vec![])),
+            callbacks: Arc::new(Mutex::new(VecDeque::with_capacity(1))),
         }
     }
     pub(crate) fn cancel(&mut self) {
@@ -240,7 +302,7 @@ impl TaskHandle {
         let mut callbacks = self.callbacks.lock().unwrap();
         if !self.finish.load(Ordering::Acquire) {
             info!("add callback to task {}", self.task_id.brief());
-            callbacks.push(callback);
+            callbacks.push_back(callback);
             if let Some(handle) = self.cancel_handle.as_ref() {
                 handle.add_count();
             }
@@ -261,7 +323,7 @@ impl TaskHandle {
     }
 
     #[inline]
-    fn callbacks(&self) -> Arc<Mutex<Vec<Box<dyn CustomCallback>>>> {
+    fn callbacks(&self) -> Arc<Mutex<VecDeque<Box<dyn CustomCallback>>>> {
         self.callbacks.clone()
     }
 
@@ -279,7 +341,7 @@ pub(crate) fn download(
 ) -> TaskHandle {
     let mut handle = TaskHandle::new(task_id.clone());
     if let Some(callback) = callback {
-        handle.callbacks.lock().unwrap().push(callback);
+        handle.callbacks.lock().unwrap().push_back(callback);
     }
 
     let callback = DownloadCallback::new(

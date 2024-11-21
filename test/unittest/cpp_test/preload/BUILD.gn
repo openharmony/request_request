@@ -18,6 +18,7 @@ ohos_unittest("preload_test") {
   module_out_path = module_output_path
 
   include_dirs = [
+    "include",
     "../../../../interfaces/inner_kits/predownload/include",
     "../../../../common/include",
   ]
@@ -25,8 +26,8 @@ ohos_unittest("preload_test") {
   sources = [
     "src/abnormal.cpp",
     "src/cancel.cpp",
+    "src/common.cpp",
     "src/fail.cpp",
-    "src/info.cpp",
     "src/progress.cpp",
     "src/success.cpp",
   ]
