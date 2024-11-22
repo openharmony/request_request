@@ -21,32 +21,45 @@
 #include "access_token.h"
 #include "accesstoken_kit.h"
 #include "app_mgr_client.h"
+#include "app_mgr_proxy.h"
 #include "common_event_data.h"
 #include "common_event_manager.h"
 #include "common_event_publish_info.h"
 #include "cxx.h"
 #include "int_wrapper.h"
+#include "iservice_registry.h"
 #include "log.h"
 #include "string_wrapper.h"
+#include "system_ability_definition.h"
 #include "tokenid_kit.h"
 #include "utils/mod.rs.h"
 
 namespace OHOS::Request {
 using namespace OHOS::Security::AccessToken;
 using namespace OHOS::EventFwk;
+using namespace OHOS::AppExecFwk;
 
-int GetTopUid(int &uid)
+int GetForegroundAbilities(rust::vec<int> &uid)
 {
     sptr<IRemoteObject> token;
-    auto ret = OHOS::AAFwk::AbilityManagerClient::GetInstance()->GetTopAbility(token);
+    auto abilities = std::vector<AppExecFwk::AppStateData>();
+    auto sysm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (sysm == nullptr) {
+        REQUEST_HILOGE("GetForegroundAbilities failed, sysm is nullptr");
+    }
+    auto remote = sysm->CheckSystemAbility(APP_MGR_SERVICE_ID);
+    if (remote == nullptr) {
+        REQUEST_HILOGE("GetForegroundAbilities failed, remote is nullptr");
+    }
+    auto proxy = AppMgrProxy(remote);
+    auto ret = proxy.GetForegroundApplications(abilities);
     if (ret != 0) {
-        REQUEST_HILOGE("GetTopUid failed, ret: %{public}d", ret);
+        REQUEST_HILOGE("GetForegroundAbilities, ret: %{public}d", ret);
         return ret;
     }
-    auto info = OHOS::AppExecFwk::RunningProcessInfo();
-    AppExecFwk::AppMgrClient().GetRunningProcessInfoByToken(token, info);
-
-    uid = info.uid_;
+    for (auto ability : abilities) {
+        uid.push_back(ability.uid);
+    }
     return 0;
 }
 

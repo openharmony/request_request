@@ -411,7 +411,7 @@ impl Scheduler {
             return Ok(false);
         }
 
-        if !config.satisfy_foreground(self.state_handler.top_uid()) {
+        if !config.satisfy_foreground(self.state_handler.foreground_abilities()) {
             info!(
                 "task {} started, waiting for app {}",
                 task_id, config.common_data.uid
