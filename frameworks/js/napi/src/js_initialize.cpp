@@ -33,7 +33,6 @@
 #include "net_conn_client.h"
 #include "request_manager.h"
 
-
 static constexpr const char *PARAM_KEY_DESCRIPTION = "description";
 static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";
 static constexpr const char *PARAM_KEY_FILE_PATH = "filePath";
@@ -696,6 +695,10 @@ std::string GetHostnameFromURL(const std::string &url)
 void JsInitialize::ParseCertificatePins(napi_env env, std::string &url, std::string &certificatePins)
 {
     auto hostname = GetHostnameFromURL(url);
+    if (OHOS::NetManagerStandard::NetConnClient::GetInstance().IsPinOpenMode(hostname)) {
+        REQUEST_HILOGI("Pins is openMode");
+        return;
+    }
     auto ret = OHOS::NetManagerStandard::NetConnClient::GetInstance().GetPinSetForHostName(hostname, certificatePins);
     if (ret != 0 || certificatePins.empty()) {
         REQUEST_HILOGD("Get No pin set by hostname");
