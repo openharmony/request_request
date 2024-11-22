@@ -73,10 +73,10 @@ void GrantNativePermission()
     delete[] perms;
 }
 
-void CreateRequestFuzzTest(size_t size)
+void CreateRequestFuzzTest(const uint8_t *data, size_t size)
 {
     Config config;
-    auto tid = std::to_string(size);
+    std::string tid(reinterpret_cast<const char *>(data), size);
 
     GrantNativePermission();
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
@@ -182,12 +182,16 @@ void IsSaReadyRequestFuzzTest(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
     RequestManager::GetInstance()->IsSaReady();
+    std::string tid(reinterpret_cast<const char *>(data), size);
+    RequestManager::GetInstance()->Start(tid);
 }
 
 void ReopenChannelRequestFuzzTest(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
     RequestManager::GetInstance()->ReopenChannel();
+    std::string tid(reinterpret_cast<const char *>(data), size);
+    RequestManager::GetInstance()->Start(tid);
 }
 
 void SubscribeSARequestFuzzTest(const uint8_t *data, size_t size)
@@ -195,6 +199,8 @@ void SubscribeSARequestFuzzTest(const uint8_t *data, size_t size)
     GrantNativePermission();
     RequestManager::GetInstance()->SubscribeSA();
     RequestManager::GetInstance()->UnsubscribeSA();
+    std::string tid(reinterpret_cast<const char *>(data), size);
+    RequestManager::GetInstance()->Start(tid);
 }
 
 class FuzzResponseListenerImpl : public IResponseListener {
@@ -253,6 +259,8 @@ void TestFunc(void)
 void RestoreListenerRequestFuzzTest(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
+    std::string tid(reinterpret_cast<const char *>(data), size);
+    RequestManager::GetInstance()->Start(tid);
     RequestManager::GetInstance()->RestoreListener(TestFunc);
 }
 
@@ -345,6 +353,7 @@ void RunningTaskCountFuzzTestSubscribeRunningTaskCount(const uint8_t *data, size
     auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
     if (proxy == nullptr) {
         std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FuzzFwkTestOberver>();
+        ob->OnRunningTaskCountUpdate(static_cast<int>(*data));
         SubscribeRunningTaskCount(ob);
         UnsubscribeRunningTaskCount(ob);
     }
@@ -362,6 +371,7 @@ void RunningTaskCountFuzzTestUnubscribeRunning(const uint8_t *data, size_t size)
     GrantNativePermission();
     std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FuzzFwkTestOberver>();
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob1);
+    ob1->OnRunningTaskCountUpdate(static_cast<int>(*data));
 
     std::shared_ptr<IRunningTaskObserver> ob2 = std::make_shared<FuzzFwkTestOberver>();
     UnsubscribeRunningTaskCount(ob2);
@@ -371,7 +381,7 @@ void RunningTaskCountFuzzTestUnubscribeRunning(const uint8_t *data, size_t size)
 void RunningTaskCountFuzzTestGetAndSetCount(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
-    int old = FwkRunningTaskCountManager::GetInstance()->GetCount();
+    int old = static_cast<int>(*data);
     int except = 1; // 10 is except count num
     FwkRunningTaskCountManager::GetInstance()->SetCount(except);
     FwkRunningTaskCountManager::GetInstance()->GetCount();
@@ -383,6 +393,7 @@ void RunningTaskCountFuzzTestUpdateRunningTaskCount(const uint8_t *data, size_t 
 {
     GrantNativePermission();
     std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FuzzFwkTestOberver>();
+    ob->OnRunningTaskCountUpdate(static_cast<int>(*data));
     FwkIRunningTaskObserver runningOb = FwkIRunningTaskObserver(ob);
     runningOb.UpdateRunningTaskCount();
 }
@@ -394,31 +405,24 @@ void RunningTaskCountFuzzTestNotifyAllObservers(const uint8_t *data, size_t size
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob1);
     FwkRunningTaskCountManager::GetInstance()->NotifyAllObservers();
     FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob1);
+    ob1->OnRunningTaskCountUpdate(static_cast<int>(*data));
 }
 
-void RunCountNotifyStubFuzzTestGetInstance(const uint8_t *data, size_t size)
-{
-    GrantNativePermission();
-    RunCountNotifyStub::GetInstance();
-}
-
-void RunCountNotifyStubFuzzTestCallBack(const uint8_t *data, size_t size)
-{
-    Notify notify;
-    GrantNativePermission();
-    RunCountNotifyStub::GetInstance()->CallBack(notify);
-}
-
-void RunCountNotifyStubFuzzTestDone(const uint8_t *data, size_t size)
+void RunCountNotifyStubFuzzTestGetInstanceDoneCallBack(const uint8_t *data, size_t size)
 {
     TaskInfo taskInfo;
+    taskInfo.tid = std::string(reinterpret_cast<const char *>(data), size);
+    Notify notify;
     GrantNativePermission();
+
+    RunCountNotifyStub::GetInstance();
     RunCountNotifyStub::GetInstance()->Done(taskInfo);
+    RunCountNotifyStub::GetInstance()->CallBack(notify);
 }
 
 void RunCountNotifyStubFuzzTestOnCallBack(const uint8_t *data, size_t size)
 {
-    int64_t except = 10; // 10 is except value
+    int64_t except = static_cast<int64_t>(*data);
     int old = FwkRunningTaskCountManager::GetInstance()->GetCount();
     OHOS::MessageParcel parcel;
     parcel.WriteInt64(except);
@@ -436,9 +440,9 @@ static constexpr int32_t INT16_SIZE = 2;  // 2 is int16 and uint16 num length
 
 void ResponseMessageFuzzTestInt64FromParcel(const uint8_t *data, size_t size)
 {
-    int64_t except = 123456; // 123456 is except num
+    int64_t except = static_cast<int64_t>(*data);
     char *parcel = reinterpret_cast<char *>(&except);
-    int64_t num;
+    int64_t num = static_cast<int64_t>(*data);
     int testSize = INT32_SIZE;
     ResponseMessageReceiver::Int64FromParcel(num, parcel, testSize);
     testSize = INT64_SIZE;
@@ -447,7 +451,7 @@ void ResponseMessageFuzzTestInt64FromParcel(const uint8_t *data, size_t size)
 
 void ResponseMessageFuzzTestUint64FromParcel(const uint8_t *data, size_t size)
 {
-    uint64_t except = 123456; // 123456 is except num
+    uint64_t except = static_cast<uint64_t>(*data);
     char *parcel = reinterpret_cast<char *>(&except);
     uint64_t num;
     int testSize = INT32_SIZE;
@@ -458,7 +462,7 @@ void ResponseMessageFuzzTestUint64FromParcel(const uint8_t *data, size_t size)
 
 void ResponseMessageFuzzTestInt32FromParcel(const uint8_t *data, size_t size)
 {
-    int32_t except = 123456; // 123456 is except num
+    int32_t except = static_cast<int32_t>(*data);
     char *parcel = reinterpret_cast<char *>(&except);
     int32_t num;
     int testSize = INT16_SIZE;
@@ -469,7 +473,7 @@ void ResponseMessageFuzzTestInt32FromParcel(const uint8_t *data, size_t size)
 
 void ResponseMessageFuzzTestUint32FromParcel(const uint8_t *data, size_t size)
 {
-    uint32_t except = 123456; // 123456 is except num
+    uint32_t except = static_cast<uint32_t>(*data);
     char *parcel = reinterpret_cast<char *>(&except);
     uint32_t num;
     int testSize = INT16_SIZE;
@@ -480,7 +484,7 @@ void ResponseMessageFuzzTestUint32FromParcel(const uint8_t *data, size_t size)
 
 void ResponseMessageFuzzTestInt16FromParcel(const uint8_t *data, size_t size)
 {
-    int16_t except = 123; // 123 is except num
+    int16_t except = static_cast<int16_t>(*data);
     char *parcel = reinterpret_cast<char *>(&except);
     int16_t num;
     int testSize = 0;
@@ -491,7 +495,7 @@ void ResponseMessageFuzzTestInt16FromParcel(const uint8_t *data, size_t size)
 
 void ResponseMessageFuzzTestStateFromParcel(const uint8_t *data, size_t size)
 {
-    State state;
+    State state = static_cast<State>(*data);
     uint32_t except = static_cast<uint32_t>(State::ANY) + 1;
     char *parcel = reinterpret_cast<char *>(&except);
     int testSize = INT32_SIZE;
@@ -504,7 +508,7 @@ void ResponseMessageFuzzTestStateFromParcel(const uint8_t *data, size_t size)
 
 void ResponseMessageFuzzTestActionFromParcel(const uint8_t *data, size_t size)
 {
-    Action action;
+    Action action = static_cast<Action>(*data);
     uint32_t except = static_cast<uint32_t>(Action::ANY) + 1;
     char *parcel = reinterpret_cast<char *>(&except);
     int testSize = INT32_SIZE;
@@ -517,7 +521,7 @@ void ResponseMessageFuzzTestActionFromParcel(const uint8_t *data, size_t size)
 
 void ResponseMessageFuzzTestVersionFromParcel(const uint8_t *data, size_t size)
 {
-    Version version;
+    Version version = static_cast<Version>(*data);
     uint32_t except = static_cast<uint32_t>(Version::API10) + 1;
     char *parcel = reinterpret_cast<char *>(&except);
     int testSize = INT32_SIZE;
@@ -530,7 +534,7 @@ void ResponseMessageFuzzTestVersionFromParcel(const uint8_t *data, size_t size)
 
 void ResponseMessageFuzzTestSubscribeTypeFromParcel(const uint8_t *data, size_t size)
 {
-    SubscribeType type;
+    SubscribeType type = static_cast<SubscribeType>(*data);
     uint32_t except = static_cast<uint32_t>(SubscribeType::BUTT) + 1;
     char *parcel = reinterpret_cast<char *>(&except);
     int testSize = INT32_SIZE;
@@ -544,7 +548,7 @@ void ResponseMessageFuzzTestSubscribeTypeFromParcel(const uint8_t *data, size_t 
 void ResponseMessageFuzzTestStringFromParcel(const uint8_t *data, size_t size)
 {
     std::string str;
-    std::string except = "except string";
+    std::string except(reinterpret_cast<const char *>(data), size);
     char *parcel = const_cast<char *>(except.c_str());
     int testSize = except.size() - 1;
     ResponseMessageReceiver::StringFromParcel(str, parcel, testSize);
@@ -565,7 +569,7 @@ void ResponseMessageFuzzTestProgressExtrasFromParcel(const uint8_t *data, size_t
 {
     int arraySize = 64; // 64 is char array length
     char except[arraySize];
-    uint32_t length = 1;
+    uint32_t length = static_cast<uint32_t>(*data);
     int ret = memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&length), sizeof(length));
     if (ret != 0) {
         return;
@@ -595,7 +599,7 @@ void ResponseMessageFuzzTestVecInt64FromParcel(const uint8_t *data, size_t size)
 {
     int arraySize = INT32_SIZE + INT64_SIZE;
     char except[arraySize];
-    uint32_t length = 1;
+    uint32_t length = static_cast<uint32_t>(*data);
     int ret = memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&length), sizeof(length));
     if (ret != 0) {
         return;
@@ -621,7 +625,7 @@ void ResponseMessageFuzzTestVecInt64FromParcel(const uint8_t *data, size_t size)
 void ResponseMessageFuzzTestResponseMessageReceiver(const uint8_t *data, size_t size)
 {
     IResponseMessageHandler *handler = nullptr;
-    int32_t sockFd = -1;
+    int32_t sockFd = static_cast<int32_t>(*data);
     ResponseMessageReceiver receiver = ResponseMessageReceiver(handler, sockFd);
 }
 
@@ -636,7 +640,7 @@ void ResponseMessageFuzzTestMsgHeaderParcel(const uint8_t *data, size_t size)
         return;
     }
     pos += sizeof(magicNum);
-    int32_t msgId = 123456; // 123456 is except num
+    int32_t msgId = static_cast<int32_t>(*data);
     ret = memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&msgId), sizeof(msgId));
     if (ret != 0) {
         return;
@@ -691,7 +695,7 @@ void ResponseMessageFuzzTestResponseFromParcel(const uint8_t *data, size_t size)
 {
     std::shared_ptr<Response> response = std::make_shared<Response>();
     int pos = 0;
-    int32_t tid = 123; // 123 is except tid
+    int32_t tid = static_cast<int32_t>(*data);
     std::string version = "version";
     int32_t statusCode = 456; // 456 is except statusCode
     std::string reason = "reason";
@@ -744,7 +748,7 @@ void ResponseMessageFuzzTestTaskStatesFromParcel(const uint8_t *data, size_t siz
 {
     std::vector<TaskState> taskStates;
     int pos = 0;
-    int32_t length = 1;
+    int32_t length = static_cast<int32_t>(*data);
     std::string path = "path";
     int32_t responseCode = NETWORK_OFFLINE;
     std::string message = "message";
@@ -791,7 +795,7 @@ void ResponseMessageFuzzTestNotifyDataFromParcel(const uint8_t *data, size_t siz
 {
     std::shared_ptr<NotifyData> notifyData = std::make_shared<NotifyData>();
     int pos = 0;
-    int32_t length = 1;
+    int32_t length = static_cast<int32_t>(*data);
     SubscribeType type = SubscribeType::BUTT;
     uint32_t taskId = 123; // 123 is except tid
     State state = State::ANY;
@@ -952,6 +956,7 @@ void RequestSyncLoadFuzzTestOnLoadSystemAbility(const uint8_t *data, size_t size
     RequestSyncLoadCallback requestSyncLoadCallback = RequestSyncLoadCallback();
     requestSyncLoadCallback.OnLoadSystemAbilityFail(OHOS::PRINT_SERVICE_ID);
     requestSyncLoadCallback.OnLoadSystemAbilityFail(OHOS::DOWNLOAD_SERVICE_ID);
+    requestSyncLoadCallback.OnLoadSystemAbilityFail(static_cast<int32_t>(*data));
     requestSyncLoadCallback.OnLoadSystemAbilitySuccess(OHOS::PRINT_SERVICE_ID, remote);
     requestSyncLoadCallback.OnLoadSystemAbilitySuccess(OHOS::DOWNLOAD_SERVICE_ID, remote);
 }
@@ -962,7 +967,7 @@ void RequestSyncLoadFuzzTestOnLoadSystemAbility(const uint8_t *data, size_t size
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    OHOS::CreateRequestFuzzTest(size);
+    OHOS::CreateRequestFuzzTest(data, size);
     OHOS::StartRequestFuzzTest(data, size);
     OHOS::StopRequestFuzzTest(data, size);
     OHOS::ShowRequestFuzzTest(data, size);
@@ -992,9 +997,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::RunningTaskCountFuzzTestGetAndSetCount(data, size);
     OHOS::RunningTaskCountFuzzTestUpdateRunningTaskCount(data, size);
     OHOS::RunningTaskCountFuzzTestNotifyAllObservers(data, size);
-    OHOS::RunCountNotifyStubFuzzTestGetInstance(data, size);
-    OHOS::RunCountNotifyStubFuzzTestCallBack(data, size);
-    OHOS::RunCountNotifyStubFuzzTestDone(data, size);
+    OHOS::RunCountNotifyStubFuzzTestGetInstanceDoneCallBack(data, size);
     OHOS::RunCountNotifyStubFuzzTestOnCallBack(data, size);
     OHOS::ResponseMessageFuzzTestInt64FromParcel(data, size);
     OHOS::ResponseMessageFuzzTestUint64FromParcel(data, size);
