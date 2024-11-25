@@ -21,39 +21,48 @@
 #include "request_preload.h"
 namespace OHOS::Request {
 
-PreloadCallbackWrapper::PreloadCallbackWrapper(std::unique_ptr<PreloadCallback> callback)
+PreloadCallbackWrapper::PreloadCallbackWrapper(std::unique_ptr<PreloadCallback> &callback)
 {
     if (callback != nullptr) {
-        this->_callback = std::move(callback);
+        this->onSuccess_ = callback->OnSuccess;
+        this->onCancel_ = callback->OnCancel;
+        this->onFail_ = callback->OnFail;
     }
 }
 
 void PreloadCallbackWrapper::OnSuccess(const std::shared_ptr<Data> data, rust::str taskId) const
 {
-    if (this->_callback != nullptr && this->_callback->OnSuccess != nullptr) {
-        this->_callback->OnSuccess(std::move(data), std::string(taskId));
+    if (this->onSuccess_ != nullptr) {
+        this->onSuccess_(std::move(data), std::string(taskId));
     }
 }
 
 void PreloadCallbackWrapper::OnFail(rust::Box<DownloadError> error, rust::str taskId) const
 {
-    if (this->_callback != nullptr && this->_callback->OnFail != nullptr) {
+    if (this->onFail_ != nullptr) {
         PreloadError preloadError(std::move(error));
-        this->_callback->OnFail(preloadError, std::string(taskId));
+        this->onFail_(preloadError, std::string(taskId));
     }
 }
 
 void PreloadCallbackWrapper::OnCancel() const
 {
-    if (this->_callback != nullptr && this->_callback->OnCancel != nullptr) {
-        this->_callback->OnCancel();
+    if (this->onCancel_ != nullptr) {
+        this->onCancel_();
     }
 }
 
-void PreloadCallbackWrapper::OnProgress(uint64_t current, uint64_t total) const
+PreloadProgressCallbackWrapper::PreloadProgressCallbackWrapper(std::unique_ptr<PreloadCallback> &callback)
 {
-    if (this->_callback != nullptr && this->_callback->OnProgress != nullptr) {
-        this->_callback->OnProgress(current, total);
+    if (callback != nullptr) {
+        this->onProgress_ = callback->OnProgress;
+    }
+}
+
+void PreloadProgressCallbackWrapper::OnProgress(uint64_t current, uint64_t total) const
+{
+    if (this->onProgress_ != nullptr) {
+        this->onProgress_(current, total);
     }
 }
 

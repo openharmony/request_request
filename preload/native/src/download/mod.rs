@@ -12,7 +12,6 @@
 // limitations under the License.
 
 mod common;
-mod error;
 
 cfg_ohos! {
     mod netstack;
