@@ -563,6 +563,10 @@ void ResponseMessageFuzzTestResponseHeaderFromParcel(const uint8_t *data, size_t
     char *parcel = const_cast<char *>(except.c_str());
     int testSize = except.size();
     ResponseMessageReceiver::ResponseHeaderFromParcel(headers, parcel, testSize);
+    std::string str(reinterpret_cast<const char *>(data), size);
+    parcel = const_cast<char *>(str.c_str());
+    testSize = except.size();
+    ResponseMessageReceiver::ResponseHeaderFromParcel(headers, parcel, testSize);
 }
 
 void ResponseMessageFuzzTestProgressExtrasFromParcel(const uint8_t *data, size_t size)
