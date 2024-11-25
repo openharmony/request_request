@@ -181,3 +181,36 @@ HWTEST_F(PreloadAbnormal, CancelBlockCallbackTest, TestSize.Level1)
     EXPECT_EQ(handle->GetState(), PreloadState::CANCEL);
     Preload::GetInstance()->Remove(url);
 }
+
+/**
+ * @tc.name: ProgressBlockCallbackTest
+ * @tc.desc: Test block callback not affect other callback
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(PreloadAbnormal, ProgressBlockCallbackTest, TestSize.Level1)
+{
+    auto url = TEST_URL_0;
+    Preload::GetInstance()->Remove(url);
+    auto abnormal_callback = PreloadCallback{
+        .OnProgress = [](uint64_t current,
+                          uint64_t total) { std::this_thread::sleep_for(std::chrono::hours(ABNORMAL_INTERVAL)); },
+    };
+    auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(abnormal_callback));
+
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+    auto handle_1 = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
+
+    while (!handle->IsFinish()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+
+    EXPECT_FALSE(flagF->load());
+    EXPECT_FALSE(flagC->load());
+    EXPECT_TRUE(flagP->load());
+    EXPECT_TRUE(flagS->load());
+    EXPECT_EQ(handle->GetState(), PreloadState::SUCCESS);
+    Preload::GetInstance()->Remove(url);
+}

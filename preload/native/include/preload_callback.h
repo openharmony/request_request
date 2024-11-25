@@ -24,16 +24,32 @@ namespace OHOS::Request {
 
 class PreloadCallbackWrapper {
 public:
-    PreloadCallbackWrapper(std::unique_ptr<PreloadCallback> callback);
+    PreloadCallbackWrapper(std::unique_ptr<PreloadCallback> &callback);
     ~PreloadCallbackWrapper() = default;
+    PreloadCallbackWrapper(const PreloadCallbackWrapper &) = delete;
+    PreloadCallbackWrapper &operator=(const PreloadCallbackWrapper &) = delete;
 
     void OnSuccess(const std::shared_ptr<Data> data, rust::str TaskId) const;
     void OnFail(rust::Box<DownloadError> error, rust::str TaskId) const;
     void OnCancel() const;
+
+private:
+    std::function<void(const std::shared_ptr<Data> &&, const std::string &TaskId)> onSuccess_;
+    std::function<void(const PreloadError &, const std::string &TaskId)> onFail_;
+    std::function<void()> onCancel_;
+};
+
+class PreloadProgressCallbackWrapper {
+public:
+    PreloadProgressCallbackWrapper(std::unique_ptr<PreloadCallback> &callback);
+    ~PreloadProgressCallbackWrapper() = default;
+    PreloadProgressCallbackWrapper(const PreloadProgressCallbackWrapper &) = delete;
+    PreloadProgressCallbackWrapper &operator=(const PreloadProgressCallbackWrapper &) = delete;
+
     void OnProgress(uint64_t current, uint64_t total) const;
 
 private:
-    std::unique_ptr<PreloadCallback> _callback;
+    std::function<void(uint64_t, uint64_t)> onProgress_;
 };
 
 std::shared_ptr<Data> BuildSharedData(rust::Box<RustData> data);

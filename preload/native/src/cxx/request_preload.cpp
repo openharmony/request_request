@@ -69,7 +69,13 @@ Preload::Preload()
 std::shared_ptr<PreloadHandle> Preload::load(
     std::string const &url, std::unique_ptr<PreloadCallback> callback, std::unique_ptr<PreloadOptions> options)
 {
-    auto callback_wrapper = std::make_unique<PreloadCallbackWrapper>(std::move(callback));
+    auto callback_wrapper = std::make_unique<PreloadCallbackWrapper>(callback);
+
+    std::shared_ptr<PreloadProgressCallbackWrapper> progress_callback_wrapper = nullptr;
+    if (callback->OnProgress != nullptr) {
+        progress_callback_wrapper = std::make_shared<PreloadProgressCallbackWrapper>(callback);
+    }
+
     FfiPredownloadOptions ffiOptions = { .headers = rust::Vec<rust::str>() };
     if (options != nullptr) {
         for (auto header : options->headers) {
@@ -77,7 +83,8 @@ std::shared_ptr<PreloadHandle> Preload::load(
             ffiOptions.headers.push_back(std::get<1>(header));
         }
     }
-    auto taskHandle = this->_agent->ffi_preload(rust::str(url), std::move(callback_wrapper), false, ffiOptions);
+    auto taskHandle = this->_agent->ffi_preload(
+        rust::str(url), std::move(callback_wrapper), std::move(progress_callback_wrapper), false, ffiOptions);
     return std::make_shared<PreloadHandle>(std::move(taskHandle));
 }
 
