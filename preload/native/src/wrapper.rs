@@ -11,10 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::Arc;
+use std::sync::{mpsc, Arc, Mutex};
 
-use cxx::UniquePtr;
-use ffi::PreloadCallbackWrapper;
+use cxx::{SharedPtr, UniquePtr};
+use ffi::{PreloadCallbackWrapper, PreloadProgressCallbackWrapper};
 
 use crate::agent::DownloadAgent;
 use crate::cache::RamCache;
@@ -22,17 +22,26 @@ use crate::download::TaskHandle;
 use crate::{CustomCallback, DownloadError};
 
 pub(super) struct FfiCallback {
-    inner: UniquePtr<PreloadCallbackWrapper>,
+    callback: UniquePtr<PreloadCallbackWrapper>,
+    progress_callback: SharedPtr<PreloadProgressCallbackWrapper>,
+    tx: Option<mpsc::Sender<(u64, u64)>>,
+    finish_lock: Arc<Mutex<bool>>,
 }
 
 unsafe impl Send for FfiCallback {}
+unsafe impl Sync for PreloadProgressCallbackWrapper {}
+unsafe impl Send for PreloadProgressCallbackWrapper {}
 
 impl FfiCallback {
-    pub(crate) fn from_ffi(ffi: UniquePtr<PreloadCallbackWrapper>) -> Option<Self> {
-        if ffi.is_null() {
-            None
-        } else {
-            Some(Self { inner: ffi })
+    pub(crate) fn from_ffi(
+        callback: UniquePtr<PreloadCallbackWrapper>,
+        progress_callback: SharedPtr<PreloadProgressCallbackWrapper>,
+    ) -> Self {
+        Self {
+            callback,
+            progress_callback,
+            tx: None,
+            finish_lock: Arc::new(Mutex::new(false)),
         }
     }
 }
@@ -53,21 +62,61 @@ impl RustData {
 
 impl CustomCallback for FfiCallback {
     fn on_success(&mut self, data: Arc<RamCache>, task_id: &str) {
+        if self.callback.is_null() {
+            return;
+        }
         let rust_data = RustData::new(data);
         let shared_data = ffi::BuildSharedData(Box::new(rust_data));
-        self.inner.OnSuccess(shared_data, task_id);
+        self.callback.OnSuccess(shared_data, task_id);
     }
 
     fn on_fail(&mut self, error: DownloadError, task_id: &str) {
-        self.inner.OnFail(Box::new(error), task_id);
+        if self.callback.is_null() {
+            return;
+        }
+        self.callback.OnFail(Box::new(error), task_id);
     }
 
     fn on_cancel(&mut self) {
-        self.inner.OnCancel();
+        if self.callback.is_null() {
+            return;
+        }
+        self.callback.OnCancel();
     }
 
     fn on_progress(&mut self, progress: u64, total: u64) {
-        self.inner.OnProgress(progress, total);
+        if self.progress_callback.is_null() {
+            return;
+        }
+        if progress == total {
+            let progress_callback = self.progress_callback.clone();
+            let mutex = self.finish_lock.clone();
+            crate::spawn(move || {
+                *mutex.lock().unwrap() = true;
+                progress_callback.OnProgress(progress, total);
+            });
+            return;
+        }
+
+        if let Some(tx) = &self.tx {
+            if tx.send((progress, total)).is_ok() {
+                return;
+            }
+        }
+        let (tx, rx) = mpsc::channel();
+        tx.send((progress, total)).unwrap();
+        self.tx = Some(tx);
+        let progress_callback = self.progress_callback.clone();
+        let mutex = self.finish_lock.clone();
+        crate::spawn(move || {
+            let lock = mutex.lock().unwrap();
+            if *lock {
+                return;
+            }
+            while let Ok((progress, total)) = rx.try_recv() {
+                progress_callback.OnProgress(progress, total);
+            }
+        });
     }
 }
 
@@ -91,7 +140,8 @@ pub(crate) mod ffi {
         fn ffi_preload(
             self: &DownloadAgent,
             url: &str,
-            mut callback: UniquePtr<PreloadCallbackWrapper>,
+            callback: UniquePtr<PreloadCallbackWrapper>,
+            progress_callback: SharedPtr<PreloadProgressCallbackWrapper>,
             update: bool,
             options: &FfiPredownloadOptions,
         ) -> Box<TaskHandle>;
@@ -118,12 +168,13 @@ pub(crate) mod ffi {
         include!("context.h");
 
         type PreloadCallbackWrapper;
+        type PreloadProgressCallbackWrapper;
         type Data;
 
         fn BuildSharedData(data: Box<RustData>) -> SharedPtr<Data>;
         fn OnSuccess(self: &PreloadCallbackWrapper, data: SharedPtr<Data>, task_id: &str);
         fn OnFail(self: &PreloadCallbackWrapper, error: Box<DownloadError>, task_id: &str);
         fn OnCancel(self: &PreloadCallbackWrapper);
-        fn OnProgress(self: &PreloadCallbackWrapper, progress: u64, total: u64);
+        fn OnProgress(self: &PreloadProgressCallbackWrapper, progress: u64, total: u64);
     }
 }

@@ -24,7 +24,7 @@ use crate::utils::url_hash;
 use crate::DownloadError;
 
 cfg_ohos! {
-    use crate::wrapper::ffi::{FfiPredownloadOptions,PreloadCallbackWrapper};
+    use crate::wrapper::ffi::{FfiPredownloadOptions,PreloadCallbackWrapper,PreloadProgressCallbackWrapper};
     use crate::wrapper::FfiCallback;
 }
 
@@ -203,14 +203,11 @@ impl DownloadAgent {
         &self,
         url: &str,
         callback: cxx::UniquePtr<PreloadCallbackWrapper>,
+        progress_callback: cxx::SharedPtr<PreloadProgressCallbackWrapper>,
         update: bool,
         options: &FfiPredownloadOptions,
     ) -> Box<TaskHandle> {
-        let Some(callback) = FfiCallback::from_ffi(callback) else {
-            error!("ffi_preload callback is null");
-            return Box::new(TaskHandle::new(TaskId::from_url(url)));
-        };
-
+        let callback = FfiCallback::from_ffi(callback, progress_callback);
         let mut request = DownloadRequest::new(url);
         if !options.headers.is_empty() {
             let headers = options
