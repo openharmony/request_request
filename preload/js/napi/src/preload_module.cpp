@@ -29,33 +29,29 @@
 
 namespace OHOS::Request {
 
-napi_value preload(napi_env env, napi_callback_info info)
+napi_value download(napi_env env, napi_callback_info info)
 {
     size_t argc = 2;
     napi_value args[2] = { nullptr };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-    napi_valuetype valuetype0;
-    NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
-    napi_valuetype valuetype1;
-    NAPI_CALL(env, napi_typeof(env, args[1], &valuetype1));
-    if (valuetype0 != napi_string || (valuetype1 != napi_object)) {
-        napi_throw_type_error(env, nullptr, "Wrong arguments.");
+
+    if (GetValueType(env, args[0]) != napi_string || GetValueType(env, args[1]) != napi_object) {
+        napi_throw_type_error(env, nullptr, "Unsupported parameter type");
         return nullptr;
     }
-
     std::string url = GetValueString(env, args[0]);
+
     std::unique_ptr<PreloadOptions> options = std::make_unique<PreloadOptions>();
     napi_value headers = nullptr;
-    if (napi_get_named_property(env, args[1], "headers", &headers) == napi_ok) {
-        if (headers != nullptr) {
-            auto names = GetPropertyNames(env, headers);
-            for (auto name : names) {
-                auto value = GetPropertyValue(env, headers, name);
-                options->headers.emplace_back(std::make_pair(name, value));
-            }
+    if (napi_get_named_property(env, args[1], "headers", &headers) == napi_ok
+        && GetValueType(env, headers) == napi_valuetype::napi_object) {
+        auto names = GetPropertyNames(env, headers);
+        for (auto name : names) {
+            auto value = GetPropertyValue(env, headers, name);
+            options->headers.emplace_back(std::make_pair(name, value));
         }
     }
-    Preload::GetInstance()->load(std::string(url), nullptr, std::move(options));
+    Preload::GetInstance()->load(url, nullptr, std::move(options));
     return nullptr;
 }
 
@@ -64,10 +60,9 @@ napi_value cancel(napi_env env, napi_callback_info info)
     size_t argc = 1;
     napi_value args[1] = { nullptr };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-    napi_valuetype valuetype0;
-    NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
-    if (valuetype0 != napi_string) {
-        napi_throw_type_error(env, nullptr, "Wrong arguments.");
+
+    if (GetValueType(env, args[0]) != napi_string) {
+        napi_throw_type_error(env, nullptr, "Unsupported parameter type");
         return nullptr;
     }
     std::string url = GetValueString(env, args[0]);
@@ -80,10 +75,9 @@ napi_value setMemoryCacheSize(napi_env env, napi_callback_info info)
     size_t argc = 1;
     napi_value args[1] = { nullptr };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-    napi_valuetype valuetype0;
-    NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
-    if (valuetype0 != napi_number) {
-        napi_throw_type_error(env, nullptr, "Wrong arguments.");
+
+    if (GetValueType(env, args[0]) != napi_number) {
+        napi_throw_type_error(env, nullptr, "Unsupported parameter type");
         return nullptr;
     }
     uint32_t size = GetValueNum(env, args[0]);
@@ -96,10 +90,9 @@ napi_value setFileCacheSize(napi_env env, napi_callback_info info)
     size_t argc = 1;
     napi_value args[1] = { nullptr };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-    napi_valuetype valuetype0;
-    NAPI_CALL(env, napi_typeof(env, args[0], &valuetype0));
-    if (valuetype0 != napi_number) {
-        napi_throw_type_error(env, nullptr, "Wrong arguments.");
+
+    if (GetValueType(env, args[0]) != napi_number) {
+        napi_throw_type_error(env, nullptr, "Unsupported parameter type");
         return nullptr;
     }
     uint32_t size = GetValueNum(env, args[0]);
@@ -110,7 +103,7 @@ napi_value setFileCacheSize(napi_env env, napi_callback_info info)
 static napi_value registerFunc(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[]{
-        DECLARE_NAPI_FUNCTION("preload", preload),
+        DECLARE_NAPI_FUNCTION("download", download),
         DECLARE_NAPI_FUNCTION("cancel", cancel),
         DECLARE_NAPI_FUNCTION("setMemoryCacheSize", setMemoryCacheSize),
         DECLARE_NAPI_FUNCTION("setFileCacheSize", setFileCacheSize),
@@ -127,7 +120,7 @@ static __attribute__((constructor)) void RegisterModule()
         .nm_flags = 0,
         .nm_filename = nullptr,
         .nm_register_func = OHOS::Request::registerFunc,
-        .nm_modname = "preload",
+        .nm_modname = "request.cacheDownload",
         .nm_priv = ((void *)0),
         .reserved = { 0 } };
     napi_module_register(&module);
