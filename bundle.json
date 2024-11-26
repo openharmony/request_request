@@ -70,7 +70,7 @@
         "base_group": [
           "//base/request/request/frameworks/js/napi:request",
           "//base/request/request/frameworks/cj/ffi:cj_request_ffi",
-          "//base/request/request/preload/js/napi:preload"
+          "//base/request/request/preload/js/napi:cachedownload"
         ],
         "fwk_group": [
           "//base/request/request/frameworks/native:request_native"
