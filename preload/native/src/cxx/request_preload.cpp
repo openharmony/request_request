@@ -72,7 +72,7 @@ std::shared_ptr<PreloadHandle> Preload::load(
     auto callback_wrapper = std::make_unique<PreloadCallbackWrapper>(callback);
 
     std::shared_ptr<PreloadProgressCallbackWrapper> progress_callback_wrapper = nullptr;
-    if (callback->OnProgress != nullptr) {
+    if (callback != nullptr && callback->OnProgress != nullptr) {
         progress_callback_wrapper = std::make_shared<PreloadProgressCallbackWrapper>(callback);
     }
 

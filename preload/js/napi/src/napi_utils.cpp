@@ -88,6 +88,13 @@ napi_value GetNamedProperty(napi_env env, napi_value object, const std::string &
     return value;
 }
 
+napi_value NapiOk(napi_env env)
+{
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
 std::string GetPropertyValue(napi_env env, napi_value object, const std::string &propertyName)
 {
     if (!HasNamedProperty(env, object, propertyName)) {
