@@ -33,12 +33,22 @@ impl CallbackWrapper {
 impl CallbackWrapper {
     fn on_success(&mut self, response: &ffi::HttpClientResponse) {
         let response = Response::from_ffi(response);
-        self.inner.on_success(response);
+        if (response.status().clone() as u32 >= 300) || (response.status().clone() as u32) < 200 {
+            let error =
+                HttpClientError::new(HttpErrorCode::HttpNoneErr, response.status().to_string());
+            self.inner.on_fail(error);
+        } else {
+            self.inner.on_success(response);
+        }
     }
 
     fn on_fail(&mut self, error: &ffi::HttpClientError) {
         let error = HttpClientError::from_ffi(error);
-        self.inner.on_fail(error);
+        if *error.code() == HttpErrorCode::HttpWriteError {
+            self.inner.on_cancel();
+        } else {
+            self.inner.on_fail(error);
+        }
     }
 
     fn on_cancel(&mut self, _response: &ffi::HttpClientResponse) {

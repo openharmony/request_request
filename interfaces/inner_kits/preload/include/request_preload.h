@@ -27,8 +27,8 @@
 namespace OHOS::Request {
 struct RustData;
 struct TaskHandle;
-struct DownloadAgent;
-struct DownloadError;
+struct CacheDownloadService;
+struct CacheDownloadError;
 
 enum class PreloadState {
     INIT,
@@ -58,7 +58,7 @@ enum ErrorKind {
 
 class PreloadError {
 public:
-    PreloadError(rust::Box<DownloadError> error);
+    PreloadError(rust::Box<CacheDownloadError> error);
     PreloadError &operator=(const PreloadError &) = delete;
     ~PreloadError();
 
@@ -67,7 +67,7 @@ public:
     ErrorKind GetErrorKind() const;
 
 private:
-    DownloadError *_error;
+    CacheDownloadError *_error;
 };
 
 struct PreloadCallback {
@@ -111,7 +111,7 @@ public:
         std::string const &url, std::unique_ptr<PreloadCallback>, std::unique_ptr<PreloadOptions> options = nullptr);
 
 private:
-    const DownloadAgent *_agent;
+    const CacheDownloadService *_agent;
 };
 
 } // namespace OHOS::Request

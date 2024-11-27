@@ -102,7 +102,7 @@
           "name": "//base/request/request/frameworks/js/napi:request_static"
         },
         {
-          "name": "//base/request/request/preload/native:preload_native",
+          "name": "//base/request/request/preload/cache_download:preload_native",
           "header": {
             "header_files": [],
             "header_base": "//base/request/request/interfaces/inner_kits/running_count/include"
@@ -120,7 +120,7 @@
         "//base/request/request/test/unittest/cpp_test/fwkTest:unittest",
         "//base/request/request/services/tests:unittest",
         "//base/request/request/preload/netstack_rs:unittest",
-        "//base/request/request/preload/native:unittest",
+        "//base/request/request/preload/cache_download:unittest",
         "//base/request/request/preload/ffrt_rs:unittest",
         "//base/request/request/request_utils:unittest"
       ]

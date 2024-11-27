@@ -19,14 +19,6 @@ use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hasher};
 use std::num::Wrapping;
 
-/// Generates a fast random ranging from 0 to usize::MAX
-///
-/// # Examples
-/// ```rust
-/// use ylong_runtime::fastrand::fast_random;
-/// let rand = fast_random();
-/// assert!(rand <= u64::MAX);
-/// ```
 pub fn fast_random() -> u64 {
     thread_local! {
         static RNG: Cell<Wrapping<u64>> = Cell::new(Wrapping(seed()));

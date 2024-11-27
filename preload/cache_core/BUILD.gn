@@ -11,19 +11,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[package]
-name = "request_utils"
-version = "0.1.0"
-edition = "2021"
+import("//build/ohos.gni")
+import("//build/test.gni")
+rust_cxx("preload_native_rust_gen") {
+  sources = [ "src/wrapper.rs" ]
+}
 
-[features]
-default = []
+ohos_rust_static_library("cache_core") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  features = [ "ohos" ]
 
-ohos = [
-    "cxx",
-]
+  sources = [ "src/lib.rs" ]
 
-[dependencies]
-cxx = { version = "1.0.115", optional = true }
-log = "0.4.22"
-env_logger = "0.11.3"
+  deps = [
+    "../../request_utils:request_utils",
+    "../ffrt_rs:ffrt_rs",
+  ]
+
+  subsystem_name = "request"
+  part_name = "request"
+}
