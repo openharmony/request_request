@@ -1007,14 +1007,13 @@ bool JsTask::SetPathPermission(const std::string &filepath)
                 continue;
             }
             if (AclSetAccess(it.first, SA_PERMISSION_X) != ACL_SUCC) {
-                REQUEST_HILOGD("AclSetAccess Parent Dir Failed: %{public}s", it.first.c_str());
+                REQUEST_HILOGE("AclSetAccess Parent Dir Failed: %{public}s", it.first.c_str());
             }
         }
     }
 
-    std::string childDir = filepath.substr(0, filepath.rfind("/"));
-    if (AclSetAccess(childDir, SA_PERMISSION_RWX) != ACL_SUCC) {
-        REQUEST_HILOGE("AclSetAccess Child Dir Failed: %{public}s", childDir.c_str());
+    if (AclSetAccess(filepath, SA_PERMISSION_RWX) != ACL_SUCC) {
+        REQUEST_HILOGE("AclSetAccess Child Dir Failed: %{public}s", filepath.c_str());
         return false;
     }
     return true;
