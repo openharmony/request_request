@@ -11,32 +11,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Request utils
+//! # Pre-download native
 
-#![warn(missing_docs)]
-#![allow(clippy::crate_in_macro_def)]
-#![allow(missing_docs)]
-#![allow(unused)]
+#![deny(unused_must_use)]
+#![allow(
+    unknown_lints,
+    static_mut_refs,
+    unused,
+    stable_features,
+    missing_docs,
+    clippy::new_without_default
+)]
+#![feature(lazy_cell)]
 
 #[macro_use]
-mod macros;
+extern crate request_utils;
 
-pub mod fastrand;
-pub mod hash;
-pub mod lru;
-pub mod task_id;
+mod data;
+mod manage;
+mod update;
 
-cfg_not_ohos! {
-    #[macro_use]
-    pub use log::{debug, error, info};
-}
+pub use data::RamCache;
+pub use manage::CacheManager;
+pub use update::Updater;
 
 cfg_ohos! {
-    #[macro_use]
-    mod hilog;
-    pub mod context;
-    mod wrapper;
-    pub use wrapper::{hilog_print, LogLevel, LogType};
+    const TAG: &str = "PreloadNative\0";
+    const DOMAIN: u32 = 0xD001C50;
+    use ffrt_rs::ffrt_spawn as spawn;
 }
 
-pub mod test;
+cfg_not_ohos! {
+    use ylong_runtime::spawn_blocking as spawn;
+}

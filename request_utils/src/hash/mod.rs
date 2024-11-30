@@ -11,32 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Request utils
-
-#![warn(missing_docs)]
-#![allow(clippy::crate_in_macro_def)]
-#![allow(missing_docs)]
-#![allow(unused)]
-
-#[macro_use]
-mod macros;
-
-pub mod fastrand;
-pub mod hash;
-pub mod lru;
-pub mod task_id;
-
-cfg_not_ohos! {
-    #[macro_use]
-    pub use log::{debug, error, info};
-}
-
 cfg_ohos! {
-    #[macro_use]
-    mod hilog;
-    pub mod context;
-    mod wrapper;
-    pub use wrapper::{hilog_print, LogLevel, LogType};
+    mod sha256;
 }
 
-pub mod test;
+mod url;
+pub use url::url_hash;

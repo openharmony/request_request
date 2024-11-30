@@ -12,7 +12,7 @@
 # limitations under the License.
 
 [package]
-name = "request_utils"
+name = "cache_core"
 version = "0.1.0"
 edition = "2021"
 
@@ -20,10 +20,12 @@ edition = "2021"
 default = []
 
 ohos = [
-    "cxx",
+    "request_utils/ohos",
+    "ffrt_rs",
 ]
 
 [dependencies]
 cxx = { version = "1.0.115", optional = true }
-log = "0.4.22"
-env_logger = "0.11.3"
+request_utils = { path = "../../request_utils" }
+ffrt_rs = { path = "../ffrt_rs", optional = true }
+ylong_runtime = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime", features = ["full"] }

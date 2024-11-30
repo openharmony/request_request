@@ -11,32 +11,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Request utils
+use std::fmt::Display;
 
-#![warn(missing_docs)]
-#![allow(clippy::crate_in_macro_def)]
-#![allow(missing_docs)]
-#![allow(unused)]
+use crate::hash::url_hash;
 
-#[macro_use]
-mod macros;
-
-pub mod fastrand;
-pub mod hash;
-pub mod lru;
-pub mod task_id;
-
-cfg_not_ohos! {
-    #[macro_use]
-    pub use log::{debug, error, info};
+#[derive(Hash, PartialEq, Eq, Clone)]
+pub struct TaskId {
+    hash: String,
 }
 
-cfg_ohos! {
-    #[macro_use]
-    mod hilog;
-    pub mod context;
-    mod wrapper;
-    pub use wrapper::{hilog_print, LogLevel, LogType};
+impl TaskId {
+    pub fn new(hash: String) -> Self {
+        Self { hash }
+    }
+
+    pub fn from_url(url: &str) -> Self {
+        Self {
+            hash: url_hash(url),
+        }
+    }
+
+    pub fn brief(&self) -> &str {
+        let len = self.hash.len();
+        &self.hash.as_str()[..len / 4]
+    }
 }
 
-pub mod test;
+impl Display for TaskId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.hash)
+    }
+}

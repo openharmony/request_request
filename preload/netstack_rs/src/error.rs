@@ -57,6 +57,7 @@ impl Debug for HttpClientError {
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[repr(i32)]
 pub enum HttpErrorCode {
     HttpNoneErr,
     HttpPermissionDeniedCode = 201,
