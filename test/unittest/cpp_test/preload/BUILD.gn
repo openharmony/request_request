@@ -33,7 +33,7 @@ ohos_unittest("preload_test") {
   ]
 
   deps = [
-    "../../../../preload/native:preload_native",
+    "../../../../preload/cache_download:preload_native",
     "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
   external_deps = [

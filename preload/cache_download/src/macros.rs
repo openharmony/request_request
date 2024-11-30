@@ -11,32 +11,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Request utils
-
-#![warn(missing_docs)]
-#![allow(clippy::crate_in_macro_def)]
-#![allow(missing_docs)]
-#![allow(unused)]
-
-#[macro_use]
-mod macros;
-
-pub mod fastrand;
-pub mod hash;
-pub mod lru;
-pub mod task_id;
-
-cfg_not_ohos! {
-    #[macro_use]
-    pub use log::{debug, error, info};
+macro_rules! cfg_ylong {
+    ($($item:item)*) => {
+        $(
+            #[cfg(feature = "ylong")]
+            $item
+        )*
+    }
 }
 
-cfg_ohos! {
-    #[macro_use]
-    mod hilog;
-    pub mod context;
-    mod wrapper;
-    pub use wrapper::{hilog_print, LogLevel, LogType};
+macro_rules! cfg_netstack {
+    ($($item:item)*) => {
+        $(
+            #[cfg(feature = "netstack")]
+            $item
+        )*
+    }
 }
-
-pub mod test;
