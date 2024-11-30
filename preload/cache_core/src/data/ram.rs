@@ -104,6 +104,8 @@ impl RamCache {
                         diff,
                         self.task_id.brief()
                     );
+                    self.handle.ram_handle.lock().unwrap().release(self.applied);
+                    self.applied = 0;
                     false
                 } else {
                     info!(
@@ -111,6 +113,7 @@ impl RamCache {
                         diff,
                         self.task_id.brief()
                     );
+                    self.applied = self.data.len() as u64;
                     true
                 }
             }
