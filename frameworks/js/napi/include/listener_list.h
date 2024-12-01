@@ -31,6 +31,7 @@ public:
     {
     }
     bool HasListener();
+    void DeleteAllListenerRef();
 
 protected:
     bool IsListenerAdded(napi_value cb);

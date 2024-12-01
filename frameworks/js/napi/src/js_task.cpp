@@ -1109,7 +1109,7 @@ void JsTask::RemoveDirsPermission(const std::vector<std::string> &dirs)
     }
 }
 
-void JsTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls, bool isRmContext)
+void JsTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls)
 {
     std::lock_guard<std::mutex> lockGuard(JsTask::taskContextMutex_);
     auto it = taskContextMap_.find(tid);
@@ -1141,10 +1141,25 @@ void JsTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls
     if (isRmCertsAcls) {
         RemoveDirsPermission(context->task->config_.certsPath);
     }
-    if (isRmContext) {
-        taskContextMap_.erase(it);
-        UnrefTaskContextMap(context);
+}
+
+void JsTask::RemoveTaskContext(const std::string &tid)
+{
+    std::lock_guard<std::mutex> lockGuard(JsTask::taskContextMutex_);
+    auto it = taskContextMap_.find(tid);
+    if (it == taskContextMap_.end()) {
+        REQUEST_HILOGD("Clear task tmp files, not in ContextMap");
+        return;
     }
+    auto context = it->second;
+
+    auto map = context->task->notifyDataListenerMap_;
+    for (auto i = map.begin(); i != map.end();i++) {
+        i->second->DeleteAllListenerRef();
+    }
+    map.clear();
+    taskContextMap_.erase(it);
+    UnrefTaskContextMap(context);
 }
 
 void JsTask::UnrefTaskContextMap(std::shared_ptr<ContextInfo> context)
