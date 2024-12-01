@@ -109,4 +109,16 @@ bool ListenerList::HasListener()
     return this->validCbNum != 0;
 }
 
+void ListenerList::DeleteAllListenerRef()
+{
+    std::lock_guard<std::recursive_mutex> lock(allCbMutex_);
+    for (auto it = this->allCb_.begin(); it != this->allCb_.end();) {
+        it->first = false;
+        napi_delete_reference(this->env_, it->second);
+        it = this->allCb_.erase(it);
+    }
+    this->validCbNum = 0;
+    return;
+}
+
 } // namespace OHOS::Request
