@@ -14,10 +14,10 @@
 [workspace]
 resolver = "2"
 members = [
-    "preload/cache_download",
-    "preload/ffrt_rs",
-    "preload/cache_core",
-    "preload/netstack_rs",
-    "request_utils",
+    "frameworks/native/cache_download",
+    "common/ffrt_rs",
+    "frameworks/native/cache_core",
+    "common/netstack_rs",
+    "common/utils",
     "test/rustest",
 ]

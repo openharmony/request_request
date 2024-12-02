@@ -31,8 +31,8 @@ ohos_rust_static_library("cache_core") {
   sources = [ "src/lib.rs" ]
 
   deps = [
-    "../../request_utils:request_utils",
-    "../ffrt_rs:ffrt_rs",
+    "../../../common/ffrt_rs:ffrt_rs",
+    "../../../common/utils:request_utils",
   ]
 
   subsystem_name = "request"

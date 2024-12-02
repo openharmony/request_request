@@ -31,7 +31,7 @@ ohos_shared_library("cachedownload") {
     "src/preload_module.cpp",
   ]
   deps = [
-    "../../cache_download:preload_native",
+    "../../../native/cache_download:preload_native",
     "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
 
