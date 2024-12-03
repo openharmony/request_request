@@ -252,6 +252,7 @@ impl RequestTask {
             version: self.conf.version,
             each_file_status: vec,
             task_id: self.conf.common_data.task_id,
+            uid: self.conf.common_data.uid,
         }
     }
 
