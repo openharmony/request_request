@@ -34,10 +34,10 @@ ohos_rust_shared_ffi("preload_native_rust") {
   sources = [ "src/lib.rs" ]
   deps = [
     ":preload_native_static",
-    "../../request_utils:request_utils",
+    "../../../common/ffrt_rs:ffrt_rs",
+    "../../../common/netstack_rs:netstack_rs",
+    "../../../common/utils:request_utils",
     "../cache_core:cache_core",
-    "../ffrt_rs:ffrt_rs",
-    "../netstack_rs:netstack_rs",
     "//third_party/rust/crates/cxx:lib",
   ]
 
@@ -49,7 +49,7 @@ config("preload_native_config") {
   include_dirs = [
     "include",
     "${target_gen_dir}/src",
-    "../../interfaces/inner_kits/preload/include",
+    "../../../interfaces/inner_kits/preload/include",
   ]
 }
 
@@ -131,10 +131,10 @@ ohos_rust_unittest("rust_preload_native_ut_test") {
 
   deps = [
     ":preload_native_static",
-    "../../request_utils:request_utils",
+    "../../../common/ffrt_rs:ffrt_rs",
+    "../../../common/netstack_rs:netstack_rs",
+    "../../../common/utils:request_utils",
     "../cache_core:cache_core",
-    "../ffrt_rs:ffrt_rs",
-    "../netstack_rs:netstack_rs",
     "//third_party/rust/crates/cxx:lib",
   ]
   external_deps = [ "hilog:hilog_rust" ]

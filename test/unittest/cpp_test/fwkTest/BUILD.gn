@@ -21,24 +21,22 @@ ohos_unittest("fwkTest") {
 
   include_dirs = [
     "include",
-    "../../../../frameworks/js/napi/include",
-    "../../../../frameworks/native/include",
+    "../../../../frameworks/js/napi/request/include",
+    "../../../../frameworks/native/request/include",
     "../../../../interfaces/inner_kits/running_count/include",
     "../../../../common/include",
   ]
 
   sources = [
-    "../../../../common/src/module_init.cpp",
-    "../../../../frameworks/native/src/parcel_helper.cpp",
-    "../../../../frameworks/native/src/request.cpp",
-    "../../../../frameworks/native/src/request_manager.cpp",
-    "../../../../frameworks/native/src/request_manager_impl.cpp",
-    "../../../../frameworks/native/src/request_running_task_count.cpp",
-    "../../../../frameworks/native/src/request_service_proxy.cpp",
-    "../../../../frameworks/native/src/request_sync_load_callback.cpp",
-    "../../../../frameworks/native/src/response_message_receiver.cpp",
-    "../../../../frameworks/native/src/runcount_notify_stub.cpp",
-    "src/module_init_test.cpp",
+    "../../../../frameworks/native/request/src/parcel_helper.cpp",
+    "../../../../frameworks/native/request/src/request.cpp",
+    "../../../../frameworks/native/request/src/request_manager.cpp",
+    "../../../../frameworks/native/request/src/request_manager_impl.cpp",
+    "../../../../frameworks/native/request/src/request_running_task_count.cpp",
+    "../../../../frameworks/native/request/src/request_service_proxy.cpp",
+    "../../../../frameworks/native/request/src/request_sync_load_callback.cpp",
+    "../../../../frameworks/native/request/src/response_message_receiver.cpp",
+    "../../../../frameworks/native/request/src/runcount_notify_stub.cpp",
     "src/parcel_helper_test.cpp",
     "src/request_manager_impl_test.cpp",
     "src/request_manager_test.cpp",
@@ -49,10 +47,7 @@ ohos_unittest("fwkTest") {
     "src/running_task_count_test.cpp",
   ]
 
-  deps = [
-    "../../../../common:request_common_static",
-    "//third_party/googletest:gmock_main",
-  ]
+  deps = [ "//third_party/googletest:gmock_main" ]
 
   external_deps = [
     "ability_base:base",
