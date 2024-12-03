@@ -34,11 +34,11 @@ ohos_shared_library("cj_request_ffi") {
   include_dirs = [
     "include",
     "../../../common/include",
-    "../../native/include",
-    "../../js/napi/include",
+    "../../native/request/include",
+    "../../js/napi/request/include",
   ]
 
-  deps = [ "../../native:request_native" ]
+  deps = [ "../../native/request:request_native" ]
 
   external_deps = [
     "ability_base:zuri",

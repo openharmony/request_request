@@ -14,8 +14,6 @@
 use std::io::{BufRead, BufReader, Lines, Write};
 use std::net::{TcpListener, TcpStream};
 
-
-
 pub fn test_server<F>(f: F) -> String
 where
     F: FnOnce(Lines<BufReader<&mut TcpStream>>) + Send + 'static,
