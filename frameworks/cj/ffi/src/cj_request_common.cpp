@@ -187,6 +187,54 @@ CProgress Convert2CProgress(const Progress &in)
     return out;
 }
 
+CArrString Convert2CArrString(const std::vector<std::string> &v)
+{
+    CArrString out = {};
+    if (v.empty()) {
+        return out;
+    }
+
+    out.head = static_cast<char **>(malloc(sizeof(char *) * v.size()));
+    if (out.head == nullptr) {
+        return out;
+    }
+
+    int64_t index = 0;
+    for (auto iter : v) {
+        out.head[index] = MallocCString(iter);
+        index++;
+    }
+    out.size = index;
+    return out;
+}
+
+CResponse Convert2CResponse(const std::shared_ptr<Response> &in)
+{
+    CResponse out = {0};
+    out.version = MallocCString(in->version);
+    out.statusCode = in->statusCode;
+    out.reason = MallocCString(in->reason);
+
+    if (in->headers.size() <= 0) {
+        return out;
+    }
+    CHttpHeaderHashPair *hashHead =
+        static_cast<CHttpHeaderHashPair *>(malloc(sizeof(CHttpHeaderHashPair) * in->headers.size()));
+    if (hashHead == nullptr) {
+        return out;
+    }
+
+    int64_t index = 0;
+    for (auto iter : in->headers) {
+        hashHead[index].key = MallocCString(iter.first);
+        hashHead[index].value = Convert2CArrString(iter.second);
+        index++;
+    }
+    out.headers.hashHead = hashHead;
+    out.headers.size = index;
+    return out;
+}
+
 void RemoveFile(const std::string &filePath)
 {
     auto removeFile = [filePath]() -> void {

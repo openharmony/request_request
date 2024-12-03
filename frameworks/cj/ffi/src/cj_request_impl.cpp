@@ -440,7 +440,7 @@ void CJRequestImpl::FreeTask(std::string taskId)
     delete CJRequestTask::ClearTaskMap(taskId);
 }
 
-RetError CJRequestImpl::ProgressOn(char *event, std::string taskId, void (*callback)(CProgress progress))
+RetError CJRequestImpl::ProgressOn(char *event, std::string taskId, void *callback)
 {
     REQUEST_HILOGD("[CJRequestImpl] ProgressOn start");
     RetError ret{};

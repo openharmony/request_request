@@ -44,6 +44,7 @@ ohos_shared_library("cj_request_ffi") {
     "ability_base:zuri",
     "ability_runtime:abilitykit_native",
     "ability_runtime:app_context",
+    "ability_runtime:cj_ability_ffi",
     "ability_runtime:data_ability_helper",
     "ability_runtime:napi_base_context",
     "c_utils:utils",

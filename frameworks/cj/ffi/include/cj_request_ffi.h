@@ -18,6 +18,8 @@
 
 #include <cstdint>
 
+#include "cj_common_ffi.h"
+
 #ifndef FFI_EXPORT
 #ifndef WINDOWS_PLATFORM
 #define FFI_EXPORT __attribute__((visibility("default")))
@@ -113,6 +115,23 @@ typedef struct {
 } CProgress;
 
 typedef struct {
+    char *key;
+    CArrString value;
+} CHttpHeaderHashPair;
+
+typedef struct {
+    CHttpHeaderHashPair *hashHead;
+    int64_t size;
+} CHttpHeader;
+
+typedef struct {
+    char *version;
+    int32_t statusCode;
+    char *reason;
+    CHttpHeader headers;
+} CResponse;
+
+typedef struct {
     char *uid;
     char *bundle;
     char *saveas;
@@ -197,7 +216,7 @@ typedef struct {
 } RetTask;
 
 FFI_EXPORT void FfiOHOSRequestFreeTask(const char *taskId);
-FFI_EXPORT RetError FfiOHOSRequestTaskProgressOn(char *event, const char *taskId, void (*callback)(CProgress progress));
+FFI_EXPORT RetError FfiOHOSRequestTaskProgressOn(char *event, const char *taskId, void *callback);
 FFI_EXPORT RetError FfiOHOSRequestTaskProgressOff(char *event, const char *taskId, void *callback);
 FFI_EXPORT RetError FfiOHOSRequestTaskStart(const char *taskId);
 FFI_EXPORT RetError FfiOHOSRequestTaskPause(const char *taskId);

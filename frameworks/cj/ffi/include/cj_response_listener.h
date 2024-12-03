@@ -19,19 +19,24 @@
 #include <list>
 #include <mutex>
 #include <string>
-
+#include "cj_listener_list.h"
 #include "i_response_listener.h"
+#include "js_common.h"
 
 namespace OHOS::CJSystemapi::Request {
+using OHOS::Request::Response;
+
 class CJResponseListener : public OHOS::Request::IResponseListener,
+                           public ListenerList,
                            public std::enable_shared_from_this<CJResponseListener> {
 public:
-    explicit CJResponseListener(const std::string &taskId) : taskId_(taskId)
-    {
-    }
+    explicit CJResponseListener(const std::string &taskId) : ListenerList(taskId, SubscribeType::RESPONSE) {}
+
+    void AddListener(std::function<void(CResponse)> cb, CFunc cbId);
+    void RemoveListener(CFunc cbId = nullptr);
+    void OnResponseReceive(const std::shared_ptr<Response> &response) override;
 
 private:
-    const std::string taskId_;
 };
 
 } // namespace OHOS::CJSystemapi::Request
