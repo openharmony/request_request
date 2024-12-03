@@ -143,7 +143,7 @@ mod ffi {
     unsafe extern "C++" {
         include!("request_utils.h");
 
-        fn PublishStateChangeEvent(bundleName: &str, taskId: u32, state: i32) -> bool;
+        fn PublishStateChangeEvent(bundleName: &str, taskId: u32, state: i32, uid: i32) -> bool;
 
         fn RequestBackgroundNotify(
             msg: RequestTaskMsg,
