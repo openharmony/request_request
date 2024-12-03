@@ -16,46 +16,29 @@
 #ifndef OH_CJ_REQUEST_APP_STATE_CALLBACK_H
 #define OH_CJ_REQUEST_APP_STATE_CALLBACK_H
 
-#include "application_context.h"
+#include "cj_ability_lifecycle_callback.h"
 
 namespace OHOS::CJSystemapi::Request {
-class CJAppStateCallback : public OHOS::AbilityRuntime::AbilityLifecycleCallback {
+class CJAppStateCallback : public OHOS::AbilityRuntime::CjAbilityLifecycleCallback,
+                           public std::enable_shared_from_this<CJAppStateCallback> {
 public:
-    void OnAbilityCreate(const std::shared_ptr<NativeReference> &ability) override{};
+    void OnAbilityCreate(const int64_t &ability){};
 
-    void OnWindowStageCreate(const std::shared_ptr<NativeReference> &ability,
-                             const std::shared_ptr<NativeReference> &windowStage) override
-    {
-    }
+    void OnWindowStageCreate(const int64_t &ability, WindowStagePtr windowStage) {}
 
-    void OnWindowStageDestroy(const std::shared_ptr<NativeReference> &ability,
-                              const std::shared_ptr<NativeReference> &windowStage) override
-    {
-    }
+    void OnWindowStageDestroy(const int64_t &ability, WindowStagePtr windowStage) {}
 
-    void OnWindowStageActive(const std::shared_ptr<NativeReference> &ability,
-                             const std::shared_ptr<NativeReference> &windowStage) override
-    {
-    }
+    void OnWindowStageActive(const int64_t &ability, WindowStagePtr windowStage) {}
 
-    void OnWindowStageInactive(const std::shared_ptr<NativeReference> &ability,
-                               const std::shared_ptr<NativeReference> &windowStage) override
-    {
-    }
+    void OnWindowStageInactive(const int64_t &ability, WindowStagePtr windowStage) {}
 
-    void OnAbilityDestroy(const std::shared_ptr<NativeReference> &ability) override
-    {
-    }
+    void OnAbilityDestroy(const int64_t &ability) {}
 
-    void OnAbilityForeground(const std::shared_ptr<NativeReference> &ability) override;
+    void OnAbilityForeground(const int64_t &ability);
 
-    void OnAbilityBackground(const std::shared_ptr<NativeReference> &ability) override
-    {
-    }
+    void OnAbilityBackground(const int64_t &ability) {}
 
-    void OnAbilityContinue(const std::shared_ptr<NativeReference> &ability) override
-    {
-    }
+    void OnAbilityContinue(const int64_t &ability) {}
 };
 } // namespace OHOS::CJSystemapi::Request
 #endif

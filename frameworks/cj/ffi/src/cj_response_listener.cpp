@@ -14,9 +14,33 @@
  */
 
 #include "cj_response_listener.h"
-
+#include "log.h"
 #include "request_manager.h"
 
 namespace OHOS::CJSystemapi::Request {
+
+using OHOS::Request::RequestManager;
+
+void CJResponseListener::AddListener(std::function<void(CResponse)> cb, CFunc cbId)
+{
+    this->AddListenerInner(cb, cbId);
+    if (this->validCbNum == 1 && this->type_ != SubscribeType::REMOVE) {
+        RequestManager::GetInstance()->AddListener(this->taskId_, this->type_, shared_from_this());
+    }
+}
+
+void CJResponseListener::RemoveListener(CFunc cbId)
+{
+    this->RemoveListenerInner(cbId);
+    if (this->validCbNum == 0 && this->type_ != SubscribeType::REMOVE) {
+        RequestManager::GetInstance()->RemoveListener(this->taskId_, this->type_, shared_from_this());
+    }
+}
+
+void CJResponseListener::OnResponseReceive(const std::shared_ptr<Response> &response)
+{
+    REQUEST_HILOGI("CJOnRespRecv tid %{public}s", response->taskId.c_str());
+    this->OnMessageReceive(response);
+}
 
 } // namespace OHOS::CJSystemapi::Request
