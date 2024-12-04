@@ -129,7 +129,7 @@ mod ffi {
     unsafe extern "C++" {
         include!("request_utils.h");
 
-        fn PublishStateChangeEvent(bundleName: &str, taskId: u32, state: i32) -> bool;
+        fn PublishStateChangeEvent(bundleName: &str, taskId: u32, state: i32, uid: i32) -> bool;
         fn GetForegroundAbilities(uid: &mut Vec<i32>) -> i32;
         fn GetCallingBundle(token_id: u64) -> String;
         fn IsSystemAPI(token_id: u64) -> bool;
