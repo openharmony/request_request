@@ -24,6 +24,7 @@ impl Notifier {
             notify_data.bundle.as_str(),
             notify_data.task_id,
             State::Completed.repr as i32,
+            notify_data.uid,
         );
         client_manager.send_notify_data(SubscribeType::Complete, notify_data)
     }
@@ -34,6 +35,7 @@ impl Notifier {
             notify_data.bundle.as_str(),
             notify_data.task_id,
             State::Failed.repr as i32,
+            notify_data.uid,
         );
         client_manager.send_notify_data(SubscribeType::Fail, notify_data)
     }
@@ -71,8 +73,9 @@ pub(crate) fn publish_state_change_event(
     bundle_name: &str,
     task_id: u32,
     state: i32,
+    uid: u64,
 ) -> Result<(), ()> {
-    match crate::utils::PublishStateChangeEvent(bundle_name, task_id, state) {
+    match crate::utils::PublishStateChangeEvent(bundle_name, task_id, state, uid as i32) {
         true => Ok(()),
         false => Err(()),
     }

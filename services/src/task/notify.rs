@@ -37,6 +37,7 @@ pub(crate) struct NotifyData {
     pub(crate) version: Version,
     pub(crate) each_file_status: Vec<EachFileStatus>,
     pub(crate) task_id: u32,
+    pub(crate) uid: u64,
 }
 
 #[repr(C)]
