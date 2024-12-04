@@ -105,7 +105,7 @@
           "name": "//base/request/request/frameworks/native/cache_download:preload_native",
           "header": {
             "header_files": [],
-            "header_base": "//base/request/request/interfaces/inner_kits/running_count/include"
+            "header_base": "//base/request/request/interfaces/inner_kits/cache_download/include"
           }
         }
       ],
