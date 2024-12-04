@@ -49,9 +49,9 @@ public:
     static void AddTaskMap(const std::string &key, JsTask *task);
     static bool SetDirsPermission(std::vector<std::string> &dirs);
     static bool SetPathPermission(const std::string &filepath);
-    static void ClearTaskTemp(
-        const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls, bool isRmContext);
+    static void ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls);
     static void RemoveDirsPermission(const std::vector<std::string> &dirs);
+    static void RemoveTaskContext(const std::string &tid);
 
     Config config_;
     bool isGetPermission;

@@ -192,13 +192,14 @@ void JSNotifyDataListener::DoJSTask(const std::shared_ptr<NotifyData> &notifyDat
     if (checkDo == RemoveTaskChecker::DoNothing) {
         this->OnMessageReceive(values, paramNumber);
     } else if (checkDo == RemoveTaskChecker::ClearFile) {
-        JsTask::ClearTaskTemp(tid, true, false, false, false);
+        JsTask::ClearTaskTemp(tid, true, false, false);
         REQUEST_HILOGD("jstask %{public}s clear file", tid.c_str());
         this->OnMessageReceive(values, paramNumber);
     } else if (checkDo == RemoveTaskChecker::ClearFileAndRemoveTask) {
-        JsTask::ClearTaskTemp(tid, true, true, true, true);
+        JsTask::ClearTaskTemp(tid, true, true, true);
         REQUEST_HILOGD("jstask %{public}s clear file", tid.c_str());
         this->OnMessageReceive(values, paramNumber);
+        JsTask::RemoveTaskContext(tid);
         JsTask::ClearTaskMap(tid);
         REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
     }
