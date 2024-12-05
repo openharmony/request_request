@@ -39,18 +39,6 @@ struct CommonTaskInfo {
     uint32_t priority;
 };
 
-struct CEachFileStatus {
-    CStringWrapper path;
-    uint8_t reason;
-    CStringWrapper message;
-};
-
-struct EachFileStatus {
-    std::string path;
-    uint8_t reason;
-    std::string message;
-};
-
 struct CTaskInfo {
     CStringWrapper bundle;
     CStringWrapper url;
@@ -64,8 +52,6 @@ struct CTaskInfo {
     CStringWrapper description;
     CStringWrapper mimeType;
     CProgress progress;
-    CEachFileStatus *eachFileStatusPtr;
-    uint32_t eachFileStatusLen;
     CommonTaskInfo commonData;
 };
 
@@ -80,7 +66,6 @@ struct TaskInfo {
     std::string description;
     std::string mimeType;
     Progress progress;
-    std::vector<EachFileStatus> eachFileStatus;
     CommonTaskInfo commonData;
 };
 
@@ -90,8 +75,6 @@ struct CUpdateInfo {
     uint32_t tries;
     CStringWrapper mimeType;
     CProgress progress;
-    CEachFileStatus *eachFileStatusPtr;
-    uint32_t eachFileStatusLen;
 };
 
 struct CUpdateStateInfo {
@@ -116,7 +99,6 @@ extern "C" {
 void DeleteCFormItem(CFormItem *ptr);
 void DeleteCFileSpec(CFileSpec *ptr);
 void DeleteCStringPtr(CStringWrapper *ptr);
-void DeleteCEachFileStatus(CEachFileStatus *ptr);
 void DeleteCTaskInfo(CTaskInfo *ptr);
 void DeleteTaskQosInfo(TaskQosInfo *ptr);
 
