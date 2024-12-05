@@ -161,8 +161,9 @@ pub(crate) fn serialize_task_info(tf: TaskInfo, reply: &mut MsgParcel) -> IpcRes
         reply.write(v)?;
     }
     reply.write(&(tf.common_data.version as u32))?;
-    reply.write(&(tf.each_file_status.len() as u32))?;
-    for item in tf.each_file_status.iter() {
+    let each_file_status = tf.build_each_file_status();
+    reply.write(&(each_file_status.len() as u32))?;
+    for item in each_file_status.iter() {
         reply.write(&(item.path))?;
         reply.write(&(item.reason.repr as u32))?;
         reply.write(&(item.message))?;

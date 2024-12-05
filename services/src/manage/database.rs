@@ -30,7 +30,7 @@ cfg_not_oh! {
 use crate::error::ErrorCode;
 use crate::service::client::ClientManagerEntry;
 use crate::task::config::TaskConfig;
-use crate::task::ffi::{CEachFileStatus, CTaskConfig, CTaskInfo, CUpdateInfo};
+use crate::task::ffi::{CTaskConfig, CTaskInfo, CUpdateInfo};
 use crate::task::info::{State, TaskInfo, UpdateInfo};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
@@ -275,12 +275,7 @@ impl RequestDb {
         let sizes = format!("{:?}", update_info.progress.sizes);
         let processed = format!("{:?}", update_info.progress.processed);
         let extras = hashmap_to_string(&update_info.progress.extras);
-        let each_file_status: Vec<CEachFileStatus> = update_info
-            .each_file_status
-            .iter()
-            .map(|x| x.to_c_struct())
-            .collect();
-        let c_update_info = update_info.to_c_struct(&sizes, &processed, &extras, &each_file_status);
+        let c_update_info = update_info.to_c_struct(&sizes, &processed, &extras);
         let ret = unsafe { UpdateRequestTask(task_id, &c_update_info) };
         debug!("Update task in database, ret is {}", ret);
     }

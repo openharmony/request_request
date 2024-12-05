@@ -128,6 +128,7 @@ impl Scheduler {
         {
             return Err(ErrorCode::TaskStateErr);
         }
+        // Change `Waiting` so that it can be scheduled.
         database.change_status(task_id, State::Waiting)?;
 
         let info = RequestDb::get_instance()

@@ -15,8 +15,7 @@ use super::config::{
     Action, CommonTaskConfig, ConfigSet, Mode, NetworkConfig, TaskConfig, Version,
 };
 use super::info::{CommonTaskInfo, InfoSet, TaskInfo, UpdateInfo};
-use super::notify::{CommonProgress, EachFileStatus, Progress};
-use super::reason::Reason;
+use super::notify::{CommonProgress, Progress};
 use crate::task::info::State;
 use crate::utils::c_wrapper::{CFileSpec, CFormItem, CStringWrapper};
 
@@ -77,31 +76,6 @@ pub(crate) struct CommonCTaskConfig {
 }
 
 #[repr(C)]
-pub(crate) struct CEachFileStatus {
-    pub(crate) path: CStringWrapper,
-    pub(crate) reason: u8,
-    pub(crate) message: CStringWrapper,
-}
-
-impl EachFileStatus {
-    pub(crate) fn to_c_struct(&self) -> CEachFileStatus {
-        CEachFileStatus {
-            path: CStringWrapper::from(&self.path),
-            reason: self.reason.repr,
-            message: CStringWrapper::from(&self.message),
-        }
-    }
-
-    pub(crate) fn from_c_struct(c_struct: &CEachFileStatus) -> EachFileStatus {
-        EachFileStatus {
-            path: c_struct.path.to_string(),
-            reason: Reason::from(c_struct.reason),
-            message: c_struct.message.to_string(),
-        }
-    }
-}
-
-#[repr(C)]
 pub(crate) struct CProgress {
     pub(crate) common_data: CommonProgress,
     pub(crate) sizes: CStringWrapper,
@@ -147,8 +121,6 @@ pub(crate) struct CTaskInfo {
     pub(crate) description: CStringWrapper,
     pub(crate) mime_type: CStringWrapper,
     pub(crate) progress: CProgress,
-    pub(crate) each_file_status_ptr: *const CEachFileStatus,
-    pub(crate) each_file_status_len: u32,
     pub(crate) common_data: CommonTaskInfo,
 }
 
@@ -169,8 +141,6 @@ impl TaskInfo {
             progress: self
                 .progress
                 .to_c_struct(&info.sizes, &info.processed, &info.extras),
-            each_file_status_ptr: info.each_file_status.as_ptr(),
-            each_file_status_len: info.each_file_status.len() as u32,
             common_data: self.common_data,
         }
     }
@@ -209,11 +179,6 @@ impl TaskInfo {
             mime_type,
             progress,
             extras,
-            each_file_status: build_vec(
-                c_struct.each_file_status_ptr,
-                c_struct.each_file_status_len as usize,
-                EachFileStatus::from_c_struct,
-            ),
             common_data: c_struct.common_data,
         };
 
@@ -221,7 +186,6 @@ impl TaskInfo {
         {
             unsafe { DeleteCFormItem(c_struct.form_items_ptr) };
             unsafe { DeleteCFileSpec(c_struct.file_specs_ptr) };
-            unsafe { DeleteCEachFileStatus(c_struct.each_file_status_ptr) };
         }
         task_info
     }
@@ -234,26 +198,16 @@ pub(crate) struct CUpdateInfo {
     pub(crate) tries: u32,
     pub(crate) mime_type: CStringWrapper,
     pub(crate) progress: CProgress,
-    pub(crate) each_file_status_ptr: *const CEachFileStatus,
-    pub(crate) each_file_status_len: u32,
 }
 
 impl UpdateInfo {
-    pub(crate) fn to_c_struct(
-        &self,
-        sizes: &str,
-        processed: &str,
-        extras: &str,
-        each_file_status: &[CEachFileStatus],
-    ) -> CUpdateInfo {
+    pub(crate) fn to_c_struct(&self, sizes: &str, processed: &str, extras: &str) -> CUpdateInfo {
         CUpdateInfo {
             mtime: self.mtime,
             reason: self.reason,
             tries: self.tries,
             mime_type: CStringWrapper::from(self.mime_type.as_str()),
             progress: self.progress.to_c_struct(sizes, processed, extras),
-            each_file_status_ptr: each_file_status.as_ptr(),
-            each_file_status_len: each_file_status.len() as u32,
         }
     }
 }
@@ -374,9 +328,4 @@ impl TaskConfig {
 
         task_config
     }
-}
-#[cfg(feature = "oh")]
-
-extern "C" {
-    pub(crate) fn DeleteCEachFileStatus(ptr: *const CEachFileStatus);
 }

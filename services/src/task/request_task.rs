@@ -13,7 +13,7 @@
 
 use std::io::{self, SeekFrom};
 use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, Ordering};
-use std::sync::{Mutex, MutexGuard};
+use std::sync::Mutex;
 use std::time::Duration;
 
 use ylong_http_client::async_impl::{Body, Client, Request, RequestBuilder, Response};
@@ -269,10 +269,6 @@ impl RequestTask {
             mtime,
             reason: reason.repr,
             progress,
-            each_file_status: RequestTask::get_each_file_status_by_code(
-                &self.code.lock().unwrap(),
-                &self.conf.file_specs,
-            ),
             tries: self.tries.load(Ordering::SeqCst),
             mime_type: self.mime_type(),
         };
@@ -537,22 +533,6 @@ impl RequestTask {
         vec
     }
 
-    pub(crate) fn get_each_file_status_by_code(
-        codes_guard: &MutexGuard<Vec<Reason>>,
-        file_specs: &[FileSpec],
-    ) -> Vec<EachFileStatus> {
-        let mut vec = Vec::new();
-        for (i, file_spec) in file_specs.iter().enumerate() {
-            let reason = *codes_guard.get(i).unwrap_or(&Reason::Default);
-            vec.push(EachFileStatus {
-                path: file_spec.path.clone(),
-                reason,
-                message: reason.to_str().into(),
-            });
-        }
-        vec
-    }
-
     pub(crate) fn info(&self) -> TaskInfo {
         let status = self.status.lock().unwrap();
         let progress = self.progress.lock().unwrap();
@@ -580,7 +560,6 @@ impl RequestTask {
             },
             progress: progress.clone(),
             extras: progress.extras.clone(),
-            each_file_status: self.get_each_file_status(),
             common_data: CommonTaskInfo {
                 task_id: self.conf.common_data.task_id,
                 uid: self.conf.common_data.uid,
