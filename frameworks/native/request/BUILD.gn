@@ -18,8 +18,8 @@ config("download_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
-    "../js/napi/request/include",
-    "../../interfaces/inner_kits/running_count/include",
+    "../../js/napi/request/include",
+    "../../../interfaces/inner_kits/running_count/include",
   ]
 
   cflags_cc = [ "-fno-exceptions" ]
@@ -42,7 +42,7 @@ ohos_shared_library("request_native") {
   stack_protector_ret = true
 
   include_dirs = [
-    "./include",
+    "include",
     "../../../frameworks/js/napi/request/include",
     "../../../common/include",
   ]
