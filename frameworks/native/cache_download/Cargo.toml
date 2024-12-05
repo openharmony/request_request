@@ -39,12 +39,13 @@ ylong = [
 
 [dependencies]
 cxx = { version = "1.0.115", optional = true }
-ffrt_rs = { path = "../ffrt_rs", optional = true }
 
 cache_core = { path = "../cache_core" }
-request_utils = { path = "../../request_utils" }
 
-netstack_rs = { path = "../netstack_rs", optional = true }
+ffrt_rs = { path = "../../../common/ffrt_rs", optional = true }
+request_utils = { path = "../../../common/utils" }
+netstack_rs = { path = "../../../common/netstack_rs", optional = true }
+
 ylong_http_client = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_http", features = [
     "async",
     "c_openssl_3_0",

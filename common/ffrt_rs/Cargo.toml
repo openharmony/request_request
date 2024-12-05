@@ -18,4 +18,3 @@ edition = "2021"
 
 [dependencies]
 cxx = "1.0.115"
-request_utils = { path = "../../request_utils" }
