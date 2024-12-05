@@ -15,7 +15,6 @@ use std::collections::HashMap;
 
 pub use ffi::State;
 
-use super::ffi::CEachFileStatus;
 use super::notify::{EachFileStatus, NotifyData, Progress};
 use crate::task::config::{Action, Version};
 use crate::task::reason::Reason;
@@ -35,7 +34,6 @@ pub(crate) struct TaskInfo {
     pub(crate) mime_type: String,
     pub(crate) progress: Progress,
     pub(crate) extras: HashMap<String, String>,
-    pub(crate) each_file_status: Vec<EachFileStatus>,
     pub(crate) common_data: CommonTaskInfo,
 }
 
@@ -80,7 +78,6 @@ pub(crate) struct InfoSet {
     pub(crate) sizes: String,
     pub(crate) processed: String,
     pub(crate) extras: String,
-    pub(crate) each_file_status: Vec<CEachFileStatus>,
 }
 
 #[cxx::bridge(namespace = "OHOS::Request")]
@@ -119,7 +116,6 @@ pub(crate) struct UpdateInfo {
     pub(crate) tries: u32,
     pub(crate) mime_type: String,
     pub(crate) progress: Progress,
-    pub(crate) each_file_status: Vec<EachFileStatus>,
 }
 
 impl From<u8> for State {
@@ -147,12 +143,15 @@ impl TaskInfo {
             sizes: format!("{:?}", self.progress.sizes),
             processed: format!("{:?}", self.progress.processed),
             extras: hashmap_to_string(&self.extras),
-            each_file_status: self
-                .each_file_status
-                .iter()
-                .map(|x| x.to_c_struct())
-                .collect(),
         }
+    }
+
+    pub(crate) fn build_each_file_status(&self) -> Vec<EachFileStatus> {
+        EachFileStatus::create_each_file_status(
+            &self.file_specs,
+            self.progress.common_data.index,
+            self.common_data.reason.into(),
+        )
     }
 
     pub(crate) fn build_notify_data(&self) -> NotifyData {
@@ -161,7 +160,7 @@ impl TaskInfo {
             progress: self.progress.clone(),
             action: Action::from(self.common_data.action),
             version: Version::from(self.common_data.version),
-            each_file_status: self.each_file_status.clone(),
+            each_file_status: self.build_each_file_status(),
             task_id: self.common_data.task_id,
             uid: self.common_data.uid,
         }
