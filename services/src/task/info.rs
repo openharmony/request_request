@@ -163,6 +163,7 @@ impl TaskInfo {
             version: Version::from(self.common_data.version),
             each_file_status: self.each_file_status.clone(),
             task_id: self.common_data.task_id,
+            uid: self.common_data.uid,
         }
     }
 }
