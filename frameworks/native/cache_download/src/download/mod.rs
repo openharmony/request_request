@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+pub(crate) const INIT: usize = 0;
+pub(crate) const RUNNING: usize = 1;
+pub(crate) const SUCCESS: usize = 2;
+pub(crate) const FAIL: usize = 3;
+pub(crate) const CANCEL: usize = 4;
+
 mod callback;
 
 cfg_netstack! {

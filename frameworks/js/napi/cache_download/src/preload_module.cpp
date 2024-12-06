@@ -51,7 +51,7 @@ napi_value download(napi_env env, napi_callback_info info)
             options->headers.emplace_back(std::make_pair(name, value));
         }
     }
-    Preload::GetInstance()->load(url, nullptr, std::move(options));
+    Preload::GetInstance()->load(url, nullptr, std::move(options), true);
     return nullptr;
 }
 

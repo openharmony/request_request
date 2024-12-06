@@ -70,8 +70,8 @@ ohos_rust_static_library("ffrt_rs") {
   part_name = "request"
 }
 
-ohos_rust_unittest("rust_request_ffrt_rs_ut_test") {
-  module_out_path = "request/preload"
+ohos_rust_unittest("rust_ffrt_rs_ut_test") {
+  module_out_path = "request/common"
 
   sources = [ "src/lib.rs" ]
 
@@ -90,5 +90,5 @@ ohos_rust_unittest("rust_request_ffrt_rs_ut_test") {
 
 group("unittest") {
   testonly = true
-  deps = [ ":rust_request_ffrt_rs_ut_test" ]
+  deps = [ ":rust_ffrt_rs_ut_test" ]
 }

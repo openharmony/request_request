@@ -19,8 +19,6 @@ edition = "2021"
 [features]
 default = [
     "ylong",
-    "ohos",
-    "netstack",
 ]
 
 ohos = [

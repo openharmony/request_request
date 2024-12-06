@@ -75,8 +75,8 @@ ohos_rust_static_library("request_utils") {
   part_name = "request"
 }
 
-ohos_rust_unittest("rust_request_utils_ut_test") {
-  module_out_path = "request/preload"
+ohos_rust_unittest("rust_utils_ut_test") {
+  module_out_path = "request/common"
 
   sources = [ "src/lib.rs" ]
   external_deps = [ "hilog:libhilog" ]
@@ -93,5 +93,5 @@ ohos_rust_unittest("rust_request_utils_ut_test") {
 
 group("unittest") {
   testonly = true
-  deps = [ ":rust_request_utils_ut_test" ]
+  deps = [ ":rust_utils_ut_test" ]
 }

@@ -13,10 +13,8 @@
 
 import("//build/test.gni")
 
-module_output_path = "request/request"
-
 ohos_js_unittest("RequestPermissionTest") {
-  module_out_path = module_output_path
+  module_out_path = "request/request"
 
   hap_profile = "./config.json"
 

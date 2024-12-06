@@ -66,8 +66,8 @@ Preload::Preload()
     this->_agent = cache_download_service();
 }
 
-std::shared_ptr<PreloadHandle> Preload::load(
-    std::string const &url, std::unique_ptr<PreloadCallback> callback, std::unique_ptr<PreloadOptions> options)
+std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique_ptr<PreloadCallback> callback,
+    std::unique_ptr<PreloadOptions> options, bool update)
 {
     auto callback_wrapper = std::make_unique<PreloadCallbackWrapper>(callback);
 
@@ -84,7 +84,7 @@ std::shared_ptr<PreloadHandle> Preload::load(
         }
     }
     auto taskHandle = this->_agent->ffi_preload(
-        rust::str(url), std::move(callback_wrapper), std::move(progress_callback_wrapper), false, ffiOptions);
+        rust::str(url), std::move(callback_wrapper), std::move(progress_callback_wrapper), update, ffiOptions);
     return std::make_shared<PreloadHandle>(std::move(taskHandle));
 }
 
@@ -105,6 +105,11 @@ void Preload::Cancel(std::string const &url)
 void Preload::Remove(std::string const &url)
 {
     this->_agent->remove(rust::str(url));
+}
+
+bool Preload::Contains(const std::string &url)
+{
+    return true;
 }
 
 Preload *Preload::GetInstance()

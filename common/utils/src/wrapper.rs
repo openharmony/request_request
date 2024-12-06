@@ -11,10 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::ffi::{c_char, CString};
-use std::ptr::null;
+use std::ffi::c_char;
 
-use cxx::CxxString;
 pub use ffi::{GetCacheDir, LogLevel, LogType, SHA256};
 
 #[cxx::bridge]
@@ -60,9 +58,6 @@ mod ffi {
         include!("hilog/log.h");
         include!("request_utils_wrapper.h");
         include!("application_context.h");
-
-        #[namespace = "OHOS::AbilityRuntime"]
-        type ApplicationContext;
 
         #[namespace = "OHOS::Request"]
         fn GetCacheDir() -> String;

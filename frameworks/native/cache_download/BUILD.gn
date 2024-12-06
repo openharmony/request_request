@@ -117,12 +117,10 @@ ohos_static_library("preload_native_static") {
   part_name = "request"
 }
 
-ohos_rust_unittest("rust_preload_native_ut_test") {
+ohos_rust_unittest("rust_cache_download_ut_test") {
   module_out_path = "request/preload"
 
   sources = [ "src/lib.rs" ]
-
-  external_deps = []
 
   rustflags = [
     "--cfg=feature=\"ohos\"",
@@ -137,7 +135,6 @@ ohos_rust_unittest("rust_preload_native_ut_test") {
     "../cache_core:cache_core",
     "//third_party/rust/crates/cxx:lib",
   ]
-  external_deps = [ "hilog:hilog_rust" ]
 
   subsystem_name = "request"
   part_name = "request"
@@ -145,5 +142,5 @@ ohos_rust_unittest("rust_preload_native_ut_test") {
 
 group("unittest") {
   testonly = true
-  deps = [ ":rust_preload_native_ut_test" ]
+  deps = [ ":rust_cache_download_ut_test" ]
 }
