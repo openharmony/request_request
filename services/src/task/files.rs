@@ -148,7 +148,6 @@ pub(crate) fn convert_path(uid: u64, bundle_name: &str, path: &str) -> String {
     let real_path = path
         .replacen("storage", "app", 1)
         .replacen("base", &base_replace, 1);
-    debug!("convert to real_path: {}", real_path);
     real_path
 }
 
