@@ -12,7 +12,6 @@
 // limitations under the License.
 
 use std::collections::VecDeque;
-use std::io::Write;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -20,14 +19,9 @@ use cache_core::{CacheManager, Updater};
 use request_utils::task_id::TaskId;
 
 use super::common::{CommonError, CommonResponse};
-use super::CacheDownloadError;
-use crate::services::{CacheDownloadService, DownloadRequest, PreloadCallback};
-
-const INIT: usize = 0;
-const RUNNING: usize = 1;
-const SUCCESS: usize = 2;
-const FAIL: usize = 3;
-const CANCEL: usize = 4;
+use super::{CacheDownloadError, RUNNING};
+use crate::download::{CANCEL, FAIL, SUCCESS};
+use crate::services::{CacheDownloadService, PreloadCallback};
 
 const PROGRESS_INTERVAL: usize = 8;
 
@@ -104,7 +98,7 @@ impl PrimeCallback {
             while let Some(mut callback) = callbacks.pop_front() {
                 let clone_cache = cache.clone();
                 let task_id = self.task_id.brief().to_string();
-                std::thread::spawn(move || {
+                crate::spawn(move || {
                     callback.on_progress(clone_cache.size() as u64, clone_cache.size() as u64);
                     callback.on_success(clone_cache, &task_id)
                 });

@@ -81,16 +81,6 @@ impl<'a> DownloadOperator for Operator<'a> {
     }
 }
 
-pub struct RequestTask<'a> {
-    headers: &'a HashMap<String, String>,
-}
-
-impl<'a> RequestTask<'a> {
-    pub(crate) fn headers(&self) -> &'a HashMap<String, String> {
-        self.headers
-    }
-}
-
 pub struct DownloadTask;
 
 impl DownloadTask {

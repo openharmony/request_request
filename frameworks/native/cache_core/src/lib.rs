@@ -17,7 +17,6 @@
 #![allow(
     unknown_lints,
     static_mut_refs,
-    unused,
     stable_features,
     missing_docs,
     clippy::new_without_default

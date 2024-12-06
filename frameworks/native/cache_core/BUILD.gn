@@ -38,3 +38,23 @@ ohos_rust_static_library("cache_core") {
   subsystem_name = "request"
   part_name = "request"
 }
+
+ohos_rust_unittest("rust_cache_core_ut_test") {
+  module_out_path = "request/preload"
+
+  rustflags = [ "--cfg=feature=\"ohos\"" ]
+
+  sources = [ "src/lib.rs" ]
+  deps = [
+    "../../../common/ffrt_rs:ffrt_rs",
+    "../../../common/utils:request_utils",
+  ]
+
+  subsystem_name = "request"
+  part_name = "request"
+}
+
+group("unittest") {
+  testonly = true
+  deps = [ ":rust_cache_core_ut_test" ]
+}
