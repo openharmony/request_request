@@ -69,6 +69,7 @@ impl CallbackWrapper {
     }
 }
 
+#[allow(unused_unsafe)]
 #[cxx::bridge(namespace = "OHOS::Request")]
 pub(crate) mod ffi {
     extern "Rust" {

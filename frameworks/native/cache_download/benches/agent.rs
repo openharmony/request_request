@@ -32,6 +32,7 @@ fn agent_preload(url: &str) {
     agent.preload(request, callback, false, Downloader::Ylong);
 }
 
+#[allow(unused)]
 fn preload_benchmark_different_url(c: &mut Criterion) {
     static SERVER: LazyLock<Vec<String>> = LazyLock::new(|| {
         let mut v = vec![];

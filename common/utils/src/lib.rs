@@ -16,7 +16,6 @@
 #![warn(missing_docs)]
 #![allow(clippy::crate_in_macro_def)]
 #![allow(missing_docs)]
-#![allow(unused)]
 
 #[macro_use]
 mod macros;
@@ -27,7 +26,6 @@ pub mod lru;
 pub mod task_id;
 
 cfg_not_ohos! {
-    #[macro_use]
     pub use log::{debug, error, info};
 }
 

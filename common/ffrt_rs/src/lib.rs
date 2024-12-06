@@ -12,7 +12,6 @@
 // limitations under the License.
 
 #![allow(missing_docs)]
-#![allow(unused)]
 mod wrapper;
 
 use wrapper::{ClosureWrapper, FfrtSpawn};

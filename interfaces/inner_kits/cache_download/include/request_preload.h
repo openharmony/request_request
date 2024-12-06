@@ -103,12 +103,13 @@ public:
     virtual ~Preload() = default;
     void Cancel(std::string const &url);
     void Remove(std::string const &url);
+    bool Contains(std::string const &url);
 
     void SetRamCacheSize(uint64_t size);
     void SetFileCacheSize(uint64_t size);
 
-    std::shared_ptr<PreloadHandle> load(
-        std::string const &url, std::unique_ptr<PreloadCallback>, std::unique_ptr<PreloadOptions> options = nullptr);
+    std::shared_ptr<PreloadHandle> load(std::string const &url, std::unique_ptr<PreloadCallback>,
+        std::unique_ptr<PreloadOptions> options = nullptr, bool update = false);
 
 private:
     const CacheDownloadService *_agent;

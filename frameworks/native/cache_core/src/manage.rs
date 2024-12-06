@@ -13,8 +13,7 @@
 
 use std::collections::HashMap;
 use std::io;
-use std::mem::MaybeUninit;
-use std::sync::{Arc, Mutex, Once, OnceLock, Weak};
+use std::sync::{Arc, Mutex, OnceLock, Weak};
 
 use request_utils::lru::LRUCache;
 use request_utils::task_id::TaskId;
@@ -76,6 +75,12 @@ impl CacheManager {
         self.update_from_file_once.lock().unwrap().remove(&task_id);
     }
 
+    pub fn contains(&self, task_id: &TaskId) -> bool {
+        self.files.lock().unwrap().contains_key(task_id)
+            || self.backup_rams.lock().unwrap().contains_key(task_id)
+            || self.rams.lock().unwrap().contains_key(task_id)
+    }
+
     pub(crate) fn get_cache(&'static self, task_id: &TaskId) -> Option<Arc<RamCache>> {
         let res = self.rams.lock().unwrap().get(task_id).cloned();
         res.or_else(|| self.backup_rams.lock().unwrap().get(task_id).cloned())
@@ -113,7 +118,7 @@ mod test {
     use std::thread;
     use std::time::Duration;
 
-    use request_utils::fastrand::{self, fast_random};
+    use request_utils::fastrand::fast_random;
     use request_utils::test::log::init;
 
     use super::*;

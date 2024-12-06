@@ -31,7 +31,6 @@ macro_rules! cfg_not_test {
     }
 }
 
-#[macro_use]
 #[macro_export]
 macro_rules! cfg_ohos {
     ($($item:item)*) => {
@@ -42,7 +41,6 @@ macro_rules! cfg_ohos {
     }
 }
 
-#[macro_use]
 #[macro_export]
 macro_rules! cfg_not_ohos {
     ($($item:item)*) => {

@@ -21,6 +21,7 @@ use request_utils::task_id::TaskId;
 
 use super::callback::PrimeCallback;
 use super::common::CommonCancel;
+use super::{INIT, SUCCESS};
 
 cfg_ylong! {
     use crate::download::ylong;
@@ -31,12 +32,6 @@ cfg_netstack! {
 }
 
 use crate::services::{DownloadRequest, PreloadCallback};
-
-const INIT: usize = 0;
-const RUNNING: usize = 1;
-const SUCCESS: usize = 2;
-const FAIL: usize = 3;
-const CANCEL: usize = 4;
 
 pub enum Downloader {
     Netstack,
@@ -69,7 +64,7 @@ impl DownloadTask {
                         cache_manager,
                         request,
                         Some(callback),
-                        super::netstack::DownloadTask::run,
+                        netstack::DownloadTask::run,
                         seq,
                     ));
                 }
@@ -250,7 +245,7 @@ mod test {
     use super::*;
     use crate::services::PreloadCallback;
 
-    const TEST_URL: &str = "http://www.baidu.com";
+    const TEST_URL: &str = "https://www.baidu.com";
 
     struct TestCallback {
         flag: Arc<AtomicBool>,
@@ -268,7 +263,7 @@ mod test {
     const DOWNLOADER: for<'a> fn(
         DownloadRequest<'a>,
         PrimeCallback,
-    ) -> Arc<(dyn CommonCancel + 'static)> = super::netstack::DownloadTask::run;
+    ) -> Arc<(dyn CommonCancel + 'static)> = netstack::DownloadTask::run;
 
     #[cfg(not(feature = "ohos"))]
     const DOWNLOADER: for<'a> fn(
@@ -292,10 +287,9 @@ mod test {
             DOWNLOADER,
             0,
         );
-        if !handle.is_finish() {
+        while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }
-        thread::sleep(Duration::from_secs(1));
         assert!(success_flag.load(Ordering::Acquire));
     }
 
@@ -341,10 +335,9 @@ mod test {
             DOWNLOADER,
             0,
         );
-        if !handle.is_finish() {
+        while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }
-        thread::sleep(Duration::from_secs(1));
         assert!(flag.load(Ordering::SeqCst));
     }
 }

@@ -12,7 +12,6 @@
 // limitations under the License.
 
 use std::io;
-use std::ops::Deref;
 
 use super::common::CommonError;
 

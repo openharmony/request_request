@@ -22,11 +22,6 @@ use request_utils::task_id::TaskId;
 use crate::download::task::{DownloadTask, Downloader, TaskHandle};
 use crate::download::CacheDownloadError;
 
-cfg_ohos! {
-    use crate::wrapper::ffi::{FfiPredownloadOptions,PreloadCallbackWrapper,PreloadProgressCallbackWrapper};
-    use crate::wrapper::FfiCallback;
-}
-
 #[allow(unused_variables)]
 pub trait PreloadCallback: Send {
     fn on_success(&mut self, data: Arc<RamCache>, task_id: &str) {}
@@ -92,6 +87,11 @@ impl CacheDownloadService {
         self.cache_manager.remove(task_id);
     }
 
+    pub fn contains(&self, url: &str) {
+        let task_id = TaskId::from_url(url);
+        self.cache_manager.contains(&task_id);
+    }
+
     pub fn preload(
         &'static self,
         request: DownloadRequest,
@@ -116,7 +116,6 @@ impl CacheDownloadService {
         }
 
         loop {
-            let cb = callback;
             let updater = match self.running_tasks.lock().unwrap().entry(task_id.clone()) {
                 Entry::Occupied(entry) => entry.get().clone(),
                 Entry::Vacant(entry) => {
@@ -124,7 +123,7 @@ impl CacheDownloadService {
                         task_id.clone(),
                         &self.cache_manager,
                         request,
-                        cb,
+                        callback,
                         downloader,
                         0,
                     )));
@@ -135,36 +134,37 @@ impl CacheDownloadService {
             };
 
             let mut updater = updater.lock().unwrap();
-
-            let handle = match updater.try_add_callback(cb) {
-                Ok(()) => updater.task_handle(),
-                Err(cb) => {
-                    if let Err(cb) = self.fetch(&task_id, cb) {
+            match updater.try_add_callback(callback) {
+                Ok(()) => return updater.task_handle(),
+                Err(mut cb) => {
+                    if update {
+                        info!("add callback failed, update task {}", task_id.brief());
+                    } else if let Err(callback) = self.fetch(&task_id, cb) {
                         error!("{} fetch fail after update", task_id.brief());
-                        if !updater.remove_flag {
-                            let seq = updater.seq + 1;
-                            *updater = DownloadTask::new(
-                                task_id.clone(),
-                                &self.cache_manager,
-                                request,
-                                cb,
-                                downloader,
-                                seq,
-                            );
-                            updater.task_handle()
-                        } else {
-                            callback = cb;
-                            continue;
-                        }
+                        cb = callback;
                     } else {
                         info!("{} fetch success", task_id.brief());
                         let handle = TaskHandle::new(task_id);
                         handle.set_completed();
-                        handle
+                        return handle;
+                    }
+
+                    if !updater.remove_flag {
+                        let seq = updater.seq + 1;
+                        *updater = DownloadTask::new(
+                            task_id.clone(),
+                            &self.cache_manager,
+                            request,
+                            cb,
+                            downloader,
+                            seq,
+                        );
+                        return updater.task_handle();
+                    } else {
+                        callback = cb;
                     }
                 }
             };
-            break handle;
         }
     }
 
@@ -218,6 +218,7 @@ mod test {
     use request_utils::test::server::test_server;
 
     use super::*;
+    use crate::download::CANCEL;
 
     const ERROR_IP: &str = "127.12.31.12";
     const NO_DATA: usize = 1359;
@@ -274,11 +275,10 @@ mod test {
         let callback = Box::new(TestCallbackS {
             flag: success_flag.clone(),
         });
-        let handle = SERVICE.preload(DownloadRequest::new(TEST_URL), callback, false, DOWNLOADER);
-        if !handle.is_finish() {
+        let handle = SERVICE.preload(DownloadRequest::new(TEST_URL), callback, true, DOWNLOADER);
+        while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }
-        thread::sleep(Duration::from_secs(1));
         assert_eq!(success_flag.load(Ordering::SeqCst), 1);
     }
 
@@ -296,22 +296,11 @@ mod test {
             flag: success_flag_1.clone(),
         });
 
-        let handle = SERVICE.preload(
-            DownloadRequest::new(TEST_URL),
-            callback_0,
-            false,
-            DOWNLOADER,
-        );
-        SERVICE.preload(
-            DownloadRequest::new(TEST_URL),
-            callback_1,
-            false,
-            DOWNLOADER,
-        );
-        if !handle.is_finish() {
+        let handle = SERVICE.preload(DownloadRequest::new(TEST_URL), callback_0, true, DOWNLOADER);
+        SERVICE.preload(DownloadRequest::new(TEST_URL), callback_1, true, DOWNLOADER);
+        while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }
-        thread::sleep(Duration::from_secs(1));
         assert_eq!(success_flag_0.load(Ordering::SeqCst), 1);
         assert_eq!(success_flag_1.load(Ordering::SeqCst), 1);
     }
@@ -324,11 +313,10 @@ mod test {
         let callback = Box::new(TestCallbackF {
             flag: error.clone(),
         });
-        let handle = SERVICE.preload(DownloadRequest::new(ERROR_IP), callback, false, DOWNLOADER);
-        if !handle.is_finish() {
+        let handle = SERVICE.preload(DownloadRequest::new(ERROR_IP), callback, true, DOWNLOADER);
+        while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }
-        thread::sleep(Duration::from_secs(1));
         assert!(!error.lock().unwrap().as_str().is_empty());
     }
 
@@ -345,22 +333,11 @@ mod test {
             flag: error_1.clone(),
         });
 
-        let handle = SERVICE.preload(
-            DownloadRequest::new(ERROR_IP),
-            callback_0,
-            false,
-            DOWNLOADER,
-        );
-        SERVICE.preload(
-            DownloadRequest::new(ERROR_IP),
-            callback_1,
-            false,
-            DOWNLOADER,
-        );
-        if !handle.is_finish() {
+        let handle = SERVICE.preload(DownloadRequest::new(ERROR_IP), callback_0, true, DOWNLOADER);
+        SERVICE.preload(DownloadRequest::new(ERROR_IP), callback_1, true, DOWNLOADER);
+        while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }
-        thread::sleep(Duration::from_secs(1));
 
         assert!(!error_0.lock().unwrap().as_str().is_empty());
         assert!(!error_1.lock().unwrap().as_str().is_empty());
@@ -377,7 +354,10 @@ mod test {
         let mut handle =
             SERVICE.preload(DownloadRequest::new(TEST_URL), callback, true, DOWNLOADER);
         handle.cancel();
-        thread::sleep(Duration::from_secs(1));
+        while handle.state() != CANCEL {
+            std::thread::sleep(Duration::from_millis(500));
+        }
+
         assert_eq!(cancel_flag.load(Ordering::SeqCst), 1);
     }
 
@@ -389,16 +369,19 @@ mod test {
         let callback = Box::new(TestCallbackC {
             flag: cancel_flag.clone(),
         });
-        SERVICE.preload(DownloadRequest::new(TEST_URL), callback, true, DOWNLOADER);
+        let handle = SERVICE.preload(DownloadRequest::new(TEST_URL), callback, true, DOWNLOADER);
         SERVICE.cancel(TEST_URL);
-        std::thread::sleep(Duration::from_secs(1));
+
+        while handle.state() != CANCEL {
+            std::thread::sleep(Duration::from_millis(500));
+        }
         assert_eq!(cancel_flag.load(Ordering::SeqCst), 1);
     }
 
     #[test]
     fn ut_preload_cancel_add_callback() {
         init();
-        let test_url = "http://www.gitee.com";
+        let test_url = "https://www.gitee.com";
 
         static SERVICE: LazyLock<CacheDownloadService> = LazyLock::new(CacheDownloadService::new);
         let cancel_flag_0 = Arc::new(AtomicUsize::new(0));
@@ -410,24 +393,21 @@ mod test {
             flag: cancel_flag_1.clone(),
         });
 
-        let mut handle_0 = SERVICE.preload(
-            DownloadRequest::new(test_url),
-            callback_0,
-            false,
-            DOWNLOADER,
-        );
-        let mut handle_1 = SERVICE.preload(
-            DownloadRequest::new(test_url),
-            callback_1,
-            false,
-            DOWNLOADER,
-        );
+        let mut handle_0 =
+            SERVICE.preload(DownloadRequest::new(test_url), callback_0, true, DOWNLOADER);
+        let mut handle_1 =
+            SERVICE.preload(DownloadRequest::new(test_url), callback_1, true, DOWNLOADER);
         handle_0.cancel();
         handle_0.cancel();
         assert_eq!(cancel_flag_0.load(Ordering::SeqCst), 0);
         assert_eq!(cancel_flag_1.load(Ordering::SeqCst), 0);
         handle_1.cancel();
-        std::thread::sleep(Duration::from_secs(2));
+        assert!(handle_0.is_finish());
+        assert!(handle_1.is_finish());
+
+        while handle_1.state() != CANCEL {
+            std::thread::sleep(Duration::from_millis(500));
+        }
         assert_eq!(cancel_flag_0.load(Ordering::SeqCst), 1);
         assert_eq!(cancel_flag_1.load(Ordering::SeqCst), 1);
     }
@@ -439,19 +419,18 @@ mod test {
         let handle = SERVICE.preload(
             DownloadRequest::new(TEST_URL),
             Box::new(TestCallbackN),
-            false,
+            true,
             DOWNLOADER,
         );
-        if !handle.is_finish() {
+        while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }
-        thread::sleep(Duration::from_millis(10));
         let success_flag = Arc::new(AtomicUsize::new(0));
         let callback = Box::new(TestCallbackS {
             flag: success_flag.clone(),
         });
-        SERVICE.preload(DownloadRequest::new(TEST_URL), callback, false, DOWNLOADER);
-        thread::sleep(Duration::from_secs(1));
+        SERVICE.preload(DownloadRequest::new(TEST_URL), callback, true, DOWNLOADER);
+        std::thread::sleep(Duration::from_millis(50));
         assert_eq!(success_flag.load(Ordering::SeqCst), 1);
     }
 
@@ -472,7 +451,7 @@ mod test {
             .map(|(k, v)| format!("{}:{}", k.to_ascii_lowercase(), v.to_ascii_lowercase()))
             .collect();
 
-        let flag = Arc::new(AtomicBool::new(false));
+        let flag = Arc::new(AtomicBool::new(true));
         let flag_clone = flag.clone();
         let test_f = move |mut lines: Lines<BufReader<&mut TcpStream>>| {
             for line in lines.by_ref() {
@@ -495,10 +474,9 @@ mod test {
             flag: success_flag.clone(),
         });
         let handle = SERVICE.preload(request, callback, true, DOWNLOADER);
-        if !handle.is_finish() {
+        while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }
-        thread::sleep(Duration::from_secs(1));
         assert!(flag.load(Ordering::SeqCst));
         assert_eq!(success_flag.load(Ordering::SeqCst), NO_DATA);
     }

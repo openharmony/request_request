@@ -11,8 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::any::Any;
-
 pub(crate) use ffi::FfrtSpawn;
 
 pub struct ClosureWrapper {
