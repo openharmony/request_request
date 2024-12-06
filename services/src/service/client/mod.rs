@@ -16,6 +16,7 @@ mod manager;
 use std::collections::HashMap;
 use std::net::Shutdown;
 use std::os::fd::AsRawFd;
+use std::time::Duration;
 
 pub(crate) use manager::{ClientManager, ClientManagerEntry};
 use ylong_http_client::Headers;
@@ -358,10 +359,27 @@ impl Client {
             Ok(size) => {
                 debug!("send message ok, pid: {}, size: {}", self.pid, size);
                 let mut buf: [u8; 4] = [0; 4];
-                let ret = self.server_sock_fd.recv(&mut buf).await;
-                if let Err(e) = ret {
-                    error!("message len err, {:?}", e)
-                }
+
+                match ylong_runtime::time::timeout(
+                    Duration::from_millis(500),
+                    self.server_sock_fd.recv(&mut buf),
+                )
+                .await
+                {
+                    Ok(ret) => match ret {
+                        Ok(len) => {
+                            debug!("message recv len {:}", len);
+                        }
+                        Err(e) => {
+                            error!("message recv error: {:?}", e);
+                        }
+                    },
+                    Err(e) => {
+                        error!("message recv {}", e);
+                        return;
+                    }
+                };
+
                 let len: u32 = u32::from_le_bytes(buf);
                 if len != message.len() as u32 {
                     error!("message len bad, send {:?}, recv {:?}", message.len(), len);
