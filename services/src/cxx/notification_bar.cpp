@@ -43,7 +43,7 @@ static constexpr uint32_t PERCENT = 100;
 static constexpr uint32_t FRONT_ZERO = 10;
 static constexpr size_t PLACEHOLDER_LENGTH = 2;
 
-constexpr const char *DOWNLOAD_FILE = "ohos_id_text_save_button_description_download_file";
+constexpr const char *DOWNLOAD_FILE = "request_agent_download_file";
 constexpr const char *DOWNLOAD_SUCCESS = "request_agent_download_success";
 constexpr const char *DOWNLOAD_FAIL = "request_agent_download_fail";
 constexpr const char *UPLOAD_FILE = "request_agent_upload_file";
@@ -127,7 +127,7 @@ void SetProgress(
         if (msg.sizes.size() > 1) {
             progress.SetCurrentValue(msg.index);
             progress.SetMaxValue(msg.sizes.size());
-            size_t pos = title.find("%d");
+            size_t pos = title.find("%s");
             if (pos != std::string::npos) {
                 title.replace(pos, PLACEHOLDER_LENGTH, ProgressNum(msg.index, msg.sizes.size()));
             } else {
@@ -137,7 +137,7 @@ void SetProgress(
         } else {
             progress.SetCurrentValue(msg.processed[0] / BINARY_SCALE);
             progress.SetMaxValue(msg.sizes[0] / BINARY_SCALE);
-            size_t pos = title.find("%d");
+            size_t pos = title.find("%s");
             if (pos != std::string::npos) {
                 title.replace(pos, PLACEHOLDER_LENGTH, ProgressPercentage(msg.processed[0], msg.sizes[0]));
             } else {
