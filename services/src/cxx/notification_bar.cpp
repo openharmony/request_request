@@ -108,9 +108,9 @@ void SetProgress(
     Notification::NotificationProgress progress;
     if (msg.action == static_cast<uint8_t>(Action::Download)) {
         title = GetSystemResourceString(DOWNLOAD_FILE);
-        title.push_back(' ');
+        size_t pos = title.find("%s");
         if (msg.sizes[0] == -1) {
-            title += ProgressSized(msg.processed[0]);
+            title.replace(pos, PLACEHOLDER_LENGTH, ProgressSized(msg.processed[0]));
             localLiveViewContent->SetTitle(title);
             return;
         } else {
@@ -119,31 +119,20 @@ void SetProgress(
             progress.SetIsPercentage(true);
             progress.SetCurrentValue(msg.processed[0] / BINARY_SCALE);
             progress.SetMaxValue(msg.sizes[0] / BINARY_SCALE);
-            title += ProgressPercentage(msg.processed[0], msg.sizes[0]);
+            title.replace(pos, PLACEHOLDER_LENGTH, ProgressPercentage(msg.processed[0], msg.sizes[0]));
         }
     } else {
         localLiveViewContent->addFlag(Notification::NotificationLocalLiveViewContent::LiveViewContentInner::PROGRESS);
         title = GetSystemResourceString(UPLOAD_FILE);
+        size_t pos = title.find("%s");
         if (msg.sizes.size() > 1) {
             progress.SetCurrentValue(msg.index);
             progress.SetMaxValue(msg.sizes.size());
-            size_t pos = title.find("%s");
-            if (pos != std::string::npos) {
-                title.replace(pos, PLACEHOLDER_LENGTH, ProgressNum(msg.index, msg.sizes.size()));
-            } else {
-                title.push_back(' ');
-                title += ProgressNum(msg.index, msg.sizes.size());
-            }
+            title.replace(pos, PLACEHOLDER_LENGTH, ProgressNum(msg.index, msg.sizes.size()));
         } else {
             progress.SetCurrentValue(msg.processed[0] / BINARY_SCALE);
             progress.SetMaxValue(msg.sizes[0] / BINARY_SCALE);
-            size_t pos = title.find("%s");
-            if (pos != std::string::npos) {
-                title.replace(pos, PLACEHOLDER_LENGTH, ProgressPercentage(msg.processed[0], msg.sizes[0]));
-            } else {
-                title.push_back(' ');
-                title += ProgressPercentage(msg.processed[0], msg.sizes[0]);
-            }
+            title.replace(pos, PLACEHOLDER_LENGTH, ProgressPercentage(msg.processed[0], msg.sizes[0]));
         }
     }
     localLiveViewContent->SetTitle(title);
