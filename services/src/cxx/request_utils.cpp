@@ -46,10 +46,12 @@ int GetForegroundAbilities(rust::vec<int> &uid)
     auto sysm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sysm == nullptr) {
         REQUEST_HILOGE("GetForegroundAbilities failed, sysm is nullptr");
+        return -1;
     }
     auto remote = sysm->CheckSystemAbility(APP_MGR_SERVICE_ID);
     if (remote == nullptr) {
         REQUEST_HILOGE("GetForegroundAbilities failed, remote is nullptr");
+        return -1;
     }
     auto proxy = AppMgrProxy(remote);
     auto ret = proxy.GetForegroundApplications(abilities);
