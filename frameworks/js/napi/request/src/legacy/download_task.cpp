@@ -156,8 +156,6 @@ bool DownloadTask::SetOption(CURL *handle, curl_slist *&headers)
 
 void DownloadTask::Start()
 {
-    REQUEST_HILOGD("taskId=%{public}s url=%{public}s file=%{public}s dir=%{public}s", taskId_.c_str(),
-        option_.url_.c_str(), option_.filename_.c_str(), option_.fileDir_.c_str());
     if (!isCurlGlobalInited_) {
         curl_global_init(CURL_GLOBAL_ALL);
         isCurlGlobalInited_ = true;

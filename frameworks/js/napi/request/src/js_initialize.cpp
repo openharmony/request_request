@@ -198,9 +198,8 @@ bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &con
         auto now = std::chrono::high_resolution_clock::now();
         auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
         std::string path = filePath + "/tmp_body_" + std::to_string(i) + "_" + std::to_string(timestamp);
-        REQUEST_HILOGD("Create upload body file, %{public}s", path.c_str());
         if (!NapiUtils::IsPathValid(path)) {
-            REQUEST_HILOGE("IsPathValid error %{public}s", path.c_str());
+            REQUEST_HILOGE("Upload IsPathValid error");
             error.code = E_PARAMETER_CHECK;
             error.errInfo = "Parameter verification failed, UploadBodyFiles error fail path";
             return false;
@@ -295,7 +294,7 @@ bool JsInitialize::GetFdInner(const std::string &path, const Config &config, int
             return true;
         }
         if (chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP) != 0) {
-            REQUEST_HILOGE("GetFd file chmod clear failed: %{public}s", path.c_str());
+            REQUEST_HILOGE("GetFd file chmod clear failed");
         }
         close(fd);
         error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
@@ -344,7 +343,7 @@ bool JsInitialize::GetInternalPath(const std::shared_ptr<OHOS::AbilityRuntime::C
     }
     path += "/" + fileName;
     if (!NapiUtils::IsPathValid(path)) {
-        REQUEST_HILOGE("IsPathValid error %{public}s", path.c_str());
+        REQUEST_HILOGE("IsPathValid error");
         errInfo = "Parameter verification failed, GetInternalPath failed, filePath is not valid";
         return false;
     }
@@ -1028,7 +1027,6 @@ bool JsInitialize::CheckUserFileSpec(const std::shared_ptr<OHOS::AbilityRuntime:
         error.errInfo = "Parameter verification failed, user file can only for Mode::FOREGROUND";
         return false;
     }
-    REQUEST_HILOGD("UserFile in: %{public}s", file.uri.c_str());
     std::shared_ptr<Uri> uri = std::make_shared<Uri>(file.uri);
     std::shared_ptr<AppExecFwk::DataAbilityHelper> dataAbilityHelper =
         AppExecFwk::DataAbilityHelper::Creator(context, uri);
@@ -1040,7 +1038,7 @@ bool JsInitialize::CheckUserFileSpec(const std::shared_ptr<OHOS::AbilityRuntime:
     }
     file.fd = dataAbilityHelper->OpenFile(*uri, "r");
     if (file.fd < 0) {
-        REQUEST_HILOGE("Failed to open user file: %{public}s, fd: %{public}d", file.uri.c_str(), file.fd);
+        REQUEST_HILOGE("Failed to open user file, fd: %{public}d", file.fd);
         error.code = E_FILE_IO;
         error.errInfo = "Failed to open user file";
         return false;
@@ -1092,7 +1090,7 @@ bool JsInitialize::CheckUploadFileSpec(const std::shared_ptr<OHOS::AbilityRuntim
             return false;
         }
     }
-    REQUEST_HILOGD("CheckUploadFileSpec path: %{public}s", path.c_str());
+    REQUEST_HILOGD("CheckUploadFileSpec path");
     file.uri = path;
     if (!GetFdUpload(path, config, file.fd, error)) {
         return false;
@@ -1149,7 +1147,7 @@ bool JsInitialize::CheckDownloadFilePath(
     // pop filename.
     pathVec.pop_back();
     if (!JsInitialize::CreateDirs(pathVec)) {
-        REQUEST_HILOGE("CreateDirs Err: %{public}s", path.c_str());
+        REQUEST_HILOGE("CreateDirs Err");
         errInfo = "Parameter verification failed, this is fail saveas path";
         return false;
     }
@@ -1191,18 +1189,18 @@ bool JsInitialize::GetSandboxPath(const std::shared_ptr<OHOS::AbilityRuntime::Co
     std::string &path, std::vector<std::string> &pathVec, std::string &errInfo)
 {
     if (!StandardizePath(context, config, path)) {
-        REQUEST_HILOGE("StandardizePath Err: %{public}s", path.c_str());
+        REQUEST_HILOGE("StandardizePath Err");
         errInfo = "Parameter verification failed, GetSandboxPath failed, StandardizePath fail";
         return false;
     };
     if (!WholeToNormal(path, pathVec) || pathVec.empty()) {
-        REQUEST_HILOGE("WholeToNormal Err: %{public}s", path.c_str());
+        REQUEST_HILOGE("WholeToNormal Err");
         errInfo = "Parameter verification failed, GetSandboxPath failed, WholeToNormal path fail";
         return false;
     };
     std::string baseDir;
     if (!CheckBelongAppBaseDir(path, baseDir)) {
-        REQUEST_HILOGE("CheckBelongAppBaseDir Err: %{public}s", path.c_str());
+        REQUEST_HILOGE("CheckBelongAppBaseDir Err");
         errInfo = "Parameter verification failed, GetSandboxPath failed, path not belong app base dir";
         return false;
     };
@@ -1332,7 +1330,7 @@ bool JsInitialize::CheckBelongAppBaseDir(const std::string &filepath, std::strin
     if ((filepath.find(AREA1) == 0) || filepath.find(AREA2) == 0 || filepath.find(AREA5) == 0) {
         return true;
     } else {
-        REQUEST_HILOGE("File dir not include base dir: %{public}s", baseDir.c_str());
+        REQUEST_HILOGE("File dir not include base dir");
         return false;
     }
 }

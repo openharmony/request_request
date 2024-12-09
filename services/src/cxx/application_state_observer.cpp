@@ -87,7 +87,7 @@ void ApplicationStateObserver::AppProcessState::OnForegroundApplicationChanged(
 void ApplicationStateObserver::AppProcessState::OnAbilityStateChanged(
     const AppExecFwk::AbilityStateData &abilityStateData)
 {
-    REQUEST_HILOGD("OnAbilityStateChanged uid=%{public}d,  bundleName=%{public}s,state=%{public}d",
+    REQUEST_HILOGD("OnAbilityStateChanged uid=%{public}d, bundleName=%{public}s,state=%{public}d",
         abilityStateData.uid, abilityStateData.bundleName.c_str(), abilityStateData.abilityState);
     RunAppStateCallback(abilityStateData.uid, abilityStateData.abilityState, abilityStateData.pid);
 }
@@ -103,7 +103,7 @@ void ApplicationStateObserver::AppProcessState::OnProcessCreated(const AppExecFw
 
 void ApplicationStateObserver::AppProcessState::OnProcessDied(const AppExecFwk::ProcessData &processData)
 {
-    REQUEST_HILOGD("OnProcessDied uid=%{public}d,  bundleName=%{public}s, state=%{public}d, pid=%{public}d",
+    REQUEST_HILOGD("OnProcessDied uid=%{public}d, bundleName=%{public}s, state=%{public}d, pid=%{public}d",
         processData.uid, processData.bundleName.c_str(), static_cast<int32_t>(processData.state), processData.pid);
     RunProcessDiedCallback(
         processData.uid, static_cast<int32_t>(processData.state), processData.pid, processData.bundleName);
