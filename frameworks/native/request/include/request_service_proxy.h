@@ -19,8 +19,8 @@
 #include <cstdint>
 
 #include "iremote_proxy.h"
-#include "js_common.h"
 #include "notify_interface.h"
+#include "request_common.h"
 #include "request_service_interface.h"
 
 namespace OHOS::Request {

@@ -19,7 +19,7 @@
 #include "constant.h"
 #include "iremote_broker.h"
 #include "iremote_object.h"
-#include "js_common.h"
+#include "request_common.h"
 
 namespace OHOS::Request {
 class NotifyInterface : public IRemoteBroker {

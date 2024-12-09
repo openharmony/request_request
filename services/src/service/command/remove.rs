@@ -42,8 +42,10 @@ impl RequestServiceStub {
         };
 
         let uid = ipc::Skeleton::calling_uid();
-
-        if !self.check_task_uid(task_id, uid) {
+        if PermissionChecker::check_down_up_permission() {
+            //skip uid check if task create by innerkits
+            info!("task permission inner");
+        } else if !self.check_task_uid(task_id, uid) {
             reply.write(&(ErrorCode::TaskNotFound as i32))?;
             return Err(IpcStatusCode::Failed);
         }

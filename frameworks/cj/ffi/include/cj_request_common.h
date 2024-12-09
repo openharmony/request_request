@@ -18,9 +18,10 @@
 
 #include <string>
 #include <vector>
+
 #include "cj_request_ffi.h"
 #include "constant.h"
-#include "js_common.h"
+#include "request_common.h"
 
 namespace OHOS::CJSystemapi::Request {
 using OHOS::Request::Action;

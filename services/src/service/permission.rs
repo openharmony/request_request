@@ -24,6 +24,10 @@ impl PermissionChecker {
         check_permission(INTERNET_PERMISSION)
     }
 
+    pub(crate) fn check_down_up_permission() -> bool {
+        check_permission(QUERY_DOWNLOAD) || check_permission(QUERY_UPLOAD)
+    }
+
     pub(crate) fn check_query() -> QueryPermission {
         debug!("Checks QUERY permission");
 

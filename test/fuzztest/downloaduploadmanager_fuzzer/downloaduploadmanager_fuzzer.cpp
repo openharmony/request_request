@@ -23,10 +23,10 @@
 #include <cstdint>
 
 #include "accesstoken_kit.h"
-#include "js_common.h"
 #include "message_parcel.h"
 #include "nativetoken_kit.h"
 #include "request.h"
+#include "request_common.h"
 #include "request_manager.h"
 #include "request_manager_impl.h"
 #include "request_running_task_count.h"

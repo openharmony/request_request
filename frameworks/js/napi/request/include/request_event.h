@@ -20,12 +20,12 @@
 #include <unordered_set>
 
 #include "async_call.h"
-#include "js_common.h"
 #include "js_task.h"
 #include "napi/native_api.h"
 #include "napi_utils.h"
 #include "noncopyable.h"
 #include "notify_interface.h"
+#include "request_common.h"
 
 namespace OHOS::Request {
 class RequestEvent final {

@@ -70,7 +70,8 @@
         "base_group": [
           "//base/request/request/frameworks/js/napi/request:request",
           "//base/request/request/frameworks/cj/ffi:cj_request_ffi",
-          "//base/request/request/frameworks/js/napi/cache_download:cachedownload"
+          "//base/request/request/frameworks/js/napi/cache_download:cachedownload",
+          "//base/request/request/interfaces/inner_kits:request_action"
         ],
         "fwk_group": [
           "//base/request/request/frameworks/native/request:request_native"
@@ -100,6 +101,9 @@
         },
         {
           "name": "//base/request/request/frameworks/js/napi/request:request_static"
+        },
+        {
+          "name": "//base/request/request/interfaces/inner_kits:request_action"
         },
         {
           "name": "//base/request/request/frameworks/native/cache_download:preload_native",

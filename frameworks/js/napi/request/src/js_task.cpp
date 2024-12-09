@@ -1152,7 +1152,7 @@ void JsTask::RemoveTaskContext(const std::string &tid)
     auto context = it->second;
 
     auto map = context->task->notifyDataListenerMap_;
-    for (auto i = map.begin(); i != map.end();i++) {
+    for (auto i = map.begin(); i != map.end(); i++) {
         i->second->DeleteAllListenerRef();
     }
     map.clear();

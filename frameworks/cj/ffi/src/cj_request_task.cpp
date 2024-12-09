@@ -30,7 +30,7 @@
 #include "cj_request_event.h"
 #include "cj_response_listener.h"
 #include "constant.h"
-#include "js_common.h"
+#include "request_common.h"
 #include "log.h"
 #include "request_manager.h"
 #include "securec.h"

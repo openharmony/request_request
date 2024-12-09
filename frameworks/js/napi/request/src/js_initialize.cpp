@@ -27,10 +27,10 @@
 #include <string>
 #include <system_error>
 
-#include "js_common.h"
 #include "log.h"
 #include "napi_utils.h"
 #include "net_conn_client.h"
+#include "request_common.h"
 #include "request_manager.h"
 
 static constexpr const char *PARAM_KEY_DESCRIPTION = "description";
