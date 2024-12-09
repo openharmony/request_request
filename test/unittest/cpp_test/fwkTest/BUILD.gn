@@ -24,6 +24,7 @@ ohos_unittest("fwkTest") {
     "../../../../frameworks/native/request/include",
     "../../../../interfaces/inner_kits/running_count/include",
     "../../../../common/include",
+    "../../../../interfaces/inner_kits/request_action/include",
   ]
 
   sources = [
@@ -35,7 +36,9 @@ ohos_unittest("fwkTest") {
     "../../../../frameworks/native/request/src/request_service_proxy.cpp",
     "../../../../frameworks/native/request/src/response_message_receiver.cpp",
     "../../../../frameworks/native/request/src/runcount_notify_stub.cpp",
+    "../../../../interfaces/inner_kits/request_action/src/request_action.cpp",
     "src/parcel_helper_test.cpp",
+    "src/request_action_test.cpp",
     "src/request_manager_impl_test.cpp",
     "src/request_manager_test.cpp",
     "src/request_test.cpp",

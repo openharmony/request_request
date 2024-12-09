@@ -15,6 +15,7 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
+use crate::manage::database::RequestDb;
 use crate::manage::events::TaskManagerEvent;
 use crate::service::permission::PermissionChecker;
 use crate::service::RequestServiceStub;
@@ -36,9 +37,18 @@ impl RequestServiceStub {
             return Err(IpcStatusCode::Failed);
         };
 
-        let uid = ipc::Skeleton::calling_uid();
-
-        if !self.check_task_uid(task_id, uid) {
+        let mut uid = ipc::Skeleton::calling_uid();
+        if PermissionChecker::check_down_permission() {
+            //skip uid check if task used by innerkits
+            info!("task permission inner");
+            match RequestDb::get_instance().query_task_uid(task_id) {
+                Some(res) => uid = res ,
+                None => {
+                    reply.write(&(ErrorCode::TaskNotFound as i32))?;
+                    return Err(IpcStatusCode::Failed);
+                },
+            };
+        } else if !self.check_task_uid(task_id, uid) {
             reply.write(&(ErrorCode::TaskNotFound as i32))?;
             return Err(IpcStatusCode::Failed);
         }

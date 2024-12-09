@@ -20,8 +20,9 @@
 #include <list>
 #include <mutex>
 #include <string>
+
 #include "cj_request_ffi.h"
-#include "js_common.h"
+#include "request_common.h"
 
 namespace OHOS::CJSystemapi::Request {
 using OHOS::Request::NotifyData;

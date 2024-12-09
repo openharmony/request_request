@@ -21,10 +21,10 @@
 #include <map>
 #include <mutex>
 
-#include "js_common.h"
 #include "legacy/download_task.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
+#include "request_common.h"
 #include "visibility.h"
 
 namespace OHOS::Request::Legacy {

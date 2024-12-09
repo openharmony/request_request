@@ -17,9 +17,9 @@
 #define REQUEST_TASK_NAPI
 
 #include "async_call.h"
-#include "js_common.h"
 #include "js_notify_data_listener.h"
 #include "js_response_listener.h"
+#include "request_common.h"
 
 namespace OHOS::Request {
 class JsTask {
