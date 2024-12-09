@@ -179,8 +179,7 @@ impl ClientManager {
     }
 
     fn handle_task_finished(&mut self, tid: u32) {
-        if self.pid_map.contains_key(&tid) {
-            self.pid_map.remove(&tid);
+        if self.pid_map.remove(&tid).is_some() {
             debug!("unsubscribe tid {:?}", tid);
         } else {
             debug!("unsubscribe tid not found");

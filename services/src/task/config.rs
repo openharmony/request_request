@@ -165,19 +165,18 @@ impl PartialOrd for Mode {
 
 impl Ord for Mode {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        let me = match *self {
+        self.to_usize().cmp(&other.to_usize())
+    }
+}
+
+impl Mode {
+    fn to_usize(self) -> usize {
+        match self {
             Mode::FrontEnd => 0,
             Mode::Any => 1,
             Mode::BackGround => 2,
             _ => unreachable!(),
-        };
-        let other = match *other {
-            Mode::FrontEnd => 0,
-            Mode::Any => 1,
-            Mode::BackGround => 2,
-            _ => unreachable!(),
-        };
-        me.cmp(&other)
+        }
     }
 }
 
