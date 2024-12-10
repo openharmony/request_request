@@ -78,6 +78,7 @@ ohos_shared_library("preload_native") {
 
   external_deps = [
     "ability_runtime:app_context",
+    "ipc:ipc_single",
     "netstack:http_client",
   ]
 
@@ -110,6 +111,7 @@ ohos_static_library("preload_native_static") {
 
   external_deps = [
     "ability_runtime:app_context",
+    "ipc:ipc_single",
     "netstack:http_client",
   ]
 
