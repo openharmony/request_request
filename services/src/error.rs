@@ -44,6 +44,15 @@ pub(crate) enum ServiceError {
     ErrorCode(ErrorCode),
 }
 
+impl Clone for ServiceError {
+    fn clone(&self) -> Self {
+        match self {
+            Self::IoError(arg0) => Self::IoError(io::Error::new(arg0.kind(), arg0.to_string())),
+            Self::ErrorCode(arg0) => Self::ErrorCode(*arg0),
+        }
+    }
+}
+
 impl std::error::Error for ServiceError {}
 
 impl fmt::Display for ServiceError {

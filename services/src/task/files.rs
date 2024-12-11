@@ -44,10 +44,10 @@ impl AttachedFiles {
 fn open_task_files(config: &TaskConfig) -> Result<(Files, Vec<i64>), ServiceError> {
     let tid = config.common_data.task_id;
     let uid = config.common_data.uid;
-    let bundle_name = convert_bundle_name(config)?;
 
     let mut files = Vec::new();
     let mut sizes = Vec::new();
+    let mut bundle_cache = BundleCache::new(config);
 
     for (idx, fs) in config.file_specs.iter().enumerate() {
         match config.common_data.action {
@@ -64,6 +64,7 @@ fn open_task_files(config: &TaskConfig) -> Result<(Files, Vec<i64>), ServiceErro
                         }
                     }
                 } else {
+                    let bundle_name = bundle_cache.get_value()?;
                     open_file_readonly(uid, &bundle_name, &fs.path)
                         .map_err(ServiceError::IoError)?
                 };
@@ -95,6 +96,7 @@ fn open_task_files(config: &TaskConfig) -> Result<(Files, Vec<i64>), ServiceErro
                         }
                     }
                 } else {
+                    let bundle_name = bundle_cache.get_value()?;
                     open_file_readwrite(uid, &bundle_name, &fs.path)
                         .map_err(ServiceError::IoError)?
                 };
@@ -110,10 +112,10 @@ fn open_task_files(config: &TaskConfig) -> Result<(Files, Vec<i64>), ServiceErro
 fn open_body_files(config: &TaskConfig) -> Result<Files, ServiceError> {
     let tid = config.common_data.task_id;
     let uid = config.common_data.uid;
-    let bundle_name = convert_bundle_name(config)?;
-
+    let mut bundle_cache = BundleCache::new(config);
     let mut body_files = Vec::new();
     for (idx, path) in config.body_file_paths.iter().enumerate() {
+        let bundle_name = bundle_cache.get_value()?;
         let file = open_file_readwrite(uid, &bundle_name, path).map_err(|e| {
             error!("Open body_file failed - task_id: {}, idx: {}", tid, idx);
             ServiceError::IoError(e)
@@ -151,7 +153,33 @@ pub(crate) fn convert_path(uid: u64, bundle_name: &str, path: &str) -> String {
     real_path
 }
 
-pub(crate) fn convert_bundle_name(config: &TaskConfig) -> Result<String, ServiceError> {
+pub(crate) struct BundleCache<'a> {
+    config: &'a TaskConfig,
+    value: Option<Result<String, ServiceError>>,
+}
+
+impl<'a> BundleCache<'a> {
+    pub(crate) fn new(config: &'a TaskConfig) -> Self {
+        Self {
+            config,
+            value: None,
+        }
+    }
+
+    pub(crate) fn get_value(&mut self) -> Result<String, ServiceError> {
+        let ret = match &self.value {
+            Some(ret) => match ret {
+                Ok(name) => Ok(name.to_owned()),
+                Err(_e) => convert_bundle_name(self.config),
+            },
+            None => convert_bundle_name(self.config),
+        };
+        self.value = Some(ret.clone());
+        ret
+    }
+}
+
+fn convert_bundle_name(config: &TaskConfig) -> Result<String, ServiceError> {
     let is_account = config.bundle_type == ATOMIC_SERVICE;
     let bundle_name = config.bundle.as_str();
     if is_account {
