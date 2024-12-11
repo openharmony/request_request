@@ -235,11 +235,14 @@ pub(crate) async fn download_inner(
 
 #[cfg(not(test))]
 fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
-    use crate::task::files::{convert_bundle_name, convert_path};
+    use crate::task::files::convert_path;
+    use crate::task::files::BundleCache;
 
     let config = task.config();
-    let bundle_name =
-        convert_bundle_name(config).map_err(|_| TaskError::Failed(Reason::OthersError))?;
+    let mut bundle_cache = BundleCache::new(config);
+    let bundle_name = bundle_cache
+        .get_value()
+        .map_err(|_| TaskError::Failed(Reason::OthersError))?;
     let real_path = convert_path(
         config.common_data.uid,
         &bundle_name,
