@@ -333,18 +333,6 @@ HWTEST_F(RequestManagerTest, RemoveAllListenersTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: LoadRequestServerTest001
- * @tc.desc: Test LoadRequestServerTest001 interface base function - LoadRequestServer
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestManagerTest, LoadRequestServerTest001, TestSize.Level1)
-{
-    EXPECT_NE(RequestManager::GetInstance(), nullptr);
-    RequestManager::GetInstance()->LoadRequestServer();
-}
-
-/**
  * @tc.name: IsSaReadyTest001
  * @tc.desc: Test IsSaReadyTest001 interface base function - IsSaReady
  * @tc.type: FUNC

@@ -31,7 +31,6 @@
 #include "request_manager_impl.h"
 #include "request_running_task_count.h"
 #include "request_service_interface.h"
-#include "request_sync_load_callback.h"
 #include "runcount_notify_stub.h"
 #include "running_task_count.h"
 #include "system_ability_definition.h"
@@ -350,7 +349,7 @@ void FuzzFwkTestOberver::OnRunningTaskCountUpdate(int count)
 void RunningTaskCountFuzzTestSubscribeRunningTaskCount(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
-    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
+    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy(true);
     if (proxy == nullptr) {
         std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FuzzFwkTestOberver>();
         ob->OnRunningTaskCountUpdate(static_cast<int>(*data));
@@ -954,17 +953,6 @@ void ResponseMessageFuzzTestNotifyDataFromParcel(const uint8_t *data, size_t siz
 
 class FuzzRemoteObjectImpl : public OHOS::IRemoteObject {};
 
-void RequestSyncLoadFuzzTestOnLoadSystemAbility(const uint8_t *data, size_t size)
-{
-    OHOS::sptr<FuzzRemoteObjectImpl> remote;
-    RequestSyncLoadCallback requestSyncLoadCallback = RequestSyncLoadCallback();
-    requestSyncLoadCallback.OnLoadSystemAbilityFail(OHOS::PRINT_SERVICE_ID);
-    requestSyncLoadCallback.OnLoadSystemAbilityFail(OHOS::DOWNLOAD_SERVICE_ID);
-    requestSyncLoadCallback.OnLoadSystemAbilityFail(static_cast<int32_t>(*data));
-    requestSyncLoadCallback.OnLoadSystemAbilitySuccess(OHOS::PRINT_SERVICE_ID, remote);
-    requestSyncLoadCallback.OnLoadSystemAbilitySuccess(OHOS::DOWNLOAD_SERVICE_ID, remote);
-}
-
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -1021,6 +1009,5 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::ResponseMessageFuzzTestResponseFromParcel(data, size);
     OHOS::ResponseMessageFuzzTestTaskStatesFromParcel(data, size);
     OHOS::ResponseMessageFuzzTestNotifyDataFromParcel(data, size);
-    OHOS::RequestSyncLoadFuzzTestOnLoadSystemAbility(data, size);
     return 0;
 }

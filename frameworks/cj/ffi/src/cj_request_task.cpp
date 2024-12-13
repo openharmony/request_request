@@ -272,10 +272,6 @@ ExceptionError CJRequestTask::Create(Context *context, Config &config)
     config_ = config;
     ExceptionError err;
     RequestManager::GetInstance()->RestoreListener(CJRequestTask::ReloadListener);
-    if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        err.code = ExceptionErrorCode::E_SERVICE_ERROR;
-        return err;
-    }
 
     if (config.mode == Mode::FOREGROUND) {
         RegisterForegroundResume();
@@ -308,11 +304,6 @@ ExceptionError CJRequestTask::GetTask(OHOS::AbilityRuntime::Context *context, st
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin get task, seq: %{public}d", seq);
 
-    if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        err.code = ExceptionErrorCode::E_SERVICE_ERROR;
-        return err;
-    }
-
     CJRequestTask *task = CJRequestTask::FindTaskById(taskId);
     if (task != nullptr) {
         if (task->config_.token != token) {
@@ -342,10 +333,6 @@ ExceptionError CJRequestTask::Remove(const std::string &tid)
 ExceptionError CJRequestTask::Touch(const std::string &tid, TaskInfo &task, const std::string &token)
 {
     ExceptionError err;
-    if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        err.code = ExceptionErrorCode::E_SERVICE_ERROR;
-        return err;
-    }
 
     int32_t result = RequestManager::GetInstance()->Touch(tid, token, task);
     if (result != ExceptionErrorCode::E_OK) {
@@ -357,10 +344,6 @@ ExceptionError CJRequestTask::Touch(const std::string &tid, TaskInfo &task, cons
 ExceptionError CJRequestTask::Search(const Filter &filter, std::vector<std::string> &tids)
 {
     ExceptionError err;
-    if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        err.code = ExceptionErrorCode::E_SERVICE_ERROR;
-        return err;
-    }
 
     int32_t result = RequestManager::GetInstance()->Search(filter, tids);
     if (result != ExceptionErrorCode::E_OK) {
@@ -412,7 +395,7 @@ ExceptionError CJRequestTask::On(std::string type, std::string &taskId, void *ca
     }
 
     REQUEST_HILOGI("End task on event %{public}s successfully, seq: %{public}d, tid: %{public}s", type.c_str(), seq,
-                   GetTidStr().c_str());
+        GetTidStr().c_str());
 
     return err;
 }

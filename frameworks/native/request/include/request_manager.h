@@ -53,7 +53,7 @@ public:
     REQUEST_API void RemoveAllListeners(const std::string &taskId);
 
     REQUEST_API void RestoreListener(void (*callback)());
-    REQUEST_API bool LoadRequestServer();
+    REQUEST_API void LoadRequestServer();
     REQUEST_API bool IsSaReady();
     REQUEST_API void ReopenChannel();
     REQUEST_API bool SubscribeSA();

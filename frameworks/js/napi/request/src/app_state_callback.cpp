@@ -40,14 +40,16 @@ void AppStateCallback::OnAbilityForeground(const std::shared_ptr<NativeReference
         RequestManager::GetInstance()->LoadRequestServer();
         return;
     }
-
+    if (!JsTask::register_) {
+        return;
+    }
     JsTask::register_ = false;
     auto context = AbilityRuntime::ApplicationContext::GetInstance();
     if (context == nullptr) {
         REQUEST_HILOGE("Get ApplicationContext failed");
         return;
     }
-    context->UnregisterAbilityLifecycleCallback(std::make_shared<AppStateCallback>());
+    context->UnregisterAbilityLifecycleCallback(shared_from_this());
     REQUEST_HILOGD("Unregister foreground resume callback success");
 }
 } // namespace Request
