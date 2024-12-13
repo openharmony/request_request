@@ -109,7 +109,7 @@ void Preload::Remove(std::string const &url)
 
 bool Preload::Contains(const std::string &url)
 {
-    return true;
+    return this->_agent->contains(rust::str(url));
 }
 
 Preload *Preload::GetInstance()

@@ -63,6 +63,7 @@ constexpr size_t SLEEP_INTERVAL = 100;
 void DownloadFailTest(std::string url)
 {
     Preload::GetInstance()->Remove(url);
+    EXPECT_FALSE(Preload::GetInstance()->Contains(url));
     TestCallback test;
     auto &[flagS, flagF, flagC, flagP, callback] = test;
 
@@ -76,6 +77,7 @@ void DownloadFailTest(std::string url)
     EXPECT_TRUE(flagF->load());
     EXPECT_FALSE(flagS->load());
     EXPECT_FALSE(flagC->load());
+    EXPECT_FALSE(Preload::GetInstance()->Contains(url));
     EXPECT_EQ(flagP->load(), 0);
     EXPECT_EQ(handle->GetState(), PreloadState::FAIL);
     Preload::GetInstance()->Remove(url);
