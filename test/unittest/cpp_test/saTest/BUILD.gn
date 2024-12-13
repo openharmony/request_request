@@ -14,15 +14,15 @@
 import("//base/request/request/request_aafwk.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
-module_output_path = "request/request"
 
 ohos_unittest("saTest") {
-  module_out_path = module_output_path
+  module_out_path = "request/request"
 
   include_dirs = [
     "include",
-    "../../../../frameworks/js/napi/include",
+    "../../../../frameworks/js/napi/request/include",
     "../../../../services/include",
+    "../../../../common/include",
   ]
 
   sources = [
@@ -30,10 +30,7 @@ ohos_unittest("saTest") {
     "src/c_string_wrapper_test.cpp",
   ]
 
-  deps = [
-    "../../../../common:request_common_static",
-    "//third_party/googletest:gmock_main",
-  ]
+  deps = [ "//third_party/googletest:gmock_main" ]
 
   external_deps = [
     "ability_base:base",

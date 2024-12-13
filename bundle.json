@@ -68,12 +68,12 @@
     "build": {
       "group_type": {
         "base_group": [
-          "//base/request/request/frameworks/js/napi:request",
+          "//base/request/request/frameworks/js/napi/request:request",
           "//base/request/request/frameworks/cj/ffi:cj_request_ffi",
-          "//base/request/request/preload/js/napi:preload"
+          "//base/request/request/frameworks/js/napi/cache_download:cachedownload"
         ],
         "fwk_group": [
-          "//base/request/request/frameworks/native:request_native"
+          "//base/request/request/frameworks/native/request:request_native"
         ],
         "service_group": [
           "//base/request/request/etc/init:downloadservice.cfg",
@@ -83,7 +83,7 @@
       },
       "inner_kits": [
         {
-          "name": "//base/request/request/frameworks/native:request_native",
+          "name": "//base/request/request/frameworks/native/request:request_native",
           "header": {
             "header_files": [
               "running_task_count.h"
@@ -99,13 +99,13 @@
           }
         },
         {
-          "name": "//base/request/request/frameworks/js/napi:request_static"
+          "name": "//base/request/request/frameworks/js/napi/request:request_static"
         },
         {
-          "name": "//base/request/request/preload/native:preload_native",
+          "name": "//base/request/request/frameworks/native/cache_download:preload_native",
           "header": {
             "header_files": [],
-            "header_base": "//base/request/request/interfaces/inner_kits/running_count/include"
+            "header_base": "//base/request/request/interfaces/inner_kits/cache_download/include"
           }
         }
       ],
@@ -119,10 +119,11 @@
         "//base/request/request/test/unittest/cpp_test/preload:unittest",
         "//base/request/request/test/unittest/cpp_test/fwkTest:unittest",
         "//base/request/request/services/tests:unittest",
-        "//base/request/request/preload/netstack_rs:unittest",
-        "//base/request/request/preload/native:unittest",
-        "//base/request/request/preload/ffrt_rs:unittest",
-        "//base/request/request/request_utils:unittest"
+        "//base/request/request/frameworks/native/cache_download:unittest",
+        "//base/request/request/frameworks/native/cache_core:unittest",
+        "//base/request/request/common/netstack_rs:unittest",
+        "//base/request/request/common/ffrt_rs:unittest",
+        "//base/request/request/common/utils:unittest"
       ]
     }
   }

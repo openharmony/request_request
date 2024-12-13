@@ -18,6 +18,7 @@ use std::os::fd::FromRawFd;
 
 use ylong_runtime::fs::File as AsyncFile;
 
+use crate::error::{ErrorCode, ServiceError};
 use crate::task::bundle::get_name_and_index;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::ATOMIC_SERVICE;
@@ -29,7 +30,7 @@ pub(crate) struct AttachedFiles {
 }
 
 impl AttachedFiles {
-    pub(crate) fn open(config: &TaskConfig) -> io::Result<AttachedFiles> {
+    pub(crate) fn open(config: &TaskConfig) -> Result<AttachedFiles, ServiceError> {
         let (files, sizes) = open_task_files(config)?;
         let body_files = open_body_files(config)?;
         Ok(Self {
@@ -40,13 +41,13 @@ impl AttachedFiles {
     }
 }
 
-fn open_task_files(config: &TaskConfig) -> io::Result<(Files, Vec<i64>)> {
+fn open_task_files(config: &TaskConfig) -> Result<(Files, Vec<i64>), ServiceError> {
     let tid = config.common_data.task_id;
     let uid = config.common_data.uid;
-    let bundle_name = convert_bundle_name(config);
 
     let mut files = Vec::new();
     let mut sizes = Vec::new();
+    let mut bundle_cache = BundleCache::new(config);
 
     for (idx, fs) in config.file_specs.iter().enumerate() {
         match config.common_data.action {
@@ -56,14 +57,21 @@ fn open_task_files(config: &TaskConfig) -> io::Result<(Files, Vec<i64>)> {
                         Some(fd) => unsafe { File::from_raw_fd(fd) },
                         None => {
                             error!("None user file failed - task_id: {}, idx: {}", tid, idx);
-                            return Err(io::Error::new(io::ErrorKind::Other, "none user file"));
+                            return Err(ServiceError::IoError(io::Error::new(
+                                io::ErrorKind::Other,
+                                "none user file",
+                            )));
                         }
                     }
                 } else {
-                    open_file_readonly(uid, &bundle_name, &fs.path)?
+                    let bundle_name = bundle_cache.get_value()?;
+                    open_file_readonly(uid, &bundle_name, &fs.path)
+                        .map_err(ServiceError::IoError)?
                 };
                 let size = cvt_res_error!(
-                    file.metadata().map(|data| data.len()),
+                    file.metadata()
+                        .map(|data| data.len())
+                        .map_err(ServiceError::IoError),
                     "Cannot get upload file's size - task_id: {}, idx: {}",
                     tid,
                     idx
@@ -81,11 +89,16 @@ fn open_task_files(config: &TaskConfig) -> io::Result<(Files, Vec<i64>)> {
                         Some(fd) => unsafe { File::from_raw_fd(fd) },
                         None => {
                             error!("None user file failed - task_id: {}, idx: {}", tid, idx);
-                            return Err(io::Error::new(io::ErrorKind::Other, "none user file"));
+                            return Err(ServiceError::IoError(io::Error::new(
+                                io::ErrorKind::Other,
+                                "none user file",
+                            )));
                         }
                     }
                 } else {
-                    open_file_readwrite(uid, &bundle_name, &fs.path)?
+                    let bundle_name = bundle_cache.get_value()?;
+                    open_file_readwrite(uid, &bundle_name, &fs.path)
+                        .map_err(ServiceError::IoError)?
                 };
                 files.push(AsyncFile::new(file));
                 sizes.push(-1)
@@ -96,16 +109,16 @@ fn open_task_files(config: &TaskConfig) -> io::Result<(Files, Vec<i64>)> {
     Ok((Files::new(files), sizes))
 }
 
-fn open_body_files(config: &TaskConfig) -> io::Result<Files> {
+fn open_body_files(config: &TaskConfig) -> Result<Files, ServiceError> {
     let tid = config.common_data.task_id;
     let uid = config.common_data.uid;
-    let bundle_name = convert_bundle_name(config);
-
+    let mut bundle_cache = BundleCache::new(config);
     let mut body_files = Vec::new();
     for (idx, path) in config.body_file_paths.iter().enumerate() {
+        let bundle_name = bundle_cache.get_value()?;
         let file = open_file_readwrite(uid, &bundle_name, path).map_err(|e| {
             error!("Open body_file failed - task_id: {}, idx: {}", tid, idx);
-            e
+            ServiceError::IoError(e)
         })?;
         body_files.push(AsyncFile::new(file))
     }
@@ -137,23 +150,48 @@ pub(crate) fn convert_path(uid: u64, bundle_name: &str, path: &str) -> String {
     let real_path = path
         .replacen("storage", "app", 1)
         .replacen("base", &base_replace, 1);
-    debug!("convert to real_path: {}", real_path);
     real_path
 }
 
-pub(crate) fn convert_bundle_name(config: &TaskConfig) -> String {
+pub(crate) struct BundleCache<'a> {
+    config: &'a TaskConfig,
+    value: Option<Result<String, ServiceError>>,
+}
+
+impl<'a> BundleCache<'a> {
+    pub(crate) fn new(config: &'a TaskConfig) -> Self {
+        Self {
+            config,
+            value: None,
+        }
+    }
+
+    pub(crate) fn get_value(&mut self) -> Result<String, ServiceError> {
+        let ret = match &self.value {
+            Some(ret) => match ret {
+                Ok(name) => Ok(name.to_owned()),
+                Err(_e) => convert_bundle_name(self.config),
+            },
+            None => convert_bundle_name(self.config),
+        };
+        self.value = Some(ret.clone());
+        ret
+    }
+}
+
+fn convert_bundle_name(config: &TaskConfig) -> Result<String, ServiceError> {
     let is_account = config.bundle_type == ATOMIC_SERVICE;
     let bundle_name = config.bundle.as_str();
     if is_account {
         let atomic_account = config.atomic_account.as_str();
-        format!("+auid-{}+{}", atomic_account, bundle_name)
+        Ok(format!("+auid-{}+{}", atomic_account, bundle_name))
     } else {
         let uid = config.common_data.uid;
         check_app_clone_bundle_name(uid, bundle_name)
     }
 }
 
-fn check_app_clone_bundle_name(uid: u64, bundle_name: &str) -> String {
+fn check_app_clone_bundle_name(uid: u64, bundle_name: &str) -> Result<String, ServiceError> {
     let mut ret_name = bundle_name.to_string();
     if let Some((index, name)) = get_name_and_index(uid as i32) {
         if bundle_name != name {
@@ -162,8 +200,10 @@ fn check_app_clone_bundle_name(uid: u64, bundle_name: &str) -> String {
         if index > 0 {
             ret_name = format!("+clone-{}+{}", index, bundle_name);
         }
+        return Ok(ret_name);
     }
-    ret_name
+    info!("can not get bundle name and index.");
+    Err(ServiceError::ErrorCode(ErrorCode::Other))
 }
 
 pub(crate) struct Files(UnsafeCell<Vec<AsyncFile>>);

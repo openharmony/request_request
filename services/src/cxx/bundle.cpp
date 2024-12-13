@@ -45,7 +45,6 @@ AppInfo GetNameAndIndex(int32_t uid)
         REQUEST_HILOGE("GetNameAndIndex, err ret: %{public}d", ret);
         return appInfo;
     }
-    REQUEST_HILOGI("GetNameAndIndex: %{public}d, %{public}s", appIndex, bundleName.c_str());
 
     appInfo.ret = true;
     appInfo.index = appIndex;

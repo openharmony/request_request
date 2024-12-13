@@ -1,0 +1,98 @@
+# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/request/request/request_aafwk.gni")
+import("//build/test.gni")
+
+rust_cxx("request_utils_cxx_gen") {
+  sources = [ "src/wrapper.rs" ]
+}
+
+ohos_static_library("request_utils_cxx") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  stack_protector_ret = true
+
+  include_dirs = [
+    "include",
+    "${target_gen_dir}/src",
+  ]
+
+  sources = [ "src/cxx/request_utils_wrapper.cpp" ]
+
+  sources += get_target_outputs(":request_utils_cxx_gen")
+
+  external_deps = [
+    "ability_runtime:app_context",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
+  ]
+  deps = [
+    ":request_utils_cxx_gen",
+    "//third_party/rust/crates/cxx:cxx_cppdeps",
+  ]
+  subsystem_name = "request"
+  part_name = "request"
+}
+
+ohos_rust_static_library("request_utils") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  features = [ "ohos" ]
+
+  deps = [
+    ":request_utils_cxx",
+    "//third_party/rust/crates/cxx:lib",
+  ]
+
+  external_deps = [ "hilog:libhilog" ]
+  sources = [ "src/lib.rs" ]
+  subsystem_name = "request"
+  part_name = "request"
+}
+
+ohos_rust_unittest("rust_utils_ut_test") {
+  module_out_path = "request/common"
+
+  sources = [ "src/lib.rs" ]
+  external_deps = [ "hilog:libhilog" ]
+
+  rustflags = [ "--cfg=feature=\"ohos\"" ]
+
+  deps = [
+    ":request_utils_cxx",
+    "//third_party/rust/crates/cxx:lib",
+  ]
+  subsystem_name = "request"
+  part_name = "request"
+}
+
+group("unittest") {
+  testonly = true
+  deps = [ ":rust_utils_ut_test" ]
+}

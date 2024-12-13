@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# any change to frameworks/native/include/download_server_ipc_interface_code.h needs to be reviewed by @leonchan5
-frameworks/native/include/download_server_ipc_interface_code.h @leonchan5
+# any change to frameworks/native/request/include/download_server_ipc_interface_code.h needs to be reviewed by @leonchan5
+frameworks/native/request/include/download_server_ipc_interface_code.h @leonchan5
 
 # any change to services/src/service/interface.rs needs to be reviewed by @leonchan5
 services/src/service/interface.rs @leonchan5

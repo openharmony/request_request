@@ -13,9 +13,9 @@
 
 import("//build/test.gni")
 
-want_output_path = "request/requestAgentTaskTest"
-
 ohos_js_stage_unittest("RequestAgentTaskTest") {
+  module_out_path = "request/requestAgentTaskTest"
+
   hap_profile = "entry/src/main/module.json"
   deps = [
     ":actbmsstageetstest_js_assets",
@@ -26,7 +26,6 @@ ohos_js_stage_unittest("RequestAgentTaskTest") {
   hap_name = "RequestAgentTaskTest"
   subsystem_name = "request"
   part_name = "request"
-  module_out_path = want_output_path
 }
 ohos_app_scope("actbmsstageetstest_app_profile") {
   app_profile = "AppScope/app.json"

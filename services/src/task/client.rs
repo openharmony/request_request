@@ -23,8 +23,9 @@ cfg_oh! {
     use crate::utils::url_policy::check_url_domain;
 }
 
+use super::files::BundleCache;
 use crate::task::config::{Action, TaskConfig};
-use crate::task::files::{convert_bundle_name, convert_path};
+use crate::task::files::convert_path;
 
 const CONNECT_TIMEOUT: u64 = 60;
 const SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
@@ -175,16 +176,16 @@ fn build_system_proxy(
 fn build_task_certs(config: &TaskConfig) -> Result<Vec<Certificate>, Box<dyn Error + Send + Sync>> {
     let uid = config.common_data.uid;
     let paths = config.certs_path.as_slice();
-    let bundle_name = convert_bundle_name(config);
+    let mut bundle_cache = BundleCache::new(config);
 
     let mut certs = Vec::new();
     for (idx, path) in paths.iter().enumerate() {
+        let bundle_name = bundle_cache.get_value()?;
         let path = convert_path(uid, &bundle_name, path);
         let cert = cvt_res_error!(
             Certificate::from_path(&path).map_err(Box::new),
-            "Parse task cert failed - idx: {}, path: {}",
+            "Parse task cert failed - idx: {}",
             idx,
-            path,
         );
         certs.push(cert);
     }

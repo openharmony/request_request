@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::os::fd::FromRawFd;
 
@@ -142,8 +142,9 @@ impl TaskConfig {
         }
     }
 
-    pub(crate) fn satisfy_foreground(&self, top_uid: Option<u64>) -> bool {
-        self.common_data.mode == Mode::BackGround || Some(self.common_data.uid) == top_uid
+    pub(crate) fn satisfy_foreground(&self, foreground_abilities: &HashSet<u64>) -> bool {
+        self.common_data.mode == Mode::BackGround
+            || foreground_abilities.contains(&self.common_data.uid)
     }
 }
 
@@ -164,19 +165,18 @@ impl PartialOrd for Mode {
 
 impl Ord for Mode {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        let me = match *self {
+        self.to_usize().cmp(&other.to_usize())
+    }
+}
+
+impl Mode {
+    fn to_usize(self) -> usize {
+        match self {
             Mode::FrontEnd => 0,
             Mode::Any => 1,
             Mode::BackGround => 2,
             _ => unreachable!(),
-        };
-        let other = match *other {
-            Mode::FrontEnd => 0,
-            Mode::Any => 1,
-            Mode::BackGround => 2,
-            _ => unreachable!(),
-        };
-        me.cmp(&other)
+        }
     }
 }
 

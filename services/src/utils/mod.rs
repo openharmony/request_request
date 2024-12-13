@@ -27,7 +27,7 @@ pub(crate) use ffi::PublishStateChangeEvent;
 cfg_oh! {
     pub(crate) mod url_policy;
     #[cfg(not(test))]
-    pub(crate) use ffi::GetTopUid;
+    pub(crate) use ffi::GetForegroundAbilities;
 }
 
 pub(crate) mod task_id_generator;
@@ -129,8 +129,8 @@ mod ffi {
     unsafe extern "C++" {
         include!("request_utils.h");
 
-        fn PublishStateChangeEvent(bundleName: &str, taskId: u32, state: i32) -> bool;
-        fn GetTopUid(uid: &mut i32) -> i32;
+        fn PublishStateChangeEvent(bundleName: &str, taskId: u32, state: i32, uid: i32) -> bool;
+        fn GetForegroundAbilities(uid: &mut Vec<i32>) -> i32;
         fn GetCallingBundle(token_id: u64) -> String;
         fn IsSystemAPI(token_id: u64) -> bool;
         fn CheckPermission(token_id: u64, permission: &str) -> bool;

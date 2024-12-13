@@ -12,12 +12,12 @@
 # limitations under the License.
 
 import("//build/test.gni")
-module_output_path = "request/request"
 
 ohos_unittest("preload_test") {
-  module_out_path = module_output_path
+  module_out_path = "request/request"
 
   include_dirs = [
+    "include",
     "../../../../interfaces/inner_kits/predownload/include",
     "../../../../common/include",
   ]
@@ -25,14 +25,14 @@ ohos_unittest("preload_test") {
   sources = [
     "src/abnormal.cpp",
     "src/cancel.cpp",
+    "src/common.cpp",
     "src/fail.cpp",
-    "src/info.cpp",
     "src/progress.cpp",
     "src/success.cpp",
   ]
 
   deps = [
-    "../../../../preload/native:preload_native",
+    "../../../../frameworks/native/cache_download:preload_native",
     "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
   external_deps = [
