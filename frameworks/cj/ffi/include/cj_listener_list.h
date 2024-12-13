@@ -20,15 +20,16 @@
 #include <list>
 #include <mutex>
 #include <string>
+
 #include "cj_request_ffi.h"
-#include "js_common.h"
+#include "request_common.h"
 
 namespace OHOS::CJSystemapi::Request {
 using OHOS::Request::NotifyData;
+using OHOS::Request::Response;
 using OHOS::Request::SubscribeType;
 
 using CFunc = void *;
-using ProgressOnCallBackType = std::function<void(CProgress)>;
 
 class ListenerList {
 public:
@@ -37,18 +38,21 @@ public:
     }
     bool HasListener();
     struct CallBackInfo {
-        ProgressOnCallBackType cb_;
+        std::function<void(CProgress)> progressCB_;
+        std::function<void(CResponse)> responseCB_;
         CFunc cbId_ = nullptr;
 
-        CallBackInfo(ProgressOnCallBackType cb, CFunc cbId) : cb_(cb), cbId_(cbId)
-        {
-        }
+        CallBackInfo(std::function<void(CProgress)> cb, CFunc cbId) : progressCB_(cb), cbId_(cbId) {}
+
+        CallBackInfo(std::function<void(CResponse)> cb, CFunc cbId) : responseCB_(cb), cbId_(cbId) {}
     };
 
 protected:
     bool IsListenerAdded(void *cb);
     void OnMessageReceive(const std::shared_ptr<NotifyData> &notifyData);
-    void AddListenerInner(ProgressOnCallBackType &cb, CFunc cbId);
+    void OnMessageReceive(const std::shared_ptr<Response> &response);
+    void AddListenerInner(std::function<void(CProgress)> &cb, CFunc cbId);
+    void AddListenerInner(std::function<void(CResponse)> &cb, CFunc cbId);
     void RemoveListenerInner(CFunc cb);
 
 protected:

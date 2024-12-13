@@ -31,7 +31,7 @@ public:
     CJNotifyDataListener(const std::string &taskId, const SubscribeType &type) : ListenerList(taskId, type)
     {
     }
-    void AddListener(ProgressOnCallBackType cb, CFunc cbId);
+    void AddListener(std::function<void(CProgress)> cb, CFunc cbId);
     void RemoveListener(CFunc cbId = nullptr);
     void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData) override;
 

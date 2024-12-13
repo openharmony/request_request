@@ -17,12 +17,13 @@
 #define OH_CJ_INITIALIZE_H
 
 #include <vector>
+
 #include "ability.h"
 #include "cj_request_ffi.h"
 #include "constant.h"
 #include "directory_ex.h"
-#include "js_common.h"
 #include "napi_base_context.h"
+#include "request_common.h"
 
 namespace OHOS::CJSystemapi::Request {
 using OHOS::AbilityRuntime::Context;

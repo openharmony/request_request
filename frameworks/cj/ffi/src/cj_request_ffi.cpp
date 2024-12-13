@@ -28,7 +28,7 @@ void FfiOHOSRequestFreeTask(const char *taskId)
     CJRequestImpl::FreeTask(taskId);
 }
 
-RetError FfiOHOSRequestTaskProgressOn(char *event, const char *taskId, void (*callback)(CProgress progress))
+RetError FfiOHOSRequestTaskProgressOn(char *event, const char *taskId, void *callback)
 {
     return CJRequestImpl::ProgressOn(event, taskId, callback);
 }

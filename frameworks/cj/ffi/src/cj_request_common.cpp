@@ -18,12 +18,13 @@
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
+
 #include "cj_request_ffi.h"
 #include "ffrt.h"
-#include "js_common.h"
 #include "log.h"
 #include "openssl/sha.h"
 #include "parameter.h"
+#include "request_common.h"
 #include "securec.h"
 
 namespace OHOS::CJSystemapi::Request {
@@ -184,6 +185,54 @@ CProgress Convert2CProgress(const Progress &in)
         elem->value = MallocCString(iter->second);
     }
     out.extras.size = static_cast<int64_t>(in.extras.size());
+    return out;
+}
+
+CArrString Convert2CArrString(const std::vector<std::string> &v)
+{
+    CArrString out = {};
+    if (v.empty()) {
+        return out;
+    }
+
+    out.head = static_cast<char **>(malloc(sizeof(char *) * v.size()));
+    if (out.head == nullptr) {
+        return out;
+    }
+
+    int64_t index = 0;
+    for (auto iter : v) {
+        out.head[index] = MallocCString(iter);
+        index++;
+    }
+    out.size = index;
+    return out;
+}
+
+CResponse Convert2CResponse(const std::shared_ptr<Response> &in)
+{
+    CResponse out = {0};
+    out.version = MallocCString(in->version);
+    out.statusCode = in->statusCode;
+    out.reason = MallocCString(in->reason);
+
+    if (in->headers.size() <= 0) {
+        return out;
+    }
+    CHttpHeaderHashPair *hashHead =
+        static_cast<CHttpHeaderHashPair *>(malloc(sizeof(CHttpHeaderHashPair) * in->headers.size()));
+    if (hashHead == nullptr) {
+        return out;
+    }
+
+    int64_t index = 0;
+    for (auto iter : in->headers) {
+        hashHead[index].key = MallocCString(iter.first);
+        hashHead[index].value = Convert2CArrString(iter.second);
+        index++;
+    }
+    out.headers.hashHead = hashHead;
+    out.headers.size = index;
     return out;
 }
 

@@ -25,9 +25,9 @@
 #include <vector>
 
 #include "gmock/gmock.h"
-#include "js_common.h"
 #include "log.h"
 #include "refbase.h"
+#include "request_common.h"
 #include "request_manager_impl.h"
 #include "system_ability_definition.h"
 

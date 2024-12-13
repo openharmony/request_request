@@ -22,10 +22,10 @@
 
 #include "../../interfaces/inner_kits/running_count/include/running_task_count.h"
 #include "iremote_proxy.h"
-#include "js_common.h"
 #include "log.h"
 #include "notify_interface.h"
 #include "peer_holder.h"
+#include "request_common.h"
 #include "request_service_interface.h"
 
 namespace OHOS::Request {

@@ -23,8 +23,8 @@
 #include <memory>
 
 #include "iremote_stub.h"
-#include "js_common.h"
 #include "notify_interface.h"
+#include "request_common.h"
 #include "visibility.h"
 
 namespace OHOS::Request {

@@ -20,11 +20,13 @@
 #include <map>
 #include <mutex>
 #include <vector>
+
 #include "ability_context.h"
 #include "cj_notify_data_listener.h"
 #include "cj_request_ffi.h"
+#include "cj_response_listener.h"
 #include "constant.h"
-#include "js_common.h"
+#include "request_common.h"
 
 namespace OHOS::CJSystemapi::Request {
 using OHOS::Request::Config;
@@ -44,6 +46,7 @@ public:
 
     std::mutex listenerMutex_;
     std::map<SubscribeType, std::shared_ptr<CJNotifyDataListener>> notifyDataListenerMap_;
+    std::shared_ptr<CJResponseListener> responseListener_;
 
     Config config_;
     std::string taskId_{};
@@ -74,7 +77,7 @@ public:
     void SetTid();
 
     ExceptionError Create(OHOS::AbilityRuntime::Context *context, Config &config);
-    ExceptionError On(std::string type, std::string &taskId, void (*callback)(CProgress progress));
+    ExceptionError On(std::string type, std::string &taskId, void *callback);
     ExceptionError Off(std::string event, CFunc callback);
 
     static void ReloadListener();

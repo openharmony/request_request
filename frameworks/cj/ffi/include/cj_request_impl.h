@@ -18,10 +18,11 @@
 
 #include <map>
 #include <string>
+
 #include "cj_request_ffi.h"
 #include "constant.h"
-#include "js_common.h"
 #include "napi_base_context.h"
+#include "request_common.h"
 
 namespace OHOS::CJSystemapi::Request {
 
@@ -50,7 +51,7 @@ public:
     static RetTaskInfo TouchTask(std::string taskId, const char *token);
     static RetTaskArr SearchTask(CFilter &filter);
     static ExceptionError Convert2Filter(CFilter &filter, Filter &out);
-    static RetError ProgressOn(char *event, std::string taskId, void (*callback)(CProgress progress));
+    static RetError ProgressOn(char *event, std::string taskId, void *callback);
     static RetError ProgressOff(char *event, std::string taskId, void *callback);
     static RetError TaskStart(std::string taskId);
     static RetError TaskPause(std::string taskId);

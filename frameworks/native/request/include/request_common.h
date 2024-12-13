@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef JS_COMMON_H
-#define JS_COMMON_H
+#ifndef REQUEST_COMMON_H
+#define REQUEST_COMMON_H
 
 #include <cstdint>
 #include <map>
@@ -312,4 +312,4 @@ struct Response {
 };
 
 } // namespace OHOS::Request
-#endif //JS_COMMON_H
+#endif //REQUEST_COMMON_H

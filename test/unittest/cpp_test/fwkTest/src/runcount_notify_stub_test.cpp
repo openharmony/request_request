@@ -24,9 +24,9 @@
 
 #include "download_server_ipc_interface_code.h"
 #include "gmock/gmock.h"
-#include "js_common.h"
 #include "log.h"
 #include "parcel_helper.h"
+#include "request_common.h"
 #include "request_running_task_count.h"
 #include "runcount_notify_stub.h"
 

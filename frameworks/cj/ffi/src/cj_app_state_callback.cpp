@@ -15,16 +15,17 @@
 
 #include "cj_app_state_callback.h"
 
+#include "cj_application_context.h"
 #include "cj_request_task.h"
-#include "js_common.h"
 #include "log.h"
+#include "request_common.h"
 #include "request_manager.h"
 
 namespace OHOS::CJSystemapi::Request {
 using OHOS::Request::Mode;
 using OHOS::Request::RequestManager;
 
-void CJAppStateCallback::OnAbilityForeground(const std::shared_ptr<NativeReference> &ability)
+void CJAppStateCallback::OnAbilityForeground(const int64_t &ability)
 {
     if (RequestManager::GetInstance()->IsSaReady()) {
         return;
@@ -36,12 +37,12 @@ void CJAppStateCallback::OnAbilityForeground(const std::shared_ptr<NativeReferen
         }
     }
     CJRequestTask::register_ = false;
-    auto context = AbilityRuntime::ApplicationContext::GetInstance();
+    auto context = ApplicationContextCJ::CJApplicationContext::GetInstance();
     if (context == nullptr) {
-        REQUEST_HILOGE("Get ApplicationContext failed");
+        REQUEST_HILOGE("Get CjApplicationContext failed");
         return;
     }
-    context->UnregisterAbilityLifecycleCallback(std::make_shared<CJAppStateCallback>());
+    context->UnregisterAbilityLifecycleCallback(shared_from_this());
     REQUEST_HILOGD("Unregister foreground resume callback success");
 }
 } // namespace OHOS::CJSystemapi::Request

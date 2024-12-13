@@ -16,7 +16,7 @@
 #ifndef OHOS_REQUEST_I_NOTIFY_DATA_LISTENER_H
 #define OHOS_REQUEST_I_NOTIFY_DATA_LISTENER_H
 
-#include "js_common.h"
+#include "request_common.h"
 
 namespace OHOS::Request {
 
