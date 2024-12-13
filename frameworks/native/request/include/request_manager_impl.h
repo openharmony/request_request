@@ -27,6 +27,7 @@
 #include "iremote_object.h"
 #include "iservice_registry.h"
 #include "js_common.h"
+#include "log.h"
 #include "refbase.h"
 #include "request.h"
 #include "request_service_interface.h"
@@ -35,12 +36,9 @@
 #include "visibility.h"
 
 namespace OHOS::Request {
-class RequestSaDeathRecipient : public IRemoteObject::DeathRecipient {
-public:
-    explicit RequestSaDeathRecipient();
-    ~RequestSaDeathRecipient() = default;
-    void OnRemoteDied(const wptr<IRemoteObject> &object) override;
-};
+
+constexpr int RETRY_TIMES = 5;
+constexpr int REMOTE_DIED_ERROR = 29189;
 
 class RequestManagerImpl : public IResponseMessageHandler {
 public:
@@ -76,11 +74,8 @@ public:
 
     void RestoreListener(void (*callback)());
     void RestoreSubRunCount();
-    bool LoadRequestServer();
+    void LoadRequestServer();
     bool IsSaReady();
-    void OnRemoteSaDied(const wptr<IRemoteObject> &object);
-    void LoadServerSuccess();
-    void LoadServerFail();
     void ReopenChannel();
     int32_t GetNextSeq();
     bool SubscribeSA();
@@ -91,9 +86,7 @@ private:
     RequestManagerImpl(const RequestManagerImpl &) = delete;
     RequestManagerImpl(RequestManagerImpl &&) = delete;
     RequestManagerImpl &operator=(const RequestManagerImpl &) = delete;
-    sptr<RequestServiceInterface> GetRequestServiceProxy();
-    int32_t Retry(std::string &taskId, const Config &config, int32_t errorCode);
-    void SetRequestServiceProxy(sptr<RequestServiceInterface> proxy);
+    sptr<RequestServiceInterface> GetRequestServiceProxy(bool load);
     int32_t EnsureChannelOpen();
     std::shared_ptr<Request> GetTask(const std::string &taskId);
     void OnChannelBroken() override;
@@ -101,18 +94,11 @@ private:
     void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData) override;
 
 private:
-    static std::mutex instanceLock_;
-    static sptr<RequestManagerImpl> instance_;
-    std::mutex downloadMutex_;
-    std::mutex conditionMutex_;
     std::mutex serviceProxyMutex_;
     std::mutex saChangeListenerMutex_;
 
     sptr<RequestServiceInterface> requestServiceProxy_;
-    sptr<RequestSaDeathRecipient> deathRecipient_;
     sptr<ISystemAbilityStatusChange> saChangeListener_;
-    std::condition_variable syncCon_;
-    std::atomic<bool> ready_ = false;
     static constexpr int LOAD_SA_TIMEOUT_MS = 15000;
     void (*callback_)() = nullptr;
     std::mutex tasksMutex_;
@@ -120,7 +106,6 @@ private:
     std::recursive_mutex msgReceiverMutex_;
     std::shared_ptr<ResponseMessageReceiver> msgReceiver_;
 
-private:
     class SystemAbilityStatusChangeListener : public OHOS::SystemAbilityStatusChangeStub {
     public:
         SystemAbilityStatusChangeListener();
@@ -128,6 +113,29 @@ private:
         virtual void OnAddSystemAbility(int32_t saId, const std::string &deviceId) override;
         virtual void OnRemoveSystemAbility(int32_t asId, const std::string &deviceId) override;
     };
+
+    template<typename ProxyMethod, typename... Args> int32_t CallProxyMethod(ProxyMethod method, Args &&...args)
+    {
+        int32_t ret = E_SERVICE_ERROR;
+        for (int i = 0; i < RETRY_TIMES; i++) {
+            auto proxy = this->GetRequestServiceProxy(true);
+            if (proxy == nullptr) {
+                REQUEST_HILOGE("Get service proxy failed");
+                continue;
+            }
+            ret = (proxy->*method)(args...);
+            if (ret == E_SERVICE_ERROR) {
+                REQUEST_HILOGE("Remote died, retry times: %{public}d", i);
+                {
+                    std::lock_guard<std::mutex> lock(serviceProxyMutex_);
+                    requestServiceProxy_ = nullptr;
+                }
+                continue;
+            }
+            break;
+        }
+        return ret;
+    }
 };
 
 } // namespace OHOS::Request

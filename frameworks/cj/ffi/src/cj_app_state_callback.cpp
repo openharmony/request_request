@@ -36,6 +36,9 @@ void CJAppStateCallback::OnAbilityForeground(const int64_t &ability)
             return;
         }
     }
+    if (!CJRequestTask::register_) {
+        return;
+    }
     CJRequestTask::register_ = false;
     auto context = ApplicationContextCJ::CJApplicationContext::GetInstance();
     if (context == nullptr) {

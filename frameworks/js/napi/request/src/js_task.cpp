@@ -188,12 +188,7 @@ int32_t JsTask::CreateExec(const std::shared_ptr<ContextInfo> &context, int32_t 
 {
     REQUEST_HILOGD("JsTask CreateExec: Action %{public}d, Mode %{public}d, seq: %{public}d",
         context->task->config_.action, context->task->config_.mode, seq);
-    if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        REQUEST_HILOGE("End create task in JsTask CreateExec, seq: %{public}d, failed: request service "
-                       "not ready",
-            seq);
-        return E_SERVICE_ERROR;
-    }
+
     if (context->task->config_.mode == Mode::FOREGROUND) {
         RegisterForegroundResume();
     }
@@ -360,13 +355,7 @@ napi_value JsTask::GetTask(napi_env env, napi_callback_info info)
         REQUEST_HILOGI("End GetTask seq %{public}d", seq);
         return res;
     };
-    auto exec = [context]() {
-        if (!RequestManager::GetInstance()->LoadRequestServer()) {
-            context->innerCode_ = E_SERVICE_ERROR;
-            return;
-        }
-        GetTaskExecution(context);
-    };
+    auto exec = [context]() { GetTaskExecution(context); };
     context->SetInput(input).SetOutput(output).SetExec(exec);
     AsyncCall asyncCall(env, info, context);
     return asyncCall.Call(context, "getTask");
@@ -614,10 +603,6 @@ napi_value JsTask::TouchInner(napi_env env, napi_callback_info info, AsyncCall::
         return napi_ok;
     };
     auto exec = [context]() {
-        if (!RequestManager::GetInstance()->LoadRequestServer()) {
-            context->innerCode_ = E_SERVICE_ERROR;
-            return;
-        }
         context->innerCode_ = RequestManager::GetInstance()->Touch(context->tid, context->token, context->taskInfo);
     };
     context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
@@ -826,10 +811,6 @@ napi_value JsTask::Search(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto exec = [context]() {
-        if (!RequestManager::GetInstance()->LoadRequestServer()) {
-            context->innerCode_ = E_SERVICE_ERROR;
-            return;
-        }
         context->innerCode_ = RequestManager::GetInstance()->Search(context->filter, context->tids);
     };
     context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
@@ -870,10 +851,6 @@ napi_value JsTask::Query(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto exec = [context]() {
-        if (!RequestManager::GetInstance()->LoadRequestServer()) {
-            context->innerCode_ = E_SERVICE_ERROR;
-            return;
-        }
         context->innerCode_ = RequestManager::GetInstance()->Query(context->tid, context->taskInfo);
     };
     context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));

@@ -97,9 +97,9 @@ void RequestManager::RestoreListener(void (*callback)())
     return RequestManagerImpl::GetInstance()->RestoreListener(callback);
 }
 
-bool RequestManager::LoadRequestServer()
+void RequestManager::LoadRequestServer()
 {
-    return RequestManagerImpl::GetInstance()->LoadRequestServer();
+    RequestManagerImpl::GetInstance()->LoadRequestServer();
 }
 
 bool RequestManager::SubscribeSA()

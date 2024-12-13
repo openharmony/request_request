@@ -42,7 +42,6 @@ ohos_fuzztest("DownloadUploadManagerFuzzTest") {
     "../../../frameworks/native/request/src/request_manager.cpp",
     "../../../frameworks/native/request/src/request_manager_impl.cpp",
     "../../../frameworks/native/request/src/request_running_task_count.cpp",
-    "../../../frameworks/native/request/src/request_sync_load_callback.cpp",
     "../../../frameworks/native/request/src/response_message_receiver.cpp",
     "../../../frameworks/native/request/src/runcount_notify_stub.cpp",
     "downloaduploadmanager_fuzzer.cpp",

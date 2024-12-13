@@ -85,9 +85,9 @@ void RequestManagerImplTest::TearDownTestCase(void)
 void RequestManagerImplTest::SetUp(void)
 {
     exceptProxy = OHOS::sptr<MockRequestServiceInterface>(new MockRequestServiceInterface());
-    testProxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
-    RequestManagerImpl::GetInstance()->SetRequestServiceProxy(exceptProxy);
-    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
+    testProxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy(true);
+    RequestManagerImpl::GetInstance()->requestServiceProxy_ = exceptProxy;
+    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy(true);
     EXPECT_TRUE(proxy == (static_cast<OHOS::sptr<RequestServiceInterface>>(exceptProxy)));
     // input testCase setup step，setup invoked before each testCase
     testing::UnitTest *test = testing::UnitTest::GetInstance();
@@ -102,7 +102,7 @@ void RequestManagerImplTest::SetUp(void)
 void RequestManagerImplTest::TearDown(void)
 {
     // input testCase teardown step，teardown invoked after each testCase
-    RequestManagerImpl::GetInstance()->SetRequestServiceProxy(testProxy);
+    RequestManagerImpl::GetInstance()->requestServiceProxy_ = testProxy;
     testProxy = nullptr;
     exceptProxy = nullptr;
 }
@@ -149,10 +149,8 @@ HWTEST_F(RequestManagerImplTest, GetTaskTest001, TestSize.Level1)
     EXPECT_CALL(*exceptProxy, OpenChannel(testing::_)).WillRepeatedly(testing::Return(E_CHANNEL_NOT_OPEN));
     EXPECT_CALL(*exceptProxy, Subscribe(testing::_)).WillOnce(testing::Return(E_OK));
     EXPECT_CALL(*exceptProxy, GetTask(tid, token, testing::_))
-        .WillOnce(testing::Return(E_UNLOADING_SA))
         .WillOnce(testing::Return(E_CHANNEL_NOT_OPEN))
         .WillOnce(testing::Return(E_OTHER));
-    EXPECT_EQ(RequestManagerImpl::GetInstance()->GetTask(tid, token, config), E_UNLOADING_SA);
     EXPECT_EQ(RequestManagerImpl::GetInstance()->GetTask(tid, token, config), E_OK);
     EXPECT_EQ(RequestManagerImpl::GetInstance()->GetTask(tid, token, config), E_OTHER);
 }
@@ -391,67 +389,6 @@ HWTEST_F(RequestManagerImplTest, OnNotifyDataReceiveTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: RestoreSubRunCountTest001
- * @tc.desc: Test RestoreSubRunCountTest001 interface base function - RestoreSubRunCount
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestManagerImplTest, RestoreSubRunCountTest001, TestSize.Level1)
-{
-    EXPECT_NE(exceptProxy, nullptr);
-    OHOS::sptr<NotifyInterface> listener(nullptr);
-    EXPECT_CALL(*exceptProxy, SubRunCount(testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
-    RequestManagerImpl::GetInstance()->SetRequestServiceProxy(exceptProxy);
-    RequestManagerImpl::GetInstance()->RestoreSubRunCount();
-}
-
-/**
- * @tc.name: OnRemoteSaDiedTest001
- * @tc.desc: Test OnRemoteSaDiedTest001 interface base function - OnRemoteSaDied
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestManagerImplTest, OnRemoteSaDiedTest001, TestSize.Level1)
-{
-    EXPECT_NE(exceptProxy, nullptr);
-    OHOS::wptr<OHOS::IRemoteObject> remote;
-    RequestManagerImpl::GetInstance()->OnRemoteSaDied(remote);
-}
-
-/**
- * @tc.name: OnRemoteDiedTest001
- * @tc.desc: Test OnRemoteDiedTest001 interface base function - OnRemoteDied
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestManagerImplTest, OnRemoteDiedTest001, TestSize.Level1)
-{
-    EXPECT_NE(exceptProxy, nullptr);
-    OHOS::wptr<OHOS::IRemoteObject> remote;
-    RequestSaDeathRecipient recipient = RequestSaDeathRecipient();
-    recipient.OnRemoteDied(remote);
-}
-
-/**
- * @tc.name: RetryTest001
- * @tc.desc: Test RetryTest001 interface base function - Retry
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestManagerImplTest, RetryTest001, TestSize.Level1)
-{
-    EXPECT_NE(exceptProxy, nullptr);
-    std::string taskId;
-    Config config;
-    int32_t errorCode = E_TASK_STATE;
-    FileSpec file;
-    file.uri = "uri";
-    RequestManagerImpl::GetInstance()->Retry(taskId, config, errorCode);
-    config.files.push_back(file);
-    RequestManagerImpl::GetInstance()->Retry(taskId, config, errorCode);
-}
-
-/**
  * @tc.name: UnsubscribeSA001
  * @tc.desc: Test UnsubscribeSA001 interface base function - UnsubscribeSA
  * @tc.type: FUNC
@@ -599,73 +536,11 @@ HWTEST_F(RequestManagerImplTest, CreateTest002, TestSize.Level1)
     std::string tid = "1";
     EXPECT_CALL(*exceptProxy, Create(testing::_, tid))
         .WillOnce(testing::Return(E_FILE_PATH))
-        .WillOnce(testing::Return(E_OK))
-        .WillOnce(testing::Return(E_UNLOADING_SA));
+        .WillOnce(testing::Return(E_OK));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->Create(config, seq, tid), E_FILE_PATH);
     EXPECT_EQ(RequestManagerImpl::GetInstance()->Create(config, seq, tid), E_OK);
     RequestManagerImpl::GetInstance()->Create(config, seq, tid);
-    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
-    EXPECT_TRUE(proxy != (static_cast<OHOS::sptr<RequestServiceInterface>>(exceptProxy)));
-}
-
-/**
- * @tc.name: RetryTest002
- * @tc.desc: Test RetryTest002 interface base function - Retry
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestManagerImplTest, RetryTest002, TestSize.Level1)
-{
-    Config config;
-    config.action = Action::DOWNLOAD;
-    int32_t errCode = E_FILE_PATH;
-    std::string tid = "1";
-    RequestManagerImpl::GetInstance()->Retry(tid, config, errCode);
-    FileSpec file0 = {
-        .name = "file0",
-        .uri = "uri0",
-        .filename = "filename0",
-        .type = "type0",
-        .isUserFile = false,
-    };
-    config.files.push_back(file0);
-    EXPECT_EQ(RequestManagerImpl::GetInstance()->Retry(tid, config, errCode), errCode);
-    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
-    EXPECT_TRUE(proxy == (static_cast<OHOS::sptr<RequestServiceInterface>>(exceptProxy)));
-    errCode = E_UNLOADING_SA;
-    RequestManagerImpl::GetInstance()->Retry(tid, config, errCode);
-    proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
-    EXPECT_TRUE(proxy != (static_cast<OHOS::sptr<RequestServiceInterface>>(exceptProxy)));
-}
-
-/**
- * @tc.name: RetryTest003
- * @tc.desc: Test RetryTest003 interface base function - Retry
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestManagerImplTest, RetryTest003, TestSize.Level1)
-{
-    Config config;
-    config.action = Action::UPLOAD;
-    int32_t errCode = E_OK;
-    std::string tid = "1";
-    FileSpec file0 = {
-        .name = "file0",
-        .uri = "uri0",
-        .filename = "filename0",
-        .type = "type0",
-        .isUserFile = false,
-    };
-    config.files.push_back(file0);
-    EXPECT_EQ(RequestManagerImpl::GetInstance()->Retry(tid, config, errCode), errCode);
-    errCode = E_FILE_PATH;
-    EXPECT_EQ(RequestManagerImpl::GetInstance()->Retry(tid, config, errCode), errCode);
-    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
-    EXPECT_TRUE(proxy == (static_cast<OHOS::sptr<RequestServiceInterface>>(exceptProxy)));
-    errCode = E_UNLOADING_SA;
-    RequestManagerImpl::GetInstance()->Retry(tid, config, errCode);
-    proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
+    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy(true);
     EXPECT_TRUE(proxy != (static_cast<OHOS::sptr<RequestServiceInterface>>(exceptProxy)));
 }
 
@@ -741,7 +616,7 @@ HWTEST_F(RequestManagerImplTest, RestoreSubRunCountTest002, TestSize.Level1)
     EXPECT_NE(exceptProxy, nullptr);
     OHOS::sptr<NotifyInterface> listener(nullptr);
     EXPECT_CALL(*exceptProxy, SubRunCount(testing::_)).WillOnce(testing::Return(E_OK));
-    RequestManagerImpl::GetInstance()->SetRequestServiceProxy(exceptProxy);
+    RequestManagerImpl::GetInstance()->requestServiceProxy_ = exceptProxy;
     RequestManagerImpl::GetInstance()->RestoreSubRunCount();
 }
 
@@ -765,20 +640,6 @@ HWTEST_F(RequestManagerImplTest, OnAddSystemAbility002, TestSize.Level1)
         RequestManagerImpl::SystemAbilityStatusChangeListener();
     listener.OnAddSystemAbility(OHOS::PRINT_SERVICE_ID, deviceId);
     FwkRunningTaskCountManager::GetInstance()->observers_.clear();
-}
-
-/**
- * @tc.name: LoadRequestServer001
- * @tc.desc: Test LoadRequestServer001 interface base function - LoadRequestServer
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestManagerImplTest, LoadRequestServer001, TestSize.Level1)
-{
-    RequestManagerImpl::GetInstance()->ready_ = true;
-    EXPECT_EQ(RequestManagerImpl::GetInstance()->LoadRequestServer(), true);
-    RequestManagerImpl::GetInstance()->ready_ = false;
-    RequestManagerImpl::GetInstance()->LoadRequestServer();
 }
 
 /**
