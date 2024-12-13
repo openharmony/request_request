@@ -87,9 +87,9 @@ impl CacheDownloadService {
         self.cache_manager.remove(task_id);
     }
 
-    pub fn contains(&self, url: &str) {
+    pub fn contains(&self, url: &str) -> bool {
         let task_id = TaskId::from_url(url);
-        self.cache_manager.contains(&task_id);
+        self.cache_manager.contains(&task_id)
     }
 
     pub fn preload(
@@ -429,7 +429,7 @@ mod test {
         let callback = Box::new(TestCallbackS {
             flag: success_flag.clone(),
         });
-        SERVICE.preload(DownloadRequest::new(TEST_URL), callback, true, DOWNLOADER);
+        SERVICE.preload(DownloadRequest::new(TEST_URL), callback, false, DOWNLOADER);
         std::thread::sleep(Duration::from_millis(50));
         assert_eq!(success_flag.load(Ordering::SeqCst), 1);
     }

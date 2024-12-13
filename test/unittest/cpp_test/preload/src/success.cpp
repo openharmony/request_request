@@ -71,6 +71,7 @@ void PreloadSuccess::SetUp(void)
 void DownloadSuccessTest(std::string url, uint64_t size)
 {
     Preload::GetInstance()->Remove(url);
+    EXPECT_FALSE(Preload::GetInstance()->Contains(url));
 
     TestCallback test;
     auto &[flagS, flagF, flagC, flagP, callback] = test;
@@ -86,6 +87,7 @@ void DownloadSuccessTest(std::string url, uint64_t size)
     EXPECT_FALSE(flagC->load());
     EXPECT_TRUE(flagP->load());
     EXPECT_TRUE(flagS->load());
+    EXPECT_TRUE(Preload::GetInstance()->Contains(url));
     EXPECT_EQ(handle->GetState(), PreloadState::SUCCESS);
     Preload::GetInstance()->Remove(url);
 }

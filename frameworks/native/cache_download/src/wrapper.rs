@@ -175,6 +175,7 @@ pub(crate) mod ffi {
         fn cache_download_service() -> *const CacheDownloadService;
         fn cancel(self: &CacheDownloadService, url: &str);
         fn remove(self: &CacheDownloadService, url: &str);
+        fn contains(self: &CacheDownloadService, url: &str) -> bool;
 
         fn cancel(self: &mut TaskHandle);
         fn task_id(self: &TaskHandle) -> String;

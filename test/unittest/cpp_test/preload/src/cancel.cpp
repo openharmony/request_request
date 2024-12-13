@@ -66,6 +66,7 @@ constexpr size_t SLEEP_INTERVAL = 100;
 void DownloadCancelTest(std::string url)
 {
     Preload::GetInstance()->Remove(url);
+    EXPECT_FALSE(Preload::GetInstance()->Contains(url));
 
     TestCallback test;
     auto &[flagS, flagF, flagC, flagP, callback] = test;
@@ -83,6 +84,7 @@ void DownloadCancelTest(std::string url)
     EXPECT_FALSE(flagS->load());
     EXPECT_TRUE(flagC->load());
     EXPECT_EQ(flagP->load(), 0);
+    EXPECT_FALSE(Preload::GetInstance()->Contains(url));
     EXPECT_EQ(handle->GetState(), PreloadState::CANCEL);
     Preload::GetInstance()->Remove(url);
 }
