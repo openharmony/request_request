@@ -366,7 +366,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadFileOn003', 0, async function (done) {
       let conf = {
-        url: 'https://www.aaaaaaa.com/test.txt',
+        url: 'http://www.ylong_http.client.com/test.txt',
       }
       let task = await request.downloadFile(context, conf);
       try {
@@ -954,7 +954,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadFileOff010', 0, async function (done) {
       let conf = {
-        url: 'https://www.aaaaaaa.com/test.txt',
+        url: 'http://www.ylong_http.client.com/test.txt',
       }
       let task = await request.downloadFile(context, conf);
       try {
@@ -992,7 +992,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf = {
-        url: 'https://www.aaaaaaa.com/test.txt',
+        url: 'http://www.ylong_http.client.com/test.txt',
       }
       let task = await request.downloadFile(context, conf);
       try {
@@ -1384,7 +1384,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf = {
-        url: 'https://www.aaaaaaa.com/test.txt',
+        url: 'http://www.ylong_http.client.com/test.txt',
       }
       let task = await request.downloadFile(context, conf);
       try {
@@ -1422,7 +1422,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf = {
-        url: 'https://www.aaaaaaa.com/test.txt',
+        url: 'http://www.ylong_http.client.com/test.txt',
       }
       let task = await request.downloadFile(context, conf);
       try {
