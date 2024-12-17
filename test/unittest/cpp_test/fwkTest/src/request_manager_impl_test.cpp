@@ -26,8 +26,8 @@
 #include <vector>
 
 #include "gmock/gmock.h"
-#include "js_common.h"
 #include "log.h"
+#include "request_common.h"
 #include "request_manager_impl.h"
 #include "request_running_task_count.h"
 #include "request_service_proxy.h"

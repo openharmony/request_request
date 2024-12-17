@@ -28,8 +28,8 @@
 #include <memory>
 
 #include "gmock/gmock.h"
-#include "js_common.h"
 #include "log.h"
+#include "request_common.h"
 #include "response_message_receiver.h"
 
 using namespace testing::ext;

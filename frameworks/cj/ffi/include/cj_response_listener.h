@@ -19,9 +19,10 @@
 #include <list>
 #include <mutex>
 #include <string>
+
 #include "cj_listener_list.h"
 #include "i_response_listener.h"
-#include "js_common.h"
+#include "request_common.h"
 
 namespace OHOS::CJSystemapi::Request {
 using OHOS::Request::Response;

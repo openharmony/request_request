@@ -14,11 +14,11 @@
  */
 
 #include "c_string_wrapper.h"
-#include "log.h"
 
 #include <gtest/gtest.h>
 
 #include "gmock/gmock.h"
+#include "log.h"
 using namespace testing::ext;
 
 class StringWrapperTest : public testing::Test {

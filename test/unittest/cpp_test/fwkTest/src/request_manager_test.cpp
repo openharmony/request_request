@@ -25,8 +25,8 @@
 #include <vector>
 
 #include "gmock/gmock.h"
-#include "js_common.h"
 #include "log.h"
+#include "request_common.h"
 #include "request_manager_impl.h"
 
 using namespace testing::ext;

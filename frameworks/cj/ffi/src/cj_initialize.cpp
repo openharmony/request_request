@@ -25,9 +25,9 @@
 #include "cj_request_common.h"
 #include "cj_request_task.h"
 #include "constant.h"
-#include "js_common.h"
 #include "log.h"
 #include "net_conn_client.h"
+#include "request_common.h"
 #include "request_manager.h"
 #include "securec.h"
 

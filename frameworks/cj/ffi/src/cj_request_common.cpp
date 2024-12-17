@@ -18,12 +18,13 @@
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
+
 #include "cj_request_ffi.h"
 #include "ffrt.h"
-#include "js_common.h"
 #include "log.h"
 #include "openssl/sha.h"
 #include "parameter.h"
+#include "request_common.h"
 #include "securec.h"
 
 namespace OHOS::CJSystemapi::Request {

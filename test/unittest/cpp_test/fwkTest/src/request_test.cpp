@@ -21,9 +21,9 @@
 #include <memory>
 
 #include "gmock/gmock.h"
-#include "js_common.h"
 #include "log.h"
 #include "request.h"
+#include "request_common.h"
 
 using namespace testing::ext;
 using namespace OHOS::Request;

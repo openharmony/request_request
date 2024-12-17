@@ -17,8 +17,8 @@
 
 #include "cj_application_context.h"
 #include "cj_request_task.h"
-#include "js_common.h"
 #include "log.h"
+#include "request_common.h"
 #include "request_manager.h"
 
 namespace OHOS::CJSystemapi::Request {

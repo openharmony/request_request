@@ -18,7 +18,7 @@
 
 #include "i_notify_data_listener.h"
 #include "i_response_listener.h"
-#include "js_common.h"
+#include "request_common.h"
 #include "visibility.h"
 
 namespace OHOS::Request {

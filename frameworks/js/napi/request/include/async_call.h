@@ -20,11 +20,11 @@
 #include <string>
 
 #include "constant.h"
-#include "js_common.h"
 #include "log.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "napi_utils.h"
+#include "request_common.h"
 
 namespace OHOS::Request {
 class AsyncCall final {
