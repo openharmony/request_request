@@ -41,12 +41,28 @@ using namespace OHOS::Request;
 
 class MockRequestServiceInterface : public RequestServiceInterface {
 public:
+    MOCK_METHOD(int32_t, StartTasks, (const std::vector<std::string> &tids, std::vector<int32_t> &rets), (override));
+    MOCK_METHOD(int32_t, StopTasks, (const std::vector<std::string> &tids, std::vector<int32_t> &rets), (override));
+    MOCK_METHOD(int32_t, ResumeTasks, (const std::vector<std::string> &tids, std::vector<int32_t> &rets), (override));
+    MOCK_METHOD(int32_t, RemoveTasks,
+        (const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets), (override));
+    MOCK_METHOD(int32_t, PauseTasks,
+        (const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets), (override));
+    MOCK_METHOD(int32_t, QueryTasks,
+        (const std::vector<std::string> &tids, (std::vector<std::pair<int32_t, TaskInfo>> & rets)), (override));
+    MOCK_METHOD(int32_t, ShowTasks,
+        (const std::vector<std::string> &tids, (std::vector<std::pair<int32_t, TaskInfo>> & rets)), (override));
+    MOCK_METHOD(int32_t, TouchTasks,
+        ((const std::vector<std::pair<std::string, std::string>> &tids),
+            (std::vector<std::pair<int32_t, TaskInfo>> & rets)),
+        (override));
+
     MOCK_METHOD(int32_t, Create, (const Config &config, std::string &taskId), (override));
     MOCK_METHOD(int32_t, GetTask, (const std::string &tid, const std::string &token, Config &config), (override));
     MOCK_METHOD(int32_t, Start, (const std::string &tid), (override));
-    MOCK_METHOD(int32_t, Pause, (const std::string &tid, Version version), (override));
+    MOCK_METHOD(int32_t, Pause, (const std::string &tid, const Version version), (override));
     MOCK_METHOD(int32_t, QueryMimeType, (const std::string &tid, std::string &mimeType), (override));
-    MOCK_METHOD(int32_t, Remove, (const std::string &tid, Version version), (override));
+    MOCK_METHOD(int32_t, Remove, (const std::string &tid, const Version version), (override));
     MOCK_METHOD(int32_t, Resume, (const std::string &tid), (override));
     MOCK_METHOD(int32_t, Stop, (const std::string &tid), (override));
     MOCK_METHOD(int32_t, Query, (const std::string &tid, TaskInfo &info), (override));

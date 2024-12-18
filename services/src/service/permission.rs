@@ -11,11 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::config::Action;
 use crate::utils::check_permission;
 
 static INTERNET_PERMISSION: &str = "ohos.permission.INTERNET";
-static QUERY_DOWNLOAD: &str = "ohos.permission.DOWNLOAD_SESSION_MANAGER";
-static QUERY_UPLOAD: &str = "ohos.permission.UPLOAD_SESSION_MANAGER";
+static MANAGER_DOWNLOAD: &str = "ohos.permission.DOWNLOAD_SESSION_MANAGER";
+static MANAGER_UPLOAD: &str = "ohos.permission.UPLOAD_SESSION_MANAGER";
 
 pub(crate) struct PermissionChecker;
 
@@ -25,31 +26,46 @@ impl PermissionChecker {
     }
 
     pub(crate) fn check_down_permission() -> bool {
-        check_permission(QUERY_DOWNLOAD)
+        check_permission(MANAGER_DOWNLOAD)
     }
 
-    pub(crate) fn check_query() -> QueryPermission {
-        debug!("Checks QUERY permission");
+    pub(crate) fn check_manager() -> ManagerPermission {
+        debug!("Checks MANAGER permission");
 
-        let query_download = check_permission(QUERY_DOWNLOAD);
-        let query_upload = check_permission(QUERY_UPLOAD);
+        let manager_download = check_permission(MANAGER_DOWNLOAD);
+        let manager_upload = check_permission(MANAGER_UPLOAD);
         info!(
-            "Checks query_download permission is {}, query_upload permission is {}",
-            query_download, query_upload
+            "Checks manager_download permission is {}, manager_upload permission is {}",
+            manager_download, manager_upload
         );
 
-        match (query_download, query_upload) {
-            (true, true) => QueryPermission::QueryAll,
-            (true, false) => QueryPermission::QueryDownLoad,
-            (false, true) => QueryPermission::QueryUpload,
-            (false, false) => QueryPermission::NoPermission,
+        match (manager_download, manager_upload) {
+            (true, true) => ManagerPermission::ManagerAll,
+            (true, false) => ManagerPermission::ManagerDownLoad,
+            (false, true) => ManagerPermission::ManagerUpload,
+            (false, false) => ManagerPermission::NoPermission,
         }
     }
 }
 
-pub(crate) enum QueryPermission {
+pub(crate) enum ManagerPermission {
     NoPermission = 0,
-    QueryDownLoad,
-    QueryUpload,
-    QueryAll,
+    ManagerDownLoad,
+    ManagerUpload,
+    ManagerAll,
+}
+
+impl ManagerPermission {
+    pub(crate) fn get_action(&self) -> Option<Action> {
+        match self {
+            ManagerPermission::NoPermission => None,
+            ManagerPermission::ManagerDownLoad => Some(Action::Download),
+            ManagerPermission::ManagerUpload => Some(Action::Upload),
+            ManagerPermission::ManagerAll => Some(Action::Any),
+        }
+    }
+
+    pub(crate) fn check_action(caller_action: Action, task_action: Action) -> bool {
+        caller_action == task_action || caller_action == Action::Any
+    }
 }

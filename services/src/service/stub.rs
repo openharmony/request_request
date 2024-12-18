@@ -22,6 +22,7 @@ use system_ability_fwk::ability::Handler;
 
 use super::client::ClientManagerEntry;
 use super::interface;
+use super::permission::PermissionChecker;
 use super::run_count::RunCountManagerEntry;
 use crate::manage::database::RequestDb;
 use crate::manage::task_manager::TaskManagerTx;
@@ -56,6 +57,16 @@ impl RequestServiceStub {
     pub(crate) fn check_task_uid(&self, task_id: u32, uid: u64) -> bool {
         let db = RequestDb::get_instance();
         db.query_task_uid(task_id) == Some(uid)
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn check_permission_or_uid(&self, task_id: u32, uid: u64) -> bool {
+        // TODO: permission should match action.
+        let permission = PermissionChecker::check_manager();
+        match permission.get_action() {
+            Some(_a) => true,
+            None => self.check_task_uid(task_id, uid),
+        }
     }
 }
 

@@ -18,6 +18,7 @@
 #include <atomic>
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 #include "data_ability_predicates.h"
 #include "download_server_ipc_interface_code.h"
@@ -42,6 +43,51 @@ const std::unique_ptr<RequestManagerImpl> &RequestManagerImpl::GetInstance()
 {
     static std::unique_ptr<RequestManagerImpl> instance(new RequestManagerImpl());
     return instance;
+}
+
+int32_t RequestManagerImpl::StartTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+{
+    return CallProxyMethod(&RequestServiceInterface::StartTasks, tids, rets);
+}
+
+int32_t RequestManagerImpl::StopTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+{
+    return CallProxyMethod(&RequestServiceInterface::StopTasks, tids, rets);
+}
+
+int32_t RequestManagerImpl::ResumeTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+{
+    return CallProxyMethod(&RequestServiceInterface::ResumeTasks, tids, rets);
+}
+
+int32_t RequestManagerImpl::RemoveTasks(
+    const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets)
+{
+    return CallProxyMethod(&RequestServiceInterface::RemoveTasks, tids, version, rets);
+}
+
+int32_t RequestManagerImpl::PauseTasks(
+    const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets)
+{
+    return CallProxyMethod(&RequestServiceInterface::PauseTasks, tids, version, rets);
+}
+
+int32_t RequestManagerImpl::QueryTasks(
+    const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+{
+    return CallProxyMethod(&RequestServiceInterface::QueryTasks, tids, rets);
+}
+
+int32_t RequestManagerImpl::ShowTasks(
+    const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+{
+    return CallProxyMethod(&RequestServiceInterface::ShowTasks, tids, rets);
+}
+
+int32_t RequestManagerImpl::TouchTasks(
+    const std::vector<std::pair<std::string, std::string>> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+{
+    return CallProxyMethod(&RequestServiceInterface::TouchTasks, tids, rets);
 }
 
 int32_t RequestManagerImpl::Create(const Config &config, int32_t seq, std::string &tid)
@@ -108,7 +154,7 @@ int32_t RequestManagerImpl::Show(const std::string &tid, TaskInfo &info)
     return CallProxyMethod(&RequestServiceInterface::Show, tid, info);
 }
 
-int32_t RequestManagerImpl::Pause(const std::string &tid, Version version)
+int32_t RequestManagerImpl::Pause(const std::string &tid, const Version version)
 {
     return CallProxyMethod(&RequestServiceInterface::Pause, tid, version);
 }
@@ -118,7 +164,7 @@ int32_t RequestManagerImpl::QueryMimeType(const std::string &tid, std::string &m
     return CallProxyMethod(&RequestServiceInterface::QueryMimeType, tid, mimeType);
 }
 
-int32_t RequestManagerImpl::Remove(const std::string &tid, Version version)
+int32_t RequestManagerImpl::Remove(const std::string &tid, const Version version)
 {
     auto proxy = this->GetRequestServiceProxy(false);
     if (proxy == nullptr) {

@@ -37,6 +37,15 @@ public:
     int32_t Pause(const std::string &tid);
     int32_t Remove(const std::string &tid);
     int32_t Resume(const std::string &tid);
+
+    int32_t StartTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
+    int32_t StopTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
+    int32_t ResumeTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
+    int32_t RemoveTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
+    int32_t PauseTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
+    int32_t ShowTasks(const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets);
+    int32_t TouchTasks(const std::vector<std::pair<std::string, std::string>> &tids,
+        std::vector<std::pair<int32_t, TaskInfo>> &rets);
 };
 
 } // namespace OHOS::Request

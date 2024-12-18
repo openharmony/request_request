@@ -17,6 +17,7 @@ use std::io;
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub(crate) enum ErrorCode {
     ErrOk = 0,
+    #[allow(dead_code)]
     IpcSizeTooLarge = 2,
     ChannelNotOpen = 5,
     Permission = 201,

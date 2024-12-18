@@ -13,19 +13,24 @@
 
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
-use std::os::fd::FromRawFd;
+use std::os::fd::{FromRawFd, IntoRawFd, RawFd};
 
 pub use ffi::{Action, Mode};
+use ipc::IpcStatusCode;
 
 cfg_oh! {
     use ipc::parcel::Serialize;
+    use ipc::parcel::Deserialize;
 }
 
 use super::reason::Reason;
+use super::ATOMIC_SERVICE;
+use crate::manage::account::GetOhosAccountUid;
 use crate::manage::network::{NetworkState, NetworkType};
 use crate::utils::c_wrapper::{CFileSpec, CFormItem, CStringWrapper};
 use crate::utils::form_item::{FileSpec, FormItem};
-use crate::utils::hashmap_to_string;
+use crate::utils::{hashmap_to_string, query_calling_bundle};
+
 #[cxx::bridge(namespace = "OHOS::Request")]
 mod ffi {
     /// Action
@@ -466,6 +471,178 @@ impl Serialize for TaskConfig {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(feature = "oh")]
+impl Deserialize for TaskConfig {
+    fn deserialize(parcel: &mut ipc::parcel::MsgParcel) -> ipc::IpcResult<Self> {
+        let action: u32 = parcel.read()?;
+        let action: Action = Action::from(action as u8);
+        let version: u32 = parcel.read()?;
+        let version: Version = Version::from(version as u8);
+        let mode: u32 = parcel.read()?;
+        let mode: Mode = Mode::from(mode as u8);
+        let bundle_type: u32 = parcel.read()?;
+        let cover: bool = parcel.read()?;
+        let network: u32 = parcel.read()?;
+        let network_config = NetworkConfig::from(network as u8);
+        let metered: bool = parcel.read()?;
+        let roaming: bool = parcel.read()?;
+        let retry: bool = parcel.read()?;
+        let redirect: bool = parcel.read()?;
+        let background: bool = parcel.read()?;
+        let index: u32 = parcel.read()?;
+        let begins: i64 = parcel.read()?;
+        let ends: i64 = parcel.read()?;
+        let gauge: bool = parcel.read()?;
+        let precise: bool = parcel.read()?;
+        let priority: u32 = parcel.read()?;
+        let url: String = parcel.read()?;
+        let title: String = parcel.read()?;
+        let method: String = parcel.read()?;
+        let token: String = parcel.read()?;
+        let description: String = parcel.read()?;
+        let data_base: String = parcel.read()?;
+        let proxy: String = parcel.read()?;
+        let certificate_pins: String = parcel.read()?;
+        let bundle = query_calling_bundle();
+        let uid = ipc::Skeleton::calling_uid();
+        let token_id = ipc::Skeleton::calling_full_token_id();
+        let certs_path_size: u32 = parcel.read()?;
+        if certs_path_size > parcel.readable() as u32 {
+            error!("deserialize failed: certs_path_size too large");
+            return Err(IpcStatusCode::Failed);
+        }
+        let mut certs_path = Vec::new();
+        for _ in 0..certs_path_size {
+            let cert_path: String = parcel.read()?;
+            certs_path.push(cert_path);
+        }
+
+        let form_size: u32 = parcel.read()?;
+        if form_size > parcel.readable() as u32 {
+            error!("deserialize failed: form_size too large");
+            return Err(IpcStatusCode::Failed);
+        }
+        let mut form_items = Vec::new();
+        for _ in 0..form_size {
+            let name: String = parcel.read()?;
+            let value: String = parcel.read()?;
+            form_items.push(FormItem { name, value });
+        }
+
+        let file_size: u32 = parcel.read()?;
+        if file_size > parcel.readable() as u32 {
+            error!("deserialize failed: file_specs size too large");
+            return Err(IpcStatusCode::Failed);
+        }
+        let mut file_specs: Vec<FileSpec> = Vec::new();
+        for _ in 0..file_size {
+            let name: String = parcel.read()?;
+            let path: String = parcel.read()?;
+            let file_name: String = parcel.read()?;
+            let mime_type: String = parcel.read()?;
+            let is_user_file: bool = parcel.read()?;
+            let mut fd: Option<RawFd> = None;
+            if is_user_file {
+                let ipc_fd: File = parcel.read_file()?;
+                fd = Some(ipc_fd.into_raw_fd());
+            }
+            file_specs.push(FileSpec {
+                name,
+                path,
+                file_name,
+                mime_type,
+                is_user_file,
+                fd,
+            });
+        }
+
+        // Response bodies fd.
+        let body_file_size: u32 = parcel.read()?;
+        if body_file_size > parcel.readable() as u32 {
+            error!("deserialize failed: body_file size too large");
+            return Err(IpcStatusCode::Failed);
+        }
+
+        let mut body_file_paths: Vec<String> = Vec::new();
+        for _ in 0..body_file_size {
+            let file_name: String = parcel.read()?;
+            body_file_paths.push(file_name);
+        }
+
+        let header_size: u32 = parcel.read()?;
+        if header_size > parcel.readable() as u32 {
+            error!("deserialize failed: header size too large");
+            return Err(IpcStatusCode::Failed);
+        }
+        let mut headers: HashMap<String, String> = HashMap::new();
+        for _ in 0..header_size {
+            let key: String = parcel.read()?;
+            let value: String = parcel.read()?;
+            headers.insert(key, value);
+        }
+
+        let extras_size: u32 = parcel.read()?;
+        if extras_size > parcel.readable() as u32 {
+            error!("deserialize failed: extras size too large");
+            return Err(IpcStatusCode::Failed);
+        }
+        let mut extras: HashMap<String, String> = HashMap::new();
+        for _ in 0..extras_size {
+            let key: String = parcel.read()?;
+            let value: String = parcel.read()?;
+            extras.insert(key, value);
+        }
+
+        let atomic_account = if bundle_type == ATOMIC_SERVICE {
+            GetOhosAccountUid()
+        } else {
+            "".to_string()
+        };
+
+        let task_config = TaskConfig {
+            bundle,
+            bundle_type,
+            atomic_account,
+            url,
+            title,
+            description,
+            method,
+            headers,
+            data: data_base,
+            token,
+            proxy,
+            certificate_pins,
+            extras,
+            version,
+            form_items,
+            file_specs,
+            body_file_paths,
+            certs_path,
+            common_data: CommonTaskConfig {
+                task_id: 0,
+                uid,
+                token_id,
+                action,
+                mode,
+                cover,
+                network_config,
+                metered,
+                roaming,
+                retry,
+                redirect,
+                index,
+                begins: begins as u64,
+                ends,
+                gauge,
+                precise,
+                priority,
+                background,
+            },
+        };
+        Ok(task_config)
     }
 }
 

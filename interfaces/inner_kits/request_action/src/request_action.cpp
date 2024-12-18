@@ -71,4 +71,39 @@ int32_t RequestAction::Resume(const std::string &tid)
     return RequestManager::GetInstance()->Resume(tid);
 }
 
+int32_t RequestAction::StartTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+{
+    return RequestManager::GetInstance()->StartTasks(tids, rets);
+}
+
+int32_t RequestAction::StopTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+{
+    return RequestManager::GetInstance()->StopTasks(tids, rets);
+}
+
+int32_t RequestAction::ResumeTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+{
+    return RequestManager::GetInstance()->ResumeTasks(tids, rets);
+}
+
+int32_t RequestAction::RemoveTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+{
+    return RequestManager::GetInstance()->RemoveTasks(tids, Version::API10, rets);
+}
+
+int32_t RequestAction::PauseTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+{
+    return RequestManager::GetInstance()->PauseTasks(tids, Version::API10, rets);
+}
+
+int32_t RequestAction::ShowTasks(const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+{
+    return RequestManager::GetInstance()->ShowTasks(tids, rets);
+}
+
+int32_t RequestAction::TouchTasks(
+    const std::vector<std::pair<std::string, std::string>> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+{
+    return RequestManager::GetInstance()->TouchTasks(tids, rets);
+}
 } // namespace OHOS::Request

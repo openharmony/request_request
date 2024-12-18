@@ -18,7 +18,6 @@ config("download_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
-    "../../js/napi/request/include",
     "../../../interfaces/inner_kits/running_count/include",
   ]
 
@@ -43,7 +42,6 @@ ohos_shared_library("request_native") {
 
   include_dirs = [
     "include",
-    "../../../frameworks/js/napi/request/include",
     "../../../common/include",
   ]
   configs = [ "//build/config/gcc:symbol_visibility_hidden" ]

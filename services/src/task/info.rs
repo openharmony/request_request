@@ -21,7 +21,8 @@ use crate::task::reason::Reason;
 use crate::utils::c_wrapper::{CFileSpec, CFormItem};
 use crate::utils::form_item::{FileSpec, FormItem};
 use crate::utils::hashmap_to_string;
-#[derive(Debug)]
+
+#[derive(Debug, Clone)]
 pub(crate) struct TaskInfo {
     pub(crate) bundle: String,
     pub(crate) url: String,
@@ -38,6 +39,24 @@ pub(crate) struct TaskInfo {
 }
 
 impl TaskInfo {
+    pub(crate) fn new() -> Self {
+        Self {
+            bundle: "".to_string(),
+            url: "".to_string(),
+            data: "".to_string(),
+            token: "".to_string(),
+            form_items: vec![],
+            file_specs: vec![],
+            title: "".to_string(),
+            description: "".to_string(),
+            mime_type: "".to_string(),
+            // Has at least one progress size.
+            progress: Progress::new(vec![0]),
+            extras: HashMap::new(),
+            common_data: CommonTaskInfo::new(),
+        }
+    }
+
     pub(crate) fn uid(&self) -> u64 {
         self.common_data.uid
     }
@@ -70,6 +89,25 @@ pub(crate) struct CommonTaskInfo {
     pub(crate) tries: u32,
     pub(crate) version: u8,
     pub(crate) priority: u32,
+}
+
+impl CommonTaskInfo {
+    pub(crate) fn new() -> Self {
+        Self {
+            task_id: 0,
+            uid: 0,
+            action: 0,
+            mode: 0,
+            ctime: 0,
+            mtime: 0,
+            reason: 0,
+            gauge: false,
+            retry: false,
+            tries: 0,
+            version: 0,
+            priority: 0,
+        }
+    }
 }
 
 pub(crate) struct InfoSet {

@@ -25,6 +25,45 @@ const std::unique_ptr<RequestManager> &RequestManager::GetInstance()
     return instance;
 }
 
+int32_t RequestManager::StartTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+{
+    return RequestManagerImpl::GetInstance()->StartTasks(tids, rets);
+}
+
+int32_t RequestManager::StopTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+{
+    return RequestManagerImpl::GetInstance()->StopTasks(tids, rets);
+}
+
+int32_t RequestManager::ResumeTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+{
+    return RequestManagerImpl::GetInstance()->ResumeTasks(tids, rets);
+}
+
+int32_t RequestManager::RemoveTasks(
+    const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets)
+{
+    return RequestManagerImpl::GetInstance()->RemoveTasks(tids, version, rets);
+}
+
+int32_t RequestManager::PauseTasks(
+    const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets)
+{
+    return RequestManagerImpl::GetInstance()->PauseTasks(tids, version, rets);
+}
+
+int32_t RequestManager::ShowTasks(
+    const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+{
+    return RequestManagerImpl::GetInstance()->ShowTasks(tids, rets);
+}
+
+int32_t RequestManager::TouchTasks(
+    const std::vector<std::pair<std::string, std::string>> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+{
+    return RequestManagerImpl::GetInstance()->TouchTasks(tids, rets);
+}
+
 int32_t RequestManager::Create(const Config &config, int32_t seq, std::string &tid)
 {
     return RequestManagerImpl::GetInstance()->Create(config, seq, tid);
@@ -62,7 +101,7 @@ int32_t RequestManager::Show(const std::string &tid, TaskInfo &info)
     return RequestManagerImpl::GetInstance()->Show(tid, info);
 }
 
-int32_t RequestManager::Pause(const std::string &tid, Version version)
+int32_t RequestManager::Pause(const std::string &tid, const Version version)
 {
     return RequestManagerImpl::GetInstance()->Pause(tid, version);
 }
@@ -72,7 +111,7 @@ int32_t RequestManager::QueryMimeType(const std::string &tid, std::string &mimeT
     return RequestManagerImpl::GetInstance()->QueryMimeType(tid, mimeType);
 }
 
-int32_t RequestManager::Remove(const std::string &tid, Version version)
+int32_t RequestManager::Remove(const std::string &tid, const Version version)
 {
     return RequestManagerImpl::GetInstance()->Remove(tid, version);
 }
