@@ -147,10 +147,8 @@ fn open_file_readonly(uid: u64, bundle_name: &str, path: &str) -> io::Result<Fil
 pub(crate) fn convert_path(uid: u64, bundle_name: &str, path: &str) -> String {
     let uuid = uid / 200000;
     let base_replace = format!("{}/base/{}", uuid, bundle_name);
-    let real_path = path
-        .replacen("storage", "app", 1)
-        .replacen("base", &base_replace, 1);
-    real_path
+    path.replacen("storage", "app", 1)
+        .replacen("base", &base_replace, 1)
 }
 
 pub(crate) struct BundleCache<'a> {

@@ -17,6 +17,7 @@ use super::events::QueryEvent;
 use super::TaskManager;
 use crate::config::{Action, Mode};
 use crate::manage::database::RequestDb;
+use crate::service::permission::ManagerPermission;
 use crate::task::config::TaskConfig;
 use crate::task::info::{State, TaskInfo};
 
@@ -111,7 +112,8 @@ impl TaskManager {
             }
         };
 
-        if info.action() == action || action == Action::Any {
+        let task_action = info.action();
+        if ManagerPermission::check_action(action, task_action) {
             info.data = "".to_string();
             info.url = "".to_string();
             Some(info)

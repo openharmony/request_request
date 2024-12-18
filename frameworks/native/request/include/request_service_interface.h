@@ -28,12 +28,28 @@ namespace OHOS::Request {
 class RequestServiceInterface : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Download.RequestServiceInterface");
+    virtual int32_t StartTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets) = 0;
+    virtual int32_t StopTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets) = 0;
+    virtual int32_t ResumeTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets) = 0;
+
+    virtual int32_t RemoveTasks(
+        const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets) = 0;
+    virtual int32_t PauseTasks(
+        const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets) = 0;
+
+    virtual int32_t QueryTasks(
+        const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets) = 0;
+    virtual int32_t ShowTasks(
+        const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets) = 0;
+    virtual int32_t TouchTasks(const std::vector<std::pair<std::string, std::string>> &tids,
+        std::vector<std::pair<int32_t, TaskInfo>> &rets) = 0;
+
     virtual int32_t Create(const Config &config, std::string &taskId) = 0;
     virtual int32_t GetTask(const std::string &tid, const std::string &token, Config &config) = 0;
     virtual int32_t Start(const std::string &tid) = 0;
-    virtual int32_t Pause(const std::string &tid, Version version) = 0;
+    virtual int32_t Pause(const std::string &tid, const Version version) = 0;
     virtual int32_t QueryMimeType(const std::string &tid, std::string &mimeType) = 0;
-    virtual int32_t Remove(const std::string &tid, Version version) = 0;
+    virtual int32_t Remove(const std::string &tid, const Version version) = 0;
     virtual int32_t Resume(const std::string &tid) = 0;
 
     virtual int32_t Stop(const std::string &tid) = 0;

@@ -17,6 +17,7 @@ use ipc::{IpcResult, IpcStatusCode};
 use crate::error::ErrorCode;
 use crate::manage::database::RequestDb;
 use crate::manage::events::TaskManagerEvent;
+use crate::service::command::{set_code_with_index, CONTROL_MAX};
 use crate::service::permission::PermissionChecker;
 use crate::service::RequestServiceStub;
 use crate::task::config::Version;
@@ -30,55 +31,71 @@ impl RequestServiceStub {
             return Err(IpcStatusCode::Failed);
         }
 
-        let task_id: String = data.read()?;
-        info!("Service remove tid {}", task_id);
+        let len: u32 = data.read()?;
+        let len = len as usize;
+        let mut vec = vec![ErrorCode::Other; len];
 
-        let Ok(task_id) = task_id.parse::<u32>() else {
-            error!(
-                "End Service remove, tid: {}, failed: task_id not valid",
-                task_id
-            );
-            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+        if len > CONTROL_MAX {
+            info!("Service start: out of size: {}", len);
+            reply.write(&(ErrorCode::Other as i32))?;
             return Err(IpcStatusCode::Failed);
-        };
+        }
 
-        let mut uid = ipc::Skeleton::calling_uid();
-        if PermissionChecker::check_down_permission() {
-            //skip uid check if task used by innerkits
-            info!("task permission inner");
-            match RequestDb::get_instance().query_task_uid(task_id) {
-                Some(res) => uid = res ,
-                None => {
-                    reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                    return Err(IpcStatusCode::Failed);
-                },
+        let uid = ipc::Skeleton::calling_uid();
+
+        for i in 0..len {
+            let task_id: String = data.read()?;
+            info!("Service remove tid {}", task_id);
+            let Ok(task_id) = task_id.parse::<u32>() else {
+                error!("Service remove, failed: tid not valid: {}", task_id);
+                set_code_with_index(&mut vec, i, ErrorCode::TaskNotFound);
+                continue;
             };
-        } else if !self.check_task_uid(task_id, uid) {
-            reply.write(&(ErrorCode::TaskNotFound as i32))?;
-            return Err(IpcStatusCode::Failed);
-        }
-
-        let (event, rx) = TaskManagerEvent::remove(uid, task_id);
-        if !self.task_manager.lock().unwrap().send_event(event) {
-            return Err(IpcStatusCode::Failed);
-        }
-        let ret = match rx.get() {
-            Some(ret) => ret,
-            None => {
+            let mut uid = uid;
+            if PermissionChecker::check_down_permission() {
+                // skip uid check if task used by innerkits
+                info!("{} remove permission inner", task_id);
+                match RequestDb::get_instance().query_task_uid(task_id) {
+                    Some(id) => uid = id,
+                    None => {
+                        set_code_with_index(&mut vec, i, ErrorCode::TaskNotFound);
+                        continue;
+                    }
+                };
+            } else if !self.check_task_uid(task_id, uid) {
+                set_code_with_index(&mut vec, i, ErrorCode::TaskNotFound);
                 error!(
-                    "End Service remove, tid: {}, failed: receives ret failed",
-                    task_id
+                    "Service remove, failed: check task uid. tid: {}, uid: {}",
+                    task_id, uid
                 );
-                return Err(IpcStatusCode::Failed);
+                continue;
             }
-        };
-        reply.write(&(ret as i32))?;
-        if ret != ErrorCode::ErrOk {
-            error!(
-                "End Service remove, tid: {}, failed: {}",
-                task_id, ret as i32
-            );
-            return Err(IpcStatusCode::Failed);
+
+            let (event, rx) = TaskManagerEvent::remove(uid, task_id);
+            if !self.task_manager.lock().unwrap().send_event(event) {
+                error!("Service remove, failed: task_manager err: {}", task_id);
+                set_code_with_index(&mut vec, i, ErrorCode::Other);
+                continue;
+            }
+            let ret = match rx.get() {
+                Some(ret) => ret,
+                None => {
+                    error!(
+                        "Service remove, tid: {}, failed: receives ret failed",
+                        task_id
+                    );
+                    set_code_with_index(&mut vec, i, ErrorCode::Other);
+                    continue;
+                }
+            };
+            set_code_with_index(&mut vec, i, ret);
+            if ret != ErrorCode::ErrOk {
+                error!("Service remove, tid: {}, failed: {}", task_id, ret as i32);
+            }
+        }
+        reply.write(&(ErrorCode::ErrOk as i32))?;
+        for ret in vec {
+            reply.write(&(ret as i32))?;
         }
         Ok(())
     }

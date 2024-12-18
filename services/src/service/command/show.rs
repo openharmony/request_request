@@ -15,57 +15,76 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
+use crate::info::TaskInfo;
 use crate::manage::database::RequestDb;
+use crate::service::command::{set_code_with_index_other, GET_INFO_MAX};
 use crate::service::permission::PermissionChecker;
 use crate::service::{serialize_task_info, RequestServiceStub};
 
 impl RequestServiceStub {
     pub(crate) fn show(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        if !PermissionChecker::check_internet() {
-            error!("Service show: no INTERNET permission");
-            reply.write(&(ErrorCode::Permission as i32))?;
+        info!("Service show");
+
+        let len: u32 = data.read()?;
+        let len = len as usize;
+        let mut vec = vec![(ErrorCode::Other, TaskInfo::new()); len];
+
+        if len > GET_INFO_MAX {
+            info!("Service start: out of size: {}", len);
+            reply.write(&(ErrorCode::Other as i32))?;
             return Err(IpcStatusCode::Failed);
         }
-        let task_id: String = data.read()?;
-        info!("Service show tid {}", task_id);
 
-        let Ok(task_id) = task_id.parse::<u32>() else {
-            error!("End Service show, failed: task_id not valid");
-            reply.write(&(ErrorCode::TaskNotFound as i32))?;
-            return Err(IpcStatusCode::Failed);
-        };
+        let uid = ipc::Skeleton::calling_uid();
+        for i in 0..len {
+            let task_id: String = data.read()?;
+            info!("Service show tid {}", task_id);
 
-        let mut uid = ipc::Skeleton::calling_uid();
-        if PermissionChecker::check_down_permission() {
-            //skip uid check if task used by innerkits
-            info!("task permission inner");
-            match RequestDb::get_instance().query_task_uid(task_id) {
-                Some(res) => uid = res ,
-                None => {
-                    reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                    return Err(IpcStatusCode::Failed);
-                },
+            let Ok(task_id) = task_id.parse::<u32>() else {
+                error!("Service show, failed: tid not valid: {}", task_id);
+                set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
+                continue;
             };
-        } else if !self.check_task_uid(task_id, uid) {
-            reply.write(&(ErrorCode::TaskNotFound as i32))?;
-            return Err(IpcStatusCode::Failed);
-        }
-
-        let info = self.task_manager.lock().unwrap().show(uid, task_id);
-        match info {
-            Some(info) => {
-                reply.write(&(ErrorCode::ErrOk as i32))?;
-                serialize_task_info(info, reply)?;
-                Ok(())
-            }
-            None => {
+            let mut uid = uid;
+            if PermissionChecker::check_down_permission() {
+                // skip uid check if task used by innerkits
+                info!("{} show permission inner", task_id);
+                match RequestDb::get_instance().query_task_uid(task_id) {
+                    Some(id) => uid = id,
+                    None => {
+                        set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
+                        continue;
+                    }
+                };
+            } else if !self.check_task_uid(task_id, uid) {
+                set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
                 error!(
-                    "End Service show, failed: task_id not found, tid: {}",
-                    task_id
+                    "Service show, failed: check task uid. tid: {}, uid: {}",
+                    task_id, uid
                 );
-                reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                Err(IpcStatusCode::Failed)
+                continue;
             }
+
+            let info = self.task_manager.lock().unwrap().show(uid, task_id);
+            match info {
+                Some(task_info) => {
+                    if let Some((c, info)) = vec.get_mut(i) {
+                        *c = ErrorCode::ErrOk;
+                        *info = task_info;
+                    }
+                }
+                None => {
+                    error!("Service show, failed: task_id not found, tid: {}", task_id);
+                    set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
+                }
+            };
         }
+        reply.write(&(ErrorCode::ErrOk as i32))?;
+        for (c, info) in vec {
+            reply.write(&(c as i32))?;
+            // TODO: Sends info only when ErrOk.
+            serialize_task_info(info, reply)?;
+        }
+        Ok(())
     }
 }

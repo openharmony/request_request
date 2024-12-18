@@ -15,42 +15,77 @@ use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
+use crate::info::TaskInfo;
+use crate::manage::database::RequestDb;
+use crate::service::command::{set_code_with_index_other, GET_INFO_MAX};
+use crate::service::permission::PermissionChecker;
 use crate::service::{serialize_task_info, RequestServiceStub};
 
 impl RequestServiceStub {
     pub(crate) fn touch(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        let task_id: String = data.read()?;
-        info!("Service touch tid {}", task_id);
+        let len: u32 = data.read()?;
+        let len = len as usize;
+        let mut vec = vec![(ErrorCode::Other, TaskInfo::new()); len];
 
-        let Ok(task_id) = task_id.parse::<u32>() else {
-            error!("End Service touch, failed: task_id or token not valid");
-            reply.write(&(ErrorCode::TaskNotFound as i32))?;
+        if len > GET_INFO_MAX {
+            info!("Service touch: out of size: {}", len);
+            reply.write(&(ErrorCode::Other as i32))?;
             return Err(IpcStatusCode::Failed);
-        };
+        }
 
-        let token: String = data.read()?;
         let uid = ipc::Skeleton::calling_uid();
+        for i in 0..len {
+            let task_id: String = data.read()?;
+            info!("Service touch tid {}", task_id);
 
-        if !self.check_task_uid(task_id, uid) {
-            reply.write(&(ErrorCode::TaskNotFound as i32))?;
-            return Err(IpcStatusCode::Failed);
-        }
-        let info = self.task_manager.lock().unwrap().touch(uid, task_id, token);
+            let token: String = data.read()?;
 
-        match info {
-            Some(info) => {
-                reply.write(&(ErrorCode::ErrOk as i32))?;
-                serialize_task_info(info, reply)?;
-                Ok(())
-            }
-            None => {
+            let Ok(task_id) = task_id.parse::<u32>() else {
+                error!("Service touch, failed: tid not valid: {}", task_id);
+                set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
+                continue;
+            };
+
+            let mut uid = uid;
+            if PermissionChecker::check_down_permission() {
+                // skip uid check if task used by innerkits
+                info!("{} touch permission inner", task_id);
+                match RequestDb::get_instance().query_task_uid(task_id) {
+                    Some(id) => uid = id,
+                    None => {
+                        set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
+                        continue;
+                    }
+                };
+            } else if !self.check_task_uid(task_id, uid) {
+                set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
                 error!(
-                    "End Service touch, tid: {}, failed: task_id or token not found",
-                    task_id
+                    "Service touch, failed: check task uid. tid: {}, uid: {}",
+                    task_id, uid
                 );
-                reply.write(&(ErrorCode::TaskNotFound as i32))?;
-                Err(IpcStatusCode::Failed)
+                continue;
             }
+
+            let info = self.task_manager.lock().unwrap().touch(uid, task_id, token);
+            match info {
+                Some(task_info) => {
+                    if let Some((c, info)) = vec.get_mut(i) {
+                        *c = ErrorCode::ErrOk;
+                        *info = task_info;
+                    }
+                }
+                None => {
+                    error!("Service touch, failed: task_id not found, tid: {}", task_id);
+                    set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
+                }
+            };
         }
+        reply.write(&(ErrorCode::ErrOk as i32))?;
+        for (c, info) in vec {
+            reply.write(&(c as i32))?;
+            // TODO: Sends info only when ErrOk.
+            serialize_task_info(info, reply)?;
+        }
+        Ok(())
     }
 }
