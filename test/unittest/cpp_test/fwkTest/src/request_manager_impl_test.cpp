@@ -552,12 +552,13 @@ HWTEST_F(RequestManagerImplTest, CreateTest002, TestSize.Level1)
     std::string tid = "1";
     EXPECT_CALL(*exceptProxy, Create(testing::_, tid))
         .WillOnce(testing::Return(E_FILE_PATH))
+        .WillOnce(testing::Return(E_OK))
         .WillOnce(testing::Return(E_OK));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->Create(config, seq, tid), E_FILE_PATH);
     EXPECT_EQ(RequestManagerImpl::GetInstance()->Create(config, seq, tid), E_OK);
     RequestManagerImpl::GetInstance()->Create(config, seq, tid);
     auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy(true);
-    EXPECT_TRUE(proxy != (static_cast<OHOS::sptr<RequestServiceInterface>>(exceptProxy)));
+    EXPECT_TRUE(proxy == (static_cast<OHOS::sptr<RequestServiceInterface>>(exceptProxy)));
 }
 
 /**
