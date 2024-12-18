@@ -441,7 +441,7 @@ void ResponseMessageFuzzTestInt64FromParcel(const uint8_t *data, size_t size)
 {
     int64_t except = static_cast<int64_t>(*data);
     char *parcel = reinterpret_cast<char *>(&except);
-    int64_t num = static_cast<int64_t>(*data);
+    int64_t num;
     int testSize = INT32_SIZE;
     ResponseMessageReceiver::Int64FromParcel(num, parcel, testSize);
     testSize = INT64_SIZE;
