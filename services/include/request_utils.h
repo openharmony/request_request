@@ -25,7 +25,7 @@ int GetTopUid(int &uid);
 rust::string GetCallingBundle(rust::u64 tokenId);
 bool IsSystemAPI(uint64_t tokenId);
 bool CheckPermission(uint64_t tokenId, rust::str permission);
-bool PublishStateChangeEvent(rust::str bundleName, uint32_t taskId, int32_t state);
+bool PublishStateChangeEvent(rust::str bundleName, uint32_t taskId, int32_t state, int32_t uid);
 int RequestBackgroundNotify(RequestTaskMsg msg, rust::str filePath, rust::str fileName, uint32_t percent);
 
 } // namespace OHOS::Request

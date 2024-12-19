@@ -127,7 +127,7 @@ int RequestBackgroundNotify(RequestTaskMsg msg, rust::str filePath, rust::str fi
     return errCode;
 }
 
-bool PublishStateChangeEvent(rust::str bundleName, uint32_t taskId, int32_t state)
+bool PublishStateChangeEvent(rust::str bundleName, uint32_t taskId, int32_t state, int32_t uid)
 {
     REQUEST_HILOGD("PublishStateChangeEvents in.");
     static constexpr const char *eventAction = "ohos.request.event.COMPLETE";
@@ -135,11 +135,14 @@ bool PublishStateChangeEvent(rust::str bundleName, uint32_t taskId, int32_t stat
     Want want;
     want.SetAction(eventAction);
     want.SetBundle(std::string(bundleName));
+    std::vector<int32_t> subscriberUids;
+    subscriberUids.push_back(uid);
 
     std::string data = std::to_string(taskId);
     CommonEventData commonData(want, state, data);
     CommonEventPublishInfo publishInfo;
     publishInfo.SetBundleName(std::string(bundleName));
+    publishInfo.SetSubscriberUid(subscriberUids);
 
     bool res = CommonEventManager::PublishCommonEvent(commonData, publishInfo);
     if (!res) {
