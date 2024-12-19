@@ -96,7 +96,6 @@ bool CheckPermission(uint64_t tokenId, rust::str permission)
     }
     int result = AccessTokenKit::VerifyAccessToken(tokenId, perm);
     if (result != PERMISSION_GRANTED) {
-        REQUEST_HILOGE("check permission %{public}s failed ret %{public}d", perm.c_str(), result);
         return false;
     }
     return true;
