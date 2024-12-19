@@ -215,7 +215,10 @@ bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &con
             }
         }
         if (bodyFd >= 0) {
-            chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
+            int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+            if (ret != 0) {
+                REQUEST_HILOGE("body chmod fail: %{public}d", ret);
+            };
         }
         if (!JsTask::SetPathPermission(path)) {
             error.code = E_FILE_IO;
@@ -278,7 +281,10 @@ bool JsInitialize::GetFdInner(const std::string &path, const Config &config, int
             chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
             return true;
         } else {
-            chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
+            int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+            if (ret != 0) {
+                REQUEST_HILOGE("file chmod fail: %{public}d", ret);
+            };
         }
 
         if (config.version == Version::API10 && config.overwrite) {
@@ -307,7 +313,10 @@ bool JsInitialize::GetFdInner(const std::string &path, const Config &config, int
             error.errInfo = "GetFd failed to open file errno " + std::to_string(errno);
             return false;
         }
-        chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
+        int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+        if (ret != 0) {
+            REQUEST_HILOGE("new file chmod fail: %{public}d", ret);
+        };
     }
     return true;
 }
