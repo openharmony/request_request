@@ -578,6 +578,26 @@ int32_t RequestServiceProxy::Resume(const std::string &tid)
     return rets[0];
 }
 
+int32_t RequestServiceProxy::SetMaxSpeed(const std::string &tid, const int64_t max_speed)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(tid);
+    data.WriteInt64(max_speed);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SET_MAX_SPEED), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("End Request SetMaxSpeed, failed: %{public}d", ret);
+        return ExceptionErrorCode::E_SERVICE_ERROR;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ExceptionErrorCode::E_OK) {
+        REQUEST_HILOGE("End Request SetMaxSpeed, failed: %{public}d", ret);
+    }
+    return ret;
+}
+
 int32_t RequestServiceProxy::OpenChannel(int32_t &sockFd)
 {
     REQUEST_HILOGD("Request OpenChannel");

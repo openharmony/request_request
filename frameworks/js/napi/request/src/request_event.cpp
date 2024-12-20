@@ -22,6 +22,7 @@
 
 namespace OHOS::Request {
 constexpr const std::int32_t DECIMALISM = 10;
+constexpr const int64_t MIN_SPEED_LIMIT = 16 * 1024;
 static constexpr const char *EVENT_COMPLETED = "completed";
 static constexpr const char *EVENT_FAILED = "failed";
 static constexpr const char *EVENT_PAUSE = "pause";
@@ -60,6 +61,7 @@ std::map<std::string, RequestEvent::Event> RequestEvent::requestEvent_ = {
     { FUNCTION_RESUME, RequestEvent::ResumeExec },
     { FUNCTION_START, RequestEvent::StartExec },
     { FUNCTION_STOP, RequestEvent::StopExec },
+    { FUNCTION_SET_MAX_SPEED, RequestEvent::SetMaxSpeedExec },
 };
 
 std::map<std::string, uint32_t> RequestEvent::resMap_ = {
@@ -70,6 +72,7 @@ std::map<std::string, uint32_t> RequestEvent::resMap_ = {
     { FUNCTION_RESUME, BOOL_RES },
     { FUNCTION_START, BOOL_RES },
     { FUNCTION_STOP, BOOL_RES },
+    { FUNCTION_SET_MAX_SPEED, BOOL_RES },
 };
 
 std::map<State, DownloadStatus> RequestEvent::stateMap_ = {
@@ -127,6 +130,50 @@ napi_value RequestEvent::Start(napi_env env, napi_callback_info info)
 napi_value RequestEvent::Stop(napi_env env, napi_callback_info info)
 {
     return Exec(env, info, FUNCTION_STOP);
+}
+
+napi_value RequestEvent::SetMaxSpeed(napi_env env, napi_callback_info info)
+{
+    int32_t seq = RequestManager::GetInstance()->GetNextSeq();
+    REQUEST_HILOGD("Begin task set max speed, seq: %{public}d", seq);
+    std::string execType = FUNCTION_SET_MAX_SPEED;
+    auto context = std::make_shared<ExecContext>();
+    auto input = [context, seq, info](size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        ExceptionError err = ParseSetMaxSpeedParameters(context->env_, self, info, context->max_speed);
+        if (err.code != E_OK) {
+            REQUEST_HILOGE("End task set max speed, seq: %{public}d, failed: %{public}d, max_speed: %{public}lld", seq,
+                err.code, context->max_speed);
+            NapiUtils::ThrowError(context->env_, err.code, err.errInfo, true);
+            return napi_invalid_arg;
+        }
+        return ParseInputParameters(context->env_, argc, self, context);
+    };
+    auto output = [context, execType, seq](napi_value *result) -> napi_status {
+        if (context->innerCode_ != E_OK) {
+            REQUEST_HILOGE("End task %{public}s in AsyncCall output, seq: %{public}d, failed: %{public}d",
+                execType.c_str(), seq, context->innerCode_);
+            return napi_generic_failure;
+        }
+
+        napi_status status = GetResult(context->env_, context, execType, *result);
+        if (status != napi_ok) {
+            REQUEST_HILOGE("End task %{public}s in AsyncCall output, seq: %{public}d, failed: %{public}d",
+                execType.c_str(), seq, status);
+        } else {
+            REQUEST_HILOGI("End task %{public}s ok seq %{public}d", execType.c_str(), seq);
+        }
+        return status;
+    };
+    auto exec = [context, execType]() {
+        auto handle = requestEvent_.find(execType);
+        if (handle != requestEvent_.end()) {
+            context->innerCode_ = handle->second(context);
+        }
+    };
+
+    context->SetInput(input).SetOutput(output).SetExec(exec);
+    AsyncCall asyncCall(env, info, context);
+    return asyncCall.Call(context, execType);
 }
 
 napi_value RequestEvent::On(napi_env env, napi_callback_info info)
@@ -240,6 +287,41 @@ NotifyData RequestEvent::BuildNotifyData(const std::shared_ptr<TaskInfo> &taskIn
     notifyData.mode = taskInfo->mode;
     notifyData.taskStates = taskInfo->taskStates;
     return notifyData;
+}
+
+ExceptionError RequestEvent::ParseSetMaxSpeedParameters(
+    napi_env env, napi_value self, napi_callback_info info, int64_t &max_speed)
+{
+    ExceptionError err = { .code = E_OK };
+    size_t argc = NapiUtils::MAX_ARGC;
+    napi_value argv[NapiUtils::MAX_ARGC] = { nullptr };
+    if (argc < NapiUtils::ONE_ARG) {
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Missing mandatory parameters, Wrong number of arguments";
+        return err;
+    }
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
+    if (status != napi_ok) {
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Parameter verification failed, Failed to obtain parameters";
+        return err;
+    }
+
+    napi_valuetype valuetype;
+    napi_typeof(env, argv[NapiUtils::FIRST_ARGV], &valuetype);
+    if (valuetype != napi_number) {
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Incorrect parameter type, speed is not of number type";
+        return err;
+    }
+
+    max_speed = NapiUtils::Convert2Int64(env, argv[NapiUtils::FIRST_ARGV]);
+    if (max_speed < MIN_SPEED_LIMIT) {
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Incorrect parameter value, minimum speed value is 16 KB/s";
+    }
+
+    return err;
 }
 
 ExceptionError RequestEvent::ParseOnOffParameters(
@@ -402,6 +484,15 @@ int32_t RequestEvent::StartExec(const std::shared_ptr<ExecContext> &context)
 int32_t RequestEvent::StopExec(const std::shared_ptr<ExecContext> &context)
 {
     int32_t ret = RequestManager::GetInstance()->Stop(context->task->GetTid());
+    if (ret == E_OK) {
+        context->boolRes = true;
+    }
+    return ret;
+}
+
+int32_t RequestEvent::SetMaxSpeedExec(const std::shared_ptr<ExecContext> &context)
+{
+    int32_t ret = RequestManager::GetInstance()->SetMaxSpeed(context->task->GetTid(), context->max_speed);
     if (ret == E_OK) {
         context->boolRes = true;
     }

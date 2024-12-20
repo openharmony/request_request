@@ -46,6 +46,7 @@ public:
     static napi_value Resume(napi_env env, napi_callback_info info);
     static napi_value Start(napi_env env, napi_callback_info info);
     static napi_value Stop(napi_env env, napi_callback_info info);
+    static napi_value SetMaxSpeed(napi_env env, napi_callback_info info);
     static std::map<Reason, DownloadErrorCode> failMap_;
 
 private:
@@ -62,6 +63,7 @@ private:
         bool boolRes = false;
         std::string strRes;
         DownloadInfo infoRes;
+        int64_t max_speed;
     };
 
     using Event = std::function<int32_t(const std::shared_ptr<ExecContext> &)>;
@@ -79,11 +81,14 @@ private:
     static int32_t QueryExec(const std::shared_ptr<ExecContext> &context);
     static int32_t RemoveExec(const std::shared_ptr<ExecContext> &context);
     static int32_t ResumeExec(const std::shared_ptr<ExecContext> &context);
+    static int32_t SetMaxSpeedExec(const std::shared_ptr<ExecContext> &context);
 
     static napi_status ParseInputParameters(
         napi_env env, size_t argc, napi_value self, const std::shared_ptr<ExecContext> &context);
     static ExceptionError ParseOnOffParameters(
         napi_env env, napi_callback_info info, bool IsRequiredParam, JsParam &jsParam);
+    static ExceptionError ParseSetMaxSpeedParameters(
+        napi_env env, napi_value self, napi_callback_info info, int64_t &max_speed);
     static napi_status GetResult(
         napi_env env, const std::shared_ptr<ExecContext> &context, const std::string &execType, napi_value &result);
     static void GetDownloadInfo(const TaskInfo &infoRes, DownloadInfo &info);

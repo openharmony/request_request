@@ -126,6 +126,11 @@ int32_t RequestManager::Resume(const std::string &tid)
     return RequestManagerImpl::GetInstance()->Resume(tid);
 }
 
+int32_t RequestManager::SetMaxSpeed(const std::string &tid, const int64_t max_speed)
+{
+    return RequestManagerImpl::GetInstance()->SetMaxSpeed(tid, max_speed);
+}
+
 int32_t RequestManager::Subscribe(const std::string &taskId)
 {
     return RequestManagerImpl::GetInstance()->Subscribe(taskId);

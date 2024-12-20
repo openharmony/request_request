@@ -53,6 +53,7 @@ public:
     int32_t QueryMimeType(const std::string &tid, std::string &mimeType) override;
     int32_t Remove(const std::string &tid, const Version version) override;
     int32_t Resume(const std::string &tid) override;
+    int32_t SetMaxSpeed(const std::string &tid, const int64_t max_speed) override;
 
     int32_t Stop(const std::string &tid) override;
     int32_t Query(const std::string &tid, TaskInfo &info) override;

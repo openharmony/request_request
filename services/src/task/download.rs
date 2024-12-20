@@ -235,8 +235,7 @@ pub(crate) async fn download_inner(
 
 #[cfg(not(test))]
 fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
-    use crate::task::files::convert_path;
-    use crate::task::files::BundleCache;
+    use crate::task::files::{convert_path, BundleCache};
 
     let config = task.config();
     let mut bundle_cache = BundleCache::new(config);

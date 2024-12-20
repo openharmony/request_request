@@ -56,6 +56,7 @@ pub(crate) struct RequestTask {
     pub(crate) background_notify_time: AtomicU64,
     pub(crate) file_total_size: AtomicI64,
     pub(crate) rate_limiting: AtomicU64,
+    pub(crate) max_speed: AtomicI64,
     pub(crate) last_notify: AtomicU64,
     pub(crate) client_manager: ClientManagerEntry,
     pub(crate) running_result: Mutex<Option<Result<(), Reason>>>,
@@ -172,6 +173,7 @@ impl RequestTask {
             background_notify_time: AtomicU64::new(time),
             file_total_size: AtomicI64::new(file_total_size),
             rate_limiting: AtomicU64::new(0),
+            max_speed: AtomicI64::new(0),
             last_notify: AtomicU64::new(time),
             client_manager,
             running_result: Mutex::new(None),
@@ -234,6 +236,7 @@ impl RequestTask {
             background_notify_time: AtomicU64::new(time),
             file_total_size: AtomicI64::new(file_total_size),
             rate_limiting: AtomicU64::new(0),
+            max_speed: AtomicI64::new(info.max_speed),
             last_notify: AtomicU64::new(time),
             client_manager,
             running_result: Mutex::new(None),
@@ -569,6 +572,7 @@ impl RequestTask {
                 version: self.conf.version as u8,
                 priority: self.conf.common_data.priority,
             },
+            max_speed: self.max_speed.load(Ordering::SeqCst),
         }
     }
 

@@ -29,3 +29,5 @@ pub(crate) mod client;
 pub(crate) mod bundle;
 pub(crate) mod ffi;
 pub(crate) mod upload;
+
+pub(crate) mod speed_limiter;

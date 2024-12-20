@@ -195,6 +195,11 @@ int32_t RequestManagerImpl::DeleteGroup(const std::string &gid)
     return CallProxyMethod(&RequestServiceInterface::DeleteGroup, gid);
 }
 
+int32_t RequestManagerImpl::SetMaxSpeed(const std::string &tid, const int64_t max_speed)
+{
+    return CallProxyMethod(&RequestServiceInterface::SetMaxSpeed, tid, max_speed);
+}
+
 int32_t RequestManagerImpl::AddListener(
     const std::string &taskId, const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener)
 {

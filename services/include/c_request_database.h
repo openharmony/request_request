@@ -108,6 +108,8 @@ constexpr const char *REQUEST_TASK_TABLE_ADD_ATOMIC_ACCOUNT = "ALTER TABLE reque
                                                               "TEXT";
 
 constexpr const char *REQUEST_TASK_TABLE_ADD_UID_INDEX = "CREATE INDEX uid_index on request_task(uid)";
+
+constexpr const char *REQUEST_TASK_TABLE_ADD_MAX_SPEED = "ALTER TABLE request_task ADD COLUMN max_speed INTEGER";
 struct TaskFilter;
 struct NetworkInfo;
 struct TaskQosInfo;

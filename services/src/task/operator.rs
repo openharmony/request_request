@@ -11,42 +11,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::future::Future;
+use std::cmp::min;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::task::{Context, Poll};
-use std::time::Duration;
 
 use ylong_http_client::HttpClientError;
 use ylong_runtime::io::AsyncWrite;
-use ylong_runtime::time::{sleep, Sleep};
 
 use crate::manage::notifier::Notifier;
 use crate::service::notification_bar::{NotificationDispatcher, NOTIFY_PROGRESS_INTERVAL};
 use crate::task::request_task::RequestTask;
+use crate::task::speed_limiter::SpeedLimiter;
 use crate::utils::get_current_timestamp;
 
-const SPEED_LIMIT_INTERVAL: u64 = 1000;
 const FRONT_NOTIFY_INTERVAL: u64 = 1000;
 
 pub(crate) struct TaskOperator {
-    pub(crate) sleep: Option<Pin<Box<Sleep>>>,
     pub(crate) task: Arc<RequestTask>,
-    pub(crate) last_time: u64,
-    pub(crate) last_size: u64,
-    pub(crate) more_sleep_time: u64,
+    pub(crate) speed_limiter: SpeedLimiter,
     pub(crate) abort_flag: Arc<AtomicBool>,
 }
 
 impl TaskOperator {
     pub(crate) fn new(task: Arc<RequestTask>, abort_flag: Arc<AtomicBool>) -> Self {
         Self {
-            sleep: None,
             task,
-            last_time: 0,
-            last_size: 0,
-            more_sleep_time: 0,
+            speed_limiter: SpeedLimiter::default(),
             abort_flag,
         }
     }
@@ -60,7 +52,9 @@ impl TaskOperator {
         }
         let current = get_current_timestamp();
 
-        if current >= self.task.last_notify.load(Ordering::SeqCst) + FRONT_NOTIFY_INTERVAL {
+        let next_notify_time = self.task.last_notify.load(Ordering::SeqCst) + FRONT_NOTIFY_INTERVAL;
+
+        if current >= next_notify_time {
             let notify_data = self.task.build_notify_data();
             self.task.last_notify.store(current, Ordering::SeqCst);
             Notifier::progress(&self.task.client_manager, notify_data);
@@ -83,47 +77,18 @@ impl TaskOperator {
             .common_data
             .total_processed as u64;
 
-        self.sleep = None;
-        let speed_limit = self.task.rate_limiting.load(Ordering::SeqCst);
-        if speed_limit != 0 {
-            if self.more_sleep_time != 0 {
-                // wake up for notify, sleep until speed limit conditions are met
-                self.sleep = Some(Box::pin(sleep(Duration::from_millis(self.more_sleep_time))));
-                self.more_sleep_time = 0;
-            } else if self.last_time == 0 {
-                // get the init time and size, for speed caculate
-                self.last_time = current;
-                self.last_size = total_processed;
-            } else if current - self.last_time < SPEED_LIMIT_INTERVAL
-                && ((total_processed - self.last_size) > speed_limit * SPEED_LIMIT_INTERVAL)
-            {
-                // sleep until notification is required or speed limit conditions are met
-                let limit_time =
-                    (total_processed - self.last_size) / speed_limit - (current - self.last_time);
-                let notify_time = FRONT_NOTIFY_INTERVAL
-                    - (current - self.task.last_notify.load(Ordering::SeqCst));
-                let sleep_time = if limit_time > notify_time {
-                    self.more_sleep_time = limit_time - notify_time;
-                    notify_time
-                } else {
-                    limit_time
-                };
-                self.sleep = Some(Box::pin(sleep(Duration::from_millis(sleep_time))));
-            } else if current - self.last_time >= SPEED_LIMIT_INTERVAL {
-                // last caculate window has meet speed limit, update last_time and last_size,
-                // for next poll's speed compare
-                self.last_time = current;
-                self.last_size = total_processed;
-            }
-        }
+        let rate_limiting = self.task.rate_limiting.load(Ordering::SeqCst);
+        let max_speed = self.task.max_speed.load(Ordering::SeqCst) as u64;
 
-        if self.sleep.is_some() {
-            match Pin::new(self.sleep.as_mut().unwrap()).poll(cx) {
-                Poll::Ready(_) => return Poll::Ready(Ok(())),
-                Poll::Pending => return Poll::Pending,
-            }
-        }
-        Poll::Ready(Ok(()))
+        let speed_limit = match (rate_limiting, max_speed) {
+            (0, max_speed) => max_speed,
+            (rate_limiting, 0) => rate_limiting,
+            (rate_limiting, max_speed) => min(rate_limiting, max_speed),
+        };
+
+        self.speed_limiter.update_speed_limit(speed_limit);
+        self.speed_limiter
+            .poll_check_limit(cx, current, total_processed, next_notify_time)
     }
 
     pub(crate) fn poll_write_file(

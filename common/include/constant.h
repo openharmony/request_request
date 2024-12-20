@@ -83,6 +83,7 @@ static constexpr const char *FUNCTION_GET_TASK_INFO = "getTaskInfo";
 static constexpr const char *FUNCTION_GET_TASK_MIME_TYPE = "getTaskMimeType";
 static constexpr const char *FUNCTION_DELETE = "delete";
 static constexpr const char *FUNCTION_RESTORE = "restore";
+static constexpr const char *FUNCTION_SET_MAX_SPEED = "setMaxSpeed";
 
 constexpr const std::uint32_t CONFIG_PARAM_AT_FIRST = 0;
 constexpr const std::uint32_t CONFIG_PARAM_AT_SECOND = 1;

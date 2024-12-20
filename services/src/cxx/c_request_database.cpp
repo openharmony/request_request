@@ -473,6 +473,7 @@ void RequestDBUpgradeFrom50(OHOS::NativeRdb::RdbStore &store)
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_BUNDLE_TYPE);
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_ATOMIC_ACCOUNT);
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_UID_INDEX);
+    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MAX_SPEED);
 }
 
 int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
@@ -799,6 +800,7 @@ void FillOtherTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskInfo
     info.formItems = VecToFormItem(BlobToCFormItem(formItemsBlob));
     set->GetBlob(26, formSpecsBlob); // Line 26 is 'file_specs'
     info.fileSpecs = VecToFileSpec(BlobToCFileSpec(formSpecsBlob));
+    set->GetLong(27, info.maxSpeed); // Line 27 is 'max_speed'
 }
 
 CProgress BuildCProgress(const Progress &progress)
@@ -844,6 +846,7 @@ CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo)
     cTaskInfo->mimeType = WrapperCString(taskInfo.mimeType);
     cTaskInfo->progress = BuildCProgress(taskInfo.progress);
     cTaskInfo->commonData = taskInfo.commonData;
+    cTaskInfo->maxSpeed = taskInfo.maxSpeed;
     return cTaskInfo;
 }
 
@@ -919,10 +922,15 @@ TaskConfig BuildRequestTaskConfig(std::shared_ptr<OHOS::NativeRdb::ResultSet> re
 }
 } // anonymous namespace
 
-bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
+void RecordRequestTaskInfo(OHOS::NativeRdb::ValuesBucket &insertValues, CTaskInfo *taskInfo)
 {
-    REQUEST_HILOGD("write to request_task");
-    OHOS::NativeRdb::ValuesBucket insertValues;
+    insertValues.PutLong("ctime", taskInfo->commonData.ctime);
+    insertValues.PutInt("retry", taskInfo->commonData.retry);
+    insertValues.PutInt("max_speed", taskInfo->maxSpeed);
+}
+
+void RecordRequestTaskConfig(OHOS::NativeRdb::ValuesBucket &insertValues, CTaskConfig *taskConfig)
+{
     insertValues.PutLong("task_id", taskConfig->commonData.taskId);
     insertValues.PutLong("uid", taskConfig->commonData.uid);
     insertValues.PutLong("token_id", taskConfig->commonData.tokenId);
@@ -932,9 +940,7 @@ bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
     insertValues.PutInt("network", taskConfig->commonData.network);
     insertValues.PutInt("metered", taskConfig->commonData.metered);
     insertValues.PutInt("roaming", taskConfig->commonData.roaming);
-    insertValues.PutLong("ctime", taskInfo->commonData.ctime);
     insertValues.PutInt("gauge", taskConfig->commonData.gauge);
-    insertValues.PutInt("retry", taskInfo->commonData.retry);
     insertValues.PutInt("redirect", taskConfig->commonData.redirect);
     insertValues.PutInt("version", taskConfig->version);
     insertValues.PutLong("config_idx", taskConfig->commonData.index);
@@ -958,6 +964,16 @@ bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
     insertValues.PutInt("bundle_type", taskConfig->bundleType);
     insertValues.PutString(
         "atomic_account", std::string(taskConfig->atomicAccount.cStr, taskConfig->atomicAccount.len));
+}
+
+bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
+{
+    REQUEST_HILOGD("write to request_task");
+    OHOS::NativeRdb::ValuesBucket insertValues;
+
+    RecordRequestTaskInfo(insertValues, taskInfo);
+    RecordRequestTaskConfig(insertValues, taskConfig);
+    
     if (!WriteMutableData(insertValues, taskInfo, taskConfig)) {
         REQUEST_HILOGE("write blob data failed");
         return false;
@@ -1014,10 +1030,10 @@ int GetTaskInfoInner(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskIn
 {
     auto resultSet =
         OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true)
-            .Query(rdbPredicates, { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry",
-                                      "tries", "version", "priority", "bundle", "url", "data", "token", "title",
-                                      "description", "mime_type", "state", "idx", "total_processed", "sizes",
-                                      "processed", "extras", "form_items", "file_specs" });
+            .Query(rdbPredicates,
+                { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry", "tries", "version",
+                    "priority", "bundle", "url", "data", "token", "title", "description", "mime_type", "state", "idx",
+                    "total_processed", "sizes", "processed", "extras", "form_items", "file_specs", "max_speed" });
     if (resultSet == nullptr || resultSet->GoToFirstRow() != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("result set is nullptr or go to first row failed");
         return OHOS::Request::QUERY_ERR;
