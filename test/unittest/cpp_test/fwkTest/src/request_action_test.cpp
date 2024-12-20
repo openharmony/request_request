@@ -66,21 +66,6 @@ void RequestActionTest::TearDown(void)
 }
 
 /**
- * @tc.name: CreateTest001
- * @tc.desc: Test CreateTest001 interface base function - Create
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestActionTest, CreateTest001, TestSize.Level1)
-{
-    EXPECT_NE(RequestAction::GetInstance(), nullptr);
-    Config config;
-    int32_t seq = 1;
-    std::string tid = "1";
-    RequestAction::GetInstance()->Create(config, seq, tid);
-}
-
-/**
  * @tc.name: GetTaskTest001
  * @tc.desc: Test CreateTest001 interface base function - GetTask
  * @tc.type: FUNC
@@ -89,13 +74,10 @@ HWTEST_F(RequestActionTest, CreateTest001, TestSize.Level1)
 HWTEST_F(RequestActionTest, GetTaskTest001, TestSize.Level1)
 {
     EXPECT_NE(RequestAction::GetInstance(), nullptr);
-    std::string tidStr = "tid";
     std::string token = "token";
     Config config;
-    int32_t seq = 1;
     std::string tid = "1";
-    RequestAction::GetInstance()->Create(config, seq, tid);
-    RequestAction::GetInstance()->RequestAction::GetInstance()->GetTask(tidStr, token, config);
+    RequestAction::GetInstance()->RequestAction::GetInstance()->GetTask(tid, token, config);
 }
 
 /**

@@ -18,6 +18,7 @@ config("download_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
+    "../../../common/include",
     "../../../interfaces/inner_kits/running_count/include",
   ]
 

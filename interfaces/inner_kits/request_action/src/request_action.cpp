@@ -29,10 +29,6 @@ const std::unique_ptr<RequestAction> &RequestAction::GetInstance()
     return instance;
 }
 
-int32_t RequestAction::Create(const Config &config, int32_t seq, std::string &tid)
-{
-    return RequestManager::GetInstance()->Create(config, seq, tid);
-}
 int32_t RequestAction::GetTask(const std::string &tid, const std::string &token, Config &config)
 {
     return RequestManager::GetInstance()->GetTask(tid, token, config);
