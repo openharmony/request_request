@@ -15,6 +15,7 @@
 
 #include "request_manager.h"
 
+#include "request_common.h"
 #include "request_manager_impl.h"
 
 namespace OHOS::Request {
@@ -25,43 +26,45 @@ const std::unique_ptr<RequestManager> &RequestManager::GetInstance()
     return instance;
 }
 
-int32_t RequestManager::StartTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestManager::StartTasks(
+    const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
 {
     return RequestManagerImpl::GetInstance()->StartTasks(tids, rets);
 }
 
-int32_t RequestManager::StopTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestManager::StopTasks(
+    const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
 {
     return RequestManagerImpl::GetInstance()->StopTasks(tids, rets);
 }
 
-int32_t RequestManager::ResumeTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestManager::ResumeTasks(
+    const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
 {
     return RequestManagerImpl::GetInstance()->ResumeTasks(tids, rets);
 }
 
-int32_t RequestManager::RemoveTasks(
-    const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestManager::RemoveTasks(
+    const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets)
 {
     return RequestManagerImpl::GetInstance()->RemoveTasks(tids, version, rets);
 }
 
-int32_t RequestManager::PauseTasks(
-    const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestManager::PauseTasks(
+    const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets)
 {
     return RequestManagerImpl::GetInstance()->PauseTasks(tids, version, rets);
 }
 
-int32_t RequestManager::ShowTasks(
-    const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+ExceptionErrorCode RequestManager::ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets)
 {
     return RequestManagerImpl::GetInstance()->ShowTasks(tids, rets);
 }
 
-int32_t RequestManager::TouchTasks(
-    const std::vector<std::pair<std::string, std::string>> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+ExceptionErrorCode RequestManager::TouchTasks(
+    const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets)
 {
-    return RequestManagerImpl::GetInstance()->TouchTasks(tids, rets);
+    return RequestManagerImpl::GetInstance()->TouchTasks(tidTokens, rets);
 }
 
 int32_t RequestManager::Create(const Config &config, int32_t seq, std::string &tid)

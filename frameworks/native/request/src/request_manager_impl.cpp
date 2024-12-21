@@ -29,6 +29,7 @@
 #include "rdb_open_callback.h"
 #include "rdb_predicates.h"
 #include "rdb_store.h"
+#include "request_common.h"
 #include "request_manager.h"
 #include "request_running_task_count.h"
 #include "request_service_interface.h"
@@ -45,49 +46,51 @@ const std::unique_ptr<RequestManagerImpl> &RequestManagerImpl::GetInstance()
     return instance;
 }
 
-int32_t RequestManagerImpl::StartTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestManagerImpl::StartTasks(
+    const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
 {
-    return CallProxyMethod(&RequestServiceInterface::StartTasks, tids, rets);
+    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::StartTasks, tids, rets));
 }
 
-int32_t RequestManagerImpl::StopTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestManagerImpl::StopTasks(
+    const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
 {
-    return CallProxyMethod(&RequestServiceInterface::StopTasks, tids, rets);
+    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::StopTasks, tids, rets));
 }
 
-int32_t RequestManagerImpl::ResumeTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestManagerImpl::ResumeTasks(
+    const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
 {
-    return CallProxyMethod(&RequestServiceInterface::ResumeTasks, tids, rets);
+    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::ResumeTasks, tids, rets));
 }
 
-int32_t RequestManagerImpl::RemoveTasks(
-    const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestManagerImpl::RemoveTasks(
+    const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets)
 {
-    return CallProxyMethod(&RequestServiceInterface::RemoveTasks, tids, version, rets);
+    return static_cast<ExceptionErrorCode>(
+        CallProxyMethod(&RequestServiceInterface::RemoveTasks, tids, version, rets));
 }
 
-int32_t RequestManagerImpl::PauseTasks(
-    const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestManagerImpl::PauseTasks(
+    const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets)
 {
-    return CallProxyMethod(&RequestServiceInterface::PauseTasks, tids, version, rets);
+    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::PauseTasks, tids, version, rets));
 }
 
-int32_t RequestManagerImpl::QueryTasks(
-    const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+ExceptionErrorCode RequestManagerImpl::QueryTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets)
 {
-    return CallProxyMethod(&RequestServiceInterface::QueryTasks, tids, rets);
+    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::QueryTasks, tids, rets));
 }
 
-int32_t RequestManagerImpl::ShowTasks(
-    const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+ExceptionErrorCode RequestManagerImpl::ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets)
 {
-    return CallProxyMethod(&RequestServiceInterface::ShowTasks, tids, rets);
+    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::ShowTasks, tids, rets));
 }
 
-int32_t RequestManagerImpl::TouchTasks(
-    const std::vector<std::pair<std::string, std::string>> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+ExceptionErrorCode RequestManagerImpl::TouchTasks(
+    const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets)
 {
-    return CallProxyMethod(&RequestServiceInterface::TouchTasks, tids, rets);
+    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::TouchTasks, tidTokens, rets));
 }
 
 int32_t RequestManagerImpl::Create(const Config &config, int32_t seq, std::string &tid)

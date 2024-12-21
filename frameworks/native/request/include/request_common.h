@@ -251,6 +251,16 @@ struct TaskInfo {
     std::vector<TaskState> taskStates;
 };
 
+struct TaskInfoRet {
+    ExceptionErrorCode code;
+    TaskInfo info;
+};
+
+struct TaskIdAndToken {
+    std::string tid;
+    std::string token;
+};
+
 struct Filter {
     std::string bundle;
     int64_t before;

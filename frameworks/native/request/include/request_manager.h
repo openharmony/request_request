@@ -26,17 +26,19 @@ namespace OHOS::Request {
 class RequestManager {
 public:
     REQUEST_API static const std::unique_ptr<RequestManager> &GetInstance();
-    REQUEST_API int32_t StartTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
-    REQUEST_API int32_t StopTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
-    REQUEST_API int32_t ResumeTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
-    REQUEST_API int32_t RemoveTasks(
-        const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets);
-    REQUEST_API int32_t PauseTasks(
-        const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets);
-    REQUEST_API int32_t ShowTasks(
-        const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets);
-    REQUEST_API int32_t TouchTasks(const std::vector<std::pair<std::string, std::string>> &tids,
-        std::vector<std::pair<int32_t, TaskInfo>> &rets);
+    REQUEST_API ExceptionErrorCode StartTasks(
+        const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets);
+    REQUEST_API ExceptionErrorCode StopTasks(
+        const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets);
+    REQUEST_API ExceptionErrorCode ResumeTasks(
+        const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets);
+    REQUEST_API ExceptionErrorCode RemoveTasks(
+        const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets);
+    REQUEST_API ExceptionErrorCode PauseTasks(
+        const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets);
+    REQUEST_API ExceptionErrorCode ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets);
+    REQUEST_API ExceptionErrorCode TouchTasks(
+        const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets);
 
     REQUEST_API int32_t Create(const Config &config, int32_t seq, std::string &tid);
     REQUEST_API int32_t GetTask(const std::string &tid, const std::string &token, Config &config);

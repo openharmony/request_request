@@ -30,19 +30,21 @@ public:
     ~RequestServiceProxy() = default;
     DISALLOW_COPY_AND_MOVE(RequestServiceProxy);
 
-    int32_t StartTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets) override;
-    int32_t StopTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets) override;
-    int32_t ResumeTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets) override;
+    ExceptionErrorCode StartTasks(
+        const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets) override;
+    ExceptionErrorCode StopTasks(const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets) override;
+    ExceptionErrorCode ResumeTasks(
+        const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets) override;
 
-    int32_t PauseTasks(
-        const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets) override;
-    int32_t RemoveTasks(
-        const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets) override;
+    ExceptionErrorCode PauseTasks(
+        const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets) override;
+    ExceptionErrorCode RemoveTasks(
+        const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets) override;
 
-    int32_t QueryTasks(const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets) override;
-    int32_t ShowTasks(const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets) override;
-    int32_t TouchTasks(const std::vector<std::pair<std::string, std::string>> &tids,
-        std::vector<std::pair<int32_t, TaskInfo>> &rets) override;
+    ExceptionErrorCode QueryTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets) override;
+    ExceptionErrorCode ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets) override;
+    ExceptionErrorCode TouchTasks(
+        const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets) override;
 
     int32_t Create(const Config &config, std::string &tid) override;
     int32_t GetTask(const std::string &tid, const std::string &token, Config &config) override;

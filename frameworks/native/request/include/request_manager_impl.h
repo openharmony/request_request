@@ -26,7 +26,6 @@
 #include "i_response_message_handler.h"
 #include "iremote_object.h"
 #include "iservice_registry.h"
-#include "request_common.h"
 #include "log.h"
 #include "refbase.h"
 #include "request.h"
@@ -44,15 +43,16 @@ constexpr int REMOTE_DIED_ERROR = 29189;
 class RequestManagerImpl : public IResponseMessageHandler {
 public:
     static const std::unique_ptr<RequestManagerImpl> &GetInstance();
-    int32_t StartTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
-    int32_t StopTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
-    int32_t ResumeTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
-    int32_t RemoveTasks(const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets);
-    int32_t PauseTasks(const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets);
-    int32_t QueryTasks(const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets);
-    int32_t ShowTasks(const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets);
-    int32_t TouchTasks(const std::vector<std::pair<std::string, std::string>> &tids,
-        std::vector<std::pair<int32_t, TaskInfo>> &rets);
+    ExceptionErrorCode StartTasks(const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets);
+    ExceptionErrorCode StopTasks(const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets);
+    ExceptionErrorCode ResumeTasks(const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets);
+    ExceptionErrorCode RemoveTasks(
+        const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets);
+    ExceptionErrorCode PauseTasks(
+        const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets);
+    ExceptionErrorCode QueryTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets);
+    ExceptionErrorCode ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets);
+    ExceptionErrorCode TouchTasks(const std::vector<TaskIdAndToken> &tids, std::vector<TaskInfoRet> &rets);
 
     int32_t Create(const Config &config, int32_t seq, std::string &tid);
     int32_t GetTask(const std::string &tid, const std::string &token, Config &config);

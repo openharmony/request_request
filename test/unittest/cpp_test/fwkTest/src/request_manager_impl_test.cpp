@@ -41,21 +41,24 @@ using namespace OHOS::Request;
 
 class MockRequestServiceInterface : public RequestServiceInterface {
 public:
-    MOCK_METHOD(int32_t, StartTasks, (const std::vector<std::string> &tids, std::vector<int32_t> &rets), (override));
-    MOCK_METHOD(int32_t, StopTasks, (const std::vector<std::string> &tids, std::vector<int32_t> &rets), (override));
-    MOCK_METHOD(int32_t, ResumeTasks, (const std::vector<std::string> &tids, std::vector<int32_t> &rets), (override));
-    MOCK_METHOD(int32_t, RemoveTasks,
-        (const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets), (override));
-    MOCK_METHOD(int32_t, PauseTasks,
-        (const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets), (override));
-    MOCK_METHOD(int32_t, QueryTasks,
-        (const std::vector<std::string> &tids, (std::vector<std::pair<int32_t, TaskInfo>> & rets)), (override));
-    MOCK_METHOD(int32_t, ShowTasks,
-        (const std::vector<std::string> &tids, (std::vector<std::pair<int32_t, TaskInfo>> & rets)), (override));
-    MOCK_METHOD(int32_t, TouchTasks,
-        ((const std::vector<std::pair<std::string, std::string>> &tids),
-            (std::vector<std::pair<int32_t, TaskInfo>> & rets)),
+    MOCK_METHOD(ExceptionErrorCode, StartTasks,
+        (const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets), (override));
+    MOCK_METHOD(ExceptionErrorCode, StopTasks,
+        (const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets), (override));
+    MOCK_METHOD(ExceptionErrorCode, ResumeTasks,
+        (const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets), (override));
+    MOCK_METHOD(ExceptionErrorCode, RemoveTasks,
+        (const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets),
         (override));
+    MOCK_METHOD(ExceptionErrorCode, PauseTasks,
+        (const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets),
+        (override));
+    MOCK_METHOD(ExceptionErrorCode, QueryTasks,
+        (const std::vector<std::string> &tids, (std::vector<TaskInfoRet> & rets)), (override));
+    MOCK_METHOD(ExceptionErrorCode, ShowTasks,
+        (const std::vector<std::string> &tids, (std::vector<TaskInfoRet> & rets)), (override));
+    MOCK_METHOD(ExceptionErrorCode, TouchTasks,
+        ((const std::vector<TaskIdAndToken> &tidTokens), (std::vector<TaskInfoRet> & rets)), (override));
 
     MOCK_METHOD(int32_t, Create, (const Config &config, std::string &taskId), (override));
     MOCK_METHOD(int32_t, GetTask, (const std::string &tid, const std::string &token, Config &config), (override));
