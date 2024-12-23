@@ -179,8 +179,7 @@ ExceptionErrorCode RequestServiceProxy::RemoveTasks(
     return ExceptionErrorCode::E_OK;
 }
 
-ExceptionErrorCode RequestServiceProxy::QueryTasks(
-    const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets)
+ExceptionErrorCode RequestServiceProxy::QueryTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets)
 {
     TaskInfoRet infoRet{ .code = ExceptionErrorCode::E_OTHER };
     uint32_t len = static_cast<uint32_t>(tids.size());
@@ -706,13 +705,13 @@ int32_t RequestServiceProxy::CreateGroup(
     return E_OK;
 }
 
-int32_t RequestServiceProxy::AttachGroup(const std::string &gid, const std::string &tid)
+int32_t RequestServiceProxy::AttachGroup(const std::string &gid, const std::vector<std::string> &tids)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(gid);
-    data.WriteString(tid);
+    data.WriteStringVector(tids);
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_ATTACH_GROUP), data, reply, option);
     if (ret != ERR_NONE) {

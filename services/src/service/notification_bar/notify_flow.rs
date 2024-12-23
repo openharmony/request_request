@@ -479,3 +479,118 @@ impl NotifyFlow {
     }
 }
 
+#[cfg(test)]
+mod test {
+
+    use ylong_runtime::fastrand::fast_random;
+
+    use super::*;
+
+    const TEST_TITLE: &str = "gold";
+    const TEST_TEXT: &str = "难说";
+
+    #[test]
+    fn ut_notify_flow_group() {
+        let mut group_progress = GroupProgress::new();
+
+        for i in 0..100 {
+            group_progress.update_task_state(i, State::Running);
+        }
+        assert_eq!(group_progress.successful(), 0);
+        assert_eq!(group_progress.failed(), 0);
+        assert_eq!(group_progress.total(), 100);
+
+        for i in 0..100 {
+            group_progress.update_task_progress(i, 100);
+            if i % 2 == 0 {
+                group_progress.update_task_state(i, State::Completed);
+            } else {
+                group_progress.update_task_state(i, State::Failed);
+            }
+        }
+        assert_eq!(group_progress.processed(), 100 * 100);
+        assert_eq!(group_progress.successful(), 50);
+        assert_eq!(group_progress.failed(), 50);
+        assert_eq!(group_progress.total(), 100);
+        for i in 0..100 {
+            group_progress.update_task_progress(i, 150);
+            group_progress.update_task_state(i, State::Completed);
+        }
+        assert_eq!(group_progress.processed(), 100 * 150);
+        assert_eq!(group_progress.successful(), 100);
+        assert_eq!(group_progress.failed(), 0);
+        assert_eq!(group_progress.total(), 100);
+    }
+
+    #[test]
+    fn ut_notify_flow_task_progress() {
+        let (_, rx) = mpsc::unbounded_channel();
+        let db = Arc::new(NotificationDb::new());
+        let mut flow = NotifyFlow::new(rx, db);
+        let task_id = fast_random() as u32;
+        let uid = fast_random();
+        let progress = ProgressNotify {
+            action: Action::Download,
+            task_id,
+            uid,
+            processed: 0,
+            total: Some(100),
+            multi_upload: None,
+            file_name: "test".to_string(),
+        };
+        let content_default = NotifyContent::default_task_progress_notify(&progress);
+        let content = flow
+            .publish_progress_notification(progress.clone())
+            .unwrap();
+        assert_eq!(content, content_default);
+
+        flow.database
+            .update_task_customized_notification(task_id, TEST_TITLE, TEST_TEXT);
+        let content_customized = NotifyContent::customized_notify(
+            task_id,
+            uid as u32,
+            TEST_TITLE.to_string(),
+            TEST_TEXT.to_string(),
+            true,
+        );
+        let content = flow.publish_progress_notification(progress).unwrap();
+        assert_eq!(content, content_customized);
+    }
+
+    #[test]
+    fn ut_notify_flow_task_eventual() {
+        let (_, rx) = mpsc::unbounded_channel();
+        let db = Arc::new(NotificationDb::new());
+        let mut flow = NotifyFlow::new(rx, db);
+        let task_id = fast_random() as u32;
+        let uid = fast_random();
+        let info = EventualNotify {
+            action: Action::Download,
+            task_id,
+            uid,
+            file_name: "test".to_string(),
+            is_successful: true,
+        };
+        let content_default = NotifyContent::default_task_eventual_notify(
+            info.action,
+            info.task_id,
+            info.uid as u32,
+            info.file_name.clone(),
+            info.is_successful,
+        );
+        let content = flow.publish_completed_notify(&info).unwrap();
+        assert_eq!(content, content_default);
+
+        flow.database
+            .update_task_customized_notification(task_id, TEST_TITLE, TEST_TEXT);
+        let content_customized = NotifyContent::customized_notify(
+            task_id,
+            uid as u32,
+            TEST_TITLE.to_string(),
+            TEST_TEXT.to_string(),
+            false,
+        );
+        let content = flow.publish_completed_notify(&info).unwrap();
+        assert_eq!(content, content_customized);
+    }
+}

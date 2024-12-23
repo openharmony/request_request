@@ -68,7 +68,7 @@ public:
 
     int32_t CreateGroup(std::string &gid, const bool gauge, const bool customized, const std::string &title,
         const std::string &text) override;
-    int32_t AttachGroup(const std::string &gid, const std::string &tid) override;
+    int32_t AttachGroup(const std::string &gid, const std::vector<std::string> &tids) override;
     int32_t DeleteGroup(const std::string &gid) override;
 
 private:
