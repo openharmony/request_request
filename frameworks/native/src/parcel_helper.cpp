@@ -269,7 +269,6 @@ bool ParcelHelper::UnMarshalConfigBodyFileName(MessageParcel &data, Config &conf
     }
     for (uint32_t i = 0; i < size; i++) {
         std::string name = data.ReadString();
-        config.bodyFds.push_back(0);
         config.bodyFileNames.push_back(name);
     }
     return true;
