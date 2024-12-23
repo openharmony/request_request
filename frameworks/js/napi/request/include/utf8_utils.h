@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef UTF8_UTILS_H
-#define UTF8_UTILS_H
+#ifndef REQUEST_UTF8_UTILS_H
+#define REQUEST_UTF8_UTILS_H
 
 #include <cstdint>
 #include <vector>

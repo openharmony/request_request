@@ -182,6 +182,20 @@ int32_t RequestManagerImpl::Resume(const std::string &tid)
     return CallProxyMethod(&RequestServiceInterface::Resume, tid);
 }
 
+int32_t RequestManagerImpl::CreateGroup(
+    std::string &gid, const bool gauge, const bool customized, const std::string &title, const std::string &text)
+{
+    return CallProxyMethod(&RequestServiceInterface::CreateGroup, gid, gauge, customized, title, text);
+}
+int32_t RequestManagerImpl::AttachGroup(const std::string &gid, const std::string &tid)
+{
+    return CallProxyMethod(&RequestServiceInterface::AttachGroup, gid, tid);
+}
+int32_t RequestManagerImpl::DeleteGroup(const std::string &gid)
+{
+    return CallProxyMethod(&RequestServiceInterface::DeleteGroup, gid);
+}
+
 int32_t RequestManagerImpl::AddListener(
     const std::string &taskId, const SubscribeType &type, const std::shared_ptr<IResponseListener> &listener)
 {

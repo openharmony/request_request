@@ -120,6 +120,14 @@ impl TaskManagerEvent {
             Recv::new(rx),
         )
     }
+
+    pub(crate) fn attach_group(task_id: u32, group_id: u32) -> (Self, Recv<ErrorCode>) {
+        let (tx, rx) = channel::<ErrorCode>();
+        (
+            Self::Service(ServiceEvent::AttachGroup(task_id, group_id, tx)),
+            Recv::new(rx),
+        )
+    }
 }
 
 #[derive(Debug)]
@@ -138,6 +146,7 @@ pub(crate) enum ServiceEvent {
     Resume(u64, u32, Sender<ErrorCode>),
     DumpOne(u32, Sender<Option<DumpOneInfo>>),
     DumpAll(Sender<DumpAllInfo>),
+    AttachGroup(u32, u32, Sender<ErrorCode>),
 }
 
 #[derive(Debug)]
@@ -207,6 +216,11 @@ impl Debug for ServiceEvent {
             Self::DumpOne(task_id, _) => {
                 f.debug_struct("DumpOne").field("task_id", task_id).finish()
             }
+            Self::AttachGroup(task_id, group_id, _) => f
+                .debug_struct("AttachGroup")
+                .field("task_id", task_id)
+                .field("group_id", group_id)
+                .finish(),
 
             Self::DumpAll(_) => f.debug_struct("DumpAll").finish(),
         }

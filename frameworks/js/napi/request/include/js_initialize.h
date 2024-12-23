@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef JS_INITIALIZE_H
-#define JS_INITIALIZE_H
+#ifndef REQUEST_JS_INITIALIZE_H
+#define REQUEST_JS_INITIALIZE_H
 
 #include "ability.h"
 #include "data_ability_helper.h"

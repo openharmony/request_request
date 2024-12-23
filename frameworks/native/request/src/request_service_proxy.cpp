@@ -686,4 +686,63 @@ int32_t RequestServiceProxy::UnsubRunCount()
     return E_OK;
 }
 
+int32_t RequestServiceProxy::CreateGroup(
+    std::string &gid, const bool gauge, const bool customized, const std::string &title, const std::string &text)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteBool(gauge);
+    data.WriteBool(customized);
+    data.WriteString(title);
+    data.WriteString(text);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_CREATE_GROUP), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("End Request AttachGroup, failed: %{public}d", ret);
+        return E_SERVICE_ERROR;
+    }
+    gid = reply.ReadString();
+    return E_OK;
+}
+
+int32_t RequestServiceProxy::AttachGroup(const std::string &gid, const std::string &tid)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(gid);
+    data.WriteString(tid);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_ATTACH_GROUP), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("End Request AttachGroup, failed: %{public}d", ret);
+        return E_SERVICE_ERROR;
+    }
+    int code = reply.ReadInt32();
+    if (code != E_OK) {
+        REQUEST_HILOGE("End Request AttachGroup, failed: %{public}d", code);
+    }
+    return code;
+}
+
+int32_t RequestServiceProxy::DeleteGroup(const std::string &gid)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(gid);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_DELETE_GROUP), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("End Request AttachGroup, failed: %{public}d", ret);
+        return E_SERVICE_ERROR;
+    }
+    int code = reply.ReadInt32();
+    if (code != E_OK) {
+        REQUEST_HILOGE("End Request AttachGroup, failed: %{public}d", code);
+    }
+    return code;
+}
+
 } // namespace OHOS::Request

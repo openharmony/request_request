@@ -74,6 +74,11 @@ public:
     REQUEST_API bool UnsubscribeSA();
     REQUEST_API int32_t GetNextSeq();
 
+    REQUEST_API int32_t CreateGroup(
+        std::string &gid, const bool gauge, const bool customized, const std::string &title, const std::string &text);
+    REQUEST_API int32_t AttachGroup(const std::string &gid, const std::string &tid);
+    REQUEST_API int32_t DeleteGroup(const std::string &gid);
+
 private:
     RequestManager() = default;
     RequestManager(const RequestManager &) = delete;

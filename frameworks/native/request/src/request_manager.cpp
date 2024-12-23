@@ -198,4 +198,18 @@ int32_t RequestManager::GetNextSeq()
     return RequestManagerImpl::GetInstance()->GetNextSeq();
 }
 
+int32_t RequestManager::CreateGroup(
+    std::string &gid, const bool gauge, const bool customized, const std::string &title, const std::string &text)
+{
+    return RequestManagerImpl::GetInstance()->CreateGroup(gid, gauge, customized, title, text);
+}
+int32_t RequestManager::AttachGroup(const std::string &gid, const std::string &tid)
+{
+    return RequestManagerImpl::GetInstance()->AttachGroup(gid, tid);
+}
+int32_t RequestManager::DeleteGroup(const std::string &gid)
+{
+    return RequestManagerImpl::GetInstance()->DeleteGroup(gid);
+}
+
 } // namespace OHOS::Request

@@ -102,6 +102,9 @@ impl RemoteStub for RequestServiceStub {
             interface::UNSUBSCRIBE => self.unsubscribe(data, reply),
             interface::SUB_RUN_COUNT => self.subscribe_run_count(data, reply),
             interface::UNSUB_RUN_COUNT => self.unsubscribe_run_count(reply),
+            interface::CREATE_GROUP => self.create_group(data, reply),
+            interface::ATTACH_GROUP => self.attach_group(data, reply),
+            interface::DELETE_GROUP => self.delete_group(data, reply),
             _ => return IpcStatusCode::Failed as i32,
         };
 

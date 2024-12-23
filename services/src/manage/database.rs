@@ -148,7 +148,6 @@ impl RequestDb {
             task_id
         );
         let v = self.query_integer::<u32>(&sql);
-
         if v.is_empty() {
             error!("contains_task check failed, empty result");
             false
@@ -339,6 +338,21 @@ impl RequestDb {
         let task_info = TaskInfo::from_c_struct(c_task_info);
         unsafe { DeleteCTaskInfo(c_task_info) };
         Some(task_info)
+    }
+
+    pub(crate) fn query_task_total_processed(&self, task_id: u32) -> Option<i64> {
+        let sql = format!(
+            "SELECT total_processed FROM request_task WHERE task_id = {}",
+            task_id
+        );
+        self.query_integer(&sql).first().copied()
+    }
+
+    pub(crate) fn query_task_state(&self, task_id: u32) -> Option<u8> {
+        let sql = format!("SELECT state FROM request_task WHERE task_id = {}", task_id);
+        self.query_integer(&sql)
+            .first()
+            .map(|state: &i32| *state as u8)
     }
 
     #[cfg(not(feature = "oh"))]

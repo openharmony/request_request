@@ -29,7 +29,6 @@ macro_rules! cfg_not_oh {
     }
 }
 
-#[cfg(not(feature = "oh"))]
 macro_rules! cvt_res_error {
     ($res: expr, $($args:tt)*) => {{
         match $res {
