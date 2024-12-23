@@ -17,6 +17,7 @@
 
 #include "cj_application_context.h"
 #include "cj_request_task.h"
+#include "ffrt.h"
 #include "log.h"
 #include "request_common.h"
 #include "request_manager.h"
@@ -32,7 +33,7 @@ void CJAppStateCallback::OnAbilityForeground(const int64_t &ability)
     }
     for (auto task = CJRequestTask::taskMap_.begin(); task != CJRequestTask::taskMap_.end(); ++task) {
         if (task->second->config_.mode == Mode::FOREGROUND) {
-            RequestManager::GetInstance()->LoadRequestServer();
+            ffrt::submit([]() mutable { RequestManager::GetInstance()->LoadRequestServer(); });
             return;
         }
     }

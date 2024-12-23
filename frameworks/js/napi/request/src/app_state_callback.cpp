@@ -15,6 +15,7 @@
 
 #include "app_state_callback.h"
 
+#include "ffrt.h"
 #include "js_task.h"
 #include "log.h"
 #include "request_manager.h"
@@ -37,7 +38,7 @@ void AppStateCallback::OnAbilityForeground(const std::shared_ptr<NativeReference
         }
     }
     if (hasForeground) {
-        RequestManager::GetInstance()->LoadRequestServer();
+        ffrt::submit([]() mutable { RequestManager::GetInstance()->LoadRequestServer(); });
         return;
     }
     if (!JsTask::register_) {
