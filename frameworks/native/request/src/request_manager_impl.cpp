@@ -67,8 +67,7 @@ ExceptionErrorCode RequestManagerImpl::ResumeTasks(
 ExceptionErrorCode RequestManagerImpl::RemoveTasks(
     const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets)
 {
-    return static_cast<ExceptionErrorCode>(
-        CallProxyMethod(&RequestServiceInterface::RemoveTasks, tids, version, rets));
+    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::RemoveTasks, tids, version, rets));
 }
 
 ExceptionErrorCode RequestManagerImpl::PauseTasks(
@@ -187,9 +186,9 @@ int32_t RequestManagerImpl::CreateGroup(
 {
     return CallProxyMethod(&RequestServiceInterface::CreateGroup, gid, gauge, customized, title, text);
 }
-int32_t RequestManagerImpl::AttachGroup(const std::string &gid, const std::string &tid)
+int32_t RequestManagerImpl::AttachGroup(const std::string &gid, const std::vector<std::string> &tids)
 {
-    return CallProxyMethod(&RequestServiceInterface::AttachGroup, gid, tid);
+    return CallProxyMethod(&RequestServiceInterface::AttachGroup, gid, tids);
 }
 int32_t RequestManagerImpl::DeleteGroup(const std::string &gid)
 {

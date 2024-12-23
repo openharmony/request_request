@@ -240,3 +240,76 @@ impl NotificationDb {
         set.next().unwrap_or(false)
     }
 }
+#[cfg(test)]
+mod test {
+    use ylong_runtime::fastrand::fast_random;
+
+    use super::*;
+    const TEST_TITLE: &str = "田文镜";
+    const TEST_TEXT: &str = "我XXX";
+    #[test]
+    fn ut_notify_database_query_tasks() {
+        let db = NotificationDb::new();
+        let group_id = fast_random() as u32;
+        let mut v = vec![];
+        for _ in 0..100 {
+            let task_id = fast_random() as u32;
+            v.push(task_id);
+            db.update_task_group(task_id, group_id);
+        }
+        v.sort();
+        let mut ans = db.query_group_tasks(group_id);
+        ans.sort();
+        assert_eq!(v, ans);
+    }
+
+    #[test]
+    fn ut_notify_database_query_task_gid() {
+        let db = NotificationDb::new();
+        let group_id = fast_random() as u32;
+
+        for _ in 0..100 {
+            let task_id = fast_random() as u32;
+            db.update_task_group(task_id, group_id);
+            assert_eq!(db.query_task_gid(task_id).unwrap(), group_id);
+        }
+    }
+
+    #[test]
+    fn ut_notify_database_query_task_customized() {
+        let db = NotificationDb::new();
+        let task_id = fast_random() as u32;
+
+        db.update_task_customized_notification(task_id, TEST_TITLE, TEST_TEXT);
+        let customized = db.query_task_customized_notification(task_id).unwrap();
+        assert_eq!(customized.title, TEST_TITLE);
+        assert_eq!(customized.text, TEST_TEXT);
+    }
+
+    #[test]
+    fn ut_notify_database_query_group_customized() {
+        let db = NotificationDb::new();
+        let group_id = fast_random() as u32;
+
+        db.update_group_customized_notification(group_id, TEST_TITLE, TEST_TEXT);
+        let customized = db.query_group_customized_notification(group_id).unwrap();
+        assert_eq!(customized.title, TEST_TITLE);
+        assert_eq!(customized.text, TEST_TEXT);
+    }
+
+    #[test]
+    fn ut_notify_database_group_config() {
+        let db = NotificationDb::new();
+        let group_id = fast_random() as u32;
+
+        assert!(!db.contains_group(group_id));
+        db.update_group_config(group_id, true);
+        assert!(db.contains_group(group_id));
+        assert!(db.is_gauge(group_id));
+        assert!(db.attach_able(group_id));
+        db.update_group_config(group_id, false);
+        db.disable_attach_group(group_id);
+        assert!(!db.attach_able(group_id));
+        assert!(!db.is_gauge(group_id));
+    }
+}

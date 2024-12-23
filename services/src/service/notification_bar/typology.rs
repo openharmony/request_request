@@ -216,3 +216,148 @@ impl ProgressCircle {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::info::State;
+    const EXAMPLE_FILE: &str = "2024_12_10_15_56";
+    const TASK_ID: u32 = 2024;
+    const UID: u32 = 12;
+    const GROUP_ID: u32 = 20;
+    #[test]
+    fn ut_notify_typology_default_task_eventual() {
+        let content = NotifyContent::default_task_eventual_notify(
+            Action::Download,
+            TASK_ID,
+            UID,
+            EXAMPLE_FILE.to_string(),
+            false,
+        );
+        assert_eq!(content.title, "下载失败");
+        assert_eq!(content.text, EXAMPLE_FILE);
+        assert_eq!(content.live_view, false);
+        assert_eq!(content.progress_circle.open, false);
+        assert_eq!(content.x_mark, false);
+        assert_eq!(content.request_id, TASK_ID);
+        assert_eq!(content.uid, UID);
+
+        let content = NotifyContent::default_task_eventual_notify(
+            Action::Download,
+            0,
+            0,
+            EXAMPLE_FILE.to_string(),
+            true,
+        );
+        assert_eq!(content.title, "下载成功");
+        assert_eq!(content.text, EXAMPLE_FILE);
+
+        let content = NotifyContent::default_task_eventual_notify(
+            Action::Upload,
+            0,
+            0,
+            EXAMPLE_FILE.to_string(),
+            false,
+        );
+        assert_eq!(content.title, "上传失败");
+        assert_eq!(content.text, EXAMPLE_FILE);
+
+        let content = NotifyContent::default_task_eventual_notify(
+            Action::Upload,
+            0,
+            0,
+            EXAMPLE_FILE.to_string(),
+            true,
+        );
+
+        assert_eq!(content.title, "上传成功");
+        assert_eq!(content.text, EXAMPLE_FILE);
+    }
+
+    #[test]
+    fn ut_notify_typology_default_progress() {
+        let mut progress_info = ProgressNotify {
+            action: Action::Download,
+            task_id: TASK_ID,
+            uid: UID as u64,
+            file_name: EXAMPLE_FILE.to_string(),
+            processed: 1,
+            total: Some(10),
+            multi_upload: None,
+        };
+        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        assert_eq!(content.title, "下载文件 10.00%");
+        assert_eq!(content.text, EXAMPLE_FILE);
+        assert_eq!(content.live_view, true);
+        assert_eq!(content.progress_circle.open, true);
+        assert_eq!(content.x_mark, true);
+        assert_eq!(content.request_id, TASK_ID);
+
+        progress_info.processed = 1001;
+        progress_info.total = Some(10000);
+        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        assert_eq!(content.title, "下载文件 10.01%");
+
+        progress_info.processed = 1010;
+        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        assert_eq!(content.title, "下载文件 10.10%");
+
+        progress_info.processed = 1;
+        progress_info.total = None;
+        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        assert_eq!(content.title, "下载文件 1B");
+
+        progress_info.processed = 1024;
+
+        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        assert_eq!(content.title, "下载文件 1.00KB");
+
+        progress_info.processed = 1024 * 1024;
+        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        assert_eq!(content.title, "下载文件 1.00MB");
+
+        progress_info.processed = 1024 * 1024 * 1024;
+        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        assert_eq!(content.title, "下载文件 1.00GB");
+
+        progress_info.action = Action::Upload;
+        progress_info.processed = 1;
+        progress_info.total = Some(10);
+        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        assert_eq!(content.title, "上传文件 10.00%");
+
+        progress_info.multi_upload = Some((1, 10));
+        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        assert_eq!(content.title, "上传文件 1/10");
+    }
+
+    #[test]
+    fn ut_notify_typology_default_group_progress() {
+        let mut group_info = GroupProgress::new();
+        group_info.update_task_state(1, State::Completed);
+        group_info.update_task_progress(1, 100);
+        let content = NotifyContent::default_group_progress_notify(
+            Action::Download,
+            GROUP_ID,
+            UID,
+            &group_info,
+        );
+        assert_eq!(content.title, "下载文件 100B");
+        assert_eq!(content.text, "成功 1 个, 失败 0 个");
+
+        for i in 1..4 {
+            group_info.update_task_state(i, State::Failed);
+        }
+        for i in 2..5 {
+            group_info.update_task_state(i, State::Completed);
+        }
+        let content = NotifyContent::default_group_progress_notify(
+            Action::Download,
+            GROUP_ID,
+            UID,
+            &group_info,
+        );
+        assert_eq!(content.title, "下载文件 100B");
+        assert_eq!(content.text, "成功 3 个, 失败 1 个");
+    }
+}

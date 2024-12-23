@@ -17,8 +17,11 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "async_call.h"
+#include "js_native_api_types.h"
+#include "log.h"
 #include "napi/native_node_api.h"
 #include "napi_utils.h"
 #include "request_manager.h"
@@ -107,24 +110,36 @@ napi_value createGroup(napi_env env, napi_callback_info info)
 
 struct AttachContext : public AsyncCall::Context {
     std::string gid;
-    std::string tid;
+    std::vector<std::string> tids;
 };
 
 napi_value attachGroup(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<AttachContext>();
+    context->withErrCode_ = true;
     auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
         if (argc != 2) {
             NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
             return napi_invalid_arg;
         }
         if (NapiUtils::GetValueType(context->env_, argv[0]) != napi_string
-            || NapiUtils::GetValueType(context->env_, argv[1]) != napi_string) {
+            || NapiUtils::GetValueType(context->env_, argv[1]) != napi_object) {
             NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
             return napi_invalid_arg;
         }
         context->gid = NapiUtils::Convert2String(context->env_, argv[0]);
-        context->tid = NapiUtils::Convert2String(context->env_, argv[1]);
+        uint32_t length = 0;
+        napi_get_array_length(context->env_, argv[1], &length);
+        for (uint32_t index = 0; index < length; ++index) {
+            napi_value name = nullptr;
+            if (napi_get_element(context->env_, argv[1], index, &name) != napi_ok) {
+                continue;
+            }
+            if (NapiUtils::GetValueType(context->env_, name) != napi_string) {
+                continue;
+            }
+            context->tids.emplace_back(NapiUtils::Convert2String(context->env_, name));
+        }
         return napi_ok;
     };
     auto output = [context](napi_value *result) -> napi_status {
@@ -134,7 +149,7 @@ napi_value attachGroup(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto exec = [context]() {
-        context->innerCode_ = RequestManager::GetInstance()->AttachGroup(context->gid, context->tid);
+        context->innerCode_ = RequestManager::GetInstance()->AttachGroup(context->gid, context->tids);
     };
     context->SetInput(input).SetOutput(output).SetExec(exec);
     AsyncCall asyncCall(env, info, context);
@@ -148,6 +163,7 @@ struct DeleteContext : public AsyncCall::Context {
 napi_value deleteGroup(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<DeleteContext>();
+    context->withErrCode_ = true;
     auto input = [context](size_t argc, napi_value *argv, napi_value self) -> napi_status {
         if (argc != 1) {
             NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);

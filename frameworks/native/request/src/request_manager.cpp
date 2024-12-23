@@ -15,6 +15,8 @@
 
 #include "request_manager.h"
 
+#include <vector>
+
 #include "request_common.h"
 #include "request_manager_impl.h"
 
@@ -203,9 +205,9 @@ int32_t RequestManager::CreateGroup(
 {
     return RequestManagerImpl::GetInstance()->CreateGroup(gid, gauge, customized, title, text);
 }
-int32_t RequestManager::AttachGroup(const std::string &gid, const std::string &tid)
+int32_t RequestManager::AttachGroup(const std::string &gid, const std::vector<std::string> &tids)
 {
-    return RequestManagerImpl::GetInstance()->AttachGroup(gid, tid);
+    return RequestManagerImpl::GetInstance()->AttachGroup(gid, tids);
 }
 int32_t RequestManager::DeleteGroup(const std::string &gid)
 {
