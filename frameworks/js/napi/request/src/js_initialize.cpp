@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 
 #include <algorithm>
+#include <cstdio>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -32,6 +33,7 @@
 #include "net_conn_client.h"
 #include "request_common.h"
 #include "request_manager.h"
+
 
 static constexpr const char *PARAM_KEY_DESCRIPTION = "description";
 static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";
@@ -204,27 +206,26 @@ bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &con
             error.errInfo = "Parameter verification failed, UploadBodyFiles error fail path";
             return false;
         }
-        int32_t bodyFd = open(path.c_str(), O_TRUNC | O_RDWR);
-        if (bodyFd < 0) {
-            bodyFd = open(path.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
-            if (bodyFd < 0) {
-                error.code = E_FILE_IO;
-                error.errInfo = "UploadBodyFiles failed to open file errno " + std::to_string(errno);
-                return false;
-            }
+        FILE *bodyFile = fopen(path.c_str(), "w+");
+        if (bodyFile == NULL) {
+            error.code = E_FILE_IO;
+            error.errInfo = "UploadBodyFiles failed to open file errno " + std::to_string(errno);
+            return false;
         }
-        if (bodyFd >= 0) {
-            int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-            if (ret != 0) {
-                REQUEST_HILOGE("body chmod fail: %{public}d", ret);
-            };
-        }
+        int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+        if (ret != 0) {
+            REQUEST_HILOGE("body chmod fail: %{public}d", ret);
+        };
+
         if (!JsTask::SetPathPermission(path)) {
             error.code = E_FILE_IO;
             error.errInfo = "UploadBodyFiles set body path permission fail";
             return false;
         }
-        config.bodyFds.push_back(bodyFd);
+        int32_t retClose = fclose(bodyFile);
+        if (retClose != 0) {
+            REQUEST_HILOGE("upload body fclose fail: %{public}d", ret);
+        }
         config.bodyFileNames.push_back(path);
     }
     return true;
@@ -246,82 +247,68 @@ bool JsInitialize::CheckPathIsFile(const std::string &path, ExceptionError &erro
     return true;
 }
 
-bool JsInitialize::GetFdDownload(const std::string &path, const Config &config, int32_t &fd, ExceptionError &error)
+bool JsInitialize::GetFdDownload(const std::string &path, const Config &config, ExceptionError &error)
 {
-    if (JsInitialize::FindDir(path) && config.action == Action::DOWNLOAD && config.firstInit && !config.overwrite) {
-        error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
-        error.errInfo = "GetFd File already exists";
+    // File is exist.
+    if (JsInitialize::FindDir(path)) {
+        if (config.firstInit && !config.overwrite) {
+            error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
+            error.errInfo = "GetFd File exists and other error";
+            return false;
+        }
+    }
+
+    FILE *file = NULL;
+    if (config.firstInit) {
+        file = fopen(path.c_str(), "w+");
+    } else {
+        file = fopen(path.c_str(), "a+");
+    }
+
+    if (file == NULL) {
+        error.code = E_FILE_IO;
+        error.errInfo = "GetFd failed to open file errno " + std::to_string(errno);
         return false;
     }
-    if (config.firstInit) {
-        fd = open(path.c_str(), O_TRUNC | O_RDWR);
-    } else {
-        fd = open(path.c_str(), O_APPEND | O_RDWR);
+
+    int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+    if (ret != 0) {
+        REQUEST_HILOGE("download file chmod fail: %{public}d", ret);
+    };
+
+    int32_t retClose = fclose(file);
+    if (retClose != 0) {
+        REQUEST_HILOGE("download fclose fail: %{public}d", ret);
     }
-    return JsInitialize::GetFdInner(path, config, fd, error);
+    return true;
 }
 
-bool JsInitialize::GetFdUpload(const std::string &path, const Config &config, int32_t &fd, ExceptionError &error)
+bool JsInitialize::GetFdUpload(const std::string &path, const Config &config, ExceptionError &error)
 {
     if (!JsInitialize::CheckPathIsFile(path, error)) {
         error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
         return false;
     }
-
-    fd = open(path.c_str(), O_RDONLY);
-    return JsInitialize::GetFdInner(path, config, fd, error);
-}
-
-bool JsInitialize::GetFdInner(const std::string &path, const Config &config, int32_t &fd, ExceptionError &error)
-{
-    if (fd >= 0) {
-        REQUEST_HILOGD("File already exists");
-        if (config.action == Action::UPLOAD) {
-            chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-            return true;
-        } else {
-            int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-            if (ret != 0) {
-                REQUEST_HILOGE("file chmod fail: %{public}d", ret);
-            };
-        }
-
-        if (config.version == Version::API10 && config.overwrite) {
-            return true;
-        }
-        if (!config.firstInit) {
-            REQUEST_HILOGD("Task config is not firstInit");
-            return true;
-        }
-        if (chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP) != 0) {
-            REQUEST_HILOGE("GetFd file chmod clear failed");
-        }
-        close(fd);
+    FILE *file = fopen(path.c_str(), "r");
+    if (file == NULL) {
         error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
-        error.errInfo = "GetFd File exists and other error";
+        error.errInfo = "GetFd failed to open file errno " + std::to_string(errno);
         return false;
-    } else {
-        if (config.action == Action::UPLOAD) {
-            error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
-            error.errInfo = "GetFd failed to open file errno " + std::to_string(errno);
-            return false;
-        }
-        fd = open(path.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
-        if (fd < 0) {
-            error.code = E_FILE_IO;
-            error.errInfo = "GetFd failed to open file errno " + std::to_string(errno);
-            return false;
-        }
-        int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-        if (ret != 0) {
-            REQUEST_HILOGE("new file chmod fail: %{public}d", ret);
-        };
+    }
+    REQUEST_HILOGD("upload file fopen ok");
+    int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    if (ret != 0) {
+        REQUEST_HILOGE("upload file chmod fail: %{public}d", ret);
+    }
+    int32_t retClose = fclose(file);
+    if (retClose != 0) {
+        REQUEST_HILOGE("upload fclose fail: %{public}d", ret);
     }
     return true;
 }
 
-bool JsInitialize::GetInternalPath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
-    std::string &path, std::string &errInfo)
+bool JsInitialize::GetInternalPath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
+    const Config &config, std::string &path, std::string &errInfo)
 {
     std::string fileName;
     std::string pattern = "internal://cache/";
@@ -693,7 +680,8 @@ std::string GetHostnameFromURL(const std::string &url)
     if (notSlash != std::string::npos) {
         posStart = notSlash;
     }
-    size_t posEnd = std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
+    size_t posEnd =
+        std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
     if (posEnd != std::string::npos) {
         return tempUrl.substr(posStart, posEnd - posStart);
     }
@@ -804,8 +792,8 @@ bool JsInitialize::GetFormItems(
     return true;
 }
 
-bool JsInitialize::Convert2FormItems(
-    napi_env env, napi_value jsValue, std::vector<FormItem> &forms, std::vector<FileSpec> &files, std::string &errInfo)
+bool JsInitialize::Convert2FormItems(napi_env env, napi_value jsValue, std::vector<FormItem> &forms,
+    std::vector<FileSpec> &files, std::string &errInfo)
 {
     bool isArray = false;
     napi_is_array(env, jsValue, &isArray);
@@ -1092,7 +1080,7 @@ bool JsInitialize::CheckUploadFileSpec(const std::shared_ptr<OHOS::AbilityRuntim
     }
     REQUEST_HILOGD("CheckUploadFileSpec path");
     file.uri = path;
-    if (!GetFdUpload(path, config, file.fd, error)) {
+    if (!GetFdUpload(path, config, error)) {
         return false;
     }
     if (!JsTask::SetPathPermission(file.uri)) {
@@ -1125,7 +1113,7 @@ bool JsInitialize::CheckDownloadFile(
     FileSpec file = { .uri = config.saveas, .isUserFile = false };
     StandardizeFileSpec(file);
     config.files.push_back(file);
-    if (!GetFdDownload(file.uri, config, file.fd, error)) {
+    if (!GetFdDownload(file.uri, config, error)) {
         return false;
     }
     if (!JsTask::SetPathPermission(config.saveas)) {
