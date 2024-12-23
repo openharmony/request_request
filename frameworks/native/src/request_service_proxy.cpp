@@ -105,18 +105,8 @@ void RequestServiceProxy::GetVectorData(const Config &config, MessageParcel &dat
         }
     }
 
-    for (const auto &file : config.files) {
-        if (file.fd > 0) {
-            close(file.fd);
-        }
-    }
-    // Response Bodys fds.
-    data.WriteUint32(config.bodyFds.size());
-    for (const auto &fd : config.bodyFds) {
-        if (fd > 0) {
-            close(fd);
-        }
-    }
+    // Response Body files.
+    data.WriteUint32(config.bodyFileNames.size());
     for (const auto &name : config.bodyFileNames) {
         data.WriteString(name);
     }

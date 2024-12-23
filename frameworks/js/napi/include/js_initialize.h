@@ -94,9 +94,8 @@ private:
     static bool CheckUploadBodyFiles(const std::string &filePath, Config &config, ExceptionError &error);
     static bool CheckPathIsFile(const std::string &path, ExceptionError &error);
     static bool CheckPathOverWrite(const std::string &path, const Config &config, ExceptionError &error);
-    static bool GetFdInner(const std::string &path, const Config &config, int32_t &fd, ExceptionError &error);
-    static bool GetFdUpload(const std::string &path, const Config &config, int32_t &fd, ExceptionError &error);
-    static bool GetFdDownload(const std::string &path, const Config &config, int32_t &fd, ExceptionError &error);
+    static bool GetFdUpload(const std::string &path, const Config &config, ExceptionError &error);
+    static bool GetFdDownload(const std::string &path, const Config &config, ExceptionError &error);
     static bool InterceptData(const std::string &str, const std::string &in, std::string &out);
     static bool IsStageMode(napi_env env, napi_value value);
     static bool CheckDownloadFilePath(
