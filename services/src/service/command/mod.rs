@@ -13,7 +13,10 @@
 
 use crate::error::ErrorCode;
 
+mod attach_group;
 mod construct;
+mod create_group;
+mod delete_group;
 mod dump;
 mod get_task;
 mod open_channel;

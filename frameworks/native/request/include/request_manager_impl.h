@@ -91,6 +91,10 @@ public:
     int32_t GetNextSeq();
     bool SubscribeSA();
     bool UnsubscribeSA();
+    int32_t CreateGroup(
+        std::string &gid, const bool gauge, const bool customized, const std::string &title, const std::string &text);
+    int32_t AttachGroup(const std::string &gid, const std::string &tid);
+    int32_t DeleteGroup(const std::string &gid);
 
 private:
     RequestManagerImpl() = default;

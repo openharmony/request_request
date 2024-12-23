@@ -28,7 +28,7 @@
 #include "notification_local_live_view_button.h"
 #include "notification_local_live_view_content.h"
 #include "resource_manager.h"
-#include "service/notification_bar.rs.h"
+#include "service/notification_bar/mod.rs.h"
 #include "task/config.rs.h"
 
 namespace OHOS::Request {
@@ -38,21 +38,14 @@ static constexpr int32_t REQUEST_SERVICE_ID = 3815;
 
 static constexpr int32_t REQUEST_STYLE_SIMPLE = 8;
 
-static constexpr uint32_t BINARY_SCALE = 1024;
-static constexpr uint32_t PERCENT = 100;
-static constexpr uint32_t FRONT_ZERO = 10;
-static constexpr size_t PLACEHOLDER_LENGTH = 2;
-
-constexpr const char *DOWNLOAD_FILE = "request_agent_download_file";
-constexpr const char *DOWNLOAD_SUCCESS = "request_agent_download_success";
-constexpr const char *DOWNLOAD_FAIL = "request_agent_download_fail";
-constexpr const char *UPLOAD_FILE = "request_agent_upload_file";
-constexpr const char *UPLOAD_SUCCESS = "request_agent_upload_success";
-constexpr const char *UPLOAD_FAIL = "request_agent_upload_fail";
+// static constexpr uint32_t BINARY_SCALE = 1024;
+// static constexpr uint32_t PERCENT = 100;
+// static constexpr uint32_t FRONT_ZERO = 10;
+// static constexpr size_t PLACEHOLDER_LENGTH = 2;
 
 static const std::string CLOSE_ICON_PATH = "/etc/request/xmark.svg";
 
-std::string GetSystemResourceString(const char *name)
+rust::string GetSystemResourceString(const rust::str name)
 {
     auto resourceMgr = Resource::GetSystemResourceManagerNoSandBox();
     if (resourceMgr == nullptr) {
@@ -70,11 +63,11 @@ std::string GetSystemResourceString(const char *name)
     resourceMgr->UpdateResConfig(*config);
 
     std::string outValue;
-    auto ret = resourceMgr->GetStringByName(name, outValue);
+    auto ret = resourceMgr->GetStringByName(name.data(), outValue);
     if (ret != Resource::RState::SUCCESS) {
         REQUEST_HILOGE("GetStringById failed: %{public}d", ret);
     }
-    return outValue;
+    return rust::string(outValue);
 }
 
 std::shared_ptr<Media::PixelMap> CreatePixelMap()
@@ -101,192 +94,70 @@ std::shared_ptr<Media::PixelMap> CreatePixelMap()
     return pixelMap;
 }
 
-void SetProgress(
-    std::shared_ptr<Notification::NotificationLocalLiveViewContent> &localLiveViewContent, RequestTaskMsg msg)
-{
-    std::string title;
-    Notification::NotificationProgress progress;
-    if (msg.action == static_cast<uint8_t>(Action::Download)) {
-        title = GetSystemResourceString(DOWNLOAD_FILE);
-        size_t pos = title.find("%s");
-        if (msg.sizes[0] == -1) {
-            title.replace(pos, PLACEHOLDER_LENGTH, ProgressSized(msg.processed[0]));
-            localLiveViewContent->SetTitle(title);
-            return;
-        } else {
-            localLiveViewContent->addFlag(
-                Notification::NotificationLocalLiveViewContent::LiveViewContentInner::PROGRESS);
-            progress.SetIsPercentage(true);
-            progress.SetCurrentValue(msg.processed[0] / BINARY_SCALE);
-            progress.SetMaxValue(msg.sizes[0] / BINARY_SCALE);
-            title.replace(pos, PLACEHOLDER_LENGTH, ProgressPercentage(msg.processed[0], msg.sizes[0]));
-        }
-    } else {
-        localLiveViewContent->addFlag(Notification::NotificationLocalLiveViewContent::LiveViewContentInner::PROGRESS);
-        title = GetSystemResourceString(UPLOAD_FILE);
-        size_t pos = title.find("%s");
-        if (msg.sizes.size() > 1) {
-            progress.SetCurrentValue(msg.index);
-            progress.SetMaxValue(msg.sizes.size());
-            title.replace(pos, PLACEHOLDER_LENGTH, ProgressNum(msg.index, msg.sizes.size()));
-        } else {
-            progress.SetCurrentValue(msg.processed[0] / BINARY_SCALE);
-            progress.SetMaxValue(msg.sizes[0] / BINARY_SCALE);
-            title.replace(pos, PLACEHOLDER_LENGTH, ProgressPercentage(msg.processed[0], msg.sizes[0]));
-        }
-    }
-    localLiveViewContent->SetTitle(title);
-    localLiveViewContent->SetProgress(progress);
-}
-
-void RequestProgressNotification(RequestTaskMsg msg)
-{
-    Notification::NotificationRequest request(msg.task_id);
-    std::shared_ptr<Notification::NotificationLocalLiveViewContent> localLiveViewContent =
-        std::make_shared<Notification::NotificationLocalLiveViewContent>();
-
-    // basic settings
-    request.SetSlotType(Notification::NotificationConstant::SlotType::LIVE_VIEW);
-    localLiveViewContent->SetContentType(
-        static_cast<int32_t>(Notification::NotificationContent::Type::LOCAL_LIVE_VIEW));
-
-    BasicRequestSettings(request, msg.uid);
-
-    request.SetInProgress(true);
-    localLiveViewContent->SetType(REQUEST_STYLE_SIMPLE);
-
-    localLiveViewContent->addFlag(Notification::NotificationLocalLiveViewContent::LiveViewContentInner::BUTTON);
-
-    // set text
-    localLiveViewContent->SetText(std::string(msg.file_name));
-
-    // set button
-    auto button = localLiveViewContent->GetButton();
-    auto icon = CreatePixelMap();
-    if (icon != nullptr) {
-        button.addSingleButtonName("cancel");
-        button.addSingleButtonIcon(icon);
-        localLiveViewContent->SetButton(button);
-    }
-
-    // set title and progress
-    SetProgress(localLiveViewContent, msg);
-
-    // set content
-    auto content = std::make_shared<Notification::NotificationContent>(localLiveViewContent);
-    request.SetContent(content);
-
-    OHOS::ErrCode errCode = Notification::NotificationHelper::PublishNotification(request);
-    if (errCode != OHOS::ERR_OK) {
-        REQUEST_HILOGE("%{public}d publish notification error %{public}d", msg.task_id, errCode);
-    }
-}
-
-void RequestCompletedNotification(uint8_t action, uint32_t taskId, int32_t uid, rust::string fileName, bool isSucceed)
-{
-    Notification::NotificationRequest request(taskId);
-    std::shared_ptr<Notification::NotificationNormalContent> normalContent =
-        std::make_shared<Notification::NotificationNormalContent>();
-
-    // basic settings
-    BasicRequestSettings(request, uid);
-
-    // set text
-    normalContent->SetText(std::string(fileName));
-
-    // set title
-    std::string title;
-    if (action == static_cast<uint8_t>(Action::Download)) {
-        if (isSucceed) {
-            title = GetSystemResourceString(DOWNLOAD_SUCCESS);
-        } else {
-            title = GetSystemResourceString(DOWNLOAD_FAIL);
-        }
-    } else {
-        if (isSucceed) {
-            title = GetSystemResourceString(UPLOAD_SUCCESS);
-        } else {
-            title = GetSystemResourceString(UPLOAD_FAIL);
-        }
-    }
-    normalContent->SetTitle(title);
-
-    // set content
-    auto content = std::make_shared<Notification::NotificationContent>(normalContent);
-    request.SetContent(content);
-
-    OHOS::ErrCode errCode = Notification::NotificationHelper::PublishNotification(request);
-    if (errCode != OHOS::ERR_OK) {
-        REQUEST_HILOGE("%{public}d publish notification error %{public}d", taskId, errCode);
-    }
-}
-
 void BasicRequestSettings(Notification::NotificationRequest &request, int32_t uid)
 {
-    // basic settings
     request.SetCreatorUid(REQUEST_SERVICE_ID);
     request.SetOwnerUid(uid);
     request.SetIsAgentNotification(true);
 }
 
-std::string ProgressNum(std::size_t uploaded, std::size_t total)
+std::shared_ptr<OHOS::Notification::NotificationContent> NormalContent(const NotifyContent &content)
 {
-    std::string content;
-    content += std::to_string(uploaded);
-    content += "/";
-    content += std::to_string(total);
-    return content;
+    auto normalContent = std::make_shared<Notification::NotificationNormalContent>();
+    normalContent->SetTitle(std::string(content.title));
+    normalContent->SetText(std::string(content.text));
+    return std::make_shared<Notification::NotificationContent>(normalContent);
 }
 
-std::string ProgressPercentage(std::size_t processed, std::size_t size)
+std::shared_ptr<OHOS::Notification::NotificationContent> LiveViewContent(const NotifyContent &content)
 {
-    std::string content;
-    if (size == 0) {
-        content += "100";
+    auto liveViewContent = std::make_shared<Notification::NotificationLocalLiveViewContent>();
+
+    liveViewContent->SetContentType(static_cast<int32_t>(Notification::NotificationContent::Type::LOCAL_LIVE_VIEW));
+    liveViewContent->SetType(REQUEST_STYLE_SIMPLE);
+
+    liveViewContent->SetText(std::string(content.text));
+    liveViewContent->SetTitle(std::string(content.title));
+
+    if (content.x_mark || content.progress_circle.open) {
+        liveViewContent->addFlag(Notification::NotificationLocalLiveViewContent::LiveViewContentInner::BUTTON);
+    }
+
+    if (content.x_mark) {
+        auto button = liveViewContent->GetButton();
+        auto icon = CreatePixelMap();
+        if (icon != nullptr) {
+            button.addSingleButtonName("cancel");
+            button.addSingleButtonIcon(icon);
+            liveViewContent->SetButton(button);
+        }
+    }
+
+    if (content.progress_circle.open) {
+        liveViewContent->addFlag(Notification::NotificationLocalLiveViewContent::LiveViewContentInner::PROGRESS);
+        Notification::NotificationProgress progress;
+        progress.SetIsPercentage(true);
+        progress.SetCurrentValue(content.progress_circle.current);
+        progress.SetMaxValue(content.progress_circle.total);
+        liveViewContent->SetProgress(progress);
+    }
+
+    return std::make_shared<Notification::NotificationContent>(liveViewContent);
+}
+
+int PublishNotification(const NotifyContent &content)
+{
+    Notification::NotificationRequest request(content.request_id);
+    BasicRequestSettings(request, content.uid);
+    request.SetInProgress(content.progress_circle.open);
+    if (content.live_view) {
+        request.SetSlotType(Notification::NotificationConstant::SlotType::LIVE_VIEW);
+        request.SetContent(LiveViewContent(content));
     } else {
-        content += std::to_string(processed * PERCENT / size);
+        request.SetContent(NormalContent(content));
     }
-    content += "%";
-    return content;
-}
 
-std::string ProgressSized(std::size_t processed)
-{
-    std::string content;
-    if (processed < BINARY_SCALE) {
-        content += std::to_string(processed);
-        content += "B";
-        return content;
-    }
-    size_t remainder = (processed % BINARY_SCALE) * PERCENT / BINARY_SCALE;
-    processed /= BINARY_SCALE;
-    if (processed < BINARY_SCALE) {
-        WithRemainder(content, processed, remainder);
-        content += "KB";
-        return content;
-    }
-    remainder = (processed % BINARY_SCALE) * PERCENT / BINARY_SCALE;
-    processed /= BINARY_SCALE;
-    if (processed < BINARY_SCALE) {
-        WithRemainder(content, processed, remainder);
-        content += "MB";
-    } else {
-        remainder = (processed % BINARY_SCALE) * PERCENT / BINARY_SCALE;
-        processed = processed / BINARY_SCALE;
-        WithRemainder(content, processed, remainder);
-        content += "GB";
-    }
-    return content;
-}
-
-void WithRemainder(std::string &content, size_t processed, size_t remainder)
-{
-    content += std::to_string(processed);
-    content += ".";
-    if (remainder < FRONT_ZERO) {
-        content += "0";
-    }
-    content += std::to_string(remainder);
+    return Notification::NotificationHelper::PublishNotification(request);
 }
 
 NotificationSubscriber::NotificationSubscriber(rust::Box<TaskManagerWrapper> taskManager)

@@ -127,7 +127,8 @@
         "//base/request/request/frameworks/native/cache_core:unittest",
         "//base/request/request/common/netstack_rs:unittest",
         "//base/request/request/common/ffrt_rs:unittest",
-        "//base/request/request/common/utils:unittest"
+        "//base/request/request/common/utils:unittest",
+        "//base/request/request/common/database:unittest"
       ]
     }
   }

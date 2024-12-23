@@ -18,6 +18,8 @@ ohos_rust_unittest("rust_request_ut_test") {
 
   sources = [ "../src/lib.rs" ]
   deps = [
+    "../../common/database:database_rs",
+    "../../common/utils:request_utils",
     "../../services:download_server_cxx",
     "../../test/rustest/c:request_test",
     "//third_party/rust/crates/cxx:lib",
@@ -26,8 +28,6 @@ ohos_rust_unittest("rust_request_ut_test") {
   rustflags = [ "--cfg=feature=\"oh\"" ]
 
   external_deps = [
-    "hilog:hilog_rust",
-    "hilog:libhilog",
     "hisysevent:hisysevent_rust",
     "hitrace:hitrace_meter_rust",
     "ipc:ipc_rust",

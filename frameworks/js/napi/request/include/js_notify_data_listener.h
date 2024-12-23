@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_REQUEST_JS_NOTIFY_DATA_LISTENER_H
-#define OHOS_REQUEST_JS_NOTIFY_DATA_LISTENER_H
+#ifndef REQUEST_JS_NOTIFY_DATA_LISTENER_H
+#define REQUEST_JS_NOTIFY_DATA_LISTENER_H
 
 #include "i_notify_data_listener.h"
 #include "listener_list.h"

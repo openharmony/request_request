@@ -20,4 +20,6 @@ members = [
     "common/netstack_rs",
     "common/utils",
     "test/rustest",
+    "common/database",
+    "services",
 ]

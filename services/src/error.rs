@@ -26,8 +26,10 @@ pub(crate) enum ErrorCode {
     FileOperationErr = 13400001,
     Other = 13499999,
     TaskEnqueueErr = 21900004,
+    TaskModeErr = 21900005,
     TaskNotFound = 21900006,
     TaskStateErr = 21900007,
+    GroupNotFound = 21900008,
 }
 
 impl From<ServiceError> for ErrorCode {

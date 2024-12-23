@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_REQUEST_LISTENER_LIST_H
-#define OHOS_REQUEST_LISTENER_LIST_H
+#ifndef REQUEST_LISTENER_LIST_H
+#define REQUEST_LISTENER_LIST_H
 
 #include <list>
 #include <mutex>

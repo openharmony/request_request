@@ -56,6 +56,7 @@ ohos_shared_library("request") {
     "src/legacy/request_manager.cpp",
     "src/listener_list.cpp",
     "src/napi_utils.cpp",
+    "src/notification_bar.cpp",
     "src/request_event.cpp",
     "src/request_module.cpp",
     "src/upload/async_call.cpp",

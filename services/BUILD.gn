@@ -20,7 +20,7 @@ rust_cxx("download_server_cxx_gen") {
     "src/manage/database.rs",
     "src/manage/network.rs",
     "src/manage/query.rs",
-    "src/service/notification_bar.rs",
+    "src/service/notification_bar/mod.rs",
     "src/task/bundle.rs",
     "src/task/config.rs",
     "src/task/info.rs",
@@ -132,12 +132,12 @@ ohos_rust_shared_library("download_server") {
 
   deps = [
     ":download_server_cxx",
+    "../common/database:database_rs",
+    "../common/utils:request_utils",
     "//third_party/rust/crates/cxx:lib",
   ]
 
   external_deps = [
-    "hilog:hilog_rust",
-    "hilog:libhilog",
     "hisysevent:hisysevent_rust",
     "hitrace:hitrace_meter_rust",
     "ipc:ipc_rust",

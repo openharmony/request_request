@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ASYNC_CALL_H
-#define ASYNC_CALL_H
+#ifndef REQUEST_ASYNC_CALL_H
+#define REQUEST_ASYNC_CALL_H
 
 #include <functional>
 #include <memory>
@@ -21,7 +21,6 @@
 
 #include "constant.h"
 #include "log.h"
-#include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "napi_utils.h"
 #include "request_common.h"

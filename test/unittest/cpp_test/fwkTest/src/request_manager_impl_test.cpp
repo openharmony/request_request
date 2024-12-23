@@ -79,6 +79,11 @@ public:
     MOCK_METHOD(int32_t, SubRunCount, (const OHOS::sptr<NotifyInterface> &listener), (override));
     MOCK_METHOD(int32_t, UnsubRunCount, (), (override));
     MOCK_METHOD(OHOS::sptr<OHOS::IRemoteObject>, AsObject, (), (override));
+    MOCK_METHOD(int32_t, CreateGroup,
+        (std::string & gid, const bool gauge, const bool customized, const std::string &title, const std::string &text),
+        (override));
+    MOCK_METHOD(int32_t, AttachGroup, (const std::string &gid, const std::string &tid), (override));
+    MOCK_METHOD(int32_t, DeleteGroup, (const std::string &gid), (override));
 };
 
 class RequestManagerImplTest : public testing::Test {
