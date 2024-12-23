@@ -497,10 +497,9 @@ HWTEST_F(RequestManagerImplTest, GetVectorData001, TestSize.Level1)
     };
     config.files.push_back(file0);
     config.files.push_back(file1);
-    config.bodyFds.push_back(-1);
-    config.bodyFds.push_back(fd[1]);
 
     config.bodyFileNames.push_back("bodyFileName");
+    config.bodyFileNames.push_back("bodyFileName1");
 
     config.headers.emplace("first0", "second0");
 
@@ -530,6 +529,7 @@ HWTEST_F(RequestManagerImplTest, GetVectorData001, TestSize.Level1)
 
     EXPECT_EQ(data.ReadUint32(), 2);
     EXPECT_EQ(data.ReadString(), "bodyFileName");
+    EXPECT_EQ(data.ReadString(), "bodyFileName1");
 
     EXPECT_EQ(data.ReadUint32(), 1);
     EXPECT_EQ(data.ReadString(), "first0");
@@ -538,6 +538,19 @@ HWTEST_F(RequestManagerImplTest, GetVectorData001, TestSize.Level1)
     EXPECT_EQ(data.ReadString(), "first1");
     EXPECT_EQ(data.ReadString(), "second1");
 }
+
+// ../../base/request/request/test/unittest/cpp_test/fwkTest/src/request_manager_impl_test.cpp:527
+// Expected equality of these values:
+// data.ReadFileDescriptor()
+// Which is: 15
+// fd[0]
+// Which is: 11
+
+// ../../base/request/request/test/unittest/cpp_test/fwkTest/src/request_manager_impl_test.cpp:529
+// Expected equality of these values:
+// data.ReadUint32()
+// Which is: 1
+// 2
 
 /**
  * @tc.name: CreateTest002

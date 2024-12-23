@@ -504,9 +504,8 @@ ExceptionError CJInitialize::UploadBodyFileProc(std::string &fileName, Config &c
 
     if (bodyFd >= 0) {
         chmod(fileName.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
+        close(bodyFd);
     }
-
-    config.bodyFds.push_back(bodyFd);
     config.bodyFileNames.push_back(fileName);
 
     return err;
@@ -561,20 +560,22 @@ ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config
         REQUEST_HILOGD("File already exists");
         if (config.action == Action::UPLOAD) {
             chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+            close(fd);
             return err;
         } else {
             chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
         }
 
         if (config.overwrite) {
+            close(fd);
             return err;
         }
         if (!config.firstInit) {
             REQUEST_HILOGD("CJRequestTask config is not firstInit");
+            close(fd);
             return err;
         }
         close(fd);
-
         err.code = ExceptionErrorCode::E_FILE_IO;
         err.errInfo = "Download File already exists";
         return err;
@@ -592,6 +593,7 @@ ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config
             return err;
         }
         chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
+        close(fd);
     }
     return err;
 }

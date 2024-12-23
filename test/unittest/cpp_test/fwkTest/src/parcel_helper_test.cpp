@@ -308,7 +308,6 @@ HWTEST_F(ParcelHelperTest, UnMarshalConfigBodyFileName001, TestSize.Level1)
     data.WriteUint32(size);
     data.WriteString("name");
     EXPECT_TRUE(ParcelHelper::UnMarshalConfigBodyFileName(data, config));
-    EXPECT_EQ(config.bodyFds[0], 0);
     EXPECT_EQ(config.bodyFileNames[0], "name");
 }
 
