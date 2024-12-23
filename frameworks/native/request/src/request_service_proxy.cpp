@@ -26,6 +26,7 @@
 #include "iremote_broker.h"
 #include "log.h"
 #include "parcel_helper.h"
+#include "request_common.h"
 #include "request_running_task_count.h"
 
 namespace OHOS::Request {
@@ -36,7 +37,8 @@ RequestServiceProxy::RequestServiceProxy(const sptr<IRemoteObject> &object)
 {
 }
 
-int32_t RequestServiceProxy::StartTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestServiceProxy::StartTasks(
+    const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
 {
     uint32_t len = static_cast<uint32_t>(tids.size());
     rets.resize(len, ExceptionErrorCode::E_OTHER);
@@ -52,18 +54,19 @@ int32_t RequestServiceProxy::StartTasks(const std::vector<std::string> &tids, st
         REQUEST_HILOGE("End Request StartTasks, failed: %{public}d", ret);
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
-    ret = reply.ReadInt32();
-    if (ret != ExceptionErrorCode::E_OK) {
-        REQUEST_HILOGE("End Request StartTasks, failed: %{public}d", ret);
-        return ret;
+    ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
+    if (code != ExceptionErrorCode::E_OK) {
+        REQUEST_HILOGE("End Request StartTasks, failed: %{public}d", code);
+        return code;
     }
     for (uint32_t i = 0; i < len; i++) {
-        rets[i] = reply.ReadInt32();
+        rets[i] = static_cast<ExceptionErrorCode>(reply.ReadInt32());
     }
     return ExceptionErrorCode::E_OK;
 }
 
-int32_t RequestServiceProxy::StopTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestServiceProxy::StopTasks(
+    const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
 {
     uint32_t len = static_cast<uint32_t>(tids.size());
     rets.resize(len, ExceptionErrorCode::E_OTHER);
@@ -79,18 +82,19 @@ int32_t RequestServiceProxy::StopTasks(const std::vector<std::string> &tids, std
         REQUEST_HILOGE("End Request StopTasks, failed: %{public}d", ret);
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
-    ret = reply.ReadInt32();
-    if (ret != ExceptionErrorCode::E_OK) {
-        REQUEST_HILOGE("End Request StopTasks, failed: %{public}d", ret);
-        return ret;
+    ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
+    if (code != ExceptionErrorCode::E_OK) {
+        REQUEST_HILOGE("End Request StopTasks, failed: %{public}d", code);
+        return code;
     }
     for (uint32_t i = 0; i < len; i++) {
-        rets[i] = reply.ReadInt32();
+        rets[i] = static_cast<ExceptionErrorCode>(reply.ReadInt32());
     }
     return ExceptionErrorCode::E_OK;
 }
 
-int32_t RequestServiceProxy::ResumeTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestServiceProxy::ResumeTasks(
+    const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
 {
     uint32_t len = static_cast<uint32_t>(tids.size());
     rets.resize(len, ExceptionErrorCode::E_OTHER);
@@ -106,19 +110,19 @@ int32_t RequestServiceProxy::ResumeTasks(const std::vector<std::string> &tids, s
         REQUEST_HILOGE("End Request ResumeTasks, failed: %{public}d", ret);
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
-    ret = reply.ReadInt32();
-    if (ret != ExceptionErrorCode::E_OK) {
-        REQUEST_HILOGE("End Request ResumeTasks, failed: %{public}d", ret);
-        return ret;
+    ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
+    if (code != ExceptionErrorCode::E_OK) {
+        REQUEST_HILOGE("End Request ResumeTasks, failed: %{public}d", code);
+        return code;
     }
     for (uint32_t i = 0; i < len; i++) {
-        rets[i] = reply.ReadInt32();
+        rets[i] = static_cast<ExceptionErrorCode>(reply.ReadInt32());
     }
     return ExceptionErrorCode::E_OK;
 }
 
-int32_t RequestServiceProxy::PauseTasks(
-    const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestServiceProxy::PauseTasks(
+    const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets)
 {
     uint32_t len = static_cast<uint32_t>(tids.size());
     rets.resize(len, ExceptionErrorCode::E_OTHER);
@@ -135,19 +139,19 @@ int32_t RequestServiceProxy::PauseTasks(
         REQUEST_HILOGE("End Request PauseTasks, failed: %{public}d", ret);
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
-    ret = reply.ReadInt32();
-    if (ret != ExceptionErrorCode::E_OK) {
-        REQUEST_HILOGE("End Request PauseTasks, failed: %{public}d", ret);
-        return ret;
+    ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
+    if (code != ExceptionErrorCode::E_OK) {
+        REQUEST_HILOGE("End Request PauseTasks, failed: %{public}d", code);
+        return code;
     }
     for (uint32_t i = 0; i < len; i++) {
-        rets[i] = reply.ReadInt32();
+        rets[i] = static_cast<ExceptionErrorCode>(reply.ReadInt32());
     }
     return ExceptionErrorCode::E_OK;
 }
 
-int32_t RequestServiceProxy::RemoveTasks(
-    const std::vector<std::string> &tids, const Version version, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestServiceProxy::RemoveTasks(
+    const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets)
 {
     uint32_t len = static_cast<uint32_t>(tids.size());
     rets.resize(len, ExceptionErrorCode::E_OTHER);
@@ -164,24 +168,23 @@ int32_t RequestServiceProxy::RemoveTasks(
         REQUEST_HILOGE("End Request RemoveTasks, failed: %{public}d", ret);
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
-    ret = reply.ReadInt32();
-    if (ret != ExceptionErrorCode::E_OK) {
-        REQUEST_HILOGE("End Request RemoveTasks, failed: %{public}d", ret);
-        return ret;
+    ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
+    if (code != ExceptionErrorCode::E_OK) {
+        REQUEST_HILOGE("End Request RemoveTasks, failed: %{public}d", code);
+        return code;
     }
     for (uint32_t i = 0; i < len; i++) {
-        rets[i] = reply.ReadInt32();
+        rets[i] = static_cast<ExceptionErrorCode>(reply.ReadInt32());
     }
     return ExceptionErrorCode::E_OK;
 }
 
-int32_t RequestServiceProxy::QueryTasks(
-    const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+ExceptionErrorCode RequestServiceProxy::QueryTasks(
+    const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets)
 {
-    TaskInfo info;
-    std::pair<int32_t, TaskInfo> pair = std::make_pair(ExceptionErrorCode::E_OTHER, info);
+    TaskInfoRet infoRet{ .code = ExceptionErrorCode::E_OTHER };
     uint32_t len = static_cast<uint32_t>(tids.size());
-    rets.resize(len, pair);
+    rets.resize(len, infoRet);
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
@@ -194,27 +197,25 @@ int32_t RequestServiceProxy::QueryTasks(
         REQUEST_HILOGE("End Request QueryTasks, failed: %{public}d", ret);
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
-    ret = reply.ReadInt32();
-    if (ret != ExceptionErrorCode::E_OK) {
-        REQUEST_HILOGE("End Request QueryTasks, failed: %{public}d", ret);
-        return ret;
+    ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
+    if (code != ExceptionErrorCode::E_OK) {
+        REQUEST_HILOGE("End Request QueryTasks, failed: %{public}d", code);
+        return code;
     }
     for (uint32_t i = 0; i < len; i++) {
-        rets[i].first = reply.ReadInt32();
+        rets[i].code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
         TaskInfo info;
         ParcelHelper::UnMarshal(reply, info);
-        rets[i].second = info;
+        rets[i].info = info;
     }
     return ExceptionErrorCode::E_OK;
 }
 
-int32_t RequestServiceProxy::ShowTasks(
-    const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+ExceptionErrorCode RequestServiceProxy::ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets)
 {
-    TaskInfo info;
-    std::pair<int32_t, TaskInfo> pair = std::make_pair(ExceptionErrorCode::E_OTHER, info);
+    TaskInfoRet infoRet{ .code = ExceptionErrorCode::E_OTHER };
     uint32_t len = static_cast<uint32_t>(tids.size());
-    rets.resize(len, pair);
+    rets.resize(len, infoRet);
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
@@ -227,50 +228,49 @@ int32_t RequestServiceProxy::ShowTasks(
         REQUEST_HILOGE("End Request ShowTasks, failed: %{public}d", ret);
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
-    ret = reply.ReadInt32();
-    if (ret != ExceptionErrorCode::E_OK) {
-        REQUEST_HILOGE("End Request ShowTasks, failed: %{public}d", ret);
-        return ret;
+    ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
+    if (code != ExceptionErrorCode::E_OK) {
+        REQUEST_HILOGE("End Request ShowTasks, failed: %{public}d", code);
+        return code;
     }
     for (uint32_t i = 0; i < len; i++) {
-        rets[i].first = reply.ReadInt32();
+        rets[i].code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
         TaskInfo info;
         ParcelHelper::UnMarshal(reply, info);
-        rets[i].second = info;
+        rets[i].info = info;
     }
     return ExceptionErrorCode::E_OK;
 }
 
-int32_t RequestServiceProxy::TouchTasks(
-    const std::vector<std::pair<std::string, std::string>> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+ExceptionErrorCode RequestServiceProxy::TouchTasks(
+    const std::vector<TaskIdAndToken> &tids, std::vector<TaskInfoRet> &rets)
 {
-    TaskInfo info;
-    std::pair<int32_t, TaskInfo> pair = std::make_pair(ExceptionErrorCode::E_OTHER, info);
+    TaskInfoRet infoRet{ .code = ExceptionErrorCode::E_OTHER };
     uint32_t len = static_cast<uint32_t>(tids.size());
-    rets.resize(len, pair);
+    rets.resize(len, infoRet);
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteUint32(len);
     for (const auto &it : tids) {
-        data.WriteString(it.first);
-        data.WriteString(it.second);
+        data.WriteString(it.tid);
+        data.WriteString(it.token);
     }
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_TOUCH), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request TouchTasks, failed: %{public}d", ret);
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
-    ret = reply.ReadInt32();
+    ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
     if (ret != ExceptionErrorCode::E_OK) {
-        REQUEST_HILOGE("End Request TouchTasks, failed: %{public}d", ret);
-        return ret;
+        REQUEST_HILOGE("End Request TouchTasks, failed: %{public}d", code);
+        return code;
     }
     for (uint32_t i = 0; i < len; i++) {
-        rets[i].first = reply.ReadInt32();
+        rets[i].code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
         TaskInfo info;
         ParcelHelper::UnMarshal(reply, info);
-        rets[i].second = info;
+        rets[i].info = info;
     }
     return ExceptionErrorCode::E_OK;
 }
@@ -399,9 +399,9 @@ int32_t RequestServiceProxy::Start(const std::string &tid)
 {
     REQUEST_HILOGD("Request Start, tid: %{public}s", tid.c_str());
     std::vector<std::string> tids = { tid };
-    std::vector<int32_t> rets = { E_OTHER };
+    std::vector<ExceptionErrorCode> rets = { E_OTHER };
     int32_t ret = RequestServiceProxy::StartTasks(tids, rets);
-    if (ret != ERR_NONE) {
+    if (ret != ExceptionErrorCode::E_OK) {
         REQUEST_HILOGE("End Request Start, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
         return ret;
     }
@@ -413,9 +413,9 @@ int32_t RequestServiceProxy::Stop(const std::string &tid)
 {
     REQUEST_HILOGD("Request Stop, tid: %{public}s", tid.c_str());
     std::vector<std::string> tids = { tid };
-    std::vector<int32_t> rets = { E_OTHER };
+    std::vector<ExceptionErrorCode> rets = { E_OTHER };
     int32_t ret = RequestServiceProxy::StopTasks(tids, rets);
-    if (ret != ERR_NONE) {
+    if (ret != ExceptionErrorCode::E_OK) {
         REQUEST_HILOGE("End Request Stop, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
         return ret;
     }
@@ -427,21 +427,21 @@ int32_t RequestServiceProxy::Query(const std::string &tid, TaskInfo &info)
 {
     REQUEST_HILOGD("Request Query, tid: %{public}s", tid.c_str());
     std::vector<std::string> tids = { tid };
-    TaskInfo taskInfo;
-    std::vector<std::pair<int32_t, TaskInfo>> rets = { std::make_pair(E_OTHER, taskInfo) };
+    TaskInfoRet infoRet{ .code = ExceptionErrorCode::E_OTHER };
+    std::vector<TaskInfoRet> rets = { infoRet };
 
     int32_t ret = RequestServiceProxy::QueryTasks(tids, rets);
-    if (ret != ERR_NONE) {
+    if (ret != ExceptionErrorCode::E_OK) {
         REQUEST_HILOGE("End Request Query err, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
         return ret;
     }
 
-    int32_t errCode = rets[0].first;
+    int32_t errCode = rets[0].code;
     if (errCode != E_OK) {
         REQUEST_HILOGE("End Request Query, tid: %{public}s, failed: %{public}d", tid.c_str(), errCode);
         return errCode;
     }
-    info = rets[0].second;
+    info = rets[0].info;
     REQUEST_HILOGD("End Request Query ok, tid: %{public}s", tid.c_str());
     return E_OK;
 }
@@ -449,21 +449,22 @@ int32_t RequestServiceProxy::Query(const std::string &tid, TaskInfo &info)
 int32_t RequestServiceProxy::Touch(const std::string &tid, const std::string &token, TaskInfo &info)
 {
     REQUEST_HILOGD("Request Touch, tid: %{public}s", tid.c_str());
-    std::vector<std::pair<std::string, std::string>> tids = { std::make_pair(tid, token) };
-    TaskInfo taskInfo;
-    std::vector<std::pair<int32_t, TaskInfo>> rets = { std::make_pair(E_OTHER, taskInfo) };
+    TaskIdAndToken idToken{ .tid = tid, .token = token };
+    std::vector<TaskIdAndToken> tidTokens = { idToken };
+    TaskInfoRet infoRet{ .code = ExceptionErrorCode::E_OTHER };
+    std::vector<TaskInfoRet> rets = { infoRet };
 
-    int32_t ret = RequestServiceProxy::TouchTasks(tids, rets);
-    if (ret != ERR_NONE) {
+    int32_t ret = RequestServiceProxy::TouchTasks(tidTokens, rets);
+    if (ret != ExceptionErrorCode::E_OK) {
         REQUEST_HILOGE("End Request Touch err, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
         return ret;
     }
-    int32_t errCode = rets[0].first;
+    int32_t errCode = rets[0].code;
     if (errCode != E_OK) {
         REQUEST_HILOGE("End Request Touch, tid: %{public}s, failed: %{public}d", tid.c_str(), errCode);
         return errCode;
     }
-    info = rets[0].second;
+    info = rets[0].info;
     REQUEST_HILOGD("End Request Touch ok, tid: %{public}s", tid.c_str());
     return E_OK;
 }
@@ -497,21 +498,21 @@ int32_t RequestServiceProxy::Show(const std::string &tid, TaskInfo &info)
 {
     REQUEST_HILOGD("Request Show, tid: %{public}s", tid.c_str());
     std::vector<std::string> tids = { tid };
-    TaskInfo taskInfo;
-    std::vector<std::pair<int32_t, TaskInfo>> rets = { std::make_pair(E_OTHER, taskInfo) };
+    TaskInfoRet infoRet{ .code = ExceptionErrorCode::E_OTHER };
+    std::vector<TaskInfoRet> rets = { infoRet };
 
     int32_t ret = RequestServiceProxy::ShowTasks(tids, rets);
-    if (ret != ERR_NONE) {
+    if (ret != ExceptionErrorCode::E_OK) {
         REQUEST_HILOGE("End Request Show err, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
         return ret;
     }
 
-    int32_t errCode = rets[0].first;
+    int32_t errCode = rets[0].code;
     if (errCode != E_OK) {
         REQUEST_HILOGE("End Request Show, tid: %{public}s, failed: %{public}d", tid.c_str(), errCode);
         return errCode;
     }
-    info = rets[0].second;
+    info = rets[0].info;
     REQUEST_HILOGD("End Request Show ok, tid: %{public}s", tid.c_str());
     return E_OK;
 }
@@ -520,9 +521,9 @@ int32_t RequestServiceProxy::Pause(const std::string &tid, const Version version
 {
     REQUEST_HILOGD("Request Pause, tid: %{public}s", tid.c_str());
     std::vector<std::string> tids = { tid };
-    std::vector<int32_t> rets = { E_OTHER };
+    std::vector<ExceptionErrorCode> rets = { E_OTHER };
     int32_t ret = RequestServiceProxy::PauseTasks(tids, version, rets);
-    if (ret != ERR_NONE) {
+    if (ret != ExceptionErrorCode::E_OK) {
         REQUEST_HILOGE("End Request Pause, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
         return ret;
     }
@@ -557,9 +558,9 @@ int32_t RequestServiceProxy::Remove(const std::string &tid, const Version versio
 {
     REQUEST_HILOGD("Request Remove, tid: %{public}s", tid.c_str());
     std::vector<std::string> tids = { tid };
-    std::vector<int32_t> rets = { E_OTHER };
+    std::vector<ExceptionErrorCode> rets = { E_OTHER };
     int32_t ret = RequestServiceProxy::RemoveTasks(tids, version, rets);
-    if (ret != ERR_NONE) {
+    if (ret != ExceptionErrorCode::E_OK) {
         REQUEST_HILOGE("End Request Remove, tid: %{public}s failed: %{public}d", tid.c_str(), ret);
         return ret;
     }
@@ -577,9 +578,9 @@ int32_t RequestServiceProxy::Resume(const std::string &tid)
 {
     REQUEST_HILOGD("Request Resume, tid: %{public}s", tid.c_str());
     std::vector<std::string> tids = { tid };
-    std::vector<int32_t> rets = { E_OTHER };
+    std::vector<ExceptionErrorCode> rets = { E_OTHER };
     int32_t ret = RequestServiceProxy::ResumeTasks(tids, rets);
-    if (ret != ERR_NONE) {
+    if (ret != ExceptionErrorCode::E_OK) {
         REQUEST_HILOGE("End Resume Resume, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
         return ret;
     }

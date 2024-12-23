@@ -16,6 +16,9 @@
 #include "request_action.h"
 
 #include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 #include "log.h"
 #include "request_common.h"
@@ -67,39 +70,115 @@ int32_t RequestAction::Resume(const std::string &tid)
     return RequestManager::GetInstance()->Resume(tid);
 }
 
-int32_t RequestAction::StartTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestAction::StartTasks(
+    const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets)
 {
-    return RequestManager::GetInstance()->StartTasks(tids, rets);
+    rets.clear();
+    std::vector<ExceptionErrorCode> vec;
+    ExceptionErrorCode code = RequestManager::GetInstance()->StartTasks(tids, vec);
+    if (code != ExceptionErrorCode::E_OK) {
+        return code;
+    }
+    uint32_t len = static_cast<uint32_t>(tids.size());
+    for (uint32_t i = 0; i < len; i++) {
+        rets.insert_or_assign(tids[i], vec[i]);
+    }
+    return ExceptionErrorCode::E_OK;
 }
 
-int32_t RequestAction::StopTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestAction::StopTasks(
+    const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets)
 {
-    return RequestManager::GetInstance()->StopTasks(tids, rets);
+    rets.clear();
+    std::vector<ExceptionErrorCode> vec;
+    ExceptionErrorCode code = RequestManager::GetInstance()->StopTasks(tids, vec);
+    if (code != ExceptionErrorCode::E_OK) {
+        return code;
+    }
+    uint32_t len = static_cast<uint32_t>(tids.size());
+    for (uint32_t i = 0; i < len; i++) {
+        rets.insert_or_assign(tids[i], vec[i]);
+    }
+    return ExceptionErrorCode::E_OK;
 }
 
-int32_t RequestAction::ResumeTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestAction::ResumeTasks(
+    const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets)
 {
-    return RequestManager::GetInstance()->ResumeTasks(tids, rets);
+    rets.clear();
+    std::vector<ExceptionErrorCode> vec;
+    ExceptionErrorCode code = RequestManager::GetInstance()->ResumeTasks(tids, vec);
+    if (code != ExceptionErrorCode::E_OK) {
+        return code;
+    }
+    uint32_t len = static_cast<uint32_t>(tids.size());
+    for (uint32_t i = 0; i < len; i++) {
+        rets.insert_or_assign(tids[i], vec[i]);
+    }
+    return ExceptionErrorCode::E_OK;
 }
 
-int32_t RequestAction::RemoveTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestAction::RemoveTasks(
+    const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets)
 {
-    return RequestManager::GetInstance()->RemoveTasks(tids, Version::API10, rets);
+    rets.clear();
+    std::vector<ExceptionErrorCode> vec;
+    ExceptionErrorCode code = RequestManager::GetInstance()->RemoveTasks(tids, Version::API10, vec);
+    if (code != ExceptionErrorCode::E_OK) {
+        return code;
+    }
+    uint32_t len = static_cast<uint32_t>(tids.size());
+    for (uint32_t i = 0; i < len; i++) {
+        rets.insert_or_assign(tids[i], vec[i]);
+    }
+    return ExceptionErrorCode::E_OK;
 }
 
-int32_t RequestAction::PauseTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets)
+ExceptionErrorCode RequestAction::PauseTasks(
+    const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets)
 {
-    return RequestManager::GetInstance()->PauseTasks(tids, Version::API10, rets);
+    rets.clear();
+    std::vector<ExceptionErrorCode> vec;
+    ExceptionErrorCode code = RequestManager::GetInstance()->PauseTasks(tids, Version::API10, vec);
+    if (code != ExceptionErrorCode::E_OK) {
+        return code;
+    }
+    uint32_t len = static_cast<uint32_t>(tids.size());
+    for (uint32_t i = 0; i < len; i++) {
+        rets.insert_or_assign(tids[i], vec[i]);
+    }
+    return ExceptionErrorCode::E_OK;
 }
 
-int32_t RequestAction::ShowTasks(const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+ExceptionErrorCode RequestAction::ShowTasks(
+    const std::vector<std::string> &tids, std::unordered_map<std::string, TaskInfoRet> &rets)
 {
-    return RequestManager::GetInstance()->ShowTasks(tids, rets);
+    rets.clear();
+    std::vector<TaskInfoRet> vec;
+    ExceptionErrorCode code = RequestManager::GetInstance()->ShowTasks(tids, vec);
+    if (code != ExceptionErrorCode::E_OK) {
+        return code;
+    }
+    uint32_t len = static_cast<uint32_t>(tids.size());
+    for (uint32_t i = 0; i < len; i++) {
+        rets.insert_or_assign(tids[i], vec[i]);
+    }
+    return ExceptionErrorCode::E_OK;
 }
 
-int32_t RequestAction::TouchTasks(
-    const std::vector<std::pair<std::string, std::string>> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets)
+ExceptionErrorCode RequestAction::TouchTasks(
+    const std::vector<TaskIdAndToken> &tidTokens, std::unordered_map<std::string, TaskInfoRet> &rets)
 {
-    return RequestManager::GetInstance()->TouchTasks(tids, rets);
+    rets.clear();
+    std::vector<TaskInfoRet> vec;
+    ExceptionErrorCode code = RequestManager::GetInstance()->TouchTasks(tidTokens, vec);
+    if (code != ExceptionErrorCode::E_OK) {
+        return code;
+    }
+    uint32_t len = static_cast<uint32_t>(tidTokens.size());
+    for (uint32_t i = 0; i < len; i++) {
+        rets.insert_or_assign(tidTokens[i].tid, vec[i]);
+    }
+    return ExceptionErrorCode::E_OK;
 }
 } // namespace OHOS::Request

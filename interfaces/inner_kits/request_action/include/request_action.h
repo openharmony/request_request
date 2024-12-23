@@ -18,6 +18,8 @@
 
 #include "access_token.h"
 #include "accesstoken_kit.h"
+#include "constant.h"
+#include "request_common.h"
 #include "request_manager.h"
 
 namespace OHOS::Request {
@@ -37,14 +39,20 @@ public:
     int32_t Remove(const std::string &tid);
     int32_t Resume(const std::string &tid);
 
-    int32_t StartTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
-    int32_t StopTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
-    int32_t ResumeTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
-    int32_t RemoveTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
-    int32_t PauseTasks(const std::vector<std::string> &tids, std::vector<int32_t> &rets);
-    int32_t ShowTasks(const std::vector<std::string> &tids, std::vector<std::pair<int32_t, TaskInfo>> &rets);
-    int32_t TouchTasks(const std::vector<std::pair<std::string, std::string>> &tids,
-        std::vector<std::pair<int32_t, TaskInfo>> &rets);
+    ExceptionErrorCode StartTasks(
+        const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets);
+    ExceptionErrorCode StopTasks(
+        const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets);
+    ExceptionErrorCode ResumeTasks(
+        const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets);
+    ExceptionErrorCode RemoveTasks(
+        const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets);
+    ExceptionErrorCode PauseTasks(
+        const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets);
+    ExceptionErrorCode ShowTasks(
+        const std::vector<std::string> &tids, std::unordered_map<std::string, TaskInfoRet> &rets);
+    ExceptionErrorCode TouchTasks(
+        const std::vector<TaskIdAndToken> &tidTokens, std::unordered_map<std::string, TaskInfoRet> &rets);
 };
 
 } // namespace OHOS::Request
