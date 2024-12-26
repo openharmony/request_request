@@ -24,7 +24,8 @@ use crate::service::RequestServiceStub;
 impl RequestServiceStub {
     pub(crate) fn start(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("Service start");
-        if !PermissionChecker::check_internet() {
+        let permission = PermissionChecker::check_down_permission();
+        if !PermissionChecker::check_internet() && !permission {
             error!("Service start: no INTERNET permission.");
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
@@ -52,7 +53,7 @@ impl RequestServiceStub {
             };
 
             let mut uid = uid;
-            if PermissionChecker::check_down_permission() {
+            if permission {
                 // skip uid check if task used by innerkits
                 info!("{} start permission inner", task_id);
                 match RequestDb::get_instance().query_task_uid(task_id) {

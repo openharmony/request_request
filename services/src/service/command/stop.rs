@@ -24,6 +24,7 @@ use crate::service::RequestServiceStub;
 impl RequestServiceStub {
     pub(crate) fn stop(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("Service stop");
+        let permission = PermissionChecker::check_down_permission();
         let len: u32 = data.read()?;
         let len = len as usize;
         let mut vec = vec![ErrorCode::Other; len];
@@ -46,7 +47,7 @@ impl RequestServiceStub {
             };
 
             let mut uid = uid;
-            if PermissionChecker::check_down_permission() {
+            if permission {
                 // skip uid check if task used by innerkits
                 info!("{} stop permission inner", task_id);
                 match RequestDb::get_instance().query_task_uid(task_id) {
