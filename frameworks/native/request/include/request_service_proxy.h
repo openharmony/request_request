@@ -30,8 +30,7 @@ public:
     ~RequestServiceProxy() = default;
     DISALLOW_COPY_AND_MOVE(RequestServiceProxy);
 
-    ExceptionErrorCode StartTasks(
-        const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets) override;
+    ExceptionErrorCode StartTasks(const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets) override;
     ExceptionErrorCode StopTasks(const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets) override;
     ExceptionErrorCode ResumeTasks(
         const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets) override;

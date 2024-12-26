@@ -15,15 +15,15 @@ import("//base/request/request/request_aafwk.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
-ohos_unittest("fwkTest") {
+ohos_unittest("innerTest") {
   module_out_path = "request/request"
 
   include_dirs = [
     "include",
     "../../../../frameworks/js/napi/request/include",
     "../../../../frameworks/native/request/include",
-    "../../../../interfaces/inner_kits/running_count/include",
     "../../../../common/include",
+    "../../../../interfaces/inner_kits/request_action/include",
   ]
 
   sources = [
@@ -34,17 +34,11 @@ ohos_unittest("fwkTest") {
     "../../../../frameworks/native/request/src/request_running_task_count.cpp",
     "../../../../frameworks/native/request/src/request_service_proxy.cpp",
     "../../../../frameworks/native/request/src/response_message_receiver.cpp",
-    "../../../../frameworks/native/request/src/runcount_notify_stub.cpp",
-    "src/parcel_helper_test.cpp",
-    "src/request_manager_impl_test.cpp",
-    "src/request_manager_test.cpp",
-    "src/request_test.cpp",
-    "src/response_message_receiver_test.cpp",
-    "src/runcount_notify_stub_test.cpp",
-    "src/running_task_count_test.cpp",
+    "../../../../interfaces/inner_kits/request_action/src/request_action.cpp",
+    "src/request_action_test.cpp",
   ]
 
-  deps = [ "//third_party/googletest:gmock_main" ]
+  deps = []
 
   external_deps = [
     "ability_base:base",
@@ -52,7 +46,10 @@ ohos_unittest("fwkTest") {
     "ability_base:zuri",
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
+    "ability_runtime:extensionkit_native",
     "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
     "access_token:libtokenid_sdk",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
@@ -74,6 +71,6 @@ ohos_unittest("fwkTest") {
 
 group("unittest") {
   testonly = true
-  deps = [ ":fwkTest" ]
+  deps = [ ":innerTest" ]
   deps += []
 }

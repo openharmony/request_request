@@ -122,6 +122,7 @@
         "//base/request/request/test/unittest/cpp_test/saTest:unittest",
         "//base/request/request/test/unittest/cpp_test/preload:unittest",
         "//base/request/request/test/unittest/cpp_test/fwkTest:unittest",
+        "//base/request/request/test/unittest/cpp_test/innerTest:unittest",
         "//base/request/request/services/tests:unittest",
         "//base/request/request/frameworks/native/cache_download:unittest",
         "//base/request/request/frameworks/native/cache_core:unittest",

@@ -223,8 +223,11 @@ void ResponseMessageReceiver::BeginReceive()
 {
     std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
     serviceHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
-    serviceHandler_->AddFileDescriptorListener(
+    auto err = serviceHandler_->AddFileDescriptorListener(
         sockFd_, OHOS::AppExecFwk::FILE_DESCRIPTOR_INPUT_EVENT, shared_from_this(), "subscribe");
+    if (err != ERR_OK) {
+        REQUEST_HILOGE("handler addlisterner err: %{public}d", err);
+    }
 }
 
 // ret 0 if success, ret < 0 if fail

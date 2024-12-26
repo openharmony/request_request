@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "constant.h"
 #include "log.h"
 #include "request_common.h"
 
@@ -32,9 +33,9 @@ const std::unique_ptr<RequestAction> &RequestAction::GetInstance()
     return instance;
 }
 
-int32_t RequestAction::GetTask(const std::string &tid, const std::string &token, Config &config)
+int32_t RequestAction::Create(const Config &config, int32_t seq, std::string &tid)
 {
-    return RequestManager::GetInstance()->GetTask(tid, token, config);
+    return E_PARAMETER_CHECK;
 }
 int32_t RequestAction::Start(const std::string &tid)
 {
