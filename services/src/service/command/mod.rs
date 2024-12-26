@@ -36,7 +36,7 @@ mod unsub_runcount;
 mod unsubscribe;
 
 pub(crate) const CONTROL_MAX: usize = 500;
-pub(crate) const GET_INFO_MAX: usize = 100;
+pub(crate) const GET_INFO_MAX: usize = 200;
 
 pub(crate) fn set_code_with_index(vec: &mut [ErrorCode], index: usize, code: ErrorCode) {
     if let Some(c) = vec.get_mut(index) {

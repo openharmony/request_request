@@ -23,6 +23,7 @@ use crate::service::{serialize_task_info, RequestServiceStub};
 
 impl RequestServiceStub {
     pub(crate) fn touch(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+        let permission = PermissionChecker::check_down_permission();
         let len: u32 = data.read()?;
         let len = len as usize;
         let mut vec = vec![(ErrorCode::Other, TaskInfo::new()); len];
@@ -47,7 +48,7 @@ impl RequestServiceStub {
             };
 
             let mut uid = uid;
-            if PermissionChecker::check_down_permission() {
+            if permission {
                 // skip uid check if task used by innerkits
                 info!("{} touch permission inner", task_id);
                 match RequestDb::get_instance().query_task_uid(task_id) {

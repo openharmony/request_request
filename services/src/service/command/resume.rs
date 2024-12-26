@@ -23,7 +23,8 @@ use crate::service::RequestServiceStub;
 
 impl RequestServiceStub {
     pub(crate) fn resume(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        if !PermissionChecker::check_internet() {
+        let permission = PermissionChecker::check_down_permission();
+        if !PermissionChecker::check_internet() && !permission {
             error!("Service resume: no INTERNET permission");
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
@@ -34,7 +35,7 @@ impl RequestServiceStub {
         let mut vec = vec![ErrorCode::Other; len];
 
         if len > CONTROL_MAX {
-            info!("Service start: out of size: {}", len);
+            info!("Service resume: out of size: {}", len);
             reply.write(&(ErrorCode::Other as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -51,7 +52,7 @@ impl RequestServiceStub {
             };
 
             let mut uid = uid;
-            if PermissionChecker::check_down_permission() {
+            if permission {
                 // skip uid check if task used by innerkits
                 info!("{} resume permission inner", task_id);
                 match RequestDb::get_instance().query_task_uid(task_id) {

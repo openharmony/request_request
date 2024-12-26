@@ -24,6 +24,7 @@ use crate::task::config::Version;
 
 impl RequestServiceStub {
     pub(crate) fn pause(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+        let permission = PermissionChecker::check_down_permission();
         let version: u32 = data.read()?;
         if Version::from(version as u8) == Version::API9 && !PermissionChecker::check_internet() {
             error!("Service pause: no INTERNET permission");
@@ -36,7 +37,7 @@ impl RequestServiceStub {
         let mut vec = vec![ErrorCode::Other; len];
 
         if len > CONTROL_MAX {
-            info!("Service start: out of size: {}", len);
+            info!("Service pause: out of size: {}", len);
             reply.write(&(ErrorCode::Other as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -53,7 +54,7 @@ impl RequestServiceStub {
             };
 
             let mut uid = uid;
-            if PermissionChecker::check_down_permission() {
+            if permission {
                 // skip uid check if task used by innerkits
                 info!("{} pause permission inner", task_id);
                 match RequestDb::get_instance().query_task_uid(task_id) {
