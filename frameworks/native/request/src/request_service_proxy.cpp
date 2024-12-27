@@ -318,7 +318,7 @@ ExceptionErrorCode RequestServiceProxy::SetMode(const std::string &tid, const Mo
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
     ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
-    if (ret != ExceptionErrorCode::E_OK) {
+    if (code != ExceptionErrorCode::E_OK) {
         REQUEST_HILOGE("End Request SetMode, failed: %{public}d", code);
         return code;
     }
