@@ -22,48 +22,133 @@
 #include "wrapper.rs.h"
 
 namespace OHOS::Request {
-Data::Data(rust::Box<RustData> data)
+Data::Data(rust::Box<RustData> &&data)
 {
-    this->_data = data.into_raw();
+    data_ = data.into_raw();
 }
+
 Data::~Data()
 {
-    rust::Box<RustData>::from_raw(this->_data);
+    rust::Box<RustData>::from_raw(data_);
 }
 
-rust::Slice<const uint8_t> Data::bytes()
+Data::Data(Data &&other) noexcept : data_(other.data_)
 {
-    return this->_data->bytes();
+    other.data_ = nullptr;
 }
 
-PreloadError::PreloadError(rust::Box<CacheDownloadError> error)
+Data &Data::operator=(Data &&other) &noexcept
 {
-    this->_error = error.into_raw();
+    if (data_) {
+        rust::Box<RustData>::from_raw(data_);
+    }
+    data_ = other.data_;
+    other.data_ = nullptr;
+    return *this;
+}
+
+template<typename T> Slice<T>::Slice(std::unique_ptr<rust::Slice<T>> &&slice) : slice_(std::move(slice))
+{
+}
+
+template<typename T> Slice<T>::~Slice()
+{
+}
+
+template<typename T> T *Slice<T>::data() const noexcept
+{
+    return slice_->data();
+}
+
+template<typename T> std::size_t Slice<T>::size() const noexcept
+{
+    return slice_->size();
+}
+
+template<typename T> std::size_t Slice<T>::length() const noexcept
+{
+    return slice_->length();
+}
+
+template<typename T> bool Slice<T>::empty() const noexcept
+{
+    return slice_->empty();
+}
+
+template<typename T> T &Slice<T>::operator[](std::size_t n) const noexcept
+{
+    return (*slice_)[n];
+}
+
+Slice<const uint8_t> Data::bytes() const
+{
+    auto bytes = std::make_unique<rust::Slice<const uint8_t>>(data_->bytes());
+    return Slice<const uint8_t>(std::move(bytes));
+}
+
+rust::Slice<const uint8_t> Data::rustSlice() const
+{
+    return data_->bytes();
+}
+
+PreloadError::PreloadError(rust::Box<CacheDownloadError> &&error)
+{
+    error_ = error.into_raw();
+}
+
+PreloadError::PreloadError(PreloadError &&other) noexcept : error_(other.error_)
+{
+    other.error_ = nullptr;
+}
+
+PreloadError &PreloadError::operator=(PreloadError &&other) &noexcept
+{
+    if (error_) {
+        rust::Box<CacheDownloadError>::from_raw(error_);
+    }
+    error_ = other.error_;
+    other.error_ = nullptr;
+    return *this;
 }
 
 PreloadError::~PreloadError()
 {
-    rust::Box<CacheDownloadError>::from_raw(this->_error);
+    rust::Box<CacheDownloadError>::from_raw(error_);
 }
 
 int32_t PreloadError::GetCode() const
 {
-    return this->_error->code();
+    return error_->code();
 }
 
 std::string PreloadError::GetMessage() const
 {
-    return std::string(this->_error->message());
+    return std::string(error_->message());
 }
 
 ErrorKind PreloadError::GetErrorKind() const
 {
-    return static_cast<ErrorKind>(this->_error->ffi_kind());
+    return static_cast<ErrorKind>(error_->ffi_kind());
 }
 
 Preload::Preload()
 {
-    this->_agent = cache_download_service();
+    agent_ = cache_download_service();
+}
+
+PreloadHandle::PreloadHandle(PreloadHandle &&other) noexcept : handle_(other.handle_)
+{
+    other.handle_ = nullptr;
+}
+
+PreloadHandle &PreloadHandle::operator=(PreloadHandle &&other) &noexcept
+{
+    if (handle_) {
+        rust::Box<TaskHandle>::from_raw(handle_);
+    }
+    handle_ = other.handle_;
+    other.handle_ = nullptr;
+    return *this;
 }
 
 std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique_ptr<PreloadCallback> callback,
@@ -83,33 +168,33 @@ std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique
             ffiOptions.headers.push_back(std::get<1>(header));
         }
     }
-    auto taskHandle = this->_agent->ffi_preload(
+    auto taskHandle = agent_->ffi_preload(
         rust::str(url), std::move(callback_wrapper), std::move(progress_callback_wrapper), update, ffiOptions);
     return std::make_shared<PreloadHandle>(std::move(taskHandle));
 }
 
 void Preload::SetRamCacheSize(uint64_t size)
 {
-    this->_agent->set_ram_cache_size(size);
+    agent_->set_ram_cache_size(size);
 }
 void Preload::SetFileCacheSize(uint64_t size)
 {
-    this->_agent->set_file_cache_size(size);
+    agent_->set_file_cache_size(size);
 }
 
 void Preload::Cancel(std::string const &url)
 {
-    this->_agent->cancel(rust::str(url));
+    agent_->cancel(rust::str(url));
 }
 
 void Preload::Remove(std::string const &url)
 {
-    this->_agent->remove(rust::str(url));
+    agent_->remove(rust::str(url));
 }
 
 bool Preload::Contains(const std::string &url)
 {
-    return this->_agent->contains(rust::str(url));
+    return agent_->contains(rust::str(url));
 }
 
 Preload *Preload::GetInstance()
@@ -120,32 +205,33 @@ Preload *Preload::GetInstance()
 
 PreloadHandle::PreloadHandle(rust::Box<TaskHandle> handle)
 {
-    this->_handle = handle.into_raw();
+    handle_ = handle.into_raw();
 }
 
 PreloadHandle::~PreloadHandle()
 {
-    rust::Box<TaskHandle>::from_raw(this->_handle);
+    rust::Box<TaskHandle>::from_raw(handle_);
 }
 
 void PreloadHandle::Cancel()
 {
-    this->_handle->cancel();
+    handle_->cancel();
 }
 
 std::string PreloadHandle::GetTaskId()
 {
-    return std::string(this->_handle->task_id());
+    return std::string(handle_->task_id());
 }
 
 bool PreloadHandle::IsFinish()
 {
-    return this->_handle->is_finish();
+    return handle_->is_finish();
 }
 
 PreloadState PreloadHandle::GetState()
 {
-    return static_cast<PreloadState>(this->_handle->state());
+    return static_cast<PreloadState>(handle_->state());
 }
+template class Slice<const uint8_t>;
 
 } // namespace OHOS::Request

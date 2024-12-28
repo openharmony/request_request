@@ -15,11 +15,16 @@
 
 #include "preload_module.h"
 
+#include <dlfcn.h>
 #include <unistd.h>
 
 #include <cstdint>
 #include <memory>
 
+#include "access_token.h"
+#include "accesstoken_kit.h"
+#include "base/request/request/common/include/constant.h"
+#include "ipc_skeleton.h"
 #include "js_native_api.h"
 #include "js_native_api_types.h"
 #include "napi/native_common.h"
@@ -28,19 +33,43 @@
 #include "request_preload.h"
 
 namespace OHOS::Request {
+using namespace Security::AccessToken;
+
+constexpr const size_t MAX_UTL_LENGTH = 8192;
+
+constexpr int64_t MAX_MEM_SIZE = 1073741824;
+constexpr int64_t MAX_FILE_SIZE = 4294967296;
+const std::string INTERNET_PERMISSION = "ohos.permission.INTERNET";
+
+bool CheckInternetPermission()
+{
+    static bool hasPermission = []() {
+        uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
+        TypeATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(static_cast<AccessTokenID>(tokenId));
+        if (tokenType == TOKEN_INVALID) {
+            return false;
+        }
+        int result = AccessTokenKit::VerifyAccessToken(tokenId, INTERNET_PERMISSION);
+        return result == PERMISSION_GRANTED;
+    };
+    return hasPermission;
+}
 
 napi_value download(napi_env env, napi_callback_info info)
 {
     size_t argc = 2;
     napi_value args[2] = { nullptr };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-
     if (GetValueType(env, args[0]) != napi_string || GetValueType(env, args[1]) != napi_object) {
-        napi_throw_type_error(env, nullptr, "Unsupported parameter type");
+        ThrowError(env, E_PARAMETER_CHECK, "parameter error");
         return nullptr;
     }
-    std::string url = GetValueString(env, args[0]);
-
+    size_t urlLength = GetStringLength(env, args[0]);
+    if (urlLength > MAX_UTL_LENGTH) {
+        ThrowError(env, E_PARAMETER_CHECK, "url exceeds the maximum length");
+        return nullptr;
+    }
+    std::string url = GetValueString(env, args[0], urlLength);
     std::unique_ptr<PreloadOptions> options = std::make_unique<PreloadOptions>();
     napi_value headers = nullptr;
     if (napi_get_named_property(env, args[1], "headers", &headers) == napi_ok
@@ -51,6 +80,9 @@ napi_value download(napi_env env, napi_callback_info info)
             options->headers.emplace_back(std::make_pair(name, value));
         }
     }
+    if (!CheckInternetPermission()) {
+        ThrowError(env, E_PERMISSION, "internet permission denied");
+    }
     Preload::GetInstance()->load(url, nullptr, std::move(options), true);
     return nullptr;
 }
@@ -60,12 +92,16 @@ napi_value cancel(napi_env env, napi_callback_info info)
     size_t argc = 1;
     napi_value args[1] = { nullptr };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-
     if (GetValueType(env, args[0]) != napi_string) {
-        napi_throw_type_error(env, nullptr, "Unsupported parameter type");
+        ThrowError(env, E_PARAMETER_CHECK, "parameter error");
         return nullptr;
     }
-    std::string url = GetValueString(env, args[0]);
+    size_t urlLength = GetStringLength(env, args[0]);
+    if (urlLength > MAX_UTL_LENGTH) {
+        ThrowError(env, E_PARAMETER_CHECK, "url exceeds the maximum length");
+        return nullptr;
+    }
+    std::string url = GetValueString(env, args[0], urlLength);
     Preload::GetInstance()->Cancel(url);
     return nullptr;
 }
@@ -77,10 +113,14 @@ napi_value setMemoryCacheSize(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
 
     if (GetValueType(env, args[0]) != napi_number) {
-        napi_throw_type_error(env, nullptr, "Unsupported parameter type");
+        ThrowError(env, E_PARAMETER_CHECK, "parameter error");
         return nullptr;
     }
-    uint32_t size = GetValueNum(env, args[0]);
+    int64_t size = GetValueNum(env, args[0]);
+    if (size > MAX_MEM_SIZE) {
+        ThrowError(env, E_PARAMETER_CHECK, "memory cache size exceeds the maximum value");
+        return nullptr;
+    }
     Preload::GetInstance()->SetRamCacheSize(size);
     return nullptr;
 }
@@ -92,10 +132,14 @@ napi_value setFileCacheSize(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
 
     if (GetValueType(env, args[0]) != napi_number) {
-        napi_throw_type_error(env, nullptr, "Unsupported parameter type");
+        ThrowError(env, E_PARAMETER_CHECK, "parameter error");
         return nullptr;
     }
-    uint32_t size = GetValueNum(env, args[0]);
+    int64_t size = GetValueNum(env, args[0]);
+    if (size > MAX_FILE_SIZE) {
+        ThrowError(env, E_PARAMETER_CHECK, "file cache size exceeds the maximum value");
+        return nullptr;
+    }
     Preload::GetInstance()->SetFileCacheSize(size);
     return nullptr;
 }
