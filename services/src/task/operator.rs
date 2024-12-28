@@ -88,7 +88,7 @@ impl TaskOperator {
 
         self.speed_limiter.update_speed_limit(speed_limit);
         self.speed_limiter
-            .poll_check_limit(cx, current, total_processed, next_notify_time)
+            .poll_check_limit(cx, current, total_processed)
     }
 
     pub(crate) fn poll_write_file(
