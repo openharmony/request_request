@@ -182,4 +182,9 @@ ExceptionErrorCode RequestAction::TouchTasks(
     }
     return ExceptionErrorCode::E_OK;
 }
+
+ExceptionErrorCode RequestAction::SetMode(std::string &tid, Mode mode)
+{
+    return RequestManager::GetInstance()->SetMode(tid, mode);
+}
 } // namespace OHOS::Request

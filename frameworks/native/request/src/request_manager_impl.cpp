@@ -46,6 +46,11 @@ const std::unique_ptr<RequestManagerImpl> &RequestManagerImpl::GetInstance()
     return instance;
 }
 
+ExceptionErrorCode RequestManagerImpl::SetMode(const std::string &tid, const Mode mode)
+{
+    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::SetMode, tid, mode));
+}
+
 ExceptionErrorCode RequestManagerImpl::StartTasks(
     const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
 {
@@ -67,7 +72,8 @@ ExceptionErrorCode RequestManagerImpl::ResumeTasks(
 ExceptionErrorCode RequestManagerImpl::RemoveTasks(
     const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets)
 {
-    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::RemoveTasks, tids, version, rets));
+    return static_cast<ExceptionErrorCode>(
+        CallProxyMethod(&RequestServiceInterface::RemoveTasks, tids, version, rets));
 }
 
 ExceptionErrorCode RequestManagerImpl::PauseTasks(

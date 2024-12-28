@@ -221,6 +221,9 @@ impl TaskManager {
             ServiceEvent::AttachGroup(task_id, group, tx) => {
                 let _ = tx.send(self.attach_group(task_id, group));
             }
+            ServiceEvent::SetMode(uid, task_id, mode, tx) => {
+                let _ = tx.send(self.set_mode(uid, task_id, mode));
+            }
         }
     }
 

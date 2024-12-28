@@ -69,6 +69,11 @@ ExceptionErrorCode RequestManager::TouchTasks(
     return RequestManagerImpl::GetInstance()->TouchTasks(tidTokens, rets);
 }
 
+ExceptionErrorCode RequestManager::SetMode(const std::string &tid, const Mode mode)
+{
+    return RequestManagerImpl::GetInstance()->SetMode(tid, mode);
+}
+
 int32_t RequestManager::Create(const Config &config, int32_t seq, std::string &tid)
 {
     return RequestManagerImpl::GetInstance()->Create(config, seq, tid);

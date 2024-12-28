@@ -65,12 +65,23 @@ impl SortedApps {
         self.inner.push(app);
     }
 
+    fn get_app_mut(&mut self, uid: u64) -> Option<&mut App> {
+        self.inner.iter_mut().find(|app| app.uid == uid)
+    }
+
     pub(crate) fn remove_task(&mut self, uid: u64, task_id: u32) -> bool {
-        // Remove target task in target app.
-        if let Some(app) = self.inner.iter_mut().find(|app| app.uid == uid) {
-            app.remove(task_id)
-        } else {
-            false
+        match self.get_app_mut(uid) {
+            // Remove target task in target app.
+            Some(app) => app.remove(task_id),
+            None => false,
+        }
+    }
+
+    pub(crate) fn task_set_mode(&mut self, uid: u64, task_id: u32, mode: Mode) -> bool {
+        match self.get_app_mut(uid) {
+            // Remove target task in target app.
+            Some(app) => app.task_set_mode(task_id, mode),
+            None => false,
         }
     }
 }
@@ -109,17 +120,30 @@ impl App {
         self.tasks.binary_insert(task)
     }
 
-    fn remove(&mut self, task_id: u32) -> bool {
-        if let Some((i, _)) = self
-            .tasks
-            .iter()
+    fn get_task_mut(&mut self, task_id: u32) -> Option<(usize, &mut Task)> {
+        self.tasks
+            .iter_mut()
             .enumerate()
             .find(|(_, task)| task.task_id == task_id)
-        {
-            self.tasks.remove(i);
-            true
-        } else {
-            false
+    }
+
+    fn remove(&mut self, task_id: u32) -> bool {
+        match self.get_task_mut(task_id) {
+            Some((index, _task)) => {
+                self.tasks.remove(index);
+                true
+            }
+            None => false,
+        }
+    }
+
+    fn task_set_mode(&mut self, task_id: u32, mode: Mode) -> bool {
+        match self.get_task_mut(task_id) {
+            Some((_index, task)) => {
+                task.set_mode(mode);
+                true
+            }
+            None => false,
         }
     }
 }
@@ -151,6 +175,10 @@ impl Task {
 
     pub(crate) fn action(&self) -> Action {
         self.action
+    }
+
+    pub(crate) fn set_mode(&mut self, mode: Mode) {
+        self.mode = mode;
     }
 }
 

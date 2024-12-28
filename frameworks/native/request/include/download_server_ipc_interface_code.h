@@ -42,6 +42,7 @@ enum class RequestInterfaceCode {
     CMD_ATTACH_GROUP,
     CMD_DELETE_GROUP,
     CMD_SET_MAX_SPEED,
+    CMD_SET_MODE = 100,
 };
 
 enum class RequestNotifyInterfaceCode {

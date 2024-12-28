@@ -14,6 +14,7 @@
 use crate::error::ErrorCode;
 
 mod attach_group;
+mod set_mode;
 mod construct;
 mod create_group;
 mod delete_group;

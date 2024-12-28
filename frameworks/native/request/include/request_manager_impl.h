@@ -54,6 +54,7 @@ public:
     ExceptionErrorCode QueryTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets);
     ExceptionErrorCode ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets);
     ExceptionErrorCode TouchTasks(const std::vector<TaskIdAndToken> &tids, std::vector<TaskInfoRet> &rets);
+    ExceptionErrorCode SetMode(const std::string &tid, const Mode mode);
 
     int32_t Create(const Config &config, int32_t seq, std::string &tid);
     int32_t GetTask(const std::string &tid, const std::string &token, Config &config);

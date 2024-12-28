@@ -208,6 +208,25 @@ impl Scheduler {
         Ok(())
     }
 
+    pub(crate) fn task_set_mode(
+        &mut self,
+        uid: u64,
+        task_id: u32,
+        mode: Mode,
+    ) -> Result<(), ErrorCode> {
+        let database = RequestDb::get_instance();
+        database.change_mode(task_id, mode)?;
+
+        if mode == Mode::FrontEnd {
+            force_cancel_progress_notification(task_id);
+        }
+
+        if self.qos.task_set_mode(uid, task_id, mode) {
+            self.schedule_if_not_scheduled();
+        }
+        Ok(())
+    }
+
     pub(crate) fn task_completed(&mut self, uid: u64, task_id: u32) {
         info!("scheduler task {} completed", task_id);
         self.running_queue.task_finish(uid, task_id);
@@ -497,6 +516,27 @@ impl RequestDb {
             && (new_state == State::Stopped || new_state == State::Removed)
         {
             cancel_progress_notification(&info);
+        }
+        Ok(())
+    }
+
+    fn change_mode(&self, task_id: u32, mode: Mode) -> Result<(), ErrorCode> {
+        let info = RequestDb::get_instance()
+            .get_task_info(task_id)
+            .ok_or(ErrorCode::TaskNotFound)?;
+        let old_mode = info.common_data.mode;
+        if old_mode == mode.repr {
+            return Ok(());
+        }
+        let sql = sql::task_set_mode(task_id, mode);
+        RequestDb::get_instance()
+            .execute(&sql)
+            .map_err(|_| ErrorCode::SystemApi)?;
+        let info = RequestDb::get_instance()
+            .get_task_info(task_id)
+            .ok_or(ErrorCode::SystemApi)?;
+        if info.common_data.mode != mode.repr {
+            return Err(ErrorCode::TaskStateErr);
         }
         Ok(())
     }
