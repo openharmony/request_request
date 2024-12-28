@@ -202,6 +202,7 @@ impl CacheManager {
                 .lock()
                 .unwrap()
                 .insert(task_id.clone(), cache.clone());
+            self.files.lock().unwrap().remove(&task_id);
             if let Some(file_cache) = FileCache::try_create(task_id.clone(), self, cache) {
                 info!("{} file cache updated", task_id.brief());
                 self.files

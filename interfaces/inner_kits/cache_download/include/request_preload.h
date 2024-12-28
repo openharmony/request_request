@@ -22,7 +22,12 @@
 #include <tuple>
 #include <vector>
 
-#include "cxx.h"
+namespace rust {
+inline namespace cxxbridge1 {
+template<typename T> class Box;
+template<typename T> class Slice;
+} // namespace cxxbridge1
+} // namespace rust
 
 namespace OHOS::Request {
 struct RustData;
@@ -38,16 +43,32 @@ enum class PreloadState {
     CANCEL,
 };
 
-class Data {
+template<typename T> class Slice {
 public:
-    Data(rust::Box<RustData> data);
-    Data &operator=(const Data &) = delete;
-
-    ~Data();
-    rust::Slice<const uint8_t> bytes();
+    Slice(std::unique_ptr<rust::Slice<T>> &&slice);
+    ~Slice();
+    T *data() const noexcept;
+    std::size_t size() const noexcept;
+    std::size_t length() const noexcept;
+    bool empty() const noexcept;
+    T &operator[](std::size_t n) const noexcept;
 
 private:
-    RustData *_data;
+    std::unique_ptr<rust::Slice<T>> slice_;
+};
+
+class Data {
+public:
+    Data(rust::Box<RustData> &&data);
+    Data(Data &&) noexcept;
+    ~Data();
+    Data &operator=(Data &&) &noexcept;
+
+    Slice<const uint8_t> bytes() const;
+    rust::Slice<const uint8_t> rustSlice() const;
+
+private:
+    RustData *data_;
 };
 
 enum ErrorKind {
@@ -58,8 +79,9 @@ enum ErrorKind {
 
 class PreloadError {
 public:
-    PreloadError(rust::Box<CacheDownloadError> error);
-    PreloadError &operator=(const PreloadError &) = delete;
+    PreloadError(rust::Box<CacheDownloadError> &&error);
+    PreloadError(PreloadError &&) noexcept;
+    PreloadError &operator=(PreloadError &&) &noexcept;
     ~PreloadError();
 
     int32_t GetCode() const;
@@ -67,7 +89,7 @@ public:
     ErrorKind GetErrorKind() const;
 
 private:
-    CacheDownloadError *_error;
+    CacheDownloadError *error_;
 };
 
 struct PreloadCallback {
@@ -79,8 +101,9 @@ struct PreloadCallback {
 
 class PreloadHandle {
 public:
+    PreloadHandle(PreloadHandle &&) noexcept;
     PreloadHandle(rust::Box<TaskHandle>);
-    PreloadError &operator=(const PreloadError &) = delete;
+    PreloadHandle &operator=(PreloadHandle &&) &noexcept;
 
     ~PreloadHandle();
     void Cancel();
@@ -89,7 +112,7 @@ public:
     PreloadState GetState();
 
 private:
-    TaskHandle *_handle;
+    TaskHandle *handle_;
 };
 
 struct PreloadOptions {
@@ -112,7 +135,7 @@ public:
         std::unique_ptr<PreloadOptions> options = nullptr, bool update = false);
 
 private:
-    const CacheDownloadService *_agent;
+    const CacheDownloadService *agent_;
 };
 
 } // namespace OHOS::Request

@@ -17,6 +17,7 @@ use std::sync::Arc;
 
 use request_utils::task_id::TaskId;
 
+use super::MAX_CACHE_SIZE;
 use crate::manage::CacheManager;
 
 const DEFAULT_TRUNK_CAPACITY: usize = 512;
@@ -93,12 +94,14 @@ impl RamCache {
             Ordering::Equal => true,
             Ordering::Greater => {
                 let diff = self.data.len() - self.applied as usize;
-                if !CacheManager::apply_cache(
-                    &self.handle.ram_handle,
-                    &self.handle.rams,
-                    |a| RamCache::task_id(a),
-                    diff,
-                ) {
+                if self.data.len() > MAX_CACHE_SIZE as usize
+                    || !CacheManager::apply_cache(
+                        &self.handle.ram_handle,
+                        &self.handle.rams,
+                        |a| RamCache::task_id(a),
+                        diff,
+                    )
+                {
                     info!(
                         "apply extra ram {} cache for task {} failed",
                         diff,

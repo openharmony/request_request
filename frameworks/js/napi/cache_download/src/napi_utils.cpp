@@ -19,33 +19,57 @@
 #include <mutex>
 #include <string>
 
+#include "base/request/request/common/include/constant.h"
+#include "js_native_api.h"
 #include "napi/native_common.h"
 
 namespace OHOS::Request {
+napi_value CreateBusinessError(napi_env env, int32_t errorCode, const std::string &errorMessage)
+{
+    napi_value error = nullptr;
+    napi_value msg = nullptr;
+    NAPI_CALL(env, napi_create_string_utf8(env, errorMessage.c_str(), errorMessage.length(), &msg));
+    NAPI_CALL(env, napi_create_error(env, nullptr, msg, &error));
+    napi_value code = nullptr;
+    NAPI_CALL(env, napi_create_uint32(env, static_cast<uint32_t>(errorCode), &code));
+    napi_set_named_property(env, error, "code", code);
+    return error;
+}
+
+void ThrowError(napi_env env, int32_t code, const std::string &msg)
+{
+    napi_value error = CreateBusinessError(env, code, msg);
+    napi_throw(env, error);
+}
+
 napi_valuetype GetValueType(napi_env env, napi_value value)
 {
     if (value == nullptr) {
         return napi_undefined;
     }
-
     napi_valuetype valueType = napi_undefined;
     NAPI_CALL_BASE(env, napi_typeof(env, value, &valueType), napi_undefined);
     return valueType;
 }
 
-std::string GetValueString(napi_env env, napi_value value)
+size_t GetStringLength(napi_env env, napi_value value)
 {
     size_t length;
-    NAPI_CALL(env, napi_get_value_string_utf8(env, value, nullptr, 0, &length));
+    NAPI_CALL_BASE(env, napi_get_value_string_utf8(env, value, nullptr, 0, &length), 0);
+    return length;
+}
+
+std::string GetValueString(napi_env env, napi_value value, size_t length)
+{
     char chars[length + 1];
     NAPI_CALL(env, napi_get_value_string_utf8(env, value, chars, sizeof(chars), &length));
     return std::string(chars);
 }
 
-uint32_t GetValueNum(napi_env env, napi_value value)
+int64_t GetValueNum(napi_env env, napi_value value)
 {
-    uint32_t ret;
-    NAPI_CALL_BASE(env, napi_get_value_uint32(env, value, &ret), 0);
+    int64_t ret;
+    NAPI_CALL_BASE(env, napi_get_value_int64(env, value, &ret), 0);
     return ret;
 }
 
@@ -64,7 +88,8 @@ std::vector<std::string> GetPropertyNames(napi_env env, napi_value object)
         if (GetValueType(env, name) != napi_string) {
             continue;
         }
-        ret.emplace_back(GetValueString(env, name));
+        size_t propertyLength = GetStringLength(env, name);
+        ret.emplace_back(GetValueString(env, name, propertyLength));
     }
     return ret;
 }
@@ -97,7 +122,8 @@ std::string GetPropertyValue(napi_env env, napi_value object, const std::string 
     if (GetValueType(env, value) != napi_string) {
         return "";
     }
-    return GetValueString(env, value);
+    auto length = GetStringLength(env, value);
+    return GetValueString(env, value, length);
 }
 
 } // namespace OHOS::Request

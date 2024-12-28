@@ -19,6 +19,7 @@ use request_utils::lru::LRUCache;
 use request_utils::task_id::TaskId;
 
 use super::data::{self, restore_files, FileCache, RamCache};
+use crate::data::MAX_CACHE_SIZE;
 
 const DEFAULT_RAM_CACHE_SIZE: u64 = 1024 * 1024 * 20;
 const DEFAULT_FILE_CACHE_SIZE: u64 = 1024 * 1024 * 100;
@@ -49,10 +50,12 @@ impl CacheManager {
 
     pub fn set_ram_cache_size(&self, size: u64) {
         self.ram_handle.lock().unwrap().change_total_size(size);
+        CacheManager::apply_cache(&self.ram_handle, &self.rams, |a| RamCache::task_id(a), 0);
     }
 
     pub fn set_file_cache_size(&self, size: u64) {
         self.file_handle.lock().unwrap().change_total_size(size);
+        CacheManager::apply_cache(&self.file_handle, &self.files, FileCache::task_id, 0);
     }
 
     pub fn restore_files(&'static self) {
@@ -94,6 +97,9 @@ impl CacheManager {
         size: usize,
     ) -> bool {
         loop {
+            if size > MAX_CACHE_SIZE as usize {
+                return false;
+            }
             if handle.lock().unwrap().apply_cache_size(size as u64) {
                 return true;
             };
