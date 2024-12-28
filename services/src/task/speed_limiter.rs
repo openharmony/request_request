@@ -23,7 +23,6 @@ use ylong_runtime::time::{sleep, Sleep};
 pub(crate) struct SpeedLimiter {
     pub(crate) last_time: u64,
     pub(crate) last_size: u64,
-    pub(crate) more_sleep_time: u64,
     pub(crate) speed_limit: u64,
     pub(crate) sleep: Option<Pin<Box<Sleep>>>,
 }
@@ -33,7 +32,6 @@ impl SpeedLimiter {
         if self.speed_limit != speed_limit {
             self.last_size = 0;
             self.last_time = 0;
-            self.more_sleep_time = 0;
             self.sleep = None;
             self.speed_limit = speed_limit;
         }
@@ -44,45 +42,22 @@ impl SpeedLimiter {
         cx: &mut Context<'_>,
         current_time: u64,
         current_size: u64,
-        wakeup_time: u64,
     ) -> Poll<Result<(), HttpClientError>> {
         const SPEED_LIMIT_INTERVAL: u64 = 1000;
         self.sleep = None;
         if self.speed_limit != 0 {
-            if self.more_sleep_time != 0 {
-                let notify_time = wakeup_time - current_time;
-                let sleep_time = if self.more_sleep_time > notify_time {
-                    notify_time
-                } else {
-                    self.more_sleep_time
-                };
-                // wake up for notify, sleep until speed limit conditions are met
-                self.sleep = Some(Box::pin(sleep(Duration::from_millis(sleep_time))));
-                self.more_sleep_time -= sleep_time;
-            } else if self.last_time == 0 {
+            if self.last_time == 0 || current_time - self.last_time >= SPEED_LIMIT_INTERVAL {
                 // get the init time and size, for speed caculate
                 self.last_time = current_time;
                 self.last_size = current_size;
             } else if current_time - self.last_time < SPEED_LIMIT_INTERVAL
-                && ((current_size - self.last_size) > self.speed_limit)
+                && ((current_size - self.last_size) >= self.speed_limit)
             {
                 // sleep until wakeup_time if needed or speed limit conditions are met
                 let limit_time = (current_size - self.last_size) * SPEED_LIMIT_INTERVAL
                     / self.speed_limit
                     - (current_time - self.last_time);
-                let notify_time = wakeup_time - current_time;
-                let sleep_time = if limit_time > notify_time {
-                    self.more_sleep_time = limit_time - notify_time;
-                    notify_time
-                } else {
-                    limit_time
-                };
-                self.sleep = Some(Box::pin(sleep(Duration::from_millis(sleep_time))));
-            } else if current_time - self.last_time >= SPEED_LIMIT_INTERVAL {
-                // last caculate window has meet speed limit, update last_time and last_size,
-                // for next poll's speed compare
-                self.last_time = current_time;
-                self.last_size = current_size;
+                self.sleep = Some(Box::pin(sleep(Duration::from_millis(limit_time))));
             }
         }
 
