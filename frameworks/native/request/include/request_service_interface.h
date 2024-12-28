@@ -52,6 +52,7 @@ public:
     virtual int32_t QueryMimeType(const std::string &tid, std::string &mimeType) = 0;
     virtual int32_t Remove(const std::string &tid, const Version version) = 0;
     virtual int32_t Resume(const std::string &tid) = 0;
+    virtual int32_t SetMaxSpeed(const std::string &tid, const int64_t max_speed) = 0;
 
     virtual int32_t Stop(const std::string &tid) = 0;
     virtual int32_t Query(const std::string &tid, TaskInfo &info) = 0;

@@ -67,6 +67,7 @@ public:
     int32_t QueryMimeType(const std::string &tid, std::string &mimeType);
     int32_t Remove(const std::string &tid, const Version version);
     int32_t Resume(const std::string &tid);
+    int32_t SetMaxSpeed(const std::string &tid, const int64_t max_speed);
 
     int32_t Subscribe(const std::string &taskId);
     int32_t Unsubscribe(const std::string &taskId);

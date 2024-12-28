@@ -91,8 +91,8 @@ mod test {
     #[test]
     fn ut_rss_capacity() {
         assert_eq!(QosLevel::High as u64, 0u64);
-        assert_eq!(QosLevel::Middle as u64, 800u64);
-        assert_eq!(QosLevel::Low as u64, 400u64);
+        assert_eq!(QosLevel::Middle as u64, 800 * 1024u64);
+        assert_eq!(QosLevel::Low as u64, 400 * 1024u64);
         assert!(is_rss_equal(
             RssCapacity::new(0),
             RssCapacity(8, 32, 8, QosLevel::High, QosLevel::Middle, QosLevel::Middle,)

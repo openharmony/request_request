@@ -53,6 +53,7 @@ struct CTaskInfo {
     CStringWrapper mimeType;
     CProgress progress;
     CommonTaskInfo commonData;
+    int64_t maxSpeed;
 };
 
 struct TaskInfo {
@@ -67,6 +68,7 @@ struct TaskInfo {
     std::string mimeType;
     Progress progress;
     CommonTaskInfo commonData;
+    int64_t maxSpeed;
 };
 
 struct CUpdateInfo {

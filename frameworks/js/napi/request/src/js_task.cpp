@@ -63,6 +63,7 @@ napi_property_descriptor clzDes[] = {
     DECLARE_NAPI_FUNCTION(FUNCTION_PAUSE, RequestEvent::Pause),
     DECLARE_NAPI_FUNCTION(FUNCTION_RESUME, RequestEvent::Resume),
     DECLARE_NAPI_FUNCTION(FUNCTION_STOP, RequestEvent::Stop),
+    DECLARE_NAPI_FUNCTION(FUNCTION_SET_MAX_SPEED, RequestEvent::SetMaxSpeed),
 };
 
 napi_property_descriptor clzDesV9[] = {

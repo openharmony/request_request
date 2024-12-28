@@ -209,6 +209,9 @@ impl TaskManager {
             ServiceEvent::Remove(uid, task_id, tx) => {
                 let _ = tx.send(self.remove(uid, task_id));
             }
+            ServiceEvent::SetMaxSpeed(uid, task_id, max_speed, tx) => {
+                let _ = tx.send(self.set_max_speed(uid, task_id, max_speed));
+            }
             ServiceEvent::DumpAll(tx) => {
                 let _ = tx.send(self.query_all_task());
             }

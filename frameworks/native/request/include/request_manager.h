@@ -52,6 +52,7 @@ public:
     REQUEST_API int32_t QueryMimeType(const std::string &tid, std::string &mimeType);
     REQUEST_API int32_t Remove(const std::string &tid, const Version version);
     REQUEST_API int32_t Resume(const std::string &tid);
+    REQUEST_API int32_t SetMaxSpeed(const std::string &tid, const int64_t max_speed);
 
     REQUEST_API int32_t Subscribe(const std::string &taskId);
     REQUEST_API int32_t Unsubscribe(const std::string &taskId);

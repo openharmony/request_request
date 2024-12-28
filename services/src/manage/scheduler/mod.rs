@@ -15,7 +15,9 @@ mod qos;
 mod queue;
 pub(crate) mod state;
 use std::collections::HashMap;
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
+
 mod sql;
 use qos::Qos;
 use queue::RunningQueue;
@@ -190,6 +192,18 @@ impl Scheduler {
 
         if self.qos.remove_task(uid, task_id) {
             self.schedule_if_not_scheduled();
+        }
+        Ok(())
+    }
+
+    pub(crate) fn set_max_speed(
+        &mut self,
+        uid: u64,
+        task_id: u32,
+        max_speed: i64,
+    ) -> Result<(), ErrorCode> {
+        if let Some(task) = self.running_queue.get_task(uid, task_id) {
+            task.max_speed.store(max_speed, Ordering::SeqCst);
         }
         Ok(())
     }

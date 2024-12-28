@@ -2835,6 +2835,89 @@ export default function requestOperateTaskTest() {
          done();
        }
      })
-     
+
+    /**
+     * @tc.number: testSetMaxSpeed001
+     * @tc.name: testSetMaxSpeed001
+     * @tc.desc: Tests whether an exception is thrown when max_speed is smaller than 16 * 1024
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+     it('testSetMaxSpeed001', 0, async function (done) {
+       let conf = {
+         action: request.agent.Action.DOWNLOAD,
+         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+         mode: request.agent.Mode.BACKGROUND,
+       }
+       let task = await request.agent.create(context, conf);
+       try {
+         await task.setMaxSpeed(16 * 1024 - 1).then(async () => {
+           expect(false).assertTrue();
+           done();
+         });
+       } catch (err) {
+         expect(err.code).assertEqual(401);
+         done();
+       }
+     })
+
+    /**
+     * @tc.number: testSetMaxSpeed002
+     * @tc.name: testSetMaxSpeed002
+     * @tc.desc: Tests ok when max_speed is 16 * 1024
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+     it('testSetMaxSpeed002', 0, async function (done) {
+       let conf = {
+         action: request.agent.Action.DOWNLOAD,
+         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+         mode: request.agent.Mode.BACKGROUND,
+       }
+       let task = await request.agent.create(context, conf);
+       try {
+         await task.setMaxSpeed(16 * 1024).then(async () => {
+           expect(true).assertTrue();
+           done();
+         });
+       } catch (err) {
+         expect(false).assertTrue();
+         done();
+       }
+     })
+
+     /**
+     * @tc.number: testSetMaxSpeed003
+     * @tc.name: testSetMaxSpeed003
+     * @tc.desc: Tests whether an exception is thrown when max_speed while task is removed
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+     it('testSetMaxSpeed003', 0, async function (done) {
+       let conf = {
+         action: request.agent.Action.DOWNLOAD,
+         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+         saveas: 'testSetMaxSpeed004.txt',
+         mode: request.agent.Mode.BACKGROUND
+       }
+       let task = await request.agent.create(context, conf);
+       await request.agent.remove(task.tid);
+       try {
+         await task.setMaxSpeed(16 * 1024).then(async () => {
+           expect(false).assertTrue();
+           done();
+         });
+       } catch (err) {
+         expect(err.code).assertEqual(21900007);
+         done();
+       }
+     })
+
   })
 }

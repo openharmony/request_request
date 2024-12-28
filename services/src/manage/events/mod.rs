@@ -29,6 +29,7 @@ mod dump;
 mod pause;
 mod remove;
 mod resume;
+mod set_max_speed;
 mod start;
 mod stop;
 
@@ -128,6 +129,14 @@ impl TaskManagerEvent {
             Recv::new(rx),
         )
     }
+
+    pub(crate) fn set_max_speed(uid: u64, task_id: u32, max_speed: i64) -> (Self, Recv<ErrorCode>) {
+        let (tx, rx) = channel::<ErrorCode>();
+        (
+            Self::Service(ServiceEvent::SetMaxSpeed(uid, task_id, max_speed, tx)),
+            Recv::new(rx),
+        )
+    }
 }
 
 #[derive(Debug)]
@@ -147,6 +156,7 @@ pub(crate) enum ServiceEvent {
     DumpOne(u32, Sender<Option<DumpOneInfo>>),
     DumpAll(Sender<DumpAllInfo>),
     AttachGroup(u32, u32, Sender<ErrorCode>),
+    SetMaxSpeed(u64, u32, i64, Sender<ErrorCode>),
 }
 
 #[derive(Debug)]
@@ -212,6 +222,12 @@ impl Debug for ServiceEvent {
                 .debug_struct("Resume")
                 .field("uid", uid)
                 .field("task_id", task_id)
+                .finish(),
+            Self::SetMaxSpeed(uid, task_id, max_speed, _) => f
+                .debug_struct("SetMaxSpeed")
+                .field("uid", uid)
+                .field("task_id", task_id)
+                .field("max_speed", max_speed)
                 .finish(),
             Self::DumpOne(task_id, _) => {
                 f.debug_struct("DumpOne").field("task_id", task_id).finish()

@@ -36,6 +36,7 @@ pub(crate) struct TaskInfo {
     pub(crate) progress: Progress,
     pub(crate) extras: HashMap<String, String>,
     pub(crate) common_data: CommonTaskInfo,
+    pub(crate) max_speed: i64,
 }
 
 impl TaskInfo {
@@ -54,6 +55,7 @@ impl TaskInfo {
             progress: Progress::new(vec![0]),
             extras: HashMap::new(),
             common_data: CommonTaskInfo::new(),
+            max_speed: 0,
         }
     }
 

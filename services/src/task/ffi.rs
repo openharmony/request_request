@@ -122,6 +122,7 @@ pub(crate) struct CTaskInfo {
     pub(crate) mime_type: CStringWrapper,
     pub(crate) progress: CProgress,
     pub(crate) common_data: CommonTaskInfo,
+    pub(crate) max_speed: i64,
 }
 
 impl TaskInfo {
@@ -142,6 +143,7 @@ impl TaskInfo {
                 .progress
                 .to_c_struct(&info.sizes, &info.processed, &info.extras),
             common_data: self.common_data,
+            max_speed: self.max_speed,
         }
     }
 
@@ -180,6 +182,7 @@ impl TaskInfo {
             progress,
             extras,
             common_data: c_struct.common_data,
+            max_speed: c_struct.max_speed,
         };
 
         #[cfg(feature = "oh")]

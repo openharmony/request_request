@@ -318,6 +318,14 @@ impl RequestDb {
         let _ = self.execute(&sql);
     }
 
+    pub(crate) fn update_task_max_speed(&self, task_id: u32, max_speed: i64) {
+        let sql = format!(
+            "UPDATE request_task SET max_speed = {} WHERE task_id = {}",
+            max_speed, task_id
+        );
+        let _ = self.execute(&sql);
+    }
+
     pub(crate) fn update_task_sizes(&self, task_id: u32, sizes: &Vec<i64>) {
         let sql = format!(
             "UPDATE request_task SET sizes = '{:?}' WHERE task_id = {}",

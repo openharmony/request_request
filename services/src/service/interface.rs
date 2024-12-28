@@ -55,6 +55,8 @@ pub const CREATE_GROUP: u32 = 18;
 pub const ATTACH_GROUP: u32 = 19;
 /// Delete a group.
 pub const DELETE_GROUP: u32 = 20;
+/// Set the max speed of a task
+pub const SET_MAX_SPEED: u32 = 21;
 
 /// Function code of RequestNotifyInterfaceCode
 pub(crate) const NOTIFY_RUN_COUNT: u32 = 2;
