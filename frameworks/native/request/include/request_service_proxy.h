@@ -44,6 +44,7 @@ public:
     ExceptionErrorCode ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets) override;
     ExceptionErrorCode TouchTasks(
         const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets) override;
+    ExceptionErrorCode SetMode(const std::string &tid, const Mode mode) override;
 
     int32_t Create(const Config &config, std::string &tid) override;
     int32_t GetTask(const std::string &tid, const std::string &token, Config &config) override;

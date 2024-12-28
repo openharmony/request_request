@@ -39,6 +39,7 @@ public:
     REQUEST_API ExceptionErrorCode ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets);
     REQUEST_API ExceptionErrorCode TouchTasks(
         const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets);
+    REQUEST_API ExceptionErrorCode SetMode(const std::string &tid, const Mode mode);
 
     REQUEST_API int32_t Create(const Config &config, int32_t seq, std::string &tid);
     REQUEST_API int32_t GetTask(const std::string &tid, const std::string &token, Config &config);

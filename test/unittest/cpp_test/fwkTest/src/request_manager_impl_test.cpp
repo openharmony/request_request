@@ -60,6 +60,7 @@ public:
     MOCK_METHOD(ExceptionErrorCode, TouchTasks,
         ((const std::vector<TaskIdAndToken> &tidTokens), (std::vector<TaskInfoRet> & rets)), (override));
 
+    MOCK_METHOD(ExceptionErrorCode, SetMode, (const std::string &tid, const Mode mode), (override));
     MOCK_METHOD(int32_t, Create, (const Config &config, std::string &taskId), (override));
     MOCK_METHOD(int32_t, GetTask, (const std::string &tid, const std::string &token, Config &config), (override));
     MOCK_METHOD(int32_t, Start, (const std::string &tid), (override));

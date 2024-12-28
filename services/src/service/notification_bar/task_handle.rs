@@ -42,7 +42,11 @@ impl TaskManager {
         if !RequestDb::get_instance().contains_task(task_id) {
             return ErrorCode::TaskNotFound;
         }
-        if RequestDb::get_instance().query_task_mode(task_id) != Mode::BackGround {
+        if RequestDb::get_instance()
+            .query_task_mode(task_id)
+            .unwrap_or(Mode::FrontEnd)
+            != Mode::BackGround
+        {
             return ErrorCode::TaskModeErr;
         }
         if !RequestDb::get_instance()
@@ -157,15 +161,10 @@ impl RequestDb {
             .unwrap_or(false)
     }
 
-    fn query_task_mode(&self, task_id: u32) -> Mode {
+    pub(crate) fn query_task_mode(&self, task_id: u32) -> Option<Mode> {
         let sql = format!("SELECT mode FROM request_task WHERE task_id = {}", task_id);
         self.query_integer(&sql)
             .first()
-            .map(|mode: &i32| match mode {
-                0 => Mode::BackGround,
-                1 => Mode::FrontEnd,
-                _ => Mode::Any,
-            })
-            .unwrap_or(Mode::FrontEnd)
+            .map(|mode: &i32| Mode::from(*mode as u8))
     }
 }

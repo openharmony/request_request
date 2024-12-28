@@ -53,6 +53,8 @@ public:
         const std::vector<std::string> &tids, std::unordered_map<std::string, TaskInfoRet> &rets);
     ExceptionErrorCode TouchTasks(
         const std::vector<TaskIdAndToken> &tidTokens, std::unordered_map<std::string, TaskInfoRet> &rets);
+
+    ExceptionErrorCode SetMode(std::string &tid, Mode mode);
 };
 
 } // namespace OHOS::Request

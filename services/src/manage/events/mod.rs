@@ -30,6 +30,7 @@ mod pause;
 mod remove;
 mod resume;
 mod set_max_speed;
+mod set_mode;
 mod start;
 mod stop;
 
@@ -110,6 +111,14 @@ impl TaskManagerEvent {
         )
     }
 
+    pub(crate) fn set_mode(uid: u64, task_id: u32, mode: Mode) -> (Self, Recv<ErrorCode>) {
+        let (tx, rx) = channel::<ErrorCode>();
+        (
+            Self::Service(ServiceEvent::SetMode(uid, task_id, mode, tx)),
+            Recv::new(rx),
+        )
+    }
+
     pub(crate) fn network() -> Self {
         Self::State(StateEvent::Network)
     }
@@ -157,6 +166,7 @@ pub(crate) enum ServiceEvent {
     DumpAll(Sender<DumpAllInfo>),
     AttachGroup(u32, u32, Sender<ErrorCode>),
     SetMaxSpeed(u64, u32, i64, Sender<ErrorCode>),
+    SetMode(u64, u32, Mode, Sender<ErrorCode>),
 }
 
 #[derive(Debug)]
@@ -239,6 +249,12 @@ impl Debug for ServiceEvent {
                 .finish(),
 
             Self::DumpAll(_) => f.debug_struct("DumpAll").finish(),
+            Self::SetMode(uid, task_id, mode, _) => f
+                .debug_struct("AttachGroup")
+                .field("uid", uid)
+                .field("task_id", task_id)
+                .field("mode", mode)
+                .finish(),
         }
     }
 }

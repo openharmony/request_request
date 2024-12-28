@@ -149,7 +149,7 @@ enum RdbStoreInner<'a> {
     Ref(Pin<&'a mut ffi::RdbStore>),
 }
 
-impl<'a> RdbStoreInner<'a> {
+impl RdbStoreInner<'_> {
     fn pin_mut(&self) -> Pin<&mut ffi::RdbStore> {
         match self {
             Self::Shared(ffi) => {

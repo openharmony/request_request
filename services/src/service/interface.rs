@@ -57,6 +57,8 @@ pub const ATTACH_GROUP: u32 = 19;
 pub const DELETE_GROUP: u32 = 20;
 /// Set the max speed of a task
 pub const SET_MAX_SPEED: u32 = 21;
+/// Change task mode.
+pub const SET_MODE: u32 = 100;
 
 /// Function code of RequestNotifyInterfaceCode
 pub(crate) const NOTIFY_RUN_COUNT: u32 = 2;
@@ -87,5 +89,6 @@ mod test {
         assert_eq!(18, CREATE_GROUP);
         assert_eq!(19, ATTACH_GROUP);
         assert_eq!(20, DELETE_GROUP);
+        assert_eq!(100, SET_MODE);
     }
 }

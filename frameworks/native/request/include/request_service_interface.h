@@ -45,6 +45,8 @@ public:
     virtual ExceptionErrorCode TouchTasks(
         const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets) = 0;
 
+    virtual ExceptionErrorCode SetMode(const std::string &tid, const Mode mode) = 0;
+
     virtual int32_t Create(const Config &config, std::string &taskId) = 0;
     virtual int32_t GetTask(const std::string &tid, const std::string &token, Config &config) = 0;
     virtual int32_t Start(const std::string &tid) = 0;

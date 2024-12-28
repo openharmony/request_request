@@ -106,6 +106,7 @@ impl RemoteStub for RequestServiceStub {
             interface::ATTACH_GROUP => self.attach_group(data, reply),
             interface::DELETE_GROUP => self.delete_group(data, reply),
             interface::SET_MAX_SPEED => self.set_max_speed(data, reply),
+            interface::SET_MODE => self.set_mode(data, reply),
             _ => return IpcStatusCode::Failed as i32,
         };
 

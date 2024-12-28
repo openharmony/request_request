@@ -179,7 +179,8 @@ ExceptionErrorCode RequestServiceProxy::RemoveTasks(
     return ExceptionErrorCode::E_OK;
 }
 
-ExceptionErrorCode RequestServiceProxy::QueryTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets)
+ExceptionErrorCode RequestServiceProxy::QueryTasks(
+    const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets)
 {
     TaskInfoRet infoRet{ .code = ExceptionErrorCode::E_OTHER };
     uint32_t len = static_cast<uint32_t>(tids.size());
@@ -272,6 +273,27 @@ ExceptionErrorCode RequestServiceProxy::TouchTasks(
         rets[i].info = info;
     }
     return ExceptionErrorCode::E_OK;
+}
+
+ExceptionErrorCode RequestServiceProxy::SetMode(const std::string &tid, const Mode mode)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(tid);
+    data.WriteUint32(static_cast<uint32_t>(mode));
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SET_MODE), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("End send SetMode request, failed: %{public}d", ret);
+        return ExceptionErrorCode::E_SERVICE_ERROR;
+    }
+    ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
+    if (ret != ExceptionErrorCode::E_OK) {
+        REQUEST_HILOGE("End Request SetMode, failed: %{public}d", code);
+        return code;
+    }
+    return code;
 }
 
 int32_t RequestServiceProxy::Create(const Config &config, std::string &tid)

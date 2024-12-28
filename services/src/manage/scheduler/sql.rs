@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::config::Action;
+use crate::config::{Action, Mode};
 use crate::info::State;
 use crate::task::reason::Reason;
 
@@ -59,6 +59,13 @@ pub(super) fn remove_task(task_id: u32) -> String {
         State::Removed.repr,
         Reason::UserOperation.repr,
         task_id,
+    )
+}
+
+pub(super) fn task_set_mode(task_id: u32, mode: Mode) -> String {
+    format!(
+        "UPDATE request_task SET mode = {} where task_id = {}",
+        mode.repr, task_id,
     )
 }
 

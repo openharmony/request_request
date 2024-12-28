@@ -20,6 +20,7 @@ pub(crate) use direction::{QosChanges, QosDirection, QosLevel};
 pub(crate) use rss::RssCapacity;
 
 use super::state;
+use crate::config::Mode;
 use crate::manage::database::TaskQosInfo;
 use crate::task::config::Action;
 
@@ -53,9 +54,11 @@ impl Qos {
     pub(crate) fn change_rss(&mut self, rss: RssCapacity) {
         self.capacity = rss;
     }
-}
 
-impl Qos {
+    pub(crate) fn task_set_mode(&mut self, uid: u64, task_id: u32, mode: Mode) -> bool {
+        self.apps.task_set_mode(uid, task_id, mode)
+    }
+
     // Reschedule qos queue and get directions.
     pub(crate) fn reschedule(&mut self, state: &state::Handler) -> QosChanges {
         self.apps
