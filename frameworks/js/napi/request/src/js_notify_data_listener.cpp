@@ -77,6 +77,9 @@ void JSNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData
             return;
         }
         JsTask *task = item->second;
+        if (task->config_.multipart) {
+            index = 0;
+        }
         len = task->config_.bodyFileNames.size();
         if (index >= len) {
             return;

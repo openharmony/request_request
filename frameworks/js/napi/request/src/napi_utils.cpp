@@ -466,6 +466,7 @@ napi_value Convert2JSValueConfig(napi_env env, Config &config)
         napi_set_named_property(env, value, "token", Convert2JSValue(env, config.token));
     }
     napi_set_named_property(env, value, "extras", Convert2JSValue(env, config.extras));
+    napi_set_named_property(env, value, "multipart", Convert2JSValue(env, config.multipart));
     return value;
 }
 

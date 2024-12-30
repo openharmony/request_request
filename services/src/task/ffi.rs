@@ -73,6 +73,7 @@ pub(crate) struct CommonCTaskConfig {
     pub(crate) precise: bool,
     pub(crate) priority: u32,
     pub(crate) background: bool,
+    pub(crate) multipart: bool,
 }
 
 #[repr(C)]
@@ -259,6 +260,7 @@ impl TaskConfig {
                 precise: self.common_data.precise,
                 priority: self.common_data.priority,
                 background: self.common_data.background,
+                multipart: self.common_data.multipart,
             },
         }
     }
@@ -318,6 +320,7 @@ impl TaskConfig {
                 precise: c_struct.common_data.precise,
                 priority: c_struct.common_data.priority,
                 background: c_struct.common_data.background,
+                multipart:c_struct.common_data.multipart,
             },
         };
 
