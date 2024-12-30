@@ -21,7 +21,7 @@
 
 #include "request_preload.h"
 struct TestCallback {
-    TestCallback();
+    TestCallback(size_t size = 0);
     std::shared_ptr<std::atomic_bool> flagS;
     std::shared_ptr<std::atomic_bool> flagF;
     std::shared_ptr<std::atomic_bool> flagC;

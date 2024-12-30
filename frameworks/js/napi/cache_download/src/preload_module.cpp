@@ -24,6 +24,7 @@
 #include "access_token.h"
 #include "accesstoken_kit.h"
 #include "base/request/request/common/include/constant.h"
+#include "base/request/request/common/include/log.h"
 #include "ipc_skeleton.h"
 #include "js_native_api.h"
 #include "js_native_api_types.h"
@@ -51,7 +52,7 @@ bool CheckInternetPermission()
         }
         int result = AccessTokenKit::VerifyAccessToken(tokenId, INTERNET_PERMISSION);
         return result == PERMISSION_GRANTED;
-    };
+    }();
     return hasPermission;
 }
 
@@ -82,6 +83,8 @@ napi_value download(napi_env env, napi_callback_info info)
     }
     if (!CheckInternetPermission()) {
         ThrowError(env, E_PERMISSION, "internet permission denied");
+        REQUEST_HILOGI("internet permission denied");
+        return nullptr;
     }
     Preload::GetInstance()->load(url, nullptr, std::move(options), true);
     return nullptr;
