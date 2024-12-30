@@ -73,7 +73,7 @@ void DownloadSuccessTest(std::string url, uint64_t size)
     Preload::GetInstance()->Remove(url);
     EXPECT_FALSE(Preload::GetInstance()->Contains(url));
 
-    TestCallback test;
+    TestCallback test(size);
     auto &[flagS, flagF, flagC, flagP, callback] = test;
 
     auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));

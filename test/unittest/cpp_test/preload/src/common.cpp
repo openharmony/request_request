@@ -17,14 +17,19 @@
 
 #include "request_preload.h"
 using namespace OHOS::Request;
-TestCallback::TestCallback()
+TestCallback::TestCallback(size_t size)
 {
     auto flagS = std::make_shared<std::atomic_bool>(false);
     auto flagF = std::make_shared<std::atomic_bool>(false);
     auto flagC = std::make_shared<std::atomic_bool>(false);
     auto flagP = std::make_shared<std::atomic_bool>(false);
     this->callback = PreloadCallback{
-        .OnSuccess = [flagS](const std::shared_ptr<Data> &&data, const std::string &taskId) { flagS->store(true); },
+        .OnSuccess =
+            [flagS, size](const std::shared_ptr<Data> &&data, const std::string &taskId) {
+                if (size == 0 || data->bytes().length() == size) {
+                    flagS->store(true);
+                }
+            },
         .OnCancel = [flagC]() { flagC->store(true); },
         .OnFail = [flagF](const PreloadError &error, const std::string &taskId) { flagF->store(true); },
         .OnProgress = [flagP](uint64_t current, uint64_t total) { flagP->store(true); },
