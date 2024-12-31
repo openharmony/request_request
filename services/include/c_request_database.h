@@ -35,13 +35,15 @@ namespace OHOS::Request {
 constexpr const char *DB_NAME = "/data/service/el1/public/database/request/request.db";
 constexpr int DATABASE_VERSION = 1;
 constexpr const char *REQUEST_DATABASE_VERSION_4_1_RELEASE = "API11_4.1-release";
-constexpr const char *REQUEST_DATABASE_VERSION = "API12_5.0-release";
+constexpr const char *REQUEST_DATABASE_VERSION_5_0_RELEASE = "API12_5.0-release";
+constexpr const char *REQUEST_DATABASE_VERSION = "API16_5.1-release";
 constexpr const char *REQUEST_TASK_TABLE_NAME = "request_task";
 constexpr int QUERY_ERR = -1;
 constexpr int QUERY_OK = 0;
 constexpr int WITHOUT_VERSION_TABLE = 40;
 constexpr int API11_4_1_RELEASE = 41;
 constexpr int API12_5_0_RELEASE = 50;
+constexpr int API16_5_1_RELEASE = 51;
 constexpr int INVALID_VERSION = -50;
 constexpr int CHECK_VERSION_FAILED = -1;
 
