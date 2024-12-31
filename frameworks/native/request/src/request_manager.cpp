@@ -69,6 +69,12 @@ ExceptionErrorCode RequestManager::TouchTasks(
     return RequestManagerImpl::GetInstance()->TouchTasks(tidTokens, rets);
 }
 
+ExceptionErrorCode RequestManager::SetMaxSpeeds(
+    const std::vector<SpeedConfig> &speedConfig, std::vector<ExceptionErrorCode> &rets)
+{
+    return RequestManagerImpl::GetInstance()->SetMaxSpeeds(speedConfig, rets);
+}
+
 ExceptionErrorCode RequestManager::SetMode(const std::string &tid, const Mode mode)
 {
     return RequestManagerImpl::GetInstance()->SetMode(tid, mode);
@@ -131,9 +137,9 @@ int32_t RequestManager::Resume(const std::string &tid)
     return RequestManagerImpl::GetInstance()->Resume(tid);
 }
 
-int32_t RequestManager::SetMaxSpeed(const std::string &tid, const int64_t max_speed)
+int32_t RequestManager::SetMaxSpeed(const std::string &tid, const int64_t maxSpeed)
 {
-    return RequestManagerImpl::GetInstance()->SetMaxSpeed(tid, max_speed);
+    return RequestManagerImpl::GetInstance()->SetMaxSpeed(tid, maxSpeed);
 }
 
 int32_t RequestManager::Subscribe(const std::string &taskId)

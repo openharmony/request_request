@@ -139,10 +139,10 @@ napi_value RequestEvent::SetMaxSpeed(napi_env env, napi_callback_info info)
     std::string execType = FUNCTION_SET_MAX_SPEED;
     auto context = std::make_shared<ExecContext>();
     auto input = [context, seq, info](size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        ExceptionError err = ParseSetMaxSpeedParameters(context->env_, self, info, context->max_speed);
+        ExceptionError err = ParseSetMaxSpeedParameters(context->env_, self, info, context->maxSpeed);
         if (err.code != E_OK) {
-            REQUEST_HILOGE("End task set max speed, seq: %{public}d, failed: %{public}d, max_speed: %{public}lld", seq,
-                err.code, context->max_speed);
+            REQUEST_HILOGE("End task set max speed, seq: %{public}d, failed: %{public}d, maxSpeed: %{public}lld", seq,
+                err.code, context->maxSpeed);
             NapiUtils::ThrowError(context->env_, err.code, err.errInfo, true);
             return napi_invalid_arg;
         }
@@ -290,7 +290,7 @@ NotifyData RequestEvent::BuildNotifyData(const std::shared_ptr<TaskInfo> &taskIn
 }
 
 ExceptionError RequestEvent::ParseSetMaxSpeedParameters(
-    napi_env env, napi_value self, napi_callback_info info, int64_t &max_speed)
+    napi_env env, napi_value self, napi_callback_info info, int64_t &maxSpeed)
 {
     ExceptionError err = { .code = E_OK };
     size_t argc = NapiUtils::MAX_ARGC;
@@ -315,8 +315,8 @@ ExceptionError RequestEvent::ParseSetMaxSpeedParameters(
         return err;
     }
 
-    max_speed = NapiUtils::Convert2Int64(env, argv[NapiUtils::FIRST_ARGV]);
-    if (max_speed < MIN_SPEED_LIMIT) {
+    maxSpeed = NapiUtils::Convert2Int64(env, argv[NapiUtils::FIRST_ARGV]);
+    if (maxSpeed < MIN_SPEED_LIMIT) {
         err.code = E_PARAMETER_CHECK;
         err.errInfo = "Incorrect parameter value, minimum speed value is 16 KB/s";
     }
@@ -492,7 +492,7 @@ int32_t RequestEvent::StopExec(const std::shared_ptr<ExecContext> &context)
 
 int32_t RequestEvent::SetMaxSpeedExec(const std::shared_ptr<ExecContext> &context)
 {
-    int32_t ret = RequestManager::GetInstance()->SetMaxSpeed(context->task->GetTid(), context->max_speed);
+    int32_t ret = RequestManager::GetInstance()->SetMaxSpeed(context->task->GetTid(), context->maxSpeed);
     if (ret == E_OK) {
         context->boolRes = true;
     }

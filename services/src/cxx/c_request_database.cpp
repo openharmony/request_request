@@ -973,7 +973,7 @@ bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
 
     RecordRequestTaskInfo(insertValues, taskInfo);
     RecordRequestTaskConfig(insertValues, taskConfig);
-    
+
     if (!WriteMutableData(insertValues, taskInfo, taskConfig)) {
         REQUEST_HILOGE("write blob data failed");
         return false;

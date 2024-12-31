@@ -179,8 +179,7 @@ ExceptionErrorCode RequestServiceProxy::RemoveTasks(
     return ExceptionErrorCode::E_OK;
 }
 
-ExceptionErrorCode RequestServiceProxy::QueryTasks(
-    const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets)
+ExceptionErrorCode RequestServiceProxy::QueryTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets)
 {
     TaskInfoRet infoRet{ .code = ExceptionErrorCode::E_OTHER };
     uint32_t len = static_cast<uint32_t>(tids.size());
@@ -275,6 +274,36 @@ ExceptionErrorCode RequestServiceProxy::TouchTasks(
     return ExceptionErrorCode::E_OK;
 }
 
+ExceptionErrorCode RequestServiceProxy::SetMaxSpeeds(
+    const std::vector<SpeedConfig> &speedConfig, std::vector<ExceptionErrorCode> &rets)
+{
+    uint32_t len = static_cast<uint32_t>(speedConfig.size());
+    rets.resize(len, ExceptionErrorCode::E_OTHER);
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteUint32(len);
+    for (auto &tid_and_speed : speedConfig) {
+        data.WriteString(tid_and_speed.tid);
+        data.WriteInt64(tid_and_speed.maxSpeed);
+    }
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SET_MAX_SPEED), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("End Request SetMaxSpeeds, failed: %{public}d", ret);
+        return ExceptionErrorCode::E_SERVICE_ERROR;
+    }
+    ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
+    if (code != ExceptionErrorCode::E_OK) {
+        REQUEST_HILOGE("End Request SetMaxSpeeds, failed: %{public}d", code);
+        return code;
+    }
+    for (uint32_t i = 0; i < len; i++) {
+        rets[i] = static_cast<ExceptionErrorCode>(reply.ReadInt32());
+    }
+    return ExceptionErrorCode::E_OK;
+}
+
 ExceptionErrorCode RequestServiceProxy::SetMode(const std::string &tid, const Mode mode)
 {
     MessageParcel data, reply;
@@ -282,8 +311,7 @@ ExceptionErrorCode RequestServiceProxy::SetMode(const std::string &tid, const Mo
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(tid);
     data.WriteUint32(static_cast<uint32_t>(mode));
-    int32_t ret =
-        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SET_MODE), data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SET_MODE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End send SetMode request, failed: %{public}d", ret);
         return ExceptionErrorCode::E_SERVICE_ERROR;
@@ -600,24 +628,19 @@ int32_t RequestServiceProxy::Resume(const std::string &tid)
     return rets[0];
 }
 
-int32_t RequestServiceProxy::SetMaxSpeed(const std::string &tid, const int64_t max_speed)
+int32_t RequestServiceProxy::SetMaxSpeed(const std::string &tid, const int64_t maxSpeed)
 {
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(tid);
-    data.WriteInt64(max_speed);
-    int32_t ret =
-        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SET_MAX_SPEED), data, reply, option);
-    if (ret != ERR_NONE) {
-        REQUEST_HILOGE("End Request SetMaxSpeed, failed: %{public}d", ret);
-        return ExceptionErrorCode::E_SERVICE_ERROR;
-    }
-    ret = reply.ReadInt32();
+    REQUEST_HILOGD("Request SetMaxSpeed, tid: %{public}s", tid.c_str());
+    std::vector<SpeedConfig> speedConfig = { { tid, maxSpeed } };
+    std::vector<ExceptionErrorCode> rets = { E_OTHER };
+    int32_t ret = RequestServiceProxy::SetMaxSpeeds(speedConfig, rets);
     if (ret != ExceptionErrorCode::E_OK) {
-        REQUEST_HILOGE("End Request SetMaxSpeed, failed: %{public}d", ret);
+        REQUEST_HILOGE("End SetMaxSpeed, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
+        return ret;
     }
-    return ret;
+
+    REQUEST_HILOGD("End SetMaxSpeed ok, tid: %{public}s", tid.c_str());
+    return rets[0];
 }
 
 int32_t RequestServiceProxy::OpenChannel(int32_t &sockFd)

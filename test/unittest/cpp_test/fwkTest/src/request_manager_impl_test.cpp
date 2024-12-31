@@ -85,7 +85,9 @@ public:
         (override));
     MOCK_METHOD(int32_t, AttachGroup, (const std::string &gid, const std::vector<std::string> &tid), (override));
     MOCK_METHOD(int32_t, DeleteGroup, (const std::string &gid), (override));
-    MOCK_METHOD(int32_t, SetMaxSpeed, (const std::string &tid, const int64_t max_speed), (override));
+    MOCK_METHOD(int32_t, SetMaxSpeed, (const std::string &tid, const int64_t maxSpeed), (override));
+    MOCK_METHOD(ExceptionErrorCode, SetMaxSpeeds,
+        (const std::vector<SpeedConfig> &speedConfig, std::vector<ExceptionErrorCode> &rets), (override));
 };
 
 class RequestManagerImplTest : public testing::Test {

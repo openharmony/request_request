@@ -38,6 +38,7 @@ public:
     int32_t Pause(const std::string &tid);
     int32_t Remove(const std::string &tid);
     int32_t Resume(const std::string &tid);
+    int32_t SetMaxSpeed(const std::string &tid, const int64_t maxSpeed);
 
     ExceptionErrorCode StartTasks(
         const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets);
@@ -53,6 +54,8 @@ public:
         const std::vector<std::string> &tids, std::unordered_map<std::string, TaskInfoRet> &rets);
     ExceptionErrorCode TouchTasks(
         const std::vector<TaskIdAndToken> &tidTokens, std::unordered_map<std::string, TaskInfoRet> &rets);
+    ExceptionErrorCode SetMaxSpeeds(
+        const std::vector<SpeedConfig> &speedConfig, std::unordered_map<std::string, ExceptionErrorCode> &rets);
 
     ExceptionErrorCode SetMode(std::string &tid, Mode mode);
 };

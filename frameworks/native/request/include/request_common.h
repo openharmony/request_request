@@ -260,6 +260,11 @@ struct TaskIdAndToken {
     std::string token;
 };
 
+struct SpeedConfig {
+    std::string tid;
+    int64_t maxSpeed;
+};
+
 struct Filter {
     std::string bundle;
     int64_t before;
