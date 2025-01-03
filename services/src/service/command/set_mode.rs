@@ -54,9 +54,9 @@ impl RequestServiceStub {
         };
 
         if old_mode == mode || mode == Mode::Any {
-            error!("Service change_mode, failed: mod state error: {}", task_id);
-            reply.write(&(ErrorCode::Other as i32))?;
-            return Err(IpcStatusCode::Failed);
+            error!("Service change_mode, mod state is ok: {}", task_id);
+            reply.write(&(ErrorCode::ErrOk as i32))?;
+            return Ok(());
         }
 
         let uid = match RequestDb::get_instance().query_task_uid(task_id) {
