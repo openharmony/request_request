@@ -71,6 +71,11 @@ int32_t RequestAction::Resume(const std::string &tid)
     return RequestManager::GetInstance()->Resume(tid);
 }
 
+int32_t RequestAction::SetMaxSpeed(const std::string &tid, const int64_t maxSpeed)
+{
+    return RequestManager::GetInstance()->SetMaxSpeed(tid, maxSpeed);
+}
+
 ExceptionErrorCode RequestAction::StartTasks(
     const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets)
 {
@@ -179,6 +184,22 @@ ExceptionErrorCode RequestAction::TouchTasks(
     uint32_t len = static_cast<uint32_t>(tidTokens.size());
     for (uint32_t i = 0; i < len; i++) {
         rets.insert_or_assign(tidTokens[i].tid, vec[i]);
+    }
+    return ExceptionErrorCode::E_OK;
+}
+
+ExceptionErrorCode RequestAction::SetMaxSpeeds(
+    const std::vector<SpeedConfig> &speedConfig, std::unordered_map<std::string, ExceptionErrorCode> &rets)
+{
+    rets.clear();
+    std::vector<ExceptionErrorCode> vec;
+    ExceptionErrorCode code = RequestManager::GetInstance()->SetMaxSpeeds(speedConfig, vec);
+    if (code != ExceptionErrorCode::E_OK) {
+        return code;
+    }
+    uint32_t len = static_cast<uint32_t>(speedConfig.size());
+    for (uint32_t i = 0; i < len; i++) {
+        rets.insert_or_assign(speedConfig[i].tid, vec[i]);
     }
     return ExceptionErrorCode::E_OK;
 }

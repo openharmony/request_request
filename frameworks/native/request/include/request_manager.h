@@ -39,6 +39,8 @@ public:
     REQUEST_API ExceptionErrorCode ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets);
     REQUEST_API ExceptionErrorCode TouchTasks(
         const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets);
+    REQUEST_API ExceptionErrorCode SetMaxSpeeds(
+        const std::vector<SpeedConfig> &speedConfig, std::vector<ExceptionErrorCode> &rets);
     REQUEST_API ExceptionErrorCode SetMode(const std::string &tid, const Mode mode);
 
     REQUEST_API int32_t Create(const Config &config, int32_t seq, std::string &tid);
@@ -53,7 +55,7 @@ public:
     REQUEST_API int32_t QueryMimeType(const std::string &tid, std::string &mimeType);
     REQUEST_API int32_t Remove(const std::string &tid, const Version version);
     REQUEST_API int32_t Resume(const std::string &tid);
-    REQUEST_API int32_t SetMaxSpeed(const std::string &tid, const int64_t max_speed);
+    REQUEST_API int32_t SetMaxSpeed(const std::string &tid, const int64_t maxSpeed);
 
     REQUEST_API int32_t Subscribe(const std::string &taskId);
     REQUEST_API int32_t Unsubscribe(const std::string &taskId);

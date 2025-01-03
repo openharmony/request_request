@@ -44,6 +44,8 @@ public:
     ExceptionErrorCode ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets) override;
     ExceptionErrorCode TouchTasks(
         const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets) override;
+    ExceptionErrorCode SetMaxSpeeds(
+        const std::vector<SpeedConfig> &speedConfig, std::vector<ExceptionErrorCode> &rets) override;
     ExceptionErrorCode SetMode(const std::string &tid, const Mode mode) override;
 
     int32_t Create(const Config &config, std::string &tid) override;
@@ -53,7 +55,7 @@ public:
     int32_t QueryMimeType(const std::string &tid, std::string &mimeType) override;
     int32_t Remove(const std::string &tid, const Version version) override;
     int32_t Resume(const std::string &tid) override;
-    int32_t SetMaxSpeed(const std::string &tid, const int64_t max_speed) override;
+    int32_t SetMaxSpeed(const std::string &tid, const int64_t maxSpeed) override;
 
     int32_t Stop(const std::string &tid) override;
     int32_t Query(const std::string &tid, TaskInfo &info) override;

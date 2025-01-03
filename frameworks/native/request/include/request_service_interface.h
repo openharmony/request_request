@@ -44,6 +44,8 @@ public:
     virtual ExceptionErrorCode ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets) = 0;
     virtual ExceptionErrorCode TouchTasks(
         const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets) = 0;
+    virtual ExceptionErrorCode SetMaxSpeeds(
+        const std::vector<SpeedConfig> &speedConfig, std::vector<ExceptionErrorCode> &rets) = 0;
 
     virtual ExceptionErrorCode SetMode(const std::string &tid, const Mode mode) = 0;
 
@@ -54,7 +56,7 @@ public:
     virtual int32_t QueryMimeType(const std::string &tid, std::string &mimeType) = 0;
     virtual int32_t Remove(const std::string &tid, const Version version) = 0;
     virtual int32_t Resume(const std::string &tid) = 0;
-    virtual int32_t SetMaxSpeed(const std::string &tid, const int64_t max_speed) = 0;
+    virtual int32_t SetMaxSpeed(const std::string &tid, const int64_t maxSpeed) = 0;
 
     virtual int32_t Stop(const std::string &tid) = 0;
     virtual int32_t Query(const std::string &tid, TaskInfo &info) = 0;

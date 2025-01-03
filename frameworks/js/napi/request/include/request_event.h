@@ -63,7 +63,7 @@ private:
         bool boolRes = false;
         std::string strRes;
         DownloadInfo infoRes;
-        int64_t max_speed;
+        int64_t maxSpeed;
     };
 
     using Event = std::function<int32_t(const std::shared_ptr<ExecContext> &)>;
@@ -88,7 +88,7 @@ private:
     static ExceptionError ParseOnOffParameters(
         napi_env env, napi_callback_info info, bool IsRequiredParam, JsParam &jsParam);
     static ExceptionError ParseSetMaxSpeedParameters(
-        napi_env env, napi_value self, napi_callback_info info, int64_t &max_speed);
+        napi_env env, napi_value self, napi_callback_info info, int64_t &maxSpeed);
     static napi_status GetResult(
         napi_env env, const std::shared_ptr<ExecContext> &context, const std::string &execType, napi_value &result);
     static void GetDownloadInfo(const TaskInfo &infoRes, DownloadInfo &info);

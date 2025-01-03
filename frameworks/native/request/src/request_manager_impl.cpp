@@ -72,8 +72,7 @@ ExceptionErrorCode RequestManagerImpl::ResumeTasks(
 ExceptionErrorCode RequestManagerImpl::RemoveTasks(
     const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets)
 {
-    return static_cast<ExceptionErrorCode>(
-        CallProxyMethod(&RequestServiceInterface::RemoveTasks, tids, version, rets));
+    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::RemoveTasks, tids, version, rets));
 }
 
 ExceptionErrorCode RequestManagerImpl::PauseTasks(
@@ -96,6 +95,12 @@ ExceptionErrorCode RequestManagerImpl::TouchTasks(
     const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets)
 {
     return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::TouchTasks, tidTokens, rets));
+}
+
+ExceptionErrorCode RequestManagerImpl::SetMaxSpeeds(
+    const std::vector<SpeedConfig> &speedConfig, std::vector<ExceptionErrorCode> &rets)
+{
+    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::SetMaxSpeeds, speedConfig, rets));
 }
 
 int32_t RequestManagerImpl::Create(const Config &config, int32_t seq, std::string &tid)
@@ -201,9 +206,9 @@ int32_t RequestManagerImpl::DeleteGroup(const std::string &gid)
     return CallProxyMethod(&RequestServiceInterface::DeleteGroup, gid);
 }
 
-int32_t RequestManagerImpl::SetMaxSpeed(const std::string &tid, const int64_t max_speed)
+int32_t RequestManagerImpl::SetMaxSpeed(const std::string &tid, const int64_t maxSpeed)
 {
-    return CallProxyMethod(&RequestServiceInterface::SetMaxSpeed, tid, max_speed);
+    return CallProxyMethod(&RequestServiceInterface::SetMaxSpeed, tid, maxSpeed);
 }
 
 int32_t RequestManagerImpl::AddListener(
