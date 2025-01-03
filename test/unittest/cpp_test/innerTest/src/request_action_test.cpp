@@ -574,3 +574,103 @@ HWTEST_F(RequestActionTest, RemoveTest004, TestSize.Level1)
     auto res = RequestAction::GetInstance()->Remove(tid);
     EXPECT_EQ(res, 21900006);
 }
+
+/**
+ * @tc.name: StartTasksTest001
+ * @tc.desc: Test StartTasksTest001 interface base function - StartTasks
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, StartTasksTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestAction::GetInstance(), nullptr);
+    GrantDownSessionPermission();
+    std::string tid = "tid";
+    std::vector<std::string> tids = { tid };
+    std::unordered_map<std::string, ExceptionErrorCode> rets;
+    ExceptionErrorCode res = RequestAction::GetInstance()->StartTasks(tids, rets);
+    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+    ExceptionErrorCode res0 = rets[tid];
+    EXPECT_EQ(res0, ExceptionErrorCode::E_TASK_NOT_FOUND);
+    REQUEST_HILOGI("===> StartTasksTest001 res 0=%{public}d", res0);
+}
+
+/**
+ * @tc.name: StopTasksTest001
+ * @tc.desc: Test StopTasksTest001 interface base function - StopTasks
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, StopTasksTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestAction::GetInstance(), nullptr);
+    GrantDownSessionPermission();
+    std::string tid = "tid";
+    std::vector<std::string> tids = { tid };
+    std::unordered_map<std::string, ExceptionErrorCode> rets;
+    ExceptionErrorCode res = RequestAction::GetInstance()->StopTasks(tids, rets);
+    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+    ExceptionErrorCode res0 = rets[tid];
+    EXPECT_EQ(res0, ExceptionErrorCode::E_TASK_NOT_FOUND);
+    REQUEST_HILOGI("===> StopTasksTest001 res 0=%{public}d", res0);
+}
+
+/**
+ * @tc.name: ResumeTasksTest001
+ * @tc.desc: Test ResumeTasksTest001 interface base function - ResumeTasks
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, ResumeTasksTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestAction::GetInstance(), nullptr);
+    GrantDownSessionPermission();
+    std::string tid = "tid";
+    std::vector<std::string> tids = { tid };
+    std::unordered_map<std::string, ExceptionErrorCode> rets;
+    ExceptionErrorCode res = RequestAction::GetInstance()->ResumeTasks(tids, rets);
+    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+    ExceptionErrorCode res0 = rets[tid];
+    EXPECT_EQ(res0, ExceptionErrorCode::E_TASK_NOT_FOUND);
+    REQUEST_HILOGI("===> ResumeTasksTest001 res 0=%{public}d", res0);
+}
+
+/**
+ * @tc.name: RemoveTasksTest001
+ * @tc.desc: Test RemoveTasksTest001 interface base function - RemoveTasks
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, RemoveTasksTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestAction::GetInstance(), nullptr);
+    GrantDownSessionPermission();
+    std::string tid = "tid";
+    std::vector<std::string> tids = { tid };
+    std::unordered_map<std::string, ExceptionErrorCode> rets;
+    ExceptionErrorCode res = RequestAction::GetInstance()->RemoveTasks(tids, rets);
+    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+    ExceptionErrorCode res0 = rets[tid];
+    EXPECT_EQ(res0, ExceptionErrorCode::E_TASK_NOT_FOUND);
+    REQUEST_HILOGI("===> RemoveTasksTest001 res 0=%{public}d", res0);
+}
+
+/**
+ * @tc.name: PauseTasksTest001
+ * @tc.desc: Test PauseTasksTest001 interface base function - PauseTasks
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, PauseTasksTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestAction::GetInstance(), nullptr);
+    GrantDownSessionPermission();
+    std::string tid = "tid";
+    std::vector<std::string> tids = { tid };
+    std::unordered_map<std::string, ExceptionErrorCode> rets;
+    ExceptionErrorCode res = RequestAction::GetInstance()->PauseTasks(tids, rets);
+    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+    ExceptionErrorCode res0 = rets[tid];
+    EXPECT_EQ(res0, ExceptionErrorCode::E_TASK_NOT_FOUND);
+    REQUEST_HILOGI("===> PauseTasksTest001 res 0=%{public}d", res0);
+}
