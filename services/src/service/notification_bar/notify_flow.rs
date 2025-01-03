@@ -19,6 +19,7 @@ use ylong_runtime::sync::mpsc::{self, UnboundedReceiver};
 
 use super::database::NotificationDb;
 use super::ffi::{NotifyContent, PublishNotification};
+use super::task_handle::cancel_notification;
 use crate::config::Action;
 use crate::info::State;
 use crate::manage::database::RequestDb;
@@ -60,12 +61,9 @@ impl GroupProgress {
     }
 
     pub(crate) fn update_task_progress(&mut self, task_id: u32, processed: u64) {
-        let prev = match self.task_progress.get_mut(&task_id) {
-            Some(prev) => prev,
-            None => {
-                self.task_progress.insert(task_id, 0);
-                self.task_progress.get_mut(&task_id).unwrap()
-            }
+        let prev = match self.task_progress.entry(task_id) {
+            Entry::Occupied(entry) => entry.into_mut(),
+            Entry::Vacant(entry) => entry.insert(0),
         };
         self.total_progress += processed - *prev;
         *prev = processed;
@@ -139,6 +137,7 @@ pub(crate) struct EventualNotify {
     pub(crate) action: Action,
     pub(crate) task_id: u32,
     pub(crate) uid: u64,
+    pub(crate) processed: u64,
     pub(crate) file_name: String,
     pub(crate) is_successful: bool,
 }
@@ -147,6 +146,8 @@ pub(crate) struct EventualNotify {
 pub(crate) enum NotifyInfo {
     Eventual(EventualNotify),
     Progress(ProgressNotify),
+    AttachGroup(u32, u64, Vec<u32>),
+    Unregister(u64, u32, u32),
     GroupEventual(u32, u64),
 }
 
@@ -185,6 +186,12 @@ impl NotifyFlow {
                     NotifyInfo::Eventual(info) => self.publish_completed_notify(&info),
                     NotifyInfo::Progress(info) => self.publish_progress_notification(info),
                     NotifyInfo::GroupEventual(group_id, uid) => self.group_eventual(group_id, uid),
+                    NotifyInfo::AttachGroup(group_id, uid, task_ids) => {
+                        self.attach_group(group_id, task_ids, uid)
+                    }
+                    NotifyInfo::Unregister(uid, task_id, group_id) => {
+                        self.unregister_task(uid, task_id, group_id)
+                    }
                 } {
                     PublishNotification(&content);
                 }
@@ -192,70 +199,122 @@ impl NotifyFlow {
         });
     }
 
-    pub(crate) fn get_customized_notification(
-        &mut self,
-        request_id: u32,
-        is_group: bool,
-    ) -> Option<(String, String)> {
-        if is_group {
-            let info = self
-                .database
-                .query_group_customized_notification(request_id)?;
-            Some((info.title, info.text))
-        } else {
-            let info = self
-                .database
-                .query_task_customized_notification(request_id)?;
-            Some((info.title, info.text))
+    fn unregister_task(&mut self, uid: u64, task_id: u32, group_id: u32) -> Option<NotifyContent> {
+        info!(
+            "Unregister task: uid: {}, task_id: {}, group_id: {}",
+            uid, task_id, group_id
+        );
+        let progress = match self.group_notify_progress.entry(group_id) {
+            Entry::Occupied(entry) => entry.into_mut(),
+            Entry::Vacant(entry) => {
+                let progress = Self::get_group_progress(&self.database, group_id);
+                entry.insert(progress)
+            }
+        };
+        if progress
+            .task_state
+            .get(&task_id)
+            .is_some_and(|state| *state != State::Completed && *state != State::Failed)
+        {
+            progress.task_state.remove(&task_id);
         }
+        if progress.task_state.is_empty() {
+            cancel_notification(group_id);
+            return None;
+        }
+        if !Self::group_eventual_check(&self.database, progress, group_id) {
+            return None;
+        }
+        Some(NotifyContent::default_group_eventual_notify(
+            Action::Download,
+            group_id,
+            uid as u32,
+            progress.processed(),
+            progress.successful() as i32,
+            progress.failed() as i32,
+        ))
     }
 
-    fn get_group_progress(&self, group_id: u32) -> GroupProgress {
+    fn update_db_task_state_and_progress(group_progress: &mut GroupProgress, task_id: u32) {
+        let Some(processed) = RequestDb::get_instance().query_task_total_processed(task_id) else {
+            return;
+        };
+        let Some(state) = RequestDb::get_instance().query_task_state(task_id) else {
+            return;
+        };
+        if state == State::Removed.repr {
+            return;
+        }
+        group_progress.update_task_state(task_id, State::from(state));
+        group_progress.update_task_progress(task_id, processed as u64);
+    }
+
+    fn get_group_progress(database: &NotificationDb, group_id: u32) -> GroupProgress {
         let mut group_progress = GroupProgress::new();
-        for task_id in self.database.query_group_tasks(group_id) {
-            let Some(processed) = RequestDb::get_instance().query_task_total_processed(task_id)
-            else {
-                error!("Failed to get {} info in group {}", task_id, group_id);
-                continue;
-            };
-            let Some(state) = RequestDb::get_instance().query_task_state(task_id) else {
-                error!("Failed to get {} state in group {}", task_id, group_id);
-                continue;
-            };
-            if state == State::Removed.repr {
-                continue;
-            }
-            group_progress.update_task_state(task_id, State::from(state));
-            group_progress.update_task_progress(task_id, processed as u64);
+        for task_id in database.query_group_tasks(group_id) {
+            Self::update_db_task_state_and_progress(&mut group_progress, task_id);
         }
         group_progress
     }
 
-    pub(crate) fn publish_progress_notification(
+    fn attach_group(
         &mut self,
-        info: ProgressNotify,
+        group_id: u32,
+        task_ids: Vec<u32>,
+        uid: u64,
     ) -> Option<NotifyContent> {
+        let is_gauge = self.check_gauge(group_id);
+        let progress = match self.group_notify_progress.entry(group_id) {
+            Entry::Occupied(entry) => {
+                let progress = entry.into_mut();
+                for task_id in task_ids {
+                    Self::update_db_task_state_and_progress(progress, task_id);
+                }
+                progress
+            }
+            Entry::Vacant(entry) => {
+                let progress = Self::get_group_progress(&self.database, group_id);
+                entry.insert(progress)
+            }
+        };
+        if self.group_customized_notify.contains_key(&group_id) || !is_gauge {
+            return None;
+        }
+        Some(NotifyContent::default_group_progress_notify(
+            Action::Download,
+            group_id,
+            uid as u32,
+            progress,
+        ))
+    }
+
+    fn check_gauge(&mut self, group_id: u32) -> bool {
+        match self.group_gauge.get(&group_id) {
+            Some(gauge) => *gauge,
+            None => {
+                let gauge = self.database.is_gauge(group_id);
+                self.group_gauge.insert(group_id, gauge);
+                gauge
+            }
+        }
+    }
+
+    fn publish_progress_notification(&mut self, info: ProgressNotify) -> Option<NotifyContent> {
         let content = match self.get_request_id(info.task_id) {
             NotifyType::Group(group_id) => {
-                let gauge = match self.group_gauge.get(&group_id) {
-                    Some(gauge) => *gauge,
-                    None => {
-                        let gauge = self.database.is_gauge(group_id);
-                        self.group_gauge.insert(group_id, gauge);
-                        gauge
-                    }
-                };
-                if !gauge {
+                if !self.check_gauge(group_id) {
                     return None;
                 }
-
                 let progress_interval_check = self.progress_interval_check(group_id);
-                if let Some(customized) = match self.group_customized_notify.get(&group_id) {
-                    Some(customized) => customized,
-                    None => {
-                        let customized = self.get_customized_notification(group_id, true);
-                        self.group_customized_notify.insert(group_id, customized);
-                        self.group_customized_notify.get(&group_id).unwrap()
+
+                if let Some(customized) = match self.group_customized_notify.entry(group_id) {
+                    Entry::Occupied(entry) => entry.into_mut(),
+                    Entry::Vacant(entry) => {
+                        let customized = self
+                            .database
+                            .query_group_customized_notification(group_id)
+                            .map(|info| (info.title, info.text));
+                        entry.insert(customized)
                     }
                 } {
                     if !progress_interval_check {
@@ -269,16 +328,15 @@ impl NotifyFlow {
                         true,
                     )
                 } else {
-                    match self.group_notify_progress.get_mut(&group_id) {
-                        Some(progress) => {
-                            progress.update_task_progress(info.task_id, info.processed)
-                        }
-                        None => {
-                            let mut progress = self.get_group_progress(group_id);
-                            progress.update_task_progress(info.task_id, info.processed);
-                            self.group_notify_progress.insert(group_id, progress);
+                    let progress = match self.group_notify_progress.entry(group_id) {
+                        Entry::Occupied(entry) => entry.into_mut(),
+                        Entry::Vacant(entry) => {
+                            let progress = Self::get_group_progress(&self.database, group_id);
+                            entry.insert(progress)
                         }
                     };
+                    progress.update_task_progress(info.task_id, info.processed);
+
                     if !progress_interval_check {
                         return None;
                     }
@@ -286,18 +344,19 @@ impl NotifyFlow {
                         info.action,
                         group_id,
                         info.uid as u32,
-                        self.group_notify_progress.get(&group_id).unwrap(),
+                        progress,
                     )
                 }
             }
             NotifyType::Task => {
-                if let Some(customized) = match self.task_customized_notify.get(&info.task_id) {
-                    Some(customized) => customized,
-                    None => {
-                        let customized = self.get_customized_notification(info.task_id, false);
-                        self.group_customized_notify
-                            .insert(info.task_id, customized);
-                        self.group_customized_notify.get(&info.task_id).unwrap()
+                if let Some(customized) = match self.task_customized_notify.entry(info.task_id) {
+                    Entry::Occupied(entry) => entry.into_mut(),
+                    Entry::Vacant(entry) => {
+                        let customized = self
+                            .database
+                            .query_task_customized_notification(info.task_id)
+                            .map(|info| (info.title, info.text));
+                        entry.insert(customized)
                     }
                 } {
                     NotifyContent::customized_notify(
@@ -337,8 +396,12 @@ impl NotifyFlow {
     fn publish_completed_notify(&mut self, info: &EventualNotify) -> Option<NotifyContent> {
         let content = match self.get_request_id(info.task_id) {
             NotifyType::Group(group_id) => {
-                let group_progress = match self.group_notify_progress.get_mut(&group_id) {
-                    Some(progress) => {
+                let is_gauge = self.check_gauge(group_id);
+
+                let group_progress = match self.group_notify_progress.entry(group_id) {
+                    Entry::Occupied(entry) => {
+                        let progress = entry.into_mut();
+                        progress.update_task_progress(info.task_id, info.processed);
                         if info.is_successful {
                             progress.update_task_state(info.task_id, State::Completed);
                         } else {
@@ -346,41 +409,53 @@ impl NotifyFlow {
                         }
                         progress
                     }
-                    None => {
-                        let progress = self.get_group_progress(group_id);
-                        self.group_notify_progress.insert(group_id, progress);
-                        self.group_notify_progress.get_mut(&group_id).unwrap()
+                    Entry::Vacant(entry) => {
+                        let progress = Self::get_group_progress(&self.database, group_id);
+                        entry.insert(progress)
                     }
                 };
-                let total_progress = group_progress.processed();
-                let successful = group_progress.successful() as i32;
-                let failed = group_progress.failed() as i32;
 
-                if let Some(customized) = match self.group_customized_notify.get(&group_id) {
-                    Some(customized) => customized,
-                    None => {
-                        let customized = self.get_customized_notification(group_id, true);
-                        self.group_customized_notify.insert(group_id, customized);
-                        self.group_customized_notify.get(&group_id).unwrap()
+                let group_eventual =
+                    Self::group_eventual_check(&self.database, group_progress, group_id);
+
+                if let Some(customized) = match self.group_customized_notify.entry(group_id) {
+                    Entry::Occupied(entry) => entry.into_mut(),
+                    Entry::Vacant(entry) => {
+                        let customized = self
+                            .database
+                            .query_group_customized_notification(group_id)
+                            .map(|info| (info.title, info.text));
+                        entry.insert(customized)
                     }
                 } {
                     let title = customized.0.clone();
                     let text = customized.1.clone();
-                    if !self.group_eventual_check(group_id) {
+                    NotifyContent::customized_notify(
+                        group_id,
+                        info.uid as u32,
+                        title,
+                        text,
+                        !group_eventual,
+                    )
+                } else if !group_eventual {
+                    if is_gauge {
+                        NotifyContent::default_group_progress_notify(
+                            info.action,
+                            group_id,
+                            info.uid as u32,
+                            group_progress,
+                        )
+                    } else {
                         return None;
                     }
-                    NotifyContent::customized_notify(group_id, info.uid as u32, title, text, false)
                 } else {
-                    if !self.group_eventual_check(group_id) {
-                        return None;
-                    }
                     NotifyContent::default_group_eventual_notify(
                         info.action,
                         group_id,
                         info.uid as u32,
-                        total_progress,
-                        successful,
-                        failed,
+                        group_progress.processed(),
+                        group_progress.successful() as i32,
+                        group_progress.failed() as i32,
                     )
                 }
             }
@@ -411,44 +486,44 @@ impl NotifyFlow {
     }
 
     fn group_eventual(&mut self, group_id: u32, uid: u64) -> Option<NotifyContent> {
-        if let Some(customized) = match self.group_customized_notify.get(&group_id) {
-            Some(customized) => customized,
-            None => {
-                let customized = self.get_customized_notification(group_id, true);
-                self.group_customized_notify.insert(group_id, customized);
-                self.group_customized_notify.get(&group_id).unwrap()
+        let group_progress = match self.group_notify_progress.entry(group_id) {
+            Entry::Occupied(entry) => entry.into_mut(),
+            Entry::Vacant(entry) => {
+                let progress = Self::get_group_progress(&self.database, group_id);
+                entry.insert(progress)
+            }
+        };
+
+        let group_eventual = Self::group_eventual_check(&self.database, group_progress, group_id);
+        if let Some(customized) = match self.group_customized_notify.entry(group_id) {
+            Entry::Occupied(entry) => entry.into_mut(),
+            Entry::Vacant(entry) => {
+                let customized = self
+                    .database
+                    .query_group_customized_notification(group_id)
+                    .map(|info| (info.title, info.text));
+                entry.insert(customized)
             }
         } {
             let title = customized.0.clone();
             let text = customized.1.clone();
-            if !self.group_eventual_check(group_id) {
+            if !group_eventual {
                 return None;
             }
             Some(NotifyContent::customized_notify(
                 group_id, uid as u32, title, text, false,
             ))
         } else {
-            let group_progress = match self.group_notify_progress.get_mut(&group_id) {
-                Some(progress) => progress,
-                None => {
-                    let progress = self.get_group_progress(group_id);
-                    self.group_notify_progress.insert(group_id, progress);
-                    self.group_notify_progress.get_mut(&group_id).unwrap()
-                }
-            };
-            let total_progress = group_progress.processed();
-            let successful = group_progress.successful() as i32;
-            let failed = group_progress.failed() as i32;
-            if !self.group_eventual_check(group_id) {
+            if !group_eventual {
                 return None;
             }
             Some(NotifyContent::default_group_eventual_notify(
                 Action::Download,
                 group_id,
                 uid as u32,
-                total_progress,
-                successful,
-                failed,
+                group_progress.processed(),
+                group_progress.successful() as i32,
+                group_progress.failed() as i32,
             ))
         }
     }
@@ -466,16 +541,12 @@ impl NotifyFlow {
         n_type
     }
 
-    fn group_eventual_check(&mut self, group_id: u32) -> bool {
-        let group_progress = match self.group_notify_progress.get_mut(&group_id) {
-            Some(progress) => progress,
-            None => {
-                let progress = self.get_group_progress(group_id);
-                self.group_notify_progress.insert(group_id, progress);
-                self.group_notify_progress.get_mut(&group_id).unwrap()
-            }
-        };
-        !self.database.attach_able(group_id) && group_progress.is_finish()
+    fn group_eventual_check(
+        database: &NotificationDb,
+        group_progress: &mut GroupProgress,
+        group_id: u32,
+    ) -> bool {
+        !database.attach_able(group_id) && group_progress.is_finish()
     }
 }
 
@@ -544,6 +615,7 @@ mod test {
             .unwrap();
         assert_eq!(content, content_default);
 
+        flow.task_customized_notify.clear();
         flow.database
             .update_task_customized_notification(task_id, TEST_TITLE, TEST_TEXT);
         let content_customized = NotifyContent::customized_notify(
@@ -567,6 +639,7 @@ mod test {
         let info = EventualNotify {
             action: Action::Download,
             task_id,
+            processed: 0,
             uid,
             file_name: "test".to_string(),
             is_successful: true,

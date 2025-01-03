@@ -12,7 +12,7 @@
 // limitations under the License.
 
 use std::ops::Deref;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use crate::manage::events::{TaskEvent, TaskManagerEvent};
@@ -73,7 +73,9 @@ impl Drop for RunningTask {
         match *self.task.running_result.lock().unwrap() {
             Some(res) => match res {
                 Ok(()) => {
-                    NotificationDispatcher::get_instance().publish_progress_notification(self);
+                    if self.task.background_notify.load(Ordering::Acquire) {
+                        NotificationDispatcher::get_instance().publish_progress_notification(self);
+                    }
                     self.tx
                         .send_event(TaskManagerEvent::Task(TaskEvent::Completed(
                             task_id, uid, mode,

@@ -11,14 +11,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::{Arc, LazyLock};
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, LazyLock, Mutex};
 
 use ylong_runtime::fastrand::fast_random;
 use ylong_runtime::sync::mpsc::{self, unbounded_channel};
 
 use super::database::NotificationDb;
 use super::notify_flow::{EventualNotify, NotifyFlow, NotifyInfo, ProgressNotify};
-use super::task_handle::NotificationCheck;
+use super::task_handle::{cancel_notification, NotificationCheck};
 use crate::info::TaskInfo;
 use crate::task::request_task::RequestTask;
 
@@ -26,6 +28,7 @@ pub(crate) const NOTIFY_PROGRESS_INTERVAL: u64 = 500;
 
 pub struct NotificationDispatcher {
     database: Arc<NotificationDb>,
+    task_gauge: Mutex<HashMap<u32, Arc<AtomicBool>>>,
     flow: mpsc::UnboundedSender<NotifyInfo>,
 }
 
@@ -36,6 +39,7 @@ impl NotificationDispatcher {
         NotifyFlow::new(rx, database.clone()).run();
         Self {
             database: database.clone(),
+            task_gauge: Mutex::new(HashMap::new()),
             flow: tx,
         }
     }
@@ -46,10 +50,36 @@ impl NotificationDispatcher {
         &INSTANCE
     }
 
-    pub(crate) fn publish_progress_notification(&self, task: &RequestTask) {
-        if !task.notification_check(false) {
-            return;
+    pub(crate) fn register_task(&self, task: &RequestTask) -> Arc<AtomicBool> {
+        let gauge = if let Some(gid) = self.database.query_task_gid(task.task_id()) {
+            if self.database.is_gauge(gid) {
+                Arc::new(AtomicBool::new(true))
+            } else {
+                Arc::new(AtomicBool::new(false))
+            }
+        } else {
+            let gauge = task.notification_check(false);
+            Arc::new(AtomicBool::new(gauge))
+        };
+        self.task_gauge
+            .lock()
+            .unwrap()
+            .insert(task.task_id(), gauge.clone());
+        gauge
+    }
+
+    pub(crate) fn unregister_task(&self, uid: u64, task_id: u32) {
+        if let Some(gid) = self.database.query_task_gid(task_id) {
+            let _ = self.flow.send(NotifyInfo::Unregister(uid, task_id, gid));
+        } else if let Some(gauge) = self.task_gauge.lock().unwrap().remove(&task_id) {
+            if gauge.load(Ordering::Acquire) {
+                gauge.store(false, Ordering::Release);
+                cancel_notification(task_id);
+            }
         }
+    }
+
+    pub(crate) fn publish_progress_notification(&self, task: &RequestTask) {
         let progress = task.progress.lock().unwrap();
         let mut total = Some(0);
         for size in progress.sizes.iter() {
@@ -76,12 +106,17 @@ impl NotificationDispatcher {
     }
 
     pub(crate) fn publish_success_notification(&self, info: &TaskInfo) {
+        self.task_gauge
+            .lock()
+            .unwrap()
+            .remove(&info.common_data.task_id);
         if !info.notification_check(true) {
             return;
         }
         let notify = EventualNotify {
             action: info.action(),
             task_id: info.common_data.task_id,
+            processed: info.progress.common_data.total_processed as u64,
             uid: info.uid(),
             file_name: info.file_specs[0].file_name.clone(),
             is_successful: true,
@@ -90,9 +125,17 @@ impl NotificationDispatcher {
     }
 
     pub(crate) fn publish_failed_notification(&self, info: &TaskInfo) {
+        self.task_gauge
+            .lock()
+            .unwrap()
+            .remove(&info.common_data.task_id);
+        if !info.notification_check(true) {
+            return;
+        }
         let notify = EventualNotify {
             action: info.action(),
             task_id: info.common_data.task_id,
+            processed: info.progress.common_data.total_processed as u64,
             uid: info.uid(),
             file_name: info.file_specs[0].file_name.clone(),
             is_successful: false,
@@ -100,13 +143,21 @@ impl NotificationDispatcher {
         let _ = self.flow.send(NotifyInfo::Eventual(notify));
     }
 
-    pub(crate) fn attach_group(&self, task_id: u32, group_id: u32) -> bool {
-        info!("Attach task {} to group {}", task_id, group_id);
+    pub(crate) fn attach_group(&self, task_ids: Vec<u32>, group_id: u32, uid: u64) -> bool {
         if !self.database.attach_able(group_id) {
             return false;
         }
-
-        self.database.update_task_group(task_id, group_id);
+        info!("Attach task {:?} to group {}", task_ids, group_id);
+        let is_gauge = self.database.is_gauge(group_id);
+        for task_id in task_ids.iter().copied() {
+            self.database.update_task_group(task_id, group_id);
+            if let Some(gauge) = self.task_gauge.lock().unwrap().get(&task_id) {
+                gauge.store(is_gauge, std::sync::atomic::Ordering::Release);
+            }
+        }
+        let _ = self
+            .flow
+            .send(NotifyInfo::AttachGroup(group_id, uid, task_ids));
         true
     }
 

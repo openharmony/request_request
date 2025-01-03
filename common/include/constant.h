@@ -67,7 +67,7 @@ static constexpr const char *E_TASK_QUEUE_INFO = "the application task queue is 
 static constexpr const char *E_TASK_MODE_INFO = "task mode error";
 static constexpr const char *E_TASK_NOT_FOUND_INFO = "task not found";
 static constexpr const char *E_TASK_STATE_INFO = "task state error";
-static constexpr const char *E_GROUP_NOT_FOUND_INFO = "group not found";
+static constexpr const char *E_GROUP_NOT_FOUND_INFO = "group deleted or not found";
 
 static constexpr const char *FUNCTION_PAUSE = "pause";
 static constexpr const char *FUNCTION_QUERY = "query";

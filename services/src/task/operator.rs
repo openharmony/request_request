@@ -60,8 +60,9 @@ impl TaskOperator {
             Notifier::progress(&self.task.client_manager, notify_data);
         }
 
-        if current
-            > self.task.background_notify_time.load(Ordering::SeqCst) + NOTIFY_PROGRESS_INTERVAL
+        if self.task.background_notify.load(Ordering::Acquire)
+            && current
+                > self.task.background_notify_time.load(Ordering::SeqCst) + NOTIFY_PROGRESS_INTERVAL
         {
             self.task
                 .background_notify_time

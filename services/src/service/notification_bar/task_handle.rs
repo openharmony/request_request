@@ -23,39 +23,31 @@ use crate::manage::TaskManager;
 use crate::task::request_task::RequestTask;
 use crate::utils::Recv;
 
-pub(crate) fn cancel_progress_notification(info: &TaskInfo) {
-    if !info.notification_check(false) {
-        return;
-    }
-    force_cancel_progress_notification(info.common_data.task_id);
-}
-
-pub(crate) fn force_cancel_progress_notification(task_id: u32) {
-    let ret = ffi::CancelNotification(task_id);
+pub(super) fn cancel_notification(request_id: u32) {
+    info!("cancel notification {}", request_id);
+    let ret = ffi::CancelNotification(request_id);
     if ret != 0 {
         error!("cancel notification failed {}", ret);
     }
 }
 
 impl TaskManager {
-    pub(crate) fn attach_group(&self, task_id: u32, group_id: u32) -> ErrorCode {
-        if !RequestDb::get_instance().contains_task(task_id) {
-            return ErrorCode::TaskNotFound;
+    pub(crate) fn attach_group(&self, uid: u64, task_ids: Vec<u32>, group_id: u32) -> ErrorCode {
+        for task_id in task_ids.iter().copied() {
+            let Some(mode) = RequestDb::get_instance().query_task_mode(task_id) else {
+                return ErrorCode::TaskNotFound;
+            };
+            if mode != Mode::BackGround {
+                return ErrorCode::TaskModeErr;
+            }
+            let Some(state) = RequestDb::get_instance().query_task_state(task_id) else {
+                return ErrorCode::TaskNotFound;
+            };
+            if state != State::Initialized.repr {
+                return ErrorCode::TaskStateErr;
+            }
         }
-        if RequestDb::get_instance()
-            .query_task_mode(task_id)
-            .unwrap_or(Mode::FrontEnd)
-            != Mode::BackGround
-        {
-            return ErrorCode::TaskModeErr;
-        }
-        if !RequestDb::get_instance()
-            .query_task_state(task_id)
-            .is_some_and(|state| state == State::Initialized.repr)
-        {
-            return ErrorCode::TaskStateErr;
-        }
-        if !NotificationDispatcher::get_instance().attach_group(task_id, group_id) {
+        if !NotificationDispatcher::get_instance().attach_group(task_ids, group_id, uid) {
             return ErrorCode::GroupNotFound;
         }
         ErrorCode::ErrOk
