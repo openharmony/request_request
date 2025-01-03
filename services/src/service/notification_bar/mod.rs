@@ -19,10 +19,8 @@ mod typology;
 
 pub use publish::NotificationDispatcher;
 pub(crate) use publish::NOTIFY_PROGRESS_INTERVAL;
+pub(crate) use task_handle::subscribe_notification_bar;
 use task_handle::TaskManagerWrapper;
-pub(crate) use task_handle::{
-    cancel_progress_notification, force_cancel_progress_notification, subscribe_notification_bar,
-};
 
 #[cxx::bridge(namespace = "OHOS::Request")]
 mod ffi {

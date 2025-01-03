@@ -25,6 +25,7 @@ impl RequestServiceStub {
         reply: &mut MsgParcel,
     ) -> IpcResult<()> {
         let Ok(group_id) = data.read::<String>()?.parse::<u32>() else {
+            reply.write(&(ErrorCode::GroupNotFound as i32))?;
             return Ok(());
         };
         let mut ret = ErrorCode::ErrOk;

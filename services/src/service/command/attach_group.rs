@@ -26,39 +26,51 @@ impl RequestServiceStub {
     ) -> IpcResult<()> {
         let Ok(group_id) = data.read::<String>()?.parse::<u32>() else {
             error!("End Service attach_group, group_id, failed: group_id not valid",);
+            reply.write(&(ErrorCode::GroupNotFound as i32))?;
             return Ok(());
         };
         let task_ids = data.read::<Vec<String>>()?;
-        let mut ret = ErrorCode::ErrOk;
-        for task_id in task_ids {
+
+        let uid = ipc::Skeleton::calling_uid();
+
+        let mut parse_ids = Vec::with_capacity(task_ids.len());
+
+        for task_id in task_ids.iter() {
             let Ok(task_id) = task_id.parse::<u32>() else {
                 error!("End Service attach_group, task_id, failed: task_id not valid");
-                ret = ErrorCode::TaskNotFound;
-                break;
+                reply.write(&(ErrorCode::TaskNotFound as i32))?;
+                return Ok(());
             };
-
-            let (event, rx) = TaskManagerEvent::attach_group(task_id, group_id);
-            if !self.task_manager.lock().unwrap().send_event(event) {
-                return Err(IpcStatusCode::Failed);
-            }
-
-            ret = match rx.get() {
-                Some(ret) => ret,
-                None => {
-                    error!(
-                    "End Service attach_group, task_id: {}, group_id: {}, failed: receives ret failed",
-                    task_id, group_id
-                );
-                    ErrorCode::TaskNotFound
-                }
-            };
-            if ret != ErrorCode::ErrOk {
+            if !self.check_task_uid(task_id, uid) {
                 error!(
-                    "End Service attach_group, task_id: {}, group_id: {}, failed: ret is not ErrOk",
-                    task_id, group_id
+                    "End Service attach_group, task_id: {}, failed: task_id not belong to uid",
+                    task_id
                 );
-                break;
+                reply.write(&(ErrorCode::TaskNotFound as i32))?;
+                return Ok(());
             }
+            parse_ids.push(task_id);
+        }
+        let (event, rx) = TaskManagerEvent::attach_group(uid, parse_ids, group_id);
+        if !self.task_manager.lock().unwrap().send_event(event) {
+            return Err(IpcStatusCode::Failed);
+        }
+
+        let ret = match rx.get() {
+            Some(ret) => ret,
+            None => {
+                error!(
+                    "End Service attach_group, task_id: {:?}, group_id: {}, failed: receives ret failed",
+                    task_ids, group_id
+                );
+                ErrorCode::Other
+            }
+        };
+        if ret != ErrorCode::ErrOk {
+            error!(
+                "End Service attach_group, task_id: {:?}, group_id: {}, failed: ret is not ErrOk",
+                task_ids, group_id
+            );
         }
         reply.write(&(ret as i32))?;
         Ok(())

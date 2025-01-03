@@ -29,6 +29,8 @@
 namespace OHOS::Request {
 
 const std::string PARAMETER_ERROR_INFO = "wrong parameters";
+const std::size_t MAX_TITLE_LENGTH = 1024;
+const std::size_t MAX_TEXT_LENGTH = 3072;
 
 struct CreateContext : public AsyncCall::Context {
     std::string gid;
@@ -37,6 +39,42 @@ struct CreateContext : public AsyncCall::Context {
     std::string title;
     std::string text;
 };
+
+napi_status createNotificationParse(CreateContext *context, napi_value customized_notification)
+{
+    if (NapiUtils::GetValueType(context->env_, customized_notification) != napi_object) {
+        return napi_ok;
+    }
+    if (NapiUtils::HasNamedProperty(context->env_, customized_notification, "title")) {
+        context->customized = true;
+        napi_value title = NapiUtils::GetNamedProperty(context->env_, customized_notification, "title");
+        if (NapiUtils::GetValueType(context->env_, title) == napi_string) {
+            context->title = NapiUtils::Convert2String(context->env_, title);
+            if (context->title.size() > MAX_TITLE_LENGTH) {
+                NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
+                return napi_invalid_arg;
+            }
+        } else {
+            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
+            return napi_invalid_arg;
+        }
+    }
+    if (NapiUtils::HasNamedProperty(context->env_, customized_notification, "text")) {
+        context->customized = true;
+        napi_value text = NapiUtils::GetNamedProperty(context->env_, customized_notification, "text");
+        if (NapiUtils::GetValueType(context->env_, text) == napi_string) {
+            context->text = NapiUtils::Convert2String(context->env_, text);
+            if (context->text.size() > MAX_TEXT_LENGTH) {
+                NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
+                return napi_invalid_arg;
+            }
+        } else {
+            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
+            return napi_invalid_arg;
+        }
+    }
+    return napi_ok;
+}
 
 napi_status createInput(CreateContext *context, size_t argc, napi_value *argv, napi_value self)
 {
@@ -63,30 +101,7 @@ napi_status createInput(CreateContext *context, size_t argc, napi_value *argv, n
         return napi_ok;
     }
     napi_value customized_notification = NapiUtils::GetNamedProperty(context->env_, argv[0], "notification");
-    if (NapiUtils::GetValueType(context->env_, customized_notification) != napi_object) {
-        return napi_ok;
-    }
-    if (NapiUtils::HasNamedProperty(context->env_, customized_notification, "title")) {
-        context->customized = true;
-        napi_value title = NapiUtils::GetNamedProperty(context->env_, customized_notification, "title");
-        if (NapiUtils::GetValueType(context->env_, title) == napi_string) {
-            context->title = NapiUtils::Convert2String(context->env_, title);
-        } else {
-            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
-            return napi_invalid_arg;
-        }
-    }
-    if (NapiUtils::HasNamedProperty(context->env_, customized_notification, "text")) {
-        context->customized = true;
-        napi_value text = NapiUtils::GetNamedProperty(context->env_, customized_notification, "text");
-        if (NapiUtils::GetValueType(context->env_, text) == napi_string) {
-            context->text = NapiUtils::Convert2String(context->env_, text);
-        } else {
-            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
-            return napi_invalid_arg;
-        }
-    }
-    return napi_ok;
+    return createNotificationParse(context, customized_notification);
 }
 
 napi_value createGroup(napi_env env, napi_callback_info info)
@@ -128,6 +143,10 @@ napi_value attachGroup(napi_env env, napi_callback_info info)
             return napi_invalid_arg;
         }
         context->gid = NapiUtils::Convert2String(context->env_, argv[0]);
+        if (context->gid == "") {
+            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
+            return napi_invalid_arg;
+        }
         uint32_t length = 0;
         napi_get_array_length(context->env_, argv[1], &length);
         for (uint32_t index = 0; index < length; ++index) {
@@ -174,6 +193,10 @@ napi_value deleteGroup(napi_env env, napi_callback_info info)
             return napi_invalid_arg;
         }
         context->gid = NapiUtils::Convert2String(context->env_, argv[0]);
+        if (context->gid == "") {
+            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
+            return napi_invalid_arg;
+        }
         return napi_ok;
     };
     auto output = [context](napi_value *result) -> napi_status {

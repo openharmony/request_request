@@ -647,9 +647,6 @@ void ConvertError(int32_t errorCode, ExceptionError &err)
         case E_TASK_INDEX_TOO_LARGE:
             generateError(E_TASK_NOT_FOUND, "Task index out of range.");
             break;
-        case E_GROUP_NOT_FOUND:
-            generateError(E_GROUP_NOT_FOUND, "Group not found.");
-            break;
         default:
             generateError(static_cast<ExceptionErrorCode>(errorCode), "");
             break;

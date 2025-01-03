@@ -31,9 +31,7 @@ use crate::manage::database::RequestDb;
 use crate::manage::notifier::Notifier;
 use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
-use crate::service::notification_bar::{
-    cancel_progress_notification, force_cancel_progress_notification, NotificationDispatcher,
-};
+use crate::service::notification_bar::NotificationDispatcher;
 use crate::service::run_count::RunCountManagerEntry;
 use crate::task::config::Action;
 use crate::task::info::State;
@@ -218,9 +216,8 @@ impl Scheduler {
         database.change_mode(task_id, mode)?;
 
         if mode == Mode::FrontEnd {
-            force_cancel_progress_notification(task_id);
+            NotificationDispatcher::get_instance().unregister_task(uid, task_id);
         }
-
         if self.qos.task_set_mode(uid, task_id, mode) {
             self.schedule_if_not_scheduled();
         }
@@ -262,7 +259,7 @@ impl Scheduler {
         let database = RequestDb::get_instance();
         let Some(info) = database.get_task_info(task_id) else {
             error!("task {} not found in database", task_id);
-            force_cancel_progress_notification(task_id);
+            NotificationDispatcher::get_instance().unregister_task(uid, task_id);
             return;
         };
         match State::from(info.progress.common_data.state) {
@@ -302,7 +299,7 @@ impl Scheduler {
             }
             State::Stopped | State::Removed => {
                 info!("task {} cancel with state Stopped or Removed", task_id);
-                cancel_progress_notification(&info);
+                NotificationDispatcher::get_instance().unregister_task(uid, task_id);
                 self.running_queue.try_restart(uid, task_id);
             }
             state => {
@@ -512,10 +509,12 @@ impl RequestDb {
             return Err(ErrorCode::TaskStateErr);
         }
 
-        if (old_state == State::Waiting.repr || old_state == State::Paused.repr)
+        if (old_state == State::Initialized.repr
+            || old_state == State::Waiting.repr
+            || old_state == State::Paused.repr)
             && (new_state == State::Stopped || new_state == State::Removed)
         {
-            cancel_progress_notification(&info);
+            NotificationDispatcher::get_instance().unregister_task(info.uid(), task_id);
         }
         Ok(())
     }
