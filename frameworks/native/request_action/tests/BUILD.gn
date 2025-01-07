@@ -1,0 +1,82 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+
+config("request_action_config") {
+  include_dirs = [
+    "../../../../interfaces/inner_kits/request_action/include",
+    "../../request/include",
+    "../../../../common/include",
+    "./",
+    "${target_gen_dir}/src",
+  ]
+}
+
+rust_cxx("request_action_cxx") {
+  sources = [ "disable_task_notification.rs" ]
+}
+
+ohos_static_library("request_action") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  stack_protector_ret = true
+
+  deps = [
+    ":request_action_cxx",
+    "../../request:request_native",
+    "//third_party/rust/crates/cxx:cxx_cppdeps",
+  ]
+
+  public_configs = [ ":request_action_config" ]
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
+    "access_token:libtokenid_sdk",
+    "hilog:libhilog",
+  ]
+
+  sources = [ "../src/request_action.cpp" ]
+  sources += get_target_outputs(":request_action_cxx")
+
+  subsystem_name = "request"
+  part_name = "request"
+}
+
+ohos_rust_executable("disable_task_notification") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  deps = [
+    ":request_action",
+    ":request_action_cxx",
+    "//third_party/rust/crates/cxx:lib",
+  ]
+  sources = [ "disable_task_notification.rs" ]
+
+  subsystem_name = "request"
+  part_name = "request"
+}

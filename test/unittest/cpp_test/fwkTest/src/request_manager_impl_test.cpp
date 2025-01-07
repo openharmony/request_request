@@ -88,6 +88,8 @@ public:
     MOCK_METHOD(int32_t, SetMaxSpeed, (const std::string &tid, const int64_t maxSpeed), (override));
     MOCK_METHOD(ExceptionErrorCode, SetMaxSpeeds,
         (const std::vector<SpeedConfig> &speedConfig, std::vector<ExceptionErrorCode> &rets), (override));
+    MOCK_METHOD(ExceptionErrorCode, DisableTaskNotification,
+        (const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets));
 };
 
 class RequestManagerImplTest : public testing::Test {

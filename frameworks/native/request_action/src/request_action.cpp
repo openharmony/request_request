@@ -23,6 +23,7 @@
 #include "constant.h"
 #include "log.h"
 #include "request_common.h"
+#include "request_manager.h"
 
 namespace OHOS::Request {
 using namespace OHOS::Security::AccessToken;
@@ -207,5 +208,17 @@ ExceptionErrorCode RequestAction::SetMaxSpeeds(
 ExceptionErrorCode RequestAction::SetMode(std::string &tid, Mode mode)
 {
     return RequestManager::GetInstance()->SetMode(tid, mode);
+}
+
+ExceptionErrorCode RequestAction::DisableTaskNotification(
+    const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets)
+{
+    rets.clear();
+    std::vector<ExceptionErrorCode> vec;
+    ExceptionErrorCode code = RequestManager::GetInstance()->DisableTaskNotification(tids, vec);
+    for (size_t i = 0; i < tids.size() && i < vec.size(); i++) {
+        rets.insert_or_assign(tids[i], vec[i]);
+    }
+    return code;
 }
 } // namespace OHOS::Request

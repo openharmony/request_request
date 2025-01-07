@@ -51,6 +51,13 @@ ExceptionErrorCode RequestManagerImpl::SetMode(const std::string &tid, const Mod
     return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::SetMode, tid, mode));
 }
 
+ExceptionErrorCode RequestManagerImpl::DisableTaskNotification(
+    const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
+{
+    return static_cast<ExceptionErrorCode>(
+        CallProxyMethod(&RequestServiceInterface::DisableTaskNotification, tids, rets));
+}
+
 ExceptionErrorCode RequestManagerImpl::StartTasks(
     const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
 {

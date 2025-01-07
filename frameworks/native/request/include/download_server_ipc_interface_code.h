@@ -43,6 +43,7 @@ enum class RequestInterfaceCode {
     CMD_DELETE_GROUP,
     CMD_SET_MAX_SPEED,
     CMD_SET_MODE = 100,
+    CMD_DISABLE_TASK_NOTIFICATIONS,
 };
 
 enum class RequestNotifyInterfaceCode {

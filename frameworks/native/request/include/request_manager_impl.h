@@ -56,6 +56,8 @@ public:
     ExceptionErrorCode TouchTasks(const std::vector<TaskIdAndToken> &tids, std::vector<TaskInfoRet> &rets);
     ExceptionErrorCode SetMaxSpeeds(const std::vector<SpeedConfig> &speedConfig, std::vector<ExceptionErrorCode> &rets);
     ExceptionErrorCode SetMode(const std::string &tid, const Mode mode);
+    ExceptionErrorCode DisableTaskNotification(
+        const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets);
 
     int32_t Create(const Config &config, int32_t seq, std::string &tid);
     int32_t GetTask(const std::string &tid, const std::string &token, Config &config);

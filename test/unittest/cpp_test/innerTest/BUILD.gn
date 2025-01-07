@@ -34,7 +34,7 @@ ohos_unittest("innerTest") {
     "../../../../frameworks/native/request/src/request_running_task_count.cpp",
     "../../../../frameworks/native/request/src/request_service_proxy.cpp",
     "../../../../frameworks/native/request/src/response_message_receiver.cpp",
-    "../../../../interfaces/inner_kits/request_action/src/request_action.cpp",
+    "../../../../frameworks/native/request_action/src/request_action.cpp",
     "src/request_action_test.cpp",
   ]
 

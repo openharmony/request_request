@@ -13,13 +13,10 @@
 
 use crate::error::ErrorCode;
 
-mod attach_group;
-mod set_mode;
 mod construct;
-mod create_group;
-mod delete_group;
 mod dump;
 mod get_task;
+mod notification_bar;
 mod open_channel;
 mod pause;
 mod query;
@@ -27,6 +24,8 @@ mod query_mime_type;
 mod remove;
 mod resume;
 mod search;
+mod set_max_speed;
+mod set_mode;
 mod show;
 mod start;
 mod stop;
@@ -35,7 +34,6 @@ mod subscribe;
 mod touch;
 mod unsub_runcount;
 mod unsubscribe;
-mod set_max_speed;
 
 pub(crate) const CONTROL_MAX: usize = 500;
 pub(crate) const GET_INFO_MAX: usize = 200;

@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <ctime>
 
+#include "constant.h"
 #include "download_server_ipc_interface_code.h"
 #include "iremote_broker.h"
 #include "log.h"
@@ -322,6 +323,27 @@ ExceptionErrorCode RequestServiceProxy::SetMode(const std::string &tid, const Mo
         return code;
     }
     return code;
+}
+
+ExceptionErrorCode RequestServiceProxy::DisableTaskNotification(
+    const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteStringVector(tids);
+    size_t length = tids.size();
+    int32_t ret = Remote()->SendRequest(
+        static_cast<uint32_t>(RequestInterfaceCode::CMD_DISABLE_TASK_NOTIFICATIONS), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("End send SetMode request, failed: %{public}d", ret);
+        return ExceptionErrorCode::E_SERVICE_ERROR;
+    }
+    
+    for (size_t i = 0; i < length; i++) {
+        rets.push_back(static_cast<ExceptionErrorCode>(reply.ReadInt32()));
+    }
+    return ExceptionErrorCode::E_OK;
 }
 
 int32_t RequestServiceProxy::Create(const Config &config, std::string &tid)

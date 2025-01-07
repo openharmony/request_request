@@ -48,6 +48,7 @@ impl PermissionChecker {
     }
 }
 
+#[derive(Clone, Copy)]
 pub(crate) enum ManagerPermission {
     NoPermission = 0,
     ManagerDownLoad,
