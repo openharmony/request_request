@@ -147,8 +147,8 @@ impl NotificationDb {
     pub(crate) fn update_task_customized_notification(
         &self,
         task_id: u32,
-        title: &str,
-        text: &str,
+        title: String,
+        text: String,
     ) {
         if let Err(e) = self.inner.execute(
             "INSERT INTO task_notification_content (task_id, title, text) VALUES (?, ?, ?) ON CONFLICT(task_id) DO UPDATE SET title = excluded.title, text = excluded.text",
@@ -301,7 +301,11 @@ mod test {
         let db = NotificationDb::new();
         let task_id = fast_random() as u32;
 
-        db.update_task_customized_notification(task_id, TEST_TITLE, TEST_TEXT);
+        db.update_task_customized_notification(
+            task_id,
+            TEST_TITLE.to_string(),
+            TEST_TEXT.to_string(),
+        );
         let customized = db.query_task_customized_notification(task_id).unwrap();
         assert_eq!(customized.title, TEST_TITLE);
         assert_eq!(customized.text, TEST_TEXT);

@@ -16,6 +16,7 @@ use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::manage::events::TaskManagerEvent;
+use crate::service::notification_bar::NotificationDispatcher;
 use crate::service::permission::PermissionChecker;
 use crate::service::RequestServiceStub;
 use crate::task::config::TaskConfig;
@@ -58,6 +59,14 @@ impl RequestServiceStub {
                 return Err(IpcStatusCode::Failed);
             }
         };
+
+        let customized_notification = data.read::<bool>()?;
+        if customized_notification {
+            let title = data.read::<String>()?;
+            let text = data.read::<String>()?;
+            NotificationDispatcher::get_instance()
+                .update_task_customized_notification(task_id, title, text);
+        }
 
         debug!("Service construct: construct event sent to manager");
 

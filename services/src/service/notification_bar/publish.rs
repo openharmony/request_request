@@ -54,6 +54,16 @@ impl NotificationDispatcher {
         self.database.disable_task_notification(task_id);
         self.unregister_task(uid, task_id);
     }
+    
+    pub(crate) fn update_task_customized_notification(
+        &self,
+        task_id: u32,
+        title: String,
+        text: String,
+    ) {
+        self.database
+            .update_task_customized_notification(task_id, title, text);
+    }
 
     pub(crate) fn register_task(&self, task: &RequestTask) -> Arc<AtomicBool> {
         let gauge = if let Some(gid) = self.database.query_task_gid(task.task_id()) {
