@@ -159,7 +159,7 @@ export default function requestDownloadFileTest() {
     /**
      * @tc.number: testDownloadUrl005
      * @tc.name: testDownloadUrl005
-     * @tc.desc: Test downloadFile when url length exceeds 2048.
+     * @tc.desc: Test downloadFile when url length exceeds 8192.
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -167,7 +167,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadUrl005', 0, function (done) {
       let conf = {
-        url: 'http://127.0.0.1/' + 'a'.repeat(2048),
+        url: 'http://127.0.0.1/' + 'a'.repeat(8192),
       }
       try {
         request.downloadFile(context, conf, (err, data) => {

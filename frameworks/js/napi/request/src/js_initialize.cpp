@@ -41,7 +41,7 @@ static constexpr const char *PARAM_KEY_BACKGROUND = "background";
 static constexpr uint32_t FILE_PERMISSION = 0644;
 static constexpr uint32_t TITLE_MAXIMUM = 256;
 static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
-static constexpr uint32_t URL_MAXIMUM = 2048;
+static constexpr uint32_t URL_MAXIMUM = 8192;
 static constexpr uint32_t PROXY_MAXIMUM = 512;
 
 namespace OHOS::Request {
@@ -576,8 +576,8 @@ bool JsInitialize::ParseUrl(napi_env env, napi_value jsConfig, std::string &url,
 {
     url = NapiUtils::Convert2String(env, jsConfig, "url");
     if (url.size() > URL_MAXIMUM) {
-        REQUEST_HILOGE("The URL exceeds the maximum length of 2048");
-        errInfo = "Parameter verification failed, the length of url exceeds 2048";
+        REQUEST_HILOGE("The URL exceeds the maximum length of 8192");
+        errInfo = "Parameter verification failed, the length of url exceeds 8192";
         return false;
     }
     if (!regex_match(url, std::regex("^http(s)?:\\/\\/.+"))) {
@@ -594,8 +594,8 @@ bool JsInitialize::ParseCertsPath(
 {
     std::string url = NapiUtils::Convert2String(env, jsConfig, "url");
     if (url.size() > URL_MAXIMUM) {
-        REQUEST_HILOGE("The URL exceeds the maximum length of 2048");
-        errInfo = "Parameter verification failed, the length of url exceeds 2048";
+        REQUEST_HILOGE("The URL exceeds the maximum length of 8192");
+        errInfo = "Parameter verification failed, the length of url exceeds 8192";
         return false;
     }
     if (!regex_match(url, std::regex("^http(s)?:\\/\\/.+"))) {
