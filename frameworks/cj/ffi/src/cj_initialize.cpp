@@ -40,7 +40,7 @@ using OHOS::Request::FileSpec;
 using OHOS::Request::FormItem;
 using OHOS::Request::Version;
 
-static constexpr uint32_t URL_MAXIMUM = 8192;
+static constexpr uint32_t URL_MAXIMUM = 2048;
 static constexpr uint32_t TITLE_MAXIMUM = 256;
 static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
 
@@ -66,7 +66,7 @@ ExceptionError CJInitialize::ParseBundleName(const std::shared_ptr<OHOS::Ability
 bool CJInitialize::ParseUrl(std::string &url)
 {
     if (url.size() > URL_MAXIMUM) {
-        REQUEST_HILOGE("The URL exceeds the maximum length of 8192");
+        REQUEST_HILOGE("The URL exceeds the maximum length of 2048");
         return false;
     }
     if (!std::regex_match(url, std::regex("^http(s)?:\\/\\/.+"))) {
@@ -80,7 +80,7 @@ bool CJInitialize::ParseUrl(std::string &url)
 bool CJInitialize::ParseCertsPath(std::string &url, std::vector<std::string> &certsPath)
 {
     if (url.size() > URL_MAXIMUM) {
-        REQUEST_HILOGE("The URL exceeds the maximum length of 8192");
+        REQUEST_HILOGE("The URL exceeds the maximum length of 2048");
         return false;
     }
     if (!regex_match(url, std::regex("^http(s)?:\\/\\/.+"))) {
