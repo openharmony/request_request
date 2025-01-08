@@ -80,6 +80,12 @@ ExceptionErrorCode RequestManager::SetMode(const std::string &tid, const Mode mo
     return RequestManagerImpl::GetInstance()->SetMode(tid, mode);
 }
 
+ExceptionErrorCode RequestManager::DisableTaskNotification(
+    const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
+{
+    return RequestManagerImpl::GetInstance()->DisableTaskNotification(tids, rets);
+}
+
 int32_t RequestManager::Create(const Config &config, int32_t seq, std::string &tid)
 {
     return RequestManagerImpl::GetInstance()->Create(config, seq, tid);

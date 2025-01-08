@@ -48,6 +48,8 @@ public:
         const std::vector<SpeedConfig> &speedConfig, std::vector<ExceptionErrorCode> &rets) = 0;
 
     virtual ExceptionErrorCode SetMode(const std::string &tid, const Mode mode) = 0;
+    virtual ExceptionErrorCode DisableTaskNotification(
+        const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets) = 0;
 
     virtual int32_t Create(const Config &config, std::string &taskId) = 0;
     virtual int32_t GetTask(const std::string &tid, const std::string &token, Config &config) = 0;

@@ -47,6 +47,8 @@ public:
     ExceptionErrorCode SetMaxSpeeds(
         const std::vector<SpeedConfig> &speedConfig, std::vector<ExceptionErrorCode> &rets) override;
     ExceptionErrorCode SetMode(const std::string &tid, const Mode mode) override;
+    ExceptionErrorCode DisableTaskNotification(
+        const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets) override;
 
     int32_t Create(const Config &config, std::string &tid) override;
     int32_t GetTask(const std::string &tid, const std::string &token, Config &config) override;

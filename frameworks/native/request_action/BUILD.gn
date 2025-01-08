@@ -16,8 +16,8 @@ import("//build/ohos.gni")
 
 config("request_action_config") {
   include_dirs = [
-    "include",
-    "../../../frameworks/native/request/include",
+    "../../../interfaces/inner_kits/request_action/include",
+    "../request/include",
     "../../../common/include",
   ]
 }
@@ -33,7 +33,7 @@ ohos_shared_library("request_action") {
   }
   stack_protector_ret = true
 
-  deps = [ "../../../frameworks/native/request:request_native" ]
+  deps = [ "../request:request_native" ]
 
   public_configs = [ ":request_action_config" ]
   external_deps = [

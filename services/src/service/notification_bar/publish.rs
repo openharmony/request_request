@@ -50,6 +50,11 @@ impl NotificationDispatcher {
         &INSTANCE
     }
 
+    pub(crate) fn disable_task_notification(&self, uid: u64, task_id: u32) {
+        self.database.disable_task_notification(task_id);
+        self.unregister_task(uid, task_id);
+    }
+
     pub(crate) fn register_task(&self, task: &RequestTask) -> Arc<AtomicBool> {
         let gauge = if let Some(gid) = self.database.query_task_gid(task.task_id()) {
             if self.database.is_gauge(gid) {
@@ -58,7 +63,7 @@ impl NotificationDispatcher {
                 Arc::new(AtomicBool::new(false))
             }
         } else {
-            let gauge = task.notification_check(false);
+            let gauge = task.notification_check(&self.database);
             Arc::new(AtomicBool::new(gauge))
         };
         self.task_gauge
@@ -69,13 +74,22 @@ impl NotificationDispatcher {
     }
 
     pub(crate) fn unregister_task(&self, uid: u64, task_id: u32) {
-        if let Some(gid) = self.database.query_task_gid(task_id) {
-            let _ = self.flow.send(NotifyInfo::Unregister(uid, task_id, gid));
-        } else if let Some(gauge) = self.task_gauge.lock().unwrap().remove(&task_id) {
-            if gauge.load(Ordering::Acquire) {
+        match (
+            self.task_gauge.lock().unwrap().get(&task_id).cloned(),
+            self.database.query_task_gid(task_id),
+        ) {
+            (Some(gauge), Some(gid)) => {
+                gauge.store(false, Ordering::Release);
+                let _ = self.flow.send(NotifyInfo::Unregister(uid, task_id, gid));
+            }
+            (None, Some(gid)) => {
+                let _ = self.flow.send(NotifyInfo::Unregister(uid, task_id, gid));
+            }
+            (Some(gauge), None) => {
                 gauge.store(false, Ordering::Release);
                 cancel_notification(task_id);
             }
+            (None, None) => {}
         }
     }
 
@@ -110,7 +124,7 @@ impl NotificationDispatcher {
             .lock()
             .unwrap()
             .remove(&info.common_data.task_id);
-        if !info.notification_check(true) {
+        if !info.notification_check(&self.database) {
             return;
         }
         let notify = EventualNotify {
@@ -129,7 +143,7 @@ impl NotificationDispatcher {
             .lock()
             .unwrap()
             .remove(&info.common_data.task_id);
-        if !info.notification_check(true) {
+        if !info.notification_check(&self.database) {
             return;
         }
         let notify = EventualNotify {

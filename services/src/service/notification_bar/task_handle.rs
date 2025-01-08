@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use super::database::NotificationDb;
 use super::ffi::{self, SubscribeNotification};
 use super::NotificationDispatcher;
 use crate::config::{Mode, Version};
@@ -55,33 +56,30 @@ impl TaskManager {
 }
 
 pub(crate) trait NotificationCheck {
-    fn notification_check(&self, completed_notify: bool) -> bool;
+    fn notification_check(&self, db: &NotificationDb) -> bool;
 }
 
 impl NotificationCheck for RequestTask {
-    fn notification_check(&self, completed_notify: bool) -> bool {
-        if !notification_check_common(
+    fn notification_check(&self, db: &NotificationDb) -> bool {
+        notification_check_common(
             self.conf.version,
             self.conf.common_data.gauge,
             self.conf.common_data.mode,
             self.conf.common_data.background,
-            completed_notify,
-        ) {
-            return false;
-        }
-        true
+            false,
+        ) && db.check_task_notification_available(&self.conf.common_data.task_id)
     }
 }
 
 impl NotificationCheck for TaskInfo {
-    fn notification_check(&self, completed_notify: bool) -> bool {
+    fn notification_check(&self, db: &NotificationDb) -> bool {
         notification_check_common(
             Version::from(self.common_data.version),
             self.common_data.gauge,
             Mode::from(self.common_data.mode),
             RequestDb::get_instance().query_task_background(self.common_data.task_id),
-            completed_notify,
-        )
+            true,
+        ) && db.check_task_notification_available(&self.common_data.task_id)
     }
 }
 

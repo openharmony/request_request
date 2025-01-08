@@ -41,6 +41,8 @@ public:
         const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets);
     REQUEST_API ExceptionErrorCode SetMaxSpeeds(
         const std::vector<SpeedConfig> &speedConfig, std::vector<ExceptionErrorCode> &rets);
+    REQUEST_API ExceptionErrorCode DisableTaskNotification(
+        const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets);
     REQUEST_API ExceptionErrorCode SetMode(const std::string &tid, const Mode mode);
 
     REQUEST_API int32_t Create(const Config &config, int32_t seq, std::string &tid);

@@ -19,6 +19,9 @@ const NOTIFICATION_DB_PATH: &str = if cfg!(test) {
 } else {
     "/data/service/el1/public/database/request/request.db"
 };
+const CREATE_TASK_CONFIG_TABLE: &str =
+    "CREATE TABLE IF NOT EXISTS task_config (task_id INTEGER PRIMARY KEY, display BOOLEAN)";
+
 const CREATE_GROUP_TABLE: &str =
     "CREATE TABLE IF NOT EXISTS group_notification (task_id INTEGER PRIMARY KEY, group_id INTEGER)";
 
@@ -52,19 +55,37 @@ impl NotificationDb {
             config.encrypt_status(true);
         }
         let rdb = RdbStore::open(config).unwrap();
-        if let Err(e) = rdb.execute(CREATE_GROUP_CONTENT_TABLE, ()) {
-            error!("Failed to create notification table: {}", e);
+        let me = Self { inner: rdb };
+        if let Err(e) = me.create_db() {
+            error!("Failed to create notification database: {}", e);
         }
-        if let Err(e) = rdb.execute(CREATE_GROUP_TABLE, ()) {
-            error!("Failed to create group table: {}", e);
+        me
+    }
+
+    fn create_db(&self) -> Result<(), i32> {
+        self.inner.execute(CREATE_TASK_CONFIG_TABLE, ())?;
+        self.inner.execute(CREATE_GROUP_CONTENT_TABLE, ())?;
+        self.inner.execute(CREATE_GROUP_TABLE, ())?;
+        self.inner.execute(CREATE_TASK_CONTENT_TABLE, ())?;
+        self.inner.execute(CREATE_GROUP_CONFIG_TABLE, ())?;
+        Ok(())
+    }
+
+    pub(crate) fn check_task_notification_available(&self, task_id: &u32) -> bool {
+        let mut set = self
+            .inner
+            .query::<bool>("SELECT display FROM task_config WHERE task_id = ?", task_id)
+            .unwrap();
+        set.next().unwrap_or(true)
+    }
+
+    pub(crate) fn disable_task_notification(&self, task_id: u32) {
+        if let Err(e) = self.inner.execute(
+            "INSERT INTO task_config (task_id, display) VALUES (?, ?) ON CONFLICT(task_id) DO UPDATE SET display = excluded.display",
+            (task_id, false),
+        ) {
+            error!("Failed to update {} notification: {}", task_id, e);
         }
-        if let Err(e) = rdb.execute(CREATE_TASK_CONTENT_TABLE, ()) {
-            error!("Failed to create task content table: {}", e);
-        }
-        if let Err(e) = rdb.execute(CREATE_GROUP_CONFIG_TABLE, ()) {
-            error!("Failed to create group config table: {}", e);
-        }
-        Self { inner: rdb }
     }
 
     pub(crate) fn update_task_group(&self, task_id: u32, group_id: u32) {

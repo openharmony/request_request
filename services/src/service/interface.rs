@@ -59,6 +59,8 @@ pub const DELETE_GROUP: u32 = 20;
 pub const SET_MAX_SPEED: u32 = 21;
 /// Change task mode.
 pub const SET_MODE: u32 = 100;
+/// Change task mode.
+pub const DISABLE_TASK_NOTIFICATION: u32 = 101;
 
 /// Function code of RequestNotifyInterfaceCode
 pub(crate) const NOTIFY_RUN_COUNT: u32 = 2;
@@ -90,5 +92,6 @@ mod test {
         assert_eq!(19, ATTACH_GROUP);
         assert_eq!(20, DELETE_GROUP);
         assert_eq!(100, SET_MODE);
+        assert_eq!(101, DISABLE_TASK_NOTIFICATION);
     }
 }

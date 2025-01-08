@@ -56,8 +56,9 @@ public:
         const std::vector<TaskIdAndToken> &tidTokens, std::unordered_map<std::string, TaskInfoRet> &rets);
     ExceptionErrorCode SetMaxSpeeds(
         const std::vector<SpeedConfig> &speedConfig, std::unordered_map<std::string, ExceptionErrorCode> &rets);
-
     ExceptionErrorCode SetMode(std::string &tid, Mode mode);
+    ExceptionErrorCode DisableTaskNotification(
+        const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets);
 };
 
 } // namespace OHOS::Request
