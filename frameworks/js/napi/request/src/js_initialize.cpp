@@ -217,14 +217,15 @@ bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &con
             REQUEST_HILOGE("body chmod fail: %{public}d", ret);
         };
 
-        if (!JsTask::SetPathPermission(path)) {
-            error.code = E_FILE_IO;
-            error.errInfo = "UploadBodyFiles set body path permission fail";
-            return false;
-        }
+        bool setRes = JsTask::SetPathPermission(path);
         int32_t retClose = fclose(bodyFile);
         if (retClose != 0) {
             REQUEST_HILOGE("upload body fclose fail: %{public}d", ret);
+        }
+        if (!setRes) {
+            error.code = E_FILE_IO;
+            error.errInfo = "UploadBodyFiles set body path permission fail";
+            return false;
         }
         config.bodyFileNames.push_back(path);
     }
