@@ -616,8 +616,11 @@ mod test {
         assert_eq!(content, content_default);
 
         flow.task_customized_notify.clear();
-        flow.database
-            .update_task_customized_notification(task_id, TEST_TITLE, TEST_TEXT);
+        flow.database.update_task_customized_notification(
+            task_id,
+            TEST_TITLE.to_string(),
+            TEST_TEXT.to_string(),
+        );
         let content_customized = NotifyContent::customized_notify(
             task_id,
             uid as u32,
@@ -654,8 +657,11 @@ mod test {
         let content = flow.publish_completed_notify(&info).unwrap();
         assert_eq!(content, content_default);
 
-        flow.database
-            .update_task_customized_notification(task_id, TEST_TITLE, TEST_TEXT);
+        flow.database.update_task_customized_notification(
+            task_id,
+            TEST_TITLE.to_string(),
+            TEST_TEXT.to_string(),
+        );
         let content_customized = NotifyContent::customized_notify(
             task_id,
             uid as u32,

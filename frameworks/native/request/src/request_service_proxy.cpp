@@ -377,6 +377,11 @@ int32_t RequestServiceProxy::Create(const Config &config, std::string &tid)
     data.WriteString(config.proxy);
     data.WriteString(config.certificatePins);
     GetVectorData(config, data);
+    data.WriteBool(config.notification.customized);
+    if (config.notification.customized) {
+        data.WriteString(config.notification.title);
+        data.WriteString(config.notification.text);
+    }
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REQUEST), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End send create request, failed: %{public}d", ret);

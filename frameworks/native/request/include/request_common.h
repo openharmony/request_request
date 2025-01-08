@@ -115,6 +115,12 @@ struct FileSpec {
     bool isUserFile;
 };
 
+struct Notification {
+    bool customized = false;
+    std::string title = "";
+    std::string text = "";
+};
+
 struct Config {
     Action action;
     std::string url;
@@ -151,6 +157,7 @@ struct Config {
     std::vector<FileSpec> files;
     std::vector<std::string> bodyFileNames;
     std::map<std::string, std::string> extras;
+    Notification notification;
 };
 
 enum class State : uint32_t {

@@ -34,7 +34,6 @@
 #include "request_common.h"
 #include "request_manager.h"
 
-
 static constexpr const char *PARAM_KEY_DESCRIPTION = "description";
 static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";
 static constexpr const char *PARAM_KEY_FILE_PATH = "filePath";
@@ -307,8 +306,8 @@ bool JsInitialize::GetFdUpload(const std::string &path, const Config &config, Ex
     return true;
 }
 
-bool JsInitialize::GetInternalPath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
-    const Config &config, std::string &path, std::string &errInfo)
+bool JsInitialize::GetInternalPath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
+    std::string &path, std::string &errInfo)
 {
     std::string fileName;
     std::string pattern = "internal://cache/";
@@ -349,6 +348,15 @@ void JsInitialize::SetParseConfig(napi_env env, napi_value jsConfig, Config &con
     config.mode = static_cast<Mode>(NapiUtils::Convert2Uint32(env, jsConfig, "mode"));
     config.headers = ParseMap(env, jsConfig, "headers");
     config.extras = ParseMap(env, jsConfig, "extras");
+    napi_value notification = NapiUtils::GetNamedProperty(env, jsConfig, "notification");
+    if (NapiUtils::GetValueType(env, notification) != napi_undefined) {
+        if (NapiUtils::HasNamedProperty(env, notification, "title")
+            || NapiUtils::HasNamedProperty(env, notification, "text")) {
+            config.notification.customized = true;
+            config.notification.title = NapiUtils::Convert2String(env, notification, "title");
+            config.notification.text = NapiUtils::Convert2String(env, notification, "text");
+        }
+    }
     if (config.mode == Mode::BACKGROUND) {
         config.background = true;
     }
@@ -680,8 +688,7 @@ std::string GetHostnameFromURL(const std::string &url)
     if (notSlash != std::string::npos) {
         posStart = notSlash;
     }
-    size_t posEnd =
-        std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
+    size_t posEnd = std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
     if (posEnd != std::string::npos) {
         return tempUrl.substr(posStart, posEnd - posStart);
     }
@@ -792,8 +799,8 @@ bool JsInitialize::GetFormItems(
     return true;
 }
 
-bool JsInitialize::Convert2FormItems(napi_env env, napi_value jsValue, std::vector<FormItem> &forms,
-    std::vector<FileSpec> &files, std::string &errInfo)
+bool JsInitialize::Convert2FormItems(
+    napi_env env, napi_value jsValue, std::vector<FormItem> &forms, std::vector<FileSpec> &files, std::string &errInfo)
 {
     bool isArray = false;
     napi_is_array(env, jsValue, &isArray);
