@@ -300,7 +300,7 @@ impl Client {
 
         let index = notify_data.progress.common_data.index;
         message.extend_from_slice(&(index as u32).to_le_bytes());
-
+        // for one task, only send last progress message
         message.extend_from_slice(&(notify_data.progress.processed[index] as u64).to_le_bytes());
 
         message.extend_from_slice(

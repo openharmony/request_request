@@ -188,6 +188,9 @@ bool JsInitialize::CheckFilePath(
 bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &config, ExceptionError &error)
 {
     size_t len = config.files.size();
+    if (config.multipart) {
+        len = 1;
+    }
 
     for (size_t i = 0; i < len; i++) {
         if (filePath.empty()) {
@@ -349,6 +352,7 @@ void JsInitialize::SetParseConfig(napi_env env, napi_value jsConfig, Config &con
     config.mode = static_cast<Mode>(NapiUtils::Convert2Uint32(env, jsConfig, "mode"));
     config.headers = ParseMap(env, jsConfig, "headers");
     config.extras = ParseMap(env, jsConfig, "extras");
+    config.multipart = NapiUtils::Convert2Boolean(env, jsConfig, "multipart");
     napi_value notification = NapiUtils::GetNamedProperty(env, jsConfig, "notification");
     if (NapiUtils::GetValueType(env, notification) != napi_undefined) {
         if (NapiUtils::HasNamedProperty(env, notification, "title")

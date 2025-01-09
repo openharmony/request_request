@@ -339,7 +339,7 @@ ExceptionErrorCode RequestServiceProxy::DisableTaskNotification(
         REQUEST_HILOGE("End send SetMode request, failed: %{public}d", ret);
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
-    
+
     for (size_t i = 0; i < length; i++) {
         rets.push_back(static_cast<ExceptionErrorCode>(reply.ReadInt32()));
     }
@@ -362,6 +362,7 @@ int32_t RequestServiceProxy::Create(const Config &config, std::string &tid)
     data.WriteBool(config.retry);
     data.WriteBool(config.redirect);
     data.WriteBool(config.background);
+    data.WriteBool(config.multipart);
     data.WriteUint32(config.index);
     data.WriteInt64(config.begins);
     data.WriteInt64(config.ends);
