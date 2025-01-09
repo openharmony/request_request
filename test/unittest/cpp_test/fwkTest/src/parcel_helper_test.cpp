@@ -442,6 +442,7 @@ void MarshalConfigBase(OHOS::MessageParcel &data)
     data.WriteBool(config.precise);
     data.WriteUint32(config.priority);
     data.WriteBool(config.background);
+    data.WriteBool(config.multipart);
     data.WriteString("bundleName");
     data.WriteString("url");
     data.WriteString("title");

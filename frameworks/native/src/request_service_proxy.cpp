@@ -72,6 +72,7 @@ int32_t RequestServiceProxy::Create(const Config &config, std::string &tid)
     data.WriteBool(config.retry);
     data.WriteBool(config.redirect);
     data.WriteBool(config.background);
+    data.WriteBool(config.multipart);
     data.WriteUint32(config.index);
     data.WriteInt64(config.begins);
     data.WriteInt64(config.ends);

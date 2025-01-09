@@ -93,6 +93,7 @@ pub(crate) struct CommonTaskConfig {
     pub(crate) precise: bool,
     pub(crate) priority: u32,
     pub(crate) background: bool,
+    pub(crate) multipart: bool,
 }
 
 /// task config
@@ -286,6 +287,7 @@ impl Default for TaskConfig {
                 precise: false,
                 priority: 0,
                 background: false,
+                multipart: false,
             },
         }
     }
@@ -412,6 +414,7 @@ impl Serialize for TaskConfig {
         parcel.write(&(self.common_data.retry))?;
         parcel.write(&(self.common_data.redirect))?;
         parcel.write(&(self.common_data.background))?;
+        parcel.write(&(self.common_data.multipart))?;
         parcel.write(&self.common_data.index)?;
         parcel.write(&(self.common_data.begins as i64))?;
         parcel.write(&self.common_data.ends)?;

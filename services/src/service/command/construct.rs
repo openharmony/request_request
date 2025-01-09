@@ -65,6 +65,8 @@ impl RequestServiceStub {
 
         let background: bool = data.read()?;
 
+        let multipart: bool = data.read()?;
+
         let index: u32 = data.read()?;
 
         let begins: i64 = data.read()?;
@@ -236,6 +238,7 @@ impl RequestServiceStub {
                 precise,
                 priority,
                 background,
+                multipart,
             },
         };
 

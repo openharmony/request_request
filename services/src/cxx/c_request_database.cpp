@@ -473,6 +473,7 @@ void RequestDBUpgradeFrom50(OHOS::NativeRdb::RdbStore &store)
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_BUNDLE_TYPE);
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_ATOMIC_ACCOUNT);
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_UID_INDEX);
+    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MULTIPART);
 }
 
 int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
@@ -873,6 +874,7 @@ void BuildRequestTaskConfigWithInt(std::shared_ptr<OHOS::NativeRdb::ResultSet> s
     config.commonData.background = static_cast<bool>(GetInt(set, 17)); // Line 17 is 'background'
     config.version = static_cast<uint8_t>(GetInt(set, 27));            // Line 27 is 'version'
     config.bundleType = static_cast<uint8_t>(GetInt(set, 34));         // Line 34 is 'bundle_type'
+    config.commonData.multipart = static_cast<bool>(GetInt(set, 36));  // Line 36 is 'multipart'
 }
 
 void BuildRequestTaskConfigWithString(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
@@ -921,7 +923,6 @@ TaskConfig BuildRequestTaskConfig(std::shared_ptr<OHOS::NativeRdb::ResultSet> re
 
 bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
 {
-    REQUEST_HILOGD("write to request_task");
     OHOS::NativeRdb::ValuesBucket insertValues;
     insertValues.PutLong("task_id", taskConfig->commonData.taskId);
     insertValues.PutLong("uid", taskConfig->commonData.uid);
@@ -958,6 +959,7 @@ bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
     insertValues.PutInt("bundle_type", taskConfig->bundleType);
     insertValues.PutString(
         "atomic_account", std::string(taskConfig->atomicAccount.cStr, taskConfig->atomicAccount.len));
+    insertValues.PutInt("multipart", taskConfig->commonData.multipart);
     if (!WriteMutableData(insertValues, taskInfo, taskConfig)) {
         REQUEST_HILOGE("write blob data failed");
         return false;
@@ -1105,11 +1107,12 @@ CTaskConfig *QueryTaskConfig(uint32_t taskId)
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
     OHOS::Request::RequestDataBase &database =
         OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true);
-    auto resultSet = database.Query(rdbPredicates,
-        { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming", "retry", "redirect",
-            "config_idx", "begins", "ends", "gauge", "precise", "priority", "background", "bundle", "url", "title",
-            "description", "method", "headers", "data", "token", "config_extras", "version", "form_items", "file_specs",
-            "body_file_names", "certs_paths", "proxy", "certificate_pins", "bundle_type", "atomic_account" });
+    auto resultSet = database.Query(
+        rdbPredicates, { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming",
+                           "retry", "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority",
+                           "background", "bundle", "url", "title", "description", "method", "headers", "data", "token",
+                           "config_extras", "version", "form_items", "file_specs", "body_file_names", "certs_paths",
+                           "proxy", "certificate_pins", "bundle_type", "atomic_account", "multipart" });
     int rowCount = 0;
     if (resultSet == nullptr) {
         REQUEST_HILOGE("QuerySingleTaskConfig failed: result set is nullptr");

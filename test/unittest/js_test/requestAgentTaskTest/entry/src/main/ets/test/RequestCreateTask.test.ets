@@ -52,6 +52,22 @@ export default function requestCreateTaskTest() {
       name: 'file',
       value: fileSpec
     }
+    let fileSpec1 = {
+      filename: 't1.txt',
+      path: `./test.txt`
+    }
+    let fileSpec2 = {
+      filename: 't2.txt',
+      path: `./test.txt`
+    }
+    let fileSpec3 = {
+      filename: 't3.txt',
+      path: `./test.txt`
+    }
+    let formItem1 = {
+      name: 'file',
+      value: [fileSpec1, fileSpec2, fileSpec3]
+    }
 
     /**
      * @tc.number: testTaskAction001
@@ -190,7 +206,7 @@ export default function requestCreateTaskTest() {
      */
     it('testTaskAction006', 0, function (done) {
       let conf = {
-        action: 0
+        action: 0,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: `./`,
         gauge: true
@@ -329,7 +345,7 @@ export default function requestCreateTaskTest() {
     /**
      * @tc.number: testTaskUrl006
      * @tc.name: testTaskUrl006
-     * @tc.desc: Test create task when url length exceeds 8192.
+     * @tc.desc: Test create task when url length is 8193.
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -339,7 +355,7 @@ export default function requestCreateTaskTest() {
 
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1/' + 'a'.repeat(8192),
+        url: 'http://127.0.0.1/' + 'a'.repeat(8176),
       }
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -361,7 +377,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskUrl007', 0, function (done)  {
+    it('testTaskUrl007', 0, function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'http://127.0.0.1/' + 'a'.repeat(8175),
@@ -373,6 +389,62 @@ export default function requestCreateTaskTest() {
         })
       } catch (err) {
         expect(err.code).assertEqual(13400001);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskUrl008
+     * @tc.name: testTaskUrl008
+     * @tc.desc: Test upload when url length is 8192
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskUrl008', 0, function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1/' + 'a'.repeat(8175),
+        data: [formItem]
+      }
+      try {
+        request.agent.create(context, conf,  (err, data) => {
+          expect(true).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskUrl009
+     * @tc.name: testTaskUrl009
+     * @tc.desc: Test upload when url length is 8193
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskUrl009', 0, function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1/' + 'a'.repeat(8176),
+        data: [formItem]
+      }
+      try {
+        request.agent.create(context, conf,  (err, data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
         done();
       }
     })
@@ -472,7 +544,7 @@ export default function requestCreateTaskTest() {
         expect(true).assertTrue();
         done();
       }
-    })   
+    })
 
     /**
      * @tc.number: testTaskDescription001
@@ -563,11 +635,11 @@ export default function requestCreateTaskTest() {
         saveas: 'testTaskDescription004.txt',
       }
       request.agent.create(context, conf, async (err, data) => {
-        expect(err===null).assertTrue();
+        expect(err === null).assertTrue();
         await request.agent.remove(data.tid);
         done();
       })
-    })    
+    })
 
     /**
      * @tc.number: testTaskMode001
@@ -1139,7 +1211,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData001', 0, function (done) {
+    it('testTaskData001', 0, async function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -1171,7 +1243,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData002', 0, function (done) {
+    it('testTaskData002', 0, async function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -1204,7 +1276,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData003', 0, function (done) {
+    it('testTaskData003', 0, async function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -1234,7 +1306,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData004', 0, function (done) {
+    it('testTaskData004', 0, async function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -1265,7 +1337,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData005', 0, function (done) {
+    it('testTaskData005', 0, async function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -1298,7 +1370,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData006', 0, function (done) {
+    it('testTaskData006', 0, async function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -1331,7 +1403,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData007', 0, function (done) {
+    it('testTaskData007', 0, async function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -1364,7 +1436,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData008', 0, function (done) {
+    it('testTaskData008', 0, async function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -1394,7 +1466,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData009', 0, function (done) {
+    it('testTaskData009', 0, async function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -1424,7 +1496,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData010', 0, function (done) {
+    it('testTaskData010', 0, async function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -1454,7 +1526,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData011', 0, function (done) {
+    it('testTaskData011', 0, async function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -1488,7 +1560,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData012', 0, function (done) {
+    it('testTaskData012', 0, async function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -1520,7 +1592,7 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData013', 0, function (done) {
+    it('testTaskData013', 0, async function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
@@ -1550,13 +1622,13 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData014', 0, function (done)  {
+    it('testTaskData014', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: 'testTaskData014.txt',
-        mode: request.agent.Mode.FOREGROUND
-        data:'aaaaa',
+        mode: request.agent.Mode.FOREGROUND,
+        data: 'aaaaa',
       }
       request.agent.create(context, conf, async (err, data) => {
         expect(err === null).assertTrue();
@@ -1574,24 +1646,24 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData015', 0, function (done)  {
+    it('testTaskData015', 0, async function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
-        data:'aaaaa',
+        data: 'aaaaa',
       }
-      try{
+      try {
         request.agent.create(context, conf, (err, data) => {
-        expect(false).assertTrue();
-        done();
-      })
-      }catch(err){
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-      
+
     })
 
     /**
@@ -1602,30 +1674,30 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData016', 0, function (done)  {
+    it('testTaskData016', 0, async function (done) {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `zcszczvxdvvadZ`,
-                   filename: 'test.txt'
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: `zcszczvxdvvadZ`,
+            filename: 'test.txt'
+          }
+        }]
       }
-      try{
+      try {
         request.agent.create(context, conf, (err, data) => {
-        expect(false).assertTrue();
-        done();
-      })
-      }catch(err){
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
         expect(err.code).assertEqual(13400001);
         done();
       }
-    })    
+    })
 
     /**
      * @tc.number: testTaskData017
@@ -1636,26 +1708,108 @@ export default function requestCreateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskData017', 0, function (done)  {
+    it('testTaskData017', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: 'testTaskData017.txt',
-        mode: request.agent.Mode.FOREGROUND
+        mode: request.agent.Mode.FOREGROUND,
         data: [{
-                 name: 'file',
-                 value: {
-                   path: `./test.txt`,
-                   filename: 'test.txt'
-                 }
-               }]
+          name: 'file',
+          value: {
+            path: `./test.txt`,
+            filename: 'test.txt'
+          }
+        }]
       }
-      try{
+      try {
         request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskData018
+     * @tc.name: testTaskData018
+     * @tc.desc: Test create upload task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskData018', 0, async function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let fileSpecD18 = [];
+      let formItemD18 = [];
+      for (let i = 0; i < 100; i++) {
+        let file = {
+          path: `./test.txt`,
+          filename: `td${i}.txt`
+        }
+        fileSpecD18.push(file);
+      }
+      formItemD18.push({
+        name: "testTaskData018", value: fileSpecD18
+      });
+
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: formItemD18,
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(true).assertTrue();
+          done();
+        })
+      } catch (err) {
         expect(false).assertTrue();
         done();
-      })
-      }catch(err){
+      }
+    })
+
+    /**
+     * @tc.number: testTaskData019
+     * @tc.name: testTaskData019
+     * @tc.desc: Test create upload task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskData019', 0, async function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let fileSpecD19 = [];
+      let formItemD19 = [];
+      for (let i = 0; i < 101; i++) {
+        let file = {
+          path: `./test.txt`,
+          filename: `td${i}.txt`
+        }
+        fileSpecD19.push(file);
+      }
+      formItemD19.push({
+        name: "testTaskData019", value: fileSpecD19
+      });
+
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: formItemD19,
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(true).assertTrue();
+          done();
+        })
+      } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
@@ -1886,8 +2040,10 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: `README.md`,
-        mode: request.agent.Mode.BACKGROUND
-        headers: {'content-type': 'multipart/form-data'},
+        mode: request.agent.Mode.BACKGROUND,
+        headers: {
+          'content-type': 'multipart/form-data'
+        },
       }
       let task = await request.agent.create(context, conf);
       task.start().then(() => {
@@ -1897,7 +2053,7 @@ export default function requestCreateTaskTest() {
         expect(false).assertTrue();
         done();
       })
-    })    
+    })
 
     /**
      * @tc.number: testTaskRetry001
@@ -2549,6 +2705,65 @@ export default function requestCreateTaskTest() {
         expect(err.code).assertEqual(401);
         done();
       }
-    });
+    })
+
+    /**
+     * @tc.number: testTaskMultipart001
+     * @tc.name: testTaskMultipart001
+     * @tc.desc: Test create task when multipart error
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskMultipart001', 0, async function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        multipart: true,
+        data: [formItem1]
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(true).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskMultipart002
+     * @tc.name: testTaskMultipart002
+     * @tc.desc: Test create task when multipart error
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskMultipart002', 0, async function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        multipart: false,
+        data: [formItem1]
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(true).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
   })
 }

@@ -168,6 +168,7 @@ void ParcelHelper::UnMarshalConfig(MessageParcel &data, Config &config)
     config.precise = data.ReadBool();
     config.priority = data.ReadUint32();
     config.background = data.ReadBool();
+    config.multipart = data.ReadBool();
     config.bundleName = data.ReadString();
     config.url = data.ReadString();
     config.title = data.ReadString();
