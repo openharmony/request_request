@@ -350,6 +350,22 @@ void RequestDBRemoveOldTables(OHOS::NativeRdb::RdbStore &store)
     REQUEST_HILOGD("Removes old tables end");
 }
 
+int ConvertDBVersion(std::string &version)
+{
+    std::map<std::string, int> db_version_map = {
+        {REQUEST_DATABASE_VERSION_4_1_RELEASE, API11_4_1_RELEASE},
+        {REQUEST_DATABASE_VERSION_5_0_RELEASE, API12_5_0_RELEASE},
+        {REQUEST_DATABASE_VERSION, API16_5_1_RELEASE}
+    };
+
+    auto handle = db_version_map.find(version);
+    if (handle != db_version_map.end()) {
+        return handle->second;
+    }
+
+    return INVALID_VERSION;
+}
+
 int RequestDBCheckVersion(OHOS::NativeRdb::RdbStore &store)
 {
     REQUEST_HILOGD("RequestDBCheckVersion in");
@@ -399,14 +415,7 @@ int RequestDBCheckVersion(OHOS::NativeRdb::RdbStore &store)
 
     REQUEST_HILOGI("request database version: %{public}s", version.c_str());
 
-    if (version == REQUEST_DATABASE_VERSION_4_1_RELEASE) {
-        return API11_4_1_RELEASE;
-    }
-    if (version == REQUEST_DATABASE_VERSION) {
-        return API12_5_0_RELEASE;
-    }
-
-    return INVALID_VERSION;
+    return ConvertDBVersion(version);
 }
 
 int RequestDBCreateTables(OHOS::NativeRdb::RdbStore &store)
@@ -461,11 +470,21 @@ int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store)
         REQUEST_HILOGE("add uid index failed, ret: %{public}d", ret);
         return ret;
     }
-    return ret;
+    return OHOS::NativeRdb::E_OK;
+}
+
+int RequestDBUpgradeFrom50(OHOS::NativeRdb::RdbStore &store)
+{
+    int ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MAX_SPEED);
+    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+        REQUEST_HILOGE("add max_speed failed, ret: %{public}d", ret);
+        return ret;
+    }
+    return OHOS::NativeRdb::E_OK;
 }
 
 // This function is used to adapt beta version, remove it later.
-void RequestDBUpgradeFrom50(OHOS::NativeRdb::RdbStore &store)
+void RequestDBUpgradeFrom51(OHOS::NativeRdb::RdbStore &store)
 {
     // Ignores these error if these columns already exists.
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_PROXY);
@@ -506,8 +525,16 @@ int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
         }
             [[fallthrough]];
         case API12_5_0_RELEASE: {
-            REQUEST_HILOGI("Version is 5.0-release, no need to update database.");
-            RequestDBUpgradeFrom50(store);
+            REQUEST_HILOGI("Upgrading database from 5.0-Release");
+            res = RequestDBUpgradeFrom50(store);
+            if (res != OHOS::NativeRdb::E_OK) {
+                return res;
+            }
+        }
+            [[fallthrough]];
+        case API16_5_1_RELEASE: {
+            REQUEST_HILOGI("Version is 5.1-release, no need to update database.");
+            RequestDBUpgradeFrom51(store);
             break;
         }
         default: {
@@ -515,7 +542,7 @@ int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
             return OHOS::NativeRdb::E_ERROR;
         }
     }
-    if (version != API12_5_0_RELEASE) {
+    if (version != API16_5_1_RELEASE) {
         return RequestDBInitVersionTable(store);
     }
     return 0;
