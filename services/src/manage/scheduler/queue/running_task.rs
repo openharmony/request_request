@@ -15,6 +15,7 @@ use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
+use crate::config::Mode;
 use crate::manage::events::{TaskEvent, TaskManagerEvent};
 use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::queue::keeper::SAKeeper;
@@ -69,7 +70,7 @@ impl Drop for RunningTask {
         Notifier::progress(&self.client_manager, self.build_notify_data());
         let task_id = self.task_id();
         let uid = self.uid();
-        let mode = self.mode();
+        let mode = Mode::from(self.mode.load(Ordering::Acquire));
         match *self.task.running_result.lock().unwrap() {
             Some(res) => match res {
                 Ok(()) => {

@@ -12,7 +12,7 @@
 // limitations under the License.
 
 use std::io::{self, SeekFrom};
-use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -24,7 +24,7 @@ cfg_oh! {
     use crate::manage::SystemConfig;
 }
 
-use super::config::{Mode, Version};
+use super::config::Version;
 use super::info::{CommonTaskInfo, State, TaskInfo, UpdateInfo};
 use super::notify::{EachFileStatus, NotifyData, Progress};
 use super::reason::Reason;
@@ -64,6 +64,7 @@ pub(crate) struct RequestTask {
     pub(crate) running_result: Mutex<Option<Result<(), Reason>>>,
     pub(crate) timeout_tries: AtomicU32,
     pub(crate) upload_resume: AtomicBool,
+    pub(crate) mode: AtomicU8,
 }
 
 impl RequestTask {
@@ -86,10 +87,6 @@ impl RequestTask {
 
     pub(crate) fn action(&self) -> Action {
         self.conf.common_data.action
-    }
-
-    pub(crate) fn mode(&self) -> Mode {
-        self.conf.common_data.mode
     }
 
     pub(crate) fn speed_limit(&self, limit: u64) {
@@ -160,6 +157,7 @@ impl RequestTask {
         let time = get_current_timestamp();
         let status = TaskStatus::new(time);
         let progress = Progress::new(sizes);
+        let mode = AtomicU8::new(config.common_data.mode.repr);
 
         RequestTask {
             conf: config,
@@ -182,6 +180,7 @@ impl RequestTask {
             running_result: Mutex::new(None),
             timeout_tries: AtomicU32::new(0),
             upload_resume: AtomicBool::new(upload_resume),
+            mode,
         }
     }
 
@@ -224,6 +223,7 @@ impl RequestTask {
             reason: Reason::from(info.common_data.reason),
         };
         let progress = info.progress;
+        let mode = AtomicU8::new(config.common_data.mode.repr);
 
         let mut task = RequestTask {
             conf: config,
@@ -246,6 +246,7 @@ impl RequestTask {
             running_result: Mutex::new(None),
             timeout_tries: AtomicU32::new(0),
             upload_resume: AtomicBool::new(upload_resume),
+            mode,
         };
         let background_notify = NotificationDispatcher::get_instance().register_task(&task);
         task.background_notify = background_notify;
@@ -541,6 +542,7 @@ impl RequestTask {
     pub(crate) fn info(&self) -> TaskInfo {
         let status = self.status.lock().unwrap();
         let progress = self.progress.lock().unwrap();
+        let mode = self.mode.load(Ordering::Acquire);
         TaskInfo {
             bundle: self.conf.bundle.clone(),
             url: self.conf.url.clone(),
@@ -569,7 +571,7 @@ impl RequestTask {
                 task_id: self.conf.common_data.task_id,
                 uid: self.conf.common_data.uid,
                 action: self.conf.common_data.action.repr,
-                mode: self.conf.common_data.mode.repr,
+                mode,
                 ctime: self.ctime,
                 mtime: status.mtime,
                 reason: status.reason.repr,

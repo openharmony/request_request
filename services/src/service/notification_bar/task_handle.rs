@@ -11,6 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::sync::atomic::Ordering;
+
 use super::database::NotificationDb;
 use super::ffi::{self, SubscribeNotification};
 use super::NotificationDispatcher;
@@ -61,10 +63,11 @@ pub(crate) trait NotificationCheck {
 
 impl NotificationCheck for RequestTask {
     fn notification_check(&self, db: &NotificationDb) -> bool {
+        let mode = self.mode.load(Ordering::Acquire);
         notification_check_common(
             self.conf.version,
             self.conf.common_data.gauge,
-            self.conf.common_data.mode,
+            Mode::from(mode),
             self.conf.common_data.background,
             false,
         ) && db.check_task_notification_available(&self.conf.common_data.task_id)
