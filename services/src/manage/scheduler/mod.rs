@@ -213,13 +213,21 @@ impl Scheduler {
         mode: Mode,
     ) -> Result<(), ErrorCode> {
         let database = RequestDb::get_instance();
-        database.change_mode(task_id, mode)?;
+        database.set_mode(task_id, mode)?;
+
+        if let Some(task) = self.running_queue.get_task_clone(uid, task_id) {
+            task.mode.store(mode.repr, Ordering::Release);
+            if mode == Mode::BackGround {
+                NotificationDispatcher::get_instance().register_task(&task);
+            }
+        }
+
+        if self.qos.task_set_mode(uid, task_id, mode) {
+            self.schedule_if_not_scheduled();
+        }
 
         if mode == Mode::FrontEnd {
             NotificationDispatcher::get_instance().unregister_task(uid, task_id);
-        }
-        if self.qos.task_set_mode(uid, task_id, mode) {
-            self.schedule_if_not_scheduled();
         }
         Ok(())
     }
@@ -519,7 +527,7 @@ impl RequestDb {
         Ok(())
     }
 
-    fn change_mode(&self, task_id: u32, mode: Mode) -> Result<(), ErrorCode> {
+    fn set_mode(&self, task_id: u32, mode: Mode) -> Result<(), ErrorCode> {
         let info = RequestDb::get_instance()
             .get_task_info(task_id)
             .ok_or(ErrorCode::TaskNotFound)?;
