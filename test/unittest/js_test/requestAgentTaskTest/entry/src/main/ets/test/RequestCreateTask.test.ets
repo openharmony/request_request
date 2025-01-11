@@ -329,7 +329,7 @@ export default function requestCreateTaskTest() {
     /**
      * @tc.number: testTaskUrl006
      * @tc.name: testTaskUrl006
-     * @tc.desc: Test create task when url length exceeds 8192.
+     * @tc.desc: Test create task when url length is 8193.
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -339,7 +339,7 @@ export default function requestCreateTaskTest() {
 
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1/' + 'a'.repeat(8192),
+        url: 'http://127.0.0.1/' + 'a'.repeat(8176),
       }
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -373,6 +373,62 @@ export default function requestCreateTaskTest() {
         })
       } catch (err) {
         expect(err.code).assertEqual(13400001);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskUrl008
+     * @tc.name: testTaskUrl008
+     * @tc.desc: Test upload when url length is 8192
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskUrl008', 0, function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1/' + 'a'.repeat(8175),
+        data: [formItem]
+      }
+      try {
+        request.agent.create(context, conf,  (err, data) => {
+          expect(true).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskUrl009
+     * @tc.name: testTaskUrl009
+     * @tc.desc: Test upload when url length is 8193
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskUrl009', 0, function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1/' + 'a'.repeat(8176),
+        data: [formItem]
+      }
+      try {
+        request.agent.create(context, conf,  (err, data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
         done();
       }
     })
