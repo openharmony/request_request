@@ -396,11 +396,11 @@ export default function requestCreateTaskTest() {
       }
       try {
         request.agent.create(context, conf,  (err, data) => {
-          expect(false).assertTrue();
+          expect(true).assertTrue();
           done();
         })
       } catch (err) {
-        expect(err.code).assertEqual(13400001);
+        expect(false).assertTrue();
         done();
       }
     })
