@@ -61,7 +61,7 @@ static std::string TEST_URL_3 = "https://vd4.bdstatic.com/mda-pm7bte3t6fs50rsh/s
                                 "1702057792414494257/"
                                 "mda-pm7bte3t6fs50rsh.mp4?v_from_s=bdapp-author-nanjing";
 
-constexpr size_t SLEEP_INTERVAL = 100;
+constexpr size_t SLEEP_INTERVAL = 1000;
 
 void DownloadCancelTest(std::string url)
 {

@@ -52,6 +52,22 @@ export default function requestCreateTaskTest() {
       name: 'file',
       value: fileSpec
     }
+    let fileSpec1 = {
+      filename: 't1.txt',
+      path: `./test.txt`
+    }
+    let fileSpec2 = {
+      filename: 't2.txt',
+      path: `./test.txt`
+    }
+    let fileSpec3 = {
+      filename: 't3.txt',
+      path: `./test.txt`
+    }
+    let formItem1 = {
+      name: 'file',
+      value: [fileSpec1,fileSpec2,fileSpec3]
+    }
 
     /**
      * @tc.number: testTaskAction001
@@ -2605,6 +2621,65 @@ export default function requestCreateTaskTest() {
         expect(err.code).assertEqual(401);
         done();
       }
-    });
+    })
+
+    /**
+     * @tc.number: testTaskMultipart001
+     * @tc.name: testTaskMultipart001
+     * @tc.desc: Test create task when multipart error
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskMultipart001', 0, async function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        multipart: true,
+        data: [formItem1]
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(true).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTaskMultipart002
+     * @tc.name: testTaskMultipart002
+     * @tc.desc: Test create task when multipart error
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskMultipart002', 0, async function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        multipart: false,
+        data: [formItem1]
+      }
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(true).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
   })
 }
