@@ -182,9 +182,8 @@ fn build_task_certs(config: &TaskConfig) -> Result<Vec<Certificate>, Box<dyn Err
         let path = convert_path(uid, &bundle_name, path);
         let cert = cvt_res_error!(
             Certificate::from_path(&path).map_err(Box::new),
-            "Parse task cert failed - idx: {}, path: {}",
+            "Parse task cert failed - idx: {}",
             idx,
-            path,
         );
         certs.push(cert);
     }

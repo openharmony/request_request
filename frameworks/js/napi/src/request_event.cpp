@@ -372,7 +372,7 @@ int32_t RequestEvent::StartExec(const std::shared_ptr<ExecContext> &context)
     }
     FileSpec file = config.files[0];
     if (JsInitialize::FindDir(file.uri) && config.action == Action::DOWNLOAD && !task->isGetPermission) {
-        REQUEST_HILOGD("Found the downloaded file: %{public}s.", file.uri.c_str());
+        REQUEST_HILOGD("Found the downloaded file");
         if (chmod(file.uri.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) != 0) {
             REQUEST_HILOGD("File add OTH access Failed.");
         }

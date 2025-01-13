@@ -393,7 +393,7 @@ void JsTask::GetTaskExecution(std::shared_ptr<ContextInfo> context)
         context->innerCode_ = RequestManager::GetInstance()->GetTask(tid, context->token, config);
         if (config.action == Action::DOWNLOAD && config.files.size() != 0) {
             config.saveas = config.files[0].uri;
-            REQUEST_HILOGD("GetTaskExecution saveas: %{public}s", config.saveas.c_str());
+            REQUEST_HILOGD("GetTaskExecution saveas");
         }
     }
     if (context->config.version != Version::API10) {
@@ -959,7 +959,7 @@ bool JsTask::SetDirsPermission(std::vector<std::string> &dirs)
     std::vector<std::string> dirElems;
     JsInitialize::StringSplit(newPath, '/', dirElems);
     if (!JsInitialize::CreateDirs(dirElems)) {
-        REQUEST_HILOGE("CreateDirs Err: %{public}s", newPath.c_str());
+        REQUEST_HILOGE("CreateDirs Error");
         return false;
     }
 
@@ -978,7 +978,6 @@ bool JsTask::SetDirsPermission(std::vector<std::string> &dirs)
             if (chmod(newfilePath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0) {
                 REQUEST_HILOGD("File add OTH access Failed.");
             }
-            REQUEST_HILOGD("current filePath is %{public}s", newfilePath.c_str());
             if (!JsTask::SetPathPermission(newfilePath)) {
                 REQUEST_HILOGE("Set path permission fail.");
                 return false;
@@ -1007,13 +1006,13 @@ bool JsTask::SetPathPermission(const std::string &filepath)
                 continue;
             }
             if (AclSetAccess(it.first, SA_PERMISSION_X) != ACL_SUCC) {
-                REQUEST_HILOGE("AclSetAccess Parent Dir Failed: %{public}s", it.first.c_str());
+                REQUEST_HILOGE("AclSetAccess Parent Dir Failed");
             }
         }
     }
 
     if (AclSetAccess(filepath, SA_PERMISSION_RWX) != ACL_SUCC) {
-        REQUEST_HILOGE("AclSetAccess Child Dir Failed: %{public}s", filepath.c_str());
+        REQUEST_HILOGE("AclSetAccess Child Dir Failed");
         return false;
     }
     return true;
@@ -1050,7 +1049,7 @@ void JsTask::ResetDirAccess(const std::string &filepath)
 {
     int ret = AclSetAccess(filepath, SA_PERMISSION_CLEAN);
     if (ret != ACL_SUCC) {
-        REQUEST_HILOGD("AclSetAccess Reset Dir Failed: %{public}s", filepath.c_str());
+        REQUEST_HILOGD("AclSetAccess Reset Dir Failed");
     }
 }
 
@@ -1068,7 +1067,7 @@ void JsTask::RemovePathMap(const std::string &filepath)
             if (fileMap_[filepath] <= 1) {
                 fileMap_.erase(filepath);
                 if (chmod(filepath.c_str(), S_IRUSR | S_IWUSR | S_IRGRP) != 0) {
-                    REQUEST_HILOGE("File remove OTH access Failed: %{public}s", filepath.c_str());
+                    REQUEST_HILOGE("File remove OTH access Failed");
                 }
             } else {
                 fileMap_[filepath] -= 1;
