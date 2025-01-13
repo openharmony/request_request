@@ -42,6 +42,7 @@ public:
         }
         ~AppProcessState() override = default;
         void OnForegroundApplicationChanged(const AppExecFwk::AppStateData &appStateData) override;
+        void OnAppStateChanged(const AppExecFwk::AppStateData &appStateData) override;
         void OnAbilityStateChanged(const AppExecFwk::AbilityStateData &abilityStateData) override;
         void OnExtensionStateChanged(const AppExecFwk::AbilityStateData &abilityStateData) override;
         void OnProcessCreated(const AppExecFwk::ProcessData &processData) override;

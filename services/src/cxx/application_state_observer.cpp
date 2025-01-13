@@ -84,12 +84,16 @@ void ApplicationStateObserver::AppProcessState::OnForegroundApplicationChanged(
 {
 }
 
+void ApplicationStateObserver::AppProcessState::OnAppStateChanged(const AppExecFwk::AppStateData &appStateData)
+{
+    REQUEST_HILOGD("OnAppStateChanged uid=%{public}d, bundleName=%{public}s,state=%{public}d", appStateData.uid,
+        appStateData.bundleName.c_str(), appStateData.state);
+    RunAppStateCallback(appStateData.uid, appStateData.state, appStateData.pid);
+}
+
 void ApplicationStateObserver::AppProcessState::OnAbilityStateChanged(
     const AppExecFwk::AbilityStateData &abilityStateData)
 {
-    REQUEST_HILOGD("OnAbilityStateChanged uid=%{public}d, bundleName=%{public}s,state=%{public}d",
-        abilityStateData.uid, abilityStateData.bundleName.c_str(), abilityStateData.abilityState);
-    RunAppStateCallback(abilityStateData.uid, abilityStateData.abilityState, abilityStateData.pid);
 }
 
 void ApplicationStateObserver::AppProcessState::OnExtensionStateChanged(
