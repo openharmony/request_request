@@ -25,37 +25,31 @@
 #include "c_string_wrapper.h"
 
 namespace OHOS::Request {
-class ApplicationStateObserver {
+class AppProcessState : public AppExecFwk::ApplicationStateObserverStub {
 public:
-    ~ApplicationStateObserver();
+    AppProcessState();
+    ~AppProcessState();
+    void OnForegroundApplicationChanged(const AppExecFwk::AppStateData &appStateData) override;
+    void OnAppStateChanged(const AppExecFwk::AppStateData &appStateData) override;
+    void OnAbilityStateChanged(const AppExecFwk::AbilityStateData &abilityStateData) override;
+    void OnExtensionStateChanged(const AppExecFwk::AbilityStateData &abilityStateData) override;
+    void OnProcessCreated(const AppExecFwk::ProcessData &processData) override;
+    void OnProcessDied(const AppExecFwk::ProcessData &processData) override;
+
+public:
     using RegCallBack = std::function<void(int32_t uid, int32_t state, int32_t pid)>;
     using ProcessCallBack = std::function<void(int32_t uid, int32_t state, int32_t pid, CStringWrapper bundleName)>;
-    static ApplicationStateObserver &GetInstance();
     bool RegisterAppStateChanged(RegCallBack &&callback);
     void RegisterProcessDied(ProcessCallBack &&callback);
+    static sptr<AppProcessState> GetInstance();
 
-public:
-    class AppProcessState : public AppExecFwk::ApplicationStateObserverStub {
-    public:
-        explicit AppProcessState(ApplicationStateObserver &appStateObserver) : appStateObserver_(appStateObserver)
-        {
-        }
-        ~AppProcessState() override = default;
-        void OnForegroundApplicationChanged(const AppExecFwk::AppStateData &appStateData) override;
-        void OnAbilityStateChanged(const AppExecFwk::AbilityStateData &abilityStateData) override;
-        void OnExtensionStateChanged(const AppExecFwk::AbilityStateData &abilityStateData) override;
-        void OnProcessCreated(const AppExecFwk::ProcessData &processData) override;
-        void OnProcessDied(const AppExecFwk::ProcessData &processData) override;
-
-    public:
-        void RunAppStateCallback(int32_t uid, int32_t state, int32_t pid);
-        void RunProcessDiedCallback(int32_t uid, int32_t state, int32_t pid, const std::string &bundleName);
-        ApplicationStateObserver &appStateObserver_;
-    };
-    ApplicationStateObserver();
+private:
     RegCallBack appStateCallback_ = nullptr;
     ProcessCallBack processCallback_ = nullptr;
+    void RunAppStateCallback(int32_t uid, int32_t state, int32_t pid);
+    void RunProcessDiedCallback(int32_t uid, int32_t state, int32_t pid, const std::string &bundleName);
 };
+
 } // namespace OHOS::Request
 
 #ifdef __cplusplus
