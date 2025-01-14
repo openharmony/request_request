@@ -481,6 +481,10 @@ impl Scheduler {
         }
         self.schedule_if_not_scheduled();
     }
+
+    pub(crate) fn retry_all_tasks(&mut self) {
+        self.running_queue.retry_all_tasks();
+    }
 }
 
 impl RequestDb {

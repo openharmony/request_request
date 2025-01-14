@@ -232,6 +232,7 @@ impl TaskManager {
 
         match event {
             StateEvent::Network => {
+                self.scheduler.retry_all_tasks();
                 self.scheduler.on_state_change(Handler::update_network, ());
             }
 
