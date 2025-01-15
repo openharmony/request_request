@@ -62,7 +62,6 @@ ohos_shared_library("preload_native") {
     cfi_cross_dso = true
     debug = false
   }
-  stack_protector_ret = true
 
   sources = [
     "src/cxx/preload_callback.cpp",
@@ -98,7 +97,6 @@ ohos_static_library("preload_native_static") {
     cfi_cross_dso = true
     debug = false
   }
-  stack_protector_ret = true
 
   public_configs = [ ":preload_native_config" ]
 

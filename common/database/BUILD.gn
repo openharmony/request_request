@@ -27,7 +27,6 @@ ohos_static_library("database_rs_cxx") {
     cfi_cross_dso = true
     debug = false
   }
-  stack_protector_ret = true
 
   include_dirs = [
     "include",
