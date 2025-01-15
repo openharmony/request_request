@@ -28,6 +28,7 @@ namespace OHOS::Request {
 class RequestServiceInterface : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Download.RequestServiceInterface");
+    virtual ExceptionErrorCode CreateTasks(const std::vector<Config> &configs, std::vector<TaskRet> &rets) = 0;
     virtual ExceptionErrorCode StartTasks(
         const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets) = 0;
     virtual ExceptionErrorCode StopTasks(

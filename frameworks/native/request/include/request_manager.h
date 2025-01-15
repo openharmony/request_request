@@ -28,6 +28,7 @@ namespace OHOS::Request {
 class RequestManager {
 public:
     REQUEST_API static const std::unique_ptr<RequestManager> &GetInstance();
+    REQUEST_API ExceptionErrorCode CreateTasks(const std::vector<Config> &configs, std::vector<TaskRet> &rets);
     REQUEST_API ExceptionErrorCode StartTasks(
         const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets);
     REQUEST_API ExceptionErrorCode StopTasks(

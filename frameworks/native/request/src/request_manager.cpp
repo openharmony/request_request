@@ -29,6 +29,11 @@ const std::unique_ptr<RequestManager> &RequestManager::GetInstance()
     return instance;
 }
 
+ExceptionErrorCode RequestManager::CreateTasks(const std::vector<Config> &configs, std::vector<TaskRet> &rets)
+{
+    return RequestManagerImpl::GetInstance()->CreateTasks(configs, rets);
+}
+
 ExceptionErrorCode RequestManager::StartTasks(
     const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
 {

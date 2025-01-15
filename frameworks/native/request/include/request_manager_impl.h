@@ -44,6 +44,7 @@ constexpr int REMOTE_DIED_ERROR = 29189;
 class RequestManagerImpl : public IResponseMessageHandler {
 public:
     static const std::unique_ptr<RequestManagerImpl> &GetInstance();
+    ExceptionErrorCode CreateTasks(const std::vector<Config> &configs, std::vector<TaskRet> &rets);
     ExceptionErrorCode StartTasks(const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets);
     ExceptionErrorCode StopTasks(const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets);
     ExceptionErrorCode ResumeTasks(const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets);

@@ -36,6 +36,7 @@ ohos_unittest("innerTest") {
     "../../../../frameworks/native/request/src/request_service_proxy.cpp",
     "../../../../frameworks/native/request/src/response_message_receiver.cpp",
     "../../../../frameworks/native/request_action/src/request_action.cpp",
+    "../../../../frameworks/native/request_action/src/task_builder.cpp",
     "src/request_action_test.cpp",
   ]
 
@@ -46,7 +47,10 @@ ohos_unittest("innerTest") {
     "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
     "ability_runtime:app_manager",
+    "ability_runtime:data_ability_helper",
     "ability_runtime:extensionkit_native",
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
@@ -57,6 +61,7 @@ ohos_unittest("innerTest") {
     "curl:curl_shared",
     "distributed_notification_service:ans_innerkits",
     "eventhandler:libeventhandler",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",
@@ -67,6 +72,7 @@ ohos_unittest("innerTest") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_acl",
   ]
 }
 
