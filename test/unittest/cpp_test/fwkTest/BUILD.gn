@@ -24,6 +24,7 @@ ohos_unittest("fwkTest") {
     "../../../../frameworks/native/request/include",
     "../../../../interfaces/inner_kits/running_count/include",
     "../../../../common/include",
+    ".././../../../common/sys_event/include",
   ]
 
   sources = [
@@ -44,7 +45,10 @@ ohos_unittest("fwkTest") {
     "src/running_task_count_test.cpp",
   ]
 
-  deps = [ "//third_party/googletest:gmock_main" ]
+  deps = [
+    "../../../../common/sys_event:request_sysevent",
+    "//third_party/googletest:gmock_main",
+  ]
 
   external_deps = [
     "ability_base:base",

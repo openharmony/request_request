@@ -24,6 +24,7 @@ ohos_unittest("innerTest") {
     "../../../../frameworks/native/request/include",
     "../../../../common/include",
     "../../../../interfaces/inner_kits/request_action/include",
+    "../../../../common/sys_event/include",
   ]
 
   sources = [
@@ -38,7 +39,7 @@ ohos_unittest("innerTest") {
     "src/request_action_test.cpp",
   ]
 
-  deps = []
+  deps = [ "../../../../common/sys_event:request_sysevent" ]
 
   external_deps = [
     "ability_base:base",

@@ -41,6 +41,7 @@ ohos_shared_library("request") {
     "include",
     "../../native/request/include",
     "../../../../common/include",
+    "../../../../common/sys_event/include",
   ]
 
   public_configs = [ ":upload_public_config" ]
@@ -69,7 +70,10 @@ ohos_shared_library("request") {
     "src/utf8_utils.cpp",
   ]
 
-  deps = [ "../../../native/request:request_native" ]
+  deps = [
+    "../../../../common/sys_event:request_sysevent",
+    "../../../native/request:request_native",
+  ]
 
   external_deps = [
     "ability_base:zuri",
@@ -100,6 +104,7 @@ ohos_static_library("request_static") {
     "include",
     "../../native/request/include",
     "../../../../common/include",
+    "../../../../common/sys_event/include",
   ]
 
   public_configs = [ ":upload_public_config" ]
@@ -127,7 +132,10 @@ ohos_static_library("request_static") {
     "src/utf8_utils.cpp",
   ]
 
-  deps = [ "../../../native/request:request_native" ]
+  deps = [
+    "../../../../common/sys_event:request_sysevent",
+    "../../../native/request:request_native",
+  ]
 
   external_deps = [
     "ability_base:zuri",
