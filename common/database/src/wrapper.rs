@@ -164,6 +164,7 @@ pub mod ffi {
         fn BindDouble(value: f64, values: Pin<&mut CxxVector<ValueObject>>);
         fn BindString(value: &str, values: Pin<&mut CxxVector<ValueObject>>);
         fn BindBlob(value: &[u8], values: Pin<&mut CxxVector<ValueObject>>);
+        fn BindNull(values: Pin<&mut CxxVector<ValueObject>>);
 
         fn GetI32(row: Pin<&mut RowEntity>, index: i32, value: &mut i32) -> i32;
         fn GetI64(row: Pin<&mut RowEntity>, index: i32, value: &mut i64) -> i32;
@@ -171,7 +172,7 @@ pub mod ffi {
         fn GetDouble(row: Pin<&mut RowEntity>, index: i32, value: &mut f64) -> i32;
         fn GetString(row: Pin<&mut RowEntity>, index: i32, value: &mut String) -> i32;
         fn GetBlob(row: Pin<&mut RowEntity>, index: i32, value: &mut Vec<u8>) -> i32;
-
+        fn IsNull(row: Pin<&mut RowEntity>, index: i32) -> bool;
         fn Execute(
             rdb: Pin<&mut RdbStore>,
             sql: &str,

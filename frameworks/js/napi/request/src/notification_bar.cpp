@@ -16,6 +16,7 @@
 #include "notification_bar.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -35,9 +36,8 @@ const std::size_t MAX_TEXT_LENGTH = 3072;
 struct CreateContext : public AsyncCall::Context {
     std::string gid;
     bool gauge = false;
-    bool customized = false;
-    std::string title;
-    std::string text;
+    std::optional<std::string> title = std::nullopt;
+    std::optional<std::string> text = std::nullopt;
 };
 
 napi_status createNotificationParse(CreateContext *context, napi_value customized_notification)
@@ -46,11 +46,10 @@ napi_status createNotificationParse(CreateContext *context, napi_value customize
         return napi_ok;
     }
     if (NapiUtils::HasNamedProperty(context->env_, customized_notification, "title")) {
-        context->customized = true;
         napi_value title = NapiUtils::GetNamedProperty(context->env_, customized_notification, "title");
         if (NapiUtils::GetValueType(context->env_, title) == napi_string) {
             context->title = NapiUtils::Convert2String(context->env_, title);
-            if (context->title.size() > MAX_TITLE_LENGTH) {
+            if (context->title->size() > MAX_TITLE_LENGTH) {
                 NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
                 return napi_invalid_arg;
             }
@@ -60,11 +59,10 @@ napi_status createNotificationParse(CreateContext *context, napi_value customize
         }
     }
     if (NapiUtils::HasNamedProperty(context->env_, customized_notification, "text")) {
-        context->customized = true;
         napi_value text = NapiUtils::GetNamedProperty(context->env_, customized_notification, "text");
         if (NapiUtils::GetValueType(context->env_, text) == napi_string) {
             context->text = NapiUtils::Convert2String(context->env_, text);
-            if (context->text.size() > MAX_TEXT_LENGTH) {
+            if (context->text->size() > MAX_TEXT_LENGTH) {
                 NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
                 return napi_invalid_arg;
             }
@@ -115,8 +113,7 @@ napi_value createGroup(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto exec = [context]() {
-        RequestManager::GetInstance()->CreateGroup(
-            context->gid, context->gauge, context->customized, context->title, context->text);
+        RequestManager::GetInstance()->CreateGroup(context->gid, context->gauge, context->title, context->text);
     };
     context->SetInput(input).SetOutput(output).SetExec(exec);
     AsyncCall asyncCall(env, info, context);

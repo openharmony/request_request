@@ -21,7 +21,6 @@
 #include <memory>
 #include <vector>
 
-#include "base/request/request/common/include/log.h"
 #include "cxx.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -64,6 +63,11 @@ inline void BindBlob(const rust::slice<const uint8_t> value, std::vector<ValueOb
     args.push_back(ValueObject(blob));
 }
 
+inline void BindNull(std::vector<ValueObject> &args)
+{
+    args.push_back(ValueObject(std::monostate()));
+}
+
 inline int GetI32(RowEntity &rowEntity, int index, int32_t &value)
 {
     return rowEntity.Get(index).GetInt(value);
@@ -82,6 +86,11 @@ inline int GetDouble(RowEntity &rowEntity, int index, double &value)
 inline int GetBool(RowEntity &rowEntity, int index, bool &value)
 {
     return rowEntity.Get(index).GetBool(value);
+}
+
+inline bool IsNull(RowEntity &rowEntity, int index)
+{
+    return rowEntity.Get(index).GetType() == ValueObject::TypeId::TYPE_NULL;
 }
 
 int GetString(RowEntity &rowEntity, int index, rust::string &value);

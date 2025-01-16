@@ -216,4 +216,43 @@ mod test {
             assert_eq!("test", name);
         }
     }
+
+    #[test]
+    fn ut_database_option() {
+        const TEST_STRING: &str = "TEST";
+        let mut rdb = get_rdb();
+        rdb.execute("DROP TABLE IF EXISTS test_table_002", ())
+            .unwrap();
+        rdb.execute(
+            "CREATE TABLE IF NOT EXISTS test_table_002 (id INTEGER PRIMARY KEY, name TEXT)",
+            (),
+        )
+        .unwrap();
+        rdb.execute(
+            "INSERT OR REPLACE INTO test_table_002 (id, name) VALUES (?, ?)",
+            (0, Option::<String>::None),
+        );
+        let mut set = rdb
+            .query::<Option<String>>("SELECT name from test_table_002 WHERE id=0", ())
+            .unwrap();
+        assert_eq!(set.next().unwrap(), None);
+
+        rdb.execute(
+            "INSERT OR REPLACE INTO test_table_002 (id, name) VALUES (?, ?)",
+            (0, Some(TEST_STRING)),
+        );
+        let mut set = rdb
+            .query::<Option<String>>("SELECT name from test_table_002 WHERE id=0", ())
+            .unwrap();
+        assert_eq!(set.next().unwrap(), Some(TEST_STRING.to_string()));
+
+        rdb.execute(
+            "INSERT OR REPLACE INTO test_table_002 (id, name) VALUES (?, ?)",
+            (0, TEST_STRING),
+        );
+        let mut set = rdb
+            .query::<Option<String>>("SELECT name from test_table_002 WHERE id=0", ())
+            .unwrap();
+        assert_eq!(set.next().unwrap(), Some(TEST_STRING.to_string()));
+    }
 }

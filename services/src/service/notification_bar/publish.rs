@@ -54,12 +54,12 @@ impl NotificationDispatcher {
         self.database.disable_task_notification(task_id);
         self.unregister_task(uid, task_id);
     }
-    
+
     pub(crate) fn update_task_customized_notification(
         &self,
         task_id: u32,
-        title: String,
-        text: String,
+        title: Option<String>,
+        text: Option<String>,
     ) {
         self.database
             .update_task_customized_notification(task_id, title, text);
@@ -199,9 +199,8 @@ impl NotificationDispatcher {
     pub(crate) fn create_group(
         &self,
         gauge: bool,
-        customized: bool,
-        title: String,
-        text: String,
+        title: Option<String>,
+        text: Option<String>,
     ) -> u32 {
         let new_group_id = loop {
             let candidate = fast_random() as u32;
@@ -210,13 +209,13 @@ impl NotificationDispatcher {
             }
         };
         info!(
-            "Create group {} gauge {} customized {}",
-            new_group_id, gauge, customized
+            "Create group {} gauge {} customized_title {:?} customized_text {:?}",
+            new_group_id, gauge, title, text
         );
         self.database.update_group_config(new_group_id, gauge);
-        if customized {
+        if title.is_some() || text.is_some() {
             self.database
-                .update_group_customized_notification(new_group_id, &title, &text);
+                .update_group_customized_notification(new_group_id, title, text);
         }
         new_group_id
     }

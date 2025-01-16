@@ -17,7 +17,7 @@ use std::sync::Arc;
 
 use ylong_runtime::sync::mpsc::{self, UnboundedReceiver};
 
-use super::database::NotificationDb;
+use super::database::{CustomizedNotification, NotificationDb};
 use super::ffi::{NotifyContent, PublishNotification};
 use super::task_handle::cancel_notification;
 use crate::config::Action;
@@ -35,9 +35,9 @@ pub(crate) struct NotifyFlow {
     last_notify_map: HashMap<u32, u64>,
     group_notify_progress: HashMap<u32, GroupProgress>,
     // value 1 for title, 2 for text.
-    group_customized_notify: HashMap<u32, Option<(String, String)>>,
+    group_customized_notify: HashMap<u32, Option<CustomizedNotification>>,
     group_gauge: HashMap<u32, bool>,
-    task_customized_notify: HashMap<u32, Option<(String, String)>>,
+    task_customized_notify: HashMap<u32, Option<CustomizedNotification>>,
     rx: mpsc::UnboundedReceiver<NotifyInfo>,
 }
 
@@ -204,6 +204,7 @@ impl NotifyFlow {
             "Unregister task: uid: {}, task_id: {}, group_id: {}",
             uid, task_id, group_id
         );
+        let customized = self.group_customized_notify(group_id);
         let progress = match self.group_notify_progress.entry(group_id) {
             Entry::Occupied(entry) => entry.into_mut(),
             Entry::Vacant(entry) => {
@@ -225,7 +226,8 @@ impl NotifyFlow {
         if !Self::group_eventual_check(&self.database, progress, group_id) {
             return None;
         }
-        Some(NotifyContent::default_group_eventual_notify(
+        Some(NotifyContent::group_eventual_notify(
+            customized,
             Action::Download,
             group_id,
             uid as u32,
@@ -264,6 +266,7 @@ impl NotifyFlow {
         uid: u64,
     ) -> Option<NotifyContent> {
         let is_gauge = self.check_gauge(group_id);
+        let customized = self.group_customized_notify(group_id);
         let progress = match self.group_notify_progress.entry(group_id) {
             Entry::Occupied(entry) => {
                 let progress = entry.into_mut();
@@ -277,10 +280,11 @@ impl NotifyFlow {
                 entry.insert(progress)
             }
         };
-        if self.group_customized_notify.contains_key(&group_id) || !is_gauge {
+        if !is_gauge {
             return None;
         }
-        Some(NotifyContent::default_group_progress_notify(
+        Some(NotifyContent::group_progress_notify(
+            customized,
             Action::Download,
             group_id,
             uid as u32,
@@ -299,6 +303,26 @@ impl NotifyFlow {
         }
     }
 
+    fn group_customized_notify(&mut self, group_id: u32) -> Option<CustomizedNotification> {
+        match self.group_customized_notify.entry(group_id) {
+            Entry::Occupied(entry) => entry.get().clone(),
+            Entry::Vacant(entry) => {
+                let customized = self.database.query_group_customized_notification(group_id);
+                entry.insert(customized).clone()
+            }
+        }
+    }
+
+    fn task_customized_notify(&mut self, task_id: u32) -> Option<CustomizedNotification> {
+        match self.task_customized_notify.entry(task_id) {
+            Entry::Occupied(entry) => entry.get().clone(),
+            Entry::Vacant(entry) => {
+                let customized = self.database.query_task_customized_notification(task_id);
+                entry.insert(customized).clone()
+            }
+        }
+    }
+
     fn publish_progress_notification(&mut self, info: ProgressNotify) -> Option<NotifyContent> {
         let content = match self.get_request_id(info.task_id) {
             NotifyType::Group(group_id) => {
@@ -307,69 +331,31 @@ impl NotifyFlow {
                 }
                 let progress_interval_check = self.progress_interval_check(group_id);
 
-                if let Some(customized) = match self.group_customized_notify.entry(group_id) {
+                let customized = self.group_customized_notify(group_id);
+                let progress = match self.group_notify_progress.entry(group_id) {
                     Entry::Occupied(entry) => entry.into_mut(),
                     Entry::Vacant(entry) => {
-                        let customized = self
-                            .database
-                            .query_group_customized_notification(group_id)
-                            .map(|info| (info.title, info.text));
-                        entry.insert(customized)
+                        let progress = Self::get_group_progress(&self.database, group_id);
+                        entry.insert(progress)
                     }
-                } {
-                    if !progress_interval_check {
-                        return None;
-                    };
-                    NotifyContent::customized_notify(
-                        group_id,
-                        info.uid as u32,
-                        customized.0.clone(),
-                        customized.1.clone(),
-                        true,
-                    )
-                } else {
-                    let progress = match self.group_notify_progress.entry(group_id) {
-                        Entry::Occupied(entry) => entry.into_mut(),
-                        Entry::Vacant(entry) => {
-                            let progress = Self::get_group_progress(&self.database, group_id);
-                            entry.insert(progress)
-                        }
-                    };
-                    progress.update_task_progress(info.task_id, info.processed);
+                };
+                progress.update_task_progress(info.task_id, info.processed);
 
-                    if !progress_interval_check {
-                        return None;
-                    }
-                    NotifyContent::default_group_progress_notify(
-                        info.action,
-                        group_id,
-                        info.uid as u32,
-                        progress,
-                    )
+                if !progress_interval_check {
+                    return None;
                 }
+                NotifyContent::group_progress_notify(
+                    customized,
+                    info.action,
+                    group_id,
+                    info.uid as u32,
+                    progress,
+                )
             }
-            NotifyType::Task => {
-                if let Some(customized) = match self.task_customized_notify.entry(info.task_id) {
-                    Entry::Occupied(entry) => entry.into_mut(),
-                    Entry::Vacant(entry) => {
-                        let customized = self
-                            .database
-                            .query_task_customized_notification(info.task_id)
-                            .map(|info| (info.title, info.text));
-                        entry.insert(customized)
-                    }
-                } {
-                    NotifyContent::customized_notify(
-                        info.task_id,
-                        info.uid as u32,
-                        customized.0.clone(),
-                        customized.1.clone(),
-                        true,
-                    )
-                } else {
-                    NotifyContent::default_task_progress_notify(&info)
-                }
-            }
+            NotifyType::Task => NotifyContent::task_progress_notify(
+                self.task_customized_notify(info.task_id),
+                &info,
+            ),
         };
         Some(content)
     }
@@ -398,6 +384,7 @@ impl NotifyFlow {
             NotifyType::Group(group_id) => {
                 let is_gauge = self.check_gauge(group_id);
 
+                let customized = self.group_customized_notify(group_id);
                 let group_progress = match self.group_notify_progress.entry(group_id) {
                     Entry::Occupied(entry) => {
                         let progress = entry.into_mut();
@@ -418,28 +405,10 @@ impl NotifyFlow {
                 let group_eventual =
                     Self::group_eventual_check(&self.database, group_progress, group_id);
 
-                if let Some(customized) = match self.group_customized_notify.entry(group_id) {
-                    Entry::Occupied(entry) => entry.into_mut(),
-                    Entry::Vacant(entry) => {
-                        let customized = self
-                            .database
-                            .query_group_customized_notification(group_id)
-                            .map(|info| (info.title, info.text));
-                        entry.insert(customized)
-                    }
-                } {
-                    let title = customized.0.clone();
-                    let text = customized.1.clone();
-                    NotifyContent::customized_notify(
-                        group_id,
-                        info.uid as u32,
-                        title,
-                        text,
-                        !group_eventual,
-                    )
-                } else if !group_eventual {
+                if !group_eventual {
                     if is_gauge {
-                        NotifyContent::default_group_progress_notify(
+                        NotifyContent::group_progress_notify(
+                            customized,
                             info.action,
                             group_id,
                             info.uid as u32,
@@ -449,7 +418,8 @@ impl NotifyFlow {
                         return None;
                     }
                 } else {
-                    NotifyContent::default_group_eventual_notify(
+                    NotifyContent::group_eventual_notify(
+                        customized,
                         info.action,
                         group_id,
                         info.uid as u32,
@@ -459,33 +429,20 @@ impl NotifyFlow {
                     )
                 }
             }
-            NotifyType::Task => {
-                if let Some(customized) = self
-                    .database
-                    .query_task_customized_notification(info.task_id)
-                {
-                    NotifyContent::customized_notify(
-                        info.task_id,
-                        info.uid as u32,
-                        customized.title,
-                        customized.text,
-                        false,
-                    )
-                } else {
-                    NotifyContent::default_task_eventual_notify(
-                        info.action,
-                        info.task_id,
-                        info.uid as u32,
-                        info.file_name.clone(),
-                        info.is_successful,
-                    )
-                }
-            }
+            NotifyType::Task => NotifyContent::task_eventual_notify(
+                self.task_customized_notify(info.task_id),
+                info.action,
+                info.task_id,
+                info.uid as u32,
+                info.file_name.clone(),
+                info.is_successful,
+            ),
         };
         Some(content)
     }
 
     fn group_eventual(&mut self, group_id: u32, uid: u64) -> Option<NotifyContent> {
+        let customized = self.group_customized_notify(group_id);
         let group_progress = match self.group_notify_progress.entry(group_id) {
             Entry::Occupied(entry) => entry.into_mut(),
             Entry::Vacant(entry) => {
@@ -495,37 +452,19 @@ impl NotifyFlow {
         };
 
         let group_eventual = Self::group_eventual_check(&self.database, group_progress, group_id);
-        if let Some(customized) = match self.group_customized_notify.entry(group_id) {
-            Entry::Occupied(entry) => entry.into_mut(),
-            Entry::Vacant(entry) => {
-                let customized = self
-                    .database
-                    .query_group_customized_notification(group_id)
-                    .map(|info| (info.title, info.text));
-                entry.insert(customized)
-            }
-        } {
-            let title = customized.0.clone();
-            let text = customized.1.clone();
-            if !group_eventual {
-                return None;
-            }
-            Some(NotifyContent::customized_notify(
-                group_id, uid as u32, title, text, false,
-            ))
-        } else {
-            if !group_eventual {
-                return None;
-            }
-            Some(NotifyContent::default_group_eventual_notify(
-                Action::Download,
-                group_id,
-                uid as u32,
-                group_progress.processed(),
-                group_progress.successful() as i32,
-                group_progress.failed() as i32,
-            ))
+
+        if !group_eventual {
+            return None;
         }
+        Some(NotifyContent::group_eventual_notify(
+            customized,
+            Action::Download,
+            group_id,
+            uid as u32,
+            group_progress.processed(),
+            group_progress.successful() as i32,
+            group_progress.failed() as i32,
+        ))
     }
 
     fn get_request_id(&mut self, task_id: u32) -> NotifyType {
@@ -556,9 +495,6 @@ mod test {
     use ylong_runtime::fastrand::fast_random;
 
     use super::*;
-
-    const TEST_TITLE: &str = "gold";
-    const TEST_TEXT: &str = "难说";
 
     #[test]
     fn ut_notify_flow_group() {
@@ -609,27 +545,11 @@ mod test {
             multi_upload: None,
             file_name: "test".to_string(),
         };
-        let content_default = NotifyContent::default_task_progress_notify(&progress);
+        let content_default = NotifyContent::task_progress_notify(None, &progress);
         let content = flow
             .publish_progress_notification(progress.clone())
             .unwrap();
         assert_eq!(content, content_default);
-
-        flow.task_customized_notify.clear();
-        flow.database.update_task_customized_notification(
-            task_id,
-            TEST_TITLE.to_string(),
-            TEST_TEXT.to_string(),
-        );
-        let content_customized = NotifyContent::customized_notify(
-            task_id,
-            uid as u32,
-            TEST_TITLE.to_string(),
-            TEST_TEXT.to_string(),
-            true,
-        );
-        let content = flow.publish_progress_notification(progress).unwrap();
-        assert_eq!(content, content_customized);
     }
 
     #[test]
@@ -647,7 +567,8 @@ mod test {
             file_name: "test".to_string(),
             is_successful: true,
         };
-        let content_default = NotifyContent::default_task_eventual_notify(
+        let content_default = NotifyContent::task_eventual_notify(
+            None,
             info.action,
             info.task_id,
             info.uid as u32,
@@ -656,20 +577,5 @@ mod test {
         );
         let content = flow.publish_completed_notify(&info).unwrap();
         assert_eq!(content, content_default);
-
-        flow.database.update_task_customized_notification(
-            task_id,
-            TEST_TITLE.to_string(),
-            TEST_TEXT.to_string(),
-        );
-        let content_customized = NotifyContent::customized_notify(
-            task_id,
-            uid as u32,
-            TEST_TITLE.to_string(),
-            TEST_TEXT.to_string(),
-            false,
-        );
-        let content = flow.publish_completed_notify(&info).unwrap();
-        assert_eq!(content, content_customized);
     }
 }
