@@ -119,10 +119,20 @@ impl ReusableReader for TaskReader {
         self.reused = Some(0);
         let index = self.index;
         let optional_file = self.task.files.get_mut(index);
-        Box::pin(async {
-            let file = optional_file.ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?;
-            file.rewind().await.map(|_| ())
-        })
+        if self.task.conf.common_data.index == index as u32 {
+            let begins = self.task.conf.common_data.begins;
+            Box::pin(async move {
+                let file =
+                    optional_file.ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?;
+                file.seek(SeekFrom::Start(begins)).await.map(|_| ())
+            })
+        } else {
+            Box::pin(async {
+                let file =
+                    optional_file.ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?;
+                file.rewind().await.map(|_| ())
+            })
+        }
     }
 }
 
