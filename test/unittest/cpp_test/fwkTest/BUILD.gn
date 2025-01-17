@@ -25,10 +25,12 @@ ohos_unittest("fwkTest") {
     "../../../../frameworks/native/include",
     "../../../../interfaces/inner_kits/running_count/include",
     "../../../../common/include",
+    "../../../../common/sys_event/include",
   ]
 
   sources = [
     "../../../../common/src/module_init.cpp",
+    "../../../../common/sys_event/src/sys_event.cpp",
     "../../../../frameworks/native/src/parcel_helper.cpp",
     "../../../../frameworks/native/src/request.cpp",
     "../../../../frameworks/native/src/request_manager.cpp",
@@ -68,6 +70,7 @@ ohos_unittest("fwkTest") {
     "distributed_notification_service:ans_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",
     "openssl:libcrypto_shared",

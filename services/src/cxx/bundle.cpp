@@ -15,6 +15,8 @@
 
 #include "bundle.h"
 
+#include "sys_event.h"
+
 using namespace OHOS::AppExecFwk;
 
 namespace OHOS::Request {
@@ -32,6 +34,7 @@ AppInfo GetNameAndIndex(int32_t uid)
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (!systemAbilityManager) {
         REQUEST_HILOGE("GetNameAndIndex, fail to get system ability mgr.");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_00, "Get SAM failed");
         return appInfo;
     }
     sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);

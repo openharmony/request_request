@@ -44,6 +44,8 @@ ohos_shared_library("request_native") {
   include_dirs = [
     "./include",
     "../../frameworks/js/napi/include",
+    "../../common/include",
+    "../../common/sys_event/include",
   ]
   configs = [ "//build/config/gcc:symbol_visibility_hidden" ]
   public_configs = [ ":download_interfaces_kits_napi_config" ]
@@ -60,7 +62,10 @@ ohos_shared_library("request_native") {
     "src/response_message_receiver.cpp",
     "src/runcount_notify_stub.cpp",
   ]
-  deps = [ "../../common:request_common_static" ]
+  deps = [
+    "../../common:request_common_static",
+    "../../common/sys_event:request_sysevent",
+  ]
 
   external_deps = [
     "ability_runtime:extensionkit_native",

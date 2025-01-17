@@ -27,6 +27,7 @@
 #include "log.h"
 #include "parcel_helper.h"
 #include "request_running_task_count.h"
+#include "sys_event.h"
 
 namespace OHOS::Request {
 using namespace OHOS::HiviewDFX;
@@ -70,11 +71,13 @@ int32_t RequestServiceProxy::Create(const Config &config, std::string &tid)
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REQUEST), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End send create request, failed: %{public}d", ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, config.bundleName, "", std::to_string(ret));
         return E_SERVICE_ERROR;
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK && errCode != E_CHANNEL_NOT_OPEN) {
         REQUEST_HILOGE("End send create request, failed: %{public}d", errCode);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_01, config.bundleName, "", std::to_string(errCode));
         return errCode;
     }
     tid = std::to_string(reply.ReadInt32());
@@ -134,11 +137,13 @@ int32_t RequestServiceProxy::GetTask(const std::string &tid, const std::string &
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_GETTASK), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request GetTask, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, config.bundleName, "", std::to_string(ret));
         return E_SERVICE_ERROR;
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK && errCode != E_CHANNEL_NOT_OPEN) {
         REQUEST_HILOGE("End Request GetTask, failed: %{public}d", errCode);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_01, config.bundleName, "", std::to_string(errCode));
         return errCode;
     }
     ParcelHelper::UnMarshalConfig(reply, config);
@@ -239,6 +244,7 @@ int32_t RequestServiceProxy::Search(const Filter &filter, std::vector<std::strin
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SEARCH), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request Search, failed: %{public}d", ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
         return E_SERVICE_ERROR;
     }
     uint32_t size = reply.ReadUint32();
@@ -299,11 +305,13 @@ int32_t RequestServiceProxy::QueryMimeType(const std::string &tid, std::string &
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_QUERYMIMETYPE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request QueryMimeType, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
         return E_SERVICE_ERROR;
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK) {
         REQUEST_HILOGE("End Request QueryMimeType, tid: %{public}s, failed: %{public}d", tid.c_str(), errCode);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_01, std::to_string(errCode));
         return errCode;
     }
     mimeType = reply.ReadString();
@@ -361,11 +369,13 @@ int32_t RequestServiceProxy::OpenChannel(int32_t &sockFd)
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_OPENCHANNEL), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request OpenChannel, failed: %{public}d", ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
         return E_SERVICE_ERROR;
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK) {
         REQUEST_HILOGE("End Request OpenChannel, failed: %{public}d", errCode);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_01, std::to_string(errCode));
         return errCode;
     }
     sockFd = reply.ReadFileDescriptor();
@@ -385,6 +395,7 @@ int32_t RequestServiceProxy::Subscribe(const std::string &tid)
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SUBSCRIBE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request Subscribe, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
         return E_SERVICE_ERROR;
     }
     REQUEST_HILOGD("End Request Subscribe ok, tid: %{public}s", tid.c_str());
@@ -403,6 +414,7 @@ int32_t RequestServiceProxy::Unsubscribe(const std::string &tid)
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_UNSUBSCRIBE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request Unsubscribe, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
         return E_SERVICE_ERROR;
     }
     REQUEST_HILOGD("End Request Unsubscribe ok, tid: %{public}s", tid.c_str());
@@ -421,11 +433,13 @@ int32_t RequestServiceProxy::SubRunCount(const sptr<NotifyInterface> &listener)
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SUB_RUNCOUNT), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request SubRunCount, failed: %{public}d", ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
         return ret;
     }
     int32_t errCode = reply.ReadInt32();
     if (errCode != E_OK) {
         REQUEST_HILOGE("End Request SubRunCount, failed: %{public}d", errCode);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_01, std::to_string(errCode));
         return errCode;
     }
     REQUEST_HILOGD("End Request SubRunCount ok");
@@ -442,6 +456,7 @@ int32_t RequestServiceProxy::UnsubRunCount()
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_UNSUB_RUNCOUNT), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request UnubRunCount, failed: %{public}d", ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
         return E_SERVICE_ERROR;
     }
     REQUEST_HILOGD("End Request UnubRunCount ok");
