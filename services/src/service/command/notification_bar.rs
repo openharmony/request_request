@@ -29,11 +29,20 @@ impl RequestServiceStub {
         reply: &mut MsgParcel,
     ) -> IpcResult<()> {
         let gauge: bool = data.read()?;
-        let customized: bool = data.read()?;
-        let title: String = data.read()?;
-        let text: String = data.read()?;
-        let new_group_id =
-            NotificationDispatcher::get_instance().create_group(gauge, customized, title, text);
+
+        let title = if data.read::<bool>()? {
+            Some(data.read()?)
+        } else {
+            None
+        };
+
+        let text = if data.read::<bool>()? {
+            Some(data.read()?)
+        } else {
+            None
+        };
+
+        let new_group_id = NotificationDispatcher::get_instance().create_group(gauge, title, text);
         reply.write(&new_group_id.to_string())?;
         Ok(())
     }

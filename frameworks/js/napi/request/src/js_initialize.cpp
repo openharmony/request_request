@@ -42,6 +42,8 @@ static constexpr uint32_t FILE_PERMISSION = 0644;
 static constexpr uint32_t TITLE_MAXIMUM = 256;
 static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
 static constexpr uint32_t URL_MAXIMUM = 8192;
+static constexpr uint32_t NOTIFICATION_TITLE_MAXIMUM = 1024;
+static constexpr uint32_t NOTIFICATION_TEXT_MAXIMUM = 3072;
 static constexpr uint32_t PROXY_MAXIMUM = 512;
 
 namespace OHOS::Request {
@@ -353,15 +355,6 @@ void JsInitialize::SetParseConfig(napi_env env, napi_value jsConfig, Config &con
     config.headers = ParseMap(env, jsConfig, "headers");
     config.extras = ParseMap(env, jsConfig, "extras");
     config.multipart = NapiUtils::Convert2Boolean(env, jsConfig, "multipart");
-    napi_value notification = NapiUtils::GetNamedProperty(env, jsConfig, "notification");
-    if (NapiUtils::GetValueType(env, notification) != napi_undefined) {
-        if (NapiUtils::HasNamedProperty(env, notification, "title")
-            || NapiUtils::HasNamedProperty(env, notification, "text")) {
-            config.notification.customized = true;
-            config.notification.title = NapiUtils::Convert2String(env, notification, "title");
-            config.notification.text = NapiUtils::Convert2String(env, notification, "text");
-        }
-    }
     if (config.mode == Mode::BACKGROUND) {
         config.background = true;
     }
@@ -402,6 +395,9 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
     if (!ParseSaveas(env, jsConfig, config, errInfo)) {
         return false;
     }
+    if (!ParseNotification(env, jsConfig, config, errInfo)) {
+        return false;
+    }
     ParseCertificatePins(env, config.url, config.certificatePins);
     ParseMethod(env, jsConfig, config);
     ParseRoaming(env, jsConfig, config);
@@ -419,6 +415,28 @@ void JsInitialize::ParseRoaming(napi_env env, napi_value jsConfig, Config &confi
     } else {
         config.roaming = NapiUtils::Convert2Boolean(env, jsConfig, "roaming");
     }
+}
+
+bool JsInitialize::ParseNotification(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
+{
+    napi_value notification = NapiUtils::GetNamedProperty(env, jsConfig, "notification");
+    if (NapiUtils::GetValueType(env, notification) != napi_undefined) {
+        if (NapiUtils::HasNamedProperty(env, notification, "title")) {
+            config.notification.title = NapiUtils::Convert2String(env, notification, "title");
+            if (config.notification.title->size() > NOTIFICATION_TITLE_MAXIMUM) {
+                errInfo = "Parameter verification failed, notification.title length exceeds the maximum limit";
+                return false;
+            }
+        }
+        if (NapiUtils::HasNamedProperty(env, notification, "text")) {
+            config.notification.text = NapiUtils::Convert2String(env, notification, "text");
+            if (config.notification.text->size() > NOTIFICATION_TEXT_MAXIMUM) {
+                errInfo = "Parameter verification failed, notification.text length exceeds the maximum limit";
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 void JsInitialize::ParseNetwork(napi_env env, napi_value jsConfig, Network &network)

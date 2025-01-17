@@ -71,8 +71,8 @@ public:
     virtual int32_t Unsubscribe(const std::string &taskId) = 0;
     virtual int32_t SubRunCount(const sptr<NotifyInterface> &listener) = 0;
     virtual int32_t UnsubRunCount() = 0;
-    virtual int32_t CreateGroup(std::string &gid, const bool gauge, const bool customized,
-        const std::string &title = "", const std::string &text = "") = 0;
+    virtual int32_t CreateGroup(
+        std::string &gid, const bool gauge, std::optional<std::string> title, std::optional<std::string> text) = 0;
     virtual int32_t AttachGroup(const std::string &gid, const std::vector<std::string> &tids) = 0;
     virtual int32_t DeleteGroup(const std::string &gid) = 0;
 };

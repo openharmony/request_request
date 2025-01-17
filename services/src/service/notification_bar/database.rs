@@ -38,10 +38,10 @@ pub(crate) struct NotificationDb {
     inner: rdb::RdbStore<'static>,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub(crate) struct CustomizedNotification {
-    pub title: String,
-    pub text: String,
+    pub title: Option<String>,
+    pub text: Option<String>,
 }
 
 impl NotificationDb {
@@ -129,7 +129,7 @@ impl NotificationDb {
         &self,
         task_id: u32,
     ) -> Option<CustomizedNotification> {
-        let mut set = match self.inner.query::<(String, String)>(
+        let mut set = match self.inner.query::<(Option<String>, Option<String>)>(
             "SELECT title, text FROM task_notification_content WHERE task_id = ?",
             task_id,
         ) {
@@ -143,12 +143,11 @@ impl NotificationDb {
             .map(|(title, text)| CustomizedNotification { title, text })
     }
 
-    #[allow(unused)]
     pub(crate) fn update_task_customized_notification(
         &self,
         task_id: u32,
-        title: String,
-        text: String,
+        title: Option<String>,
+        text: Option<String>,
     ) {
         if let Err(e) = self.inner.execute(
             "INSERT INTO task_notification_content (task_id, title, text) VALUES (?, ?, ?) ON CONFLICT(task_id) DO UPDATE SET title = excluded.title, text = excluded.text",
@@ -162,7 +161,7 @@ impl NotificationDb {
         &self,
         group_id: u32,
     ) -> Option<CustomizedNotification> {
-        let mut set = match self.inner.query::<(String, String)>(
+        let mut set = match self.inner.query::<(Option<String>, Option<String>)>(
             "SELECT title, text FROM group_notification_content WHERE group_id = ?",
             group_id,
         ) {
@@ -179,8 +178,8 @@ impl NotificationDb {
     pub(crate) fn update_group_customized_notification(
         &self,
         group_id: u32,
-        title: &str,
-        text: &str,
+        title: Option<String>,
+        text: Option<String>,
     ) {
         if let Err(e) = self.inner.execute(
             "INSERT INTO group_notification_content (group_id, title, text) VALUES (?, ?, ?) ON CONFLICT(group_id) DO UPDATE SET title = excluded.title, text = excluded.text",
@@ -303,12 +302,12 @@ mod test {
 
         db.update_task_customized_notification(
             task_id,
-            TEST_TITLE.to_string(),
-            TEST_TEXT.to_string(),
+            Some(TEST_TITLE.to_string()),
+            Some(TEST_TEXT.to_string()),
         );
         let customized = db.query_task_customized_notification(task_id).unwrap();
-        assert_eq!(customized.title, TEST_TITLE);
-        assert_eq!(customized.text, TEST_TEXT);
+        assert_eq!(customized.title.unwrap(), TEST_TITLE);
+        assert_eq!(customized.text.unwrap(), TEST_TEXT);
     }
 
     #[test]
@@ -316,10 +315,14 @@ mod test {
         let db = NotificationDb::new();
         let group_id = fast_random() as u32;
 
-        db.update_group_customized_notification(group_id, TEST_TITLE, TEST_TEXT);
+        db.update_group_customized_notification(
+            group_id,
+            Some(TEST_TITLE.to_string()),
+            Some(TEST_TEXT.to_string()),
+        );
         let customized = db.query_group_customized_notification(group_id).unwrap();
-        assert_eq!(customized.title, TEST_TITLE);
-        assert_eq!(customized.text, TEST_TEXT);
+        assert_eq!(customized.title.unwrap(), TEST_TITLE);
+        assert_eq!(customized.text.unwrap(), TEST_TEXT);
     }
 
     #[test]

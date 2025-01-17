@@ -60,10 +60,18 @@ impl RequestServiceStub {
             }
         };
 
-        let customized_notification = data.read::<bool>()?;
-        if customized_notification {
-            let title = data.read::<String>()?;
-            let text = data.read::<String>()?;
+        let title = if data.read::<bool>()? {
+            Some(data.read::<String>()?)
+        } else {
+            None
+        };
+
+        let text = if data.read::<bool>()? {
+            Some(data.read::<String>()?)
+        } else {
+            None
+        };
+        if title.is_some() || text.is_some() {
             NotificationDispatcher::get_instance()
                 .update_task_customized_notification(task_id, title, text);
         }

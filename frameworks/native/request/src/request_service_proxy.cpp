@@ -21,11 +21,13 @@
 
 #include <cstdint>
 #include <ctime>
+#include <optional>
 
 #include "constant.h"
 #include "download_server_ipc_interface_code.h"
 #include "iremote_broker.h"
 #include "log.h"
+#include "message_parcel.h"
 #include "parcel_helper.h"
 #include "request_common.h"
 #include "request_running_task_count.h"
@@ -346,6 +348,22 @@ ExceptionErrorCode RequestServiceProxy::DisableTaskNotification(
     return ExceptionErrorCode::E_OK;
 }
 
+void SerializeNotification(MessageParcel &data, const Notification &notification)
+{
+    if (notification.title != std::nullopt) {
+        data.WriteBool(true);
+        data.WriteString(*notification.title);
+    } else {
+        data.WriteBool(false);
+    }
+    if (notification.text != std::nullopt) {
+        data.WriteBool(true);
+        data.WriteString(*notification.text);
+    } else {
+        data.WriteBool(false);
+    }
+}
+
 int32_t RequestServiceProxy::Create(const Config &config, std::string &tid)
 {
     MessageParcel data, reply;
@@ -378,11 +396,8 @@ int32_t RequestServiceProxy::Create(const Config &config, std::string &tid)
     data.WriteString(config.proxy);
     data.WriteString(config.certificatePins);
     GetVectorData(config, data);
-    data.WriteBool(config.notification.customized);
-    if (config.notification.customized) {
-        data.WriteString(config.notification.title);
-        data.WriteString(config.notification.text);
-    }
+    SerializeNotification(data, config.notification);
+
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REQUEST), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End send create request, failed: %{public}d", ret);
@@ -774,15 +789,24 @@ int32_t RequestServiceProxy::UnsubRunCount()
 }
 
 int32_t RequestServiceProxy::CreateGroup(
-    std::string &gid, const bool gauge, const bool customized, const std::string &title, const std::string &text)
+    std::string &gid, const bool gauge, std::optional<std::string> title, std::optional<std::string> text)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteBool(gauge);
-    data.WriteBool(customized);
-    data.WriteString(title);
-    data.WriteString(text);
+    if (title != std::nullopt) {
+        data.WriteBool(true);
+        data.WriteString(*title);
+    } else {
+        data.WriteBool(false);
+    }
+    if (text != std::nullopt) {
+        data.WriteBool(true);
+        data.WriteString(*text);
+    } else {
+        data.WriteBool(false);
+    }
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_CREATE_GROUP), data, reply, option);
     if (ret != ERR_NONE) {

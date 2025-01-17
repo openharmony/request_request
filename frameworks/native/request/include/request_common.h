@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -116,9 +117,8 @@ struct FileSpec {
 };
 
 struct Notification {
-    bool customized = false;
-    std::string title = "";
-    std::string text = "";
+    std::optional<std::string> title = std::nullopt;
+    std::optional<std::string> text = std::nullopt;
 };
 
 struct Config {

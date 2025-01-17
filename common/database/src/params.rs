@@ -16,8 +16,8 @@ use std::pin::{pin, Pin};
 use cxx::{CxxVector, UniquePtr};
 
 use crate::wrapper::ffi::{
-    self, BindBlob, BindBool, BindDouble, BindI32, BindI64, BindString, GetBlob, GetBool,
-    GetDouble, GetI32, GetI64, GetString, NewVector, ResultSet, RowEntity, ValueObject,
+    self, BindBlob, BindBool, BindDouble, BindI32, BindI64, BindNull, BindString, GetBlob, GetBool,
+    GetDouble, GetI32, GetI64, GetString, IsNull, NewVector, ResultSet, RowEntity, ValueObject,
 };
 
 trait ToSql {
@@ -88,6 +88,17 @@ impl<T: ?Sized + ToSql> ToSql for &T {
     }
 }
 
+impl<T: ToSql> ToSql for Option<T> {
+    fn to_sql(&self, values: Pin<&mut CxxVector<ValueObject>>) {
+        match self {
+            Some(value) => value.to_sql(values),
+            None => {
+                BindNull(values);
+            }
+        }
+    }
+}
+
 impl FromSql for i32 {
     fn from_sql(index: i32, row: Pin<&mut RowEntity>) -> Self {
         let mut value = 0;
@@ -133,6 +144,19 @@ impl FromSql for Vec<u8> {
         let mut value = Vec::new();
         GetBlob(row, index, &mut value);
         value
+    }
+}
+
+impl<T: FromSql> FromSql for Option<T> {
+    fn from_sql(index: i32, values: Pin<&mut RowEntity>) -> Self {
+        unsafe {
+            let values = values.get_unchecked_mut();
+            if IsNull(Pin::new_unchecked(values), index) {
+                None
+            } else {
+                Some(T::from_sql(index, Pin::new_unchecked(values)))
+            }
+        }
     }
 }
 

@@ -20,6 +20,7 @@ const UPLOAD_FILE: &str = "request_agent_upload_file\0";
 const UPLOAD_SUCCESS: &str = "request_agent_upload_success\0";
 const UPLOAD_FAIL: &str = "request_agent_upload_fail\0";
 
+use super::database::CustomizedNotification;
 use super::ffi::{GetSystemResourceString, NotifyContent, ProgressCircle};
 use super::notify_flow::{GroupProgress, ProgressNotify};
 use crate::config::Action;
@@ -45,33 +46,39 @@ fn progress_size(current: u64) -> String {
 }
 
 impl NotifyContent {
-    pub(crate) fn default_task_eventual_notify(
+    pub(crate) fn task_eventual_notify(
+        mut customized: Option<CustomizedNotification>,
         action: Action,
         task_id: u32,
         uid: u32,
         file_name: String,
         is_successful: bool,
     ) -> Self {
-        let title = match action {
-            Action::Download => {
-                if is_successful {
-                    GetSystemResourceString(DOWNLOAD_SUCCESS)
-                } else {
-                    GetSystemResourceString(DOWNLOAD_FAIL)
+        let title = customized
+            .as_mut()
+            .and_then(|c| c.title.take())
+            .unwrap_or_else(|| match action {
+                Action::Download => {
+                    if is_successful {
+                        GetSystemResourceString(DOWNLOAD_SUCCESS)
+                    } else {
+                        GetSystemResourceString(DOWNLOAD_FAIL)
+                    }
                 }
-            }
-            Action::Upload => {
-                if is_successful {
-                    GetSystemResourceString(UPLOAD_SUCCESS)
-                } else {
-                    GetSystemResourceString(UPLOAD_FAIL)
+                Action::Upload => {
+                    if is_successful {
+                        GetSystemResourceString(UPLOAD_SUCCESS)
+                    } else {
+                        GetSystemResourceString(UPLOAD_FAIL)
+                    }
                 }
-            }
-            _ => unreachable!(),
-        };
+                _ => unreachable!(),
+            });
+        let text = customized.and_then(|c| c.text).unwrap_or(file_name);
+
         Self {
             title,
-            text: file_name,
+            text,
             request_id: task_id,
             uid,
             live_view: false,
@@ -80,20 +87,16 @@ impl NotifyContent {
         }
     }
 
-    pub(crate) fn default_task_progress_notify(info: &ProgressNotify) -> Self {
-        let title = match info.action {
-            Action::Download => {
-                let title = GetSystemResourceString(DOWNLOAD_FILE);
-                match info.total {
-                    Some(total) => title.replace("%s", &progress_percentage(info.processed, total)),
-                    None => title.replace("%s", &progress_size(info.processed)),
-                }
-            }
-            Action::Upload => {
-                let title = GetSystemResourceString(UPLOAD_FILE);
-                if let Some((current_count, total_count)) = info.multi_upload {
-                    title.replace("%s", &format!("{}/{}", current_count, total_count))
-                } else {
+    pub(crate) fn task_progress_notify(
+        mut customized: Option<CustomizedNotification>,
+        info: &ProgressNotify,
+    ) -> Self {
+        let title = customized
+            .as_mut()
+            .and_then(|c| c.title.take())
+            .unwrap_or_else(|| match info.action {
+                Action::Download => {
+                    let title = GetSystemResourceString(DOWNLOAD_FILE);
                     match info.total {
                         Some(total) => {
                             title.replace("%s", &progress_percentage(info.processed, total))
@@ -101,16 +104,34 @@ impl NotifyContent {
                         None => title.replace("%s", &progress_size(info.processed)),
                     }
                 }
-            }
-            _ => unreachable!(),
-        };
+                Action::Upload => {
+                    let title = GetSystemResourceString(UPLOAD_FILE);
+                    if let Some((current_count, total_count)) = info.multi_upload {
+                        title.replace("%s", &format!("{}/{}", current_count, total_count))
+                    } else {
+                        match info.total {
+                            Some(total) => {
+                                title.replace("%s", &progress_percentage(info.processed, total))
+                            }
+                            None => title.replace("%s", &progress_size(info.processed)),
+                        }
+                    }
+                }
+                _ => unreachable!(),
+            });
+
+        let text = customized
+            .and_then(|c| c.text.clone())
+            .unwrap_or_else(|| info.file_name.clone());
+
         let progress_circle = match info.total {
             Some(total) => ProgressCircle::open(info.processed, total),
             None => ProgressCircle::close(),
         };
+
         Self {
             title,
-            text: info.file_name.clone(),
+            text,
             request_id: info.task_id,
             uid: info.uid as u32,
             live_view: true,
@@ -119,7 +140,8 @@ impl NotifyContent {
         }
     }
 
-    pub(crate) fn default_group_eventual_notify(
+    pub(crate) fn group_eventual_notify(
+        mut customized: Option<CustomizedNotification>,
         action: Action,
         group_id: u32,
         uid: u32,
@@ -127,12 +149,19 @@ impl NotifyContent {
         successful_count: i32,
         failed_count: i32,
     ) -> Self {
-        let title = match action {
-            Action::Download => format!("下载完成 {}", progress_size(current_size)),
-            Action::Upload => format!("上传完成 {}", progress_size(current_size)),
-            _ => unreachable!(),
-        };
-        let text = format!("成功 {} 个, 失败 {} 个", successful_count, failed_count);
+        let title = customized
+            .as_mut()
+            .and_then(|c| c.title.take())
+            .unwrap_or_else(|| match action {
+                Action::Download => format!("下载完成 {}", progress_size(current_size)),
+                Action::Upload => format!("上传完成 {}", progress_size(current_size)),
+                _ => unreachable!(),
+            });
+
+        let text = customized
+            .and_then(|c| c.text)
+            .unwrap_or_else(|| format!("成功 {} 个, 失败 {} 个", successful_count, failed_count));
+
         Self {
             title,
             text,
@@ -144,25 +173,32 @@ impl NotifyContent {
         }
     }
 
-    pub(crate) fn default_group_progress_notify(
+    pub(crate) fn group_progress_notify(
+        mut customized: Option<CustomizedNotification>,
         action: Action,
         group_id: u32,
         uid: u32,
         group_progress: &GroupProgress,
     ) -> Self {
-        let title = match action {
-            Action::Download => {
-                let title = GetSystemResourceString(DOWNLOAD_FILE);
-                title.replace("%s", &progress_size(group_progress.processed()))
-            }
-            Action::Upload => {
-                let title = GetSystemResourceString(UPLOAD_FILE);
-                title.replace("%s", &progress_size(group_progress.processed()))
-            }
-            _ => unreachable!(),
-        };
+        let title = customized
+            .as_mut()
+            .and_then(|c| c.title.take())
+            .unwrap_or_else(|| match action {
+                Action::Download => {
+                    let title = GetSystemResourceString(DOWNLOAD_FILE);
+                    title.replace("%s", &progress_size(group_progress.processed()))
+                }
+                Action::Upload => {
+                    let title = GetSystemResourceString(UPLOAD_FILE);
+                    title.replace("%s", &progress_size(group_progress.processed()))
+                }
+                _ => unreachable!(),
+            });
+
         let (successful, failed) = (group_progress.successful(), group_progress.failed());
-        let text = format!("成功 {} 个, 失败 {} 个", successful, failed);
+        let text = customized
+            .and_then(|c| c.text)
+            .unwrap_or_else(|| format!("成功 {} 个, 失败 {} 个", successful, failed));
 
         let progress_circle =
             ProgressCircle::open((successful + failed) as u64, group_progress.total() as u64);
@@ -173,24 +209,6 @@ impl NotifyContent {
             uid,
             live_view: true,
             progress_circle,
-            x_mark: false,
-        }
-    }
-
-    pub(crate) fn customized_notify(
-        request_id: u32,
-        uid: u32,
-        title: String,
-        text: String,
-        live_view: bool,
-    ) -> Self {
-        Self {
-            title,
-            text,
-            request_id,
-            uid,
-            live_view,
-            progress_circle: ProgressCircle::close(),
             x_mark: false,
         }
     }
@@ -227,7 +245,8 @@ mod test {
     const GROUP_ID: u32 = 20;
     #[test]
     fn ut_notify_typology_default_task_eventual() {
-        let content = NotifyContent::default_task_eventual_notify(
+        let content = NotifyContent::task_eventual_notify(
+            None,
             Action::Download,
             TASK_ID,
             UID,
@@ -242,7 +261,8 @@ mod test {
         assert_eq!(content.request_id, TASK_ID);
         assert_eq!(content.uid, UID);
 
-        let content = NotifyContent::default_task_eventual_notify(
+        let content = NotifyContent::task_eventual_notify(
+            None,
             Action::Download,
             0,
             0,
@@ -252,7 +272,8 @@ mod test {
         assert_eq!(content.title, "下载成功");
         assert_eq!(content.text, EXAMPLE_FILE);
 
-        let content = NotifyContent::default_task_eventual_notify(
+        let content = NotifyContent::task_eventual_notify(
+            None,
             Action::Upload,
             0,
             0,
@@ -262,7 +283,8 @@ mod test {
         assert_eq!(content.title, "上传失败");
         assert_eq!(content.text, EXAMPLE_FILE);
 
-        let content = NotifyContent::default_task_eventual_notify(
+        let content = NotifyContent::task_eventual_notify(
+            None,
             Action::Upload,
             0,
             0,
@@ -285,7 +307,7 @@ mod test {
             total: Some(10),
             multi_upload: None,
         };
-        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        let content = NotifyContent::task_progress_notify(None, &progress_info);
         assert_eq!(content.title, "下载文件 10.00%");
         assert_eq!(content.text, EXAMPLE_FILE);
         assert_eq!(content.live_view, true);
@@ -295,39 +317,39 @@ mod test {
 
         progress_info.processed = 1001;
         progress_info.total = Some(10000);
-        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        let content = NotifyContent::task_progress_notify(None, &progress_info);
         assert_eq!(content.title, "下载文件 10.01%");
 
         progress_info.processed = 1010;
-        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        let content = NotifyContent::task_progress_notify(None, &progress_info);
         assert_eq!(content.title, "下载文件 10.10%");
 
         progress_info.processed = 1;
         progress_info.total = None;
-        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        let content = NotifyContent::task_progress_notify(None, &progress_info);
         assert_eq!(content.title, "下载文件 1B");
 
         progress_info.processed = 1024;
 
-        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        let content = NotifyContent::task_progress_notify(None, &progress_info);
         assert_eq!(content.title, "下载文件 1.00KB");
 
         progress_info.processed = 1024 * 1024;
-        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        let content = NotifyContent::task_progress_notify(None, &progress_info);
         assert_eq!(content.title, "下载文件 1.00MB");
 
         progress_info.processed = 1024 * 1024 * 1024;
-        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        let content = NotifyContent::task_progress_notify(None, &progress_info);
         assert_eq!(content.title, "下载文件 1.00GB");
 
         progress_info.action = Action::Upload;
         progress_info.processed = 1;
         progress_info.total = Some(10);
-        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        let content = NotifyContent::task_progress_notify(None, &progress_info);
         assert_eq!(content.title, "上传文件 10.00%");
 
         progress_info.multi_upload = Some((1, 10));
-        let content = NotifyContent::default_task_progress_notify(&progress_info);
+        let content = NotifyContent::task_progress_notify(None, &progress_info);
         assert_eq!(content.title, "上传文件 1/10");
     }
 
@@ -336,7 +358,8 @@ mod test {
         let mut group_info = GroupProgress::new();
         group_info.update_task_state(1, State::Completed);
         group_info.update_task_progress(1, 100);
-        let content = NotifyContent::default_group_progress_notify(
+        let content = NotifyContent::group_progress_notify(
+            None,
             Action::Download,
             GROUP_ID,
             UID,
@@ -351,7 +374,8 @@ mod test {
         for i in 2..5 {
             group_info.update_task_state(i, State::Completed);
         }
-        let content = NotifyContent::default_group_progress_notify(
+        let content = NotifyContent::group_progress_notify(
+            None,
             Action::Download,
             GROUP_ID,
             UID,
