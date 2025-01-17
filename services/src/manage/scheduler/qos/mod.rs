@@ -61,6 +61,7 @@ impl Qos {
 
     // Reschedule qos queue and get directions.
     pub(crate) fn reschedule(&mut self, state: &state::Handler) -> QosChanges {
+        // Only sort apps.
         self.apps
             .sort(state.foreground_abilities(), state.top_user());
         let mut changes = QosChanges::new();
@@ -84,10 +85,10 @@ impl Qos {
         let mut qos_vec = Vec::new();
 
         for (i, task) in self.apps.iter().enumerate().flat_map(|(i, app)| {
-            if !app.is_empty() {
+            if !app.tasks.is_empty() {
                 app_i = i;
             }
-            app.iter().enumerate()
+            app.tasks.iter().enumerate()
         }) {
             if task.action() != action {
                 continue;
@@ -118,7 +119,7 @@ impl Qos {
         loop {
             let mut no_tasks_left = true;
 
-            for tasks in self.apps.iter().skip(app_i + 1).map(|app| &app[..]) {
+            for tasks in self.apps.iter().skip(app_i + 1).map(|app| &app.tasks[..]) {
                 let task = match tasks.get(i) {
                     Some(task) => {
                         no_tasks_left = false;
@@ -152,7 +153,7 @@ impl Qos {
             .iter()
             .skip(app_i)
             .take(1)
-            .flat_map(|app| app.iter().skip(task_i + 1))
+            .flat_map(|app| app.tasks.iter().skip(task_i + 1))
         {
             if task.action() != action {
                 continue;

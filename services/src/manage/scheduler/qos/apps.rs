@@ -97,7 +97,7 @@ impl Deref for SortedApps {
 /// An independent app.
 pub(crate) struct App {
     pub(crate) uid: u64,
-    tasks: Vec<Task>,
+    pub(crate) tasks: Vec<Task>,
 }
 
 impl App {
@@ -110,10 +110,6 @@ impl App {
 
     fn from_raw(uid: u64, tasks: Vec<Task>) -> Self {
         Self { uid, tasks }
-    }
-
-    pub(crate) fn is_empty(&self) -> bool {
-        self.tasks.is_empty()
     }
 
     fn insert(&mut self, task: Task) {
@@ -131,28 +127,26 @@ impl App {
         match self.get_task_mut(task_id) {
             Some((index, _task)) => {
                 self.tasks.remove(index);
+                // Remove do not need to resort tasks.
                 true
             }
             None => false,
         }
+    }
+
+    fn resort_tasks(&mut self) {
+        self.tasks.sort();
     }
 
     fn task_set_mode(&mut self, task_id: u32, mode: Mode) -> bool {
         match self.get_task_mut(task_id) {
             Some((_index, task)) => {
                 task.set_mode(mode);
+                self.resort_tasks();
                 true
             }
             None => false,
         }
-    }
-}
-
-impl Deref for App {
-    type Target = Vec<Task>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.tasks
     }
 }
 
