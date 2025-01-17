@@ -12,14 +12,14 @@
 # limitations under the License.
 
 [package]
-name = "disable_task_notification"
+name = "request_action_test"
 version = "1.0.0"
 edition = "2021"
 license = "Apache-2.0"
 
 [[bin]]
-name = "disable_task_notification"
-path = "disable_task_notification.rs"
+name = "request_action_test"
+path = "request_action_test.rs"
 
 [dependencies]
 cxx = "1.0.115"
