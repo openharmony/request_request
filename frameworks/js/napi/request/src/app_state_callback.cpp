@@ -19,6 +19,7 @@
 #include "js_task.h"
 #include "log.h"
 #include "request_manager.h"
+#include "sys_event.h"
 
 namespace OHOS {
 namespace Request {
@@ -27,6 +28,8 @@ void AppStateCallback::OnAbilityForeground(const std::shared_ptr<NativeReference
     if (RequestManager::GetInstance()->IsSaReady()) {
         return;
     }
+    SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_02, "Check SA failed");
+
     bool hasForeground = false;
     {
         std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
@@ -48,6 +51,7 @@ void AppStateCallback::OnAbilityForeground(const std::shared_ptr<NativeReference
     auto context = AbilityRuntime::ApplicationContext::GetInstance();
     if (context == nullptr) {
         REQUEST_HILOGE("Get ApplicationContext failed");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_00, "Get AppContext failed");
         return;
     }
     context->UnregisterAbilityLifecycleCallback(shared_from_this());

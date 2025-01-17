@@ -56,3 +56,17 @@ TASK_INFO_STATISTICS:
   TASKS_SIZE: {type: UINT64, desc: Download tasks size}
   TASKS_NUMBER: {type: UINT32, desc: Download tasks number}
 
+STATISTIC_EVENT:
+  __BASE: {type: STATISTIC, level: MINOR, desc: Request record statistic event }
+  DFX_CODE: {type: UINT32, desc: dfx code }
+  BUNDLE_NAME: {type: STRING, desc: bundle name }
+  MODULE_NAME: {type: STRING, desc: module name }
+  EXTRA_INFO: {type: STRING, desc: More detailed log information}
+
+FAULT_EVENT:
+  __BASE: {type: FAULT, level: CRITICAL, desc: Request throw fault event }
+  DFX_CODE: {type: UINT32, desc: dfx code }
+  BUNDLE_NAME: {type: STRING, desc: bundle name }
+  MODULE_NAME: {type: STRING, desc: module name }
+  EXTRA_INFO: {type: STRING, desc: More detailed log information}
+

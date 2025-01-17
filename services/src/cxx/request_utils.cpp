@@ -30,6 +30,7 @@
 #include "iservice_registry.h"
 #include "log.h"
 #include "string_wrapper.h"
+#include "sys_event.h"
 #include "system_ability_definition.h"
 #include "tokenid_kit.h"
 #include "utils/mod.rs.h"
@@ -46,11 +47,13 @@ int GetForegroundAbilities(rust::vec<int> &uid)
     auto sysm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sysm == nullptr) {
         REQUEST_HILOGE("GetForegroundAbilities failed, sysm is nullptr");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_00, "Get SAM failed");
         return -1;
     }
     auto remote = sysm->CheckSystemAbility(APP_MGR_SERVICE_ID);
     if (remote == nullptr) {
         REQUEST_HILOGE("GetForegroundAbilities failed, remote is nullptr");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_02, "Check SA failed");
         return -1;
     }
     auto proxy = AppMgrProxy(remote);

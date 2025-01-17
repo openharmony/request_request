@@ -24,6 +24,7 @@
 #include "log.h"
 #include "napi_base_context.h"
 #include "napi_utils.h"
+#include "sys_event.h"
 
 namespace OHOS::Request::Legacy {
 std::map<std::string, RequestManager::DownloadDescriptor> RequestManager::downloadDescriptors_;
@@ -133,11 +134,13 @@ std::string RequestManager::GetCacheDir(napi_env env)
     auto ability = AbilityRuntime::GetCurrentAbility(env);
     if (ability == nullptr) {
         REQUEST_HILOGE("GetCurrentAbility failed.");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_04, "GetCurrentAbility failed");
         return {};
     }
     auto abilityContext = ability->GetAbilityContext();
     if (abilityContext == nullptr) {
         REQUEST_HILOGE("GetAbilityContext failed.");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_01, "GetAbilityContext failed");
         return {};
     }
     return abilityContext->GetCacheDir();

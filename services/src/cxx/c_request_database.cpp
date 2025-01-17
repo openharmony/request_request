@@ -352,11 +352,8 @@ void RequestDBRemoveOldTables(OHOS::NativeRdb::RdbStore &store)
 
 int ConvertDBVersion(std::string &version)
 {
-    std::map<std::string, int> db_version_map = {
-        {REQUEST_DATABASE_VERSION_4_1_RELEASE, API11_4_1_RELEASE},
-        {REQUEST_DATABASE_VERSION_5_0_RELEASE, API12_5_0_RELEASE},
-        {REQUEST_DATABASE_VERSION, API16_5_1_RELEASE}
-    };
+    std::map<std::string, int> db_version_map = { { REQUEST_DATABASE_VERSION_4_1_RELEASE, API11_4_1_RELEASE },
+        { REQUEST_DATABASE_VERSION_5_0_RELEASE, API12_5_0_RELEASE }, { REQUEST_DATABASE_VERSION, API16_5_1_RELEASE } };
 
     auto handle = db_version_map.find(version);
     if (handle != db_version_map.end()) {
