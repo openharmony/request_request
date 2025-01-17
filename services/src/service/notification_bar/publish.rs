@@ -52,7 +52,13 @@ impl NotificationDispatcher {
 
     pub(crate) fn disable_task_notification(&self, uid: u64, task_id: u32) {
         self.database.disable_task_notification(task_id);
-        self.unregister_task(uid, task_id);
+        self.unregister_task(uid, task_id, true);
+    }
+
+    pub(crate) fn enable_task_progress_notification(&self, task_id: u32) {
+        if let Some(gauge) = self.task_gauge.lock().unwrap().get(&task_id) {
+            gauge.store(true, Ordering::Release);
+        }
     }
 
     pub(crate) fn update_task_customized_notification(
@@ -83,17 +89,21 @@ impl NotificationDispatcher {
         gauge
     }
 
-    pub(crate) fn unregister_task(&self, uid: u64, task_id: u32) {
+    pub(crate) fn unregister_task(&self, uid: u64, task_id: u32, affect_group: bool) {
         match (
             self.task_gauge.lock().unwrap().get(&task_id).cloned(),
             self.database.query_task_gid(task_id),
         ) {
             (Some(gauge), Some(gid)) => {
-                gauge.store(false, Ordering::Release);
-                let _ = self.flow.send(NotifyInfo::Unregister(uid, task_id, gid));
+                if affect_group {
+                    gauge.store(false, Ordering::Release);
+                    let _ = self.flow.send(NotifyInfo::Unregister(uid, task_id, gid));
+                }
             }
             (None, Some(gid)) => {
-                let _ = self.flow.send(NotifyInfo::Unregister(uid, task_id, gid));
+                if affect_group {
+                    let _ = self.flow.send(NotifyInfo::Unregister(uid, task_id, gid));
+                }
             }
             (Some(gauge), None) => {
                 gauge.store(false, Ordering::Release);

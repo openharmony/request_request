@@ -16,6 +16,7 @@
 #ifndef OHOS_REQUEST_ACTION_WRAPPER_H
 #define OHOS_REQUEST_ACTION_WRAPPER_H
 
+#include <cstdint>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -50,6 +51,12 @@ inline NativeTokenInfoParams Permission(std::unique_ptr<const char *[]> &perms)
         .processName = "disable_task_notification",
         .aplStr = "system_core",
     };
+}
+
+inline void SetMode(rust::str taskId, int32_t mode)
+{
+    std::string tid = std::string(taskId);
+    RequestAction::GetInstance()->SetMode(tid, static_cast<Mode>(mode));
 }
 
 inline void SetAccessTokenPermission()

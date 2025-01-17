@@ -215,19 +215,16 @@ impl Scheduler {
         let database = RequestDb::get_instance();
         database.set_mode(task_id, mode)?;
 
-        if let Some(task) = self.running_queue.get_task_clone(uid, task_id) {
-            task.mode.store(mode.repr, Ordering::Release);
-            if mode == Mode::BackGround {
-                NotificationDispatcher::get_instance().register_task(&task);
-            }
-        }
-
         if self.qos.task_set_mode(uid, task_id, mode) {
             self.schedule_if_not_scheduled();
         }
-
+        if let Some(task) = self.running_queue.get_task_clone(uid, task_id) {
+            task.mode.store(mode.repr, Ordering::Release);
+        }
         if mode == Mode::FrontEnd {
-            NotificationDispatcher::get_instance().unregister_task(uid, task_id);
+            NotificationDispatcher::get_instance().unregister_task(uid, task_id, false);
+        } else if mode == Mode::BackGround {
+            NotificationDispatcher::get_instance().enable_task_progress_notification(task_id);
         }
         Ok(())
     }
@@ -267,7 +264,7 @@ impl Scheduler {
         let database = RequestDb::get_instance();
         let Some(info) = database.get_task_info(task_id) else {
             error!("task {} not found in database", task_id);
-            NotificationDispatcher::get_instance().unregister_task(uid, task_id);
+            NotificationDispatcher::get_instance().unregister_task(uid, task_id, true);
             return;
         };
         match State::from(info.progress.common_data.state) {
@@ -307,7 +304,7 @@ impl Scheduler {
             }
             State::Stopped | State::Removed => {
                 info!("task {} cancel with state Stopped or Removed", task_id);
-                NotificationDispatcher::get_instance().unregister_task(uid, task_id);
+                NotificationDispatcher::get_instance().unregister_task(uid, task_id, true);
                 self.running_queue.try_restart(uid, task_id);
             }
             state => {
@@ -522,7 +519,7 @@ impl RequestDb {
             || old_state == State::Paused.repr)
             && (new_state == State::Stopped || new_state == State::Removed)
         {
-            NotificationDispatcher::get_instance().unregister_task(info.uid(), task_id);
+            NotificationDispatcher::get_instance().unregister_task(info.uid(), task_id, true);
         }
         Ok(())
     }
