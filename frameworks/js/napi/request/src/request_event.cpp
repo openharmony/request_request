@@ -141,8 +141,8 @@ napi_value RequestEvent::SetMaxSpeed(napi_env env, napi_callback_info info)
     auto input = [context, seq, info](size_t argc, napi_value *argv, napi_value self) -> napi_status {
         ExceptionError err = ParseSetMaxSpeedParameters(context->env_, self, info, context->maxSpeed);
         if (err.code != E_OK) {
-            REQUEST_HILOGE("End task set max speed, seq: %{public}d, failed: %{public}d, maxSpeed: %{public}lld", seq,
-                err.code, context->maxSpeed);
+            REQUEST_HILOGE("End task set max speed, seq: %{public}d, failed: %{public}d, maxSpeed: %{public}d", seq,
+                err.code, static_cast<int32_t>(context->maxSpeed));
             NapiUtils::ThrowError(context->env_, err.code, err.errInfo, true);
             return napi_invalid_arg;
         }

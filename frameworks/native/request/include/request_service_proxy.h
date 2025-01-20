@@ -30,6 +30,7 @@ public:
     ~RequestServiceProxy() = default;
     DISALLOW_COPY_AND_MOVE(RequestServiceProxy);
 
+    ExceptionErrorCode CreateTasks(const std::vector<Config> &configs, std::vector<TaskRet> &rets) override;
     ExceptionErrorCode StartTasks(const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets) override;
     ExceptionErrorCode StopTasks(const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets) override;
     ExceptionErrorCode ResumeTasks(
@@ -78,6 +79,7 @@ public:
 
 private:
     static void GetVectorData(const Config &config, MessageParcel &data);
+    static void WriteConfigData(const Config &config, MessageParcel &data);
     static inline BrokerDelegator<RequestServiceProxy> delegator_;
 };
 } // namespace OHOS::Request

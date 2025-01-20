@@ -16,6 +16,7 @@ use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::manage::events::TaskManagerEvent;
+use crate::service::command::{CONSTRUCT_MAX, set_code_with_index_other};
 use crate::service::notification_bar::NotificationDispatcher;
 use crate::service::permission::PermissionChecker;
 use crate::service::RequestServiceStub;
@@ -24,75 +25,91 @@ use crate::task::config::TaskConfig;
 impl RequestServiceStub {
     pub(crate) fn construct(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("Service construct");
-
-        if !PermissionChecker::check_internet() {
-            error!("End Service construct, failed: no INTERNET permission");
+        let permission = PermissionChecker::check_down_permission();
+        if !PermissionChecker::check_internet() && !permission {
+            error!("Service start: no INTERNET permission.");
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
         }
-        let task_config: TaskConfig = match data.read() {
-            Ok(config) => config,
-            Err(_e) => {
-                reply.write(&(ErrorCode::IpcSizeTooLarge as i32))?;
-                return Err(IpcStatusCode::Failed);
-            }
-        };
-        debug!("Service construct: task_config constructed");
+        let len: u32 = data.read()?;
+        let len = len as usize;
+        let mut vec = vec![(ErrorCode::Other, 0u32); len];
 
-        let (event, rx) = TaskManagerEvent::construct(task_config);
-        if !self.task_manager.lock().unwrap().send_event(event) {
+        if len > CONSTRUCT_MAX {
+            info!("Service construct: out of size: {}", len);
+            reply.write(&(ErrorCode::Other as i32))?;
             return Err(IpcStatusCode::Failed);
         }
-        let ret = match rx.get() {
-            Some(ret) => ret,
-            None => {
-                error!("End Service construct, failed: receives ret failed");
-                return Err(IpcStatusCode::Failed);
-            }
-        };
-
-        let task_id = match ret {
-            Ok(id) => id,
-            Err(err_code) => {
-                error!("End Service construct, failed: {:?}", err_code);
-                reply.write(&(err_code as i32))?;
-                return Err(IpcStatusCode::Failed);
-            }
-        };
-
-        let title = if data.read::<bool>()? {
-            Some(data.read::<String>()?)
-        } else {
-            None
-        };
-
-        let text = if data.read::<bool>()? {
-            Some(data.read::<String>()?)
-        } else {
-            None
-        };
-        if title.is_some() || text.is_some() {
-            NotificationDispatcher::get_instance()
-                .update_task_customized_notification(task_id, title, text);
-        }
-
-        debug!("Service construct: construct event sent to manager");
 
         let uid = ipc::Skeleton::calling_uid();
         let token_id = ipc::Skeleton::calling_full_token_id();
         let pid = ipc::Skeleton::calling_pid();
 
-        let ret = self.client_manager.subscribe(task_id, pid, uid, token_id);
-        if ret != ErrorCode::ErrOk {
-            error!("End Service subscribe, tid: {}, failed: {:?}", task_id, ret);
-            reply.write(&(ret as i32))?;
-            reply.write(&(task_id as i32))?;
-            return Ok(());
-        }
+        for i in 0..len {
+            let task_config: TaskConfig = match data.read() {
+                Ok(config) => config,
+                Err(_e) => {
+                    set_code_with_index_other(&mut vec, i, ErrorCode::IpcSizeTooLarge);
+                    continue;
+                }
+            };
+            debug!("Service construct: task_config constructed");
+            let (event, rx) = TaskManagerEvent::construct(task_config);
+            if !self.task_manager.lock().unwrap().send_event(event) {
+                set_code_with_index_other(&mut vec, i, ErrorCode::Other);
+                continue;
+            }
+            let ret = match rx.get() {
+                Some(ret) => ret,
+                None => {
+                    error!("End Service construct, failed: receives ret failed");
+                    set_code_with_index_other(&mut vec, i, ErrorCode::Other);
+                    continue;
+                }
+            };
 
+            let task_id = match ret {
+                Ok(id) => id,
+                Err(err_code) => {
+                    error!("End Service construct, failed: {:?}", err_code);
+                    set_code_with_index_other(&mut vec, i, err_code);
+                    continue;
+                }
+            };
+
+            let title = if data.read::<bool>()? {
+                Some(data.read::<String>()?)
+            } else {
+                None
+            };
+
+            let text = if data.read::<bool>()? {
+                Some(data.read::<String>()?)
+            } else {
+                None
+            };
+            if title.is_some() || text.is_some() {
+                NotificationDispatcher::get_instance()
+                    .update_task_customized_notification(task_id, title, text);
+            }
+
+            debug!("Service construct: construct event sent to manager");
+
+            let ret = self.client_manager.subscribe(task_id, pid, uid, token_id);
+            if ret != ErrorCode::ErrOk {
+                error!("End Service subscribe, tid: {}, failed: {:?}", task_id, ret);
+            }
+            if let Some((c, tid)) = vec.get_mut(i) {
+                *c = ret;
+                *tid = task_id;
+            }
+            debug!("End Service construct, succeed with tid: {}", task_id);
+        }
         reply.write(&(ErrorCode::ErrOk as i32))?;
-        debug!("End Service construct, succeed with tid: {}", task_id);
-        reply.write(&(task_id as i32))?;
+        for (c, tid) in vec {
+            reply.write(&(c as i32))?;
+            reply.write(&tid)?;
+        }
         Ok(())
     }
 }

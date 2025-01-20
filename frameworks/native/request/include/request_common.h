@@ -333,5 +333,10 @@ struct Response {
     std::map<std::string, std::vector<std::string>> headers;
 };
 
+struct TaskRet {
+    ExceptionErrorCode code;
+    std::string tid;
+};
+
 } // namespace OHOS::Request
 #endif //REQUEST_COMMON_H

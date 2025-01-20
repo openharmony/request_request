@@ -16,11 +16,10 @@
 #ifndef OHOS_REQUEST_ACTION_H
 #define OHOS_REQUEST_ACTION_H
 
-#include "access_token.h"
-#include "accesstoken_kit.h"
 #include "constant.h"
 #include "request_common.h"
 #include "request_manager.h"
+#include "task_builder.h"
 
 namespace OHOS::Request {
 
@@ -30,7 +29,7 @@ static const std::string UPLOAD_PERMISSION = "ohos.permission.UPLOAD_SESSION_MAN
 class RequestAction {
 public:
     static const std::unique_ptr<RequestAction> &GetInstance();
-    int32_t Create(const Config &config, int32_t seq, std::string &tid);
+    int32_t Create(TaskBuilder &builder, std::string &tid);
     int32_t Start(const std::string &tid);
     int32_t Stop(const std::string &tid);
     int32_t Touch(const std::string &tid, const std::string &token, TaskInfo &info);
@@ -40,6 +39,7 @@ public:
     int32_t Resume(const std::string &tid);
     int32_t SetMaxSpeed(const std::string &tid, const int64_t maxSpeed);
 
+    ExceptionErrorCode CreateTasks(std::vector<TaskBuilder> &builders, std::vector<TaskRet> &rets);
     ExceptionErrorCode StartTasks(
         const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets);
     ExceptionErrorCode StopTasks(

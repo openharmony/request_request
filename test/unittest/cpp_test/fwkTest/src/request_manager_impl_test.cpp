@@ -92,6 +92,7 @@ public:
         (const std::vector<SpeedConfig> &speedConfig, std::vector<ExceptionErrorCode> &rets), (override));
     MOCK_METHOD(ExceptionErrorCode, DisableTaskNotification,
         (const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets));
+    MOCK_METHOD(ExceptionErrorCode, CreateTasks, (const std::vector<Config> &configs, std::vector<TaskRet> &rets));
 };
 
 class RequestManagerImplTest : public testing::Test {

@@ -41,6 +41,39 @@ RequestServiceProxy::RequestServiceProxy(const sptr<IRemoteObject> &object)
 {
 }
 
+ExceptionErrorCode RequestServiceProxy::CreateTasks(const std::vector<Config> &configs, std::vector<TaskRet> &rets)
+{
+    uint32_t len = static_cast<uint32_t>(configs.size());
+    rets.resize(len, {
+                         .code = ExceptionErrorCode::E_OTHER,
+                     });
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteUint32(len);
+    for (auto &config : configs) {
+        WriteConfigData(config, data);
+    }
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REQUEST), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("End Request StartTasks, failed: %{public}d", ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        return ExceptionErrorCode::E_SERVICE_ERROR;
+    }
+    ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
+    if (code != ExceptionErrorCode::E_OK) {
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_01, std::to_string(code));
+        REQUEST_HILOGE("End Request StartTasks, failed: %{public}d", code);
+        return code;
+    }
+    for (uint32_t i = 0; i < len; i++) {
+        rets[i].code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
+        rets[i].tid = std::to_string(reply.ReadInt32());
+    }
+    return ExceptionErrorCode::E_OK;
+}
+
 ExceptionErrorCode RequestServiceProxy::StartTasks(
     const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
 {
@@ -388,9 +421,23 @@ void SerializeNotification(MessageParcel &data, const Notification &notification
 
 int32_t RequestServiceProxy::Create(const Config &config, std::string &tid)
 {
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    REQUEST_HILOGD("Request Create, tid: %{public}s", tid.c_str());
+    std::vector<Config> configs = { config };
+    std::vector<TaskRet> rets;
+    int32_t ret = RequestServiceProxy::CreateTasks(configs, rets);
+    if (ret != ExceptionErrorCode::E_OK) {
+        REQUEST_HILOGE("End Request Create failed: %{public}d", ret);
+        return ret;
+    }
+    if (rets[0].code == ExceptionErrorCode::E_OK) {
+        REQUEST_HILOGD("End Request Create ok, tid: %{public}s", tid.c_str());
+        tid = rets[0].tid;
+    }
+    return rets[0].code;
+}
+
+void RequestServiceProxy::WriteConfigData(const Config &config, MessageParcel &data)
+{
     data.WriteUint32(static_cast<uint32_t>(config.action));
     data.WriteUint32(static_cast<uint32_t>(config.version));
     data.WriteUint32(static_cast<uint32_t>(config.mode));
@@ -419,21 +466,6 @@ int32_t RequestServiceProxy::Create(const Config &config, std::string &tid)
     data.WriteString(config.certificatePins);
     GetVectorData(config, data);
     SerializeNotification(data, config.notification);
-
-    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REQUEST), data, reply, option);
-    if (ret != ERR_NONE) {
-        REQUEST_HILOGE("End send create request, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, config.bundleName, "", std::to_string(ret));
-        return E_SERVICE_ERROR;
-    }
-    int32_t errCode = reply.ReadInt32();
-    if (errCode != E_OK && errCode != E_CHANNEL_NOT_OPEN) {
-        REQUEST_HILOGE("End send create request, failed: %{public}d", errCode);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_01, config.bundleName, "", std::to_string(errCode));
-        return errCode;
-    }
-    tid = std::to_string(reply.ReadInt32());
-    return errCode;
 }
 
 void RequestServiceProxy::GetVectorData(const Config &config, MessageParcel &data)

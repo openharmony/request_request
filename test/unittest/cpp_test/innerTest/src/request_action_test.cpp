@@ -149,9 +149,10 @@ std::string g_tidUser = "550015967"; //test correct tid which will be replaced a
 HWTEST_F(RequestActionTest, CreateTest001, TestSize.Level1)
 {
     EXPECT_NE(RequestAction::GetInstance(), nullptr);
-    Config config;
+    TaskBuilder builder;
+    builder.setAction(Action::ANY);
     std::string tid;
-    auto res = RequestAction::GetInstance()->Create(config, 1, tid);
+    auto res = RequestAction::GetInstance()->Create(builder, tid);
     EXPECT_NE(res, 0);
 }
 
