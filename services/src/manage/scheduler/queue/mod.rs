@@ -233,6 +233,14 @@ impl RunningQueue {
         self.run_count_manager
             .notify_run_count(self.download_queue.len() + self.upload_queue.len());
     }
+
+    pub(crate) fn retry_all_tasks(&mut self) {
+        for task in self.running_tasks.drain() {
+            if let Some(handle) = task.1 {
+                handle.cancel();
+            }
+        }
+    }
 }
 
 struct AbortHandle {
