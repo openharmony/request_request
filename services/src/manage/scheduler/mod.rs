@@ -262,6 +262,9 @@ impl Scheduler {
         self.running_queue.task_finish(uid, task_id);
 
         let database = RequestDb::get_instance();
+        if self.running_queue.try_restart(uid, task_id) {
+            return;
+        }
         let Some(info) = database.get_task_info(task_id) else {
             error!("task {} not found in database", task_id);
             NotificationDispatcher::get_instance().unregister_task(uid, task_id, true);
@@ -269,14 +272,12 @@ impl Scheduler {
         };
         match State::from(info.progress.common_data.state) {
             State::Running | State::Retrying => {
-                if !self.running_queue.try_restart(uid, task_id) {
-                    info!("task {} waiting for task limits", task_id);
-                    RequestDb::get_instance().update_task_state(
-                        task_id,
-                        State::Waiting,
-                        Reason::RunningTaskMeetLimits,
-                    );
-                }
+                info!("task {} waiting for task limits", task_id);
+                RequestDb::get_instance().update_task_state(
+                    task_id,
+                    State::Waiting,
+                    Reason::RunningTaskMeetLimits,
+                );
             }
             State::Failed => {
                 info!("task {} cancel with state Failed", task_id);
@@ -305,7 +306,6 @@ impl Scheduler {
             State::Stopped | State::Removed => {
                 info!("task {} cancel with state Stopped or Removed", task_id);
                 NotificationDispatcher::get_instance().unregister_task(uid, task_id, true);
-                self.running_queue.try_restart(uid, task_id);
             }
             state => {
                 info!(
@@ -314,7 +314,6 @@ impl Scheduler {
                     state,
                     Reason::from(info.common_data.reason)
                 );
-                self.running_queue.try_restart(uid, task_id);
             }
         }
     }
