@@ -445,14 +445,14 @@ bool JsInitialize::ParseNotification(napi_env env, napi_value jsConfig, Config &
 {
     napi_value notification = NapiUtils::GetNamedProperty(env, jsConfig, "notification");
     if (NapiUtils::GetValueType(env, notification) != napi_undefined) {
-        if (NapiUtils::HasNamedProperty(env, notification, "title")) {
+        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, notification, "title")) != napi_undefined) {
             config.notification.title = NapiUtils::Convert2String(env, notification, "title");
             if (config.notification.title->size() > NOTIFICATION_TITLE_MAXIMUM) {
                 errInfo = "Parameter verification failed, notification.title length exceeds the maximum limit";
                 return false;
             }
         }
-        if (NapiUtils::HasNamedProperty(env, notification, "text")) {
+        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, notification, "title")) != napi_undefined) {
             config.notification.text = NapiUtils::Convert2String(env, notification, "text");
             if (config.notification.text->size() > NOTIFICATION_TEXT_MAXIMUM) {
                 errInfo = "Parameter verification failed, notification.text length exceeds the maximum limit";
