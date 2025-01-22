@@ -89,5 +89,8 @@ ohos_rust_unittest("rust_ffrt_rs_ut_test") {
 
 group("unittest") {
   testonly = true
-  deps = [ ":rust_ffrt_rs_ut_test" ]
+  deps = []
+  if (!use_clang_coverage) {
+    deps = [ ":rust_ffrt_rs_ut_test" ]
+  }
 }
