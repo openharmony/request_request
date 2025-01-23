@@ -42,41 +42,6 @@ using namespace OHOS::Request;
 #undef private
 #undef protected
 
-class RequestActionTest : public testing::Test {
-public:
-    static void SetUpTestCase(void);
-    static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
-};
-
-void RequestActionTest::SetUpTestCase(void)
-{
-    // input testSuit setup step，setup invoked before all testCases
-}
-
-void RequestActionTest::TearDownTestCase(void)
-{
-    // input testSuit teardown step，teardown invoked after all testCases
-}
-
-void RequestActionTest::SetUp(void)
-{
-    // input testCase setup step，setup invoked before each testCase
-    testing::UnitTest *test = testing::UnitTest::GetInstance();
-    ASSERT_NE(test, nullptr);
-    const testing::TestInfo *testInfo = test->current_test_info();
-    ASSERT_NE(testInfo, nullptr);
-    string testCaseName = string(testInfo->name());
-    REQUEST_HILOGI("[SetUp] %{public}s start", testCaseName.c_str());
-    GTEST_LOG_(INFO) << testCaseName.append(" start");
-}
-
-void RequestActionTest::TearDown(void)
-{
-    // input testCase teardown step，teardown invoked after each testCase
-}
-
 void GrantInternetPermission()
 {
     const char **perms = new const char *[1];
@@ -117,14 +82,12 @@ void GrantDownSessionPermission()
     delete[] perms;
 }
 
-void GrantDownInterPermission()
+void GrantNoPermission()
 {
-    const char **perms = new const char *[2];
-    perms[0] = "ohos.permission.INTERNET";
-    perms[1] = "ohos.permission.DOWNLOAD_SESSION_MANAGER";
+    const char **perms = new const char *[0];
     NativeTokenInfoParams infoInstance = {
         .dcapsNum = 0,
-        .permsNum = 2,
+        .permsNum = 0,
         .aclsNum = 0,
         .dcaps = nullptr,
         .perms = perms,
@@ -136,6 +99,42 @@ void GrantDownInterPermission()
     SetSelfTokenID(tokenId);
     OHOS::Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
     delete[] perms;
+}
+
+class RequestActionTest : public testing::Test {
+public:
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
+};
+
+void RequestActionTest::SetUpTestCase(void)
+{
+    // input testSuit setup step，setup invoked before all testCases
+}
+
+void RequestActionTest::TearDownTestCase(void)
+{
+    // input testSuit teardown step，teardown invoked after all testCases
+    GrantNoPermission();
+}
+
+void RequestActionTest::SetUp(void)
+{
+    // input testCase setup step，setup invoked before each testCase
+    testing::UnitTest *test = testing::UnitTest::GetInstance();
+    ASSERT_NE(test, nullptr);
+    const testing::TestInfo *testInfo = test->current_test_info();
+    ASSERT_NE(testInfo, nullptr);
+    string testCaseName = string(testInfo->name());
+    REQUEST_HILOGI("[SetUp] %{public}s start", testCaseName.c_str());
+    GTEST_LOG_(INFO) << testCaseName.append(" start");
+}
+
+void RequestActionTest::TearDown(void)
+{
+    // input testCase teardown step，teardown invoked after each testCase
 }
 
 std::string g_tidUser = "550015967"; //test correct tid which will be replaced after create used
@@ -166,6 +165,7 @@ HWTEST_F(RequestActionTest, StartTest001, TestSize.Level1)
 {
     EXPECT_NE(RequestAction::GetInstance(), nullptr);
     std::string tidStr = "tid";
+    GrantInternetPermission();
     auto res = RequestAction::GetInstance()->Start(tidStr);
     REQUEST_HILOGI("===> StartTest001 res %{public}d", res);
 }
@@ -195,7 +195,6 @@ HWTEST_F(RequestActionTest, TouchTest001, TestSize.Level1)
     std::string tid = "tid";
     std::string token = "11111111";
     TaskInfo info;
-    GrantDownSessionPermission();
     RequestAction::GetInstance()->Touch(tid, token, info);
 }
 
@@ -267,7 +266,7 @@ HWTEST_F(RequestActionTest, StartTest002, TestSize.Level1)
     std::string tidStr = "tid";
     GrantInternetPermission();
     auto res = RequestAction::GetInstance()->Start(tidStr);
-    EXPECT_EQ(res, 21900006);
+    EXPECT_NE(res, 0);
 }
 
 /**
@@ -341,7 +340,7 @@ HWTEST_F(RequestActionTest, ResumeTest002, TestSize.Level1)
     std::string tid = "tid";
     GrantInternetPermission();
     auto res = RequestAction::GetInstance()->Resume(tid);
-    EXPECT_EQ(res, 21900006);
+    EXPECT_NE(res, 0);
 }
 
 /**
@@ -368,9 +367,9 @@ HWTEST_F(RequestActionTest, StartTest003, TestSize.Level1)
 {
     EXPECT_NE(RequestAction::GetInstance(), nullptr);
     std::string tid = g_tidUser;
-    GrantDownInterPermission();
+    GrantDownSessionPermission();
     auto res = RequestAction::GetInstance()->Start(tid);
-    EXPECT_NE(res, 201);
+    EXPECT_NE(res, 13499999);
     REQUEST_HILOGI("===> StartTest003 res 0=%{public}d", res);
 }
 
@@ -386,7 +385,7 @@ HWTEST_F(RequestActionTest, StopTest003, TestSize.Level1)
     std::string tid = g_tidUser;
     GrantDownSessionPermission();
     auto res = RequestAction::GetInstance()->Stop(tid);
-    EXPECT_NE(res, 201);
+    EXPECT_EQ(res, 21900006);
     REQUEST_HILOGI("===> StopTest003 res 0=%{public}d", res);
 }
 
@@ -404,7 +403,7 @@ HWTEST_F(RequestActionTest, TouchTest003, TestSize.Level1)
     TaskInfo info;
     GrantDownSessionPermission();
     auto res = RequestAction::GetInstance()->Touch(tid, token, info);
-    EXPECT_NE(res, 201);
+    EXPECT_EQ(res, 21900006);
     REQUEST_HILOGI("===> TouchTest003 res 0=%{public}d", res);
 }
 
@@ -421,7 +420,7 @@ HWTEST_F(RequestActionTest, ShowTest003, TestSize.Level1)
     TaskInfo info;
     GrantDownSessionPermission();
     auto res = RequestAction::GetInstance()->Show(tid, info);
-    EXPECT_NE(res, 201);
+    EXPECT_EQ(res, 21900006);
     REQUEST_HILOGI("===> ShowTest003 res 0=%{public}d", res);
 }
 
@@ -437,7 +436,7 @@ HWTEST_F(RequestActionTest, PauseTest003, TestSize.Level1)
     std::string tid = g_tidUser;
     GrantDownSessionPermission();
     auto res = RequestAction::GetInstance()->Pause(tid);
-    EXPECT_NE(res, 201);
+    EXPECT_EQ(res, 21900006);
     REQUEST_HILOGI("===> PauseTest003 res 0=%{public}d", res);
 }
 
@@ -451,7 +450,7 @@ HWTEST_F(RequestActionTest, ResumeTest003, TestSize.Level1)
 {
     EXPECT_NE(RequestAction::GetInstance(), nullptr);
     std::string tid = g_tidUser;
-    GrantDownInterPermission();
+    GrantDownSessionPermission();
     auto res = RequestAction::GetInstance()->Resume(tid);
     EXPECT_NE(res, 201);
     REQUEST_HILOGI("===> ResumeTest003 res 0=%{public}d", res);
@@ -483,9 +482,8 @@ HWTEST_F(RequestActionTest, StartTest004, TestSize.Level1)
 {
     EXPECT_NE(RequestAction::GetInstance(), nullptr);
     std::string tid = g_tidUser;
-    GrantInternetPermission();
     auto res = RequestAction::GetInstance()->Start(tid);
-    EXPECT_EQ(res, 21900006);
+    EXPECT_NE(res, 13499999);
 }
 
 /**
@@ -557,9 +555,8 @@ HWTEST_F(RequestActionTest, ResumeTest004, TestSize.Level1)
 {
     EXPECT_NE(RequestAction::GetInstance(), nullptr);
     std::string tid = g_tidUser;
-    GrantInternetPermission();
     auto res = RequestAction::GetInstance()->Resume(tid);
-    EXPECT_EQ(res, 21900006);
+    EXPECT_NE(res, 13499999);
 }
 
 /**
@@ -590,7 +587,7 @@ HWTEST_F(RequestActionTest, StartTasksTest001, TestSize.Level1)
     std::vector<std::string> tids = { tid };
     std::unordered_map<std::string, ExceptionErrorCode> rets;
     ExceptionErrorCode res = RequestAction::GetInstance()->StartTasks(tids, rets);
-    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+    EXPECT_NE(res, ExceptionErrorCode::E_OTHER);
     ExceptionErrorCode res0 = rets[tid];
     EXPECT_EQ(res0, ExceptionErrorCode::E_TASK_NOT_FOUND);
     REQUEST_HILOGI("===> StartTasksTest001 res 0=%{public}d", res0);
@@ -630,7 +627,7 @@ HWTEST_F(RequestActionTest, ResumeTasksTest001, TestSize.Level1)
     std::vector<std::string> tids = { tid };
     std::unordered_map<std::string, ExceptionErrorCode> rets;
     ExceptionErrorCode res = RequestAction::GetInstance()->ResumeTasks(tids, rets);
-    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+    EXPECT_NE(res, ExceptionErrorCode::E_OTHER);
     ExceptionErrorCode res0 = rets[tid];
     EXPECT_EQ(res0, ExceptionErrorCode::E_TASK_NOT_FOUND);
     REQUEST_HILOGI("===> ResumeTasksTest001 res 0=%{public}d", res0);

@@ -17,10 +17,12 @@ import requestCreateTaskTest from './RequestCreateTask.test.ets';
 import requestOperateTaskTest from './RequestOperateTask.test.ets';
 import requestDownloadFileTest from './RequestDownloadFile.test.ets';
 import requestUploadFileTest from './RequestUploadFile.test.ets';
+import requestTaskGroupTest from './RequestTaskGroup.test.ets'
 
 export default function testsuite() {
   requestCreateTaskTest();
   requestOperateTaskTest();
   requestDownloadFileTest();
   requestUploadFileTest();
+  requestTaskGroupTest();
 }
