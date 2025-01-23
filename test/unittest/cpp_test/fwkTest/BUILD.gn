@@ -28,6 +28,7 @@ ohos_unittest("fwkTest") {
   ]
 
   sources = [
+    "../../../../common/sys_event/src/sys_event.cpp",
     "../../../../frameworks/native/request/src/parcel_helper.cpp",
     "../../../../frameworks/native/request/src/request.cpp",
     "../../../../frameworks/native/request/src/request_manager.cpp",
@@ -45,10 +46,7 @@ ohos_unittest("fwkTest") {
     "src/running_task_count_test.cpp",
   ]
 
-  deps = [
-    "../../../../common/sys_event:request_sysevent",
-    "//third_party/googletest:gmock_main",
-  ]
+  deps = [ "//third_party/googletest:gmock_main" ]
 
   external_deps = [
     "ability_base:base",
@@ -64,6 +62,7 @@ ohos_unittest("fwkTest") {
     "distributed_notification_service:ans_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",
     "openssl:libcrypto_shared",
