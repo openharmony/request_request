@@ -324,25 +324,25 @@ impl RequestTask {
         let mut current_index = 0;
         {
             let mut progress = self.progress.lock().unwrap();
-            if self.upload_resume.load(Ordering::SeqCst) {
-                let total = progress.common_data.total_processed;
-                let file_sizes = &progress.sizes;
-                let mut current_size = 0;
-                for (index, &file_size) in file_sizes.iter().enumerate() {
-                    current_size += file_size as usize;
-                    if total <= current_size {
-                        current_index = index;
-                        break;
-                    }
+
+            let total = progress.common_data.total_processed;
+            let file_sizes = &progress.sizes;
+            let mut current_size = 0;
+            for (index, &file_size) in file_sizes.iter().enumerate() {
+                current_size += file_size as usize;
+                if total <= current_size {
+                    current_index = index;
+                    break;
                 }
-                self.upload_resume.store(false, Ordering::SeqCst);
-                progress.common_data.index = current_index;
-                progress.common_data.total_processed =
-                    progress.processed.iter().take(current_index).sum();
-            } else {
-                progress.common_data.index = 0;
-                progress.common_data.total_processed = 0;
             }
+            if self.upload_resume.load(Ordering::SeqCst) {
+                self.upload_resume.store(false, Ordering::SeqCst);
+            } else {
+                progress.processed[current_index] = 0;
+            }
+            progress.common_data.index = current_index;
+            progress.common_data.total_processed =
+                progress.processed.iter().take(current_index).sum();
         }
 
         for index in start..size {
