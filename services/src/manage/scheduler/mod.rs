@@ -239,6 +239,13 @@ impl Scheduler {
         }
 
         if let Some(info) = database.get_task_qos_info(task_id) {
+            if info.state == State::Failed.repr {
+                if let Some(task_info) = database.get_task_info(task_id) {
+                    Scheduler::notify_fail(task_info, &self.client_manager);
+                    return;
+                }
+            }
+
             if info.state != State::Running.repr && info.state != State::Waiting.repr {
                 return;
             }
@@ -260,11 +267,11 @@ impl Scheduler {
     ) {
         info!("scheduler task {} canceled", task_id);
         self.running_queue.task_finish(uid, task_id);
-
-        let database = RequestDb::get_instance();
         if self.running_queue.try_restart(uid, task_id) {
             return;
         }
+
+        let database = RequestDb::get_instance();
         let Some(info) = database.get_task_info(task_id) else {
             error!("task {} not found in database", task_id);
             NotificationDispatcher::get_instance().unregister_task(uid, task_id, true);
@@ -281,27 +288,8 @@ impl Scheduler {
             }
             State::Failed => {
                 info!("task {} cancel with state Failed", task_id);
-                if let Some((front, back)) = task_count.get_mut(&uid) {
-                    match mode {
-                        Mode::FrontEnd => {
-                            if *front > 0 {
-                                *front -= 1;
-                            }
-                        }
-                        _ => {
-                            if *back > 0 {
-                                *back -= 1;
-                            }
-                        }
-                    }
-                }
-                Notifier::fail(&self.client_manager, info.build_notify_data());
-                NotificationDispatcher::get_instance().publish_failed_notification(&info);
-                #[cfg(feature = "oh")]
-                {
-                    let reason = Reason::from(info.common_data.reason);
-                    Self::sys_event(info, reason);
-                }
+                Scheduler::reduce_task_count(uid, mode, task_count);
+                Scheduler::notify_fail(info, &self.client_manager);
             }
             State::Stopped | State::Removed => {
                 info!("task {} cancel with state Stopped or Removed", task_id);
@@ -336,14 +324,40 @@ impl Scheduler {
 
         database.update_task_state(task_id, State::Failed, reason);
         if let Some(info) = database.get_task_info(task_id) {
-            Notifier::fail(&self.client_manager, info.build_notify_data());
-            NotificationDispatcher::get_instance().publish_failed_notification(&info);
-            #[cfg(feature = "oh")]
-            Self::sys_event(info, reason);
+            Scheduler::notify_fail(info, &self.client_manager);
         }
     }
+
+    fn notify_fail(info: TaskInfo, client_manager: &ClientManagerEntry) {
+        Notifier::fail(client_manager, info.build_notify_data());
+        NotificationDispatcher::get_instance().publish_failed_notification(&info);
+        #[cfg(feature = "oh")]
+        Self::sys_event(info);
+    }
+
+    pub(crate) fn reduce_task_count(
+        uid: u64,
+        mode: Mode,
+        task_count: &mut HashMap<u64, (usize, usize)>,
+    ) {
+        if let Some((front, back)) = task_count.get_mut(&uid) {
+            match mode {
+                Mode::FrontEnd => {
+                    if *front > 0 {
+                        *front -= 1;
+                    }
+                }
+                _ => {
+                    if *back > 0 {
+                        *back -= 1;
+                    }
+                }
+            }
+        }
+    }
+
     #[cfg(feature = "oh")]
-    pub(crate) fn sys_event(info: TaskInfo, reason: Reason) {
+    pub(crate) fn sys_event(info: TaskInfo) {
         use hisysevent::{build_number_param, build_str_param};
 
         use crate::sys_event::SysEvent;
@@ -355,6 +369,7 @@ impl Scheduler {
             Action::Upload => "UPLOAD",
             _ => "UNKNOWN",
         };
+        let reason = Reason::from(info.common_data.reason);
 
         SysEvent::task_fault()
             .param(build_str_param!(crate::sys_event::TASKS_TYPE, action))
