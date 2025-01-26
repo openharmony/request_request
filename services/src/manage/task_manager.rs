@@ -30,7 +30,7 @@ use super::database::RequestDb;
 use super::events::{
     QueryEvent, ScheduleEvent, ServiceEvent, StateEvent, TaskEvent, TaskManagerEvent,
 };
-use crate::config::{Action, Mode};
+use crate::config::Action;
 use crate::error::ErrorCode;
 use crate::info::TaskInfo;
 use crate::manage::network::register_network_change;
@@ -234,45 +234,19 @@ impl TaskManager {
         debug!("TaskManager handles task event {:?}", event);
 
         match event {
-            TaskEvent::Completed(task_id, uid, mode) => {
-                if let Some((front, back)) = self.task_count.get_mut(&uid) {
-                    match mode {
-                        Mode::FrontEnd => {
-                            if *front > 0 {
-                                *front -= 1;
-                            }
-                        }
-                        _ => {
-                            if *back > 0 {
-                                *back -= 1;
-                            }
-                        }
-                    }
-                }
-                self.scheduler.task_completed(uid, task_id);
-            }
             TaskEvent::Subscribe(task_id, token_id, tx) => {
                 let _ = tx.send(self.check_subscriber(task_id, token_id));
+            }
+            TaskEvent::Completed(task_id, uid, mode) => {
+                Scheduler::reduce_task_count(uid, mode, &mut self.task_count);
+                self.scheduler.task_completed(uid, task_id);
             }
             TaskEvent::Running(task_id, uid, mode) => {
                 self.scheduler
                     .task_cancel(uid, task_id, mode, &mut self.task_count);
             }
             TaskEvent::Failed(task_id, uid, reason, mode) => {
-                if let Some((front, back)) = self.task_count.get_mut(&uid) {
-                    match mode {
-                        Mode::FrontEnd => {
-                            if *front > 0 {
-                                *front -= 1;
-                            }
-                        }
-                        _ => {
-                            if *back > 0 {
-                                *back -= 1;
-                            }
-                        }
-                    }
-                }
+                Scheduler::reduce_task_count(uid, mode, &mut self.task_count);
                 self.scheduler.task_failed(uid, task_id, reason);
             }
             TaskEvent::Offline(task_id, uid, mode) => {
