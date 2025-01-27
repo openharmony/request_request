@@ -22,8 +22,8 @@
 namespace OHOS {
 namespace Request {
 //event
-constexpr const char *STATISTIC_EVENT = "STATISTIC_EVENT";
-constexpr const char *FAULT_EVENT = "FAULT_EVENT";
+constexpr const char *STATISTIC_EVENT = "EXEC_ERROR";
+constexpr const char *FAULT_EVENT = "EXEC_FAULT";
 
 enum DfxErrorCode : uint32_t {
     APP_ERROR_00 = 0x00000000,

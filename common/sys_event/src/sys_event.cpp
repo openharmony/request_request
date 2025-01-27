@@ -27,7 +27,7 @@ namespace Request {
 
 namespace {
 //event params
-const std::string PARAM_DFX_CODE = "DFX_CODE";
+const std::string PARAM_DFX_CODE = "CODE";
 const std::string PARAM_BUNDLE_NAME = "BUNDLE_NAME";
 const std::string PARAM_MODULE_NAME = "MODULE_NAME";
 const std::string PARAM_EXTRA_INFO = "EXTRA_INFO";
