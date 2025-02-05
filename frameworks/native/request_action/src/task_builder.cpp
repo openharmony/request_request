@@ -131,7 +131,7 @@ TaskBuilder &TaskBuilder::setProxy(const std::string &proxy)
     return *this;
 }
 
-TaskBuilder &TaskBuilder::setIndex(int index)
+TaskBuilder &TaskBuilder::setIndex(uint32_t index)
 {
     this->config.index = index;
     return *this;
@@ -167,7 +167,7 @@ TaskBuilder &TaskBuilder::setToken(const std::string &token)
     return *this;
 }
 
-TaskBuilder &TaskBuilder::setPriority(int priority)
+TaskBuilder &TaskBuilder::setPriority(uint32_t priority)
 {
     this->config.priority = priority;
     return *this;

@@ -40,13 +40,13 @@ public:
     TaskBuilder &setRetry(bool retry);
     TaskBuilder &setRedirect(bool redirect);
     TaskBuilder &setProxy(const std::string &proxy);
-    TaskBuilder &setIndex(int index);
+    TaskBuilder &setIndex(uint32_t index);
     TaskBuilder &setBegins(int begins);
     TaskBuilder &setEnds(int ends);
     TaskBuilder &setGauge(bool gauge);
     TaskBuilder &setPrecise(bool precise);
     TaskBuilder &setToken(const std::string &token);
-    TaskBuilder &setPriority(int priority);
+    TaskBuilder &setPriority(uint32_t priority);
     TaskBuilder &setExtras(const std::map<std::string, std::string> &extras);
 
 public:
