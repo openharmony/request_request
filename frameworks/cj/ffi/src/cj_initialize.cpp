@@ -46,8 +46,9 @@ static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
 
 static constexpr uint32_t FILE_PERMISSION = 0644;
 
-static const std::string AREA1 = "el1";
-static const std::string AREA2 = "el2";
+static const std::string AREA1 = "/data/storage/el1/base";
+static const std::string AREA2 = "/data/storage/el2/base";
+static const std::string AREA5 = "/data/storage/el5/base";
 
 ExceptionError CJInitialize::ParseBundleName(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
                                              std::string &bundleName)
@@ -335,27 +336,12 @@ bool CJInitialize::CheckPathBaseDir(const std::string &filepath, std::string &ba
     if (!CJInitialize::GetBaseDir(baseDir)) {
         return false;
     }
-    if (filepath.find(baseDir) == 0) {
+
+    if ((filepath.find(AREA1) == 0) || filepath.find(AREA2) == 0 || filepath.find(AREA5) == 0) {
         return true;
     }
-    // check baseDir replaced with el2
-    if (baseDir.find(AREA1) != std::string::npos) {
-        baseDir = baseDir.replace(baseDir.find(AREA1), AREA1.length(), AREA2);
-        if (filepath.find(baseDir) == 0) {
-            return true;
-        }
-        REQUEST_HILOGE("File dir not include base dir: %{public}s", baseDir.c_str());
-        return false;
-    }
-    // check baseDir replaced with el1
-    if (baseDir.find(AREA2) != std::string::npos) {
-        baseDir = baseDir.replace(baseDir.find(AREA2), AREA2.length(), AREA1);
-        if (filepath.find(baseDir) == 0) {
-            return true;
-        }
-        REQUEST_HILOGE("File dir not include base dir: %{public}s", baseDir.c_str());
-        return false;
-    }
+
+    REQUEST_HILOGE("File dir not include base dir: %{public}s", baseDir.c_str());
     return false;
 }
 
@@ -503,7 +489,7 @@ ExceptionError CJInitialize::UploadBodyFileProc(std::string &fileName, Config &c
     }
 
     if (bodyFd >= 0) {
-        chmod(fileName.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
+        chmod(fileName.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
         close(bodyFd);
     }
     config.bodyFileNames.push_back(fileName);
@@ -563,7 +549,7 @@ ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config
             close(fd);
             return err;
         } else {
-            chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
+            chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
         }
 
         if (config.overwrite) {
@@ -592,7 +578,7 @@ ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config
             err.errInfo = "Failed to open file errno " + std::to_string(errno);
             return err;
         }
-        chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
+        chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
         close(fd);
     }
     return err;

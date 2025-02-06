@@ -122,18 +122,20 @@ bool CJRequestTask::SetPathPermission(const std::string &filepath)
     }
 
     AddPathMap(filepath, baseDir);
-    for (auto it : pathMap_) {
-        if (it.second <= 0) {
-            continue;
-        }
-        if (AclSetAccess(it.first, SA_PERMISSION_X) != ACL_SUCC) {
-            REQUEST_HILOGE("AclSetAccess Parent Dir Failed.");
-            return false;
+    {
+        std::lock_guard<std::mutex> lockGuard(pathMutex_);
+        for (auto it : pathMap_) {
+            if (it.second <= 0) {
+                continue;
+            }
+            if (AclSetAccess(it.first, SA_PERMISSION_X) != ACL_SUCC) {
+                REQUEST_HILOGE("AclSetAccess Parent Dir Failed.");
+                return false;
+            }
         }
     }
 
-    std::string childDir = filepath.substr(0, filepath.rfind("/"));
-    if (AclSetAccess(childDir, SA_PERMISSION_RWX) != ACL_SUCC) {
+    if (AclSetAccess(filepath, SA_PERMISSION_RWX) != ACL_SUCC) {
         REQUEST_HILOGE("AclSetAccess Child Dir Failed.");
         return false;
     }
@@ -216,7 +218,7 @@ void CJRequestTask::RemovePathMap(const std::string &filepath)
         return;
     }
 
-    if (chmod(filepath.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) != 0) {
+    if (chmod(filepath.c_str(), S_IRUSR | S_IWUSR | S_IRGRP) != 0) {
         REQUEST_HILOGE("File remove WOTH access Failed.");
     }
 

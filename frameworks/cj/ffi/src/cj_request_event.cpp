@@ -82,7 +82,7 @@ ExceptionErrorCode CJRequestEvent::StartExec(const CJRequestTask *task)
     FileSpec file = config.files[0];
     if (CJInitialize::FindDir(file.uri) && config.action == Action::DOWNLOAD) {
         REQUEST_HILOGD("Found the downloaded file: %{public}s.", file.uri.c_str());
-        if (chmod(file.uri.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH) != 0) {
+        if (chmod(file.uri.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) != 0) {
             REQUEST_HILOGD("File add OTH access Failed.");
         }
         if (!CJRequestTask::SetPathPermission(file.uri)) {
