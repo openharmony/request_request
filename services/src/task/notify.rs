@@ -16,6 +16,7 @@ use std::collections::HashMap;
 use super::config::{Action, Version};
 use super::info::State;
 use super::reason::Reason;
+use crate::FileSpec;
 
 // NotifyData's callback arg
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
@@ -62,6 +63,26 @@ pub(crate) struct EachFileStatus {
     pub(crate) path: String,
     pub(crate) reason: Reason,
     pub(crate) message: String,
+}
+
+impl EachFileStatus {
+    pub(crate) fn create_each_file_status(
+        file_specs: &[FileSpec],
+        index: usize,
+        reason: Reason,
+    ) -> Vec<EachFileStatus> {
+        let mut vec = Vec::new();
+        for (i, file_spec) in file_specs.iter().enumerate() {
+            let code = if i >= index { reason } else { Reason::Default };
+            let each_file_status = EachFileStatus {
+                path: file_spec.path.clone(),
+                reason: code,
+                message: code.to_str().into(),
+            };
+            vec.push(each_file_status);
+        }
+        vec
+    }
 }
 
 impl Progress {

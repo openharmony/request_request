@@ -651,45 +651,6 @@ std::vector<CFileSpec> BlobToCFileSpec(const std::vector<uint8_t> &blob)
     return vec;
 }
 
-std::vector<uint8_t> CEachFileStatusToBlob(const CEachFileStatus *cpointer, uint32_t length)
-{
-    std::vector<uint8_t> blob;
-    for (uint32_t i = 0; i < length; ++i) {
-        const CEachFileStatus &obj = cpointer[i];
-        const uint8_t *objBytes = reinterpret_cast<const uint8_t *>(&obj);
-        blob.insert(blob.end(), objBytes, objBytes + sizeof(CEachFileStatus));
-        blob.insert(blob.end(), obj.path.cStr, obj.path.cStr + obj.path.len);
-        blob.insert(blob.end(), &obj.reason, &obj.reason + sizeof(uint8_t));
-        blob.insert(blob.end(), obj.message.cStr, obj.message.cStr + obj.message.len);
-    }
-    return blob;
-}
-
-std::vector<CEachFileStatus> BlobToCEachFileStatus(const std::vector<uint8_t> &blob)
-{
-    std::vector<CEachFileStatus> vec;
-    size_t position = 0;
-    while (position < blob.size()) {
-        CEachFileStatus obj;
-        memcpy_s(&obj, sizeof(CEachFileStatus), blob.data() + position, sizeof(CEachFileStatus));
-        position += sizeof(CEachFileStatus);
-
-        obj.path.cStr = new char[obj.path.len];
-        memcpy_s(obj.path.cStr, obj.path.len, blob.data() + position, obj.path.len);
-        position += obj.path.len;
-
-        memcpy_s(&obj.reason, sizeof(uint8_t), blob.data() + position, sizeof(uint8_t));
-        position += sizeof(uint8_t);
-
-        obj.message.cStr = new char[obj.message.len];
-        memcpy_s(obj.message.cStr, obj.message.len, blob.data() + position, obj.message.len);
-        position += obj.message.len;
-
-        vec.push_back(obj);
-    }
-    return vec;
-}
-
 std::vector<uint8_t> CStringToBlob(const CStringWrapper *cpointer, uint32_t length)
 {
     std::vector<uint8_t> blob;
@@ -753,26 +714,8 @@ std::vector<FileSpec> VecToFileSpec(const std::vector<CFileSpec> &cvec)
     return vec;
 }
 
-// convert vector<CEachFileStatus> to vector<EachFileStatus>
-std::vector<EachFileStatus> VecToEachFileStatus(const std::vector<CEachFileStatus> &cvec)
-{
-    std::vector<EachFileStatus> vec;
-    for (const CEachFileStatus &obj : cvec) {
-        EachFileStatus eachFileStatus;
-        eachFileStatus.path = std::string(obj.path.cStr, obj.path.len);
-        eachFileStatus.reason = obj.reason;
-        eachFileStatus.message = std::string(obj.message.cStr, obj.message.len);
-        vec.push_back(std::move(eachFileStatus));
-        //release memory of obj(new)
-        delete[] obj.path.cStr;
-        delete[] obj.message.cStr;
-    }
-    return vec;
-}
-
 template<typename T> bool WriteUpdateData(OHOS::NativeRdb::ValuesBucket &insertValues, T *info)
 {
-    std::vector<uint8_t> eachFileStatusBlob = CEachFileStatusToBlob(info->eachFileStatusPtr, info->eachFileStatusLen);
     // write to insertValues
     insertValues.PutString("mime_type", std::string(info->mimeType.cStr, info->mimeType.len));
     insertValues.PutInt("state", info->progress.commonData.state);
@@ -781,7 +724,6 @@ template<typename T> bool WriteUpdateData(OHOS::NativeRdb::ValuesBucket &insertV
     insertValues.PutString("sizes", std::string(info->progress.sizes.cStr, info->progress.sizes.len));
     insertValues.PutString("processed", std::string(info->progress.processed.cStr, info->progress.processed.len));
     insertValues.PutString("extras", std::string(info->progress.extras.cStr, info->progress.extras.len));
-    insertValues.PutBlob("each_file_status", eachFileStatusBlob);
     return true;
 }
 
@@ -852,14 +794,11 @@ void FillOtherTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskInfo
 
     std::vector<uint8_t> formItemsBlob;
     std::vector<uint8_t> formSpecsBlob;
-    std::vector<uint8_t> eachFileStatusBlob;
 
     set->GetBlob(25, formItemsBlob); // Line 25 is 'form_items'
     info.formItems = VecToFormItem(BlobToCFormItem(formItemsBlob));
     set->GetBlob(26, formSpecsBlob); // Line 26 is 'file_specs'
     info.fileSpecs = VecToFileSpec(BlobToCFileSpec(formSpecsBlob));
-    set->GetBlob(27, eachFileStatusBlob); // Line 27 is 'each_file_status'
-    info.eachFileStatus = VecToEachFileStatus(BlobToCEachFileStatus(eachFileStatusBlob));
 }
 
 CProgress BuildCProgress(const Progress &progress)
@@ -883,16 +822,12 @@ CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo)
 
     uint32_t fileSpecsLen = taskInfo.fileSpecs.size();
     CFileSpec *fileSpecsPtr = new CFileSpec[fileSpecsLen];
-    CEachFileStatus *eachFileStatusPtr = new CEachFileStatus[fileSpecsLen];
     for (uint32_t i = 0; i < fileSpecsLen; i++) {
         fileSpecsPtr[i].name = WrapperCString(taskInfo.fileSpecs[i].name);
         fileSpecsPtr[i].path = WrapperCString(taskInfo.fileSpecs[i].path);
         fileSpecsPtr[i].fileName = WrapperCString(taskInfo.fileSpecs[i].fileName);
         fileSpecsPtr[i].mimeType = WrapperCString(taskInfo.fileSpecs[i].mimeType);
         fileSpecsPtr[i].is_user_file = taskInfo.fileSpecs[i].is_user_file;
-        eachFileStatusPtr[i].path = WrapperCString(taskInfo.eachFileStatus[i].path);
-        eachFileStatusPtr[i].reason = taskInfo.eachFileStatus[i].reason;
-        eachFileStatusPtr[i].message = WrapperCString(taskInfo.eachFileStatus[i].message);
     }
 
     CTaskInfo *cTaskInfo = new CTaskInfo;
@@ -908,8 +843,6 @@ CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo)
     cTaskInfo->description = WrapperCString(taskInfo.description);
     cTaskInfo->mimeType = WrapperCString(taskInfo.mimeType);
     cTaskInfo->progress = BuildCProgress(taskInfo.progress);
-    cTaskInfo->eachFileStatusPtr = eachFileStatusPtr;
-    cTaskInfo->eachFileStatusLen = fileSpecsLen;
     cTaskInfo->commonData = taskInfo.commonData;
     return cTaskInfo;
 }
@@ -1044,15 +977,12 @@ bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo)
     OHOS::NativeRdb::ValuesBucket values;
     values.PutLong("mtime", updateInfo->mtime);
     values.PutLong("tries", updateInfo->tries);
-    std::vector<uint8_t> eachFileStatusBlob =
-        CEachFileStatusToBlob(updateInfo->eachFileStatusPtr, updateInfo->eachFileStatusLen);
     // write to insertValues
     values.PutString("mime_type", std::string(updateInfo->mimeType.cStr, updateInfo->mimeType.len));
     values.PutLong("idx", updateInfo->progress.commonData.index);
     values.PutLong("total_processed", updateInfo->progress.commonData.totalProcessed);
     values.PutString("processed", std::string(updateInfo->progress.processed.cStr, updateInfo->progress.processed.len));
     values.PutString("extras", std::string(updateInfo->progress.extras.cStr, updateInfo->progress.extras.len));
-    values.PutBlob("each_file_status", eachFileStatusBlob);
 
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
@@ -1087,7 +1017,7 @@ int GetTaskInfoInner(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskIn
             .Query(rdbPredicates, { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry",
                                       "tries", "version", "priority", "bundle", "url", "data", "token", "title",
                                       "description", "mime_type", "state", "idx", "total_processed", "sizes",
-                                      "processed", "extras", "form_items", "file_specs", "each_file_status" });
+                                      "processed", "extras", "form_items", "file_specs" });
     if (resultSet == nullptr || resultSet->GoToFirstRow() != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("result set is nullptr or go to first row failed");
         return OHOS::Request::QUERY_ERR;
