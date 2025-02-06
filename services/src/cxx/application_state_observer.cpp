@@ -22,6 +22,7 @@
 #include "app_process_data.h"
 #include "iservice_registry.h"
 #include "log.h"
+#include "sys_event.h"
 #include "sys_mgr_client.h"
 #include "system_ability.h"
 #include "system_ability_definition.h"
@@ -52,6 +53,7 @@ bool AppProcessState::RegisterAppStateChanged(RegCallBack &&callback)
     auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityManager == nullptr) {
         REQUEST_HILOGE("get SystemAbilityManager failed.");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_00, "Get SAM failed");
         return false;
     }
     auto systemAbility = systemAbilityManager->GetSystemAbility(APP_MGR_SERVICE_ID);

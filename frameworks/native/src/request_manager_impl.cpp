@@ -33,6 +33,7 @@
 #include "response_message_receiver.h"
 #include "result_set.h"
 #include "runcount_notify_stub.h"
+#include "sys_event.h"
 #include "system_ability_definition.h"
 
 namespace OHOS::Request {
@@ -458,11 +459,13 @@ sptr<RequestServiceInterface> RequestManagerImpl::GetRequestServiceProxy()
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityManager == nullptr) {
         REQUEST_HILOGE("Getting SystemAbilityManager failed.");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_00, "Get SAM failed");
         return nullptr;
     }
     auto systemAbility = systemAbilityManager->GetSystemAbility(DOWNLOAD_SERVICE_ID, "");
     if (systemAbility == nullptr) {
-        REQUEST_HILOGE("Get SystemAbility failed.");
+        REQUEST_HILOGE("Load SystemAbility failed.");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_01, "Load SA failed");
         return nullptr;
     }
     deathRecipient_ = new RequestSaDeathRecipient();
@@ -485,6 +488,7 @@ bool RequestManagerImpl::SubscribeSA()
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityManager == nullptr) {
         REQUEST_HILOGE("Getting SystemAbilityManager failed.");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_00, "Get SAM failed");
         return false;
     }
     saChangeListener_ = new (std::nothrow) SystemAbilityStatusChangeListener();
@@ -494,6 +498,7 @@ bool RequestManagerImpl::SubscribeSA()
     }
     if (systemAbilityManager->SubscribeSystemAbility(DOWNLOAD_SERVICE_ID, saChangeListener_) != E_OK) {
         REQUEST_HILOGE("SubscribeSystemAbility failed.");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_03, "Subscribe SA failed");
         return false;
     }
     return true;
@@ -509,9 +514,11 @@ bool RequestManagerImpl::UnsubscribeSA()
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityManager == nullptr) {
         REQUEST_HILOGE("Getting SystemAbilityManager failed.");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_00, "Get SAM failed");
         return false;
     }
     if (systemAbilityManager->UnSubscribeSystemAbility(DOWNLOAD_SERVICE_ID, saChangeListener_) != E_OK) {
+        SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_04, "UnSubscribe SA failed");
         REQUEST_HILOGE("UnsubscribeSystemAbility failed.");
         return false;
     }

@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "log.h"
+#include "sys_event.h"
 
 namespace OHOS::Request {
 
@@ -222,9 +223,16 @@ ResponseMessageReceiver::ResponseMessageReceiver(IResponseMessageHandler *handle
 void ResponseMessageReceiver::BeginReceive()
 {
     std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+    if (!runner) {
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_10, "GetMainEventRunner failed");
+    }
     serviceHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
-    serviceHandler_->AddFileDescriptorListener(
+    auto err = serviceHandler_->AddFileDescriptorListener(
         sockFd_, OHOS::AppExecFwk::FILE_DESCRIPTOR_INPUT_EVENT, shared_from_this(), "subscribe");
+    if (err != ERR_OK) {
+        REQUEST_HILOGE("handler addlisterner err: %{public}d", err);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_11, "handler addlisterner err");
+    }
 }
 
 // ret 0 if success, ret < 0 if fail
@@ -361,10 +369,10 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
 {
     int readSize = ResponseMessageReceiver::RESPONSE_MAX_SIZE;
     char buffer[readSize];
-
     int32_t length = read(fd, buffer, readSize);
     if (length <= 0) {
         REQUEST_HILOGE("read message error: %{public}d, %{public}d", length, errno);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, UDS_FAULT_00, "read" + std::to_string(errno));
         return;
     }
     REQUEST_HILOGD("read message: %{public}d", length);
@@ -374,8 +382,8 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
     int32_t ret = write(fd, lenBuf, 4);
     if (ret <= 0) {
         REQUEST_HILOGE("send length back failed: %{public}d", ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, UDS_FAULT_02, "write" + std::to_string(ret));
     }
-
     char *leftBuf = buffer;
     int32_t leftLen = length;
     int32_t msgId = -1;
@@ -384,9 +392,11 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
     MsgHeaderParcel(msgId, msgType, headerSize, leftBuf, leftLen);
     if (msgId != messageId_) {
         REQUEST_HILOGE("Bad messageId, expect %{public}d = %{public}d", msgId, messageId_);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, UDS_FAULT_01, msgId, messageId_);
     }
     if (headerSize != static_cast<int16_t>(length)) {
         REQUEST_HILOGE("Bad headerSize, %{public}d, %{public}d", length, headerSize);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, UDS_FAULT_01, headerSize, length);
     }
     ++messageId_;
 
@@ -396,6 +406,7 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
             this->handler_->OnResponseReceive(response);
         } else {
             REQUEST_HILOGE("Bad Response");
+            SysEventLog::SendSysEventLog(FAULT_EVENT, UDS_FAULT_01, "Bad Response");
         }
     } else if (msgType == MessageType::NOTIFY_DATA) {
         std::shared_ptr<NotifyData> notifyData = std::make_shared<NotifyData>();
@@ -403,6 +414,7 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
             this->handler_->OnNotifyDataReceive(notifyData);
         } else {
             REQUEST_HILOGE("Bad NotifyData");
+            SysEventLog::SendSysEventLog(FAULT_EVENT, UDS_FAULT_01, "Bad NotifyData");
         }
     }
 }

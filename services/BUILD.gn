@@ -32,6 +32,7 @@ config("download_server_cxx_config") {
   include_dirs = [
     "include",
     "${target_gen_dir}/src",
+    "../common/sys_event/include",
   ]
 }
 
@@ -93,6 +94,7 @@ ohos_static_library("download_server_cxx") {
 
   deps = [
     ":download_server_cxx_gen",
+    "../common/sys_event:request_sysevent",
     "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
 
