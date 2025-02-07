@@ -128,4 +128,46 @@ bool PublishStateChangeEvent(rust::str bundleName, uint32_t taskId, int32_t stat
     return res;
 }
 
+int32_t UpdatePolicy(bool result)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (systemAbilityManager == nullptr) {
+        REQUEST_HILOGE("Getting SystemAbilityManager failed.");
+        return -1;
+    }
+    int32_t systemAbilityId = 3706;
+
+    OnDemandPolicyType policyType = OnDemandPolicyType::START_POLICY;
+
+    std::vector<SystemAbilityOnDemandEvent> abilityOnDemandEvents;
+
+    SystemAbilityOnDemandEvent event2;
+    event2.eventId = OnDemandEventId::COMMON_EVENT;
+    event2.name = "usual.event.USER_REMOVED";
+    abilityOnDemandEvents.push_back(event2);
+
+    SystemAbilityOnDemandEvent event3;
+    event3.eventId = OnDemandEventId::COMMON_EVENT;
+    event3.name = "usual.event.USER_SWITCHED";
+    abilityOnDemandEvents.push_back(event3);
+
+    SystemAbilityOnDemandEvent event4;
+    event4.eventId = OnDemandEventId::COMMON_EVENT;
+    event4.name = "usual.event.USER_STARTED";
+    abilityOnDemandEvents.push_back(event4);
+
+    if (!result) {
+        SystemAbilityOnDemandEvent event1;
+        event1.eventId = OnDemandEventId::COMMON_EVENT;
+        event1.name = "usual.event.CONNECTIVITY_CHANGE";
+        event1.value = "3";
+        abilityOnDemandEvents.push_back(event1);
+    }
+
+    int32_t ret = systemAbilityManager->UpdateOnDemandPolicy(systemAbilityId, policyType, abilityOnDemandEvents);
+
+    return ret;
+}
+
 } // namespace OHOS::Request

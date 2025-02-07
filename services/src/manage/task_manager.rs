@@ -30,9 +30,9 @@ use super::database::RequestDb;
 use super::events::{
     QueryEvent, ScheduleEvent, ServiceEvent, StateEvent, TaskEvent, TaskManagerEvent,
 };
-use crate::config::Action;
+use crate::config::{Action, Mode};
 use crate::error::ErrorCode;
-use crate::info::TaskInfo;
+use crate::info::{TaskInfo, State};
 use crate::manage::app_state::AppUninstallSubscriber;
 use crate::manage::network::register_network_change;
 use crate::manage::network_manager::NetworkManager;
@@ -41,7 +41,7 @@ use crate::manage::scheduler::Scheduler;
 use crate::service::client::ClientManagerEntry;
 use crate::service::notification_bar::subscribe_notification_bar;
 use crate::service::run_count::RunCountManagerEntry;
-use crate::utils::{runtime_spawn, subscribe_common_event};
+use crate::utils::{runtime_spawn, subscribe_common_event, update_policy, get_current_timestamp};
 
 const CLEAR_INTERVAL: u64 = 30 * 60;
 const RESTORE_ALL_TASKS_INTERVAL: u64 = 10;
@@ -310,6 +310,21 @@ impl TaskManager {
 
     fn unload_sa(&mut self) -> bool {
         const REQUEST_SERVICE_ID: i32 = 3706;
+        const ONE_MONTH: i64 = 30 * 24 * 60 * 60 * 1000;
+
+        let db = RequestDb::get_instance();
+
+        let filter = TaskFilter {
+            before: get_current_timestamp() as i64,
+            after: get_current_timestamp() as i64 - ONE_MONTH,
+            state: State::Waiting.repr,
+            action: Action::Any.repr,
+            mode: Mode::Any.repr,
+        };
+
+        let bundle_name = "*".to_string();
+
+        let task_ids = db.system_search_task(filter, bundle_name);
 
         if !self.rx.is_empty() {
             return false;
@@ -328,11 +343,34 @@ impl TaskManager {
 
         info!("unload SA");
 
+        let any_tasks = task_ids.is_empty();
+        let update_on_demand_policy = update_policy(any_tasks);
+        if update_on_demand_policy != 0 {
+            info!("Update on demand policy failed");
+        }
+
         // failed logic?
         #[cfg(feature = "oh")]
         let _ = SystemAbilityManager::unload_system_ability(REQUEST_SERVICE_ID);
 
         true
+    }
+}
+
+#[cxx::bridge(namespace = "OHOS::Request")]
+mod ffi {
+    #[derive(Clone, Debug, Copy)]
+    pub(crate) struct TaskQosInfo {
+        pub(crate) task_id: u32,
+        pub(crate) action: u8,
+        pub(crate) mode: u8,
+        pub(crate) state: u8,
+        pub(crate) priority: u32,
+    }
+
+    unsafe extern "C++" {
+        include!("system_ability_manager.h");
+        include!("system_ability_on_demand_event.h");
     }
 }
 
