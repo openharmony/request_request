@@ -9,6 +9,7 @@
             "dump_level": 1,
             "recycle-strategy": "low-memory",
             "start-on-demand": {
+                "allow-update": true,
                 "commonevent": [
                     {
                         "name": "usual.event.CONNECTIVITY_CHANGE",
