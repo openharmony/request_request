@@ -38,6 +38,7 @@ use crate::manage::network::register_network_change;
 use crate::manage::network_manager::NetworkManager;
 use crate::manage::scheduler::state::Handler;
 use crate::manage::scheduler::Scheduler;
+use crate::manage::query::TaskFilter;
 use crate::service::client::ClientManagerEntry;
 use crate::service::notification_bar::subscribe_notification_bar;
 use crate::service::run_count::RunCountManagerEntry;
