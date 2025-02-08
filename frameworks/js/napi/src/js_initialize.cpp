@@ -33,7 +33,7 @@
 #include "napi_utils.h"
 #include "net_conn_client.h"
 #include "request_manager.h"
-
+#include "sys_event.h"
 
 static constexpr const char *PARAM_KEY_DESCRIPTION = "description";
 static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";
@@ -113,6 +113,7 @@ ExceptionError JsInitialize::InitParam(
     if (applicationInfo == nullptr) {
         err.code = E_OTHER;
         err.errInfo = "ApplicationInfo is null";
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_03, err.errInfo);
         return err;
     }
     config.bundleType = static_cast<u_int32_t>(applicationInfo->bundleType);
@@ -134,6 +135,7 @@ napi_status JsInitialize::GetContext(
         auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
         if (ability == nullptr) {
             REQUEST_HILOGE("Get current ability fail");
+            SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_04, "Get current ability fail");
             return napi_generic_failure;
         }
         context = ability->GetAbilityContext();
@@ -142,6 +144,7 @@ napi_status JsInitialize::GetContext(
     }
     if (context == nullptr) {
         REQUEST_HILOGE("Get Context failed, context is nullptr.");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_06, "Get Context failed");
         return napi_generic_failure;
     }
     return napi_ok;
@@ -152,11 +155,13 @@ bool JsInitialize::GetAppBaseDir(std::string &baseDir)
     auto context = AbilityRuntime::Context::GetApplicationContext();
     if (context == nullptr) {
         REQUEST_HILOGE("AppContext is null.");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_02, "AppContext is null");
         return false;
     }
     baseDir = context->GetBaseDir();
     if (baseDir.empty()) {
         REQUEST_HILOGE("Base dir not found.");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_07, "Base dir not found");
         return false;
     }
     return true;
@@ -167,20 +172,24 @@ bool JsInitialize::CheckFilePath(
 {
     if (config.action == Action::DOWNLOAD) {
         if (!CheckDownloadFile(context, config, error)) {
+            SysEventLog::SendSysEventLog(STATISTIC_EVENT, APP_ERROR_00, config.bundleName, "", error.errInfo);
             return false;
         }
     } else {
         if (!CheckUploadFiles(context, config, error)) {
+            SysEventLog::SendSysEventLog(STATISTIC_EVENT, APP_ERROR_01, config.bundleName, "", error.errInfo);
             return false;
         }
         std::string filePath = context->GetCacheDir();
         if (!CheckUploadBodyFiles(filePath, config, error)) {
+            SysEventLog::SendSysEventLog(STATISTIC_EVENT, APP_ERROR_02, config.bundleName, "", error.errInfo);
             return false;
         }
     }
     if (!JsTask::SetDirsPermission(config.certsPath)) {
         error.code = E_FILE_IO;
         error.errInfo = "set files of directors permission fail";
+        SysEventLog::SendSysEventLog(FAULT_EVENT, TASK_FAULT_02, config.bundleName, "", error.errInfo);
         return false;
     }
     return true;
@@ -210,17 +219,21 @@ bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &con
         if (bodyFile == NULL) {
             error.code = E_FILE_IO;
             error.errInfo = "UploadBodyFiles failed to open file errno " + std::to_string(errno);
+            SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_00, config.bundleName, "", error.errInfo);
             return false;
         }
         int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
         if (ret != 0) {
             REQUEST_HILOGE("body chmod fail: %{public}d", ret);
+            SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_01, config.bundleName, "", std::to_string(ret));
         };
 
         bool setRes = JsTask::SetPathPermission(path);
         int32_t retClose = fclose(bodyFile);
         if (retClose != 0) {
             REQUEST_HILOGE("upload body fclose fail: %{public}d", ret);
+            SysEventLog::SendSysEventLog(
+                FAULT_EVENT, STANDARD_FAULT_02, config.bundleName, "", std::to_string(retClose));
         }
         if (!setRes) {
             error.code = E_FILE_IO;
@@ -238,11 +251,13 @@ bool JsInitialize::CheckPathIsFile(const std::string &path, ExceptionError &erro
     if (!std::filesystem::exists(path, err)) {
         error.code = E_FILE_IO;
         error.errInfo = "Path not exists: " + err.message();
+        SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_03, error.errInfo);
         return false;
     }
     if (std::filesystem::is_directory(path, err)) {
         error.code = E_FILE_IO;
         error.errInfo = "Path not File: " + err.message();
+        SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_04, error.errInfo);
         return false;
     }
     return true;
@@ -255,6 +270,7 @@ bool JsInitialize::GetFdDownload(const std::string &path, const Config &config, 
         if (config.firstInit && !config.overwrite) {
             error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
             error.errInfo = "GetFd File exists and other error";
+            SysEventLog::SendSysEventLog(STATISTIC_EVENT, APP_ERROR_00, config.bundleName, "", error.errInfo);
             return false;
         }
     }
@@ -269,17 +285,20 @@ bool JsInitialize::GetFdDownload(const std::string &path, const Config &config, 
     if (file == NULL) {
         error.code = E_FILE_IO;
         error.errInfo = "GetFd failed to open file errno " + std::to_string(errno);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_00, config.bundleName, "", error.errInfo);
         return false;
     }
 
     int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
     if (ret != 0) {
         REQUEST_HILOGE("download file chmod fail: %{public}d", ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_01, config.bundleName, "", std::to_string(ret));
     };
 
     int32_t retClose = fclose(file);
     if (retClose != 0) {
         REQUEST_HILOGE("download fclose fail: %{public}d", ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_02, config.bundleName, "", std::to_string(retClose));
     }
     return true;
 }
@@ -288,22 +307,26 @@ bool JsInitialize::GetFdUpload(const std::string &path, const Config &config, Ex
 {
     if (!JsInitialize::CheckPathIsFile(path, error)) {
         error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
+        SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_03, config.bundleName, "", error.errInfo);
         return false;
     }
     FILE *file = fopen(path.c_str(), "r");
     if (file == NULL) {
         error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
         error.errInfo = "GetFd failed to open file errno " + std::to_string(errno);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_00, config.bundleName, "", error.errInfo);
         return false;
     }
     REQUEST_HILOGD("upload file fopen ok");
     int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (ret != 0) {
         REQUEST_HILOGE("upload file chmod fail: %{public}d", ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_01, config.bundleName, "", std::to_string(ret));
     }
     int32_t retClose = fclose(file);
     if (retClose != 0) {
         REQUEST_HILOGE("upload fclose fail: %{public}d", ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_02, config.bundleName, "", std::to_string(retClose));
     }
     return true;
 }
@@ -1023,6 +1046,7 @@ bool JsInitialize::CheckUserFileSpec(const std::shared_ptr<OHOS::AbilityRuntime:
         REQUEST_HILOGE("dataAbilityHelper null");
         error.code = E_PARAMETER_CHECK;
         error.errInfo = "Parameter verification failed, dataAbilityHelper null";
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_07, config.bundleName, "", error.errInfo);
         return false;
     }
     file.fd = dataAbilityHelper->OpenFile(*uri, "r");
@@ -1030,6 +1054,7 @@ bool JsInitialize::CheckUserFileSpec(const std::shared_ptr<OHOS::AbilityRuntime:
         REQUEST_HILOGE("Failed to open user file, fd: %{public}d", file.fd);
         error.code = E_FILE_IO;
         error.errInfo = "Failed to open user file";
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_09, config.bundleName, "", error.errInfo);
         return false;
     }
     StandardizeFileSpec(file);
@@ -1157,6 +1182,7 @@ bool JsInitialize::CreateDirs(const std::vector<std::string> &pathDirs)
         // create_directory noexcept.
         if (!std::filesystem::create_directory(path, err)) {
             REQUEST_HILOGE("Create Dir Err: %{public}d, %{public}s", err.value(), err.message().c_str());
+            SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_05, err.message());
             return false;
         }
     }
@@ -1229,6 +1255,7 @@ bool JsInitialize::BaseToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Conte
     std::string base = context->GetBaseDir();
     if (base.empty()) {
         REQUEST_HILOGE("GetBaseDir error.");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_06, "GetCacheDir error");
         return false;
     }
     path = base + "/" + path;
@@ -1240,6 +1267,7 @@ bool JsInitialize::CacheToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Cont
     std::string cache = context->GetCacheDir();
     if (cache.empty()) {
         REQUEST_HILOGE("GetCacheDir error.");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_05, "GetCacheDir error");
         return false;
     }
     path = cache + "/" + path;

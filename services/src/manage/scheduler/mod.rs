@@ -29,6 +29,10 @@ use crate::manage::database::RequestDb;
 use crate::manage::notifier::Notifier;
 use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
+use crate::service::notification_bar::{
+    cancel_progress_notification, force_cancel_progress_notification, publish_failed_notification,
+    publish_success_notification,
+};
 use crate::service::run_count::RunCountManagerEntry;
 use crate::task::config::Action;
 use crate::task::info::State;
@@ -128,6 +132,7 @@ impl Scheduler {
         {
             return Err(ErrorCode::TaskStateErr);
         }
+        // Change `Waiting` so that it can be scheduled.
         database.change_status(task_id, State::Waiting)?;
 
         let info = RequestDb::get_instance()
@@ -204,6 +209,13 @@ impl Scheduler {
         }
 
         if let Some(info) = database.get_task_qos_info(task_id) {
+            if info.state == State::Failed.repr {
+                if let Some(task_info) = database.get_task_info(task_id) {
+                    Scheduler::notify_fail(task_info, &self.client_manager);
+                    return;
+                }
+            }
+
             if info.state != State::Running.repr && info.state != State::Waiting.repr {
                 return;
             }
@@ -212,6 +224,7 @@ impl Scheduler {
         database.update_task_state(task_id, State::Completed, Reason::Default);
         if let Some(info) = database.get_task_info(task_id) {
             Notifier::complete(&self.client_manager, info.build_notify_data());
+            publish_success_notification(&info);
         }
     }
 
@@ -224,45 +237,32 @@ impl Scheduler {
     ) {
         info!("scheduler task {} canceled", task_id);
         self.running_queue.task_finish(uid, task_id);
-
+        if self.running_queue.try_restart(uid, task_id) {
+            return;
+        }
         let database = RequestDb::get_instance();
         let Some(info) = database.get_task_info(task_id) else {
             error!("task {} not found in database", task_id);
+            force_cancel_progress_notification(task_id);
             return;
         };
         match State::from(info.progress.common_data.state) {
             State::Running | State::Retrying => {
-                if !self.running_queue.try_restart(uid, task_id) {
-                    info!("task {} waiting for task limits", task_id);
-                    RequestDb::get_instance().update_task_state(
-                        task_id,
-                        State::Waiting,
-                        Reason::RunningTaskMeetLimits,
-                    );
-                }
+                info!("task {} waiting for task limits", task_id);
+                RequestDb::get_instance().update_task_state(
+                    task_id,
+                    State::Waiting,
+                    Reason::RunningTaskMeetLimits,
+                );
             }
             State::Failed => {
                 info!("task {} cancel with state Failed", task_id);
-                if let Some((front, back)) = task_count.get_mut(&uid) {
-                    match mode {
-                        Mode::FrontEnd => {
-                            if *front > 0 {
-                                *front -= 1;
-                            }
-                        }
-                        _ => {
-                            if *back > 0 {
-                                *back -= 1;
-                            }
-                        }
-                    }
-                }
-                Notifier::fail(&self.client_manager, info.build_notify_data());
-                #[cfg(feature = "oh")]
-                {
-                    let reason = Reason::from(info.common_data.reason);
-                    Self::sys_event(info, reason);
-                }
+                Scheduler::reduce_task_count(uid, mode, task_count);
+                Scheduler::notify_fail(info, &self.client_manager);
+            }
+            State::Stopped | State::Removed => {
+                info!("task {} cancel with state Stopped or Removed", task_id);
+                cancel_progress_notification(&info);
             }
             state => {
                 info!(
@@ -271,7 +271,6 @@ impl Scheduler {
                     state,
                     Reason::from(info.common_data.reason)
                 );
-                self.running_queue.try_restart(uid, task_id);
             }
         }
     }
@@ -293,15 +292,41 @@ impl Scheduler {
         }
 
         database.update_task_state(task_id, State::Failed, reason);
-
         if let Some(info) = database.get_task_info(task_id) {
-            Notifier::fail(&self.client_manager, info.build_notify_data());
-            #[cfg(feature = "oh")]
-            Self::sys_event(info, reason);
+            Scheduler::notify_fail(info, &self.client_manager);
         }
     }
+
+    fn notify_fail(info: TaskInfo, client_manager: &ClientManagerEntry) {
+        Notifier::fail(client_manager, info.build_notify_data());
+        publish_failed_notification(&info);
+        #[cfg(feature = "oh")]
+        Self::sys_event(info);
+    }
+
+    pub(crate) fn reduce_task_count(
+        uid: u64,
+        mode: Mode,
+        task_count: &mut HashMap<u64, (usize, usize)>,
+    ) {
+        if let Some((front, back)) = task_count.get_mut(&uid) {
+            match mode {
+                Mode::FrontEnd => {
+                    if *front > 0 {
+                        *front -= 1;
+                    }
+                }
+                _ => {
+                    if *back > 0 {
+                        *back -= 1;
+                    }
+                }
+            }
+        }
+    }
+
     #[cfg(feature = "oh")]
-    pub(crate) fn sys_event(info: TaskInfo, reason: Reason) {
+    pub(crate) fn sys_event(info: TaskInfo) {
         use hisysevent::{build_number_param, build_str_param};
 
         use crate::sys_event::SysEvent;
@@ -313,6 +338,7 @@ impl Scheduler {
             Action::Upload => "UPLOAD",
             _ => "UNKNOWN",
         };
+        let reason = Reason::from(info.common_data.reason);
 
         SysEvent::task_fault()
             .param(build_str_param!(crate::sys_event::TASKS_TYPE, action))
@@ -403,7 +429,7 @@ impl Scheduler {
             return Ok(false);
         }
 
-        if !config.satisfy_foreground(self.state_handler.top_uid()) {
+        if !config.satisfy_foreground(self.state_handler.foreground_abilities()) {
             info!(
                 "task {} started, waiting for app {}",
                 task_id, config.common_data.uid
@@ -435,21 +461,27 @@ impl Scheduler {
         }
         self.schedule_if_not_scheduled();
     }
+
+    pub(crate) fn retry_all_tasks(&mut self) {
+        self.running_queue.retry_all_tasks();
+    }
 }
 
 impl RequestDb {
-    fn change_status(&self, task_id: u32, state: State) -> Result<(), ErrorCode> {
+    fn change_status(&self, task_id: u32, new_state: State) -> Result<(), ErrorCode> {
         let info = RequestDb::get_instance()
             .get_task_info(task_id)
             .ok_or(ErrorCode::TaskNotFound)?;
-        if info.progress.common_data.state == state.repr {
-            if state == State::Removed {
+
+        let old_state = info.progress.common_data.state;
+        if old_state == new_state.repr {
+            if new_state == State::Removed {
                 return Err(ErrorCode::TaskNotFound);
             } else {
                 return Err(ErrorCode::TaskStateErr);
             }
         }
-        let sql = match state {
+        let sql = match new_state {
             State::Paused => sql::pause_task(task_id),
             State::Running => sql::start_task(task_id),
             State::Stopped => sql::stop_task(task_id),
@@ -465,10 +497,15 @@ impl RequestDb {
         let info = RequestDb::get_instance()
             .get_task_info(task_id)
             .ok_or(ErrorCode::SystemApi)?;
-        if info.progress.common_data.state != state.repr {
-            Err(ErrorCode::TaskStateErr)
-        } else {
-            Ok(())
+        if info.progress.common_data.state != new_state.repr {
+            return Err(ErrorCode::TaskStateErr);
         }
+
+        if (old_state == State::Waiting.repr || old_state == State::Paused.repr)
+            && (new_state == State::Stopped || new_state == State::Removed)
+        {
+            cancel_progress_notification(&info);
+        }
+        Ok(())
     }
 }

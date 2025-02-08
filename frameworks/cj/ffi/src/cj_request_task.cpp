@@ -266,12 +266,8 @@ ExceptionError CJTask::Create(Context* context, Config &config)
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin task create, seq: %{public}d", seq);
     config_ = config;
+
     RequestManager::GetInstance()->RestoreListener(CJTask::ReloadListener);
-    if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        return {
-            .code = ExceptionErrorCode::E_SERVICE_ERROR
-        };
-    }
 
     if (config.mode == Mode::FOREGROUND) {
         RegisterForegroundResume();

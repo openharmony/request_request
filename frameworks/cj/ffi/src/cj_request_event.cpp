@@ -110,10 +110,6 @@ ExceptionErrorCode CJRequestEvent::PauseExec(const CJTask *task)
 
 ExceptionErrorCode CJRequestEvent::ResumeExec(const CJTask *task)
 {
-    if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        return ExceptionErrorCode::E_SERVICE_ERROR;
-    }
-
     return (ExceptionErrorCode)RequestManager::GetInstance()->Resume(task->GetTidStr());
 }
 

@@ -83,9 +83,9 @@ void RequestManagerImplTest::TearDownTestCase(void)
 void RequestManagerImplTest::SetUp(void)
 {
     exceptProxy = OHOS::sptr<MockRequestServiceInterface>(new MockRequestServiceInterface());
-    testProxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
-    RequestManagerImpl::GetInstance()->SetRequestServiceProxy(exceptProxy);
-    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
+    testProxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy(true);
+    RequestManagerImpl::GetInstance()->requestServiceProxy_ = exceptProxy;
+    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy(true);
     EXPECT_TRUE(proxy == (static_cast<OHOS::sptr<RequestServiceInterface>>(exceptProxy)));
     // input testCase setup step，setup invoked before each testCase
     testing::UnitTest *test = testing::UnitTest::GetInstance();
@@ -100,7 +100,7 @@ void RequestManagerImplTest::SetUp(void)
 void RequestManagerImplTest::TearDown(void)
 {
     // input testCase teardown step，teardown invoked after each testCase
-    RequestManagerImpl::GetInstance()->SetRequestServiceProxy(testProxy);
+    RequestManagerImpl::GetInstance()->requestServiceProxy_ = testProxy;
     testProxy = nullptr;
     exceptProxy = nullptr;
 }
@@ -392,54 +392,8 @@ HWTEST_F(RequestManagerImplTest, RestoreSubRunCountTest001, TestSize.Level1)
     EXPECT_NE(exceptProxy, nullptr);
     OHOS::sptr<NotifyInterface> listener(nullptr);
     EXPECT_CALL(*exceptProxy, SubRunCount(testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
-    RequestManagerImpl::GetInstance()->SetRequestServiceProxy(exceptProxy);
+    RequestManagerImpl::GetInstance()->requestServiceProxy_ = exceptProxy;
     RequestManagerImpl::GetInstance()->RestoreSubRunCount();
-}
-
-/**
- * @tc.name: OnRemoteSaDiedTest001
- * @tc.desc: Test OnRemoteSaDiedTest001 interface base function - OnRemoteSaDied
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestManagerImplTest, OnRemoteSaDiedTest001, TestSize.Level1)
-{
-    EXPECT_NE(exceptProxy, nullptr);
-    OHOS::wptr<OHOS::IRemoteObject> remote;
-    RequestManagerImpl::GetInstance()->OnRemoteSaDied(remote);
-}
-
-/**
- * @tc.name: OnRemoteDiedTest001
- * @tc.desc: Test OnRemoteDiedTest001 interface base function - OnRemoteDied
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestManagerImplTest, OnRemoteDiedTest001, TestSize.Level1)
-{
-    EXPECT_NE(exceptProxy, nullptr);
-    OHOS::wptr<OHOS::IRemoteObject> remote;
-    RequestSaDeathRecipient recipient = RequestSaDeathRecipient();
-    recipient.OnRemoteDied(remote);
-}
-
-/**
- * @tc.name: Retry001
- * @tc.desc: Test Retry001 interface base function - Retry
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestManagerImplTest, RetryTest001, TestSize.Level1)
-{
-    EXPECT_NE(exceptProxy, nullptr);
-    std::string taskId;
-    Config config;
-    int32_t errorCode = E_TASK_STATE;
-    FileSpec file;
-    file.uri = "uri";
-    RequestManagerImpl::GetInstance()->Retry(taskId, config, errorCode);
-    config.files.push_back(file);
-    RequestManagerImpl::GetInstance()->Retry(taskId, config, errorCode);
 }
 
 /**

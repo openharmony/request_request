@@ -154,7 +154,6 @@ RetReqData CJRequestImpl::CreateTask(OHOS::AbilityRuntime::Context* context, CCo
     }
 
     ret.taskId = MallocCString(task->taskId_);
-    
     REQUEST_HILOGD("[CJRequestImpl] CreateTask end");
     return ret;
 }

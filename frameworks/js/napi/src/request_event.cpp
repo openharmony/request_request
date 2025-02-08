@@ -424,10 +424,6 @@ int32_t RequestEvent::QueryExec(const std::shared_ptr<ExecContext> &context)
 {
     TaskInfo infoRes;
     int32_t ret = E_OK;
-    if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        ret = E_SERVICE_ERROR;
-        return ret;
-    }
     ret = RequestManager::GetInstance()->Show(context->task->GetTid(), infoRes);
     if (context->version_ != Version::API10 && ret != E_PERMISSION) {
         ret = E_OK;
@@ -439,10 +435,7 @@ int32_t RequestEvent::QueryExec(const std::shared_ptr<ExecContext> &context)
 int32_t RequestEvent::QueryMimeTypeExec(const std::shared_ptr<ExecContext> &context)
 {
     int32_t ret = E_OK;
-    if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        ret = E_SERVICE_ERROR;
-        return ret;
-    }
+
     ret = RequestManager::GetInstance()->QueryMimeType(context->task->GetTid(), context->strRes);
     if (context->version_ != Version::API10 && ret != E_PERMISSION) {
         ret = E_OK;
@@ -502,10 +495,7 @@ int32_t RequestEvent::RemoveExec(const std::shared_ptr<ExecContext> &context)
 int32_t RequestEvent::ResumeExec(const std::shared_ptr<ExecContext> &context)
 {
     int32_t ret = E_OK;
-    if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        ret = E_SERVICE_ERROR;
-        return ret;
-    }
+
     ret = RequestManager::GetInstance()->Resume(context->task->GetTid());
     if (context->version_ != Version::API10 && ret != E_PERMISSION) {
         ret = E_OK;

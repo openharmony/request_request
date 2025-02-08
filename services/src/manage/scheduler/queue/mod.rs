@@ -85,6 +85,9 @@ impl RunningQueue {
             .get(&(uid, task_id))
             .or(self.upload_queue.get(&(uid, task_id)))
         {
+            if self.running_tasks.contains_key(&(uid, task_id)) {
+                return false;
+            }
             info!("{} restart running", task_id);
             let running_task = RunningTask::new(task.clone(), self.tx.clone(), self.keeper.clone());
             let abort_flag = Arc::new(AtomicBool::new(false));
@@ -242,6 +245,14 @@ impl RunningQueue {
         #[cfg(feature = "oh")]
         self.run_count_manager
             .notify_run_count(self.download_queue.len() + self.upload_queue.len());
+    }
+
+    pub(crate) fn retry_all_tasks(&mut self) {
+        for task in self.running_tasks.drain() {
+            if let Some(handle) = task.1 {
+                handle.cancel();
+            }
+        }
     }
 }
 

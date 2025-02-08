@@ -21,39 +21,45 @@
 #include "access_token.h"
 #include "accesstoken_kit.h"
 #include "app_mgr_client.h"
+#include "app_mgr_proxy.h"
 #include "common_event_data.h"
 #include "common_event_manager.h"
 #include "common_event_publish_info.h"
 #include "cxx.h"
 #include "int_wrapper.h"
+#include "iservice_registry.h"
 #include "log.h"
-#include "notification.h"
-#include "notification_constant.h"
-#include "notification_content.h"
-#include "notification_helper.h"
 #include "string_wrapper.h"
+#include "system_ability_definition.h"
 #include "tokenid_kit.h"
 #include "utils/mod.rs.h"
-#include "want_params.h"
 
 namespace OHOS::Request {
 using namespace OHOS::Security::AccessToken;
-using namespace OHOS::Notification;
 using namespace OHOS::EventFwk;
-static constexpr uint8_t DOWNLOAD_ACTION = 0;
+using namespace OHOS::AppExecFwk;
 
-int GetTopUid(int &uid)
+int GetForegroundAbilities(rust::vec<int> &uid)
 {
     sptr<IRemoteObject> token;
-    auto ret = OHOS::AAFwk::AbilityManagerClient::GetInstance()->GetTopAbility(token);
+    auto abilities = std::vector<AppExecFwk::AppStateData>();
+    auto sysm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (sysm == nullptr) {
+        REQUEST_HILOGE("GetForegroundAbilities failed, sysm is nullptr");
+    }
+    auto remote = sysm->CheckSystemAbility(APP_MGR_SERVICE_ID);
+    if (remote == nullptr) {
+        REQUEST_HILOGE("GetForegroundAbilities failed, remote is nullptr");
+    }
+    auto proxy = AppMgrProxy(remote);
+    auto ret = proxy.GetForegroundApplications(abilities);
     if (ret != 0) {
-        REQUEST_HILOGE("GetTopUid failed, ret: %{public}d", ret);
+        REQUEST_HILOGE("GetForegroundAbilities, ret: %{public}d", ret);
         return ret;
     }
-    auto info = OHOS::AppExecFwk::RunningProcessInfo();
-    AppExecFwk::AppMgrClient().GetRunningProcessInfoByToken(token, info);
-
-    uid = info.uid_;
+    for (auto ability : abilities) {
+        uid.push_back(ability.uid);
+    }
     return 0;
 }
 
@@ -92,39 +98,6 @@ bool CheckPermission(uint64_t tokenId, rust::str permission)
         return false;
     }
     return true;
-}
-
-int RequestBackgroundNotify(RequestTaskMsg msg, rust::str filePath, rust::str fileName, uint32_t percent)
-{
-    REQUEST_HILOGD("Background Notification, percent is %{public}d", percent);
-    auto requestTemplate = std::make_shared<NotificationTemplate>();
-
-    requestTemplate->SetTemplateName("downloadTemplate");
-    OHOS::AAFwk::WantParams wantParams;
-    wantParams.SetParam("progressValue", OHOS::AAFwk::Integer::Box(percent));
-    wantParams.SetParam("fileName", OHOS::AAFwk::String::Box(std::string(fileName)));
-    std::shared_ptr<NotificationNormalContent> normalContent = std::make_shared<NotificationNormalContent>();
-    if (msg.action == DOWNLOAD_ACTION) {
-        wantParams.SetParam("title", OHOS::AAFwk::String::Box("下载"));
-        normalContent->SetTitle("下载");
-    } else {
-        wantParams.SetParam("title", OHOS::AAFwk::String::Box("上传"));
-        normalContent->SetTitle("上传");
-    }
-    requestTemplate->SetTemplateData(std::make_shared<OHOS::AAFwk::WantParams>(wantParams));
-    normalContent->SetText(std::string(fileName));
-
-    auto content = std::make_shared<NotificationContent>(normalContent);
-    NotificationRequest req(msg.task_id);
-    req.SetCreatorUid(msg.uid);
-    req.SetContent(content);
-    req.SetTemplate(requestTemplate);
-    req.SetSlotType(NotificationConstant::OTHER);
-    OHOS::ErrCode errCode = NotificationHelper::PublishNotification(req);
-    if (errCode != OHOS::ERR_OK) {
-        REQUEST_HILOGE("notification errCode: %{public}d", errCode);
-    }
-    return errCode;
 }
 
 bool PublishStateChangeEvent(rust::str bundleName, uint32_t taskId, int32_t state, int32_t uid)

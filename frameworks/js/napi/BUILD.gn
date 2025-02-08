@@ -40,6 +40,8 @@ ohos_shared_library("request") {
   include_dirs = [
     "include",
     "../../native/include",
+    "../../../common/include",
+    "../../../common/sys_event/include",
   ]
 
   public_configs = [ ":upload_public_config" ]
@@ -69,6 +71,7 @@ ohos_shared_library("request") {
 
   deps = [
     "../../../common:request_common_static",
+    "../../../common/sys_event:request_sysevent",
     "../../native:request_native",
   ]
 
@@ -100,6 +103,8 @@ ohos_static_library("request_static") {
   include_dirs = [
     "include",
     "../../native/include",
+    "../../../common/include",
+    "../../../common/sys_event/include",
   ]
 
   public_configs = [ ":upload_public_config" ]
@@ -129,6 +134,7 @@ ohos_static_library("request_static") {
 
   deps = [
     "../../../common:request_common_static",
+    "../../../common/sys_event:request_sysevent",
     "../../native:request_native",
   ]
 

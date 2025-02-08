@@ -13,7 +13,7 @@
 
 use std::io::{self, SeekFrom};
 use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, Ordering};
-use std::sync::{Mutex, MutexGuard};
+use std::sync::Mutex;
 use std::time::Duration;
 
 use ylong_http_client::async_impl::{Body, Client, Request, RequestBuilder, Response};
@@ -22,7 +22,6 @@ use ylong_runtime::io::{AsyncSeekExt, AsyncWriteExt};
 
 cfg_oh! {
     use crate::manage::SystemConfig;
-    use crate::utils::{request_background_notify, RequestTaskMsg};
 }
 
 use super::config::{Mode, Version};
@@ -269,10 +268,6 @@ impl RequestTask {
             mtime,
             reason: reason.repr,
             progress,
-            each_file_status: RequestTask::get_each_file_status_by_code(
-                &self.code.lock().unwrap(),
-                &self.conf.file_specs,
-            ),
             tries: self.tries.load(Ordering::SeqCst),
             mime_type: self.mime_type(),
         };
@@ -537,22 +532,6 @@ impl RequestTask {
         vec
     }
 
-    pub(crate) fn get_each_file_status_by_code(
-        codes_guard: &MutexGuard<Vec<Reason>>,
-        file_specs: &[FileSpec],
-    ) -> Vec<EachFileStatus> {
-        let mut vec = Vec::new();
-        for (i, file_spec) in file_specs.iter().enumerate() {
-            let reason = *codes_guard.get(i).unwrap_or(&Reason::Default);
-            vec.push(EachFileStatus {
-                path: file_spec.path.clone(),
-                reason,
-                message: reason.to_str().into(),
-            });
-        }
-        vec
-    }
-
     pub(crate) fn info(&self) -> TaskInfo {
         let status = self.status.lock().unwrap();
         let progress = self.progress.lock().unwrap();
@@ -580,7 +559,6 @@ impl RequestTask {
             },
             progress: progress.clone(),
             extras: progress.extras.clone(),
-            each_file_status: self.get_each_file_status(),
             common_data: CommonTaskInfo {
                 task_id: self.conf.common_data.task_id,
                 uid: self.conf.common_data.uid,
@@ -595,48 +573,6 @@ impl RequestTask {
                 version: self.conf.version as u8,
                 priority: self.conf.common_data.priority,
             },
-        }
-    }
-
-    pub(crate) fn background_notify(&self) {
-        if self.conf.version == Version::API9 && !self.conf.common_data.background {
-            return;
-        }
-        if self.conf.version == Version::API10 && self.conf.common_data.mode == Mode::FrontEnd {
-            return;
-        }
-        let mut file_total_size = self.file_total_size.load(Ordering::SeqCst);
-        let total_processed = self.progress.lock().unwrap().common_data.total_processed as u64;
-        if file_total_size <= 0 || total_processed == 0 {
-            return;
-        }
-        if self.conf.common_data.action == Action::Download {
-            if self.conf.common_data.ends < 0 {
-                file_total_size -= self.conf.common_data.begins as i64;
-            } else {
-                file_total_size =
-                    self.conf.common_data.ends - self.conf.common_data.begins as i64 + 1;
-            }
-        }
-        self.background_notify_time
-            .store(get_current_timestamp(), Ordering::SeqCst);
-        let index = self.progress.lock().unwrap().common_data.index;
-        if index >= self.conf.file_specs.len() {
-            return;
-        }
-
-        #[cfg(feature = "oh")]
-        {
-            let percent = total_processed * 100 / (file_total_size as u64);
-            let task_msg = RequestTaskMsg {
-                task_id: self.conf.common_data.task_id,
-                uid: self.conf.common_data.uid as i32,
-                action: self.conf.common_data.action.repr,
-            };
-
-            let path = self.conf.file_specs[index].path.as_str();
-            let file_name = self.conf.file_specs[index].file_name.as_str();
-            let _ = request_background_notify(task_msg, path, file_name, percent as u32);
         }
     }
 

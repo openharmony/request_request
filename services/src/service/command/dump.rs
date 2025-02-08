@@ -120,10 +120,7 @@ impl RequestServiceStub {
             let _ = file.write(
                 format!(
                     "{:<20}{:<12}{:<12}{:<12}\n",
-                    task.task_id,
-                    task.action.repr,
-                    task.state.repr,
-                    task.reason.repr
+                    task.task_id, task.action.repr, task.state.repr, task.reason.repr
                 )
                 .as_bytes(),
             );

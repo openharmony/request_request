@@ -58,7 +58,8 @@ impl Qos {
 impl Qos {
     // Reschedule qos queue and get directions.
     pub(crate) fn reschedule(&mut self, state: &state::Handler) -> QosChanges {
-        self.apps.sort(state.top_uid(), state.top_user());
+        self.apps
+            .sort(state.foreground_abilities(), state.top_user());
         let mut changes = QosChanges::new();
         changes.download = Some(self.reschedule_inner(Action::Download));
         changes.upload = Some(self.reschedule_inner(Action::Upload));

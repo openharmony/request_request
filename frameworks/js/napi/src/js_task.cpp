@@ -33,6 +33,7 @@
 #include "request_event.h"
 #include "request_manager.h"
 #include "storage_acl.h"
+#include "sys_event.h"
 #include "upload/upload_task_napiV5.h"
 
 using namespace OHOS::StorageDaemon;
@@ -188,12 +189,7 @@ int32_t JsTask::CreateExec(const std::shared_ptr<ContextInfo> &context, int32_t 
 {
     REQUEST_HILOGD("JsTask CreateExec: Action %{public}d, Mode %{public}d, seq: %{public}d",
         context->task->config_.action, context->task->config_.mode, seq);
-    if (!RequestManager::GetInstance()->LoadRequestServer()) {
-        REQUEST_HILOGE("End create task in JsTask CreateExec, seq: %{public}d, failed: request service "
-                       "not ready",
-            seq);
-        return E_SERVICE_ERROR;
-    }
+
     if (context->task->config_.mode == Mode::FOREGROUND) {
         RegisterForegroundResume();
     }
@@ -360,13 +356,7 @@ napi_value JsTask::GetTask(napi_env env, napi_callback_info info)
         REQUEST_HILOGI("End GetTask seq %{public}d", seq);
         return res;
     };
-    auto exec = [context]() {
-        if (!RequestManager::GetInstance()->LoadRequestServer()) {
-            context->innerCode_ = E_SERVICE_ERROR;
-            return;
-        }
-        GetTaskExecution(context);
-    };
+    auto exec = [context]() { GetTaskExecution(context); };
     context->SetInput(input).SetOutput(output).SetExec(exec);
     AsyncCall asyncCall(env, info, context);
     return asyncCall.Call(context, "getTask");
@@ -614,10 +604,6 @@ napi_value JsTask::TouchInner(napi_env env, napi_callback_info info, AsyncCall::
         return napi_ok;
     };
     auto exec = [context]() {
-        if (!RequestManager::GetInstance()->LoadRequestServer()) {
-            context->innerCode_ = E_SERVICE_ERROR;
-            return;
-        }
         context->innerCode_ = RequestManager::GetInstance()->Touch(context->tid, context->token, context->taskInfo);
     };
     context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
@@ -826,10 +812,6 @@ napi_value JsTask::Search(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto exec = [context]() {
-        if (!RequestManager::GetInstance()->LoadRequestServer()) {
-            context->innerCode_ = E_SERVICE_ERROR;
-            return;
-        }
         context->innerCode_ = RequestManager::GetInstance()->Search(context->filter, context->tids);
     };
     context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
@@ -870,10 +852,6 @@ napi_value JsTask::Query(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto exec = [context]() {
-        if (!RequestManager::GetInstance()->LoadRequestServer()) {
-            context->innerCode_ = E_SERVICE_ERROR;
-            return;
-        }
         context->innerCode_ = RequestManager::GetInstance()->Query(context->tid, context->taskInfo);
     };
     context->SetInput(std::move(input)).SetOutput(std::move(output)).SetExec(std::move(exec));
@@ -1007,12 +985,14 @@ bool JsTask::SetPathPermission(const std::string &filepath)
             }
             if (AclSetAccess(it.first, SA_PERMISSION_X) != ACL_SUCC) {
                 REQUEST_HILOGE("AclSetAccess Parent Dir Failed");
+                SysEventLog::SendSysEventLog(FAULT_EVENT, ACL_FAULT_00, "AclSetAccess Parent Dir Failed");
             }
         }
     }
 
     if (AclSetAccess(filepath, SA_PERMISSION_RWX) != ACL_SUCC) {
         REQUEST_HILOGE("AclSetAccess Child Dir Failed");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ACL_FAULT_00, "AclSetAccess Child Dir Failed");
         return false;
     }
     return true;
@@ -1152,7 +1132,7 @@ void JsTask::RemoveTaskContext(const std::string &tid)
     auto context = it->second;
 
     auto map = context->task->notifyDataListenerMap_;
-    for (auto i = map.begin(); i != map.end();i++) {
+    for (auto i = map.begin(); i != map.end(); i++) {
         i->second->DeleteAllListenerRef();
     }
     map.clear();
@@ -1230,6 +1210,7 @@ void JsTask::RegisterForegroundResume()
     auto context = AbilityRuntime::ApplicationContext::GetInstance();
     if (context == nullptr) {
         REQUEST_HILOGE("End register foreground resume callback, failed: Get ApplicationContext failed");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_00, "Register failed get AppContext");
         return;
     }
     context->RegisterAbilityLifecycleCallback(std::make_shared<AppStateCallback>());
