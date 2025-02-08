@@ -31,8 +31,10 @@ pub(crate) struct NotifyFlow {
     database: Arc<NotificationDb>,
     // key for task_id.
     notify_type_map: HashMap<u32, NotifyType>,
+
     // key for request_id, group or task.
     last_notify_map: HashMap<u32, u64>,
+
     group_notify_progress: HashMap<u32, GroupProgress>,
     // value 1 for title, 2 for text.
     group_customized_notify: HashMap<u32, Option<CustomizedNotification>>,
@@ -418,6 +420,7 @@ impl NotifyFlow {
                         return None;
                     }
                 } else {
+                    self.database.clear_group_info(group_id);
                     NotifyContent::group_eventual_notify(
                         customized,
                         info.action,
@@ -429,14 +432,17 @@ impl NotifyFlow {
                     )
                 }
             }
-            NotifyType::Task => NotifyContent::task_eventual_notify(
-                self.task_customized_notify(info.task_id),
-                info.action,
-                info.task_id,
-                info.uid as u32,
-                info.file_name.clone(),
-                info.is_successful,
-            ),
+            NotifyType::Task => {
+                self.database.clear_task_info(info.task_id);
+                NotifyContent::task_eventual_notify(
+                    self.task_customized_notify(info.task_id),
+                    info.action,
+                    info.task_id,
+                    info.uid as u32,
+                    info.file_name.clone(),
+                    info.is_successful,
+                )
+            }
         };
         Some(content)
     }
