@@ -42,6 +42,7 @@ cfg_oh! {
     pub use utils::form_item::FileSpec;
 }
 
+mod database;
 mod error;
 mod manage;
 mod service;

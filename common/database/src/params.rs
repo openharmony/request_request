@@ -115,6 +115,22 @@ impl FromSql for i64 {
     }
 }
 
+impl FromSql for u32 {
+    fn from_sql(index: i32, row: Pin<&mut RowEntity>) -> Self {
+        let mut value = 0;
+        GetI64(row, index, &mut value);
+        value as u32
+    }
+}
+
+impl FromSql for u64 {
+    fn from_sql(index: i32, row: Pin<&mut RowEntity>) -> Self {
+        let mut value = 0;
+        GetI64(row, index, &mut value);
+        value as u64
+    }
+}
+
 impl FromSql for bool {
     fn from_sql(index: i32, row: Pin<&mut RowEntity>) -> Self {
         let mut value = 0;

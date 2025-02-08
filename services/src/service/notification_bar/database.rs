@@ -11,14 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use rdb::config::SecurityLevel;
-use rdb::{OpenConfig, RdbStore};
+use crate::database::REQUEST_DB;
 
-const NOTIFICATION_DB_PATH: &str = if cfg!(test) {
-    "/data/test/notification.db"
-} else {
-    "/data/service/el1/public/database/request/request.db"
-};
 const CREATE_TASK_CONFIG_TABLE: &str =
     "CREATE TABLE IF NOT EXISTS task_config (task_id INTEGER PRIMARY KEY, display BOOLEAN)";
 
@@ -26,7 +20,7 @@ const CREATE_GROUP_TABLE: &str =
     "CREATE TABLE IF NOT EXISTS group_notification (task_id INTEGER PRIMARY KEY, group_id INTEGER)";
 
 const CREATE_GROUP_CONFIG_TABLE: &str =
-    "CREATE TABLE IF NOT EXISTS group_notification_config (group_id INTEGER PRIMARY KEY, gauge BOOLEAN, attach_able BOOLEAN)";
+    "CREATE TABLE IF NOT EXISTS group_notification_config (group_id INTEGER PRIMARY KEY, gauge BOOLEAN, attach_able BOOLEAN, ctime INTEGER)";
 
 const CREATE_TASK_CONTENT_TABLE: &str =
     "CREATE TABLE IF NOT EXISTS task_notification_content (task_id INTEGER PRIMARY KEY, title TEXT, text TEXT)";
@@ -34,8 +28,12 @@ const CREATE_TASK_CONTENT_TABLE: &str =
 const CREATE_GROUP_CONTENT_TABLE: &str =
     "CREATE TABLE IF NOT EXISTS group_notification_content (group_id INTEGER PRIMARY KEY, title TEXT, text TEXT)";
 
+use std::time::{SystemTime, UNIX_EPOCH};
+
+const MILLIS_IN_A_WEEK: u64 = 7 * 24 * 60 * 60 * 1000;
+
 pub(crate) struct NotificationDb {
-    inner: rdb::RdbStore<'static>,
+    inner: &'static rdb::RdbStore<'static>,
 }
 
 #[derive(Default, Clone)]
@@ -46,16 +44,7 @@ pub(crate) struct CustomizedNotification {
 
 impl NotificationDb {
     pub(crate) fn new() -> Self {
-        let mut config = OpenConfig::new(NOTIFICATION_DB_PATH);
-        config.security_level(SecurityLevel::S1);
-        if cfg!(test) {
-            config.encrypt_status(false);
-            config.bundle_name("Test");
-        } else {
-            config.encrypt_status(true);
-        }
-        let rdb = RdbStore::open(config).unwrap();
-        let me = Self { inner: rdb };
+        let me = Self { inner: &REQUEST_DB };
         if let Err(e) = me.create_db() {
             error!("Failed to create notification database: {}", e);
         }
@@ -69,6 +58,80 @@ impl NotificationDb {
         self.inner.execute(CREATE_TASK_CONTENT_TABLE, ())?;
         self.inner.execute(CREATE_GROUP_CONFIG_TABLE, ())?;
         Ok(())
+    }
+
+    pub(crate) fn clear_task_info(&self, task_id: u32) {
+        let sqls = [
+            "DELETE FROM task_config WHERE task_id = ?",
+            "DELETE FROM task_notification_content WHERE task_id = ?",
+            "DELETE FROM group_notification WHERE task_id = ?",
+        ];
+        for sql in sqls.iter() {
+            if let Err(e) = self.inner.execute(sql, task_id) {
+                error!(
+                    "Failed to clear task {} notification info: {}, sql: {}",
+                    task_id, e, sql
+                );
+            }
+        }
+    }
+
+    pub(crate) fn clear_group_info(&self, group_id: u32) {
+        let sqls = [
+            "DELETE FROM group_notification WHERE group_id = ?",
+            "DELETE FROM group_notification_content WHERE group_id = ?",
+            "DELETE FROM group_notification_config WHERE group_id = ?",
+        ];
+        for sql in sqls.iter() {
+            if let Err(e) = self.inner.execute(sql, group_id) {
+                error!(
+                    "Failed to clear group {} notification info: {}, sql: {}",
+                    group_id, e, sql
+                );
+            }
+        }
+    }
+
+    pub(crate) fn clear_group_info_a_week_ago(&self) {
+        let current_time = match SystemTime::now().duration_since(UNIX_EPOCH) {
+            Ok(duration) => duration,
+            Err(e) => {
+                error!("Failed to get current time: {}", e);
+                return;
+            }
+        }
+        .as_millis() as u64;
+        let group_ids = match self.inner.query::<u32>(
+            "SELECT group_id FROM group_notification_config WHERE ctime < ?",
+            current_time - MILLIS_IN_A_WEEK,
+        ) {
+            Ok(rows) => rows,
+            Err(e) => {
+                error!("Failed to clear group info: {}", e);
+                return;
+            }
+        };
+        for group_id in group_ids {
+            let mut count = match self.inner.query::<u32>(
+                "SELECT COUNT(*) FROM group_notification WHERE group_id = ?",
+                group_id,
+            ) {
+                Ok(rows) => rows,
+                Err(e) => {
+                    error!("Failed to clear group info: {}", e);
+                    continue;
+                }
+            };
+            if !count.next().is_some_and(|x| x == 0) {
+                continue;
+            }
+
+            info!(
+                "clear group {} info for have been overdue for more than a week.",
+                group_id
+            );
+            self.clear_group_info(group_id);
+        }
     }
 
     pub(crate) fn check_task_notification_available(&self, task_id: &u32) -> bool {
@@ -98,7 +161,7 @@ impl NotificationDb {
     }
 
     pub(crate) fn query_group_tasks(&self, group_id: u32) -> Vec<u32> {
-        let set = match self.inner.query::<i32>(
+        let set = match self.inner.query::<u32>(
             "SELECT task_id FROM group_notification WHERE group_id = ?",
             group_id,
         ) {
@@ -108,11 +171,11 @@ impl NotificationDb {
                 return Vec::new();
             }
         };
-        set.map(|task_id| task_id as u32).collect()
+        set.collect()
     }
 
     pub(crate) fn query_task_gid(&self, task_id: u32) -> Option<u32> {
-        let mut set = match self.inner.query::<i32>(
+        let mut set = match self.inner.query::<u32>(
             "SELECT group_id FROM group_notification WHERE task_id = ?",
             task_id,
         ) {
@@ -122,7 +185,7 @@ impl NotificationDb {
                 return None;
             }
         };
-        set.next().map(|group_id| group_id as u32)
+        set.next()
     }
 
     pub(crate) fn query_task_customized_notification(
@@ -189,10 +252,10 @@ impl NotificationDb {
         }
     }
 
-    pub(crate) fn update_group_config(&self, group_id: u32, gauge: bool) {
+    pub(crate) fn update_group_config(&self, group_id: u32, gauge: bool, ctime: u64) {
         if let Err(e) = self.inner.execute(
-            "INSERT INTO group_notification_config (group_id, gauge, attach_able) VALUES (?, ?, ?) ON CONFLICT(group_id) DO UPDATE SET gauge = excluded.gauge",
-            (group_id, gauge, true),
+            "INSERT INTO group_notification_config (group_id, gauge, attach_able, ctime) VALUES (?, ?, ?, ?) ON CONFLICT(group_id) DO UPDATE SET gauge = excluded.gauge , ctime = excluded.ctime",
+            (group_id, gauge, true, ctime),
         ) {
             error!("Failed to update {} notification: {}", group_id, e);
         }
@@ -331,13 +394,84 @@ mod test {
         let group_id = fast_random() as u32;
 
         assert!(!db.contains_group(group_id));
-        db.update_group_config(group_id, true);
+        db.update_group_config(group_id, true, 0);
         assert!(db.contains_group(group_id));
         assert!(db.is_gauge(group_id));
         assert!(db.attach_able(group_id));
-        db.update_group_config(group_id, false);
+        db.update_group_config(group_id, false, 0);
         db.disable_attach_group(group_id);
         assert!(!db.attach_able(group_id));
         assert!(!db.is_gauge(group_id));
+    }
+
+    #[test]
+    fn ut_clear_task_info() {
+        let db = NotificationDb::new();
+
+        let group_id = fast_random() as u32;
+        let task_id = fast_random() as u32;
+
+        db.disable_task_notification(task_id);
+        db.update_task_customized_notification(task_id, None, None);
+        db.update_task_group(task_id, group_id);
+        assert!(!db.check_task_notification_available(&task_id));
+        assert!(db.query_task_customized_notification(task_id).is_some());
+        assert_eq!(db.query_task_gid(task_id).unwrap(), group_id);
+
+        db.clear_task_info(task_id);
+        assert!(db.check_task_notification_available(&task_id));
+        assert!(db.query_task_customized_notification(task_id).is_none());
+        assert!(db.query_task_gid(task_id).is_none());
+    }
+
+    #[test]
+    fn ut_clear_group_info() {
+        let db = NotificationDb::new();
+
+        let group_id = fast_random() as u32;
+        let task_id = fast_random() as u32;
+        db.update_group_customized_notification(group_id, None, None);
+        db.update_group_config(group_id, true, 0);
+        db.update_task_group(task_id, group_id);
+
+        assert!(db.query_group_customized_notification(group_id).is_some());
+        assert!(db.contains_group(group_id));
+        assert_eq!(db.query_task_gid(task_id).unwrap(), group_id);
+
+        db.clear_group_info(group_id);
+        assert!(db.query_group_customized_notification(group_id).is_none());
+        assert!(!db.contains_group(group_id));
+        assert!(db.query_task_gid(task_id).is_none());
+    }
+
+    #[test]
+    fn ut_clear_group_info_a_week_ago() {
+        let current_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64;
+        let a_week_ago = current_time - MILLIS_IN_A_WEEK;
+
+        let db = NotificationDb::new();
+        let group_id = fast_random() as u32;
+        let task_id = fast_random() as u32;
+
+        db.update_group_customized_notification(group_id, None, None);
+        db.update_group_config(group_id, true, current_time);
+
+        db.clear_group_info_a_week_ago();
+        assert!(db.query_group_customized_notification(group_id).is_some());
+        assert!(db.contains_group(group_id));
+
+        db.update_group_config(group_id, true, a_week_ago);
+        db.update_task_group(task_id, group_id);
+        db.clear_group_info_a_week_ago();
+        assert!(db.query_group_customized_notification(group_id).is_some());
+        assert!(db.contains_group(group_id));
+
+        db.clear_task_info(task_id);
+        db.clear_group_info_a_week_ago();
+        assert!(db.query_group_customized_notification(group_id).is_none());
+        assert!(!db.contains_group(group_id));
     }
 }

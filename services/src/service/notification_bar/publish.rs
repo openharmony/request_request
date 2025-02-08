@@ -50,6 +50,14 @@ impl NotificationDispatcher {
         &INSTANCE
     }
 
+    pub(crate) fn clear_task_info(&self, task_id: u32) {
+        self.database.clear_task_info(task_id);
+    }
+
+    pub(crate) fn clear_group_info(&self) {
+        self.database.clear_group_info_a_week_ago();
+    }
+
     pub(crate) fn disable_task_notification(&self, uid: u64, task_id: u32) {
         self.database.disable_task_notification(task_id);
         self.unregister_task(uid, task_id, true);
@@ -222,7 +230,13 @@ impl NotificationDispatcher {
             "Create group {} gauge {} customized_title {:?} customized_text {:?}",
             new_group_id, gauge, title, text
         );
-        self.database.update_group_config(new_group_id, gauge);
+
+        let current_time = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64;
+        self.database
+            .update_group_config(new_group_id, gauge, current_time);
         if title.is_some() || text.is_some() {
             self.database
                 .update_group_customized_notification(new_group_id, title, text);

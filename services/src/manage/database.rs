@@ -486,20 +486,6 @@ impl RequestDb {
         row.next().map(|config| config.unwrap())
     }
 
-    /// Removes task records from a week ago before unloading.
-    pub(crate) fn delete_early_records(&self) {
-        use std::time::{SystemTime, UNIX_EPOCH};
-
-        const MILLIS_IN_A_WEEK: u64 = 7 * 24 * 60 * 60 * 1000;
-        if let Ok(time) = SystemTime::now().duration_since(UNIX_EPOCH) {
-            let sql = format!(
-                "DELETE from request_task WHERE mtime < {} ",
-                time.as_millis() as u64 - MILLIS_IN_A_WEEK
-            );
-            let _ = self.execute(&sql);
-        }
-    }
-
     #[cfg(feature = "oh")]
     pub(crate) fn get_task_qos_info(&self, task_id: u32) -> Option<TaskQosInfo> {
         #[cfg(feature = "oh")]
