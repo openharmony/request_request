@@ -56,3 +56,17 @@ TASK_INFO_STATISTICS:
   TASKS_SIZE: {type: UINT64, desc: Download tasks size}
   TASKS_NUMBER: {type: UINT32, desc: Download tasks number}
 
+EXEC_ERROR:
+  __BASE: {type: STATISTIC, level: MINOR, desc: Error information management statistics during the execution of the request module }
+  CODE: {type: UINT32, desc: Error information code of request }
+  BUNDLE_NAME: {type: STRING, desc: Interface caller package name }
+  MODULE_NAME: {type: STRING, desc: Request module name }
+  EXTRA_INFO: {type: STRING, desc: Extra information }
+
+EXEC_FAULT:
+  __BASE: {type: FAULT, level: CRITICAL, desc: Fault information management statistics during the execution of the request module }
+  CODE: {type: UINT32, desc: Error information code of request }
+  BUNDLE_NAME: {type: STRING, desc: Interface caller package name }
+  MODULE_NAME: {type: STRING, desc: Request module name }
+  EXTRA_INFO: {type: STRING, desc: Extra information }
+

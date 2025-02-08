@@ -20,6 +20,7 @@ rust_cxx("download_server_cxx_gen") {
     "src/manage/database.rs",
     "src/manage/network.rs",
     "src/manage/query.rs",
+    "src/service/notification_bar.rs",
     "src/task/bundle.rs",
     "src/task/config.rs",
     "src/task/info.rs",
@@ -32,6 +33,7 @@ config("download_server_cxx_config") {
   include_dirs = [
     "include",
     "${target_gen_dir}/src",
+    "../common/sys_event/include",
   ]
 }
 
@@ -58,6 +60,7 @@ ohos_static_library("download_server_cxx") {
     "src/cxx/c_task_info.cpp",
     "src/cxx/get_proxy.cpp",
     "src/cxx/network.cpp",
+    "src/cxx/notification_bar.cpp",
     "src/cxx/request_cert_mgr_adapter.cpp",
     "src/cxx/request_utils.cpp",
     "src/cxx/url_policy.cpp",
@@ -80,6 +83,7 @@ ohos_static_library("download_server_cxx") {
     "distributed_notification_service:ans_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "i18n:intl_util",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",
     "os_account:libaccountkits",
@@ -87,12 +91,15 @@ ohos_static_library("download_server_cxx") {
     "relational_store:native_appdatafwk",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
+    "resource_management:global_resmgr",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
 
   deps = [
     ":download_server_cxx_gen",
+    "../common/sys_event:request_sysevent",
+    "../etc/icon:request_notificaton_xmark_icon",
     "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
 

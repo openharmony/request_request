@@ -25,6 +25,7 @@
 #include "net_conn_client.h"
 #include "net_specifier.h"
 #include "refbase.h"
+#include "sys_event.h"
 
 #ifdef REQUEST_TELEPHONY_CORE_SERVICE
 #include "cellular_data_client.h"
@@ -139,11 +140,13 @@ bool RequestNetCallbackStub::IsRoaming()
         auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (sm == nullptr) {
             REQUEST_HILOGE("GetSystemAbilityManager return null");
+            SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_00, "Get SAM failed");
             return false;
         }
         auto systemAbility = sm->CheckSystemAbility(TELEPHONY_CORE_SERVICE_SYS_ABILITY_ID);
         if (systemAbility == nullptr) {
             REQUEST_HILOGE("Telephony SA not found");
+            SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_02, "Check SA failed");
             return false;
         }
     }

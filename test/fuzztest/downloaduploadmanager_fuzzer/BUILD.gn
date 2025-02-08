@@ -26,6 +26,9 @@ ohos_fuzztest("DownloadUploadManagerFuzzTest") {
   include_dirs = [
     "../../../frameworks/js/napi/include",
     "../../../frameworks/native/include",
+    "../../../common/include",
+    "../../../interfaces/inner_kits/running_count/include",
+    "../../../common/sys_event/include",
   ]
 
   cflags = [
@@ -40,7 +43,6 @@ ohos_fuzztest("DownloadUploadManagerFuzzTest") {
     "../../../frameworks/native/src/request_manager.cpp",
     "../../../frameworks/native/src/request_manager_impl.cpp",
     "../../../frameworks/native/src/request_running_task_count.cpp",
-    "../../../frameworks/native/src/request_sync_load_callback.cpp",
     "../../../frameworks/native/src/response_message_receiver.cpp",
     "../../../frameworks/native/src/runcount_notify_stub.cpp",
     "downloaduploadmanager_fuzzer.cpp",
@@ -48,6 +50,7 @@ ohos_fuzztest("DownloadUploadManagerFuzzTest") {
 
   deps = [
     "../../../common:request_common_static",
+    "../../../common/sys_event:request_sysevent",
     "../../../frameworks/js/napi:request_static",
     "../../../frameworks/native:request_native",
   ]

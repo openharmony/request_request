@@ -18,6 +18,7 @@
 #include "js_common.h"
 #include "cj_request_task.h"
 #include "cj_request_log.h"
+#include "ffrt.h"
 #include "request_manager.h"
 
 namespace OHOS::CJSystemapi::Request {
@@ -31,9 +32,13 @@ void CJAppStateCallback::OnAbilityForeground(const std::shared_ptr<NativeReferen
     }
     for (auto task = CJTask::taskMap_.begin(); task != CJTask::taskMap_.end(); ++task) {
         if (task->second->config_.mode == Mode::FOREGROUND) {
-            RequestManager::GetInstance()->LoadRequestServer();
+            ffrt::submit([]() mutable { RequestManager::GetInstance()->LoadRequestServer(); });
             return;
         }
+    }
+
+    if (! CJTask::register_) {
+        return;
     }
     CJTask::register_ = false;
     auto context = AbilityRuntime::ApplicationContext::GetInstance();

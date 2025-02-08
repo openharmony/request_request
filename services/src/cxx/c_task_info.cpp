@@ -30,11 +30,6 @@ void DeleteCStringPtr(CStringWrapper *ptr)
     delete[] ptr;
 }
 
-void DeleteCEachFileStatus(CEachFileStatus *ptr)
-{
-    delete[] ptr;
-}
-
 void DeleteCTaskInfo(CTaskInfo *ptr)
 {
     delete[] ptr;

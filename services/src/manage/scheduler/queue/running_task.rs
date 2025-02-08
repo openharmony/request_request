@@ -19,6 +19,7 @@ use crate::manage::events::{TaskEvent, TaskManagerEvent};
 use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::queue::keeper::SAKeeper;
 use crate::manage::task_manager::TaskManagerTx;
+use crate::service::notification_bar::publish_progress_notification;
 use crate::task::config::Action;
 use crate::task::download::download;
 use crate::task::reason::Reason;
@@ -65,41 +66,35 @@ impl Deref for RunningTask {
 impl Drop for RunningTask {
     fn drop(&mut self) {
         self.task.update_progress_in_database();
-        self.task.background_notify();
+        publish_progress_notification(self);
         Notifier::progress(&self.client_manager, self.build_notify_data());
+        let task_id = self.task_id();
+        let uid = self.uid();
+        let mode = self.mode();
         match *self.task.running_result.lock().unwrap() {
             Some(res) => match res {
                 Ok(()) => {
                     self.tx
                         .send_event(TaskManagerEvent::Task(TaskEvent::Completed(
-                            self.task_id(),
-                            self.uid(),
-                            self.mode(),
+                            task_id, uid, mode,
                         )));
                 }
                 Err(e) if e == Reason::NetworkOffline => {
                     self.tx
                         .send_event(TaskManagerEvent::Task(TaskEvent::Offline(
-                            self.task_id(),
-                            self.uid(),
-                            self.mode(),
+                            task_id, uid, mode,
                         )));
                 }
                 Err(e) => {
                     self.tx.send_event(TaskManagerEvent::Task(TaskEvent::Failed(
-                        self.task_id(),
-                        self.uid(),
-                        e,
-                        self.mode(),
+                        task_id, uid, e, mode,
                     )));
                 }
             },
             None => {
                 self.tx
                     .send_event(TaskManagerEvent::Task(TaskEvent::Running(
-                        self.task_id(),
-                        self.uid(),
-                        self.mode(),
+                        task_id, uid, mode,
                     )));
             }
         }

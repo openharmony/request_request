@@ -89,7 +89,6 @@ impl RequestAbility {
         info!("system_config_manager init ok");
 
         let task_manager = TaskManager::init(runcount_manager.clone(), client_manger.clone());
-
         *self.task_manager.lock().unwrap() = Some(task_manager.clone());
 
         info!("task_manager init ok");

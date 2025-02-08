@@ -15,9 +15,11 @@
 
 #include "app_state_callback.h"
 
+#include "ffrt.h"
 #include "js_task.h"
 #include "log.h"
 #include "request_manager.h"
+#include "sys_event.h"
 
 namespace OHOS {
 namespace Request {
@@ -26,6 +28,8 @@ void AppStateCallback::OnAbilityForeground(const std::shared_ptr<NativeReference
     if (RequestManager::GetInstance()->IsSaReady()) {
         return;
     }
+    SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_02, "Check SA failed");
+
     bool hasForeground = false;
     {
         std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
@@ -37,17 +41,20 @@ void AppStateCallback::OnAbilityForeground(const std::shared_ptr<NativeReference
         }
     }
     if (hasForeground) {
-        RequestManager::GetInstance()->LoadRequestServer();
+        ffrt::submit([]() mutable { RequestManager::GetInstance()->LoadRequestServer(); });
         return;
     }
-
+    if (!JsTask::register_) {
+        return;
+    }
     JsTask::register_ = false;
     auto context = AbilityRuntime::ApplicationContext::GetInstance();
     if (context == nullptr) {
         REQUEST_HILOGE("Get ApplicationContext failed");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_00, "Get AppContext failed");
         return;
     }
-    context->UnregisterAbilityLifecycleCallback(std::make_shared<AppStateCallback>());
+    context->UnregisterAbilityLifecycleCallback(shared_from_this());
     REQUEST_HILOGD("Unregister foreground resume callback success");
 }
 } // namespace Request

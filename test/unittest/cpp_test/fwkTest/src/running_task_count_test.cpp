@@ -83,7 +83,7 @@ HWTEST_F(RunningTaskCountTest, SubscribeRunningTaskCountTest_001, TestSize.Level
 {
     GTEST_LOG_(INFO) << "RunningTaskCountTest, SubscribeRunningTaskCountTest_001, TestSize.Level1";
     REQUEST_HILOGI("[RunningTaskCountTest] SubscribeRunningTaskCountTest_001 begin");
-    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy();
+    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy(true);
     if (proxy == nullptr) {
         std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FwkTestOberver>();
         int32_t ret = SubscribeRunningTaskCount(ob);

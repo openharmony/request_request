@@ -20,7 +20,8 @@
 
 namespace OHOS {
 namespace Request {
-class AppStateCallback : public OHOS::AbilityRuntime::AbilityLifecycleCallback {
+class AppStateCallback
+    : public OHOS::AbilityRuntime::AbilityLifecycleCallback, public std::enable_shared_from_this<AppStateCallback> {
 public:
     void OnAbilityCreate(const std::shared_ptr<NativeReference> &ability) override{};
 
