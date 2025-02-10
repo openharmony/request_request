@@ -433,15 +433,18 @@ impl NotifyFlow {
                 }
             }
             NotifyType::Task => {
-                self.database.clear_task_info(info.task_id);
-                NotifyContent::task_eventual_notify(
+                let content = NotifyContent::task_eventual_notify(
                     self.task_customized_notify(info.task_id),
                     info.action,
                     info.task_id,
                     info.uid as u32,
                     info.file_name.clone(),
                     info.is_successful,
-                )
+                );
+                if info.is_successful {
+                    self.database.clear_task_info(info.task_id);
+                }
+                content
             }
         };
         Some(content)
@@ -501,6 +504,9 @@ mod test {
     use ylong_runtime::fastrand::fast_random;
 
     use super::*;
+
+    const TEST_TITLE: &str = "test_title";
+    const TEST_TEXT: &str = "test_text";
 
     #[test]
     fn ut_notify_flow_group() {
@@ -582,6 +588,55 @@ mod test {
             info.is_successful,
         );
         let content = flow.publish_completed_notify(&info).unwrap();
+        assert_eq!(content, content_default);
+    }
+
+    #[test]
+    fn ut_customized_task_eventual() {
+        let (_, rx) = mpsc::unbounded_channel();
+        let db = Arc::new(NotificationDb::new());
+        let mut flow = NotifyFlow::new(rx, db.clone());
+        let task_id = fast_random() as u32;
+        let uid = fast_random();
+        let mut info = EventualNotify {
+            action: Action::Download,
+            task_id,
+            processed: 0,
+            uid,
+            file_name: "test".to_string(),
+            is_successful: false,
+        };
+        db.update_task_customized_notification(
+            task_id,
+            Some(TEST_TITLE.to_string()),
+            Some(TEST_TEXT.to_string()),
+        );
+
+        let customized = db.query_task_customized_notification(task_id);
+        let content_default = NotifyContent::task_eventual_notify(
+            customized,
+            info.action,
+            info.task_id,
+            info.uid as u32,
+            info.file_name.clone(),
+            info.is_successful,
+        );
+        let content = flow.publish_completed_notify(&info).unwrap();
+        let customized = db.query_task_customized_notification(task_id);
+        assert!(customized.is_some());
+        assert_eq!(content, content_default);
+
+        info.is_successful = true;
+        let content = flow.publish_completed_notify(&info).unwrap();
+        let content_default = NotifyContent::task_eventual_notify(
+            customized,
+            info.action,
+            info.task_id,
+            info.uid as u32,
+            info.file_name.clone(),
+            info.is_successful,
+        );
+        assert!(db.query_task_customized_notification(task_id).is_none());
         assert_eq!(content, content_default);
     }
 }

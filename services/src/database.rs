@@ -108,7 +108,7 @@ fn clear_database_test() {
         .query::<u32>("SELECT task_id from request_task", ())
         .unwrap()
         .collect();
-    for task_id in task_ids.iter().take(2) {
+    for task_id in task_ids.iter() {
         assert!(query.contains(task_id));
     }
 
