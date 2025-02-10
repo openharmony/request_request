@@ -287,11 +287,6 @@ bool TaskBuilder::checkData()
                 return false;
             }
         }
-        if (this->config.files.size() <= this->config.index) {
-            REQUEST_HILOGE(
-                "files.size is %{public}zu, index is %{public}d", this->config.files.size(), this->config.index);
-            return false;
-        }
     }
     return true;
 }
@@ -408,7 +403,8 @@ std::string GetHostnameFromURL(const std::string &url)
     if (notSlash != std::string::npos) {
         posStart = notSlash;
     }
-    size_t posEnd = std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
+    size_t posEnd =
+        std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
     if (posEnd != std::string::npos) {
         return tempUrl.substr(posStart, posEnd - posStart);
     }
