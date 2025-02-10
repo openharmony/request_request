@@ -130,7 +130,6 @@ bool CJRequestTask::SetPathPermission(const std::string &filepath)
             }
             if (AclSetAccess(it.first, SA_PERMISSION_X) != ACL_SUCC) {
                 REQUEST_HILOGE("AclSetAccess Parent Dir Failed.");
-                return false;
             }
         }
     }
