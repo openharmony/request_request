@@ -74,8 +74,8 @@ libcurl: 封装libcurl接口完成上传。
 ##  说明
 ###  接口说明
 -   Request接口文档
-    -   [js-apis-request.md](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis/js-apis-request.md) 提供从API version 6开始接口定义和示例代码。
-    -   [js-apis-system-request.md](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis/js-apis-system-request.md) 提供从API version 3开始接口定义和示例代码，此文档接口从API version 9开始已全部废弃，不推荐使用。
+    -   [js-apis-request.md](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-request.md) 提供从API version 6开始接口定义和示例代码。
+    -   [js-apis-system-request.md](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-system-request.md) 提供从API version 3开始接口定义和示例代码，此文档接口从API version 9开始已全部废弃，不推荐使用。
 
 
 
