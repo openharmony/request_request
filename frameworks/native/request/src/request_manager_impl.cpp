@@ -62,7 +62,22 @@ ExceptionErrorCode RequestManagerImpl::DisableTaskNotification(
 ExceptionErrorCode RequestManagerImpl::CreateTasks(const std::vector<Config> &configs, std::vector<TaskRet> &rets)
 {
     this->EnsureChannelOpen();
-    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::CreateTasks, configs, rets));
+    int ret = CallProxyMethod(&RequestServiceInterface::CreateTasks, configs, rets);
+    if (ret == E_OK) {
+        bool channelOpened = false;
+        for (auto taskRet : rets) {
+            if (taskRet.code != E_CHANNEL_NOT_OPEN) {
+                continue;
+            }
+            if (!channelOpened) {
+                this->ReopenChannel();
+                channelOpened = true;
+            }
+            taskRet.code =
+                static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::Subscribe, taskRet.tid));
+        }
+    }
+    return static_cast<ExceptionErrorCode>(ret);
 }
 
 ExceptionErrorCode RequestManagerImpl::StartTasks(
@@ -86,7 +101,8 @@ ExceptionErrorCode RequestManagerImpl::ResumeTasks(
 ExceptionErrorCode RequestManagerImpl::RemoveTasks(
     const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets)
 {
-    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::RemoveTasks, tids, version, rets));
+    return static_cast<ExceptionErrorCode>(
+        CallProxyMethod(&RequestServiceInterface::RemoveTasks, tids, version, rets));
 }
 
 ExceptionErrorCode RequestManagerImpl::PauseTasks(

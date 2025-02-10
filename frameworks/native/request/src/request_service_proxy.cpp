@@ -57,14 +57,14 @@ ExceptionErrorCode RequestServiceProxy::CreateTasks(const std::vector<Config> &c
     }
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REQUEST), data, reply, option);
     if (ret != ERR_NONE) {
-        REQUEST_HILOGE("End Request StartTasks, failed: %{public}d", ret);
+        REQUEST_HILOGE("End Request CreateTasks, failed: %{public}d", ret);
         SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
     ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
     if (code != ExceptionErrorCode::E_OK) {
         SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_01, std::to_string(code));
-        REQUEST_HILOGE("End Request StartTasks, failed: %{public}d", code);
+        REQUEST_HILOGE("End Request CreateTasks, failed: %{public}d", code);
         return code;
     }
     for (uint32_t i = 0; i < len; i++) {
@@ -226,7 +226,8 @@ ExceptionErrorCode RequestServiceProxy::RemoveTasks(
     return ExceptionErrorCode::E_OK;
 }
 
-ExceptionErrorCode RequestServiceProxy::QueryTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets)
+ExceptionErrorCode RequestServiceProxy::QueryTasks(
+    const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets)
 {
     TaskInfoRet infoRet{ .code = ExceptionErrorCode::E_OTHER };
     uint32_t len = static_cast<uint32_t>(tids.size());
@@ -366,7 +367,8 @@ ExceptionErrorCode RequestServiceProxy::SetMode(const std::string &tid, const Mo
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(tid);
     data.WriteUint32(static_cast<uint32_t>(mode));
-    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SET_MODE), data, reply, option);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SET_MODE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End send SetMode request, failed: %{public}d", ret);
         SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
@@ -429,7 +431,7 @@ int32_t RequestServiceProxy::Create(const Config &config, std::string &tid)
         REQUEST_HILOGE("End Request Create failed: %{public}d", ret);
         return ret;
     }
-    if (rets[0].code == ExceptionErrorCode::E_OK) {
+    if (rets[0].code == ExceptionErrorCode::E_OK || rets[0].code == ExceptionErrorCode::E_CHANNEL_NOT_OPEN) {
         REQUEST_HILOGD("End Request Create ok, tid: %{public}s", tid.c_str());
         tid = rets[0].tid;
     }
