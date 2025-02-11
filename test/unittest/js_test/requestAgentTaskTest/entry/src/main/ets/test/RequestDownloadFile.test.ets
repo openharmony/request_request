@@ -227,7 +227,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     })
-    
+
     /**
      * @tc.number: testDownloadFile001
      * @tc.name: testDownloadFile001
@@ -1465,7 +1465,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     })
-    
+
 
   })
 }

@@ -320,7 +320,7 @@ impl TaskConfig {
                 precise: c_struct.common_data.precise,
                 priority: c_struct.common_data.priority,
                 background: c_struct.common_data.background,
-                multipart:c_struct.common_data.multipart,
+                multipart: c_struct.common_data.multipart,
             },
         };
 

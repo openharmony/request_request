@@ -24,6 +24,7 @@ use ylong_runtime::net::UnixDatagram;
 use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 use ylong_runtime::sync::oneshot::{channel, Sender};
 
+use crate::config::Version;
 use crate::error::ErrorCode;
 use crate::task::notify::{NotifyData, SubscribeType};
 use crate::utils::{runtime_spawn, Recv};
@@ -249,7 +250,14 @@ impl Client {
         response.extend_from_slice(&reason.into_bytes());
         response.push(b'\0');
 
+        // The maximum length of the headers in uds should not exceed 8192
+        let mut buf_size = 0;
         for (k, v) in headers {
+            buf_size += k.as_bytes().len() + v.iter().map(|f| f.len()).sum::<usize>();
+            if buf_size > HEADERS_MAX_SIZE as usize {
+                break;
+            }
+
             response.extend_from_slice(k.as_bytes());
             response.push(b':');
             for (i, sub_value) in v.iter().enumerate() {
@@ -263,6 +271,7 @@ impl Client {
 
         let mut size = response.len() as u16;
         if size > HEADERS_MAX_SIZE {
+            info!("send response too long");
             response.truncate(HEADERS_MAX_SIZE as usize);
             size = HEADERS_MAX_SIZE;
         }
@@ -312,11 +321,23 @@ impl Client {
             message.extend_from_slice(&size.to_le_bytes());
         }
 
-        message.extend_from_slice(&(notify_data.progress.extras.len() as u32).to_le_bytes());
-        for (key, value) in notify_data.progress.extras {
-            message.extend_from_slice(&key.into_bytes());
+        // The maximum length of the headers in uds should not exceed 8192
+        let mut buf_size = 0;
+        let index = notify_data
+            .progress
+            .extras
+            .iter()
+            .take_while(|x| {
+                buf_size += x.0.len() + x.1.len();
+                buf_size < HEADERS_MAX_SIZE as usize
+            })
+            .count();
+
+        message.extend_from_slice(&(index as u32).to_le_bytes());
+        for (key, value) in notify_data.progress.extras.iter().take(index) {
+            message.extend_from_slice(key.as_bytes());
             message.push(b'\0');
-            message.extend_from_slice(&value.into_bytes());
+            message.extend_from_slice(value.as_bytes());
             message.push(b'\0');
         }
 
@@ -324,9 +345,12 @@ impl Client {
 
         message.extend_from_slice(&(notify_data.version as u32).to_le_bytes());
 
+        // Param taskstates used for UploadFile when complete or fail
         message.extend_from_slice(&(notify_data.each_file_status.len() as u32).to_le_bytes());
         for status in notify_data.each_file_status {
-            message.extend_from_slice(&status.path.into_bytes());
+            if notify_data.version == Version::API9 {
+                message.extend_from_slice(&status.path.into_bytes());
+            }
             message.push(b'\0');
             message.extend_from_slice(&(status.reason.repr as u32).to_le_bytes());
             message.extend_from_slice(&status.message.into_bytes());

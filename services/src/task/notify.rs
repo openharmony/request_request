@@ -52,7 +52,7 @@ pub(crate) struct CommonProgress {
 #[derive(Debug, Clone)]
 pub(crate) struct Progress {
     pub(crate) common_data: CommonProgress,
-    /// Total size of the files. 
+    /// Total size of the files.
     pub(crate) sizes: Vec<i64>,
     /// Each progress size of the files.
     pub(crate) processed: Vec<usize>,

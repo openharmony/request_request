@@ -123,8 +123,7 @@ pub(crate) fn check_permission(permission: &str) -> bool {
 }
 
 #[cfg(feature = "oh")]
-pub(crate) fn update_policy(any_tasks:bool) -> i32 {
-    
+pub(crate) fn update_policy(any_tasks: bool) -> i32 {
     ffi::UpdatePolicy(any_tasks)
 }
 
@@ -140,7 +139,7 @@ mod ffi {
         fn GetCallingBundle(token_id: u64) -> String;
         fn IsSystemAPI(token_id: u64) -> bool;
         fn CheckPermission(token_id: u64, permission: &str) -> bool;
-        fn UpdatePolicy(any_tasks:bool) -> i32;
+        fn UpdatePolicy(any_tasks: bool) -> i32;
     }
 }
 

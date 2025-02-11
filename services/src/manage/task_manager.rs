@@ -32,17 +32,17 @@ use super::events::{
 };
 use crate::config::{Action, Mode};
 use crate::error::ErrorCode;
-use crate::info::{TaskInfo, State};
+use crate::info::{State, TaskInfo};
 use crate::manage::app_state::AppUninstallSubscriber;
 use crate::manage::network::register_network_change;
 use crate::manage::network_manager::NetworkManager;
+use crate::manage::query::TaskFilter;
 use crate::manage::scheduler::state::Handler;
 use crate::manage::scheduler::Scheduler;
-use crate::manage::query::TaskFilter;
 use crate::service::client::ClientManagerEntry;
 use crate::service::notification_bar::subscribe_notification_bar;
 use crate::service::run_count::RunCountManagerEntry;
-use crate::utils::{runtime_spawn, subscribe_common_event, update_policy, get_current_timestamp};
+use crate::utils::{get_current_timestamp, runtime_spawn, subscribe_common_event, update_policy};
 
 const CLEAR_INTERVAL: u64 = 30 * 60;
 const RESTORE_ALL_TASKS_INTERVAL: u64 = 10;
