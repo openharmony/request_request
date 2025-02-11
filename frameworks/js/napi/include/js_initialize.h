@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef JS_INITIALIZE_H
-#define JS_INITIALIZE_H
+#ifndef REQUEST_JS_INITIALIZE_H
+#define REQUEST_JS_INITIALIZE_H
 
 #include "ability.h"
 #include "data_ability_helper.h"
@@ -59,6 +59,7 @@ private:
     static bool ParseDownloadConfig(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static bool ParseAction(napi_env env, napi_value jsConfig, Action &action, std::string &errInfo);
     static bool ParseUrl(napi_env env, napi_value jsConfig, std::string &url, std::string &errInfo);
+    static bool ParseNotification(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static bool ParseProxy(napi_env env, napi_value jsConfig, std::string &proxy, std::string &errInfo);
     static bool ParseCertsPath(
         napi_env env, napi_value jsConfig, std::vector<std::string> &certsPath, std::string &errInfo);

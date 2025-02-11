@@ -49,6 +49,12 @@ pub const UNSUBSCRIBE: u32 = 15;
 pub const SUB_RUN_COUNT: u32 = 16;
 /// Unsubscribe run count.
 pub const UNSUB_RUN_COUNT: u32 = 17;
+/// Create a group.
+pub const CREATE_GROUP: u32 = 18;
+/// Attach a group.
+pub const ATTACH_GROUP: u32 = 19;
+/// Delete a group.
+pub const DELETE_GROUP: u32 = 20;
 
 /// Function code of RequestNotifyInterfaceCode
 pub(crate) const NOTIFY_RUN_COUNT: u32 = 2;
@@ -76,5 +82,8 @@ mod test {
         assert_eq!(15, UNSUBSCRIBE);
         assert_eq!(16, SUB_RUN_COUNT);
         assert_eq!(17, UNSUB_RUN_COUNT);
+        assert_eq!(18, CREATE_GROUP);
+        assert_eq!(19, ATTACH_GROUP);
+        assert_eq!(20, DELETE_GROUP);
     }
 }

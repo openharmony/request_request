@@ -14,7 +14,12 @@
 //! This create implement the request proxy and stub
 #![cfg_attr(test, feature(future_join))]
 #![cfg_attr(test, allow(clippy::redundant_clone))]
-#![allow(unreachable_pub, clippy::new_without_default)]
+#![allow(
+    unreachable_pub,
+    clippy::new_without_default,
+    unknown_lints,
+    stable_features
+)]
 #![warn(
     missing_docs,
     clippy::redundant_static_lifetimes,
@@ -22,17 +27,14 @@
     clippy::clone_on_copy,
     clippy::unused_async
 )]
-
+#![feature(lazy_cell)]
 #[macro_use]
 mod macros;
 
-#[cfg(not(feature = "oh"))]
 #[macro_use]
-extern crate log;
+extern crate request_utils;
 
 cfg_oh! {
-    #[macro_use]
-    mod hilog;
     mod trace;
     pub mod ability;
     mod sys_event;
@@ -40,6 +42,7 @@ cfg_oh! {
     pub use utils::form_item::FileSpec;
 }
 
+mod database;
 mod error;
 mod manage;
 mod service;
@@ -48,19 +51,8 @@ mod utils;
 pub use task::{config, info};
 
 cfg_oh! {
-    #[cfg(not(test))]
-    const LOG_LABEL: hilog_rust::HiLogLabel = hilog_rust::HiLogLabel {
-        log_type: hilog_rust::LogType::LogCore,
-        domain: 0xD001C50,
-        tag: "RequestService",
-    };
-
-    #[cfg(test)]
-    const LOG_LABEL: hilog_rust::HiLogLabel = hilog_rust::HiLogLabel {
-        log_type: hilog_rust::LogType::LogCore,
-        domain: 0xD001C50,
-        tag: "RequestUtTest",
-    };
+    const TAG: &str = "RequestService\0";
+    const DOMAIN: u32 = 0xD001C50;
 }
 
 #[cfg(feature = "oh")]

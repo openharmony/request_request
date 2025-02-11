@@ -47,6 +47,7 @@ enum ExceptionErrorCode : int32_t {
     E_TASK_MODE = 21900005,
     E_TASK_NOT_FOUND = 21900006,
     E_TASK_STATE = 21900007,
+    E_GROUP_NOT_FOUND = 21900008,
 };
 
 struct ExceptionError {
@@ -66,6 +67,7 @@ static constexpr const char *E_TASK_QUEUE_INFO = "the application task queue is 
 static constexpr const char *E_TASK_MODE_INFO = "task mode error";
 static constexpr const char *E_TASK_NOT_FOUND_INFO = "task not found";
 static constexpr const char *E_TASK_STATE_INFO = "task state error";
+static constexpr const char *E_GROUP_NOT_FOUND_INFO = "group deleted or not found";
 
 static constexpr const char *FUNCTION_PAUSE = "pause";
 static constexpr const char *FUNCTION_QUERY = "query";

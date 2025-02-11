@@ -329,7 +329,7 @@ export default function requestCreateTaskTest() {
     /**
      * @tc.number: testTaskUrl006
      * @tc.name: testTaskUrl006
-     * @tc.desc: Test create task when url length exceeds 8192.
+     * @tc.desc: Test create task when url length exceeds 2048.
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -339,7 +339,7 @@ export default function requestCreateTaskTest() {
 
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1/' + 'a'.repeat(8192),
+        url: 'http://127.0.0.1/' + 'a'.repeat(2048),
       }
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -355,7 +355,7 @@ export default function requestCreateTaskTest() {
     /**
      * @tc.number: testTaskUrl007
      * @tc.name: testTaskUrl007
-     * @tc.desc: Test create task when url length is 8192.
+     * @tc.desc: Test create task when url length is 2048.
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -364,7 +364,7 @@ export default function requestCreateTaskTest() {
     it('testTaskUrl007', 0, function (done)  {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1/' + 'a'.repeat(8175),
+        url: 'http://127.0.0.1/' + 'a'.repeat(2031),
       }
       try {
         request.agent.create(context, conf, (err, data) => {

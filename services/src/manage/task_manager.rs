@@ -204,6 +204,9 @@ impl TaskManager {
             ServiceEvent::DumpOne(task_id, tx) => {
                 let _ = tx.send(self.query_one_task(task_id));
             }
+            ServiceEvent::AttachGroup(uid, task_ids, group, tx) => {
+                let _ = tx.send(self.attach_group(uid, task_ids, group));
+            }
         }
     }
 

@@ -20,6 +20,7 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "napi_utils.h"
+#include "notification_bar.h"
 #include "request_event.h"
 
 using namespace OHOS::Request;
@@ -118,6 +119,9 @@ static napi_value InitAgent(napi_env env, napi_value exports)
         DECLARE_NAPI_METHOD("touch", JsTask::Touch),
         DECLARE_NAPI_METHOD("search", JsTask::Search),
         DECLARE_NAPI_METHOD("query", JsTask::Query),
+        DECLARE_NAPI_METHOD("createGroup", createGroup),
+        DECLARE_NAPI_METHOD("attachGroup", attachGroup),
+        DECLARE_NAPI_METHOD("deleteGroup", deleteGroup),
     };
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
     REQUEST_HILOGI("InitV10 end %{public}d", status);

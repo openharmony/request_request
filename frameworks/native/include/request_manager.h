@@ -16,6 +16,8 @@
 #ifndef OHOS_REQUEST_DOWNLOAD_MANAGER_H
 #define OHOS_REQUEST_DOWNLOAD_MANAGER_H
 
+#include <optional>
+
 #include "i_notify_data_listener.h"
 #include "i_response_listener.h"
 #include "js_common.h"
@@ -59,6 +61,11 @@ public:
     REQUEST_API bool SubscribeSA();
     REQUEST_API bool UnsubscribeSA();
     REQUEST_API int32_t GetNextSeq();
+
+    REQUEST_API int32_t CreateGroup(
+        std::string &gid, const bool gauge, std::optional<std::string> title, std::optional<std::string> text);
+    REQUEST_API int32_t AttachGroup(const std::string &gid, const std::vector<std::string> &tid);
+    REQUEST_API int32_t DeleteGroup(const std::string &gid);
 
 private:
     RequestManager() = default;

@@ -14,5 +14,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "services", "test/rustest",
+    "services",
+    "common/database",
+    "common/utils",
 ]

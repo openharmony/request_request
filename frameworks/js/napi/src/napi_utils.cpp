@@ -72,7 +72,7 @@ static const std::map<ExceptionErrorCode, std::string> ErrorCodeToMsg{ { E_OK, E
     { E_UNSUPPORTED, E_UNSUPPORTED_INFO }, { E_FILE_IO, E_FILE_IO_INFO }, { E_FILE_PATH, E_FILE_PATH_INFO },
     { E_SERVICE_ERROR, E_SERVICE_ERROR_INFO }, { E_TASK_QUEUE, E_TASK_QUEUE_INFO }, { E_TASK_MODE, E_TASK_MODE_INFO },
     { E_TASK_NOT_FOUND, E_TASK_NOT_FOUND_INFO }, { E_TASK_STATE, E_TASK_STATE_INFO }, { E_OTHER, E_OTHER_INFO },
-    { E_NOT_SYSTEM_APP, NOT_SYSTEM_APP } };
+    { E_NOT_SYSTEM_APP, NOT_SYSTEM_APP }, { E_GROUP_NOT_FOUND, E_GROUP_NOT_FOUND_INFO } };
 
 napi_status Convert2JSValue(napi_env env, const DownloadInfo &in, napi_value &out)
 {

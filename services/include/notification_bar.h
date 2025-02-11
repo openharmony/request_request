@@ -24,18 +24,12 @@
 #include "notification_local_live_view_subscriber.h"
 namespace OHOS::Request {
 
-struct RequestTaskMsg;
 struct TaskManagerWrapper;
+struct NotifyContent;
+struct ProgressCircle;
 
-void RequestProgressNotification(RequestTaskMsg msg);
-void RequestCompletedNotification(uint8_t action, uint32_t taskId, int32_t uid, rust::string fileName, bool isSucceed);
-
-std::string ProgressNum(std::size_t uploaded, std::size_t total);
-std::string ProgressSized(std::size_t processed);
-std::string ProgressPercentage(std::size_t processed, std::size_t size);
-void WithRemainder(std::string &content, size_t processed, size_t remainder);
-
-void BasicRequestSettings(Notification::NotificationRequest &request, int32_t uid);
+rust::string GetSystemResourceString(const rust::str);
+int PublishNotification(const NotifyContent &content);
 
 class NotificationSubscriber : public Notification::NotificationLocalLiveViewSubscriber {
 public:

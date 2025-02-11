@@ -148,7 +148,6 @@ impl RequestDb {
             task_id
         );
         let v = self.query_integer::<u32>(&sql);
-
         if v.is_empty() {
             error!("contains_task check failed, empty result");
             false
@@ -341,6 +340,21 @@ impl RequestDb {
         Some(task_info)
     }
 
+    pub(crate) fn query_task_total_processed(&self, task_id: u32) -> Option<i64> {
+        let sql = format!(
+            "SELECT total_processed FROM request_task WHERE task_id = {}",
+            task_id
+        );
+        self.query_integer(&sql).first().copied()
+    }
+
+    pub(crate) fn query_task_state(&self, task_id: u32) -> Option<u8> {
+        let sql = format!("SELECT state FROM request_task WHERE task_id = {}", task_id);
+        self.query_integer(&sql)
+            .first()
+            .map(|state: &i32| *state as u8)
+    }
+
     #[cfg(not(feature = "oh"))]
     pub(crate) fn get_task_info(&self, task_id: u32) -> Option<TaskInfo> {
         use crate::info::CommonTaskInfo;
@@ -450,20 +464,6 @@ impl RequestDb {
             })
             .unwrap();
         row.next().map(|config| config.unwrap())
-    }
-
-    /// Removes task records from a week ago before unloading.
-    pub(crate) fn delete_early_records(&self) {
-        use std::time::{SystemTime, UNIX_EPOCH};
-
-        const MILLIS_IN_A_WEEK: u64 = 7 * 24 * 60 * 60 * 1000;
-        if let Ok(time) = SystemTime::now().duration_since(UNIX_EPOCH) {
-            let sql = format!(
-                "DELETE from request_task WHERE mtime < {} ",
-                time.as_millis() as u64 - MILLIS_IN_A_WEEK
-            );
-            let _ = self.execute(&sql);
-        }
     }
 
     #[cfg(feature = "oh")]

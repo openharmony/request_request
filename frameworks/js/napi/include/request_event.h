@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DOWNLOAD_EVENT_H
-#define DOWNLOAD_EVENT_H
+#ifndef REQUEST_REQUEST_EVENT_H
+#define REQUEST_REQUEST_EVENT_H
 
 #include <string>
 #include <unordered_set>

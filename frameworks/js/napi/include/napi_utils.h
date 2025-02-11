@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DOWNLOAD_NAPI_UTILS_H
-#define DOWNLOAD_NAPI_UTILS_H
+#ifndef REQUEST_NAPI_UTILS_H
+#define REQUEST_NAPI_UTILS_H
 
 #include <iomanip>
 #include <map>

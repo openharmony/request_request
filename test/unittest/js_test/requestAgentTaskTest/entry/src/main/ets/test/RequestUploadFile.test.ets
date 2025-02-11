@@ -213,7 +213,7 @@ export default function RequestUploadFileTest() {
     /**
      * @tc.number: testUploadUrl005
      * @tc.name: testUploadUrl005
-     * @tc.desc: Test upload when url length exceeds 8192
+     * @tc.desc: Test upload when url length exceeds 2048
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -223,7 +223,7 @@ export default function RequestUploadFileTest() {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
-        url: 'http://127.0.0.1/' + 'a'.repeat(8192),
+        url: 'http://127.0.0.1/' + 'a'.repeat(2048),
         header: {
           'Accept': '*/*'
         },

@@ -15,6 +15,9 @@
 
 #include "request_manager.h"
 
+#include <optional>
+#include <vector>
+
 #include "request_manager_impl.h"
 
 namespace OHOS::Request {
@@ -154,6 +157,20 @@ void RequestManager::RemoveAllListeners(const std::string &taskId)
 int32_t RequestManager::GetNextSeq()
 {
     return RequestManagerImpl::GetInstance()->GetNextSeq();
+}
+
+int32_t RequestManager::CreateGroup(
+    std::string &gid, const bool gauge, std::optional<std::string> title, std::optional<std::string> text)
+{
+    return RequestManagerImpl::GetInstance()->CreateGroup(gid, gauge, title, text);
+}
+int32_t RequestManager::AttachGroup(const std::string &gid, const std::vector<std::string> &tids)
+{
+    return RequestManagerImpl::GetInstance()->AttachGroup(gid, tids);
+}
+int32_t RequestManager::DeleteGroup(const std::string &gid)
+{
+    return RequestManagerImpl::GetInstance()->DeleteGroup(gid);
 }
 
 } // namespace OHOS::Request

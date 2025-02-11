@@ -12,14 +12,14 @@
 // limitations under the License.
 
 use std::ops::Deref;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use crate::manage::events::{TaskEvent, TaskManagerEvent};
 use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::queue::keeper::SAKeeper;
 use crate::manage::task_manager::TaskManagerTx;
-use crate::service::notification_bar::publish_progress_notification;
+use crate::service::notification_bar::NotificationDispatcher;
 use crate::task::config::Action;
 use crate::task::download::download;
 use crate::task::reason::Reason;
@@ -66,7 +66,6 @@ impl Deref for RunningTask {
 impl Drop for RunningTask {
     fn drop(&mut self) {
         self.task.update_progress_in_database();
-        publish_progress_notification(self);
         Notifier::progress(&self.client_manager, self.build_notify_data());
         let task_id = self.task_id();
         let uid = self.uid();
@@ -74,6 +73,9 @@ impl Drop for RunningTask {
         match *self.task.running_result.lock().unwrap() {
             Some(res) => match res {
                 Ok(()) => {
+                    if self.task.background_notify.load(Ordering::Acquire) {
+                        NotificationDispatcher::get_instance().publish_progress_notification(self);
+                    }
                     self.tx
                         .send_event(TaskManagerEvent::Task(TaskEvent::Completed(
                             task_id, uid, mode,

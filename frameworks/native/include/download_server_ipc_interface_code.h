@@ -38,6 +38,9 @@ enum class RequestInterfaceCode {
     CMD_UNSUBSCRIBE,
     CMD_SUB_RUNCOUNT,
     CMD_UNSUB_RUNCOUNT,
+    CMD_CREATE_GROUP,
+    CMD_ATTACH_GROUP,
+    CMD_DELETE_GROUP,
 };
 
 enum class RequestNotifyInterfaceCode {

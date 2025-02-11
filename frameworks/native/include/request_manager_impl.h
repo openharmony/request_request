@@ -20,6 +20,7 @@
 #include <condition_variable>
 #include <map>
 #include <mutex>
+#include <vector>
 
 #include "constant.h"
 #include "i_notify_data_listener.h"
@@ -80,6 +81,10 @@ public:
     int32_t GetNextSeq();
     bool SubscribeSA();
     bool UnsubscribeSA();
+    int32_t CreateGroup(
+        std::string &gid, const bool gauge, std::optional<std::string> title, std::optional<std::string> text);
+    int32_t AttachGroup(const std::string &gid, const std::vector<std::string> &tids);
+    int32_t DeleteGroup(const std::string &gid);
 
 private:
     RequestManagerImpl() = default;

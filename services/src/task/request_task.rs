@@ -13,7 +13,7 @@
 
 use std::io::{self, SeekFrom};
 use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, Ordering};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use ylong_http_client::async_impl::{Body, Client, Request, RequestBuilder, Response};
@@ -33,6 +33,7 @@ use crate::manage::database::RequestDb;
 use crate::manage::network_manager::NetworkManager;
 use crate::manage::notifier::Notifier;
 use crate::service::client::ClientManagerEntry;
+use crate::service::notification_bar::NotificationDispatcher;
 use crate::task::client::build_client;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::files::{AttachedFiles, Files};
@@ -54,6 +55,7 @@ pub(crate) struct RequestTask {
     pub(crate) code: Mutex<Vec<Reason>>,
     pub(crate) tries: AtomicU32,
     pub(crate) background_notify_time: AtomicU64,
+    pub(crate) background_notify: Arc<AtomicBool>,
     pub(crate) file_total_size: AtomicI64,
     pub(crate) rate_limiting: AtomicU64,
     pub(crate) last_notify: AtomicU64,
@@ -174,6 +176,7 @@ impl RequestTask {
             status: Mutex::new(status),
             code: Mutex::new(vec![Reason::Default; file_len]),
             background_notify_time: AtomicU64::new(time),
+            background_notify: Arc::new(AtomicBool::new(false)),
             file_total_size: AtomicI64::new(file_total_size),
             rate_limiting: AtomicU64::new(0),
             last_notify: AtomicU64::new(time),
@@ -224,7 +227,7 @@ impl RequestTask {
         };
         let progress = info.progress;
 
-        Ok(RequestTask {
+        let mut task = RequestTask {
             conf: config,
             client,
             files: files.files,
@@ -236,6 +239,7 @@ impl RequestTask {
             status: Mutex::new(status),
             code: Mutex::new(vec![Reason::Default; file_len]),
             background_notify_time: AtomicU64::new(time),
+            background_notify: Arc::new(AtomicBool::new(false)),
             file_total_size: AtomicI64::new(file_total_size),
             rate_limiting: AtomicU64::new(0),
             last_notify: AtomicU64::new(time),
@@ -243,7 +247,10 @@ impl RequestTask {
             running_result: Mutex::new(None),
             timeout_tries: AtomicU32::new(0),
             upload_resume: AtomicBool::new(upload_resume),
-        })
+        };
+        let background_notify = NotificationDispatcher::get_instance().register_task(&task);
+        task.background_notify = background_notify;
+        Ok(task)
     }
 
     pub(crate) fn build_notify_data(&self) -> NotifyData {
