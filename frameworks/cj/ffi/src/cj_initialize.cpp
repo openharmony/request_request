@@ -639,14 +639,14 @@ ExceptionError CJInitialize::CheckFileSpec(const std::shared_ptr<OHOS::AbilityRu
             file.name = "file";
         }
 
-        if (!CJRequestTask::SetPathPermission(file.uri)) {
-            err.code = ExceptionErrorCode::E_FILE_IO;
-            err.errInfo = "set path permission fail";
+        err = GetFD(path, config, file.fd);
+        if (err.code != ExceptionErrorCode::E_OK) {
             return err;
         }
 
-        err = GetFD(path, config, file.fd);
-        if (err.code != ExceptionErrorCode::E_OK) {
+        if (!CJRequestTask::SetPathPermission(file.uri)) {
+            err.code = ExceptionErrorCode::E_FILE_IO;
+            err.errInfo = "set path permission fail";
             return err;
         }
     }
