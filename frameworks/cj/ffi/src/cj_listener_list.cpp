@@ -18,7 +18,18 @@
 
 namespace OHOS::CJSystemapi::Request {
 
-void ListenerList::AddListenerInner(ProgressOnCallBackType &cb, CFunc cbId)
+void ListenerList::AddListenerInner(std::function<void(CProgress)> &cb, CFunc cbId)
+{
+    std::lock_guard<std::recursive_mutex> lock(allCbMutex_);
+    if (this->IsListenerAdded(cbId)) {
+        return;
+    }
+
+    this->allCb_.push_back(std::make_pair(true, std::make_shared<CallBackInfo>(cb, cbId)));
+    ++this->validCbNum;
+}
+
+void ListenerList::AddListenerInner(std::function<void(CResponse)> &cb, CFunc cbId)
 {
     std::lock_guard<std::recursive_mutex> lock(allCbMutex_);
     if (this->IsListenerAdded(cbId)) {
@@ -63,7 +74,20 @@ void ListenerList::OnMessageReceive(const std::shared_ptr<NotifyData> &notifyDat
             it = this->allCb_.erase(it);
             continue;
         }
-        it->second->cb_(Convert2CProgress(notifyData->progress));
+        it->second->progressCB_(Convert2CProgress(notifyData->progress));
+        it++;
+    }
+}
+
+void ListenerList::OnMessageReceive(const std::shared_ptr<Response> &response)
+{
+    std::lock_guard<std::recursive_mutex> lock(allCbMutex_);
+    for (auto it = this->allCb_.begin(); it != this->allCb_.end();) {
+        if (it->first == false) {
+            it = this->allCb_.erase(it);
+            continue;
+        }
+        it->second->responseCB_(Convert2CResponse(response));
         it++;
     }
 }
@@ -88,4 +112,4 @@ bool ListenerList::HasListener()
     return this->validCbNum != 0;
 }
 
-} // namespace OHOS::Request
+} // namespace OHOS::CJSystemapi::Request

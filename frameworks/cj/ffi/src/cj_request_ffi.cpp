@@ -15,57 +15,77 @@
 
 #include "cj_request_ffi.h"
 #include <cinttypes>
-#include "cj_request_log.h"
-#include "cj_request_task.h"
 #include "cj_request_common.h"
 #include "cj_request_impl.h"
+#include "cj_request_task.h"
+#include "log.h"
 
 namespace OHOS::CJSystemapi::Request {
 
 extern "C" {
-    void FfiOHOSRequestFreeTask(const char *taskId)
-    {
-        CJRequestImpl::FreeTask(taskId);
-    }
+void FfiOHOSRequestFreeTask(const char *taskId)
+{
+    CJRequestImpl::FreeTask(taskId);
+}
 
-    RetError FfiOHOSRequestTaskProgressOn(char *event, const char *taskId, void (*callback)(CProgress progress))
-    {
-        return CJRequestImpl::ProgressOn(event, taskId, callback);
-    }
+RetError FfiOHOSRequestTaskProgressOn(char *event, const char *taskId, void *callback)
+{
+    return CJRequestImpl::ProgressOn(event, taskId, callback);
+}
 
-    RetError FfiOHOSRequestTaskProgressOff(char *event, const char *taskId, void *callback)
-    {
-        return CJRequestImpl::ProgressOff(event, taskId, callback);
-    }
+RetError FfiOHOSRequestTaskProgressOff(char *event, const char *taskId, void *callback)
+{
+    return CJRequestImpl::ProgressOff(event, taskId, callback);
+}
 
-    RetError FfiOHOSRequestTaskStart(const char *taskId)
-    {
-        return CJRequestImpl::TaskStart(taskId);
-    }
+RetError FfiOHOSRequestTaskStart(const char *taskId)
+{
+    return CJRequestImpl::TaskStart(taskId);
+}
 
-    RetError FfiOHOSRequestTaskPause(const char *taskId)
-    {
-        return CJRequestImpl::TaskPause(taskId);
-    }
+RetError FfiOHOSRequestTaskPause(const char *taskId)
+{
+    return CJRequestImpl::TaskPause(taskId);
+}
 
-    RetError FfiOHOSRequestTaskResume(const char *taskId)
-    {
-        return CJRequestImpl::TaskResume(taskId);
-    }
+RetError FfiOHOSRequestTaskResume(const char *taskId)
+{
+    return CJRequestImpl::TaskResume(taskId);
+}
 
-    RetError FfiOHOSRequestTaskStop(const char *taskId)
-    {
-        return CJRequestImpl::TaskStop(taskId);
-    }
+RetError FfiOHOSRequestTaskStop(const char *taskId)
+{
+    return CJRequestImpl::TaskStop(taskId);
+}
 
-    RetReqData FfiOHOSRequestCreateTask(void* context, CConfig config)
-    {
-        return CJRequestImpl::CreateTask((OHOS::AbilityRuntime::Context *)context, &config);
-    }
+RetReqData FfiOHOSRequestCreateTask(void *context, CConfig config)
+{
+    return CJRequestImpl::CreateTask((OHOS::AbilityRuntime::Context *)context, &config);
+}
 
-    RetError FfiOHOSRequestRemoveTask(const char *taskId)
-    {
-        return CJRequestImpl::RemoveTask(taskId);
-    }
+RetTask FfiOHOSRequestGetTask(void *context, const char *taskId, RequestNativeOptionCString token)
+{
+    return CJRequestImpl::GetTask((OHOS::AbilityRuntime::Context *)context, taskId, token);
+}
+
+RetError FfiOHOSRequestRemoveTask(const char *taskId)
+{
+    return CJRequestImpl::RemoveTask(taskId);
+}
+
+RetTaskInfo FfiOHOSRequestShowTask(const char *taskId)
+{
+    return CJRequestImpl::ShowTask(taskId);
+}
+
+RetTaskInfo FfiOHOSRequestTouchTask(const char *taskId, char *token)
+{
+    return CJRequestImpl::TouchTask(taskId, token);
+}
+
+RetTaskArr FfiOHOSRequestSearchTask(CFilter filter)
+{
+    return CJRequestImpl::SearchTask(filter);
 }
 }
+} // namespace OHOS::CJSystemapi::Request

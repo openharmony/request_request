@@ -15,57 +15,53 @@
 
 #include "cj_initialize.h"
 
-#include <regex>
-#include <sys/stat.h>
 #include <algorithm>
 #include <cstring>
-#include <filesystem>
 #include <fcntl.h>
+#include <filesystem>
 #include <fstream>
-#include "securec.h"
+#include <regex>
+#include <sys/stat.h>
+#include "cj_request_common.h"
+#include "cj_request_task.h"
 #include "constant.h"
 #include "js_common.h"
-#include "cj_request_log.h"
-#include "request_manager.h"
-#include "cj_request_common.h"
+#include "log.h"
 #include "net_conn_client.h"
-#include "cj_request_task.h"
+#include "request_manager.h"
+#include "securec.h"
 
 namespace OHOS::CJSystemapi::Request {
 
+using OHOS::AbilityRuntime::Context;
 using OHOS::Request::Action;
-using OHOS::Request::Version;
+using OHOS::Request::ExceptionErrorCode;
 using OHOS::Request::FileSpec;
 using OHOS::Request::FormItem;
-using OHOS::Request::ExceptionErrorCode;
-using OHOS::AbilityRuntime::Context;
+using OHOS::Request::Version;
 
-static constexpr uint32_t TOKEN_MAX_BYTES = 2048;
-static constexpr uint32_t TOKEN_MIN_BYTES = 8;
 static constexpr uint32_t URL_MAXIMUM = 2048;
 static constexpr uint32_t TITLE_MAXIMUM = 256;
 static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
 
 static constexpr uint32_t FILE_PERMISSION = 0644;
 
-static const std::string AREA1 = "el1";
-static const std::string AREA2 = "el2";
+static const std::string AREA1 = "/data/storage/el1/base";
+static const std::string AREA2 = "/data/storage/el2/base";
+static const std::string AREA5 = "/data/storage/el5/base";
 
 ExceptionError CJInitialize::ParseBundleName(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
-    std::string &bundleName)
+                                             std::string &bundleName)
 {
+    ExceptionError err;
     if (context->GetApplicationInfo() == nullptr) {
-        return {
-            .code = ExceptionErrorCode::E_OTHER,
-            .errInfo = "ApplicationInfo is null"
-        };
+        err.code = ExceptionErrorCode::E_OTHER;
+        err.errInfo = "ApplicationInfo is null";
+        return err;
     }
 
     bundleName = context->GetBundleName();
-
-    return {
-        .code = ExceptionErrorCode::E_OK
-    };
+    return err;
 }
 
 bool CJInitialize::ParseUrl(std::string &url)
@@ -160,7 +156,7 @@ bool CJInitialize::Convert2FileSpecs(const CFileSpecArr *cFiles, const char *nam
 }
 
 bool CJInitialize::ParseFormItems(const CFormItemArr *cForms, std::vector<FormItem> &forms,
-    std::vector<FileSpec> &files)
+                                  std::vector<FileSpec> &files)
 {
     for (int i = 0; i < cForms->size; ++i) {
         CFormItem *cForm = &cForms->head[i];
@@ -192,7 +188,7 @@ bool CJInitialize::ParseFormItems(const CFormItemArr *cForms, std::vector<FormIt
 bool CJInitialize::ParseData(const CConfig *config, Config &out)
 {
     REQUEST_HILOGD("formItems.size is %{public}" PRIi64 ", data.str is %{public}p", config->data.formItems.size,
-        config->data.str);
+                   config->data.str);
     if (config->data.str == nullptr && config->data.formItems.size <= 0) {
         return true;
     }
@@ -240,7 +236,7 @@ bool CJInitialize::ParseTitle(Config &config)
     return true;
 }
 
-bool CJInitialize::ParseToken(Config &config)
+bool CJInitialize::ParseToken(Config &config, std::string &errInfo)
 {
     if (config.token.empty()) {
         config.token = "null";
@@ -248,6 +244,7 @@ bool CJInitialize::ParseToken(Config &config)
     }
     size_t len = config.token.length();
     if (len < TOKEN_MIN_BYTES || len > TOKEN_MAX_BYTES) {
+        errInfo = "Parameter verification failed, the length of token should between 8 and 2048 bytes";
         return false;
     }
 
@@ -339,27 +336,12 @@ bool CJInitialize::CheckPathBaseDir(const std::string &filepath, std::string &ba
     if (!CJInitialize::GetBaseDir(baseDir)) {
         return false;
     }
-    if (filepath.find(baseDir) == 0) {
+
+    if ((filepath.find(AREA1) == 0) || filepath.find(AREA2) == 0 || filepath.find(AREA5) == 0) {
         return true;
     }
-    // check baseDir replaced with el2
-    if (baseDir.find(AREA1) != std::string::npos) {
-        baseDir = baseDir.replace(baseDir.find(AREA1), AREA1.length(), AREA2);
-        if (filepath.find(baseDir) == 0) {
-            return true;
-        }
-        REQUEST_HILOGE("File dir not include base dir: %{public}s", baseDir.c_str());
-        return false;
-    }
-    // check baseDir replaced with el1
-    if (baseDir.find(AREA2) != std::string::npos) {
-        baseDir = baseDir.replace(baseDir.find(AREA2), AREA2.length(), AREA1);
-        if (filepath.find(baseDir) == 0) {
-            return true;
-        }
-        REQUEST_HILOGE("File dir not include base dir: %{public}s", baseDir.c_str());
-        return false;
-    }
+
+    REQUEST_HILOGE("File dir not include base dir: %{public}s", baseDir.c_str());
     return false;
 }
 
@@ -383,7 +365,7 @@ bool CJInitialize::CreateDirs(const std::vector<std::string> &pathDirs)
 }
 
 bool CJInitialize::CheckDownloadFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config,
-    std::string &errInfo)
+                                         std::string &errInfo)
 {
     std::string path = config.saveas;
     if (!StandardizePath(context, config, path)) {
@@ -415,8 +397,8 @@ bool CJInitialize::CheckDownloadFilePath(const std::shared_ptr<OHOS::AbilityRunt
     return true;
 }
 
-bool CJInitialize::FileToWhole(
-    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path)
+bool CJInitialize::FileToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
+                               std::string &path)
 {
     std::string bundleName = path.substr(0, path.find("/"));
     if (bundleName != config.bundleName) {
@@ -439,7 +421,7 @@ bool CJInitialize::CacheToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Cont
 }
 
 bool CJInitialize::StandardizePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
-    std::string &path)
+                                   std::string &path)
 {
     std::string WHOLE_PREFIX = "/";
     std::string FILE_PREFIX = "file://";
@@ -495,38 +477,36 @@ bool CJInitialize::WholeToNormal(const std::string &wholePath, std::string &norm
 
 ExceptionError CJInitialize::UploadBodyFileProc(std::string &fileName, Config &config)
 {
+    ExceptionError err;
     int32_t bodyFd = open(fileName.c_str(), O_TRUNC | O_RDWR);
     if (bodyFd < 0) {
         bodyFd = open(fileName.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
         if (bodyFd < 0) {
-            return {
-                .code = ExceptionErrorCode::E_FILE_IO,
-                .errInfo = "Failed to open file errno " + std::to_string(errno)
-            };
+            err.code = ExceptionErrorCode::E_FILE_IO;
+            err.errInfo = "Failed to open file errno " + std::to_string(errno);
+            return err;
         }
     }
 
     if (bodyFd >= 0) {
-        chmod(fileName.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
+        chmod(fileName.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
         close(bodyFd);
     }
     config.bodyFileNames.push_back(fileName);
 
-    return {
-        .code = ExceptionErrorCode::E_OK
-    };
+    return err;
 }
 
 ExceptionError CJInitialize::CheckUploadBodyFiles(Config &config, const std::string &filePath)
 {
     size_t len = config.files.size();
+    ExceptionError err;
     for (size_t i = 0; i < len; i++) {
         if (filePath.empty()) {
             REQUEST_HILOGE("internal to cache error");
-            return {
-                .code = ExceptionErrorCode::E_PARAMETER_CHECK,
-                .errInfo = "IsPathValid error empty path"
-            };
+            err.code = ExceptionErrorCode::E_PARAMETER_CHECK;
+            err.errInfo = "IsPathValid error empty path";
+            return err;
         }
         auto now = std::chrono::high_resolution_clock::now();
         auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
@@ -534,19 +514,16 @@ ExceptionError CJInitialize::CheckUploadBodyFiles(Config &config, const std::str
         REQUEST_HILOGD("Create upload body file, %{public}s", fileName.c_str());
         if (!IsPathValid(fileName)) {
             REQUEST_HILOGE("IsPathValid error %{public}s", fileName.c_str());
-            return {
-                .code = ExceptionErrorCode::E_PARAMETER_CHECK,
-                .errInfo = "IsPathValid error fail path"
-            };
+            err.code = ExceptionErrorCode::E_PARAMETER_CHECK;
+            err.errInfo = "IsPathValid error fail path";
+            return err;
         }
-        ExceptionError ret = UploadBodyFileProc(fileName, config);
-        if (ret.code != ExceptionErrorCode::E_OK) {
-            return ret;
+        err = UploadBodyFileProc(fileName, config);
+        if (err.code != ExceptionErrorCode::E_OK) {
+            return err;
         }
     }
-    return {
-        .code = ExceptionErrorCode::E_OK
-    };
+    return err;
 }
 
 bool CJInitialize::InterceptData(const std::string &str, const std::string &in, std::string &out)
@@ -563,56 +540,54 @@ bool CJInitialize::InterceptData(const std::string &str, const std::string &in, 
 
 ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config, int32_t &fd)
 {
-    ExceptionError error = { .code = ExceptionErrorCode::E_OK };
+    ExceptionError err;
     fd = config.action == Action::UPLOAD ? open(path.c_str(), O_RDONLY) : open(path.c_str(), O_TRUNC | O_RDWR);
     if (fd >= 0) {
         REQUEST_HILOGD("File already exists");
         if (config.action == Action::UPLOAD) {
             chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
             close(fd);
-            return error;
+            return err;
         } else {
-            chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
+            chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
         }
 
         if (config.overwrite) {
             close(fd);
-            return error;
+            return err;
         }
         if (!config.firstInit) {
-            REQUEST_HILOGD("CJTask config is not firstInit");
+            REQUEST_HILOGD("CJRequestTask config is not firstInit");
             close(fd);
-            return error;
+            return err;
         }
         close(fd);
-        ExceptionErrorCode code = ExceptionErrorCode::E_FILE_IO;
-        return {
-            .code = code,
-            .errInfo = "Download File already exists"
-        };
+
+        err.code = ExceptionErrorCode::E_FILE_IO;
+        err.errInfo = "Download File already exists";
+        return err;
     } else {
         if (config.action == Action::UPLOAD) {
             ExceptionErrorCode code = ExceptionErrorCode::E_FILE_IO;
-            return {
-                .code = code,
-                .errInfo = "Failed to open file errno " + std::to_string(errno)
-            };
+            err.code = ExceptionErrorCode::E_FILE_IO;
+            err.errInfo = "Failed to open file errno " + std::to_string(errno);
+            return err;
         }
         fd = open(path.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
         if (fd < 0) {
-            return {
-                .code = ExceptionErrorCode::E_FILE_IO,
-                .errInfo = "Failed to open file errno " +std::to_string(errno)
-            };
+            err.code = ExceptionErrorCode::E_FILE_IO;
+            err.errInfo = "Failed to open file errno " + std::to_string(errno);
+            return err;
         }
-        chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IWOTH);
+        chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
         close(fd);
     }
-    return error;
+    return err;
 }
 
 bool CJInitialize::GetInternalPath(const std::string &fileUri,
-    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, std::string &filePath)
+                                   const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config,
+                                   std::string &filePath)
 {
     if (config.action == Action::DOWNLOAD && fileUri.find('/') == 0) {
         filePath = fileUri;
@@ -644,16 +619,15 @@ bool CJInitialize::GetInternalPath(const std::string &fileUri,
 }
 
 ExceptionError CJInitialize::CheckFileSpec(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
-    Config &config)
+                                           Config &config)
 {
-    ExceptionError err = { .code = ExceptionErrorCode::E_OK };
+    ExceptionError err;
     for (auto &file : config.files) {
         std::string path;
         if (!GetInternalPath(file.uri, context, config, path)) {
-            return {
-                .code = ExceptionErrorCode::E_PARAMETER_CHECK,
-                .errInfo = "this is fail path"
-            };
+            err.code = ExceptionErrorCode::E_PARAMETER_CHECK;
+            err.errInfo = "this is fail path";
+            return err;
         }
         file.uri = path;
         if (file.filename.empty()) {
@@ -666,15 +640,14 @@ ExceptionError CJInitialize::CheckFileSpec(const std::shared_ptr<OHOS::AbilityRu
             file.name = "file";
         }
 
-        if (!CJTask::SetPathPermission(file.uri)) {
-            return {
-                .code = ExceptionErrorCode::E_FILE_IO,
-                .errInfo = "set path permission fail"
-            };
-        }
-
         err = GetFD(path, config, file.fd);
         if (err.code != ExceptionErrorCode::E_OK) {
+            return err;
+        }
+
+        if (!CJRequestTask::SetPathPermission(file.uri)) {
+            err.code = ExceptionErrorCode::E_FILE_IO;
+            err.errInfo = "set path permission fail";
             return err;
         }
     }
@@ -682,16 +655,16 @@ ExceptionError CJInitialize::CheckFileSpec(const std::shared_ptr<OHOS::AbilityRu
 }
 
 ExceptionError CJInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
-    Config &config)
+                                           Config &config)
 {
-    ExceptionError err = { .code = ExceptionErrorCode::E_OK };
+    ExceptionError err;
     if (config.action == Action::DOWNLOAD) {
         if (!CheckDownloadFilePath(context, config, err.errInfo)) {
             err.code = ExceptionErrorCode::E_PARAMETER_CHECK;
             return err;
         }
 
-        FileSpec file = { .uri = config.saveas };
+        FileSpec file = {.uri = config.saveas};
         config.files.push_back(file);
     }
 
@@ -700,11 +673,10 @@ ExceptionError CJInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRu
         return err;
     }
 
-    if (!CJTask::SetDirsPermission(config.certsPath)) {
-        return {
-            .code = ExceptionErrorCode::E_FILE_IO,
-            .errInfo = "set files of directors permission fail"
-        };
+    if (!CJRequestTask::SetDirsPermission(config.certsPath)) {
+        err.code = ExceptionErrorCode::E_FILE_IO;
+        err.errInfo = "set files of directors permission fail";
+        return err;
     }
 
     if (config.action == Action::UPLOAD) {
@@ -716,55 +688,57 @@ ExceptionError CJInitialize::CheckFilePath(const std::shared_ptr<OHOS::AbilityRu
 }
 
 ExceptionError CJInitialize::ParseConfig(OHOS::AbilityRuntime::Context *stageContext, const CConfig *ffiConfig,
-    Config &config)
+                                         Config &config)
 {
     config.action = (OHOS::Request::Action)ffiConfig->action;
     config.withErrCode = true;
     config.version = Version::API10; // CJ only support API10
 
+    ExceptionError err;
     if (stageContext == nullptr) {
-        return {
-            .code = ExceptionErrorCode::E_PARAMETER_CHECK,
-            .errInfo = "Get context fail"
-        };
+        err.code = ExceptionErrorCode::E_PARAMETER_CHECK;
+        err.errInfo = "Get context fail";
+        return err;
     }
 
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = stageContext->shared_from_this();
-    ExceptionError ret = ParseBundleName(context, config.bundleName);
-    if (ret.code != 0) {
-        return ret;
+    err = ParseBundleName(context, config.bundleName);
+    if (err.code != 0) {
+        return err;
     }
-    ret.code = ExceptionErrorCode::E_PARAMETER_CHECK;
+    err.code = ExceptionErrorCode::E_PARAMETER_CHECK;
     if (!ParseUrl(config.url)) {
-        ret.errInfo = "parse url error";
-        return ret;
+        err.errInfo = "parse url error";
+        return err;
     }
 
     if (!ParseCertsPath(config.url, config.certsPath)) {
-        ret.errInfo = "parse certs path error";
-        return ret;
+        err.errInfo = "parse certs path error";
+        return err;
     }
 
     if (!ParseData(ffiConfig, config)) {
-        ret.errInfo = "parse data error";
-        return ret;
+        err.errInfo = "parse data error";
+        return err;
     }
 
     if (!ParseIndex(config)) {
-        ret.errInfo = "Index exceeds file list";
-        return ret;
+        err.errInfo = "Index exceeds file list";
+        return err;
     }
 
-    if (!ParseTitle(config) ||
-        !ParseToken(config) ||
-        !ParseDescription(config.description)) {
-        ret.errInfo = "Exceeding maximum length";
-        return ret;
+    if (!ParseToken(config, err.errInfo)) {
+        return err;
+    }
+
+    if (!ParseTitle(config) || !ParseDescription(config.description)) {
+        err.errInfo = "Exceeding maximum length";
+        return err;
     }
 
     if (!ParseSaveas(config)) {
-        ret.errInfo = "parse saveas error";
-        return ret;
+        err.errInfo = "parse saveas error";
+        return err;
     }
 
     ParseMethod(config);
@@ -780,6 +754,5 @@ bool CJInitialize::FindDir(const std::string &pathDir)
     std::error_code err;
     return std::filesystem::exists(pathDir, err);
 }
-
 
 } // namespace OHOS::CJSystemapi::Request

@@ -19,7 +19,8 @@
 #include "application_context.h"
 
 namespace OHOS::CJSystemapi::Request {
-class CJAppStateCallback : public OHOS::AbilityRuntime::AbilityLifecycleCallback {
+class CJAppStateCallback : public OHOS::AbilityRuntime::AbilityLifecycleCallback,
+                           public std::enable_shared_from_this<CJAppStateCallback> {
 public:
     void OnAbilityCreate(const std::shared_ptr<NativeReference> &ability) override{};
 
