@@ -21,6 +21,7 @@ use ipc::{IpcResult, IpcStatusCode};
 use crate::error::ErrorCode;
 use crate::manage::account::GetOhosAccountUid;
 use crate::manage::events::TaskManagerEvent;
+use crate::service::notification_bar::NotificationDispatcher;
 use crate::service::permission::PermissionChecker;
 use crate::service::RequestServiceStub;
 use crate::task::config::{Action, CommonTaskConfig, Mode, NetworkConfig, TaskConfig, Version};
@@ -260,6 +261,22 @@ impl RequestServiceStub {
                 return Err(IpcStatusCode::Failed);
             }
         };
+
+        let title = if data.read::<bool>()? {
+            Some(data.read::<String>()?)
+        } else {
+            None
+        };
+
+        let text = if data.read::<bool>()? {
+            Some(data.read::<String>()?)
+        } else {
+            None
+        };
+        if title.is_some() || text.is_some() {
+            NotificationDispatcher::get_instance()
+                .update_task_customized_notification(task_id, title, text);
+        }
 
         debug!("Service construct: construct event sent to manager");
 

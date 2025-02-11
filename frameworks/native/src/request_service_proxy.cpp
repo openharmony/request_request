@@ -21,10 +21,13 @@
 
 #include <cstdint>
 #include <ctime>
+#include <optional>
 
+#include "constant.h"
 #include "download_server_ipc_interface_code.h"
 #include "iremote_broker.h"
 #include "log.h"
+#include "message_parcel.h"
 #include "parcel_helper.h"
 #include "request_running_task_count.h"
 #include "sys_event.h"
@@ -35,6 +38,22 @@ using namespace OHOS::HiviewDFX;
 RequestServiceProxy::RequestServiceProxy(const sptr<IRemoteObject> &object)
     : IRemoteProxy<RequestServiceInterface>(object)
 {
+}
+
+void SerializeNotification(MessageParcel &data, const Notification &notification)
+{
+    if (notification.title != std::nullopt) {
+        data.WriteBool(true);
+        data.WriteString(*notification.title);
+    } else {
+        data.WriteBool(false);
+    }
+    if (notification.text != std::nullopt) {
+        data.WriteBool(true);
+        data.WriteString(*notification.text);
+    } else {
+        data.WriteBool(false);
+    }
 }
 
 int32_t RequestServiceProxy::Create(const Config &config, std::string &tid)
@@ -68,6 +87,8 @@ int32_t RequestServiceProxy::Create(const Config &config, std::string &tid)
     data.WriteString(config.proxy);
     data.WriteString(config.certificatePins);
     GetVectorData(config, data);
+    SerializeNotification(data, config.notification);
+
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REQUEST), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End send create request, failed: %{public}d", ret);
@@ -379,9 +400,9 @@ int32_t RequestServiceProxy::OpenChannel(int32_t &sockFd)
         return errCode;
     }
     sockFd = reply.ReadFileDescriptor();
-    int flags = fcntl(sockFd, F_GETFL, 0);
+    uint32_t flags = static_cast<uint32_t>(fcntl(sockFd, F_GETFL, 0));
     fcntl(sockFd, F_SETFL, flags & ~O_NONBLOCK);
-    flags = fcntl(sockFd, F_GETFL, 0);
+    flags = static_cast<uint32_t>(fcntl(sockFd, F_GETFL, 0));
     if (flags & O_NONBLOCK) {
         REQUEST_HILOGE("Set ~O_NONBLOCK failed for fd %{public}d", sockFd);
     }
@@ -466,6 +487,77 @@ int32_t RequestServiceProxy::UnsubRunCount()
     }
     REQUEST_HILOGD("End Request UnubRunCount ok");
     return E_OK;
+}
+
+int32_t RequestServiceProxy::CreateGroup(
+    std::string &gid, const bool gauge, std::optional<std::string> title, std::optional<std::string> text)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteBool(gauge);
+    if (title != std::nullopt) {
+        data.WriteBool(true);
+        data.WriteString(*title);
+    } else {
+        data.WriteBool(false);
+    }
+    if (text != std::nullopt) {
+        data.WriteBool(true);
+        data.WriteString(*text);
+    } else {
+        data.WriteBool(false);
+    }
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_CREATE_GROUP), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("End Request AttachGroup, failed: %{public}d", ret);
+        return E_SERVICE_ERROR;
+    }
+    gid = reply.ReadString();
+    return E_OK;
+}
+
+int32_t RequestServiceProxy::AttachGroup(const std::string &gid, const std::vector<std::string> &tids)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(gid);
+    data.WriteStringVector(tids);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_ATTACH_GROUP), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("End Request AttachGroup, failed: %{public}d", ret);
+        return E_SERVICE_ERROR;
+    }
+    int code = reply.ReadInt32();
+    if (code != E_OK) {
+        REQUEST_HILOGE("End Request AttachGroup, failed: %{public}d", code);
+    }
+    return code;
+}
+
+int32_t RequestServiceProxy::DeleteGroup(const std::string &gid)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(gid);
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_DELETE_GROUP), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("End Request AttachGroup, failed: %{public}d", ret);
+        return E_SERVICE_ERROR;
+    }
+    int code = reply.ReadInt32();
+    if (code != E_OK) {
+        REQUEST_HILOGE("End Request AttachGroup, failed: %{public}d", code);
+    }
+    return code;
 }
 
 } // namespace OHOS::Request

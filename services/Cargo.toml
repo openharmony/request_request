@@ -30,6 +30,7 @@ oh = [
 ]
 
 [dependencies]
+rdb = { path = "../common/database" }
 ylong_runtime = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime", features = ["full"] }
 ylong_http_client = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_http", features = [
     "async",
@@ -38,6 +39,7 @@ ylong_http_client = { git = "https://gitee.com/openharmony/commonlibrary_rust_yl
     "ylong_base",
 ] }
 
+request_utils = { path = "../common/utils" }
 hilog_rust = { git = "https://gitee.com/openharmony/hiviewdfx_hilog", optional = true }
 hisysevent = { git = "https://gitee.com/openharmony/hiviewdfx_hisysevent", optional = true }
 hitrace_meter_rust = { git = "https://gitee.com/openharmony/hiviewdfx_hitrace", optional = true }

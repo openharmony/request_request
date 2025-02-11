@@ -23,7 +23,7 @@ use ylong_runtime::io::AsyncWrite;
 use ylong_runtime::time::{sleep, Sleep};
 
 use crate::manage::notifier::Notifier;
-use crate::service::notification_bar::publish_progress_notification;
+use crate::service::notification_bar::{NotificationDispatcher, NOTIFY_PROGRESS_INTERVAL};
 use crate::task::request_task::RequestTask;
 use crate::utils::get_current_timestamp;
 
@@ -65,7 +65,16 @@ impl TaskOperator {
             self.task.last_notify.store(current, Ordering::SeqCst);
             Notifier::progress(&self.task.client_manager, notify_data);
         }
-        publish_progress_notification(&self.task);
+
+        if self.task.background_notify.load(Ordering::Acquire)
+            && current
+                > self.task.background_notify_time.load(Ordering::SeqCst) + NOTIFY_PROGRESS_INTERVAL
+        {
+            self.task
+                .background_notify_time
+                .store(current, Ordering::SeqCst);
+            NotificationDispatcher::get_instance().publish_progress_notification(&self.task);
+        }
 
         let total_processed = self
             .task

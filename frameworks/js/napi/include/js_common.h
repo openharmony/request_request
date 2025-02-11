@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef JS_COMMON_H
-#define JS_COMMON_H
+#ifndef REQUEST_COMMON_H
+#define REQUEST_COMMON_H
 
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -115,6 +116,11 @@ struct FileSpec {
     bool isUserFile;
 };
 
+struct Notification {
+    std::optional<std::string> title = std::nullopt;
+    std::optional<std::string> text = std::nullopt;
+};
+
 struct Config {
     Action action;
     std::string url;
@@ -151,6 +157,7 @@ struct Config {
     std::vector<FileSpec> files;
     std::vector<std::string> bodyFileNames;
     std::map<std::string, std::string> extras;
+    Notification notification;
 };
 
 enum class State : uint32_t {

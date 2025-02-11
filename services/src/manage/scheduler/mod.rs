@@ -29,10 +29,7 @@ use crate::manage::database::RequestDb;
 use crate::manage::notifier::Notifier;
 use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
-use crate::service::notification_bar::{
-    cancel_progress_notification, force_cancel_progress_notification, publish_failed_notification,
-    publish_success_notification,
-};
+use crate::service::notification_bar::NotificationDispatcher;
 use crate::service::run_count::RunCountManagerEntry;
 use crate::task::config::Action;
 use crate::task::info::State;
@@ -224,7 +221,7 @@ impl Scheduler {
         database.update_task_state(task_id, State::Completed, Reason::Default);
         if let Some(info) = database.get_task_info(task_id) {
             Notifier::complete(&self.client_manager, info.build_notify_data());
-            publish_success_notification(&info);
+            NotificationDispatcher::get_instance().publish_success_notification(&info);
         }
     }
 
@@ -243,7 +240,7 @@ impl Scheduler {
         let database = RequestDb::get_instance();
         let Some(info) = database.get_task_info(task_id) else {
             error!("task {} not found in database", task_id);
-            force_cancel_progress_notification(task_id);
+            NotificationDispatcher::get_instance().unregister_task(uid, task_id);
             return;
         };
         match State::from(info.progress.common_data.state) {
@@ -262,7 +259,7 @@ impl Scheduler {
             }
             State::Stopped | State::Removed => {
                 info!("task {} cancel with state Stopped or Removed", task_id);
-                cancel_progress_notification(&info);
+                NotificationDispatcher::get_instance().unregister_task(uid, task_id);
             }
             state => {
                 info!(
@@ -299,7 +296,7 @@ impl Scheduler {
 
     fn notify_fail(info: TaskInfo, client_manager: &ClientManagerEntry) {
         Notifier::fail(client_manager, info.build_notify_data());
-        publish_failed_notification(&info);
+        NotificationDispatcher::get_instance().publish_failed_notification(&info);
         #[cfg(feature = "oh")]
         Self::sys_event(info);
     }
@@ -501,10 +498,12 @@ impl RequestDb {
             return Err(ErrorCode::TaskStateErr);
         }
 
-        if (old_state == State::Waiting.repr || old_state == State::Paused.repr)
+        if (old_state == State::Initialized.repr
+            || old_state == State::Waiting.repr
+            || old_state == State::Paused.repr)
             && (new_state == State::Stopped || new_state == State::Removed)
         {
-            cancel_progress_notification(&info);
+            NotificationDispatcher::get_instance().unregister_task(info.uid(), task_id);
         }
         Ok(())
     }

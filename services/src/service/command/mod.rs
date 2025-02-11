@@ -14,6 +14,7 @@
 mod construct;
 mod dump;
 mod get_task;
+mod notification_bar;
 mod open_channel;
 mod pause;
 mod query;

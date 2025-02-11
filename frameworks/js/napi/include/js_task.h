@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef REQUEST_TASK_NAPI
-#define REQUEST_TASK_NAPI
+#ifndef REQUEST_TASK_NAPI_H
+#define REQUEST_TASK_NAPI_H
 
 #include "async_call.h"
 #include "js_common.h"

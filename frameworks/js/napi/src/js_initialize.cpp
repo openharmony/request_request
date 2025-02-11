@@ -42,7 +42,9 @@ static constexpr const char *PARAM_KEY_BACKGROUND = "background";
 static constexpr uint32_t FILE_PERMISSION = 0644;
 static constexpr uint32_t TITLE_MAXIMUM = 256;
 static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
-static constexpr uint32_t URL_MAXIMUM = 8192;
+static constexpr uint32_t URL_MAXIMUM = 2048;
+static constexpr uint32_t NOTIFICATION_TITLE_MAXIMUM = 1024;
+static constexpr uint32_t NOTIFICATION_TEXT_MAXIMUM = 3072;
 static constexpr uint32_t PROXY_MAXIMUM = 512;
 
 namespace OHOS::Request {
@@ -331,8 +333,8 @@ bool JsInitialize::GetFdUpload(const std::string &path, const Config &config, Ex
     return true;
 }
 
-bool JsInitialize::GetInternalPath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
-    const Config &config, std::string &path, std::string &errInfo)
+bool JsInitialize::GetInternalPath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
+    std::string &path, std::string &errInfo)
 {
     std::string fileName;
     std::string pattern = "internal://cache/";
@@ -413,6 +415,9 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
     if (!ParseSaveas(env, jsConfig, config, errInfo)) {
         return false;
     }
+    if (!ParseNotification(env, jsConfig, config, errInfo)) {
+        return false;
+    }
     ParseCertificatePins(env, config.url, config.certificatePins);
     ParseMethod(env, jsConfig, config);
     ParseRoaming(env, jsConfig, config);
@@ -430,6 +435,28 @@ void JsInitialize::ParseRoaming(napi_env env, napi_value jsConfig, Config &confi
     } else {
         config.roaming = NapiUtils::Convert2Boolean(env, jsConfig, "roaming");
     }
+}
+
+bool JsInitialize::ParseNotification(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
+{
+    napi_value notification = NapiUtils::GetNamedProperty(env, jsConfig, "notification");
+    if (NapiUtils::GetValueType(env, notification) != napi_undefined) {
+        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, notification, "title")) != napi_undefined) {
+            config.notification.title = NapiUtils::Convert2String(env, notification, "title");
+            if (config.notification.title->size() > NOTIFICATION_TITLE_MAXIMUM) {
+                errInfo = "Parameter verification failed, notification.title length exceeds the maximum limit";
+                return false;
+            }
+        }
+        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, notification, "text")) != napi_undefined) {
+            config.notification.text = NapiUtils::Convert2String(env, notification, "text");
+            if (config.notification.text->size() > NOTIFICATION_TEXT_MAXIMUM) {
+                errInfo = "Parameter verification failed, notification.text length exceeds the maximum limit";
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 void JsInitialize::ParseNetwork(napi_env env, napi_value jsConfig, Network &network)
@@ -592,8 +619,8 @@ bool JsInitialize::ParseUrl(napi_env env, napi_value jsConfig, std::string &url,
 {
     url = NapiUtils::Convert2String(env, jsConfig, "url");
     if (url.size() > URL_MAXIMUM) {
-        REQUEST_HILOGE("The URL exceeds the maximum length of 8192");
-        errInfo = "Parameter verification failed, the length of url exceeds 8192";
+        REQUEST_HILOGE("The URL exceeds the maximum length of 2048");
+        errInfo = "Parameter verification failed, the length of url exceeds 2048";
         return false;
     }
     if (!regex_match(url, std::regex("^http(s)?:\\/\\/.+"))) {
@@ -610,8 +637,8 @@ bool JsInitialize::ParseCertsPath(
 {
     std::string url = NapiUtils::Convert2String(env, jsConfig, "url");
     if (url.size() > URL_MAXIMUM) {
-        REQUEST_HILOGE("The URL exceeds the maximum length of 8192");
-        errInfo = "Parameter verification failed, the length of url exceeds 8192";
+        REQUEST_HILOGE("The URL exceeds the maximum length of 2048");
+        errInfo = "Parameter verification failed, the length of url exceeds 2048";
         return false;
     }
     if (!regex_match(url, std::regex("^http(s)?:\\/\\/.+"))) {
@@ -704,8 +731,7 @@ std::string GetHostnameFromURL(const std::string &url)
     if (notSlash != std::string::npos) {
         posStart = notSlash;
     }
-    size_t posEnd =
-        std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
+    size_t posEnd = std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
     if (posEnd != std::string::npos) {
         return tempUrl.substr(posStart, posEnd - posStart);
     }
@@ -816,8 +842,8 @@ bool JsInitialize::GetFormItems(
     return true;
 }
 
-bool JsInitialize::Convert2FormItems(napi_env env, napi_value jsValue, std::vector<FormItem> &forms,
-    std::vector<FileSpec> &files, std::string &errInfo)
+bool JsInitialize::Convert2FormItems(
+    napi_env env, napi_value jsValue, std::vector<FormItem> &forms, std::vector<FileSpec> &files, std::string &errInfo)
 {
     bool isArray = false;
     napi_is_array(env, jsValue, &isArray);

@@ -120,6 +120,18 @@ impl TaskManagerEvent {
             Recv::new(rx),
         )
     }
+
+    pub(crate) fn attach_group(
+        uid: u64,
+        task_ids: Vec<u32>,
+        group_id: u32,
+    ) -> (Self, Recv<ErrorCode>) {
+        let (tx, rx) = channel::<ErrorCode>();
+        (
+            Self::Service(ServiceEvent::AttachGroup(uid, task_ids, group_id, tx)),
+            Recv::new(rx),
+        )
+    }
 }
 
 #[derive(Debug)]
@@ -129,6 +141,7 @@ pub(crate) enum QueryEvent {
     Touch(u32, u64, String, Sender<Option<TaskInfo>>),
 }
 
+#[derive(Debug)]
 pub(crate) enum ServiceEvent {
     Construct(Box<ConstructMessage>, Sender<Result<u32, ErrorCode>>),
     Pause(u64, u32, Sender<ErrorCode>),
@@ -138,6 +151,7 @@ pub(crate) enum ServiceEvent {
     Resume(u64, u32, Sender<ErrorCode>),
     DumpOne(u32, Sender<Option<DumpOneInfo>>),
     DumpAll(Sender<DumpAllInfo>),
+    AttachGroup(u64, Vec<u32>, u32, Sender<ErrorCode>),
 }
 
 #[derive(Debug)]
@@ -171,44 +185,6 @@ impl Debug for ConstructMessage {
             .field("mode", &self.config.method)
             .field("version", &self.config.version)
             .finish()
-    }
-}
-
-impl Debug for ServiceEvent {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Construct(message, _) => message.fmt(f),
-            Self::Pause(uid, task_id, _) => f
-                .debug_struct("Pause")
-                .field("uid", uid)
-                .field("task_id", task_id)
-                .finish(),
-            Self::Start(uid, task_id, _) => f
-                .debug_struct("Start")
-                .field("uid", uid)
-                .field("task_id", task_id)
-                .finish(),
-            Self::Stop(uid, task_id, _) => f
-                .debug_struct("Stop")
-                .field("uid", uid)
-                .field("task_id", task_id)
-                .finish(),
-            Self::Remove(uid, task_id, _) => f
-                .debug_struct("Remove")
-                .field("uid", uid)
-                .field("task_id", task_id)
-                .finish(),
-            Self::Resume(uid, task_id, _) => f
-                .debug_struct("Resume")
-                .field("uid", uid)
-                .field("task_id", task_id)
-                .finish(),
-            Self::DumpOne(task_id, _) => {
-                f.debug_struct("DumpOne").field("task_id", task_id).finish()
-            }
-
-            Self::DumpAll(_) => f.debug_struct("DumpAll").finish(),
-        }
     }
 }
 
