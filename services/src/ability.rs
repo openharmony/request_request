@@ -30,6 +30,7 @@ pub(crate) static mut PANIC_INFO: Option<String> = None;
 use crate::manage::events::TaskManagerEvent;
 use crate::manage::task_manager::TaskManagerTx;
 use crate::service::RequestServiceStub;
+use crate::utils::update_policy;
 
 /// TEST_SERVICE_ID SAID
 pub(crate) static mut SYSTEM_CONFIG_MANAGER: MaybeUninit<SystemConfigManager> =
@@ -135,6 +136,11 @@ impl Ability for RequestAbility {
         } else {
             self.init(handler);
         }
+    }
+
+    fn on_start_with_reason(&self, _handle: Handler) {
+        const INIT_POLICY: bool = false;
+        let _ = update_policy(INIT_POLICY);
     }
 
     fn on_active(&self, reason: system_ability_fwk::cxx_share::SystemAbilityOnDemandReason) {
