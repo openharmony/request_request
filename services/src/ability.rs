@@ -136,9 +136,6 @@ impl Ability for RequestAbility {
         } else {
             self.init(handler);
         }
-    }
-
-    fn on_start_with_reason(&self, _handle: Handler) {
         const INIT_POLICY: bool = false;
         let _ = update_policy(INIT_POLICY);
     }
