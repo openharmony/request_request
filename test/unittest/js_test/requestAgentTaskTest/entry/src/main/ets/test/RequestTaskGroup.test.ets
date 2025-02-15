@@ -46,7 +46,7 @@ export default function requestTaskGroupTest() {
     let context = globalThis.abilityContext;
     let cacheDir = globalThis.cacheDir;
 
-    
+
     /**
      * @tc.number: testcreateGroup001
      * @tc.name: testcreateGroup001
@@ -61,11 +61,11 @@ export default function requestTaskGroupTest() {
         gauge: true,
         notification: {},
       };
-      try{
+      try {
         let gid = await request.agent.createGroup(config);
         expect(true).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(false).assertTrue();
         done();
       }
@@ -81,11 +81,11 @@ export default function requestTaskGroupTest() {
      * @tc.require:
      */
     it('testcreateGroup002', 0, async function (done) {
-      try{
+      try {
         let gid = await request.agent.createGroup(123);
         expect(false).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
@@ -94,7 +94,7 @@ export default function requestTaskGroupTest() {
     /**
      * @tc.number: testcreateGroup003
      * @tc.name: testcreateGroup003
-     * @tc.desc: Test for createGroup when title length is 1024 
+     * @tc.desc: Test for createGroup when title length is 1024
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -107,20 +107,20 @@ export default function requestTaskGroupTest() {
           title: 'a'.repeat(1024),
         },
       };
-      try{
+      try {
         let gid = await request.agent.createGroup(config);
         expect(true).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(false).assertTrue();
         done();
       }
-    })    
+    })
 
     /**
      * @tc.number: testcreateGroup004
      * @tc.name: testcreateGroup004
-     * @tc.desc: Test for createGroup when fail by title length more than 1024 
+     * @tc.desc: Test for createGroup when fail by title length more than 1024
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -130,18 +130,18 @@ export default function requestTaskGroupTest() {
       let config = {
         gauge: true,
         notification: {
-          title: '1'+'a'.repeat(1024),
+          title: '1' + 'a'.repeat(1024),
         },
       };
-      try{
+      try {
         let gid = await request.agent.createGroup(config);
         expect(false).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-    })  
+    })
 
     /**
      * @tc.number: testcreateGroup005
@@ -156,23 +156,23 @@ export default function requestTaskGroupTest() {
       let config = {
         gauge: true,
         notification: {
-          text:'a'.repeat(3072),
+          text: 'a'.repeat(3072),
         },
       };
-      try{
+      try {
         let gid = await request.agent.createGroup(config);
         expect(true).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(false).assertTrue();
         done();
       }
-    })    
+    })
 
     /**
      * @tc.number: testcreateGroup006
      * @tc.name: testcreateGroup006
-     * @tc.desc: Test for createGroup when fail by text length more than 3072 
+     * @tc.desc: Test for createGroup when fail by text length more than 3072
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -182,18 +182,18 @@ export default function requestTaskGroupTest() {
       let config = {
         gauge: true,
         notification: {
-          text: '1'+'a'.repeat(3072),
+          text: '1' + 'a'.repeat(3072),
         },
       };
-      try{
+      try {
         let gid = await request.agent.createGroup(config);
         expect(false).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-    }) 
+    })
 
     /**
      * @tc.number: testattachGroup001
@@ -209,17 +209,17 @@ export default function requestTaskGroupTest() {
         gauge: true,
         notification: {},
       };
-      try{
+      try {
         let gid = await request.agent.createGroup(config);
         let tids = [];
-        await request.agent.attachGroup(gid,tids);
+        await request.agent.attachGroup(gid, tids);
         expect(true).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(false).assertTrue();
         done();
       }
-    }) 
+    })
 
     /**
      * @tc.number: testattachGroup002
@@ -231,20 +231,20 @@ export default function requestTaskGroupTest() {
      * @tc.require:
      */
     it('testattachGroup002', 0, async function (done) {
-      try{
-        await request.agent.attachGroup("gid","tids");
+      try {
+        await request.agent.attachGroup("gid", "tids");
         expect(false).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-    }) 
+    })
 
     /**
      * @tc.number: testattachGroup003
      * @tc.name: testattachGroup003
-     * @tc.desc: Test for attachGroup when failed by task not belong to this app 
+     * @tc.desc: Test for attachGroup when failed by task not belong to this app
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -255,13 +255,13 @@ export default function requestTaskGroupTest() {
         gauge: true,
         notification: {},
       };
-      try{
+      try {
         let gid = await request.agent.createGroup(config);
         let tids = ['123123'];
-        await request.agent.attachGroup(gid,tids);
+        await request.agent.attachGroup(gid, tids);
         expect(false).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(err.code).assertEqual(21900006);
         done();
       }
@@ -270,7 +270,7 @@ export default function requestTaskGroupTest() {
     /**
      * @tc.number: testattachGroup004
      * @tc.name: testattachGroup004
-     * @tc.desc: Test for attachGroup when failed by 
+     * @tc.desc: Test for attachGroup when failed by
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -281,12 +281,12 @@ export default function requestTaskGroupTest() {
         gauge: true,
         notification: {},
       };
-      try{
+      try {
         let gid = await request.agent.createGroup(config);
         await request.agent.attachGroup(gid);
         expect(false).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
@@ -314,12 +314,12 @@ export default function requestTaskGroupTest() {
         overwrite: true,
       }
       let task = await request.agent.create(context, conf);
-      try{
+      try {
         let gid = await request.agent.createGroup(config);
-        await request.agent.attachGroup(gid,[task.tid]);
+        await request.agent.attachGroup(gid, [task.tid]);
         expect(true).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(false).assertTrue();
         done();
       }
@@ -358,12 +358,12 @@ export default function requestTaskGroupTest() {
       let tid1 = task1.tid;
       let task2 = await request.agent.create(context, conf2);
       let tid2 = task2.tid;
-      try{
+      try {
         let gid = await request.agent.createGroup(config);
-        await request.agent.attachGroup(gid,[tid1,tid2]);
+        await request.agent.attachGroup(gid, [tid1, tid2]);
         expect(false).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(err.code).assertEqual(21900005);
         done();
       }
@@ -399,16 +399,16 @@ export default function requestTaskGroupTest() {
         mode: request.agent.Mode.BACKGROUND
       }
       let task1 = await request.agent.create(context, conf1);
-      task1.start();  
+      task1.start();
       let tid1 = task1.tid;
       let task2 = await request.agent.create(context, conf2);
       let tid2 = task2.tid;
-      try{
+      try {
         let gid = await request.agent.createGroup(config);
-        await request.agent.attachGroup(gid,[tid1,tid2]);
+        await request.agent.attachGroup(gid, [tid1, tid2]);
         expect(false).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(err.code).assertEqual(21900007);
         await request.agent.remove(task1.tid);
         done();
@@ -430,14 +430,14 @@ export default function requestTaskGroupTest() {
         notification: {},
       };
 
-      try{
+      try {
         let gid = await request.agent.createGroup(config);
-        await request.agent.attachGroup(gid,[]);
+        await request.agent.attachGroup(gid, []);
         await request.agent.deleteGroup(gid);
-        await request.agent.attachGroup(gid,[]);
+        await request.agent.attachGroup(gid, []);
         expect(false).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(err.code).assertEqual(21900008);
         done();
       }
@@ -453,12 +453,12 @@ export default function requestTaskGroupTest() {
      * @tc.require:
      */
     it('testattachGroup009', 0, async function (done) {
-        let gid = "123";
-      try{
-        await request.agent.attachGroup(gid,[]);
+      let gid = "123";
+      try {
+        await request.agent.attachGroup(gid, []);
         expect(false).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(err.code).assertEqual(21900008);
         done();
       }
@@ -479,12 +479,12 @@ export default function requestTaskGroupTest() {
         notification: {},
       };
 
-      try{
+      try {
         let gid = await request.agent.createGroup(config);
-        await request.agent.attachGroup(gid,["123"]);
+        await request.agent.attachGroup(gid, ["123"]);
         expect(false).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(err.code).assertEqual(21900006);
         done();
       }
@@ -504,7 +504,7 @@ export default function requestTaskGroupTest() {
         gauge: true,
         notification: {},
       };
-    let conf = {
+      let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: 'testGroupd01.txt',
@@ -512,14 +512,14 @@ export default function requestTaskGroupTest() {
       }
       let task = await request.agent.create(context, conf);
       let tid = task.tid;
-      try{
+      try {
         let gid = await request.agent.createGroup(config);
         let tids = [tid];
-        await request.agent.attachGroup(gid,tids);
+        await request.agent.attachGroup(gid, tids);
         await request.agent.deleteGroup(gid);
         expect(true).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(false).assertTrue();
         done();
       }
@@ -539,7 +539,7 @@ export default function requestTaskGroupTest() {
         gauge: true,
         notification: {},
       };
-    let conf = {
+      let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: 'testGroupd02.txt',
@@ -547,15 +547,15 @@ export default function requestTaskGroupTest() {
       }
       let task = await request.agent.create(context, conf);
       let tid = task.tid;
-      try{
+      try {
         let gid = await request.agent.createGroup(config);
         let tids = [tid];
-        await request.agent.attachGroup(gid,tids);
+        await request.agent.attachGroup(gid, tids);
         await request.agent.deleteGroup(gid);
         await request.agent.deleteGroup(gid);
         expect(false).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(err.code).assertEqual(21900008);
         done();
       }
@@ -575,12 +575,12 @@ export default function requestTaskGroupTest() {
         gauge: true,
         notification: {},
       };
-      try{
+      try {
         let gid = "123"
         await request.agent.deleteGroup(gid);
         expect(false).assertTrue();
         done();
-      }catch (err) {
+      } catch (err) {
         expect(err.code).assertEqual(21900008);
         done();
       }
