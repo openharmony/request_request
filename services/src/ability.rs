@@ -135,9 +135,9 @@ impl Ability for RequestAbility {
             self.init(handler);
         } else {
             self.init(handler);
-            const INIT_POLICY: bool = false;
-            let _ = update_policy(INIT_POLICY);
         }
+        const INIT_POLICY: bool = false;
+        let _ = update_policy(INIT_POLICY);
     }
 
     fn on_active(&self, reason: system_ability_fwk::cxx_share::SystemAbilityOnDemandReason) {
