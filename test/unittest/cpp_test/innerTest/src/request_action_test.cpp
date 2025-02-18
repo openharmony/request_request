@@ -20,9 +20,12 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <vector>
 
+#include "constant.h"
 #include "request_manager.h"
 #include "request_service_proxy.h"
+#include "task_builder.h"
 #define private public
 #define protected public
 
@@ -138,22 +141,6 @@ void RequestActionTest::TearDown(void)
 }
 
 std::string g_tidUser = "550015967"; //test correct tid which will be replaced after create used
-
-/**
- * @tc.name: CreateTest001
- * @tc.desc: Test CreateTest001 interface base function - Start
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestActionTest, CreateTest001, TestSize.Level1)
-{
-    EXPECT_NE(RequestAction::GetInstance(), nullptr);
-    TaskBuilder builder;
-    builder.setAction(Action::ANY);
-    std::string tid;
-    auto res = RequestAction::GetInstance()->Create(builder, tid);
-    EXPECT_NE(res, 0);
-}
 
 /**
  * @tc.name: StartTest001
@@ -634,26 +621,6 @@ HWTEST_F(RequestActionTest, ResumeTasksTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: RemoveTasksTest001
- * @tc.desc: Test RemoveTasksTest001 interface base function - RemoveTasks
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestActionTest, RemoveTasksTest001, TestSize.Level1)
-{
-    EXPECT_NE(RequestAction::GetInstance(), nullptr);
-    GrantDownSessionPermission();
-    std::string tid = "tid";
-    std::vector<std::string> tids = { tid };
-    std::unordered_map<std::string, ExceptionErrorCode> rets;
-    ExceptionErrorCode res = RequestAction::GetInstance()->RemoveTasks(tids, rets);
-    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
-    ExceptionErrorCode res0 = rets[tid];
-    EXPECT_EQ(res0, ExceptionErrorCode::E_TASK_NOT_FOUND);
-    REQUEST_HILOGI("===> RemoveTasksTest001 res 0=%{public}d", res0);
-}
-
-/**
  * @tc.name: PauseTasksTest001
  * @tc.desc: Test PauseTasksTest001 interface base function - PauseTasks
  * @tc.type: FUNC
@@ -671,4 +638,160 @@ HWTEST_F(RequestActionTest, PauseTasksTest001, TestSize.Level1)
     ExceptionErrorCode res0 = rets[tid];
     EXPECT_EQ(res0, ExceptionErrorCode::E_TASK_NOT_FOUND);
     REQUEST_HILOGI("===> PauseTasksTest001 res 0=%{public}d", res0);
+}
+
+/**
+ * @tc.name: ShowTasksTest001
+ * @tc.desc: Test ShowTasksTest001 interface base function - ShowTasks
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, ShowTasksTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestAction::GetInstance(), nullptr);
+    GrantDownSessionPermission();
+    std::string tid = "tid";
+    std::vector<std::string> tids = { tid };
+    std::unordered_map<std::string, TaskInfoRet> rets;
+    ExceptionErrorCode res = RequestAction::GetInstance()->ShowTasks(tids, rets);
+    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+    TaskInfoRet res0 = rets[tid];
+    EXPECT_EQ(res0.code, ExceptionErrorCode::E_TASK_NOT_FOUND);
+}
+
+/**
+ * @tc.name: TouchTasksTest001
+ * @tc.desc: Test TouchTasksTest001 interface base function - TouchTasks
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, TouchTasksTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestAction::GetInstance(), nullptr);
+    GrantDownSessionPermission();
+    std::string tid = "tid";
+    std::string token = "tasktoken";
+    TaskIdAndToken tidToken = { tid, token };
+    std::vector<TaskIdAndToken> tids = { tidToken };
+    std::unordered_map<std::string, TaskInfoRet> rets;
+    ExceptionErrorCode res = RequestAction::GetInstance()->TouchTasks(tids, rets);
+    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+    TaskInfoRet res0 = rets[tid];
+    EXPECT_EQ(res0.code, ExceptionErrorCode::E_TASK_NOT_FOUND);
+}
+
+/**
+ * @tc.name: SetMaxSpeedsTest001
+ * @tc.desc: Test SetMaxSpeedsTest001 interface base function - SetMaxSpeeds
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, SetMaxSpeedsTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestAction::GetInstance(), nullptr);
+    GrantNoPermission();
+    std::string tid = "tid";
+    SpeedConfig config = { tid, 1000 };
+    std::vector<SpeedConfig> configs = { config };
+    std::unordered_map<std::string, ExceptionErrorCode> rets;
+    ExceptionErrorCode res = RequestAction::GetInstance()->SetMaxSpeeds(configs, rets);
+    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+    ExceptionErrorCode res0 = rets[tid];
+    EXPECT_EQ(res0, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: SetModeTest001
+ * @tc.desc: Test SetModeTest001 interface base function - SetMode
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, SetModeTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestAction::GetInstance(), nullptr);
+    GrantNoPermission();
+    std::string tid = "tid";
+    Mode mode = Mode::BACKGROUND;
+    ExceptionErrorCode res = RequestAction::GetInstance()->SetMode(tid, mode);
+    EXPECT_EQ(res, ExceptionErrorCode::E_PERMISSION);
+}
+
+/**
+ * @tc.name: DisableTaskNotificationTest001
+ * @tc.desc: Test DisableTaskNotificationTest001 interface base function - DisableTaskNotification
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, DisableTaskNotificationTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestAction::GetInstance(), nullptr);
+    std::string tid = "tid";
+    std::vector<std::string> tids = { tid };
+    std::unordered_map<std::string, ExceptionErrorCode> rets;
+    ExceptionErrorCode res = RequestAction::GetInstance()->DisableTaskNotification(tids, rets);
+    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+    EXPECT_EQ(rets[tid], ExceptionErrorCode::E_TASK_NOT_FOUND);
+}
+
+/**
+ * @tc.name: CreateTest001
+ * @tc.desc: Test CreateTest001 interface base function - Create
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateTest001, TestSize.Level1)
+{
+    std::string tid;
+    TaskBuilder builder;
+    std::string url = "https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+    std::map<std::string, std::string> headers;
+    std::map<std::string, std::string> extras;
+    auto buildRes = builder.setAction(Action::DOWNLOAD)
+                   .setUrl(url)
+                   .setTitle("title")
+                   .setDescription("description")
+                   .setMode(Mode::FOREGROUND)
+                   .setOverwrite(true)
+                   .setMethod("GET")
+                   .setHeaders(headers)
+                   .setData("data")
+                   .setSaveAs("./test.txt")
+                   .setNetwork(Network::ANY)
+                   .setMetered(true)
+                   .setRoaming(true)
+                   .setRetry(true)
+                   .setRedirect(true)
+                   .setProxy("")
+                   .setIndex(0)
+                   .setBegins(0)
+                   .setEnds(-1)
+                   .setGauge(true)
+                   .setPrecise(false)
+                   .setToken("")
+                   .setPriority(0)
+                   .setExtras(extras)
+                   .build();
+    auto res = RequestAction::GetInstance()->Create(builder, tid);
+    REQUEST_HILOGI("===> CreateTest001 res 0=%{public}d", res);
+    EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: RemoveTasksTest001
+ * @tc.desc: Test RemoveTasksTest001 interface base function - RemoveTasks
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, RemoveTasksTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestAction::GetInstance(), nullptr);
+    GrantDownSessionPermission();
+    std::string tid = "tid";
+    std::vector<std::string> tids = { tid };
+    std::unordered_map<std::string, ExceptionErrorCode> rets;
+    ExceptionErrorCode res = RequestAction::GetInstance()->RemoveTasks(tids, rets);
+    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+    ExceptionErrorCode res0 = rets[tid];
+    EXPECT_EQ(res0, ExceptionErrorCode::E_TASK_NOT_FOUND);
+    REQUEST_HILOGI("===> RemoveTasksTest001 res 0=%{public}d", res0);
 }

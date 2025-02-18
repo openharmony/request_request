@@ -508,8 +508,7 @@ HWTEST_F(TaskBuilderTest, checkDescription001, TestSize.Level1)
 HWTEST_F(TaskBuilderTest, checkDescription002, TestSize.Level1)
 {
     TaskBuilder builder;
-    bool ret = builder.setDescription("TaskBuilder description")
-    .checkDescription();
+    bool ret = builder.setDescription("TaskBuilder description").checkDescription();
     EXPECT_EQ(ret, true);
 }
 
@@ -522,8 +521,7 @@ HWTEST_F(TaskBuilderTest, checkDescription002, TestSize.Level1)
 HWTEST_F(TaskBuilderTest, checkSaveas001, TestSize.Level1)
 {
     TaskBuilder builder;
-    bool ret = builder.setAction(Action::UPLOAD).setSaveAs("any")
-    .checkSaveas();
+    bool ret = builder.setAction(Action::UPLOAD).setSaveAs("any").checkSaveas();
     EXPECT_EQ(ret, true);
     EXPECT_EQ(builder.config.saveas, "");
 }
@@ -537,9 +535,7 @@ HWTEST_F(TaskBuilderTest, checkSaveas001, TestSize.Level1)
 HWTEST_F(TaskBuilderTest, checkSaveas002, TestSize.Level1)
 {
     TaskBuilder builder;
-    bool ret = builder.setAction(Action::DOWNLOAD)
-    .setSaveAs("./saveAs.txt")
-    .checkSaveas();
+    bool ret = builder.setAction(Action::DOWNLOAD).setSaveAs("./saveAs.txt").checkSaveas();
     EXPECT_EQ(ret, true);
 }
 
@@ -552,10 +548,8 @@ HWTEST_F(TaskBuilderTest, checkSaveas002, TestSize.Level1)
 HWTEST_F(TaskBuilderTest, checkSaveas003, TestSize.Level1)
 {
     TaskBuilder builder;
-    bool ret = builder.setAction(Action::DOWNLOAD)
-    .setUrl("https://example.com/saveAs.txt")
-    .setSaveAs("./")
-    .checkSaveas();
+    bool ret =
+        builder.setAction(Action::DOWNLOAD).setUrl("https://example.com/saveAs.txt").setSaveAs("./").checkSaveas();
     EXPECT_EQ(ret, true);
 }
 
@@ -568,9 +562,7 @@ HWTEST_F(TaskBuilderTest, checkSaveas003, TestSize.Level1)
 HWTEST_F(TaskBuilderTest, checkSaveas004, TestSize.Level1)
 {
     TaskBuilder builder;
-    bool ret = builder.setAction(Action::DOWNLOAD)
-    .setUrl("https://example.com/").setSaveAs("./")
-    .checkSaveas();
+    bool ret = builder.setAction(Action::DOWNLOAD).setUrl("https://example.com/").setSaveAs("./").checkSaveas();
     EXPECT_EQ(ret, false);
 }
 
@@ -583,10 +575,7 @@ HWTEST_F(TaskBuilderTest, checkSaveas004, TestSize.Level1)
 HWTEST_F(TaskBuilderTest, checkSaveas005, TestSize.Level1)
 {
     TaskBuilder builder;
-    bool ret = builder.setAction(Action::DOWNLOAD)
-    .setUrl("https://example.com/")
-    .setSaveAs("./data/")
-    .checkSaveas();
+    bool ret = builder.setAction(Action::DOWNLOAD).setUrl("https://example.com/").setSaveAs("./data/").checkSaveas();
     EXPECT_EQ(ret, false);
 }
 
@@ -612,8 +601,7 @@ HWTEST_F(TaskBuilderTest, checkCertificatePins001, TestSize.Level1)
 HWTEST_F(TaskBuilderTest, checkCertificatePins002, TestSize.Level1)
 {
     TaskBuilder builder;
-    builder.setUrl("https://checkCertificate.test:80/data")
-    .checkCertificatePins();
+    builder.setUrl("https://checkCertificate.test:80/data").checkCertificatePins();
     EXPECT_TRUE(builder.config.certificatePins.empty());
 }
 
@@ -665,9 +653,7 @@ HWTEST_F(TaskBuilderTest, checkMethod003, TestSize.Level1)
 HWTEST_F(TaskBuilderTest, checkMethod004, TestSize.Level1)
 {
     TaskBuilder builder;
-    builder.setAction(Action::DOWNLOAD)
-    .setMethod("GET")
-    .checkMethod();
+    builder.setAction(Action::DOWNLOAD).setMethod("GET").checkMethod();
     EXPECT_EQ(builder.config.method, "GET");
 }
 
@@ -707,22 +693,22 @@ HWTEST_F(TaskBuilderTest, build001, TestSize.Level1)
 {
     TaskBuilder builder;
     auto res = builder.setUrl("https://127.0.0.1/data.txt")
-    .setDescription("test for TaskBuilder")
-    .setMode(Mode::BACKGROUND)
-    .setOverwrite(true)
-    .setMethod("GET")
-    .setAction(Action::DOWNLOAD)
-    .setSaveAs("./task_builder_test.txt")
-    .setNetwork(Network::WIFI)
-    .setMetered(true)
-    .setRoaming(false)
-    .setRetry(true)
-    .setRedirect(true)
-    .setIndex(0)
-    .setBegins(0)
-    .setEnds(-1)
-    .setGauge(true)
-    .setToken("null")
-    .build();
+                   .setDescription("test for TaskBuilder")
+                   .setMode(Mode::BACKGROUND)
+                   .setOverwrite(true)
+                   .setMethod("GET")
+                   .setAction(Action::DOWNLOAD)
+                   .setSaveAs("./task_builder_test.txt")
+                   .setNetwork(Network::WIFI)
+                   .setMetered(true)
+                   .setRoaming(false)
+                   .setRetry(true)
+                   .setRedirect(true)
+                   .setIndex(0)
+                   .setBegins(0)
+                   .setEnds(-1)
+                   .setGauge(true)
+                   .setToken("null")
+                   .build();
     EXPECT_EQ(res.second, ExceptionErrorCode::E_PARAMETER_CHECK);
 }

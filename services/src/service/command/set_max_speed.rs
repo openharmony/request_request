@@ -26,11 +26,6 @@ impl RequestServiceStub {
         info!("Service set_max_speed");
         const MIN_SPEED_LIMIT : i64 = 16 * 1024;
         let permission = PermissionChecker::check_down_permission();
-        if !PermissionChecker::check_internet() && !permission {
-            error!("Service set_max_speed: no INTERNET permission.");
-            reply.write(&(ErrorCode::Permission as i32))?;
-            return Err(IpcStatusCode::Failed);
-        }
 
         let len: u32 = data.read()?;
         let len = len as usize;
