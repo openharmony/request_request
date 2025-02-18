@@ -78,6 +78,7 @@ HWTEST_F(PreloadAbnormal, NullptrTest, TestSize.Level1)
     };
     auto handle = Preload::GetInstance()->load(TEST_URL_0, std::make_unique<PreloadCallback>(callback));
     EXPECT_NE(handle, nullptr);
+    handle->Cancel();
 }
 
 /**
