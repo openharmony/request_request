@@ -39,6 +39,7 @@ ohos_fuzztest("DownloadUploadManagerFuzzTest") {
   ]
 
   sources = [
+    "../../../frameworks/native/request/src/common_utils.cpp",
     "../../../frameworks/native/request/src/request.cpp",
     "../../../frameworks/native/request/src/request_manager.cpp",
     "../../../frameworks/native/request/src/request_manager_impl.cpp",
@@ -64,6 +65,7 @@ ohos_fuzztest("DownloadUploadManagerFuzzTest") {
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "init:libbegetutil",
     "input:libmmi-client",
     "ipc:ipc_single",
     "napi:ace_napi",
