@@ -144,6 +144,7 @@ struct Config {
     bool background = false;
     bool withErrCode = true;
     bool firstInit = true;
+    bool multipart = false;
     std::string title;
     std::string saveas;
     std::string method;

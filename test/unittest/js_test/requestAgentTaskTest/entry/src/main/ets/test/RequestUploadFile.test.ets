@@ -213,7 +213,7 @@ export default function RequestUploadFileTest() {
     /**
      * @tc.number: testUploadUrl005
      * @tc.name: testUploadUrl005
-     * @tc.desc: Test upload when url length exceeds 8192
+     * @tc.desc: Test upload when url length is 8193
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -223,7 +223,7 @@ export default function RequestUploadFileTest() {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf = {
-        url: 'http://127.0.0.1/' + 'a'.repeat(8192),
+        url: 'http://127.0.0.1/' + 'a'.repeat(8176),
         header: {
           'Accept': '*/*'
         },
@@ -272,6 +272,38 @@ export default function RequestUploadFileTest() {
         expect(err.code).assertEqual(401);
         done();
       }
+    })
+
+    /**
+     * @tc.number: testUploadUrl007
+     * @tc.name: testUploadUrl007
+     * @tc.desc: Test upload when url length is 8192
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadUrl007', 0, function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        url: 'http://127.0.0.1/' + 'a'.repeat(8175),
+        header: {
+          'Accept': '*/*'
+        },
+        method: 'POST',
+        files: [File],
+        data: [RequestData]
+      };
+      request.uploadFile(context, conf).then(async (data) => {
+        expect(true).assertTrue();
+        let task = data;
+        await task.delete();
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
     })
 
     /**

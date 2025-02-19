@@ -32,6 +32,7 @@
 #include "log.h"
 #include "napi_utils.h"
 #include "net_conn_client.h"
+#include "parameter.h"
 #include "request_manager.h"
 #include "sys_event.h"
 
@@ -46,6 +47,7 @@ static constexpr uint32_t URL_MAXIMUM = 8192;
 static constexpr uint32_t NOTIFICATION_TITLE_MAXIMUM = 1024;
 static constexpr uint32_t NOTIFICATION_TEXT_MAXIMUM = 3072;
 static constexpr uint32_t PROXY_MAXIMUM = 512;
+static constexpr uint32_t MAX_UPLOAD_ON15_FILES = 100;
 
 namespace OHOS::Request {
 napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Version version, bool firstInit)
@@ -200,6 +202,9 @@ bool JsInitialize::CheckFilePath(
 bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &config, ExceptionError &error)
 {
     size_t len = config.files.size();
+    if (config.multipart) {
+        len = 1;
+    }
 
     for (size_t i = 0; i < len; i++) {
         if (filePath.empty()) {
@@ -375,6 +380,7 @@ void JsInitialize::SetParseConfig(napi_env env, napi_value jsConfig, Config &con
     config.mode = static_cast<Mode>(NapiUtils::Convert2Uint32(env, jsConfig, "mode"));
     config.headers = ParseMap(env, jsConfig, "headers");
     config.extras = ParseMap(env, jsConfig, "extras");
+    config.multipart = NapiUtils::Convert2Boolean(env, jsConfig, "multipart");
     if (config.mode == Mode::BACKGROUND) {
         config.background = true;
     }
@@ -1090,6 +1096,14 @@ bool JsInitialize::CheckUserFileSpec(const std::shared_ptr<OHOS::AbilityRuntime:
 bool JsInitialize::CheckUploadFiles(
     const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, ExceptionError &error)
 {
+    int32_t sdkVersion = GetSdkApiVersion();
+    constexpr const int32_t uploadVersion = 15;
+    if (config.version == Version::API10 && sdkVersion >= uploadVersion
+        && config.files.size() > MAX_UPLOAD_ON15_FILES) {
+        error.code = E_PARAMETER_CHECK;
+        error.errInfo = "Parameter verification failed, upload by multipart file so many";
+        return false;
+    }
     // need reconstruction.
     for (auto &file : config.files) {
         if (IsUserFile(file.uri)) {

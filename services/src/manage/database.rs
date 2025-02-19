@@ -448,6 +448,7 @@ impl RequestDb {
                         precise: true,
                         priority: 0,
                         background: true,
+                        multipart: false,
                     },
                     headers: Default::default(),
                     extras: Default::default(),

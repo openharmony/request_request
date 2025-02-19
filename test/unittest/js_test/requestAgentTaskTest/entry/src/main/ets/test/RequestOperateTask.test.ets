@@ -1737,7 +1737,7 @@ export default function requestOperateTaskTest() {
     /**
      * @tc.number: testRemove007
      * @tc.name: testRemove007
-     * @tc.desc: Test remove a running task 
+     * @tc.desc: Test remove a running task
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -1818,7 +1818,7 @@ export default function requestOperateTaskTest() {
         expect(false).assertTrue();
         done();
       }
-    }) 
+    })
 
     /**
      * @tc.number: testRedirect001
@@ -2799,19 +2799,19 @@ export default function requestOperateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-     it('testTaskId001', 0, async function (done) {
-       let conf = {
-         action: request.agent.Action.DOWNLOAD,
-         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-         saveas: `test_get_task_id_001`,
-       }
-       try {
-         await request.agent.getTask(context, "3424657889323469022694654311244554");
-       } catch (err) {
-         expect(err.code).assertEqual(21900006);
-         done();
-       }
-     })
+    it('testTaskId001', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test_get_task_id_001`,
+      }
+      try {
+        await request.agent.getTask(context, "3424657889323469022694654311244554");
+      } catch (err) {
+        expect(err.code).assertEqual(21900006);
+        done();
+      }
+    })
 
     /**
      * @tc.number: testGetTaskId002
@@ -2822,19 +2822,19 @@ export default function requestOperateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-     it('testTaskId002', 0, async function (done) {
-       let conf = {
-         action: request.agent.Action.DOWNLOAD,
-         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-         saveas: `test_get_task_id_002`,
-       }
-       try {
-         await request.agent.getTask(context, "avbdfdf");
-       } catch (err) {
-         expect(err.code).assertEqual(21900006);
-         done();
-       }
-     })
+    it('testTaskId002', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test_get_task_id_002`,
+      }
+      try {
+        await request.agent.getTask(context, "avbdfdf");
+      } catch (err) {
+        expect(err.code).assertEqual(21900006);
+        done();
+      }
+    })
      
   })
 }

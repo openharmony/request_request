@@ -80,6 +80,7 @@ impl AsyncRead for TaskReader {
                         None => {
                             progress_guard.processed[index] += upload_size;
                             progress_guard.common_data.total_processed += upload_size;
+                            progress_guard.common_data.index = index;
                         }
                         Some(uploaded) => {
                             drop(progress_guard);
@@ -216,6 +217,54 @@ fn build_multipart_request(
     }
 }
 
+fn build_batch_multipart_request(
+    task: Arc<RequestTask>,
+    _index: usize,
+    abort_flag: Arc<AtomicBool>,
+) -> Option<Request> {
+    let mut multi_part = MultiPart::new();
+    let task_operator = TaskOperator::new(task.clone(), abort_flag);
+    let start = task.progress.lock().unwrap().common_data.index;
+    info!("multi part upload task {}", task.task_id());
+
+    for item in task.conf.form_items.iter() {
+        let part = Part::new()
+            .name(item.name.as_str())
+            .body(item.value.as_str());
+
+        multi_part = multi_part.part(part);
+    }
+    for index in start..task.conf.file_specs.len() {
+        let task_reader = TaskReader::new(task.clone(), index);
+        let upload_length = {
+            let progress = task.progress.lock().unwrap();
+            progress.sizes[index] as u64 - progress.processed[index] as u64
+        };
+        let part = Part::new()
+            .name(task.conf.file_specs[index].name.as_str())
+            .file_name(task.conf.file_specs[index].file_name.as_str())
+            .mime(task.conf.file_specs[index].mime_type.as_str())
+            .length(Some(upload_length))
+            .stream(task_reader);
+
+        multi_part = multi_part.part(part);
+    }
+
+    let uploader = Uploader::builder()
+        .multipart(multi_part)
+        .operator(task_operator)
+        .build();
+
+    match task.build_request_builder() {
+        Ok(request_builder) => {
+            let request: Result<Request, HttpClientError> =
+                request_builder.body(Body::multipart(uploader));
+            build_request_common(&task, 0, request)
+        }
+        Err(err) => build_request_common(&task, 0, Err(err)),
+    }
+}
+
 fn build_request_common(
     task: &Arc<RequestTask>,
     _index: usize,
@@ -270,6 +319,58 @@ impl RequestTask {
         }
         .is_ok()
     }
+
+    async fn prepare_batch_upload(&self, start: usize, size: usize) -> bool {
+        let mut current_index = 0;
+        {
+            let mut progress = self.progress.lock().unwrap();
+
+            let total = progress.common_data.total_processed;
+            let file_sizes = &progress.sizes;
+            let mut current_size = 0;
+            for (index, &file_size) in file_sizes.iter().enumerate() {
+                current_size += file_size as usize;
+                if total <= current_size {
+                    current_index = index;
+                    break;
+                }
+            }
+            if self.upload_resume.load(Ordering::SeqCst) {
+                self.upload_resume.store(false, Ordering::SeqCst);
+            } else {
+                progress.processed[current_index] = 0;
+            }
+            progress.common_data.index = current_index;
+            progress.common_data.total_processed =
+                progress.processed.iter().take(current_index).sum();
+        }
+
+        for index in start..size {
+            let Some(file) = self.files.get_mut(index) else {
+                error!("task {} file {} not found", self.task_id(), index);
+                return false;
+            };
+            let processed = self.progress.lock().unwrap().processed[index] as u64;
+            let target_start = if self.conf.common_data.index == index as u32 {
+                let Ok(metadata) = file.metadata().await else {
+                    error!("get file metadata failed");
+                    return false;
+                };
+                if metadata.len() > self.progress.lock().unwrap().sizes[index] as u64 {
+                    self.conf.common_data.begins + processed
+                } else {
+                    processed
+                }
+            } else {
+                processed
+            };
+            if let Err(e) = file.seek(SeekFrom::Start(target_start)).await {
+                error!("file seek err:{:}", e);
+                return false;
+            }
+        }
+        true
+    }
 }
 
 pub(crate) async fn upload(task: Arc<RequestTask>, abort_flag: Arc<AtomicBool>) {
@@ -316,36 +417,41 @@ async fn upload_inner(
     let size = task.conf.file_specs.len();
     let start = task.progress.lock().unwrap().common_data.index;
 
-    for index in start..size {
+    if task.conf.common_data.multipart {
         #[cfg(feature = "oh")]
-        let _trace = Trace::new(&format!("upload file:{} index:{}", task.task_id(), index));
+        let _trace = Trace::new(&format!("upload file:{} index:{}", task.task_id(), start));
 
-        if !task.prepare_single_upload(index).await {
+        if !task.prepare_batch_upload(start, size).await {
             return Err(TaskError::Failed(Reason::OthersError));
         }
+
+        upload_one_file(
+            task.clone(),
+            start,
+            abort_flag.clone(),
+            build_batch_multipart_request,
+        )
+        .await?
+    } else {
         let is_multipart = match task.conf.headers.get("Content-Type") {
             Some(s) => s.eq("multipart/form-data"),
             None => task.conf.method.to_uppercase().eq("POST"),
         };
+        for index in start..size {
+            #[cfg(feature = "oh")]
+            let _trace = Trace::new(&format!("upload file:{} index:{}", task.task_id(), index));
 
-        if is_multipart {
-            upload_one_file(
-                task.clone(),
-                index,
-                abort_flag.clone(),
-                build_multipart_request,
-            )
-            .await?
-        } else {
-            upload_one_file(
-                task.clone(),
-                index,
-                abort_flag.clone(),
-                build_stream_request,
-            )
-            .await?
-        };
-        task.notify_header_receive();
+            if !task.prepare_single_upload(index).await {
+                return Err(TaskError::Failed(Reason::OthersError));
+            }
+
+            let func = match is_multipart {
+                true => build_multipart_request,
+                false => build_stream_request,
+            };
+            upload_one_file(task.clone(), index, abort_flag.clone(), func).await?;
+            task.notify_header_receive();
+        }
     }
 
     info!("task {} upload ok", task.task_id());

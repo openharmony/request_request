@@ -43,6 +43,7 @@ struct CommonTaskConfig {
     bool precise;
     uint32_t priority;
     bool background;
+    bool multipart;
 };
 
 struct CStringMap {

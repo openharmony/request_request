@@ -191,6 +191,7 @@ pub(crate) fn serialize_task_config(config: TaskConfig, reply: &mut MsgParcel) -
     reply.write(&(config.common_data.precise))?;
     reply.write(&(config.common_data.priority))?;
     reply.write(&(config.common_data.background))?;
+    reply.write(&(config.common_data.multipart))?;
     reply.write(&(config.bundle))?;
     reply.write(&(config.url))?;
     reply.write(&(config.title))?;
