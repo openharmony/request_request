@@ -629,10 +629,21 @@ bool JsInitialize::ParseUrl(napi_env env, napi_value jsConfig, std::string &url,
         errInfo = "Parameter verification failed, the length of url exceeds 8192";
         return false;
     }
-    if (!regex_match(url, std::regex("^http(s)?:\\/\\/.+"))) {
-        REQUEST_HILOGE("ParseUrl error");
-        errInfo = "Parameter verification failed, the url should start with http(s)://";
-        return false;
+    auto hostname = GetHostnameFromURL(url);
+    bool cleartextPermitted = true;
+    OHOS::NetManagerStandard::NetConnClient::GetInstance().IsCleartextPermitted(hostname, cleartextPermitted);
+    if (!cleartextPermitted) {
+        if (!regex_match(url, std::regex("^https:\\/\\/.+"))) {
+            REQUEST_HILOGE("ParseUrl error");
+            errInfo = "Parameter verification failed, clear text transmission to this url is not permitted";
+            return false;
+        }
+    } else {
+        if (!regex_match(url, std::regex("^http(s)?:\\/\\/.+"))) {
+            REQUEST_HILOGE("ParseUrl error");
+            errInfo = "Parameter verification failed, the url should start with http(s)://";
+            return false;
+        }
     }
 
     return true;

@@ -33,6 +33,8 @@ static const std::string AREA1 = "/data/storage/el1/base";
 static const std::string AREA2 = "/data/storage/el2/base";
 static const std::string AREA5 = "/data/storage/el5/base";
 
+std::string GetHostnameFromURL(const std::string &url);
+
 class JsInitialize {
 public:
     JsInitialize() = default;
