@@ -224,7 +224,7 @@ ExceptionErrorCode RequestAction::DisableTaskNotification(
     return code;
 }
 
-bool CreateDirs(const std::vector<std::string> &pathDirs)
+bool RequestAction::CreateDirs(const std::vector<std::string> &pathDirs)
 {
     std::string path;
     std::error_code err;
@@ -243,7 +243,8 @@ bool CreateDirs(const std::vector<std::string> &pathDirs)
     return true;
 }
 
-bool FileToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path)
+bool RequestAction::FileToWhole(
+    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path)
 {
     std::string bundleName = path.substr(0, path.find("/"));
     if (bundleName != config.bundleName) {
@@ -254,7 +255,7 @@ bool FileToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, 
     return true;
 }
 
-bool BaseToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, std::string &path)
+bool RequestAction::BaseToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, std::string &path)
 {
     std::string base = context->GetBaseDir();
     if (base.empty()) {
@@ -265,7 +266,7 @@ bool BaseToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, 
     return true;
 }
 
-bool CacheToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, std::string &path)
+bool RequestAction::CacheToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, std::string &path)
 {
     std::string cache = context->GetCacheDir();
     if (cache.empty()) {
@@ -276,7 +277,7 @@ bool CacheToWhole(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
     return true;
 }
 
-bool StandardizePath(
+bool RequestAction::StandardizePath(
     const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path)
 {
     std::string wholePrefix = "/";
@@ -302,7 +303,7 @@ bool StandardizePath(
     return CacheToWhole(context, path);
 }
 
-void StringSplit(const std::string &str, const char delim, std::vector<std::string> &elems)
+void RequestAction::StringSplit(const std::string &str, const char delim, std::vector<std::string> &elems)
 {
     std::stringstream stream(str);
     std::string item;
@@ -314,7 +315,7 @@ void StringSplit(const std::string &str, const char delim, std::vector<std::stri
     return;
 }
 
-bool PathVecToNormal(const std::vector<std::string> &in, std::vector<std::string> &out)
+bool RequestAction::PathVecToNormal(const std::vector<std::string> &in, std::vector<std::string> &out)
 {
     for (auto elem : in) {
         if (elem == "..") {
@@ -330,7 +331,7 @@ bool PathVecToNormal(const std::vector<std::string> &in, std::vector<std::string
     return true;
 }
 
-bool WholeToNormal(std::string &path, std::vector<std::string> &out)
+bool RequestAction::WholeToNormal(std::string &path, std::vector<std::string> &out)
 {
     std::string normalPath;
     std::vector<std::string> elems;
@@ -345,7 +346,7 @@ bool WholeToNormal(std::string &path, std::vector<std::string> &out)
     return true;
 }
 
-bool GetAppBaseDir(std::string &baseDir)
+bool RequestAction::GetAppBaseDir(std::string &baseDir)
 {
     auto context = AbilityRuntime::Context::GetApplicationContext();
     if (context == nullptr) {
@@ -360,7 +361,7 @@ bool GetAppBaseDir(std::string &baseDir)
     return true;
 }
 
-bool CheckBelongAppBaseDir(const std::string &filepath, std::string &baseDir)
+bool RequestAction::CheckBelongAppBaseDir(const std::string &filepath, std::string &baseDir)
 {
     if (!GetAppBaseDir(baseDir)) {
         return false;
@@ -373,7 +374,7 @@ bool CheckBelongAppBaseDir(const std::string &filepath, std::string &baseDir)
     }
 }
 
-bool GetSandboxPath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
+bool RequestAction::GetSandboxPath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
     std::string &path, std::vector<std::string> &pathVec)
 {
     if (!StandardizePath(context, config, path)) {
@@ -392,7 +393,7 @@ bool GetSandboxPath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &contex
     return true;
 }
 
-bool CheckDownloadFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config)
+bool RequestAction::CheckDownloadFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config)
 {
     std::string path = config.saveas;
     std::vector<std::string> pathVec;
@@ -409,7 +410,7 @@ bool CheckDownloadFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> 
     return true;
 }
 
-bool InterceptData(const std::string &str, const std::string &in, std::string &out)
+bool RequestAction::InterceptData(const std::string &str, const std::string &in, std::string &out)
 {
     std::size_t position = in.find_last_of(str);
     // when the str at last index, will error.
@@ -420,7 +421,7 @@ bool InterceptData(const std::string &str, const std::string &in, std::string &o
     return true;
 }
 
-void StandardizeFileSpec(FileSpec &file)
+void RequestAction::StandardizeFileSpec(FileSpec &file)
 {
     if (file.filename.empty()) {
         InterceptData("/", file.uri, file.filename);
@@ -434,7 +435,7 @@ void StandardizeFileSpec(FileSpec &file)
     return;
 }
 
-void AddPathMap(const std::string &filepath, const std::string &baseDir)
+void RequestAction::AddPathMap(const std::string &filepath, const std::string &baseDir)
 {
     {
         std::lock_guard<std::mutex> lockGuard(pathMutex_);
@@ -461,7 +462,7 @@ void AddPathMap(const std::string &filepath, const std::string &baseDir)
     }
 }
 
-bool SetPathPermission(const std::string &filepath)
+bool RequestAction::SetPathPermission(const std::string &filepath)
 {
     std::string baseDir;
     if (!CheckBelongAppBaseDir(filepath, baseDir)) {
@@ -488,7 +489,7 @@ bool SetPathPermission(const std::string &filepath)
     return true;
 }
 
-bool IsPathValid(const std::string &filePath)
+bool RequestAction::IsPathValid(const std::string &filePath)
 {
     auto path = filePath.substr(0, filePath.rfind('/'));
     char resolvedPath[PATH_MAX + 1] = { 0 };
@@ -500,7 +501,7 @@ bool IsPathValid(const std::string &filePath)
     return true;
 }
 
-bool GetInternalPath(
+bool RequestAction::GetInternalPath(
     const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path)
 {
     std::string fileName;
@@ -527,13 +528,13 @@ bool GetInternalPath(
     return true;
 }
 
-bool FindDir(const std::string &pathDir)
+bool RequestAction::FindDir(const std::string &pathDir)
 {
     std::error_code err;
     return std::filesystem::exists(pathDir, err);
 }
 
-ExceptionErrorCode GetFdDownload(const std::string &path, const Config &config)
+ExceptionErrorCode RequestAction::GetFdDownload(const std::string &path, const Config &config)
 {
     // File is exist.
     if (FindDir(path)) {
@@ -565,7 +566,8 @@ ExceptionErrorCode GetFdDownload(const std::string &path, const Config &config)
     return E_OK;
 }
 
-ExceptionErrorCode CheckDownloadFile(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config)
+ExceptionErrorCode RequestAction::CheckDownloadFile(
+    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config)
 {
     ExceptionErrorCode ret;
     if (config.version == Version::API9) {
@@ -594,12 +596,12 @@ ExceptionErrorCode CheckDownloadFile(const std::shared_ptr<OHOS::AbilityRuntime:
     return ExceptionErrorCode::E_OK;
 }
 
-bool IsUserFile(const std::string &path)
+bool RequestAction::IsUserFile(const std::string &path)
 {
     return path.find("file://docs/") == 0 || path.find("file://media/") == 0;
 }
 
-ExceptionErrorCode CheckUserFileSpec(
+ExceptionErrorCode RequestAction::CheckUserFileSpec(
     const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, FileSpec &file)
 {
     if (config.mode != Mode::FOREGROUND) {
@@ -621,7 +623,7 @@ ExceptionErrorCode CheckUserFileSpec(
     return E_OK;
 }
 
-bool CheckPathIsFile(const std::string &path)
+bool RequestAction::CheckPathIsFile(const std::string &path)
 {
     std::error_code err;
     if (!std::filesystem::exists(path, err)) {
@@ -633,7 +635,7 @@ bool CheckPathIsFile(const std::string &path)
     return true;
 }
 
-ExceptionErrorCode GetFdUpload(const std::string &path, const Config &config)
+ExceptionErrorCode RequestAction::GetFdUpload(const std::string &path, const Config &config)
 {
     if (!CheckPathIsFile(path)) {
         return config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
@@ -654,7 +656,7 @@ ExceptionErrorCode GetFdUpload(const std::string &path, const Config &config)
     return E_OK;
 }
 
-ExceptionErrorCode CheckUploadFileSpec(
+ExceptionErrorCode RequestAction::CheckUploadFileSpec(
     const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, FileSpec &file)
 {
     ExceptionErrorCode ret;
@@ -683,7 +685,8 @@ ExceptionErrorCode CheckUploadFileSpec(
     return E_OK;
 }
 
-ExceptionErrorCode CheckUploadFiles(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config)
+ExceptionErrorCode RequestAction::CheckUploadFiles(
+    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config)
 {
     // need reconstruction.
     ExceptionErrorCode ret;
@@ -709,7 +712,7 @@ ExceptionErrorCode CheckUploadFiles(const std::shared_ptr<OHOS::AbilityRuntime::
     return E_OK;
 }
 
-ExceptionErrorCode CheckUploadBodyFiles(const std::string &filePath, Config &config)
+ExceptionErrorCode RequestAction::CheckUploadBodyFiles(const std::string &filePath, Config &config)
 {
     size_t len = config.files.size();
     if (config.multipart) {
@@ -750,7 +753,7 @@ ExceptionErrorCode CheckUploadBodyFiles(const std::string &filePath, Config &con
     return E_OK;
 }
 
-bool SetDirsPermission(std::vector<std::string> &dirs)
+bool RequestAction::SetDirsPermission(std::vector<std::string> &dirs)
 {
     if (dirs.empty()) {
         return true;
@@ -791,10 +794,14 @@ bool SetDirsPermission(std::vector<std::string> &dirs)
     return true;
 }
 
-ExceptionErrorCode CheckFilePath(Config &config)
+ExceptionErrorCode RequestAction::CheckFilePath(Config &config)
 {
     auto context = AbilityRuntime::Context::GetApplicationContext();
     ExceptionErrorCode ret;
+    if (context == nullptr) {
+        REQUEST_HILOGE("AppContext is null.");
+        return E_FILE_IO;
+    }
     if (config.action == Action::DOWNLOAD) {
         ret = CheckDownloadFile(context, config);
         if (ret != ExceptionErrorCode::E_OK) {
@@ -883,7 +890,7 @@ ExceptionErrorCode RequestAction::CreateTasks(std::vector<TaskBuilder> &builders
     return ret;
 }
 
-void RemoveFile(const std::string &filePath)
+void RequestAction::RemoveFile(const std::string &filePath)
 {
     auto removeFile = [filePath]() -> void {
         std::remove(filePath.c_str());
@@ -892,7 +899,7 @@ void RemoveFile(const std::string &filePath)
     ffrt::submit(removeFile, {}, {}, ffrt::task_attr().name("Os_Request_Rm").qos(ffrt::qos_default));
 }
 
-void RemovePathMap(const std::string &filepath)
+void RequestAction::RemovePathMap(const std::string &filepath)
 {
     std::string baseDir;
     if (!CheckBelongAppBaseDir(filepath, baseDir)) {
@@ -937,7 +944,7 @@ void RemovePathMap(const std::string &filepath)
     }
 }
 
-void RemoveDirsPermission(const std::vector<std::string> &dirs)
+void RequestAction::RemoveDirsPermission(const std::vector<std::string> &dirs)
 {
     for (const auto &folderPath : dirs) {
         fs::path folder = folderPath;
@@ -949,7 +956,7 @@ void RemoveDirsPermission(const std::vector<std::string> &dirs)
     }
 }
 
-void ClearTaskTemp(const std::string &tid)
+bool RequestAction::ClearTaskTemp(const std::string &tid)
 {
     Config config;
     {
@@ -957,7 +964,7 @@ void ClearTaskTemp(const std::string &tid)
         auto it = taskMap_.find(tid);
         if (it == taskMap_.end()) {
             REQUEST_HILOGD("Clear task tmp files, not in taskMap_");
-            return;
+            return false;
         }
         config = it->second;
         taskMap_.erase(it);
@@ -979,11 +986,12 @@ void ClearTaskTemp(const std::string &tid)
     }
 
     RemoveDirsPermission(config.certsPath);
+    return true;
 }
 
 int32_t RequestAction::Remove(const std::string &tid)
 {
-    ClearTaskTemp(tid);
+    RequestAction::ClearTaskTemp(tid);
     return RequestManager::GetInstance()->Remove(tid, Version::API10);
 }
 
@@ -991,7 +999,7 @@ ExceptionErrorCode RequestAction::RemoveTasks(
     const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets)
 {
     for (auto &tid : tids) {
-        ClearTaskTemp(tid);
+        RequestAction::ClearTaskTemp(tid);
     }
     rets.clear();
     std::vector<ExceptionErrorCode> vec;
