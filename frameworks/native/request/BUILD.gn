@@ -51,6 +51,7 @@ ohos_shared_library("request_native") {
   version_script = "libdownload_single.map"
 
   sources = [
+    "src/common_utils.cpp",
     "src/parcel_helper.cpp",
     "src/request.cpp",
     "src/request_manager.cpp",
@@ -68,6 +69,7 @@ ohos_shared_library("request_native") {
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_single",
     "relational_store:native_dataability",
     "relational_store:native_rdb",

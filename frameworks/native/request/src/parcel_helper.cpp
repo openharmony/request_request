@@ -60,6 +60,10 @@ void ParcelHelper::UnMarshalBase(MessageParcel &data, TaskInfo &info)
     info.data = data.ReadString();
     info.description = data.ReadString();
     info.priority = data.ReadUint32();
+    if (info.code != Reason::REASON_OK) {
+        info.faults = CommonUtils::GetFaultByReason(info.code);
+        info.reason = CommonUtils::GetMsgByReason(info.code);
+    }
 }
 
 bool ParcelHelper::UnMarshalFormItem(MessageParcel &data, TaskInfo &info)

@@ -28,6 +28,7 @@ ohos_unittest("innerTest") {
   ]
 
   sources = [
+    "../../../../frameworks/native/request/src/common_utils.cpp",
     "../../../../frameworks/native/request/src/parcel_helper.cpp",
     "../../../../frameworks/native/request/src/request.cpp",
     "../../../../frameworks/native/request/src/request_manager.cpp",
@@ -64,6 +65,7 @@ ohos_unittest("innerTest") {
     "eventhandler:libeventhandler",
     "ffrt:libffrt",
     "hilog:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",
     "openssl:libcrypto_shared",
