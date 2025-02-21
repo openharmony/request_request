@@ -100,6 +100,9 @@ impl TaskOperator {
     ) -> Poll<Result<usize, HttpClientError>> {
         let file = self.task.files.get_mut(0).unwrap();
         let mut progress_guard = self.task.progress.lock().unwrap();
+        if self.abort_flag.load(Ordering::Acquire) {
+            return Poll::Ready(Err(HttpClientError::user_aborted()));
+        }
         match Pin::new(file).poll_write(cx, data) {
             Poll::Ready(Ok(size)) => {
                 progress_guard.processed[0] += size;
