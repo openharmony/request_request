@@ -24,10 +24,10 @@
 #include <memory>
 #include <regex>
 
-#include "common_utils.h"
 #include "constant.h"
 #include "log.h"
 #include "request_common.h"
+#include "request_common_utils.h"
 #include "request_manager.h"
 #include "securec.h"
 

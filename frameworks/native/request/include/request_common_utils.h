@@ -24,6 +24,7 @@
 #include "log.h"
 #include "parameter.h"
 #include "request_common.h"
+#include "visibility.h"
 
 namespace OHOS::Request {
 class CommonUtils {
@@ -66,8 +67,8 @@ private:
                                                             "background or terminate";
 
 public:
-    static Faults GetFaultByReason(Reason code);
-    static std::string GetMsgByReason(Reason code);
+    REQUEST_API static Faults GetFaultByReason(Reason code);
+    REQUEST_API static std::string GetMsgByReason(Reason code);
 };
 } // namespace OHOS::Request
 #endif // COMMON_UTILS_H

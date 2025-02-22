@@ -39,8 +39,8 @@ ohos_fuzztest("DownloadUploadManagerFuzzTest") {
   ]
 
   sources = [
-    "../../../frameworks/native/request/src/common_utils.cpp",
     "../../../frameworks/native/request/src/request.cpp",
+    "../../../frameworks/native/request/src/request_common_utils.cpp",
     "../../../frameworks/native/request/src/request_manager.cpp",
     "../../../frameworks/native/request/src/request_manager_impl.cpp",
     "../../../frameworks/native/request/src/request_running_task_count.cpp",
