@@ -192,7 +192,7 @@ impl Scheduler {
         let database = RequestDb::get_instance();
         database.change_status(task_id, State::Stopped)?;
         self.qos.remove_task(uid, task_id);
-        
+
         if self.running_queue.cancel_task(task_id, uid) {
             self.schedule_if_not_scheduled();
         }
@@ -363,9 +363,7 @@ impl Scheduler {
 
     #[cfg(feature = "oh")]
     pub(crate) fn sys_event(info: TaskInfo) {
-        use hisysevent::{build_number_param, build_str_param};
-
-        use crate::sys_event::SysEvent;
+        use crate::sys_event::sys_task_fault;
 
         let index = info.progress.common_data.index;
         let size = info.file_specs.len();
@@ -376,25 +374,13 @@ impl Scheduler {
         };
         let reason = Reason::from(info.common_data.reason);
 
-        SysEvent::task_fault()
-            .param(build_str_param!(crate::sys_event::TASKS_TYPE, action))
-            .param(build_number_param!(
-                crate::sys_event::TOTAL_FILE_NUM,
-                size as i32
-            ))
-            .param(build_number_param!(
-                crate::sys_event::FAIL_FILE_NUM,
-                (size - index) as i32
-            ))
-            .param(build_number_param!(
-                crate::sys_event::SUCCESS_FILE_NUM,
-                index as i32
-            ))
-            .param(build_number_param!(
-                crate::sys_event::ERROR_INFO,
-                reason.repr as i32
-            ))
-            .write();
+        sys_task_fault(
+            action,
+            size as i32,
+            (size - index) as i32,
+            index as i32,
+            reason.repr as i32,
+        );
     }
 
     pub(crate) fn on_state_change<T, F>(&mut self, f: F, t: T)

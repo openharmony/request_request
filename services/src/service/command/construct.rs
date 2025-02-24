@@ -16,7 +16,7 @@ use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::manage::events::TaskManagerEvent;
-use crate::service::command::{CONSTRUCT_MAX, set_code_with_index_other};
+use crate::service::command::{set_code_with_index_other, CONSTRUCT_MAX};
 use crate::service::notification_bar::NotificationDispatcher;
 use crate::service::permission::PermissionChecker;
 use crate::service::RequestServiceStub;
@@ -28,6 +28,11 @@ impl RequestServiceStub {
         let permission = PermissionChecker::check_down_permission();
         if !PermissionChecker::check_internet() && !permission {
             error!("Service start: no INTERNET permission.");
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A01,
+                "Service start: no INTERNET permission."
+            );
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -63,6 +68,11 @@ impl RequestServiceStub {
                 Some(ret) => ret,
                 None => {
                     error!("End Service construct, failed: receives ret failed");
+                    sys_event!(
+                        ExecError,
+                        DfxCode::INVALID_IPC_MESSAGE_A02,
+                        "End Service construct, failed: receives ret failed"
+                    );
                     set_code_with_index_other(&mut vec, i, ErrorCode::Other);
                     continue;
                 }
@@ -72,6 +82,11 @@ impl RequestServiceStub {
                 Ok(id) => id,
                 Err(err_code) => {
                     error!("End Service construct, failed: {:?}", err_code);
+                    sys_event!(
+                        ExecError,
+                        DfxCode::INVALID_IPC_MESSAGE_A02,
+                        &format!("End Service construct, failed: {:?}", err_code)
+                    );
                     set_code_with_index_other(&mut vec, i, err_code);
                     continue;
                 }
@@ -98,6 +113,11 @@ impl RequestServiceStub {
             let ret = self.client_manager.subscribe(task_id, pid, uid, token_id);
             if ret != ErrorCode::ErrOk {
                 error!("End Service subscribe, tid: {}, failed: {:?}", task_id, ret);
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A02,
+                    &format!("End Service subscribe, tid: {}, failed: {:?}", task_id, ret)
+                );
             }
             if let Some((c, tid)) = vec.get_mut(i) {
                 *c = ret;

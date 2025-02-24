@@ -516,6 +516,11 @@ impl Deserialize for TaskConfig {
         let certs_path_size: u32 = parcel.read()?;
         if certs_path_size > parcel.readable() as u32 {
             error!("deserialize failed: certs_path_size too large");
+            sys_event!(
+                ExecFault,
+                DfxCode::INVALID_IPC_MESSAGE_A00,
+                "deserialize failed: certs_path_size too large"
+            );
             return Err(IpcStatusCode::Failed);
         }
         let mut certs_path = Vec::new();
@@ -527,6 +532,11 @@ impl Deserialize for TaskConfig {
         let form_size: u32 = parcel.read()?;
         if form_size > parcel.readable() as u32 {
             error!("deserialize failed: form_size too large");
+            sys_event!(
+                ExecFault,
+                DfxCode::INVALID_IPC_MESSAGE_A00,
+                "deserialize failed: form_size too large"
+            );
             return Err(IpcStatusCode::Failed);
         }
         let mut form_items = Vec::new();
@@ -539,6 +549,11 @@ impl Deserialize for TaskConfig {
         let file_size: u32 = parcel.read()?;
         if file_size > parcel.readable() as u32 {
             error!("deserialize failed: file_specs size too large");
+            sys_event!(
+                ExecFault,
+                DfxCode::INVALID_IPC_MESSAGE_A00,
+                "deserialize failed: file_specs size too large"
+            );
             return Err(IpcStatusCode::Failed);
         }
         let mut file_specs: Vec<FileSpec> = Vec::new();
@@ -567,6 +582,11 @@ impl Deserialize for TaskConfig {
         let body_file_size: u32 = parcel.read()?;
         if body_file_size > parcel.readable() as u32 {
             error!("deserialize failed: body_file size too large");
+            sys_event!(
+                ExecFault,
+                DfxCode::INVALID_IPC_MESSAGE_A00,
+                "deserialize failed: body_file size too large"
+            );
             return Err(IpcStatusCode::Failed);
         }
 
@@ -579,6 +599,11 @@ impl Deserialize for TaskConfig {
         let header_size: u32 = parcel.read()?;
         if header_size > parcel.readable() as u32 {
             error!("deserialize failed: header size too large");
+            sys_event!(
+                ExecFault,
+                DfxCode::INVALID_IPC_MESSAGE_A00,
+                "deserialize failed: header size too large"
+            );
             return Err(IpcStatusCode::Failed);
         }
         let mut headers: HashMap<String, String> = HashMap::new();
@@ -591,6 +616,11 @@ impl Deserialize for TaskConfig {
         let extras_size: u32 = parcel.read()?;
         if extras_size > parcel.readable() as u32 {
             error!("deserialize failed: extras size too large");
+            sys_event!(
+                ExecFault,
+                DfxCode::INVALID_IPC_MESSAGE_A00,
+                "deserialize failed: extras size too large"
+            );
             return Err(IpcStatusCode::Failed);
         }
         let mut extras: HashMap<String, String> = HashMap::new();

@@ -180,6 +180,11 @@ impl NotifyFlow {
                     Ok(message) => message,
                     Err(e) => {
                         error!("Notification flow channel error: {:?}", e);
+                        sys_event!(
+                            ExecFault,
+                            DfxCode::UDS_FAULT_03,
+                            &format!("Notification flow channel error: {:?}", e)
+                        );
                         continue;
                     }
                 };

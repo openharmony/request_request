@@ -26,6 +26,11 @@ impl RequestServiceStub {
         let permission = PermissionChecker::check_down_permission();
         if !permission {
             error!("Service change_mode: no DOWNLOAD_SESSION_MANAGER permission.");
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A43,
+                "Service change_mode: no DOWNLOAD_SESSION_MANAGER permission."
+            );
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -34,6 +39,11 @@ impl RequestServiceStub {
         info!("Service change_mode tid {}", task_id);
         let Ok(task_id) = task_id.parse::<u32>() else {
             error!("Service change_mode, failed: tid not valid: {}", task_id);
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A44,
+                &format!("Service change_mode, failed: tid not valid: {}", task_id)
+            );
             reply.write(&(ErrorCode::TaskNotFound as i32))?;
             return Err(IpcStatusCode::Failed);
         };
@@ -48,6 +58,14 @@ impl RequestServiceStub {
                     "Service change_mode, failed: old_mode not valid: {}",
                     task_id
                 );
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A44,
+                    &format!(
+                        "Service change_mode, failed: old_mode not valid: {}",
+                        task_id
+                    )
+                );
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 return Err(IpcStatusCode::Failed);
             }
@@ -55,6 +73,11 @@ impl RequestServiceStub {
 
         if old_mode == mode || mode == Mode::Any {
             error!("Service change_mode, mod state is ok: {}", task_id);
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A44,
+                &format!("Service change_mode, mod state is ok: {}", task_id)
+            );
             reply.write(&(ErrorCode::ErrOk as i32))?;
             return Ok(());
         }
@@ -70,6 +93,11 @@ impl RequestServiceStub {
         let (event, rx) = TaskManagerEvent::set_mode(uid, task_id, mode);
         if !self.task_manager.lock().unwrap().send_event(event) {
             error!("Service change_mode, failed: task_manager err: {}", task_id);
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A44,
+                &format!("Service change_mode, failed: task_manager err: {}", task_id)
+            );
             reply.write(&(ErrorCode::Other as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -79,6 +107,11 @@ impl RequestServiceStub {
                 error!(
                     "Service change_mode, tid: {}, failed: receives ret failed",
                     task_id
+                );
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A44,
+                    &format!("Service change_mode, mod state is ok: {}", task_id)
                 );
                 reply.write(&(ErrorCode::Other as i32))?;
                 return Err(IpcStatusCode::Failed);

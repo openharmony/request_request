@@ -69,6 +69,7 @@ impl RequestServiceStub {
             Some(infos) => infos,
             None => {
                 error!("Service dump: receives infos failed");
+                sys_event!(ExecFault, DfxCode::UDS_FAULT_03, "Service dump: receives infos failed");
                 return;
             }
         };
@@ -105,6 +106,7 @@ impl RequestServiceStub {
             Some(task) => task,
             None => {
                 error!("Service dump: receives task failed");
+                sys_event!(ExecFault, DfxCode::UDS_FAULT_03, "Service dump: receives task failed");
                 return;
             }
         };

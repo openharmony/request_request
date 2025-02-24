@@ -40,6 +40,11 @@ impl RunCountManagerEntry {
             unsafe {
                 if let Some(e) = PANIC_INFO.as_ref() {
                     error!("Sends RunCountManager event failed {}", e);
+                    sys_event!(
+                        ExecFault,
+                        DfxCode::UDS_FAULT_02,
+                        &format!("Sends RunCountManager event failed {}", e)
+                    );
                 } else {
                     info!("RunCountManager is unloading");
                 }
@@ -95,6 +100,11 @@ impl RunCountManager {
                 Ok(message) => message,
                 Err(e) => {
                     error!("RunCountManager recv error {:?}", e);
+                    sys_event!(
+                        ExecFault,
+                        DfxCode::UDS_FAULT_03,
+                        &format!("RunCountManager recv error {:?}", e)
+                    );
                     continue;
                 }
             };

@@ -54,6 +54,11 @@ impl RequestServiceStub {
     ) -> IpcResult<()> {
         let Ok(group_id) = data.read::<String>()?.parse::<u32>() else {
             error!("End Service attach_group, group_id, failed: group_id not valid",);
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A38,
+                "End Service attach_group, group_id, failed: group_id not valid"
+            );
             reply.write(&(ErrorCode::GroupNotFound as i32))?;
             return Ok(());
         };
@@ -66,6 +71,11 @@ impl RequestServiceStub {
         for task_id in task_ids.iter() {
             let Ok(task_id) = task_id.parse::<u32>() else {
                 error!("End Service attach_group, task_id, failed: task_id not valid");
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A38,
+                    "End Service attach_group, task_id, failed: task_id not valid"
+                );
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 return Ok(());
             };
@@ -73,6 +83,11 @@ impl RequestServiceStub {
                 error!(
                     "End Service attach_group, task_id: {}, failed: task_id not belong to uid",
                     task_id
+                );
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A38,
+                    &format!("End Service attach_group, task_id: {}, failed: task_id not belong to uid", task_id)
                 );
                 reply.write(&(ErrorCode::TaskNotFound as i32))?;
                 return Ok(());
@@ -91,6 +106,11 @@ impl RequestServiceStub {
                     "End Service attach_group, task_id: {:?}, group_id: {}, failed: receives ret failed",
                     task_ids, group_id
                 );
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A38, 
+                    &format!("End Service attach_group, task_id: {:?}, group_id: {}, failed: receives ret failed",task_ids, group_id)
+                );
                 ErrorCode::Other
             }
         };
@@ -98,6 +118,11 @@ impl RequestServiceStub {
             error!(
                 "End Service attach_group, task_id: {:?}, group_id: {}, failed: ret is not ErrOk",
                 task_ids, group_id
+            );
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A38,
+                &format!("End Service attach_group, task_id: {:?}, group_id: {}, failed: ret is not ErrOk",task_ids, group_id)
             );
         }
         reply.write(&(ret as i32))?;
@@ -136,6 +161,11 @@ impl RequestServiceStub {
                 Ok(()) => reply.write(&(ErrorCode::ErrOk as i32)),
                 Err(e) => {
                     error!("End Service disable_task_notifications, failed: {:?}", e);
+                    sys_event!(
+                        ExecError,
+                        DfxCode::INVALID_IPC_MESSAGE_A46,
+                        &format!("End Service disable_task_notifications, failed: {:?}", e)
+                    );
                     reply.write(&(e as i32))
                 }
             }?;

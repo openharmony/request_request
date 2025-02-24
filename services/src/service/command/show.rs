@@ -42,6 +42,11 @@ impl RequestServiceStub {
 
             let Ok(task_id) = task_id.parse::<u32>() else {
                 error!("Service show, failed: tid not valid: {}", task_id);
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A18,
+                    &format!("Service show, failed: tid not valid: {}", task_id)
+                );
                 set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
                 continue;
             };
@@ -62,6 +67,14 @@ impl RequestServiceStub {
                     "Service show, failed: check task uid. tid: {}, uid: {}",
                     task_id, uid
                 );
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A18,
+                    &format!(
+                        "Service show, failed: check task uid. tid: {}, uid: {}",
+                        task_id, uid
+                    )
+                );
                 continue;
             }
 
@@ -75,6 +88,11 @@ impl RequestServiceStub {
                 }
                 None => {
                     error!("Service show, failed: task_id not found, tid: {}", task_id);
+                    sys_event!(
+                        ExecError,
+                        DfxCode::INVALID_IPC_MESSAGE_A18,
+                        &format!("Service show, failed: task_id not found, tid: {}", task_id)
+                    );
                     set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
                 }
             };

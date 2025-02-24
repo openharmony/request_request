@@ -109,6 +109,11 @@ impl TaskManager {
             AppUninstallSubscriber::new(tx.clone()),
         ) {
             error!("Subscribe app uninstall event failed: {}", e);
+            sys_event!(
+                ExecFault,
+                DfxCode::EVENT_FAULT_01,
+                &format!("Subscribe app uninstall event failed: {}", e)
+            );
         }
 
         let task_manager = Self::new(tx.clone(), rx, runcount_manager, client_manager);

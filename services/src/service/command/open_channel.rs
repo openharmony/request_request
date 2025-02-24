@@ -34,6 +34,11 @@ impl RequestServiceStub {
             }
             Err(err) => {
                 error!("End Service open_channel, failed: {:?}", err);
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A26,
+                    &format!("End Service open_channel, failed: {:?}", err)
+                );
                 reply.write(&(ErrorCode::ParameterCheck as i32))?;
                 Err(IpcStatusCode::Failed)
             }
