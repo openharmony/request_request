@@ -712,3 +712,113 @@ HWTEST_F(TaskBuilderTest, build001, TestSize.Level1)
                    .build();
     EXPECT_EQ(res.second, ExceptionErrorCode::E_PARAMETER_CHECK);
 }
+
+/**
+ * @tc.name: build002
+ * @tc.desc: Test TaskBuilder interface base function - checkAction
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, build002, TestSize.Level1)
+{
+    TaskBuilder builder;
+    auto res = builder.setAction(Action::ANY).build();
+    EXPECT_EQ(res.second, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: build003
+ * @tc.desc: Test TaskBuilder interface base function - checkUrl
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, build003, TestSize.Level1)
+{
+    TaskBuilder builder;
+    auto res = builder.setAction(Action::DOWNLOAD).setUrl("123").build();
+    EXPECT_EQ(res.second, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: build004
+ * @tc.desc: Test TaskBuilder interface base function - checkData
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, build004, TestSize.Level1)
+{
+    TaskBuilder builder;
+    std::vector<FileSpec> data;
+    auto res = builder.setAction(Action::UPLOAD).setUrl("https://127.0.0.1/data.txt").setData(data).build();
+    EXPECT_EQ(res.second, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: build005
+ * @tc.desc: Test TaskBuilder interface base function - checkIndex
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, build005, TestSize.Level1)
+{
+    TaskBuilder builder;
+    auto res = builder.setAction(Action::UPLOAD).setUrl("https://127.0.0.1/data.txt").setIndex(100).build();
+    EXPECT_EQ(res.second, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: build006
+ * @tc.desc: Test TaskBuilder interface base function - checkProxy
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, build006, TestSize.Level1)
+{
+    TaskBuilder builder;
+    auto res =
+        builder.setAction(Action::DOWNLOAD).setUrl("https://127.0.0.1/data.txt").setProxy("http://example.com").build();
+    EXPECT_EQ(res.second, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: build007
+ * @tc.desc: Test TaskBuilder interface base function - checkTitle
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, build007, TestSize.Level1)
+{
+    TaskBuilder builder;
+    std::string title(257, 'a');
+    auto res = builder.setAction(Action::DOWNLOAD).setUrl("https://127.0.0.1/data.txt").setTitle(title).build();
+    EXPECT_EQ(res.second, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: build008
+ * @tc.desc: Test TaskBuilder interface base function - checkDescription
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, build008, TestSize.Level1)
+{
+    TaskBuilder builder;
+    std::string description(1025, 'a');
+    auto res =
+        builder.setAction(Action::DOWNLOAD).setUrl("https://127.0.0.1/data.txt").setDescription(description).build();
+    EXPECT_EQ(res.second, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: build009
+ * @tc.desc: Test TaskBuilder interface base function - checkSaveas
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, build009, TestSize.Level1)
+{
+    TaskBuilder builder;
+    std::string description(1025, 'a');
+    auto res = builder.setAction(Action::DOWNLOAD).setUrl("https://example.com/").setSaveAs("./data/").build();
+    EXPECT_EQ(res.second, ExceptionErrorCode::E_PARAMETER_CHECK);
+}

@@ -686,6 +686,22 @@ HWTEST_F(RequestActionTest, TouchTasksTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SetMaxSpeedTest001
+ * @tc.desc: Test SetMaxSpeedTest001 interface base function - SetMaxSpeed
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, SetMaxSpeedTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestAction::GetInstance(), nullptr);
+    GrantNoPermission();
+    std::string tid = "tid";
+    int64_t maxSpeed = 1000;
+    auto res = RequestAction::GetInstance()->SetMaxSpeed(tid, maxSpeed);
+    EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
  * @tc.name: SetMaxSpeedsTest001
  * @tc.desc: Test SetMaxSpeedsTest001 interface base function - SetMaxSpeeds
  * @tc.type: FUNC
@@ -782,6 +798,20 @@ HWTEST_F(RequestActionTest, CreateTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CreateTasksTest001
+ * @tc.desc: Test CreateTasksTest001 interface base function - CreateTasks
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateTasksTest001, TestSize.Level1)
+{
+    std::vector<TaskBuilder> builders;
+    std::vector<TaskRet> rets;
+    auto res = RequestAction::GetInstance()->CreateTasks(builders, rets);
+    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+}
+
+/**
  * @tc.name: RemoveTasksTest001
  * @tc.desc: Test RemoveTasksTest001 interface base function - RemoveTasks
  * @tc.type: FUNC
@@ -830,9 +860,9 @@ HWTEST_F(RequestActionTest, CreateInnerTest002, TestSize.Level1)
     EXPECT_EQ(res, true);
 }
 
-class ContextTest : public ApplicationContext {
+class ContextTestMock : public ApplicationContext {
 public:
-    ~ContextTest(){};
+    ~ContextTestMock(){};
     std::string GetBaseDir(void) const override
     {
         return "/data/app/base";
@@ -848,7 +878,7 @@ public:
 HWTEST_F(RequestActionTest, CreateInnerTest003, TestSize.Level1)
 {
     // convert "internal://cache/exmaple" to "/data/....../cache/example"
-    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTest>();
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
     std::string path;
     auto res = RequestAction::BaseToWhole(context, path);
     EXPECT_EQ(res, true);
@@ -863,7 +893,7 @@ HWTEST_F(RequestActionTest, CreateInnerTest003, TestSize.Level1)
 HWTEST_F(RequestActionTest, CreateInnerTest004, TestSize.Level1)
 {
     // convert "./exmaple" to "/data/....../cache/example"
-    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTest>();
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
     Config config;
     std::string path;
     auto res = RequestAction::CacheToWhole(context, path);
@@ -878,7 +908,7 @@ HWTEST_F(RequestActionTest, CreateInnerTest004, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest005, TestSize.Level1)
 {
-    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTest>();
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
     Config config;
     std::string path;
     auto res = RequestAction::StandardizePath(context, config, path);
@@ -893,7 +923,7 @@ HWTEST_F(RequestActionTest, CreateInnerTest005, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0051, TestSize.Level1)
 {
-    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTest>();
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
     Config config;
     std::string path = "/";
     auto res = RequestAction::StandardizePath(context, config, path);
@@ -978,7 +1008,7 @@ HWTEST_F(RequestActionTest, CreateInnerTest010, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest011, TestSize.Level1)
 {
-    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTest>();
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
     Config config;
     std::string path;
     std::vector<std::string> pathVec;
@@ -993,7 +1023,7 @@ HWTEST_F(RequestActionTest, CreateInnerTest011, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest012, TestSize.Level1)
 {
-    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTest>();
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
     Config config;
     auto res = RequestAction::CheckDownloadFilePath(context, config);
     EXPECT_EQ(res, false);
@@ -1077,7 +1107,7 @@ HWTEST_F(RequestActionTest, CreateInnerTest017, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest018, TestSize.Level1)
 {
-    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTest>();
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
     Config config;
     std::string path;
     auto res = RequestAction::GetInternalPath(context, config, path);
@@ -1119,7 +1149,7 @@ HWTEST_F(RequestActionTest, CreateInnerTest020, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest021, TestSize.Level1)
 {
-    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTest>();
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
     Config config;
     auto res = RequestAction::CheckDownloadFile(context, config);
     EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
@@ -1172,7 +1202,7 @@ HWTEST_F(RequestActionTest, CreateInnerTest0222, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest023, TestSize.Level1)
 {
-    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTest>();
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
     Config config;
     FileSpec file;
     auto res = RequestAction::CheckUserFileSpec(context, config, file);
@@ -1214,7 +1244,7 @@ HWTEST_F(RequestActionTest, CreateInnerTest025, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest026, TestSize.Level1)
 {
-    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTest>();
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
     Config config;
     FileSpec file;
     auto res = RequestAction::CheckUploadFileSpec(context, config, file);
@@ -1229,7 +1259,7 @@ HWTEST_F(RequestActionTest, CreateInnerTest026, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest027, TestSize.Level1)
 {
-    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTest>();
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
     Config config = { .version = Version::API10 };
     auto res = RequestAction::CheckUploadFiles(context, config);
     EXPECT_EQ(res, ExceptionErrorCode::E_OK);
