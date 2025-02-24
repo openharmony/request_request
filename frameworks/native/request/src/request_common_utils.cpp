@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "common_utils.h"
+#include "request_common_utils.h"
 
 namespace OHOS::Request {
 Faults CommonUtils::GetFaultByReason(Reason code)
