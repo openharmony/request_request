@@ -244,6 +244,34 @@ impl RunningQueue {
             }
         }
     }
+
+    pub(crate) fn cancel_task(&mut self, task_id: u32, uid: u64) -> bool {
+        let handle = match self
+            .running_tasks
+            .get_mut(&(uid, task_id))
+            .and_then(|task| task.take())
+        {
+            Some(h) => h,
+            None => return false,
+        };
+        let task = match self
+            .upload_queue
+            .get(&(uid, task_id))
+            .or_else(|| self.download_queue.get(&(uid, task_id)))
+        {
+            Some(t) => t,
+            None => {
+                return false;
+            }
+        };
+
+        let progress_lock = task.progress.lock().unwrap();
+        handle.cancel();
+        drop(progress_lock);
+
+        task.update_progress_in_database();
+        true
+    }
 }
 
 struct AbortHandle {

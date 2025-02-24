@@ -158,37 +158,42 @@ impl Scheduler {
     pub(crate) fn pause_task(&mut self, uid: u64, task_id: u32) -> Result<(), ErrorCode> {
         let database = RequestDb::get_instance();
         database.change_status(task_id, State::Paused)?;
+        self.qos.remove_task(uid, task_id);
 
-        if let Some(info) = database.get_task_info(task_id) {
-            Notifier::pause(&self.client_manager, info.build_notify_data());
-        }
-        self.running_queue.upload_resume.insert(task_id);
-        if self.qos.remove_task(uid, task_id) {
+        if self.running_queue.cancel_task(task_id, uid) {
+            self.running_queue.upload_resume.insert(task_id);
             self.schedule_if_not_scheduled();
         }
+        let info = database
+            .get_task_info(task_id)
+            .ok_or(ErrorCode::TaskNotFound)?;
+
+        Notifier::pause(&self.client_manager, info.build_notify_data());
         Ok(())
     }
 
     pub(crate) fn remove_task(&mut self, uid: u64, task_id: u32) -> Result<(), ErrorCode> {
         let database = RequestDb::get_instance();
         database.change_status(task_id, State::Removed)?;
+        self.qos.remove_task(uid, task_id);
+
+        if self.running_queue.cancel_task(task_id, uid) {
+            self.schedule_if_not_scheduled();
+        }
         let info = database
             .get_task_info(task_id)
             .ok_or(ErrorCode::TaskNotFound)?;
 
         Notifier::remove(&self.client_manager, info.build_notify_data());
-
-        if self.qos.remove_task(uid, task_id) {
-            self.schedule_if_not_scheduled();
-        }
         Ok(())
     }
 
     pub(crate) fn stop_task(&mut self, uid: u64, task_id: u32) -> Result<(), ErrorCode> {
         let database = RequestDb::get_instance();
         database.change_status(task_id, State::Stopped)?;
-
-        if self.qos.remove_task(uid, task_id) {
+        self.qos.remove_task(uid, task_id);
+        
+        if self.running_queue.cancel_task(task_id, uid) {
             self.schedule_if_not_scheduled();
         }
         Ok(())
