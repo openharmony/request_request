@@ -29,7 +29,6 @@ ohos_unittest("fwkTest") {
 
   sources = [
     "../../../../common/sys_event/src/sys_event.cpp",
-    "../../../../frameworks/native/request/src/common_utils.cpp",
     "../../../../frameworks/native/request/src/parcel_helper.cpp",
     "../../../../frameworks/native/request/src/request.cpp",
     "../../../../frameworks/native/request/src/request_manager.cpp",
@@ -64,7 +63,6 @@ ohos_unittest("fwkTest") {
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
-    "init:libbegetutil",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",
     "openssl:libcrypto_shared",

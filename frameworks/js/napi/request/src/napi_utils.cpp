@@ -24,15 +24,47 @@
 #include <memory>
 #include <regex>
 
-#include "common_utils.h"
 #include "constant.h"
 #include "log.h"
-#include "request_common.h"
 #include "request_manager.h"
 #include "securec.h"
 
 namespace OHOS::Request::NapiUtils {
 static constexpr int64_t JS_NUMBER_MAX_VALUE = (1LL << 53) - 1;
+static constexpr const char *REASON_OK_INFO = "Task successful";
+static constexpr const char *TASK_SURVIVAL_ONE_MONTH_INFO = "The task has not been completed for a month yet";
+static constexpr const char *WAITTING_NETWORK_ONE_DAY_INFO = "The task waiting for network recovery has not been "
+                                                             "completed for a day yet";
+static constexpr const char *STOPPED_NEW_FRONT_TASK_INFO = "Stopped by a new front task";
+static constexpr const char *RUNNING_TASK_MEET_LIMITS_INFO = "Too many task in running state";
+static constexpr const char *USER_OPERATION_INFO = "User operation";
+static constexpr const char *APP_BACKGROUND_OR_TERMINATE_INFO = "The app is background or terminate";
+static constexpr const char *NETWORK_OFFLINE_INFO = "NetWork is offline";
+static constexpr const char *UNSUPPORTED_NETWORK_TYPE_INFO = "NetWork type not meet the task config";
+static constexpr const char *BUILD_CLIENT_FAILED_INFO = "Build client error";
+static constexpr const char *BUILD_REQUEST_FAILED_INFO = "Build request error";
+static constexpr const char *GET_FILESIZE_FAILED_INFO = "Failed because cannot get the file size from the server and "
+                                                        "the precise is setted true by user";
+static constexpr const char *CONTINUOUS_TASK_TIMEOUT_INFO = "Continuous processing task time out";
+static constexpr const char *CONNECT_ERROR_INFO = "Connect error";
+static constexpr const char *REQUEST_ERROR_INFO = "Request error";
+static constexpr const char *UPLOAD_FILE_ERROR_INFO = "There are some files upload failed";
+static constexpr const char *REDIRECT_ERROR_INFO = "Redirect error";
+static constexpr const char *PROTOCOL_ERROR_INFO = "Http protocol error";
+static constexpr const char *IO_ERROR_INFO = "Io Error";
+static constexpr const char *UNSUPPORT_RANGE_REQUEST_INFO = "Range request not supported";
+static constexpr const char *OTHERS_ERROR_INFO = "Some other error occured";
+static constexpr const char *ACCOUNT_STOPPED_INFO = "Account stopped";
+static constexpr const char *NETWORK_CHANGED_INFO = "Network changed";
+static constexpr const char *DNS_INFO = "DNS error";
+static constexpr const char *TCP_INFO = "TCP error";
+static constexpr const char *SSL_INFO = "TSL/SSL error";
+static constexpr const char *INSUFFICIENT_SPACE_INFO = "Insufficient space error";
+static constexpr const char *NETWORK_APP_INFO = "NetWork is offline and the app is background or terminate";
+static constexpr const char *NETWORK_ACCOUNT_INFO = "NetWork is offline and the account is stopped";
+static constexpr const char *APP_ACCOUNT_INFO = "The account is stopped and the app is background or terminate";
+static constexpr const char *NETWORK_ACCOUNT_APP_INFO = "NetWork is offline and the account is stopped and the app is "
+                                                        "background or terminate";
 static constexpr const char *NOT_SYSTEM_APP = "permission verification failed, application which is not a system "
                                               "application uses system API";
 
@@ -263,6 +295,98 @@ napi_value Convert2JSValue(napi_env env, const std::vector<FileSpec> &files, con
     return data;
 }
 
+uint32_t Convert2Broken(Reason code)
+{
+    static std::map<Reason, Faults> InnerCodeToBroken = {
+        { REASON_OK, Faults::OTHERS },
+        { TASK_SURVIVAL_ONE_MONTH, Faults::OTHERS },
+        { WAITTING_NETWORK_ONE_DAY, Faults::OTHERS },
+        { STOPPED_NEW_FRONT_TASK, Faults::OTHERS },
+        { RUNNING_TASK_MEET_LIMITS, Faults::OTHERS },
+        { USER_OPERATION, Faults::OTHERS },
+        { APP_BACKGROUND_OR_TERMINATE, Faults::OTHERS },
+        { NETWORK_OFFLINE, Faults::DISCONNECTED },
+        { UNSUPPORTED_NETWORK_TYPE, Faults::OTHERS },
+        { BUILD_CLIENT_FAILED, Faults::PARAM },
+        { BUILD_REQUEST_FAILED, Faults::PARAM },
+        { GET_FILESIZE_FAILED, Faults::FSIO },
+        { CONTINUOUS_TASK_TIMEOUT, Faults::OTHERS },
+        { CONNECT_ERROR, Faults::TCP },
+        { REQUEST_ERROR, Faults::PROTOCOL },
+        { UPLOAD_FILE_ERROR, Faults::OTHERS },
+        { REDIRECT_ERROR, Faults::REDIRECT },
+        { PROTOCOL_ERROR, Faults::PROTOCOL },
+        { IO_ERROR, Faults::FSIO },
+        { UNSUPPORT_RANGE_REQUEST, Faults::PROTOCOL },
+        { OTHERS_ERROR, Faults::OTHERS },
+        { ACCOUNT_STOPPED, Faults::OTHERS },
+        { NETWORK_CHANGED, Faults::OTHERS },
+        { DNS, Faults::DNS },
+        { TCP, Faults::TCP },
+        { SSL, Faults::SSL },
+        { INSUFFICIENT_SPACE, Faults::OTHERS },
+        { NETWORK_APP, Faults::DISCONNECTED },
+        { NETWORK_ACCOUNT, Faults::DISCONNECTED },
+        { APP_ACCOUNT, Faults::OTHERS },
+        { NETWORK_APP_ACCOUNT, Faults::DISCONNECTED },
+    };
+    constexpr const int32_t detailVersion = 12;
+    auto iter = InnerCodeToBroken.find(code);
+    if (iter != InnerCodeToBroken.end()) {
+        int32_t sdkVersion = GetSdkApiVersion();
+        REQUEST_HILOGD("GetSdkApiVersion %{public}d", sdkVersion);
+        if (sdkVersion < detailVersion
+            && (iter->second == Faults::PARAM || iter->second == Faults::DNS || iter->second == Faults::TCP
+                || iter->second == Faults::SSL || iter->second == Faults::REDIRECT)) {
+            return static_cast<uint32_t>(Faults::OTHERS);
+        }
+        return static_cast<uint32_t>(iter->second);
+    }
+    return 0;
+}
+
+std::string Convert2ReasonMsg(Reason code)
+{
+    static std::map<Reason, std::string> ReasonMsg = {
+        { REASON_OK, REASON_OK_INFO },
+        { TASK_SURVIVAL_ONE_MONTH, TASK_SURVIVAL_ONE_MONTH_INFO },
+        { WAITTING_NETWORK_ONE_DAY, WAITTING_NETWORK_ONE_DAY_INFO },
+        { STOPPED_NEW_FRONT_TASK, STOPPED_NEW_FRONT_TASK_INFO },
+        { RUNNING_TASK_MEET_LIMITS, RUNNING_TASK_MEET_LIMITS_INFO },
+        { USER_OPERATION, USER_OPERATION_INFO },
+        { APP_BACKGROUND_OR_TERMINATE, APP_BACKGROUND_OR_TERMINATE_INFO },
+        { NETWORK_OFFLINE, NETWORK_OFFLINE_INFO },
+        { UNSUPPORTED_NETWORK_TYPE, UNSUPPORTED_NETWORK_TYPE_INFO },
+        { BUILD_CLIENT_FAILED, BUILD_CLIENT_FAILED_INFO },
+        { BUILD_REQUEST_FAILED, BUILD_REQUEST_FAILED_INFO },
+        { GET_FILESIZE_FAILED, GET_FILESIZE_FAILED_INFO },
+        { CONTINUOUS_TASK_TIMEOUT, CONTINUOUS_TASK_TIMEOUT_INFO },
+        { CONNECT_ERROR, CONNECT_ERROR_INFO },
+        { REQUEST_ERROR, REQUEST_ERROR_INFO },
+        { UPLOAD_FILE_ERROR, UPLOAD_FILE_ERROR_INFO },
+        { REDIRECT_ERROR, REDIRECT_ERROR_INFO },
+        { PROTOCOL_ERROR, PROTOCOL_ERROR_INFO },
+        { IO_ERROR, IO_ERROR_INFO },
+        { UNSUPPORT_RANGE_REQUEST, UNSUPPORT_RANGE_REQUEST_INFO },
+        { OTHERS_ERROR, OTHERS_ERROR_INFO },
+        { ACCOUNT_STOPPED, ACCOUNT_STOPPED_INFO },
+        { NETWORK_CHANGED, NETWORK_CHANGED_INFO },
+        { DNS, DNS_INFO },
+        { TCP, TCP_INFO },
+        { SSL, SSL_INFO },
+        { INSUFFICIENT_SPACE, INSUFFICIENT_SPACE_INFO },
+        { NETWORK_APP, NETWORK_APP_INFO },
+        { NETWORK_ACCOUNT, NETWORK_ACCOUNT_INFO },
+        { APP_ACCOUNT, APP_ACCOUNT_INFO },
+        { NETWORK_APP_ACCOUNT, NETWORK_ACCOUNT_APP_INFO },
+    };
+    auto iter = ReasonMsg.find(code);
+    if (iter != ReasonMsg.end()) {
+        return iter->second;
+    }
+    return "unknown";
+}
+
 napi_value Convert2JSValue(napi_env env, TaskInfo &taskInfo)
 {
     napi_value value = nullptr;
@@ -302,10 +426,9 @@ napi_value Convert2JSValue(napi_env env, TaskInfo &taskInfo)
         napi_get_null(env, &value1);
         napi_set_named_property(env, value, "faults", value1);
     } else {
-        Faults fault = CommonUtils::GetFaultByReason(taskInfo.code);
-        napi_set_named_property(env, value, "faults", Convert2JSValue(env, static_cast<uint32_t>(fault)));
+        napi_set_named_property(env, value, "faults", Convert2JSValue(env, Convert2Broken(taskInfo.code)));
     }
-    napi_set_named_property(env, value, "reason", Convert2JSValue(env, CommonUtils::GetMsgByReason(taskInfo.code)));
+    napi_set_named_property(env, value, "reason", Convert2JSValue(env, Convert2ReasonMsg(taskInfo.code)));
     napi_set_named_property(env, value, "extras", Convert2JSValue(env, taskInfo.extras));
     return value;
 }
