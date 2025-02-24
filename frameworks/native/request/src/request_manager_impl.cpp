@@ -61,6 +61,9 @@ ExceptionErrorCode RequestManagerImpl::DisableTaskNotification(
 
 ExceptionErrorCode RequestManagerImpl::CreateTasks(const std::vector<Config> &configs, std::vector<TaskRet> &rets)
 {
+    if (configs.size() == 0) {
+        return ExceptionErrorCode::E_OK;
+    }
     this->EnsureChannelOpen();
     int ret = CallProxyMethod(&RequestServiceInterface::CreateTasks, configs, rets);
     if (ret == E_OK) {
@@ -101,8 +104,7 @@ ExceptionErrorCode RequestManagerImpl::ResumeTasks(
 ExceptionErrorCode RequestManagerImpl::RemoveTasks(
     const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets)
 {
-    return static_cast<ExceptionErrorCode>(
-        CallProxyMethod(&RequestServiceInterface::RemoveTasks, tids, version, rets));
+    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::RemoveTasks, tids, version, rets));
 }
 
 ExceptionErrorCode RequestManagerImpl::PauseTasks(
