@@ -608,3 +608,64 @@ HWTEST_F(RequestManagerImplTest, ReopenChannel001, TestSize.Level1)
     EXPECT_CALL(*exceptProxy, OpenChannel(testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     RequestManagerImpl::GetInstance()->ReopenChannel();
 }
+
+/**
+ * @tc.name: CreateGroup001
+ * @tc.desc: Test CreateGroup001 interface base function - CreateGroup
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, CreateGroup001, TestSize.Level1)
+{
+    EXPECT_NE(exceptProxy, nullptr);
+    std::string gid = "gid";
+    bool gauge = true;
+    std::optional<std::string> title = "title";
+    std::optional<std::string> text = "text";
+    EXPECT_CALL(*exceptProxy, CreateGroup(gid, testing::_, testing::_, testing::_)).WillOnce(testing::Return(E_OK));
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->CreateGroup(gid, gauge, title, text), E_OK);
+}
+
+/**
+ * @tc.name: AttachGroup001
+ * @tc.desc: Test AttachGroup001 interface base function - AttachGroup
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, AttachGroup001, TestSize.Level1)
+{
+    std::string gid = "gid";
+    std::vector<std::string> tids = { "tid", "1231" };
+    EXPECT_CALL(*exceptProxy, AttachGroup(gid, testing::_)).WillOnce(testing::Return(E_OK));
+    auto res = RequestManagerImpl::GetInstance()->AttachGroup(gid, tids);
+    EXPECT_EQ(res, E_OK);
+}
+
+/**
+ * @tc.name: DeleteGroup001
+ * @tc.desc: Test DeleteGroup001 interface base function - DeleteGroup
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, DeleteGroup001, TestSize.Level1)
+{
+    std::string gid = "gid";
+    EXPECT_CALL(*exceptProxy, DeleteGroup(gid)).WillOnce(testing::Return(E_OK));
+    auto res = RequestManagerImpl::GetInstance()->DeleteGroup(gid);
+    EXPECT_EQ(res, E_OK);
+}
+
+/**
+ * @tc.name: QueryTasks003
+ * @tc.desc: Test QueryTasks003 interface base function - QueryTasks
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerImplTest, QueryTasks001, TestSize.Level1)
+{
+    EXPECT_NE(exceptProxy, nullptr);
+    std::vector<std::string> tids = { "tid", "123" };
+    std::vector<TaskInfoRet> rets;
+    EXPECT_CALL(*exceptProxy, QueryTasks(tids, testing::_)).WillOnce(testing::Return(E_OK));
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->QueryTasks(tids, rets), E_OK);
+}

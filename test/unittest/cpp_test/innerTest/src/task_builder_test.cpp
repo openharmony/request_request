@@ -169,6 +169,8 @@ HWTEST_F(TaskBuilderTest, checkCertsPath001, TestSize.Level1)
     builder.checkCertsPath();
     builder.setUrl("https:");
     builder.checkCertsPath();
+    builder.setUrl("https");
+    builder.checkCertsPath();
     builder.setUrl("https:example");
     builder.checkCertsPath();
     builder.setUrl("https://example.com/files?query=1");
@@ -580,6 +582,19 @@ HWTEST_F(TaskBuilderTest, checkSaveas005, TestSize.Level1)
 }
 
 /**
+ * @tc.name: checkSaveas006
+ * @tc.desc: Test TaskBuilder interface base function - checkSaveas006
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, checkSaveas006, TestSize.Level1)
+{
+    TaskBuilder builder;
+    bool ret = builder.setAction(Action::DOWNLOAD).setUrl("https://example.com/1").setSaveAs(".").checkSaveas();
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.name: checkCertificatePins001
  * @tc.desc: Test TaskBuilder interface base function - checkCertificatePins001
  * @tc.type: FUNC
@@ -602,6 +617,32 @@ HWTEST_F(TaskBuilderTest, checkCertificatePins002, TestSize.Level1)
 {
     TaskBuilder builder;
     builder.setUrl("https://checkCertificate.test:80/data").checkCertificatePins();
+    EXPECT_TRUE(builder.config.certificatePins.empty());
+}
+
+/**
+ * @tc.name: checkCertificatePins003
+ * @tc.desc: Test TaskBuilder interface base function - checkCertificatePins003
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, checkCertificatePins003, TestSize.Level1)
+{
+    TaskBuilder builder;
+    builder.setUrl("checkCertificateTest").checkCertificatePins();
+    EXPECT_TRUE(builder.config.certificatePins.empty());
+}
+
+/**
+ * @tc.name: checkCertificatePins004
+ * @tc.desc: Test TaskBuilder interface base function - checkCertificatePins004
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, checkCertificatePins004, TestSize.Level1)
+{
+    TaskBuilder builder;
+    builder.setUrl("checkCertificate/Test").checkCertificatePins();
     EXPECT_TRUE(builder.config.certificatePins.empty());
 }
 
@@ -658,6 +699,71 @@ HWTEST_F(TaskBuilderTest, checkMethod004, TestSize.Level1)
 }
 
 /**
+ * @tc.name: checkMethod005
+ * @tc.desc: Test TaskBuilder interface base function - checkMethod005
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, checkMethod005, TestSize.Level1)
+{
+    TaskBuilder builder;
+    builder.setAction(Action::DOWNLOAD).setMethod("POST").checkMethod();
+    EXPECT_EQ(builder.config.method, "POST");
+}
+
+/**
+ * @tc.name: checkMethod006
+ * @tc.desc: Test TaskBuilder interface base function - checkMethod006
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, checkMethod006, TestSize.Level1)
+{
+    TaskBuilder builder;
+    builder.setAction(Action::UPLOAD).setMethod("PUT").checkMethod();
+    EXPECT_EQ(builder.config.method, "PUT");
+}
+
+/**
+ * @tc.name: checkMethod007
+ * @tc.desc: Test TaskBuilder interface base function - checkMethod007
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, checkMethod007, TestSize.Level1)
+{
+    TaskBuilder builder;
+    builder.setAction(Action::UPLOAD).setMethod("aa").checkMethod();
+    EXPECT_EQ(builder.config.method, "PUT");
+}
+
+/**
+ * @tc.name: checkMethod008
+ * @tc.desc: Test TaskBuilder interface base function - checkMethod008
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, checkMethod008, TestSize.Level1)
+{
+    TaskBuilder builder;
+    builder.setAction(Action::DOWNLOAD).setMethod("aa").checkMethod();
+    EXPECT_EQ(builder.config.method, "GET");
+}
+
+/**
+ * @tc.name: checkMethod009
+ * @tc.desc: Test TaskBuilder interface base function - checkMethod009
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(TaskBuilderTest, checkMethod009, TestSize.Level1)
+{
+    TaskBuilder builder;
+    builder.setAction(Action::DOWNLOAD).setMethod("").checkMethod();
+    EXPECT_EQ(builder.config.method, "GET");
+}
+
+/**
  * @tc.name: checkOtherConfig001
  * @tc.desc: Test TaskBuilder interface base function - checkOtherConfig001
  * @tc.type: FUNC
@@ -681,6 +787,9 @@ HWTEST_F(TaskBuilderTest, checkOtherConfig002, TestSize.Level1)
     TaskBuilder builder;
     builder.setMode(Mode::BACKGROUND).checkOtherConfig();
     EXPECT_TRUE(builder.config.background);
+    TaskBuilder builder1;
+    builder1.setMode(Mode::FOREGROUND).checkOtherConfig();
+    EXPECT_FALSE(builder1.config.background);
 }
 
 /**
@@ -762,7 +871,12 @@ HWTEST_F(TaskBuilderTest, build004, TestSize.Level1)
 HWTEST_F(TaskBuilderTest, build005, TestSize.Level1)
 {
     TaskBuilder builder;
-    auto res = builder.setAction(Action::UPLOAD).setUrl("https://127.0.0.1/data.txt").setIndex(100).build();
+    std::vector<FileSpec> files;
+    FileSpec checkedFile;
+    checkedFile.uri = "./checkData.txt";
+    files.push_back(checkedFile);
+    auto res =
+        builder.setAction(Action::UPLOAD).setUrl("https://127.0.0.1/data.txt").setData(files).setIndex(100).build();
     EXPECT_EQ(res.second, ExceptionErrorCode::E_PARAMETER_CHECK);
 }
 

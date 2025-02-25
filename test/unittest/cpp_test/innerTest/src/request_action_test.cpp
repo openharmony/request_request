@@ -746,12 +746,11 @@ HWTEST_F(RequestActionTest, SetModeTest001, TestSize.Level1)
 HWTEST_F(RequestActionTest, DisableTaskNotificationTest001, TestSize.Level1)
 {
     EXPECT_NE(RequestAction::GetInstance(), nullptr);
-    std::string tid = "tid";
-    std::vector<std::string> tids = { tid };
+    std::vector<std::string> tids = { "tid", "123", "123123" };
     std::unordered_map<std::string, ExceptionErrorCode> rets;
     ExceptionErrorCode res = RequestAction::GetInstance()->DisableTaskNotification(tids, rets);
     EXPECT_EQ(res, ExceptionErrorCode::E_OK);
-    EXPECT_EQ(rets[tid], ExceptionErrorCode::E_TASK_NOT_FOUND);
+    EXPECT_EQ(rets["tid"], ExceptionErrorCode::E_TASK_NOT_FOUND);
 }
 
 /**
@@ -845,6 +844,32 @@ HWTEST_F(RequestActionTest, CreateInnerTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CreateInnerTest0011
+ * @tc.desc: Test CreateInnerTest0011 interface base function - CreateDirs
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0011, TestSize.Level1)
+{
+    std::vector<std::string> pathDirs = { "sys", "tmp" };
+    auto res = RequestAction::CreateDirs(pathDirs);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: CreateInnerTest0012
+ * @tc.desc: Test CreateInnerTest0012 interface base function - CreateDirs
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0012, TestSize.Level1)
+{
+    std::vector<std::string> pathDirs = { "data", "test", "CreateInTestDir" };
+    auto res = RequestAction::CreateDirs(pathDirs);
+    EXPECT_EQ(res, true);
+}
+
+/**
  * @tc.name: CreateInnerTest002
  * @tc.desc: Test CreateInnerTest002 interface base function - FileToWhole
  * @tc.type: FUNC
@@ -860,13 +885,46 @@ HWTEST_F(RequestActionTest, CreateInnerTest002, TestSize.Level1)
     EXPECT_EQ(res, true);
 }
 
+/**
+ * @tc.name: CreateInnerTest0021
+ * @tc.desc: Test CreateInnerTest0021 interface base function - FileToWhole
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0021, TestSize.Level1)
+{
+    // convert "file://example" to "/data/storage/el?/base/exmaple"
+    std::shared_ptr<OHOS::AbilityRuntime::Context> context;
+    Config config = { .bundleName = "com.example.aaa" };
+    std::string path = "aaa/file";
+    auto res = RequestAction::FileToWhole(context, config, path);
+    EXPECT_EQ(res, false);
+}
+
 class ContextTestMock : public ApplicationContext {
 public:
     ~ContextTestMock(){};
     std::string GetBaseDir(void) const override
     {
         return "/data/app/base";
-    }
+    };
+    std::string GetCacheDir(void) override
+    {
+        return "/data/app/cache";
+    };
+};
+
+class ContextTestErrMock : public ApplicationContext {
+public:
+    ~ContextTestErrMock(){};
+    std::string GetBaseDir(void) const override
+    {
+        return "";
+    };
+    std::string GetCacheDir(void) override
+    {
+        return "";
+    };
 };
 
 /**
@@ -885,6 +943,21 @@ HWTEST_F(RequestActionTest, CreateInnerTest003, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CreateInnerTest0031
+ * @tc.desc: Test CreateInnerTest0031 interface base function - BaseToWhole
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0031, TestSize.Level1)
+{
+    // convert "internal://cache/exmaple" to "/data/....../cache/example"
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestErrMock>();
+    std::string path;
+    auto res = RequestAction::BaseToWhole(context, path);
+    EXPECT_EQ(res, false);
+}
+
+/**
  * @tc.name: CreateInnerTest004
  * @tc.desc: Test CreateInnerTest004 interface base function - CacheToWhole
  * @tc.type: FUNC
@@ -894,15 +967,29 @@ HWTEST_F(RequestActionTest, CreateInnerTest004, TestSize.Level1)
 {
     // convert "./exmaple" to "/data/....../cache/example"
     std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
-    Config config;
+    std::string path;
+    auto res = RequestAction::CacheToWhole(context, path);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.name: CreateInnerTest0041
+ * @tc.desc: Test CreateInnerTest0041 interface base function - CacheToWhole
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0041, TestSize.Level1)
+{
+    // convert "./exmaple" to "/data/....../cache/example"
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestErrMock>();
     std::string path;
     auto res = RequestAction::CacheToWhole(context, path);
     EXPECT_EQ(res, false);
 }
 
 /**
- * @tc.name: CreateInnerTest0041
- * @tc.desc: Test CreateInnerTest004 interface base function - StandardizePath
+ * @tc.name: CreateInnerTest005
+ * @tc.desc: Test CreateInnerTest005 interface base function - StandardizePath
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -912,12 +999,12 @@ HWTEST_F(RequestActionTest, CreateInnerTest005, TestSize.Level1)
     Config config;
     std::string path;
     auto res = RequestAction::StandardizePath(context, config, path);
-    EXPECT_EQ(res, false);
+    EXPECT_EQ(res, true);
 }
 
 /**
- * @tc.name: CreateInnerTest0041
- * @tc.desc: Test CreateInnerTest004 interface base function - StandardizePath
+ * @tc.name: CreateInnerTest0051
+ * @tc.desc: Test CreateInnerTest0051 interface base function - StandardizePath
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
@@ -928,6 +1015,51 @@ HWTEST_F(RequestActionTest, CreateInnerTest0051, TestSize.Level1)
     std::string path = "/";
     auto res = RequestAction::StandardizePath(context, config, path);
     EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.name: CreateInnerTest0052
+ * @tc.desc: Test CreateInnerTest0052 interface base function - StandardizePath
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0052, TestSize.Level1)
+{
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestErrMock>();
+    Config config;
+    std::string path = "file://aa";
+    auto res = RequestAction::StandardizePath(context, config, path);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: CreateInnerTest0053
+ * @tc.desc: Test CreateInnerTest0053 interface base function - StandardizePath
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0053, TestSize.Level1)
+{
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestErrMock>();
+    Config config;
+    std::string path = "internal://aa";
+    auto res = RequestAction::StandardizePath(context, config, path);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: CreateInnerTest0054
+ * @tc.desc: Test CreateInnerTest0054 interface base function - StandardizePath
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0054, TestSize.Level1)
+{
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestErrMock>();
+    Config config;
+    std::string path = "./";
+    auto res = RequestAction::StandardizePath(context, config, path);
+    EXPECT_EQ(res, false);
 }
 
 /**
@@ -960,6 +1092,36 @@ HWTEST_F(RequestActionTest, CreateInnerTest007, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CreateInnerTest0071
+ * @tc.desc: Test CreateInnerTest0071 interface base function - PathVecToNormal
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0071, TestSize.Level1)
+{
+    std::vector<std::string> in = { "..", "aaaa" };
+    std::vector<std::string> out;
+    out.resize(10);
+    auto res = RequestAction::PathVecToNormal(in, out);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.name: CreateInnerTest0072
+ * @tc.desc: Test CreateInnerTest0072 interface base function - PathVecToNormal
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0072, TestSize.Level1)
+{
+    std::vector<std::string> in = { ".." };
+    std::vector<std::string> out;
+    out.resize(0);
+    auto res = RequestAction::PathVecToNormal(in, out);
+    EXPECT_EQ(res, false);
+}
+
+/**
  * @tc.name: CreateInnerTest008
  * @tc.desc: Test CreateInnerTest008 interface base function - WholeToNormal
  * @tc.type: FUNC
@@ -969,6 +1131,36 @@ HWTEST_F(RequestActionTest, CreateInnerTest008, TestSize.Level1)
 {
     std::string path;
     std::vector<std::string> out;
+    auto res = RequestAction::WholeToNormal(path, out);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.name: CreateInnerTest0081
+ * @tc.desc: Test CreateInnerTest0081 interface base function - WholeToNormal
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0081, TestSize.Level1)
+{
+    std::string path = "../aa";
+    std::vector<std::string> out;
+    out.resize(0);
+    auto res = RequestAction::WholeToNormal(path, out);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: CreateInnerTest0082
+ * @tc.desc: Test CreateInnerTest0082 interface base function - WholeToNormal
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0082, TestSize.Level1)
+{
+    std::string path = "/data/../aa";
+    std::vector<std::string> out;
+    out.resize(10);
     auto res = RequestAction::WholeToNormal(path, out);
     EXPECT_EQ(res, true);
 }
@@ -1001,6 +1193,28 @@ HWTEST_F(RequestActionTest, CreateInnerTest010, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CreateInnerTest0101
+ * @tc.desc: Test CreateInnerTest0101 interface base function - FindAREAPath
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0101, TestSize.Level1)
+{
+    std::string filepath;
+    auto res = RequestAction::FindAREAPath(filepath);
+    EXPECT_EQ(res, false);
+    std::string filepath1 = "/data/storage/el1/base/a";
+    auto res1 = RequestAction::FindAREAPath(filepath1);
+    EXPECT_EQ(res1, true);
+    std::string filepath2 = "/data/storage/el2/base/a";
+    auto res2 = RequestAction::FindAREAPath(filepath2);
+    EXPECT_EQ(res2, true);
+    std::string filepath3 = "/data/storage/el5/base/a";
+    auto res3 = RequestAction::FindAREAPath(filepath3);
+    EXPECT_EQ(res3, true);
+}
+
+/**
  * @tc.name: CreateInnerTest011
  * @tc.desc: Test CreateInnerTest011 interface base function - GetSandboxPath
  * @tc.type: FUNC
@@ -1015,6 +1229,77 @@ HWTEST_F(RequestActionTest, CreateInnerTest011, TestSize.Level1)
     auto res = RequestAction::GetSandboxPath(context, config, path, pathVec);
     EXPECT_EQ(res, false);
 }
+
+/**
+ * @tc.name: CreateInnerTest0111
+ * @tc.desc: Test CreateInnerTest0111 interface base function - GetSandboxPath
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0111, TestSize.Level1)
+{
+    // StandardizePath is false
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestErrMock>();
+    Config config;
+    std::string path = "/";
+    std::vector<std::string> pathVec;
+    auto res = RequestAction::GetSandboxPath(context, config, path, pathVec);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: CreateInnerTest0112
+ * @tc.desc: Test CreateInnerTest0112 interface base function - GetSandboxPath
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0112, TestSize.Level1)
+{
+    // WholeToNormal is false
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
+    Config config;
+    std::string path = "/";
+    std::vector<std::string> pathVec;
+    auto res = RequestAction::GetSandboxPath(context, config, path, pathVec);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: CreateInnerTest0113
+ * @tc.desc: Test CreateInnerTest0113 interface base function - GetSandboxPath
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0113, TestSize.Level1)
+{
+    // pathVec empty
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
+    Config config;
+    std::string path = "../aa";
+    std::vector<std::string> pathVec;
+    pathVec.resize(0);
+    auto res = RequestAction::GetSandboxPath(context, config, path, pathVec);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: CreateInnerTest0114
+ * @tc.desc: Test CreateInnerTest0114 interface base function - GetSandboxPath
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0114, TestSize.Level1)
+{
+    // CheckBelongAppBaseDir is false
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
+    Config config;
+    std::string path = "/";
+    std::vector<std::string> pathVec;
+    pathVec.resize(10);
+    auto res = RequestAction::GetSandboxPath(context, config, path, pathVec);
+    EXPECT_EQ(res, false);
+}
+
 /**
  * @tc.name: CreateInnerTest012
  * @tc.desc: Test CreateInnerTest012 interface base function - CheckDownloadFilePath
@@ -1045,6 +1330,21 @@ HWTEST_F(RequestActionTest, CreateInnerTest013, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CreateInnerTest0131
+ * @tc.desc: Test CreateInnerTest0131 interface base function - InterceptData
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0131, TestSize.Level1)
+{
+    std::string str = "/";
+    std::string in = "a/";
+    std::string out;
+    auto res = RequestAction::InterceptData(str, in, out);
+    EXPECT_EQ(res, false);
+}
+
+/**
  * @tc.name: CreateInnerTest014
  * @tc.desc: Test CreateInnerTest014 interface base function - StandardizeFileSpec
  * @tc.type: FUNC
@@ -1057,6 +1357,11 @@ HWTEST_F(RequestActionTest, CreateInnerTest014, TestSize.Level1)
     EXPECT_EQ(file.name, "file");
     EXPECT_EQ(file.filename, "test.txt");
     EXPECT_EQ(file.type, "txt");
+    FileSpec file1 = { .uri = "/test.txt", .filename = "test1", .name = "file1", .type = "text/plain" };
+    RequestAction::StandardizeFileSpec(file1);
+    EXPECT_EQ(file1.name, "file1");
+    EXPECT_FALSE(file1.filename.empty());
+    EXPECT_FALSE(file1.type.empty());
 }
 
 /**
@@ -1068,8 +1373,9 @@ HWTEST_F(RequestActionTest, CreateInnerTest014, TestSize.Level1)
 HWTEST_F(RequestActionTest, CreateInnerTest015, TestSize.Level1)
 {
     EXPECT_NE(RequestManager::GetInstance(), nullptr);
-    std::string filepath;
-    std::string baseDir;
+    std::string filepath = "a/entry/file/cache";
+    std::string baseDir = "base";
+    RequestAction::AddPathMap(filepath, baseDir);
     RequestAction::AddPathMap(filepath, baseDir);
 }
 
@@ -1100,6 +1406,32 @@ HWTEST_F(RequestActionTest, CreateInnerTest017, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CreateInnerTest0171
+ * @tc.desc: Test CreateInnerTest0171 interface base function - IsPathValid
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0171, TestSize.Level1)
+{
+    std::string filepath = "/data/storage/el1/base/test_createinner_0171/";
+    auto res = RequestAction::IsPathValid(filepath);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: CreateInnerTest0172
+ * @tc.desc: Test CreateInnerTest0172 interface base function - IsPathValid
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0172, TestSize.Level1)
+{
+    std::string filepath = "/data/test/";
+    auto res = RequestAction::IsPathValid(filepath);
+    EXPECT_EQ(res, true);
+}
+
+/**
  * @tc.name: CreateInnerTest018
  * @tc.desc: Test CreateInnerTest018 interface base function - GetInternalPath
  * @tc.type: FUNC
@@ -1112,6 +1444,48 @@ HWTEST_F(RequestActionTest, CreateInnerTest018, TestSize.Level1)
     std::string path;
     auto res = RequestAction::GetInternalPath(context, config, path);
     EXPECT_EQ(res, false);
+    std::string path1 = "internal://cache/test1.txt";
+    auto res1 = RequestAction::GetInternalPath(context, config, path1);
+    EXPECT_EQ(res1, false);
+}
+
+/**
+ * @tc.name: CreateInnerTest0181
+ * @tc.desc: Test CreateInnerTest0181 interface base function - GetInternalPath
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0181, TestSize.Level1)
+{
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestErrMock>();
+    Config config;
+    std::string path = "internal://cache/test1.txt";
+    auto res = RequestAction::GetInternalPath(context, config, path);
+    EXPECT_EQ(res, false);
+}
+
+class ContextCacheTestMock : public ApplicationContext {
+public:
+    ~ContextCacheTestMock(){};
+    std::string GetCacheDir(void) override
+    {
+        return "/data";
+    };
+};
+
+/**
+ * @tc.name: CreateInnerTest0182
+ * @tc.desc: Test CreateInnerTest0182 interface base function - GetInternalPath
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0182, TestSize.Level1)
+{
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextCacheTestMock>();
+    Config config;
+    std::string path = "test";
+    auto res = RequestAction::GetInternalPath(context, config, path);
+    EXPECT_EQ(res, true);
 }
 
 /**
@@ -1142,6 +1516,45 @@ HWTEST_F(RequestActionTest, CreateInnerTest020, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CreateInnerTest0201
+ * @tc.desc: Test CreateInnerTest0201 interface base function - GetFdDownload
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0201, TestSize.Level1)
+{
+    std::string path = "/data/test";
+    Config config = { .version = Version::API10, .firstInit = true, .overwrite = false };
+    auto res = RequestAction::GetFdDownload(path, config);
+    EXPECT_EQ(res, ExceptionErrorCode::E_FILE_IO);
+    Config config1 = { .version = Version::API9, .firstInit = true, .overwrite = false };
+    auto res1 = RequestAction::GetFdDownload(path, config1);
+    EXPECT_EQ(res1, ExceptionErrorCode::E_FILE_PATH);
+    Config config2 = { .version = Version::API10, .firstInit = false, .overwrite = true };
+    auto res2 = RequestAction::GetFdDownload(path, config2);
+    EXPECT_EQ(res2, ExceptionErrorCode::E_FILE_IO);
+    Config config3 = { .version = Version::API10, .firstInit = false, .overwrite = false };
+    auto res3 = RequestAction::GetFdDownload(path, config3);
+    EXPECT_EQ(res2, ExceptionErrorCode::E_FILE_IO);
+    Config config4 = { .version = Version::API10, .firstInit = true, .overwrite = true };
+    EXPECT_EQ(RequestAction::GetFdDownload(path, config4), ExceptionErrorCode::E_FILE_IO);
+}
+
+/**
+ * @tc.name: CreateInnerTest0202
+ * @tc.desc: Test CreateInnerTest0202 interface base function - GetFdDownload
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0202, TestSize.Level1)
+{
+    std::string path = "/data/storage/el1/base/test";
+    Config config = { .version = Version::API10, .firstInit = true, .overwrite = true };
+    auto res = RequestAction::GetFdDownload(path, config);
+    EXPECT_EQ(res, ExceptionErrorCode::E_FILE_IO);
+}
+
+/**
  * @tc.name: CreateInnerTest021
  * @tc.desc: Test CreateInnerTest021 interface base function - CheckDownloadFile
  * @tc.type: FUNC
@@ -1151,6 +1564,37 @@ HWTEST_F(RequestActionTest, CreateInnerTest021, TestSize.Level1)
 {
     std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
     Config config;
+    auto res = RequestAction::CheckDownloadFile(context, config);
+    EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: CreateInnerTest0211
+ * @tc.desc: Test CreateInnerTest0211 interface base function - CheckDownloadFile
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0211, TestSize.Level1)
+{
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
+    FileSpec file = { .uri = "/test.txt" };
+    Config config = { .version = Version::API9, .files = { file } };
+    auto res = RequestAction::CheckDownloadFile(context, config);
+    EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: CreateInnerTest0212
+ * @tc.desc: Test CreateInnerTest0212 interface base function - CheckDownloadFile
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0212, TestSize.Level1)
+{
+    // CheckDownloadFile api9/ find("/")-false/ GetInternalPath-true
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextCacheTestMock>();
+    FileSpec file = { .uri = "test" };
+    Config config = { .version = Version::API9, .files = { file } };
     auto res = RequestAction::CheckDownloadFile(context, config);
     EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
 }
@@ -1210,6 +1654,36 @@ HWTEST_F(RequestActionTest, CreateInnerTest023, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CreateInnerTest0231
+ * @tc.desc: Test CreateInnerTest0231 interface base function - CheckUserFileSpec
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0231, TestSize.Level1)
+{
+    std::shared_ptr<ApplicationContext> context;
+    Config config = { .mode = Mode::BACKGROUND };
+    FileSpec file;
+    auto res = RequestAction::CheckUserFileSpec(context, config, file);
+    EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: CreateInnerTest0232
+ * @tc.desc: Test CreateInnerTest0232 interface base function - CheckUserFileSpec
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0232, TestSize.Level1)
+{
+    std::shared_ptr<ApplicationContext> context;
+    Config config = { .mode = Mode::FOREGROUND };
+    FileSpec file;
+    auto res = RequestAction::CheckUserFileSpec(context, config, file);
+    EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
  * @tc.name: CreateInnerTest024
  * @tc.desc: Test CreateInnerTest024 interface base function - CheckPathIsFile
  * @tc.type: FUNC
@@ -1217,9 +1691,20 @@ HWTEST_F(RequestActionTest, CreateInnerTest023, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest024, TestSize.Level1)
 {
+    // exist is false
     std::string path;
     auto res = RequestAction::CheckPathIsFile(path);
     EXPECT_EQ(res, false);
+    // is_directory is true
+    std::string path1 = "/data/test";
+    auto res1 = RequestAction::CheckPathIsFile(path1);
+    EXPECT_EQ(res1, false);
+    // exist and no_directory
+    std::ofstream file("/data/test/CreateInnerFile");
+    file.close();
+    std::string path2 = "/data/test/CreateInnerFile";
+    auto res2 = RequestAction::CheckPathIsFile(path2);
+    EXPECT_EQ(res2, true);
 }
 
 /**
@@ -1231,9 +1716,49 @@ HWTEST_F(RequestActionTest, CreateInnerTest024, TestSize.Level1)
 HWTEST_F(RequestActionTest, CreateInnerTest025, TestSize.Level1)
 {
     std::string path;
+    // open file error in api10
     Config config = { .version = Version::API10 };
     auto res = RequestAction::GetFdUpload(path, config);
     EXPECT_EQ(res, ExceptionErrorCode::E_FILE_IO);
+    // open file error in api9
+    Config config1 = { .version = Version::API9 };
+    auto res1 = RequestAction::GetFdUpload(path, config1);
+    EXPECT_EQ(res1, ExceptionErrorCode::E_FILE_PATH);
+}
+
+/**
+ * @tc.name: CreateInnerTest0251
+ * @tc.desc: Test CreateInnerTest0251 interface base function - GetFdUpload
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0251, TestSize.Level1)
+{
+    std::ofstream file("/data/test/CreateInnerFile");
+    file.close();
+    std::string path = "/data/test/CreateInnerFile";
+    Config config = { .version = Version::API10 };
+    auto res = RequestAction::GetFdUpload(path, config);
+    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+}
+
+/**
+ * @tc.name: CreateInnerTest0252
+ * @tc.desc: Test CreateInnerTest0252 interface base function - GetFdUpload
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0252, TestSize.Level1)
+{
+    std::string path = " system/etc/init.cfg";
+    // open file error in api10
+    Config config = { .version = Version::API10 };
+    auto res = RequestAction::GetFdUpload(path, config);
+    EXPECT_EQ(res, ExceptionErrorCode::E_FILE_IO);
+    // open file error in api9
+    Config config1 = { .version = Version::API9 };
+    auto res1 = RequestAction::GetFdUpload(path, config1);
+    EXPECT_EQ(res1, ExceptionErrorCode::E_FILE_PATH);
 }
 
 /**
@@ -1249,6 +1774,23 @@ HWTEST_F(RequestActionTest, CreateInnerTest026, TestSize.Level1)
     FileSpec file;
     auto res = RequestAction::CheckUploadFileSpec(context, config, file);
     EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: CreateInnerTest0261
+ * @tc.desc: Test CreateInnerTest0261 interface base function - CheckUploadFileSpec
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0261, TestSize.Level1)
+{
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
+    FileSpec file;
+    Config config = { .version = Version::API9 };
+    auto res = RequestAction::CheckUploadFileSpec(context, config, file);
+    EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
+    Config config1 = { .version = Version::API10 };
+    EXPECT_EQ(RequestAction::CheckUploadFileSpec(context, config1, file), ExceptionErrorCode::E_PARAMETER_CHECK);
 }
 
 /**
@@ -1277,6 +1819,29 @@ HWTEST_F(RequestActionTest, CreateInnerTest028, TestSize.Level1)
     Config config = { .version = Version::API10 };
     auto res = RequestAction::CheckUploadBodyFiles(filepath, config);
     EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+    // len !=0 but filePath empty
+    FileSpec fileSpec = {
+        .filename = "filename", .name = "file", .uri = "/data/test/CheckUploadBodyFilesTest", .type = "text/plain"
+    };
+    Config config1 = { .multipart = true, .files = { fileSpec } };
+    EXPECT_EQ(RequestAction::CheckUploadBodyFiles(filepath, config1), ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: CreateInnerTest0281
+ * @tc.desc: Test CreateInnerTest0281 interface base function - CheckUploadBodyFiles
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0281, TestSize.Level1)
+{
+    // len !=0 and filepath no empty
+    std::string filepath = "/data/test";
+    FileSpec fileSpec = {
+        .filename = "filename", .name = "file", .uri = "/data/test/CheckUploadBodyFilesTest", .type = "text/plain"
+    };
+    Config config1 = { .multipart = true, .files = { fileSpec } };
+    EXPECT_EQ(RequestAction::CheckUploadBodyFiles(filepath, config1), ExceptionErrorCode::E_FILE_IO);
 }
 
 /**
@@ -1326,7 +1891,7 @@ HWTEST_F(RequestActionTest, CreateInnerTest030, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest031, TestSize.Level1)
 {
-    std::string filepath = "data/storage/testRemove";
+    std::string filepath = "data/test/testRemove";
     RequestAction::RemoveFile(filepath);
     auto res = std::filesystem::exists(filepath);
     EXPECT_EQ(res, false);
@@ -1354,7 +1919,7 @@ HWTEST_F(RequestActionTest, CreateInnerTest032, TestSize.Level1)
 HWTEST_F(RequestActionTest, CreateInnerTest033, TestSize.Level1)
 {
     EXPECT_NE(RequestManager::GetInstance(), nullptr);
-    std::vector<std::string> dirs;
+    std::vector<std::string> dirs = { "/data/test" };
     RequestAction::RemoveDirsPermission(dirs);
 }
 
