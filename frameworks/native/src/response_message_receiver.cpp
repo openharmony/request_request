@@ -371,8 +371,6 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
     char buffer[readSize];
     int32_t length = read(fd, buffer, readSize);
     if (length <= 0) {
-        REQUEST_HILOGE("read message error: %{public}d, %{public}d", length, errno);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, UDS_FAULT_00, "read" + std::to_string(errno));
         return;
     }
     REQUEST_HILOGD("read message: %{public}d", length);
