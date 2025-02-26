@@ -39,6 +39,7 @@ ohos_unittest("preload_test") {
     "googletest:gmock",
     "googletest:gtest_main",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
   ]
 }
 
