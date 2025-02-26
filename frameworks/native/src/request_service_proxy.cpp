@@ -401,12 +401,6 @@ int32_t RequestServiceProxy::OpenChannel(int32_t &sockFd)
         return errCode;
     }
     sockFd = reply.ReadFileDescriptor();
-    uint32_t flags = static_cast<uint32_t>(fcntl(sockFd, F_GETFL, 0));
-    fcntl(sockFd, F_SETFL, flags & ~O_NONBLOCK);
-    flags = static_cast<uint32_t>(fcntl(sockFd, F_GETFL, 0));
-    if (flags & O_NONBLOCK) {
-        REQUEST_HILOGE("Set ~O_NONBLOCK failed for fd %{public}d", sockFd);
-    }
     REQUEST_HILOGD("End Request OpenChannel ok, fd: %{public}d", sockFd);
     return E_OK;
 }
