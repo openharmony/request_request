@@ -69,6 +69,7 @@ ohos_shared_library("request_native") {
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "init:libbegetutil",
     "ipc:ipc_single",
     "relational_store:native_dataability",

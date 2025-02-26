@@ -45,6 +45,7 @@ ohos_unittest("saTest") {
     "distributed_notification_service:ans_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_appdatafwk",

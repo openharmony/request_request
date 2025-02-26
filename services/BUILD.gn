@@ -85,6 +85,7 @@ ohos_static_library("download_server_cxx") {
     "distributed_notification_service:ans_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "i18n:intl_util",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",

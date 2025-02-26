@@ -45,6 +45,7 @@ ohos_shared_library("request_action") {
     "access_token:libtokenid_sdk",
     "ffrt:libffrt",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "netmanager_base:net_conn_manager_if",
     "storage_service:storage_manager_acl",
   ]
