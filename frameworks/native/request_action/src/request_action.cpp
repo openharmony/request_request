@@ -366,6 +366,11 @@ bool RequestAction::CheckBelongAppBaseDir(const std::string &filepath, std::stri
     if (!GetAppBaseDir(baseDir)) {
         return false;
     }
+    return FindAREAPath(filepath);
+}
+
+bool RequestAction::FindAREAPath(const std::string &filepath)
+{
     if ((filepath.find(AREA1) == 0) || filepath.find(AREA2) == 0 || filepath.find(AREA5) == 0) {
         return true;
     } else {

@@ -15,15 +15,16 @@
 
 #include <cstdint>
 #include <cstring>
+
 #define private public
 #define protected public
-
 #include <gtest/gtest.h>
 
 #include "gmock/gmock.h"
 #include "log.h"
 #include "parcel_helper.h"
 #include "request_common.h"
+#include "request_common_utils.h"
 
 using namespace testing::ext;
 using namespace OHOS::Request;
@@ -532,4 +533,91 @@ HWTEST_F(ParcelHelperTest, UnMarshalConfig001, TestSize.Level1)
     EXPECT_EQ(config.method, "method");
     EXPECT_EQ(config.data, "data");
     EXPECT_EQ(config.token, "token");
+}
+
+/**
+ * @tc.name: GetFaultByReason001
+ * @tc.desc: Test GetFaultByReason001 interface base function - GetFaultByReason
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(ParcelHelperTest, CommonUtilsGetFaultByReason001, TestSize.Level1)
+{
+    EXPECT_EQ(CommonUtils::GetFaultByReason(REASON_OK), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(TASK_SURVIVAL_ONE_MONTH), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(WAITTING_NETWORK_ONE_DAY), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(STOPPED_NEW_FRONT_TASK), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(RUNNING_TASK_MEET_LIMITS), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(USER_OPERATION), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(APP_BACKGROUND_OR_TERMINATE), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(NETWORK_OFFLINE), Faults::DISCONNECTED);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(UNSUPPORTED_NETWORK_TYPE), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(BUILD_CLIENT_FAILED), Faults::PARAM);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(BUILD_REQUEST_FAILED), Faults::PARAM);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(GET_FILESIZE_FAILED), Faults::FSIO);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(CONTINUOUS_TASK_TIMEOUT), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(CONNECT_ERROR), Faults::TCP);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(REQUEST_ERROR), Faults::PROTOCOL);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(UPLOAD_FILE_ERROR), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(REDIRECT_ERROR), Faults::REDIRECT);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(PROTOCOL_ERROR), Faults::PROTOCOL);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(IO_ERROR), Faults::FSIO);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(UNSUPPORT_RANGE_REQUEST), Faults::PROTOCOL);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(OTHERS_ERROR), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(ACCOUNT_STOPPED), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(NETWORK_CHANGED), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(DNS), Faults::DNS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(TCP), Faults::TCP);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(SSL), Faults::SSL);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(INSUFFICIENT_SPACE), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(NETWORK_APP), Faults::DISCONNECTED);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(NETWORK_ACCOUNT), Faults::DISCONNECTED);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(APP_ACCOUNT), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(NETWORK_APP_ACCOUNT), Faults::DISCONNECTED);
+    Reason code = static_cast<Reason>(1000);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(code), Faults::OTHERS);
+}
+
+/**
+ * @tc.name: GetMsgByReason001
+ * @tc.desc: Test GetMsgByReason001 interface base function - GetMsgByReason
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(ParcelHelperTest, CommonUtilsGetMsgByReason001, TestSize.Level1)
+{
+    EXPECT_EQ(CommonUtils::GetMsgByReason(REASON_OK), CommonUtils::REASON_OK_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(REASON_OK), CommonUtils::REASON_OK_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(TASK_SURVIVAL_ONE_MONTH), CommonUtils::TASK_SURVIVAL_ONE_MONTH_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(WAITTING_NETWORK_ONE_DAY), CommonUtils::WAITTING_NETWORK_ONE_DAY_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(STOPPED_NEW_FRONT_TASK), CommonUtils::STOPPED_NEW_FRONT_TASK_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(RUNNING_TASK_MEET_LIMITS), CommonUtils::RUNNING_TASK_MEET_LIMITS_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(USER_OPERATION), CommonUtils::USER_OPERATION_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(APP_BACKGROUND_OR_TERMINATE), CommonUtils::APP_BACKGROUND_OR_TERMINATE_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(NETWORK_OFFLINE), CommonUtils::NETWORK_OFFLINE_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(UNSUPPORTED_NETWORK_TYPE), CommonUtils::UNSUPPORTED_NETWORK_TYPE_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(BUILD_CLIENT_FAILED), CommonUtils::BUILD_CLIENT_FAILED_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(BUILD_REQUEST_FAILED), CommonUtils::BUILD_REQUEST_FAILED_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(GET_FILESIZE_FAILED), CommonUtils::GET_FILESIZE_FAILED_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(CONTINUOUS_TASK_TIMEOUT), CommonUtils::CONTINUOUS_TASK_TIMEOUT_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(CONNECT_ERROR), CommonUtils::CONNECT_ERROR_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(REQUEST_ERROR), CommonUtils::REQUEST_ERROR_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(UPLOAD_FILE_ERROR), CommonUtils::UPLOAD_FILE_ERROR_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(REDIRECT_ERROR), CommonUtils::REDIRECT_ERROR_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(PROTOCOL_ERROR), CommonUtils::PROTOCOL_ERROR_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(IO_ERROR), CommonUtils::IO_ERROR_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(UNSUPPORT_RANGE_REQUEST), CommonUtils::UNSUPPORT_RANGE_REQUEST_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(OTHERS_ERROR), CommonUtils::OTHERS_ERROR_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(ACCOUNT_STOPPED), CommonUtils::ACCOUNT_STOPPED_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(NETWORK_CHANGED), CommonUtils::NETWORK_CHANGED_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(DNS), CommonUtils::DNS_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(TCP), CommonUtils::TCP_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(SSL), CommonUtils::SSL_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(INSUFFICIENT_SPACE), CommonUtils::INSUFFICIENT_SPACE_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(NETWORK_APP), CommonUtils::NETWORK_APP_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(NETWORK_ACCOUNT), CommonUtils::NETWORK_ACCOUNT_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(APP_ACCOUNT), CommonUtils::APP_ACCOUNT_INFO);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(NETWORK_APP_ACCOUNT), CommonUtils::NETWORK_ACCOUNT_APP_INFO);
+    Reason code = static_cast<Reason>(1000);
+    EXPECT_EQ(CommonUtils::GetMsgByReason(code), "unknown");
 }

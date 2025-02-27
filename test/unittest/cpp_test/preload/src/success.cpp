@@ -182,3 +182,25 @@ HWTEST_F(PreloadSuccess, OnSuccessCache, TestSize.Level1)
     EXPECT_TRUE(flagS_1->load());
     Preload::GetInstance()->Remove(url);
 }
+
+/**
+ * @tc.name: PreloadSuccessCache
+ * @tc.desc: Test cached data
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+
+HWTEST_F(PreloadSuccess, PreloadSuccessCache, TestSize.Level1)
+{
+    std::string url = TEST_URL_0;
+    auto preload = Preload::GetInstance();
+    preload->SetRamCacheSize(1000);
+    preload->SetFileCacheSize(1000);
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+    auto handle = preload->load(url, std::make_unique<PreloadCallback>(callback));
+    auto id = handle->GetTaskId();
+    EXPECT_FALSE(id.empty());
+    preload->Cancel(url);
+    handle->Cancel();
+}

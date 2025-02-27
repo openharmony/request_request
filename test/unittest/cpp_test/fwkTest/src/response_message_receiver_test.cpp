@@ -18,10 +18,10 @@
 
 #include <cstring>
 
-#include "i_response_listener.h"
+
 #define private public
 #define protected public
-
+#include "i_response_listener.h"
 #include <gtest/gtest.h>
 
 #include <cstdint>

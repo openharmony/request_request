@@ -74,6 +74,7 @@ private:
     static bool WholeToNormal(std::string &path, std::vector<std::string> &out);
     static bool GetAppBaseDir(std::string &baseDir);
     static bool CheckBelongAppBaseDir(const std::string &filepath, std::string &baseDir);
+    static bool FindAREAPath(const std::string &filepath);
     static bool GetSandboxPath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
         std::string &path, std::vector<std::string> &pathVec);
     static bool CheckDownloadFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);

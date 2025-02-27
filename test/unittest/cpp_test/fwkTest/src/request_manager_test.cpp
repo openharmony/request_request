@@ -333,6 +333,18 @@ HWTEST_F(RequestManagerTest, RemoveAllListenersTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: LoadRequestServerTest001
+ * @tc.desc: Test LoadRequestServerTest001 interface base function - LoadRequestServer
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerTest, LoadRequestServerTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
+    RequestManager::GetInstance()->LoadRequestServer();
+}
+
+/**
  * @tc.name: IsSaReadyTest001
  * @tc.desc: Test IsSaReadyTest001 interface base function - IsSaReady
  * @tc.type: FUNC
@@ -390,4 +402,47 @@ HWTEST_F(RequestManagerTest, GetNextSeqTest001, TestSize.Level1)
 {
     int32_t ret = RequestManager::GetInstance()->GetNextSeq();
     EXPECT_EQ(RequestManager::GetInstance()->GetNextSeq(), ret + 1);
+}
+
+/**
+ * @tc.name: CreateGroupTest001
+ * @tc.desc: Test CreateGroupTest001 interface base function - CreateGroup
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerTest, CreateGroupTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
+    std::string gid = "gid";
+    bool gauge = true;
+    std::optional<std::string> title;
+    std::optional<std::string> text;
+    EXPECT_EQ(RequestManager::GetInstance()->CreateGroup(gid, gauge, title, text), 0);
+}
+
+/**
+ * @tc.name: CreateGroupTest001
+ * @tc.desc: Test CreateGroupTest001 interface base function - CreateGroup
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerTest, AttachGroupTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
+    std::string gid = "gid";
+    std::vector<std::string> tids;
+    EXPECT_EQ(RequestManager::GetInstance()->AttachGroup(gid, tids), 21900008);
+}
+
+/**
+ * @tc.name: DeleteGroupTest001
+ * @tc.desc: Test DeleteGroupTest001 interface base function - DeleteGroup
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestManagerTest, DeleteGroupTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
+    std::string gid = "gid";
+    EXPECT_EQ(RequestManager::GetInstance()->DeleteGroup(gid), 21900008);
 }
