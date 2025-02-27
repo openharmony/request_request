@@ -403,8 +403,7 @@ std::string GetHostnameFromURL(const std::string &url)
     if (notSlash != std::string::npos) {
         posStart = notSlash;
     }
-    size_t posEnd =
-        std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
+    size_t posEnd = std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
     if (posEnd != std::string::npos) {
         return tempUrl.substr(posStart, posEnd - posStart);
     }

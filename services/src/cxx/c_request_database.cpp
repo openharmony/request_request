@@ -477,6 +477,18 @@ int RequestDBUpgradeFrom50(OHOS::NativeRdb::RdbStore &store)
         REQUEST_HILOGE("add max_speed failed, ret: %{public}d", ret);
         return ret;
     }
+
+    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MULTIPART);
+    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+        REQUEST_HILOGE("add multipart failed, ret: %{public}d", ret);
+        return ret;
+    }
+
+    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_STATUS_CODE);
+    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+        REQUEST_HILOGE("add status code failed, ret: %{public}d", ret);
+        return ret;
+    }
     return OHOS::NativeRdb::E_OK;
 }
 
@@ -484,13 +496,9 @@ int RequestDBUpgradeFrom50(OHOS::NativeRdb::RdbStore &store)
 void RequestDBUpgradeFrom51(OHOS::NativeRdb::RdbStore &store)
 {
     // Ignores these error if these columns already exists.
-    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_PROXY);
-    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CERTIFICATE_PINS);
-    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_BUNDLE_TYPE);
-    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_ATOMIC_ACCOUNT);
-    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_UID_INDEX);
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MAX_SPEED);
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MULTIPART);
+    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_STATUS_CODE);
 }
 
 int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
@@ -498,6 +506,8 @@ int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
     REQUEST_HILOGD("Begins upgrading database");
 
     int res;
+    // Gradually upgrade from the current database to the latest version, and the system will re-add
+    // newly added database tables to guarantee successful migration in the latest beta release.
     int version = RequestDBCheckVersion(store);
     switch (version) {
         case INVALID_VERSION: {
@@ -758,6 +768,7 @@ bool WriteMutableData(OHOS::NativeRdb::ValuesBucket &insertValues, CTaskInfo *ta
     insertValues.PutLong("mtime", taskInfo->commonData.mtime);
     insertValues.PutInt("reason", taskInfo->commonData.reason);
     insertValues.PutLong("tries", taskInfo->commonData.tries);
+    insertValues.PutInt("status_code", taskInfo->statusCode);
     if (!WriteUpdateData(insertValues, taskInfo)) {
         return false;
     }
@@ -825,7 +836,8 @@ void FillOtherTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskInfo
     info.formItems = VecToFormItem(BlobToCFormItem(formItemsBlob));
     set->GetBlob(26, formSpecsBlob); // Line 26 is 'file_specs'
     info.fileSpecs = VecToFileSpec(BlobToCFileSpec(formSpecsBlob));
-    set->GetLong(27, info.maxSpeed); // Line 27 is 'max_speed'
+    set->GetLong(27, info.maxSpeed);  // Line 27 is 'max_speed'
+    set->GetInt(28, info.statusCode); // Line 28 is 'status_code'
 }
 
 CProgress BuildCProgress(const Progress &progress)
@@ -872,6 +884,7 @@ CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo)
     cTaskInfo->progress = BuildCProgress(taskInfo.progress);
     cTaskInfo->commonData = taskInfo.commonData;
     cTaskInfo->maxSpeed = taskInfo.maxSpeed;
+    cTaskInfo->statusCode = taskInfo.statusCode;
     return cTaskInfo;
 }
 
@@ -1026,6 +1039,7 @@ bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo)
     values.PutLong("total_processed", updateInfo->progress.commonData.totalProcessed);
     values.PutString("processed", std::string(updateInfo->progress.processed.cStr, updateInfo->progress.processed.len));
     values.PutString("extras", std::string(updateInfo->progress.extras.cStr, updateInfo->progress.extras.len));
+    values.PutInt("status_code", updateInfo->statusCode);
 
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
@@ -1057,10 +1071,10 @@ int GetTaskInfoInner(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskIn
 {
     auto resultSet =
         OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true)
-            .Query(rdbPredicates,
-                { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry", "tries", "version",
-                    "priority", "bundle", "url", "data", "token", "title", "description", "mime_type", "state", "idx",
-                    "total_processed", "sizes", "processed", "extras", "form_items", "file_specs", "max_speed" });
+            .Query(rdbPredicates, { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry",
+                                      "tries", "version", "priority", "bundle", "url", "data", "token", "title",
+                                      "description", "mime_type", "state", "idx", "total_processed", "sizes",
+                                      "processed", "extras", "form_items", "file_specs", "max_speed", "status_code" });
     if (resultSet == nullptr || resultSet->GoToFirstRow() != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("result set is nullptr or go to first row failed");
         return OHOS::Request::QUERY_ERR;

@@ -61,6 +61,8 @@ public:
         (const std::vector<std::string> &tids, (std::vector<TaskInfoRet> & rets)), (override));
     MOCK_METHOD(ExceptionErrorCode, ShowTasks,
         (const std::vector<std::string> &tids, (std::vector<TaskInfoRet> & rets)), (override));
+    MOCK_METHOD(ExceptionErrorCode, ShowBatchProgress,
+        (const std::vector<std::string> &tids, (std::vector<TaskProgressRet> & rets)), (override));
     MOCK_METHOD(ExceptionErrorCode, TouchTasks,
         ((const std::vector<TaskIdAndToken> &tidTokens), (std::vector<TaskInfoRet> & rets)), (override));
 
@@ -77,6 +79,7 @@ public:
     MOCK_METHOD(int32_t, Touch, (const std::string &tid, const std::string &token, TaskInfo &info), (override));
     MOCK_METHOD(int32_t, Search, (const Filter &filter, std::vector<std::string> &tids), (override));
     MOCK_METHOD(int32_t, Show, (const std::string &tid, TaskInfo &info), (override));
+    MOCK_METHOD(int32_t, ShowProgress, (const std::string &tid, TaskProgress &taskProgress), (override));
 
     MOCK_METHOD(int32_t, OpenChannel, (int32_t & sockFd), (override));
     MOCK_METHOD(int32_t, Subscribe, (const std::string &taskId), (override));

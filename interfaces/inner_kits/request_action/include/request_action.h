@@ -35,6 +35,7 @@ public:
     int32_t Stop(const std::string &tid);
     int32_t Touch(const std::string &tid, const std::string &token, TaskInfo &info);
     int32_t Show(const std::string &tid, TaskInfo &info);
+    int32_t ShowProgress(const std::string &tid, TaskProgress &taskProgress);
     int32_t Pause(const std::string &tid);
     int32_t Remove(const std::string &tid);
     int32_t Resume(const std::string &tid);
@@ -53,6 +54,8 @@ public:
         const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets);
     ExceptionErrorCode ShowTasks(
         const std::vector<std::string> &tids, std::unordered_map<std::string, TaskInfoRet> &rets);
+    ExceptionErrorCode ShowBatchProgress(
+        const std::vector<std::string> &tids, std::unordered_map<std::string, TaskProgressRet> &rets);
     ExceptionErrorCode TouchTasks(
         const std::vector<TaskIdAndToken> &tidTokens, std::unordered_map<std::string, TaskInfoRet> &rets);
     ExceptionErrorCode SetMaxSpeeds(

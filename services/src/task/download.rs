@@ -126,6 +126,8 @@ pub(crate) async fn download_inner(
     match response.as_ref() {
         Ok(response) => {
             let status_code = response.status();
+            task.status_code
+                .store(status_code.as_u16() as i32, Ordering::SeqCst);
             #[cfg(feature = "oh")]
             task.notify_response(response);
             info!(

@@ -831,6 +831,34 @@ HWTEST_F(RequestActionTest, RemoveTasksTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: ShowProgressTest001
+ * @tc.desc: Test ShowProgressTest001 interface base function - ShowProgress
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, ShowProgressTest001, TestSize.Level1)
+{
+    std::string tid = "test";
+    TaskProgress taskProgress;
+    auto res = RequestAction::GetInstance()->ShowProgress(tid, taskProgress);
+    EXPECT_EQ(res, ExceptionErrorCode::E_TASK_NOT_FOUND);
+}
+
+/**
+ * @tc.name: ShowProgressTest001
+ * @tc.desc: Test ShowProgressTest001 interface base function - ShowProgress
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, SummarizeTasksTest001, TestSize.Level1)
+{
+    std::vector<std::string> tids = { "test" };
+    std::unordered_map<std::string, TaskProgressRet> rets;
+    auto res = RequestAction::GetInstance()->ShowBatchProgress(tids, rets);
+    EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+}
+
+/**
  * @tc.name: CreateInnerTest001
  * @tc.desc: Test CreateInnerTest001 interface base function - CreateDirs
  * @tc.type: FUNC

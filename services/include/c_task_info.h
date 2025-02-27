@@ -54,6 +54,7 @@ struct CTaskInfo {
     CProgress progress;
     CommonTaskInfo commonData;
     int64_t maxSpeed;
+    int32_t statusCode;
 };
 
 struct TaskInfo {
@@ -69,6 +70,7 @@ struct TaskInfo {
     Progress progress;
     CommonTaskInfo commonData;
     int64_t maxSpeed;
+    int32_t statusCode;
 };
 
 struct CUpdateInfo {
@@ -77,6 +79,7 @@ struct CUpdateInfo {
     uint32_t tries;
     CStringWrapper mimeType;
     CProgress progress;
+    int32_t statusCode;
 };
 
 struct CUpdateStateInfo {

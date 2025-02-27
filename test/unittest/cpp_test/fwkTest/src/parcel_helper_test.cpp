@@ -131,14 +131,14 @@ HWTEST_F(ParcelHelperTest, UnMarshalMapProgressExtras001, TestSize.Level1)
     TaskInfo info;
     uint32_t size = 0;
     data.WriteUint32(size);
-    EXPECT_TRUE(ParcelHelper::UnMarshalMapProgressExtras(data, info));
+    EXPECT_TRUE(ParcelHelper::UnMarshalMapProgressExtras(data, info.progress));
     size = 1;
     data.WriteUint32(size);
-    EXPECT_FALSE(ParcelHelper::UnMarshalMapProgressExtras(data, info));
+    EXPECT_FALSE(ParcelHelper::UnMarshalMapProgressExtras(data, info.progress));
     data.WriteUint32(size);
     data.WriteString("key");
     data.WriteString("value");
-    EXPECT_TRUE(ParcelHelper::UnMarshalMapProgressExtras(data, info));
+    EXPECT_TRUE(ParcelHelper::UnMarshalMapProgressExtras(data, info.progress));
     EXPECT_EQ(info.progress.extras["key"], "value");
 }
 
@@ -422,6 +422,44 @@ HWTEST_F(ParcelHelperTest, UnMarshal001, TestSize.Level1)
     EXPECT_EQ(info.mimeType, "mimeType");
     EXPECT_EQ(info.progress.sizes.size(), 1);
     EXPECT_EQ(info.progress.sizes[0], 1);
+}
+
+/**
+ * @tc.name: UnMarshalTaskProgress001
+ * @tc.desc: Test UnMarshalTaskProgress001 interface base function - UnMarshalTaskProgress001
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(ParcelHelperTest, UnMarshalTaskProgress001, TestSize.Level1)
+{
+    OHOS::MessageParcel data;
+    data.WriteString("tid");
+    MarshalProgress(data);
+    uint32_t progressExtrasSize = 0;
+    data.WriteUint32(progressExtrasSize);
+    data.WriteUint32(static_cast<uint32_t>(Reason::REASON_OK));
+    data.WriteUint32(200);
+    TaskProgress taskProgress;
+    ParcelHelper::UnMarshalTaskProgress(data, taskProgress);
+    EXPECT_EQ(taskProgress.tid, "tid");
+    EXPECT_EQ(taskProgress.progress.sizes.size(), 1);
+    EXPECT_EQ(taskProgress.code, Reason::REASON_OK);
+    EXPECT_EQ(taskProgress.statusCode, 200);
+    EXPECT_EQ(static_cast<uint32_t>(taskProgress.faults), 0);
+    EXPECT_EQ(taskProgress.reason, "");
+
+    data.WriteString("tid");
+    MarshalProgress(data);
+    data.WriteUint32(progressExtrasSize);
+    data.WriteUint32(static_cast<uint32_t>(Reason::IO_ERROR));
+    data.WriteUint32(200);
+    ParcelHelper::UnMarshalTaskProgress(data, taskProgress);
+    EXPECT_EQ(taskProgress.tid, "tid");
+    EXPECT_EQ(taskProgress.progress.sizes.size(), 1);
+    EXPECT_EQ(taskProgress.code, Reason::IO_ERROR);
+    EXPECT_EQ(taskProgress.statusCode, 200);
+    EXPECT_EQ(taskProgress.faults, Faults::FSIO);
+    EXPECT_EQ(taskProgress.reason, "Io Error");
 }
 
 void MarshalConfigBase(OHOS::MessageParcel &data)

@@ -43,6 +43,8 @@ public:
 
     ExceptionErrorCode QueryTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets) override;
     ExceptionErrorCode ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets) override;
+    ExceptionErrorCode ShowBatchProgress(
+        const std::vector<std::string> &tids, std::vector<TaskProgressRet> &rets) override;
     ExceptionErrorCode TouchTasks(
         const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets) override;
     ExceptionErrorCode SetMaxSpeeds(
@@ -65,6 +67,7 @@ public:
     int32_t Touch(const std::string &tid, const std::string &token, TaskInfo &info) override;
     int32_t Search(const Filter &filter, std::vector<std::string> &tids) override;
     int32_t Show(const std::string &tid, TaskInfo &info) override;
+    int32_t ShowProgress(const std::string &tid, TaskProgress &taskProgress) override;
 
     int32_t OpenChannel(int32_t &sockFd) override;
     int32_t Subscribe(const std::string &tid) override;

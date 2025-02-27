@@ -54,6 +54,7 @@ public:
         const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets);
     ExceptionErrorCode QueryTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets);
     ExceptionErrorCode ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets);
+    ExceptionErrorCode ShowBatchProgress(const std::vector<std::string> &tids, std::vector<TaskProgressRet> &rets);
     ExceptionErrorCode TouchTasks(const std::vector<TaskIdAndToken> &tids, std::vector<TaskInfoRet> &rets);
     ExceptionErrorCode SetMaxSpeeds(const std::vector<SpeedConfig> &speedConfig, std::vector<ExceptionErrorCode> &rets);
     ExceptionErrorCode SetMode(const std::string &tid, const Mode mode);
@@ -68,6 +69,7 @@ public:
     int32_t Touch(const std::string &tid, const std::string &token, TaskInfo &info);
     int32_t Search(const Filter &filter, std::vector<std::string> &tids);
     int32_t Show(const std::string &tid, TaskInfo &info);
+    int32_t ShowProgress(const std::string &tid, TaskProgress &taskProgress);
     int32_t Pause(const std::string &tid, const Version version);
     int32_t QueryMimeType(const std::string &tid, std::string &mimeType);
     int32_t Remove(const std::string &tid, const Version version);
