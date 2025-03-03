@@ -1274,9 +1274,9 @@ export default function requestDownloadFileTest() {
       await task.suspend();
 
       try {
-        task.getTaskInfo().then((downloadInfo) => {
+        task.getTaskInfo().then(async (downloadInfo) => {
           expect(downloadInfo.status).assertEqual(3);
-          task.delete();
+          await task.delete();
           done();
         }).catch((err) => {
           expect(false).assertTrue();
@@ -1309,9 +1309,9 @@ export default function requestDownloadFileTest() {
       await task.suspend();
 
       try {
-        task.getTaskInfo((err, downloadInfo) => {
+        task.getTaskInfo(async (err, downloadInfo) => {
           expect(downloadInfo.status).assertEqual(3);
-          task.delete();
+          await task.delete();
           done();
         })
       } catch (err) {
@@ -1330,17 +1330,14 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadGetTaskInfo003', 0, async function (done) {
-      let filePath = cacheDir + '/test.txt';
-      if (fs.accessSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
       let conf = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+        filePath: "DownloadGetTaskInfo003"
       }
       let task = await request.downloadFile(context, conf);
       try {
-
         function ProgressCallback() {
+          task.off('progress');
           task.getTaskInfo().then((downloadInfo) => {
             expect(downloadInfo.status).assertEqual(1);
             task.delete();
@@ -1350,7 +1347,6 @@ export default function requestDownloadFileTest() {
             done();
           })
         }
-
         task.on('progress', ProgressCallback)
       } catch (err) {
         expect(false).assertTrue();
@@ -1368,25 +1364,20 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadGetTaskInfo0031', 0, async function (done) {
-      let filePath = cacheDir + '/test.txt';
-      if (fs.accessSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
       let conf = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+        filePath: "DownloadGetTaskInfo0031",
       }
       let task = await request.downloadFile(context, conf);
       try {
-
-        function PauseCallback() {
+        task.on('progress', function (size, total) {
+          task.off('progress');
           task.getTaskInfo((err, downloadInfo) => {
             expect(downloadInfo.status).assertEqual(1);
             task.delete();
             done();
           })
-        }
-
-        task.on('progress', PauseCallback)
+        })
       } catch (err) {
         expect(false).assertTrue();
         done();
@@ -1412,7 +1403,6 @@ export default function requestDownloadFileTest() {
       }
       let task = await request.downloadFile(context, conf);
       try {
-
         function FailCallback() {
           task.getTaskInfo().then((downloadInfo) => {
             expect(downloadInfo.status).assertEqual(4);
@@ -1423,7 +1413,6 @@ export default function requestDownloadFileTest() {
             done();
           })
         }
-
         task.on('fail', FailCallback)
       } catch (err) {
         expect(false).assertTrue();
@@ -1452,9 +1441,9 @@ export default function requestDownloadFileTest() {
       try {
 
         function FailCallback() {
-          task.getTaskInfo((err, downloadInfo) => {
+          task.getTaskInfo(async (err, downloadInfo) => {
             expect(downloadInfo.status).assertEqual(4);
-            task.delete();
+            await task.delete();
             done();
           })
         }

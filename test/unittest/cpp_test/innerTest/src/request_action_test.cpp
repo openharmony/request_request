@@ -1194,23 +1194,23 @@ HWTEST_F(RequestActionTest, CreateInnerTest010, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0101
- * @tc.desc: Test CreateInnerTest0101 interface base function - FindAREAPath
+ * @tc.desc: Test CreateInnerTest0101 interface base function - FindAreaPath
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0101, TestSize.Level1)
 {
     std::string filepath;
-    auto res = RequestAction::FindAREAPath(filepath);
+    auto res = RequestAction::FindAreaPath(filepath);
     EXPECT_EQ(res, false);
     std::string filepath1 = "/data/storage/el1/base/a";
-    auto res1 = RequestAction::FindAREAPath(filepath1);
+    auto res1 = RequestAction::FindAreaPath(filepath1);
     EXPECT_EQ(res1, true);
     std::string filepath2 = "/data/storage/el2/base/a";
-    auto res2 = RequestAction::FindAREAPath(filepath2);
+    auto res2 = RequestAction::FindAreaPath(filepath2);
     EXPECT_EQ(res2, true);
     std::string filepath3 = "/data/storage/el5/base/a";
-    auto res3 = RequestAction::FindAREAPath(filepath3);
+    auto res3 = RequestAction::FindAreaPath(filepath3);
     EXPECT_EQ(res3, true);
 }
 
