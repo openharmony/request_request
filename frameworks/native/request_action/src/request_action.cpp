@@ -431,7 +431,8 @@ void RequestAction::StandardizeFileSpec(FileSpec &file)
     if (file.filename.empty()) {
         InterceptData("/", file.uri, file.filename);
     }
-    if (file.type.empty()) {
+    // Does not have "contentType" field or API9 "type" empty.
+    if (!file.hasContentType) {
         InterceptData(".", file.filename, file.type);
     }
     if (file.name.empty()) {

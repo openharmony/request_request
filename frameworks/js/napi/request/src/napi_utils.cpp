@@ -721,7 +721,12 @@ bool Convert2File(napi_env env, napi_value jsFile, FileSpec &file)
     if (type == nullptr) {
         return false;
     }
-    file.type = Convert2String(env, type);
+    std::string mimeType = Convert2String(env, type);
+    // If it is empty, it need to be reset.
+    if (!mimeType.empty()) {
+        file.hasContentType = true;
+        file.type = mimeType;
+    }
     return true;
 }
 
