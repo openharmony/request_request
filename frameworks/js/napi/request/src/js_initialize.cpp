@@ -948,7 +948,10 @@ bool JsInitialize::Convert2FileSpec(napi_env env, napi_value jsValue, const std:
         return false;
     }
     file.filename = NapiUtils::Convert2String(env, jsValue, "filename");
-    file.type = NapiUtils::Convert2String(env, jsValue, "mimetype");
+    file.hasContentType = NapiUtils::HasNamedProperty(env, jsValue, "contentType");
+    if (file.hasContentType) {
+        file.type = NapiUtils::Convert2String(env, jsValue, "contentType");
+    }
     return true;
 }
 
@@ -1065,7 +1068,8 @@ void JsInitialize::StandardizeFileSpec(FileSpec &file)
     if (file.filename.empty()) {
         InterceptData("/", file.uri, file.filename);
     }
-    if (file.type.empty()) {
+    // Does not have "contentType" field or API9 "type" empty.
+    if (!file.hasContentType) {
         InterceptData(".", file.filename, file.type);
     }
     if (file.name.empty()) {

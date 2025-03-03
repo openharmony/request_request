@@ -1362,6 +1362,9 @@ HWTEST_F(RequestActionTest, CreateInnerTest014, TestSize.Level1)
     EXPECT_EQ(file1.name, "file1");
     EXPECT_FALSE(file1.filename.empty());
     EXPECT_FALSE(file1.type.empty());
+    FileSpec file2 = { .uri = "/test.txt", .filename = "test1", .name = "file1", .type = "", .hasContentType = true };
+    RequestAction::StandardizeFileSpec(file2);
+    EXPECT_EQ(file2.type, "");
 }
 
 /**

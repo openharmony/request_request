@@ -113,7 +113,8 @@ struct FileSpec {
     std::string filename;
     std::string type;
     int32_t fd = -1;
-    bool isUserFile;
+    bool isUserFile = false;
+    bool hasContentType = false;
 };
 
 struct Notification {
