@@ -18,16 +18,15 @@
 
 #include <cstring>
 
-
 #define private public
 #define protected public
-#include "i_response_listener.h"
 #include <gtest/gtest.h>
 
 #include <cstdint>
 #include <memory>
 
 #include "gmock/gmock.h"
+#include "i_response_listener.h"
 #include "log.h"
 #include "request_common.h"
 #include "response_message_receiver.h"
