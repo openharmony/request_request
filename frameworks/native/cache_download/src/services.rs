@@ -104,7 +104,7 @@ impl CacheDownloadService {
         info!("preload task {}", task_id.brief());
 
         if !update {
-            if let Err(ret) = self.fetch(&task_id, callback) {
+            if let Err(ret) = self.fetch_with_callback(&task_id, callback) {
                 error!("{} fetch fail", task_id.brief());
                 callback = ret;
             } else {
@@ -139,7 +139,7 @@ impl CacheDownloadService {
                 Err(mut cb) => {
                     if update {
                         info!("add callback failed, update task {}", task_id.brief());
-                    } else if let Err(callback) = self.fetch(&task_id, cb) {
+                    } else if let Err(callback) = self.fetch_with_callback(&task_id, cb) {
                         error!("{} fetch fail after update", task_id.brief());
                         cb = callback;
                     } else {
@@ -168,6 +168,11 @@ impl CacheDownloadService {
         }
     }
 
+    pub fn fetch(&'static self, url: &str) -> Option<Arc<RamCache>> {
+        let task_id = TaskId::from_url(url);
+        self.cache_manager.fetch(&task_id)
+    }
+
     pub(crate) fn task_finish(&self, task_id: &TaskId, seq: usize) {
         let Some(updater) = self.running_tasks.lock().unwrap().get(task_id).cloned() else {
             return;
@@ -189,7 +194,7 @@ impl CacheDownloadService {
         self.cache_manager.set_ram_cache_size(size);
     }
 
-    fn fetch(
+    fn fetch_with_callback(
         &'static self,
         task_id: &TaskId,
         mut callback: Box<dyn PreloadCallback>,
@@ -479,5 +484,22 @@ mod test {
         }
         assert!(flag.load(Ordering::SeqCst));
         assert_eq!(success_flag.load(Ordering::SeqCst), NO_DATA);
+    }
+
+    #[test]
+    fn ut_preload_fetch() {
+        init();
+        static SERVICE: LazyLock<CacheDownloadService> = LazyLock::new(CacheDownloadService::new);
+        let success_flag = Arc::new(AtomicUsize::new(0));
+        let callback = Box::new(TestCallbackS {
+            flag: success_flag.clone(),
+        });
+        let handle = SERVICE.preload(DownloadRequest::new(TEST_URL), callback, true, DOWNLOADER);
+        while !handle.is_finish() {
+            thread::sleep(Duration::from_millis(500));
+        }
+        let cache = SERVICE.fetch(TEST_URL);
+        assert!(cache.is_some());
+        assert_eq!(success_flag.load(Ordering::SeqCst), 1);
     }
 }

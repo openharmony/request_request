@@ -173,6 +173,15 @@ std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique
     return std::make_shared<PreloadHandle>(std::move(taskHandle));
 }
 
+std::optional<Data> Preload::fetch(std::string const &url)
+{
+    std::unique_ptr<Data> data = agent_->ffi_fetch(rust::str(url));
+    if (data == nullptr) {
+        return std::nullopt;
+    }
+    return std::move(*data);
+}
+
 void Preload::SetRamCacheSize(uint64_t size)
 {
     agent_->set_ram_cache_size(size);

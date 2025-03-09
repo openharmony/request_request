@@ -66,7 +66,7 @@ impl PreloadCallback for FfiCallback {
             return;
         }
         let rust_data = RustData::new(data);
-        let shared_data = ffi::BuildSharedData(Box::new(rust_data));
+        let shared_data = ffi::SharedData(Box::new(rust_data));
         self.callback.OnSuccess(shared_data, task_id);
     }
 
@@ -139,8 +139,14 @@ impl CacheDownloadService {
                 .collect::<Vec<(&str, &str)>>();
             request.headers(headers);
         }
-
         Box::new(self.preload(request, Box::new(callback), update, Downloader::Netstack))
+    }
+
+    fn ffi_fetch(&'static self, url: &str) -> UniquePtr<ffi::Data> {
+        match self.fetch(url).map(RustData::new) {
+            Some(data) => ffi::UniqueData(Box::new(data)),
+            _ => UniquePtr::null(),
+        }
     }
 }
 
@@ -169,6 +175,8 @@ pub(crate) mod ffi {
             update: bool,
             options: &FfiPredownloadOptions,
         ) -> Box<TaskHandle>;
+        fn ffi_fetch(self: &'static CacheDownloadService, url: &str) -> UniquePtr<Data>;
+
         fn set_file_cache_size(self: &CacheDownloadService, size: u64);
         fn set_ram_cache_size(self: &CacheDownloadService, size: u64);
 
@@ -196,7 +204,8 @@ pub(crate) mod ffi {
         type PreloadProgressCallbackWrapper;
         type Data;
 
-        fn BuildSharedData(data: Box<RustData>) -> SharedPtr<Data>;
+        fn SharedData(data: Box<RustData>) -> SharedPtr<Data>;
+        fn UniqueData(data: Box<RustData>) -> UniquePtr<Data>;
         fn OnSuccess(self: &PreloadCallbackWrapper, data: SharedPtr<Data>, task_id: &str);
         fn OnFail(self: &PreloadCallbackWrapper, error: Box<CacheDownloadError>, task_id: &str);
         fn OnCancel(self: &PreloadCallbackWrapper);
