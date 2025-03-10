@@ -21,6 +21,7 @@ use super::qos::RssCapacity;
 use crate::manage::network::NetworkState;
 use crate::manage::network_manager::NetworkManager;
 use crate::manage::task_manager::TaskManagerTx;
+use crate::utils::runtime_spawn;
 #[cfg(feature = "oh")]
 #[cfg(not(test))]
 use crate::utils::GetForegroundAbilities;
@@ -111,7 +112,7 @@ impl Handler {
         let task_manager = self.task_manager.clone();
         self.background_timeout.insert(
             uid,
-            ylong_runtime::spawn(async move {
+            runtime_spawn(async move {
                 ylong_runtime::time::sleep(Duration::from_secs(60)).await;
                 task_manager.trigger_background_timeout(uid);
             }),

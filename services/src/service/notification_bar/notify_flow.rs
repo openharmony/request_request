@@ -23,7 +23,7 @@ use super::task_handle::cancel_notification;
 use crate::config::Action;
 use crate::info::State;
 use crate::manage::database::RequestDb;
-use crate::utils::get_current_timestamp;
+use crate::utils::{get_current_timestamp, runtime_spawn};
 
 const NOTIFY_PROGRESS_INTERVAL: u64 = if cfg!(test) { 1 } else { 500 };
 
@@ -174,7 +174,7 @@ impl NotifyFlow {
     }
 
     pub(crate) fn run(mut self) {
-        ylong_runtime::spawn(async move {
+        runtime_spawn(async move {
             loop {
                 let info = match self.rx.recv().await {
                     Ok(message) => message,
