@@ -406,12 +406,31 @@ void RequestManagerImpl::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &
     task->OnNotifyDataReceive(notifyData);
 }
 
-sptr<RequestServiceInterface> RequestManagerImpl::GetRequestServiceProxy(bool load)
+sptr<RequestServiceInterface> RequestManagerImpl::GetRequestServiceProxy(bool needLoadSA)
 {
     std::lock_guard<std::mutex> lock(serviceProxyMutex_);
-    if (requestServiceProxy_ != nullptr || !load) {
+    // When SubRuncount/UnSubRuncount/RestoreSubRunCount/Remove need to get proxy but not need to load
+    if (!needLoadSA) {
+        sptr<ISystemAbilityManager> systemAbilityManager =
+            SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (systemAbilityManager == nullptr) {
+            REQUEST_HILOGE("Getting SystemAbilityManager failed.");
+            SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_00, "Get SAM failed");
+            return nullptr;
+        }
+        // Update the proxy to avoid holding an expired object
+        auto systemAbility = systemAbilityManager->GetSystemAbility(DOWNLOAD_SERVICE_ID, "");
+        if (systemAbility != nullptr) {
+            requestServiceProxy_ = iface_cast<RequestServiceInterface>(systemAbility);
+        } else {
+            REQUEST_HILOGI("Get SystemAbility failed.");
+        }
         return requestServiceProxy_;
     }
+    if (requestServiceProxy_ != nullptr) {
+        return requestServiceProxy_;
+    }
+
     REQUEST_HILOGI("Load System Ability");
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();

@@ -17,6 +17,7 @@
 
 #include "constant.h"
 #include "refbase.h"
+#include "runcount_notify_stub.h"
 #define private public
 #define protected public
 
@@ -307,8 +308,7 @@ HWTEST_F(RequestManagerImplTest, QueryMimeTypeTest001, TestSize.Level1)
 HWTEST_F(RequestManagerImplTest, RemoveTest001, TestSize.Level1)
 {
     string tid = "tid";
-    EXPECT_CALL(*exceptProxy, Remove(tid, Version::API10)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
-    EXPECT_EQ(RequestManagerImpl::GetInstance()->Remove(tid, Version::API10), E_CHANNEL_NOT_OPEN);
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->Remove(tid, Version::API10), E_TASK_NOT_FOUND);
 }
 
 /**
@@ -356,27 +356,15 @@ HWTEST_F(RequestManagerImplTest, UnsubscribeTest001, TestSize.Level1)
 
 /**
  * @tc.name: SubRunCountTest001
- * @tc.desc: Test SubRunCountTest001 interface base function - SubRunCount
+ * @tc.desc: Test SubRunCountTest001 interface base function - SubRunCount&UnsubRunCount
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
 HWTEST_F(RequestManagerImplTest, SubRunCountTest001, TestSize.Level1)
 {
-    OHOS::sptr<NotifyInterface> listener(nullptr);
-    EXPECT_CALL(*exceptProxy, SubRunCount(testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
-    EXPECT_EQ(RequestManagerImpl::GetInstance()->SubRunCount(listener), E_CHANNEL_NOT_OPEN);
-}
-
-/**
- * @tc.name: UnsubRunCountTest001
- * @tc.desc: Test UnsubRunCountTest001 interface base function - UnsubRunCount
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestManagerImplTest, UnsubRunCountTest001, TestSize.Level1)
-{
-    EXPECT_CALL(*exceptProxy, UnsubRunCount()).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
-    EXPECT_EQ(RequestManagerImpl::GetInstance()->UnsubRunCount(), E_CHANNEL_NOT_OPEN);
+    auto listener = RunCountNotifyStub::GetInstance();
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->SubRunCount(listener), E_OK);
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->UnsubRunCount(), E_OK);
 }
 
 /**
@@ -558,16 +546,15 @@ HWTEST_F(RequestManagerImplTest, SubscribeSATest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: RestoreSubRunCountTest002
- * @tc.desc: Test RestoreSubRunCountTest002 interface base function - RestoreSubRunCount
+ * @tc.name: RestoreSubRunCountTest001
+ * @tc.desc: Test RestoreSubRunCountTest001 interface base function - RestoreSubRunCount
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(RequestManagerImplTest, RestoreSubRunCountTest002, TestSize.Level1)
+HWTEST_F(RequestManagerImplTest, RestoreSubRunCountTest001, TestSize.Level1)
 {
     EXPECT_NE(exceptProxy, nullptr);
     OHOS::sptr<NotifyInterface> listener(nullptr);
-    EXPECT_CALL(*exceptProxy, SubRunCount(testing::_)).WillOnce(testing::Return(E_OK));
     RequestManagerImpl::GetInstance()->requestServiceProxy_ = exceptProxy;
     RequestManagerImpl::GetInstance()->RestoreSubRunCount();
 }
@@ -587,7 +574,6 @@ HWTEST_F(RequestManagerImplTest, OnAddSystemAbility002, TestSize.Level1)
     auto pNewFwkOb = std::make_shared<FwkIRunningTaskObserver>(nullptr);
     FwkRunningTaskCountManager::GetInstance()->observers_.push_back(pNewFwkOb);
     EXPECT_TRUE(FwkRunningTaskCountManager::GetInstance()->HasObserver());
-    EXPECT_CALL(*exceptProxy, SubRunCount(testing::_)).WillOnce(testing::Return(E_OK));
     RequestManagerImpl::SystemAbilityStatusChangeListener listener =
         RequestManagerImpl::SystemAbilityStatusChangeListener();
     listener.OnAddSystemAbility(OHOS::PRINT_SERVICE_ID, deviceId);
