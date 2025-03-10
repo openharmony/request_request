@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -133,6 +134,8 @@ public:
 
     std::shared_ptr<PreloadHandle> load(std::string const &url, std::unique_ptr<PreloadCallback>,
         std::unique_ptr<PreloadOptions> options = nullptr, bool update = false);
+
+    std::optional<Data> fetch(std::string const &url);
 
 private:
     const CacheDownloadService *agent_;

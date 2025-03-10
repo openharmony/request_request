@@ -52,7 +52,8 @@ private:
     std::function<void(uint64_t, uint64_t)> onProgress_;
 };
 
-std::shared_ptr<Data> BuildSharedData(rust::Box<RustData> data);
+std::shared_ptr<Data> SharedData(rust::Box<RustData> data);
+std::unique_ptr<Data> UniqueData(rust::Box<RustData> data);
 
 } // namespace OHOS::Request
 

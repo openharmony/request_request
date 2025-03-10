@@ -26,6 +26,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <thread>
 #include <tuple>
 #include <unordered_map>
@@ -89,6 +90,7 @@ void DownloadSuccessTest(std::string url, uint64_t size)
     EXPECT_TRUE(flagS->load());
     EXPECT_TRUE(Preload::GetInstance()->Contains(url));
     EXPECT_EQ(handle->GetState(), PreloadState::SUCCESS);
+    EXPECT_NE(Preload::GetInstance()->fetch(url), std::nullopt);
     Preload::GetInstance()->Remove(url);
 }
 
@@ -141,6 +143,7 @@ HWTEST_F(PreloadSuccess, OnSuccessAddCallback, TestSize.Level1)
     EXPECT_TRUE(flagP_1->load());
     EXPECT_TRUE(flagS->load());
     EXPECT_TRUE(flagS_1->load());
+    EXPECT_NE(Preload::GetInstance()->fetch(url), std::nullopt);
     Preload::GetInstance()->Remove(url);
 }
 
@@ -180,6 +183,7 @@ HWTEST_F(PreloadSuccess, OnSuccessCache, TestSize.Level1)
     EXPECT_TRUE(flagP->load());
     EXPECT_TRUE(flagS->load());
     EXPECT_TRUE(flagS_1->load());
+    EXPECT_NE(Preload::GetInstance()->fetch(url), std::nullopt);
     Preload::GetInstance()->Remove(url);
 }
 

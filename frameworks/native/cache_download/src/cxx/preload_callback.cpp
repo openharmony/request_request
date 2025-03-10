@@ -66,9 +66,14 @@ void PreloadProgressCallbackWrapper::OnProgress(uint64_t current, uint64_t total
     }
 }
 
-std::shared_ptr<Data> BuildSharedData(rust::Box<RustData> data)
+std::shared_ptr<Data> SharedData(rust::Box<RustData> data)
 {
     return std::make_shared<Data>(std::move(data));
+}
+
+std::unique_ptr<Data> UniqueData(rust::Box<RustData> data)
+{
+    return std::make_unique<Data>(std::move(data));
 }
 
 } // namespace OHOS::Request
