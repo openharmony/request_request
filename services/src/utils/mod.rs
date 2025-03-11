@@ -30,6 +30,7 @@ cfg_oh! {
     pub(crate) use ffi::GetForegroundAbilities;
 }
 
+pub(crate) mod task_event_count;
 pub(crate) mod task_id_generator;
 use ylong_runtime::sync::oneshot::Receiver;
 use ylong_runtime::task::JoinHandle;

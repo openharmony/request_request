@@ -42,6 +42,7 @@ use crate::manage::scheduler::Scheduler;
 use crate::service::client::ClientManagerEntry;
 use crate::service::notification_bar::subscribe_notification_bar;
 use crate::service::run_count::RunCountManagerEntry;
+use crate::utils::task_event_count::{task_complete_add, task_fail_add, task_unload};
 use crate::utils::{get_current_timestamp, runtime_spawn, subscribe_common_event, update_policy};
 
 const CLEAR_INTERVAL: u64 = 30 * 60;
@@ -270,6 +271,7 @@ impl TaskManager {
             }
             TaskEvent::Completed(task_id, uid, mode) => {
                 Scheduler::reduce_task_count(uid, mode, &mut self.task_count);
+                task_complete_add();
                 self.scheduler.task_completed(uid, task_id);
             }
             TaskEvent::Running(task_id, uid, mode) => {
@@ -278,6 +280,7 @@ impl TaskManager {
             }
             TaskEvent::Failed(task_id, uid, reason, mode) => {
                 Scheduler::reduce_task_count(uid, mode, &mut self.task_count);
+                task_fail_add();
                 self.scheduler.task_failed(uid, task_id, reason);
             }
             TaskEvent::Offline(task_id, uid, mode) => {
@@ -348,6 +351,8 @@ impl TaskManager {
         }
 
         info!("unload SA");
+
+        task_unload();
 
         let any_tasks = task_ids.is_empty();
         let update_on_demand_policy = update_policy(any_tasks);
