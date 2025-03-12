@@ -157,6 +157,11 @@ pub(crate) async fn download_inner(
                 let has_downloaded = file.metadata().await?.len() > 0;
                 if has_downloaded {
                     error!("task {} file not cleared", task.task_id());
+                    sys_event!(
+                        ExecFault,
+                        DfxCode::TASK_FAULT_09,
+                        &format!("task {} file not cleared", task.task_id())
+                    );
                     task.clear_downloaded_file().await?;
                 }
             }
@@ -165,27 +170,78 @@ pub(crate) async fn download_inner(
             error!("Task {} {:?}", task.task_id(), e);
 
             match e.error_kind() {
-                ErrorKind::Timeout => return Err(TaskError::Failed(Reason::ContinuousTaskTimeout)),
-                ErrorKind::Request => return Err(TaskError::Failed(Reason::RequestError)),
-                ErrorKind::Redirect => return Err(TaskError::Failed(Reason::RedirectError)),
+                ErrorKind::Timeout => {
+                    sys_event!(
+                        ExecFault,
+                        DfxCode::TASK_FAULT_01,
+                        &format!("Task {} {:?}", task.task_id(), e)
+                    );
+                    return Err(TaskError::Failed(Reason::ContinuousTaskTimeout));
+                }
+                ErrorKind::Request => {
+                    sys_event!(
+                        ExecFault,
+                        DfxCode::TASK_FAULT_02,
+                        &format!("Task {} {:?}", task.task_id(), e)
+                    );
+                    return Err(TaskError::Failed(Reason::RequestError));
+                }
+                ErrorKind::Redirect => {
+                    sys_event!(
+                        ExecFault,
+                        DfxCode::TASK_FAULT_08,
+                        &format!("Task {} {:?}", task.task_id(), e)
+                    );
+                    return Err(TaskError::Failed(Reason::RedirectError));
+                }
                 ErrorKind::Connect | ErrorKind::ConnectionUpgrade => {
                     task.network_retry().await?;
                     if e.is_dns_error() {
+                        sys_event!(
+                            ExecFault,
+                            DfxCode::TASK_FAULT_05,
+                            &format!("Task {} {:?}", task.task_id(), e)
+                        );
                         return Err(TaskError::Failed(Reason::Dns));
                     } else if e.is_tls_error() {
+                        sys_event!(
+                            ExecFault,
+                            DfxCode::TASK_FAULT_07,
+                            &format!("Task {} {:?}", task.task_id(), e)
+                        );
                         return Err(TaskError::Failed(Reason::Ssl));
                     } else {
+                        sys_event!(
+                            ExecFault,
+                            DfxCode::TASK_FAULT_06,
+                            &format!("Task {} {:?}", task.task_id(), e)
+                        );
                         return Err(TaskError::Failed(Reason::Tcp));
                     }
                 }
                 ErrorKind::BodyTransfer => {
                     task.network_retry().await?;
+                    sys_event!(
+                        ExecFault,
+                        DfxCode::TASK_FAULT_09,
+                        &format!("Task {} {:?}", task.task_id(), e)
+                    );
                     return Err(TaskError::Failed(Reason::OthersError));
                 }
                 _ => {
                     if format!("{}", e).contains("No space left on device") {
+                        sys_event!(
+                            ExecFault,
+                            DfxCode::TASK_FAULT_09,
+                            &format!("Task {} {:?}", task.task_id(), e)
+                        );
                         return Err(TaskError::Failed(Reason::InsufficientSpace));
                     } else {
+                        sys_event!(
+                            ExecFault,
+                            DfxCode::TASK_FAULT_09,
+                            &format!("Task {} {:?}", task.task_id(), e)
+                        );
                         return Err(TaskError::Failed(Reason::OthersError));
                     }
                 }
@@ -252,6 +308,11 @@ fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
         Ok(metadata) => {
             if !metadata.is_file() {
                 error!("task {} check local not file", task.task_id());
+                sys_event!(
+                    ExecFault,
+                    DfxCode::TASK_FAULT_04,
+                    &format!("task {} check local not file", task.task_id())
+                );
                 return Err(TaskError::Failed(Reason::IoError));
             }
         }
@@ -259,6 +320,11 @@ fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
             // Skip this situation when we loss some permission.
             if e.kind() == std::io::ErrorKind::NotFound {
                 error!("task {} check local not exist", task.task_id());
+                sys_event!(
+                    ExecFault,
+                    DfxCode::TASK_FAULT_04,
+                    &format!("task {} check local not exist", task.task_id())
+                );
                 return Err(TaskError::Failed(Reason::IoError));
             }
         }

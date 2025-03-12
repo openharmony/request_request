@@ -28,6 +28,11 @@ impl RequestServiceStub {
         let permission = PermissionChecker::check_down_permission();
         if !PermissionChecker::check_internet() && !permission {
             error!("Service query mime type: no INTERNET permission");
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A07,
+                "Service query mime type: no INTERNET permission"
+            );
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -36,6 +41,11 @@ impl RequestServiceStub {
 
         let Ok(task_id) = task_id.parse::<u32>() else {
             error!("End Service query mime type, failed: task_id not valid");
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A08,
+                "End Service query mime type, failed: task_id not valid"
+            );
             reply.write(&(ErrorCode::TaskNotFound as i32))?;
             return Err(IpcStatusCode::Failed);
         };

@@ -91,6 +91,14 @@ pub(crate) fn build_client(
                     "Intercept request by domain check, tid {}, bundle {}, domain_type {}, url {}",
                     config.common_data.task_id, &config.bundle, &domain_type, &config.url
                 );
+                sys_event!(
+                    ExecFault,
+                    DfxCode::URL_POLICY_FAULT_00,
+                    &format!(
+                    "Intercept request by domain check, tid {}, bundle {}, domain_type {}, url {}",
+                config.common_data.task_id, &config.bundle, &domain_type, &config.url)
+                );
+
                 return Err(Box::new(HttpClientError::other(
                     "Intercept request by domain check",
                 )));

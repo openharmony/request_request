@@ -74,12 +74,22 @@ pub(crate) fn register_network_change() {
             }
             if registry.is_null() {
                 error!("RegisterNetworkChange failed!");
+                sys_event!(
+                    ExecFault,
+                    DfxCode::NET_CONN_CLIENT_FAULT_02,
+                    "RegisterNetworkChange failed!"
+                );
                 return;
             }
             network_manager.network._registry = Some(Arc::new(registry));
         }
         None => {
             error!("register_network_change failed, tx is None!");
+            sys_event!(
+                ExecFault,
+                DfxCode::NET_CONN_CLIENT_FAULT_02,
+                "register_network_change failed, tx is None!"
+            );
         }
     }
 }

@@ -24,6 +24,11 @@ impl RequestServiceStub {
 
         let Ok(task_id) = task_id.parse::<u32>() else {
             error!("End Service unsubscribe, failed: task_id not valid");
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A30,
+                "End Service unsubscribe, failed: task_id not valid"
+            );
             reply.write(&(ErrorCode::TaskNotFound as i32))?;
             return Err(IpcStatusCode::Failed);
         };

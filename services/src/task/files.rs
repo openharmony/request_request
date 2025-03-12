@@ -57,6 +57,11 @@ fn open_task_files(config: &TaskConfig) -> Result<(Files, Vec<i64>), ServiceErro
                         Some(fd) => unsafe { File::from_raw_fd(fd) },
                         None => {
                             error!("None user file failed - task_id: {}, idx: {}", tid, idx);
+                            sys_event!(
+                                ExecFault,
+                                DfxCode::SA_ERROR_01,
+                                &format!("None user file failed - task_id: {}, idx: {}", tid, idx)
+                            );
                             return Err(ServiceError::IoError(io::Error::new(
                                 io::ErrorKind::Other,
                                 "none user file",
@@ -89,6 +94,11 @@ fn open_task_files(config: &TaskConfig) -> Result<(Files, Vec<i64>), ServiceErro
                         Some(fd) => unsafe { File::from_raw_fd(fd) },
                         None => {
                             error!("None user file failed - task_id: {}, idx: {}", tid, idx);
+                            sys_event!(
+                                ExecFault,
+                                DfxCode::SA_ERROR_01,
+                                &format!("None user file failed - task_id: {}, idx: {}", tid, idx)
+                            );
                             return Err(ServiceError::IoError(io::Error::new(
                                 io::ErrorKind::Other,
                                 "none user file",
@@ -118,6 +128,11 @@ fn open_body_files(config: &TaskConfig) -> Result<Files, ServiceError> {
         let bundle_name = bundle_cache.get_value()?;
         let file = open_file_readwrite(uid, &bundle_name, path).map_err(|e| {
             error!("Open body_file failed - task_id: {}, idx: {}", tid, idx);
+            sys_event!(
+                ExecFault,
+                DfxCode::SA_ERROR_02,
+                &format!("Open body_file failed - task_id: {}, idx: {}", tid, idx)
+            );
             ServiceError::IoError(e)
         })?;
         body_files.push(AsyncFile::new(file))

@@ -26,6 +26,11 @@ impl RequestServiceStub {
         let permission = PermissionChecker::check_down_permission();
         if !PermissionChecker::check_internet() && !permission {
             error!("Service resume: no INTERNET permission");
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A11,
+                "Service resume: no INTERNET permission"
+            );
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -47,6 +52,11 @@ impl RequestServiceStub {
 
             let Ok(task_id) = task_id.parse::<u32>() else {
                 error!("Service resume, failed: tid not valid: {}", task_id);
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A12,
+                    &format!("Service resume, failed: tid not valid: {}", task_id)
+                );
                 set_code_with_index(&mut vec, i, ErrorCode::TaskNotFound);
                 continue;
             };
@@ -68,12 +78,22 @@ impl RequestServiceStub {
                     "Service resume, failed: check task uid. tid: {}, uid: {}",
                     task_id, uid
                 );
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A12,
+                    &format!("Service resume, failed: check task uid. tid: {}, uid: {}", task_id, uid)
+                );
                 continue;
             }
 
             let (event, rx) = TaskManagerEvent::resume(uid, task_id);
             if !self.task_manager.lock().unwrap().send_event(event) {
                 error!("Service resume, failed: task_manager err: {}", task_id);
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A12,
+                    &format!("Service resume, failed: task_manager err: {}", task_id)
+                );
                 set_code_with_index(&mut vec, i, ErrorCode::Other);
                 continue;
             }
@@ -85,6 +105,11 @@ impl RequestServiceStub {
                         "Service resume, tid: {}, failed: receives ret failed",
                         task_id
                     );
+                    sys_event!(
+                        ExecError,
+                        DfxCode::INVALID_IPC_MESSAGE_A12,
+                        &format!("Service resume, tid: {}, failed: receives ret failed", task_id)
+                    );
                     set_code_with_index(&mut vec, i, ErrorCode::Other);
                     continue;
                 }
@@ -92,6 +117,11 @@ impl RequestServiceStub {
             set_code_with_index(&mut vec, i, ret);
             if ret != ErrorCode::ErrOk {
                 error!("Service resume, tid: {}, failed: {}", task_id, ret as i32);
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A12,
+                    &format!("Service resume, tid: {}, failed: {}", task_id, ret as i32)
+                );
             }
         }
 

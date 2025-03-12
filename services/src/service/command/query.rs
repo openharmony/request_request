@@ -25,6 +25,11 @@ impl RequestServiceStub {
     pub(crate) fn query(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         if !is_system_api() {
             error!("Service query: not system api");
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A05,
+                "Service query: not system api"
+            );
             reply.write(&(ErrorCode::SystemApi as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -33,6 +38,11 @@ impl RequestServiceStub {
             Some(a) => a,
             None => {
                 error!("Service query: no QUERY permission");
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A05,
+                    "Service query: no QUERY permission"
+                );
                 reply.write(&(ErrorCode::Permission as i32))?;
                 return Err(IpcStatusCode::Failed);
             }
@@ -54,6 +64,11 @@ impl RequestServiceStub {
 
             let Ok(task_id) = task_id.parse::<u32>() else {
                 error!("Service query, failed: tid not valid: {}", task_id);
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A06,
+                    &format!("Service query, failed: tid not valid: {}", task_id)
+                );
                 set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
                 continue;
             };
@@ -68,6 +83,11 @@ impl RequestServiceStub {
                 }
                 None => {
                     error!("Service query, failed: task_id not found, tid: {}", task_id);
+                    sys_event!(
+                        ExecError,
+                        DfxCode::INVALID_IPC_MESSAGE_A06,
+                        &format!("Service query, failed: task_id not found, tid: {}", task_id)
+                    );
                     set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
                 }
             };

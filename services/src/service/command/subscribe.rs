@@ -25,6 +25,11 @@ impl RequestServiceStub {
 
         let Ok(task_id) = task_id.parse::<u32>() else {
             error!("End Service subscribe, failed: task_id not valid");
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A28,
+                "End Service subscribe, failed: task_id not valid"
+            );
             reply.write(&(ErrorCode::TaskNotFound as i32))?;
             return Err(IpcStatusCode::Failed);
         };
@@ -45,6 +50,14 @@ impl RequestServiceStub {
                 "End Service subscribe, tid: {}, failed: send event failed",
                 task_id
             );
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A28,
+                &format!(
+                    "End Service subscribe, tid: {}, failed: send event failed",
+                    task_id
+                )
+            );
             return Err(IpcStatusCode::Failed);
         }
         let ret = match rx.get() {
@@ -54,6 +67,14 @@ impl RequestServiceStub {
                     "End Service subscribe, tid: {}, failed: receives ret failed",
                     task_id
                 );
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A28,
+                    &format!(
+                        "End Service subscribe, tid: {}, failed: receives ret failed",
+                        task_id
+                    )
+                );
                 reply.write(&(ErrorCode::Other as i32))?;
                 return Err(IpcStatusCode::Failed);
             }
@@ -61,6 +82,11 @@ impl RequestServiceStub {
 
         if ret != ErrorCode::ErrOk {
             error!("End Service subscribe, tid: {}, failed: {:?}", task_id, ret);
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A28,
+                &format!("End Service subscribe, tid: {}, failed: {:?}", task_id, ret)
+            );
             reply.write(&(ret as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -72,6 +98,11 @@ impl RequestServiceStub {
             Ok(())
         } else {
             error!("End Service subscribe, tid: {}, failed: {:?}", task_id, ret);
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A28,
+                &format!("End Service subscribe, tid: {}, failed: {:?}", task_id, ret)
+            );
             reply.write(&(ret as i32))?;
             Err(IpcStatusCode::Failed)
         }

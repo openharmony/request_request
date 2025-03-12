@@ -17,14 +17,18 @@ use ipc::{IpcResult, IpcStatusCode};
 use crate::error::ErrorCode;
 use crate::manage::database::RequestDb;
 use crate::manage::events::TaskManagerEvent;
-use crate::service::command::{CONTROL_MAX, set_code_with_index};
+use crate::service::command::{set_code_with_index, CONTROL_MAX};
 use crate::service::permission::PermissionChecker;
 use crate::service::RequestServiceStub;
 
 impl RequestServiceStub {
-    pub(crate) fn set_max_speed(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+    pub(crate) fn set_max_speed(
+        &self,
+        data: &mut MsgParcel,
+        reply: &mut MsgParcel,
+    ) -> IpcResult<()> {
         info!("Service set_max_speed");
-        const MIN_SPEED_LIMIT : i64 = 16 * 1024;
+        const MIN_SPEED_LIMIT: i64 = 16 * 1024;
         let permission = PermissionChecker::check_down_permission();
 
         let len: u32 = data.read()?;
@@ -43,16 +47,28 @@ impl RequestServiceStub {
             let task_id: String = data.read()?;
             let max_speed: i64 = data.read()?;
             if max_speed < MIN_SPEED_LIMIT {
-                error!("Service set_max_speed, failed: speed not valid: {}", max_speed);
+                error!(
+                    "Service set_max_speed, failed: speed not valid: {}",
+                    max_speed
+                );
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A42,
+                    &format!("Service set_max_speed, failed: speed not valid: {}", max_speed)
+                );
                 set_code_with_index(&mut vec, i, ErrorCode::ParameterCheck);
                 continue;
             }
             let Ok(task_id) = task_id.parse::<u32>() else {
                 error!("Service set_max_speed, failed: tid not valid: {}", task_id);
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A42,
+                    &format!("Service set_max_speed, failed: tid not valid: {}", task_id)
+                );
                 set_code_with_index(&mut vec, i, ErrorCode::TaskNotFound);
                 continue;
             };
-
 
             let mut uid = uid;
 
@@ -71,25 +87,54 @@ impl RequestServiceStub {
                     "Service set_max_speed, failed: check task uid. tid: {}, uid: {}",
                     task_id, uid
                 );
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A42,
+                    &format!("Service set_max_speed, failed: check task uid. tid: {}, uid: {}", task_id, uid)
+                );
                 continue;
             }
 
             let (event, rx) = TaskManagerEvent::set_max_speed(uid, task_id, max_speed);
             if !self.task_manager.lock().unwrap().send_event(event) {
-                error!("Service set_max_speed, failed: task_manager err: {}", task_id);
+                error!(
+                    "Service set_max_speed, failed: task_manager err: {}",
+                    task_id
+                );
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A42,
+                    &format!("Service set_max_speed, failed: task_manager err: {}", task_id)
+                );
                 set_code_with_index(&mut vec, i, ErrorCode::Other);
                 continue;
             }
 
             let Some(ret) = rx.get() else {
-                error!("Service set_max_speed, tid: {}, failed: receives ret failed", task_id);
+                error!(
+                    "Service set_max_speed, tid: {}, failed: receives ret failed",
+                    task_id
+                );
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A42,
+                    &format!("Service set_max_speed, tid: {}, failed: receives ret failed", task_id)
+                );
                 set_code_with_index(&mut vec, i, ErrorCode::Other);
                 continue;
             };
 
             set_code_with_index(&mut vec, i, ret);
             if ret != ErrorCode::ErrOk {
-                error!("Service set_max_speed, tid: {}, failed: {}", task_id, ret as i32);
+                error!(
+                    "Service set_max_speed, tid: {}, failed: {}",
+                    task_id, ret as i32
+                );
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A42,
+                    &format!("Service set_max_speed, tid: {}, failed: {}", task_id, ret as i32)
+                );
             }
         }
 
