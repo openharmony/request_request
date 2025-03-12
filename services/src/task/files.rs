@@ -67,6 +67,11 @@ fn open_task_files(config: &TaskConfig) -> io::Result<(Files, Vec<i64>)> {
                         Some(fd) => unsafe { File::from_raw_fd(fd) },
                         None => {
                             error!("None user file failed - task_id: {}, idx: {}", tid, idx);
+                            sys_event!(
+                                ExecFault,
+                                DfxCode::SA_ERROR_01,
+                                &format!("None user file failed - task_id: {}, idx: {}", tid, idx)
+                            );
                             return Err(io::Error::new(io::ErrorKind::Other, "none user file"));
                         }
                     }
@@ -97,6 +102,11 @@ fn open_task_files(config: &TaskConfig) -> io::Result<(Files, Vec<i64>)> {
                         Some(fd) => unsafe { File::from_raw_fd(fd) },
                         None => {
                             error!("None user file failed - task_id: {}, idx: {}", tid, idx);
+                            sys_event!(
+                                ExecFault,
+                                DfxCode::SA_ERROR_01,
+                                &format!("None user file failed - task_id: {}, idx: {}", tid, idx)
+                            );
                             return Err(io::Error::new(io::ErrorKind::Other, "none user file"));
                         }
                     }

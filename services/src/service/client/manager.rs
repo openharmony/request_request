@@ -40,6 +40,11 @@ impl ClientManagerEntry {
             unsafe {
                 if let Some(e) = PANIC_INFO.as_ref() {
                     error!("Sends ClientManager event failed {}", e);
+                    sys_event!(
+                        ExecFault,
+                        DfxCode::UDS_FAULT_02,
+                        &format!("Sends ClientManager event failed {}", e)
+                    );
                 } else {
                     info!("ClientManager is unloading");
                 }
@@ -75,6 +80,11 @@ impl ClientManager {
                 Ok(message) => message,
                 Err(e) => {
                     error!("ClientManager recv error {:?}", e);
+                    sys_event!(
+                        ExecFault,
+                        DfxCode::UDS_FAULT_03,
+                        &format!("ClientManager recv error {:?}", e)
+                    );
                     continue;
                 }
             };
@@ -98,6 +108,11 @@ impl ClientManager {
                                 headers,
                             )) {
                                 error!("send response error, {}", err);
+                                sys_event!(
+                                    ExecFault,
+                                    DfxCode::UDS_FAULT_02,
+                                    &format!("send response error, {}", err)
+                                );
                             }
                         } else {
                             debug!("response client not found");
@@ -113,6 +128,11 @@ impl ClientManager {
                                 tx.send(ClientEvent::SendNotifyData(subscribe_type, notify_data))
                             {
                                 error!("send notify data error, {}", err);
+                                sys_event!(
+                                    ExecFault,
+                                    DfxCode::UDS_FAULT_02,
+                                    &format!("send notify data error, {}", err)
+                                );
                             }
                         } else {
                             debug!("response client not found");

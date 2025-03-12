@@ -24,6 +24,11 @@ impl RequestServiceStub {
     pub(crate) fn query(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         if !is_system_api() {
             error!("Service query: not system api");
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A05,
+                "Service query: not system api"
+            );
             reply.write(&(ErrorCode::SystemApi as i32))?;
             return Err(IpcStatusCode::Failed);
         }
@@ -31,6 +36,11 @@ impl RequestServiceStub {
         let action = match permission {
             QueryPermission::NoPermission => {
                 error!("Service query: no QUERY permission");
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A05,
+                    "Service query: no QUERY permission"
+                );
                 reply.write(&(ErrorCode::Permission as i32))?;
                 return Err(IpcStatusCode::Failed);
             }

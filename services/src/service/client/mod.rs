@@ -62,6 +62,11 @@ impl ClientManagerEntry {
             Some(ret) => ret,
             None => {
                 error!("open channel fail, recv none");
+                sys_event!(
+                    ExecFault,
+                    DfxCode::UDS_FAULT_03,
+                    "open channel fail, recv none"
+                );
                 Err(ErrorCode::Other)
             }
         }
@@ -78,6 +83,11 @@ impl ClientManagerEntry {
             Some(ret) => ret,
             None => {
                 error!("subscribe fail, recv none");
+                sys_event!(
+                    ExecFault,
+                    DfxCode::UDS_FAULT_03,
+                    "subscribe fail, recv none"
+                );
                 ErrorCode::Other
             }
         }
@@ -94,6 +104,7 @@ impl ClientManagerEntry {
             Some(ret) => ret,
             None => {
                 error!("unsubscribe failed");
+                sys_event!(ExecFault, DfxCode::UDS_FAULT_03, "unsubscribe failed");
                 ErrorCode::Other
             }
         }
@@ -115,6 +126,11 @@ impl ClientManagerEntry {
             Some(ret) => ret,
             None => {
                 error!("notify_process_terminate failed");
+                sys_event!(
+                    ExecFault,
+                    DfxCode::UDS_FAULT_03,
+                    "notify_process_terminate failed"
+                );
                 ErrorCode::Other
             }
         }
@@ -154,6 +170,11 @@ impl Client {
             Ok((server_sock_fd, client_sock_fd)) => (server_sock_fd, client_sock_fd),
             Err(err) => {
                 error!("can't create a pair of sockets, {:?}", err);
+                sys_event!(
+                    ExecFault,
+                    DfxCode::TASK_FAULT_09,
+                    &format!("can't create a pair of sockets, {:?}", err)
+                );
                 return None;
             }
         };
@@ -183,6 +204,11 @@ impl Client {
                     Ok(message) => message,
                     Err(e) => {
                         error!("ClientManager recv error {:?}", e);
+                        sys_event!(
+                            ExecFault,
+                            DfxCode::UDS_FAULT_03,
+                            &format!("ClientManager recv error {:?}", e)
+                        );
                         continue;
                     }
                 };
@@ -395,18 +421,18 @@ impl Client {
                             debug!("message recv len {:}", len);
                         }
                         Err(e) => {
-                            error!("message recv error: {:?}", e);
+                            debug!("message recv error: {:?}", e);
                         }
                     },
                     Err(e) => {
-                        error!("message recv {}", e);
+                        debug!("message recv {}", e);
                         return;
                     }
                 };
 
                 let len: u32 = u32::from_le_bytes(buf);
                 if len != message.len() as u32 {
-                    error!("message len bad, send {:?}, recv {:?}", message.len(), len);
+                    debug!("message len bad, send {:?}, recv {:?}", message.len(), len);
                 } else {
                     debug!("notify done, pid: {}", self.pid);
                 }

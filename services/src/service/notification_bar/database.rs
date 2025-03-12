@@ -47,6 +47,11 @@ impl NotificationDb {
         let me = Self { inner: &REQUEST_DB };
         if let Err(e) = me.create_db() {
             error!("Failed to create notification database: {}", e);
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_04,
+                &format!("Failed to create notification database: {}", e)
+            );
         }
         me
     }
@@ -148,6 +153,7 @@ impl NotificationDb {
             (task_id, group_id),
         ) {
             error!("Failed to update {} notification: {}", task_id, e);
+            sys_event!(ExecFault, DfxCode::RDB_FAULT_04, &format!("Failed to update {} notification: {}", task_id, e));
         }
     }
 
@@ -159,6 +165,11 @@ impl NotificationDb {
             Ok(set) => set,
             Err(e) => {
                 error!("Failed to query group tasks: {}", e);
+                sys_event!(
+                    ExecFault,
+                    DfxCode::RDB_FAULT_04,
+                    &format!("Failed to query group tasks: {}", e)
+                );
                 return Vec::new();
             }
         };
@@ -173,6 +184,11 @@ impl NotificationDb {
             Ok(set) => set,
             Err(e) => {
                 error!("Failed to query task group id: {}", e);
+                sys_event!(
+                    ExecFault,
+                    DfxCode::RDB_FAULT_04,
+                    &format!("Failed to query task group id: {}", e)
+                );
                 return None;
             }
         };
@@ -190,6 +206,11 @@ impl NotificationDb {
             Ok(set) => set,
             Err(e) => {
                 error!("Failed to query task customized notification: {}", e);
+                sys_event!(
+                    ExecFault,
+                    DfxCode::RDB_FAULT_04,
+                    &format!("Failed to query task customized notification: {}", e)
+                );
                 return None;
             }
         };
@@ -208,6 +229,7 @@ impl NotificationDb {
             (task_id, title, text),
         ) {
             error!("Failed to insert {} notification: {}", task_id, e);
+            sys_event!(ExecFault, DfxCode::RDB_FAULT_04, &format!("Failed to insert {} notification: {}", task_id, e));
         }
     }
 
@@ -222,6 +244,11 @@ impl NotificationDb {
             Ok(set) => set,
             Err(e) => {
                 error!("Failed to query task customized notification: {}", e);
+                sys_event!(
+                    ExecFault,
+                    DfxCode::RDB_FAULT_04,
+                    &format!("Failed to query task customized notification: {}", e)
+                );
                 return None;
             }
         };
@@ -240,6 +267,7 @@ impl NotificationDb {
             (group_id, title, text),
         ) {
             error!("Failed to insert {} notification: {}", group_id, e);
+            sys_event!(ExecFault, DfxCode::RDB_FAULT_04, &format!("Failed to insert {} notification: {}", group_id, e));
         }
     }
 
@@ -249,6 +277,7 @@ impl NotificationDb {
             (group_id, gauge, true, ctime),
         ) {
             error!("Failed to update {} notification: {}", group_id, e);
+            sys_event!(ExecFault, DfxCode::RDB_FAULT_04, &format!("Failed to update {} notification: {}", group_id, e));
         }
     }
 
@@ -259,6 +288,11 @@ impl NotificationDb {
             task_id,
         ) {
             error!("Failed to delete {} notification: {}", task_id, e);
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_04,
+                &format!("Failed to delete {} notification: {}", task_id, e)
+            );
         }
     }
 
@@ -269,6 +303,11 @@ impl NotificationDb {
             group_id,
         ) {
             error!("Failed to delete {} notification: {}", group_id, e);
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_04,
+                &format!("Failed to delete {} notification: {}", group_id, e)
+            );
         }
     }
 
@@ -300,6 +339,11 @@ impl NotificationDb {
             (false, group_id),
         ) {
             error!("Failed to update {} notification: {}", group_id, e);
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_04,
+                &format!("Failed to update {} notification: {}", group_id, e)
+            );
         }
     }
 

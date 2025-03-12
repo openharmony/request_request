@@ -29,6 +29,11 @@ impl TaskIdGenerator {
                 Err(e) => {
                     static ID: AtomicU32 = AtomicU32::new(0);
                     error!("Generate task id from system time failed {:?}", e);
+                    sys_event!(
+                        ExecFault,
+                        DfxCode::SA_ERROR_00,
+                        &format!("Generate task id from system time failed {:?}", e)
+                    );
                     ID.fetch_add(1, Ordering::Relaxed)
                 }
             };

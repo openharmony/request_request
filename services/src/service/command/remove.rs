@@ -25,6 +25,11 @@ impl RequestServiceStub {
         let version: u32 = data.read()?;
         if Version::from(version as u8) == Version::API9 && !PermissionChecker::check_internet() {
             error!("Service remove: no INTERNET permission");
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A09,
+                "Service pause: no INTERNET permission"
+            );
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
         }
