@@ -14,7 +14,7 @@
 import("//build/test.gni")
 
 ohos_js_stage_unittest("RequestAgentTaskTest") {
-  module_out_path = "request/requestAgentTaskTest"
+  module_out_path = "request/request/requestAgentTaskTest"
 
   hap_profile = "entry/src/main/module.json"
   deps = [

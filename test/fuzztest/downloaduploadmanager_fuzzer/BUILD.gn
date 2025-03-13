@@ -19,7 +19,7 @@ import("//build/test.gni")
 
 ##############################fuzztest##########################################
 ohos_fuzztest("DownloadUploadManagerFuzzTest") {
-  module_out_path = "request/request"
+  module_out_path = "request/request/request"
 
   fuzz_config_file = "../../../test/fuzztest/downloaduploadmanager_fuzzer"
 

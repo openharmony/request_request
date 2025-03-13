@@ -15,7 +15,7 @@ import("//base/request/request/request_aafwk.gni")
 import("//build/test.gni")
 
 ohos_js_unittest("RequestJsTest") {
-  module_out_path = "request/request"
+  module_out_path = "request/request/request"
 
   hap_profile = "./config.json"
 

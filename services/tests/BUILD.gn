@@ -14,7 +14,7 @@ import("//base/request/request/request_aafwk.gni")
 import("//build/test.gni")
 
 ohos_rust_unittest("rust_request_ut_test") {
-  module_out_path = "request/request_rust"
+  module_out_path = "request/request/request_rust"
 
   sources = [ "../src/lib.rs" ]
   deps = [
@@ -42,7 +42,7 @@ ohos_rust_unittest("rust_request_ut_test") {
 }
 
 ohos_rust_unittest("rust_request_sdv_test") {
-  module_out_path = "request/request_rust"
+  module_out_path = "request/request/request_rust"
 
   rustflags = [
     "--cfg=gn_test",

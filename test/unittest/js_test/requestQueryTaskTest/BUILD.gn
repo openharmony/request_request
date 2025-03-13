@@ -14,7 +14,7 @@
 import("//build/test.gni")
 
 ohos_js_stage_unittest("RequestQueryTaskTest") {
-  module_out_path = "request/requestQueryTaskTest"
+  module_out_path = "request/request/requestQueryTaskTest"
 
   hap_profile = "entry/src/main/module.json"
   deps = [
