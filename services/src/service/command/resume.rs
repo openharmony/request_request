@@ -45,11 +45,106 @@ impl RequestServiceStub {
             return Err(IpcStatusCode::Failed);
         }
 
+        if len == 1 {
+            self.resume_one_task(data, permission, &mut vec)?;
+        } else {
+            self.resume_batch_tasks(data, permission, &mut vec, len)?;
+        }
+
+        reply.write(&(ErrorCode::ErrOk as i32))?;
+        for ret in vec {
+            reply.write(&(ret as i32))?;
+        }
+        Ok(())
+    }
+
+    fn resume_one_task(&self, data: &mut MsgParcel, permission: bool, rets: &mut [ErrorCode]) -> IpcResult<()> {
         let uid = ipc::Skeleton::calling_uid();
+        let task_id: String = data.read()?;
+        info!("Service resume tid {}", task_id);
+
+        let Ok(task_id) = task_id.parse::<u32>() else {
+            error!("Service resume, failed: tid not valid: {}", task_id);
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A12,
+                &format!("Service resume, failed: tid not valid: {}", task_id)
+            );
+            set_code_with_index(rets, 0, ErrorCode::TaskNotFound);
+            return Ok(());
+        };
+
+        let mut uid = uid;
+        if permission {
+            // skip uid check if task used by innerkits
+            info!("{} resume permission inner", task_id);
+            match RequestDb::get_instance().query_task_uid(task_id) {
+                Some(id) => uid = id,
+                None => {
+                    set_code_with_index(rets, 0, ErrorCode::TaskNotFound);
+                    return Ok(());
+                }
+            };
+        } else if !self.check_task_uid(task_id, uid) {
+            set_code_with_index(rets, 0, ErrorCode::TaskNotFound);
+            error!(
+                "Service resume, failed: check task uid. tid: {}, uid: {}",
+                task_id, uid
+            );
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A12,
+                &format!("Service resume, failed: check task uid. tid: {}, uid: {}", task_id, uid)
+            );
+            return Ok(());
+        }
+
+        let (event, rx) = TaskManagerEvent::resume(uid, task_id);
+        if !self.task_manager.lock().unwrap().send_event(event) {
+            error!("Service resume, failed: task_manager err: {}", task_id);
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A12,
+                &format!("Service resume, failed: task_manager err: {}", task_id)
+            );
+            set_code_with_index(rets, 0, ErrorCode::Other);
+            return Ok(());
+        }
+
+        let ret = match rx.get() {
+            Some(ret) => ret,
+            None => {
+                error!(
+                    "Service resume, tid: {}, failed: receives ret failed",
+                    task_id
+                );
+                sys_event!(
+                    ExecError,
+                    DfxCode::INVALID_IPC_MESSAGE_A12,
+                    &format!("Service resume, tid: {}, failed: receives ret failed", task_id)
+                );
+                set_code_with_index(rets, 0, ErrorCode::Other);
+                return Ok(());
+            }
+        };
+        set_code_with_index(rets, 0, ret);
+        if ret != ErrorCode::ErrOk {
+            error!("Service resume, tid: {}, failed: {}", task_id, ret as i32);
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A12,
+                &format!("Service resume, tid: {}, failed: {}", task_id, ret as i32)
+            );
+        }
+        Ok(())
+    }
+
+    fn resume_batch_tasks(&self, data: &mut MsgParcel, permission: bool, rets: &mut [ErrorCode], len: usize) -> IpcResult<()> {
+        let uid: u64 = ipc::Skeleton::calling_uid();
+        let mut tasks = Vec::with_capacity(len);
         for i in 0..len {
             let task_id: String = data.read()?;
             info!("Service resume tid {}", task_id);
-
             let Ok(task_id) = task_id.parse::<u32>() else {
                 error!("Service resume, failed: tid not valid: {}", task_id);
                 sys_event!(
@@ -57,7 +152,7 @@ impl RequestServiceStub {
                     DfxCode::INVALID_IPC_MESSAGE_A12,
                     &format!("Service resume, failed: tid not valid: {}", task_id)
                 );
-                set_code_with_index(&mut vec, i, ErrorCode::TaskNotFound);
+                set_code_with_index(rets, i, ErrorCode::TaskNotFound);
                 continue;
             };
 
@@ -68,12 +163,12 @@ impl RequestServiceStub {
                 match RequestDb::get_instance().query_task_uid(task_id) {
                     Some(id) => uid = id,
                     None => {
-                        set_code_with_index(&mut vec, i, ErrorCode::TaskNotFound);
+                        set_code_with_index(rets, i, ErrorCode::TaskNotFound);
                         continue;
                     }
                 };
             } else if !self.check_task_uid(task_id, uid) {
-                set_code_with_index(&mut vec, i, ErrorCode::TaskNotFound);
+                set_code_with_index(rets, i, ErrorCode::TaskNotFound);
                 error!(
                     "Service resume, failed: check task uid. tid: {}, uid: {}",
                     task_id, uid
@@ -85,49 +180,54 @@ impl RequestServiceStub {
                 );
                 continue;
             }
+            tasks.push((uid, task_id));
+        }
 
-            let (event, rx) = TaskManagerEvent::resume(uid, task_id);
-            if !self.task_manager.lock().unwrap().send_event(event) {
-                error!("Service resume, failed: task_manager err: {}", task_id);
+        let (event, rx) = TaskManagerEvent::resume_batch(tasks.clone());
+        if !self.task_manager.lock().unwrap().send_event(event) {
+            error!("Service resume, failed: task_manager err: {:?}", tasks);
                 sys_event!(
                     ExecError,
                     DfxCode::INVALID_IPC_MESSAGE_A12,
-                    &format!("Service resume, failed: task_manager err: {}", task_id)
+                    &format!("Service resume, failed: task_manager err: {:?}", tasks)
                 );
-                set_code_with_index(&mut vec, i, ErrorCode::Other);
-                continue;
-            }
-
-            let ret = match rx.get() {
-                Some(ret) => ret,
-                None => {
-                    error!(
-                        "Service resume, tid: {}, failed: receives ret failed",
-                        task_id
+            return Err(IpcStatusCode::Failed);
+        }
+        let Some(error_map) = rx.get() else {
+            error!("Service resume, failed: receives ret failed");
+            sys_event!(
+                        ExecError,
+                        DfxCode::INVALID_IPC_MESSAGE_A12,
+                        "Service resume, tid: failed: receives ret failed"
                     );
+            return Err(IpcStatusCode::Failed);
+        };
+
+        // The error code is ErrorCode::Other, indicating that the task has been dispatched to the TaskManager,
+        // and it is necessary to retrieve the execution result of the TaskManager from the error_map.
+        let mut index = 0;
+        for ret in rets.iter_mut() {
+            if matches!(*ret, ErrorCode::Other) {
+                let Some((_, task_id)) = tasks.get(index) else {
+                    error!("Service resume, failed: bad tasks index");
                     sys_event!(
                         ExecError,
                         DfxCode::INVALID_IPC_MESSAGE_A12,
-                        &format!("Service resume, tid: {}, failed: receives ret failed", task_id)
+                        "Service resume, failed: bad tasks index"
                     );
-                    set_code_with_index(&mut vec, i, ErrorCode::Other);
-                    continue;
+                    break;
+                };
+                *ret = *error_map.get(task_id).unwrap_or(&ErrorCode::Other);
+                if !matches!(*ret, ErrorCode::ErrOk) {
+                    error!("Service resume, tid: {}, failed: {}", task_id, *ret as i32);
+                    sys_event!(
+                        ExecError,
+                        DfxCode::INVALID_IPC_MESSAGE_A12,
+                        &format!("Service resume, tid: {}, failed: {}", task_id, *ret as i32)
+                    );
                 }
-            };
-            set_code_with_index(&mut vec, i, ret);
-            if ret != ErrorCode::ErrOk {
-                error!("Service resume, tid: {}, failed: {}", task_id, ret as i32);
-                sys_event!(
-                    ExecError,
-                    DfxCode::INVALID_IPC_MESSAGE_A12,
-                    &format!("Service resume, tid: {}, failed: {}", task_id, ret as i32)
-                );
+                index += 1;
             }
-        }
-
-        reply.write(&(ErrorCode::ErrOk as i32))?;
-        for ret in vec {
-            reply.write(&(ret as i32))?;
         }
         Ok(())
     }

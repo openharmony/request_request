@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::collections::HashMap;
 use std::fmt::Debug;
 
 use ylong_runtime::sync::oneshot::{channel, Sender};
@@ -29,9 +30,11 @@ mod dump;
 mod pause;
 mod remove;
 mod resume;
+mod resume_batch;
 mod set_max_speed;
 mod set_mode;
 mod start;
+mod start_batch;
 mod stop;
 
 #[derive(Debug)]
@@ -74,6 +77,14 @@ impl TaskManagerEvent {
         )
     }
 
+    pub(crate) fn start_batch(tasks: Vec<(u64, u32)>) -> (Self, Recv<HashMap<u32, ErrorCode>>) {
+        let (tx, rx) = channel::<HashMap<u32, ErrorCode>>();
+        (
+            Self::Service(ServiceEvent::StartBatch(tasks, tx)),
+            Recv::new(rx),
+        )
+    }
+
     pub(crate) fn stop(uid: u64, task_id: u32) -> (Self, Recv<ErrorCode>) {
         let (tx, rx) = channel::<ErrorCode>();
         (
@@ -94,6 +105,14 @@ impl TaskManagerEvent {
         let (tx, rx) = channel::<ErrorCode>();
         (
             Self::Service(ServiceEvent::Resume(uid, task_id, tx)),
+            Recv::new(rx),
+        )
+    }
+
+    pub(crate) fn resume_batch(tasks: Vec<(u64, u32)>) -> (Self, Recv<HashMap<u32, ErrorCode>>) {
+        let (tx, rx) = channel::<HashMap<u32, ErrorCode>>();
+        (
+            Self::Service(ServiceEvent::ResumeBatch(tasks, tx)),
             Recv::new(rx),
         )
     }
@@ -164,9 +183,11 @@ pub(crate) enum ServiceEvent {
     Construct(Box<ConstructMessage>, Sender<Result<u32, ErrorCode>>),
     Pause(u64, u32, Sender<ErrorCode>),
     Start(u64, u32, Sender<ErrorCode>),
+    StartBatch(Vec<(u64, u32)>, Sender<HashMap<u32, ErrorCode>>),
     Stop(u64, u32, Sender<ErrorCode>),
     Remove(u64, u32, Sender<ErrorCode>),
     Resume(u64, u32, Sender<ErrorCode>),
+    ResumeBatch(Vec<(u64, u32)>, Sender<HashMap<u32, ErrorCode>>),
     DumpOne(u32, Sender<Option<DumpOneInfo>>),
     DumpAll(Sender<DumpAllInfo>),
     AttachGroup(u64, Vec<u32>, u32, Sender<ErrorCode>),
