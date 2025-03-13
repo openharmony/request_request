@@ -26,6 +26,9 @@ use super::notify_flow::{GroupProgress, ProgressNotify};
 use crate::config::Action;
 
 fn progress_percentage(current: u64, total: u64) -> String {
+    if total == 0 {
+        return "100%".to_string();
+    }
     format!(
         "{}.{:02}%",
         current * 100 / total,

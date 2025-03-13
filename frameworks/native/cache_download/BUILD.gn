@@ -121,7 +121,7 @@ ohos_static_library("preload_native_static") {
 }
 
 ohos_rust_unittest("rust_cache_download_ut_test") {
-  module_out_path = "request/preload"
+  module_out_path = "request/request/preload"
 
   sources = [ "src/lib.rs" ]
 

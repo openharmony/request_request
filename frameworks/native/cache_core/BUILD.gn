@@ -40,7 +40,7 @@ ohos_rust_static_library("cache_core") {
 }
 
 ohos_rust_unittest("rust_cache_core_ut_test") {
-  module_out_path = "request/preload"
+  module_out_path = "request/request/preload"
 
   rustflags = [ "--cfg=feature=\"ohos\"" ]
 

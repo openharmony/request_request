@@ -14,7 +14,7 @@
 import("//build/test.gni")
 
 ohos_unittest("preload_test") {
-  module_out_path = "request/request"
+  module_out_path = "request/request/request"
 
   include_dirs = [
     "include",

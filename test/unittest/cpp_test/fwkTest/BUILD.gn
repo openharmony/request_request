@@ -16,7 +16,7 @@ import("//build/ohos.gni")
 import("//build/test.gni")
 
 ohos_unittest("fwkTest") {
-  module_out_path = "request/request"
+  module_out_path = "request/request/request"
 
   include_dirs = [
     "include",

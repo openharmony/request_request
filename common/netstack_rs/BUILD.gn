@@ -68,7 +68,7 @@ ohos_rust_static_library("netstack_rs") {
 }
 
 ohos_rust_unittest("rust_netstack_rs_ut_test") {
-  module_out_path = "request/common"
+  module_out_path = "request/request/common"
 
   sources = [ "src/lib.rs" ]
 
