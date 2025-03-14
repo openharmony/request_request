@@ -15,7 +15,10 @@
 
 #include "async_call.h"
 
+#include <new>
+
 #include "log.h"
+
 
 namespace OHOS::Request {
 constexpr uint8_t MAX_ARGC = 10;
@@ -77,7 +80,10 @@ napi_value AsyncCall::Call(const std::shared_ptr<Context> &context, const std::s
     napi_value resource = nullptr;
     std::string name = "REQUEST_" + resourceName;
     napi_create_string_utf8(context->env_, name.c_str(), NAPI_AUTO_LENGTH, &resource);
-    WorkData *workData = new WorkData{ .ctx = context };
+    WorkData *workData = new (std::nothrow) WorkData{ .ctx = context };
+    if (workData == nullptr) {
+        return ret;
+    }
     workData->ctx = context;
     napi_create_async_work(
         context->env_, nullptr, resource, AsyncCall::OnExecute, AsyncCall::OnComplete, workData, &context->work_);

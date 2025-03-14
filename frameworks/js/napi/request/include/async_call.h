@@ -17,6 +17,7 @@
 
 #include <functional>
 #include <memory>
+#include <new>
 #include <string>
 
 #include "constant.h"
@@ -36,8 +37,11 @@ public:
         Context() = default;
         virtual ~Context()
         {
-            ContextNapiHolder *holder =
-                new ContextNapiHolder{ .env = env_, .callbackRef = callbackRef_, .self = self_, .work = work_ };
+            ContextNapiHolder *holder = new (std::nothrow)
+                ContextNapiHolder{ .env = env_, .callbackRef = callbackRef_, .self = self_, .work = work_ };
+            if (holder == nullptr) {
+                return;
+            }
             auto afterCallback = [holder]() {
                 napi_handle_scope scope = nullptr;
                 napi_open_handle_scope(holder->env, &scope);

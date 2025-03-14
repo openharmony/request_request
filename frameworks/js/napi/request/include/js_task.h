@@ -123,6 +123,8 @@ private:
     static void RegisterForegroundResume();
     static void AddTask(std::shared_ptr<ContextInfo> context);
     static void AddRemoveListener(const std::shared_ptr<ContextInfo> &context);
+    static bool ParseTouchCheck(const napi_env env, const size_t argc, const napi_value *argv,
+        const std::shared_ptr<TouchContext> context, ExceptionError &err);
     bool Equals(napi_env env, napi_value value, napi_ref copy);
 
     static std::mutex createMutex_;
