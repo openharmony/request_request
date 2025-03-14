@@ -22,9 +22,11 @@
 #include <cstring>
 #include <filesystem>
 #include <mutex>
+#include <new>
 
 #include "app_state_callback.h"
 #include "async_call.h"
+#include "constant.h"
 #include "js_initialize.h"
 #include "legacy/request_manager.h"
 #include "log.h"
@@ -612,38 +614,52 @@ napi_value JsTask::TouchInner(napi_env env, napi_callback_info info, AsyncCall::
     return asyncCall.Call(context, "touch");
 }
 
-ExceptionError JsTask::ParseTouch(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<TouchContext> context)
+bool JsTask::ParseTouchCheck(const napi_env env, const size_t argc, const napi_value *argv,
+    const std::shared_ptr<TouchContext> context, ExceptionError &err)
 {
-    ExceptionError err = { .code = E_OK };
     // 2 means least param num.
     if (argc < 2) {
         REQUEST_HILOGE("Wrong number of arguments");
         err.code = E_PARAMETER_CHECK;
         err.errInfo = "Missing mandatory parameters, need at least two params, id and token";
-        return err;
+        return false;
     }
     if (NapiUtils::GetValueType(env, argv[0]) != napi_string || NapiUtils::GetValueType(env, argv[1]) != napi_string) {
         REQUEST_HILOGE("The parameter: tid is not of string type");
         err.code = E_PARAMETER_CHECK;
         err.errInfo = "Incorrect parameter type, tid is not of string type";
-        return err;
+        return false;
     }
     context->tid = NapiUtils::Convert2String(env, argv[0]);
     if (context->tid.empty()) {
         REQUEST_HILOGE("tid is empty");
         err.code = E_PARAMETER_CHECK;
         err.errInfo = "Parameter verification failed, tid is empty";
-        return err;
+        return false;
     }
     // tid length <= 32
     if (context->tid.size() > 32) {
         REQUEST_HILOGE("tid invalid, %{public}s", context->tid.c_str());
         err.code = E_TASK_NOT_FOUND;
         err.errInfo = "task not found error";
+        return false;
+    }
+    return true;
+}
+
+ExceptionError JsTask::ParseTouch(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<TouchContext> context)
+{
+    ExceptionError err = { .code = E_OK };
+    if (!JsTask::ParseTouchCheck(env, argc, argv, context, err)) {
         return err;
     }
     uint32_t bufferLen = TOKEN_MAX_BYTES + 2;
-    char *token = new char[bufferLen];
+    char *token = new (std::nothrow) char[bufferLen];
+    if (token == nullptr) {
+        err.code = E_OTHER;
+        err.errInfo = "cannot new token";
+        return err;
+    }
     size_t len = 0;
     napi_status status = napi_get_value_string_utf8(env, argv[1], token, bufferLen, &len);
     if (status != napi_ok) {

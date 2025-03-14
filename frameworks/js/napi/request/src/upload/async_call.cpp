@@ -21,7 +21,10 @@ using namespace OHOS::Request::Upload;
 namespace OHOS::Request::UploadNapi {
 AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context) : env_(env)
 {
-    context_ = new AsyncContext();
+    context_ = new (std::nothrow) AsyncContext();
+    if (context_ == nullptr) {
+        return;
+    }
     size_t argc = JSUtil::MAX_ARGC;
     napi_value self = nullptr;
     napi_value argv[JSUtil::MAX_ARGC] = { nullptr };

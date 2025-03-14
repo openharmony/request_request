@@ -24,6 +24,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <new>
 #include <regex>
 #include <string>
 #include <system_error>
@@ -485,7 +486,10 @@ bool JsInitialize::ParseToken(napi_env env, napi_value jsConfig, Config &config,
         return true;
     }
     uint32_t bufferLen = TOKEN_MAX_BYTES + 2;
-    token = new char[bufferLen];
+    token = new (std::nothrow) char[bufferLen];
+    if (token == nullptr) {
+        return false;
+    }
     napi_status status = napi_get_value_string_utf8(env, value, token, bufferLen, &len);
     if (status != napi_ok) {
         REQUEST_HILOGE("napi get value string utf8 failed");
