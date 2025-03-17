@@ -15,7 +15,10 @@ import("//base/request/request/request_aafwk.gni")
 import("//build/test.gni")
 
 rust_cxx("request_utils_cxx_gen") {
-  sources = [ "src/wrapper.rs" ]
+  sources = [
+    "src/observe/network/wrapper.rs",
+    "src/wrapper.rs",
+  ]
 }
 
 ohos_static_library("request_utils_cxx") {
@@ -33,14 +36,19 @@ ohos_static_library("request_utils_cxx") {
     "${target_gen_dir}/src",
   ]
 
-  sources = [ "src/cxx/request_utils_wrapper.cpp" ]
+  sources = [
+    "src/cxx/request_utils_network.cpp",
+    "src/cxx/request_utils_wrapper.cpp",
+  ]
 
   sources += get_target_outputs(":request_utils_cxx_gen")
 
   external_deps = [
     "ability_runtime:app_context",
+    "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "netmanager_base:net_conn_manager_if",
     "openssl:libcrypto_shared",
     "openssl:libssl_shared",
   ]
