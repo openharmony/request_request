@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Huawei Device Co., Ltd.
+// Copyright (C) 2025 Huawei Device Co., Ltd.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,30 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Request utils
+use super::wrapper::ffi::NetInfo;
 
-#![warn(missing_docs)]
-#![allow(clippy::crate_in_macro_def)]
-#![allow(missing_docs, clippy::new_without_default)]
-
-#[macro_use]
-mod macros;
-
-pub mod fastrand;
-pub mod hash;
-pub mod lru;
-pub mod task_id;
-cfg_not_ohos! {
-    pub use log::{debug, error, info};
+#[allow(unused)]
+pub trait Observer: Send + Sync {
+    fn net_available(&self, net_id: i32) {}
+    fn net_lost(&self, net_id: i32) {}
+    fn net_capability_changed(&self, net_id: i32, net_info: &NetInfo) {}
 }
-
-cfg_ohos! {
-    #[macro_use]
-    mod hilog;
-    pub mod observe;
-    pub mod context;
-    mod wrapper;
-    pub use wrapper::{hilog_print, LogLevel, LogType};
-}
-
-pub mod test;
