@@ -18,6 +18,7 @@
 #include "constant.h"
 #include "refbase.h"
 #include "runcount_notify_stub.h"
+#include "running_task_count.h"
 #define private public
 #define protected public
 
@@ -559,6 +560,15 @@ HWTEST_F(RequestManagerImplTest, RestoreSubRunCountTest001, TestSize.Level1)
     RequestManagerImpl::GetInstance()->RestoreSubRunCount();
 }
 
+class TestRunCountDemo : public IRunningTaskObserver {
+public:
+    ~TestRunCountDemo() = default;
+    void OnRunningTaskCountUpdate(int count) override
+    {
+        return;
+    }
+};
+
 /**
  * @tc.name: OnAddSystemAbility002
  * @tc.desc: Test OnAddSystemAbility002 interface base function - OnAddSystemAbility
@@ -571,7 +581,8 @@ HWTEST_F(RequestManagerImplTest, OnAddSystemAbility002, TestSize.Level1)
     string deviceId = "deviceId";
     RequestManagerImpl::GetInstance()->RestoreListener(nullptr);
     EXPECT_FALSE(FwkRunningTaskCountManager::GetInstance()->HasObserver());
-    auto pNewFwkOb = std::make_shared<FwkIRunningTaskObserver>(nullptr);
+    std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<TestRunCountDemo>();
+    auto pNewFwkOb = std::make_shared<FwkIRunningTaskObserver>(ob);
     FwkRunningTaskCountManager::GetInstance()->observers_.push_back(pNewFwkOb);
     EXPECT_TRUE(FwkRunningTaskCountManager::GetInstance()->HasObserver());
     RequestManagerImpl::SystemAbilityStatusChangeListener listener =
