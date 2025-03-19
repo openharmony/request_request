@@ -17,7 +17,8 @@ import requestCreateTaskTest from './RequestCreateTask.test.ets';
 import requestOperateTaskTest from './RequestOperateTask.test.ets';
 import requestDownloadFileTest from './RequestDownloadFile.test.ets';
 import requestUploadFileTest from './RequestUploadFile.test.ets';
-import requestTaskGroupTest from './RequestTaskGroup.test.ets'
+import requestTaskGroupTest from './RequestTaskGroup.test.ets';
+import requestNewUploadTest from './RequestNewUpload.test.ets';
 
 export default function testsuite() {
   requestCreateTaskTest();
@@ -25,4 +26,5 @@ export default function testsuite() {
   requestDownloadFileTest();
   requestUploadFileTest();
   requestTaskGroupTest();
+  requestNewUploadTest();
 }

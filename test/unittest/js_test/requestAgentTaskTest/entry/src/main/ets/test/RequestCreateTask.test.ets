@@ -356,6 +356,7 @@ export default function requestCreateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'http://127.0.0.1/' + 'a'.repeat(8176),
+        saveas: 'testTaskUrl006'
       }
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -381,14 +382,16 @@ export default function requestCreateTaskTest() {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'http://127.0.0.1/' + 'a'.repeat(8175),
+        saveas: 'testTaskUrl007'
       }
       try {
-        request.agent.create(context, conf, (err, data) => {
-          expect(false).assertTrue();
+        request.agent.create(context, conf, async (err, data) => {
+          expect(true).assertTrue();
+          await request.agent.remove(data.tid);
           done();
         })
       } catch (err) {
-        expect(err.code).assertEqual(13400001);
+        expect(false).assertTrue();
         done();
       }
     })
@@ -408,7 +411,8 @@ export default function requestCreateTaskTest() {
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1/' + 'a'.repeat(8175),
-        data: [formItem]
+        data: [formItem],
+        saveas: 'testTaskUrl008'
       }
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -436,7 +440,8 @@ export default function requestCreateTaskTest() {
       let conf = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1/' + 'a'.repeat(8176),
-        data: [formItem]
+        data: [formItem],
+        saveas: 'testTaskUrl009'
       }
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -949,13 +954,13 @@ export default function requestCreateTaskTest() {
      * @tc.require:
      */
     it('testTaskOverwrite009', 0, async function (done) {
-      let dirPath = cacheDir + '/dir-test.txt';
+      let dirPath = cacheDir + '/testTaskOverwrite009';
       fs.mkdirSync(dirPath);
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         overwrite: true,
-        saveas: './dir-test.txt'
+        saveas: './testTaskOverwrite009'
       }
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -1106,8 +1111,9 @@ export default function requestCreateTaskTest() {
         method: 'GET'
       }
       let task = await request.agent.create(context, conf);
-      task.start().then(() => {
+      task.start().then(async () => {
         expect(true).assertTrue();
+        await request.agent.remove(task.tid);
         done();
       }).catch((err) => {
         expect(false).assertTrue();
