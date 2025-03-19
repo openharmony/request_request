@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <memory>
 
+#include "constant.h"
 #include "request_manager_impl.h"
 #include "request_running_task_count.h"
 
@@ -113,6 +114,22 @@ HWTEST_F(RunningTaskCountTest, SubscribeRunningTaskCountTest_002, TestSize.Level
     FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob1);
     FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob2);
     REQUEST_HILOGI("[RunningTaskCountTest] SubscribeRunningTaskCountTest_002 end");
+}
+
+/**
+ * @tc.name: SubscribeRunningTaskCountTest_003
+ * @tc.desc: Test SubscribeRunningTaskCountTest_003 interface base function - subscribe failede by nptr
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RunningTaskCountTest, SubscribeRunningTaskCountTest_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RunningTaskCountTest, SubscribeRunningTaskCountTest_003, TestSize.Level1";
+    REQUEST_HILOGI("[RunningTaskCountTest] SubscribeRunningTaskCountTest_003 begin");
+
+    std::shared_ptr<IRunningTaskObserver> ob = nullptr;
+    auto ret = SubscribeRunningTaskCount(ob);
+    EXPECT_EQ(ret, E_OTHER);
 }
 
 /**

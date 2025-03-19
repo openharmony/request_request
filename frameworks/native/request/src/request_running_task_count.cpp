@@ -124,6 +124,10 @@ void FwkRunningTaskCountManager::NotifyAllObservers()
 // impl Sub && UnSub
 int32_t SubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob)
 {
+    if (!ob) {
+        REQUEST_HILOGE("Subscribe failed because of null observer");
+        return E_OTHER;
+    }
     if (FwkRunningTaskCountManager::GetInstance()->HasObserver()) {
         FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob);
         ob->OnRunningTaskCountUpdate(FwkRunningTaskCountManager::GetInstance()->GetCount());
