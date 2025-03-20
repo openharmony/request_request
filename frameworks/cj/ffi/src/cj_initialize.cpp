@@ -187,8 +187,6 @@ bool CJInitialize::ParseFormItems(const CFormItemArr *cForms, std::vector<FormIt
 
 bool CJInitialize::ParseData(const CConfig *config, Config &out)
 {
-    REQUEST_HILOGD("formItems.size is %{public}" PRIi64 ", data.str is %{public}p", config->data.formItems.size,
-                   config->data.str);
     if (config->data.str == nullptr && config->data.formItems.size <= 0) {
         return true;
     }
