@@ -13,6 +13,8 @@
 
 use std::collections::HashMap;
 use std::pin::Pin;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 
 use cxx::SharedPtr;
 
@@ -24,7 +26,8 @@ use crate::wrapper::CallbackWrapper;
 /// RequestTask
 #[derive(Clone)]
 pub struct RequestTask {
-    inner: SharedPtr<HttpClientTask>,
+    inner: Arc<Mutex<SharedPtr<HttpClientTask>>>,
+    reset: Arc<AtomicBool>,
 }
 
 unsafe impl Send for RequestTask {}
@@ -43,53 +46,84 @@ pub enum TaskStatus {
 impl RequestTask {
     pub(crate) fn from_http_request(request: &HttpClientRequest) -> Self {
         Self {
-            inner: NewHttpClientTask(request),
+            inner: Arc::new(Mutex::new(NewHttpClientTask(request))),
+            reset: Arc::new(AtomicBool::new(false)),
         }
     }
 
     pub(crate) fn from_ffi(inner: SharedPtr<HttpClientTask>) -> Self {
-        Self { inner }
+        Self {
+            inner: Arc::new(Mutex::new(inner)),
+            reset: Arc::new(AtomicBool::new(false)),
+        }
     }
 
     /// start the request task
     pub fn start(&mut self) -> bool {
-        self.pin_mut().Start()
+        unsafe {
+            let ptr = self.inner.lock().unwrap().as_ref().unwrap() as *const HttpClientTask
+                as *mut HttpClientTask;
+            Pin::new_unchecked(ptr.as_mut().unwrap()).Start()
+        }
     }
 
     /// cancel the request task
     pub fn cancel(&self) {
-        self.pin_mut().Cancel();
+        let task = self.inner.lock().unwrap().clone();
+        Self::pin_mut(&task).Cancel();
+    }
+
+    /// reset the task
+    pub fn reset(&self) {
+        if self
+            .reset
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .is_ok()
+        {
+            self.cancel();
+        }
     }
 
     /// get the request task status
     pub fn status(&mut self) -> TaskStatus {
-        self.pin_mut().GetStatus().try_into().unwrap_or_default()
+        let task = self.inner.lock().unwrap().clone();
+        Self::pin_mut(&task)
+            .GetStatus()
+            .try_into()
+            .unwrap_or_default()
     }
 
     pub fn response(&mut self) -> Response {
-        Response::from_ffi(self.pin_mut().GetResponse().into_ref().get_ref())
+        let task = self.inner.lock().unwrap().clone();
+        Response::from_shared(task)
     }
 
     pub fn headers(&mut self) -> HashMap<String, String> {
         self.response().headers()
     }
 
-    pub(crate) fn set_callback(&mut self, callback: impl RequestCallback + 'static) {
+    pub(crate) fn set_callback(&mut self, callback: Box<dyn RequestCallback + 'static>) {
+        let task = self.inner.lock().unwrap().clone();
         OnCallback(
-            self.inner.clone(),
-            Box::new(CallbackWrapper::from_callback(callback)),
+            task,
+            Box::new(CallbackWrapper::from_callback(
+                callback,
+                self.reset.clone(),
+                self.inner.clone(),
+                0,
+            )),
         );
     }
 
-    fn pin_mut(&self) -> Pin<&mut HttpClientTask> {
-        let ptr = self.inner.as_ref().unwrap() as *const HttpClientTask as *mut HttpClientTask;
+    pub(crate) fn pin_mut(ptr: &SharedPtr<HttpClientTask>) -> Pin<&mut HttpClientTask> {
+        let ptr = ptr.as_ref().unwrap() as *const HttpClientTask as *mut HttpClientTask;
         unsafe { Pin::new_unchecked(ptr.as_mut().unwrap()) }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+    use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
     use std::sync::Arc;
 
     use super::*;
@@ -169,12 +203,12 @@ mod test {
         let response_code = Arc::new(AtomicU32::new(0));
         let error = Arc::new(AtomicU32::new(0));
         let result = Arc::new(AtomicU32::new(0));
-        let callback = TestCallback::new(
+        let callback = Box::new(TestCallback::new(
             finished.clone(),
             response_code.clone(),
             error.clone(),
             result.clone(),
-        );
+        ));
         task.set_callback(callback);
         task.start();
         while !finished.load(Ordering::SeqCst) {
@@ -205,12 +239,12 @@ mod test {
         let response_code = Arc::new(AtomicU32::new(0));
         let error = Arc::new(AtomicU32::new(0));
         let result = Arc::new(AtomicU32::new(0));
-        let callback = TestCallback::new(
+        let callback = Box::new(TestCallback::new(
             finished.clone(),
             response_code.clone(),
             error.clone(),
             result.clone(),
-        );
+        ));
         task.set_callback(callback);
         task.start();
         std::thread::sleep(std::time::Duration::from_millis(1));
@@ -234,12 +268,12 @@ mod test {
         let response_code = Arc::new(AtomicU32::new(0));
         let error = Arc::new(AtomicU32::new(0));
         let result = Arc::new(AtomicU32::new(0));
-        let callback = TestCallback::new(
+        let callback = Box::new(TestCallback::new(
             finished.clone(),
             response_code.clone(),
             error.clone(),
             result.clone(),
-        );
+        ));
         task.set_callback(callback);
         task.start();
         while !finished.load(Ordering::SeqCst) {
@@ -265,12 +299,12 @@ mod test {
         let response_code = Arc::new(AtomicU32::new(0));
         let error = Arc::new(AtomicU32::new(0));
         let result = Arc::new(AtomicU32::new(0));
-        let callback = TestCallback::new(
+        let callback = Box::new(TestCallback::new(
             finished.clone(),
             response_code.clone(),
             error.clone(),
             result.clone(),
-        );
+        ));
         task.set_callback(callback);
         task.start();
         while !finished.load(Ordering::SeqCst) {
@@ -296,12 +330,12 @@ mod test {
         let response_code = Arc::new(AtomicU32::new(0));
         let error = Arc::new(AtomicU32::new(0));
         let result = Arc::new(AtomicU32::new(0));
-        let callback = TestCallback::new(
+        let callback = Box::new(TestCallback::new(
             finished.clone(),
             response_code.clone(),
             error.clone(),
             result.clone(),
-        );
+        ));
         task.set_callback(callback);
         task.start();
         while !finished.load(Ordering::SeqCst) {
@@ -311,5 +345,138 @@ mod test {
             error.load(Ordering::SeqCst),
             crate::error::HttpErrorCode::HttpOperationTimedout as u32
         );
+    }
+
+    #[test]
+    fn ut_request_task_reset_range() {
+        const RANGE_TEST_URL:&str = "https://vd4.bdstatic.com/mda-pm7bte3t6fs50rsh/sc/cae_h264/1702057792414494257/mda-pm7bte3t6fs50rsh.mp4?v_from_s=bdapp-author-nanjing";
+        const LENGTH: usize = 1984562;
+        struct RestartTest {
+            finished: Arc<AtomicBool>,
+            data_receive: Arc<AtomicBool>,
+            failed: Arc<AtomicBool>,
+            total: Arc<AtomicUsize>,
+        }
+        impl RequestCallback for RestartTest {
+            fn on_success(&mut self, _response: Response) {
+                self.finished.store(true, Ordering::SeqCst);
+            }
+
+            fn on_fail(&mut self, _error: HttpClientError) {
+                self.finished.store(true, Ordering::SeqCst);
+                self.failed.store(true, Ordering::SeqCst);
+            }
+
+            fn on_cancel(&mut self) {
+                self.finished.store(true, Ordering::SeqCst);
+                self.failed.store(true, Ordering::SeqCst);
+            }
+
+            fn on_data_receive(&mut self, data: &[u8], _task: RequestTask) {
+                self.data_receive.store(true, Ordering::SeqCst);
+                self.total.fetch_add(data.len(), Ordering::SeqCst);
+            }
+        }
+
+        let mut request: cxx::UniquePtr<crate::wrapper::ffi::HttpClientRequest> =
+            NewHttpClientRequest();
+        cxx::let_cxx_string!(url = RANGE_TEST_URL);
+        request.pin_mut().SetURL(&url);
+        cxx::let_cxx_string!(method = "GET");
+        request.pin_mut().SetMethod(&method);
+
+        let mut task = RequestTask::from_http_request(&request);
+        let finished = Arc::new(AtomicBool::new(false));
+        let total = Arc::new(AtomicUsize::new(0));
+        let failed = Arc::new(AtomicBool::new(false));
+        let data_receive = Arc::new(AtomicBool::new(false));
+
+        let callback = Box::new(RestartTest {
+            finished: finished.clone(),
+            data_receive: data_receive.clone(),
+            failed: failed.clone(),
+            total: total.clone(),
+        });
+        task.set_callback(callback);
+        task.start();
+
+        while !data_receive.load(Ordering::SeqCst) {
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        task.reset();
+        while !finished.load(Ordering::SeqCst) {
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        assert_eq!(total.load(Ordering::SeqCst), LENGTH);
+        assert!(!failed.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn ut_request_task_reset_not_range() {
+        const NOT_SUPPORT_RANGE_TEST_URL: &str =
+            "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+        const LENGTH: usize = 1042003;
+        struct RestartTest {
+            finished: Arc<AtomicBool>,
+            data_receive: Arc<AtomicBool>,
+            failed: Arc<AtomicBool>,
+            total: Arc<AtomicUsize>,
+        }
+        impl RequestCallback for RestartTest {
+            fn on_success(&mut self, _response: Response) {
+                self.finished.store(true, Ordering::SeqCst);
+            }
+
+            fn on_fail(&mut self, _error: HttpClientError) {
+                self.finished.store(true, Ordering::SeqCst);
+                self.failed.store(true, Ordering::SeqCst);
+            }
+
+            fn on_cancel(&mut self) {
+                self.finished.store(true, Ordering::SeqCst);
+                self.failed.store(true, Ordering::SeqCst);
+            }
+
+            fn on_data_receive(&mut self, data: &[u8], _task: RequestTask) {
+                self.data_receive.store(true, Ordering::SeqCst);
+                self.total.fetch_add(data.len(), Ordering::SeqCst);
+            }
+
+            fn on_restart(&mut self) {
+                self.total.store(0, Ordering::SeqCst);
+            }
+        }
+
+        let mut request: cxx::UniquePtr<crate::wrapper::ffi::HttpClientRequest> =
+            NewHttpClientRequest();
+        cxx::let_cxx_string!(url = NOT_SUPPORT_RANGE_TEST_URL);
+        request.pin_mut().SetURL(&url);
+        cxx::let_cxx_string!(method = "GET");
+        request.pin_mut().SetMethod(&method);
+
+        let mut task = RequestTask::from_http_request(&request);
+        let finished = Arc::new(AtomicBool::new(false));
+        let total = Arc::new(AtomicUsize::new(0));
+        let failed = Arc::new(AtomicBool::new(false));
+        let data_receive = Arc::new(AtomicBool::new(false));
+
+        let callback = Box::new(RestartTest {
+            finished: finished.clone(),
+            data_receive: data_receive.clone(),
+            failed: failed.clone(),
+            total: total.clone(),
+        });
+        task.set_callback(callback);
+        task.start();
+
+        while !data_receive.load(Ordering::SeqCst) {
+            std::thread::sleep(std::time::Duration::from_millis(2000));
+        }
+        task.reset();
+        while !finished.load(Ordering::SeqCst) {
+            std::thread::sleep(std::time::Duration::from_millis(1000));
+        }
+        assert_eq!(total.load(Ordering::SeqCst), LENGTH);
+        assert!(!failed.load(Ordering::SeqCst));
     }
 }

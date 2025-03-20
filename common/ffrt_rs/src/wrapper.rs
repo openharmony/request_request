@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub(crate) use ffi::FfrtSpawn;
+pub(crate) use ffi::{FfrtSleep, FfrtSpawn};
 
 pub struct ClosureWrapper {
     inner: Option<Box<dyn FnOnce()>>,
@@ -44,5 +44,6 @@ mod ffi {
     unsafe extern "C++" {
         include!("wrapper.h");
         fn FfrtSpawn(closure: Box<ClosureWrapper>);
+        fn FfrtSleep(ms: u64);
     }
 }

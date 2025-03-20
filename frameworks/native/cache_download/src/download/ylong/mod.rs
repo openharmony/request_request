@@ -26,7 +26,7 @@ use ylong_http_client::async_impl::{
 use ylong_http_client::{ErrorKind, HttpClientError, StatusCode};
 
 use super::callback::PrimeCallback;
-use super::common::{CommonCancel, CommonError, CommonResponse};
+use super::common::{CommonHandle, CommonError, CommonResponse};
 use crate::services::DownloadRequest;
 
 impl CommonError for HttpClientError {
@@ -87,7 +87,7 @@ impl DownloadTask {
     pub(super) fn run(
         request: DownloadRequest,
         mut callback: PrimeCallback,
-    ) -> Arc<dyn CommonCancel> {
+    ) -> Arc<dyn CommonHandle> {
         let url = match PercentEncoder::encode(request.url) {
             Ok(url) => url,
             Err(e) => {
@@ -181,7 +181,7 @@ impl CancelHandle {
     }
 }
 
-impl CommonCancel for CancelHandle {
+impl CommonHandle for CancelHandle {
     fn cancel(&self) -> bool {
         if self.count.fetch_sub(1, std::sync::atomic::Ordering::SeqCst) == 1 {
             self.inner.store(true, Ordering::Release);

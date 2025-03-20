@@ -63,4 +63,12 @@ impl Updater {
         }
         self.cache.as_mut().unwrap().write_all(data).unwrap();
     }
+
+    pub fn reset_cache(&mut self) {
+        let size = self.cache.as_ref().map(|a| a.size()).unwrap_or(0);
+        if size != 0 {
+            info!("reset {} cache size {}", self.task_id.brief(), size);
+            self.cache.take();
+        }
+    }
 }

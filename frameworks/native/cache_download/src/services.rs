@@ -17,10 +17,12 @@ use std::mem::MaybeUninit;
 use std::sync::{Arc, Mutex, Once};
 
 use cache_core::{CacheManager, RamCache};
+use request_utils::observe::network::NetRegistrar;
 use request_utils::task_id::TaskId;
 
 use crate::download::task::{DownloadTask, Downloader, TaskHandle};
 use crate::download::CacheDownloadError;
+use crate::observe::NetObserver;
 
 #[allow(unused_variables)]
 pub trait PreloadCallback: Send {
@@ -33,6 +35,7 @@ pub trait PreloadCallback: Send {
 pub struct CacheDownloadService {
     running_tasks: Mutex<HashMap<TaskId, Arc<Mutex<DownloadTask>>>>,
     cache_manager: CacheManager,
+    net_registrar: NetRegistrar,
 }
 
 pub struct DownloadRequest<'a> {
@@ -56,6 +59,7 @@ impl CacheDownloadService {
         Self {
             running_tasks: Mutex::new(HashMap::new()),
             cache_manager: CacheManager::new(),
+            net_registrar: NetRegistrar::new(),
         }
     }
 
@@ -68,6 +72,11 @@ impl CacheDownloadService {
                 .assume_init_ref()
                 .cache_manager
                 .restore_files();
+            DOWNLOAD_AGENT
+                .assume_init_ref()
+                .net_registrar
+                .add_observer(NetObserver);
+            let _ = DOWNLOAD_AGENT.assume_init_ref().net_registrar.register();
         });
         unsafe { DOWNLOAD_AGENT.assume_init_ref() }
     }
@@ -79,11 +88,15 @@ impl CacheDownloadService {
         }
     }
 
+    pub(crate) fn reset_all_tasks(&self) {
+        let running_tasks = self.running_tasks.lock().unwrap();
+        for task in running_tasks.values() {
+            task.lock().unwrap().handle.reset();
+        }
+    }
+
     pub fn remove(&self, url: &str) {
         let task_id = TaskId::from_url(url);
-        if let Some(updater) = self.running_tasks.lock().unwrap().remove(&task_id) {
-            updater.lock().unwrap().cancel();
-        }
         self.cache_manager.remove(task_id);
     }
 

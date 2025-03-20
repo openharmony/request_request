@@ -22,7 +22,9 @@ pub(crate) trait CommonError: Error {
     fn msg(&self) -> String;
 }
 
-pub(crate) trait CommonCancel: Send + Sync {
+pub(crate) trait CommonHandle: Send + Sync {
     fn cancel(&self) -> bool;
     fn add_count(&self);
+    #[cfg(feature = "netstack")]
+    fn reset(&self);
 }

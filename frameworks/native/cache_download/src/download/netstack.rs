@@ -20,7 +20,7 @@ use netstack_rs::response::Response;
 use netstack_rs::task::RequestTask;
 
 use super::callback::PrimeCallback;
-use super::common::{CommonCancel, CommonError, CommonResponse};
+use super::common::{CommonError, CommonHandle, CommonResponse};
 use crate::services::DownloadRequest;
 
 impl<'a> CommonResponse for Response<'a> {
@@ -74,12 +74,16 @@ impl RequestCallback for PrimeCallback {
     fn on_progress(&mut self, dl_total: u64, dl_now: u64, ul_total: u64, ul_now: u64) {
         self.common_progress(dl_total, dl_now, ul_total, ul_now);
     }
+
+    fn on_restart(&mut self) {
+        self.common_restart();
+    }
 }
 
 pub(crate) struct DownloadTask;
 
 impl DownloadTask {
-    pub(super) fn run(input: DownloadRequest, callback: PrimeCallback) -> Arc<dyn CommonCancel> {
+    pub(super) fn run(input: DownloadRequest, callback: PrimeCallback) -> Arc<dyn CommonHandle> {
         let mut request = Request::new();
         request.url(input.url);
         if let Some(headers) = input.headers {
@@ -110,7 +114,7 @@ impl CancelHandle {
     }
 }
 
-impl CommonCancel for CancelHandle {
+impl CommonHandle for CancelHandle {
     fn cancel(&self) -> bool {
         if self.count.fetch_sub(1, std::sync::atomic::Ordering::SeqCst) == 1 {
             self.inner.cancel();
@@ -122,5 +126,9 @@ impl CommonCancel for CancelHandle {
 
     fn add_count(&self) {
         self.count.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    }
+
+    fn reset(&self) {
+        self.inner.reset();
     }
 }

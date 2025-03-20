@@ -89,22 +89,14 @@ impl PrimeCallback {
         self.finish.store(true, Ordering::Release);
         let mut callbacks = self.callbacks.lock().unwrap();
 
-        if callbacks.len() <= 1 {
-            if let Some(mut callback) = callbacks.pop_front() {
-                callback.on_progress(cache.size() as u64, cache.size() as u64);
-                callback.on_success(cache.clone(), self.task_id.brief());
-            }
-        } else {
-            while let Some(mut callback) = callbacks.pop_front() {
-                let clone_cache = cache.clone();
-                let task_id = self.task_id.brief().to_string();
-                crate::spawn(move || {
-                    callback.on_progress(clone_cache.size() as u64, clone_cache.size() as u64);
-                    callback.on_success(clone_cache, &task_id)
-                });
-            }
+        while let Some(mut callback) = callbacks.pop_front() {
+            let clone_cache = cache.clone();
+            let task_id = self.task_id.brief().to_string();
+            crate::spawn(move || {
+                callback.on_progress(clone_cache.size() as u64, clone_cache.size() as u64);
+                callback.on_success(clone_cache, &task_id)
+            });
         }
-
         drop(callbacks);
         self.notify_agent_finish();
     }
@@ -118,16 +110,10 @@ impl PrimeCallback {
         self.finish.store(true, Ordering::Release);
         let mut callbacks = self.callbacks.lock().unwrap();
 
-        if callbacks.len() <= 1 {
-            if let Some(mut callback) = callbacks.pop_front() {
-                callback.on_fail(CacheDownloadError::from(&error), self.task_id.brief());
-            }
-        } else {
-            while let Some(mut callback) = callbacks.pop_front() {
-                let task_id = self.task_id.brief().to_string();
-                let error = CacheDownloadError::from(&error);
-                crate::spawn(move || callback.on_fail(error, &task_id));
-            }
+        while let Some(mut callback) = callbacks.pop_front() {
+            let task_id = self.task_id.brief().to_string();
+            let error = CacheDownloadError::from(&error);
+            crate::spawn(move || callback.on_fail(error, &task_id));
         }
         drop(callbacks);
         self.notify_agent_finish();
@@ -140,16 +126,9 @@ impl PrimeCallback {
         self.finish.store(true, Ordering::Release);
         let mut callbacks = self.callbacks.lock().unwrap();
 
-        if callbacks.len() <= 1 {
-            if let Some(mut callback) = callbacks.pop_front() {
-                callback.on_cancel();
-            }
-        } else {
-            while let Some(mut callback) = callbacks.pop_front() {
-                crate::spawn(move || callback.on_cancel());
-            }
+        while let Some(mut callback) = callbacks.pop_front() {
+            crate::spawn(move || callback.on_cancel());
         }
-
         drop(callbacks);
         self.notify_agent_finish();
     }
@@ -188,6 +167,11 @@ impl PrimeCallback {
     {
         self.progress_restriction.data_receive = true;
         self.cache_handle.cache_receive(data, content_length);
+    }
+
+    #[cfg(feature = "netstack")]
+    pub(crate) fn common_restart(&mut self) {
+        self.cache_handle.reset_cache();
     }
 
     fn notify_agent_finish(&self) {

@@ -24,4 +24,6 @@ struct ClosureWrapper;
 
 void FfrtSpawn(rust::Box<ClosureWrapper> closure);
 
+void FfrtSleep(uint64_t ms);
+
 #endif

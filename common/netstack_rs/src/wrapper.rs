@@ -11,7 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use cxx::SharedPtr;
+use std::pin::Pin;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
+
+use cxx::{let_cxx_string, SharedPtr};
+use ffi::{HttpClientRequest, HttpClientTask, NewHttpClientTask, OnCallback};
+use ffrt_rs::{ffrt_sleep, ffrt_spawn};
 
 use crate::error::{HttpClientError, HttpErrorCode};
 use crate::request::RequestCallback;
@@ -19,64 +25,206 @@ use crate::response::{Response, ResponseCode};
 use crate::task::{RequestTask, TaskStatus};
 
 pub struct CallbackWrapper {
-    inner: Box<dyn RequestCallback>,
+    inner: Option<Box<dyn RequestCallback>>,
+    reset: Arc<AtomicBool>,
+    task: Arc<Mutex<SharedPtr<HttpClientTask>>>,
+    current: u64,
 }
 
 impl CallbackWrapper {
-    pub(crate) fn from_callback(inner: impl RequestCallback + 'static) -> Self {
+    pub(crate) fn from_callback(
+        inner: Box<dyn RequestCallback + 'static>,
+        reset: Arc<AtomicBool>,
+        task: Arc<Mutex<SharedPtr<HttpClientTask>>>,
+        current: u64,
+    ) -> Self {
         Self {
-            inner: Box::new(inner),
+            inner: Some(inner),
+            reset,
+            task,
+            current,
         }
     }
 }
 
 impl CallbackWrapper {
-    fn on_success(&mut self, response: &ffi::HttpClientResponse) {
+    fn on_success(&mut self, _request: &HttpClientRequest, response: &ffi::HttpClientResponse) {
+        let Some(mut callback) = self.inner.take() else {
+            return;
+        };
         let response = Response::from_ffi(response);
         if (response.status().clone() as u32 >= 300) || (response.status().clone() as u32) < 200 {
             let error =
                 HttpClientError::new(HttpErrorCode::HttpNoneErr, response.status().to_string());
-            self.inner.on_fail(error);
+            callback.on_fail(error);
         } else {
-            self.inner.on_success(response);
+            callback.on_success(response);
         }
     }
 
-    fn on_fail(&mut self, error: &ffi::HttpClientError) {
+    fn on_fail(
+        &mut self,
+        request: &HttpClientRequest,
+        response: &ffi::HttpClientResponse,
+        error: &ffi::HttpClientError,
+    ) {
         let error = HttpClientError::from_ffi(error);
         if *error.code() == HttpErrorCode::HttpWriteError {
-            self.inner.on_cancel();
+            self.on_cancel(request, response);
+            return;
+        }
+        let Some(callback) = self.inner.take() else {
+            return;
+        };
+
+        let (new_task, new_callback) = self.create_new_task(callback, request, response);
+        let reset = self.reset.clone();
+        let replaced_task = self.task.clone();
+        ffrt_spawn(move || {
+            for _ in 0..20 {
+                ffrt_sleep(1000);
+                if reset.load(Ordering::SeqCst) {
+                    Self::replace_task_and_callback(&replaced_task, new_task, new_callback);
+                    reset.store(false, Ordering::SeqCst);
+                    return;
+                }
+            }
+            if let Some(mut callback) = new_callback.inner {
+                callback.on_fail(error);
+            }
+        });
+    }
+
+    fn on_cancel(&mut self, request: &HttpClientRequest, response: &ffi::HttpClientResponse) {
+        let Some(mut callback) = self.inner.take() else {
+            return;
+        };
+
+        if self.reset.load(Ordering::SeqCst) {
+            let (new_task, new_callback) = self.create_new_task(callback, request, response);
+            Self::replace_task_and_callback(&self.task, new_task, new_callback);
+            self.reset.store(false, Ordering::SeqCst);
         } else {
-            self.inner.on_fail(error);
+            callback.on_cancel();
         }
     }
 
-    fn on_cancel(&mut self, _response: &ffi::HttpClientResponse) {
-        self.inner.on_cancel();
-    }
     fn on_data_receive(
         &mut self,
         task: SharedPtr<ffi::HttpClientTask>,
         data: *const u8,
         size: usize,
     ) {
+        let Some(callback) = self.inner.as_mut() else {
+            return;
+        };
+        self.current += size as u64;
         let data = unsafe { std::slice::from_raw_parts(data, size) };
         let task = RequestTask::from_ffi(task);
-        self.inner.on_data_receive(data, task);
+        callback.on_data_receive(data, task);
     }
+
     fn on_progress(&mut self, dl_total: u64, dl_now: u64, ul_total: u64, ul_now: u64) {
-        self.inner.on_progress(dl_total, dl_now, ul_total, ul_now);
+        let Some(callback) = self.inner.as_mut() else {
+            return;
+        };
+        callback.on_progress(dl_total, dl_now, ul_total, ul_now);
+    }
+
+    fn create_new_task(
+        &mut self,
+        mut callback: Box<dyn RequestCallback>,
+        request: &HttpClientRequest,
+        response: &ffi::HttpClientResponse,
+    ) -> (SharedPtr<HttpClientTask>, Box<CallbackWrapper>) {
+        if self.current > 0 && !set_range(request, response, &mut self.current) {
+            callback.on_restart();
+        }
+
+        let new_task = NewHttpClientTask(request);
+        let new_callback = Box::new(CallbackWrapper::from_callback(
+            callback,
+            self.reset.clone(),
+            self.task.clone(),
+            self.current,
+        ));
+        (new_task, new_callback)
+    }
+
+    fn replace_task_and_callback(
+        replaced_task: &Arc<Mutex<SharedPtr<HttpClientTask>>>,
+        task: SharedPtr<HttpClientTask>,
+        callback: Box<CallbackWrapper>,
+    ) {
+        OnCallback(task.clone(), callback);
+        *replaced_task.lock().unwrap() = task.clone();
+        RequestTask::pin_mut(&task).Start();
     }
 }
+
+fn set_range(
+    request: &HttpClientRequest,
+    response: &ffi::HttpClientResponse,
+    current: &mut u64,
+) -> bool {
+    let response = Response::from_ffi(response);
+    let headers = response.headers();
+    let ptr = request as *const HttpClientRequest as *mut HttpClientRequest;
+    let mut support_range = false;
+
+    if let Some(etag) = headers.get("etag") {
+        let_cxx_string!(key = "If-Range");
+        let_cxx_string!(val = etag);
+        unsafe {
+            Pin::new_unchecked(ptr.as_mut().unwrap()).SetHeader(&key, &val);
+        }
+        support_range = true;
+    } else if let Some(last_modified) = headers.get("last-modified") {
+        let_cxx_string!(key = "If-Range");
+        let_cxx_string!(val = last_modified);
+        unsafe {
+            Pin::new_unchecked(ptr.as_mut().unwrap()).SetHeader(&key, &val);
+        }
+        support_range = true;
+    }
+
+    if support_range {
+        let_cxx_string!(key = "Range");
+        let bytes = format!("bytes={}-", current);
+        let_cxx_string!(val = bytes);
+        unsafe {
+            Pin::new_unchecked(ptr.as_mut().unwrap()).SetHeader(&key, &val);
+        }
+    } else {
+        *current = 0;
+    }
+    support_range
+}
+
+unsafe impl Send for HttpClientTask {}
+unsafe impl Sync for HttpClientTask {}
 
 #[allow(unused_unsafe)]
 #[cxx::bridge(namespace = "OHOS::Request")]
 pub(crate) mod ffi {
     extern "Rust" {
         type CallbackWrapper;
-        fn on_success(self: &mut CallbackWrapper, response: &HttpClientResponse);
-        fn on_fail(self: &mut CallbackWrapper, error: &HttpClientError);
-        fn on_cancel(self: &mut CallbackWrapper, response: &HttpClientResponse);
+        fn on_success(
+            self: &mut CallbackWrapper,
+            request: &HttpClientRequest,
+            response: &HttpClientResponse,
+        );
+        fn on_fail(
+            self: &mut CallbackWrapper,
+            request: &HttpClientRequest,
+            response: &HttpClientResponse,
+            error: &HttpClientError,
+        );
+        fn on_cancel(
+            self: &mut CallbackWrapper,
+            request: &HttpClientRequest,
+            response: &HttpClientResponse,
+        );
         unsafe fn on_data_receive(
             self: &mut CallbackWrapper,
             task: SharedPtr<HttpClientTask>,
