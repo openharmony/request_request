@@ -19,7 +19,6 @@
 
 #include "log.h"
 
-
 namespace OHOS::Request {
 constexpr uint8_t MAX_ARGC = 10;
 AsyncCall::AsyncCall(napi_env env, napi_callback_info info, const std::shared_ptr<Context> &context)

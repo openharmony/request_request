@@ -52,6 +52,7 @@ public:
     ~NetUnregistration() = default;
 
     int32_t unregister() const;
+
 private:
     sptr<NetObserver> observer_;
 };
