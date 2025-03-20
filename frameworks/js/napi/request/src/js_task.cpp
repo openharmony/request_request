@@ -154,6 +154,9 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
             && config.action == Action::UPLOAD) {
             context->withErrCode_ = false;
         }
+        if (config.version == Version::API8 && context->innerCode_ == E_PERMISSION) {
+            context-> withErrCode_= true;
+        }
     };
     auto output = [context, seq](napi_value *result) -> napi_status {
         if (result == nullptr || context->innerCode_ != E_OK) {
@@ -334,7 +337,7 @@ napi_value JsTask::GetTask(napi_env env, napi_callback_info info)
     auto input = [context, seq](size_t argc, napi_value *argv, napi_value self) -> napi_status {
         ExceptionError err = ParseGetTask(context->env_, argc, argv, context);
         if (err.code != E_OK) {
-            REQUEST_HILOGE("End get task in AsyncCall input, seq: %{public}d, failed: parse tid or token fail", seq);
+            REQUEST_HILOGE("End get task in AsyncCall input, seq: %{public}d, failed: parse task failed", seq);
             NapiUtils::ThrowError(context->env_, err.code, err.errInfo, true);
             return napi_invalid_arg;
         }
