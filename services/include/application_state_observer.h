@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <mutex>
 #include <string>
 
 #include "application_state_observer_stub.h"
@@ -46,6 +47,8 @@ public:
 private:
     RegCallBack appStateCallback_ = nullptr;
     ProcessCallBack processCallback_ = nullptr;
+    std::mutex appStateMutex;
+    std::mutex processMutex;
     void RunAppStateCallback(int32_t uid, int32_t state, int32_t pid);
     void RunProcessDiedCallback(int32_t uid, int32_t state, int32_t pid, const std::string &bundleName);
 };

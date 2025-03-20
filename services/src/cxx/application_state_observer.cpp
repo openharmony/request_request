@@ -15,6 +15,7 @@
 
 #include "application_state_observer.h"
 
+#include <mutex>
 #include <string>
 
 #include "app_mgr_client.h"
@@ -65,8 +66,11 @@ bool AppProcessState::RegisterAppStateChanged(RegCallBack &&callback)
     if (appObject) {
         int ret = appObject->RegisterApplicationStateObserver(appProcessState);
         if (ret == ERR_OK) {
-            REQUEST_HILOGI("register success");
-            appStateCallback_ = callback;
+            {
+                std::lock_guard<std::mutex> lockApp(appStateMutex);
+                REQUEST_HILOGI("register success");
+                appStateCallback_ = callback;
+            }
             return true;
         }
         REQUEST_HILOGE("register fail, ret = %{public}d", ret);
@@ -78,6 +82,7 @@ bool AppProcessState::RegisterAppStateChanged(RegCallBack &&callback)
 
 void AppProcessState::RegisterProcessDied(ProcessCallBack &&callback)
 {
+    std::lock_guard<std::mutex> lockProcess(processMutex);
     processCallback_ = callback;
 }
 
@@ -90,6 +95,7 @@ void AppProcessState::OnAppStateChanged(const AppExecFwk::AppStateData &appState
 
 void AppProcessState::RunAppStateCallback(int32_t uid, int32_t state, int32_t pid)
 {
+    std::lock_guard<std::mutex> lockApp(appStateMutex);
     if (appStateCallback_ == nullptr) {
         REQUEST_HILOGE("appStateObserver callback is nullptr");
         return;
@@ -107,6 +113,7 @@ void AppProcessState::OnProcessDied(const AppExecFwk::ProcessData &processData)
 
 void AppProcessState::RunProcessDiedCallback(int32_t uid, int32_t state, int32_t pid, const std::string &bundleName)
 {
+    std::lock_guard<std::mutex> lockProcess(processMutex);
     if (processCallback_ == nullptr) {
         REQUEST_HILOGE("processStateObserver callback is nullptr");
         return;
