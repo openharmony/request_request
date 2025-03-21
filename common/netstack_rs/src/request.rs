@@ -17,7 +17,6 @@ use crate::error::HttpClientError;
 use crate::response::Response;
 use crate::task::RequestTask;
 use crate::wrapper::ffi::{HttpClientRequest, NewHttpClientRequest, SetBody};
-
 /// Builder for creating a Request.
 pub struct Request<C: RequestCallback + 'static> {
     inner: UniquePtr<HttpClientRequest>,
@@ -83,7 +82,7 @@ impl<C: RequestCallback> Request<C> {
     pub fn build(mut self) -> RequestTask {
         let mut task = RequestTask::from_http_request(&self.inner);
         if let Some(callback) = self.callback.take() {
-            task.set_callback(callback);
+            task.set_callback(Box::new(callback));
         }
         task
     }
@@ -102,6 +101,8 @@ pub trait RequestCallback {
     fn on_data_receive(&mut self, data: &[u8], task: RequestTask) {}
     /// Called when progress is made.
     fn on_progress(&mut self, dl_total: u64, dl_now: u64, ul_total: u64, ul_now: u64) {}
+    /// Called when the task is restarted.
+    fn on_restart(&mut self) {}
 }
 
 impl<C: RequestCallback> Default for Request<C> {

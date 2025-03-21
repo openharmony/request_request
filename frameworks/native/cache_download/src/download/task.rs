@@ -20,7 +20,7 @@ use request_utils::info;
 use request_utils::task_id::TaskId;
 
 use super::callback::PrimeCallback;
-use super::common::CommonCancel;
+use super::common::CommonHandle;
 use super::{INIT, SUCCESS};
 
 cfg_ylong! {
@@ -109,7 +109,7 @@ impl DownloadTask {
 #[derive(Clone)]
 pub struct TaskHandle {
     task_id: TaskId,
-    cancel_handle: Option<Arc<dyn CommonCancel>>,
+    handle: Option<Arc<dyn CommonHandle>>,
     state: Arc<AtomicUsize>,
     finish: Arc<AtomicBool>,
     callbacks: Arc<Mutex<VecDeque<Box<dyn PreloadCallback>>>>,
@@ -120,13 +120,13 @@ impl TaskHandle {
         Self {
             state: Arc::new(AtomicUsize::new(INIT)),
             task_id,
-            cancel_handle: None,
+            handle: None,
             finish: Arc::new(AtomicBool::new(false)),
             callbacks: Arc::new(Mutex::new(VecDeque::with_capacity(1))),
         }
     }
     pub(crate) fn cancel(&mut self) {
-        if let Some(handle) = self.cancel_handle.take() {
+        if let Some(handle) = self.handle.take() {
             info!("cancel task {}", self.task_id.brief());
             if self.finish.load(Ordering::Acquire) {
                 return;
@@ -140,6 +140,15 @@ impl TaskHandle {
             }
         } else {
             error!("cancel task {} not exist", self.task_id.brief());
+        }
+    }
+
+    pub(crate) fn reset(&mut self) {
+        if self.finish.load(Ordering::Acquire) {
+            return;
+        }
+        if let Some(handle) = self.handle.as_ref() {
+            handle.reset();
         }
     }
 
@@ -168,7 +177,7 @@ impl TaskHandle {
         if !self.finish.load(Ordering::Acquire) {
             info!("add callback to task {}", self.task_id.brief());
             callbacks.push_back(callback);
-            if let Some(handle) = self.cancel_handle.as_ref() {
+            if let Some(handle) = self.handle.as_ref() {
                 handle.add_count();
             }
             Ok(())
@@ -193,8 +202,8 @@ impl TaskHandle {
     }
 
     #[inline]
-    fn set_cancel_handle(&mut self, handle: Arc<dyn CommonCancel>) {
-        self.cancel_handle = Some(handle);
+    fn set_handle(&mut self, handle: Arc<dyn CommonHandle>) {
+        self.handle = Some(handle);
     }
 }
 
@@ -207,7 +216,7 @@ fn download_inner<F>(
     seq: usize,
 ) -> TaskHandle
 where
-    F: Fn(DownloadRequest, PrimeCallback) -> Arc<dyn CommonCancel>,
+    F: Fn(DownloadRequest, PrimeCallback) -> Arc<dyn CommonHandle>,
 {
     let mut handle = TaskHandle::new(task_id.clone());
     if let Some(callback) = callback {
@@ -223,8 +232,8 @@ where
         seq,
     );
 
-    let cancel_handle = downloader(request, callback);
-    handle.set_cancel_handle(cancel_handle);
+    let task = downloader(request, callback);
+    handle.set_handle(task);
     handle
 }
 
@@ -263,13 +272,13 @@ mod test {
     const DOWNLOADER: for<'a> fn(
         DownloadRequest<'a>,
         PrimeCallback,
-    ) -> Arc<(dyn CommonCancel + 'static)> = netstack::DownloadTask::run;
+    ) -> Arc<(dyn CommonHandle + 'static)> = netstack::DownloadTask::run;
 
     #[cfg(not(feature = "ohos"))]
     const DOWNLOADER: for<'a> fn(
         DownloadRequest<'a>,
         PrimeCallback,
-    ) -> Arc<(dyn CommonCancel + 'static)> = ylong::DownloadTask::run;
+    ) -> Arc<(dyn CommonHandle + 'static)> = ylong::DownloadTask::run;
 
     #[test]
     fn ut_preload() {

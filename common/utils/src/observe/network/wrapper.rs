@@ -13,7 +13,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use ffi::NetInfo;
+use ffi::{NetInfo, NetUnregistration};
 
 use super::Observer;
 
@@ -49,6 +49,9 @@ impl NetObserverWrapper {
         }
     }
 }
+
+unsafe impl Send for NetUnregistration {}
+unsafe impl Sync for NetUnregistration {}
 
 #[cxx::bridge(namespace = "OHOS::Request")]
 pub mod ffi {

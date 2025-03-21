@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Huawei Device Co., Ltd.
+// Copyright (C) 2025 Huawei Device Co., Ltd.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,33 +11,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![allow(
-    unknown_lints,
-    static_mut_refs,
-    stable_features,
-    missing_docs,
-    clippy::new_without_default
-)]
-#![feature(lazy_cell)]
+use request_utils::observe::network;
 
-#[macro_use]
-extern crate request_utils;
+use crate::services::CacheDownloadService;
 
-#[macro_use]
-mod macros;
+pub(crate) struct NetObserver;
 
-mod download;
-pub mod services;
-pub use download::task::Downloader;
-
-cfg_ohos! {
-    mod wrapper;
-    mod observe;
-    const TAG: &str = "PreloadNative\0";
-    const DOMAIN: u32 = 0xD001C50;
-    use ffrt_rs::ffrt_spawn as spawn;
-}
-
-cfg_not_ohos! {
-    use ylong_runtime::spawn_blocking as spawn;
+impl network::Observer for NetObserver {
+    fn net_available(&self, net_id: i32) {
+        info!("net available, net_id: {}", net_id);
+        CacheDownloadService::get_instance().reset_all_tasks();
+    }
 }

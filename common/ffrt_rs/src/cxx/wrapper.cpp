@@ -15,6 +15,7 @@
 
 #include "wrapper.h"
 
+#include "cpp/task.h"
 #include "cxx.h"
 #include "wrapper.rs.h"
 
@@ -24,4 +25,9 @@ void FfrtSpawn(rust::Box<ClosureWrapper> closure)
         closure->run();
         rust::Box<ClosureWrapper>::from_raw(closure);
     });
+}
+
+void FfrtSleep(uint64_t ms)
+{
+    ffrt::this_task::sleep_for(std::chrono::milliseconds(ms));
 }

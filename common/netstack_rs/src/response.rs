@@ -15,21 +15,25 @@ use std::collections::HashMap;
 use std::fmt::Display;
 use std::pin::Pin;
 
-use crate::wrapper::ffi::{GetHeaders, HttpClientResponse};
+use cxx::SharedPtr;
+
+use crate::task::RequestTask;
+use crate::wrapper::ffi::{GetHeaders, HttpClientResponse, HttpClientTask};
 
 /// http client response
 pub struct Response<'a> {
-    inner: &'a HttpClientResponse,
+    inner: ResponseInner<'a>,
 }
 
 impl<'a> Response<'a> {
     /// Get Response Code
     pub fn status(&self) -> ResponseCode {
-        self.inner.GetResponseCode().try_into().unwrap_or_default()
+        let response = self.inner.to_response();
+        response.GetResponseCode().try_into().unwrap_or_default()
     }
 
     pub fn headers(&self) -> HashMap<String, String> {
-        let ptr = self.inner as *const HttpClientResponse as *mut HttpClientResponse;
+        let ptr = self.inner.to_response() as *const HttpClientResponse as *mut HttpClientResponse;
         let p = unsafe { Pin::new_unchecked(ptr.as_mut().unwrap()) };
 
         let mut headers = GetHeaders(p).into_iter();
@@ -37,7 +41,7 @@ impl<'a> Response<'a> {
         loop {
             if let Some(key) = headers.next() {
                 if let Some(value) = headers.next() {
-                    ret.insert(key, value);
+                    ret.insert(key.to_lowercase(), value);
                     continue;
                 }
             }
@@ -47,11 +51,36 @@ impl<'a> Response<'a> {
     }
 
     pub(crate) fn from_ffi(inner: &'a HttpClientResponse) -> Self {
-        Self { inner }
+        Self {
+            inner: ResponseInner::Ref(inner),
+        }
+    }
+
+    pub(crate) fn from_shared(inner: SharedPtr<HttpClientTask>) -> Self {
+        Self {
+            inner: ResponseInner::Shared(inner),
+        }
     }
 }
 
-#[derive(Clone, Debug, Default)]
+enum ResponseInner<'a> {
+    Ref(&'a HttpClientResponse),
+    Shared(SharedPtr<HttpClientTask>),
+}
+
+impl<'a> ResponseInner<'a> {
+    fn to_response(&self) -> &HttpClientResponse {
+        match self {
+            ResponseInner::Ref(inner) => inner,
+            ResponseInner::Shared(inner) => RequestTask::pin_mut(inner)
+                .GetResponse()
+                .into_ref()
+                .get_ref(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub enum ResponseCode {
     #[default]
     None = 0,

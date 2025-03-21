@@ -27,12 +27,14 @@ void OnCallback(std::shared_ptr<HttpClientTask> task, rust::Box<CallbackWrapper>
     CallbackWrapper *raw_ptr = callback.into_raw();
     auto shared = std::shared_ptr<CallbackWrapper>(
         raw_ptr, [](CallbackWrapper *ptr) { rust::Box<CallbackWrapper>::from_raw(ptr); });
-    task->OnSuccess(
-        [shared](const HttpClientRequest &, const HttpClientResponse &response) { shared->on_success(response); });
-    task->OnFail([shared](const HttpClientRequest &, const HttpClientResponse &response,
-                     const HttpClientError &error) { shared->on_fail(error); });
-    task->OnCancel(
-        [shared](const HttpClientRequest &, const HttpClientResponse &response) { shared->on_cancel(response); });
+    task->OnSuccess([shared](const HttpClientRequest &request, const HttpClientResponse &response) {
+        shared->on_success(request, response);
+    });
+    task->OnFail([shared](const HttpClientRequest &request, const HttpClientResponse &response,
+                     const HttpClientError &error) { shared->on_fail(request, response, error); });
+    task->OnCancel([shared](const HttpClientRequest &request, const HttpClientResponse &response) {
+        shared->on_cancel(request, response);
+    });
     task->OnDataReceive([shared, task](const HttpClientRequest &, const uint8_t *data, size_t size) {
         shared->on_data_receive(task, data, size);
     });
