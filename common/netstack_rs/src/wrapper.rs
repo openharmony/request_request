@@ -55,7 +55,7 @@ impl CallbackWrapper {
         let response = Response::from_ffi(response);
         if (response.status().clone() as u32 >= 300) || (response.status().clone() as u32) < 200 {
             let error =
-                HttpClientError::new(HttpErrorCode::HttpNoneErr, response.status().to_string());
+                HttpClientError::new(HttpErrorCode::HttpNoneErr, (response.status() as u32).to_string());
             callback.on_fail(error);
         } else {
             callback.on_success(response);
@@ -289,14 +289,12 @@ pub(crate) mod ffi {
     }
 
     #[repr(i32)]
-    #[derive(Debug)]
     enum TaskStatus {
         IDLE,
         RUNNING,
     }
 
     #[repr(i32)]
-    #[derive(Debug)]
     enum ResponseCode {
         NONE = 0,
         OK = 200,
@@ -337,7 +335,6 @@ pub(crate) mod ffi {
     }
 
     #[repr(i32)]
-    #[derive(Debug)]
     enum HttpErrorCode {
         HTTP_NONE_ERR,
         HTTP_PERMISSION_DENIED_CODE = 201,

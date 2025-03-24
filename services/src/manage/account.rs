@@ -19,7 +19,7 @@ pub(crate) use ffi::*;
 use super::database::RequestDb;
 use crate::manage::events::TaskManagerEvent;
 use crate::manage::task_manager::TaskManagerTx;
-use crate::utils::runtime_spawn;
+use crate::utils::{call_once, runtime_spawn};
 
 #[derive(Debug)]
 pub(crate) enum AccountEvent {
@@ -141,7 +141,7 @@ async fn get_background_accounts() -> Option<Vec<i32>> {
 pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
     static ONCE: Once = Once::new();
 
-    ONCE.call_once(|| unsafe {
+    call_once(&ONCE, || unsafe {
         TASK_MANAGER_TX = Some(task_manager.clone());
     });
 

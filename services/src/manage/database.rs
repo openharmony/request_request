@@ -35,7 +35,7 @@ use crate::task::ffi::{CTaskConfig, CTaskInfo, CUpdateInfo};
 use crate::task::info::{State, TaskInfo, UpdateInfo};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
-use crate::utils::{get_current_timestamp, hashmap_to_string};
+use crate::utils::{call_once, get_current_timestamp, hashmap_to_string};
 
 pub(crate) struct RequestDb {
     user_file_tasks: Mutex<HashMap<u32, Arc<RequestTask>>>,
@@ -50,7 +50,8 @@ impl RequestDb {
     pub(crate) fn get_instance() -> &'static Self {
         static mut DB: MaybeUninit<RequestDb> = MaybeUninit::uninit();
         static ONCE: Once = Once::new();
-        ONCE.call_once(|| {
+
+        call_once(&ONCE, || {
             let (path, encrypt) = if cfg!(test) {
                 ("/data/test/request.db", false)
             } else {
@@ -72,7 +73,8 @@ impl RequestDb {
     pub(crate) fn get_instance() -> &'static Self {
         static mut DATABASE: MaybeUninit<RequestDb> = MaybeUninit::uninit();
         static ONCE: Once = Once::new();
-        ONCE.call_once(|| {
+
+        call_once(&ONCE, || {
             let inner = Connection::open_in_memory().unwrap();
             inner.execute(&CREATE_TABLE, ()).unwrap();
             unsafe {

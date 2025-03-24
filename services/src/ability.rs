@@ -10,7 +10,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//! This create implement the request server register and publish
+
+//! This module is responsible for registering and publishing system services.
 
 use std::mem::MaybeUninit;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -26,38 +27,26 @@ use crate::manage::app_state::AppStateListener;
 use crate::manage::{account, SystemConfigManager, TaskManager};
 use crate::service::client::ClientManager;
 use crate::service::run_count::RunCountManager;
-pub(crate) static mut PANIC_INFO: Option<String> = None;
 use crate::manage::events::TaskManagerEvent;
 use crate::manage::task_manager::TaskManagerTx;
 use crate::service::RequestServiceStub;
 use crate::utils::update_policy;
 
-/// TEST_SERVICE_ID SAID
+pub(crate) static mut PANIC_INFO: Option<String> = None;
+
 pub(crate) static mut SYSTEM_CONFIG_MANAGER: MaybeUninit<SystemConfigManager> =
     MaybeUninit::uninit();
 
-fn service_start_fault() {
-    const DOMAIN: &str = "REQUEST";
-    const SERVICE_START_FAULT: &str = "SERVICE_START_FAULT";
-    const ERROR_INFO: &str = "ERROR_INFO";
-    const DOWNLOAD_PUBLISH_FAIL: i32 = -1;
-
-    write(
-        DOMAIN,
-        SERVICE_START_FAULT,
-        EventType::Fault,
-        &[build_number_param!(ERROR_INFO, DOWNLOAD_PUBLISH_FAIL)],
-    );
-}
-
-/// request ability
+/// The structure of `Request System Ability`.
+///
+/// This structure is responsible for interacting with `System Ability Manager`.
 pub struct RequestAbility {
     task_manager: Mutex<Option<TaskManagerTx>>,
     remote_busy: Arc<AtomicBool>,
 }
 
 impl RequestAbility {
-    /// new request ability
+    /// Creates a new `RequestAbility`.
     pub fn new() -> Self {
         Self {
             remote_busy: Arc::new(AtomicBool::new(false)),
@@ -68,6 +57,7 @@ impl RequestAbility {
     fn init(&self, handler: Handler) {
         info!("ability init");
 
+        // Use a structure to handle panic.
         std::panic::set_hook(Box::new(|info| unsafe {
             let info = info.to_string();
             error!("{}", info);
@@ -86,12 +76,12 @@ impl RequestAbility {
         let client_manger = ClientManager::init();
         info!("client_manger init ok");
 
+        // Use methods to handle rather than directly accessing members.
         unsafe { SYSTEM_CONFIG_MANAGER.write(SystemConfigManager::init()) };
         info!("system_config_manager init ok");
 
         let task_manager = TaskManager::init(runcount_manager.clone(), client_manger.clone());
         *self.task_manager.lock().unwrap() = Some(task_manager.clone());
-
         info!("task_manager init ok");
 
         AppStateListener::init(client_manger.clone(), task_manager.clone());
@@ -181,3 +171,18 @@ static A: extern "C" fn() = {
     }
     init
 };
+
+// TODO: Use `SysEvent` instead.
+fn service_start_fault() {
+    const DOMAIN: &str = "REQUEST";
+    const SERVICE_START_FAULT: &str = "SERVICE_START_FAULT";
+    const ERROR_INFO: &str = "ERROR_INFO";
+    const DOWNLOAD_PUBLISH_FAIL: i32 = -1;
+
+    write(
+        DOMAIN,
+        SERVICE_START_FAULT,
+        EventType::Fault,
+        &[build_number_param!(ERROR_INFO, DOWNLOAD_PUBLISH_FAIL)],
+    );
+}
