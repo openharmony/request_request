@@ -14,8 +14,7 @@
 use std::sync::LazyLock;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use rdb::config::SecurityLevel;
-use rdb::{OpenConfig, RdbStore};
+use rdb::{OpenConfig, RdbStore, SecurityLevel};
 
 use crate::service::notification_bar::NotificationDispatcher;
 

@@ -11,13 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::pin::{pin, Pin};
+use std::pin::Pin;
 
 use cxx::{CxxVector, UniquePtr};
 
 use crate::wrapper::ffi::{
-    self, BindBlob, BindBool, BindDouble, BindI32, BindI64, BindNull, BindString, GetBlob, GetBool,
-    GetDouble, GetI32, GetI64, GetString, IsNull, NewVector, ResultSet, RowEntity, ValueObject,
+    BindBlob, BindBool, BindDouble, BindI32, BindI64, BindNull, BindString, GetBlob, GetDouble,
+    GetI32, GetI64, GetString, IsNull, NewVector, RowEntity, ValueObject,
 };
 
 trait ToSql {
@@ -186,10 +186,11 @@ impl ParamValues {
     }
 
     fn push<T: ToSql>(&mut self, value: T) {
-        unsafe { T::to_sql(&value, self.inner.pin_mut()) };
+        T::to_sql(&value, self.inner.pin_mut())
     }
 }
 
+/// Params trait.
 pub trait Params {
     fn into_values_object(self) -> UniquePtr<CxxVector<ValueObject>>;
 }
