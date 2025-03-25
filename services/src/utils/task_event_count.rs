@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::mem::MaybeUninit;
 use std::sync::{Arc, Mutex, Once};
 
 struct RequestTaskCount {
@@ -21,36 +20,40 @@ struct RequestTaskCount {
 }
 
 impl RequestTaskCount {
-    fn get_instance() -> &'static Arc<Mutex<RequestTaskCount>> {
-        static mut TASK_COUNT: MaybeUninit<Arc<Mutex<RequestTaskCount>>> = MaybeUninit::uninit();
+    fn get_instance() -> Arc<Mutex<RequestTaskCount>> {
+        static mut TASK_COUNT: Option<Arc<Mutex<RequestTaskCount>>> = None;
         static ONCE: Once = Once::new();
-        unsafe {
-            ONCE.call_once(|| {
-                TASK_COUNT.write(Arc::new(Mutex::new(RequestTaskCount {
+        ONCE.call_once(|| {
+            unsafe {
+                TASK_COUNT = Some(Arc::new(Mutex::new(RequestTaskCount {
                     completed_task_count: 0,
                     failed_task_count: 0,
                     load_state: false,
-                })));
-            });
-            &*TASK_COUNT.as_ptr()
-        }
+                })))
+            };
+        });
+
+        unsafe { TASK_COUNT.as_ref().unwrap().clone() }
     }
 }
 
 pub(crate) fn task_complete_add() {
-    let mut task_count = RequestTaskCount::get_instance().lock().unwrap();
+    let instance = RequestTaskCount::get_instance();
+    let mut task_count = instance.lock().unwrap();
     task_count.completed_task_count += 1;
     task_count.load_state = true;
 }
 
 pub(crate) fn task_fail_add() {
-    let mut task_count = RequestTaskCount::get_instance().lock().unwrap();
+    let instance = RequestTaskCount::get_instance();
+    let mut task_count = instance.lock().unwrap();
     task_count.failed_task_count += 1;
     task_count.load_state = true;
 }
 
 pub(crate) fn task_unload() {
-    let mut task_count = RequestTaskCount::get_instance().lock().unwrap();
+    let instance = RequestTaskCount::get_instance();
+    let mut task_count = instance.lock().unwrap();
     if task_count.load_state {
         let completed = task_count.completed_task_count;
         let failed = task_count.failed_task_count;
