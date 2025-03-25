@@ -40,8 +40,10 @@ public:
             ContextNapiHolder *holder = new (std::nothrow)
                 ContextNapiHolder{ .env = env_, .callbackRef = callbackRef_, .self = self_, .work = work_ };
             if (holder == nullptr) {
+                REQUEST_HILOGE("new ContextNapiHolder null");
                 return;
             }
+            // Deletes reference of callback in JS main thread.
             auto afterCallback = [holder]() {
                 napi_handle_scope scope = nullptr;
                 napi_open_handle_scope(holder->env, &scope);

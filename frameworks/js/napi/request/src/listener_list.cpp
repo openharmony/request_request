@@ -68,6 +68,7 @@ napi_status ListenerList::RemoveListenerInner(napi_value cb)
     return napi_ok;
 }
 
+// In JS main thread.
 void ListenerList::OnMessageReceive(napi_value *value, uint32_t paramNumber)
 {
     std::lock_guard<std::recursive_mutex> lock(allCbMutex_);
@@ -85,6 +86,7 @@ void ListenerList::OnMessageReceive(napi_value *value, uint32_t paramNumber)
     }
 }
 
+// Check whether `cb` has been stored, in JS main thread.
 bool ListenerList::IsListenerAdded(napi_value cb)
 {
     if (cb == nullptr) {
@@ -100,7 +102,6 @@ bool ListenerList::IsListenerAdded(napi_value cb)
             return it->first;
         }
     }
-
     return false;
 }
 

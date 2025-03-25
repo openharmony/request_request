@@ -210,8 +210,6 @@ void JSNotifyDataListener::DoJSTask(const std::shared_ptr<NotifyData> &notifyDat
 
 void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData)
 {
-    REQUEST_HILOGI(
-        "Notify %{public}s tid %{public}d", SubscribeTypeToString(notifyData->type).c_str(), notifyData->taskId);
     NotifyDataPtr *ptr = new (std::nothrow) NotifyDataPtr;
     if (ptr == nullptr) {
         REQUEST_HILOGE("NotifyDataPtr new failed");
@@ -219,7 +217,8 @@ void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
     }
     ptr->listener = shared_from_this();
     ptr->notifyData = notifyData;
-
+    REQUEST_HILOGI(
+        "Notify: %{public}s tid %{public}d", SubscribeTypeToString(notifyData->type).c_str(), notifyData->taskId);
     int32_t ret = napi_send_event(
         this->env_,
         [ptr]() {
@@ -227,8 +226,13 @@ void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(ptr->listener->env_, &scope);
             if (scope == nullptr) {
+                REQUEST_HILOGE("napi_open_handle_scope null");
                 delete ptr;
                 return;
+            }
+            if (ptr->notifyData->type == SubscribeType::COMPLETED || ptr->notifyData->type == SubscribeType::FAILED) {
+                REQUEST_HILOGI("DoJSTask: %{public}s tid %{public}d",
+                    SubscribeTypeToString(ptr->notifyData->type).c_str(), ptr->notifyData->taskId);
             }
             ptr->listener->DoJSTask(ptr->notifyData);
             napi_close_handle_scope(ptr->listener->env_, scope);

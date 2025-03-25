@@ -47,13 +47,12 @@ napi_status JSResponseListener::RemoveListener(napi_value cb)
 
 void JSResponseListener::OnResponseReceive(const std::shared_ptr<Response> &response)
 {
-    REQUEST_HILOGI("OnResponseReceive, tid: %{public}s", response->taskId.c_str());
-
     {
         std::lock_guard<std::mutex> lock(this->responseMutex_);
         this->response_ = response;
     }
     std::shared_ptr<JSResponseListener> listener = shared_from_this();
+    REQUEST_HILOGI("OnResponseReceive, tid: %{public}s", response->taskId.c_str());
     int32_t ret = napi_send_event(
         listener->env_,
         [listener]() {
@@ -61,6 +60,7 @@ void JSResponseListener::OnResponseReceive(const std::shared_ptr<Response> &resp
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(listener->env_, &scope);
             if (scope == nullptr) {
+                REQUEST_HILOGE("napi_open_handle_scope null");
                 return;
             }
             napi_value value = NapiUtils::Convert2JSValue(listener->env_, listener->response_);
