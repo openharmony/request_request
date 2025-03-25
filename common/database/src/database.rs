@@ -11,21 +11,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::path::Iter;
+use cxx::SharedPtr;
 use std::pin::Pin;
-
-use cxx::{SharedPtr, UniquePtr};
 
 use crate::config::OpenConfig;
 use crate::params::{FromSql, Params};
-use crate::wrapper::ffi::{self, Execute, GetRdbStore, GetString, NewRowEntity, Query};
 use crate::wrapper::open_rdb_store;
+use crate::wrapper::ffi::{self, Execute, NewRowEntity, Query};
 
+/// `RdbStore` ffi wrapper.
 pub struct RdbStore<'a> {
     inner: RdbStoreInner<'a>,
 }
 
 impl<'a> RdbStore<'a> {
+    /// Creates a new `RdbStore`.
     pub fn open(config: OpenConfig) -> Result<Self, i32> {
         let rdb = open_rdb_store(config)?;
         if rdb.is_null() {
@@ -36,6 +36,14 @@ impl<'a> RdbStore<'a> {
         })
     }
 
+    /// Creates a `RdbStore` from a C structure.
+    pub fn from_ffi(ffi: Pin<&'a mut ffi::RdbStore>) -> Self {
+        Self {
+            inner: RdbStoreInner::Ref(ffi),
+        }
+    }
+
+    /// Executes a sql statement.
     pub fn execute<P: Params>(&self, sql: &str, values: P) -> Result<(), i32> {
         match Execute(self.inner.pin_mut(), sql, values.into_values_object()) {
             0 => Ok(()),
@@ -43,6 +51,7 @@ impl<'a> RdbStore<'a> {
         }
     }
 
+    /// Queries results with a sql statement.
     pub fn query<T>(&self, sql: &str, values: impl Params) -> Result<QuerySet<T>, i32> {
         let result = Query(self.inner.pin_mut(), sql, values.into_values_object());
         if result.is_null() {
@@ -62,14 +71,29 @@ impl<'a> RdbStore<'a> {
             phantom: std::marker::PhantomData,
         })
     }
+}
 
-    pub fn from_ffi(ffi: Pin<&'a mut ffi::RdbStore>) -> Self {
-        Self {
-            inner: RdbStoreInner::Ref(ffi),
+enum RdbStoreInner<'a> {
+    Shared(SharedPtr<ffi::RdbStore>),
+    Ref(Pin<&'a mut ffi::RdbStore>),
+}
+
+impl RdbStoreInner<'_> {
+    fn pin_mut(&self) -> Pin<&mut ffi::RdbStore> {
+        match self {
+            Self::Shared(ffi) => {
+                let ptr = ffi.as_ref().unwrap() as *const ffi::RdbStore as *mut ffi::RdbStore;
+                unsafe { Pin::new_unchecked(ptr.as_mut().unwrap()) }
+            }
+            Self::Ref(ffi) => {
+                let ptr = ffi.as_ref().get_ref() as *const ffi::RdbStore as *mut ffi::RdbStore;
+                unsafe { Pin::new_unchecked(ptr.as_mut().unwrap()) }
+            }
         }
     }
 }
 
+/// Query results.
 pub struct QuerySet<T> {
     inner: SharedPtr<ffi::ResultSet>,
     column_count: i32,
@@ -77,14 +101,16 @@ pub struct QuerySet<T> {
 }
 
 impl<T> QuerySet<T> {
+    /// Gets the count of the rows in the query result.
     pub fn row_count(&mut self) -> i32 {
         let mut row_count = 0;
         match self.pin_mut().GetRowCount(&mut row_count) {
             0 => row_count,
-            err => 0,
+            _err => 0,
         }
     }
 
+    /// Gets the counts of the columns in the query result.
     pub fn column_count(&self) -> i32 {
         self.column_count
     }
@@ -100,10 +126,11 @@ where
     T: FromSql,
 {
     type Item = T;
+
     fn next(&mut self) -> Option<Self::Item> {
         let mut row = NewRowEntity();
         self.pin_mut().GoToNextRow();
-        if (self.pin_mut().GetRow(row.pin_mut()) != 0) {
+        if self.pin_mut().GetRow(row.pin_mut()) != 0 {
             return None;
         }
         Some(T::from_sql(0, row.pin_mut()))
@@ -144,53 +171,28 @@ single_tuple_impl!((0 A), (1 B), (2 C), (3 D), (4 E), (5 F), (6 G), (7 H), (8 I)
 single_tuple_impl!((0 A), (1 B), (2 C), (3 D), (4 E), (5 F), (6 G), (7 H), (8 I), (9 J), (10 K), (11 L), (12 M), (13 N));
 single_tuple_impl!((0 A), (1 B), (2 C), (3 D), (4 E), (5 F), (6 G), (7 H), (8 I), (9 J), (10 K), (11 L), (12 M), (13 N), (14 O));
 single_tuple_impl!((0 A), (1 B), (2 C), (3 D), (4 E), (5 F), (6 G), (7 H), (8 I), (9 J), (10 K), (11 L), (12 M), (13 N), (14 O), (15 P));
-enum RdbStoreInner<'a> {
-    Shared(cxx::SharedPtr<ffi::RdbStore>),
-    Ref(Pin<&'a mut ffi::RdbStore>),
-}
-
-impl RdbStoreInner<'_> {
-    fn pin_mut(&self) -> Pin<&mut ffi::RdbStore> {
-        match self {
-            Self::Shared(ffi) => {
-                let ptr = ffi.as_ref().unwrap() as *const ffi::RdbStore as *mut ffi::RdbStore;
-                unsafe { Pin::new_unchecked(ptr.as_mut().unwrap()) }
-            }
-            Self::Ref(ffi) => {
-                let ptr = ffi.as_ref().get_ref() as *const ffi::RdbStore as *mut ffi::RdbStore;
-                unsafe { Pin::new_unchecked(ptr.as_mut().unwrap()) }
-            }
-        }
-    }
-}
 
 #[cfg(test)]
 mod test {
-    use std::fs;
-    use std::sync::atomic::{AtomicUsize, Ordering};
+    use super::*;
 
+    use std::fs;
     use ffi::SecurityLevel;
 
-    use super::*;
-    use crate::config::OpenCallback;
-
-    const CREATE_TEST_TABLE: &str =
-        "CREATE TABLE IF NOT EXISTS test_table (id INTEGER PRIMARY KEY, name TEXT)";
-
-    struct Callback;
-
     fn get_rdb() -> RdbStore<'static> {
-        fs::create_dir_all("/data/test");
+        let _ = fs::create_dir_all("/data/test");
+
         let mut config = OpenConfig::new("/data/test/request_database_test.db");
         config.encrypt_status(false);
         config.security_level(SecurityLevel::S1);
         config.bundle_name("test");
+
         RdbStore::open(config).unwrap()
     }
 
     #[test]
     fn ut_database_query() {
-        let mut rdb = get_rdb();
+        let rdb = get_rdb();
         rdb.execute("DROP TABLE IF EXISTS test_table_001", ())
             .unwrap();
         rdb.execute(
@@ -220,7 +222,8 @@ mod test {
     #[test]
     fn ut_database_option() {
         const TEST_STRING: &str = "TEST";
-        let mut rdb = get_rdb();
+
+        let rdb = get_rdb();
         rdb.execute("DROP TABLE IF EXISTS test_table_002", ())
             .unwrap();
         rdb.execute(
@@ -228,7 +231,7 @@ mod test {
             (),
         )
         .unwrap();
-        rdb.execute(
+        let _ = rdb.execute(
             "INSERT OR REPLACE INTO test_table_002 (id, name) VALUES (?, ?)",
             (0, Option::<String>::None),
         );
@@ -237,7 +240,7 @@ mod test {
             .unwrap();
         assert_eq!(set.next().unwrap(), None);
 
-        rdb.execute(
+        let _ = rdb.execute(
             "INSERT OR REPLACE INTO test_table_002 (id, name) VALUES (?, ?)",
             (0, Some(TEST_STRING)),
         );
@@ -246,7 +249,7 @@ mod test {
             .unwrap();
         assert_eq!(set.next().unwrap(), Some(TEST_STRING.to_string()));
 
-        rdb.execute(
+        let _ = rdb.execute(
             "INSERT OR REPLACE INTO test_table_002 (id, name) VALUES (?, ?)",
             (0, TEST_STRING),
         );

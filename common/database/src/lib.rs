@@ -11,12 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![allow(unused, missing_docs)]
+//! RDB FFI implementation.
 
-pub mod config;
+mod config;
 mod database;
 mod params;
 mod wrapper;
 
 pub use config::OpenConfig;
 pub use database::RdbStore;
+pub use wrapper::ffi::SecurityLevel;

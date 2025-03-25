@@ -16,21 +16,22 @@ use std::pin::Pin;
 use cxx::SharedPtr;
 use ffi::{GetRdbStore, RdbStore};
 
-use crate::config::OpenCallback;
-use crate::OpenConfig;
+use crate::config::{OpenCallback, OpenConfig};
+use crate::database;
 
+/// OpenCallback ffi.
 pub struct OpenCallbackWrapper {
     inner: Box<dyn OpenCallback>,
 }
 
 impl OpenCallbackWrapper {
     fn on_create(&mut self, rdb: Pin<&mut RdbStore>) -> i32 {
-        let mut rdb = crate::RdbStore::from_ffi(rdb);
+        let mut rdb = database::RdbStore::from_ffi(rdb);
         self.inner.on_create(&mut rdb)
     }
 
     fn on_upgrade(&mut self, rdb: Pin<&mut RdbStore>, old_version: i32, new_version: i32) -> i32 {
-        let mut rdb = crate::RdbStore::from_ffi(rdb);
+        let mut rdb = database::RdbStore::from_ffi(rdb);
         self.inner.on_upgrade(&mut rdb, old_version, new_version)
     }
 
@@ -40,13 +41,13 @@ impl OpenCallbackWrapper {
         current_version: i32,
         target_version: i32,
     ) -> i32 {
-        let mut rdb = crate::RdbStore::from_ffi(rdb);
+        let mut rdb = database::RdbStore::from_ffi(rdb);
         self.inner
             .on_downgrade(&mut rdb, current_version, target_version)
     }
 
     fn on_open(&mut self, rdb: Pin<&mut RdbStore>) -> i32 {
-        let mut rdb = crate::RdbStore::from_ffi(rdb);
+        let mut rdb = database::RdbStore::from_ffi(rdb);
         self.inner.on_open(&mut rdb)
     }
 
@@ -73,9 +74,10 @@ pub(crate) fn open_rdb_store(config: OpenConfig) -> Result<SharedPtr<RdbStore>, 
 
 unsafe impl Send for RdbStore {}
 unsafe impl Sync for RdbStore {}
+
+#[allow(unused, missing_docs)]
 #[cxx::bridge(namespace = "OHOS::Request")]
 pub mod ffi {
-
     #[repr(i32)]
     enum SecurityLevel {
         S1 = 1,

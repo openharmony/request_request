@@ -13,43 +13,18 @@
 
 use cxx::{let_cxx_string, UniquePtr};
 
-pub use crate::wrapper::ffi::SecurityLevel;
-use crate::wrapper::ffi::{NewConfig, RdbStoreConfig};
-use crate::RdbStore;
+use crate::database::RdbStore;
+use crate::wrapper::ffi::{NewConfig, RdbStoreConfig, SecurityLevel};
 
+/// Open options of `RDB`.
 pub struct OpenConfig {
     pub(crate) inner: UniquePtr<RdbStoreConfig>,
     pub(crate) version: i32,
     pub(crate) callback: Box<dyn OpenCallback>,
 }
 
-struct DefaultCallback;
-impl OpenCallback for DefaultCallback {}
-
-pub trait OpenCallback {
-    fn on_create(&mut self, rdb: &mut RdbStore) -> i32 {
-        0
-    }
-    fn on_upgrade(&mut self, rdb: &mut RdbStore, old_version: i32, new_version: i32) -> i32 {
-        0
-    }
-    fn on_downgrade(
-        &mut self,
-        rdb: &mut RdbStore,
-        current_version: i32,
-        target_version: i32,
-    ) -> i32 {
-        0
-    }
-    fn on_open(&mut self, rdb: &mut RdbStore) -> i32 {
-        0
-    }
-    fn on_corrupt(&mut self, database_file: &str) -> i32 {
-        0
-    }
-}
-
 impl OpenConfig {
+    /// Creates a new `OpenConfig`.
     pub fn new(path: &str) -> Self {
         Self {
             inner: NewConfig(path),
@@ -58,29 +33,71 @@ impl OpenConfig {
         }
     }
 
+    /// Sets the security level of the database.
     pub fn security_level(&mut self, level: SecurityLevel) -> &mut Self {
         self.inner.pin_mut().SetSecurityLevel(level);
         self
     }
 
+    /// Sets the encrypt status of the database.
     pub fn encrypt_status(&mut self, status: bool) -> &mut Self {
         self.inner.pin_mut().SetEncryptStatus(status);
         self
     }
 
+    /// Sets the bundle name of the database.
     pub fn bundle_name(&mut self, name: &str) -> &mut Self {
         let_cxx_string!(name = name);
         self.inner.pin_mut().SetBundleName(&name);
         self
     }
 
+    /// Sets the open callback of the database.
     pub fn callback(&mut self, callback: Box<dyn OpenCallback>) -> &mut Self {
         self.callback = callback;
         self
     }
 
+    /// Sets the version of the database.
     pub fn version(&mut self, version: i32) -> &mut Self {
         self.version = version;
         self
     }
 }
+
+/// Trait for database callbacks.
+pub trait OpenCallback {
+    /// Callback for creating the database.
+    fn on_create(&mut self, _rdb: &mut RdbStore) -> i32 {
+        0
+    }
+
+    /// Callback for upgrading the database.
+    fn on_upgrade(&mut self, _rdb: &mut RdbStore, _old_version: i32, _new_version: i32) -> i32 {
+        0
+    }
+
+    /// Callback for downgrading the database.
+    fn on_downgrade(
+        &mut self,
+        _rdb: &mut RdbStore,
+        _current_version: i32,
+        _target_version: i32,
+    ) -> i32 {
+        0
+    }
+
+    /// Callback for opening the database.
+    fn on_open(&mut self, _rdb: &mut RdbStore) -> i32 {
+        0
+    }
+
+    /// Callback when the database is corrupted.
+    fn on_corrupt(&mut self, _database_file: &str) -> i32 {
+        0
+    }
+}
+
+struct DefaultCallback;
+
+impl OpenCallback for DefaultCallback {}
