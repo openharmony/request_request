@@ -49,7 +49,8 @@ impl TaskManager {
             _ => (background, MAX_BACKGROUND_TASK),
         };
 
-        if *task_count > limit {
+        // The loop starts counting from 0 and ends at limit, not exceeding limit. 
+        if *task_count >= limit {
             error!(
                 "{} task count {} exceeds the limit {}",
                 uid, task_count, limit
