@@ -54,8 +54,10 @@ impl CallbackWrapper {
         };
         let response = Response::from_ffi(response);
         if (response.status().clone() as u32 >= 300) || (response.status().clone() as u32) < 200 {
-            let error =
-                HttpClientError::new(HttpErrorCode::HttpNoneErr, (response.status() as u32).to_string());
+            let error = HttpClientError::new(
+                HttpErrorCode::HttpNoneErr,
+                (response.status() as u32).to_string(),
+            );
             callback.on_fail(error);
         } else {
             callback.on_success(response);

@@ -13,8 +13,8 @@
 
 //! Request Download Server Implementation.
 //!
-//! This system service is used to assist applications in handling network tasks such as uploading
-//! and downloading.
+//! This system service is used to assist applications in handling network tasks
+//! such as uploading and downloading.
 
 #![cfg_attr(test, feature(future_join))]
 #![cfg_attr(test, allow(clippy::redundant_clone))]
