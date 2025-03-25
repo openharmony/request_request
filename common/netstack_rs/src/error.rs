@@ -11,9 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::error::Error;
-use std::fmt::{Debug, Display};
-
 use crate::wrapper::ffi;
 
 #[derive(Clone)]
@@ -42,21 +39,7 @@ impl HttpClientError {
     }
 }
 
-impl Error for HttpClientError {}
-
-impl Display for HttpClientError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl Debug for HttpClientError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "code {:?}, msg {}", self.code(), self.msg())
-    }
-}
-
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Default, Clone, PartialEq, Eq)]
 #[repr(i32)]
 pub enum HttpErrorCode {
     HttpNoneErr,

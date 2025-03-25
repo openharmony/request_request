@@ -18,7 +18,7 @@ use super::task_manager::TaskManagerTx;
 use crate::manage::events::{StateEvent, TaskManagerEvent};
 use crate::service::client::ClientManagerEntry;
 use crate::utils::c_wrapper::CStringWrapper;
-use crate::utils::{CommonEventSubscriber, CommonEventWant};
+use crate::utils::{call_once, CommonEventSubscriber, CommonEventWant};
 
 pub(crate) struct AppStateListener {
     client_manager: ClientManagerEntry,
@@ -31,7 +31,7 @@ static ONCE: Once = Once::new();
 impl AppStateListener {
     pub(crate) fn init(client_manager: ClientManagerEntry, task_manager: TaskManagerTx) {
         unsafe {
-            ONCE.call_once(|| {
+            call_once(&ONCE, || {
                 APP_STATE_LISTENER.write(AppStateListener {
                     client_manager,
                     task_manager,

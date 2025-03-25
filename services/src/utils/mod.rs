@@ -17,6 +17,7 @@ pub(crate) mod form_item;
 use std::collections::HashMap;
 use std::future::Future;
 use std::io::Write;
+use std::sync::Once;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub(crate) use common_event::{
@@ -95,7 +96,10 @@ pub(crate) fn split_string(str: &mut str) -> std::str::Split<'_, &str> {
     str.trim_matches(pat).split(", ")
 }
 
-#[inline(always)]
+pub(crate) fn call_once<F: FnOnce()>(once: &Once, func: F) {
+    once.call_once(Box::new(func) as Box<dyn FnOnce()>)
+}
+
 pub(crate) fn runtime_spawn<F: Future<Output = ()> + Send + Sync + 'static>(
     fut: F,
 ) -> JoinHandle<()> {

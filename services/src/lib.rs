@@ -11,7 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! This create implement the request proxy and stub
+//! Request Download Server Implementation.
+//!
+//! This system service is used to assist applications in handling network tasks such as uploading
+//! and downloading.
+
 #![cfg_attr(test, feature(future_join))]
 #![cfg_attr(test, allow(clippy::redundant_clone))]
 #![allow(
@@ -28,6 +32,7 @@
     clippy::unused_async
 )]
 #![feature(lazy_cell)]
+
 #[macro_use]
 mod macros;
 

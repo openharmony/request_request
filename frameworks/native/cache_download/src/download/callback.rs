@@ -105,7 +105,7 @@ impl PrimeCallback {
     where
         E: CommonError,
     {
-        info!("{} download failed {}", self.task_id.brief(), error);
+        info!("{} download failed {}", self.task_id.brief(), error.code());
         self.state.store(FAIL, Ordering::Release);
         self.finish.store(true, Ordering::Release);
         let mut callbacks = self.callbacks.lock().unwrap();

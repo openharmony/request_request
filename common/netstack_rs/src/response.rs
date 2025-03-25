@@ -12,7 +12,6 @@
 // limitations under the License.
 
 use std::collections::HashMap;
-use std::fmt::Display;
 use std::pin::Pin;
 
 use cxx::SharedPtr;
@@ -80,7 +79,7 @@ impl<'a> ResponseInner<'a> {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Default, PartialEq, Eq)]
 pub enum ResponseCode {
     #[default]
     None = 0,
@@ -119,11 +118,4 @@ pub enum ResponseCode {
     Unavailable,
     GatewayTimeout,
     Version,
-}
-
-impl Display for ResponseCode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let code = self.clone() as i32;
-        write!(f, "{} {:?}", code, self)
-    }
 }

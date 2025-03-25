@@ -20,6 +20,7 @@ use super::account::{BACKGROUND_ACCOUNTS, FOREGROUND_ACCOUNT};
 use super::network::{NetworkInner, NetworkState};
 use super::task_manager::TaskManagerTx;
 use crate::manage::network::Network;
+use crate::utils::call_once;
 
 pub(crate) struct NetworkManager {
     pub(crate) network: Network,
@@ -30,8 +31,9 @@ impl NetworkManager {
     pub(crate) fn get_instance() -> &'static Mutex<NetworkManager> {
         static mut NETWORK_MANAGER: MaybeUninit<Mutex<NetworkManager>> = MaybeUninit::uninit();
         static ONCE: Once = Once::new();
+
         unsafe {
-            ONCE.call_once(|| {
+            call_once(&ONCE, || {
                 let inner = NetworkInner::new();
                 let network = Network {
                     inner,

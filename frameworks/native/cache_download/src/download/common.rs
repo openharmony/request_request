@@ -11,13 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::error::Error;
-
 pub(crate) trait CommonResponse {
     fn code(&self) -> u32;
 }
 
-pub(crate) trait CommonError: Error {
+pub(crate) trait CommonError {
     fn code(&self) -> i32;
     fn msg(&self) -> String;
 }
