@@ -57,6 +57,8 @@ pub const ATTACH_GROUP: u32 = 19;
 pub const DELETE_GROUP: u32 = 20;
 /// Set the max speed of a task
 pub const SET_MAX_SPEED: u32 = 21;
+/// Show a task's progress.
+pub const SHOW_PROGRESS: u32 = 22;
 /// Change task mode.
 pub const SET_MODE: u32 = 100;
 /// Change task mode.

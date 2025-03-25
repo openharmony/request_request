@@ -12,7 +12,9 @@
 // limitations under the License.
 
 use std::io::{self, SeekFrom};
-use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicU8, Ordering};
+use std::sync::atomic::{
+    AtomicBool, AtomicI32, AtomicI64, AtomicU32, AtomicU64, AtomicU8, Ordering,
+};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -65,6 +67,7 @@ pub(crate) struct RequestTask {
     pub(crate) timeout_tries: AtomicU32,
     pub(crate) upload_resume: AtomicBool,
     pub(crate) mode: AtomicU8,
+    pub(crate) status_code: AtomicI32,
 }
 
 impl RequestTask {
@@ -181,6 +184,7 @@ impl RequestTask {
             timeout_tries: AtomicU32::new(0),
             upload_resume: AtomicBool::new(upload_resume),
             mode,
+            status_code: AtomicI32::new(0),
         }
     }
 
@@ -247,6 +251,7 @@ impl RequestTask {
             timeout_tries: AtomicU32::new(0),
             upload_resume: AtomicBool::new(upload_resume),
             mode,
+            status_code: AtomicI32::new(info.status_code),
         };
         let background_notify = NotificationDispatcher::get_instance().register_task(&task);
         task.background_notify = background_notify;
@@ -277,6 +282,7 @@ impl RequestTask {
             progress,
             tries: self.tries.load(Ordering::SeqCst),
             mime_type: self.mime_type(),
+            status_code: self.status_code.load(Ordering::SeqCst),
         };
         RequestDb::get_instance().update_task(self.task_id(), update_info);
     }
@@ -631,6 +637,7 @@ impl RequestTask {
                 priority: self.conf.common_data.priority,
             },
             max_speed: self.max_speed.load(Ordering::SeqCst),
+            status_code: self.status_code.load(Ordering::SeqCst),
         }
     }
 

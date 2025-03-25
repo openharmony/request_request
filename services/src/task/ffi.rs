@@ -124,6 +124,7 @@ pub(crate) struct CTaskInfo {
     pub(crate) progress: CProgress,
     pub(crate) common_data: CommonTaskInfo,
     pub(crate) max_speed: i64,
+    pub(crate) status_code: i32,
 }
 
 impl TaskInfo {
@@ -145,6 +146,7 @@ impl TaskInfo {
                 .to_c_struct(&info.sizes, &info.processed, &info.extras),
             common_data: self.common_data,
             max_speed: self.max_speed,
+            status_code: self.status_code,
         }
     }
 
@@ -184,6 +186,7 @@ impl TaskInfo {
             extras,
             common_data: c_struct.common_data,
             max_speed: c_struct.max_speed,
+            status_code: c_struct.status_code,
         };
 
         #[cfg(feature = "oh")]
@@ -202,6 +205,7 @@ pub(crate) struct CUpdateInfo {
     pub(crate) tries: u32,
     pub(crate) mime_type: CStringWrapper,
     pub(crate) progress: CProgress,
+    pub(crate) status_code: i32,
 }
 
 impl UpdateInfo {
@@ -212,6 +216,7 @@ impl UpdateInfo {
             tries: self.tries,
             mime_type: CStringWrapper::from(self.mime_type.as_str()),
             progress: self.progress.to_c_struct(sizes, processed, extras),
+            status_code: self.status_code,
         }
     }
 }

@@ -27,6 +27,7 @@ mod search;
 mod set_max_speed;
 mod set_mode;
 mod show;
+mod show_progress;
 mod start;
 mod stop;
 mod sub_runcount;

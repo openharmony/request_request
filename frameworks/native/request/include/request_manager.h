@@ -40,6 +40,8 @@ public:
     REQUEST_API ExceptionErrorCode PauseTasks(
         const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets);
     REQUEST_API ExceptionErrorCode ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets);
+    REQUEST_API ExceptionErrorCode ShowBatchProgress(
+        const std::vector<std::string> &tids, std::vector<TaskProgressRet> &rets);
     REQUEST_API ExceptionErrorCode TouchTasks(
         const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets);
     REQUEST_API ExceptionErrorCode SetMaxSpeeds(
@@ -56,6 +58,7 @@ public:
     REQUEST_API int32_t Touch(const std::string &tid, const std::string &token, TaskInfo &info);
     REQUEST_API int32_t Search(const Filter &filter, std::vector<std::string> &tids);
     REQUEST_API int32_t Show(const std::string &tid, TaskInfo &info);
+    REQUEST_API int32_t ShowProgress(const std::string &tid, TaskProgress &taskProgress);
     REQUEST_API int32_t Pause(const std::string &tid, const Version version);
     REQUEST_API int32_t QueryMimeType(const std::string &tid, std::string &mimeType);
     REQUEST_API int32_t Remove(const std::string &tid, const Version version);

@@ -293,6 +293,42 @@ ExceptionErrorCode RequestServiceProxy::ShowTasks(const std::vector<std::string>
     return ExceptionErrorCode::E_OK;
 }
 
+ExceptionErrorCode RequestServiceProxy::ShowBatchProgress(
+    const std::vector<std::string> &tids, std::vector<TaskProgressRet> &rets)
+{
+    TaskProgressRet taskProgressRet{ .code = ExceptionErrorCode::E_OTHER };
+    uint32_t len = static_cast<uint32_t>(tids.size());
+    rets.resize(len, taskProgressRet);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
+    data.WriteUint32(len);
+    for (const std::string &tid : tids) {
+        data.WriteString(tid);
+    }
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SHOW_PROGRESS), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("End Request ShowBatchProgress, failed: %{public}d", ret);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        return ExceptionErrorCode::E_SERVICE_ERROR;
+    }
+    ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
+    if (code != ExceptionErrorCode::E_OK) {
+        REQUEST_HILOGE("End Request ShowBatchProgress, failed: %{public}d", code);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_01, std::to_string(code));
+        return code;
+    }
+    for (uint32_t i = 0; i < len; i++) {
+        rets[i].code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
+        TaskProgress taskProgress;
+        ParcelHelper::UnMarshalTaskProgress(reply, taskProgress);
+        rets[i].taskProgress = taskProgress;
+    }
+    return ExceptionErrorCode::E_OK;
+}
+
 ExceptionErrorCode RequestServiceProxy::TouchTasks(
     const std::vector<TaskIdAndToken> &tids, std::vector<TaskInfoRet> &rets)
 {
@@ -367,8 +403,7 @@ ExceptionErrorCode RequestServiceProxy::SetMode(const std::string &tid, const Mo
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(tid);
     data.WriteUint32(static_cast<uint32_t>(mode));
-    int32_t ret =
-        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SET_MODE), data, reply, option);
+    int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SET_MODE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End send SetMode request, failed: %{public}d", ret);
         SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
@@ -657,6 +692,29 @@ int32_t RequestServiceProxy::Show(const std::string &tid, TaskInfo &info)
     }
     info = rets[0].info;
     REQUEST_HILOGD("End Request Show ok, tid: %{public}s", tid.c_str());
+    return E_OK;
+}
+
+int32_t RequestServiceProxy::ShowProgress(const std::string &tid, TaskProgress &taskProgress)
+{
+    REQUEST_HILOGD("Request ShowProgress, tid: %{public}s", tid.c_str());
+    std::vector<std::string> tids = { tid };
+    TaskProgressRet taskProgressRet{ .code = ExceptionErrorCode::E_OTHER };
+    std::vector<TaskProgressRet> rets = { taskProgressRet };
+
+    int32_t ret = RequestServiceProxy::ShowBatchProgress(tids, rets);
+    if (ret != ExceptionErrorCode::E_OK) {
+        REQUEST_HILOGE("End Request ShowProgress err, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
+        return ret;
+    }
+
+    int32_t errCode = rets[0].code;
+    if (errCode != E_OK) {
+        REQUEST_HILOGE("End Request ShowProgress, tid: %{public}s, failed: %{public}d", tid.c_str(), errCode);
+        return errCode;
+    }
+    taskProgress = rets[0].taskProgress;
+    REQUEST_HILOGD("End Request ShowProgress ok, tid: %{public}s", tid.c_str());
     return E_OK;
 }
 

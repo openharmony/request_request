@@ -107,6 +107,7 @@ impl RemoteStub for RequestServiceStub {
             interface::ATTACH_GROUP => self.attach_group(data, reply),
             interface::DELETE_GROUP => self.delete_group(data, reply),
             interface::SET_MAX_SPEED => self.set_max_speed(data, reply),
+            interface::SHOW_PROGRESS => self.show_progress(data, reply),
             interface::SET_MODE => self.set_mode(data, reply),
             interface::DISABLE_TASK_NOTIFICATION => self.disable_task_notifications(data, reply),
             _ => return IpcStatusCode::Failed as i32,
@@ -246,5 +247,23 @@ pub(crate) fn serialize_task_config(config: TaskConfig, reply: &mut MsgParcel) -
     for i in 0..config.body_file_paths.len() {
         reply.write(&(config.body_file_paths[i]))?;
     }
+    Ok(())
+}
+
+pub(crate) fn serialize_task_progress(tf: TaskInfo, reply: &mut MsgParcel) -> IpcResult<()> {
+    reply.write(&(tf.common_data.task_id.to_string()))?;
+    reply.write(&(tf.progress.common_data.state as u32))?;
+    let index = tf.progress.common_data.index;
+    reply.write(&(index as u32))?;
+    reply.write(&(tf.progress.processed[index] as u64))?;
+    reply.write(&(tf.progress.common_data.total_processed as u64))?;
+    reply.write(&(tf.progress.sizes))?;
+    reply.write(&(tf.progress.extras.len() as u32))?;
+    for (k, v) in tf.progress.extras.iter() {
+        reply.write(k)?;
+        reply.write(v)?;
+    }
+    reply.write(&(tf.common_data.reason as u32))?;
+    reply.write(&tf.status_code)?;
     Ok(())
 }
