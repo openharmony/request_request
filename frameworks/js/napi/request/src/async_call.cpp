@@ -84,9 +84,20 @@ napi_value AsyncCall::Call(const std::shared_ptr<Context> &context, const std::s
         return ret;
     }
     workData->ctx = context;
-    napi_create_async_work(
+    napi_status status = napi_create_async_work(
         context->env_, nullptr, resource, AsyncCall::OnExecute, AsyncCall::OnComplete, workData, &context->work_);
-    napi_queue_async_work_with_qos(context->env_, context->work_, napiQosLevel_);
+    if (status != napi_ok) {
+        REQUEST_HILOGE("async call napi_create failed");
+        delete workData;
+        return nullptr;
+    }
+    status = napi_queue_async_work_with_qos(context->env_, context->work_, napiQosLevel_);
+    if (status != napi_ok) {
+        REQUEST_HILOGE("async call napi_create failed");
+        napi_delete_async_work(context->env_, context->work_);
+        delete workData;
+        return nullptr;
+    }
     REQUEST_HILOGD("async call exec");
     return ret;
 }
