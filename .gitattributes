@@ -15,9 +15,9 @@
 * text=auto
 
 # 强制特定文件类型使用 LF 换行符
-*.rs text eol=lf
-*.h text eol=lf
-*.cpp text eol=lf
+# *.rs text eol=lf
+# *.h text eol=lf
+# *.cpp text eol=lf
 
 # 排除二进制文件（避免误处理）
 *.png binary
