@@ -421,44 +421,24 @@ impl Client {
                             debug!("message recv len {:}", len);
                         }
                         Err(e) => {
-                            error!("message recv error: {:?}", e);
-                            sys_event!(
-                                ExecFault,
-                                DfxCode::UDS_FAULT_03,
-                                &format!("message recv error: {:?}", e)
-                            );
+                            debug!("message recv error: {:?}", e);
                         }
                     },
                     Err(e) => {
-                        error!("message recv {}", e);
-                        sys_event!(
-                            ExecFault,
-                            DfxCode::UDS_FAULT_03,
-                            &format!("message recv {}", e)
-                        );
+                        debug!("message recv {}", e);
                         return;
                     }
                 };
 
                 let len: u32 = u32::from_le_bytes(buf);
                 if len != message.len() as u32 {
-                    error!("message len bad, send {:?}, recv {:?}", message.len(), len);
-                    sys_event!(
-                        ExecFault,
-                        DfxCode::UDS_FAULT_03,
-                        &format!("message len bad, send {:?}, recv {:?}", message.len(), len)
-                    );
+                    debug!("message len bad, send {:?}, recv {:?}", message.len(), len);
                 } else {
                     debug!("notify done, pid: {}", self.pid);
                 }
             }
             Err(err) => {
                 error!("message send error: {:?}", err);
-                sys_event!(
-                    ExecFault,
-                    DfxCode::UDS_FAULT_02,
-                    &format!("message send error: {:?}", err)
-                );
             }
         }
     }
