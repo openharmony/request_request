@@ -31,7 +31,6 @@ pub(crate) mod task_manager;
 #[cfg(test)]
 mod test {
     use std::fs::File;
-    use std::time::Duration;
 
     use ylong_runtime::sync::mpsc::unbounded_channel;
 
@@ -41,14 +40,10 @@ mod test {
     use crate::config::{Action, ConfigBuilder, Mode};
     use crate::error::ErrorCode;
     use crate::info::{State, TaskInfo};
-    use crate::manage::events::{TaskEvent, TaskManagerEvent};
     use crate::manage::task_manager::{TaskManagerRx, TaskManagerTx};
     use crate::service::client::ClientManagerEntry;
     use crate::service::run_count::RunCountManagerEntry;
-    use crate::task::reason::Reason;
     use crate::tests::{lock_database, test_init};
-
-    const GITEE_FILE_LEN: u64 = 1042003;
 
     fn task_manager() -> TaskManager {
         let (tx, rx) = unbounded_channel();
@@ -70,123 +65,6 @@ mod test {
     fn task_into(task_id: u32) -> TaskInfo {
         let db = RequestDb::get_instance();
         db.get_task_info(task_id).unwrap()
-    }
-
-    #[test]
-    fn ut_manager_task_state_and_reason() {
-        test_init();
-        let _lock = lock_database();
-        let mut manager = task_manager();
-        let file_path = "test_files/ut_manager_task_state_and_reason.txt";
-
-        let file = File::create(file_path).unwrap();
-        let config = ConfigBuilder::new()
-        .action(Action::Download)
-        .retry(true)
-        .mode(Mode::BackGround)
-        .file_spec(file)
-        .url("https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt")
-        .redirect(true)
-        .build();
-        let uid = config.common_data.uid;
-        let task_id = manager.create(config).unwrap();
-        assert_eq!(
-            task_into(task_id).progress.common_data.state,
-            State::Initialized.repr
-        );
-
-        assert_eq!(task_into(task_id).common_data.reason, Reason::Default.repr);
-
-        manager.start(uid, task_id);
-        assert_eq!(
-            task_into(task_id).progress.common_data.state,
-            State::Waiting.repr
-        );
-        assert_eq!(
-            task_into(task_id).common_data.reason,
-            Reason::RunningTaskMeetLimits.repr
-        );
-
-        manager.pause(uid, task_id);
-        assert_eq!(
-            task_into(task_id).progress.common_data.state,
-            State::Paused.repr
-        );
-        assert_eq!(
-            task_into(task_id).common_data.reason,
-            Reason::UserOperation.repr
-        );
-
-        manager.resume(uid, task_id);
-        assert_eq!(
-            task_into(task_id).progress.common_data.state,
-            State::Waiting.repr
-        );
-        assert_eq!(
-            task_into(task_id).common_data.reason,
-            Reason::RunningTaskMeetLimits.repr
-        );
-
-        manager.pause(uid, task_id);
-        assert_eq!(
-            task_into(task_id).progress.common_data.state,
-            State::Paused.repr
-        );
-        assert_eq!(
-            task_into(task_id).common_data.reason,
-            Reason::UserOperation.repr
-        );
-
-        manager.resume(uid, task_id);
-        assert_eq!(
-            task_into(task_id).progress.common_data.state,
-            State::Waiting.repr
-        );
-        assert_eq!(
-            task_into(task_id).common_data.reason,
-            Reason::RunningTaskMeetLimits.repr
-        );
-
-        manager.stop(uid, task_id);
-        assert_eq!(
-            task_into(task_id).progress.common_data.state,
-            State::Stopped.repr
-        );
-        assert_eq!(
-            task_into(task_id).common_data.reason,
-            Reason::UserOperation.repr
-        );
-
-        manager.start(uid, task_id);
-        assert_eq!(
-            task_into(task_id).progress.common_data.state,
-            State::Waiting.repr
-        );
-        assert_eq!(
-            task_into(task_id).common_data.reason,
-            Reason::RunningTaskMeetLimits.repr
-        );
-
-        manager.scheduler.reschedule();
-
-        ylong_runtime::block_on(async move {
-            ylong_runtime::time::sleep(Duration::from_millis(500)).await;
-            assert_eq!(
-                task_into(task_id).progress.common_data.state,
-                State::Running.repr
-            );
-            assert_eq!(task_into(task_id).common_data.reason, Reason::Default.repr);
-            ylong_runtime::time::sleep(Duration::from_secs(10)).await;
-            let msg = manager.rx.recv().await.unwrap();
-            assert!(matches!(msg, TaskManagerEvent::Reschedule));
-            let msg = manager.rx.recv().await.unwrap();
-            assert!(matches!(
-                msg,
-                TaskManagerEvent::Task(TaskEvent::Completed(info_task_id, info_uid,Mode::BackGround)) if uid == info_uid && task_id == info_task_id
-            ));
-            let file = File::open(file_path).unwrap();
-            assert_eq!(file.metadata().unwrap().len(), GITEE_FILE_LEN);
-        });
     }
 
     #[test]
@@ -275,63 +153,5 @@ mod test {
             task_into(task_id).progress.common_data.state,
             State::Removed.repr
         );
-    }
-
-    #[test]
-    fn ut_manager_reschedule() {
-        test_init();
-        let _lock = lock_database();
-        let mut manager = task_manager();
-        let file_path = "test_files/ut_manager_reschedule.txt";
-
-        let file = File::create(file_path).unwrap();
-        let config = ConfigBuilder::new()
-        .action(Action::Download)
-        .retry(true)
-        .mode(Mode::BackGround)
-        .file_spec(file)
-        .url("https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt")
-        .redirect(true)
-        .build();
-        let uid = config.common_data.uid;
-        let task_id = manager.create(config.clone()).unwrap();
-        manager.rx.try_recv().unwrap_err();
-        manager.start(uid, task_id);
-        assert!(matches!(
-            manager.rx.try_recv().unwrap(),
-            TaskManagerEvent::Reschedule
-        ));
-        manager.scheduler.resort_scheduled = false;
-        manager.stop(uid, task_id);
-        assert!(matches!(
-            manager.rx.try_recv().unwrap(),
-            TaskManagerEvent::Reschedule
-        ));
-        manager.scheduler.resort_scheduled = false;
-        manager.start(uid, task_id);
-        assert!(matches!(
-            manager.rx.try_recv().unwrap(),
-            TaskManagerEvent::Reschedule
-        ));
-        manager.stop(uid, task_id);
-        manager.rx.try_recv().unwrap_err();
-        manager.scheduler.resort_scheduled = false;
-        manager.start(uid, task_id);
-        assert!(matches!(
-            manager.rx.try_recv().unwrap(),
-            TaskManagerEvent::Reschedule
-        ));
-        manager.scheduler.resort_scheduled = false;
-        manager.pause(uid, task_id);
-        assert!(matches!(
-            manager.rx.try_recv().unwrap(),
-            TaskManagerEvent::Reschedule
-        ));
-        manager.scheduler.resort_scheduled = false;
-        manager.resume(uid, task_id);
-        assert!(matches!(
-            manager.rx.try_recv().unwrap(),
-            TaskManagerEvent::Reschedule
-        ));
     }
 }

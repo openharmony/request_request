@@ -932,7 +932,6 @@ HWTEST_F(TaskBuilderTest, build008, TestSize.Level1)
 HWTEST_F(TaskBuilderTest, build009, TestSize.Level1)
 {
     TaskBuilder builder;
-    std::string description(1025, 'a');
     auto res = builder.setAction(Action::DOWNLOAD).setUrl("https://example.com/").setSaveAs("./data/").build();
     EXPECT_EQ(res.second, ExceptionErrorCode::E_PARAMETER_CHECK);
 }
