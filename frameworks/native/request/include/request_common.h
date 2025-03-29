@@ -353,5 +353,7 @@ struct TaskRet {
     std::string tid;
 };
 
+static uint64_t REQUEST_FDSAN_TAG = 0xC01C50;
+
 } // namespace OHOS::Request
 #endif //REQUEST_COMMON_H

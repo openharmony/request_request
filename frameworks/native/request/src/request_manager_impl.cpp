@@ -364,9 +364,14 @@ int32_t RequestManagerImpl::EnsureChannelOpen()
     int32_t sockFd = -1;
     int ret = CallProxyMethod(&RequestServiceInterface::OpenChannel, sockFd);
     if (ret != E_OK) {
-        REQUEST_HILOGE("EnsureChannelOpen failed: %{public}d", ret);
+        REQUEST_HILOGE("EnsureChannelOpen failed: %{public}d, %{public}d", ret, sockFd);
         return ret;
     }
+    if (sockFd == -1) {
+        REQUEST_HILOGE("EnsureChannelOpen but fd -1: %{public}d", sockFd);
+        return ret;
+    }
+    fdsan_exchange_owner_tag(sockFd, 0, REQUEST_FDSAN_TAG);
     REQUEST_HILOGD("EnsureChannelOpen ok: %{public}d", sockFd);
     msgReceiver_ = std::make_shared<ResponseMessageReceiver>(this, sockFd);
     msgReceiver_->BeginReceive();
