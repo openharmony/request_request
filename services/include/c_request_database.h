@@ -171,7 +171,10 @@ bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo);
 bool UpdateRequestTaskState(uint32_t taskId, CUpdateStateInfo *updateStateInfo);
 void RequestDBRemoveRecordsFromTime(uint64_t time);
 CTaskInfo *GetTaskInfo(uint32_t taskId);
+
+CTaskInfo *GetTaskInfos(uint32_t *taskIds, int32_t inLen, int32_t *outLen);
 CTaskConfig *QueryTaskConfig(uint32_t taskId);
+CTaskConfig *QueryTaskConfigs(uint32_t *taskIds, int32_t inLen, int32_t *outLen);
 
 #ifdef __cplusplus
 }

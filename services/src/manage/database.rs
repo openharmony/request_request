@@ -391,6 +391,26 @@ impl RequestDb {
         Some(task_info)
     }
 
+    #[cfg(feature = "oh")]
+    pub(crate) fn get_task_infos(&self, task_ids: &Vec<u32>) -> HashMap<u32, TaskInfo> {
+        let mut ret = HashMap::new();
+        debug!("Get task infos from database");
+        let mut out_len = 0;
+        let c_task_info =
+            unsafe { GetTaskInfos(task_ids.as_ptr(), task_ids.len() as i32, &mut out_len) };
+        if c_task_info.is_null() {
+            info!("No task found in database");
+            return ret;
+        }
+        for i in 0..out_len {
+            let task_info = TaskInfo::from_c_struct(unsafe { &*c_task_info.offset(i as isize) });
+            ret.insert(task_info.common_data.task_id, task_info);
+        }
+        unsafe { DeleteCTaskInfo(c_task_info) };
+
+        ret
+    }
+
     pub(crate) fn query_task_total_processed(&self, task_id: u32) -> Option<i64> {
         let sql = format!(
             "SELECT total_processed FROM request_task WHERE task_id = {}",
@@ -465,6 +485,26 @@ impl RequestDb {
             unsafe { DeleteCTaskConfig(c_task_config) };
             Some(task_config)
         }
+    }
+
+    #[cfg(feature = "oh")]
+    pub(crate) fn get_task_configs(&self, task_ids: &Vec<u32>) -> HashMap<u32, TaskConfig> {
+        let mut ret = HashMap::new();
+        debug!("query single task config in database");
+        let mut out_len = 0;
+        let c_task_config =
+            unsafe { QueryTaskConfigs(task_ids.as_ptr(), task_ids.len() as i32, &mut out_len) };
+        if c_task_config.is_null() {
+            error!("can not find task in database, task id: {:?}", task_ids);
+            return ret;
+        }
+        for i in 0..out_len {
+            let task_config =
+                TaskConfig::from_c_struct(unsafe { &*c_task_config.offset(i as isize) });
+            ret.insert(task_config.common_data.task_id, task_config);
+        }
+        unsafe { DeleteCTaskConfig(c_task_config) };
+        ret
     }
 
     #[cfg(not(feature = "oh"))]
@@ -673,7 +713,10 @@ extern "C" {
     fn DeleteCTaskConfig(ptr: *const CTaskConfig);
     fn DeleteCTaskInfo(ptr: *const CTaskInfo);
     fn GetTaskInfo(task_id: u32) -> *const CTaskInfo;
+    fn GetTaskInfos(task_ids: *const u32, in_len: i32, out_len: &mut i32) -> *const CTaskInfo;
     fn QueryTaskConfig(task_id: u32) -> *const CTaskConfig;
+    fn QueryTaskConfigs(task_ids: *const u32, in_len: i32, out_len: &mut i32)
+        -> *const CTaskConfig;
     fn RecordRequestTask(info: *const CTaskInfo, config: *const CTaskConfig) -> bool;
     fn UpdateRequestTask(id: u32, info: *const CUpdateInfo) -> bool;
 }

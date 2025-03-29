@@ -888,6 +888,49 @@ CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo)
     return cTaskInfo;
 }
 
+// The caller needs to ensure the legality of the input parameters.
+CTaskInfo *BuildCTaskInfos(const std::vector<TaskInfo> &taskInfos, int32_t *len)
+{
+    *len = taskInfos.size();
+    CTaskInfo *cTaskInfos = new CTaskInfo[*len];
+    for (int32_t infoIndex = 0; infoIndex < *len; ++infoIndex) {
+        auto &taskInfo = taskInfos[infoIndex];
+        uint32_t formItemsLen = taskInfo.formItems.size();
+        CFormItem *formItemsPtr = new CFormItem[formItemsLen];
+        for (uint32_t i = 0; i < formItemsLen; i++) {
+            formItemsPtr[i].name = WrapperCString(taskInfo.formItems[i].name);
+            formItemsPtr[i].value = WrapperCString(taskInfo.formItems[i].value);
+        }
+
+        uint32_t fileSpecsLen = taskInfo.fileSpecs.size();
+        CFileSpec *fileSpecsPtr = new CFileSpec[fileSpecsLen];
+        for (uint32_t i = 0; i < fileSpecsLen; i++) {
+            fileSpecsPtr[i].name = WrapperCString(taskInfo.fileSpecs[i].name);
+            fileSpecsPtr[i].path = WrapperCString(taskInfo.fileSpecs[i].path);
+            fileSpecsPtr[i].fileName = WrapperCString(taskInfo.fileSpecs[i].fileName);
+            fileSpecsPtr[i].mimeType = WrapperCString(taskInfo.fileSpecs[i].mimeType);
+            fileSpecsPtr[i].is_user_file = taskInfo.fileSpecs[i].is_user_file;
+        }
+
+        cTaskInfos[infoIndex].bundle = WrapperCString(taskInfo.bundle);
+        cTaskInfos[infoIndex].url = WrapperCString(taskInfo.url);
+        cTaskInfos[infoIndex].data = WrapperCString(taskInfo.data);
+        cTaskInfos[infoIndex].token = WrapperCString(taskInfo.token);
+        cTaskInfos[infoIndex].formItemsPtr = formItemsPtr;
+        cTaskInfos[infoIndex].formItemsLen = formItemsLen;
+        cTaskInfos[infoIndex].fileSpecsPtr = fileSpecsPtr;
+        cTaskInfos[infoIndex].fileSpecsLen = fileSpecsLen;
+        cTaskInfos[infoIndex].title = WrapperCString(taskInfo.title);
+        cTaskInfos[infoIndex].description = WrapperCString(taskInfo.description);
+        cTaskInfos[infoIndex].mimeType = WrapperCString(taskInfo.mimeType);
+        cTaskInfos[infoIndex].progress = BuildCProgress(taskInfo.progress);
+        cTaskInfos[infoIndex].commonData = taskInfo.commonData;
+        cTaskInfos[infoIndex].maxSpeed = taskInfo.maxSpeed;
+    }
+
+    return cTaskInfos;
+}
+
 void BuildRequestTaskConfigWithLong(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
 {
     config.commonData.taskId = static_cast<uint32_t>(GetLong(set, 0));    // Line 0 is 'task_id'
@@ -1101,6 +1144,63 @@ CTaskInfo *GetTaskInfo(uint32_t taskId)
     return BuildCTaskInfo(taskInfo);
 }
 
+int GetTaskInfosInner(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, std::vector<TaskInfo> &taskInfos)
+{
+    auto resultSet =
+        OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true)
+            .Query(rdbPredicates,
+                { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry", "tries", "version",
+                    "priority", "bundle", "url", "data", "token", "title", "description", "mime_type", "state", "idx",
+                    "total_processed", "sizes", "processed", "extras", "form_items", "file_specs", "max_speed" });
+    if (resultSet == nullptr) {
+        REQUEST_HILOGE("result set is nullptr");
+        return OHOS::Request::QUERY_ERR;
+    }
+
+    int32_t rowCount;
+    int32_t ret = resultSet->GetRowCount(rowCount);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("Gets rowCount failed, GetRowCount ret: %{public}d", ret);
+        return OHOS::Request::QUERY_ERR;
+    }
+
+    for (int32_t i = 0; i < rowCount; ++i) {
+        if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
+            REQUEST_HILOGE("go to row %{public}d failed", i);
+            resultSet->Close();
+            return OHOS::Request::QUERY_ERR;
+        }
+        TaskInfo taskInfo;
+        FillCommonTaskInfo(resultSet, taskInfo);
+        FillOtherTaskInfo(resultSet, taskInfo);
+        taskInfos.push_back(taskInfo);
+    }
+    resultSet->Close();
+    return OHOS::Request::QUERY_OK;
+}
+
+CTaskInfo *GetTaskInfos(uint32_t *taskIds, int32_t inLen, int32_t *outLen)
+{
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
+    *outLen = 0;
+    std::vector<std::string> ids;
+    for (int32_t i = 0; i < inLen; ++i) {
+        ids.push_back(std::to_string(taskIds[i]));
+    }
+    rdbPredicates.In("task_id", ids);
+
+    std::vector<TaskInfo> taskInfos;
+    if (GetTaskInfosInner(rdbPredicates, taskInfos) == OHOS::Request::QUERY_ERR || taskInfos.empty()) {
+        REQUEST_HILOGE("QueryRequestTaskInfo failed: result set is nullptr or go to first row failed, "
+                       "task_id: %{public}d",
+            taskIds[0]);
+        return nullptr;
+    }
+    *outLen = taskInfos.size();
+
+    return BuildCTaskInfos(taskInfos, outLen);
+}
+
 void BuildCTaskConfig(CTaskConfig *cTaskConfig, const TaskConfig &taskConfig)
 {
     cTaskConfig->bundle = WrapperCString(taskConfig.bundle);
@@ -1194,4 +1294,54 @@ CTaskConfig *QueryTaskConfig(uint32_t taskId)
     CTaskConfig *cTaskConfig = new CTaskConfig;
     BuildCTaskConfig(cTaskConfig, taskConfig);
     return cTaskConfig;
+}
+
+CTaskConfig *QueryTaskConfigs(uint32_t *taskIds, int32_t inLen, int32_t *outLen)
+{
+    *outLen = 0;
+    std::vector<std::string> ids;
+    for (int32_t i = 0; i < inLen; ++i) {
+        ids.push_back(std::to_string(taskIds[i]));
+    }
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
+    rdbPredicates.In("task_id", ids);
+    OHOS::Request::RequestDataBase &database =
+        OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true);
+    auto resultSet = database.Query(
+        rdbPredicates, { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming",
+                           "retry", "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority",
+                           "background", "bundle", "url", "title", "description", "method", "headers", "data", "token",
+                           "config_extras", "version", "form_items", "file_specs", "body_file_names", "certs_paths",
+                           "proxy", "certificate_pins", "bundle_type", "atomic_account", "multipart" });
+    int rowCount = 0;
+    if (resultSet == nullptr) {
+        REQUEST_HILOGE("QuerySingleTaskConfig failed: result set is nullptr");
+        return nullptr;
+    }
+    int errCode = resultSet->GetRowCount(rowCount);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        REQUEST_HILOGE("TaskConfig result count row failed");
+        database.CheckAndRebuildDataBase(errCode);
+        return nullptr;
+    }
+    if (rowCount == 0) {
+        REQUEST_HILOGE("TaskConfig result count row is 0");
+        return nullptr;
+    }
+    CTaskConfig *cTaskConfigs = new CTaskConfig[rowCount];
+    for (int i = 0; i < rowCount; i++) {
+        if (resultSet->GoToRow(i) != OHOS::NativeRdb::E_OK) {
+            REQUEST_HILOGE("TaskConfig result set go to %{public}d row failed", i);
+            delete[] cTaskConfigs;
+            return nullptr;
+        }
+
+        TaskConfig taskConfig = BuildRequestTaskConfig(resultSet);
+        REQUEST_HILOGD("QuerySingleTaskConfig in, after BuildRequestTaskConfig, task_id: %{public}u",
+            taskConfig.commonData.taskId);
+
+        BuildCTaskConfig(&cTaskConfigs[i], taskConfig);
+    }
+    *outLen = rowCount;
+    return cTaskConfigs;
 }

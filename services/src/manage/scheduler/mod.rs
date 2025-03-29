@@ -24,10 +24,10 @@ use queue::RunningQueue;
 use state::sql::SqlList;
 
 use super::events::TaskManagerEvent;
-use crate::config::Mode;
+use crate::config::{Mode, TaskConfig};
 use crate::error::ErrorCode;
 use crate::info::TaskInfo;
-use crate::manage::database::RequestDb;
+use crate::manage::database::{RequestDb, TaskQosInfo};
 use crate::manage::notifier::Notifier;
 use crate::manage::task_manager::TaskManagerTx;
 use crate::service::client::ClientManagerEntry;
@@ -144,7 +144,11 @@ impl Scheduler {
             }
         }
 
-        if !self.check_config_satisfy(task_id)? {
+        let config = database
+            .get_task_config(task_id)
+            .ok_or(ErrorCode::TaskNotFound)?;
+
+        if !self.check_config_satisfy(task_id, &config) {
             return Ok(());
         };
         let qos_info = database
@@ -153,6 +157,105 @@ impl Scheduler {
         self.qos.start_task(uid, qos_info);
         self.schedule_if_not_scheduled();
         Ok(())
+    }
+
+    pub(crate) fn start_tasks(&mut self, tasks: Vec<(u64, u32)>) -> HashMap<u32, ErrorCode> {
+        self.start_tasks_inner(tasks, false)
+    }
+
+    pub(crate) fn resume_tasks(&mut self, tasks: Vec<(u64, u32)>) -> HashMap<u32, ErrorCode> {
+        self.start_tasks_inner(tasks, true)
+    }
+
+    fn start_tasks_inner(
+        &mut self,
+        tasks: Vec<(u64, u32)>,
+        is_resume: bool,
+    ) -> HashMap<u32, ErrorCode> {
+        let mut error_map = HashMap::new();
+        let database = RequestDb::get_instance();
+        let task_ids = tasks.iter().map(|x| x.1).collect();
+        let task_infos = database.get_task_infos(&task_ids);
+        let task_configs = database.get_task_configs(&task_ids);
+        let mut waiting_list = Vec::new();
+        let mut complete_list = Vec::new();
+        let mut need_reschedule = false;
+        for (uid, task_id) in tasks {
+            let Some(info) = task_infos.get(&task_id) else {
+                error_map.insert(task_id, ErrorCode::TaskNotFound);
+                continue;
+            };
+            let mut state = info.progress.common_data.state;
+            if (is_resume && state != State::Paused.repr)
+                || (!is_resume && state == State::Paused.repr)
+            {
+                error_map.insert(task_id, ErrorCode::TaskStateErr);
+                continue;
+            }
+            if is_resume {
+                Notifier::resume(&self.client_manager, info.build_notify_data());
+            }
+            if info.progress.is_finish() {
+                // todo:删除了好多info的获取
+                complete_list.push(task_id);
+                state = State::Completed.repr;
+                Notifier::complete(&self.client_manager, info.build_notify_data());
+            } else {
+                waiting_list.push(task_id);
+                state = State::Waiting.repr;
+            }
+
+            let Some(config) = task_configs.get(&task_id) else {
+                error!("task {} config not found", task_id);
+                error_map.insert(task_id, ErrorCode::Other);
+                continue;
+            };
+            error_map.insert(task_id, ErrorCode::ErrOk);
+            // The waiting_list represents the collection of tasks that are about to be
+            // batch-set to the waiting state, and the complete_list represents
+            // the collection of tasks that are about to be set to the complete state.
+            // If a task does not meet the startup condition, it will be individually
+            // configured and removed from both collections.
+            if !self.check_config_satisfy(task_id, config) {
+                if waiting_list.last() == Some(&task_id) {
+                    waiting_list.pop();
+                }
+                if complete_list.last() == Some(&task_id) {
+                    complete_list.pop();
+                }
+                continue;
+            };
+            let qos_info = TaskQosInfo {
+                task_id,
+                action: info.common_data.action,
+                mode: info.common_data.mode,
+                state,
+                priority: info.common_data.priority,
+            };
+            self.qos.start_task(uid, qos_info);
+            need_reschedule = true;
+        }
+        if !waiting_list.is_empty() {
+            database.change_status_batch(
+                &waiting_list,
+                &task_infos,
+                &mut error_map,
+                State::Waiting,
+            );
+        }
+        if !complete_list.is_empty() {
+            database.change_status_batch(
+                &complete_list,
+                &task_infos,
+                &mut error_map,
+                State::Completed,
+            );
+        }
+
+        if need_reschedule {
+            self.schedule_if_not_scheduled();
+        }
+        error_map
     }
 
     pub(crate) fn pause_task(&mut self, uid: u64, task_id: u32) -> Result<(), ErrorCode> {
@@ -434,11 +537,8 @@ impl Scheduler {
         }
     }
 
-    pub(crate) fn check_config_satisfy(&self, task_id: u32) -> Result<bool, ErrorCode> {
+    pub(crate) fn check_config_satisfy(&self, task_id: u32, config: &TaskConfig) -> bool {
         let database = RequestDb::get_instance();
-        let config = database
-            .get_task_config(task_id)
-            .ok_or(ErrorCode::TaskNotFound)?;
 
         if let Err(reason) = config.satisfy_network(self.state_handler.network()) {
             info!(
@@ -448,7 +548,7 @@ impl Scheduler {
             );
 
             database.update_task_state(task_id, State::Waiting, reason);
-            return Ok(false);
+            return false;
         }
 
         if !config.satisfy_foreground(self.state_handler.foreground_abilities()) {
@@ -457,9 +557,9 @@ impl Scheduler {
                 task_id, config.common_data.uid
             );
             database.update_task_state(task_id, State::Waiting, Reason::AppBackgroundOrTerminate);
-            return Ok(false);
+            return false;
         }
-        Ok(true)
+        true
     }
 
     pub(crate) fn clear_timeout_tasks(&mut self) {
@@ -531,6 +631,86 @@ impl RequestDb {
             NotificationDispatcher::get_instance().unregister_task(info.uid(), task_id, true);
         }
         Ok(())
+    }
+
+    fn change_status_batch(
+        &self,
+        task_ids: &[u32],
+        task_infos: &HashMap<u32, TaskInfo>,
+        error_map: &mut HashMap<u32, ErrorCode>,
+        new_state: State,
+    ) {
+        // Leverage the in-memory TaskInfo to perform status checks. If the conditions
+        // for modification are met, add the task to satisfied_task_ids, and
+        // then proceed with a unified status change.
+        let mut satisfied_task_ids = Vec::new();
+        for task_id in task_ids {
+            let Some(info) = task_infos.get(task_id) else {
+                error_map.insert(*task_id, ErrorCode::TaskNotFound);
+                continue;
+            };
+            let old_state = info.progress.common_data.state;
+            if old_state == new_state.repr {
+                if new_state == State::Removed {
+                    error_map.insert(*task_id, ErrorCode::TaskNotFound);
+                } else {
+                    error_map.insert(*task_id, ErrorCode::TaskStateErr);
+                }
+                continue;
+            }
+            if Self::check_status(old_state, new_state, info.common_data.action) {
+                satisfied_task_ids.push(*task_id);
+                if (old_state == State::Initialized.repr
+                    || old_state == State::Waiting.repr
+                    || old_state == State::Paused.repr)
+                    && (new_state == State::Stopped || new_state == State::Removed)
+                {
+                    NotificationDispatcher::get_instance().unregister_task(
+                        info.uid(),
+                        *task_id,
+                        true,
+                    );
+                }
+            }
+        }
+        let sql = match new_state {
+            State::Paused => sql::pause_tasks(&satisfied_task_ids),
+            State::Running => sql::start_tasks(&satisfied_task_ids),
+            State::Stopped => sql::stop_tasks(&satisfied_task_ids),
+            State::Removed => sql::remove_tasks(&satisfied_task_ids),
+            State::Waiting => sql::start_tasks(&satisfied_task_ids),
+            _ => return,
+        };
+        if RequestDb::get_instance().execute(&sql).is_err() {
+            for task_id in satisfied_task_ids {
+                error_map.insert(task_id, ErrorCode::SystemApi);
+            }
+        }
+    }
+
+    // If you want to reuse this interface, you need to confirm whether the logic
+    // meets the expectations.
+    fn check_status(old_state: u8, new_state: State, action: u8) -> bool {
+        match new_state {
+            State::Paused => {
+                old_state == State::Running.repr
+                    || old_state == State::Retrying.repr
+                    || old_state == State::Waiting.repr
+            }
+            State::Running | State::Waiting => {
+                old_state == State::Initialized.repr
+                    || old_state == State::Paused.repr
+                    || ((old_state == State::Stopped.repr || old_state == State::Failed.repr)
+                        && action == Action::Download.repr)
+            }
+            State::Stopped => {
+                old_state == State::Running.repr
+                    || old_state == State::Retrying.repr
+                    || old_state == State::Waiting.repr
+            }
+            State::Removed => true,
+            _ => false,
+        }
     }
 
     fn set_mode(&self, task_id: u32, mode: Mode) -> Result<(), ErrorCode> {
