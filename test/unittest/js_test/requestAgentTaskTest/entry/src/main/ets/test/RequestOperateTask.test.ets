@@ -2799,7 +2799,7 @@ export default function requestOperateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskId001', 0, async function (done) {
+    it('testGetTaskId001', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
@@ -2822,7 +2822,7 @@ export default function requestOperateTaskTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testTaskId002', 0, async function (done) {
+    it('testGetTaskId002', 0, async function (done) {
       let conf = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
@@ -2832,6 +2832,123 @@ export default function requestOperateTaskTest() {
         await request.agent.getTask(context, "avbdfdf");
       } catch (err) {
         expect(err.code).assertEqual(21900006);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testGetTaskId003
+     * @tc.name: testGetTaskId003
+     * @tc.desc: Tests fot correct gettask
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testGetTaskId003', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test_get_task_id_003`,
+      }
+      let task = await request.agent.create(context, conf);
+      try {
+        await request.agent.getTask(context, task.tid);
+        expect(true).assertTrue();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testGetTaskId004
+     * @tc.name: testGetTaskId004
+     * @tc.desc: Tests whether an exception is thrown when lack task_id
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testGetTaskId004', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test_get_task_id_003`,
+      }
+      try {
+        await request.agent.getTask(context, "");
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testGetTaskId005
+     * @tc.name: testGetTaskId005
+     * @tc.desc: Tests whether an exception is thrown when task_id is fake
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testGetTaskId005', 0, async function (done) {
+      let tid = '1'.repeat(33),
+      try {
+        await request.agent.getTask(undefined, tid);
+      } catch (err) {
+        expect(err.code).assertEqual(21900006);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testGetTaskId006
+     * @tc.name: testGetTaskId006
+     * @tc.desc: Tests whether an exception is thrown when task_id is fake and undefined
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testGetTaskId006', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test_get_task_id_004`,
+      }
+      try {
+        await request.agent.getTask(undefined, "123123");
+      } catch (err) {
+        expect(err.code).assertEqual(21900006);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testGetTaskId007
+     * @tc.name: testGetTaskId007
+     * @tc.desc: Tests whether an exception is thrown when task_id is fake and undefined
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testGetTaskId007', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `test_get_task_id_007`,
+      }
+      let task = await request.agent.create(context, conf);
+      try {
+        await request.agent.getTask(undefined, task.tid);
+        expect(true).assertTrue();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
         done();
       }
     })
