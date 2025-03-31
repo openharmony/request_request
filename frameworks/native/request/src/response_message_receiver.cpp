@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "log.h"
+#include "request_common.h"
 #include "sys_event.h"
 
 namespace OHOS::Request {
@@ -421,7 +422,9 @@ void ResponseMessageReceiver::OnShutdown(int32_t fd)
 {
     REQUEST_HILOGI("uds OnShutdown, %{public}d", fd);
     serviceHandler_->RemoveFileDescriptorListener(fd);
-    close(fd);
+    if (fd > 0) {
+        fdsan_close_with_tag(fd, REQUEST_FDSAN_TAG);
+    }
     this->handler_->OnChannelBroken();
 }
 
@@ -429,7 +432,9 @@ void ResponseMessageReceiver::OnException(int32_t fd)
 {
     REQUEST_HILOGI("uds OnException, %{public}d", fd);
     serviceHandler_->RemoveFileDescriptorListener(fd);
-    close(fd);
+    if (fd > 0) {
+        fdsan_close_with_tag(fd, REQUEST_FDSAN_TAG);
+    }
     this->handler_->OnChannelBroken();
 }
 
