@@ -53,6 +53,7 @@ private:
         std::map<std::string, std::vector<std::string>> &headers, char *&parcel, int32_t &size);
     static int32_t ProgressExtrasFromParcel(std::map<std::string, std::string> &extras, char *&parcel, int32_t &size);
     void OnReadable(int32_t fd) override;
+    bool ReadUdsData(int32_t fd, char *buffer, int32_t &length);
     static int32_t VecInt64FromParcel(std::vector<int64_t> &vec, char *&parcel, int32_t &size);
     static int32_t MsgHeaderParcel(int32_t &msgId, int16_t &msgType, int16_t &bodySize, char *&parcel, int32_t &size);
     static int32_t ResponseFromParcel(std::shared_ptr<Response> &response, char *&parcel, int32_t &size);
@@ -63,8 +64,9 @@ private:
 
 private:
     IResponseMessageHandler *handler_;
-    int32_t sockFd_{ -1 };
     int32_t messageId_{ 1 };
+    int32_t sockFd_{ -1 };
+    std::mutex sockFdMutex_;
 };
 
 } // namespace OHOS::Request
