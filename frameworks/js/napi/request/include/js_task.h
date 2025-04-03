@@ -74,6 +74,7 @@ private:
         Config config{};
         std::string tid{};
         std::string token = "null";
+        bool contextIf = false;
     };
 
     struct ContextCallbackData {

@@ -350,6 +350,11 @@ napi_value JsTask::GetTask(napi_env env, napi_callback_info info)
                 "End get task in AsyncCall output, seq: %{public}d, failed: %{public}d", seq, context->innerCode_);
             return napi_generic_failure;
         }
+        if (context->contextIf) {
+            context->innerCode_ = E_PARAMETER_CHECK;
+            REQUEST_HILOGE("End get task in AsyncCall output failed by error context");
+            return napi_generic_failure;
+        }
         if (!GetTaskOutput(context)) {
             REQUEST_HILOGE("End get task in AsyncCall output, seq: %{public}d, failed: get task output failed", seq);
             return napi_generic_failure;
@@ -383,6 +388,7 @@ void JsTask::GetTaskExecution(std::shared_ptr<ContextInfo> context)
         context->taskRef = taskContextMap_[tid]->taskRef;
         context->jsConfig = taskContextMap_[tid]->jsConfig;
         context->innerCode_ = E_OK;
+        context->contextIf = false;
         return;
     } else {
         Config &config = context->config;
@@ -438,6 +444,12 @@ ExceptionError JsTask::ParseGetTask(napi_env env, size_t argc, napi_value *argv,
         err.code = E_PARAMETER_CHECK;
         err.errInfo = "Missing mandatory parameters, need at least two params, context and id";
         return err;
+    }
+    std::shared_ptr<OHOS::AbilityRuntime::Context> runtimeContext = nullptr;
+    napi_status getStatus = JsInitialize::GetContext(env, argv[0], runtimeContext);
+    if (getStatus != napi_ok) {
+        REQUEST_HILOGE("Get context fail");
+        context->contextIf = true;
     }
     if (NapiUtils::GetValueType(env, argv[1]) != napi_string) {
         REQUEST_HILOGE("The parameter: tid is not of string type");
