@@ -369,25 +369,25 @@ int32_t ResponseMessageReceiver::NotifyDataFromParcel(
     return 0;
 }
 
-bool ResponseMessageReceiver::ReadUdsData(int32_t fd, char *buffer, int32_t &length)
+bool ResponseMessageReceiver::ReadUdsData(char *buffer, int32_t readSize, int32_t &length)
 {
-    int readSize = ResponseMessageReceiver::RESPONSE_MAX_SIZE;
     std::lock_guard<std::mutex> lock(sockFdMutex_);
-    if (fd < 0) {
-        REQUEST_HILOGE("OnReadable errfd: %{public}d", fd);
+    if (sockFd_ < 0) {
+        REQUEST_HILOGE("OnReadable errfd: %{public}d", sockFd_);
         return false;
     }
-    length = read(fd, buffer, readSize);
+    length = read(sockFd_, buffer, readSize);
     if (length <= 0) {
+        REQUEST_HILOGE("read message error: %{public}d, %{public}d", length, errno);
         return false;
     }
     REQUEST_HILOGD("read message: %{public}d", length);
 
     char lenBuf[4];
     *reinterpret_cast<uint32_t *>(lenBuf) = length;
-    int32_t ret = write(fd, lenBuf, 4);
+    int32_t ret = write(sockFd_, lenBuf, 4);
     if (ret <= 0) {
-        REQUEST_HILOGE("send length back failed: %{public}d", ret);
+        REQUEST_HILOGE("send length back failed: %{public}d, %{public}d", ret, errno);
         SysEventLog::SendSysEventLog(FAULT_EVENT, UDS_FAULT_02, "write" + std::to_string(ret));
     }
     return true;
@@ -398,8 +398,8 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
     int readSize = ResponseMessageReceiver::RESPONSE_MAX_SIZE;
     char buffer[readSize];
     int32_t length = 0;
-    if (!ReadUdsData(fd, buffer, length)) {
-        REQUEST_HILOGE("ReadUdsData err: %{public}d, %{public}d", fd, length);
+    if (!ReadUdsData(buffer, readSize, length)) {
+        REQUEST_HILOGE("ReadUdsData err: %{public}d,%{public}d, %{public}d", sockFd_, fd, length);
         return;
     };
 
@@ -440,37 +440,26 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
 
 void ResponseMessageReceiver::OnShutdown(int32_t fd)
 {
-    {
-        std::lock_guard<std::mutex> lock(sockFdMutex_);
-        REQUEST_HILOGI("uds OnShutdown, %{public}d", fd);
-        if (fd > 0) {
-            serviceHandler_->RemoveFileDescriptorListener(fd);
-            fdsan_close_with_tag(fd, REQUEST_FDSAN_TAG);
-        }
-        fd = -1;
-    }
-    this->handler_->OnChannelBroken();
+    REQUEST_HILOGI("uds OnShutdown, %{public}d, %{public}d", sockFd_, fd);
+    ShutdownChannel();
 }
 
 void ResponseMessageReceiver::OnException(int32_t fd)
 {
-    {
-        std::lock_guard<std::mutex> lock(sockFdMutex_);
-        REQUEST_HILOGI("uds OnException, %{public}d", fd);
-        if (fd > 0) {
-            serviceHandler_->RemoveFileDescriptorListener(fd);
-            fdsan_close_with_tag(fd, REQUEST_FDSAN_TAG);
-        }
-        fd = -1;
-    }
-    this->handler_->OnChannelBroken();
+    REQUEST_HILOGI("uds OnException, %{public}d, %{public}d", sockFd_, fd);
+    ShutdownChannel();
 }
 
 void ResponseMessageReceiver::Shutdown()
 {
+    REQUEST_HILOGI("uds shutdown, %{public}d", sockFd_);
+    ShutdownChannel();
+}
+
+void ResponseMessageReceiver::ShutdownChannel()
+{
     {
         std::lock_guard<std::mutex> lock(sockFdMutex_);
-        REQUEST_HILOGI("uds shutdown, %{public}d", sockFd_);
         if (sockFd_ > 0) {
             serviceHandler_->RemoveFileDescriptorListener(sockFd_);
             fdsan_close_with_tag(sockFd_, REQUEST_FDSAN_TAG);
