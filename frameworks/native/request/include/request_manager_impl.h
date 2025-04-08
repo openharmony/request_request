@@ -39,7 +39,6 @@
 namespace OHOS::Request {
 
 constexpr int RETRY_TIMES = 5;
-constexpr int REMOTE_DIED_ERROR = 29189;
 
 class RequestManagerImpl : public IResponseMessageHandler {
 public:
