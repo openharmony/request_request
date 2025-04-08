@@ -24,7 +24,7 @@
 #include <optional>
 #include <string>
 #include <vector>
-
+#include "log.h"
 #include "ani_common_utils.h"
 
 class AniObjectUtils {
@@ -33,13 +33,13 @@ public:
     {
         ani_namespace ns;
         if (ANI_OK != env->FindNamespace(nsName, &ns)) {
-            std::cerr << "[ANI] Not found namespace " << nsName << std::endl;
+            REQUEST_HILOGE("[ANI] Not found namespace %{public}s", nsName);
             return nullptr;
         }
 
         ani_class cls;
         if (ANI_OK != env->Namespace_FindClass(ns, clsName, &cls)) {
-            std::cerr << "[ANI] Not found class " << clsName << std::endl;
+            REQUEST_HILOGE("[ANI] Not found namespace %{public}s", clsName);
             return nullptr;
         }
 
@@ -55,19 +55,19 @@ public:
     {
         ani_namespace ns;
         if (ANI_OK != env->FindNamespace(nsName, &ns)) {
-            std::cerr << "[ANI] Not found namespace " << nsName << std::endl;
+            REQUEST_HILOGE("[ANI] Not found namespace %{public}s", nsName);
             return nullptr;
         }
 
         ani_namespace subNs;
         if (ANI_OK != env->Namespace_FindNamespace(ns, subNsName, &subNs)) {
-            std::cerr << "[ANI] Not found namespace " << subNsName << std::endl;
+            REQUEST_HILOGE("[ANI] Not found namespace %{public}s", subNsName);
             return nullptr;
         }
 
         ani_class cls;
         if (ANI_OK != env->Namespace_FindClass(subNs, clsName, &cls)) {
-            std::cerr << "[ANI] Not found class " << clsName << std::endl;
+            REQUEST_HILOGE("[ANI] Not found class %{public}s", clsName);
             return nullptr;
         }
 
@@ -83,7 +83,7 @@ public:
     {
         ani_class cls;
         if (ANI_OK != env->FindClass(clsName, &cls)) {
-            std::cerr << "[ANI] Not found class " << clsName << std::endl;
+            REQUEST_HILOGE("[ANI] Not found class %{public}s", clsName);
             return nullptr;
         }
 
@@ -99,7 +99,7 @@ public:
     {
         ani_method ctor;
         if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", nullptr, &ctor)) {
-            std::cerr << "[ANI] Not found <ctor> for class" << std::endl;
+            REQUEST_HILOGE("[ANI] Not found <ctor> for class");
             return nullptr;
         }
 
@@ -137,14 +137,14 @@ private:
     {
         ani_method ctor;
         if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", nullptr, &ctor)) {
-            std::cerr << "[ANI] Not found <ctor> for class" << std::endl;
+            REQUEST_HILOGE("[ANI] Not found <ctor> for class");
             return nullptr;
         }
 
         ani_object obj;
         ani_status status = env->Object_New_V(cls, ctor, &obj, args);
         if (ANI_OK != status) {
-            std::cerr << "[ANI] Failed to Object_New for class " << cls << std::endl;
+            REQUEST_HILOGE("[ANI] Failed to Object_New for class.");
             return nullptr;
         }
         return obj;
@@ -175,7 +175,7 @@ public:
     {
         ani_string aniStr = nullptr;
         if (ANI_OK != env->String_NewUTF8(str.data(), str.size(), &aniStr)) {
-            std::cerr << "[ANI] Unsupported ANI_VERSION_1" << std::endl;
+            REQUEST_HILOGE("[ANI] Unsupported ANI_VERSION_1");
             return nullptr;
         }
         return aniStr;
@@ -422,7 +422,7 @@ public:
 
         ani_status status = env_->EnumItem_GetValue_Int(item_.value(), &value);
         if (ANI_OK != status) {
-            std::cerr << "Failed to call EnumItem_GetValue_Int" << std::endl;
+            REQUEST_HILOGE("Failed to call EnumItem_GetValue_Int");
             return status;
         }
         return ANI_OK;
@@ -447,7 +447,7 @@ public:
         ani_string strValue;
         ani_status status = env_->EnumItem_GetValue_String(item_.value(), &strValue);
         if (ANI_OK != status) {
-            std::cerr << "Failed to call EnumItem_GetValue_String" << std::endl;
+            REQUEST_HILOGE("Failed to call EnumItem_GetValue_String");
             return status;
         }
         value = AniStringUtils::ToStd(env_, strValue);
@@ -471,13 +471,13 @@ private:
         ani_enum enumType;
         status = env_->FindEnum(className, &enumType);
         if (ANI_OK != status) {
-            std::cerr << "Failed to call FindEnum for " << className << std::endl;
+            REQUEST_HILOGE("Failed to call FindEnum for %{public}s", className);
             return status;
         }
 
         status = env_->Enum_GetEnumItemByIndex(enumType, index, &item);
         if (ANI_OK != status) {
-            std::cerr << "Failed to call Enum_GetEnumItemByIndex for " << className << "[" << index << "]" << std::endl;
+            REQUEST_HILOGE("Failed to call Enum_GetEnumItemByIndex for %{public}s, [%{public}d]", className, index);
             return status;
         }
         return ANI_OK;

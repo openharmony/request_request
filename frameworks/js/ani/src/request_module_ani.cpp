@@ -26,20 +26,45 @@
 #include "log.h"
 #include "ani_utils.h"
 #include "ani_task.h"
+#include "ani_js_initialize.h"
 
 using namespace OHOS;
 using namespace OHOS::Request;
 
-static ani_object Create([[maybe_unused]] ani_env *env, ani_object context, ani_object config)
+static bool InitConfig(ani_env *env, ani_object object, Config &config)
 {
-    REQUEST_HILOGI("Create start");
-    ani_object nullobj{};
+    std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
+    ExceptionError error;
+    context = JsInitialize::GetContext(env, object);
     if (context == nullptr) {
-        REQUEST_HILOGI("context == null");
+        REQUEST_HILOGE("context == null");
+        return false;
+    }
+    auto applicationInfo = context->GetApplicationInfo();
+    if (applicationInfo == nullptr) {
+        REQUEST_HILOGE("applicationInfo == null");
+        return false;
+    }
+    config.bundleType = static_cast<u_int32_t>(applicationInfo->bundleType);
+    config.bundleName = context->GetBundleName();
+    config.version = Version::API10;
+    bool ret = JsInitialize::CheckFilePath(context, config, error);
+    if (!ret) {
+        REQUEST_HILOGE("error info is: %{public}s", error.errInfo.c_str());
+    }
+    return ret;
+}
+
+static ani_object Create([[maybe_unused]] ani_env *env, ani_object object, ani_object config)
+{
+    REQUEST_HILOGI("Create Start");
+    ani_object nullobj{};
+    if (object == nullptr) {
+        REQUEST_HILOGE("context == null");
         return nullobj;
     }
     if (config == nullptr) {
-        REQUEST_HILOGI("config == null");
+        REQUEST_HILOGE("config == null");
         return nullobj;
     }
 
@@ -66,9 +91,17 @@ static ani_object Create([[maybe_unused]] ani_env *env, ani_object context, ani_
     REQUEST_HILOGI("vibrateInfo.type: %{public}d", action);
     aniConfig.action = action;
     aniConfig.url = urlStr;
+    aniConfig.overwrite = true;
+    aniConfig.saveas = "default.txt";
+    bool ret = InitConfig(env, object, aniConfig);
+    if (!ret) {
+        REQUEST_HILOGE("AniTask::InitConfig failed!");
+        return nullobj;
+    }
+
     AniTask *task = AniTask::Create(env, aniConfig);
     if (task == nullptr) {
-        REQUEST_HILOGI("AniTask::Create task == nullptr!");
+        REQUEST_HILOGE("AniTask::Create task == nullptr!");
         return nullobj;
     }
 
