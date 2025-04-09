@@ -83,5 +83,8 @@ ohos_rust_unittest("rust_netstack_rs_ut_test") {
 
 group("unittest") {
   testonly = true
-  deps = [ ":rust_netstack_rs_ut_test" ]
+  deps = []
+  if (!use_libfuzzer) {
+    deps = [ ":rust_netstack_rs_ut_test" ]
+  }
 }
