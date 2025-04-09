@@ -100,7 +100,7 @@ impl FileCache {
         cache: Arc<RamCache>,
     ) -> Option<Self> {
         let size = cache.size();
-        info!(
+        debug!(
             "try apply new file cache {} for task {}",
             size,
             task_id.brief()
