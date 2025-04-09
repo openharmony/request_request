@@ -21,6 +21,7 @@ ohos_shared_library("requestmodule_ani") {
     "../../native/request/include",
   ]
   sources = [
+    "src/ani_js_initialize.cpp",
     "src/ani_task.cpp",
     "src/request_module_ani.cpp",
   ]
@@ -31,13 +32,20 @@ ohos_shared_library("requestmodule_ani") {
   ]
 
   external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:data_ability_helper",
     "ability_runtime:extensionkit_native",
-    "ability_runtime:napi_base_context",
     "c_utils:utils",
     "curl:curl_shared",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "netmanager_base:net_conn_manager_if",
     "openssl:libssl_shared",
     "runtime_core:ani",
+    "storage_service:storage_manager_acl",
   ]
 
   sanitize = {

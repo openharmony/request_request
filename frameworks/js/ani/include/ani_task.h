@@ -17,7 +17,6 @@
 #define ANI_TASK_H
 
 #include <ani.h>
-
 #include "i_response_listener.h"
 #include "i_notify_data_listener.h"
 
@@ -26,14 +25,14 @@ namespace OHOS::Request {
 class ResponseListener : public IResponseListener {
 public:
     virtual ~ResponseListener() = default;
-    ResponseListener(ani_env* env, ani_ref callbackRef) : env_(env), callbackRef_(callbackRef)
+    ResponseListener(ani_vm* vm, ani_ref callbackRef) : vm_(vm), callbackRef_(callbackRef)
     {
     }
 
     virtual void OnResponseReceive(const std::shared_ptr<Response> &response);
 
 private:
-    ani_env *env_;
+    ani_vm *vm_;
     ani_ref callbackRef_;
 };
 
@@ -73,6 +72,20 @@ public:
     {
         tid_ = tid;
     }
+
+    static bool SetDirsPermission(std::vector<std::string> &dirs);
+    static bool SetPathPermission(const std::string &filepath);
+    static void RemoveDirsPermission(const std::vector<std::string> &dirs);
+    static void AddPathMap(const std::string &filepath, const std::string &baseDir);
+    static void ResetDirAccess(const std::string &filepath);
+    static void RemovePathMap(const std::string &filepath);
+
+    Config config_;
+    bool isGetPermission;
+
+    static std::mutex pathMutex_;
+    static std::map<std::string, int32_t> pathMap_;
+    static std::map<std::string, int32_t> fileMap_;
 
 private:
     std::string tid_;

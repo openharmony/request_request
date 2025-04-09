@@ -50,10 +50,10 @@ export default namespace request {
     }
 
     interface HttpResponse {
-      readonly version: string,
-      readonly statusCode: number,
-      readonly reason: string,
-      readonly headers: Map<string, Array<string>>,
+      readonly version: string;
+      readonly statusCode: number;
+      readonly reason: string;
+      readonly headers: Map<string, Array<string>>;
     }
 
     export class HttpResponseImpl implements HttpResponse {
