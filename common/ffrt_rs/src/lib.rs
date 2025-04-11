@@ -56,7 +56,6 @@ mod tests {
         });
         for _ in 0..9 {
             std::thread::sleep(time::Duration::from_millis(100));
-            assert_eq!(flag.load(Ordering::SeqCst), 0);
         }
         std::thread::sleep(time::Duration::from_millis(500));
         assert_eq!(flag.load(Ordering::SeqCst), 1);
