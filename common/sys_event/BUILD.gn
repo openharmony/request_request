@@ -31,6 +31,8 @@ ohos_static_library("request_sysevent") {
     cfi_cross_dso = true
     debug = false
   }
+  stack_protector_ret = true
+
   sources = [ "src/sys_event.cpp" ]
 
   public_configs = [ ":request_sysevent_config" ]
