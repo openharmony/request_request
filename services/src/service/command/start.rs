@@ -23,7 +23,7 @@ use crate::service::RequestServiceStub;
 
 impl RequestServiceStub {
     pub(crate) fn start(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service start");
+        debug!("Service start");
         let permission = PermissionChecker::check_down_permission();
         if !PermissionChecker::check_internet() && !permission {
             error!("Service start: no INTERNET permission.");

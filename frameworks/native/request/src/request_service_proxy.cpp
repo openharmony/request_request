@@ -58,7 +58,9 @@ ExceptionErrorCode RequestServiceProxy::CreateTasks(const std::vector<Config> &c
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REQUEST), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request CreateTasks, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
     ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
@@ -89,7 +91,9 @@ ExceptionErrorCode RequestServiceProxy::StartTasks(
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_START), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request StartTasks, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
     ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
@@ -119,7 +123,9 @@ ExceptionErrorCode RequestServiceProxy::StopTasks(
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_STOP), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request StopTasks, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
     ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
@@ -149,7 +155,9 @@ ExceptionErrorCode RequestServiceProxy::ResumeTasks(
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_RESUME), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request ResumeTasks, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
     ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
@@ -180,7 +188,9 @@ ExceptionErrorCode RequestServiceProxy::PauseTasks(
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_PAUSE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request PauseTasks, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
     ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
@@ -211,7 +221,9 @@ ExceptionErrorCode RequestServiceProxy::RemoveTasks(
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_REMOVE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request RemoveTasks, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
     ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
@@ -242,7 +254,9 @@ ExceptionErrorCode RequestServiceProxy::QueryTasks(
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_QUERY), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request QueryTasks, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
     ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
@@ -275,7 +289,9 @@ ExceptionErrorCode RequestServiceProxy::ShowTasks(const std::vector<std::string>
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SHOW), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request ShowTasks, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
     ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
@@ -310,7 +326,9 @@ ExceptionErrorCode RequestServiceProxy::TouchTasks(
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_TOUCH), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request TouchTasks, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
     ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
@@ -345,7 +363,9 @@ ExceptionErrorCode RequestServiceProxy::SetMaxSpeeds(
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SET_MAX_SPEED), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request SetMaxSpeeds, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
     ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
@@ -371,7 +391,9 @@ ExceptionErrorCode RequestServiceProxy::SetMode(const std::string &tid, const Mo
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SET_MODE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End send SetMode request, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
     ExceptionErrorCode code = static_cast<ExceptionErrorCode>(reply.ReadInt32());
@@ -395,7 +417,9 @@ ExceptionErrorCode RequestServiceProxy::DisableTaskNotification(
         static_cast<uint32_t>(RequestInterfaceCode::CMD_DISABLE_TASK_NOTIFICATIONS), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End send SetMode request, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return ExceptionErrorCode::E_SERVICE_ERROR;
     }
 
@@ -626,7 +650,9 @@ int32_t RequestServiceProxy::Search(const Filter &filter, std::vector<std::strin
     int32_t ret = Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SEARCH), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request Search, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return E_SERVICE_ERROR;
     }
     uint32_t size = reply.ReadUint32();
@@ -685,7 +711,9 @@ int32_t RequestServiceProxy::QueryMimeType(const std::string &tid, std::string &
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_QUERYMIMETYPE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request QueryMimeType, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return E_SERVICE_ERROR;
     }
     int32_t errCode = reply.ReadInt32();
@@ -759,7 +787,9 @@ int32_t RequestServiceProxy::OpenChannel(int32_t &sockFd)
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_OPENCHANNEL), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request OpenChannel, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return E_SERVICE_ERROR;
     }
     int32_t errCode = reply.ReadInt32();
@@ -784,7 +814,9 @@ int32_t RequestServiceProxy::Subscribe(const std::string &tid)
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SUBSCRIBE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request Subscribe, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return E_SERVICE_ERROR;
     }
     REQUEST_HILOGD("End Request Subscribe ok, tid: %{public}s", tid.c_str());
@@ -803,7 +835,9 @@ int32_t RequestServiceProxy::Unsubscribe(const std::string &tid)
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_UNSUBSCRIBE), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request Unsubscribe, tid: %{public}s, failed: %{public}d", tid.c_str(), ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return E_SERVICE_ERROR;
     }
     REQUEST_HILOGD("End Request Unsubscribe ok, tid: %{public}s", tid.c_str());
@@ -822,7 +856,9 @@ int32_t RequestServiceProxy::SubRunCount(const sptr<NotifyInterface> &listener)
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SUB_RUNCOUNT), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request SubRunCount, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return ret;
     }
     int32_t errCode = reply.ReadInt32();
@@ -845,7 +881,9 @@ int32_t RequestServiceProxy::UnsubRunCount()
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_UNSUB_RUNCOUNT), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request UnubRunCount, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return E_SERVICE_ERROR;
     }
     REQUEST_HILOGD("End Request UnubRunCount ok");
@@ -875,7 +913,9 @@ int32_t RequestServiceProxy::CreateGroup(
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_CREATE_GROUP), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request AttachGroup, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return E_SERVICE_ERROR;
     }
     gid = reply.ReadString();
@@ -893,7 +933,9 @@ int32_t RequestServiceProxy::AttachGroup(const std::string &gid, const std::vect
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_ATTACH_GROUP), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request AttachGroup, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return E_SERVICE_ERROR;
     }
     int code = reply.ReadInt32();
@@ -914,7 +956,9 @@ int32_t RequestServiceProxy::DeleteGroup(const std::string &gid)
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_DELETE_GROUP), data, reply, option);
     if (ret != ERR_NONE) {
         REQUEST_HILOGE("End Request AttachGroup, failed: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
         return E_SERVICE_ERROR;
     }
     int code = reply.ReadInt32();
