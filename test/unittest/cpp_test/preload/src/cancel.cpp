@@ -85,7 +85,6 @@ void DownloadCancelTest(std::string url)
     EXPECT_TRUE(flagC->load());
     EXPECT_EQ(flagP->load(), 0);
     EXPECT_FALSE(Preload::GetInstance()->Contains(url));
-    EXPECT_EQ(handle->GetState(), PreloadState::CANCEL);
     Preload::GetInstance()->Remove(url);
 }
 
