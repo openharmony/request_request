@@ -31,6 +31,7 @@ use super::events::{
     QueryEvent, ScheduleEvent, ServiceEvent, StateEvent, TaskEvent, TaskManagerEvent,
 };
 use crate::config::{Action, Mode};
+use crate::database::clear_database_part;
 use crate::error::ErrorCode;
 use crate::info::{State, TaskInfo};
 use crate::manage::app_state::AppUninstallSubscriber;
@@ -40,7 +41,7 @@ use crate::manage::query::TaskFilter;
 use crate::manage::scheduler::state::Handler;
 use crate::manage::scheduler::Scheduler;
 use crate::service::client::ClientManagerEntry;
-use crate::service::notification_bar::subscribe_notification_bar;
+use crate::service::notification_bar::{subscribe_notification_bar, NotificationDispatcher};
 use crate::service::run_count::RunCountManagerEntry;
 use crate::utils::task_event_count::{task_complete_add, task_fail_add, task_unload};
 use crate::utils::{get_current_timestamp, runtime_spawn, subscribe_common_event, update_policy};
@@ -323,7 +324,39 @@ impl TaskManager {
         self.scheduler.restore_all_tasks();
     }
 
+    fn check_any_tasks(&self) -> bool {
+        let running_tasks = self.scheduler.running_tasks();
+        if running_tasks != 0 {
+            info!("running {} tasks when unload SA", running_tasks,);
+            return true;
+        }
+
+        // check rx again for there may be new message arrive.
+        if !self.rx.is_empty() {
+            return true;
+        }
+        false
+    }
+
     fn unload_sa(&mut self) -> bool {
+        if self.check_any_tasks() {
+            return false;
+        }
+
+        const TIMES: usize = 10;
+        const PRE_COUNT: usize = 1000;
+
+        for _i in 0..TIMES {
+            let remain = clear_database_part(PRE_COUNT).unwrap_or(false);
+            if self.check_any_tasks() {
+                return false;
+            }
+            if !remain {
+                break;
+            }
+        }
+        NotificationDispatcher::get_instance().clear_group_info();
+
         const REQUEST_SERVICE_ID: i32 = 3706;
         const ONE_MONTH: i64 = 30 * 24 * 60 * 60 * 1000;
 
@@ -341,23 +374,7 @@ impl TaskManager {
 
         let task_ids = db.system_search_task(filter, bundle_name);
 
-        if !self.rx.is_empty() {
-            return false;
-        }
-
-        let running_tasks = self.scheduler.running_tasks();
-        if running_tasks != 0 {
-            info!("running {} tasks when unload SA", running_tasks,);
-            return false;
-        }
-
-        // check rx again for there may be new message arrive.
-        if !self.rx.is_empty() {
-            return false;
-        }
-
         info!("unload SA");
-
         task_unload();
 
         let any_tasks = task_ids.is_empty();
