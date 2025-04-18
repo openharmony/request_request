@@ -38,27 +38,32 @@ pub(crate) static REQUEST_DB: LazyLock<RdbStore<'static>> = LazyLock::new(|| {
     RdbStore::open(config).unwrap()
 });
 
-pub(crate) fn clear_database() {
+pub(crate) fn clear_database_part(pre_count: usize) -> Result<bool, ()> {
+    let mut remain = true;
     // rdb not support RETURNING expr.
     let current_time = match SystemTime::now().duration_since(UNIX_EPOCH) {
         Ok(duration) => duration,
         Err(e) => {
             error!("Failed to get current time: {}", e);
-            return;
+            return Err(());
         }
     }
     .as_millis() as u64;
 
-    let task_ids = match REQUEST_DB.query::<u32>(
-        "SELECT task_id from request_task WHERE mtime < ?",
-        current_time - MILLIS_IN_A_WEEK,
+    let task_ids: Vec<_> = match REQUEST_DB.query::<u32>(
+        "SELECT task_id from request_task WHERE mtime < ? LIMIT ?",
+        (current_time - MILLIS_IN_A_WEEK, pre_count as u64),
     ) {
-        Ok(rows) => rows,
+        Ok(rows) => rows.collect(),
         Err(e) => {
             error!("Failed to clear database: {}", e);
-            return;
+            return Err(());
         }
     };
+
+    if task_ids.len() < pre_count {
+        remain = false;
+    }
 
     for task_id in task_ids {
         info!(
@@ -70,7 +75,7 @@ pub(crate) fn clear_database() {
         }
         NotificationDispatcher::get_instance().clear_task_info(task_id);
     }
-    NotificationDispatcher::get_instance().clear_group_info();
+    Ok(remain)
 }
 
 #[test]
@@ -111,7 +116,10 @@ fn clear_database_test() {
         assert!(query.contains(task_id));
     }
 
-    clear_database();
+    if let Ok(remain) = clear_database_part(query.len() + 1) {
+        assert!(!remain);
+    }
+
     let query: Vec<_> = REQUEST_DB
         .query::<u32>("SELECT task_id from request_task", ())
         .unwrap()
