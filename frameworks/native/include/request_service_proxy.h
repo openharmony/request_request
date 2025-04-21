@@ -24,6 +24,9 @@
 #include "request_service_interface.h"
 
 namespace OHOS::Request {
+
+constexpr int REMOTE_DIED_ERROR = 29189;
+
 class RequestServiceProxy : public IRemoteProxy<RequestServiceInterface> {
 public:
     explicit RequestServiceProxy(const sptr<IRemoteObject> &object);

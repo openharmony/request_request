@@ -105,6 +105,11 @@ async fn get_foreground_account() -> Option<i32> {
             return Some(foreground_account);
         } else {
             error!("GetForegroundOsAccount failed: {} retry {} times", res, i);
+            sys_event!(
+                ExecFault,
+                DfxCode::OS_ACCOUNT_FAULT_01,
+                &format!("GetForegroundOsAccount failed: {} retry {} times", res, i)
+            );
             ylong_runtime::time::sleep(std::time::Duration::from_millis(500)).await;
         }
     }
@@ -120,6 +125,12 @@ async fn get_background_accounts() -> Option<Vec<i32>> {
             return Some(accounts);
         } else {
             error!("GetBackgroundOsAccounts failed: {} retry {} times", res, i);
+            sys_event!(
+                ExecFault,
+                DfxCode::INVALID_IPC_MESSAGE_A00,
+                &format!("GetBackgroundOsAccounts failed: {} retry {} times", res, i)
+            );
+
             ylong_runtime::time::sleep(std::time::Duration::from_millis(500)).await;
         }
     }
@@ -146,8 +157,16 @@ pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
 
         if ret != 0 {
             error!(
-                "registry_account_switch_subscribe  failed: {} retry 500ms later",
+                "registry_account_switch_subscribe failed: {} retry 500ms later",
                 ret
+            );
+            sys_event!(
+                ExecFault,
+                DfxCode::OS_ACCOUNT_FAULT_00,
+                &format!(
+                    "registry_account_switch_subscribe failed: {} retry 500ms later",
+                    ret
+                )
             );
             std::thread::sleep(std::time::Duration::from_millis(500));
         } else {
@@ -167,6 +186,14 @@ pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
             error!(
                 "registry_account_active_subscribe failed: {} retry 500ms later",
                 ret
+            );
+            sys_event!(
+                ExecFault,
+                DfxCode::OS_ACCOUNT_FAULT_00,
+                &format!(
+                    "registry_account_active_subscribe failed: {} retry 500ms later",
+                    ret
+                )
             );
             std::thread::sleep(std::time::Duration::from_millis(500));
         } else {
@@ -189,6 +216,15 @@ pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
                 "registry_account_remove_subscribe failed: {} retry 500ms later",
                 ret
             );
+            sys_event!(
+                ExecFault,
+                DfxCode::OS_ACCOUNT_FAULT_00,
+                &format!(
+                    "registry_account_remove_subscribe failed: {} retry 500ms later",
+                    ret
+                )
+            );
+
             std::thread::sleep(std::time::Duration::from_millis(500));
         } else {
             break;
@@ -208,6 +244,15 @@ pub(crate) fn registry_account_subscribe(task_manager: TaskManagerTx) {
                 "registry_account_stop_subscribe failed: {} retry 500ms later",
                 ret
             );
+            sys_event!(
+                ExecFault,
+                DfxCode::OS_ACCOUNT_FAULT_00,
+                &format!(
+                    "registry_account_stop_subscribe failed: {} retry 500ms later",
+                    ret
+                )
+            );
+
             std::thread::sleep(std::time::Duration::from_millis(500));
         } else {
             break;
@@ -222,6 +267,11 @@ impl RequestDb {
         let sql = format!("DELETE from request_task WHERE uid/200000 = {}", user_id);
         if let Err(e) = self.execute(&sql) {
             error!("delete_all_account_tasks failed: {}", e);
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_04,
+                &format!("delete_all_account_tasks failed: {}", e)
+            );
         };
     }
 }

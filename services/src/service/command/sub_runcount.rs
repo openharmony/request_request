@@ -33,6 +33,11 @@ impl RequestServiceStub {
         reply.write(&(ret as i32))?;
         if ret != ErrorCode::ErrOk {
             error!("End Service run_count subscribe, failed:{}", ret as i32);
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A32,
+                &format!("End Service run_count subscribe, failed:{}", ret as i32)
+            );
             return Err(IpcStatusCode::Failed);
         }
         Ok(())

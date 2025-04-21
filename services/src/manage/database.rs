@@ -92,6 +92,11 @@ impl RequestDb {
             Ok(())
         } else {
             error!("execute {} failed: {}", sql, ret);
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_04,
+                &format!("execute {} failed: {}", sql, ret)
+            );
             Err(ret)
         }
     }
@@ -102,6 +107,11 @@ impl RequestDb {
 
         self.inner.execute(sql, ()).map(|_| ()).map_err(|e| {
             error!("execute sql failed: {}", e);
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_04,
+                &format!("execute {} failed: {}", sql, ret)
+            );
             e.sqlite_error_code().unwrap() as u32 as i32
         })
     }
@@ -118,6 +128,11 @@ impl RequestDb {
             .map(|a| {
                 a.try_into().unwrap_or_else(|e| {
                     error!("query_integer failed, value: {}", e);
+                    sys_event!(
+                        ExecFault,
+                        DfxCode::RDB_FAULT_06,
+                        &format!("query_integer failed, value: {}", e)
+                    );
                     Default::default()
                 })
             })
@@ -125,6 +140,11 @@ impl RequestDb {
 
         if ret != 0 {
             error!("query integer err:{}", ret);
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_06,
+                &format!("query integer err:{}", ret)
+            );
         }
         v
     }
@@ -150,6 +170,11 @@ impl RequestDb {
         let v = self.query_integer::<u32>(&sql);
         if v.is_empty() {
             error!("contains_task check failed, empty result");
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_06,
+                "contains_task check failed, empty result"
+            );
             false
         } else {
             v[0] == 1
@@ -164,6 +189,11 @@ impl RequestDb {
         let v = self.query_integer::<u64>(&sql);
         if v.is_empty() {
             error!("query_task_token_id failed, empty result");
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_06,
+                "query_task_token_id failed, empty result"
+            );
             Err(-1)
         } else {
             Ok(v[0])
@@ -403,6 +433,11 @@ impl RequestDb {
         let c_task_config = unsafe { QueryTaskConfig(task_id) };
         if c_task_config.is_null() {
             error!("can not find task in database, task id: {}", task_id);
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_06,
+                &format!("can not find task in database, task id: {}", task_id)
+            );
             None
         } else {
             let task_config = TaskConfig::from_c_struct(unsafe { &*c_task_config });
@@ -578,6 +613,11 @@ impl RequestDb {
         debug!("get_task {} state is {:?}", task_id, state);
         if state == State::Removed {
             error!("get_task state is Removed, {}", task_id);
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_06,
+                &format!("get_task state is Removed, {}", task_id)
+            );
             return Err(ErrorCode::TaskStateErr);
         }
 
@@ -592,6 +632,11 @@ impl RequestDb {
             Ok(task) => Ok(Arc::new(task)),
             Err(e) => {
                 error!("new RequestTask failed {}, err: {:?}", task_id, e);
+                sys_event!(
+                    ExecFault,
+                    DfxCode::RDB_FAULT_06,
+                    &format!("new RequestTask failed {}, err: {:?}", task_id, e)
+                );
                 Err(e)
             }
         }

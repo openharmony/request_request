@@ -41,3 +41,19 @@ macro_rules! cvt_res_error {
         }
     }}
 }
+
+macro_rules! sys_event {
+    ($kind:ident, $num:expr, $str:expr) => {
+        use crate::sys_event::EventKind::{ExecError, ExecFault};
+        use crate::sys_event::{isys_error, isys_fault, DfxCode};
+        match $kind {
+            ExecError => {
+                isys_error($num, $str);
+            }
+            ExecFault => {
+                isys_fault($num, $str);
+            }
+            _ => {}
+        }
+    };
+}

@@ -289,6 +289,11 @@ impl RequestTask {
             Ok(value) => value,
             Err(e) => {
                 error!("url percent encoding error is {:?}", e);
+                sys_event!(
+                    ExecFault,
+                    DfxCode::TASK_FAULT_03,
+                    &format!("url percent encoding error is {:?}", e)
+                );
                 return Err(e);
             }
         };
@@ -427,10 +432,20 @@ impl RequestTask {
                 }
                 Err(e) => {
                     error!("convert string to i64 error: {:?}", e);
+                    sys_event!(
+                        ExecFault,
+                        DfxCode::TASK_FAULT_09,
+                        &format!("convert string to i64 error: {:?}", e)
+                    );
                 }
             }
         } else {
             error!("cannot get content-length of the task");
+            sys_event!(
+                ExecFault,
+                DfxCode::TASK_FAULT_09,
+                "cannot get content-length of the task"
+            );
             if self.conf.common_data.precise {
                 return Err(TaskError::Failed(Reason::GetFileSizeFailed));
             }
@@ -446,17 +461,46 @@ impl RequestTask {
             error!("Task {} {:?}", self.task_id(), err);
         }
         match err.error_kind() {
-            ErrorKind::Timeout => Err(TaskError::Failed(Reason::ContinuousTaskTimeout)),
+            ErrorKind::Timeout => {
+                sys_event!(
+                    ExecFault,
+                    DfxCode::TASK_FAULT_01,
+                    &format!("Task {} {:?}", self.task_id(), err)
+                );
+                Err(TaskError::Failed(Reason::ContinuousTaskTimeout))
+            }
             // user triggered
-            ErrorKind::UserAborted => Err(TaskError::Waiting(TaskPhase::UserAbort)),
+            ErrorKind::UserAborted => {
+                sys_event!(
+                    ExecFault,
+                    DfxCode::TASK_FAULT_09,
+                    &format!("Task {} {:?}", self.task_id(), err)
+                );
+                Err(TaskError::Waiting(TaskPhase::UserAbort))
+            }
             ErrorKind::BodyTransfer | ErrorKind::BodyDecode => {
                 self.network_retry().await?;
+                sys_event!(
+                    ExecFault,
+                    DfxCode::TASK_FAULT_09,
+                    &format!("Task {} {:?}", self.task_id(), err)
+                );
                 Err(TaskError::Failed(Reason::OthersError))
             }
             _ => {
                 if format!("{}", err).contains("No space left on device") {
+                    sys_event!(
+                        ExecFault,
+                        DfxCode::TASK_FAULT_09,
+                        &format!("Task {} {:?}", self.task_id(), err)
+                    );
                     Err(TaskError::Failed(Reason::InsufficientSpace))
                 } else {
+                    sys_event!(
+                        ExecFault,
+                        DfxCode::TASK_FAULT_09,
+                        &format!("Task {} {:?}", self.task_id(), err)
+                    );
                     Err(TaskError::Failed(Reason::OthersError))
                 }
             }
@@ -473,6 +517,11 @@ impl RequestTask {
             status_message = reason.into();
         } else {
             error!("bad status_message {:?}", status_code);
+            sys_event!(
+                ExecFault,
+                DfxCode::TASK_FAULT_02,
+                &format!("bad status_message {:?}", status_code)
+            );
             return;
         }
         let headers = response.headers().clone();
@@ -619,6 +668,11 @@ fn check_file_specs(file_specs: &[FileSpec]) -> bool {
         let path = &spec.path;
         if !spec.is_user_file && !path.starts_with(EL1) && !path.starts_with(EL2) && !path.starts_with(EL5) {
             error!("File path invalid - path: {}, idx: {}", path, idx);
+            sys_event!(
+                ExecFault,
+                DfxCode::TASK_FAULT_09,
+                &format!("File path invalid - path: {}, idx: {}", path, idx)
+            );
             result = false;
             break;
         }

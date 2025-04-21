@@ -28,6 +28,11 @@ impl RequestServiceStub {
                 "End Service getTask, tid: {}, failed: task_id or token not valid",
                 task_id
             );
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A24,
+                &format!("End Service getTask, tid: {}, failed: task_id or token not valid", task_id)
+            );
             reply.write(&(ErrorCode::TaskNotFound as i32))?;
             return Err(IpcStatusCode::Failed);
         };
@@ -45,6 +50,11 @@ impl RequestServiceStub {
                 "End Service getTask, tid: {}, failed: task_id or token not found",
                 task_id
             );
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A24,
+                &format!("End Service getTask, tid: {}, failed: task_id or token not found", task_id)
+            );
             reply.write(&(ErrorCode::TaskNotFound as i32))?;
             return Err(IpcStatusCode::Failed);
         };
@@ -55,6 +65,11 @@ impl RequestServiceStub {
         let ret = self.client_manager.subscribe(task_id, pid, uid, token_id);
         if ret != ErrorCode::ErrOk {
             error!("End Service subscribe, tid: {}, failed: {:?}", task_id, ret);
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A24,
+                &format!("End Service subscribe, tid: {}, failed: {:?}", task_id, ret)
+            );
             reply.write(&(ret as i32))?;
             serialize_task_config(config, reply)?;
             return Ok(());

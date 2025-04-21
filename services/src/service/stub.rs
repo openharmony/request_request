@@ -69,6 +69,7 @@ impl RemoteStub for RequestServiceStub {
             Ok(token) if token == SERVICE_TOKEN => {}
             _ => {
                 error!("Gets invalid token");
+                sys_event!(ExecError, DfxCode::INVALID_IPC_MESSAGE_A00, "Gets invalid token");
                 return IpcStatusCode::Failed as i32;
             }
         };

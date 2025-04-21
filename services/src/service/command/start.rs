@@ -23,6 +23,11 @@ impl RequestServiceStub {
     pub(crate) fn start(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         if !PermissionChecker::check_internet() {
             error!("Service start: no INTERNET permission.");
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A13,
+                "Service start: no INTERNET permission."
+            );
             reply.write(&(ErrorCode::Permission as i32))?;
             return Err(IpcStatusCode::Failed);
         }
