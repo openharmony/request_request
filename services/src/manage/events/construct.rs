@@ -23,8 +23,8 @@ use crate::task::config::TaskConfig;
 use crate::task::request_task::{check_config, RequestTask};
 use crate::utils::task_id_generator::TaskIdGenerator;
 
-const MAX_BACKGROUND_TASK: usize = 1000;
-const MAX_FRONTEND_TASK: usize = 2000;
+const MAX_BACKGROUND_TASK: usize = 1001;
+const MAX_FRONTEND_TASK: usize = 2001;
 
 impl TaskManager {
     pub(crate) fn create(&mut self, mut config: TaskConfig) -> Result<u32, ErrorCode> {
