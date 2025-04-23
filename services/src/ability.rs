@@ -21,7 +21,6 @@ use samgr::definition::APP_MGR_SERVICE_ID;
 use samgr::manage::SystemAbilityManager;
 use system_ability_fwk::ability::{Ability, Handler};
 
-use crate::database::clear_database;
 use crate::manage::app_state::AppStateListener;
 use crate::manage::{account, SystemConfigManager, TaskManager};
 use crate::service::client::ClientManager;
@@ -147,7 +146,6 @@ impl Ability for RequestAbility {
             -1
         } else {
             info!("remote not busy accept idle");
-            clear_database();
             0
         }
     }
