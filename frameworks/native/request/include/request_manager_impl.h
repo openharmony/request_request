@@ -116,6 +116,8 @@ private:
     void OnChannelBroken() override;
     void OnResponseReceive(const std::shared_ptr<Response> &response) override;
     void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData) override;
+    void OnFaultsReceive(const std::shared_ptr<int32_t> &tid, const std::shared_ptr<SubscribeType> &type,
+        const std::shared_ptr<Reason> &reason) override;
 
 private:
     std::mutex serviceProxyMutex_;

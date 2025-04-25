@@ -163,6 +163,8 @@ static std::string SubscribeTypeToString(SubscribeType type)
             return "resume";
         case SubscribeType::RESPONSE:
             return "response";
+        case SubscribeType::FAULT:
+            return "fault";
         case SubscribeType::BUTT:
             return "butt";
     }
@@ -235,6 +237,41 @@ void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
                     SubscribeTypeToString(ptr->notifyData->type).c_str(), ptr->notifyData->taskId);
             }
             ptr->listener->DoJSTask(ptr->notifyData);
+            napi_close_handle_scope(ptr->listener->env_, scope);
+            delete ptr;
+        },
+        napi_eprio_high);
+    if (ret != napi_ok) {
+        REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
+        delete ptr;
+    }
+}
+
+void JSNotifyDataListener::OnFaultsReceive(const std::shared_ptr<int32_t> &tid,
+    const std::shared_ptr<SubscribeType> &type, const std::shared_ptr<Reason> &reason)
+{
+    ReasonDataPtr *ptr = new (std::nothrow) ReasonDataPtr;
+    if (ptr == nullptr) {
+        REQUEST_HILOGE("ReasonDataPtr new failed");
+        return;
+    }
+    ptr->listener = shared_from_this();
+    ptr->reason = reason;
+    ptr->tid = tid;
+    int32_t ret = napi_send_event(
+        this->env_,
+        [ptr, this]() {
+            uint32_t paramNumber = NapiUtils::ONE_ARG;
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ptr->listener->env_, &scope);
+            if (scope == nullptr) {
+                REQUEST_HILOGE("napi_open_handle_scope null");
+                delete ptr;
+                return;
+            }
+            napi_value value = NapiUtils::Convert2JSValue(ptr->listener->env_, *(ptr->reason));
+            JsTask::ClearTaskTemp(std::to_string(*(ptr->tid)), true, false, false);
+            this->OnMessageReceive(&value, paramNumber);
             napi_close_handle_scope(ptr->listener->env_, scope);
             delete ptr;
         },

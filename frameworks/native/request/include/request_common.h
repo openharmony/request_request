@@ -93,6 +93,7 @@ enum class SubscribeType : uint32_t {
     REMOVE,
     RESUME,
     RESPONSE,
+    FAULT,
     BUTT,
 };
 

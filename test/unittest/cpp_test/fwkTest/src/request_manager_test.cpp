@@ -285,6 +285,10 @@ public:
         (void)notifyData;
         return;
     }
+    void OnFaultsReceive(const std::shared_ptr<int32_t> &tid, const std::shared_ptr<SubscribeType> &type,
+        const std::shared_ptr<Reason> &reason) override
+    {
+    }
 };
 
 /**

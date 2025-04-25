@@ -246,7 +246,7 @@ impl Scheduler {
         if let Some(info) = database.get_task_qos_info(task_id) {
             if info.state == State::Failed.repr {
                 if let Some(task_info) = database.get_task_info(task_id) {
-                    Scheduler::notify_fail(task_info, &self.client_manager);
+                    Scheduler::notify_fail(task_info, &self.client_manager, Reason::Default);
                     return;
                 }
             }
@@ -294,7 +294,7 @@ impl Scheduler {
             State::Failed => {
                 info!("task {} cancel with state Failed", task_id);
                 Scheduler::reduce_task_count(uid, mode, task_count);
-                Scheduler::notify_fail(info, &self.client_manager);
+                Scheduler::notify_fail(info, &self.client_manager, Reason::Default);
             }
             State::Stopped | State::Removed => {
                 info!("task {} cancel with state Stopped or Removed", task_id);
@@ -329,12 +329,13 @@ impl Scheduler {
 
         database.update_task_state(task_id, State::Failed, reason);
         if let Some(info) = database.get_task_info(task_id) {
-            Scheduler::notify_fail(info, &self.client_manager);
+            Scheduler::notify_fail(info, &self.client_manager, reason);
         }
     }
 
-    fn notify_fail(info: TaskInfo, client_manager: &ClientManagerEntry) {
+    fn notify_fail(info: TaskInfo, client_manager: &ClientManagerEntry, reason: Reason) {
         Notifier::fail(client_manager, info.build_notify_data());
+        Notifier::faults(info.common_data.task_id, client_manager, reason);
         NotificationDispatcher::get_instance().publish_failed_notification(&info);
         #[cfg(feature = "oh")]
         Self::sys_event(info);

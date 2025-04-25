@@ -28,6 +28,8 @@ pub(crate) enum SubscribeType {
     Progress,
     Remove,
     Resume,
+    //Response,
+    Faults = 8,
 }
 
 #[derive(Debug, Clone)]

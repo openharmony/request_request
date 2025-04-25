@@ -36,6 +36,8 @@ public:
     bool HasListener();
     void OnResponseReceive(const std::shared_ptr<Response> &response);
     void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData);
+    void OnFaultsReceive(const std::shared_ptr<int32_t> &tid, const std::shared_ptr<SubscribeType> &type,
+        const std::shared_ptr<Reason> &reason);
     bool NeedNotify(const std::shared_ptr<NotifyData> &notifyData);
 
 private:

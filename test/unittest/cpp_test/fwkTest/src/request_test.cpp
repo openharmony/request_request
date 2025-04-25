@@ -117,6 +117,10 @@ public:
         g_requestTest = 1;
         return;
     }
+    void OnFaultsReceive(const std::shared_ptr<int32_t> &tid, const std::shared_ptr<SubscribeType> &type,
+        const std::shared_ptr<Reason> &reason) override
+    {
+    }
 };
 
 /**
