@@ -417,6 +417,17 @@ void RequestManagerImpl::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &
     task->OnNotifyDataReceive(notifyData);
 }
 
+void RequestManagerImpl::OnFaultsReceive(const std::shared_ptr<int32_t> &tid,
+    const std::shared_ptr<SubscribeType> &type, const std::shared_ptr<Reason> &reason)
+{
+    std::shared_ptr<Request> task = this->GetTask(std::to_string(*tid));
+    if (task.get() == nullptr) {
+        REQUEST_HILOGE("OnFaultsReceive task not found");
+        return;
+    }
+    task->OnFaultsReceive(tid, type, reason);
+}
+
 sptr<RequestServiceInterface> RequestManagerImpl::GetRequestServiceProxy(bool needLoadSA)
 {
     std::lock_guard<std::mutex> lock(serviceProxyMutex_);

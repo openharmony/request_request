@@ -108,4 +108,14 @@ void Request::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData)
     }
 }
 
+void Request::OnFaultsReceive(const std::shared_ptr<int32_t> &tid, const std::shared_ptr<SubscribeType> &type,
+    const std::shared_ptr<Reason> &reason)
+{
+    std::lock_guard<std::mutex> lock(listenerMutex_);
+    auto listener = notifyDataListenerMap_.find(*type);
+    if (listener != notifyDataListenerMap_.end()) {
+        listener->second->OnFaultsReceive(tid, type, reason);
+    }
+}
+
 } // namespace OHOS::Request

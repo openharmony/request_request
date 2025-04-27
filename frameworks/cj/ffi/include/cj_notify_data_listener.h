@@ -23,6 +23,7 @@ namespace OHOS::CJSystemapi::Request {
 using OHOS::Request::INotifyDataListener;
 using OHOS::Request::NotifyData;
 using OHOS::Request::SubscribeType;
+using OHOS::Request::Reason;
 
 class CJNotifyDataListener : public INotifyDataListener,
                              public ListenerList,
@@ -34,6 +35,8 @@ public:
     void AddListener(std::function<void(CProgress)> cb, CFunc cbId);
     void RemoveListener(CFunc cbId = nullptr);
     void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData) override;
+    void OnFaultsReceive(const std::shared_ptr<int32_t> &tid, const std::shared_ptr<SubscribeType> &type,
+        const std::shared_ptr<Reason> &reason) override;
 
 private:
     bool IsHeaderReceive(const std::shared_ptr<NotifyData> &notifyData);

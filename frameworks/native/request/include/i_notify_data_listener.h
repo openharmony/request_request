@@ -24,6 +24,8 @@ class INotifyDataListener {
 public:
     virtual ~INotifyDataListener() = default;
     virtual void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData) = 0;
+    virtual void OnFaultsReceive(const std::shared_ptr<int32_t> &tid, const std::shared_ptr<SubscribeType> &type,
+        const std::shared_ptr<Reason> &reason) = 0;
 };
 
 } // namespace OHOS::Request

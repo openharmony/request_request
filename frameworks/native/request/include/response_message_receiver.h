@@ -25,6 +25,7 @@ namespace OHOS::Request {
 enum MessageType {
     HTTP_RESPONSE = 0,
     NOTIFY_DATA,
+    FAULTS,
 };
 
 class ResponseMessageReceiver
@@ -58,6 +59,12 @@ private:
     static int32_t ResponseFromParcel(std::shared_ptr<Response> &response, char *&parcel, int32_t &size);
     static int32_t TaskStatesFromParcel(std::vector<TaskState> &taskStates, char *&parcel, int32_t &size);
     static int32_t NotifyDataFromParcel(std::shared_ptr<NotifyData> &notifyData, char *&parcel, int32_t &size);
+    static int32_t ReasonFromParcel(Reason &reason, char *&parcel, int32_t &size);
+    static int32_t ReasonDataFromParcel(std::shared_ptr<int32_t> &tid, std::shared_ptr<SubscribeType> &type,
+        std::shared_ptr<Reason> &reason, char *&parcel, int32_t &size);
+    void HandResponseData(char *&leftBuf, int32_t &leftLen);
+    void HandNotifyData(char *&leftBuf, int32_t &leftLen);
+    void HandFaultsData(char *&leftBuf, int32_t &leftLen);
     void OnShutdown(int32_t fd) override;
     void OnException(int32_t fd) override;
 

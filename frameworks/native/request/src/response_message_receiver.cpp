@@ -135,6 +135,16 @@ int32_t ResponseMessageReceiver::SubscribeTypeFromParcel(SubscribeType &type, ch
     return 0;
 }
 
+int32_t ResponseMessageReceiver::ReasonFromParcel(Reason &reason, char *&parcel, int32_t &size)
+{
+    uint32_t temp;
+    if (Uint32FromParcel(temp, parcel, size)) {
+        return -1;
+    }
+    reason = static_cast<Reason>(temp);
+    return 0;
+}
+
 int32_t ResponseMessageReceiver::StringFromParcel(std::string &str, char *&parcel, int32_t &size)
 {
     int32_t i = 0;
@@ -255,6 +265,27 @@ int32_t ResponseMessageReceiver::MsgHeaderParcel(
         return -1;
     }
     if (Int16FromParcel(bodySize, parcel, size) != 0) {
+        return -1;
+    }
+    return 0;
+}
+
+int32_t ResponseMessageReceiver::ReasonDataFromParcel(
+    std::shared_ptr<int32_t> &tid, std::shared_ptr<SubscribeType> &type, std::shared_ptr<Reason> &reason,
+    char *&parcel, int32_t &size)
+{
+    if (Int32FromParcel(*tid, parcel, size) != 0) {
+        REQUEST_HILOGE("Bad tid");
+        return -1;
+    }
+
+    if (SubscribeTypeFromParcel(*type, parcel, size) != 0) {
+        REQUEST_HILOGE("Bad Subscribe Type");
+        return -1;
+    }
+
+    if (ReasonFromParcel(*reason, parcel, size) != 0) {
+        REQUEST_HILOGE("Bad reason");
         return -1;
     }
     return 0;
@@ -399,21 +430,46 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
     ++messageId_;
 
     if (msgType == MessageType::HTTP_RESPONSE) {
-        std::shared_ptr<Response> response = std::make_shared<Response>();
-        if (ResponseFromParcel(response, leftBuf, leftLen) == 0) {
-            this->handler_->OnResponseReceive(response);
-        } else {
-            REQUEST_HILOGE("Bad Response");
-            SysEventLog::SendSysEventLog(FAULT_EVENT, UDS_FAULT_01, "Bad Response");
-        }
+        HandResponseData(leftBuf, leftLen);
     } else if (msgType == MessageType::NOTIFY_DATA) {
-        std::shared_ptr<NotifyData> notifyData = std::make_shared<NotifyData>();
-        if (NotifyDataFromParcel(notifyData, leftBuf, leftLen) == 0) {
-            this->handler_->OnNotifyDataReceive(notifyData);
-        } else {
-            REQUEST_HILOGE("Bad NotifyData");
-            SysEventLog::SendSysEventLog(FAULT_EVENT, UDS_FAULT_01, "Bad NotifyData");
-        }
+        HandNotifyData(leftBuf, leftLen);
+    } else if (msgType == MessageType::FAULTS) {
+        HandFaultsData(leftBuf, leftLen);
+    }
+}
+
+void ResponseMessageReceiver::HandResponseData(char *&leftBuf, int32_t &leftLen)
+{
+    std::shared_ptr<Response> response = std::make_shared<Response>();
+    if (ResponseFromParcel(response, leftBuf, leftLen) == 0) {
+        this->handler_->OnResponseReceive(response);
+    } else {
+        REQUEST_HILOGE("Bad Response");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, UDS_FAULT_01, "Bad Response");
+    }
+}
+
+void ResponseMessageReceiver::HandNotifyData(char *&leftBuf, int32_t &leftLen)
+{
+    std::shared_ptr<NotifyData> notifyData = std::make_shared<NotifyData>();
+    if (NotifyDataFromParcel(notifyData, leftBuf, leftLen) == 0) {
+        this->handler_->OnNotifyDataReceive(notifyData);
+    } else {
+        REQUEST_HILOGE("Bad NotifyData");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, UDS_FAULT_01, "Bad NotifyData");
+    }
+}
+
+void ResponseMessageReceiver::HandFaultsData(char *&leftBuf, int32_t &leftLen)
+{
+    std::shared_ptr<int32_t> tid = std::make_shared<int32_t>();
+    std::shared_ptr<Reason> reason = std::make_shared<Reason>();
+    std::shared_ptr<SubscribeType> type = std::make_shared<SubscribeType>();
+    if (ReasonDataFromParcel(tid, type, reason, leftBuf, leftLen) == 0) {
+        this->handler_->OnFaultsReceive(tid, type, reason);
+    } else {
+        REQUEST_HILOGE("Bad faults");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, UDS_FAULT_01, "Bad faults");
     }
 }
 
