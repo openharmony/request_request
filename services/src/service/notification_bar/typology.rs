@@ -19,6 +19,8 @@ const DOWNLOAD_FAIL: &str = "request_agent_download_fail\0";
 const UPLOAD_FILE: &str = "request_agent_upload_file\0";
 const UPLOAD_SUCCESS: &str = "request_agent_upload_success\0";
 const UPLOAD_FAIL: &str = "request_agent_upload_fail\0";
+const TASK_COUNT: &str = "request_agent_task_count\0";
+const DOWNLOAD_COMPLETE: &str = "request_agent_download_complete\0";
 
 use super::database::CustomizedNotification;
 use super::ffi::{GetSystemResourceString, NotifyContent, ProgressCircle};
@@ -156,14 +158,19 @@ impl NotifyContent {
             .as_mut()
             .and_then(|c| c.title.take())
             .unwrap_or_else(|| match action {
-                Action::Download => format!("下载完成 {}", progress_size(current_size)),
+                Action::Download => format!("{} {}", GetSystemResourceString(DOWNLOAD_COMPLETE), progress_size(current_size)),
                 Action::Upload => format!("上传完成 {}", progress_size(current_size)),
                 _ => unreachable!(),
             });
 
+        let text_task_count = GetSystemResourceString(TASK_COUNT);
+
         let text = customized
             .and_then(|c| c.text)
-            .unwrap_or_else(|| format!("成功 {} 个, 失败 {} 个", successful_count, failed_count));
+            .unwrap_or_else(|| text_task_count
+                .replace("%1$d", &successful_count.to_string())
+                .replace("%2$d", &failed_count.to_string())
+            );
 
         Self {
             title,
