@@ -121,6 +121,7 @@ struct FileSpec {
 struct Notification {
     std::optional<std::string> title = std::nullopt;
     std::optional<std::string> text = std::nullopt;
+    bool disable = false;
 };
 
 struct Config {

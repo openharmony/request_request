@@ -21,6 +21,7 @@ use crate::manage::events::TaskManagerEvent;
 use crate::service::notification_bar::NotificationDispatcher;
 use crate::service::permission::{ManagerPermission, PermissionChecker};
 use crate::service::RequestServiceStub;
+use crate::utils::{check_permission, is_system_api};
 
 impl RequestServiceStub {
     pub(crate) fn create_group(
@@ -42,7 +43,12 @@ impl RequestServiceStub {
             None
         };
 
-        let new_group_id = NotificationDispatcher::get_instance().create_group(gauge, title, text);
+        let mut disable:bool = data.read()?;
+        if disable && (!is_system_api() || !check_permission("ohos.permission.REQUEST_DISABLE_NOTIFICATION")){
+            disable = false;
+        }
+
+        let new_group_id = NotificationDispatcher::get_instance().create_group(gauge, title, text, disable);
         reply.write(&new_group_id.to_string())?;
         Ok(())
     }
