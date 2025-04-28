@@ -224,6 +224,9 @@ public:
         const std::shared_ptr<Reason> &reason) override
     {
     }
+    void OnWaitReceive(std::int32_t taskId, WaitingReason reason) override
+    {
+    }
 };
 
 void AddAndRemoveListenerRequestFuzzTest(const uint8_t *data, size_t size)

@@ -373,6 +373,9 @@ public:
     void OnChannelBroken() override
     {
     }
+    void OnWaitReceive(std::int32_t taskId, WaitingReason reason) override
+    {
+    }
 };
 
 /**

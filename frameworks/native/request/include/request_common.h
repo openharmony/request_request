@@ -84,6 +84,13 @@ enum Reason : uint32_t {
     NETWORK_APP_ACCOUNT,
 };
 
+enum WaitingReason : uint32_t {
+    TaskQueueFull,
+    NetworkNotMatch,
+    AppBackground,
+    UserInactivated,
+};
+
 enum class SubscribeType : uint32_t {
     COMPLETED = 0,
     FAILED,
@@ -94,6 +101,7 @@ enum class SubscribeType : uint32_t {
     RESUME,
     RESPONSE,
     FAULT,
+    WAIT,
     BUTT,
 };
 

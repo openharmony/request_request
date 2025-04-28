@@ -165,6 +165,8 @@ static std::string SubscribeTypeToString(SubscribeType type)
             return "response";
         case SubscribeType::FAULT:
             return "fault";
+        case SubscribeType::WAIT:
+            return "wait";
         case SubscribeType::BUTT:
             return "butt";
     }
@@ -279,6 +281,28 @@ void JSNotifyDataListener::OnFaultsReceive(const std::shared_ptr<int32_t> &tid,
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete ptr;
+    }
+}
+
+void JSNotifyDataListener::OnWaitReceive(std::int32_t taskId, WaitingReason reason)
+{
+    int32_t ret = napi_send_event(
+        this->env_,
+        [me = shared_from_this(), taskId, reason]() {
+            uint32_t paramNumber = NapiUtils::ONE_ARG;
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(me->env_, &scope);
+            if (scope == nullptr) {
+                REQUEST_HILOGE("napi_open_handle_scope null");
+                return;
+            }
+            napi_value value = NapiUtils::Convert2JSValue(me->env_, reason);
+            me->OnMessageReceive(&value, paramNumber);
+            napi_close_handle_scope(me->env_, scope);
+        },
+        napi_eprio_high);
+    if (ret != napi_ok) {
+        REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
     }
 }
 

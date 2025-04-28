@@ -18,6 +18,7 @@
 
 #include "cj_listener_list.h"
 #include "i_notify_data_listener.h"
+#include "request_common.h"
 
 namespace OHOS::CJSystemapi::Request {
 using OHOS::Request::INotifyDataListener;
@@ -37,6 +38,7 @@ public:
     void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData) override;
     void OnFaultsReceive(const std::shared_ptr<int32_t> &tid, const std::shared_ptr<SubscribeType> &type,
         const std::shared_ptr<Reason> &reason) override;
+    void OnWaitReceive(std::int32_t taskId, OHOS::Request::WaitingReason reason) override;
 
 private:
     bool IsHeaderReceive(const std::shared_ptr<NotifyData> &notifyData);

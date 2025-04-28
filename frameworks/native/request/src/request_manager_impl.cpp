@@ -427,6 +427,16 @@ void RequestManagerImpl::OnFaultsReceive(const std::shared_ptr<int32_t> &tid,
     task->OnFaultsReceive(tid, type, reason);
 }
 
+void RequestManagerImpl::OnWaitReceive(std::int32_t taskId, WaitingReason reason)
+{
+    std::shared_ptr<Request> task = this->GetTask(std::to_string(taskId));
+    if (task.get() == nullptr) {
+        REQUEST_HILOGE("OnWaitReceive task not found");
+        return;
+    }
+    task->OnWaitReceive(taskId, reason);
+}
+
 sptr<RequestServiceInterface> RequestManagerImpl::GetRequestServiceProxy(bool needLoadSA)
 {
     std::lock_guard<std::mutex> lock(serviceProxyMutex_);

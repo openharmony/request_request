@@ -270,9 +270,8 @@ int32_t ResponseMessageReceiver::MsgHeaderParcel(
     return 0;
 }
 
-int32_t ResponseMessageReceiver::ReasonDataFromParcel(
-    std::shared_ptr<int32_t> &tid, std::shared_ptr<SubscribeType> &type, std::shared_ptr<Reason> &reason,
-    char *&parcel, int32_t &size)
+int32_t ResponseMessageReceiver::ReasonDataFromParcel(std::shared_ptr<int32_t> &tid,
+    std::shared_ptr<SubscribeType> &type, std::shared_ptr<Reason> &reason, char *&parcel, int32_t &size)
 {
     if (Int32FromParcel(*tid, parcel, size) != 0) {
         REQUEST_HILOGE("Bad tid");
@@ -435,6 +434,8 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
         HandNotifyData(leftBuf, leftLen);
     } else if (msgType == MessageType::FAULTS) {
         HandFaultsData(leftBuf, leftLen);
+    } else if (msgType == MessageType::WAIT) {
+        HandWaitData(leftBuf, leftLen);
     }
 }
 
@@ -471,6 +472,21 @@ void ResponseMessageReceiver::HandFaultsData(char *&leftBuf, int32_t &leftLen)
         REQUEST_HILOGE("Bad faults");
         SysEventLog::SendSysEventLog(FAULT_EVENT, UDS_FAULT_01, "Bad faults");
     }
+}
+
+void ResponseMessageReceiver::HandWaitData(char *&leftBuf, int32_t &leftLen)
+{
+    int32_t taskId;
+    if (Int32FromParcel(taskId, leftBuf, leftLen) != 0) {
+        REQUEST_HILOGE("Bad taskId");
+        return;
+    }
+    uint32_t reason;
+    if (Uint32FromParcel(reason, leftBuf, leftLen) != 0) {
+        REQUEST_HILOGE("Bad reason");
+        return;
+    }
+    this->handler_->OnWaitReceive(taskId, static_cast<WaitingReason>(reason));
 }
 
 void ResponseMessageReceiver::OnShutdown(int32_t fd)

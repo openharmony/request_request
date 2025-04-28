@@ -118,4 +118,13 @@ void Request::OnFaultsReceive(const std::shared_ptr<int32_t> &tid, const std::sh
     }
 }
 
+void Request::OnWaitReceive(std::int32_t taskId, WaitingReason reason)
+{
+    std::lock_guard<std::mutex> lock(listenerMutex_);
+    auto listener = notifyDataListenerMap_.find(SubscribeType::WAIT);
+    if (listener != notifyDataListenerMap_.end()) {
+        listener->second->OnWaitReceive(taskId, reason);
+    }
+}
+
 } // namespace OHOS::Request
