@@ -24,11 +24,13 @@ cfg_oh! {
 }
 
 use super::files::BundleCache;
+use crate::service::notification_bar::NotificationDispatcher;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::files::convert_path;
 
 const CONNECT_TIMEOUT: u64 = 60;
 const SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
+const SECONDS_IN_TEN_MINUTES: u64 = 10 * 60;
 
 pub(crate) fn build_client(
     config: &TaskConfig,
@@ -38,6 +40,11 @@ pub(crate) fn build_client(
         .connect_timeout(Timeout::from_secs(CONNECT_TIMEOUT))
         .request_timeout(Timeout::from_secs(SECONDS_IN_ONE_WEEK))
         .min_tls_version(TlsVersion::TLS_1_2);
+    if !NotificationDispatcher::get_instance()
+        .check_task_notification_available(config.common_data.task_id)
+    {
+        client = client.request_timeout(Timeout::from_secs(SECONDS_IN_TEN_MINUTES));
+    }
 
     client = client.sockets_owner(config.common_data.uid as u32, config.common_data.uid as u32);
     // Set redirect strategy.

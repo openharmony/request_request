@@ -75,8 +75,7 @@ public:
     int32_t SubRunCount(const sptr<NotifyInterface> &listener) override;
     int32_t UnsubRunCount() override;
 
-    int32_t CreateGroup(std::string &gid, const bool gauge, std::optional<std::string> title,
-        std::optional<std::string> text) override;
+    int32_t CreateGroup(std::string &gid, const bool gauge, Notification &notification) override;
     int32_t AttachGroup(const std::string &gid, const std::vector<std::string> &tids) override;
     int32_t DeleteGroup(const std::string &gid) override;
 

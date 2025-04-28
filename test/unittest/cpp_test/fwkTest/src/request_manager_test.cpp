@@ -419,9 +419,13 @@ HWTEST_F(RequestManagerTest, CreateGroupTest001, TestSize.Level1)
     EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string gid = "gid";
     bool gauge = true;
-    std::optional<std::string> title;
-    std::optional<std::string> text;
-    EXPECT_EQ(RequestManager::GetInstance()->CreateGroup(gid, gauge, title, text), 0);
+    Notification info{
+        .text = "text",
+        .title = "title",
+        .disable = false,
+    };
+
+    EXPECT_EQ(RequestManager::GetInstance()->CreateGroup(gid, gauge, info), 0);
 }
 
 /**

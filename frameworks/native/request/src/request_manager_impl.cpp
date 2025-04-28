@@ -235,10 +235,9 @@ int32_t RequestManagerImpl::Resume(const std::string &tid)
     return CallProxyMethod(&RequestServiceInterface::Resume, tid);
 }
 
-int32_t RequestManagerImpl::CreateGroup(
-    std::string &gid, const bool gauge, std::optional<std::string> title, std::optional<std::string> text)
+int32_t RequestManagerImpl::CreateGroup(std::string &gid, const bool gauge, Notification &notification)
 {
-    return CallProxyMethod(&RequestServiceInterface::CreateGroup, gid, gauge, title, text);
+    return CallProxyMethod(&RequestServiceInterface::CreateGroup, gid, gauge, notification);
 }
 int32_t RequestManagerImpl::AttachGroup(const std::string &gid, const std::vector<std::string> &tids)
 {

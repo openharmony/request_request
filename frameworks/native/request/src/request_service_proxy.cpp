@@ -226,8 +226,7 @@ ExceptionErrorCode RequestServiceProxy::RemoveTasks(
     return ExceptionErrorCode::E_OK;
 }
 
-ExceptionErrorCode RequestServiceProxy::QueryTasks(
-    const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets)
+ExceptionErrorCode RequestServiceProxy::QueryTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets)
 {
     TaskInfoRet infoRet{ .code = ExceptionErrorCode::E_OTHER };
     uint32_t len = static_cast<uint32_t>(tids.size());
@@ -454,6 +453,7 @@ void SerializeNotification(MessageParcel &data, const Notification &notification
     } else {
         data.WriteBool(false);
     }
+    data.WriteBool(notification.disable);
 }
 
 int32_t RequestServiceProxy::Create(const Config &config, std::string &tid)
@@ -910,25 +910,25 @@ int32_t RequestServiceProxy::UnsubRunCount()
     return E_OK;
 }
 
-int32_t RequestServiceProxy::CreateGroup(
-    std::string &gid, const bool gauge, std::optional<std::string> title, std::optional<std::string> text)
+int32_t RequestServiceProxy::CreateGroup(std::string &gid, const bool gauge, Notification &notification)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteBool(gauge);
-    if (title != std::nullopt) {
+    if (notification.title != std::nullopt) {
         data.WriteBool(true);
-        data.WriteString(*title);
+        data.WriteString(*notification.title);
     } else {
         data.WriteBool(false);
     }
-    if (text != std::nullopt) {
+    if (notification.text != std::nullopt) {
         data.WriteBool(true);
-        data.WriteString(*text);
+        data.WriteString(*notification.text);
     } else {
         data.WriteBool(false);
     }
+    data.WriteBool(notification.disable);
     int32_t ret =
         Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_CREATE_GROUP), data, reply, option);
     if (ret != ERR_NONE) {

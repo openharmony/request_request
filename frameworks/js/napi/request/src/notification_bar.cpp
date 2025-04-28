@@ -36,8 +36,7 @@ const std::size_t MAX_TEXT_LENGTH = 3072;
 struct CreateContext : public AsyncCall::Context {
     std::string gid;
     bool gauge = false;
-    std::optional<std::string> title = std::nullopt;
-    std::optional<std::string> text = std::nullopt;
+    Notification notification;
 };
 
 napi_status createNotificationParse(CreateContext *context, napi_value customized_notification)
@@ -48,27 +47,29 @@ napi_status createNotificationParse(CreateContext *context, napi_value customize
     if (NapiUtils::HasNamedProperty(context->env_, customized_notification, "title")) {
         napi_value title = NapiUtils::GetNamedProperty(context->env_, customized_notification, "title");
         if (NapiUtils::GetValueType(context->env_, title) == napi_string) {
-            context->title = NapiUtils::Convert2String(context->env_, title);
-            if (context->title->size() > MAX_TITLE_LENGTH) {
+            context->notification.title = NapiUtils::Convert2String(context->env_, title);
+            if (context->notification.title->size() > MAX_TITLE_LENGTH) {
                 NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
                 return napi_invalid_arg;
             }
-        } else {
-            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
-            return napi_invalid_arg;
         }
     }
     if (NapiUtils::HasNamedProperty(context->env_, customized_notification, "text")) {
         napi_value text = NapiUtils::GetNamedProperty(context->env_, customized_notification, "text");
         if (NapiUtils::GetValueType(context->env_, text) == napi_string) {
-            context->text = NapiUtils::Convert2String(context->env_, text);
-            if (context->text->size() > MAX_TEXT_LENGTH) {
+            context->notification.text = NapiUtils::Convert2String(context->env_, text);
+            if (context->notification.text->size() > MAX_TEXT_LENGTH) {
                 NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
                 return napi_invalid_arg;
             }
-        } else {
-            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
-            return napi_invalid_arg;
+        }
+    }
+    if (NapiUtils::HasNamedProperty(context->env_, customized_notification, "disable")) {
+        napi_value disable = NapiUtils::GetNamedProperty(context->env_, customized_notification, "disable");
+        if (NapiUtils::GetValueType(context->env_, disable) == napi_boolean) {
+            bool value = false;
+            napi_get_value_bool(context->env_, disable, &value);
+            context->notification.disable = value;
         }
     }
     return napi_ok;
@@ -113,7 +114,7 @@ napi_value createGroup(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto exec = [context]() {
-        RequestManager::GetInstance()->CreateGroup(context->gid, context->gauge, context->title, context->text);
+        RequestManager::GetInstance()->CreateGroup(context->gid, context->gauge, context->notification);
     };
     context->SetInput(input).SetOutput(output).SetExec(exec);
     AsyncCall asyncCall(env, info, context);
