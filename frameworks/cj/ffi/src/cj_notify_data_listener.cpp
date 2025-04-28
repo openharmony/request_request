@@ -114,4 +114,10 @@ void CJNotifyDataListener::OnFaultsReceive(const std::shared_ptr<int32_t> &tid,
     return;
 }
 
+void CJNotifyDataListener::OnWaitReceive(std::int32_t taskId, OHOS::Request::WaitingReason reason)
+{
+    // unimplemented
+    return;
+}
+
 } // namespace OHOS::CJSystemapi::Request

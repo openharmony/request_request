@@ -19,7 +19,7 @@ use super::reason::Reason;
 use crate::FileSpec;
 
 // NotifyData's callback arg
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) enum SubscribeType {
     Complete = 0,
     Fail,
@@ -28,8 +28,16 @@ pub(crate) enum SubscribeType {
     Progress,
     Remove,
     Resume,
-    //Response,
+    // Response,
     Faults = 8,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum WaitingCause {
+    TaskQueue = 0,
+    Network,
+    AppState,
+    UserState,
 }
 
 #[derive(Debug, Clone)]

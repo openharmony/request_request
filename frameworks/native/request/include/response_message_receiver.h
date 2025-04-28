@@ -26,6 +26,7 @@ enum MessageType {
     HTTP_RESPONSE = 0,
     NOTIFY_DATA,
     FAULTS,
+    WAIT,
 };
 
 class ResponseMessageReceiver
@@ -65,6 +66,7 @@ private:
     void HandResponseData(char *&leftBuf, int32_t &leftLen);
     void HandNotifyData(char *&leftBuf, int32_t &leftLen);
     void HandFaultsData(char *&leftBuf, int32_t &leftLen);
+    void HandWaitData(char *&leftBuf, int32_t &leftLen);
     void OnShutdown(int32_t fd) override;
     void OnException(int32_t fd) override;
 

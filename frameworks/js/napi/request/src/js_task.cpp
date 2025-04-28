@@ -155,7 +155,7 @@ napi_value JsTask::JsMain(napi_env env, napi_callback_info info, Version version
             context->withErrCode_ = false;
         }
         if (config.version == Version::API8 && context->innerCode_ == E_PERMISSION) {
-            context-> withErrCode_= true;
+            context->withErrCode_ = true;
         }
     };
     auto output = [context, seq](napi_value *result) -> napi_status {

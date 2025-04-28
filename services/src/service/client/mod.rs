@@ -26,7 +26,7 @@ use ylong_runtime::sync::oneshot::{channel, Sender};
 
 use crate::config::Version;
 use crate::error::ErrorCode;
-use crate::task::notify::{NotifyData, SubscribeType};
+use crate::task::notify::{NotifyData, SubscribeType, WaitingCause};
 use crate::task::reason::Reason;
 use crate::utils::{runtime_spawn, Recv};
 
@@ -44,6 +44,7 @@ pub(crate) enum ClientEvent {
     SendResponse(u32, String, u32, String, Headers),
     SendNotifyData(SubscribeType, NotifyData),
     SendFaults(u32, SubscribeType, Reason),
+    SendWaitNotify(u32, WaitingCause),
     Shutdown,
 }
 
@@ -51,6 +52,7 @@ pub(crate) enum MessageType {
     HttpResponse = 0,
     NotifyData,
     Faults,
+    Waiting,
 }
 
 impl ClientManagerEntry {
@@ -160,6 +162,11 @@ impl ClientManagerEntry {
         let event = ClientEvent::SendFaults(tid, subscribe_type, reason);
         let _ = self.send_event(event);
     }
+
+    pub(crate) fn send_wait_reason(&self, tid: u32, reason: WaitingCause) {
+        let event = ClientEvent::SendWaitNotify(tid, reason);
+        let _ = self.send_event(event);
+    }
 }
 
 // uid and token_id will be used later
@@ -233,14 +240,17 @@ impl Client {
                             .await;
                     }
                     ClientEvent::SendFaults(tid, subscribe_type, reason) => {
-                        self.handle_send_faults(tid, subscribe_type, reason)
-                            .await;
+                        self.handle_send_faults(tid, subscribe_type, reason).await;
                     }
                     ClientEvent::SendNotifyData(subscribe_type, notify_data) => {
                         if subscribe_type == SubscribeType::Progress {
                             progress_index.insert(notify_data.task_id, index);
                         }
                         temp_notify_data.push((subscribe_type, notify_data));
+                    }
+                    ClientEvent::SendWaitNotify(task_id, waiting_reason) => {
+                        self.handle_send_waiting_notify(task_id, waiting_reason)
+                            .await;
                     }
                     _ => {}
                 }
@@ -286,6 +296,33 @@ impl Client {
         let size = size.to_le_bytes();
         message[POSITION_OF_LENGTH as usize] = size[0];
         message[(POSITION_OF_LENGTH + 1) as usize] = size[1];
+        self.send_message(message).await;
+    }
+
+    async fn handle_send_waiting_notify(&mut self, task_id: u32, waiting_reason: WaitingCause) {
+        let mut message = Vec::<u8>::new();
+
+        message.extend_from_slice(&REQUEST_MAGIC_NUM.to_le_bytes());
+
+        message.extend_from_slice(&self.message_id.to_le_bytes());
+        self.message_id += 1;
+
+        let message_type = MessageType::Waiting as u16;
+        message.extend_from_slice(&message_type.to_le_bytes());
+
+        let message_body_size: u16 = 0;
+        message.extend_from_slice(&message_body_size.to_le_bytes());
+
+        message.extend_from_slice(&task_id.to_le_bytes());
+
+        message.extend_from_slice(&(waiting_reason as u32).to_le_bytes());
+
+        let size = message.len() as u16;
+        debug!("send waiting notify size {:?}", size);
+        let size = size.to_le_bytes();
+        message[POSITION_OF_LENGTH as usize] = size[0];
+        message[(POSITION_OF_LENGTH + 1) as usize] = size[1];
+
         self.send_message(message).await;
     }
 

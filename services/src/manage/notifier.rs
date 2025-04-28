@@ -13,7 +13,7 @@
 
 use crate::info::State;
 use crate::service::client::ClientManagerEntry;
-use crate::task::notify::{NotifyData, SubscribeType};
+use crate::task::notify::{NotifyData, SubscribeType, WaitingCause};
 use crate::task::reason::Reason;
 pub(crate) struct Notifier;
 
@@ -69,6 +69,10 @@ impl Notifier {
         let task_id = notify_data.task_id;
         client_manager.send_notify_data(SubscribeType::Remove, notify_data);
         client_manager.notify_task_finished(task_id);
+    }
+
+    pub(crate) fn waiting(client_manager: &ClientManagerEntry, task_id: u32, cause: WaitingCause) {
+        client_manager.send_wait_reason(task_id, cause);
     }
 }
 
