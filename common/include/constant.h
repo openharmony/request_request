@@ -55,19 +55,19 @@ struct ExceptionError {
     std::string errInfo;
 };
 
-static constexpr const char *E_OK_INFO = "check succeeded";
-static constexpr const char *E_PERMISSION_INFO = "the permissions check fails";
-static constexpr const char *E_PARAMETER_CHECK_INFO = "the parameters check fails";
-static constexpr const char *E_UNSUPPORTED_INFO = "call unsupported api";
-static constexpr const char *E_FILE_IO_INFO = " file operation error";
-static constexpr const char *E_FILE_PATH_INFO = "bad file path";
-static constexpr const char *E_SERVICE_ERROR_INFO = "task service ability error";
-static constexpr const char *E_OTHER_INFO = "other error";
-static constexpr const char *E_TASK_QUEUE_INFO = "the application task queue is full";
-static constexpr const char *E_TASK_MODE_INFO = "task mode error";
-static constexpr const char *E_TASK_NOT_FOUND_INFO = "task not found";
-static constexpr const char *E_TASK_STATE_INFO = "task state error";
-static constexpr const char *E_GROUP_NOT_FOUND_INFO = "group deleted or not found";
+static constexpr const char *E_OK_INFO = "Check succeeded";
+static constexpr const char *E_PERMISSION_INFO = "The permissions check fails";
+static constexpr const char *E_PARAMETER_CHECK_INFO = "The parameters check fails";
+static constexpr const char *E_UNSUPPORTED_INFO = "Call unsupported api";
+static constexpr const char *E_FILE_IO_INFO = "Invalid file or file system error";
+static constexpr const char *E_FILE_PATH_INFO = "File path not supported or invalid";
+static constexpr const char *E_SERVICE_ERROR_INFO = "Task service ability error";
+static constexpr const char *E_OTHER_INFO = "Others error";
+static constexpr const char *E_TASK_QUEUE_INFO = "The application task queue is full";
+static constexpr const char *E_TASK_MODE_INFO = "Operation with wrong task mode";
+static constexpr const char *E_TASK_NOT_FOUND_INFO = "Task removed or not found";
+static constexpr const char *E_TASK_STATE_INFO = "Operation with wrong task state";
+static constexpr const char *E_GROUP_NOT_FOUND_INFO = "Group deleted or not found";
 
 static constexpr const char *FUNCTION_PAUSE = "pause";
 static constexpr const char *FUNCTION_QUERY = "query";
