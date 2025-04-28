@@ -164,13 +164,19 @@ impl NotifyContent {
             });
 
         let text_task_count = GetSystemResourceString(TASK_COUNT);
+        let text_count = if text_task_count.contains("%d") {
+            text_task_count
+                .replacen("%d", &successful_count.to_string(), 1)
+                .replacen("%d", &failed_count.to_string(), 1)
+        } else {
+            text_task_count
+                .replace("%1$d", &successful_count.to_string())
+                .replace("%2$d", &failed_count.to_string())
+        };
 
         let text = customized
             .and_then(|c| c.text)
-            .unwrap_or_else(|| text_task_count
-                .replace("%1$d", &successful_count.to_string())
-                .replace("%2$d", &failed_count.to_string())
-            );
+            .unwrap_or(text_count);
 
         Self {
             title,
@@ -206,9 +212,20 @@ impl NotifyContent {
             });
 
         let (successful, failed) = (group_progress.successful(), group_progress.failed());
+        let text_task_count = GetSystemResourceString(TASK_COUNT);
+        let text_count = if text_task_count.contains("%d") {
+            text_task_count
+                .replacen("%d", &successful.to_string(), 1)
+                .replacen("%d", &failed.to_string(), 1)
+        } else {
+            text_task_count
+                .replace("%1$d", &successful.to_string())
+                .replace("%2$d", &failed.to_string())
+        };
+
         let text = customized
             .and_then(|c| c.text)
-            .unwrap_or_else(|| format!("成功 {} 个, 失败 {} 个", successful, failed));
+            .unwrap_or(text_count);
 
         let progress_circle =
             ProgressCircle::open((successful + failed) as u64, group_progress.total() as u64);
@@ -375,8 +392,20 @@ mod test {
             UID,
             &group_info,
         );
+        
         assert_eq!(content.title, "下载文件 100B");
-        assert_eq!(content.text, "成功 1 个, 失败 0 个");
+
+        let text_task_count = GetSystemResourceString(TASK_COUNT);
+        let text_count = if text_task_count.contains("%d") {
+            text_task_count
+                .replacen("%d","1", 1)
+                .replacen("%d", "0", 1)
+        } else {
+            text_task_count
+                .replace("%1$d", "1")
+                .replace("%2$d", "0")
+        };
+        assert_eq!(content.text, text_count);
 
         for i in 1..4 {
             group_info.update_task_state(i, State::Failed);
@@ -391,7 +420,18 @@ mod test {
             UID,
             &group_info,
         );
+        
         assert_eq!(content.title, "下载文件 100B");
-        assert_eq!(content.text, "成功 3 个, 失败 1 个");
+        let text_task_count = GetSystemResourceString(TASK_COUNT);
+        let text_count = if text_task_count.contains("%d") {
+            text_task_count
+                .replacen("%d","3", 1)
+                .replacen("%d", "1", 1)
+        } else {
+            text_task_count
+                .replace("%1$d", "3")
+                .replace("%2$d", "1")
+        };
+        assert_eq!(content.text, text_count);
     }
 }
