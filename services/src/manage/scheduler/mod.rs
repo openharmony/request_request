@@ -291,6 +291,11 @@ impl Scheduler {
                     State::Waiting,
                     Reason::RunningTaskMeetLimits,
                 );
+                Notifier::waiting(
+                    &self.client_manager,
+                    task_id,
+                    WaitingCause::TaskQueue,
+                );
             }
             State::Failed => {
                 info!("task {} cancel with state Failed", task_id);
