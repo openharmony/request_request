@@ -286,6 +286,8 @@ void JSNotifyDataListener::OnFaultsReceive(const std::shared_ptr<int32_t> &tid,
 
 void JSNotifyDataListener::OnWaitReceive(std::int32_t taskId, WaitingReason reason)
 {
+    REQUEST_HILOGI(
+        "Notify wait, tid %{public}d, reason: %{public}d", taskId, static_cast<int32_t>(reason));
     int32_t ret = napi_send_event(
         this->env_,
         [me = shared_from_this(), taskId, reason]() {
