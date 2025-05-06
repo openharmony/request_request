@@ -1311,6 +1311,103 @@ export default function requestOperateTaskTest() {
       }
     })
 
+	  /**
+     * @tc.number: testOnTask010
+     * @tc.name: testOnTask010
+     * @tc.desc: Test on task for faults
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testOnTask010', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.txt',
+        saveas: 'testOnTask010.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('fault', function (faults) {
+        expect(faults).assertEqual(request.agent.Faults.PROTOCOL);
+        done();
+      })
+      await task.start();
+    })
+	
+	    /**
+     * @tc.number: testOnTask011
+     * @tc.name: testOnTask011
+     * @tc.desc: Test on task for faults
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testOnTask011', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee111.com/chenzhixue/downloadTest/releases/download/v1.0/test1.txt',
+        saveas: 'testOnTask011.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('fault', function (faults) {
+        expect(faults).assertEqual(request.agent.Faults.DNS);
+        done();
+      })
+      await task.start();
+    })
+
+    /**
+     * @tc.number: testOnTask012
+     * @tc.name: testOnTask012
+     * @tc.desc: Test on task for faults
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testOnTask012', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https:////',
+        saveas: 'testOnTask012.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('fault', function (faults) {
+        expect(faults).assertEqual(request.agent.Faults.PARAM);
+        done();
+      })
+      await task.start();
+    })
+
+    /**
+     * @tc.number: testOnTask013
+     * @tc.name: testOnTask013
+     * @tc.desc: Test on task for faults
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testOnTask013', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://httpbin.org/stream/1',
+        saveas: 'testOnTask013.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        precise : true
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('fault', function (faults) {
+        expect(faults).assertEqual(request.agent.Faults.FSIO);
+        done();
+      })
+      await task.start();
+    })
+
     /**
      * @tc.number: testOffTask001
      * @tc.name: testOffTask001
