@@ -16,6 +16,7 @@
 import { AsyncCallback, Callback } from '@ohos.base';
 import { BusinessError } from '@ohos.base';
 import BaseContext from 'application.BaseContext';
+import hilog from '@ohos.hilog';
 
 export default namespace request {
   namespace agent {
@@ -88,6 +89,35 @@ export default namespace request {
       readonly sizes: Array<number>;
       readonly extras?: object;
     }
+    const StateMap: Record<number, State> = {
+      0x00: State.INITIALIZED,
+      0x10: State.WAITING,
+      0x20: State.RUNNING,
+      0x21: State.RETRYING,
+      0x30: State.PAUSED,
+      0x31: State.STOPPED,
+      0x40: State.COMPLETED,
+      0x41: State.FAILED,
+      0x50: State.REMOVED
+    };
+    export class ProgressImpl implements Progress {
+      readonly state: State;
+      readonly index: number;
+      readonly processed: number;
+      readonly sizes: Array<number>;
+      readonly extras?: object;
+
+      constructor(state: number, index: number, processed: number) {
+        const resolvedState = StateMap[state];
+        if (resolvedState !== undefined) {
+          this.state = resolvedState;
+        } else {
+          this.state = State.INITIALIZED;
+        }
+        this.index = index;
+        this.processed = processed;
+      }
+    }
 
     interface Config {
       action: Action;
@@ -117,18 +147,63 @@ export default namespace request {
     }
 
     interface Task {
+      start(callback: AsyncCallback<void>): void;
       start(): Promise<void>;
-      on(event: 'response', callback: Callback<HttpResponse>): void;
+      on(event: 'response' | 'completed', callback: Callback<HttpResponse | Progress>): void;
     };
+
+    class Cleaner {
+      static callback(cleaner: Cleaner): void {
+          hilog.info(0x0000, 'request', "enter Cleaner.callback");
+          cleaner.clean()
+      }
+
+      constructor(targetPtr: long) {
+          this.targetPtr = targetPtr
+      }
+
+      native clean(): void
+
+      private targetPtr: long = 0;
+    }
+
+    class FinalizationAgent<T extends Object> {
+      static register<T extends Object>(obj: T, ptr: long): FinalizationAgent<T> {
+          let instance: FinalizationAgent<T> = new FinalizationAgent<T>();
+          instance.init(obj, ptr);
+          return instance;
+      }
+
+      unregister(): void {
+          finalizer.unregister(this.unregisterToken);
+      }
+
+      private init(obj: T, ptr: long): void {
+          this.unregisterToken = {};
+          this.cleaner = new Cleaner(ptr);
+          finalizer.register(obj, this.cleaner!, this.unregisterToken);
+      }
+
+      private cleaner: Cleaner | null = null;
+      private unregisterToken: object;
+    }
+
+    let finalizer = new FinalizationRegistry<Cleaner>(Cleaner.callback)
 
     export class TaskImpl implements Task {
       nativePtr: long = 0;
+      private fzAgent: FinalizationAgent<TaskImpl>;
       constructor(context: long) {
-          console.log("in constructor, context is " + context)
+          hilog.info(0x0000, 'request', "in constructor, context is " + context)
           this.nativePtr = context;
+          this.fzAgent = FinalizationAgent.register<TaskImpl>(this, this.nativePtr);
       }
 
-      on(event: 'response', callback: Callback<HttpResponse>): void {
+      unregisterCleaner(): void {
+        this.fzAgent.unregister();
+      }
+
+      on(event: 'response' | 'completed', callback: Callback<HttpResponse | Progress>): void {
         this.onSync(event, callback);
       };
 
@@ -139,9 +214,6 @@ export default namespace request {
         p1.then((data: NullishType): void => {
           let e: BusinessError<void>;
           callback(e, undefined);
-        }).catch((error: NullishType) => {
-          let err =  error as BusinessError<void>;
-          callback(err, undefined);
         });
       };
 
@@ -151,21 +223,19 @@ export default namespace request {
               this.startSync();
             });
             p1.then((e: NullishType) : void => {
-              console.log("in start Promise then. e is ", e);
+              hilog.info(0x0000, 'request', "in start Promise then. e is ", e)
               resolve(undefined);
-            }).catch((err: Error) : void => {
-              reject(err);
             });
         });
         return p;
       }
 
-      native function onSync(event: 'response', callback: Callback<HttpResponse>): void;
+      native function onSync(event: string, callback: Callback<HttpResponse | Progress>): void;
       native function startSync(): void;
     };
-  
+
     export native function createSync(context: BaseContext, config: Config): Task;
-  
+
     export function create(context: BaseContext, config: Config, callback: AsyncCallback<Task>): void {
       let p1 = taskpool.execute(createSync, context, config);
       p1.then((data: NullishType) => {
@@ -178,13 +248,13 @@ export default namespace request {
         callback(err, data);
       });
     };
-  
+
     export function create(context: BaseContext, config: Config): Promise<Task> {
       let p = new Promise<Task>((resolve: (v: Task) => void,
         reject: (error: Object) => void): void => {
           let p1 = taskpool.execute(createSync, context, config);
           p1.then((e: NullishType): void => {
-            console.log("in create Promise then. e is ", e)
+            hilog.info(0x0000, 'request', "in create Promise then. e is ", e)
             resolve(e as Task);
           }).catch((err: Error) : void => {
             reject(err);
