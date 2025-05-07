@@ -77,6 +77,7 @@
       "group_type": {
         "base_group": [
           "//base/request/request/frameworks/js/napi/request:request",
+          "//base/request/request/frameworks/ets/ani:request_ani",
           "//base/request/request/frameworks/cj/ffi:cj_request_ffi",
           "//base/request/request/frameworks/js/napi/cache_download:cachedownload",
           "//base/request/request/frameworks/js/ani:requestmoduleani_package"
