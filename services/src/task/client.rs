@@ -54,6 +54,12 @@ pub(crate) fn build_client(
         client = client.redirect(Redirect::none());
     }
 
+    if config.common_data.min_speed.speed > 0 && config.common_data.min_speed.duration > 0 {
+        client = client
+            .min_speed_limit(config.common_data.min_speed.speed as u64)
+            .min_speed_interval(config.common_data.min_speed.duration as u64);
+    }
+
     // Set HTTP proxy.
     #[cfg(feature = "oh")]
     if let Some(proxy) = build_task_proxy(config)? {

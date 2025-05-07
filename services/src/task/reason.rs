@@ -44,6 +44,7 @@ mod ffi {
         NetworkAccount = 28,
         AppAccount = 29,
         NetworkAppAccount = 30,
+        LowSpeed = 31,
     }
 }
 
@@ -145,5 +146,6 @@ mod test {
         assert_eq!(Reason::NetworkAccount.repr, 28);
         assert_eq!(Reason::AppAccount.repr, 29);
         assert_eq!(Reason::NetworkAppAccount.repr, 30);
+        assert_eq!(Reason::LowSpeed.repr, 31);
     }
 }

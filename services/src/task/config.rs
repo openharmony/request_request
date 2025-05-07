@@ -77,6 +77,13 @@ pub enum NetworkConfig {
     Cellular,
 }
 
+/// task min speed
+#[derive(Copy, Clone, Debug, Default)]
+pub struct MinSpeed {
+    pub(crate) speed: i32,
+    pub(crate) duration: i32,
+}
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub(crate) struct CommonTaskConfig {
@@ -99,6 +106,7 @@ pub(crate) struct CommonTaskConfig {
     pub(crate) priority: u32,
     pub(crate) background: bool,
     pub(crate) multipart: bool,
+    pub(crate) min_speed: MinSpeed,
 }
 
 /// task config
@@ -292,6 +300,7 @@ impl Default for TaskConfig {
                 priority: 0,
                 background: false,
                 multipart: false,
+                min_speed: MinSpeed::default(),
             },
         }
     }
@@ -425,6 +434,8 @@ impl Serialize for TaskConfig {
         parcel.write(&self.common_data.gauge)?;
         parcel.write(&self.common_data.precise)?;
         parcel.write(&self.common_data.priority)?;
+        parcel.write(&self.common_data.min_speed.speed)?;
+        parcel.write(&self.common_data.min_speed.duration)?;
         parcel.write(&self.url)?;
         parcel.write(&self.title)?;
         parcel.write(&self.method)?;
@@ -502,6 +513,8 @@ impl Deserialize for TaskConfig {
         let gauge: bool = parcel.read()?;
         let precise: bool = parcel.read()?;
         let priority: u32 = parcel.read()?;
+        let min_speed: i32 = parcel.read()?;
+        let min_duration: i32 = parcel.read()?;
         let url: String = parcel.read()?;
         let title: String = parcel.read()?;
         let method: String = parcel.read()?;
@@ -675,6 +688,10 @@ impl Deserialize for TaskConfig {
                 priority,
                 background,
                 multipart,
+                min_speed: MinSpeed {
+                    speed: min_speed,
+                    duration: min_duration,
+                },
             },
         };
         Ok(task_config)

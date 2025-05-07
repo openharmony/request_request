@@ -24,6 +24,11 @@
 #include "c_form_item.h"
 #include "c_string_wrapper.h"
 
+struct MinSpeed {
+    int32_t speed;
+    int32_t duration;
+};
+
 struct CommonTaskConfig {
     uint32_t taskId;
     uint64_t uid;
@@ -44,6 +49,7 @@ struct CommonTaskConfig {
     uint32_t priority;
     bool background;
     bool multipart;
+    MinSpeed minSpeed;
 };
 
 struct CStringMap {

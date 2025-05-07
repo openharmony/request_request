@@ -493,6 +493,8 @@ void RequestServiceProxy::WriteConfigData(const Config &config, MessageParcel &d
     data.WriteBool(config.gauge);
     data.WriteBool(config.precise);
     data.WriteUint32(config.priority);
+    data.WriteInt32(config.minSpeed.speed);
+    data.WriteInt32(config.minSpeed.duration);
     data.WriteString(config.url);
     data.WriteString(config.title);
     data.WriteString(config.method);

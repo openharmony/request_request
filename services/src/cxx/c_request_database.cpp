@@ -353,7 +353,8 @@ void RequestDBRemoveOldTables(OHOS::NativeRdb::RdbStore &store)
 int ConvertDBVersion(std::string &version)
 {
     std::map<std::string, int> db_version_map = { { REQUEST_DATABASE_VERSION_4_1_RELEASE, API11_4_1_RELEASE },
-        { REQUEST_DATABASE_VERSION_5_0_RELEASE, API12_5_0_RELEASE }, { REQUEST_DATABASE_VERSION, API16_5_1_RELEASE } };
+        { REQUEST_DATABASE_VERSION_5_0_RELEASE, API12_5_0_RELEASE },
+        { REQUEST_DATABASE_VERSION_5_1_RELEASE, API16_5_1_RELEASE }, { REQUEST_DATABASE_VERSION, API20_6_0_RELEASE } };
 
     auto handle = db_version_map.find(version);
     if (handle != db_version_map.end()) {
@@ -492,13 +493,28 @@ int RequestDBUpgradeFrom50(OHOS::NativeRdb::RdbStore &store)
     return OHOS::NativeRdb::E_OK;
 }
 
-// This function is used to adapt beta version, remove it later.
-void RequestDBUpgradeFrom51(OHOS::NativeRdb::RdbStore &store)
+int RequestDBUpgradeFrom51(OHOS::NativeRdb::RdbStore &store)
 {
-    // Ignores these error if these columns already exists.
-    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MAX_SPEED);
-    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MULTIPART);
-    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_STATUS_CODE);
+    int ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MIN_SPEED);
+    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+        REQUEST_HILOGE("add max_speed failed, ret: %{public}d", ret);
+        return ret;
+    }
+
+    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MIN_SPEED_DURATION);
+    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+        REQUEST_HILOGE("add multipart failed, ret: %{public}d", ret);
+        return ret;
+    }
+
+    return OHOS::NativeRdb::E_OK;
+}
+
+// This function is used to adapt beta version, remove it later.
+void RequestDBUpgradeFrom60(OHOS::NativeRdb::RdbStore &store)
+{
+    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MIN_SPEED);
+    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MIN_SPEED_DURATION);
 }
 
 int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
@@ -540,8 +556,16 @@ int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
         }
             [[fallthrough]];
         case API16_5_1_RELEASE: {
-            REQUEST_HILOGI("Version is 5.1-release, no need to update database.");
-            RequestDBUpgradeFrom51(store);
+            REQUEST_HILOGI("Upgrading database from 5.1-Release.");
+            res = RequestDBUpgradeFrom51(store);
+            if (res != OHOS::NativeRdb::E_OK) {
+                return res;
+            }
+        }
+            [[fallthrough]];
+        case API20_6_0_RELEASE: {
+            REQUEST_HILOGI("Version is 6.0-release, no need to update database.");
+            RequestDBUpgradeFrom60(store);
             break;
         }
         default: {
@@ -915,6 +939,8 @@ void BuildRequestTaskConfigWithInt(std::shared_ptr<OHOS::NativeRdb::ResultSet> s
     config.version = static_cast<uint8_t>(GetInt(set, 27));            // Line 27 is 'version'
     config.bundleType = static_cast<uint8_t>(GetInt(set, 34));         // Line 34 is 'bundle_type'
     config.commonData.multipart = static_cast<bool>(GetInt(set, 36));  // Line 36 is 'multipart'
+    config.commonData.minSpeed.speed = GetInt(set, 37);                // Line 37 is 'min_speed'
+    config.commonData.minSpeed.duration = GetInt(set, 38);             // Line 38 is 'min_speed_duration'
 }
 
 void BuildRequestTaskConfigWithString(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
@@ -1004,6 +1030,8 @@ void RecordRequestTaskConfig(OHOS::NativeRdb::ValuesBucket &insertValues, CTaskC
     insertValues.PutString(
         "atomic_account", std::string(taskConfig->atomicAccount.cStr, taskConfig->atomicAccount.len));
     insertValues.PutInt("multipart", taskConfig->commonData.multipart);
+    insertValues.PutInt("min_speed", taskConfig->commonData.minSpeed.speed);
+    insertValues.PutInt("min_speed_duration", taskConfig->commonData.minSpeed.duration);
 }
 
 bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
@@ -1162,12 +1190,12 @@ CTaskConfig *QueryTaskConfig(uint32_t taskId)
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
     OHOS::Request::RequestDataBase &database =
         OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true);
-    auto resultSet = database.Query(
-        rdbPredicates, { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming",
-                           "retry", "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority",
-                           "background", "bundle", "url", "title", "description", "method", "headers", "data", "token",
-                           "config_extras", "version", "form_items", "file_specs", "body_file_names", "certs_paths",
-                           "proxy", "certificate_pins", "bundle_type", "atomic_account", "multipart" });
+    auto resultSet = database.Query(rdbPredicates,
+        { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming", "retry",
+            "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority", "background", "bundle", "url",
+            "title", "description", "method", "headers", "data", "token", "config_extras", "version", "form_items",
+            "file_specs", "body_file_names", "certs_paths", "proxy", "certificate_pins", "bundle_type",
+            "atomic_account", "multipart", "min_speed", "min_speed_duration" });
     int rowCount = 0;
     if (resultSet == nullptr) {
         REQUEST_HILOGE("QuerySingleTaskConfig failed: result set is nullptr");
