@@ -25,7 +25,10 @@
 #include <string>
 #include <vector>
 #include "log.h"
-#include "ani_common_utils.h"
+#include "base.h"
+
+namespace OHOS {
+namespace AniUtil {
 
 class AniObjectUtils {
 public:
@@ -216,6 +219,9 @@ public:
     template<typename T>
     bool TryConvert(T &value);
 
+    template<typename T>
+    bool TryConvertArray(std::vector<T> &value);
+
 private:
     ani_env *env_;
     ani_object obj_;
@@ -304,6 +310,7 @@ inline bool UnionAccessor::TryConvert<std::string>(std::string &value)
     return true;
 }
 
+ani_boolean IsInstanceOf(ani_env *env, const std::string &cls_name, ani_object obj);
 
 class OptionalAccessor {
 public:
@@ -579,5 +586,8 @@ private:
     ani_env *env_ = nullptr;
     ani_status status_ = ANI_ERROR;
 };
+
+} // namespace AniUtil
+} // namespace OHOS
 
 #endif

@@ -27,7 +27,7 @@
 #include <regex>
 #include <string>
 #include <system_error>
-
+#include "ani_utils.h"
 #include "log.h"
 #include "net_conn_client.h"
 #include "parameter.h"
@@ -40,6 +40,7 @@ static const std::string AREA2 = "/data/storage/el2/base";
 static const std::string AREA5 = "/data/storage/el5/base";
 static constexpr uint32_t MAX_UPLOAD_ON15_FILES = 100;
 
+using namespace OHOS::AniUtil;
 namespace OHOS::Request {
 bool IsPathValid(const std::string &filePath)
 {
@@ -290,24 +291,20 @@ bool JsInitialize::GetInternalPath(const std::shared_ptr<OHOS::AbilityRuntime::C
     REQUEST_HILOGE("11 fileName %{public}s", fileName.c_str());
     if (fileName.empty()) {
         errInfo = "Parameter verification failed, GetInternalPath failed, fileName is empty";
-        REQUEST_HILOGE("222 fileName is empty");
         return false;
     }
     path = context->GetCacheDir();
-    REQUEST_HILOGE("222 path is  %{public}s", path.c_str());
     if (path.empty()) {
         REQUEST_HILOGE("internal to cache error");
         errInfo = "Parameter verification failed, GetInternalPath failed, cache path is empty";
         return false;
     }
     path += "/" + fileName;
-    REQUEST_HILOGE("333333333 path is %{public}s", path.c_str());
     if (!IsPathValid(path)) {
         REQUEST_HILOGE("IsPathValid error %{public}s", path.c_str());
         errInfo = "Parameter verification failed, GetInternalPath failed, filePath is not valid";
         return false;
     }
-    REQUEST_HILOGE("44444444444 path is  %{public}s", path.c_str());
     return true;
 }
 
@@ -417,7 +414,7 @@ bool JsInitialize::CheckUploadFileSpec(const std::shared_ptr<OHOS::AbilityRuntim
             return false;
         }
     }
-    REQUEST_HILOGD("CheckUploadFileSpec path");
+    REQUEST_HILOGI("CheckUploadFileSpec path: %{public}s", path.c_str());
     file.uri = path;
     if (!GetFdUpload(path, config, error)) {
         return false;
@@ -675,8 +672,53 @@ bool JsInitialize::CheckBelongAppBaseDir(const std::string &filepath, std::strin
     if ((filepath.find(AREA1) == 0) || filepath.find(AREA2) == 0 || filepath.find(AREA5) == 0) {
         return true;
     } else {
-        REQUEST_HILOGE("File dir not include base dir: %{public}s", baseDir.c_str());
+        REQUEST_HILOGE("File dir not include base dir: %{public}s, path dir: %{public}s",
+            baseDir.c_str(), filepath.c_str());
         return false;
     }
 }
+
+bool JsInitialize::Convert2FileSpec(ani_env *env, ani_object aniValue, const std::string &name, FileSpec &file)
+{
+    REQUEST_HILOGI("Convert2FileSpec in");
+    file.name = name;
+    ani_ref pathRef;
+    if (ANI_OK != env->Object_GetPropertyByName_Ref(aniValue, "path", &pathRef)) {
+        REQUEST_HILOGE("Object_GetFieldByName_Ref value from data Faild");
+        return false;
+    }
+    file.uri = AniStringUtils::ToStd(env, static_cast<ani_string>(pathRef));
+    StringTrim(file.uri);
+    if (file.uri.empty()) {
+        return false;
+    }
+    file.filename = "";
+    ani_ref fileNameRef;
+    if (env->Object_GetPropertyByName_Ref(aniValue, "filename", &fileNameRef) == ANI_OK) {
+        file.filename = AniStringUtils::ToStd(env, static_cast<ani_string>(fileNameRef));
+    }
+    return true;
+}
+
+bool JsInitialize::Convert2FileSpecs(ani_env *env, ani_object aniValue, const std::string &name,
+    std::vector<FileSpec> &files)
+{
+    UnionAccessor unionAccessor(env, aniValue);
+    std::vector<ani_ref> arrayValues = {};
+    if (!unionAccessor.TryConvertArray<ani_ref>(arrayValues) || arrayValues.empty()) {
+        return false;
+    }
+    bool ret = false;
+    for (uint16_t i = 0; i < arrayValues.size(); i++) {
+        ani_object data = static_cast<ani_object>(arrayValues[i]);
+        FileSpec file;
+        ret = Convert2FileSpec(env, data, name, file);
+        if (!ret) {
+            return false;
+        }
+        files.push_back(file);
+    }
+    return true;
+}
+
 } // namespace OHOS::Request
