@@ -22,33 +22,40 @@
 
 namespace OHOS::Request {
 
-class ResponseListener : public IResponseListener {
+class ResponseListener : public IResponseListener, public std::enable_shared_from_this<ResponseListener>  {
 public:
     virtual ~ResponseListener() = default;
-    ResponseListener(ani_vm* vm, ani_ref callbackRef) : vm_(vm), callbackRef_(callbackRef)
+    ResponseListener(ani_vm* vm, std::string tid, SubscribeType type) : vm_(vm), tid_(tid), type_(type)
     {
     }
 
     virtual void OnResponseReceive(const std::shared_ptr<Response> &response);
+    void AddListener(ani_ref &callback);
 
 private:
     ani_vm *vm_;
+    std::string tid_;
+    SubscribeType type_;
     ani_ref callbackRef_;
 };
 
-class NotifyDataListener : public INotifyDataListener {
+class NotifyDataListener : public INotifyDataListener, public std::enable_shared_from_this<NotifyDataListener> {
 public:
     virtual ~NotifyDataListener() = default;
-    NotifyDataListener(ani_env* env, std::string tid, SubscribeType type) : env_(env), tid_(tid), type_(type)
+    NotifyDataListener(ani_vm *vm, std::string tid, SubscribeType type) : vm_(vm), tid_(tid), type_(type)
     {
     }
 
     virtual void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData);
+    void AddListener(ani_ref &callback);
 
 private:
-    ani_env *env_;
+    ani_vm *vm_;
     std::string tid_;
     SubscribeType type_;
+    ani_ref callbackRef_;
+    
+    std::shared_ptr<Response> response_;
 };
 
 class AniTask {
@@ -90,6 +97,11 @@ public:
 private:
     std::string tid_;
     SubscribeType type_;
+    static std::map<std::string, SubscribeType> supportEventsAni_;
+
+    std::mutex listenerMutex_;
+    std::shared_ptr<ResponseListener> responseListener_;
+    std::map<SubscribeType, std::shared_ptr<NotifyDataListener>> notifyDataListenerMap_;
 };
 
 } // namespace OHOS::Request
