@@ -3344,5 +3344,142 @@ export default function requestOperateTaskTest() {
         done();
       }
     })
+
+    /**
+     * @tc.number: testTimeout001
+     * @tc.name: testTimeout001
+     * @tc.desc: Test on task background task
+     * @tc.step: 1. start a download task when connectionTimeout is 0.
+                 2. check the error code.
+     * @tc.expect: error code equals 401.
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTimeout001', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTimeout001.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        timeout: {
+            connectionTimeout : 0,
+        },
+      }
+
+      try {
+        request.agent.create(context, conf, (err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTimeout002
+     * @tc.name: testTimeout002
+     * @tc.desc: Test on task background task
+     * @tc.step: 1. start a download task when totalTimeout is 0.
+                 2. check the error code.
+     * @tc.expect: error code equals 401.
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTimeout002', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTimeout002.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        timeout: {
+            connectionTimeout : 1,
+            totalTimeout : 0,
+        },
+      }
+
+      try {
+        request.agent.create(context, conf, (err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTimeout003
+     * @tc.name: testTimeout003
+     * @tc.desc: Test on task background task
+     * @tc.step: 1. start a download task when totalTimeout is 604801.
+                 2. check the error code.
+     * @tc.expect: error code equals 401.
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTimeout003', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTimeout003.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        timeout: {
+            connectionTimeout : 1,
+            totalTimeout : 604801,
+        },
+      }
+
+      try {
+        request.agent.create(context, conf, (err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTimeout004
+     * @tc.name: testTimeout004
+     * @tc.desc: Test on task background task
+     * @tc.step: 1. start a download task when connectionTimeout is 2, totalTimeout is 10.
+                 2. check the error code.
+     * @tc.expect: the task is created success.
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTimeout004', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTimeout004.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        timeout: {
+            connectionTimeout : 2,
+            totalTimeout : 10,
+        },
+      }
+
+      let task = await request.agent.create(context, conf);
+      task.on('completed', function (progress) {
+        expect(true).assertTrue();
+        done();
+      })
+      try {
+        await task.start();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
   })
 }

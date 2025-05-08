@@ -495,6 +495,8 @@ void RequestServiceProxy::WriteConfigData(const Config &config, MessageParcel &d
     data.WriteUint32(config.priority);
     data.WriteInt32(config.minSpeed.speed);
     data.WriteInt32(config.minSpeed.duration);
+    data.WriteUint32(config.timeout.connectionTimeout);
+    data.WriteUint32(config.timeout.totalTimeout);
     data.WriteString(config.url);
     data.WriteString(config.title);
     data.WriteString(config.method);

@@ -84,6 +84,13 @@ pub struct MinSpeed {
     pub(crate) duration: i32,
 }
 
+/// task Timeout
+#[derive(Copy, Clone, Debug, Default)]
+pub struct Timeout {
+    pub(crate) connection_timeout: u32,
+    pub(crate) total_timeout: u32,
+}
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub(crate) struct CommonTaskConfig {
@@ -107,6 +114,7 @@ pub(crate) struct CommonTaskConfig {
     pub(crate) background: bool,
     pub(crate) multipart: bool,
     pub(crate) min_speed: MinSpeed,
+    pub(crate) timeout: Timeout,
 }
 
 /// task config
@@ -301,6 +309,7 @@ impl Default for TaskConfig {
                 background: false,
                 multipart: false,
                 min_speed: MinSpeed::default(),
+                timeout: Timeout::default(),
             },
         }
     }
@@ -436,6 +445,8 @@ impl Serialize for TaskConfig {
         parcel.write(&self.common_data.priority)?;
         parcel.write(&self.common_data.min_speed.speed)?;
         parcel.write(&self.common_data.min_speed.duration)?;
+        parcel.write(&self.common_data.timeout.connection_timeout)?;
+        parcel.write(&self.common_data.timeout.total_timeout)?;
         parcel.write(&self.url)?;
         parcel.write(&self.title)?;
         parcel.write(&self.method)?;
@@ -515,6 +526,8 @@ impl Deserialize for TaskConfig {
         let priority: u32 = parcel.read()?;
         let min_speed: i32 = parcel.read()?;
         let min_duration: i32 = parcel.read()?;
+        let connection_timeout: u32 = parcel.read()?;
+        let total_timeout: u32 = parcel.read()?;
         let url: String = parcel.read()?;
         let title: String = parcel.read()?;
         let method: String = parcel.read()?;
@@ -691,6 +704,10 @@ impl Deserialize for TaskConfig {
                 min_speed: MinSpeed {
                     speed: min_speed,
                     duration: min_duration,
+                },
+                timeout: Timeout {
+                    connection_timeout,
+                    total_timeout,
                 },
             },
         };

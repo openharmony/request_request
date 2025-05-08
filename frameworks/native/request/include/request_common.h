@@ -138,6 +138,11 @@ struct MinSpeed {
     int32_t duration = 0;
 };
 
+struct Timeout {
+    uint32_t connectionTimeout = 60;
+    uint32_t totalTimeout = 604800;
+};
+
 struct Config {
     Action action;
     std::string url;
@@ -177,6 +182,7 @@ struct Config {
     std::map<std::string, std::string> extras;
     Notification notification;
     MinSpeed minSpeed;
+    Timeout timeout;
 };
 
 enum class State : uint32_t {
