@@ -82,6 +82,7 @@ enum Reason : uint32_t {
     NETWORK_ACCOUNT,
     APP_ACCOUNT,
     NETWORK_APP_ACCOUNT,
+    LOW_SPEED,
 };
 
 enum WaitingReason : uint32_t {
@@ -132,6 +133,11 @@ struct Notification {
     bool disable = false;
 };
 
+struct MinSpeed {
+    int32_t speed = 0;
+    int32_t duration = 0;
+};
+
 struct Config {
     Action action;
     std::string url;
@@ -170,6 +176,7 @@ struct Config {
     std::vector<std::string> bodyFileNames;
     std::map<std::string, std::string> extras;
     Notification notification;
+    MinSpeed minSpeed;
 };
 
 enum class State : uint32_t {
@@ -207,6 +214,7 @@ enum class Faults : uint32_t {
     TCP = 0X60,
     SSL = 0X70,
     REDIRECT = 0x80,
+    LOW_SPEED = 0x90,
 };
 
 struct TaskState {

@@ -12,7 +12,7 @@
 // limitations under the License.
 
 use super::config::{
-    Action, CommonTaskConfig, ConfigSet, Mode, NetworkConfig, TaskConfig, Version,
+    Action, CommonTaskConfig, ConfigSet, MinSpeed, Mode, NetworkConfig, TaskConfig, Version,
 };
 use super::info::{CommonTaskInfo, InfoSet, TaskInfo, UpdateInfo};
 use super::notify::{CommonProgress, Progress};
@@ -74,6 +74,13 @@ pub(crate) struct CommonCTaskConfig {
     pub(crate) priority: u32,
     pub(crate) background: bool,
     pub(crate) multipart: bool,
+    pub(crate) min_speed: CMinSpeed,
+}
+
+#[repr(C)]
+pub(crate) struct CMinSpeed {
+    pub(crate) speed: i32,
+    pub(crate) duration: i32,
 }
 
 #[repr(C)]
@@ -266,6 +273,10 @@ impl TaskConfig {
                 priority: self.common_data.priority,
                 background: self.common_data.background,
                 multipart: self.common_data.multipart,
+                min_speed: CMinSpeed {
+                    speed: self.common_data.min_speed.speed,
+                    duration: self.common_data.min_speed.duration,
+                },
             },
         }
     }
@@ -326,6 +337,10 @@ impl TaskConfig {
                 priority: c_struct.common_data.priority,
                 background: c_struct.common_data.background,
                 multipart: c_struct.common_data.multipart,
+                min_speed: MinSpeed {
+                    speed: c_struct.common_data.min_speed.speed,
+                    duration: c_struct.common_data.min_speed.duration,
+                },
             },
         };
 

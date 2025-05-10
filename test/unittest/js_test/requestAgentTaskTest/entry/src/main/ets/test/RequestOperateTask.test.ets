@@ -1334,7 +1334,7 @@ export default function requestOperateTaskTest() {
       })
       await task.start();
     })
-	
+
 	    /**
      * @tc.number: testOnTask011
      * @tc.name: testOnTask011
@@ -3016,5 +3016,293 @@ export default function requestOperateTaskTest() {
       }
     })
 
+    /**
+     * @tc.name: testLowSpeed001
+     * @tc.desc: Tests the task can be completed normally when MinSpeed is not set.
+     * @tc.precon: start https download server
+     * @tc.step: 1. start a download task when MinSpeed is not set.
+                 2. check if the complete callback is triggered.
+     * @tc.expect: complete callback is triggered.
+     * @tc.type: Func
+     * @tc.level: Level 1
+     * @tc.require: issue#IC63UZ
+     */
+    it('testLowSpeed001', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testLowSpeed001.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('completed', function (progress) {
+        expect(true).assertTrue();
+        done();
+      })
+      try {
+        await task.start();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name: testLowSpeed002
+     * @tc.desc: Tests the task can be completed normally when MinSpeed.speed is 0.
+     * @tc.precon: start https download server
+     * @tc.step: 1. start a download task when MinSpeed.speed is 0.
+                 2. check if the complete callback is triggered.
+     * @tc.expect: complete callback is triggered.
+     * @tc.type: Func
+     * @tc.level: Level 1
+     * @tc.require: issue#IC63UZ
+     */
+    it('testLowSpeed002', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testLowSpeed002.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        minSpeed: {
+          speed: 0,
+          duration: 1,
+        }
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('completed', function (progress) {
+        expect(true).assertTrue();
+        done();
+      })
+      try {
+        await task.start();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name: testLowSpeed003
+     * @tc.desc: Tests the task can be completed normally when MinSpeed.duration is 0.
+     * @tc.precon: start https download server
+     * @tc.step: 1. start a download task when MinSpeed.duration is 0.
+                 2. check if the complete callback is triggered.
+     * @tc.expect: complete callback is triggered.
+     * @tc.type: Func
+     * @tc.level: Level 1
+     * @tc.require: issue#IC63UZ
+     */
+    it('testLowSpeed003', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testLowSpeed003.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        minSpeed: {
+          speed: 1,
+          duration: 0,
+        }
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('completed', function (progress) {
+        expect(true).assertTrue();
+        done();
+      })
+      try {
+        await task.start();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name: testLowSpeed004
+     * @tc.desc: Tests the task creates fail when MinSpeed.duration is -1.
+     * @tc.precon: start https download server
+     * @tc.step: 1. start a download task when MinSpeed.duration is -1.
+                 2. check the error code.
+     * @tc.expect: error code equals 401.
+     * @tc.type: Func
+     * @tc.level: Level 1
+     * @tc.require: issue#IC63UZ
+     */
+    it('testLowSpeed004', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testLowSpeed004.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        minSpeed: {
+          speed: 1,
+          duration: -1,
+        }
+      }
+      try {
+        request.agent.create(context, conf, (err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
+     * @tc.name: testLowSpeed005
+     * @tc.desc: Tests the task creates fail when MinSpeed.speed is -1.
+     * @tc.precon: start https download server
+     * @tc.step: 1. start a download task when MinSpeed.speed is -1.
+                 2. check the error code.
+     * @tc.expect: error code equals 401.
+     * @tc.type: Func
+     * @tc.level: Level 1
+     * @tc.require: issue#IC63UZ
+     */
+    it('testLowSpeed005', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testLowSpeed005.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        minSpeed: {
+          speed: -1,
+          duration: 1,
+        }
+      }
+      try {
+        request.agent.create(context, conf, (err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
+     * @tc.name: testLowSpeed006
+     * @tc.desc: Tests the task can be completed normally when MinSpeed is satisfied.
+     * @tc.precon: start https download server
+     * @tc.step: 1. start a download task when MinSpeed is satisfied.
+                 2. check if the complete callback is triggered.
+     * @tc.expect: complete callback is triggered.
+     * @tc.type: Func
+     * @tc.level: Level 1
+     * @tc.require: issue#IC63UZ
+     */
+    it('testLowSpeed006', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testLowSpeed006.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        minSpeed: {
+          speed: 1,
+          duration: 1,
+        }
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('completed', function (progress) {
+        expect(true).assertTrue();
+        done();
+      })
+      try {
+        await task.start();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name: testLowSpeed007
+     * @tc.desc: Tests the task can be completed normally when MinSpeed is not satisfied.
+     * @tc.precon: start https download server
+     * @tc.step: 1. start a download task when MinSpeed is not satisfied.
+                 2. check if the fault callback is triggered.
+     * @tc.expect: fault callback is triggered.
+     * @tc.type: Func
+     * @tc.level: Level 1
+     * @tc.require: issue#IC63UZ
+     */
+    it('testLowSpeed007', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+        saveas: 'testLowSpeed007.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        minSpeed: {
+          speed: 1000 * 1000 * 1000,
+          duration: 1,
+        }
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('fault', function (faults) {
+        expect(faults).assertEqual(0x90);
+        done();
+      })
+      try {
+        await task.start();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name: testLowSpeed008
+     * @tc.desc: Tests no error occurs if speed is above the minimum limit but duration is not met.
+     * @tc.precon: start https download server
+     * @tc.step: 1. create a download task with MinSpeed.duration is 2 and MinSpeed.speed is 1000000000.
+                 2. start the task.
+                 3. sleep 1s.
+                 4. pause the task.
+                 5. resume the task.
+                 6. check if the fault callback is triggered.
+     * @tc.expect: fault callback is triggered.
+     * @tc.type: Func
+     * @tc.level: Level 1
+     * @tc.require: issue#IC63UZ
+     */
+    it('testLowSpeed008', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+        saveas: 'testLowSpeed008.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        minSpeed: {
+          speed: 1000 * 1000 * 1000,
+          duration: 1,
+        }
+      }
+      let task = await request.agent.create(context, conf);
+      task.on('fault', function (faults) {
+        expect(false).assertTrue();
+        done();
+      })
+      try {
+        await task.start();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+      await sleep(1000);
+      await task.pause()
+      task.off('fault')
+      task.on('fault', function (faults) {
+        expect(faults).assertEqual(0x90);
+        done();
+      })
+      try {
+        await task.resume();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
   })
 }

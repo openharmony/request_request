@@ -80,6 +80,7 @@ static void NapiCreateFaults(napi_env env, napi_value &faults)
     NapiUtils::SetUint32Property(env, faults, "TCP", static_cast<uint32_t>(Faults::TCP));
     NapiUtils::SetUint32Property(env, faults, "SSL", static_cast<uint32_t>(Faults::SSL));
     NapiUtils::SetUint32Property(env, faults, "REDIRECT", static_cast<uint32_t>(Faults::REDIRECT));
+    NapiUtils::SetUint32Property(env, faults, "LOW_SPEED", static_cast<uint32_t>(Faults::LOW_SPEED));
 }
 
 static void NapiCreateBroadcastEvent(napi_env env, napi_value &broadcastEvent)

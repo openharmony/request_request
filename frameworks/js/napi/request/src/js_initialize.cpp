@@ -425,6 +425,9 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
     if (!ParseNotification(env, jsConfig, config, errInfo)) {
         return false;
     }
+    if (!ParseMinSpeed(env, jsConfig, config, errInfo)) {
+        return false;
+    }
     ParseCertificatePins(env, config.url, config.certificatePins);
     ParseMethod(env, jsConfig, config);
     ParseRoaming(env, jsConfig, config);
@@ -464,6 +467,44 @@ bool JsInitialize::ParseNotification(napi_env env, napi_value jsConfig, Config &
         }
         if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, notification, "disable")) != napi_undefined) {
             config.notification.disable = NapiUtils::Convert2Boolean(env, notification, "disable");
+        }
+    }
+    return true;
+}
+
+bool JsInitialize::ParseMinSpeed(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
+{
+    napi_value minSpeed = NapiUtils::GetNamedProperty(env, jsConfig, "minSpeed");
+    if (NapiUtils::GetValueType(env, minSpeed) != napi_undefined) {
+        napi_value value = NapiUtils::GetNamedProperty(env, minSpeed, "speed");
+        auto ty = NapiUtils::GetValueType(env, value);
+        if (ty != napi_undefined) {
+            if (ty != napi_number) {
+                REQUEST_HILOGE("GetNamedProperty err");
+                errInfo = "Incorrect parameter type, minSpeed.speed type is not of napi_number type";
+                return false;
+            }
+            config.minSpeed.speed = NapiUtils::Convert2Int32(env, value);
+            if (config.minSpeed.speed < 0) {
+                REQUEST_HILOGE("minSpeed.speed is %{public}d", config.minSpeed.duration);
+                errInfo = "Parameter verification failed, minSpeed.speed must be greater than or equal to 0";
+                return false;
+            }
+        }
+        value = NapiUtils::GetNamedProperty(env, minSpeed, "duration");
+        ty = NapiUtils::GetValueType(env, value);
+        if (ty != napi_undefined) {
+            if (ty != napi_number) {
+                REQUEST_HILOGE("GetNamedProperty err");
+                errInfo = "Incorrect parameter type, minSpeed.duration type is not of napi_number type";
+                return false;
+            }
+            config.minSpeed.duration = NapiUtils::Convert2Int32(env, value);
+            if (config.minSpeed.duration < 0) {
+                REQUEST_HILOGE("minSpeed.duration is %{public}d", config.minSpeed.duration);
+                errInfo = "Parameter verification failed, minSpeed.duration must be greater than or equal to 0";
+                return false;
+            }
         }
     }
     return true;

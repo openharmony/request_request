@@ -485,13 +485,17 @@ impl RequestTask {
                 Err(TaskError::Waiting(TaskPhase::UserAbort))
             }
             ErrorKind::BodyTransfer | ErrorKind::BodyDecode => {
-                self.network_retry().await?;
                 sys_event!(
                     ExecFault,
                     DfxCode::TASK_FAULT_09,
                     &format!("Task {} {:?}", self.task_id(), err)
                 );
-                Err(TaskError::Failed(Reason::OthersError))
+                if format!("{}", err).contains("Below low speed limit") {
+                    Err(TaskError::Failed(Reason::LowSpeed))
+                } else {
+                    self.network_retry().await?;
+                    Err(TaskError::Failed(Reason::OthersError))
+                }
             }
             _ => {
                 if format!("{}", err).contains("No space left on device") {
