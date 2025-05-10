@@ -300,7 +300,8 @@ impl Scheduler {
             State::Failed => {
                 info!("task {} cancel with state Failed", task_id);
                 Scheduler::reduce_task_count(uid, mode, task_count);
-                Scheduler::notify_fail(info, &self.client_manager, Reason::Default);
+                let reason = info.common_data.reason;
+                Scheduler::notify_fail(info, &self.client_manager, Reason::from(reason));
             }
             State::Stopped | State::Removed => {
                 info!("task {} cancel with state Stopped or Removed", task_id);
@@ -358,7 +359,8 @@ impl Scheduler {
 
         database.update_task_state(task_id, State::Failed, reason);
         if let Some(info) = database.get_task_info(task_id) {
-            Scheduler::notify_fail(info, &self.client_manager, reason);
+            let reason = info.common_data.reason;
+            Scheduler::notify_fail(info, &self.client_manager, Reason::from(reason));
         }
     }
 
