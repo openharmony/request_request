@@ -315,10 +315,10 @@ impl Client {
 
         message.extend_from_slice(&task_id.to_le_bytes());
 
-        message.extend_from_slice(&(waiting_reason as u32).to_le_bytes());
+        message.extend_from_slice(&(waiting_reason.clone() as u32).to_le_bytes());
 
         let size = message.len() as u16;
-        debug!("send waiting notify size {:?}", size);
+        debug!("send wait notify, tid {:?} reason {:?} size {:?}", task_id, waiting_reason, size);
         let size = size.to_le_bytes();
         message[POSITION_OF_LENGTH as usize] = size[0];
         message[(POSITION_OF_LENGTH + 1) as usize] = size[1];

@@ -1334,7 +1334,7 @@ export default function requestOperateTaskTest() {
       })
       await task.start();
     })
-	
+
 	    /**
      * @tc.number: testOnTask011
      * @tc.name: testOnTask011
@@ -2113,6 +2113,46 @@ export default function requestOperateTaskTest() {
       })
       await task.start();
     })
+
+    /**
+     * @tc.name: testOnWait001
+     * @tc.desc: test the task won't receive wait callback when callback is off.
+     * @tc.precon: start https download server
+     * @tc.step: 1. start 1 download task with wait callback off.
+                 2. check if the wait callback is triggered.
+     * @tc.expect: no wait callback is triggered.
+     * @tc.type: Func
+     * @tc.level: Level 1
+     * @tc.require: issue#IC6PSO
+     */
+    it('testOnWait001', 0, async function (done) {
+      const conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: `testOnWait001.txt`,
+        mode: request.agent.Mode.BACKGROUND,
+        overwrite: true,
+      };
+
+      const task = await request.agent.create(context, conf);
+
+      task.on('wait', async (reason) => {
+        expect(false).assertTrue();
+        done();
+      });
+      task.off('wait');
+      task.on('completed', function (progress) {
+        expect(true).assertTrue();
+        done();
+      })
+
+      try {
+        await task.start();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
 
     /**
      * @tc.number: testDownloadTaskSaveas001
