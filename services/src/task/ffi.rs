@@ -12,7 +12,7 @@
 // limitations under the License.
 
 use super::config::{
-    Action, CommonTaskConfig, ConfigSet, MinSpeed, Mode, NetworkConfig, TaskConfig, Version,
+    Action, CommonTaskConfig, ConfigSet, MinSpeed, Timeout, Mode, NetworkConfig, TaskConfig, Version,
 };
 use super::info::{CommonTaskInfo, InfoSet, TaskInfo, UpdateInfo};
 use super::notify::{CommonProgress, Progress};
@@ -75,12 +75,19 @@ pub(crate) struct CommonCTaskConfig {
     pub(crate) background: bool,
     pub(crate) multipart: bool,
     pub(crate) min_speed: CMinSpeed,
+    pub(crate) timeout: CTimeout,
 }
 
 #[repr(C)]
 pub(crate) struct CMinSpeed {
     pub(crate) speed: i32,
     pub(crate) duration: i32,
+}
+
+#[repr(C)]
+pub(crate) struct CTimeout {
+    pub(crate) connection_timeout: u32,
+    pub(crate) total_timeout: u32,
 }
 
 #[repr(C)]
@@ -277,6 +284,10 @@ impl TaskConfig {
                     speed: self.common_data.min_speed.speed,
                     duration: self.common_data.min_speed.duration,
                 },
+                timeout: CTimeout {
+                    connection_timeout: self.common_data.timeout.connection_timeout,
+                    total_timeout: self.common_data.timeout.total_timeout,
+                },
             },
         }
     }
@@ -340,6 +351,10 @@ impl TaskConfig {
                 min_speed: MinSpeed {
                     speed: c_struct.common_data.min_speed.speed,
                     duration: c_struct.common_data.min_speed.duration,
+                },
+                timeout: Timeout {
+                    connection_timeout: c_struct.common_data.timeout.connection_timeout,
+                    total_timeout: c_struct.common_data.timeout.total_timeout,
                 },
             },
         };

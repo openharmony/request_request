@@ -507,6 +507,16 @@ int RequestDBUpgradeFrom51(OHOS::NativeRdb::RdbStore &store)
         return ret;
     }
 
+    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CONNECTION_TIMEOUT);
+    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+        REQUEST_HILOGE("add connection timeout failed, ret: %{public}d", ret);
+        return ret;
+    }
+    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_TOTAL_TIMEOUT);
+    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+        REQUEST_HILOGE("add total timeout failed, ret: %{public}d", ret);
+        return ret;
+    }
     return OHOS::NativeRdb::E_OK;
 }
 
@@ -515,6 +525,8 @@ void RequestDBUpgradeFrom60(OHOS::NativeRdb::RdbStore &store)
 {
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MIN_SPEED);
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MIN_SPEED_DURATION);
+    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CONNECTION_TIMEOUT);
+    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_TOTAL_TIMEOUT);
 }
 
 int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
@@ -573,7 +585,7 @@ int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
             return OHOS::NativeRdb::E_ERROR;
         }
     }
-    if (version != API16_5_1_RELEASE) {
+    if (version != API20_6_0_RELEASE) {
         return RequestDBInitVersionTable(store);
     }
     return 0;
@@ -941,6 +953,8 @@ void BuildRequestTaskConfigWithInt(std::shared_ptr<OHOS::NativeRdb::ResultSet> s
     config.commonData.multipart = static_cast<bool>(GetInt(set, 36));  // Line 36 is 'multipart'
     config.commonData.minSpeed.speed = GetInt(set, 37);                // Line 37 is 'min_speed'
     config.commonData.minSpeed.duration = GetInt(set, 38);             // Line 38 is 'min_speed_duration'
+    config.commonData.timeout.connectionTimeout = GetInt(set, 39);     // Line 39 is 'connectionTimeout'
+    config.commonData.timeout.totalTimeout = GetInt(set, 40);          // Line 40 is 'totalTimeout'
 }
 
 void BuildRequestTaskConfigWithString(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
@@ -1032,6 +1046,8 @@ void RecordRequestTaskConfig(OHOS::NativeRdb::ValuesBucket &insertValues, CTaskC
     insertValues.PutInt("multipart", taskConfig->commonData.multipart);
     insertValues.PutInt("min_speed", taskConfig->commonData.minSpeed.speed);
     insertValues.PutInt("min_speed_duration", taskConfig->commonData.minSpeed.duration);
+    insertValues.PutInt("connection_timeout", taskConfig->commonData.timeout.connectionTimeout);
+    insertValues.PutInt("total_timeout", taskConfig->commonData.timeout.totalTimeout);
 }
 
 bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
@@ -1195,7 +1211,8 @@ CTaskConfig *QueryTaskConfig(uint32_t taskId)
             "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority", "background", "bundle", "url",
             "title", "description", "method", "headers", "data", "token", "config_extras", "version", "form_items",
             "file_specs", "body_file_names", "certs_paths", "proxy", "certificate_pins", "bundle_type",
-            "atomic_account", "multipart", "min_speed", "min_speed_duration" });
+            "atomic_account", "multipart", "min_speed", "min_speed_duration", "connection_timeout", "total_timeout" });
+
     int rowCount = 0;
     if (resultSet == nullptr) {
         REQUEST_HILOGE("QuerySingleTaskConfig failed: result set is nullptr");

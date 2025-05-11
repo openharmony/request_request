@@ -49,6 +49,8 @@ static constexpr uint32_t NOTIFICATION_TITLE_MAXIMUM = 1024;
 static constexpr uint32_t NOTIFICATION_TEXT_MAXIMUM = 3072;
 static constexpr uint32_t PROXY_MAXIMUM = 512;
 static constexpr uint32_t MAX_UPLOAD_ON15_FILES = 100;
+static constexpr uint32_t MIN_TIMEOUT = 1;
+static constexpr uint32_t MAX_TIMEOUT = 604800;
 
 namespace OHOS::Request {
 napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Version version, bool firstInit)
@@ -428,6 +430,9 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
     if (!ParseMinSpeed(env, jsConfig, config, errInfo)) {
         return false;
     }
+    if (!ParseTimeout(env, jsConfig, config, errInfo)) {
+        return false;
+    }
     ParseCertificatePins(env, config.url, config.certificatePins);
     ParseMethod(env, jsConfig, config);
     ParseRoaming(env, jsConfig, config);
@@ -503,6 +508,28 @@ bool JsInitialize::ParseMinSpeed(napi_env env, napi_value jsConfig, Config &conf
             if (config.minSpeed.duration < 0) {
                 REQUEST_HILOGE("minSpeed.duration is %{public}d", config.minSpeed.duration);
                 errInfo = "Parameter verification failed, minSpeed.duration must be greater than or equal to 0";
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool JsInitialize::ParseTimeout(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
+{
+    napi_value timeout = NapiUtils::GetNamedProperty(env, jsConfig, "timeout");
+    if (NapiUtils::GetValueType(env, timeout) != napi_undefined) {
+        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, timeout, "connectionTimeout")) != napi_undefined) {
+            config.timeout.connectionTimeout = NapiUtils::Convert2Uint32(env, timeout, "connectionTimeout");
+            if (config.timeout.connectionTimeout < MIN_TIMEOUT) {
+                errInfo = "Parameter verification failed, the connectionTimeout is less than minimum";
+                return false;
+            }
+        }
+        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, timeout, "totalTimeout")) != napi_undefined) {
+            config.timeout.totalTimeout = NapiUtils::Convert2Uint32(env, timeout, "totalTimeout");
+            if (config.timeout.totalTimeout < MIN_TIMEOUT || config.timeout.totalTimeout > MAX_TIMEOUT) {
+                errInfo = "Parameter verification failed, the totalTimeout exceeds the limit";
                 return false;
             }
         }

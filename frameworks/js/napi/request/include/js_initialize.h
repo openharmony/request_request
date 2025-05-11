@@ -78,6 +78,7 @@ private:
     static void ParseRetry(napi_env env, napi_value jsConfig, bool &retry);
     static bool ParseSaveas(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static bool ParseToken(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
+    static bool ParseTimeout(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static bool ParseDescription(napi_env env, napi_value jsConfig, std::string &description, std::string &errInfo);
     static int64_t ParseEnds(napi_env env, napi_value jsConfig);
     static int64_t ParseBegins(napi_env env, napi_value jsConfig);

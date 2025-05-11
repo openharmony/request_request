@@ -24,9 +24,15 @@
 #include "c_form_item.h"
 #include "c_string_wrapper.h"
 
+
 struct MinSpeed {
     int32_t speed;
     int32_t duration;
+};
+
+struct Timeout {
+    uint32_t connectionTimeout = 60;
+    uint32_t totalTimeout = 604800;
 };
 
 struct CommonTaskConfig {
@@ -50,6 +56,7 @@ struct CommonTaskConfig {
     bool background;
     bool multipart;
     MinSpeed minSpeed;
+    Timeout timeout;
 };
 
 struct CStringMap {
