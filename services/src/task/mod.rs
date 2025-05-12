@@ -13,21 +13,19 @@
 
 /// request task config
 pub mod config;
-
 /// request task info
 pub mod info;
-pub(crate) mod reason;
 
 pub(crate) mod download;
 pub(crate) mod files;
 pub(crate) mod notify;
 mod operator;
+pub(crate) mod reason;
 pub(crate) mod request_task;
 pub(crate) const ATOMIC_SERVICE: u32 = 1;
-pub(crate) mod client;
-
 pub(crate) mod bundle;
+pub(crate) mod client;
 pub(crate) mod ffi;
-pub(crate) mod upload;
-
 pub(crate) mod speed_limiter;
+pub(crate) mod task_control;
+pub(crate) mod upload;

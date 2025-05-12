@@ -19,7 +19,6 @@ use std::task::{Context, Poll};
 
 use ylong_http_client::async_impl::{DownloadOperator, Downloader, Response};
 use ylong_http_client::{ErrorKind, HttpClientError, SpeedLimit, Timeout};
-use ylong_runtime::io::AsyncSeekExt;
 
 use super::operator::TaskOperator;
 use super::reason::Reason;
@@ -27,6 +26,7 @@ use super::request_task::{TaskError, TaskPhase};
 use crate::manage::database::RequestDb;
 use crate::task::info::State;
 use crate::task::request_task::RequestTask;
+use crate::task::task_control;
 #[cfg(feature = "oh")]
 use crate::trace::Trace;
 
@@ -96,9 +96,10 @@ pub(crate) async fn download(task: Arc<RequestTask>, abort_flag: Arc<AtomicBool>
 
 impl RequestTask {
     async fn prepare_download(&self) -> Result<(), TaskError> {
-        let file = self.files.get_mut(0).unwrap();
-        file.seek(SeekFrom::End(0)).await?;
-        let downloaded = file.metadata().await?.len() as usize;
+        let file = self.files.get(0).unwrap();
+        task_control::file_seek(file.clone(), SeekFrom::End(0)).await?;
+        let downloaded = task_control::file_metadata(file).await?.len() as usize;
+
         let mut progress = self.progress.lock().unwrap();
         progress.common_data.index = 0;
         progress.common_data.total_processed = downloaded;
@@ -120,7 +121,7 @@ pub(crate) async fn download_inner(
 
     info!("download task {} running", task.task_id());
 
-    let request = task.build_download_request().await?;
+    let request = RequestTask::build_download_request(task.clone()).await?;
 
     let response = task.client.request(request).await;
     match response.as_ref() {
@@ -156,7 +157,8 @@ pub(crate) async fn download_inner(
                     return Err(TaskError::Failed(Reason::UnsupportedRangeRequest));
                 }
                 let file = task.files.get(0).unwrap();
-                let has_downloaded = file.metadata().await?.len() > 0;
+
+                let has_downloaded = task_control::file_metadata(file).await?.len() > 0;
                 if has_downloaded {
                     error!("task {} file not cleared", task.task_id());
                     sys_event!(
@@ -164,7 +166,7 @@ pub(crate) async fn download_inner(
                         DfxCode::TASK_FAULT_09,
                         &format!("task {} file not cleared", task.task_id())
                     );
-                    task.clear_downloaded_file().await?;
+                    task_control::clear_downloaded_file(task.clone()).await?;
                 }
             }
         }
@@ -277,8 +279,9 @@ pub(crate) async fn download_inner(
     if let Err(e) = downloader.download().await {
         return task.handle_download_error(e).await;
     }
-    let file = task.files.get_mut(0).unwrap();
-    file.sync_all().await?;
+
+    let file_mutex = task.files.get(0).unwrap();
+    task_control::file_sync_all(file_mutex).await?;
 
     #[cfg(not(test))]
     check_file_exist(&task)?;

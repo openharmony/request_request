@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::io::{self, SeekFrom};
+use std::io::{self};
 use std::sync::atomic::{
     AtomicBool, AtomicI32, AtomicI64, AtomicU32, AtomicU64, AtomicU8, Ordering,
 };
@@ -20,7 +20,6 @@ use std::time::Duration;
 
 use ylong_http_client::async_impl::{Body, Client, Request, RequestBuilder, Response};
 use ylong_http_client::{ErrorKind, HttpClientError};
-use ylong_runtime::io::{AsyncSeekExt, AsyncWriteExt};
 
 cfg_oh! {
     use crate::manage::SystemConfig;
@@ -39,6 +38,7 @@ use crate::service::notification_bar::NotificationDispatcher;
 use crate::task::client::build_client;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::files::{AttachedFiles, Files};
+use crate::task::task_control;
 use crate::utils::form_item::FileSpec;
 use crate::utils::get_current_timestamp;
 
@@ -327,57 +327,46 @@ impl RequestTask {
         Ok(request)
     }
 
-    pub(crate) async fn clear_downloaded_file(&self) -> Result<(), std::io::Error> {
-        info!("task {} clear downloaded file", self.task_id());
-        let file = self.files.get_mut(0).unwrap();
-        file.set_len(0).await?;
-        file.seek(SeekFrom::Start(0)).await?;
+    pub(crate) async fn build_download_request(
+        task: Arc<RequestTask>,
+    ) -> Result<Request, TaskError> {
+        let mut request_builder = task.build_request_builder()?;
 
-        let mut progress_guard = self.progress.lock().unwrap();
-        progress_guard.common_data.total_processed = 0;
-        progress_guard.processed[0] = 0;
+        let file = task.files.get(0).unwrap();
 
-        Ok(())
-    }
-
-    pub(crate) async fn build_download_request(&self) -> Result<Request, TaskError> {
-        let mut request_builder = self.build_request_builder()?;
-
-        let file = self.files.get_mut(0).unwrap();
-
-        let has_downloaded = file.metadata().await?.len();
+        let has_downloaded = task_control::file_metadata(file).await?.len();
         let resume_download = has_downloaded > 0;
-        let require_range = self.require_range();
+        let require_range = task.require_range();
 
-        let begins = self.conf.common_data.begins;
-        let ends = self.conf.common_data.ends;
+        let begins = task.conf.common_data.begins;
+        let ends = task.conf.common_data.ends;
 
         debug!(
             "task {} build download request, resume_download: {}, require_range: {}",
-            self.task_id(),
+            task.task_id(),
             resume_download,
             require_range
         );
         match (resume_download, require_range) {
             (true, false) => {
-                let (builder, support_range) = self.support_range(request_builder);
+                let (builder, support_range) = task.support_range(request_builder);
                 request_builder = builder;
                 if support_range {
                     request_builder =
-                        self.range_request(request_builder, begins + has_downloaded, ends);
+                        task.range_request(request_builder, begins + has_downloaded, ends);
                 } else {
-                    self.clear_downloaded_file().await?;
+                    task_control::clear_downloaded_file(task.clone()).await?;
                 }
             }
             (false, true) => {
-                request_builder = self.range_request(request_builder, begins, ends);
+                request_builder = task.range_request(request_builder, begins, ends);
             }
             (true, true) => {
-                let (builder, support_range) = self.support_range(request_builder);
+                let (builder, support_range) = task.support_range(request_builder);
                 request_builder = builder;
                 if support_range {
                     request_builder =
-                        self.range_request(request_builder, begins + has_downloaded, ends);
+                        task.range_request(request_builder, begins + has_downloaded, ends);
                 } else {
                     return Err(TaskError::Failed(Reason::UnsupportedRangeRequest));
                 }
@@ -385,7 +374,7 @@ impl RequestTask {
             (false, false) => {}
         };
 
-        let request = request_builder.body(Body::slice(self.conf.data.clone()))?;
+        let request = request_builder.body(Body::slice(task.conf.data.clone()))?;
         Ok(request)
     }
 
@@ -556,11 +545,11 @@ impl RequestTask {
                 }
             }
 
-            let file = match self.body_files.get_mut(index) {
+            let file = match self.body_files.get(index) {
                 Some(file) => file,
                 None => return,
             };
-            let _ = file.set_len(0).await;
+            let _ = task_control::file_set_len(file.clone(), 0).await;
             loop {
                 let mut buf = [0u8; 1024];
                 let size = r.data(&mut buf).await;
@@ -572,10 +561,10 @@ impl RequestTask {
                 if size == 0 {
                     break;
                 }
-                let _ = file.write_all(&buf[..size]).await;
+                let _ = task_control::file_write_all(file.clone(), &buf[..size]).await;
             }
             // Makes sure all the data has been written to the target file.
-            let _ = file.sync_all().await;
+            let _ = task_control::file_sync_all(file).await;
         }
     }
 
