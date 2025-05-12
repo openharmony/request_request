@@ -70,6 +70,10 @@ public:
         const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, ExceptionError &error);
     static bool CheckFilePath(
         const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, ExceptionError &error);
+
+    static bool Convert2FileSpecs(
+        ani_env *env, ani_object aniValue, const std::string &name, std::vector<FileSpec> &files);
+    static bool Convert2FileSpec(ani_env *env, ani_object aniValue, const std::string &name, FileSpec &file);
 };
 }
 #endif // ANI_JS_INITIALIZE_H
