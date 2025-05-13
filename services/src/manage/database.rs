@@ -312,6 +312,11 @@ impl RequestDb {
         debug!("Update task in database, ret is {}", ret);
     }
 
+    pub(crate) fn update_task_time(&self, task_id: u32, task_time: u64) {
+        let ret = unsafe { UpdateRequestTaskTime(task_id, task_time) };
+        debug!("Update task time in database, ret is {}", ret);
+    }
+
     pub(crate) fn clear_invalid_records(&self) {
         let sql = format!(
             "UPDATE request_task SET state = {} WHERE state = {} AND reason = {}",
@@ -676,6 +681,7 @@ extern "C" {
     fn QueryTaskConfig(task_id: u32) -> *const CTaskConfig;
     fn RecordRequestTask(info: *const CTaskInfo, config: *const CTaskConfig) -> bool;
     fn UpdateRequestTask(id: u32, info: *const CUpdateInfo) -> bool;
+    fn UpdateRequestTaskTime(task_id: u32, taskTime: u64) -> bool;
 }
 
 #[cxx::bridge(namespace = "OHOS::Request")]

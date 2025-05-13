@@ -14,8 +14,11 @@
 use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::config::Mode;
+use crate::info::State;
+use crate::manage::database::RequestDb;
 use crate::manage::events::{TaskEvent, TaskManagerEvent};
 use crate::manage::notifier::Notifier;
 use crate::manage::scheduler::queue::keeper::SAKeeper;
@@ -66,7 +69,24 @@ impl Deref for RunningTask {
 
 impl Drop for RunningTask {
     fn drop(&mut self) {
+        let task_end_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as u64;
+
+        let start_time = self.task.start_time.load(Ordering::SeqCst);
+        let total_task_time = self.task.task_time.load(Ordering::SeqCst);
+        let current_task_time = task_end_time - start_time;
+        let mut task_time = 0;
+        if let Some(info) = RequestDb::get_instance().get_task_info(self.task_id()) {
+            if info.progress.common_data.state == State::Waiting.repr
+                || info.progress.common_data.state == State::Paused.repr {
+                task_time = total_task_time + current_task_time;
+            }
+        }
+        self.task.task_time.store(task_time as u64, Ordering::SeqCst);
         self.task.update_progress_in_database();
+        RequestDb::get_instance().update_task_time(self.task_id(), task_time);
         Notifier::progress(&self.client_manager, self.build_notify_data());
         let task_id = self.task_id();
         let uid = self.uid();

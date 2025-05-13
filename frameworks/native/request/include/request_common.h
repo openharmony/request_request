@@ -139,8 +139,8 @@ struct MinSpeed {
 };
 
 struct Timeout {
-    uint32_t connectionTimeout = 60;
-    uint32_t totalTimeout = 604800;
+    uint64_t connectionTimeout = 60;
+    uint64_t totalTimeout = 604800;
 };
 
 struct Config {
@@ -279,6 +279,7 @@ struct TaskInfo {
     std::string reason;
     bool withSystem = false;
     uint32_t priority;
+    uint64_t taskTime = 0;
     std::map<std::string, std::string> extras;
     std::vector<TaskState> taskStates;
 };

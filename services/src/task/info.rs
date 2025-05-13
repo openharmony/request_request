@@ -38,6 +38,7 @@ pub(crate) struct TaskInfo {
     pub(crate) common_data: CommonTaskInfo,
     pub(crate) max_speed: i64,
     pub(crate) status_code: i32,
+    pub(crate) task_time: u64,
 }
 
 impl TaskInfo {
@@ -58,6 +59,7 @@ impl TaskInfo {
             common_data: CommonTaskInfo::new(),
             max_speed: 0,
             status_code: 0,
+            task_time: 0,
         }
     }
 

@@ -519,15 +519,19 @@ bool JsInitialize::ParseTimeout(napi_env env, napi_value jsConfig, Config &confi
 {
     napi_value timeout = NapiUtils::GetNamedProperty(env, jsConfig, "timeout");
     if (NapiUtils::GetValueType(env, timeout) != napi_undefined) {
-        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, timeout, "connectionTimeout")) != napi_undefined) {
-            config.timeout.connectionTimeout = NapiUtils::Convert2Uint32(env, timeout, "connectionTimeout");
+        if (NapiUtils::GetValueType(env,
+            NapiUtils::GetNamedProperty(env, timeout, "connectionTimeout")) != napi_undefined) {
+            config.timeout.connectionTimeout =
+                static_cast<uint64_t>(NapiUtils::Convert2Int64(env, timeout, "connectionTimeout"));
             if (config.timeout.connectionTimeout < MIN_TIMEOUT) {
                 errInfo = "Parameter verification failed, the connectionTimeout is less than minimum";
                 return false;
             }
         }
-        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, timeout, "totalTimeout")) != napi_undefined) {
-            config.timeout.totalTimeout = NapiUtils::Convert2Uint32(env, timeout, "totalTimeout");
+        if (NapiUtils::GetValueType(env,
+            NapiUtils::GetNamedProperty(env, timeout, "totalTimeout")) != napi_undefined) {
+            config.timeout.totalTimeout =
+                static_cast<uint64_t>(NapiUtils::Convert2Int64(env, timeout, "totalTimeout"));
             if (config.timeout.totalTimeout < MIN_TIMEOUT || config.timeout.totalTimeout > MAX_TIMEOUT) {
                 errInfo = "Parameter verification failed, the totalTimeout exceeds the limit";
                 return false;

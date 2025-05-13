@@ -87,8 +87,8 @@ pub(crate) struct CMinSpeed {
 
 #[repr(C)]
 pub(crate) struct CTimeout {
-    pub(crate) connection_timeout: u32,
-    pub(crate) total_timeout: u32,
+    pub(crate) connection_timeout: u64,
+    pub(crate) total_timeout: u64,
 }
 
 #[repr(C)]
@@ -140,6 +140,7 @@ pub(crate) struct CTaskInfo {
     pub(crate) common_data: CommonTaskInfo,
     pub(crate) max_speed: i64,
     pub(crate) status_code: i32,
+    pub(crate) task_time: u64,
 }
 
 impl TaskInfo {
@@ -162,6 +163,7 @@ impl TaskInfo {
             common_data: self.common_data,
             max_speed: self.max_speed,
             status_code: self.status_code,
+            task_time: self.task_time,
         }
     }
 
@@ -202,6 +204,7 @@ impl TaskInfo {
             common_data: c_struct.common_data,
             max_speed: c_struct.max_speed,
             status_code: c_struct.status_code,
+            task_time: c_struct.task_time,
         };
 
         #[cfg(feature = "oh")]

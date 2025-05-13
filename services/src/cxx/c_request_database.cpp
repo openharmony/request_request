@@ -517,6 +517,11 @@ int RequestDBUpgradeFrom51(OHOS::NativeRdb::RdbStore &store)
         REQUEST_HILOGE("add total timeout failed, ret: %{public}d", ret);
         return ret;
     }
+    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_TASK_TIME);
+    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+        REQUEST_HILOGE("add task time failed, ret: %{public}d", ret);
+        return ret;
+    }
     return OHOS::NativeRdb::E_OK;
 }
 
@@ -527,6 +532,7 @@ void RequestDBUpgradeFrom60(OHOS::NativeRdb::RdbStore &store)
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MIN_SPEED_DURATION);
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CONNECTION_TIMEOUT);
     store.ExecuteSql(REQUEST_TASK_TABLE_ADD_TOTAL_TIMEOUT);
+    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_TASK_TIME);
 }
 
 int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
@@ -874,6 +880,7 @@ void FillOtherTaskInfo(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskInfo
     info.fileSpecs = VecToFileSpec(BlobToCFileSpec(formSpecsBlob));
     set->GetLong(27, info.maxSpeed);  // Line 27 is 'max_speed'
     set->GetInt(28, info.statusCode); // Line 28 is 'status_code'
+    info.taskTime = static_cast<uint64_t>(GetLong(set, 29)); //  line 29 is 'task_time'
 }
 
 CProgress BuildCProgress(const Progress &progress)
@@ -921,6 +928,7 @@ CTaskInfo *BuildCTaskInfo(const TaskInfo &taskInfo)
     cTaskInfo->commonData = taskInfo.commonData;
     cTaskInfo->maxSpeed = taskInfo.maxSpeed;
     cTaskInfo->statusCode = taskInfo.statusCode;
+    cTaskInfo->taskTime = taskInfo.taskTime;
     return cTaskInfo;
 }
 
@@ -953,8 +961,10 @@ void BuildRequestTaskConfigWithInt(std::shared_ptr<OHOS::NativeRdb::ResultSet> s
     config.commonData.multipart = static_cast<bool>(GetInt(set, 36));  // Line 36 is 'multipart'
     config.commonData.minSpeed.speed = GetInt(set, 37);                // Line 37 is 'min_speed'
     config.commonData.minSpeed.duration = GetInt(set, 38);             // Line 38 is 'min_speed_duration'
-    config.commonData.timeout.connectionTimeout = GetInt(set, 39);     // Line 39 is 'connectionTimeout'
-    config.commonData.timeout.totalTimeout = GetInt(set, 40);          // Line 40 is 'totalTimeout'
+    // Line 39 is 'connectionTimeout'
+    config.commonData.timeout.connectionTimeout = static_cast<uint64_t>(GetLong(set, 39));
+    // Line 40 is 'totalTimeout'
+    config.commonData.timeout.totalTimeout = static_cast<uint64_t>(GetLong(set, 40));
 }
 
 void BuildRequestTaskConfigWithString(std::shared_ptr<OHOS::NativeRdb::ResultSet> set, TaskConfig &config)
@@ -1006,6 +1016,7 @@ void RecordRequestTaskInfo(OHOS::NativeRdb::ValuesBucket &insertValues, CTaskInf
     insertValues.PutLong("ctime", taskInfo->commonData.ctime);
     insertValues.PutInt("retry", taskInfo->commonData.retry);
     insertValues.PutInt("max_speed", taskInfo->maxSpeed);
+    insertValues.PutLong("task_time", taskInfo->taskTime);
 }
 
 void RecordRequestTaskConfig(OHOS::NativeRdb::ValuesBucket &insertValues, CTaskConfig *taskConfig)
@@ -1046,8 +1057,8 @@ void RecordRequestTaskConfig(OHOS::NativeRdb::ValuesBucket &insertValues, CTaskC
     insertValues.PutInt("multipart", taskConfig->commonData.multipart);
     insertValues.PutInt("min_speed", taskConfig->commonData.minSpeed.speed);
     insertValues.PutInt("min_speed_duration", taskConfig->commonData.minSpeed.duration);
-    insertValues.PutInt("connection_timeout", taskConfig->commonData.timeout.connectionTimeout);
-    insertValues.PutInt("total_timeout", taskConfig->commonData.timeout.totalTimeout);
+    insertValues.PutLong("connection_timeout", taskConfig->commonData.timeout.connectionTimeout);
+    insertValues.PutLong("total_timeout", taskConfig->commonData.timeout.totalTimeout);
 }
 
 bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
@@ -1094,6 +1105,21 @@ bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo)
     return true;
 }
 
+bool UpdateRequestTaskTime(uint32_t taskId, uint64_t taskTime)
+{
+    REQUEST_HILOGD("update request task time");
+    OHOS::NativeRdb::ValuesBucket values;
+    values.PutLong("task_time", taskTime);
+
+    OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
+    rdbPredicates.EqualTo("task_id", std::to_string(taskId));
+    if (!OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true).Update(values, rdbPredicates)) {
+        REQUEST_HILOGE("update request task time failed, task_id: %{public}d", taskId);
+        return false;
+    }
+    return true;
+}
+
 bool UpdateRequestTaskState(uint32_t taskId, CUpdateStateInfo *updateStateInfo)
 {
     REQUEST_HILOGD("Change task state, tid: %{public}d, state is %{public}d", taskId, updateStateInfo->state);
@@ -1118,7 +1144,8 @@ int GetTaskInfoInner(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskIn
             .Query(rdbPredicates, { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry",
                                       "tries", "version", "priority", "bundle", "url", "data", "token", "title",
                                       "description", "mime_type", "state", "idx", "total_processed", "sizes",
-                                      "processed", "extras", "form_items", "file_specs", "max_speed", "status_code" });
+                                      "processed", "extras", "form_items", "file_specs", "max_speed", "status_code",
+                                      "task_time" });
     if (resultSet == nullptr || resultSet->GoToFirstRow() != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("result set is nullptr or go to first row failed");
         return OHOS::Request::QUERY_ERR;
