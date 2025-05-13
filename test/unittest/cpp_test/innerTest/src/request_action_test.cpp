@@ -1631,6 +1631,51 @@ HWTEST_F(RequestActionTest, CreateInnerTest0212, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CreateInnerTest0213
+ * @tc.desc: Test CreateInnerTest0213 interface base function - CheckDownloadFile
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0213, TestSize.Level1)
+{
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextCacheTestMock>();
+    FileSpec file = { .uri = "test" };
+    Config config = { .version = Version::API9, .saveas = "file://media/Photo/1/test.img" };
+    auto res = RequestAction::CheckDownloadFile(context, config);
+    EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: CreateInnerTest0214
+ * @tc.desc: Test CreateInnerTest0214 interface base function - CheckDownloadFile
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0214, TestSize.Level1)
+{
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextCacheTestMock>();
+    FileSpec file = { .uri = "test" };
+    Config config = { .version = Version::API10, .overwrite = false, .saveas = "file://media/Photo/1/test.img" };
+    auto res = RequestAction::CheckDownloadFile(context, config);
+    EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
+ * @tc.name: CreateInnerTest0214
+ * @tc.desc: Test CreateInnerTest0214 interface base function - CheckDownloadFile
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0215, TestSize.Level1)
+{
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextCacheTestMock>();
+    FileSpec file = { .uri = "file://media/Photo/1/test.img" };
+    Config config = { .version = Version::API10, .mode = Mode::BACKGROUND, .overwrite = true, .saveas = "file://media/Photo/1/test.img" };
+    auto res = RequestAction::CheckDownloadFile(context, config);
+    EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
+}
+
+/**
  * @tc.name: CreateInnerTest022
  * @tc.desc: Test CreateInnerTest022 interface base function - IsUserFile
  * @tc.type: FUNC
@@ -1677,10 +1722,9 @@ HWTEST_F(RequestActionTest, CreateInnerTest0222, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest023, TestSize.Level1)
 {
-    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
     Config config;
     FileSpec file;
-    auto res = RequestAction::CheckUserFileSpec(context, config, file);
+    auto res = RequestAction::CheckUserFileSpec(config, file, true);
     EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
 }
 
@@ -1692,10 +1736,9 @@ HWTEST_F(RequestActionTest, CreateInnerTest023, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0231, TestSize.Level1)
 {
-    std::shared_ptr<ApplicationContext> context;
     Config config = { .mode = Mode::BACKGROUND };
     FileSpec file;
-    auto res = RequestAction::CheckUserFileSpec(context, config, file);
+    auto res = RequestAction::CheckUserFileSpec(config, file, true);
     EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
 }
 
@@ -1707,11 +1750,38 @@ HWTEST_F(RequestActionTest, CreateInnerTest0231, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0232, TestSize.Level1)
 {
-    std::shared_ptr<ApplicationContext> context;
     Config config = { .mode = Mode::FOREGROUND };
     FileSpec file;
-    auto res = RequestAction::CheckUserFileSpec(context, config, file);
-    EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
+    auto res = RequestAction::CheckUserFileSpec(config, file, true);
+    EXPECT_EQ(res, ExceptionErrorCode::E_FILE_IO);
+}
+
+/**
+ * @tc.name: CreateInnerTest0233
+ * @tc.desc: Test CreateInnerTest0233 interface base function - CheckUserFileSpec
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0233, TestSize.Level1)
+{
+    Config config = { .mode = Mode::FOREGROUND, .firstInit = true };
+    FileSpec file = { .uri = "", .isUserFile = true };
+    auto res = RequestAction::CheckUserFileSpec(config, file, false);
+    EXPECT_EQ(res, ExceptionErrorCode::E_FILE_IO);
+}
+
+/**
+ * @tc.name: CreateInnerTest0234
+ * @tc.desc: Test CreateInnerTest0234 interface base function - CheckUserFileSpec
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0234, TestSize.Level1)
+{
+    Config config = { .mode = Mode::FOREGROUND, .firstInit = false };
+    FileSpec file = { .uri = "", .isUserFile = true };
+    auto res = RequestAction::CheckUserFileSpec(config, file, false);
+    EXPECT_EQ(res, ExceptionErrorCode::E_FILE_IO);
 }
 
 /**
@@ -1825,17 +1895,32 @@ HWTEST_F(RequestActionTest, CreateInnerTest0261, TestSize.Level1)
 }
 
 /**
- * @tc.name: CreateInnerTest027
- * @tc.desc: Test CreateInnerTest027 interface base function - CheckUploadFiles
+ * @tc.name: CreateInnerTest0271
+ * @tc.desc: Test CreateInnerTest0271 interface base function - CheckUploadFiles
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(RequestActionTest, CreateInnerTest027, TestSize.Level1)
+HWTEST_F(RequestActionTest, CreateInnerTest0271, TestSize.Level1)
 {
     std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
     Config config = { .version = Version::API10 };
     auto res = RequestAction::CheckUploadFiles(context, config);
     EXPECT_EQ(res, ExceptionErrorCode::E_OK);
+}
+
+/**
+ * @tc.name: CreateInnerTest0272
+ * @tc.desc: Test CreateInnerTest0272 interface base function - CheckUploadFiles
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(RequestActionTest, CreateInnerTest0272, TestSize.Level1)
+{
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
+    FileSpec file = { .uri = "file://media/Photo/1/test.img", .isUserFile = true };
+    Config config = { .version = Version::API10, .files = { file } };
+    auto res = RequestAction::CheckUploadFiles(context, config);
+    EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
 }
 
 /**
