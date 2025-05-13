@@ -271,7 +271,7 @@ uint32_t Convert2Broken(Reason code)
         {Reason::BUILD_CLIENT_FAILED, Faults::PARAM},
         {Reason::BUILD_REQUEST_FAILED, Faults::PARAM},
         {Reason::GET_FILESIZE_FAILED, Faults::FSIO},
-        {Reason::CONTINUOUS_TASK_TIMEOUT, Faults::TIMEOUT},
+        {Reason::CONTINUOUS_TASK_TIMEOUT, Faults::OTHERS},
         {Reason::CONNECT_ERROR, Faults::TCP},
         {Reason::REQUEST_ERROR, Faults::PROTOCOL},
         {Reason::UPLOAD_FILE_ERROR, Faults::OTHERS},
