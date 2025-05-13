@@ -291,11 +291,7 @@ impl Scheduler {
                     State::Waiting,
                     Reason::RunningTaskMeetLimits,
                 );
-                Notifier::waiting(
-                    &self.client_manager,
-                    task_id,
-                    WaitingCause::TaskQueue,
-                );
+                Notifier::waiting(&self.client_manager, task_id, WaitingCause::TaskQueue);
             }
             State::Failed => {
                 info!("task {} cancel with state Failed", task_id);
@@ -480,11 +476,7 @@ impl Scheduler {
             );
 
             database.update_task_state(task_id, State::Waiting, reason);
-            Notifier::waiting(
-                &self.client_manager,
-                task_id,
-                WaitingCause::Network,
-            );
+            Notifier::waiting(&self.client_manager, task_id, WaitingCause::Network);
             return Ok(false);
         }
 
@@ -494,11 +486,7 @@ impl Scheduler {
                 task_id, config.common_data.uid
             );
             database.update_task_state(task_id, State::Waiting, Reason::AppBackgroundOrTerminate);
-            Notifier::waiting(
-                &self.client_manager,
-                task_id,
-                WaitingCause::AppState,
-            );
+            Notifier::waiting(&self.client_manager, task_id, WaitingCause::AppState);
             return Ok(false);
         }
         Ok(true)
