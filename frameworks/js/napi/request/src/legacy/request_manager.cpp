@@ -140,7 +140,6 @@ std::string RequestManager::GetCacheDir(napi_env env)
     auto abilityContext = ability->GetAbilityContext();
     if (abilityContext == nullptr) {
         REQUEST_HILOGE("GetAbilityContext failed.");
-        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_01, "GetAbilityContext failed");
         return {};
     }
     return abilityContext->GetCacheDir();
