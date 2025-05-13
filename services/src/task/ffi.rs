@@ -12,7 +12,8 @@
 // limitations under the License.
 
 use super::config::{
-    Action, CommonTaskConfig, ConfigSet, MinSpeed, Timeout, Mode, NetworkConfig, TaskConfig, Version,
+    Action, CommonTaskConfig, ConfigSet, MinSpeed, Mode, NetworkConfig, TaskConfig, Timeout,
+    Version,
 };
 use super::info::{CommonTaskInfo, InfoSet, TaskInfo, UpdateInfo};
 use super::notify::{CommonProgress, Progress};

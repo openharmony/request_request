@@ -76,6 +76,7 @@ impl From<u8> for Reason {
             28 => Reason::NetworkAccount,
             29 => Reason::AppAccount,
             30 => Reason::NetworkAppAccount,
+            31 => Reason::LowSpeed,
             _ => Reason::OthersError,
         }
     }
@@ -110,6 +111,7 @@ impl Reason {
             Reason::NetworkAccount => "NetWork is offline and the account is stopped",
             Reason::AppAccount => "The app is background or terminate and the account is stopped",
             Reason::NetworkAppAccount => "NetWork is offline and the app is background or terminate and the account is stopped",
+            Reason::LowSpeed => "Below low speed limit",
             _ => "unknown error",
         }
     }

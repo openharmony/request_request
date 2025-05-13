@@ -35,8 +35,12 @@ pub(crate) fn build_client(
     #[cfg(feature = "oh")] mut system: SystemConfig,
 ) -> Result<Client, Box<dyn Error + Send + Sync>> {
     let mut client = Client::builder()
-        .connect_timeout(Timeout::from_secs(config.common_data.timeout.connection_timeout.into()))
-        .request_timeout(Timeout::from_secs(config.common_data.timeout.total_timeout.into()))
+        .connect_timeout(Timeout::from_secs(
+            config.common_data.timeout.connection_timeout.into(),
+        ))
+        .request_timeout(Timeout::from_secs(
+            config.common_data.timeout.total_timeout.into(),
+        ))
         .min_tls_version(TlsVersion::TLS_1_2);
     if !NotificationDispatcher::get_instance()
         .check_task_notification_available(config.common_data.task_id)
