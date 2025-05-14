@@ -192,7 +192,7 @@ export default namespace request {
 
     export class TaskImpl implements Task {
       nativePtr: long = 0;
-      private fzAgent: FinalizationAgent<TaskImpl>;
+      private fzAgent: FinalizationAgent<TaskImpl> | null = null;
       constructor(context: long) {
           hilog.info(0x0000, 'request', "in constructor, context is " + context)
           this.nativePtr = context;
@@ -200,7 +200,7 @@ export default namespace request {
       }
 
       unregisterCleaner(): void {
-        this.fzAgent.unregister();
+        this.fzAgent?.unregister();
       }
 
       on(event: 'response' | 'completed', callback: Callback<HttpResponse | Progress>): void {
