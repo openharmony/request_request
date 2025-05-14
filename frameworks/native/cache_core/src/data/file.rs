@@ -34,13 +34,18 @@ static CACHE_DIR_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
     #[cfg(feature = "ohos")]
     let mut path = match request_utils::context::get_cache_dir() {
         Some(dir) => PathBuf::from_str(&dir).unwrap(),
-        None => PathBuf::from_str("/data/storage/el2/base/cache").unwrap(),
+        None => {
+            error!("get cache dir failed");
+            PathBuf::from_str("/data/storage/el2/base/cache").unwrap()
+        }
     };
     #[cfg(not(feature = "ohos"))]
     let mut path = PathBuf::from_str("./").unwrap();
 
     path.push("preload_caches");
-    let _ = fs::create_dir_all(path.as_path());
+    if let Err(e) = fs::create_dir_all(path.as_path()) {
+        error!("create cache dir error {} path {:?}", e, path);
+    }
     path
 });
 
@@ -157,7 +162,15 @@ pub(crate) fn restore_files() -> impl Iterator<Item = TaskId> {
 }
 
 pub(crate) fn restore_files_inner(path: &Path) -> impl Iterator<Item = TaskId> {
-    let files = fs::read_dir(path).unwrap();
+    let closure = |(path, _)| path;
+
+    let files = match fs::read_dir(path) {
+        Ok(files) => files,
+        Err(e) => {
+            error!("read dir error {}", e);
+            return vec![].into_iter().map(closure);
+        }
+    };
     let mut v = files
         .into_iter()
         .filter_map(|entry| match filter_map_entry(entry, path) {
@@ -169,7 +182,7 @@ pub(crate) fn restore_files_inner(path: &Path) -> impl Iterator<Item = TaskId> {
         })
         .collect::<Vec<_>>();
     v.sort_by_key(|(_, time)| *time);
-    v.into_iter().map(|(path, _)| path)
+    v.into_iter().map(closure)
 }
 
 fn filter_map_entry(

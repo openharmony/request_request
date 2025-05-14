@@ -55,13 +55,19 @@ impl Updater {
     where
         F: FnOnce() -> Option<usize>,
     {
-        if self.cache.is_none() {
-            let content_length = content_length();
-            let apply_cache =
-                RamCache::new(self.task_id.clone(), self.cache_manager, content_length);
-            self.cache = Some(apply_cache)
+        match self.cache {
+            Some(ref mut cache) => {
+                if let Err(e) = cache.write_all(data) {
+                    error!("write cache failed, err: {}", e);
+                }
+            }
+            None => {
+                let content_length = content_length();
+                let apply_cache =
+                    RamCache::new(self.task_id.clone(), self.cache_manager, content_length);
+                self.cache = Some(apply_cache)
+            }
         }
-        self.cache.as_mut().unwrap().write_all(data).unwrap();
     }
 
     pub fn reset_cache(&mut self) {

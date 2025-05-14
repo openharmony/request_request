@@ -13,8 +13,7 @@
 
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
-use std::mem::MaybeUninit;
-use std::sync::{Arc, Mutex, Once};
+use std::sync::{Arc, Mutex, Once, OnceLock};
 
 use cache_core::{CacheManager, RamCache};
 use request_utils::observe::network::NetRegistrar;
@@ -64,21 +63,24 @@ impl CacheDownloadService {
     }
 
     pub fn get_instance() -> &'static Self {
-        static mut DOWNLOAD_AGENT: MaybeUninit<CacheDownloadService> = MaybeUninit::uninit();
+        static DOWNLOAD_AGENT: OnceLock<CacheDownloadService> = OnceLock::new();
         static ONCE: Once = Once::new();
-        ONCE.call_once(|| unsafe {
-            DOWNLOAD_AGENT.write(CacheDownloadService::new());
-            DOWNLOAD_AGENT
-                .assume_init_ref()
-                .cache_manager
-                .restore_files();
-            DOWNLOAD_AGENT
-                .assume_init_ref()
-                .net_registrar
-                .add_observer(NetObserver);
-            let _ = DOWNLOAD_AGENT.assume_init_ref().net_registrar.register();
+        let cache_download = DOWNLOAD_AGENT.get_or_init(CacheDownloadService::new);
+
+        ONCE.call_once(|| {
+            let old_hook = std::panic::take_hook();
+            std::panic::set_hook(Box::new(move |info| {
+                error!("Panic occurred {:?}", info);
+                old_hook(info);
+            }));
+            cache_download.cache_manager.restore_files();
+            cache_download.net_registrar.add_observer(NetObserver);
+            if let Err(e) = cache_download.net_registrar.register() {
+                error!("Failed to register network observer: {:?}", e);
+            }
         });
-        unsafe { DOWNLOAD_AGENT.assume_init_ref() }
+
+        cache_download
     }
 
     pub fn cancel(&self, url: &str) {

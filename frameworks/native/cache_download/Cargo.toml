@@ -25,6 +25,7 @@ default = [
 ohos = [
     "cxx",
     "ffrt_rs",
+    "cache_core/ohos",
     "request_utils/ohos",
 ]
 
