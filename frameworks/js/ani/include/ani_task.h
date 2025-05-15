@@ -19,10 +19,14 @@
 #include <ani.h>
 #include "i_response_listener.h"
 #include "i_notify_data_listener.h"
+#include "listener_list.h"
 
 namespace OHOS::Request {
 
-class ResponseListener : public IResponseListener, public std::enable_shared_from_this<ResponseListener>  {
+class ResponseListener :
+    public IResponseListener,
+    public std::enable_shared_from_this<ResponseListener>,
+    public ListenerList {
 public:
     virtual ~ResponseListener() = default;
     ResponseListener(ani_vm* vm, std::string tid, SubscribeType type) : vm_(vm), tid_(tid), type_(type)
@@ -36,10 +40,12 @@ private:
     ani_vm *vm_;
     std::string tid_;
     SubscribeType type_;
-    ani_ref callbackRef_;
 };
 
-class NotifyDataListener : public INotifyDataListener, public std::enable_shared_from_this<NotifyDataListener> {
+class NotifyDataListener :
+    public INotifyDataListener,
+    public std::enable_shared_from_this<NotifyDataListener>,
+    public ListenerList {
 public:
     virtual ~NotifyDataListener() = default;
     NotifyDataListener(ani_vm *vm, std::string tid, SubscribeType type) : vm_(vm), tid_(tid), type_(type)
@@ -53,7 +59,6 @@ private:
     ani_vm *vm_;
     std::string tid_;
     SubscribeType type_;
-    ani_ref callbackRef_;
     
     std::shared_ptr<Response> response_;
 };

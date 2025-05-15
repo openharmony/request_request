@@ -85,10 +85,7 @@ void AniTask::Start()
 
 void NotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData)
 {
-    REQUEST_HILOGI("OnNotifyDataReceive enter, type_:%{public}d, tid_:%{public}d",
-        (int)notifyData->type, notifyData->taskId);
-    REQUEST_HILOGI("OnNotifyDataReceive enter, index:%{public}u, totalProcessed:%{public}llu",
-        notifyData->progress.index, notifyData->progress.totalProcessed);
+    REQUEST_HILOGI("OnNotifyDataReceive enter");
     ani_env *workerEnv = nullptr;
     ani_options aniArgs {0, nullptr};
     auto status = vm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &workerEnv);
@@ -104,42 +101,25 @@ void NotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &
     ani_object Progress = AniObjectUtils::Create(workerEnv, "L@ohos/request/request;", "Lagent;", "LProgressImpl;",
         static_cast<ani_double>(notifyData->progress.state), static_cast<ani_double>(notifyData->progress.index),
         static_cast<ani_double>(notifyData->progress.processed));
-    auto fnObj = reinterpret_cast<ani_fn_object>(this->callbackRef_);
     std::vector<ani_ref> args = {Progress};
-    ani_ref result;
-    if (fnObj == nullptr || args.size() == 0) {
-        REQUEST_HILOGI("%{public}s: fnObj == nullptr", __func__);
-        return;
-    }
-
-    if (IsInstanceOf(workerEnv, "Lstd/core/Function1;", fnObj) == 0) {
-        REQUEST_HILOGE("%{public}s: fnObj is not instance Of function  ", __func__);
-        return;
-    }
-    const std::string className = "L@ohos/request/request/agent/ProgressImpl;";
-    if (IsInstanceOf(workerEnv, className, static_cast<ani_object>(Progress)) == 0) {
-        REQUEST_HILOGE("%{public}s: Progress is not instance Of ProgressImpl class", __func__);
-        return;
-    }
-
-    if (ANI_OK != workerEnv->FunctionalObject_Call(fnObj, 1, args.data(), &result)) {
-        REQUEST_HILOGI("%{public}s: FunctionalObject_Call failed", __func__);
-        return;
-    }
+    
+    OnMessageReceive(workerEnv, args);
     status = vm_->DetachCurrentThread();
     REQUEST_HILOGI("OnNotifyDataReceive end");
 }
 
 void NotifyDataListener::AddListener(ani_ref &callback)
 {
-    this->callbackRef_ = callback;
-    RequestManager::GetInstance()->AddListener(this->tid_, this->type_, shared_from_this());
+    AddListenerInner(callback);
+    
+    if (this->validCbNum == 1) {
+        RequestManager::GetInstance()->AddListener(this->tid_, this->type_, shared_from_this());
+    }
 }
 
 void ResponseListener::OnResponseReceive(const std::shared_ptr<Response> &response)
 {
-    REQUEST_HILOGI("OnResponseReceive enter, statusCode:%{public}d, tid_:%{public}s",
-        response->statusCode, response->taskId.c_str());
+    REQUEST_HILOGI("OnResponseReceive enter");
     ani_env *workerEnv = nullptr;
     ani_options aniArgs {0, nullptr};
     auto status = vm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &workerEnv);
@@ -153,42 +133,19 @@ void ResponseListener::OnResponseReceive(const std::shared_ptr<Response> &respon
         return;
     }
     ani_object httpResponse = AniObjectUtils::Create(workerEnv, "L@ohos/request/request;", "Lagent;",
-        "LHttpResponseImpl;");
-    workerEnv->Object_SetPropertyByName_Ref(httpResponse, "version",
-        AniStringUtils::ToAni(workerEnv, response->version));
-    workerEnv->Object_SetPropertyByName_Double(httpResponse, "statusCode",
-        static_cast<ani_double>(response->statusCode));
-    workerEnv->Object_SetPropertyByName_Ref(httpResponse, "reason",
-        AniStringUtils::ToAni(workerEnv, response->reason));
-    auto fnObj = reinterpret_cast<ani_fn_object>(callbackRef_);
+        "LHttpResponseImpl;", AniStringUtils::ToAni(workerEnv, response->version),
+        static_cast<ani_double>(response->statusCode), AniStringUtils::ToAni(workerEnv, response->reason));
     std::vector<ani_ref> args = {httpResponse};
-    ani_ref result;
-    if (fnObj == nullptr || args.size() == 0) {
-        REQUEST_HILOGI("%{public}s: fnObj == nullptr", __func__);
-        return;
-    }
-
-    if (IsInstanceOf(workerEnv, "Lstd/core/Function1;", fnObj) == 0) {
-        REQUEST_HILOGE("%{public}s: fnObj is not instance Of function  ", __func__);
-        return;
-    }
-    const std::string className = "L@ohos/request/request/agent/HttpResponseImpl;";
-    if (IsInstanceOf(workerEnv, className, static_cast<ani_object>(httpResponse)) == 0) {
-        REQUEST_HILOGE("%{public}s: httpResponse is not instance Of HttpResponseImpl class", __func__);
-        return;
-    }
-
-    if (ANI_OK != workerEnv->FunctionalObject_Call(fnObj, 1, args.data(), &result)) {
-        REQUEST_HILOGI("%{public}s: FunctionalObject_Call failed", __func__);
-        return;
-    }
+    OnMessageReceive(workerEnv, args);
     status = vm_->DetachCurrentThread();
 }
 
 void ResponseListener::AddListener(ani_ref &callback)
 {
-    this->callbackRef_ = callback;
-    RequestManager::GetInstance()->AddListener(this->tid_, this->type_, shared_from_this());
+    AddListenerInner(callback);
+    if (this->validCbNum == 1 && this->type_ != SubscribeType::REMOVE) {
+        RequestManager::GetInstance()->AddListener(this->tid_, this->type_, shared_from_this());
+    }
 }
 
 void AniTask::On([[maybe_unused]] ani_env* env, std::string event, ani_ref callback)
