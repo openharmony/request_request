@@ -23,6 +23,7 @@ ohos_shared_library("requestmodule_ani") {
   sources = [
     "src/ani_js_initialize.cpp",
     "src/ani_task.cpp",
+    "src/listener_list.cpp",
     "src/request_module_ani.cpp",
   ]
 
