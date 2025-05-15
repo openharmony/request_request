@@ -68,6 +68,8 @@ pub(crate) struct RequestTask {
     pub(crate) upload_resume: AtomicBool,
     pub(crate) mode: AtomicU8,
     pub(crate) status_code: AtomicI32,
+    pub(crate) start_time: AtomicU64,
+    pub(crate) task_time: AtomicU64,
 }
 
 impl RequestTask {
@@ -185,6 +187,8 @@ impl RequestTask {
             upload_resume: AtomicBool::new(upload_resume),
             mode,
             status_code: AtomicI32::new(0),
+            start_time: AtomicU64::new(0),
+            task_time: AtomicU64::new(0),
         }
     }
 
@@ -195,10 +199,11 @@ impl RequestTask {
         client_manager: ClientManagerEntry,
         upload_resume: bool,
     ) -> Result<RequestTask, ErrorCode> {
+        let task_time = info.task_time;
         #[cfg(feature = "oh")]
-        let (files, client) = check_config(&config, system)?;
+        let (files, client) = check_config(&config, task_time, system)?;
         #[cfg(not(feature = "oh"))]
-        let (files, client) = check_config(&config)?;
+        let (files, client) = check_config(&config, task_time)?;
 
         let file_len = files.files.len();
         let action = config.common_data.action;
@@ -252,6 +257,8 @@ impl RequestTask {
             upload_resume: AtomicBool::new(upload_resume),
             mode,
             status_code: AtomicI32::new(info.status_code),
+            start_time: AtomicU64::new(0),
+            task_time: AtomicU64::new(info.task_time),
         };
         let background_notify = NotificationDispatcher::get_instance().register_task(&task);
         task.background_notify = background_notify;
@@ -642,6 +649,7 @@ impl RequestTask {
             },
             max_speed: self.max_speed.load(Ordering::SeqCst),
             status_code: self.status_code.load(Ordering::SeqCst),
+            task_time: self.task_time.load(Ordering::SeqCst),
         }
     }
 
@@ -700,6 +708,7 @@ fn check_file_specs(file_specs: &[FileSpec]) -> bool {
 
 pub(crate) fn check_config(
     config: &TaskConfig,
+    task_time: u64,
     #[cfg(feature = "oh")] system: SystemConfig,
 ) -> Result<(AttachedFiles, Client), ErrorCode> {
     if !check_file_specs(&config.file_specs) {
@@ -707,10 +716,10 @@ pub(crate) fn check_config(
     }
     let files = AttachedFiles::open(config).map_err(|_| ErrorCode::FileOperationErr)?;
     #[cfg(feature = "oh")]
-    let client = build_client(config, system).map_err(|_| ErrorCode::Other)?;
+    let client = build_client(config, task_time, system).map_err(|_| ErrorCode::Other)?;
 
     #[cfg(not(feature = "oh"))]
-    let client = build_client(config).map_err(|_| ErrorCode::Other)?;
+    let client = build_client(config, task_time).map_err(|_| ErrorCode::Other)?;
     Ok((files, client))
 }
 

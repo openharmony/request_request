@@ -124,6 +124,8 @@ constexpr const char *REQUEST_TASK_TABLE_ADD_CONNECTION_TIMEOUT = "ALTER TABLE r
                                                                   "connection_timeout INTEGER";
 constexpr const char *REQUEST_TASK_TABLE_ADD_TOTAL_TIMEOUT = "ALTER TABLE request_task ADD COLUMN total_timeout "
                                                              "INTEGER";
+constexpr const char *REQUEST_TASK_TABLE_ADD_TASK_TIME = "ALTER TABLE request_task ADD COLUMN task_time "
+                                                             "INTEGER";
 
 struct TaskFilter;
 struct NetworkInfo;
@@ -178,6 +180,7 @@ struct CVectorWrapper {
 // Request Database Modify.
 bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig);
 bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo);
+bool UpdateRequestTaskTime(uint32_t taskId, uint64_t taskTime);
 bool UpdateRequestTaskState(uint32_t taskId, CUpdateStateInfo *updateStateInfo);
 void RequestDBRemoveRecordsFromTime(uint64_t time);
 CTaskInfo *GetTaskInfo(uint32_t taskId);

@@ -593,7 +593,7 @@ HWTEST_F(ParcelHelperTest, CommonUtilsGetFaultByReason001, TestSize.Level1)
     EXPECT_EQ(CommonUtils::GetFaultByReason(BUILD_CLIENT_FAILED), Faults::PARAM);
     EXPECT_EQ(CommonUtils::GetFaultByReason(BUILD_REQUEST_FAILED), Faults::PARAM);
     EXPECT_EQ(CommonUtils::GetFaultByReason(GET_FILESIZE_FAILED), Faults::FSIO);
-    EXPECT_EQ(CommonUtils::GetFaultByReason(CONTINUOUS_TASK_TIMEOUT), Faults::OTHERS);
+    EXPECT_EQ(CommonUtils::GetFaultByReason(CONTINUOUS_TASK_TIMEOUT), Faults::TIMEOUT);
     EXPECT_EQ(CommonUtils::GetFaultByReason(CONNECT_ERROR), Faults::TCP);
     EXPECT_EQ(CommonUtils::GetFaultByReason(REQUEST_ERROR), Faults::PROTOCOL);
     EXPECT_EQ(CommonUtils::GetFaultByReason(UPLOAD_FILE_ERROR), Faults::OTHERS);

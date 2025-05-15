@@ -87,8 +87,8 @@ pub struct MinSpeed {
 /// task Timeout
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Timeout {
-    pub(crate) connection_timeout: u32,
-    pub(crate) total_timeout: u32,
+    pub(crate) connection_timeout: u64,
+    pub(crate) total_timeout: u64,
 }
 
 #[repr(C)]
@@ -526,8 +526,8 @@ impl Deserialize for TaskConfig {
         let priority: u32 = parcel.read()?;
         let min_speed: i32 = parcel.read()?;
         let min_duration: i32 = parcel.read()?;
-        let connection_timeout: u32 = parcel.read()?;
-        let total_timeout: u32 = parcel.read()?;
+        let connection_timeout: u64 = parcel.read()?;
+        let total_timeout: u64 = parcel.read()?;
         let url: String = parcel.read()?;
         let title: String = parcel.read()?;
         let method: String = parcel.read()?;
