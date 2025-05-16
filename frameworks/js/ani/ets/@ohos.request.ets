@@ -230,8 +230,8 @@ export default namespace request {
         return p;
       }
 
-      native function onSync(event: string, callback: Callback<HttpResponse | Progress>): void;
-      native function startSync(): void;
+      native onSync(event: string, callback: Callback<HttpResponse | Progress>): void;
+      native startSync(): void;
     };
 
     export native function createSync(context: BaseContext, config: Config): Task;
