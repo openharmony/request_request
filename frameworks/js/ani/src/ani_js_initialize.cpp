@@ -150,6 +150,7 @@ bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &con
             error.errInfo = "Parameter verification failed, UploadBodyFiles error fail path";
             return false;
         }
+
         FILE *bodyFile = fopen(path.c_str(), "w+");
         if (bodyFile == NULL) {
             error.code = E_FILE_IO;
@@ -211,6 +212,12 @@ bool JsInitialize::GetFdDownload(const std::string &path, const Config &config, 
     }
 
     FILE *file = NULL;
+    if (!IsPathValid(path)) {
+        REQUEST_HILOGE("GetFdDownload IsPathValid error");
+        error.code = E_PARAMETER_CHECK;
+        error.errInfo = "Parameter verification failed, GetFdDownload error fail path";
+        return false;
+    }
     if (config.firstInit) {
         file = fopen(path.c_str(), "w+");
     } else {
@@ -254,6 +261,12 @@ bool JsInitialize::GetFdUpload(const std::string &path, const Config &config, Ex
     if (!JsInitialize::CheckPathIsFile(path, error)) {
         error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
         SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_03, config.bundleName, "", error.errInfo);
+        return false;
+    }
+    if (!IsPathValid(path)) {
+        REQUEST_HILOGE("GetFdUpload IsPathValid error");
+        error.code = E_PARAMETER_CHECK;
+        error.errInfo = "Parameter verification failed, GetFdUpload error fail path";
         return false;
     }
     FILE *file = fopen(path.c_str(), "r");

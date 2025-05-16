@@ -37,9 +37,9 @@ public:
     void AddListener(ani_ref &callback);
 
 private:
-    ani_vm *vm_;
-    std::string tid_;
-    SubscribeType type_;
+    ani_vm *vm_ = nullptr;
+    std::string tid_ = "";
+    SubscribeType type_ = SubscribeType::FAILED;
 };
 
 class NotifyDataListener :
@@ -56,11 +56,11 @@ public:
     void AddListener(ani_ref &callback);
 
 private:
-    ani_vm *vm_;
-    std::string tid_;
-    SubscribeType type_;
-    
-    std::shared_ptr<Response> response_;
+    ani_vm *vm_ = nullptr;
+    std::string tid_ = "";
+    SubscribeType type_ = SubscribeType::FAILED;
+
+    std::shared_ptr<Response> response_ = nullptr;
 };
 
 class AniTask {
@@ -92,16 +92,16 @@ public:
     static void ResetDirAccess(const std::string &filepath);
     static void RemovePathMap(const std::string &filepath);
 
-    Config config_;
-    bool isGetPermission;
+    Config config_ = {.action = Action::DOWNLOAD, .version = Version::API8};
+    bool isGetPermission = false;
 
     static std::mutex pathMutex_;
     static std::map<std::string, int32_t> pathMap_;
     static std::map<std::string, int32_t> fileMap_;
 
 private:
-    std::string tid_;
-    SubscribeType type_;
+    std::string tid_ = "";
+    SubscribeType type_ = SubscribeType::FAILED;
     static std::map<std::string, SubscribeType> supportEventsAni_;
 
     std::mutex listenerMutex_;
