@@ -31,8 +31,8 @@ struct MinSpeed {
 };
 
 struct Timeout {
-    uint64_t connectionTimeout = 60;
-    uint64_t totalTimeout = 604800;
+    uint64_t connectionTimeout = 0;
+    uint64_t totalTimeout = 0;
 };
 
 struct CommonTaskConfig {
