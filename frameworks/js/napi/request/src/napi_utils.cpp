@@ -358,6 +358,24 @@ napi_value Convert2JSValue(napi_env env, const std::shared_ptr<Response> &respon
     return value;
 }
 
+napi_value Convert2JSValue(napi_env env, const Reason reason)
+{
+    napi_value value = nullptr;
+    napi_create_object(env, &value);
+
+    Faults fault = CommonUtils::GetFaultByReason(reason);
+    if (napi_create_uint32(env, static_cast<uint32_t>(fault), &value) != napi_ok) {
+        return nullptr;
+    }
+
+    return value;
+}
+
+napi_value Convert2JSValue(napi_env env, WaitingReason reason)
+{
+    return Convert2JSValue(env, static_cast<uint32_t>(reason));
+}
+
 napi_value Convert2JSHeaders(napi_env env, const std::map<std::string, std::vector<std::string>> &headers)
 {
     napi_value value = nullptr;

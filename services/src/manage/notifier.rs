@@ -13,8 +13,8 @@
 
 use crate::info::State;
 use crate::service::client::ClientManagerEntry;
-use crate::task::notify::{NotifyData, SubscribeType};
-
+use crate::task::notify::{NotifyData, SubscribeType, WaitingCause};
+use crate::task::reason::Reason;
 pub(crate) struct Notifier;
 
 impl Notifier {
@@ -38,6 +38,10 @@ impl Notifier {
             notify_data.uid,
         );
         client_manager.send_notify_data(SubscribeType::Fail, notify_data)
+    }
+
+    pub(crate) fn faults(tid: u32, client_manager: &ClientManagerEntry, reason: Reason) {
+        client_manager.send_faults(tid, SubscribeType::Faults, reason)
     }
 
     pub(crate) fn pause(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
@@ -65,6 +69,10 @@ impl Notifier {
         let task_id = notify_data.task_id;
         client_manager.send_notify_data(SubscribeType::Remove, notify_data);
         client_manager.notify_task_finished(task_id);
+    }
+
+    pub(crate) fn waiting(client_manager: &ClientManagerEntry, task_id: u32, cause: WaitingCause) {
+        client_manager.send_wait_reason(task_id, cause);
     }
 }
 

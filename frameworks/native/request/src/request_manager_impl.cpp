@@ -235,10 +235,9 @@ int32_t RequestManagerImpl::Resume(const std::string &tid)
     return CallProxyMethod(&RequestServiceInterface::Resume, tid);
 }
 
-int32_t RequestManagerImpl::CreateGroup(
-    std::string &gid, const bool gauge, std::optional<std::string> title, std::optional<std::string> text)
+int32_t RequestManagerImpl::CreateGroup(std::string &gid, const bool gauge, Notification &notification)
 {
-    return CallProxyMethod(&RequestServiceInterface::CreateGroup, gid, gauge, title, text);
+    return CallProxyMethod(&RequestServiceInterface::CreateGroup, gid, gauge, notification);
 }
 int32_t RequestManagerImpl::AttachGroup(const std::string &gid, const std::vector<std::string> &tids)
 {
@@ -420,6 +419,27 @@ void RequestManagerImpl::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &
         return;
     }
     task->OnNotifyDataReceive(notifyData);
+}
+
+void RequestManagerImpl::OnFaultsReceive(const std::shared_ptr<int32_t> &tid,
+    const std::shared_ptr<SubscribeType> &type, const std::shared_ptr<Reason> &reason)
+{
+    std::shared_ptr<Request> task = this->GetTask(std::to_string(*tid));
+    if (task.get() == nullptr) {
+        REQUEST_HILOGE("OnFaultsReceive task not found");
+        return;
+    }
+    task->OnFaultsReceive(tid, type, reason);
+}
+
+void RequestManagerImpl::OnWaitReceive(std::int32_t taskId, WaitingReason reason)
+{
+    std::shared_ptr<Request> task = this->GetTask(std::to_string(taskId));
+    if (task.get() == nullptr) {
+        REQUEST_HILOGE("OnWaitReceive task not found");
+        return;
+    }
+    task->OnWaitReceive(taskId, reason);
 }
 
 sptr<RequestServiceInterface> RequestManagerImpl::GetRequestServiceProxy(bool needLoadSA)

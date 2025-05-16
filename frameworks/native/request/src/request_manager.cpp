@@ -239,10 +239,9 @@ int32_t RequestManager::GetNextSeq()
     return RequestManagerImpl::GetInstance()->GetNextSeq();
 }
 
-int32_t RequestManager::CreateGroup(
-    std::string &gid, const bool gauge, std::optional<std::string> title, std::optional<std::string> text)
+int32_t RequestManager::CreateGroup(std::string &gid, const bool gauge, Notification &notification)
 {
-    return RequestManagerImpl::GetInstance()->CreateGroup(gid, gauge, title, text);
+    return RequestManagerImpl::GetInstance()->CreateGroup(gid, gauge, notification);
 }
 int32_t RequestManager::AttachGroup(const std::string &gid, const std::vector<std::string> &tids)
 {

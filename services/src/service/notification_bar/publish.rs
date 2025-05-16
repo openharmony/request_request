@@ -79,9 +79,14 @@ impl NotificationDispatcher {
             .update_task_customized_notification(task_id, title, text);
     }
 
+    pub(crate) fn check_task_notification_available(&self, task_id: u32) -> bool {
+        self.database.check_task_notification_available(&task_id)
+    }
+
     pub(crate) fn register_task(&self, task: &RequestTask) -> Arc<AtomicBool> {
         let gauge = if let Some(gid) = self.database.query_task_gid(task.task_id()) {
-            if self.database.is_gauge(gid) {
+            if self.database.check_group_notification_available(&gid) && self.database.is_gauge(gid)
+            {
                 Arc::new(AtomicBool::new(true))
             } else {
                 Arc::new(AtomicBool::new(false))
@@ -197,6 +202,10 @@ impl NotificationDispatcher {
                 gauge.store(is_gauge, std::sync::atomic::Ordering::Release);
             }
         }
+        if !self.database.check_group_notification_available(&group_id) {
+            return true;
+        }
+
         let _ = self
             .flow
             .send(NotifyInfo::AttachGroup(group_id, uid, task_ids));
@@ -209,6 +218,9 @@ impl NotificationDispatcher {
             return false;
         }
         self.database.disable_attach_group(group_id);
+        if !self.database.check_group_notification_available(&group_id) {
+            return true;
+        }
         let notify = NotifyInfo::GroupEventual(group_id, uid);
         let _ = self.flow.send(notify);
         true
@@ -219,6 +231,7 @@ impl NotificationDispatcher {
         gauge: bool,
         title: Option<String>,
         text: Option<String>,
+        disable: bool,
     ) -> u32 {
         let new_group_id = loop {
             let candidate = fast_random() as u32;
@@ -227,8 +240,8 @@ impl NotificationDispatcher {
             }
         };
         info!(
-            "Create group {} gauge {} customized_title {:?} customized_text {:?}",
-            new_group_id, gauge, title, text
+            "Create group {} gauge {} customized_title {:?} customized_text {:?} disable {}",
+            new_group_id, gauge, title, text, disable
         );
 
         let current_time = std::time::SystemTime::now()
@@ -236,7 +249,7 @@ impl NotificationDispatcher {
             .unwrap()
             .as_millis() as u64;
         self.database
-            .update_group_config(new_group_id, gauge, current_time);
+            .update_group_config(new_group_id, gauge, current_time, !disable);
         if title.is_some() || text.is_some() {
             self.database
                 .update_group_customized_notification(new_group_id, title, text);

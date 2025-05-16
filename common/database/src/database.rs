@@ -11,13 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use cxx::SharedPtr;
 use std::pin::Pin;
+
+use cxx::SharedPtr;
 
 use crate::config::OpenConfig;
 use crate::params::{FromSql, Params};
-use crate::wrapper::open_rdb_store;
 use crate::wrapper::ffi::{self, Execute, NewRowEntity, Query};
+use crate::wrapper::open_rdb_store;
 
 /// `RdbStore` ffi wrapper.
 pub struct RdbStore<'a> {
@@ -174,10 +175,11 @@ single_tuple_impl!((0 A), (1 B), (2 C), (3 D), (4 E), (5 F), (6 G), (7 H), (8 I)
 
 #[cfg(test)]
 mod test {
-    use super::*;
-
     use std::fs;
+
     use ffi::SecurityLevel;
+
+    use super::*;
 
     fn get_rdb() -> RdbStore<'static> {
         let _ = fs::create_dir_all("/data/test");

@@ -87,9 +87,7 @@ public:
     MOCK_METHOD(int32_t, SubRunCount, (const OHOS::sptr<NotifyInterface> &listener), (override));
     MOCK_METHOD(int32_t, UnsubRunCount, (), (override));
     MOCK_METHOD(OHOS::sptr<OHOS::IRemoteObject>, AsObject, (), (override));
-    MOCK_METHOD(int32_t, CreateGroup,
-        (std::string & gid, const bool gauge, std::optional<std::string> title, std::optional<std::string> text),
-        (override));
+    MOCK_METHOD(int32_t, CreateGroup, (std::string & gid, const bool gauge, Notification &info), (override));
     MOCK_METHOD(int32_t, AttachGroup, (const std::string &gid, const std::vector<std::string> &tid), (override));
     MOCK_METHOD(int32_t, DeleteGroup, (const std::string &gid), (override));
     MOCK_METHOD(int32_t, SetMaxSpeed, (const std::string &tid, const int64_t maxSpeed), (override));
@@ -620,10 +618,14 @@ HWTEST_F(RequestManagerImplTest, CreateGroup001, TestSize.Level1)
     EXPECT_NE(exceptProxy, nullptr);
     std::string gid = "gid";
     bool gauge = true;
-    std::optional<std::string> title = "title";
-    std::optional<std::string> text = "text";
-    EXPECT_CALL(*exceptProxy, CreateGroup(gid, testing::_, testing::_, testing::_)).WillOnce(testing::Return(E_OK));
-    EXPECT_EQ(RequestManagerImpl::GetInstance()->CreateGroup(gid, gauge, title, text), E_OK);
+    Notification info{
+        .text = "text",
+        .title = "title",
+        .disable = false,
+
+    };
+    EXPECT_CALL(*exceptProxy, CreateGroup(gid, testing::_, testing::_)).WillOnce(testing::Return(E_OK));
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->CreateGroup(gid, gauge, info), E_OK);
 }
 
 /**

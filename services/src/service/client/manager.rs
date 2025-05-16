@@ -141,6 +141,38 @@ impl ClientManager {
                         debug!("notify data pid not found");
                     }
                 }
+                ClientEvent::SendFaults(tid, subscribe_type, reason) => {
+                    if let Some(&pid) = self.pid_map.get(&tid) {
+                        if let Some((tx, _fd)) = self.clients.get_mut(&pid) {
+                            if let Err(err) =
+                                tx.send(ClientEvent::SendFaults(tid, subscribe_type, reason))
+                            {
+                                error!("send faults error, {}", err);
+                                sys_event!(
+                                    ExecFault,
+                                    DfxCode::UDS_FAULT_02,
+                                    &format!("send faults error, {}", err)
+                                );
+                            }
+                        }
+                    }
+                }
+                ClientEvent::SendWaitNotify(tid, reason) => {
+                    if let Some(&pid) = self.pid_map.get(&tid) {
+                        if let Some((tx, _fd)) = self.clients.get_mut(&pid) {
+                            if let Err(err) =
+                                tx.send(ClientEvent::SendWaitNotify(tid, reason))
+                            {
+                                error!("send faults error, {}", err);
+                                sys_event!(
+                                    ExecFault,
+                                    DfxCode::UDS_FAULT_02,
+                                    &format!("send faults error, {}", err)
+                                );
+                            }
+                        }
+                    }
+                }
                 _ => {}
             }
 

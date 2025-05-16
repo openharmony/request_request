@@ -21,6 +21,7 @@ use crate::service::notification_bar::NotificationDispatcher;
 use crate::service::permission::PermissionChecker;
 use crate::service::RequestServiceStub;
 use crate::task::config::TaskConfig;
+use crate::utils::{check_permission, is_system_api};
 
 impl RequestServiceStub {
     pub(crate) fn construct(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
@@ -106,6 +107,17 @@ impl RequestServiceStub {
             if title.is_some() || text.is_some() {
                 NotificationDispatcher::get_instance()
                     .update_task_customized_notification(task_id, title, text);
+            }
+            let notification_disable = data.read::<bool>()? && is_system_api();
+            if notification_disable {
+                if !check_permission("ohos.permission.REQUEST_DISABLE_NOTIFICATION") {
+                    if let Some((c, tid)) = vec.get_mut(i) {
+                        *c = ErrorCode::Permission;
+                        *tid = task_id;
+                    }
+                    continue;
+                }
+                NotificationDispatcher::get_instance().disable_task_notification(uid, task_id);
             }
 
             debug!("Service construct: construct event sent to manager");
