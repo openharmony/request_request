@@ -31,6 +31,11 @@
     ],
     "deps": {
       "components": [
+        "rust",
+        "rust_cxx",
+        "rust_bindgen",
+        "ylong_http",
+        "ylong_runtime",
         "os_account",
         "samgr",
         "init",
@@ -53,7 +58,6 @@
         "distributed_notification_service",
         "c_utils",
         "netstack",
-        "ylong_runtime",
         "storage_service",
         "ffrt",
         "openssl",

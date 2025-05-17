@@ -21,7 +21,7 @@
 #include <memory>
 #include <vector>
 
-#include "../../../../interfaces/inner_kits/request_action/include/request_action.h"
+#include "request_action.h"
 #include "accesstoken_kit.h"
 #include "cxx.h"
 #include "nativetoken_kit.h"

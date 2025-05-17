@@ -36,10 +36,12 @@ ohos_static_library("ffrt_rs_cxx") {
 
   sources += get_target_outputs(":ffrt_rs_cxx_gen")
 
-  external_deps = [ "ffrt:libffrt" ]
+  external_deps = [
+    "ffrt:libffrt",
+    "rust_cxx:cxx_cppdeps",
+    ]
   deps = [
     ":ffrt_rs_cxx_gen",
-    "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
 
   subsystem_name = "request"
@@ -58,11 +60,13 @@ ohos_rust_static_library("ffrt_rs") {
 
   sources = [ "src/lib.rs" ]
 
-  external_deps = [ "ffrt:libffrt" ]
+  external_deps = [
+    "ffrt:libffrt",
+    "rust_cxx:lib",
+  ]
 
   deps = [
     ":ffrt_rs_cxx",
-    "//third_party/rust/crates/cxx:lib",
   ]
 
   subsystem_name = "request"
@@ -74,14 +78,13 @@ ohos_rust_unittest("rust_ffrt_rs_ut_test") {
 
   sources = [ "src/lib.rs" ]
 
-  external_deps = []
-
   deps = [
     ":ffrt_rs_cxx",
-    "//third_party/rust/crates/cxx:lib",
   ]
-
-  external_deps = [ "ffrt:libffrt" ]
+  external_deps = [
+    "ffrt:libffrt",
+    "rust_cxx:lib",
+  ]
 
   subsystem_name = "request"
   part_name = "request"

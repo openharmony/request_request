@@ -33,13 +33,13 @@ ohos_unittest("preload_test") {
 
   deps = [
     "../../../../frameworks/native/cache_download:preload_native",
-    "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
   external_deps = [
     "googletest:gmock",
     "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "rust_cxx:cxx_cppdeps",
   ]
 }
 

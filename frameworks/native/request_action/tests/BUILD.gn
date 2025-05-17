@@ -38,10 +38,12 @@ ohos_static_library("request_action") {
   }
   stack_protector_ret = true
 
+  include_dirs = [
+    "../../../../interfaces/inner_kits/request_action/include",
+  ]
   deps = [
     ":request_action_cxx",
     "../../request:request_native",
-    "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
 
   public_configs = [ ":request_action_config" ]
@@ -51,6 +53,7 @@ ohos_static_library("request_action") {
     "access_token:libtoken_setproc",
     "access_token:libtokenid_sdk",
     "hilog:libhilog",
+    "rust_cxx:cxx_cppdeps",
   ]
 
   sources = [ "../src/request_action.cpp" ]
@@ -73,7 +76,9 @@ ohos_rust_executable("request_action_test") {
   deps = [
     ":request_action",
     ":request_action_cxx",
-    "//third_party/rust/crates/cxx:lib",
+  ]
+  external_deps = [
+    "rust_cxx:lib",
   ]
   sources = [ "request_action_test.rs" ]
 

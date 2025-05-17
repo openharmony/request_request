@@ -20,7 +20,7 @@
 #include <mutex>
 #include <vector>
 
-#include "../../interfaces/inner_kits/running_count/include/running_task_count.h"
+#include "base/request/request/interfaces/inner_kits/running_count/include/running_task_count.h"
 #include "iremote_proxy.h"
 #include "log.h"
 #include "notify_interface.h"
