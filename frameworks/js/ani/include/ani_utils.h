@@ -509,7 +509,7 @@ public:
         if (ANI_OK != env_->Object_GetPropertyByName_Double(obj_, "length", &value)) {
             return ANI_ERROR;
         }
-        length = int(value);
+        length = static_cast<std::size_t>(value);
         return ANI_OK;
     }
 
