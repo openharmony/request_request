@@ -103,13 +103,13 @@ impl RequestTask {
     }
 
     pub(crate) fn set_callback(&mut self, callback: Box<dyn RequestCallback + 'static>) {
-        let task = self.inner.lock().unwrap().clone();
+        let task = self.inner.lock().unwrap();
         OnCallback(
-            task,
+            &task,
             Box::new(CallbackWrapper::from_callback(
                 callback,
                 self.reset.clone(),
-                self.inner.clone(),
+                Arc::downgrade(&self.inner),
                 0,
             )),
         );

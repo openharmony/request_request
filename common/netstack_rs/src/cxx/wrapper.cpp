@@ -22,7 +22,7 @@
 namespace OHOS::Request {
 using namespace OHOS::NetStack::HttpClient;
 
-void OnCallback(std::shared_ptr<HttpClientTask> task, rust::Box<CallbackWrapper> callback)
+void OnCallback(const std::shared_ptr<HttpClientTask> &task, rust::Box<CallbackWrapper> callback)
 {
     CallbackWrapper *raw_ptr = callback.into_raw();
     auto shared = std::shared_ptr<CallbackWrapper>(
@@ -35,8 +35,12 @@ void OnCallback(std::shared_ptr<HttpClientTask> task, rust::Box<CallbackWrapper>
     task->OnCancel([shared](const HttpClientRequest &request, const HttpClientResponse &response) {
         shared->on_cancel(request, response);
     });
-    task->OnDataReceive([shared, task](const HttpClientRequest &, const uint8_t *data, size_t size) {
-        shared->on_data_receive(task, data, size);
+    auto weak = task->weak_from_this();
+    task->OnDataReceive([shared, weak](const HttpClientRequest &, const uint8_t *data, size_t size) {
+        auto httpTask = weak.lock();
+        if (httpTask != nullptr) {
+            shared->on_data_receive(httpTask, data, size);
+        }
     });
     task->OnProgress([shared](const HttpClientRequest &, u_long dlTotal, u_long dlNow, u_long ulTotal, u_long ulNow) {
         shared->on_progress(dlTotal, dlNow, ulTotal, ulNow);

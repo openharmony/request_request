@@ -13,7 +13,7 @@
 
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 
 use cxx::{let_cxx_string, SharedPtr};
 use ffi::{HttpClientRequest, HttpClientTask, NewHttpClientTask, OnCallback};
@@ -27,7 +27,8 @@ use crate::task::{RequestTask, TaskStatus};
 pub struct CallbackWrapper {
     inner: Option<Box<dyn RequestCallback>>,
     reset: Arc<AtomicBool>,
-    task: Arc<Mutex<SharedPtr<HttpClientTask>>>,
+    task: Weak<Mutex<SharedPtr<HttpClientTask>>>,
+    tries: usize,
     current: u64,
 }
 
@@ -35,13 +36,14 @@ impl CallbackWrapper {
     pub(crate) fn from_callback(
         inner: Box<dyn RequestCallback + 'static>,
         reset: Arc<AtomicBool>,
-        task: Arc<Mutex<SharedPtr<HttpClientTask>>>,
+        task: Weak<Mutex<SharedPtr<HttpClientTask>>>,
         current: u64,
     ) -> Self {
         Self {
             inner: Some(inner),
             reset,
             task,
+            tries: 0,
             current,
         }
     }
@@ -78,15 +80,20 @@ impl CallbackWrapper {
         let Some(callback) = self.inner.take() else {
             return;
         };
+        let (new_task, mut new_callback) = self.create_new_task(callback, request, response);
+        if self.tries < 3 {
+            self.tries += 1;
+            new_callback.tries = self.tries;
+            Self::start_new_task(new_task, new_callback);
+            return;
+        }
 
-        let (new_task, new_callback) = self.create_new_task(callback, request, response);
         let reset = self.reset.clone();
-        let replaced_task = self.task.clone();
         ffrt_spawn(move || {
             for _ in 0..20 {
                 ffrt_sleep(1000);
                 if reset.load(Ordering::SeqCst) {
-                    Self::replace_task_and_callback(&replaced_task, new_task, new_callback);
+                    Self::start_new_task(new_task, new_callback);
                     reset.store(false, Ordering::SeqCst);
                     return;
                 }
@@ -104,7 +111,7 @@ impl CallbackWrapper {
 
         if self.reset.load(Ordering::SeqCst) {
             let (new_task, new_callback) = self.create_new_task(callback, request, response);
-            Self::replace_task_and_callback(&self.task, new_task, new_callback);
+            Self::start_new_task(new_task, new_callback);
             self.reset.store(false, Ordering::SeqCst);
         } else {
             callback.on_cancel();
@@ -153,13 +160,11 @@ impl CallbackWrapper {
         (new_task, new_callback)
     }
 
-    fn replace_task_and_callback(
-        replaced_task: &Arc<Mutex<SharedPtr<HttpClientTask>>>,
-        task: SharedPtr<HttpClientTask>,
-        callback: Box<CallbackWrapper>,
-    ) {
-        OnCallback(task.clone(), callback);
-        *replaced_task.lock().unwrap() = task.clone();
+    fn start_new_task(task: SharedPtr<HttpClientTask>, callback: Box<CallbackWrapper>) {
+        if let Some(r) = callback.task.upgrade() {
+            *r.lock().unwrap() = task.clone();
+        }
+        OnCallback(&task, callback);
         RequestTask::pin_mut(&task).Start();
     }
 }
@@ -275,7 +280,7 @@ pub(crate) mod ffi {
         fn Start(self: Pin<&mut HttpClientTask>) -> bool;
         fn Cancel(self: Pin<&mut HttpClientTask>);
         fn GetStatus(self: Pin<&mut HttpClientTask>) -> TaskStatus;
-        fn OnCallback(task: SharedPtr<HttpClientTask>, callback: Box<CallbackWrapper>);
+        fn OnCallback(task: &SharedPtr<HttpClientTask>, callback: Box<CallbackWrapper>);
 
         #[namespace = "OHOS::NetStack::HttpClient"]
         type HttpClientResponse;

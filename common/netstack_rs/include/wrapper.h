@@ -27,7 +27,7 @@ namespace OHOS::Request {
 using namespace OHOS::NetStack::HttpClient;
 struct CallbackWrapper;
 
-void OnCallback(std::shared_ptr<HttpClientTask>, rust::Box<CallbackWrapper> callback);
+void OnCallback(const std::shared_ptr<HttpClientTask> &task, rust::Box<CallbackWrapper> callback);
 
 inline std::unique_ptr<HttpClientRequest> NewHttpClientRequest()
 {

@@ -120,7 +120,6 @@ impl CacheDownloadService {
 
         if !update {
             if let Err(ret) = self.fetch_with_callback(&task_id, callback) {
-                error!("{} fetch fail", task_id.brief());
                 callback = ret;
             } else {
                 info!("{} fetch success", task_id.brief());
