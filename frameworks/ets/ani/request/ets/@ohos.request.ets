@@ -84,8 +84,8 @@ export default namespace request {
     })
     p1.then((content: NullishType) => {
         callback(new BusinessError(), content as DownloadTask);
-    }, (err: BusinessError): void => {
-        callback(err, new DownloadTaskInner);
+    }, (err: Error): void => {
+        callback(err as BusinessError, new DownloadTaskInner);
     });
   }
 
@@ -95,8 +95,8 @@ export default namespace request {
           return downloadFileSync(context, config);
       }).then((content: NullishType) => {
           resolve(content as DownloadTask);
-      }, (err: BusinessError): void => {
-          reject(err);
+      }, (err: Error): void => {
+          reject(err as BusinessError);
       });
     });
   }
@@ -109,8 +109,8 @@ export default namespace request {
     })
     p1.then((content: NullishType) => {
         callback(new BusinessError(), content as UploadTask);
-    }, (err: BusinessError): void => {
-        callback(err, new UploadTaskInner);
+    }, (err: Error): void => {
+        callback(err as BusinessError, new UploadTaskInner);
     });
   }
 
@@ -120,8 +120,8 @@ export default namespace request {
           return uploadFileSync(context, config);
       }).then((content: NullishType) => {
           resolve(content as UploadTask);
-      }, (err: BusinessError): void => {
-          reject(err);
+      }, (err: Error): void => {
+          reject(err as BusinessError);
       });
     });
   }
@@ -248,8 +248,8 @@ export default namespace request {
         })
         p1.then((content: NullishType) => {
             callback(new BusinessError(), content as boolean);
-        }, (err: BusinessError): void => {
-            callback(err, false);
+        }, (err: Error): void => {
+            callback(err as BusinessError, false);
         });
     }
 
@@ -259,8 +259,8 @@ export default namespace request {
                 return this.deleteSync();
             }).then((content: NullishType) => {
                 resolve(content as boolean);
-            }, (err: BusinessError): void => {
-                reject(err);
+            }, (err: Error): void => {
+                reject(err as BusinessError);
             });
         });
     }
@@ -273,8 +273,8 @@ export default namespace request {
         })
         p1.then((content: NullishType) => {
             callback(new BusinessError(), content as boolean);
-        }, (err: BusinessError): void => {
-            callback(err, false);
+        }, (err: Error): void => {
+            callback(err as BusinessError, false);
         });
     }
 
@@ -284,8 +284,8 @@ export default namespace request {
                 return this.suspendSync();
             }).then((content: NullishType) => {
                 resolve(content as boolean);
-            }, (err: BusinessError): void => {
-                reject(err);
+            }, (err: Error): void => {
+                reject(err as BusinessError);
             });
         });
     }
@@ -298,8 +298,8 @@ export default namespace request {
         })
         p1.then((content: NullishType) => {
             callback(new BusinessError(), content as boolean);
-        }, (err: BusinessError): void => {
-            callback(err, false);
+        }, (err: Error): void => {
+            callback(err as BusinessError, false);
         });
     }
 
@@ -309,8 +309,8 @@ export default namespace request {
                 return this.restoreSync();
             }).then((content: NullishType) => {
                 resolve(content as boolean);
-            }, (err: BusinessError): void => {
-                reject(err);
+            }, (err: Error): void => {
+                reject(err as BusinessError);
             });
         });
     }
@@ -323,8 +323,8 @@ export default namespace request {
         })
         p1.then((content: NullishType) => {
             callback(new BusinessError(), content as DownloadInfo);
-        }, (err: BusinessError): void => {
-            callback(err, new DownloadInfoInner);
+        }, (err: Error): void => {
+            callback(err as BusinessError, new DownloadInfoInner);
         });
     }
 
@@ -334,8 +334,8 @@ export default namespace request {
                 return this.getTaskInfoSync();
             }).then((content: NullishType) => {
                 resolve(content as DownloadInfo);
-            }, (err: BusinessError): void => {
-                reject(err);
+            }, (err: Error): void => {
+                reject(err as BusinessError);
             });
         });
     }
@@ -348,8 +348,8 @@ export default namespace request {
         })
         p1.then((content: NullishType) => {
             callback(new BusinessError(), content as string);
-        }, (err: BusinessError): void => {
-            callback(err, "");
+        }, (err: Error): void => {
+            callback(err as BusinessError, "");
         });
     }
 
@@ -359,8 +359,8 @@ export default namespace request {
                 return this.getTaskMimeTypeSync();
             }).then((content: NullishType) => {
                 resolve(content as string);
-            }, (err: BusinessError): void => {
-                reject(err);
+            }, (err: Error): void => {
+                reject(err as BusinessError);
             });
         });
     }
@@ -424,8 +424,8 @@ export default namespace request {
       })
       p1.then((content: NullishType) => {
           callback(new BusinessError(), content as boolean);
-      }, (err: BusinessError): void => {
-          callback(err, false);
+      }, (err: Error): void => {
+          callback(err as BusinessError, false);
       });
     }
 
@@ -435,8 +435,8 @@ export default namespace request {
               return this.deleteSync();
           }).then((content: NullishType) => {
               resolve(content as boolean);
-          }, (err: BusinessError): void => {
-              reject(err);
+          }, (err: Error): void => {
+              reject(err as BusinessError);
           });
       });
     }
@@ -680,8 +680,8 @@ export default namespace request {
         });
         p1.then(() => {
          callback(new BusinessError(), undefined);
-        }, (err: BusinessError): void => {
-          callback(err, undefined);
+        }, (err: Error): void => {
+          callback(err as BusinessError, undefined);
         });
     }
 
@@ -691,8 +691,8 @@ export default namespace request {
               return this.startSync();
             }).then((content: NullishType) => {
                 resolve(undefined);
-            }, (err: BusinessError): void => {
-                reject(err);
+            }, (err: Error): void => {
+                reject(err as BusinessError);
             });
         });
     }
@@ -705,8 +705,8 @@ export default namespace request {
         });
         p1.then(() => {
             callback(new BusinessError(), undefined);
-        }, (err: BusinessError): void => {
-            callback(err, undefined);
+        }, (err: Error): void => {
+            callback(err as BusinessError, undefined);
         });
     }
     pause(): Promise<void> {
@@ -715,8 +715,8 @@ export default namespace request {
               return this.pauseSync();
             }).then((content: NullishType) => {
                 resolve(undefined);
-            }, (err: BusinessError): void => {
-                reject(err);
+            }, (err: Error): void => {
+                reject(err as BusinessError);
             });
         });
     }
@@ -729,8 +729,8 @@ export default namespace request {
         });
         p1.then(() => {
             callback(new BusinessError(), undefined);
-        }, (err: BusinessError): void => {
-            callback(err, undefined);
+        }, (err: Error): void => {
+            callback(err as BusinessError, undefined);
         });
     }
     resume(): Promise<void> {
@@ -739,8 +739,8 @@ export default namespace request {
               return this.resumeSync();
             }).then((content: NullishType) => {
                 resolve(undefined);
-            }, (err: BusinessError): void => {
-                reject(err);
+            }, (err: Error): void => {
+                reject(err as BusinessError);
             });
         });
     }
@@ -753,8 +753,8 @@ export default namespace request {
         });
         p1.then(() => {
             callback(new BusinessError(), undefined);
-        }, (err: BusinessError): void => {
-            callback(err, undefined);
+        }, (err: Error): void => {
+            callback(err as BusinessError, undefined);
         });
     }
     stop(): Promise<void> {
@@ -763,8 +763,8 @@ export default namespace request {
               return this.stopSync();
             }).then((content: NullishType) => {
                 resolve(undefined);
-            }, (err: BusinessError): void => {
-                reject(err);
+            }, (err: Error): void => {
+                reject(err as BusinessError);
             });
         });
     }
@@ -777,8 +777,8 @@ export default namespace request {
               return this.setMaxSpeedSync(speed);
             }).then((content: NullishType) => {
                 resolve(undefined);
-            }, (err: BusinessError): void => {
-                reject(err);
+            }, (err: Error): void => {
+                reject(err as BusinessError);
             });
         });
     }
@@ -792,8 +792,8 @@ export default namespace request {
       });
       p1.then((content: NullishType) => {
         callback(new BusinessError(), content as Task);
-      }, (err: BusinessError): void => {
-        callback(err,new TaskInner);
+      }, (err: Error): void => {
+        callback(err as BusinessError,new TaskInner);
       });
     }
 
@@ -803,8 +803,8 @@ export default namespace request {
           return createSync(context, config);
         }).then((content: NullishType) => {
           resolve(content as Task);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
     }
@@ -817,8 +817,8 @@ export default namespace request {
           return getTaskSync(context, id, token);
         }).then((content: NullishType) => {
           resolve(content as Task);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
     }
@@ -831,8 +831,8 @@ export default namespace request {
       });
       p1.then(() => {
         callback(new BusinessError(), undefined);
-      }, (err: BusinessError): void => {
-        callback(err, undefined);
+      }, (err: Error): void => {
+        callback(err as BusinessError, undefined);
       });
     }
 
@@ -842,8 +842,8 @@ export default namespace request {
           return removeSync(id);
         }).then(() => {
           resolve(undefined);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
     }
@@ -856,8 +856,8 @@ export default namespace request {
       });
       p1.then((content: NullishType) => {
         callback(new BusinessError(), content as TaskInfo);
-      }, (err: BusinessError): void => {
-        callback(err, new TaskInfoInner);
+      }, (err: Error): void => {
+        callback(err as BusinessError, new TaskInfoInner);
       });
     }
 
@@ -867,8 +867,8 @@ export default namespace request {
           return showSync(id);
         }).then((content: NullishType) => {
           resolve(content as TaskInfo);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
     }
@@ -881,8 +881,8 @@ export default namespace request {
       });
       p1.then((content: NullishType) => {
         callback(new BusinessError(), content as TaskInfo);
-      }, (err: BusinessError): void => {
-        callback(err, new TaskInfoInner);
+      }, (err: Error): void => {
+        callback(err as BusinessError, new TaskInfoInner);
       });
     }
 
@@ -892,8 +892,8 @@ export default namespace request {
           return touchSync(id, token);
         }).then((content: NullishType) => {
           resolve(content as TaskInfo);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
     }
@@ -906,8 +906,8 @@ export default namespace request {
       });
       p1.then((content: NullishType) => {
         callback(new BusinessError(), content as Array<string>);
-      }, (err: BusinessError): void => {
-        callback(err, []);
+      }, (err: Error): void => {
+        callback(err as BusinessError, []);
       });
     }
 
@@ -917,8 +917,8 @@ export default namespace request {
       });
       p1.then((content: NullishType) => {
         callback(new BusinessError(), content as Array<string>);
-      }, (err: BusinessError): void => {
-        callback(err, []);
+      }, (err: Error): void => {
+        callback(err as BusinessError, []);
       });
     }
 
@@ -928,8 +928,8 @@ export default namespace request {
           return searchSync(filter)
         }).then((content: NullishType) => {
           resolve(content as Array<string>);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
     }
@@ -942,8 +942,8 @@ export default namespace request {
       });
       p1.then((content: NullishType) => {
         callback(new BusinessError(), content as TaskInfo);
-      }, (err: BusinessError): void => {
-        callback(err, new TaskInfoInner);
+      }, (err: Error): void => {
+        callback(err as BusinessError, new TaskInfoInner);
       });
     }
 
@@ -953,8 +953,8 @@ export default namespace request {
           return querySync(id);
         }).then((content: NullishType) => {
           resolve(content as TaskInfo);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
     }
@@ -972,8 +972,8 @@ export default namespace request {
           return createGroupSync(config);
         }).then((content: NullishType) => {
           resolve(content as string);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
     }
@@ -986,8 +986,8 @@ export default namespace request {
           return attachGroupSync(gid, tids);
         }).then(() => {
           resolve(undefined);;
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
     }
@@ -1000,8 +1000,8 @@ export default namespace request {
           return deleteGroupSync(gid, []);
         }).then(() => {
           resolve(undefined);;
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
     }
