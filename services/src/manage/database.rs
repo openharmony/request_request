@@ -396,17 +396,17 @@ impl RequestDb {
         let mut ret = HashMap::new();
         debug!("Get task infos from database");
         let mut out_len = 0;
-        let c_task_info =
+        let c_task_infos =
             unsafe { GetTaskInfos(task_ids.as_ptr(), task_ids.len() as i32, &mut out_len) };
-        if c_task_info.is_null() {
+        if c_task_infos.is_null() {
             info!("No task found in database");
             return ret;
         }
         for i in 0..out_len {
-            let task_info = TaskInfo::from_c_struct(unsafe { &*c_task_info.offset(i as isize) });
+            let task_info = TaskInfo::from_c_struct(unsafe { &*c_task_infos.offset(i as isize) });
             ret.insert(task_info.common_data.task_id, task_info);
         }
-        unsafe { DeleteCTaskInfo(c_task_info) };
+        unsafe { DeleteCTaskInfos(c_task_infos) };
 
         ret
     }
@@ -492,18 +492,18 @@ impl RequestDb {
         let mut ret = HashMap::new();
         debug!("query single task config in database");
         let mut out_len = 0;
-        let c_task_config =
+        let c_task_configs =
             unsafe { QueryTaskConfigs(task_ids.as_ptr(), task_ids.len() as i32, &mut out_len) };
-        if c_task_config.is_null() {
+        if c_task_configs.is_null() {
             error!("can not find task in database, task id: {:?}", task_ids);
             return ret;
         }
         for i in 0..out_len {
             let task_config =
-                TaskConfig::from_c_struct(unsafe { &*c_task_config.offset(i as isize) });
+                TaskConfig::from_c_struct(unsafe { &*c_task_configs.offset(i as isize) });
             ret.insert(task_config.common_data.task_id, task_config);
         }
-        unsafe { DeleteCTaskConfig(c_task_config) };
+        unsafe { DeleteCTaskConfigs(c_task_configs) };
         ret
     }
 
@@ -711,7 +711,9 @@ unsafe impl Sync for RequestDb {}
 
 extern "C" {
     fn DeleteCTaskConfig(ptr: *const CTaskConfig);
+    fn DeleteCTaskConfigs(ptr: *const CTaskConfig);
     fn DeleteCTaskInfo(ptr: *const CTaskInfo);
+    fn DeleteCTaskInfos(ptr: *const CTaskInfo);
     fn GetTaskInfo(task_id: u32) -> *const CTaskInfo;
     fn GetTaskInfos(task_ids: *const u32, in_len: i32, out_len: &mut i32) -> *const CTaskInfo;
     fn QueryTaskConfig(task_id: u32) -> *const CTaskConfig;
