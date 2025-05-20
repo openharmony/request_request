@@ -21,9 +21,14 @@ use crate::service::command::{set_code_with_index_other, GET_INFO_MAX};
 use crate::service::permission::PermissionChecker;
 use crate::service::stub::serialize_task_progress;
 use crate::service::RequestServiceStub;
+use crate::task::files::check_same_uuid;
 
 impl RequestServiceStub {
-    pub(crate) fn show_progress(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+    pub(crate) fn show_progress(
+        &self,
+        data: &mut MsgParcel,
+        reply: &mut MsgParcel,
+    ) -> IpcResult<()> {
         info!("Service show_progress");
         let permission = PermissionChecker::check_down_permission();
         let len: u32 = data.read()?;
@@ -36,7 +41,7 @@ impl RequestServiceStub {
             return Err(IpcStatusCode::Failed);
         }
 
-        let uid = ipc::Skeleton::calling_uid();
+        let ipc_uid = ipc::Skeleton::calling_uid();
         for i in 0..len {
             let task_id: String = data.read()?;
             info!("Service show_progress tid {}", task_id);
@@ -46,27 +51,30 @@ impl RequestServiceStub {
                 set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
                 continue;
             };
-            let mut uid = uid;
-            if permission {
-                // skip uid check if task used by innerkits
-                info!("{} show_progress permission inner", task_id);
-                match RequestDb::get_instance().query_task_uid(task_id) {
-                    Some(id) => uid = id,
-                    None => {
-                        set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
-                        continue;
-                    }
-                };
-            } else if !self.check_task_uid(task_id, uid) {
+
+            let task_uid = match RequestDb::get_instance().query_task_uid(task_id) {
+                Some(uid) => uid,
+                None => {
+                    set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
+                    continue;
+                }
+            };
+
+            if !check_same_uuid(ipc_uid, task_uid) {
+                set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
+                continue;
+            }
+
+            if (task_uid != ipc_uid) && !permission {
                 set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
                 error!(
                     "Service show_progress, failed: check task uid. tid: {}, uid: {}",
-                    task_id, uid
+                    task_id, ipc_uid
                 );
                 continue;
             }
 
-            let info = self.task_manager.lock().unwrap().show(uid, task_id);
+            let info = self.task_manager.lock().unwrap().show(task_uid, task_id);
             match info {
                 Some(task_info) => {
                     if let Some((err, info)) = vec.get_mut(i) {
@@ -75,7 +83,10 @@ impl RequestServiceStub {
                     }
                 }
                 None => {
-                    error!("Service ShowProgress, failed: task_id not found, tid: {}", task_id);
+                    error!(
+                        "Service ShowProgress, failed: task_id not found, tid: {}",
+                        task_id
+                    );
                     set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
                 }
             };
