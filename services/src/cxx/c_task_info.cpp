@@ -32,6 +32,11 @@ void DeleteCStringPtr(CStringWrapper *ptr)
 
 void DeleteCTaskInfo(CTaskInfo *ptr)
 {
+    delete ptr;
+}
+
+void DeleteCTaskInfos(CTaskInfo *ptr)
+{
     delete[] ptr;
 }
 

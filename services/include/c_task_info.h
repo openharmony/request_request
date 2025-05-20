@@ -105,6 +105,7 @@ void DeleteCFormItem(CFormItem *ptr);
 void DeleteCFileSpec(CFileSpec *ptr);
 void DeleteCStringPtr(CStringWrapper *ptr);
 void DeleteCTaskInfo(CTaskInfo *ptr);
+void DeleteCTaskInfos(CTaskInfo *ptr);
 void DeleteTaskQosInfo(TaskQosInfo *ptr);
 
 #ifdef __cplusplus

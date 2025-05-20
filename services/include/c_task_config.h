@@ -105,6 +105,8 @@ extern "C" {
 
 void DeleteCTaskConfig(CTaskConfig *ptr);
 
+void DeleteCTaskConfigs(CTaskConfig *ptr);
+
 #ifdef __cplusplus
 }
 #endif
