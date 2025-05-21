@@ -12,7 +12,7 @@
 // limitations under the License.
 
 use std::future::Future;
-use std::io::SeekFrom;
+use std::io::{Read, SeekFrom};
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -20,12 +20,13 @@ use std::task::{Context, Poll};
 
 use ylong_http_client::async_impl::{Body, MultiPart, Part, Request, UploadOperator, Uploader};
 use ylong_http_client::{ErrorKind, HttpClientError, ReusableReader};
-use ylong_runtime::io::{AsyncRead, AsyncSeekExt, ReadBuf};
+use ylong_runtime::io::{AsyncRead, ReadBuf};
 
 use super::info::State;
 use super::operator::TaskOperator;
 use super::reason::Reason;
 use super::request_task::{TaskError, TaskPhase};
+use super::task_control;
 use crate::manage::database::RequestDb;
 use crate::task::request_task::RequestTask;
 #[cfg(feature = "oh")]
@@ -50,15 +51,18 @@ impl TaskReader {
 impl AsyncRead for TaskReader {
     fn poll_read(
         mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
+        _cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<std::io::Result<()>> {
         let index = self.index;
         let file = self
             .task
             .files
-            .get_mut(index)
+            .get(index)
             .ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?;
+
+        // Obtain `file`` first and then `progress` to prevent deadlocks.
+        let mut file = file.lock().unwrap();
         let mut progress_guard = self.task.progress.lock().unwrap();
 
         if self.task.conf.common_data.index == index as u32 || progress_guard.processed[index] != 0
@@ -70,9 +74,10 @@ impl AsyncRead for TaskReader {
             };
             let buf_filled_len = buf.filled().len();
             let mut read_buf = buf.take(total_upload_bytes);
-            match Pin::new(file).poll_read(cx, &mut read_buf) {
-                Poll::Ready(Ok(_)) => {
-                    let upload_size = read_buf.filled().len();
+            match file.read(read_buf.initialize_unfilled()) {
+                Ok(size) => {
+                    let upload_size = read_buf.filled().len() + size;
+                    read_buf.set_filled(upload_size);
                     // need update buf.filled and buf.initialized
                     buf.assume_init(upload_size);
                     buf.set_filled(buf_filled_len + upload_size);
@@ -89,21 +94,19 @@ impl AsyncRead for TaskReader {
                     }
                     Poll::Ready(Ok(()))
                 }
-                Poll::Pending => Poll::Pending,
-                Poll::Ready(Err(e)) => Poll::Ready(Err(e)),
+                Err(e) => Poll::Ready(Err(e)),
             }
         } else {
-            let filled_len = buf.filled().len();
-            match Pin::new(file).poll_read(cx, buf) {
-                Poll::Ready(Ok(_)) => {
-                    let current_filled_len = buf.filled().len();
-                    let upload_size = current_filled_len - filled_len;
-                    progress_guard.processed[index] += upload_size;
-                    progress_guard.common_data.total_processed += upload_size;
+            match file.read(buf.initialize_unfilled()) {
+                Ok(size) => {
+                    let current_filled_len = buf.filled().len() + size;
+                    buf.set_filled(current_filled_len);
+
+                    progress_guard.processed[index] += size;
+                    progress_guard.common_data.total_processed += size;
                     Poll::Ready(Ok(()))
                 }
-                Poll::Pending => Poll::Pending,
-                Poll::Ready(Err(e)) => Poll::Ready(Err(e)),
+                Err(e) => Poll::Ready(Err(e)),
             }
         }
     }
@@ -118,19 +121,21 @@ impl ReusableReader for TaskReader {
     {
         self.reused = Some(0);
         let index = self.index;
-        let optional_file = self.task.files.get_mut(index);
+        let optional_file = self.task.files.get(index);
         if self.task.conf.common_data.index == index as u32 {
             let begins = self.task.conf.common_data.begins;
             Box::pin(async move {
                 let file =
                     optional_file.ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?;
-                file.seek(SeekFrom::Start(begins)).await.map(|_| ())
+                task_control::file_seek(file, SeekFrom::Start(begins))
+                    .await
+                    .map(|_| ())
             })
         } else {
             Box::pin(async {
                 let file =
                     optional_file.ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?;
-                file.rewind().await.map(|_| ())
+                task_control::file_rewind(file).await.map(|_| ())
             })
         }
     }
@@ -297,7 +302,7 @@ fn build_request_common(
 
 impl RequestTask {
     async fn prepare_single_upload(&self, index: usize) -> bool {
-        let Some(file) = self.files.get_mut(index) else {
+        let Some(file) = self.files.get(index) else {
             error!("task {} file {} not found", self.task_id(), index);
             return false;
         };
@@ -314,18 +319,21 @@ impl RequestTask {
 
         let processed = self.progress.lock().unwrap().processed[index] as u64;
         if self.conf.common_data.index == index as u32 {
-            let Ok(metadata) = file.metadata().await else {
+            let Ok(metadata) = task_control::file_metadata(file.clone()).await else {
                 error!("get file metadata failed");
                 return false;
             };
             if metadata.len() > self.progress.lock().unwrap().sizes[index] as u64 {
-                file.seek(SeekFrom::Start(self.conf.common_data.begins + processed))
-                    .await
+                task_control::file_seek(
+                    file,
+                    SeekFrom::Start(self.conf.common_data.begins + processed),
+                )
+                .await
             } else {
-                file.seek(SeekFrom::Start(processed)).await
+                task_control::file_seek(file.clone(), SeekFrom::Start(processed)).await
             }
         } else {
-            file.seek(SeekFrom::Start(processed)).await
+            task_control::file_seek(file, SeekFrom::Start(processed)).await
         }
         .is_ok()
     }
@@ -356,13 +364,13 @@ impl RequestTask {
         }
 
         for index in start..size {
-            let Some(file) = self.files.get_mut(index) else {
+            let Some(file) = self.files.get(index) else {
                 error!("task {} file {} not found", self.task_id(), index);
                 return false;
             };
             let processed = self.progress.lock().unwrap().processed[index] as u64;
             let target_start = if self.conf.common_data.index == index as u32 {
-                let Ok(metadata) = file.metadata().await else {
+                let Ok(metadata) = task_control::file_metadata(file.clone()).await else {
                     error!("get file metadata failed");
                     return false;
                 };
@@ -374,7 +382,7 @@ impl RequestTask {
             } else {
                 processed
             };
-            if let Err(e) = file.seek(SeekFrom::Start(target_start)).await {
+            if let Err(e) = task_control::file_seek(file, SeekFrom::Start(target_start)).await {
                 error!("file seek err:{:}", e);
                 return false;
             }

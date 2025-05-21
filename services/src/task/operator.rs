@@ -12,13 +12,12 @@
 // limitations under the License.
 
 use std::cmp::min;
-use std::pin::Pin;
+use std::io::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
 use ylong_http_client::HttpClientError;
-use ylong_runtime::io::AsyncWrite;
 
 use crate::manage::notifier::Notifier;
 use crate::service::notification_bar::{NotificationDispatcher, NOTIFY_PROGRESS_INTERVAL};
@@ -94,23 +93,24 @@ impl TaskOperator {
 
     pub(crate) fn poll_write_file(
         &self,
-        cx: &mut Context<'_>,
+        _cx: &mut Context<'_>,
         data: &[u8],
         skip_size: usize,
     ) -> Poll<Result<usize, HttpClientError>> {
-        let file = self.task.files.get_mut(0).unwrap();
-        let mut progress_guard = self.task.progress.lock().unwrap();
+        let file_mutex = self.task.files.get(0).unwrap();
+        let mut file = file_mutex.lock().unwrap();
+
         if self.abort_flag.load(Ordering::Acquire) {
             return Poll::Ready(Err(HttpClientError::user_aborted()));
         }
-        match Pin::new(file).poll_write(cx, data) {
-            Poll::Ready(Ok(size)) => {
+        match file.write(data) {
+            Ok(size) => {
+                let mut progress_guard = self.task.progress.lock().unwrap();
                 progress_guard.processed[0] += size;
                 progress_guard.common_data.total_processed += size;
                 Poll::Ready(Ok(size + skip_size))
             }
-            Poll::Pending => Poll::Pending,
-            Poll::Ready(Err(e)) => Poll::Ready(Err(HttpClientError::other(e))),
+            Err(e) => Poll::Ready(Err(HttpClientError::other(e))),
         }
     }
 }

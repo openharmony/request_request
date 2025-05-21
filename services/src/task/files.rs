@@ -11,12 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::cell::UnsafeCell;
 use std::fs::{File, OpenOptions};
 use std::io;
 use std::os::fd::FromRawFd;
-
-use ylong_runtime::fs::File as AsyncFile;
+use std::sync::{Arc, Mutex};
 
 use crate::error::{ErrorCode, ServiceError};
 use crate::task::bundle::get_name_and_index;
@@ -81,7 +79,7 @@ fn open_task_files(config: &TaskConfig) -> Result<(Files, Vec<i64>), ServiceErro
                     tid,
                     idx
                 );
-                files.push(AsyncFile::new(file));
+                files.push(Arc::new(Mutex::new(file)));
                 debug!(
                     "Get file size succeed - task_id: {}, idx: {}, size: {}",
                     tid, idx, size
@@ -110,7 +108,7 @@ fn open_task_files(config: &TaskConfig) -> Result<(Files, Vec<i64>), ServiceErro
                     open_file_readwrite(uid, &bundle_name, &fs.path)
                         .map_err(ServiceError::IoError)?
                 };
-                files.push(AsyncFile::new(file));
+                files.push(Arc::new(Mutex::new(file)));
                 sizes.push(-1)
             }
             _ => unreachable!("Action::Any in open_task_files should never reach"),
@@ -135,7 +133,7 @@ fn open_body_files(config: &TaskConfig) -> Result<Files, ServiceError> {
             );
             ServiceError::IoError(e)
         })?;
-        body_files.push(AsyncFile::new(file))
+        body_files.push(Arc::new(Mutex::new(file)))
     }
     Ok(Files::new(body_files))
 }
@@ -219,25 +217,18 @@ fn check_app_clone_bundle_name(uid: u64, bundle_name: &str) -> Result<String, Se
     Err(ServiceError::ErrorCode(ErrorCode::Other))
 }
 
-pub(crate) struct Files(UnsafeCell<Vec<AsyncFile>>);
+pub(crate) struct Files(Vec<Arc<Mutex<File>>>);
 
 impl Files {
-    fn new(files: Vec<AsyncFile>) -> Self {
-        Self(UnsafeCell::new(files))
+    fn new(files: Vec<Arc<Mutex<File>>>) -> Self {
+        Self(files)
     }
 
     pub(crate) fn len(&self) -> usize {
-        unsafe { &*self.0.get() }.len()
+        self.0.len()
     }
 
-    pub(crate) fn get(&self, index: usize) -> Option<&AsyncFile> {
-        unsafe { &*self.0.get() }.get(index)
-    }
-
-    pub(crate) fn get_mut(&self, index: usize) -> Option<&mut AsyncFile> {
-        unsafe { &mut *self.0.get() }.get_mut(index)
+    pub(crate) fn get(&self, index: usize) -> Option<Arc<Mutex<File>>> {
+        self.0.get(index).cloned()
     }
 }
-
-unsafe impl Sync for Files {}
-unsafe impl Send for Files {}
