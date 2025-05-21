@@ -93,8 +93,7 @@ private:
     static ExceptionErrorCode CheckDownloadFile(
         const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
     static bool IsUserFile(const std::string &path);
-    static ExceptionErrorCode CheckUserFileSpec(
-        const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, FileSpec &file);
+    static ExceptionErrorCode CheckUserFileSpec(const Config &config, FileSpec &file, bool isUpload);
     static bool CheckPathIsFile(const std::string &path);
     static ExceptionErrorCode GetFdUpload(const std::string &path, const Config &config);
     static ExceptionErrorCode CheckUploadFileSpec(

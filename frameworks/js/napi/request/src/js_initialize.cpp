@@ -29,6 +29,7 @@
 #include <string>
 #include <system_error>
 
+#include "file_uri.h"
 #include "log.h"
 #include "napi_utils.h"
 #include "net_conn_client.h"
@@ -1082,25 +1083,26 @@ void JsInitialize::StandardizeFileSpec(FileSpec &file)
     return;
 }
 
-bool JsInitialize::CheckUserFileSpec(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
-    const Config &config, FileSpec &file, ExceptionError &error)
+bool JsInitialize::CheckUserFileSpec(
+    const Config &config, FileSpec &file, ExceptionError &error, bool isUpload)
 {
     if (config.mode != Mode::FOREGROUND) {
         error.code = E_PARAMETER_CHECK;
         error.errInfo = "Parameter verification failed, user file can only for Mode::FOREGROUND";
         return false;
     }
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(file.uri);
-    std::shared_ptr<AppExecFwk::DataAbilityHelper> dataAbilityHelper =
-        AppExecFwk::DataAbilityHelper::Creator(context, uri);
-    if (dataAbilityHelper == nullptr) {
-        REQUEST_HILOGE("dataAbilityHelper null");
-        error.code = E_PARAMETER_CHECK;
-        error.errInfo = "Parameter verification failed, dataAbilityHelper null";
-        SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_07, config.bundleName, "", error.errInfo);
-        return false;
+    std::shared_ptr<AppFileService::ModuleFileUri::FileUri> fileUri = 
+    std::make_shared<AppFileService::ModuleFileUri::FileUri>(file.uri);
+    std::string realPath = fileUri->GetRealPath();
+    if (isUpload) {
+        file.fd = open(realPath.c_str(), O_RDONLY);
+    } else {
+        if (config.firstInit) {
+            file.fd = open(realPath.c_str(), O_RDWR | O_TRUNC);
+        } else {
+            file.fd = open(realPath.c_str(), O_RDWR | O_APPEND);
+        }
     }
-    file.fd = dataAbilityHelper->OpenFile(*uri, "r");
     if (file.fd < 0) {
         REQUEST_HILOGE("Failed to open user file, fd: %{public}d", file.fd);
         error.code = E_FILE_IO;
@@ -1108,6 +1110,7 @@ bool JsInitialize::CheckUserFileSpec(const std::shared_ptr<OHOS::AbilityRuntime:
         SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_09, config.bundleName, "", error.errInfo);
         return false;
     }
+    fdsan_exchange_owner_tag(file.fd, 0, REQUEST_FDSAN_TAG);
     StandardizeFileSpec(file);
     return true;
 }
@@ -1132,7 +1135,7 @@ bool JsInitialize::CheckUploadFiles(
                 error.errInfo = "Parameter verification failed, user file can only for request.agent.";
                 return false;
             }
-            if (!CheckUserFileSpec(context, config, file, error)) {
+            if (!CheckUserFileSpec(config, file, error, true)) {
                 return false;
             }
             StandardizeFileSpec(file);
@@ -1180,6 +1183,24 @@ bool JsInitialize::CheckUploadFileSpec(const std::shared_ptr<OHOS::AbilityRuntim
 bool JsInitialize::CheckDownloadFile(
     const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, ExceptionError &error)
 {
+    if (IsUserFile(config.saveas)) {
+        if (config.version == Version::API9) {
+            error.code = E_PARAMETER_CHECK;
+            error.errInfo = "Parameter verification failed, user file can only for request.agent.";
+            return false;
+        }
+        if (!config.overwrite) {
+            error.code = E_PARAMETER_CHECK;
+            error.errInfo = "Parameter verification failed, download to user file must support overrite.";
+            return false;
+        }
+        FileSpec file = { .uri = config.saveas, .isUserFile = true };
+        if (!CheckUserFileSpec(config, file, error, false)) {
+            return false;
+        }
+        config.files.push_back(file);
+        return true;
+    }
     if (config.version == Version::API9) {
         std::string path = config.saveas;
         if (config.saveas.find('/') == 0) {

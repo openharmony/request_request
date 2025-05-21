@@ -2358,6 +2358,98 @@ export default function requestOperateTaskTest() {
     })
 
     /**
+     * @tc.number: testDownloadTaskUserFile001
+     * @tc.name: testDownloadTaskUserFile001
+     * @tc.desc: Test when download user file with wrong `Mode`
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskUserFile001', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        saveas: 'file://media/Photo/1/test.txt'
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          expect(false).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(true).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testDownloadTaskUserFile002
+     * @tc.name: testDownloadTaskUserFile002
+     * @tc.desc: Test when download user file without `overrite`
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskUserFile002', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.FOREGROUND,
+        saveas: 'file://media/Photo/1/test.txt',
+        overwrite: false,
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          expect(false).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(true).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testDownloadTaskUserFile003
+     * @tc.name: testDownloadTaskUserFile003
+     * @tc.desc: Test when download user file without `overrite`
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadTaskUserFile003', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.FOREGROUND,
+        saveas: 'file://media/Photo/1/test.txt',
+        overwrite: true,
+      }
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          expect(false).assertTrue();
+          done();
+        }).catch((err) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(true).assertTrue();
+        done();
+      }
+    })
+
+    /**
      * @tc.number: testUploadTaskUserFile001
      * @tc.name: testUploadTaskUserFile001
      * @tc.desc: Test when upload user file with wrong `Mode`

@@ -324,6 +324,32 @@ export default function requestDownloadFileTest() {
     })
 
     /**
+     * @tc.number: testDownloadFile0032
+     * @tc.name: testDownloadFile0032
+     * @tc.desc: Test create for downloadfile of user file.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadFile0032', 0, async function (done) {
+      let conf = {
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'file://media/Photo/1/test.txt',
+        background: false,
+      }
+      try {
+        request.downloadFile(context, conf, async (err, data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(true).assertTrue();
+        done();
+      }
+    })
+
+    /**
      * @tc.number: testDownloadFileOn001
      * @tc.name: testDownloadFileOn001
      * @tc.desc: Test downloadFile task on for error type like 'test'

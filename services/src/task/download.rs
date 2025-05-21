@@ -299,6 +299,10 @@ fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
     use crate::task::files::{convert_path, BundleCache};
 
     let config = task.config();
+    // download_server is unable to access the file path of user file.
+    if config.file_specs[0].is_user_file {
+        return Ok(());
+    }
     let mut bundle_cache = BundleCache::new(config);
     let bundle_name = bundle_cache
         .get_value()

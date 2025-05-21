@@ -156,6 +156,13 @@ int32_t RequestManagerImpl::Create(const Config &config, int32_t seq, std::strin
     if (ret != E_OK) {
         REQUEST_HILOGE("Request create, seq: %{public}d, failed: %{public}d", seq, ret);
     }
+    for (auto &file : config.files) {
+        if (file.isUserFile) {
+            if (file.fd > 0) {
+                fdsan_close_with_tag(file.fd, REQUEST_FDSAN_TAG);
+            }
+        }
+    }
     return ret;
 }
 
