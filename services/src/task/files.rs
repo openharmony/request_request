@@ -158,10 +158,18 @@ fn open_file_readonly(uid: u64, bundle_name: &str, path: &str) -> io::Result<Fil
 }
 
 pub(crate) fn convert_path(uid: u64, bundle_name: &str, path: &str) -> String {
-    let uuid = uid / 200000;
+    let uuid = get_uuid_from_uid(uid);
     let base_replace = format!("{}/base/{}", uuid, bundle_name);
     path.replacen("storage", "app", 1)
         .replacen("base", &base_replace, 1)
+}
+
+fn get_uuid_from_uid(uid: u64) -> u64 {
+    uid / 200000
+}
+
+pub(crate) fn check_same_uuid(uid1: u64, uid2: u64) -> bool {
+    get_uuid_from_uid(uid1) == get_uuid_from_uid(uid2)
 }
 
 pub(crate) struct BundleCache<'a> {

@@ -21,6 +21,7 @@ use crate::service::command::{set_code_with_index, CONTROL_MAX};
 use crate::service::permission::PermissionChecker;
 use crate::service::RequestServiceStub;
 use crate::task::config::Version;
+use crate::task::files::check_same_uuid;
 
 impl RequestServiceStub {
     pub(crate) fn remove(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
@@ -51,7 +52,7 @@ impl RequestServiceStub {
             return Err(IpcStatusCode::Failed);
         }
 
-        let uid = ipc::Skeleton::calling_uid();
+        let ipc_uid = ipc::Skeleton::calling_uid();
 
         for i in 0..len {
             let task_id: String = data.read()?;
@@ -66,32 +67,38 @@ impl RequestServiceStub {
                 set_code_with_index(&mut vec, i, ErrorCode::TaskNotFound);
                 continue;
             };
-            let mut uid = uid;
-            if permission {
-                // skip uid check if task used by innerkits
-                info!("{} remove permission inner", task_id);
-                match RequestDb::get_instance().query_task_uid(task_id) {
-                    Some(id) => uid = id,
-                    None => {
-                        set_code_with_index(&mut vec, i, ErrorCode::TaskNotFound);
-                        continue;
-                    }
-                };
-            } else if !self.check_task_uid(task_id, uid) {
+
+            let task_uid = match RequestDb::get_instance().query_task_uid(task_id) {
+                Some(uid) => uid,
+                None => {
+                    set_code_with_index(&mut vec, i, ErrorCode::TaskNotFound);
+                    continue;
+                }
+            };
+
+            if !check_same_uuid(ipc_uid, task_uid) {
+                set_code_with_index(&mut vec, i, ErrorCode::TaskNotFound);
+                continue;
+            }
+
+            if (task_uid != ipc_uid) && !permission {
                 set_code_with_index(&mut vec, i, ErrorCode::TaskNotFound);
                 error!(
                     "Service remove, failed: check task uid. tid: {}, uid: {}",
-                    task_id, uid
+                    task_id, ipc_uid
                 );
                 sys_event!(
                     ExecError,
                     DfxCode::INVALID_IPC_MESSAGE_A10,
-                    &format!("Service remove, failed: check task uid. tid: {}, uid: {}",task_id, uid)
+                    &format!(
+                        "Service remove, failed: check task uid. tid: {}, uid: {}",
+                        task_id, ipc_uid
+                    )
                 );
                 continue;
             }
 
-            let (event, rx) = TaskManagerEvent::remove(uid, task_id);
+            let (event, rx) = TaskManagerEvent::remove(task_uid, task_id);
             if !self.task_manager.lock().unwrap().send_event(event) {
                 error!("Service remove, failed: task_manager err: {}", task_id);
                 sys_event!(
@@ -112,7 +119,10 @@ impl RequestServiceStub {
                     sys_event!(
                         ExecError,
                         DfxCode::INVALID_IPC_MESSAGE_A10,
-                        &format!("Service remove, tid: {}, failed: receives ret failed",task_id)
+                        &format!(
+                            "Service remove, tid: {}, failed: receives ret failed",
+                            task_id
+                        )
                     );
                     set_code_with_index(&mut vec, i, ErrorCode::Other);
                     continue;

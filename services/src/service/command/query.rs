@@ -16,9 +16,11 @@ use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::info::TaskInfo;
+use crate::manage::database::RequestDb;
 use crate::service::command::{set_code_with_index_other, GET_INFO_MAX};
 use crate::service::permission::PermissionChecker;
 use crate::service::{serialize_task_info, RequestServiceStub};
+use crate::task::files::check_same_uuid;
 use crate::utils::is_system_api;
 
 impl RequestServiceStub {
@@ -58,6 +60,7 @@ impl RequestServiceStub {
             return Err(IpcStatusCode::Failed);
         }
 
+        let ipc_uid = ipc::Skeleton::calling_uid();
         for i in 0..len {
             let task_id: String = data.read()?;
             info!("Service query tid {}", task_id);
@@ -72,6 +75,19 @@ impl RequestServiceStub {
                 set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
                 continue;
             };
+
+            let task_uid = match RequestDb::get_instance().query_task_uid(task_id) {
+                Some(uid) => uid,
+                None => {
+                    set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
+                    continue;
+                }
+            };
+
+            if !check_same_uuid(ipc_uid, task_uid) {
+                set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
+                continue;
+            }
 
             let info = self.task_manager.lock().unwrap().query(task_id, action);
             match info {

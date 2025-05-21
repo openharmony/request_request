@@ -20,6 +20,7 @@ use crate::manage::events::TaskManagerEvent;
 use crate::service::command::{set_code_with_index, CONTROL_MAX};
 use crate::service::permission::PermissionChecker;
 use crate::service::RequestServiceStub;
+use crate::task::files::check_same_uuid;
 
 impl RequestServiceStub {
     pub(crate) fn start(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
@@ -48,7 +49,10 @@ impl RequestServiceStub {
 
         if len == 1 {
             self.start_one_task(data, permission, &mut vec)?;
-        } else if self.start_batch_tasks(data, permission, &mut vec, len).is_err() {
+        } else if self
+            .start_batch_tasks(data, permission, &mut vec, len)
+            .is_err()
+        {
             self.start_batch_tasks(data, permission, &mut vec, len)?;
         }
 
@@ -59,8 +63,13 @@ impl RequestServiceStub {
         Ok(())
     }
 
-    fn start_one_task(&self, data: &mut MsgParcel, permission: bool, rets: &mut [ErrorCode]) -> IpcResult<()> {
-        let uid = ipc::Skeleton::calling_uid();
+    fn start_one_task(
+        &self,
+        data: &mut MsgParcel,
+        permission: bool,
+        rets: &mut [ErrorCode],
+    ) -> IpcResult<()> {
+        let ipc_uid = ipc::Skeleton::calling_uid();
         let task_id: String = data.read()?;
         info!("Service start tid {}", task_id);
         let Ok(task_id) = task_id.parse::<u32>() else {
@@ -74,35 +83,37 @@ impl RequestServiceStub {
             return Ok(());
         };
 
-        let mut uid = uid;
-        if permission {
-            // skip uid check if task used by innerkits
-            info!("{} start permission inner", task_id);
-            match RequestDb::get_instance().query_task_uid(task_id) {
-                Some(id) => uid = id,
-                None => {
-                    set_code_with_index(rets, 0, ErrorCode::TaskNotFound);
-                    return Ok(());
-                }
-            };
-        } else if !self.check_task_uid(task_id, uid) {
+        let task_uid = match RequestDb::get_instance().query_task_uid(task_id) {
+            Some(uid) => uid,
+            None => {
+                set_code_with_index(rets, 0, ErrorCode::TaskNotFound);
+                return Ok(());
+            }
+        };
+
+        if (task_uid != ipc_uid) && !permission {
+            set_code_with_index(rets, 0, ErrorCode::TaskNotFound);
+            return Ok(());
+        }
+
+        if task_uid != ipc_uid && !permission {
             set_code_with_index(rets, 0, ErrorCode::TaskNotFound);
             error!(
                 "Service start, failed: check task uid. tid: {}, uid: {}",
-                task_id, uid
+                task_id, ipc_uid
             );
             sys_event!(
                 ExecError,
                 DfxCode::INVALID_IPC_MESSAGE_A14,
                 &format!(
                     "Service start, failed: check task uid. tid: {}, uid: {}",
-                    task_id, uid
+                    task_id, ipc_uid
                 )
             );
             return Ok(());
         }
 
-        let (event, rx) = TaskManagerEvent::start(uid, task_id);
+        let (event, rx) = TaskManagerEvent::start(task_uid, task_id);
         if !self.task_manager.lock().unwrap().send_event(event) {
             error!("Service start, failed: task_manager err: {}", task_id);
             sys_event!(
@@ -144,8 +155,14 @@ impl RequestServiceStub {
         Ok(())
     }
 
-    fn start_batch_tasks(&self, data: &mut MsgParcel, permission: bool, rets: &mut [ErrorCode], len: usize) -> IpcResult<()> {
-        let uid = ipc::Skeleton::calling_uid();
+    fn start_batch_tasks(
+        &self,
+        data: &mut MsgParcel,
+        permission: bool,
+        rets: &mut [ErrorCode],
+        len: usize,
+    ) -> IpcResult<()> {
+        let ipc_uid = ipc::Skeleton::calling_uid();
         let mut tasks = Vec::with_capacity(len);
         for i in 0..len {
             let task_id: String = data.read()?;
@@ -161,34 +178,36 @@ impl RequestServiceStub {
                 continue;
             };
 
-            let mut uid = uid;
-            if permission {
-                // skip uid check if task used by innerkits
-                info!("{} start permission inner", task_id);
-                match RequestDb::get_instance().query_task_uid(task_id) {
-                    Some(id) => uid = id,
-                    None => {
-                        set_code_with_index(rets, i, ErrorCode::TaskNotFound);
-                        continue;
-                    }
-                };
-            } else if !self.check_task_uid(task_id, uid) {
+            let task_uid = match RequestDb::get_instance().query_task_uid(task_id) {
+                Some(uid) => uid,
+                None => {
+                    set_code_with_index(rets, i, ErrorCode::TaskNotFound);
+                    continue;
+                }
+            };
+
+            if !check_same_uuid(ipc_uid, task_uid) {
+                set_code_with_index(rets, i, ErrorCode::TaskNotFound);
+                continue;
+            }
+
+            if (task_uid != ipc_uid) && !permission {
                 set_code_with_index(rets, i, ErrorCode::TaskNotFound);
                 error!(
                     "Service start, failed: check task uid. tid: {}, uid: {}",
-                    task_id, uid
+                    task_id, ipc_uid
                 );
                 sys_event!(
                     ExecError,
                     DfxCode::INVALID_IPC_MESSAGE_A14,
                     &format!(
                         "Service start, failed: check task uid. tid: {}, uid: {}",
-                        task_id, uid
+                        task_id, ipc_uid
                     )
                 );
                 continue;
             }
-            tasks.push((uid, task_id));
+            tasks.push((task_uid, task_id));
         }
         let (event, rx) = TaskManagerEvent::start_batch(tasks.clone());
         if !self.task_manager.lock().unwrap().send_event(event) {
@@ -201,17 +220,24 @@ impl RequestServiceStub {
             return Err(IpcStatusCode::Failed);
         }
         let Some(error_map) = rx.get() else {
-            error!("Service start, tid: {:?} failed: receives ret failed", tasks);
+            error!(
+                "Service start, tid: {:?} failed: receives ret failed",
+                tasks
+            );
             sys_event!(
                 ExecError,
                 DfxCode::INVALID_IPC_MESSAGE_A14,
-                &format!("Service start, tid: {:?} failed: receives ret failed", tasks)
+                &format!(
+                    "Service start, tid: {:?} failed: receives ret failed",
+                    tasks
+                )
             );
             return Err(IpcStatusCode::Failed);
         };
 
-        // The error code is ErrorCode::Other, indicating that the task has been dispatched to the TaskManager,
-        // and it is necessary to retrieve the execution result of the TaskManager from the error_map.
+        // The error code is ErrorCode::Other, indicating that the task has been
+        // dispatched to the TaskManager, and it is necessary to retrieve the
+        // execution result of the TaskManager from the error_map.
         let mut index = 0;
         for ret in rets.iter_mut() {
             if matches!(*ret, ErrorCode::Other) {
