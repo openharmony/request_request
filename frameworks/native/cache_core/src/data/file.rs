@@ -296,7 +296,7 @@ impl CacheManager {
         }
         let res = match res {
             Err(e) => {
-                error!("{} ram update from file failed {}", task_id.brief(), e);
+                info!("{} ram update from file failed {}", task_id.brief(), e);
                 None
             }
             Ok(weak) => {
