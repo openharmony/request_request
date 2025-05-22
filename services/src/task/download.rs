@@ -16,7 +16,7 @@ use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::task::{Context, Poll};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use ylong_http_client::async_impl::{DownloadOperator, Downloader, Response};
 use ylong_http_client::{ErrorKind, HttpClientError, SpeedLimit, Timeout};
@@ -73,10 +73,17 @@ pub(crate) fn build_downloader(
 pub(crate) async fn download(task: Arc<RequestTask>, abort_flag: Arc<AtomicBool>) {
     task.tries.store(0, Ordering::SeqCst);
     loop {
+        let begin_time = Instant::now();
         if let Err(e) = download_inner(task.clone(), abort_flag.clone()).await {
             match e {
                 TaskError::Waiting(phase) => match phase {
                     TaskPhase::NeedRetry => {
+                        let download_time = begin_time.elapsed().as_secs();
+                        task.rest_time.fetch_sub(download_time, Ordering::SeqCst);
+                        let mut client = task.client.lock().await;
+                        client.total_timeout(Timeout::from_secs(
+                            task.rest_time.load(Ordering::SeqCst),
+                        ));
                         continue;
                     }
                     TaskPhase::UserAbort => {}
@@ -129,7 +136,8 @@ pub(crate) async fn download_inner(
         .as_secs() as u64;
 
     task.start_time.store(start_time as u64, Ordering::SeqCst);
-    let response = task.client.request(request).await;
+    let client = task.client.lock().await;
+    let response = client.request(request).await;
     match response.as_ref() {
         Ok(response) => {
             let status_code = response.status();
