@@ -55,6 +55,7 @@ struct CTaskInfo {
     CommonTaskInfo commonData;
     int64_t maxSpeed;
     int32_t statusCode;
+    uint64_t taskTime;
 };
 
 struct TaskInfo {
@@ -71,6 +72,7 @@ struct TaskInfo {
     CommonTaskInfo commonData;
     int64_t maxSpeed;
     int32_t statusCode;
+    uint64_t taskTime;
 };
 
 struct CUpdateInfo {

@@ -28,30 +28,52 @@ use crate::service::notification_bar::NotificationDispatcher;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::files::convert_path;
 
-const CONNECT_TIMEOUT: u64 = 60;
-const SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
 const SECONDS_IN_TEN_MINUTES: u64 = 10 * 60;
+const DEFAULT_CONNECTION_TIMEOUT: u64 = 60;
+const DEFAULT_TOTAL_TIMEOUT: u64 = 60 * 60 * 24 * 7;
 
 pub(crate) fn build_client(
     config: &TaskConfig,
+    task_time: u64,
     #[cfg(feature = "oh")] mut system: SystemConfig,
 ) -> Result<Client, Box<dyn Error + Send + Sync>> {
-    let mut client = Client::builder()
-        .connect_timeout(Timeout::from_secs(CONNECT_TIMEOUT))
-        .request_timeout(Timeout::from_secs(SECONDS_IN_ONE_WEEK))
-        .min_tls_version(TlsVersion::TLS_1_2);
-    if !NotificationDispatcher::get_instance()
-        .check_task_notification_available(config.common_data.task_id)
-    {
-        client = client.request_timeout(Timeout::from_secs(SECONDS_IN_TEN_MINUTES));
+    let mut rest_timeout = 0;
+    let mut connection_timeout = config.common_data.timeout.connection_timeout;
+    if connection_timeout == 0 {
+        connection_timeout = DEFAULT_CONNECTION_TIMEOUT;
     }
 
+    let mut total_timeout = config.common_data.timeout.total_timeout;
+
+    if total_timeout == 0 {
+        if !NotificationDispatcher::get_instance()
+            .check_task_notification_available(config.common_data.task_id)
+        {
+            total_timeout = SECONDS_IN_TEN_MINUTES;
+        } else {
+            total_timeout = DEFAULT_TOTAL_TIMEOUT;
+        }
+    }
+
+    if total_timeout > task_time {
+        rest_timeout = total_timeout - task_time;
+    }
+    let mut client = Client::builder()
+        .connect_timeout(Timeout::from_secs(connection_timeout))
+        .request_timeout(Timeout::from_secs(rest_timeout))
+        .min_tls_version(TlsVersion::TLS_1_2);
     client = client.sockets_owner(config.common_data.uid as u32, config.common_data.uid as u32);
     // Set redirect strategy.
     if config.common_data.redirect {
         client = client.redirect(Redirect::limited(usize::MAX));
     } else {
         client = client.redirect(Redirect::none());
+    }
+
+    if config.common_data.min_speed.speed > 0 && config.common_data.min_speed.duration > 0 {
+        client = client
+            .min_speed_limit(config.common_data.min_speed.speed as u64)
+            .min_speed_interval(config.common_data.min_speed.duration as u64);
     }
 
     // Set HTTP proxy.

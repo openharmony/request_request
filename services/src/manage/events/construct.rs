@@ -65,6 +65,7 @@ impl TaskManager {
 
         let (files, client) = check_config(
             &config,
+            0,
             #[cfg(feature = "oh")]
             system_config,
         )?;

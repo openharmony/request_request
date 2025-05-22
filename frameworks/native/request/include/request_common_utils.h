@@ -65,6 +65,7 @@ private:
     static constexpr const char *NETWORK_ACCOUNT_APP_INFO = "NetWork is offline and the account is stopped and the "
                                                             "app is"
                                                             "background or terminate";
+    static constexpr const char *LOW_SPEED_INFO = "Below low speed limit";
 
 public:
     REQUEST_API static Faults GetFaultByReason(Reason code);

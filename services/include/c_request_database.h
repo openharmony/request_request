@@ -36,7 +36,8 @@ constexpr const char *DB_NAME = "/data/service/el1/public/database/request/reque
 constexpr int DATABASE_VERSION = 1;
 constexpr const char *REQUEST_DATABASE_VERSION_4_1_RELEASE = "API11_4.1-release";
 constexpr const char *REQUEST_DATABASE_VERSION_5_0_RELEASE = "API12_5.0-release";
-constexpr const char *REQUEST_DATABASE_VERSION = "API16_5.1-release";
+constexpr const char *REQUEST_DATABASE_VERSION_5_1_RELEASE = "API16_5.1-release";
+constexpr const char *REQUEST_DATABASE_VERSION = "API20_6.0-release";
 constexpr const char *REQUEST_TASK_TABLE_NAME = "request_task";
 constexpr int QUERY_ERR = -1;
 constexpr int QUERY_OK = 0;
@@ -44,6 +45,7 @@ constexpr int WITHOUT_VERSION_TABLE = 40;
 constexpr int API11_4_1_RELEASE = 41;
 constexpr int API12_5_0_RELEASE = 50;
 constexpr int API16_5_1_RELEASE = 51;
+constexpr int API20_6_0_RELEASE = 60;
 constexpr int INVALID_VERSION = -50;
 constexpr int CHECK_VERSION_FAILED = -1;
 
@@ -115,6 +117,16 @@ constexpr const char *REQUEST_TASK_TABLE_ADD_MAX_SPEED = "ALTER TABLE request_ta
 constexpr const char *REQUEST_TASK_TABLE_ADD_MULTIPART = "ALTER TABLE request_task ADD COLUMN multipart INTEGER";
 constexpr const char *REQUEST_TASK_TABLE_ADD_STATUS_CODE = "ALTER TABLE request_task ADD COLUMN status_code INTEGER";
 
+constexpr const char *REQUEST_TASK_TABLE_ADD_MIN_SPEED = "ALTER TABLE request_task ADD COLUMN min_speed INTEGER";
+constexpr const char *REQUEST_TASK_TABLE_ADD_MIN_SPEED_DURATION = "ALTER TABLE request_task ADD COLUMN "
+                                                                  "min_speed_duration INTEGER";
+constexpr const char *REQUEST_TASK_TABLE_ADD_CONNECTION_TIMEOUT = "ALTER TABLE request_task ADD COLUMN "
+                                                                  "connection_timeout INTEGER";
+constexpr const char *REQUEST_TASK_TABLE_ADD_TOTAL_TIMEOUT = "ALTER TABLE request_task ADD COLUMN total_timeout "
+                                                             "INTEGER";
+constexpr const char *REQUEST_TASK_TABLE_ADD_TASK_TIME = "ALTER TABLE request_task ADD COLUMN task_time "
+                                                             "INTEGER";
+
 struct TaskFilter;
 struct NetworkInfo;
 struct TaskQosInfo;
@@ -168,6 +180,7 @@ struct CVectorWrapper {
 // Request Database Modify.
 bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig);
 bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo);
+bool UpdateRequestTaskTime(uint32_t taskId, uint64_t taskTime);
 bool UpdateRequestTaskState(uint32_t taskId, CUpdateStateInfo *updateStateInfo);
 void RequestDBRemoveRecordsFromTime(uint64_t time);
 CTaskInfo *GetTaskInfo(uint32_t taskId);

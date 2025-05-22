@@ -17,6 +17,7 @@ use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::task::{Context, Poll};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use ylong_http_client::async_impl::{Body, MultiPart, Part, Request, UploadOperator, Uploader};
 use ylong_http_client::{ErrorKind, HttpClientError, ReusableReader};
@@ -435,6 +436,12 @@ async fn upload_inner(
     let size = task.conf.file_specs.len();
     let start = task.progress.lock().unwrap().common_data.index;
 
+    let start_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as u64;
+    task.start_time.store(start_time as u64, Ordering::SeqCst);
+
     if task.conf.common_data.multipart {
         #[cfg(feature = "oh")]
         let _trace = Trace::new(&format!("upload file:{} index:{}", task.task_id(), start));
@@ -596,6 +603,7 @@ mod test {
 
         let (files, client) = check_config(
             &config,
+            0,
             #[cfg(feature = "oh")]
             system_config,
         )

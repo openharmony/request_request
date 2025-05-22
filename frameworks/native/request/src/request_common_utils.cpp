@@ -31,7 +31,7 @@ Faults CommonUtils::GetFaultByReason(Reason code)
         { BUILD_CLIENT_FAILED, Faults::PARAM },
         { BUILD_REQUEST_FAILED, Faults::PARAM },
         { GET_FILESIZE_FAILED, Faults::FSIO },
-        { CONTINUOUS_TASK_TIMEOUT, Faults::OTHERS },
+        { CONTINUOUS_TASK_TIMEOUT, Faults::TIMEOUT },
         { CONNECT_ERROR, Faults::TCP },
         { REQUEST_ERROR, Faults::PROTOCOL },
         { UPLOAD_FILE_ERROR, Faults::OTHERS },
@@ -50,6 +50,7 @@ Faults CommonUtils::GetFaultByReason(Reason code)
         { NETWORK_ACCOUNT, Faults::DISCONNECTED },
         { APP_ACCOUNT, Faults::OTHERS },
         { NETWORK_APP_ACCOUNT, Faults::DISCONNECTED },
+        { LOW_SPEED, Faults::LOW_SPEED },
     };
     static const std::unordered_set<Faults> downgradeFaults = { Faults::PARAM, Faults::DNS, Faults::TCP, Faults::SSL,
         Faults::REDIRECT };
@@ -102,6 +103,7 @@ std::string CommonUtils::GetMsgByReason(Reason code)
         { NETWORK_ACCOUNT, NETWORK_ACCOUNT_INFO },
         { APP_ACCOUNT, APP_ACCOUNT_INFO },
         { NETWORK_APP_ACCOUNT, NETWORK_ACCOUNT_APP_INFO },
+        { LOW_SPEED, LOW_SPEED_INFO },
     };
     auto iter = reasonMsg.find(code);
     if (iter == reasonMsg.end()) {

@@ -50,6 +50,8 @@ static constexpr uint32_t NOTIFICATION_TITLE_MAXIMUM = 1024;
 static constexpr uint32_t NOTIFICATION_TEXT_MAXIMUM = 3072;
 static constexpr uint32_t PROXY_MAXIMUM = 512;
 static constexpr uint32_t MAX_UPLOAD_ON15_FILES = 100;
+static constexpr uint32_t MIN_TIMEOUT = 1;
+static constexpr uint32_t MAX_TIMEOUT = 604800;
 
 namespace OHOS::Request {
 napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Version version, bool firstInit)
@@ -426,6 +428,12 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
     if (!ParseNotification(env, jsConfig, config, errInfo)) {
         return false;
     }
+    if (!ParseMinSpeed(env, jsConfig, config, errInfo)) {
+        return false;
+    }
+    if (!ParseTimeout(env, jsConfig, config, errInfo)) {
+        return false;
+    }
     ParseCertificatePins(env, config.url, config.certificatePins);
     ParseMethod(env, jsConfig, config);
     ParseRoaming(env, jsConfig, config);
@@ -465,6 +473,68 @@ bool JsInitialize::ParseNotification(napi_env env, napi_value jsConfig, Config &
         }
         if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, notification, "disable")) != napi_undefined) {
             config.notification.disable = NapiUtils::Convert2Boolean(env, notification, "disable");
+        }
+    }
+    return true;
+}
+
+bool JsInitialize::ParseMinSpeed(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
+{
+    napi_value minSpeed = NapiUtils::GetNamedProperty(env, jsConfig, "minSpeed");
+    if (NapiUtils::GetValueType(env, minSpeed) != napi_undefined) {
+        napi_value value = NapiUtils::GetNamedProperty(env, minSpeed, "speed");
+        auto ty = NapiUtils::GetValueType(env, value);
+        if (ty != napi_undefined) {
+            if (ty != napi_number) {
+                REQUEST_HILOGE("GetNamedProperty err");
+                errInfo = "Incorrect parameter type, minSpeed.speed type is not of napi_number type";
+                return false;
+            }
+            config.minSpeed.speed = NapiUtils::Convert2Int64(env, value);
+            if (config.minSpeed.speed < 0) {
+                errInfo = "Parameter verification failed, minSpeed.speed must be greater than or equal to 0";
+                return false;
+            }
+        }
+        value = NapiUtils::GetNamedProperty(env, minSpeed, "duration");
+        ty = NapiUtils::GetValueType(env, value);
+        if (ty != napi_undefined) {
+            if (ty != napi_number) {
+                REQUEST_HILOGE("GetNamedProperty err");
+                errInfo = "Incorrect parameter type, minSpeed.duration type is not of napi_number type";
+                return false;
+            }
+            config.minSpeed.duration = NapiUtils::Convert2Int64(env, value);
+            if (config.minSpeed.duration < 0) {
+                errInfo = "Parameter verification failed, minSpeed.duration must be greater than or equal to 0";
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool JsInitialize::ParseTimeout(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
+{
+    napi_value timeout = NapiUtils::GetNamedProperty(env, jsConfig, "timeout");
+    if (NapiUtils::GetValueType(env, timeout) != napi_undefined) {
+        if (NapiUtils::GetValueType(env,
+            NapiUtils::GetNamedProperty(env, timeout, "connectionTimeout")) != napi_undefined) {
+            config.timeout.connectionTimeout =
+                static_cast<uint64_t>(NapiUtils::Convert2Int64(env, timeout, "connectionTimeout"));
+            if (config.timeout.connectionTimeout < MIN_TIMEOUT) {
+                errInfo = "Parameter verification failed, the connectionTimeout is less than minimum";
+                return false;
+            }
+        }
+        if (NapiUtils::GetValueType(env,
+            NapiUtils::GetNamedProperty(env, timeout, "totalTimeout")) != napi_undefined) {
+            config.timeout.totalTimeout =
+                static_cast<uint64_t>(NapiUtils::Convert2Int64(env, timeout, "totalTimeout"));
+            if (config.timeout.totalTimeout < MIN_TIMEOUT || config.timeout.totalTimeout > MAX_TIMEOUT) {
+                errInfo = "Parameter verification failed, the totalTimeout exceeds the limit";
+                return false;
+            }
         }
     }
     return true;
