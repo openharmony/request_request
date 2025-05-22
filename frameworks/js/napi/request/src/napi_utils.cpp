@@ -809,6 +809,10 @@ void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileDa
     std::ifstream inputFile(filePath.c_str(), std::ios::binary);
     if (inputFile.is_open()) {
         inputFile.seekg(0, std::ios::end);
+        if (!inputFile) {
+            inputFile.close();
+            return;
+        }
         fileData.resize(inputFile.tellg());
         inputFile.seekg(0);
         inputFile.read(reinterpret_cast<char *>(fileData.data()), fileData.size());

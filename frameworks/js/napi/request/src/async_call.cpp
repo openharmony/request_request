@@ -72,7 +72,9 @@ napi_value AsyncCall::Call(const std::shared_ptr<Context> &context, const std::s
     }
     napi_value ret = nullptr;
     if (context->callbackRef_ == nullptr) {
-        napi_create_promise(context->env_, &context->defer_, &ret);
+        if (napi_create_promise(context->env_, &context->defer_, &ret) != napi_ok) {
+            return nullptr;
+        }
     } else {
         napi_get_undefined(context->env_, &ret);
     }
