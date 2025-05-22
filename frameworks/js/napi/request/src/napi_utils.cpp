@@ -263,6 +263,15 @@ napi_value Convert2JSValue(napi_env env, const std::vector<FileSpec> &files, con
     return data;
 }
 
+napi_value Convert2JSValue(napi_env env, const MinSpeed &minSpeed)
+{
+    napi_value value = nullptr;
+    napi_create_object(env, &value);
+    napi_set_named_property(env, value, "speed", Convert2JSValue(env, minSpeed.speed));
+    napi_set_named_property(env, value, "duration", Convert2JSValue(env, minSpeed.duration));
+    return value;
+}
+
 napi_value Convert2JSValue(napi_env env, TaskInfo &taskInfo)
 {
     napi_value value = nullptr;
@@ -344,6 +353,7 @@ napi_value Convert2JSValueConfig(napi_env env, Config &config)
     }
     napi_set_named_property(env, value, "extras", Convert2JSValue(env, config.extras));
     napi_set_named_property(env, value, "multipart", Convert2JSValue(env, config.multipart));
+    napi_set_named_property(env, value, "minSpeed", Convert2JSValue(env, config.minSpeed));
     return value;
 }
 

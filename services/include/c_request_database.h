@@ -125,7 +125,7 @@ constexpr const char *REQUEST_TASK_TABLE_ADD_CONNECTION_TIMEOUT = "ALTER TABLE r
 constexpr const char *REQUEST_TASK_TABLE_ADD_TOTAL_TIMEOUT = "ALTER TABLE request_task ADD COLUMN total_timeout "
                                                              "INTEGER";
 constexpr const char *REQUEST_TASK_TABLE_ADD_TASK_TIME = "ALTER TABLE request_task ADD COLUMN task_time "
-                                                             "INTEGER";
+                                                         "INTEGER";
 
 struct TaskFilter;
 struct NetworkInfo;

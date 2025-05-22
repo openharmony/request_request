@@ -88,7 +88,7 @@ private:
     static ExceptionError ParseOnOffParameters(
         napi_env env, napi_callback_info info, bool IsRequiredParam, JsParam &jsParam);
     static ExceptionError ParseSetMaxSpeedParameters(
-        napi_env env, napi_value self, napi_callback_info info, int64_t &maxSpeed);
+        napi_env env, napi_value self, napi_callback_info info, int64_t minSpeed, int64_t &maxSpeed);
     static napi_status GetResult(
         napi_env env, const std::shared_ptr<ExecContext> &context, const std::string &execType, napi_value &result);
     static void GetDownloadInfo(const TaskInfo &infoRes, DownloadInfo &info);

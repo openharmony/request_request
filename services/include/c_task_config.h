@@ -24,7 +24,6 @@
 #include "c_form_item.h"
 #include "c_string_wrapper.h"
 
-
 struct MinSpeed {
     int64_t speed;
     int64_t duration;

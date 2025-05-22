@@ -67,6 +67,7 @@ napi_value Convert2JSValue(napi_env env, WaitingReason reason);
 napi_value Convert2JSValueConfig(napi_env env, Config &config);
 napi_value Convert2JSValue(napi_env env, const std::shared_ptr<Response> &response);
 napi_value Convert2JSValue(napi_env env, const std::vector<FileSpec> &files, const std::vector<FormItem> &forms);
+napi_value Convert2JSValue(napi_env env, const MinSpeed &minSpeed);
 napi_value Convert2JSHeaders(napi_env env, const std::map<std::string, std::vector<std::string>> &header);
 napi_value Convert2JSHeadersAndBody(napi_env env, const std::map<std::string, std::string> &header,
     const std::vector<uint8_t> &bodyBytes, bool isSeparate);
