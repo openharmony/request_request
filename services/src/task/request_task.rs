@@ -47,7 +47,7 @@ const RETRY_INTERVAL: u64 = 400;
 
 pub(crate) struct RequestTask {
     pub(crate) conf: TaskConfig,
-    pub(crate) client: Client,
+    pub(crate) client: ylong_runtime::sync::Mutex<Client>,
     pub(crate) files: Files,
     pub(crate) body_files: Files,
     pub(crate) ctime: u64,
@@ -70,6 +70,7 @@ pub(crate) struct RequestTask {
     pub(crate) status_code: AtomicI32,
     pub(crate) start_time: AtomicU64,
     pub(crate) task_time: AtomicU64,
+    pub(crate) rest_time: AtomicU64,
 }
 
 impl RequestTask {
@@ -166,7 +167,7 @@ impl RequestTask {
 
         RequestTask {
             conf: config,
-            client,
+            client: ylong_runtime::sync::Mutex::new(client),
             files: files.files,
             body_files: files.body_files,
             ctime: time,
@@ -189,6 +190,7 @@ impl RequestTask {
             status_code: AtomicI32::new(0),
             start_time: AtomicU64::new(0),
             task_time: AtomicU64::new(0),
+            rest_time: AtomicU64::new(0),
         }
     }
 
@@ -199,11 +201,11 @@ impl RequestTask {
         client_manager: ClientManagerEntry,
         upload_resume: bool,
     ) -> Result<RequestTask, ErrorCode> {
-        let task_time = info.task_time;
+        let rest_time = get_rest_time(&config, info.task_time);
         #[cfg(feature = "oh")]
-        let (files, client) = check_config(&config, task_time, system)?;
+        let (files, client) = check_config(&config, rest_time, system)?;
         #[cfg(not(feature = "oh"))]
-        let (files, client) = check_config(&config, task_time)?;
+        let (files, client) = check_config(&config, rest_time)?;
 
         let file_len = files.files.len();
         let action = config.common_data.action;
@@ -236,7 +238,7 @@ impl RequestTask {
 
         let mut task = RequestTask {
             conf: config,
-            client,
+            client: ylong_runtime::sync::Mutex::new(client),
             files: files.files,
             body_files: files.body_files,
             ctime,
@@ -259,6 +261,7 @@ impl RequestTask {
             status_code: AtomicI32::new(info.status_code),
             start_time: AtomicU64::new(0),
             task_time: AtomicU64::new(info.task_time),
+            rest_time: AtomicU64::new(rest_time),
         };
         let background_notify = NotificationDispatcher::get_instance().register_task(&task);
         task.background_notify = background_notify;
@@ -697,7 +700,7 @@ fn check_file_specs(file_specs: &[FileSpec]) -> bool {
 
 pub(crate) fn check_config(
     config: &TaskConfig,
-    task_time: u64,
+    total_timeout: u64,
     #[cfg(feature = "oh")] system: SystemConfig,
 ) -> Result<(AttachedFiles, Client), ErrorCode> {
     if !check_file_specs(&config.file_specs) {
@@ -705,11 +708,34 @@ pub(crate) fn check_config(
     }
     let files = AttachedFiles::open(config).map_err(|_| ErrorCode::FileOperationErr)?;
     #[cfg(feature = "oh")]
-    let client = build_client(config, task_time, system).map_err(|_| ErrorCode::Other)?;
+    let client = build_client(config, total_timeout, system).map_err(|_| ErrorCode::Other)?;
 
     #[cfg(not(feature = "oh"))]
-    let client = build_client(config, task_time).map_err(|_| ErrorCode::Other)?;
+    let client = build_client(config, total_timeout).map_err(|_| ErrorCode::Other)?;
     Ok((files, client))
+}
+
+pub(crate) fn get_rest_time(config: &TaskConfig, task_time: u64) -> u64 {
+    const SECONDS_IN_TEN_MINUTES: u64 = 10 * 60;
+    const DEFAULT_TOTAL_TIMEOUT: u64 = 60 * 60 * 24 * 7;
+
+    let mut total_timeout = config.common_data.timeout.total_timeout;
+
+    if total_timeout == 0 {
+        if !NotificationDispatcher::get_instance()
+            .check_task_notification_available(config.common_data.task_id)
+        {
+            total_timeout = SECONDS_IN_TEN_MINUTES;
+        } else {
+            total_timeout = DEFAULT_TOTAL_TIMEOUT;
+        }
+    }
+
+    if total_timeout > task_time {
+        total_timeout - task_time
+    } else {
+        0
+    }
 }
 
 impl From<HttpClientError> for TaskError {

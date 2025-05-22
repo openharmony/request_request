@@ -17,10 +17,10 @@ use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::task::{Context, Poll};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use ylong_http_client::async_impl::{Body, MultiPart, Part, Request, UploadOperator, Uploader};
-use ylong_http_client::{ErrorKind, HttpClientError, ReusableReader};
+use ylong_http_client::{ErrorKind, HttpClientError, ReusableReader, Timeout};
 use ylong_runtime::io::{AsyncRead, ReadBuf};
 
 use super::info::State;
@@ -492,6 +492,30 @@ async fn upload_one_file<F>(
 where
     F: Fn(Arc<RequestTask>, usize, Arc<AtomicBool>) -> Option<Request>,
 {
+    let begin_time = Instant::now();
+    let result = upload_one_file_inner(
+        task.clone(),
+        index,
+        abort_flag.clone(),
+        build_upload_request,
+    )
+    .await;
+    let upload_time = begin_time.elapsed().as_secs();
+    task.rest_time.fetch_sub(upload_time, Ordering::SeqCst);
+    let mut client = task.client.lock().await;
+    client.total_timeout(Timeout::from_secs(task.rest_time.load(Ordering::SeqCst)));
+    result
+}
+
+async fn upload_one_file_inner<F>(
+    task: Arc<RequestTask>,
+    index: usize,
+    abort_flag: Arc<AtomicBool>,
+    build_upload_request: F,
+) -> Result<(), TaskError>
+where
+    F: Fn(Arc<RequestTask>, usize, Arc<AtomicBool>) -> Option<Request>,
+{
     info!(
         "begin 1 upload tid {} index {} sizes {}",
         task.conf.common_data.task_id,
@@ -503,7 +527,8 @@ where
         return Err(TaskError::Failed(Reason::BuildRequestFailed));
     };
 
-    let response = task.client.request(request).await;
+    let client = task.client.lock().await;
+    let response = client.request(request).await;
     match response.as_ref() {
         Ok(response) => {
             let status_code = response.status();
@@ -552,8 +577,12 @@ where
                     }
                 }
                 ErrorKind::BodyTransfer => {
-                    task.network_retry().await?;
-                    return Err(TaskError::Failed(Reason::OthersError));
+                    if format!("{}", e).contains("Below low speed limit") {
+                        return Err(TaskError::Failed(Reason::LowSpeed));
+                    } else {
+                        task.network_retry().await?;
+                        return Err(TaskError::Failed(Reason::OthersError));
+                    }
                 }
                 ErrorKind::UserAborted => return Err(TaskError::Waiting(TaskPhase::UserAbort)),
                 _ => {
