@@ -35,6 +35,7 @@ use crate::service::notification_bar::NotificationDispatcher;
 use crate::service::run_count::RunCountManagerEntry;
 use crate::task::config::Action;
 use crate::task::info::State;
+use crate::task::notify::WaitingCause;
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::utils::get_current_timestamp;
@@ -349,7 +350,7 @@ impl Scheduler {
         if let Some(info) = database.get_task_qos_info(task_id) {
             if info.state == State::Failed.repr {
                 if let Some(task_info) = database.get_task_info(task_id) {
-                    Scheduler::notify_fail(task_info, &self.client_manager);
+                    Scheduler::notify_fail(task_info, &self.client_manager, Reason::Default);
                     return;
                 }
             }
@@ -393,15 +394,43 @@ impl Scheduler {
                     State::Waiting,
                     Reason::RunningTaskMeetLimits,
                 );
+                Notifier::waiting(
+                    &self.client_manager,
+                    task_id,
+                    WaitingCause::TaskQueue,
+                );
             }
             State::Failed => {
                 info!("task {} cancel with state Failed", task_id);
                 Scheduler::reduce_task_count(uid, mode, task_count);
-                Scheduler::notify_fail(info, &self.client_manager);
+                Scheduler::notify_fail(info, &self.client_manager, Reason::Default);
             }
             State::Stopped | State::Removed => {
                 info!("task {} cancel with state Stopped or Removed", task_id);
                 NotificationDispatcher::get_instance().unregister_task(uid, task_id, true);
+            }
+            State::Waiting => {
+                info!("task {} cancel with state Waiting", task_id);
+                let reason = match info.common_data.reason {
+                    reason if reason == Reason::AppBackgroundOrTerminate.repr => {
+                        WaitingCause::AppState
+                    }
+                    reason
+                        if reason == Reason::NetworkOffline.repr
+                            || reason == Reason::UnsupportedNetworkType.repr =>
+                    {
+                        WaitingCause::Network
+                    }
+                    reason if reason == Reason::RunningTaskMeetLimits.repr => {
+                        WaitingCause::TaskQueue
+                    }
+                    reason if reason == Reason::AccountStopped.repr => WaitingCause::UserState,
+                    reason => {
+                        error!("task {} cancel with other reason {}", task_id, reason);
+                        WaitingCause::TaskQueue
+                    }
+                };
+                Notifier::waiting(&self.client_manager, task_id, reason);
             }
             state => {
                 info!(
@@ -432,12 +461,13 @@ impl Scheduler {
 
         database.update_task_state(task_id, State::Failed, reason);
         if let Some(info) = database.get_task_info(task_id) {
-            Scheduler::notify_fail(info, &self.client_manager);
+            Scheduler::notify_fail(info, &self.client_manager, reason);
         }
     }
 
-    fn notify_fail(info: TaskInfo, client_manager: &ClientManagerEntry) {
+    fn notify_fail(info: TaskInfo, client_manager: &ClientManagerEntry, reason: Reason) {
         Notifier::fail(client_manager, info.build_notify_data());
+        Notifier::faults(info.common_data.task_id, client_manager, reason);
         NotificationDispatcher::get_instance().publish_failed_notification(&info);
         #[cfg(feature = "oh")]
         Self::sys_event(info);
@@ -548,6 +578,11 @@ impl Scheduler {
             );
 
             database.update_task_state(task_id, State::Waiting, reason);
+            Notifier::waiting(
+                &self.client_manager,
+                task_id,
+                WaitingCause::Network,
+            );
             return false;
         }
 
@@ -557,6 +592,11 @@ impl Scheduler {
                 task_id, config.common_data.uid
             );
             database.update_task_state(task_id, State::Waiting, Reason::AppBackgroundOrTerminate);
+            Notifier::waiting(
+                &self.client_manager,
+                task_id,
+                WaitingCause::AppState,
+            );
             return false;
         }
         true

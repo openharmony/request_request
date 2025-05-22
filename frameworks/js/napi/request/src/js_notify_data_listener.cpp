@@ -163,6 +163,10 @@ static std::string SubscribeTypeToString(SubscribeType type)
             return "resume";
         case SubscribeType::RESPONSE:
             return "response";
+        case SubscribeType::FAULT:
+            return "fault";
+        case SubscribeType::WAIT:
+            return "wait";
         case SubscribeType::BUTT:
             return "butt";
     }
@@ -242,6 +246,65 @@ void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete ptr;
+    }
+}
+
+void JSNotifyDataListener::OnFaultsReceive(const std::shared_ptr<int32_t> &tid,
+    const std::shared_ptr<SubscribeType> &type, const std::shared_ptr<Reason> &reason)
+{
+    ReasonDataPtr *ptr = new (std::nothrow) ReasonDataPtr;
+    if (ptr == nullptr) {
+        REQUEST_HILOGE("ReasonDataPtr new failed");
+        return;
+    }
+    ptr->listener = shared_from_this();
+    ptr->reason = reason;
+    ptr->tid = tid;
+    int32_t ret = napi_send_event(
+        this->env_,
+        [ptr, this]() {
+            uint32_t paramNumber = NapiUtils::ONE_ARG;
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ptr->listener->env_, &scope);
+            if (scope == nullptr) {
+                REQUEST_HILOGE("napi_open_handle_scope null");
+                delete ptr;
+                return;
+            }
+            napi_value value = NapiUtils::Convert2JSValue(ptr->listener->env_, *(ptr->reason));
+            JsTask::ClearTaskTemp(std::to_string(*(ptr->tid)), true, false, false);
+            this->OnMessageReceive(&value, paramNumber);
+            napi_close_handle_scope(ptr->listener->env_, scope);
+            delete ptr;
+        },
+        napi_eprio_high);
+    if (ret != napi_ok) {
+        REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
+        delete ptr;
+    }
+}
+
+void JSNotifyDataListener::OnWaitReceive(std::int32_t taskId, WaitingReason reason)
+{
+    REQUEST_HILOGI(
+        "Notify wait, tid %{public}d, reason: %{public}d", taskId, static_cast<int32_t>(reason));
+    int32_t ret = napi_send_event(
+        this->env_,
+        [me = shared_from_this(), taskId, reason]() {
+            uint32_t paramNumber = NapiUtils::ONE_ARG;
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(me->env_, &scope);
+            if (scope == nullptr) {
+                REQUEST_HILOGE("napi_open_handle_scope null");
+                return;
+            }
+            napi_value value = NapiUtils::Convert2JSValue(me->env_, reason);
+            me->OnMessageReceive(&value, paramNumber);
+            napi_close_handle_scope(me->env_, scope);
+        },
+        napi_eprio_high);
+    if (ret != napi_ok) {
+        REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
     }
 }
 

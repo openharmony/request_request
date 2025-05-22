@@ -463,6 +463,9 @@ bool JsInitialize::ParseNotification(napi_env env, napi_value jsConfig, Config &
                 return false;
             }
         }
+        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, notification, "disable")) != napi_undefined) {
+            config.notification.disable = NapiUtils::Convert2Boolean(env, notification, "disable");
+        }
     }
     return true;
 }

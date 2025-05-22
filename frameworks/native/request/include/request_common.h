@@ -84,6 +84,13 @@ enum Reason : uint32_t {
     NETWORK_APP_ACCOUNT,
 };
 
+enum WaitingReason : uint32_t {
+    TaskQueueFull,
+    NetworkNotMatch,
+    AppBackground,
+    UserInactivated,
+};
+
 enum class SubscribeType : uint32_t {
     COMPLETED = 0,
     FAILED,
@@ -93,6 +100,8 @@ enum class SubscribeType : uint32_t {
     REMOVE,
     RESUME,
     RESPONSE,
+    FAULT,
+    WAIT,
     BUTT,
 };
 
@@ -120,6 +129,7 @@ struct FileSpec {
 struct Notification {
     std::optional<std::string> title = std::nullopt;
     std::optional<std::string> text = std::nullopt;
+    bool disable = false;
 };
 
 struct Config {

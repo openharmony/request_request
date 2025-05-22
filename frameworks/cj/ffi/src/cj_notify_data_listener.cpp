@@ -108,4 +108,16 @@ void CJNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
     RemoveJSTask(notifyData);
 }
 
+void CJNotifyDataListener::OnFaultsReceive(const std::shared_ptr<int32_t> &tid,
+    const std::shared_ptr<SubscribeType> &type, const std::shared_ptr<Reason> &reason)
+{
+    return;
+}
+
+void CJNotifyDataListener::OnWaitReceive(std::int32_t taskId, OHOS::Request::WaitingReason reason)
+{
+    // unimplemented
+    return;
+}
+
 } // namespace OHOS::CJSystemapi::Request

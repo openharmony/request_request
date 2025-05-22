@@ -34,6 +34,9 @@ public:
     napi_status AddListener(napi_value cb);
     napi_status RemoveListener(napi_value cb = nullptr);
     void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData) override;
+    void OnFaultsReceive(const std::shared_ptr<int32_t> &tid, const std::shared_ptr<SubscribeType> &type,
+        const std::shared_ptr<Reason> &reason) override;
+    void OnWaitReceive(std::int32_t taskId, WaitingReason reason) override;
 
 private:
     bool IsHeaderReceive(const std::shared_ptr<NotifyData> &notifyData);
@@ -45,6 +48,12 @@ private:
 struct NotifyDataPtr {
     std::shared_ptr<NotifyData> notifyData = nullptr;
     std::shared_ptr<JSNotifyDataListener> listener = nullptr;
+};
+
+struct ReasonDataPtr {
+    std::shared_ptr<JSNotifyDataListener> listener = nullptr;
+    std::shared_ptr<Reason> reason = nullptr;
+    std::shared_ptr<int32_t> tid = nullptr;
 };
 
 } // namespace OHOS::Request

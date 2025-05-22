@@ -100,7 +100,7 @@ public:
     bool SubscribeSA();
     bool UnsubscribeSA();
     int32_t CreateGroup(
-        std::string &gid, const bool gauge, std::optional<std::string> title, std::optional<std::string> text);
+        std::string &gid, const bool gauge, Notification &notification);
     int32_t AttachGroup(const std::string &gid, const std::vector<std::string> &tids);
     int32_t DeleteGroup(const std::string &gid);
 
@@ -115,6 +115,9 @@ private:
     void OnChannelBroken() override;
     void OnResponseReceive(const std::shared_ptr<Response> &response) override;
     void OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData) override;
+    void OnFaultsReceive(const std::shared_ptr<int32_t> &tid, const std::shared_ptr<SubscribeType> &type,
+        const std::shared_ptr<Reason> &reason) override;
+    void OnWaitReceive(std::int32_t taskId, WaitingReason reason) override;
 
 private:
     std::mutex serviceProxyMutex_;
