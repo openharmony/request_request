@@ -22,7 +22,6 @@ ohos_rust_unittest("rust_request_ut_test") {
     "../../common/utils:request_utils",
     "../../services:download_server_cxx",
     "../../test/rustest/c:request_test",
-    "//third_party/rust/crates/cxx:lib",
   ]
 
   rustflags = [ "--cfg=feature=\"oh\"" ]
@@ -36,6 +35,7 @@ ohos_rust_unittest("rust_request_ut_test") {
     "safwk:system_ability_fwk_rust",
     "samgr:samgr_rust",
     "ylong_runtime:ylong_runtime",
+    "rust_cxx:lib",
   ]
 
   subsystem_name = "request"

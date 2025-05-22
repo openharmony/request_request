@@ -51,10 +51,10 @@ ohos_static_library("request_utils_cxx") {
     "netmanager_base:net_conn_manager_if",
     "openssl:libcrypto_shared",
     "openssl:libssl_shared",
+    "rust_cxx:cxx_cppdeps",
   ]
   deps = [
     ":request_utils_cxx_gen",
-    "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
   subsystem_name = "request"
   part_name = "request"
@@ -74,10 +74,12 @@ ohos_rust_static_library("request_utils") {
 
   deps = [
     ":request_utils_cxx",
-    "//third_party/rust/crates/cxx:lib",
   ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "hilog:libhilog",
+    "rust_cxx:lib",
+  ]
   sources = [ "src/lib.rs" ]
   subsystem_name = "request"
   part_name = "request"
@@ -87,13 +89,14 @@ ohos_rust_unittest("rust_utils_ut_test") {
   module_out_path = "request/request/common"
 
   sources = [ "src/lib.rs" ]
-  external_deps = [ "hilog:libhilog" ]
-
   rustflags = [ "--cfg=feature=\"ohos\"" ]
 
   deps = [
     ":request_utils_cxx",
-    "//third_party/rust/crates/cxx:lib",
+  ]
+  external_deps = [
+    "hilog:libhilog",
+    "rust_cxx:lib",
   ]
   subsystem_name = "request"
   part_name = "request"

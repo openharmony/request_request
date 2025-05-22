@@ -30,8 +30,6 @@ ohos_unittest("saTest") {
     "src/c_string_wrapper_test.cpp",
   ]
 
-  deps = [ "//third_party/googletest:gmock_main" ]
-
   external_deps = [
     "ability_base:base",
     "ability_base:want",
@@ -53,6 +51,7 @@ ohos_unittest("saTest") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "googletest:gmock_main",
   ]
 }
 

@@ -36,10 +36,12 @@ ohos_static_library("netstack_rs_cxx") {
 
   sources += get_target_outputs(":netstack_rs_cxx_gen")
 
-  external_deps = [ "netstack:http_client" ]
+  external_deps = [
+    "netstack:http_client",
+    "rust_cxx:cxx_cppdeps",
+    ]
   deps = [
     ":netstack_rs_cxx_gen",
-    "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
 
   subsystem_name = "request"
@@ -61,7 +63,9 @@ ohos_rust_static_library("netstack_rs") {
   deps = [
     ":netstack_rs_cxx",
     "../ffrt_rs:ffrt_rs",
-    "//third_party/rust/crates/cxx:lib",
+  ]
+  external_deps = [
+    "rust_cxx:lib",
   ]
 
   subsystem_name = "request"
@@ -76,7 +80,9 @@ ohos_rust_unittest("rust_netstack_rs_ut_test") {
   deps = [
     ":netstack_rs_cxx",
     "../ffrt_rs:ffrt_rs",
-    "//third_party/rust/crates/cxx:lib",
+  ]
+  external_deps = [
+    "rust_cxx:lib",
   ]
 
   subsystem_name = "request"

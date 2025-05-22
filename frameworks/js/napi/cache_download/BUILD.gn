@@ -31,7 +31,6 @@ ohos_shared_library("cachedownload") {
   ]
   deps = [
     "../../../native/cache_download:preload_native",
-    "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
 
   external_deps = [
@@ -49,6 +48,7 @@ ohos_shared_library("cachedownload") {
     "init:libbegetutil",
     "ipc:ipc_single",
     "napi:ace_napi",
+    "rust_cxx:cxx_cppdeps",
   ]
 
   relative_install_dir = "module/request"

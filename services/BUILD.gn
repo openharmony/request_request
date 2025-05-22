@@ -97,13 +97,14 @@ ohos_static_library("download_server_cxx") {
     "resource_management:global_resmgr",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "rust_cxx:cxx_cppdeps",
+    "ylong_runtime:ylong_runtime",
   ]
 
   deps = [
     ":download_server_cxx_gen",
     "../common/sys_event:request_sysevent",
     "../etc/icon:request_notificaton_xmark_icon",
-    "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
 
   defines = []
@@ -137,7 +138,6 @@ ohos_rust_shared_library("download_server") {
     ":download_server_cxx",
     "../common/database:database_rs",
     "../common/utils:request_utils",
-    "//third_party/rust/crates/cxx:lib",
   ]
 
   external_deps = [
@@ -149,6 +149,7 @@ ohos_rust_shared_library("download_server") {
     "safwk:system_ability_fwk_rust",
     "samgr:samgr_rust",
     "ylong_runtime:ylong_runtime",
+    "rust_cxx:lib",
   ]
 
   crate_name = "download_server"

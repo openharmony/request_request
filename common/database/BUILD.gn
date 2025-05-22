@@ -39,11 +39,12 @@ ohos_static_library("database_rs_cxx") {
   external_deps = [
     "hilog:libhilog",
     "relational_store:native_rdb",
+    "rust_cxx:cxx_cppdeps",
+    "c_utils:utils",
   ]
 
   deps = [
     ":database_rs_cxx_gen",
-    "//third_party/rust/crates/cxx:cxx_cppdeps",
   ]
 
   subsystem_name = "request"
@@ -64,7 +65,9 @@ ohos_rust_static_library("database_rs") {
   sources = [ "src/lib.rs" ]
   deps = [
     ":database_rs_cxx",
-    "//third_party/rust/crates/cxx:lib",
+  ]
+  external_deps = [
+    "rust_cxx:lib",
   ]
 
   subsystem_name = "request"
@@ -78,7 +81,9 @@ ohos_rust_unittest("rust_database_rs_ut_test") {
 
   deps = [
     ":database_rs_cxx",
-    "//third_party/rust/crates/cxx:lib",
+  ]
+  external_deps = [
+    "rust_cxx:lib",
   ]
 
   subsystem_name = "request"

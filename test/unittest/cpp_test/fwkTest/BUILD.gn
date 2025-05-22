@@ -47,8 +47,6 @@ ohos_unittest("fwkTest") {
     "src/running_task_count_test.cpp",
   ]
 
-  deps = [ "//third_party/googletest:gmock_main" ]
-
   external_deps = [
     "ability_base:base",
     "ability_base:want",
@@ -74,6 +72,7 @@ ohos_unittest("fwkTest") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "googletest:gmock_main",
   ]
 }
 
