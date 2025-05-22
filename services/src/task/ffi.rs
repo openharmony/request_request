@@ -12,7 +12,8 @@
 // limitations under the License.
 
 use super::config::{
-    Action, CommonTaskConfig, ConfigSet, Mode, NetworkConfig, TaskConfig, Version,
+    Action, CommonTaskConfig, ConfigSet, MinSpeed, Mode, NetworkConfig, TaskConfig, Timeout,
+    Version,
 };
 use super::info::{CommonTaskInfo, InfoSet, TaskInfo, UpdateInfo};
 use super::notify::{CommonProgress, Progress};
@@ -74,6 +75,20 @@ pub(crate) struct CommonCTaskConfig {
     pub(crate) priority: u32,
     pub(crate) background: bool,
     pub(crate) multipart: bool,
+    pub(crate) min_speed: CMinSpeed,
+    pub(crate) timeout: CTimeout,
+}
+
+#[repr(C)]
+pub(crate) struct CMinSpeed {
+    pub(crate) speed: i64,
+    pub(crate) duration: i64,
+}
+
+#[repr(C)]
+pub(crate) struct CTimeout {
+    pub(crate) connection_timeout: u64,
+    pub(crate) total_timeout: u64,
 }
 
 #[repr(C)]
@@ -125,6 +140,7 @@ pub(crate) struct CTaskInfo {
     pub(crate) common_data: CommonTaskInfo,
     pub(crate) max_speed: i64,
     pub(crate) status_code: i32,
+    pub(crate) task_time: u64,
 }
 
 impl TaskInfo {
@@ -147,6 +163,7 @@ impl TaskInfo {
             common_data: self.common_data,
             max_speed: self.max_speed,
             status_code: self.status_code,
+            task_time: self.task_time,
         }
     }
 
@@ -187,6 +204,7 @@ impl TaskInfo {
             common_data: c_struct.common_data,
             max_speed: c_struct.max_speed,
             status_code: c_struct.status_code,
+            task_time: c_struct.task_time,
         };
 
         #[cfg(feature = "oh")]
@@ -266,6 +284,14 @@ impl TaskConfig {
                 priority: self.common_data.priority,
                 background: self.common_data.background,
                 multipart: self.common_data.multipart,
+                min_speed: CMinSpeed {
+                    speed: self.common_data.min_speed.speed,
+                    duration: self.common_data.min_speed.duration,
+                },
+                timeout: CTimeout {
+                    connection_timeout: self.common_data.timeout.connection_timeout,
+                    total_timeout: self.common_data.timeout.total_timeout,
+                },
             },
         }
     }
@@ -326,6 +352,14 @@ impl TaskConfig {
                 priority: c_struct.common_data.priority,
                 background: c_struct.common_data.background,
                 multipart: c_struct.common_data.multipart,
+                min_speed: MinSpeed {
+                    speed: c_struct.common_data.min_speed.speed,
+                    duration: c_struct.common_data.min_speed.duration,
+                },
+                timeout: Timeout {
+                    connection_timeout: c_struct.common_data.timeout.connection_timeout,
+                    total_timeout: c_struct.common_data.timeout.total_timeout,
+                },
             },
         };
 

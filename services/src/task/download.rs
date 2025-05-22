@@ -16,6 +16,7 @@ use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::task::{Context, Poll};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use ylong_http_client::async_impl::{DownloadOperator, Downloader, Response};
 use ylong_http_client::{ErrorKind, HttpClientError, SpeedLimit, Timeout};
@@ -122,7 +123,12 @@ pub(crate) async fn download_inner(
     info!("download task {} running", task.task_id());
 
     let request = RequestTask::build_download_request(task.clone()).await?;
+    let start_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as u64;
 
+    task.start_time.store(start_time as u64, Ordering::SeqCst);
     let response = task.client.request(request).await;
     match response.as_ref() {
         Ok(response) => {
@@ -375,7 +381,7 @@ mod test {
         static TASK_MANGER: Lazy<TaskManagerTx> = Lazy::new(|| {
             TaskManager::init(RUN_COUNT_MANAGER.clone(), CLIENT.clone(), NETWORK.clone())
         });
-        let (files, client) = check_config(&config).unwrap();
+        let (files, client) = check_config(&config, 0).unwrap();
 
         let task = Arc::new(RequestTask::new(
             config,

@@ -14,6 +14,7 @@
 use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
+use crate::config::Mode;
 use crate::error::ErrorCode;
 use crate::manage::events::TaskManagerEvent;
 use crate::service::command::{set_code_with_index_other, CONSTRUCT_MAX};
@@ -60,6 +61,7 @@ impl RequestServiceStub {
                 }
             };
             debug!("Service construct: task_config constructed");
+            let mode = task_config.common_data.mode;
             let (event, rx) = TaskManagerEvent::construct(task_config);
             if !self.task_manager.lock().unwrap().send_event(event) {
                 set_code_with_index_other(&mut vec, i, ErrorCode::Other);
@@ -117,7 +119,9 @@ impl RequestServiceStub {
                     }
                     continue;
                 }
-                NotificationDispatcher::get_instance().disable_task_notification(uid, task_id);
+                if matches!(mode, Mode::BackGround) {
+                    NotificationDispatcher::get_instance().disable_task_notification(uid, task_id);
+                }
             }
 
             debug!("Service construct: construct event sent to manager");

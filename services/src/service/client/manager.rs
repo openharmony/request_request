@@ -160,9 +160,7 @@ impl ClientManager {
                 ClientEvent::SendWaitNotify(tid, reason) => {
                     if let Some(&pid) = self.pid_map.get(&tid) {
                         if let Some((tx, _fd)) = self.clients.get_mut(&pid) {
-                            if let Err(err) =
-                                tx.send(ClientEvent::SendWaitNotify(tid, reason))
-                            {
+                            if let Err(err) = tx.send(ClientEvent::SendWaitNotify(tid, reason)) {
                                 error!("send faults error, {}", err);
                                 sys_event!(
                                     ExecFault,
