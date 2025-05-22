@@ -17,6 +17,7 @@ use std::os::fd::FromRawFd;
 use std::sync::{Arc, Mutex};
 
 use crate::error::{ErrorCode, ServiceError};
+use crate::manage::account;
 use crate::task::bundle::get_name_and_index;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::ATOMIC_SERVICE;
@@ -168,8 +169,17 @@ fn get_uuid_from_uid(uid: u64) -> u64 {
     uid / 200000
 }
 
-pub(crate) fn check_same_uuid(uid1: u64, uid2: u64) -> bool {
-    get_uuid_from_uid(uid1) == get_uuid_from_uid(uid2)
+pub(crate) fn check_current_account(task_uid: u64) -> bool {
+    let task_account = get_uuid_from_uid(task_uid);
+    let (foreground_account, _active_accounts) = account::query_active_accounts();
+    let b = task_account == foreground_account;
+    if !b {
+        info!(
+            "check_current_account: {}, {}",
+            foreground_account, task_account
+        );
+    }
+    b
 }
 
 pub(crate) struct BundleCache<'a> {

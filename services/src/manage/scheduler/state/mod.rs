@@ -18,6 +18,7 @@ use sql::SqlList;
 use ylong_runtime::task::JoinHandle;
 
 use super::qos::RssCapacity;
+use crate::manage::account;
 use crate::manage::network::NetworkState;
 use crate::manage::network_manager::NetworkManager;
 use crate::manage::task_manager::TaskManagerTx;
@@ -46,7 +47,7 @@ impl Handler {
 
     pub(crate) fn init(&mut self) -> SqlList {
         let network_info = NetworkManager::query_network();
-        let (foreground_account, active_accounts) = NetworkManager::query_active_accounts();
+        let (foreground_account, active_accounts) = account::query_active_accounts();
 
         #[allow(unused_mut)]
         let mut foreground_abilities = vec![];
@@ -90,7 +91,7 @@ impl Handler {
     }
 
     pub(crate) fn update_account(&mut self, _a: ()) -> Option<SqlList> {
-        let (foreground_account, active_accounts) = NetworkManager::query_active_accounts();
+        let (foreground_account, active_accounts) = account::query_active_accounts();
         self.recorder
             .update_accounts(foreground_account, active_accounts)
     }
