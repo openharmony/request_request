@@ -12,6 +12,7 @@
 // limitations under the License.
 
 use std::fs::File;
+use std::os::fd::AsRawFd;
 use std::os::unix::io::FromRawFd;
 
 use ipc::parcel::MsgParcel;
@@ -25,9 +26,11 @@ impl RequestServiceStub {
         let pid = ipc::Skeleton::calling_pid();
         info!("Service open_channel pid {}", pid);
         match self.client_manager.open_channel(pid) {
-            Ok(fd) => {
-                info!("End open_channel fd {}", fd);
+            Ok(ud_fd) => {
+                // `as_raw_fd` does not track the ownership or life cycle of this fd.
+                let fd = ud_fd.as_raw_fd();
                 let file = unsafe { File::from_raw_fd(fd) };
+                info!("End open_channel fd {}", fd);
                 reply.write(&(ErrorCode::ErrOk as i32))?;
                 reply.write_file(file)?;
                 Ok(())

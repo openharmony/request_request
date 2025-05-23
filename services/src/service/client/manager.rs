@@ -12,7 +12,9 @@
 // limitations under the License.
 
 use std::collections::{hash_map, HashMap};
+use std::sync::Arc;
 
+use ylong_runtime::net::UnixDatagram;
 use ylong_runtime::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 use ylong_runtime::sync::oneshot::Sender;
 
@@ -56,7 +58,7 @@ impl ClientManagerEntry {
 }
 pub(crate) struct ClientManager {
     // map from pid to client and fd
-    clients: HashMap<u64, (UnboundedSender<ClientEvent>, i32)>,
+    clients: HashMap<u64, (UnboundedSender<ClientEvent>, Arc<UnixDatagram>)>,
     pid_map: HashMap<u32, u64>,
     rx: UnboundedReceiver<ClientEvent>,
 }
@@ -178,16 +180,16 @@ impl ClientManager {
         }
     }
 
-    fn handle_open_channel(&mut self, pid: u64, tx: Sender<Result<i32, ErrorCode>>) {
+    fn handle_open_channel(&mut self, pid: u64, tx: Sender<Result<Arc<UnixDatagram>, ErrorCode>>) {
         match self.clients.entry(pid) {
             hash_map::Entry::Occupied(o) => {
                 let (_, fd) = o.get();
-                let _ = tx.send(Ok(*fd));
+                let _ = tx.send(Ok(fd.clone()));
             }
             hash_map::Entry::Vacant(v) => match Client::constructor(pid) {
-                Some((client, fd)) => {
-                    let _ = tx.send(Ok(fd));
-                    v.insert((client, fd));
+                Some((client, ud_fd)) => {
+                    let _ = tx.send(Ok(ud_fd.clone()));
+                    v.insert((client, ud_fd));
                 }
                 None => {
                     let _ = tx.send(Err(ErrorCode::Other));
