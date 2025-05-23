@@ -15,7 +15,7 @@ mod manager;
 
 use std::collections::HashMap;
 use std::net::Shutdown;
-use std::os::fd::AsRawFd;
+use std::sync::Arc;
 use std::time::Duration;
 
 pub(crate) use manager::{ClientManager, ClientManagerEntry};
@@ -36,7 +36,7 @@ const POSITION_OF_LENGTH: u32 = 10;
 
 #[derive(Debug)]
 pub(crate) enum ClientEvent {
-    OpenChannel(u64, Sender<Result<i32, ErrorCode>>),
+    OpenChannel(u64, Sender<Result<Arc<UnixDatagram>, ErrorCode>>),
     Subscribe(u32, u64, u64, u64, Sender<ErrorCode>),
     Unsubscribe(u32, Sender<ErrorCode>),
     TaskFinished(u32),
@@ -56,8 +56,8 @@ pub(crate) enum MessageType {
 }
 
 impl ClientManagerEntry {
-    pub(crate) fn open_channel(&self, pid: u64) -> Result<i32, ErrorCode> {
-        let (tx, rx) = channel::<Result<i32, ErrorCode>>();
+    pub(crate) fn open_channel(&self, pid: u64) -> Result<Arc<UnixDatagram>, ErrorCode> {
+        let (tx, rx) = channel::<Result<Arc<UnixDatagram>, ErrorCode>>();
         let event = ClientEvent::OpenChannel(pid, tx);
         if !self.send_event(event) {
             return Err(ErrorCode::Other);
@@ -174,12 +174,14 @@ pub(crate) struct Client {
     pub(crate) pid: u64,
     pub(crate) message_id: u32,
     pub(crate) server_sock_fd: UnixDatagram,
-    pub(crate) client_sock_fd: UnixDatagram,
+    pub(crate) client_sock_fd: Arc<UnixDatagram>,
     rx: UnboundedReceiver<ClientEvent>,
 }
 
 impl Client {
-    pub(crate) fn constructor(pid: u64) -> Option<(UnboundedSender<ClientEvent>, i32)> {
+    pub(crate) fn constructor(
+        pid: u64,
+    ) -> Option<(UnboundedSender<ClientEvent>, Arc<UnixDatagram>)> {
         let (tx, rx) = unbounded_channel();
         let (server_sock_fd, client_sock_fd) = match UnixDatagram::pair() {
             Ok((server_sock_fd, client_sock_fd)) => (server_sock_fd, client_sock_fd),
@@ -193,16 +195,17 @@ impl Client {
                 return None;
             }
         };
+        let client_sock_fd = Arc::new(client_sock_fd);
         let client = Client {
             pid,
             message_id: 1,
             server_sock_fd,
-            client_sock_fd,
+            client_sock_fd: client_sock_fd.clone(),
             rx,
         };
-        let fd = client.client_sock_fd.as_raw_fd();
+
         runtime_spawn(client.run());
-        Some((tx, fd))
+        Some((tx, client_sock_fd))
     }
 
     async fn run(mut self) {
