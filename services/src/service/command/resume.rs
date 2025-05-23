@@ -20,7 +20,7 @@ use crate::manage::events::TaskManagerEvent;
 use crate::service::command::{set_code_with_index, CONTROL_MAX};
 use crate::service::permission::PermissionChecker;
 use crate::service::RequestServiceStub;
-use crate::task::files::check_same_uuid;
+use crate::task::files::check_current_account;
 
 impl RequestServiceStub {
     pub(crate) fn resume(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
@@ -88,7 +88,7 @@ impl RequestServiceStub {
             }
         };
 
-        if !check_same_uuid(ipc_uid, task_uid) {
+        if !check_current_account(task_uid) {
             set_code_with_index(rets, 0, ErrorCode::TaskNotFound);
             return Ok(());
         }
@@ -184,7 +184,7 @@ impl RequestServiceStub {
                 }
             };
 
-            if !check_same_uuid(ipc_uid, task_uid) {
+            if !check_current_account(task_uid) {
                 set_code_with_index(rets, i, ErrorCode::TaskNotFound);
                 continue;
             }

@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::collections::HashSet;
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::{Mutex, Once};
 
@@ -45,6 +46,18 @@ pub(crate) fn update_accounts(task_manager: TaskManagerTx) {
     {
         runtime_spawn(AccountUpdater::new(task_manager).update());
     }
+}
+
+pub(crate) fn query_active_accounts() -> (u64, HashSet<u64>) {
+    let mut active_accounts = HashSet::new();
+    let foreground_account = FOREGROUND_ACCOUNT.load(Ordering::SeqCst) as u64;
+    active_accounts.insert(foreground_account);
+    if let Some(background_accounts) = BACKGROUND_ACCOUNTS.lock().unwrap().as_ref() {
+        for account in background_accounts.iter() {
+            active_accounts.insert(*account as u64);
+        }
+    }
+    (foreground_account, active_accounts)
 }
 
 struct AccountUpdater {
