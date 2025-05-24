@@ -216,6 +216,9 @@ void ParcelHelper::UnMarshalConfig(MessageParcel &data, Config &config)
     if (!UnMarshalConfigBodyFileName(data, config)) {
         return;
     }
+    // read min speed
+    config.minSpeed.speed = data.ReadInt64();
+    config.minSpeed.duration = data.ReadInt64();
 }
 
 bool ParcelHelper::UnMarshalConfigHeaders(MessageParcel &data, Config &config)

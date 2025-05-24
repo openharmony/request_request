@@ -143,14 +143,20 @@ napi_value RequestEvent::SetMaxSpeed(napi_env env, napi_callback_info info)
     std::string execType = FUNCTION_SET_MAX_SPEED;
     auto context = std::make_shared<ExecContext>();
     auto input = [context, seq, info](size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        ExceptionError err = ParseSetMaxSpeedParameters(context->env_, self, info, context->maxSpeed);
+        napi_status ret = ParseInputParameters(context->env_, argc, self, context);
+        if (ret != napi_ok) {
+            REQUEST_HILOGE("End task set max speed, seq: %{public}d, failed: %{public}d", seq, ret);
+            return ret;
+        }
+        int64_t minSpeed = context->task->config_.minSpeed.speed;
+        ExceptionError err = ParseSetMaxSpeedParameters(context->env_, self, info, minSpeed, context->maxSpeed);
         if (err.code != E_OK) {
             REQUEST_HILOGE("End task set max speed, seq: %{public}d, failed: %{public}d, maxSpeed: %{public}d", seq,
                 err.code, static_cast<int32_t>(context->maxSpeed));
             NapiUtils::ThrowError(context->env_, err.code, err.errInfo, true);
             return napi_invalid_arg;
         }
-        return ParseInputParameters(context->env_, argc, self, context);
+        return napi_ok;
     };
     auto output = [context, execType, seq](napi_value *result) -> napi_status {
         if (context->innerCode_ != E_OK) {
@@ -294,7 +300,7 @@ NotifyData RequestEvent::BuildNotifyData(const std::shared_ptr<TaskInfo> &taskIn
 }
 
 ExceptionError RequestEvent::ParseSetMaxSpeedParameters(
-    napi_env env, napi_value self, napi_callback_info info, int64_t &maxSpeed)
+    napi_env env, napi_value self, napi_callback_info info, int64_t minSpeed, int64_t &maxSpeed)
 {
     ExceptionError err = { .code = E_OK };
     size_t argc = NapiUtils::MAX_ARGC;
@@ -323,6 +329,11 @@ ExceptionError RequestEvent::ParseSetMaxSpeedParameters(
     if (maxSpeed < MIN_SPEED_LIMIT) {
         err.code = E_PARAMETER_CHECK;
         err.errInfo = "Incorrect parameter value, minimum speed value is 16 KB/s";
+    }
+
+    if (maxSpeed < minSpeed) {
+        err.code = E_PARAMETER_CHECK;
+        err.errInfo = "Incorrect parameter value, max speed value is less than min speed";
     }
 
     return err;

@@ -3266,6 +3266,72 @@ export default function requestOperateTaskTest() {
     })
 
     /**
+     * @tc.name: testSetMaxSpeed004
+     * @tc.precon: start https download server
+     * @tc.step: 1. create a task with minSpeed 16 * 1024 + 1.
+                 2. setMaxSpeed is 16 * 1024
+                 3. setMaxSpeed failed with errorcode 401.
+     * @tc.expect: errorcode is 401.
+     * @tc.type: Func
+     * @tc.level: Level 1
+     * @tc.require: issue#IC9V2X
+     */
+    it('testSetMaxSpeed004', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        minSpeed: {
+          speed: 16 * 1024 + 1,
+          duration: 1,
+        }
+      }
+      let task = await request.agent.create(context, conf);
+      try {
+        await task.setMaxSpeed(16 * 1024).then(async () => {
+          expect(false).assertTrue();
+          done();
+        });
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    })
+
+    /**
+     * @tc.name: testSetMaxSpeed005
+     * @tc.precon: start https download server
+     * @tc.step: 1. create a task with minSpeed 16 * 1024.
+                 2. setMaxSpeed is 16 * 1024
+                 3. setMaxSpeed succeed.
+     * @tc.expect: setMaxSpeed succeed.
+     * @tc.type: Func
+     * @tc.level: Level 1
+     * @tc.require: issue#IC9V2X
+     */
+    it('testSetMaxSpeed005', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        minSpeed: {
+          speed: 16 * 1024,
+          duration: 1,
+        }
+      }
+      let task = await request.agent.create(context, conf);
+      try {
+        await task.setMaxSpeed(16 * 1024).then(async () => {
+          expect(true).assertTrue();
+          done();
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
      * @tc.name: testLowSpeed001
      * @tc.desc: Tests the task can be completed normally when MinSpeed is not set.
      * @tc.precon: start https download server

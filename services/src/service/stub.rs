@@ -247,6 +247,9 @@ pub(crate) fn serialize_task_config(config: TaskConfig, reply: &mut MsgParcel) -
     for i in 0..config.body_file_paths.len() {
         reply.write(&(config.body_file_paths[i]))?;
     }
+    // write min speed
+    reply.write(&(config.common_data.min_speed.speed))?;
+    reply.write(&(config.common_data.min_speed.duration))?;
     Ok(())
 }
 
