@@ -136,6 +136,9 @@ impl Scheduler {
             .ok_or(ErrorCode::TaskNotFound)?;
         if is_resume {
             Notifier::resume(&self.client_manager, info.build_notify_data());
+        } else {
+            // If the task is started, reset the task time.
+            database.update_task_time(task_id, 0);
         }
 
         if info.progress.is_finish() {
