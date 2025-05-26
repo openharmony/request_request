@@ -75,6 +75,7 @@ impl Drop for RunningTask {
             .as_secs() as u64;
 
         let start_time = self.task.start_time.load(Ordering::SeqCst);
+        self.task.start_time.store(task_end_time, Ordering::SeqCst);
         let total_task_time = self.task.task_time.load(Ordering::SeqCst);
         let current_task_time = task_end_time - start_time;
         let mut task_time = 0;
