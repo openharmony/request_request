@@ -20,7 +20,7 @@ use crate::error::ErrorCode;
 use crate::manage::database::RequestDb;
 use crate::manage::TaskManager;
 use crate::task::config::TaskConfig;
-use crate::task::request_task::{check_config, RequestTask};
+use crate::task::request_task::{check_config, get_rest_time, RequestTask};
 use crate::utils::task_id_generator::TaskIdGenerator;
 
 const MAX_BACKGROUND_TASK: usize = 1001;
@@ -63,13 +63,21 @@ impl TaskManager {
         #[cfg(feature = "oh")]
         let system_config = unsafe { SYSTEM_CONFIG_MANAGER.assume_init_ref().system_config() };
 
+        let rest_time = get_rest_time(&config, 0);
         let (files, client) = check_config(
             &config,
-            0,
+            rest_time,
             #[cfg(feature = "oh")]
             system_config,
         )?;
-        let task = RequestTask::new(config, files, client, self.client_manager.clone(), false);
+        let task = RequestTask::new(
+            config,
+            files,
+            client,
+            self.client_manager.clone(),
+            false,
+            rest_time,
+        );
         // New task: State::Initialized, Reason::Default
         RequestDb::get_instance().insert_task(task);
         Ok(task_id)

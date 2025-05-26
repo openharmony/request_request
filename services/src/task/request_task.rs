@@ -133,6 +133,7 @@ impl RequestTask {
         client: Client,
         client_manager: ClientManagerEntry,
         upload_resume: bool,
+        rest_time: u64,
     ) -> RequestTask {
         let file_len = files.files.len();
         let action = config.common_data.action;
@@ -190,7 +191,7 @@ impl RequestTask {
             status_code: AtomicI32::new(0),
             start_time: AtomicU64::new(0),
             task_time: AtomicU64::new(0),
-            rest_time: AtomicU64::new(0),
+            rest_time: AtomicU64::new(rest_time),
         }
     }
 

@@ -613,7 +613,7 @@ mod test {
     use crate::config::{Action, ConfigBuilder, Mode, TaskConfig};
     use crate::manage::network::{NetworkInfo, NetworkInner, NetworkType};
     use crate::service::client::ClientManagerEntry;
-    use crate::task::request_task::{check_config, RequestTask};
+    use crate::task::request_task::{check_config, get_rest_time, RequestTask};
     use crate::task::upload::upload;
     use crate::tests::test_init;
 
@@ -630,9 +630,11 @@ mod test {
             is_roaming: false,
         });
 
+        let rest_time = get_rest_time(&config, 0);
+
         let (files, client) = check_config(
             &config,
-            0,
+            rest_time,
             #[cfg(feature = "oh")]
             system_config,
         )
@@ -644,6 +646,7 @@ mod test {
             client,
             client_manager,
             false,
+            rest_time,
         ));
         task
     }
