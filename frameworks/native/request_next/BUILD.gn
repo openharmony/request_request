@@ -10,14 +10,32 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import("//build/config/components/ets_frontend/ets2abc_config.gni")
 import("//build/ohos.gni")
 
-group("ani_package") {
-    deps = [
-        "request:request_ani",
-        "request:request",
-        "request:request_etc"
-    ]
+ohos_rust_shared_library("request_client") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    boundary_sanitize = true
+    all_ubsan = true
+    debug = false
+  }
+  sources = [ "src/lib.rs" ]
+
+  external_deps = [
+    "ipc:ipc_rust",
+    "samgr:samgr_rust",
+  ]
+
+  deps = [
+    "../../../common/request_core:request_core",
+    "../../../common/utils:request_utils",
+    "//third_party/rust/crates/cxx:lib",
+    "//third_party/rust/crates/serde/serde:lib",
+  ]
+
+  clippy_lints = "none"
+
+  subsystem_name = "request"
+  part_name = "request"
 }

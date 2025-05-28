@@ -11,20 +11,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[workspace]
-resolver = "2"
-members = [
-    "frameworks/native/cache_core",
-    "frameworks/native/cache_download",
-    "frameworks/native/request_action/tests/",
-    "frameworks/ets/ani/request",
-    "frameworks/native/request_next",
-    "frameworks/ets/ani/cache_download",
-    "common/ffrt_rs",
-    "common/netstack_rs",
-    "common/utils",
-    "common/request_core",
-    "common/database",
-    "test/rustest",
-    "services",
-]
+[package]
+name = "request_ani"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ani_rs = { git = "https://gitee.com/openharmony/communication_netmanager_base", branch = "OpenHarmony_feature_20250328" }
+cxx = "1.0.115"
+serde = { version = "1.0", features = ["derive"] }
+samgr = { git = "https://gitee.com/openharmony/systemabilitymgr_samgr" }
+ipc = { git = "https://gitee.com/openharmony/communication_ipc" }
+
+request = { path = "../../../native/request_next" }
+request_utils = { path = "../../../../common/utils" }
+request_core = { path = "../../../../common/request_core" }

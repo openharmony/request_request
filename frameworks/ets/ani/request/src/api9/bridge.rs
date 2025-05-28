@@ -16,9 +16,7 @@ use std::collections::HashMap;
 use request_core::{Action, CommonTaskConfig, Mode, NetworkConfig, TaskConfig, Version};
 use serde::{Deserialize, Serialize};
 
-pub mod download;
-
-#[ani_rs::ani(path = "L@ohos/request/request/DownloadConfigInner;")]
+#[ani_rs::ani(path = "L@ohos/request/request/DownloadConfigInner")]
 #[derive(Debug)]
 pub struct DownloadConfig {
     pub url: Option<String>,
@@ -32,7 +30,7 @@ pub struct DownloadConfig {
     pub background: Option<bool>,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/DownloadInfoInner;")]
+#[ani_rs::ani(path = "L@ohos/request/request/DownloadInfoInner")]
 struct DownloadInfo {
     description: String,
     downloaded_bytes: f64,
@@ -60,13 +58,13 @@ pub struct File {
     type_: String,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/RequestDataInner;")]
+#[ani_rs::ani(path = "L@ohos/request/request/RequestDataInner")]
 struct RequestData {
     name: String,
     value: String,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/UploadConfigInner;")]
+#[ani_rs::ani(path = "L@ohos/request/request/UploadConfigInner")]
 struct UploadConfig {
     url: String,
     header: HashMap<String, String>,
@@ -78,7 +76,7 @@ struct UploadConfig {
     data: Vec<RequestData>,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/TaskStateInner;")]
+#[ani_rs::ani(path = "L@ohos/request/request/TaskStateInner")]
 pub struct TaskState {
     path: String,
     response_code: f64,
