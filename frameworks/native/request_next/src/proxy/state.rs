@@ -11,29 +11,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::Arc;
 use std::time::{self, Instant};
 
 use ipc::remote::RemoteObj;
 use samgr::definition::DOWNLOAD_SERVICE_ID;
 use samgr::manage::SystemAbilityManager;
 
-mod checker;
-mod task;
-
-const SERVICE_TOKEN: &str = "OHOS.Download.RequestServiceInterface";
-
-pub struct RequestProxy {
-    remote: Mutex<SaState>,
-}
-
-enum SaState {
+pub(crate) enum SaState {
     Ready(Arc<RemoteObj>),
     Invalid(time::Instant),
 }
 
 impl SaState {
-    fn update() -> Self {
+    pub(crate) fn update() -> Self {
         for _ in 0..10 {
             match SystemAbilityManager::load_system_ability(DOWNLOAD_SERVICE_ID, 1000) {
                 Some(remote) => {
@@ -45,31 +36,5 @@ impl SaState {
             }
         }
         SaState::Invalid(Instant::now())
-    }
-}
-
-static REQUEST_PROXY: LazyLock<RequestProxy> = LazyLock::new(|| RequestProxy {
-    remote: Mutex::new(SaState::update()),
-});
-
-impl RequestProxy {
-    pub fn get_instance() -> &'static Self {
-        &REQUEST_PROXY
-    }
-
-    pub(crate) fn remote(&self) -> Option<Arc<RemoteObj>> {
-        let mut remote = self.remote.lock().unwrap();
-        match *remote {
-            SaState::Ready(ref obj) => return Some(obj.clone()),
-            SaState::Invalid(ref time) => {
-                if time.elapsed().as_secs() > 10 {
-                    *remote = SaState::update();
-                    if let SaState::Ready(ref obj) = *remote {
-                        return Some(obj.clone());
-                    }
-                }
-            }
-        }
-        None
     }
 }
