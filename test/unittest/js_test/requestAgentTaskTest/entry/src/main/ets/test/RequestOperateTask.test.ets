@@ -3756,5 +3756,183 @@ export default function requestOperateTaskTest() {
         done();
       }
     })
+
+    /**
+     * @tc.number: testTimeout005
+     * @tc.name: testTimeout005
+     * @tc.desc: Test on task background task
+     * @tc.step: 1. start a download task when connectionTimeout is 1.
+                 2. check the error code.
+     * @tc.expect: the task is created success.
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require: issue#IC8U1A
+     */
+    it('testTimeout005', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'http://222.111.222.111:13333',
+        saveas: 'testTimeout005.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        timeout: {
+            connectionTimeout : 1,
+        },
+      }
+
+      let task = await request.agent.create(context, conf);
+      task.on('fault', function (faults) {
+        expect(faults).assertEqual(request.agent.Faults.TCP);
+        done();
+      })
+      try {
+        await task.start();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTimeout006
+     * @tc.name: testTimeout006
+     * @tc.desc: Test on task background task
+     * @tc.step: 1. start a download task when connectionTimeout is 10, totalTimeout is 2.
+                 2. check the error code.
+     * @tc.expect: the task is created success.
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require: issue#IC8U1A
+     */
+    it('testTimeout006', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+        saveas: 'testTimeout006.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        timeout: {
+            connectionTimeout : 10,
+            totalTimeout : 2,
+        },
+      }
+
+      let task = await request.agent.create(context, conf);
+      task.on('fault', function (faults) {
+        expect(faults).assertEqual(request.agent.Faults.TIMEOUT);
+        done();
+      })
+      try {
+        await task.start();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTimeout007
+     * @tc.name: testTimeout007
+     * @tc.desc: Test on task background task
+     * @tc.step: 1. start a download task when connectionTimeout is 1, totalTimeout is 1.
+                 2. check the error code.
+     * @tc.expect: the task is created success.
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require: issue#IC8U1A
+     */
+    it('testTimeout007', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'http://222.111.222.111:13333',
+        saveas: 'testTimeout007.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        timeout: {
+            connectionTimeout : 1,
+            totalTimeout : 1,
+        },
+      }
+
+      let task = await request.agent.create(context, conf);
+      task.on('fault', function (faults) {
+        expect(faults).assertEqual(request.agent.Faults.TCP);
+        done();
+      })
+      try {
+        await task.start();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTimeout008
+     * @tc.name: testTimeout008
+     * @tc.desc: Test on task background task
+     * @tc.step: 1. start a download task when connectionTimeout is 5, totalTimeout is 10.
+                 2. check the error code.
+     * @tc.expect: the task is created success.
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require: issue#IC8U1A
+     */
+    it('testTimeout008', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+        saveas: 'testTimeout008.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        timeout: {
+            connectionTimeout : 5,
+            totalTimeout : 10,
+        },
+      }
+
+      let task = await request.agent.create(context, conf);
+      task.on('fault', function (faults) {
+        expect(faults).assertEqual(request.agent.Faults.TIMEOUT);
+        done();
+      })
+      try {
+        await task.start();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testTimeout009
+     * @tc.name: testTimeout009
+     * @tc.desc: Test on task background task
+     * @tc.step: 1. start a download task when totalTimeout is 604800.
+                 2. check the error code.
+     * @tc.expect: the task is created success.
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require: issue#IC8U1A
+     */
+    it('testTimeout009', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTimeout009.txt',
+        mode: request.agent.Mode.BACKGROUND,
+        timeout: {
+            totalTimeout : 604800,
+        },
+      }
+
+      let task = await request.agent.create(context, conf);
+      task.on('completed', function (progress) {
+        expect(true).assertTrue();
+        done();
+      })
+      try {
+        await task.start();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
   })
 }
