@@ -13,7 +13,9 @@
 
 use std::ffi::CStr;
 
+use ani_rs::business_error::BusinessError;
 use ani_rs::objects::{AniFnObject, AniObject, AniRef};
+use ani_rs::AniEnv;
 
 use super::{Config, Task};
 use crate::cstr;
@@ -24,37 +26,27 @@ pub const CREATE_SYNC: &CStr = cstr(b"createSync\0");
 pub const START_SYNC: &CStr = cstr(b"startSync\0");
 pub const ON: &CStr = cstr(b"on\0");
 
-pub fn create_sync<'local>(
-    env: ani_rs::AniEnv<'local>,
-    _ani_this: AniRef<'local>,
-    config: AniObject<'local>,
-) -> ani_rs::objects::AniRef<'local> {
+#[ani_rs::native]
+pub fn create_sync(config: Config) -> Result<Task, BusinessError> {
     let proxy = RequestProxy::get_instance();
-    let config: Config = env.deserialize(config).unwrap();
-    // let res = env.undefined();
-    // env.throw_business_error(code, message)
     let task_id = proxy.create(config);
     let task = Task { tid: task_id };
-    env.serialize(&task).unwrap()
+
+    Ok(task)
 }
 
-pub fn start_sync<'local>(env: ani_rs::AniEnv<'local>, ani_this: AniRef<'local>) {
+#[ani_rs::native]
+pub fn start_sync(this: Task) -> Result<(), BusinessError> {
     let proxy = RequestProxy::get_instance();
-    let task: Task = env.deserialize(ani_this.into()).unwrap();
-    proxy.start(task.tid);
+    proxy.start(this.tid);
     std::thread::sleep(std::time::Duration::from_secs(100000));
+    Ok(())
 }
 
-pub fn on<'local>(
-    env: ani_rs::AniEnv<'local>,
-    ani_this: AniRef<'local>,
-    method: AniObject<'local>,
-    callback: AniFnObject,
-) {
-    let task: Task = env.deserialize(ani_this.into()).unwrap();
-    let method: String = env.deserialize(method).unwrap();
-
+#[ani_rs::native]
+pub fn on(env: &AniEnv, this: Task, method: String, callback: AniFnObject)-> Result<(), BusinessError> {
     UdsListener::get_instance().ensure_channel_open();
-    RequestProxy::get_instance().subscribe(task.tid.clone());
-    info!("task {} on method: {}", task.tid, method);
+    RequestProxy::get_instance().subscribe(this.tid.clone());
+    info!("task {} on method: {}", this.tid, method);
+    Ok(())
 }
