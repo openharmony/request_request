@@ -11,25 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::ffi::CStr;
-
-use ani_rs::objects::{AniObject, AniRef};
-
-use super::DownloadConfig;
-use crate::cstr;
-use crate::proxy::RequestProxy;
-
-pub const DOWNLOAD_SYNC: &CStr = cstr(b"downloadSync\0");
-
-pub fn download_sync<'local>(
-    env: ani_rs::AniEnv<'local>,
-    _ani_this: AniRef<'local>,
-    config: AniObject<'local>,
-) -> ani_rs::objects::AniRef<'local> {
-    let config: DownloadConfig = env.deserialize(config).unwrap();
-    let proxy = RequestProxy::get_instance();
-
-    proxy.create(config);
-
-    env.undefined().unwrap()
+#[ani_rs::ani]
+pub struct CacheDownloadOptions {
+    pub header: Option<HashMap<String, String>>,
 }

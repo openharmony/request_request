@@ -16,7 +16,6 @@ use std::os::fd::IntoRawFd;
 
 use request_core::{CommonTaskConfig, NetworkConfig, TaskConfig, Version};
 use serde::{Deserialize, Serialize};
-pub mod task;
 
 #[derive(Serialize, Deserialize)]
 pub enum Data {
@@ -24,8 +23,8 @@ pub enum Data {
     Array(Vec<FormItem>),
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskConfigInner;")]
-struct Config {
+#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskConfigInner")]
+pub struct Config {
     action: Action,
 
     url: String,
@@ -79,7 +78,7 @@ struct Config {
     notification: Option<Notification>,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInfoInner;")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInfoInner")]
 pub struct TaskInfo {
     pub uid: Option<String>,
 
@@ -123,36 +122,36 @@ pub struct TaskInfo {
     pub extras: Option<HashMap<String, String>>,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInner;")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInner")]
 pub struct Task {
     tid: String,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Action;")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/Action")]
 pub enum Action {
     Download,
     Upload,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Mode;")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/Mode")]
 pub enum Mode {
     BackGround,
     ForeGround,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Network;")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/Network")]
 pub enum Network {
     ANY,
     WIFI,
     CELLULAR,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/BroadcastEvent;")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/BroadcastEvent")]
 pub enum BroadcastEvent {
     COMPLETE,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/FileSpecInner;")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/FileSpecInner")]
 pub struct FileSpec {
     path: String,
 
@@ -173,20 +172,20 @@ pub enum Value {
     Array(Vec<FileSpec>),
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/FormItemInner;")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/FormItemInner")]
 pub struct FormItem {
     name: String,
     value: Value,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/NotificationInner;")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/NotificationInner")]
 pub struct Notification {
     title: Option<String>,
 
     text: Option<String>,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/State;")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/State")]
 pub enum State {
     INITIALIZED = 0x00,
 
@@ -207,7 +206,7 @@ pub enum State {
     REMOVED = 0x50,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/ProgressInner;")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/ProgressInner")]
 pub struct Progress {
     state: State,
 
@@ -220,7 +219,7 @@ pub struct Progress {
     extras: Option<HashMap<String, String>>,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Faults;")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/Faults")]
 pub enum Faults {
     OTHERS = 0xFF,
 
@@ -243,7 +242,7 @@ pub enum Faults {
     REDIRECT = 0x80,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/FilterInner;")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/FilterInner")]
 pub struct Filter {
     bundle: Option<String>,
 
@@ -258,7 +257,7 @@ pub struct Filter {
     mode: Option<Mode>,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/HttpResponseInner;")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/HttpResponseInner")]
 pub struct HttpResponse {
     version: String,
 
@@ -268,7 +267,7 @@ pub struct HttpResponse {
     headers: HashMap<String, Vec<String>>,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/GroupConfigInner;")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/GroupConfigInner")]
 pub struct GroupConfig {
     gauge: Option<bool>,
 

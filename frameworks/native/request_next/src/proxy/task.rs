@@ -49,30 +49,4 @@ impl RequestProxy {
         data.write(&task_id).unwrap();
         let mut reply = remote.send_request(interface::START, &mut data).unwrap();
     }
-
-    pub(crate) fn open_channel(&self) -> RawFd {
-        let Some(remote) = self.remote() else { todo!() };
-        let mut data = MsgParcel::new();
-        data.write_interface_token(SERVICE_TOKEN).unwrap();
-
-        let mut reply = remote
-            .send_request(interface::OPEN_CHANNEL, &mut data)
-            .unwrap();
-        let code = reply.read::<i32>().unwrap();
-        let fd = reply.read_file().unwrap();
-        info!("open channel fd: {:?}", fd);
-        fd.into_raw_fd()
-    }
-
-    pub(crate) fn subscribe(&self, task_id: String) {
-        let Some(remote) = self.remote() else { todo!() };
-        let mut data = MsgParcel::new();
-
-        data.write_interface_token(SERVICE_TOKEN).unwrap();
-
-        data.write(&task_id).unwrap();
-        let mut reply = remote
-            .send_request(interface::SUBSCRIBE, &mut data)
-            .unwrap();
-    }
 }
