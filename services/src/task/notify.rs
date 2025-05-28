@@ -29,7 +29,7 @@ pub(crate) enum SubscribeType {
     Remove,
     Resume,
     // Response,
-    Faults = 8,
+    FaultOccur = 8,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

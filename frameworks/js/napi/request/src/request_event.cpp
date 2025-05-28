@@ -33,7 +33,7 @@ static constexpr const char *EVENT_HEADERRECEIVE = "headerReceive";
 static constexpr const char *EVENT_FAIL = "fail";
 static constexpr const char *EVENT_COMPLETE = "complete";
 static constexpr const char *EVENT_RESPONSE = "response";
-static constexpr const char *EVENT_FAULT = "fault";
+static constexpr const char *EVENT_FAULT_OCCUR = "faultOccur";
 static constexpr const char *EVENT_WAIT = "wait";
 
 std::map<std::string, SubscribeType> RequestEvent::supportEventsV9_ = {
@@ -53,7 +53,7 @@ std::map<std::string, SubscribeType> RequestEvent::supportEventsV10_ = {
     { EVENT_RESUME, SubscribeType::RESUME },
     { EVENT_REMOVE, SubscribeType::REMOVE },
     { EVENT_RESPONSE, SubscribeType::RESPONSE },
-    { EVENT_FAULT, SubscribeType::FAULT },
+    { EVENT_FAULT_OCCUR, SubscribeType::FAULT_OCCUR },
     { EVENT_WAIT, SubscribeType::WAIT },
 };
 

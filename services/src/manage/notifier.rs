@@ -41,7 +41,7 @@ impl Notifier {
     }
 
     pub(crate) fn faults(tid: u32, client_manager: &ClientManagerEntry, reason: Reason) {
-        client_manager.send_faults(tid, SubscribeType::Faults, reason)
+        client_manager.send_faults(tid, SubscribeType::FaultOccur, reason)
     }
 
     pub(crate) fn pause(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
