@@ -223,7 +223,7 @@ export default namespace request {
               this.startSync();
             });
             p1.then((e: NullishType) : void => {
-              hilog.info(0x0000, 'request', "in start Promise then. e is ", e)
+              hilog.info(0x0000, 'request', "in start Promise then. e is ", e as (Object | undefined | null))
               resolve(undefined);
             });
         });
@@ -254,7 +254,7 @@ export default namespace request {
         reject: (error: Object) => void): void => {
           let p1 = taskpool.execute(createSync, context, config);
           p1.then((e: NullishType): void => {
-            hilog.info(0x0000, 'request', "in create Promise then. e is ", e)
+            hilog.info(0x0000, 'request', "in create Promise then. e is ", e as (Object | undefined | null))
             resolve(e as Task);
           }).catch((err: Error) : void => {
             reject(err);
