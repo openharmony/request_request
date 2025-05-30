@@ -298,6 +298,12 @@ impl RequestDb {
         true
     }
 
+    pub(crate) fn remove_user_file_task(&self, task_id: u32) {
+        let mut task_map = self.user_file_tasks.lock().unwrap();
+        task_map.remove(&task_id);
+        debug!("Remove completed user file task, task_id: {}", task_id);
+    }
+
     #[cfg(feature = "oh")]
     pub(crate) fn update_task(&self, task_id: u32, update_info: UpdateInfo) {
         debug!("Update task in database, task_id: {}", task_id);
