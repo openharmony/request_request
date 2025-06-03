@@ -24,9 +24,7 @@ export default namespace request {
 
     interface FileSpec {
       path: string;
-      mimeType?: string;
       filename?: string;
-      extras?: object;
     }
 
     interface FormItem {
@@ -39,29 +37,16 @@ export default namespace request {
       UPLOAD
     }
 
-    enum Mode {
-      BACKGROUND,
-      FOREGROUND
-    }
-
-    enum Network {
-      ANY,
-      WIFI,
-      CELLULAR
-    }
-
     interface HttpResponse {
       readonly version: string;
       readonly statusCode: number;
       readonly reason: string;
-      readonly headers: Map<string, Array<string>>;
     }
 
     export class HttpResponseImpl implements HttpResponse {
       readonly version: string;
       readonly statusCode: number;
       readonly reason: string;
-      readonly headers: Map<string, Array<string>>;
 
       constructor(version: string, statusCode: number, reason: string) {
           this.version = version;
@@ -86,8 +71,6 @@ export default namespace request {
       readonly state: State;
       readonly index: number;
       readonly processed: number;
-      readonly sizes: Array<number>;
-      readonly extras?: object;
     }
     const StateMap: Record<number, State> = {
       0x00: State.INITIALIZED,
@@ -104,8 +87,6 @@ export default namespace request {
       readonly state: State;
       readonly index: number;
       readonly processed: number;
-      readonly sizes: Array<number>;
-      readonly extras?: object;
 
       constructor(state: number, index: number, processed: number) {
         const resolvedState = StateMap[state];
@@ -122,28 +103,9 @@ export default namespace request {
     interface Config {
       action: Action;
       url: string;
-      title?: string;
-      description?: string;
-      mode?: Mode;
-      overwrite?: boolean;
       method?: string;
-      headers?: object;
       data?: string | Array<FormItem>;
       saveas?: string;
-      network?: Network;
-      metered?: boolean;
-      roaming?: boolean;
-      retry?: boolean;
-      redirect?: boolean;
-      proxy?: string;
-      index?: number;
-      begins?: number;
-      ends?: number;
-      gauge?: boolean;
-      precise?: boolean;
-      token?: string;
-      priority?: number;
-      extras?: object;
     }
 
     interface Task {
