@@ -37,6 +37,7 @@ cfg_ohos! {
     pub mod context;
     mod wrapper;
     pub use wrapper::{hilog_print, LogLevel, LogType};
+    pub mod storage;
 }
 
 pub mod test;

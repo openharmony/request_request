@@ -11,10 +11,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use request_core::TaskConfig;
+use crate::proxy::RequestProxy;
 
-// TODO： 标准化路径， 各种入参路径统一变为完全体沙箱路径
-pub struct JsContext;
-pub(crate) fn standardize_path(_context: JsContext, config: &mut TaskConfig) -> String {
-    "".to_owned()
+impl RequestProxy {
+    pub(crate) fn create_group(&self) -> Result<(), i32> {
+        todo!()
+    }
+
+    pub(crate) fn delete_group(&self, group_id: i64) -> Result<(), i32> {
+        todo!()
+    }
+
+    pub(crate) fn attach_group(&self, group_id: i64, task_ids: Vec<i64>) -> Result<(), i32> {
+        todo!()
+    }
 }

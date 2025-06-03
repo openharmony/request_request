@@ -11,19 +11,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use core::fmt;
-use std::error::Error;
+use crate::check::file::DownloadPathError;
 
-#[derive(Debug)]
-pub struct RequestError {
-    pub code: u64,
-    pub message: String,
+pub enum CreateTaskError {
+    DownloadPath(DownloadPathError),
+    Code(i32),
 }
 
-impl fmt::Display for RequestError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.message)
+impl From<DownloadPathError> for CreateTaskError {
+    fn from(error: DownloadPathError) -> Self {
+        CreateTaskError::DownloadPath(error)
     }
 }
 
-impl Error for RequestError {}
+impl From<i32> for CreateTaskError {
+    fn from(code: i32) -> Self {
+        CreateTaskError::Code(code)
+    }
+}

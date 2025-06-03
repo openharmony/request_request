@@ -20,7 +20,6 @@ export default namespace cacheDownload {
     export interface CacheDownloadOptions {
         headers?: Record<string, string>;
     }
-
     export native function download(url: string, options: CacheDownloadOptions): void;
 
     export native function cancel(url: string): void;

@@ -14,123 +14,31 @@
 use std::collections::HashMap;
 use std::os::fd::IntoRawFd;
 
-use request_core::{CommonTaskConfig, NetworkConfig, TaskConfig, Version};
+use request_core::config::{self, CommonTaskConfig, NetworkConfig, TaskConfig, Version};
 use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize)]
-pub enum Data {
-    S(String),
-    Array(Vec<FormItem>),
-}
-
-#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskConfigInner")]
-pub struct Config {
-    action: Action,
-
-    url: String,
-
-    title: Option<String>,
-
-    description: Option<String>,
-
-    mode: Option<Mode>,
-
-    overwrite: Option<bool>,
-
-    method: Option<String>,
-
-    headers: Option<HashMap<String, String>>,
-
-    data: Option<Data>,
-
-    saveas: Option<String>,
-
-    network: Option<Network>,
-
-    metered: Option<bool>,
-
-    roaming: Option<bool>,
-
-    retry: Option<bool>,
-
-    redirect: Option<bool>,
-
-    proxy: Option<String>,
-
-    index: Option<i32>,
-
-    begins: Option<i32>,
-
-    ends: Option<i32>,
-
-    gauge: Option<bool>,
-
-    precise: Option<bool>,
-
-    token: Option<String>,
-
-    priority: Option<i32>,
-
-    extras: Option<HashMap<String, String>>,
-
-    multipart: Option<bool>,
-
-    notification: Option<Notification>,
-}
-
-#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInfoInner")]
-pub struct TaskInfo {
-    pub uid: Option<String>,
-
-    pub bundle: Option<String>,
-
-    pub saveas: Option<String>,
-
-    pub url: Option<String>,
-
-    pub data: Option<Data>,
-    pub tid: String,
-
-    pub title: String,
-
-    pub description: String,
-
-    pub action: Action,
-
-    pub mode: Mode,
-
-    pub priority: i32,
-
-    pub mime_type: String,
-
-    pub progress: Progress,
-
-    pub gauge: bool,
-
-    pub ctime: i32,
-
-    pub mtime: i32,
-
-    pub retry: bool,
-
-    pub tries: i32,
-
-    pub faults: Faults,
-
-    pub reason: String,
-
-    pub extras: Option<HashMap<String, String>>,
-}
-
-#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInner")]
-pub struct Task {
-    tid: String,
-}
 
 #[ani_rs::ani(path = "L@ohos/request/request/agent/Action")]
 pub enum Action {
     Download,
     Upload,
+}
+
+impl From<Action> for request_core::config::Action {
+    fn from(value: Action) -> Self {
+        match value {
+            Action::Download => config::Action::Download,
+            Action::Upload => config::Action::Upload,
+        }
+    }
+}
+
+impl From<config::Action> for Action {
+    fn from(value: config::Action) -> Self {
+        match value {
+            config::Action::Download => Action::Download,
+            config::Action::Upload => Action::Upload,
+        }
+    }
 }
 
 #[ani_rs::ani(path = "L@ohos/request/request/agent/Mode")]
@@ -139,11 +47,49 @@ pub enum Mode {
     ForeGround,
 }
 
+impl From<Mode> for config::Mode {
+    fn from(value: Mode) -> Self {
+        match value {
+            Mode::BackGround => config::Mode::BackGround,
+            Mode::ForeGround => config::Mode::FrontEnd,
+        }
+    }
+}
+
+impl From<config::Mode> for Mode {
+    fn from(value: config::Mode) -> Self {
+        match value {
+            config::Mode::BackGround => Mode::BackGround,
+            config::Mode::FrontEnd => Mode::ForeGround,
+        }
+    }
+}
+
 #[ani_rs::ani(path = "L@ohos/request/request/agent/Network")]
 pub enum Network {
     ANY,
     WIFI,
     CELLULAR,
+}
+
+impl From<Network> for NetworkConfig {
+    fn from(value: Network) -> Self {
+        match value {
+            Network::ANY => NetworkConfig::Any,
+            Network::WIFI => NetworkConfig::Wifi,
+            Network::CELLULAR => NetworkConfig::Cellular,
+        }
+    }
+}
+
+impl From<NetworkConfig> for Network {
+    fn from(value: NetworkConfig) -> Self {
+        match value {
+            NetworkConfig::Any => Network::ANY,
+            NetworkConfig::Wifi => Network::WIFI,
+            NetworkConfig::Cellular => Network::CELLULAR,
+        }
+    }
 }
 
 #[ani_rs::ani(path = "L@ohos/request/request/agent/BroadcastEvent")]
@@ -154,14 +100,22 @@ pub enum BroadcastEvent {
 #[ani_rs::ani(path = "L@ohos/request/request/agent/FileSpecInner")]
 pub struct FileSpec {
     path: String,
-
-    mime_type: Option<String>,
-
     content_type: Option<String>,
-
     filename: Option<String>,
-
     extras: Option<HashMap<String, String>>,
+}
+
+impl From<FileSpec> for request_core::file::FileSpec {
+    fn from(value: FileSpec) -> Self {
+        request_core::file::FileSpec {
+            name: "".to_string(),
+            path: value.path,
+            mime_type: value.content_type.unwrap_or("".to_string()),
+            file_name: value.filename.unwrap_or("".to_string()),
+            is_user_file: false,
+            fd: None,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -178,99 +132,135 @@ pub struct FormItem {
     value: Value,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/NotificationInner")]
+#[ani_rs::ani]
 pub struct Notification {
     title: Option<String>,
-
     text: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum Data {
+    S(String),
+    Array(Vec<FormItem>),
+}
+
+#[ani_rs::ani]
+pub struct Config {
+    pub action: Action,
+    pub url: String,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub mode: Option<Mode>,
+    pub overwrite: Option<bool>,
+    pub method: Option<String>,
+    pub headers: Option<HashMap<String, String>>,
+    pub data: Option<Data>,
+    pub saveas: Option<String>,
+    pub network: Option<Network>,
+    pub metered: Option<bool>,
+    pub roaming: Option<bool>,
+    pub retry: Option<bool>,
+    pub redirect: Option<bool>,
+    pub proxy: Option<String>,
+    pub index: Option<i32>,
+    pub begins: Option<i64>,
+    pub ends: Option<i64>,
+    pub gauge: Option<bool>,
+    pub precise: Option<bool>,
+    pub token: Option<String>,
+    pub priority: Option<i32>,
+    pub extras: Option<HashMap<String, String>>,
+    pub multipart: Option<bool>,
+    pub notification: Option<Notification>,
 }
 
 #[ani_rs::ani(path = "L@ohos/request/request/agent/State")]
 pub enum State {
     INITIALIZED = 0x00,
-
     WAITING = 0x10,
-
     RUNNING = 0x20,
-
     RETRYING = 0x21,
-
     PAUSED = 0x30,
-
     STOPPED = 0x31,
-
     COMPLETED = 0x40,
-
     FAILED = 0x41,
-
     REMOVED = 0x50,
 }
 
 #[ani_rs::ani(path = "L@ohos/request/request/agent/ProgressInner")]
 pub struct Progress {
     state: State,
-
     index: i32,
-
-    processed: i32,
-
-    sizes: Vec<i32>,
-
+    processed: i64,
+    sizes: Vec<i64>,
     extras: Option<HashMap<String, String>>,
 }
 
 #[ani_rs::ani(path = "L@ohos/request/request/agent/Faults")]
 pub enum Faults {
     OTHERS = 0xFF,
-
     DISCONNECTED = 0x00,
-
     TIMEOUT = 0x10,
-
     PROTOCOL = 0x20,
-
     PARAM = 0x30,
-
     FSIO = 0x40,
-
     DNS = 0x50,
-
     TCP = 0x60,
-
     SSL = 0x70,
-
     REDIRECT = 0x80,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/FilterInner")]
+#[ani_rs::ani]
 pub struct Filter {
     bundle: Option<String>,
-
-    before: Option<i32>,
-
-    after: Option<i32>,
-
+    before: Option<i64>,
+    after: Option<i64>,
     state: Option<State>,
-
     action: Option<Action>,
-
     mode: Option<Mode>,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/HttpResponseInner")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInfoInner")]
+pub struct TaskInfo {
+    pub uid: Option<String>,
+    pub bundle: Option<String>,
+    pub saveas: Option<String>,
+    pub url: Option<String>,
+    pub data: Option<Data>,
+    pub tid: String,
+    pub title: String,
+    pub description: String,
+    pub action: Action,
+    pub mode: Mode,
+    pub priority: i32,
+    pub mime_type: String,
+    pub progress: Progress,
+    pub gauge: bool,
+    pub ctime: i64,
+    pub mtime: i64,
+    pub retry: bool,
+    pub tries: i32,
+    pub faults: Faults,
+    pub reason: String,
+    pub extras: Option<HashMap<String, String>>,
+}
+
+#[ani_rs::ani]
 pub struct HttpResponse {
     version: String,
-
     status_code: i32,
-
     reason: String,
     headers: HashMap<String, Vec<String>>,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/GroupConfigInner")]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInner")]
+pub struct Task {
+    pub tid: i64,
+}
+
+#[ani_rs::ani]
 pub struct GroupConfig {
     gauge: Option<bool>,
-
     notification: Notification,
 }
 
@@ -298,7 +288,7 @@ impl From<Config> for TaskConfig {
             extras: HashMap::new(),
             version: Version::API9,
             form_items: vec![],
-            file_specs: vec![request_core::FileSpec {
+            file_specs: vec![request_core::file::FileSpec {
                 name: "".to_string(),
                 mime_type: "".to_string(),
                 path: "".to_string(),
@@ -312,8 +302,8 @@ impl From<Config> for TaskConfig {
                 task_id: 0,
                 uid: 0,
                 token_id: 0,
-                action: request_core::Action::Download,
-                mode: request_core::Mode::BackGround,
+                action: value.action.into(),
+                mode: value.mode.unwrap_or(Mode::BackGround).into(),
                 cover: false,
                 network_config: NetworkConfig::Any,
                 metered: false,

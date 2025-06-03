@@ -11,12 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#![feature(lazy_cell)]
 mod check;
 mod client;
-mod listen;
 mod proxy;
-
 pub use client::RequestClient;
+mod listen;
+pub use listen::Callback;
 
 #[macro_use]
 extern crate request_utils;
