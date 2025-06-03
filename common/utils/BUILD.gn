@@ -44,6 +44,7 @@ ohos_static_library("request_utils_cxx") {
   sources += get_target_outputs(":request_utils_cxx_gen")
 
   external_deps = [
+    "ability_runtime:ani_base_context",
     "ability_runtime:app_context",
     "bundle_framework:appexecfwk_core_headers",
     "c_utils:utils",
@@ -55,6 +56,8 @@ ohos_static_library("request_utils_cxx") {
     "openssl:libssl_shared",
     "rust_cxx:cxx_cppdeps",
     "samgr:samgr_proxy",
+    "runtime_core:ani",
+    "storage_service:storage_manager_acl",
   ]
   deps = [ ":request_utils_cxx_gen" ]
   subsystem_name = "request"
@@ -78,6 +81,7 @@ ohos_rust_static_library("request_utils") {
   external_deps = [
     "hilog:libhilog",
     "rust_cxx:lib",
+    "netmanager_base:ani_rs",
   ]
   sources = [ "src/lib.rs" ]
   subsystem_name = "request"
@@ -97,6 +101,15 @@ ohos_rust_unittest("rust_utils_ut_test") {
 
   deps = [
     ":request_utils_cxx",
+  ]
+  external_deps = [
+    "hilog:libhilog",
+    "rust_cxx:lib",
+  ]
+
+  external_deps = [
+    "hilog:libhilog",
+    "netmanager_base:ani_rs",
   ]
   subsystem_name = "request"
   part_name = "request"

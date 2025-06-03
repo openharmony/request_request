@@ -20,72 +20,61 @@ import { BusinessError } from '@ohos.base';
 import BaseContext from 'application.BaseContext';
 
 export default namespace request {
-  const EXCEPTION_PERMISSION: number;
-  const EXCEPTION_PARAMCHECK: number;
-  const EXCEPTION_UNSUPPORTED: number;
-  const EXCEPTION_FILEIO: number;
-  const EXCEPTION_FILEPATH: number;
-  const EXCEPTION_SERVICE: number;
-  const EXCEPTION_OTHERS: number;
+  loadLibrary("request_ani")
 
-  const NETWORK_MOBILE: number;
+  const EXCEPTION_PERMISSION: int;
+  const EXCEPTION_PARAMCHECK: int;
+  const EXCEPTION_UNSUPPORTED: int;
+  const EXCEPTION_FILEIO: int;
+  const EXCEPTION_FILEPATH: int;
+  const EXCEPTION_SERVICE: int;
+  const EXCEPTION_OTHERS: int;
 
-  const NETWORK_WIFI: number;
+  const NETWORK_MOBILE: int;
 
-  const ERROR_CANNOT_RESUME: number;
+  const NETWORK_WIFI: int;
 
-  const ERROR_DEVICE_NOT_FOUND: number;
+  const ERROR_CANNOT_RESUME: int;
 
-  const ERROR_FILE_ALREADY_EXISTS: number;
+  const ERROR_DEVICE_NOT_FOUND: int;
 
-  const ERROR_FILE_ERROR: number;
+  const ERROR_FILE_ALREADY_EXISTS: int;
 
-  const ERROR_HTTP_DATA_ERROR: number;
+  const ERROR_FILE_ERROR: int;
 
-  const ERROR_INSUFFICIENT_SPACE: number;
+  const ERROR_HTTP_DATA_ERROR: int;
 
-  const ERROR_TOO_MANY_REDIRECTS: number;
+  const ERROR_INSUFFICIENT_SPACE: int;
 
-  const ERROR_UNHANDLED_HTTP_CODE: number;
+  const ERROR_TOO_MANY_REDIRECTS: int;
 
-  const ERROR_UNKNOWN: number;
+  const ERROR_UNHANDLED_HTTP_CODE: int;
 
-  const ERROR_OFFLINE: number;
+  const ERROR_UNKNOWN: int;
 
-  const ERROR_UNSUPPORTED_NETWORK_TYPE: number;
+  const ERROR_OFFLINE: int;
 
-  const PAUSED_QUEUED_FOR_WIFI: number;
+  const ERROR_UNSUPPORTED_NETWORK_TYPE: int;
 
-  const PAUSED_WAITING_FOR_NETWORK: number;
+  const PAUSED_QUEUED_FOR_WIFI: int;
 
-  const PAUSED_WAITING_TO_RETRY: number;
+  const PAUSED_WAITING_FOR_NETWORK: int;
 
-  const PAUSED_BY_USER: number;
+  const PAUSED_WAITING_TO_RETRY: int;
 
-  const PAUSED_UNKNOWN: number;
+  const PAUSED_BY_USER: int;
 
-  const SESSION_SUCCESSFUL: number;
+  const PAUSED_UNKNOWN: int;
 
-  const SESSION_RUNNING: number;
+  const SESSION_SUCCESSFUL: int;
 
-  const SESSION_PENDING: number;
+  const SESSION_RUNNING: int;
 
-  const SESSION_PAUSED: number;
+  const SESSION_PENDING: int;
 
-  const SESSION_FAILED: number;
+  const SESSION_PAUSED: int;
 
-  native function downloadSync(config: DownloadConfig): DownloadTask;
-
-  export function download(config: DownloadConfig, callback: AsyncCallback<DownloadTask>): void {
-    let p1 = taskpool.execute((): DownloadTask => {
-        return downloadSync(config);
-    })
-    p1.then((content: NullishType) => {
-        callback(new BusinessError(), content as DownloadTask);
-    }, (err: BusinessError): void => {
-        callback(err, new DownloadTaskInner);
-    });
-  }
+  const SESSION_FAILED: int;
 
   native function downloadFileSync(context: BaseContext, config: DownloadConfig): DownloadTask;
 
@@ -97,18 +86,6 @@ export default namespace request {
         callback(new BusinessError(), content as DownloadTask);
     }, (err: BusinessError): void => {
         callback(err, new DownloadTaskInner);
-    });
-  }
-
-  export function download(config: DownloadConfig): Promise<DownloadTask> {
-    return new Promise<DownloadTask>((resolve, reject) => {
-      taskpool.execute((): DownloadTask => {
-          return downloadSync(config);
-      }).then((content: NullishType) => {
-          resolve(content as DownloadTask);
-      }, (err: BusinessError): void => {
-          reject(err);
-      });
     });
   }
 
@@ -124,19 +101,6 @@ export default namespace request {
     });
   }
 
-  native function uploadSync(config: UploadConfig): UploadTask;
-
-  export function upload(config: UploadConfig, callback: AsyncCallback<UploadTask>): void {
-    let p1 = taskpool.execute((): UploadTask => {
-        return uploadSync(config);
-    })
-    p1.then((content: NullishType) => {
-        callback(new BusinessError(), content as UploadTask);
-    }, (err: BusinessError): void => {
-        callback(err, new UploadTaskInner);
-    });
-  }
-
   native function uploadFileSync(context: BaseContext, config: UploadConfig): UploadTask;
 
   export function uploadFile(context: BaseContext, config: UploadConfig, callback: AsyncCallback<UploadTask>): void {
@@ -147,18 +111,6 @@ export default namespace request {
         callback(new BusinessError(), content as UploadTask);
     }, (err: BusinessError): void => {
         callback(err, new UploadTaskInner);
-    });
-  }
-
-  export function upload(config: UploadConfig): Promise<UploadTask> {
-    return new Promise<UploadTask>((resolve, reject) => {
-      taskpool.execute((): UploadTask => {
-          return uploadSync(config);
-      }).then((content: NullishType) => {
-          resolve(content as UploadTask);
-      }, (err: BusinessError): void => {
-          reject(err);
-      });
     });
   }
 
@@ -180,7 +132,7 @@ export default namespace request {
     enableMetered?: boolean;
     enableRoaming?: boolean;
     description?: string;
-    networkType?: number;
+    networkType?: int;
     filePath?: string;
     title?: string;
     background?: boolean;
@@ -188,64 +140,36 @@ export default namespace request {
 
   interface DownloadInfo {
     description: string;
-    downloadedBytes: number;
-    downloadId: number;
-    failedReason: number;
+    downloadedBytes: long;
+    downloadId: long;
+    failedReason: int;
     fileName: string;
     filePath: string;
-    pausedReason: number;
-    status: number;
+    pausedReason: int;
+    status: int;
     targetURI: string;
     downloadTitle: string;
-    downloadTotalBytes: number;
+    downloadTotalBytes: long;
   }
 
   class DownloadInfoInner implements DownloadInfo{
     description: string;
-    downloadedBytes: number;
-    downloadId: number;
-    failedReason: number;
+    downloadedBytes: long;
+    downloadId: long;
+    failedReason: int;
     fileName: string;
     filePath: string;
-    pausedReason: number;
-    status: number;
+    pausedReason: int;
+    status: int;
     targetURI: string;
     downloadTitle: string;
-    downloadTotalBytes: number;
+    downloadTotalBytes: long;
   }
 
   interface DownloadTask {
-    // on(type: 'progress', callback: (receivedSize: number, totalSize: number) => void): void;
+    on(type: 'progress' | 'complete' | 'pause' | 'remove' | 'fail', callback: object): void;
 
-    // off(type: 'progress', callback?: (receivedSize: number, totalSize: number) => void): void;
-
-    // on(type: 'complete' | 'pause' | 'remove', callback: () => void): void;
-
-    // off(type: 'complete' | 'pause' | 'remove', callback?: () => void): void;
-
-    // on(type: 'fail', callback: (err: number) => void): void;
-
-    // off(type: 'fail', callback?: (err: number) => void): void;
-
-    remove(callback: AsyncCallback<boolean>): void;
-
-    remove(): Promise<boolean>;
-
-    pause(callback: AsyncCallback<void>): void;
-
-    pause(): Promise<void>;
-
-    resume(callback: AsyncCallback<void>): void;
-
-    resume(): Promise<void>;
-
-    query(callback: AsyncCallback<DownloadInfo>): void;
-
-    query(): Promise<DownloadInfo>;
-
-    queryMimeType(callback: AsyncCallback<string>): void;
-
-    queryMimeType(): Promise<string>;
+    // off(type: 'progress' | 'complete' | 'pause' | 'remove' | 'fail' , callback?: object): void;
 
     delete(callback: AsyncCallback<boolean>): void;
 
@@ -268,131 +192,53 @@ export default namespace request {
     getTaskMimeType(): Promise<string>;
   }
 
-  class DownloadTaskInner implements DownloadTask {
-    native removeSync(): boolean;
-
-    remove(callback: AsyncCallback<boolean>): void {
-      let p1 = taskpool.execute((): boolean => {
-        return this.removeSync();
-      })
-      p1.then((content: NullishType) => {
-          callback(new BusinessError(), content as boolean);
-      }, (err: BusinessError): void => {
-          callback(err, false);
-      });
+  export class DownloadTaskInner implements DownloadTask {
+    static {
+      loadLibrary("request_ani")
     }
 
-    remove(): Promise<boolean> {
-      return new Promise<boolean>((resolve, reject) => {
-        taskpool.execute((): boolean => {
-            return this.removeSync();
-        }).then((content: NullishType) => {
-            resolve(content as boolean);
-        }, (err: BusinessError): void => {
-            reject(err);
-        });
-      });
+    taskId: long;
+
+    native onProgress(callback: (receivedSize: long, totalSize: long) => void): void;
+    native onEvent(type: string, callback: () => void):void;
+    native onFail(callback: (err: int) => void): void;
+
+    // native offProgress(callback?: (receivedSize: long, totalSize: long) => void): void;
+    // native offEvent(type: string, callback?: () => void): void;
+    // native offFail(callback?: (err: int) => void): void;
+
+
+    on(type: 'progress' | 'complete' | 'pause' | 'remove' | 'fail', callback: object): void {
+      if (type == 'progress') {
+        this.onProgress(callback as (receivedSize: long, totalSize: long) => void);
+      } else if (type == 'complete' || type == 'pause' || type == 'remove') {
+        this.onEvent(type, callback as () => void);
+      } else {
+        this.onFail(callback as (err: int) => void);
+      }
     }
 
-    native pauseSync(): void;
-
-    pause(callback: AsyncCallback<void>): void {
-        let p1 = taskpool.execute((): undefined => {
-            return this.pauseSync();
-        })
-        p1.then(() => {
-            callback(new BusinessError(), undefined);
-        }, (err: BusinessError): void => {
-            callback(err, undefined);
-        });
-    }
-
-    pause(): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            taskpool.execute((): undefined => {
-              return this.pauseSync();
-            }).then(() => {
-                resolve(undefined);
-            }, (err: BusinessError): void => {
-                reject(err);
-            });
-        });
-    }
-
-    native resumeSync(): void;
-
-    resume(callback: AsyncCallback<void>): void {
-        let p1 = taskpool.execute((): undefined => {
-            return this.resumeSync();
-        })
-        p1.then(() => {
-            callback(new BusinessError(), undefined);
-        }, (err: BusinessError): void => {
-            callback(err, undefined);
-        });
-    }
-
-    resume(): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            taskpool.execute((): undefined => {
-                return this.resumeSync();
-            }).then(() => {
-                resolve(undefined);
-            }, (err: BusinessError): void => {
-                reject(err);
-            });
-        });
-    }
-
-    native querySync(): DownloadInfo;
-
-    query(callback: AsyncCallback<DownloadInfo>): void {
-        let p1 = taskpool.execute((): DownloadInfo => {
-            return this.querySync();
-        })
-        p1.then((content: NullishType) => {
-            callback(new BusinessError(), content as DownloadInfo);
-        }, (err: BusinessError): void => {
-            callback(err, new DownloadInfoInner);
-        });
-    }
-
-    query(): Promise<DownloadInfo> {
-        return new Promise<DownloadInfo>((resolve, reject) => {
-            taskpool.execute((): DownloadInfo => {
-                return this.querySync();
-            }).then((content: NullishType) => {
-                resolve(content as DownloadInfo);
-            }, (err: BusinessError): void => {
-                reject(err);
-            });
-        });
-    }
-
-    native queryMimeTypeSync(): string;
-
-    queryMimeType(callback: AsyncCallback<string>): void {
-        let p1 = taskpool.execute((): string => {
-            return this.queryMimeTypeSync();
-        })
-        p1.then((content: NullishType) => {
-            callback(new BusinessError(), content as string);
-        }, (err: BusinessError): void => {
-            callback(err, "");
-        });
-    }
-
-    queryMimeType(): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
-            taskpool.execute((): string => {
-                return this.queryMimeTypeSync();
-            }).then((content: NullishType) => {
-                resolve(content as string);
-            }, (err: BusinessError): void => {
-                reject(err);
-            });
-        });
-    }
+     // off(type: 'progress' | 'complete' | 'pause' | 'remove' | 'fail' , callback?: object): void {
+     //   if (type == 'progress') {
+     //     if (callback === undefined) {
+     //       this.offProgress();
+     //     } else {
+     //       this.offProgress(callback as (receivedSize: long, totalSize: long) => void);
+     //     }
+     //   } else if (type == 'complete' || type == 'pause' || type == 'remove') {
+     //     if (callback === undefined) {
+     //         this.offEvent(type)
+     //     }else {
+     //         this.offEvent(type, callback as () => void)
+     //     }
+     //   } else if (type == 'fail') {
+     //     if (callback === undefined) {
+     //       this.offFail();
+     //     } else {
+     //       this.offFail(callback as (err: int) => void)
+     //     }
+     //   }
+     // }
 
     native deleteSync(): boolean;
 
@@ -536,23 +382,23 @@ export default namespace request {
     url: string;
     header: Object;
     method: string;
-    index?: number;
-    begins?: number;
-    ends?: number;
+    index?: int;
+    begins?: long;
+    ends?: long;
     files: Array<File>;
     data: Array<RequestData>;
   }
 
   interface TaskState {
     path: string;
-    responseCode: number;
+    responseCode: int;
     message: string;
   }
 
   interface UploadTask {
-    // on(type: 'progress', callback: (uploadedSize: number, totalSize: number) => void): void;
+    // on(type: 'progress', callback: (uploadedSize: long, totalSize: long) => void): void;
 
-    // off(type: 'progress', callback?: (uploadedSize: number, totalSize: number) => void): void;
+    // off(type: 'progress', callback?: (uploadedSize: long, totalSize: long) => void): void;
 
     // on(type: 'headerReceive', callback: (header: object) => void): void;
 
@@ -562,41 +408,13 @@ export default namespace request {
 
     // off(type: 'complete' | 'fail', callback?: Callback<Array<TaskState>>): void;
 
-    remove(callback: AsyncCallback<boolean>): void;
-
-    remove(): Promise<boolean>;
-
     delete(callback: AsyncCallback<boolean>): void;
 
     delete(): Promise<boolean>;
   }
 
   class UploadTaskInner implements UploadTask {
-
-    native removeSync(): boolean;
-
-    remove(callback: AsyncCallback<boolean>): void {
-        let p1 = taskpool.execute((): boolean => {
-            return this.removeSync();
-        })
-        p1.then((content: NullishType) => {
-            callback(new BusinessError(), content as boolean);
-        }, (err: BusinessError): void => {
-            callback(err, false);
-        });
-    }
-
-    remove(): Promise<boolean> {
-      return new Promise<boolean>((resolve, reject) => {
-          taskpool.execute((): boolean => {
-              return this.removeSync();
-          }).then((content: NullishType) => {
-              resolve(content as boolean);
-          }, (err: BusinessError): void => {
-              reject(err);
-          });
-      });
-    }
+    taskId: long;
 
     native deleteSync(): boolean;
 
@@ -624,7 +442,9 @@ export default namespace request {
     }
   }
 
-  namespace agent {
+  export namespace agent {
+    loadLibrary("request_ani")
+
     enum Action {
       DOWNLOAD,
       UPLOAD
@@ -647,6 +467,13 @@ export default namespace request {
 
     interface FileSpec {
       path: string;
+      contentType?: string;
+      filename?: string;
+      extras?: object;
+    }
+
+    class FileSpecInner implements FileSpec {
+      path: string;
       mimeType?: string;
       contentType?: string;
       filename?: string;
@@ -654,6 +481,11 @@ export default namespace request {
     }
 
     interface FormItem {
+      name: string;
+      value: string | FileSpec | Array<FileSpec>;
+    }
+
+    class FormItemInner implements FormItem {
       name: string;
       value: string | FileSpec | Array<FileSpec>;
     }
@@ -681,13 +513,13 @@ export default namespace request {
       retry?: boolean;
       redirect?: boolean;
       proxy?: string;
-      index?: number;
-      begins?: number;
-      ends?: number;
+      index?: int;
+      begins?: long;
+      ends?: long;
       gauge?: boolean;
       precise?: boolean;
       token?: string;
-      priority?: number;
+      priority?: int;
       extras?: object;
       multipart?: boolean;
       notification?: Notification;
@@ -707,9 +539,17 @@ export default namespace request {
 
     interface Progress {
       readonly state: State;
-      readonly index: number;
-      readonly processed: number;
-      readonly sizes: Array<number>;
+      readonly index: int;
+      readonly processed: long;
+      readonly sizes: Array<long>;
+      readonly extras?: object;
+    }
+
+    class ProgressInner implements Progress {
+      readonly state: State;
+      readonly index: int;
+      readonly processed: long;
+      readonly sizes: Array<long>;
       readonly extras?: object;
     }
 
@@ -728,8 +568,8 @@ export default namespace request {
 
     interface Filter {
       bundle?: string;
-      before?: number;
-      after?: number;
+      before?: long;
+      after?: long;
       state?: State;
       action?: Action;
       mode?: Mode;
@@ -746,14 +586,14 @@ export default namespace request {
       readonly description: string;
       readonly action: Action;
       readonly mode: Mode;
-      readonly priority: number;
+      readonly priority: int;
       readonly mimeType: string;
       readonly progress: Progress;
       readonly gauge: boolean;
-      readonly ctime: number;
-      readonly mtime: number;
+      readonly ctime: long;
+      readonly mtime: long;
       readonly retry: boolean;
-      readonly tries: number;
+      readonly tries: int;
       readonly faults: Faults;
       readonly reason: string;
       readonly extras?: object;
@@ -770,14 +610,14 @@ export default namespace request {
       readonly description: string;
       readonly action: Action;
       readonly mode: Mode;
-      readonly priority: number;
+      readonly priority: int;
       readonly mimeType: string;
       readonly progress: Progress;
       readonly gauge: boolean;
-      readonly ctime: number;
-      readonly mtime: number;
+      readonly ctime: long;
+      readonly mtime: long;
       readonly retry: boolean;
-      readonly tries: number;
+      readonly tries: int;
       readonly faults: Faults;
       readonly reason: string;
       readonly extras?: object;
@@ -785,7 +625,7 @@ export default namespace request {
 
     interface HttpResponse {
       readonly version: string,
-      readonly statusCode: number,
+      readonly statusCode: int,
       readonly reason: string,
       readonly headers: Map<string, Array<string>>,
     }
@@ -817,11 +657,13 @@ export default namespace request {
       resume(): Promise<void>;
       stop(callback: AsyncCallback<void>): void;
       stop(): Promise<void>;
-      setMaxSpeed(speed: number): Promise<void>;
+      setMaxSpeed(speed: long): Promise<void>;
     }
 
   class TaskInner implements Task {
     readonly tid: string;
+    
+
     config: Config;
 
     native startSync(): void;
@@ -921,9 +763,9 @@ export default namespace request {
         });
     }
 
-    native setMaxSpeedSync(speed:number): void;
+    native setMaxSpeedSync(speed:long): void;
 
-    setMaxSpeed(speed: number): Promise<void> {
+    setMaxSpeed(speed: long): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             taskpool.execute((): undefined => {
               return this.setMaxSpeedSync(speed);
@@ -1050,7 +892,7 @@ export default namespace request {
       });
     }
 
-    native function searchSync(filter?: Filter): Array<string>;
+  native function searchSync(filter?: Filter): Array<string>;
 
     export function search(callback: AsyncCallback<Array<string>>): void {
       let p1 = taskpool.execute((): Array<string> => {
@@ -1077,7 +919,7 @@ export default namespace request {
     export function search(filter?: Filter): Promise<Array<string>> {
       return new Promise<Array<string>>((resolve, reject) => {
         taskpool.execute((): Array<string> => {
-          return searchSync(filter);
+          return searchSync(filter)
         }).then((content: NullishType) => {
           resolve(content as Array<string>);
         }, (err: BusinessError): void => {
@@ -1086,7 +928,7 @@ export default namespace request {
       });
     }
 
-    native function querySync(id: string): TaskInfo;
+    export native function querySync(id: string): TaskInfo;
 
     export function query(id: string, callback: AsyncCallback<TaskInfo>): void {
       let p1 = taskpool.execute((): TaskInfo => {
@@ -1144,12 +986,12 @@ export default namespace request {
       });
     }
 
-    native function detachGroupSync(gid: string, tids: string[]): void;
+    native function deleteGroupSync(gid: string, tids: string[]): void;
 
     export function deleteGroup(gid: string): Promise<void> {
       return new Promise<void>((resolve, reject) => {
         taskpool.execute((): void => {
-          return detachGroupSync(gid, []);
+          return deleteGroupSync(gid, []);
         }).then(() => {
           resolve(undefined);;
         }, (err: BusinessError): void => {
@@ -1158,4 +1000,10 @@ export default namespace request {
       });
     }
   }
+}
+
+function main () {
+  let w = new request.DownloadTaskInner;
+  w.suspend();
+  w.on('progress', (a:long, b:long) => {})
 }

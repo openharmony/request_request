@@ -62,9 +62,6 @@ pub const SET_MODE: u32 = 100;
 /// Change task mode.
 pub const DISABLE_TASK_NOTIFICATION: u32 = 101;
 
-/// Function code of RequestNotifyInterfaceCode
-pub(crate) const NOTIFY_RUN_COUNT: u32 = 2;
-
 #[cfg(test)]
 mod test {
     use super::*;

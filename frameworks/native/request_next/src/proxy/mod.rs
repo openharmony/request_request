@@ -11,6 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+mod notification;
+mod query;
 mod state;
 mod task;
 mod uds;
@@ -20,6 +22,7 @@ const SERVICE_TOKEN: &str = "OHOS.Download.RequestServiceInterface";
 use std::sync::{Arc, LazyLock, Mutex};
 
 use ipc::remote::RemoteObj;
+use request_core::error_code::EXCEPTION_SERVICE;
 use state::SaState;
 
 pub struct RequestProxy {
@@ -34,19 +37,20 @@ impl RequestProxy {
         &REQUEST_PROXY
     }
 
-    pub(crate) fn remote(&self) -> Option<Arc<RemoteObj>> {
+    pub(crate) fn remote(&self) -> Result<Arc<RemoteObj>, i32> {
         let mut remote = self.remote.lock().unwrap();
         match *remote {
-            SaState::Ready(ref obj) => return Some(obj.clone()),
+            SaState::Ready(ref obj) => return Ok(obj.clone()),
             SaState::Invalid(ref time) => {
-                if time.elapsed().as_secs() > 10 {
+                if time.elapsed().as_secs() > 5 {
                     *remote = SaState::update();
                     if let SaState::Ready(ref obj) = *remote {
-                        return Some(obj.clone());
+                        return Ok(obj.clone());
                     }
                 }
             }
         }
-        None
+        error!("request systemAbility load failed");
+        Err(EXCEPTION_SERVICE)
     }
 }
