@@ -11,13 +11,46 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#![allow(unused)]
+
 use std::ffi::c_char;
 
-pub use ffi::{GetCacheDir, LogLevel, LogType, SHA256};
+use cxx::SharedPtr;
+pub use ffi::*;
 
-#[cxx::bridge]
+#[repr(transparent)]
+pub struct AniEnv {
+    pub inner: ani_rs::AniEnv<'static>,
+}
+
+#[repr(transparent)]
+pub struct AniObject {
+    pub inner: ani_rs::objects::AniObject<'static>,
+}
+
+impl From<SharedPtr<ffi::ApplicationInfo>> for super::context::ApplicationInfo {
+    fn from(value: SharedPtr<ffi::ApplicationInfo>) -> Self {
+        super::context::ApplicationInfo {
+            bundle_type: BundleType(&value).into(),
+        }
+    }
+}
+
+#[cxx::bridge(namespace = "OHOS::Request")]
 mod ffi {
+
+    #[namespace = "OHOS::AppExecFwk"]
     #[repr(i32)]
+    enum BundleType {
+        APP,
+        ATOMIC_SERVICE,
+        SHARED,
+        APP_SERVICE_FWK,
+        APP_PLUGIN,
+    }
+
+    #[repr(i32)]
+    #[namespace = ""]
     enum LogType {
         // min log type
         LOG_TYPE_MIN = 0,
@@ -37,6 +70,7 @@ mod ffi {
 
     // Log level
     #[repr(i32)]
+    #[namespace = ""]
     enum LogLevel {
         // min log level
         LOG_LEVEL_MIN = 0,
@@ -54,19 +88,61 @@ mod ffi {
         LOG_LEVEL_MAX,
     }
 
+    extern "Rust" {
+        type AniEnv;
+
+        type AniObject;
+    }
+
     unsafe extern "C++" {
         include!("hilog/log.h");
         include!("request_utils_wrapper.h");
         include!("application_context.h");
+        include!("context.h");
+        include!("storage_acl.h");
 
-        #[namespace = "OHOS::Request"]
+        #[namespace = "OHOS::AppExecFwk"]
+        type BundleType;
+
         fn GetCacheDir() -> String;
 
-        #[namespace = "OHOS::Request"]
         fn SHA256(input: &str) -> String;
 
+        unsafe fn IsStageContext(env: *mut AniEnv, ani_object: *mut AniObject) -> bool;
+
+        unsafe fn GetStageModeContext(
+            env: *mut *mut AniEnv,
+            ani_object: *mut AniObject,
+        ) -> SharedPtr<Context>;
+
+        fn GetBundleName(context: &SharedPtr<Context>) -> String;
+
+        fn ContextGetCacheDir(context: &SharedPtr<Context>) -> String;
+        fn ContextGetBaseDir(context: &SharedPtr<Context>) -> String;
+
+        fn BundleType(application_info: &SharedPtr<ApplicationInfo>) -> BundleType;
+
+        #[namespace = "OHOS::AbilityRuntime"]
+        type Context;
+
+        #[namespace = "OHOS::AppExecFwk"]
+        type ApplicationInfo;
+
+        #[namespace = "OHOS::AbilityRuntime"]
+        fn GetApplicationInfo(self: &Context) -> SharedPtr<ApplicationInfo>;
+
+        #[namespace = "OHOS::StorageDaemon"]
+        fn AclSetAccess(targetFile: &CxxString, entryTxt: &CxxString) -> i32;
+
+        #[namespace = "OHOS::StorageDaemon"]
+        fn AclSetDefault(targetFile: &CxxString, entryTxt: &CxxString) -> i32;
+
+        #[namespace = ""]
         type LogType;
+
+        #[namespace = ""]
         type LogLevel;
+
     }
 }
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Huawei Device Co., Ltd.
+// Copyright (c) 2023 Huawei Device Co., Ltd.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,15 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::wrapper::ffi::{AclSetAccess, GetAppBaseDir};
+use crate::config::{Action, Mode};
+use crate::info::State;
 
-mod path;
-pub(crate) use path::standardize_path;
-
-pub(crate) fn get_app_base_dir() -> String {
-    GetAppBaseDir()
-}
-
-pub(crate) fn acl_set_access(target: &str, entry: &str) -> i32 {
-    AclSetAccess(target, entry)
+pub struct SearchFilter {
+    pub before: Option<i64>,
+    pub after: Option<i64>,
+    pub state: Option<State>,
+    pub action: Option<Action>,
+    pub mode: Option<Mode>,
 }

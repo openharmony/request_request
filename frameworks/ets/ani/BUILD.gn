@@ -15,9 +15,9 @@ import("//build/config/components/ets_frontend/ets2abc_config.gni")
 import("//build/ohos.gni")
 
 group("ani_package") {
-    deps = [
-        "request:request_ani",
-        "request:request",
-        "request:request_etc"
-    ]
+  deps = [
+    "request:request",
+    "request:request_ani",
+    "request:request_etc",
+  ]
 }

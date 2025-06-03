@@ -24,15 +24,13 @@ ohos_rust_static_library("request_core") {
   }
 
   sources = [ "src/lib.rs" ]
-  
+
   external_deps = [
-    "samgr:samgr_rust",
     "ipc:ipc_rust",
+    "samgr:samgr_rust",
   ]
 
-  deps = [
-    "//third_party/rust/crates/serde/serde:lib",
-  ]
+  deps = [ "//third_party/rust/crates/serde/serde:lib" ]
 
   clippy_lints = "none"
 

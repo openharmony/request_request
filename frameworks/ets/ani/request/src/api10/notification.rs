@@ -11,8 +11,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub struct RequestClient;
+use ani_rs::business_error::BusinessError;
 
-impl RequestClient {
-    
+use crate::api10::bridge::GroupConfig;
+
+#[ani_rs::native]
+pub fn create_group(config: GroupConfig) -> Result<String, BusinessError> {
+    todo!()
+}
+
+#[ani_rs::native]
+pub fn attach_group(gid: String, tids: Vec<String>) -> Result<(), BusinessError> {
+    todo!()
+}
+
+#[ani_rs::native]
+pub fn delete_group(gid: String) -> Result<(), BusinessError> {
+    todo!()
 }

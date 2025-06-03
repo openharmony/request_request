@@ -23,6 +23,6 @@ serde = { version = "1.0", features = ["derive"] }
 samgr = { git = "https://gitee.com/openharmony/systemabilitymgr_samgr" }
 ipc = { git = "https://gitee.com/openharmony/communication_ipc" }
 
-request = { path = "../../../native/request_next" }
+request_client = { path = "../../../native/request_next" }
 request_utils = { path = "../../../../common/utils" }
 request_core = { path = "../../../../common/request_core" }
