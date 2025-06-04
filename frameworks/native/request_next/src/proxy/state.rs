@@ -25,13 +25,14 @@ pub(crate) enum SaState {
 
 impl SaState {
     pub(crate) fn update() -> Self {
-        for _ in 0..10 {
+        for _ in 0..5 {
             match SystemAbilityManager::load_system_ability(DOWNLOAD_SERVICE_ID, 1000) {
                 Some(remote) => {
                     return SaState::Ready(Arc::new(remote));
                 }
                 None => {
-                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    std::thread::sleep(std::time::Duration::from_millis(5000));
+                    error!("request systemAbility load failed, retrying...");
                 }
             }
         }

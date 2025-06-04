@@ -37,8 +37,8 @@ ohos_rust_shared_library("request_ani") {
   deps = [
     "../../../../common/request_core:request_core",
     "../../../../common/utils:request_utils",
-    "//third_party/rust/crates/serde/serde:lib",
     "../../../native/request_next:request_client",
+    "//third_party/rust/crates/serde/serde:lib",
   ]
 
   clippy_lints = "none"

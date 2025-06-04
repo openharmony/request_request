@@ -12,5 +12,6 @@
 // limitations under the License.
 
 mod bridge;
-mod download;
-mod upload;
+pub mod callback;
+pub mod download;
+pub mod upload;
