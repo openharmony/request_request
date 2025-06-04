@@ -30,6 +30,10 @@ CStringWrapper WrapperCString(const std::string &str)
 {
     CStringWrapper cStringWrapper;
     cStringWrapper.len = str.length();
+    if (cStringWrapper.len <= 0) {
+        cStringWrapper.cStr = nullptr;
+        return cStringWrapper;
+    }
     cStringWrapper.cStr = new char[cStringWrapper.len];
     memcpy_s(cStringWrapper.cStr, cStringWrapper.len, str.c_str(), cStringWrapper.len);
     return cStringWrapper;
