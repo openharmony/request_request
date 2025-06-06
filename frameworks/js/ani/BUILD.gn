@@ -1,0 +1,88 @@
+# Copyright (C) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/request/request/request_aafwk.gni")
+import("//build/config/components/ets_frontend/ets2abc_config.gni")
+import("//build/ohos.gni")
+
+ohos_shared_library("requestmodule_ani") {
+  include_dirs = [
+    "include",
+    "../../native/request/include",
+  ]
+  sources = [
+    "src/ani_js_initialize.cpp",
+    "src/ani_task.cpp",
+    "src/listener_list.cpp",
+    "src/request_module_ani.cpp",
+  ]
+
+  deps = [
+    "../../../common/sys_event:request_sysevent",
+    "../../native/request:request_native",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:data_ability_helper",
+    "ability_runtime:extensionkit_native",
+    "c_utils:utils",
+    "curl:curl_shared",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "netmanager_base:net_conn_manager_if",
+    "openssl:libssl_shared",
+    "runtime_core:ani",
+    "storage_service:storage_manager_acl",
+  ]
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  subsystem_name = "request"
+  part_name = "request"
+  output_extension = "so"
+}
+
+generate_static_abc("requestmodule_abc") {
+  base_url = "./ets"
+  files = [ "./ets/@ohos.request.ets" ]
+  dst_file = "$target_out_dir/requestmodule.abc"
+  out_puts = [ "$target_out_dir/requestmodule.abc" ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/requestmodule.abc"
+}
+
+ohos_prebuilt_etc("requestmodule_abc_etc") {
+  source = "$target_out_dir/requestmodule.abc"
+  module_install_dir = "framework"
+  subsystem_name = "request"
+  part_name = "request"
+  deps = [ ":requestmodule_abc" ]
+}
+
+group("requestmoduleani_package") {
+  deps = [
+    ":requestmodule_abc_etc",
+    ":requestmodule_ani",
+  ]
+}
