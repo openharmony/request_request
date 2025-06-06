@@ -646,7 +646,7 @@ ExceptionErrorCode RequestAction::CheckUserFileSpec(
     if (config.mode != Mode::FOREGROUND) {
         return E_PARAMETER_CHECK;
     }
-    std::shared_ptr<AppFileService::ModuleFileUri::FileUri> fileUri = 
+    std::shared_ptr<AppFileService::ModuleFileUri::FileUri> fileUri =
     std::make_shared<AppFileService::ModuleFileUri::FileUri>(file.uri);
     std::string realPath = fileUri->GetRealPath();
     if (isUpload) {

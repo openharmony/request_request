@@ -54,6 +54,7 @@ public:
 private:
     static ExceptionError InitParam(
         napi_env env, napi_value *argv, std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
+    static void ParseConfigInner(napi_env env, napi_value jsConfig, Config &config);
     static bool ParseConfig(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static bool ParseConfigV9(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static void SetParseConfig(napi_env env, napi_value jsConfig, Config &config);
