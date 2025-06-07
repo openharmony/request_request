@@ -289,7 +289,7 @@ uint32_t Convert2Broken(Reason code)
         {Reason::NETWORK_APP, Faults::DISCONNECTED},
         {Reason::NETWORK_ACCOUNT, Faults::DISCONNECTED},
         {Reason::APP_ACCOUNT, Faults::OTHERS},
-        {Reason:: NETWORK_APP_ACCOUNT, Faults::DISCONNECTED}
+        {Reason:: NETWORK_APP_ACCOUNT, Faults::DISCONNECTED},
     };
     constexpr const int32_t detailVersion = 12;
     auto iter = InnerCodeToBroken.find(code);
