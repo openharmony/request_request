@@ -56,6 +56,7 @@ ohos_shared_library("cj_request_ffi") {
     "napi:cj_bind_ffi",
     "napi:cj_bind_native",
     "netmanager_base:net_conn_manager_if",
+    "netmanager_base:net_security_config_if",
     "openssl:libcrypto_shared",
     "openssl:libssl_shared",
     "storage_service:storage_manager_acl",
