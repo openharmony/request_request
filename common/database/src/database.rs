@@ -20,6 +20,8 @@ use crate::params::{FromSql, Params};
 use crate::wrapper::ffi::{self, Execute, NewRowEntity, Query};
 use crate::wrapper::open_rdb_store;
 
+const E_OK: i32 = 0;
+
 /// `RdbStore` ffi wrapper.
 pub struct RdbStore<'a> {
     inner: RdbStoreInner<'a>,
@@ -130,8 +132,10 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut row = NewRowEntity();
-        self.pin_mut().GoToNextRow();
-        if self.pin_mut().GetRow(row.pin_mut()) != 0 {
+        if self.pin_mut().GoToNextRow() != E_OK {
+            return None;
+        };
+        if self.pin_mut().GetRow(row.pin_mut()) != E_OK {
             return None;
         }
         Some(T::from_sql(0, row.pin_mut()))
@@ -144,8 +148,10 @@ macro_rules! single_tuple_impl {
             type Item = ($($ftype,) *);
             fn next(&mut self) -> Option<Self::Item> {
                 let mut row = NewRowEntity();
-                self.pin_mut().GoToNextRow();
-                if (self.pin_mut().GetRow(row.pin_mut()) != 0) {
+                if self.pin_mut().GoToNextRow() != E_OK {
+                    return None;
+                };
+                if (self.pin_mut().GetRow(row.pin_mut()) != E_OK) {
                     return None;
                 }
                 Some(($({
