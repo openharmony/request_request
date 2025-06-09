@@ -476,14 +476,15 @@ mod test {
 
         db.disable_task_notification(task_id);
         db.update_task_customized_notification(task_id, None, None);
-        db.update_task_group(task_id, group_id);
         assert!(!db.check_task_notification_available(&task_id));
         assert!(db.query_task_customized_notification(task_id).is_some());
-        assert_eq!(db.query_task_gid(task_id).unwrap(), group_id);
-
         db.clear_task_info(task_id);
         assert!(db.check_task_notification_available(&task_id));
         assert!(db.query_task_customized_notification(task_id).is_none());
+        
+        db.update_task_group(task_id, group_id);
+        assert_eq!(db.query_task_gid(task_id).unwrap(), group_id);
+        db.clear_task_info(task_id);
         assert!(db.query_task_gid(task_id).is_none());
     }
 
