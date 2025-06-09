@@ -233,7 +233,11 @@ int RequestDataBase::GetAppTaskQosInfos(rust::str sql, rust::vec<TaskQosInfo> &r
             REQUEST_HILOGE("GetRunningTasksArray result set go to %{public}d row failed", i);
             return -1;
         }
-        int taskId, action, mode, state, priority;
+        int taskId;
+        int action;
+        int mode;
+        int state;
+        int priority;
         queryRet->GetInt(0, taskId);   // Line 0 is 'task_id'
         queryRet->GetInt(1, action);   // Line 1 is 'action'
         queryRet->GetInt(2, mode);     // Line 2 is 'mode'
@@ -272,7 +276,10 @@ int RequestDataBase::GetTaskQosInfo(rust::str sql, TaskQosInfo &res)
         REQUEST_HILOGE("GetTaskQosInfo result set go to 0 row failed");
         return -1;
     }
-    int64_t action, mode, state, priority;
+    int64_t action;
+    int64_t mode;
+    int64_t state;
+    int64_t priority;
     queryRet->GetLong(0, action);   // Line 0 is 'action'
     queryRet->GetLong(1, mode);     // Line 1 is 'mode'
     queryRet->GetLong(2, state);    // Line 2 is 'state'

@@ -81,7 +81,8 @@ ExceptionErrorCode RequestServiceProxy::StartTasks(
 {
     uint32_t len = static_cast<uint32_t>(tids.size());
     rets.resize(len, ExceptionErrorCode::E_OTHER);
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteUint32(len);
@@ -113,7 +114,8 @@ ExceptionErrorCode RequestServiceProxy::StopTasks(
 {
     uint32_t len = static_cast<uint32_t>(tids.size());
     rets.resize(len, ExceptionErrorCode::E_OTHER);
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteUint32(len);
@@ -145,7 +147,8 @@ ExceptionErrorCode RequestServiceProxy::ResumeTasks(
 {
     uint32_t len = static_cast<uint32_t>(tids.size());
     rets.resize(len, ExceptionErrorCode::E_OTHER);
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteUint32(len);
@@ -177,7 +180,8 @@ ExceptionErrorCode RequestServiceProxy::PauseTasks(
 {
     uint32_t len = static_cast<uint32_t>(tids.size());
     rets.resize(len, ExceptionErrorCode::E_OTHER);
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteUint32(static_cast<uint32_t>(version));
@@ -210,7 +214,8 @@ ExceptionErrorCode RequestServiceProxy::RemoveTasks(
 {
     uint32_t len = static_cast<uint32_t>(tids.size());
     rets.resize(len, ExceptionErrorCode::E_OTHER);
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteUint32(static_cast<uint32_t>(version));
@@ -243,7 +248,8 @@ ExceptionErrorCode RequestServiceProxy::QueryTasks(const std::vector<std::string
     TaskInfoRet infoRet{ .code = ExceptionErrorCode::E_OTHER };
     uint32_t len = static_cast<uint32_t>(tids.size());
     rets.resize(len, infoRet);
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteUint32(len);
@@ -278,7 +284,8 @@ ExceptionErrorCode RequestServiceProxy::ShowTasks(const std::vector<std::string>
     TaskInfoRet infoRet{ .code = ExceptionErrorCode::E_OTHER };
     uint32_t len = static_cast<uint32_t>(tids.size());
     rets.resize(len, infoRet);
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteUint32(len);
@@ -352,7 +359,8 @@ ExceptionErrorCode RequestServiceProxy::TouchTasks(
     TaskInfoRet infoRet{ .code = ExceptionErrorCode::E_OTHER };
     uint32_t len = static_cast<uint32_t>(tids.size());
     rets.resize(len, infoRet);
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteUint32(len);
@@ -388,7 +396,8 @@ ExceptionErrorCode RequestServiceProxy::SetMaxSpeeds(
 {
     uint32_t len = static_cast<uint32_t>(speedConfig.size());
     rets.resize(len, ExceptionErrorCode::E_OTHER);
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteUint32(len);
@@ -419,7 +428,8 @@ ExceptionErrorCode RequestServiceProxy::SetMaxSpeeds(
 
 ExceptionErrorCode RequestServiceProxy::SetMode(const std::string &tid, const Mode mode)
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(tid);
@@ -444,7 +454,8 @@ ExceptionErrorCode RequestServiceProxy::SetMode(const std::string &tid, const Mo
 ExceptionErrorCode RequestServiceProxy::DisableTaskNotification(
     const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets)
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteStringVector(tids);
@@ -580,7 +591,8 @@ void RequestServiceProxy::GetVectorData(const Config &config, MessageParcel &dat
 int32_t RequestServiceProxy::GetTask(const std::string &tid, const std::string &token, Config &config)
 {
     REQUEST_HILOGD("Request GetTask, tid: %{public}s", tid.c_str());
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(tid);
@@ -679,7 +691,8 @@ int32_t RequestServiceProxy::Touch(const std::string &tid, const std::string &to
 int32_t RequestServiceProxy::Search(const Filter &filter, std::vector<std::string> &tids)
 {
     REQUEST_HILOGD("Request Search");
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(filter.bundle);
@@ -767,7 +780,8 @@ int32_t RequestServiceProxy::Pause(const std::string &tid, const Version version
 int32_t RequestServiceProxy::QueryMimeType(const std::string &tid, std::string &mimeType)
 {
     REQUEST_HILOGD("Request QueryMimeType, tid: %{public}s", tid.c_str());
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(RequestServiceProxy::GetDescriptor());
     data.WriteString(tid);
@@ -844,7 +858,8 @@ int32_t RequestServiceProxy::SetMaxSpeed(const std::string &tid, const int64_t m
 int32_t RequestServiceProxy::OpenChannel(int32_t &sockFd)
 {
     REQUEST_HILOGD("Request OpenChannel");
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     int32_t ret =
@@ -870,7 +885,8 @@ int32_t RequestServiceProxy::OpenChannel(int32_t &sockFd)
 int32_t RequestServiceProxy::Subscribe(const std::string &tid)
 {
     REQUEST_HILOGD("Request Subscribe, tid: %{public}s", tid.c_str());
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(tid);
@@ -891,7 +907,8 @@ int32_t RequestServiceProxy::Subscribe(const std::string &tid)
 int32_t RequestServiceProxy::Unsubscribe(const std::string &tid)
 {
     REQUEST_HILOGD("Request Unsubscribe, tid: %{public}s", tid.c_str());
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(tid);
@@ -912,7 +929,8 @@ int32_t RequestServiceProxy::SubRunCount(const sptr<NotifyInterface> &listener)
 {
     REQUEST_HILOGD("Request SubRunCount");
     FwkRunningTaskCountManager::GetInstance()->SetSaStatus(true);
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteRemoteObject(listener->AsObject());
@@ -938,7 +956,8 @@ int32_t RequestServiceProxy::SubRunCount(const sptr<NotifyInterface> &listener)
 int32_t RequestServiceProxy::UnsubRunCount()
 {
     REQUEST_HILOGD("Request UnubRunCount");
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     int32_t ret =
@@ -956,7 +975,8 @@ int32_t RequestServiceProxy::UnsubRunCount()
 
 int32_t RequestServiceProxy::CreateGroup(std::string &gid, const bool gauge, Notification &notification)
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteBool(gauge);
@@ -988,7 +1008,8 @@ int32_t RequestServiceProxy::CreateGroup(std::string &gid, const bool gauge, Not
 
 int32_t RequestServiceProxy::AttachGroup(const std::string &gid, const std::vector<std::string> &tids)
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(gid);
@@ -1012,7 +1033,8 @@ int32_t RequestServiceProxy::AttachGroup(const std::string &gid, const std::vect
 
 int32_t RequestServiceProxy::DeleteGroup(const std::string &gid)
 {
-    MessageParcel data, reply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(gid);
