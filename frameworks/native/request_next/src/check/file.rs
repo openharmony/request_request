@@ -149,7 +149,7 @@ pub fn set_file_permission(path: &PathBuf, context: &Context) -> Result<(), Down
         .open(&path)
         .map_err(|e| DownloadPathError::CreateFile(e))?;
 
-    let perm = fs::Permissions::from_mode(0o666);
+    let perm = fs::Permissions::from_mode(0o777);
     if let Err(e) = fs::set_permissions(&path, perm) {
         return Err(DownloadPathError::SetPermission(e));
     }
@@ -157,18 +157,22 @@ pub fn set_file_permission(path: &PathBuf, context: &Context) -> Result<(), Down
     let base_dir = context.get_base_dir();
     info!("Base directory: {:?}", base_dir);
 
-    let mut path = path.clone();
+    let mut path_clone = path.clone();
+
+    while path_clone.to_string_lossy().to_string().len() >= 10 {
+        info!("Current path: {:?}", path_clone);
+        if let Err(e) =
+            storage::acl_set_access(&path_clone.to_string_lossy().to_string(), SA_PERMISSION_X)
+        {
+            info!("");
+        }
+        path_clone.pop();
+    }
+
+    info!("Setting ACL access for path: {:?}", path);
     if let Err(e) = storage::acl_set_access(&path.to_string_lossy().to_string(), SA_PERMISSION_RWX)
     {
         return Err(DownloadPathError::AclAccess(e));
-    }
-
-    while path.pop() && path.to_string_lossy().to_string().len() > base_dir.len() {
-        if let Err(e) =
-            storage::acl_set_access(&path.to_string_lossy().to_string(), SA_PERMISSION_X)
-        {
-            return Err(DownloadPathError::AclAccess(e));
-        }
     }
 
     Ok(())
