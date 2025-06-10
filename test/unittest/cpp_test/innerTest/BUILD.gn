@@ -71,6 +71,7 @@ ohos_unittest("innerTest") {
     "init:libbegetutil",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",
+    "netmanager_base:net_security_config_if",
     "openssl:libcrypto_shared",
     "openssl:libssl_shared",
     "relational_store:native_appdatafwk",

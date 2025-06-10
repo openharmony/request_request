@@ -32,7 +32,7 @@
 #include "file_uri.h"
 #include "log.h"
 #include "napi_utils.h"
-#include "net_conn_client.h"
+#include "network_security_config.h"
 #include "parameter.h"
 #include "request_common.h"
 #include "request_manager.h"
@@ -714,7 +714,7 @@ bool JsInitialize::ParseUrl(napi_env env, napi_value jsConfig, std::string &url,
     }
     auto hostname = GetHostnameFromURL(url);
     bool cleartextPermitted = true;
-    OHOS::NetManagerStandard::NetConnClient::GetInstance().IsCleartextPermitted(hostname, cleartextPermitted);
+    OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance().IsCleartextPermitted(hostname, cleartextPermitted);
     if (!cleartextPermitted) {
         if (!regex_match(url, std::regex("^https:\\/\\/.+"))) {
             REQUEST_HILOGE("ParseUrl error");
@@ -775,7 +775,7 @@ bool JsInitialize::ParseCertsPath(
     iter_t hostEnd = std::find(protocolEnd, (pathStart != urlEnd) ? pathStart : queryStart, ':');
     std::string hostname = std::string(hostStart, hostEnd);
     REQUEST_HILOGD("Hostname is %{public}s", hostname.c_str());
-    NetManagerStandard::NetConnClient::GetInstance().GetTrustAnchorsForHostName(hostname, certsPath);
+    NetManagerStandard::NetworkSecurityConfig::GetInstance().GetTrustAnchorsForHostName(hostname, certsPath);
     return true;
 }
 
@@ -841,11 +841,12 @@ std::string GetHostnameFromURL(const std::string &url)
 void JsInitialize::ParseCertificatePins(napi_env env, std::string &url, std::string &certificatePins)
 {
     auto hostname = GetHostnameFromURL(url);
-    if (OHOS::NetManagerStandard::NetConnClient::GetInstance().IsPinOpenMode(hostname)) {
+    if (OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance().IsPinOpenMode(hostname)) {
         REQUEST_HILOGI("Pins is openMode");
         return;
     }
-    auto ret = OHOS::NetManagerStandard::NetConnClient::GetInstance().GetPinSetForHostName(hostname, certificatePins);
+    auto ret = OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance().
+        GetPinSetForHostName(hostname, certificatePins);
     if (ret != 0 || certificatePins.empty()) {
         REQUEST_HILOGD("Get No pin set by hostname");
     }

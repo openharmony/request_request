@@ -19,7 +19,7 @@
 
 #include "application_context.h"
 #include "log.h"
-#include "net_conn_client.h"
+#include "network_security_config.h"
 
 namespace OHOS::Request {
 
@@ -271,7 +271,8 @@ void TaskBuilder::checkCertsPath()
     iter_t hostEnd = std::find(protocolEnd, (pathStart != urlEnd) ? pathStart : queryStart, ':');
     std::string hostname = std::string(hostStart, hostEnd);
     REQUEST_HILOGD("Hostname is %{public}s", hostname.c_str());
-    NetManagerStandard::NetConnClient::GetInstance().GetTrustAnchorsForHostName(hostname, this->config.certsPath);
+    NetManagerStandard::NetworkSecurityConfig::GetInstance().
+        GetTrustAnchorsForHostName(hostname, this->config.certsPath);
 }
 
 bool TaskBuilder::checkData()
@@ -413,11 +414,11 @@ std::string GetHostnameFromURL(const std::string &url)
 void TaskBuilder::checkCertificatePins()
 {
     auto hostname = GetHostnameFromURL(this->config.url);
-    if (OHOS::NetManagerStandard::NetConnClient::GetInstance().IsPinOpenMode(hostname)) {
+    if (OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance().IsPinOpenMode(hostname)) {
         REQUEST_HILOGI("Pins is openMode");
         return;
     }
-    auto ret = OHOS::NetManagerStandard::NetConnClient::GetInstance().GetPinSetForHostName(
+    auto ret = OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance().GetPinSetForHostName(
         hostname, this->config.certificatePins);
     if (ret != 0 || this->config.certificatePins.empty()) {
         REQUEST_HILOGD("Get No pin set by hostname");

@@ -92,6 +92,7 @@ ohos_shared_library("request") {
     "ipc:ipc_single",
     "napi:ace_napi",
     "netmanager_base:net_conn_manager_if",
+    "netmanager_base:net_security_config_if",
     "openssl:libssl_shared",
     "storage_service:storage_manager_acl",
   ]
@@ -155,6 +156,7 @@ ohos_static_library("request_static") {
     "ipc:ipc_single",
     "napi:ace_napi",
     "netmanager_base:net_conn_manager_if",
+    "netmanager_base:net_security_config_if",
     "openssl:libssl_shared",
     "storage_service:storage_manager_acl",
   ]

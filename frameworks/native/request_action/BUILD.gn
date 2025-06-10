@@ -48,6 +48,7 @@ ohos_shared_library("request_action") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "netmanager_base:net_conn_manager_if",
+    "netmanager_base:net_security_config_if",
     "storage_service:storage_manager_acl",
   ]
 

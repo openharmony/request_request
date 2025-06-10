@@ -26,7 +26,7 @@
 #include "cj_request_task.h"
 #include "constant.h"
 #include "log.h"
-#include "net_conn_client.h"
+#include "network_security_config.h"
 #include "request_common.h"
 #include "request_manager.h"
 #include "securec.h"
@@ -116,7 +116,7 @@ bool CJInitialize::ParseCertsPath(std::string &url, std::vector<std::string> &ce
     iter_t hostEnd = std::find(protocolEnd, (pathStart != urlEnd) ? pathStart : queryStart, ':');
     std::string hostname = std::string(hostStart, hostEnd);
     REQUEST_HILOGD("Hostname is %{public}s", hostname.c_str());
-    NetManagerStandard::NetConnClient::GetInstance().GetTrustAnchorsForHostName(hostname, certsPath);
+    NetManagerStandard::NetworkSecurityConfig::GetInstance().GetTrustAnchorsForHostName(hostname, certsPath);
 
     return true;
 }
