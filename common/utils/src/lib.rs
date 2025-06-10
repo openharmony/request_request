@@ -21,6 +21,7 @@
 mod macros;
 
 pub mod fastrand;
+pub mod file_control;
 pub mod hash;
 pub mod lru;
 pub mod task_id;

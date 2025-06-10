@@ -26,7 +26,6 @@ impl RequestServiceStub {
         let permission = PermissionChecker::check_down_permission();
         let len: u32 = data.read()?;
         let len = len as usize;
-        let mut vec = vec![(ErrorCode::Other, TaskInfo::new()); len];
 
         if len > GET_INFO_MAX {
             info!("Service touch: out of size: {}", len);
@@ -35,6 +34,7 @@ impl RequestServiceStub {
         }
 
         let uid = ipc::Skeleton::calling_uid();
+        let mut vec = vec![(ErrorCode::Other, TaskInfo::new()); len];
         for i in 0..len {
             let task_id: String = data.read()?;
             info!("Service touch tid {}", task_id);

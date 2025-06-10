@@ -33,7 +33,6 @@ impl RequestServiceStub {
 
         let len: u32 = data.read()?;
         let len = len as usize;
-        let mut vec = vec![ErrorCode::Other; len];
 
         if len > CONTROL_MAX {
             info!("Service set_max_speed: out of size: {}", len);
@@ -42,7 +41,7 @@ impl RequestServiceStub {
         }
 
         let uid = ipc::Skeleton::calling_uid();
-
+        let mut vec = vec![ErrorCode::Other; len];
         for i in 0..len {
             let task_id: String = data.read()?;
             let max_speed: i64 = data.read()?;
@@ -54,7 +53,10 @@ impl RequestServiceStub {
                 sys_event!(
                     ExecError,
                     DfxCode::INVALID_IPC_MESSAGE_A42,
-                    &format!("Service set_max_speed, failed: speed not valid: {}", max_speed)
+                    &format!(
+                        "Service set_max_speed, failed: speed not valid: {}",
+                        max_speed
+                    )
                 );
                 set_code_with_index(&mut vec, i, ErrorCode::ParameterCheck);
                 continue;
@@ -90,7 +92,10 @@ impl RequestServiceStub {
                 sys_event!(
                     ExecError,
                     DfxCode::INVALID_IPC_MESSAGE_A42,
-                    &format!("Service set_max_speed, failed: check task uid. tid: {}, uid: {}", task_id, uid)
+                    &format!(
+                        "Service set_max_speed, failed: check task uid. tid: {}, uid: {}",
+                        task_id, uid
+                    )
                 );
                 continue;
             }
@@ -104,7 +109,10 @@ impl RequestServiceStub {
                 sys_event!(
                     ExecError,
                     DfxCode::INVALID_IPC_MESSAGE_A42,
-                    &format!("Service set_max_speed, failed: task_manager err: {}", task_id)
+                    &format!(
+                        "Service set_max_speed, failed: task_manager err: {}",
+                        task_id
+                    )
                 );
                 set_code_with_index(&mut vec, i, ErrorCode::Other);
                 continue;
@@ -118,7 +126,10 @@ impl RequestServiceStub {
                 sys_event!(
                     ExecError,
                     DfxCode::INVALID_IPC_MESSAGE_A42,
-                    &format!("Service set_max_speed, tid: {}, failed: receives ret failed", task_id)
+                    &format!(
+                        "Service set_max_speed, tid: {}, failed: receives ret failed",
+                        task_id
+                    )
                 );
                 set_code_with_index(&mut vec, i, ErrorCode::Other);
                 continue;
@@ -133,7 +144,10 @@ impl RequestServiceStub {
                 sys_event!(
                     ExecError,
                     DfxCode::INVALID_IPC_MESSAGE_A42,
-                    &format!("Service set_max_speed, tid: {}, failed: {}", task_id, ret as i32)
+                    &format!(
+                        "Service set_max_speed, tid: {}, failed: {}",
+                        task_id, ret as i32
+                    )
                 );
             }
         }

@@ -50,7 +50,6 @@ impl RequestServiceStub {
 
         let len: u32 = data.read()?;
         let len = len as usize;
-        let mut vec = vec![(ErrorCode::Other, TaskInfo::new()); len];
 
         if len > GET_INFO_MAX {
             info!("Service query: out of size: {}", len);
@@ -58,6 +57,7 @@ impl RequestServiceStub {
             return Err(IpcStatusCode::Failed);
         }
 
+        let mut vec = vec![(ErrorCode::Other, TaskInfo::new()); len];
         for i in 0..len {
             let task_id: String = data.read()?;
             info!("Service query tid {}", task_id);

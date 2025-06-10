@@ -18,6 +18,7 @@ use std::sync::atomic::{
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+use request_utils::file_control::{belong_app_base, check_standardized_path};
 use ylong_http_client::async_impl::{Body, Client, Request, RequestBuilder, Response};
 use ylong_http_client::{ErrorKind, HttpClientError};
 
@@ -652,30 +653,26 @@ impl TaskStatus {
 }
 
 fn check_file_specs(file_specs: &[FileSpec]) -> bool {
-    const EL1: &str = "/data/storage/el1/base/";
-    const EL2: &str = "/data/storage/el2/base/";
-    const EL5: &str = "/data/storage/el5/base/";
-
-    let mut result = true;
     for (idx, spec) in file_specs.iter().enumerate() {
+        if spec.is_user_file {
+            continue;
+        }
         let path = &spec.path;
-        if !spec.is_user_file
-            && !path.starts_with(EL1)
-            && !path.starts_with(EL2)
-            && !path.starts_with(EL5)
-        {
+        if !check_standardized_path(path) {
+            error!("File path err - path: {}, idx: {}", path, idx);
+            return false;
+        }
+        if !belong_app_base(path) {
             error!("File path invalid - path: {}, idx: {}", path, idx);
             sys_event!(
                 ExecFault,
                 DfxCode::TASK_FAULT_09,
                 &format!("File path invalid - path: {}, idx: {}", path, idx)
             );
-            result = false;
-            break;
+            return false;
         }
     }
-
-    result
+    true
 }
 
 pub(crate) fn check_config(

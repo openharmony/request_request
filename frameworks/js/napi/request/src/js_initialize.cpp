@@ -1156,6 +1156,7 @@ bool JsInitialize::CheckUploadFileSpec(const std::shared_ptr<OHOS::AbilityRuntim
             error.code = E_PARAMETER_CHECK;
             return false;
         }
+        StandardizePathApi9(path);
     } else {
         std::vector<std::string> pathVec;
         if (!GetSandboxPath(context, config, path, pathVec, error.errInfo)) {
@@ -1177,17 +1178,25 @@ bool JsInitialize::CheckUploadFileSpec(const std::shared_ptr<OHOS::AbilityRuntim
     return true;
 }
 
+void JsInitialize::StandardizePathApi9(std::string &path)
+{
+    std::vector<std::string> pathVec;
+    if (!JsInitialize::WholeToNormal(path, pathVec) || pathVec.empty()) {
+        REQUEST_HILOGE("WholeToNormal Err api9");
+    };
+}
+
 bool JsInitialize::CheckDownloadFile(
     const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config, ExceptionError &error)
 {
     if (config.version == Version::API9) {
         std::string path = config.saveas;
         if (config.saveas.find('/') == 0) {
-            // API9 do not check.
         } else if (!GetInternalPath(context, config, path, error.errInfo)) {
             error.code = E_PARAMETER_CHECK;
             return false;
         }
+        StandardizePathApi9(path);
         config.saveas = path;
     } else {
         if (!CheckDownloadFilePath(context, config, error.errInfo)) {
@@ -1360,6 +1369,8 @@ bool JsInitialize::WholeToNormal(std::string &path, std::vector<std::string> &ou
     return true;
 }
 
+// "/A/B/../C" -> "/A/C"
+// ["A", "B", "..", "C"] -> ["A", "C"]
 bool JsInitialize::PathVecToNormal(const std::vector<std::string> &in, std::vector<std::string> &out)
 {
     for (auto elem : in) {
@@ -1369,13 +1380,14 @@ bool JsInitialize::PathVecToNormal(const std::vector<std::string> &in, std::vect
             } else {
                 return false;
             }
-        } else {
+        } else if (elem != ".") {
             out.push_back(elem);
         }
     }
     return true;
 }
 
+// "/A/B//C" -> ["A", "B", "C"]
 void JsInitialize::StringSplit(const std::string &str, const char delim, std::vector<std::string> &elems)
 {
     std::stringstream stream(str);
