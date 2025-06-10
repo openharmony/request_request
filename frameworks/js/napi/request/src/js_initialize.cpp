@@ -390,6 +390,17 @@ void JsInitialize::SetParseConfig(napi_env env, napi_value jsConfig, Config &con
     }
 }
 
+void JsInitialize::ParseConfigInner(napi_env env, napi_value jsConfig, Config &config)
+{
+    ParseCertificatePins(env, config.url, config.certificatePins);
+    ParseMethod(env, jsConfig, config);
+    ParseRoaming(env, jsConfig, config);
+    ParseRedirect(env, jsConfig, config.redirect);
+    ParseNetwork(env, jsConfig, config.network);
+    ParseRetry(env, jsConfig, config.retry);
+    SetParseConfig(env, jsConfig, config);
+}
+
 bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
 {
     if (NapiUtils::GetValueType(env, jsConfig) != napi_object) {
@@ -434,13 +445,7 @@ bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config
     if (!ParseTimeout(env, jsConfig, config, errInfo)) {
         return false;
     }
-    ParseCertificatePins(env, config.url, config.certificatePins);
-    ParseMethod(env, jsConfig, config);
-    ParseRoaming(env, jsConfig, config);
-    ParseRedirect(env, jsConfig, config.redirect);
-    ParseNetwork(env, jsConfig, config.network);
-    ParseRetry(env, jsConfig, config.retry);
-    SetParseConfig(env, jsConfig, config);
+    ParseConfigInner(env, jsConfig, config);
     return true;
 }
 
@@ -1164,7 +1169,7 @@ bool JsInitialize::CheckUserFileSpec(
         error.errInfo = "Parameter verification failed, user file can only for Mode::FOREGROUND";
         return false;
     }
-    std::shared_ptr<AppFileService::ModuleFileUri::FileUri> fileUri = 
+    std::shared_ptr<AppFileService::ModuleFileUri::FileUri> fileUri =
     std::make_shared<AppFileService::ModuleFileUri::FileUri>(file.uri);
     std::string realPath = fileUri->GetRealPath();
     if (isUpload) {

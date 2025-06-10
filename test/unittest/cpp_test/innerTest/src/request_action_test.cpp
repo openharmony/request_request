@@ -1670,7 +1670,8 @@ HWTEST_F(RequestActionTest, CreateInnerTest0215, TestSize.Level1)
 {
     std::shared_ptr<ApplicationContext> context = std::make_shared<ContextCacheTestMock>();
     FileSpec file = { .uri = "file://media/Photo/1/test.img" };
-    Config config = { .version = Version::API10, .mode = Mode::BACKGROUND, .overwrite = true, .saveas = "file://media/Photo/1/test.img" };
+    Config config = { .version = Version::API10, .mode = Mode::BACKGROUND, .overwrite = true,
+        .saveas = "file://media/Photo/1/test.img" };
     auto res = RequestAction::CheckDownloadFile(context, config);
     EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
 }
