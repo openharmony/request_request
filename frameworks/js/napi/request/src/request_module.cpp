@@ -21,6 +21,7 @@
 #include "napi/native_node_api.h"
 #include "napi_utils.h"
 #include "notification_bar.h"
+#include "request_common.h"
 #include "request_event.h"
 
 using namespace OHOS::Request;
@@ -83,6 +84,19 @@ static void NapiCreateFaults(napi_env env, napi_value &faults)
     NapiUtils::SetUint32Property(env, faults, "LOW_SPEED", static_cast<uint32_t>(Faults::LOW_SPEED));
 }
 
+static void NapiCreateWaitingReason(napi_env env, napi_value &waitingReason)
+{
+    napi_create_object(env, &waitingReason);
+    NapiUtils::SetUint32Property(
+        env, waitingReason, "TASK_QUEUE_FULL", static_cast<uint32_t>(WaitingReason::TaskQueueFull));
+    NapiUtils::SetUint32Property(
+        env, waitingReason, "NETWORK_NOT_MATCH", static_cast<uint32_t>(WaitingReason::NetworkNotMatch));
+    NapiUtils::SetUint32Property(
+        env, waitingReason, "APP_BACKGROUND", static_cast<uint32_t>(WaitingReason::AppBackground));
+    NapiUtils::SetUint32Property(
+        env, waitingReason, "USER_INACTIVATED", static_cast<uint32_t>(WaitingReason::UserInactivated));
+}
+
 static void NapiCreateBroadcastEvent(napi_env env, napi_value &broadcastEvent)
 {
     napi_create_object(env, &broadcastEvent);
@@ -104,6 +118,8 @@ static napi_value InitAgent(napi_env env, napi_value exports)
     NapiCreateFaults(env, faults);
     napi_value broadcastEvent = nullptr;
     NapiCreateBroadcastEvent(env, broadcastEvent);
+    napi_value waitingReason = nullptr;
+    NapiCreateWaitingReason(env, waitingReason);
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_PROPERTY("Action", action),
@@ -112,6 +128,7 @@ static napi_value InitAgent(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("State", state),
         DECLARE_NAPI_PROPERTY("Faults", faults),
         DECLARE_NAPI_PROPERTY("BroadcastEvent", broadcastEvent),
+        DECLARE_NAPI_PROPERTY("WaitingReason", waitingReason),
 
         DECLARE_NAPI_METHOD("create", JsTask::JsCreate),
         DECLARE_NAPI_METHOD("getTask", JsTask::GetTask),
