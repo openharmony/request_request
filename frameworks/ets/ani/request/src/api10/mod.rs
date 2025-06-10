@@ -13,5 +13,6 @@
 
 pub mod agent;
 mod bridge;
+pub mod callback;
 pub mod notification;
 pub mod task;

@@ -130,90 +130,89 @@ pub struct NotifyData {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct InfoProgress {
-    pub(crate) common_data: CommonProgress,
+pub struct InfoProgress {
+    pub common_data: CommonProgress,
     /// Total size of the files.
-    pub(crate) sizes: Vec<i64>,
+    pub sizes: Vec<i64>,
     /// Each progress size of the files.
-    pub(crate) processed: Vec<usize>,
-    pub(crate) extras: HashMap<String, String>,
+    pub processed: Vec<usize>,
+    pub extras: HashMap<String, String>,
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct CommonProgress {
-    pub(crate) state: u8,
-    pub(crate) index: usize,
-    pub(crate) total_processed: usize,
+pub struct CommonProgress {
+    pub state: u8,
+    pub index: usize,
+    pub total_processed: usize,
 }
 
 #[derive(Copy, Clone, Debug)]
-pub(crate) struct CommonTaskInfo {
-    pub(crate) task_id: u32,
-    pub(crate) uid: u64,
-    pub(crate) action: u8,
-    pub(crate) mode: u8,
-    pub(crate) ctime: u64,
-    pub(crate) mtime: u64,
-    pub(crate) reason: u8,
-    pub(crate) gauge: bool,
-    pub(crate) retry: bool,
-    pub(crate) tries: u32,
-    pub(crate) version: u8,
-    pub(crate) priority: u32,
+pub struct CommonTaskInfo {
+    pub task_id: u32,
+    pub uid: u64,
+    pub action: u8,
+    pub mode: u8,
+    pub ctime: u64,
+    pub mtime: u64,
+    pub reason: u8,
+    pub gauge: bool,
+    pub retry: bool,
+    pub tries: u32,
+    pub version: u8,
+    pub priority: u32,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct TaskInfo {
-    pub(crate) bundle: String,
-    pub(crate) url: String,
-    pub(crate) data: String,
-    pub(crate) token: String,
-    pub(crate) form_items: Vec<FormItem>,
-    pub(crate) file_specs: Vec<FileSpec>,
-    pub(crate) title: String,
-    pub(crate) description: String,
-    pub(crate) mime_type: String,
-    pub(crate) progress: InfoProgress,
-    pub(crate) extras: HashMap<String, String>,
-    pub(crate) common_data: CommonTaskInfo,
-    pub(crate) max_speed: i64,
+pub struct TaskInfo {
+    pub bundle: String,
+    pub url: String,
+    pub data: String,
+    pub token: String,
+    pub form_items: Vec<FormItem>,
+    pub file_specs: Vec<FileSpec>,
+    pub title: String,
+    pub description: String,
+    pub mime_type: String,
+    pub progress: InfoProgress,
+    pub extras: HashMap<String, String>,
+    pub common_data: CommonTaskInfo,
+    pub max_speed: i64,
 }
 
 impl Deserialize for TaskInfo {
     fn deserialize(parcel: &mut ipc::parcel::MsgParcel) -> ipc::IpcResult<Self> {
-        let gauge = parcel.read::<bool>()?;
-        let retry = parcel.read::<bool>()?;
-        let action = parcel.read::<u32>()? as u8;
-        let mode = parcel.read::<u32>()? as u8;
-        let reason = parcel.read::<u32>()? as u8;
-        let tries = parcel.read::<u32>()?;
-        let uid = parcel.read::<String>()?.parse::<u64>().unwrap_or(0);
-        let bundle = parcel.read::<String>()?;
-        let url = parcel.read::<String>()?;
-        let task_id = parcel.read::<String>()?.parse::<u32>().unwrap_or(0);
-        let title = parcel.read::<String>()?;
-        let mime_type = parcel.read::<String>()?;
-        let ctime = parcel.read::<u64>()?;
-        let mtime = parcel.read::<u64>()?;
-        let data = parcel.read::<String>()?;
-        let description = parcel.read::<String>()?;
-        let priority = parcel.read::<u32>()?;
-
-        let form_items_len = parcel.read::<u32>()? as usize;
+        let gauge = parcel.read::<bool>().unwrap();
+        let retry = parcel.read::<bool>().unwrap();
+        let action = parcel.read::<u32>().unwrap() as u8;
+        let mode = parcel.read::<u32>().unwrap() as u8;
+        let reason = parcel.read::<u32>().unwrap() as u8;
+        let tries = parcel.read::<u32>().unwrap();
+        let uid = parcel.read::<String>().unwrap().parse::<u64>().unwrap_or(0);
+        let bundle = parcel.read::<String>().unwrap();
+        let url = parcel.read::<String>().unwrap();
+        let task_id = parcel.read::<String>().unwrap().parse::<u32>().unwrap_or(0);
+        let title = parcel.read::<String>().unwrap();
+        let mime_type = parcel.read::<String>().unwrap();
+        let ctime = parcel.read::<u64>().unwrap();
+        let mtime = parcel.read::<u64>().unwrap();
+        let data = parcel.read::<String>().unwrap();
+        let description = parcel.read::<String>().unwrap();
+        let priority = parcel.read::<u32>().unwrap();
+        let form_items_len = parcel.read::<u32>().unwrap() as usize;
         let mut form_items = Vec::with_capacity(form_items_len);
         for _ in 0..form_items_len {
-            let name = parcel.read::<String>()?;
-            let value = parcel.read::<String>()?;
+            let name = parcel.read::<String>().unwrap();
+            let value = parcel.read::<String>().unwrap();
             form_items.push(FormItem { name, value });
         }
 
-        let file_specs_len = parcel.read::<u32>()? as usize;
+        let file_specs_len = parcel.read::<u32>().unwrap() as usize;
         let mut file_specs = Vec::with_capacity(file_specs_len);
         for _ in 0..file_specs_len {
-            let name = parcel.read::<String>()?;
-            let path = parcel.read::<String>()?;
-            let file_name = parcel.read::<String>()?;
-            let mime_type = parcel.read::<String>()?;
+            let name = parcel.read::<String>().unwrap();
+            let path = parcel.read::<String>().unwrap();
+            let file_name = parcel.read::<String>().unwrap();
+            let mime_type = parcel.read::<String>().unwrap();
             file_specs.push(FileSpec {
                 name,
                 path,
@@ -224,33 +223,43 @@ impl Deserialize for TaskInfo {
             });
         }
 
-        let state = parcel.read::<u32>()? as u8;
-        let index = parcel.read::<u32>()? as usize;
-        let processed = parcel.read::<u64>()? as usize;
-        let total_processed = parcel.read::<u64>()? as usize;
-        let sizes = parcel.read::<Vec<i64>>()?;
-        let extras_len = parcel.read::<u32>()? as usize;
+        let state = parcel.read::<u32>().unwrap() as u8;
+        let index = parcel.read::<u32>().unwrap() as usize;
+        let processed = parcel.read::<u64>().unwrap() as usize;
+        let total_processed = parcel.read::<u64>().unwrap() as usize;
+        let sizes = parcel.read::<Vec<i64>>().unwrap();
+
+        let extras_len = parcel.read::<u32>().unwrap() as usize;
+        let mut progress_extras = HashMap::with_capacity(extras_len);
+        for _ in 0..extras_len {
+            let key = parcel.read::<String>().unwrap();
+            let value = parcel.read::<String>().unwrap();
+            progress_extras.insert(key, value);
+        }
+
+        let extras_len = parcel.read::<u32>().unwrap() as usize;
         let mut extras = HashMap::with_capacity(extras_len);
         for _ in 0..extras_len {
-            let key = parcel.read::<String>()?;
-            let value = parcel.read::<String>()?;
+            let key = parcel.read::<String>().unwrap();
+            let value = parcel.read::<String>().unwrap();
             extras.insert(key, value);
         }
 
-        let version = parcel.read::<u32>()? as u8;
+        let version = parcel.read::<u32>().unwrap() as u8;
 
-        let each_file_status_len = parcel.read::<u32>()? as usize;
-        let mut each_file_status = Vec::with_capacity(each_file_status_len);
+        let each_file_status_len = parcel.read::<u32>().unwrap() as usize;
+        let mut task_states = Vec::with_capacity(each_file_status_len);
         for _ in 0..each_file_status_len {
-            let path = parcel.read::<String>()?;
-            let response_code = parcel.read::<u32>()?;
-            let message = parcel.read::<String>()?;
-            each_file_status.push(TaskState {
+            let path = parcel.read::<String>().unwrap();
+            let reason = parcel.read::<u32>().unwrap() as u8;
+            let message = parcel.read::<String>().unwrap();
+            task_states.push(TaskState {
                 path,
-                response_code,
+                response_code: reason as u32,
                 message,
             });
         }
+
         let common_data = CommonTaskInfo {
             task_id,
             uid,
@@ -273,7 +282,7 @@ impl Deserialize for TaskInfo {
             },
             sizes,
             processed: vec![processed; file_specs.len()],
-            extras,
+            extras: progress_extras,
         };
         Ok(TaskInfo {
             bundle,
@@ -286,7 +295,7 @@ impl Deserialize for TaskInfo {
             description,
             mime_type,
             progress,
-            extras: HashMap::new(), // Extras are not serialized in this context
+            extras, // Extras are not serialized in this context
             common_data,
             max_speed: 0, // Max speed is not serialized in this context
         })

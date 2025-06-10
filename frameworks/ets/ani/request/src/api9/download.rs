@@ -20,6 +20,7 @@ use ani_rs::objects::{AniObject, AniRef};
 use ani_rs::AniEnv;
 use request_client::RequestClient;
 use request_core::config::Version;
+use request_core::info::TaskInfo;
 use request_utils::context::{is_stage_context, Context};
 
 use super::bridge::{DownloadConfig, DownloadTask};
@@ -37,12 +38,11 @@ pub fn download_file(
 
     let seq = TaskSeq::next();
     info!("Api9 task, seq: {}", seq.0);
-
     let context = Context::new(env, &context);
 
     let save_as = match &config.file_path {
-        Some(path) => path.to_string(),
-        None => {
+        Some(path) if path != "./" => path.to_string(),
+        _ => {
             let name = PathBuf::from(&config.url);
             name.file_name()
                 .map(|s| s.to_string_lossy().to_string())
@@ -53,7 +53,7 @@ pub fn download_file(
     let task = match RequestClient::get_instance().crate_task(
         context,
         Version::API9,
-        config,
+        config.into(),
         &save_as,
         false,
     ) {
@@ -100,8 +100,11 @@ pub fn restore(this: DownloadTask) -> Result<(), BusinessError> {
 }
 
 #[ani_rs::native]
-pub fn get_task_info(this: DownloadTask) -> Result<DownloadTask, BusinessError> {
-    Ok(this)
+pub fn get_task_info(this: DownloadTask) -> Result<DownloadInfo, BusinessError> {
+    RequestClient::get_instance()
+        .show_task(this.task_id)
+        .map(|info| DownloadInfo::from(info))
+        .map_err(|e| BusinessError::new(e, "Failed to get download task info".to_string()))
 }
 
 #[ani_rs::native]
