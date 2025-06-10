@@ -63,6 +63,7 @@ ani_constructor!(
         "pauseSync": api10::task::pause,
         "resumeSync": api10::task::resume,
         "stopSync": api10::task::stop,
+        "onEvent" :api10::callback::on_event,
         "setMaxSpeedSync": api10::task::set_max_speed,
     ]
 );

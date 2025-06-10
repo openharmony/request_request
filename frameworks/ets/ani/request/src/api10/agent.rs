@@ -12,6 +12,7 @@
 // limitations under the License.
 
 use std::path::PathBuf;
+use std::task;
 
 use ani_rs::business_error::BusinessError;
 use ani_rs::objects::{AniObject, AniRef};
@@ -26,16 +27,13 @@ use crate::seq::TaskSeq;
 #[ani_rs::native]
 pub fn create(env: &AniEnv, context: AniRef, config: Config) -> Result<Task, BusinessError> {
     let context = AniObject::from(context);
-    info!("is {}", is_stage_context(env, &context));
-
     let seq = TaskSeq::next();
-
     info!("Api10 task, seq: {}", seq.0);
     let context = Context::new(env, &context);
 
     let save_as = match &config.saveas {
-        Some(path) => path.to_string(),
-        None => {
+        Some(path) if path != "./" => path.to_string(),
+        _ => {
             let name = PathBuf::from(&config.url);
             name.file_name()
                 .map(|s| s.to_string_lossy().to_string())
@@ -44,9 +42,22 @@ pub fn create(env: &AniEnv, context: AniRef, config: Config) -> Result<Task, Bus
     };
     let overwrite = config.overwrite.unwrap_or(false);
 
-    match RequestClient::get_instance().crate_task(context, Version::API10, config, &save_as, overwrite) {
-        Ok(task_id) => Ok(Task { tid: task_id }),
-        Err(e) => Err(BusinessError::new(-1, format!("Create task failed"))),
+    info!("Creating task with config: {:?}", overwrite);
+
+    match RequestClient::get_instance().crate_task(
+        context,
+        Version::API10,
+        config.into(),
+        &save_as,
+        overwrite,
+    ) {
+        Ok(task_id) => Ok(Task {
+            tid: task_id.to_string(),
+        }),
+        Err(e) => {
+            error!("Create task failed: {:?}", e);
+            Err(BusinessError::new(-1, format!("Create task failed")))
+        }
     }
 }
 
@@ -70,7 +81,14 @@ pub fn remove(id: String) -> Result<(), BusinessError> {
 
 #[ani_rs::native]
 pub fn show(id: String) -> Result<TaskInfo, BusinessError> {
-    todo!()
+    let task_id = id.parse::<i64>().unwrap();
+    RequestClient::get_instance()
+        .show_task(task_id)
+        .map(|info| {
+            info!("Api10 get task info: {:?}", info);
+            TaskInfo::from(info)
+        })
+        .map_err(|e| BusinessError::new(e, "Failed to get download task info".to_string()))
 }
 
 #[ani_rs::native]

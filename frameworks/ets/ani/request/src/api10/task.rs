@@ -18,30 +18,35 @@ use crate::api10::bridge::Task;
 
 #[ani_rs::native]
 pub fn start(this: Task) -> Result<(), BusinessError> {
-    RequestClient::get_instance().start(this.tid);
+    let task_id = this.tid.parse().unwrap();
+    RequestClient::get_instance().start(task_id);
     Ok(())
 }
 
 #[ani_rs::native]
 pub fn pause(this: Task) -> Result<(), BusinessError> {
-    RequestClient::get_instance().pause(this.tid);
+    let task_id = this.tid.parse().unwrap();
+    RequestClient::get_instance().pause(task_id);
     Ok(())
 }
 
 #[ani_rs::native]
 pub fn resume(this: Task) -> Result<(), BusinessError> {
-    RequestClient::get_instance().resume(this.tid);
+    let task_id = this.tid.parse().unwrap();
+    RequestClient::get_instance().resume(task_id);
     Ok(())
 }
 
 #[ani_rs::native]
 pub fn stop(this: Task) -> Result<(), BusinessError> {
-    RequestClient::get_instance().stop(this.tid);
+    let task_id = this.tid.parse().unwrap();
+    RequestClient::get_instance().stop(task_id);
     Ok(())
 }
 
 #[ani_rs::native]
 pub fn set_max_speed(this: Task, speed: i64) -> Result<(), BusinessError> {
-    RequestClient::get_instance().set_max_speed(this.tid, speed);
+    let task_id = this.tid.parse().unwrap();
+    RequestClient::get_instance().set_max_speed(task_id, speed);
     Ok(())
 }

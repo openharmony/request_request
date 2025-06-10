@@ -14,6 +14,7 @@
 use std::collections::HashMap;
 
 use request_core::config::{NetworkConfig, TaskConfig, TaskConfigBuilder, Version};
+use request_core::info::TaskInfo;
 
 #[ani_rs::ani]
 pub struct DownloadConfig {
@@ -114,5 +115,23 @@ impl From<DownloadConfig> for TaskConfig {
         }
 
         config_builder.build()
+    }
+}
+
+impl From<TaskInfo> for DownloadInfo {
+    fn from(info: TaskInfo) -> Self {
+        DownloadInfo {
+            description: info.description,
+            downloaded_bytes: info.progress.processed[0] as i64,
+            download_id: info.common_data.task_id as i64,
+            failed_reason: info.common_data.reason as i32,
+            file_name: info.file_specs[0].file_name.clone(),
+            file_path: info.file_specs[0].path.clone(),
+            paused_reason: info.common_data.reason as i32,
+            status: info.progress.common_data.state as i32,
+            target_URI: info.url,
+            download_title: info.title,
+            download_total_bytes: info.progress.sizes[0] as i64,
+        }
     }
 }

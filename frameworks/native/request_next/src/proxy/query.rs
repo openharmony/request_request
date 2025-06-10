@@ -14,6 +14,7 @@
 use ipc::parcel::MsgParcel;
 use ipc::remote;
 use request_core::filter::SearchFilter;
+use request_core::info::TaskInfo;
 use request_core::interface;
 
 use crate::proxy::{RequestProxy, SERVICE_TOKEN};
@@ -56,7 +57,7 @@ impl RequestProxy {
         Ok(mime_type)
     }
 
-    pub(crate) fn show(&self, task_id: i64) -> Result<(), i32> {
+    pub(crate) fn show(&self, task_id: i64) -> Result<TaskInfo, i32> {
         let remote = self.remote()?;
 
         let mut data = MsgParcel::new();
@@ -71,7 +72,13 @@ impl RequestProxy {
         if code != 0 {
             return Err(code);
         }
-        todo!()
+
+        let code = reply.read::<i32>().unwrap(); // error code
+        if code != 0 {
+            return Err(code);
+        }
+        let task_info = reply.read::<TaskInfo>().unwrap(); // task info
+        Ok(task_info)
     }
 
     pub(crate) fn touch(&self, task_id: i64, token: String) -> Result<(), i32> {
