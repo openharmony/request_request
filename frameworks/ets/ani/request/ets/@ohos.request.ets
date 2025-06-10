@@ -16,7 +16,7 @@
 
 import { AsyncCallback, Callback } from '@ohos.base';
 import { BusinessError } from '@ohos.base';
-
+import hilog from '@ohos.hilog';
 import BaseContext from 'application.BaseContext';
 
 export default namespace request {
@@ -167,7 +167,7 @@ export default namespace request {
   }
 
   interface DownloadTask {
-    on(type: 'progress' | 'complete' | 'pause' | 'remove' | 'fail', callback: object): void;
+    on(type: string, callback: object): void;
 
     // off(type: 'progress' | 'complete' | 'pause' | 'remove' | 'fail' , callback?: object): void;
 
@@ -208,10 +208,10 @@ export default namespace request {
     // native offFail(callback?: (err: int) => void): void;
 
 
-    on(type: 'progress' | 'complete' | 'pause' | 'remove' | 'fail', callback: object): void {
+    on(type: string, callback: object): void {
       if (type == 'progress') {
         this.onProgress(callback as (receivedSize: long, totalSize: long) => void);
-      } else if (type == 'complete' || type == 'pause' || type == 'remove') {
+      } else if (type == 'complete' | type == 'pause' | type == 'remove') {
         this.onEvent(type, callback as () => void);
       } else {
         this.onFail(callback as (err: int) => void);
@@ -634,19 +634,16 @@ export default namespace request {
       readonly tid: string;
       config: Config;
 
-      // on(event: 'progress', callback: (progress: Progress) => void): void;
-      // off(event: 'progress', callback?: (progress: Progress) => void): void;
-      // on(event: 'completed', callback: (progress: Progress) => void): void;
-      // off(event: 'completed', callback?: (progress: Progress) => void): void;
-      // on(event: 'failed', callback: (progress: Progress) => void): void;
-      // off(event: 'failed', callback?: (progress: Progress) => void): void;
-      // on(event: 'pause', callback: (progress: Progress) => void): void;
-      // off(event: 'pause', callback?: (progress: Progress) => void): void;
-      // on(event: 'resume', callback: (progress: Progress) => void): void;
-      // off(event: 'resume', callback?: (progress: Progress) => void): void;
-      // on(event: 'remove', callback: (progress: Progress) => void): void;
-      // off(event: 'remove', callback?: (progress: Progress) => void): void;
+      on(event: string, callback: (progress: Progress) => void): void;
+
       // on(event: 'response', callback: Callback<HttpResponse>): void;
+
+      // off(event: 'progress', callback?: (progress: Progress) => void): void;
+      // off(event: 'completed', callback?: (progress: Progress) => void): void;
+      // off(event: 'failed', callback?: (progress: Progress) => void): void;
+      // off(event: 'pause', callback?: (progress: Progress) => void): void;
+      // off(event: 'resume', callback?: (progress: Progress) => void): void;
+      // off(event: 'remove', callback?: (progress: Progress) => void): void;
       // off(event: 'response', callback?: Callback<HttpResponse>): void;
 
       start(callback: AsyncCallback<void>): void;
@@ -660,13 +657,22 @@ export default namespace request {
       setMaxSpeed(speed: long): Promise<void>;
     }
 
-  class TaskInner implements Task {
+  export class TaskInner implements Task {
+    static {
+      loadLibrary("request_ani")
+    }
+
     readonly tid: string;
     
-
     config: Config;
 
     native startSync(): void;
+
+    native onEvent(event: string, callback: (progress: Progress) => void): void;
+
+    on(event: string , callback: (progress: Progress) => void): void {
+      this.onEvent(event, callback);
+    }
 
     start(callback: AsyncCallback<void>): void {
         let p1 = taskpool.execute((): void => {
@@ -958,7 +964,7 @@ export default namespace request {
       notification: Notification;
     }
 
-    native function createGroupSync(config: GroupConfig): string;
+    export native function createGroupSync(config: GroupConfig): string;
 
     export function createGroup(config: GroupConfig): Promise<string> {
       return new Promise<string>((resolve, reject) => {
@@ -1000,10 +1006,4 @@ export default namespace request {
       });
     }
   }
-}
-
-function main () {
-  let w = new request.DownloadTaskInner;
-  w.suspend();
-  w.on('progress', (a:long, b:long) => {})
 }

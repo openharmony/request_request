@@ -42,7 +42,6 @@ pub fn on_progress(
             on_fail: Mutex::new(vec![]),
         });
         RequestClient::get_instance().register_callback(this.task_id, coll.clone());
-
         callback_mgr
             .tasks
             .lock()
@@ -61,6 +60,10 @@ pub fn on_event(
 ) -> Result<(), BusinessError> {
     let callback_mgr = CallbackManager::get_instance();
     let callback = callback.into_global_callback(env).unwrap();
+    info!(
+        "on_event called for task_id: {}, event: {}",
+        this.task_id, event
+    );
     let coll = if event == "complete" {
         if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&this.task_id) {
             coll.on_complete.lock().unwrap().push(callback);

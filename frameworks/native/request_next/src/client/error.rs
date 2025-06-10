@@ -13,6 +13,7 @@
 
 use crate::check::file::DownloadPathError;
 
+#[derive(Debug)]
 pub enum CreateTaskError {
     DownloadPath(DownloadPathError),
     Code(i32),

@@ -17,6 +17,7 @@ use std::sync::{Arc, OnceLock};
 
 use request_core::config::{TaskConfig, Version};
 use request_core::file::FileSpec;
+use request_core::info::TaskInfo;
 use request_utils::context::Context;
 
 use crate::client::error::CreateTaskError;
@@ -42,15 +43,15 @@ impl<'a> RequestClient<'a> {
         })
     }
 
-    pub fn crate_task<C: Into<TaskConfig>>(
+    pub fn crate_task(
         &self,
         context: Context,
         version: Version,
-        config: C,
+        mut config: TaskConfig,
         save_as: &str,
         overwrite: bool,
     ) -> Result<i64, CreateTaskError> {
-        let mut config = config.into();
+        info!("Creating task with config: {:?}", config);
 
         let path = check::file::get_download_path(version, &context, &save_as, overwrite)?;
         info!("Download file path: {:?}", path);
@@ -106,5 +107,9 @@ impl<'a> RequestClient<'a> {
     pub fn open_channel(&self) {
         let file = self.proxy.open_channel().unwrap();
         self.listener.set_listenr(file);
+    }
+
+    pub fn show_task(&self, task_id: i64) -> Result<TaskInfo, i32> {
+        self.proxy.show(task_id)
     }
 }

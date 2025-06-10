@@ -12,7 +12,6 @@
 // limitations under the License.
 
 use std::collections::HashMap;
-use std::os::fd::IntoRawFd;
 
 use request_core::config::{self, CommonTaskConfig, NetworkConfig, TaskConfig, Version};
 use serde::{Deserialize, Serialize};
@@ -41,17 +40,27 @@ impl From<config::Action> for Action {
     }
 }
 
+impl From<u8> for Action {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => Action::Download,
+            1 => Action::Upload,
+            _ => unimplemented!(),
+        }
+    }
+}
+
 #[ani_rs::ani(path = "L@ohos/request/request/agent/Mode")]
 pub enum Mode {
-    BackGround,
-    ForeGround,
+    Background,
+    Foreground,
 }
 
 impl From<Mode> for config::Mode {
     fn from(value: Mode) -> Self {
         match value {
-            Mode::BackGround => config::Mode::BackGround,
-            Mode::ForeGround => config::Mode::FrontEnd,
+            Mode::Background => config::Mode::BackGround,
+            Mode::Foreground => config::Mode::FrontEnd,
         }
     }
 }
@@ -59,25 +68,35 @@ impl From<Mode> for config::Mode {
 impl From<config::Mode> for Mode {
     fn from(value: config::Mode) -> Self {
         match value {
-            config::Mode::BackGround => Mode::BackGround,
-            config::Mode::FrontEnd => Mode::ForeGround,
+            config::Mode::BackGround => Mode::Background,
+            config::Mode::FrontEnd => Mode::Foreground,
+        }
+    }
+}
+
+impl From<u8> for Mode {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => Mode::Background,
+            1 => Mode::Foreground,
+            _ => unimplemented!(),
         }
     }
 }
 
 #[ani_rs::ani(path = "L@ohos/request/request/agent/Network")]
 pub enum Network {
-    ANY,
-    WIFI,
-    CELLULAR,
+    Any,
+    Wifi,
+    Cellular,
 }
 
 impl From<Network> for NetworkConfig {
     fn from(value: Network) -> Self {
         match value {
-            Network::ANY => NetworkConfig::Any,
-            Network::WIFI => NetworkConfig::Wifi,
-            Network::CELLULAR => NetworkConfig::Cellular,
+            Network::Any => NetworkConfig::Any,
+            Network::Wifi => NetworkConfig::Wifi,
+            Network::Cellular => NetworkConfig::Cellular,
         }
     }
 }
@@ -85,16 +104,16 @@ impl From<Network> for NetworkConfig {
 impl From<NetworkConfig> for Network {
     fn from(value: NetworkConfig) -> Self {
         match value {
-            NetworkConfig::Any => Network::ANY,
-            NetworkConfig::Wifi => Network::WIFI,
-            NetworkConfig::Cellular => Network::CELLULAR,
+            NetworkConfig::Any => Network::Any,
+            NetworkConfig::Wifi => Network::Wifi,
+            NetworkConfig::Cellular => Network::Cellular,
         }
     }
 }
 
 #[ani_rs::ani(path = "L@ohos/request/request/agent/BroadcastEvent")]
 pub enum BroadcastEvent {
-    COMPLETE,
+    Complete,
 }
 
 #[ani_rs::ani(path = "L@ohos/request/request/agent/FileSpecInner")]
@@ -176,15 +195,49 @@ pub struct Config {
 
 #[ani_rs::ani(path = "L@ohos/request/request/agent/State")]
 pub enum State {
-    INITIALIZED = 0x00,
-    WAITING = 0x10,
-    RUNNING = 0x20,
-    RETRYING = 0x21,
-    PAUSED = 0x30,
-    STOPPED = 0x31,
-    COMPLETED = 0x40,
-    FAILED = 0x41,
-    REMOVED = 0x50,
+    Initialized = 0x00,
+    Waiting = 0x10,
+    Running = 0x20,
+    Retrying = 0x21,
+    Paused = 0x30,
+    Stopped = 0x31,
+    Completed = 0x40,
+    Failed = 0x41,
+    Removed = 0x50,
+}
+
+impl From<request_core::info::State> for State {
+    fn from(value: request_core::info::State) -> Self {
+        match value {
+            request_core::info::State::Initialized => State::Initialized,
+            request_core::info::State::Waiting => State::Waiting,
+            request_core::info::State::Running => State::Running,
+            request_core::info::State::Retrying => State::Retrying,
+            request_core::info::State::Paused => State::Paused,
+            request_core::info::State::Stopped => State::Stopped,
+            request_core::info::State::Completed => State::Completed,
+            request_core::info::State::Failed => State::Failed,
+            request_core::info::State::Removed => State::Removed,
+            _ => unimplemented!(),
+        }
+    }
+}
+
+impl From<u8> for State {
+    fn from(value: u8) -> Self {
+        match value {
+            0x00 => State::Initialized,
+            0x10 => State::Waiting,
+            0x20 => State::Running,
+            0x21 => State::Retrying,
+            0x30 => State::Paused,
+            0x31 => State::Stopped,
+            0x40 => State::Completed,
+            0x41 => State::Failed,
+            0x50 => State::Removed,
+            _ => unimplemented!(),
+        }
+    }
 }
 
 #[ani_rs::ani(path = "L@ohos/request/request/agent/ProgressInner")]
@@ -196,18 +249,42 @@ pub struct Progress {
     extras: Option<HashMap<String, String>>,
 }
 
+impl From<&request_core::info::Progress> for Progress {
+    fn from(value: &request_core::info::Progress) -> Self {
+        Progress {
+            state: value.state.clone().into(),
+            index: value.index as i32,
+            processed: value.total_processed as i64,
+            sizes: value.sizes.clone(),
+            extras: None,
+        }
+    }
+}
+
+impl From<&request_core::info::InfoProgress> for Progress {
+    fn from(value: &request_core::info::InfoProgress) -> Self {
+        Progress {
+            state: value.common_data.state.into(),
+            index: value.common_data.index as i32,
+            processed: value.common_data.total_processed as i64,
+            sizes: value.sizes.clone(),
+            extras: None,
+        }
+    }
+}
+
 #[ani_rs::ani(path = "L@ohos/request/request/agent/Faults")]
 pub enum Faults {
-    OTHERS = 0xFF,
-    DISCONNECTED = 0x00,
-    TIMEOUT = 0x10,
-    PROTOCOL = 0x20,
-    PARAM = 0x30,
-    FSIO = 0x40,
-    DNS = 0x50,
-    TCP = 0x60,
-    SSL = 0x70,
-    REDIRECT = 0x80,
+    Others = 0xFF,
+    Disconnected = 0x00,
+    Timeout = 0x10,
+    Protocol = 0x20,
+    Param = 0x30,
+    Fsio = 0x40,
+    Dns = 0x50,
+    Tcp = 0x60,
+    Ssl = 0x70,
+    Redirect = 0x80,
 }
 
 #[ani_rs::ani]
@@ -245,6 +322,34 @@ pub struct TaskInfo {
     pub extras: Option<HashMap<String, String>>,
 }
 
+impl From<request_core::info::TaskInfo> for TaskInfo {
+    fn from(value: request_core::info::TaskInfo) -> Self {
+        TaskInfo {
+            uid: Some(value.common_data.uid.to_string()),
+            bundle: Some(value.bundle),
+            saveas: None,
+            url: Some(value.url),
+            data: None,
+            tid: value.common_data.task_id.to_string(),
+            title: value.title,
+            description: value.description,
+            action: value.common_data.action.into(),
+            mode: value.common_data.mode.into(),
+            priority: value.common_data.priority as i32,
+            mime_type: value.mime_type,
+            progress: Progress::from(&value.progress),
+            gauge: value.common_data.gauge,
+            ctime: value.common_data.ctime as i64,
+            mtime: value.common_data.mtime as i64,
+            retry: value.common_data.retry,
+            tries: value.common_data.tries as i32,
+            faults: Faults::Others,
+            reason: value.common_data.reason.to_string(),
+            extras: Some(value.extras.clone()),
+        }
+    }
+}
+
 #[ani_rs::ani]
 pub struct HttpResponse {
     version: String,
@@ -255,23 +360,17 @@ pub struct HttpResponse {
 
 #[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInner")]
 pub struct Task {
-    pub tid: i64,
+    pub tid: String,
 }
 
 #[ani_rs::ani]
 pub struct GroupConfig {
-    gauge: Option<bool>,
-    notification: Notification,
+    pub gauge: Option<bool>,
+    pub notification: Notification,
 }
 
 impl From<Config> for TaskConfig {
     fn from(value: Config) -> Self {
-        let file = std::fs::File::options()
-            .read(true)
-            .write(true)
-            .create(true)
-            .open("/data/test.txt")
-            .unwrap();
         TaskConfig {
             bundle: "".to_string(),
             bundle_type: 0,
@@ -288,14 +387,7 @@ impl From<Config> for TaskConfig {
             extras: HashMap::new(),
             version: Version::API9,
             form_items: vec![],
-            file_specs: vec![request_core::file::FileSpec {
-                name: "".to_string(),
-                mime_type: "".to_string(),
-                path: "".to_string(),
-                file_name: "".to_string(),
-                is_user_file: true,
-                fd: Some(file.into_raw_fd()),
-            }],
+            file_specs: vec![],
             body_file_paths: vec![],
             certs_path: vec![],
             common_data: CommonTaskConfig {
@@ -303,7 +395,7 @@ impl From<Config> for TaskConfig {
                 uid: 0,
                 token_id: 0,
                 action: value.action.into(),
-                mode: value.mode.unwrap_or(Mode::BackGround).into(),
+                mode: value.mode.unwrap_or(Mode::Background).into(),
                 cover: false,
                 network_config: NetworkConfig::Any,
                 metered: false,
