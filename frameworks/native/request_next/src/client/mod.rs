@@ -16,6 +16,7 @@ pub mod error;
 use std::sync::{Arc, OnceLock};
 
 use request_core::config::{TaskConfig, Version};
+use request_core::error_code::CHANNEL_NOT_OPEN;
 use request_core::file::FileSpec;
 use request_core::info::TaskInfo;
 use request_utils::context::Context;
@@ -36,10 +37,12 @@ impl<'a> RequestClient<'a> {
 
         INSTANCE.get_or_init(|| {
             let listener = Observer::new();
-            RequestClient {
+            let res = RequestClient {
                 listener,
                 proxy: RequestProxy::get_instance(),
-            }
+            };
+            res.open_channel();
+            res
         })
     }
 
@@ -68,8 +71,23 @@ impl<'a> RequestClient<'a> {
             fd: None,
         };
         config.file_specs.push(file_specs);
-        self.open_channel();
-        self.proxy.create(config)
+        loop {
+            let res = match self.proxy.create(&config) {
+                Err(e) => {
+                    error!("Failed to create task: {:?}", e);
+                    if matches!(e, CreateTaskError::Code(CHANNEL_NOT_OPEN)) {
+                        self.open_channel();
+                        continue;
+                    }
+                    Err(e)
+                }
+                Ok(task_id) => {
+                    info!("Task created successfully with ID: {}", task_id);
+                    Ok(task_id)
+                }
+            };
+            break res;
+        }
     }
 
     pub fn start(&self, task_id: i64) -> Result<(), i32> {

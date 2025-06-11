@@ -12,3 +12,17 @@
 // limitations under the License.
 
 pub const EXCEPTION_SERVICE: i32 = 13400003;
+
+pub const ERR_OK: i32 = 0;
+pub const IPC_SIZE_TOO_LARGE: i32 = 2;
+pub const CHANNEL_NOT_OPEN: i32 = 5;
+pub const PERMISSION: i32 = 201;
+pub const SYSTEM_API: i32 = 202;
+pub const PARAMETER_CHECK: i32 = 401;
+pub const FILE_OPERATION_ERR: i32 = 13400001;
+pub const OTHER: i32 = 13499999;
+pub const TASK_ENQUEUE_ERR: i32 = 21900004;
+pub const TASK_MODE_ERR: i32 = 21900005;
+pub const TASK_NOT_FOUND: i32 = 21900006;
+pub const TASK_STATE_ERR: i32 = 21900007;
+pub const GROUP_NOT_FOUND: i32 = 21900008;

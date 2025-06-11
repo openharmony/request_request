@@ -97,7 +97,6 @@ fn message_check(uds: &mut UdsSer, size: i16, message_id: i32, msg_type: &mut i1
             "Message ID mismatch: expected {}, got {}",
             message_id, msg_id
         );
-        return false;
     }
 
     *msg_type = uds.read();
