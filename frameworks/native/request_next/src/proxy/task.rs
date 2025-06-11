@@ -19,13 +19,13 @@ use super::{RequestProxy, SERVICE_TOKEN};
 use crate::client::error::CreateTaskError;
 
 impl RequestProxy {
-    pub(crate) fn create(&self, config: TaskConfig) -> Result<i64, CreateTaskError> {
+    pub(crate) fn create(&self, config: &TaskConfig) -> Result<i64, CreateTaskError> {
         let remote = self.remote()?;
         let mut data = MsgParcel::new();
         data.write_interface_token(SERVICE_TOKEN).unwrap();
 
         data.write(&1u32).unwrap();
-        data.write(&config).unwrap();
+        data.write(config).unwrap();
 
         data.write(&false).unwrap();
         data.write(&false).unwrap();
