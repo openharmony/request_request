@@ -2628,6 +2628,10 @@ export default function requestCreateTaskTest() {
         expect(request.agent.Faults.TIMEOUT).assertEqual(0x10);
         expect(request.agent.Faults.PROTOCOL).assertEqual(0x20);
         expect(request.agent.Faults.FSIO).assertEqual(0x40);
+        expect(request.agent.WaitingReason.TASK_QUEUE_FULL).assertEqual(0x00);
+        expect(request.agent.WaitingReason.NETWORK_NOT_MATCH).assertEqual(0x01);
+        expect(request.agent.WaitingReason.APP_BACKGROUND).assertEqual(0x02);
+        expect(request.agent.WaitingReason.USER_INACTIVATED).assertEqual(0x03);
         done();
       } catch (err) {
         expect(false).assertTrue();
