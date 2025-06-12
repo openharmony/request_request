@@ -36,6 +36,7 @@ ohos_rust_unittest("rust_request_ut_test") {
     "samgr:samgr_rust",
     "ylong_runtime:ylong_runtime",
     "rust_cxx:lib",
+    "selinux_adapter:librestorecon",
   ]
 
   subsystem_name = "request"

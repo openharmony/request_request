@@ -163,8 +163,8 @@ static std::string SubscribeTypeToString(SubscribeType type)
             return "resume";
         case SubscribeType::RESPONSE:
             return "response";
-        case SubscribeType::FAULT:
-            return "fault";
+        case SubscribeType::FAULT_OCCUR:
+            return "faultOccur";
         case SubscribeType::WAIT:
             return "wait";
         case SubscribeType::BUTT:

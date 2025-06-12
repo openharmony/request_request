@@ -40,7 +40,6 @@ impl RequestServiceStub {
         }
         let len: u32 = data.read()?;
         let len = len as usize;
-        let mut vec = vec![(ErrorCode::Other, 0u32); len];
 
         if len > CONSTRUCT_MAX {
             info!("Service construct: out of size: {}", len);
@@ -51,6 +50,7 @@ impl RequestServiceStub {
         let uid = ipc::Skeleton::calling_uid();
         let token_id = ipc::Skeleton::calling_full_token_id();
         let pid = ipc::Skeleton::calling_pid();
+        let mut vec = vec![(ErrorCode::Other, 0u32); len];
 
         for i in 0..len {
             let task_config: TaskConfig = match data.read() {
