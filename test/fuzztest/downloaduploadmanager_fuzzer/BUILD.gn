@@ -74,6 +74,8 @@ ohos_fuzztest("DownloadUploadManagerFuzzTest") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
+    "cJSON:cjson_static",
   ]
 }
 

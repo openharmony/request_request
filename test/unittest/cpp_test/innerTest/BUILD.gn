@@ -79,6 +79,8 @@ ohos_unittest("innerTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_acl",
+    "selinux_adapter:librestorecon",
+    "cJSON:cjson_static",
   ]
 }
 

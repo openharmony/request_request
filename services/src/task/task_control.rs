@@ -15,12 +15,22 @@ use std::fs::{File, Metadata};
 use std::io::{self, Seek, SeekFrom, Write};
 use std::sync::{Arc, Mutex};
 
-use ylong_runtime::spawn_blocking;
+use ylong_runtime::task::JoinHandle;
 
 use crate::task::request_task::RequestTask;
 
+pub(crate) fn runtime_spawn_blocking<F, T>(fut: F) -> JoinHandle<Result<T, io::Error>>
+where
+    F: FnOnce() -> Result<T, io::Error> + Send + Sync + 'static,
+    T: Send + 'static,
+{
+    ylong_runtime::spawn_blocking(
+        Box::new(fut) as Box<dyn FnOnce() -> Result<T, io::Error> + Send + Sync>
+    )
+}
+
 pub(crate) async fn file_seek(file: Arc<Mutex<File>>, pos: SeekFrom) -> io::Result<u64> {
-    spawn_blocking(move || {
+    runtime_spawn_blocking(move || {
         let mut file = file.lock().unwrap();
         file.flush()?;
         file.seek(pos)
@@ -30,7 +40,7 @@ pub(crate) async fn file_seek(file: Arc<Mutex<File>>, pos: SeekFrom) -> io::Resu
 }
 
 pub(crate) async fn file_rewind(file: Arc<Mutex<File>>) -> io::Result<()> {
-    spawn_blocking(move || {
+    runtime_spawn_blocking(move || {
         let mut file = file.lock().unwrap();
         file.flush()?;
         file.rewind()
@@ -40,7 +50,7 @@ pub(crate) async fn file_rewind(file: Arc<Mutex<File>>) -> io::Result<()> {
 }
 
 pub(crate) async fn file_sync_all(file: Arc<Mutex<File>>) -> io::Result<()> {
-    spawn_blocking(move || {
+    runtime_spawn_blocking(move || {
         let mut file = file.lock().unwrap();
         file.flush()?;
         file.sync_all()
@@ -50,7 +60,7 @@ pub(crate) async fn file_sync_all(file: Arc<Mutex<File>>) -> io::Result<()> {
 }
 
 pub(crate) async fn file_metadata(file: Arc<Mutex<File>>) -> io::Result<Metadata> {
-    spawn_blocking(move || {
+    runtime_spawn_blocking(move || {
         let file = file.lock().unwrap();
         file.metadata()
     })
@@ -59,7 +69,7 @@ pub(crate) async fn file_metadata(file: Arc<Mutex<File>>) -> io::Result<Metadata
 }
 
 pub(crate) async fn file_set_len(file: Arc<Mutex<File>>, size: u64) -> io::Result<()> {
-    spawn_blocking(move || {
+    runtime_spawn_blocking(move || {
         let mut file = file.lock().unwrap();
         file.flush()?;
         file.set_len(size)
@@ -70,7 +80,7 @@ pub(crate) async fn file_set_len(file: Arc<Mutex<File>>, size: u64) -> io::Resul
 
 pub(crate) async fn file_write_all<'a>(file: Arc<Mutex<File>>, buf: &[u8]) -> io::Result<()> {
     let buf = buf.to_vec();
-    spawn_blocking(move || {
+    runtime_spawn_blocking(move || {
         let mut file = file.lock().unwrap();
         file.write_all(&buf)
     })
@@ -80,7 +90,7 @@ pub(crate) async fn file_write_all<'a>(file: Arc<Mutex<File>>, buf: &[u8]) -> io
 
 pub(crate) async fn clear_downloaded_file(task: Arc<RequestTask>) -> Result<(), std::io::Error> {
     info!("task {} clear downloaded file", task.task_id());
-    spawn_blocking(move || {
+    runtime_spawn_blocking(move || {
         {
             let file_mutex = task.files.get(0).unwrap();
             let mut file = file_mutex.lock().unwrap();

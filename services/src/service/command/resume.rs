@@ -38,14 +38,13 @@ impl RequestServiceStub {
 
         let len: u32 = data.read()?;
         let len = len as usize;
-        let mut vec = vec![ErrorCode::Other; len];
 
         if len > CONTROL_MAX {
             info!("Service resume: out of size: {}", len);
             reply.write(&(ErrorCode::Other as i32))?;
             return Err(IpcStatusCode::Failed);
         }
-
+        let mut vec = vec![ErrorCode::Other; len];
         if len == 1 {
             self.resume_one_task(data, permission, &mut vec)?;
         } else {

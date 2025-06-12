@@ -37,13 +37,13 @@ static constexpr const char *EVENT_RESUME = "resume";
 static constexpr const char *EVENT_REMOVE = "remove";
 static constexpr const char *EVENT_PROGRESS = "progress";
 static constexpr const char *EVENT_RESPONSE = "response";
-static constexpr const char *EVENT_FAULT = "fault";
+static constexpr const char *EVENT_FAULT_OCCUR = "faultOccur";
 
 std::map<std::string, SubscribeType> CJRequestEvent::supportEventsV10_ = {
     {EVENT_PROGRESS, SubscribeType::PROGRESS}, {EVENT_COMPLETED, SubscribeType::COMPLETED},
     {EVENT_FAILED, SubscribeType::FAILED},     {EVENT_PAUSE, SubscribeType::PAUSE},
     {EVENT_RESUME, SubscribeType::RESUME},     {EVENT_REMOVE, SubscribeType::REMOVE},
-    {EVENT_RESPONSE, SubscribeType::RESPONSE}, {EVENT_FAULT, SubscribeType::FAULT},
+    {EVENT_RESPONSE, SubscribeType::RESPONSE}, {EVENT_FAULT_OCCUR, SubscribeType::FAULT_OCCUR},
 };
 
 SubscribeType CJRequestEvent::StringToSubscribeType(const std::string &type)

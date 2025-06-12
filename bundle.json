@@ -34,6 +34,8 @@
         "rust",
         "rust_cxx",
         "rust_bindgen",
+        "selinux_adapter",
+        "cJSON",
         "ylong_http",
         "ylong_runtime",
         "os_account",

@@ -86,10 +86,10 @@ enum Reason : uint32_t {
 };
 
 enum WaitingReason : uint32_t {
-    TaskQueueFull,
-    NetworkNotMatch,
-    AppBackground,
-    UserInactivated,
+    TaskQueueFull = 0x00,
+    NetworkNotMatch = 0x01,
+    AppBackground = 0x02,
+    UserInactivated = 0x03,
 };
 
 enum class SubscribeType : uint32_t {
@@ -101,7 +101,7 @@ enum class SubscribeType : uint32_t {
     REMOVE,
     RESUME,
     RESPONSE,
-    FAULT,
+    FAULT_OCCUR,
     WAIT,
     BUTT,
 };

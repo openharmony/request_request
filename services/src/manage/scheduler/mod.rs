@@ -136,6 +136,9 @@ impl Scheduler {
             .ok_or(ErrorCode::TaskNotFound)?;
         if is_resume {
             Notifier::resume(&self.client_manager, info.build_notify_data());
+        } else {
+            // If the task is started, reset the task time.
+            database.update_task_time(task_id, 0);
         }
 
         if info.progress.is_finish() {
@@ -284,6 +287,7 @@ impl Scheduler {
         if self.running_queue.cancel_task(task_id, uid) {
             self.schedule_if_not_scheduled();
         }
+        database.remove_user_file_task(task_id);
         let info = database
             .get_task_info(task_id)
             .ok_or(ErrorCode::TaskNotFound)?;
@@ -361,6 +365,7 @@ impl Scheduler {
         }
 
         database.update_task_state(task_id, State::Completed, Reason::Default);
+        database.remove_user_file_task(task_id);
         if let Some(info) = database.get_task_info(task_id) {
             Notifier::complete(&self.client_manager, info.build_notify_data());
             NotificationDispatcher::get_instance().publish_success_notification(&info);
