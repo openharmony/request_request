@@ -56,8 +56,8 @@ rust::vec<rust::string> GetHeaders(HttpClientResponse &response)
     }
     std::map<std::string, std::string> headers = response.GetHeaders();
     for (auto header : headers) {
-        ret.emplace_back(header.first);
-        ret.emplace_back(header.second);
+        ret.emplace_back(rust::string::lossy(header.first));
+        ret.emplace_back(rust::string::lossy(header.second));
     }
     return ret;
 };
