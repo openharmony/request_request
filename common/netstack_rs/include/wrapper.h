@@ -23,9 +23,11 @@
 #include "http_client_request.h"
 #include "http_client_response.h"
 #include "http_client_task.h"
+
 namespace OHOS::Request {
 using namespace OHOS::NetStack::HttpClient;
 struct CallbackWrapper;
+struct RustPerformanceInfo;
 
 void OnCallback(const std::shared_ptr<HttpClientTask> &task, rust::Box<CallbackWrapper> callback);
 
@@ -46,6 +48,10 @@ inline std::shared_ptr<HttpClientTask> NewHttpClientTask(const HttpClientRequest
 }
 
 rust::vec<rust::string> GetHeaders(HttpClientResponse &response);
+
+rust::vec<rust::string> GetResolvConf();
+
+void GetPerformanceInfo(const HttpClientResponse &response, RustPerformanceInfo &performance);
 
 } // namespace OHOS::Request
 

@@ -19,7 +19,9 @@
 #include <unistd.h>
 
 #include <cstdint>
+#include <cstring>
 #include <memory>
+#include <optional>
 
 #include "access_token.h"
 #include "accesstoken_kit.h"
@@ -32,6 +34,7 @@
 #include "napi/native_node_api.h"
 #include "napi_utils.h"
 #include "request_preload.h"
+#include "wrapper.rs.h"
 
 namespace OHOS::Request {
 using namespace Security::AccessToken;
@@ -40,7 +43,9 @@ constexpr const size_t MAX_UTL_LENGTH = 8192;
 
 constexpr int64_t MAX_MEM_SIZE = 1073741824;
 constexpr int64_t MAX_FILE_SIZE = 4294967296;
+constexpr int64_t MAX_INFO_LIST_SIZE = 8192;
 const std::string INTERNET_PERMISSION = "ohos.permission.INTERNET";
+const std::string GET_NETWORK_INFO_PERMISSION = "ohos.permission.GET_NETWORK_INFO";
 
 bool CheckInternetPermission()
 {
@@ -51,6 +56,20 @@ bool CheckInternetPermission()
             return false;
         }
         int result = AccessTokenKit::VerifyAccessToken(tokenId, INTERNET_PERMISSION);
+        return result == PERMISSION_GRANTED;
+    }();
+    return hasPermission;
+}
+
+bool CheckNetworkInfoPermission()
+{
+    static bool hasPermission = []() {
+        uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
+        TypeATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(static_cast<AccessTokenID>(tokenId));
+        if (tokenType == TOKEN_INVALID) {
+            return false;
+        }
+        int result = AccessTokenKit::VerifyAccessToken(tokenId, GET_NETWORK_INFO_PERMISSION);
         return result == PERMISSION_GRANTED;
     }();
     return hasPermission;
@@ -147,6 +166,70 @@ napi_value setFileCacheSize(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+napi_value setDownloadInfoListSize(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1] = { nullptr };
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+
+    if (GetValueType(env, args[0]) != napi_number) {
+        ThrowError(env, E_PARAMETER_CHECK, "parameter error");
+        return nullptr;
+    }
+    int64_t size = GetValueNum(env, args[0]);
+    if (size > MAX_INFO_LIST_SIZE) {
+        ThrowError(env, E_PARAMETER_CHECK, "info list size exceeds the maximum value");
+        return nullptr;
+    }
+    Preload::GetInstance()->SetDownloadInfoListSize(size);
+    return nullptr;
+}
+
+napi_value getDownloadInfo(napi_env env, napi_callback_info info)
+{
+    if (!CheckNetworkInfoPermission()) {
+        ThrowError(env, E_PERMISSION, "internet permission denied");
+        REQUEST_HILOGI("internet permission denied");
+        return nullptr;
+    }
+    size_t argc = 1;
+    napi_value args[1] = { nullptr };
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+    if (GetValueType(env, args[0]) != napi_string) {
+        ThrowError(env, E_PARAMETER_CHECK, "parameter error");
+        return nullptr;
+    }
+    size_t urlLength = GetStringLength(env, args[0]);
+    if (urlLength > MAX_UTL_LENGTH) {
+        ThrowError(env, E_PARAMETER_CHECK, "url exceeds the maximum length");
+        return nullptr;
+    }
+    std::string url = GetValueString(env, args[0], urlLength);
+    std::optional<CppDownloadInfo> result = Preload::GetInstance()->GetDownloadInfo(url);
+    if (!result) {
+        napi_value undefined;
+        napi_get_undefined(env, &undefined);
+        return undefined;
+    }
+    napi_status status;
+    // 6. 创建 JavaScript 对象
+    napi_value jsInfo;
+    status = napi_create_object(env, &jsInfo);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    if (!buildInfoResource(env, result.value(), jsInfo)) {
+        return nullptr;
+    }
+    if (!buildInfoNetwork(env, result.value(), jsInfo)) {
+        return nullptr;
+    }
+    if (!buildInfoPerformance(env, result.value(), jsInfo)) {
+        return nullptr;
+    }
+    return jsInfo;
+}
+
 static napi_value registerFunc(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[]{
@@ -154,6 +237,8 @@ static napi_value registerFunc(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("cancel", cancel),
         DECLARE_NAPI_FUNCTION("setMemoryCacheSize", setMemoryCacheSize),
         DECLARE_NAPI_FUNCTION("setFileCacheSize", setFileCacheSize),
+        DECLARE_NAPI_FUNCTION("setDownloadInfoListSize", setDownloadInfoListSize),
+        DECLARE_NAPI_FUNCTION("getDownloadInfo", getDownloadInfo),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc));
     return exports;

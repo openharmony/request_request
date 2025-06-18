@@ -17,7 +17,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use cxx::SharedPtr;
+use request_utils::task_id::TaskId;
 
+use crate::info::DownloadInfoMgr;
 use crate::request::RequestCallback;
 use crate::response::Response;
 use crate::wrapper::ffi::{HttpClientRequest, HttpClientTask, NewHttpClientTask, OnCallback};
@@ -102,7 +104,7 @@ impl RequestTask {
         self.response().headers()
     }
 
-    pub(crate) fn set_callback(&mut self, callback: Box<dyn RequestCallback + 'static>) {
+    pub(crate) fn set_callback(&mut self, callback: Box<dyn RequestCallback + 'static>, info_mgr: Arc<DownloadInfoMgr>, task_id: TaskId) {
         let task = self.inner.lock().unwrap();
         OnCallback(
             &task,
@@ -110,6 +112,8 @@ impl RequestTask {
                 callback,
                 self.reset.clone(),
                 Arc::downgrade(&self.inner),
+                task_id,
+                info_mgr,
                 0,
             )),
         );
@@ -209,7 +213,8 @@ mod test {
             error.clone(),
             result.clone(),
         ));
-        task.set_callback(callback);
+        let info_mgr = Arc::new(DownloadInfoMgr::new());
+        task.set_callback(callback, info_mgr, TaskId::from_url(TEST_URL));
         task.start();
         while !finished.load(Ordering::SeqCst) {
             std::thread::sleep(std::time::Duration::from_millis(100));
@@ -245,7 +250,8 @@ mod test {
             error.clone(),
             result.clone(),
         ));
-        task.set_callback(callback);
+        let info_mgr = Arc::new(DownloadInfoMgr::new());
+        task.set_callback(callback, info_mgr, TaskId::from_url(TEST_URL));
         task.start();
         std::thread::sleep(std::time::Duration::from_millis(1));
         task.cancel();
@@ -274,7 +280,8 @@ mod test {
             error.clone(),
             result.clone(),
         ));
-        task.set_callback(callback);
+        let info_mgr = Arc::new(DownloadInfoMgr::new());
+        task.set_callback(callback, info_mgr, TaskId::from_url(LOCAL_URL));
         task.start();
         while !finished.load(Ordering::SeqCst) {
             std::thread::sleep(std::time::Duration::from_millis(100));
@@ -305,7 +312,8 @@ mod test {
             error.clone(),
             result.clone(),
         ));
-        task.set_callback(callback);
+        let info_mgr = Arc::new(DownloadInfoMgr::new());
+        task.set_callback(callback, info_mgr, TaskId::from_url("222.222.222.222"));
         task.start();
         while !finished.load(Ordering::SeqCst) {
             std::thread::sleep(std::time::Duration::from_millis(100));
@@ -336,7 +344,8 @@ mod test {
             error.clone(),
             result.clone(),
         ));
-        task.set_callback(callback);
+        let info_mgr = Arc::new(DownloadInfoMgr::new());
+        task.set_callback(callback, info_mgr, TaskId::from_url(TEST_URL));
         task.start();
         while !finished.load(Ordering::SeqCst) {
             std::thread::sleep(std::time::Duration::from_millis(100));
@@ -397,7 +406,8 @@ mod test {
             failed: failed.clone(),
             total: total.clone(),
         });
-        task.set_callback(callback);
+        let info_mgr = Arc::new(DownloadInfoMgr::new());
+        task.set_callback(callback, info_mgr, TaskId::from_url(RANGE_TEST_URL));
         task.start();
 
         while !data_receive.load(Ordering::SeqCst) {
@@ -466,7 +476,8 @@ mod test {
             failed: failed.clone(),
             total: total.clone(),
         });
-        task.set_callback(callback);
+        let info_mgr = Arc::new(DownloadInfoMgr::new());
+        task.set_callback(callback, info_mgr, TaskId::from_url(NOT_SUPPORT_RANGE_TEST_URL));
         task.start();
 
         while !data_receive.load(Ordering::SeqCst) {

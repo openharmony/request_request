@@ -21,7 +21,7 @@
     clippy::unused_async
 )]
 #![deny(unused_must_use)]
-#![allow(missing_docs)]
+#![allow(missing_docs, clippy::new_without_default)]
 
 /// Request.
 pub mod request;
@@ -33,3 +33,8 @@ pub mod response;
 
 pub mod error;
 mod wrapper;
+
+pub mod info;
+
+const TAG: &str = "PreloadNative\0";
+const DOMAIN: u32 = 0xD001C50;

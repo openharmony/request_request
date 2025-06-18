@@ -15,6 +15,7 @@ use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
 
 use netstack_rs::error::HttpClientError;
+use netstack_rs::info::DownloadInfoMgr;
 use netstack_rs::request::{Request, RequestCallback};
 use netstack_rs::response::Response;
 use netstack_rs::task::RequestTask;
@@ -83,7 +84,11 @@ impl RequestCallback for PrimeCallback {
 pub(crate) struct DownloadTask;
 
 impl DownloadTask {
-    pub(super) fn run(input: DownloadRequest, callback: PrimeCallback) -> Arc<dyn CommonHandle> {
+    pub(super) fn run(
+        input: DownloadRequest,
+        callback: PrimeCallback,
+        info_mgr: Arc<DownloadInfoMgr>,
+    ) -> Arc<dyn CommonHandle> {
         let mut request = Request::new();
         request.url(input.url);
         if let Some(headers) = input.headers {
@@ -92,7 +97,9 @@ impl DownloadTask {
             }
         }
         callback.set_running();
+        request.task_id(callback.task_id());
         request.callback(callback);
+        request.info_mgr(info_mgr);
         let mut task = request.build();
         task.start();
         Arc::new(CancelHandle::new(task))

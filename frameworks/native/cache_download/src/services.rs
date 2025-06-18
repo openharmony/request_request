@@ -16,6 +16,9 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex, Once, OnceLock};
 
 use cache_core::{CacheManager, RamCache};
+
+use netstack_rs::info::{DownloadInfo, DownloadInfoMgr};
+
 use request_utils::observe::network::NetRegistrar;
 use request_utils::task_id::TaskId;
 
@@ -34,6 +37,7 @@ pub trait PreloadCallback: Send {
 pub struct CacheDownloadService {
     running_tasks: Mutex<HashMap<TaskId, Arc<Mutex<DownloadTask>>>>,
     cache_manager: CacheManager,
+    info_mgr: Arc<DownloadInfoMgr>,
     net_registrar: NetRegistrar,
 }
 
@@ -58,6 +62,7 @@ impl CacheDownloadService {
         Self {
             running_tasks: Mutex::new(HashMap::new()),
             cache_manager: CacheManager::new(),
+            info_mgr: Arc::new(DownloadInfoMgr::new()),
             net_registrar: NetRegistrar::new(),
         }
     }
@@ -136,6 +141,7 @@ impl CacheDownloadService {
                     let updater = Arc::new(Mutex::new(DownloadTask::new(
                         task_id.clone(),
                         &self.cache_manager,
+                        self.info_mgr.clone(),
                         request,
                         callback,
                         downloader,
@@ -168,6 +174,7 @@ impl CacheDownloadService {
                         *updater = DownloadTask::new(
                             task_id.clone(),
                             &self.cache_manager,
+                            self.info_mgr.clone(),
                             request,
                             cb,
                             downloader,
@@ -206,6 +213,15 @@ impl CacheDownloadService {
     pub fn set_ram_cache_size(&self, size: u64) {
         info!("set ram cache size to {}", size);
         self.cache_manager.set_ram_cache_size(size);
+    }
+
+    pub fn set_info_list_size(&self, size: u16) {
+        self.info_mgr.update_info_list_size(size);
+    }
+
+    pub fn get_download_info(&self, url: &str) -> Option<DownloadInfo> {
+        let task_id = TaskId::from_url(url);
+        self.info_mgr.get_download_info(task_id)
     }
 
     fn fetch_with_callback(

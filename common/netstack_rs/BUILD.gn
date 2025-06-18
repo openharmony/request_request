@@ -30,6 +30,7 @@ ohos_static_library("netstack_rs_cxx") {
 
   include_dirs = [
     "include",
+    "../include",
     "${target_gen_dir}/src",
   ]
   sources = [ "src/cxx/wrapper.cpp" ]
@@ -37,12 +38,13 @@ ohos_static_library("netstack_rs_cxx") {
   sources += get_target_outputs(":netstack_rs_cxx_gen")
 
   external_deps = [
+    "hilog:libhilog",
+    "netmanager_base:net_conn_manager_if",
+    "netmanager_base:netsys_client",
     "netstack:http_client",
     "rust_cxx:cxx_cppdeps",
-    ]
-  deps = [
-    ":netstack_rs_cxx_gen",
   ]
+  deps = [ ":netstack_rs_cxx_gen" ]
 
   subsystem_name = "request"
   part_name = "request"
@@ -63,10 +65,9 @@ ohos_rust_static_library("netstack_rs") {
   deps = [
     ":netstack_rs_cxx",
     "../ffrt_rs:ffrt_rs",
+    "../utils:request_utils",
   ]
-  external_deps = [
-    "rust_cxx:lib",
-  ]
+  external_deps = [ "rust_cxx:lib" ]
 
   subsystem_name = "request"
   part_name = "request"
@@ -80,10 +81,9 @@ ohos_rust_unittest("rust_netstack_rs_ut_test") {
   deps = [
     ":netstack_rs_cxx",
     "../ffrt_rs:ffrt_rs",
+    "../utils:request_utils",
   ]
-  external_deps = [
-    "rust_cxx:lib",
-  ]
+  external_deps = [ "rust_cxx:lib" ]
 
   subsystem_name = "request"
   part_name = "request"

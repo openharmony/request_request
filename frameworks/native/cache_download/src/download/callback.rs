@@ -74,6 +74,10 @@ impl PrimeCallback {
     pub(crate) fn set_running(&self) {
         self.state.store(RUNNING, Ordering::Release);
     }
+
+    pub(crate) fn task_id(&self) -> TaskId {
+        self.task_id.clone()
+    }
 }
 
 impl PrimeCallback {

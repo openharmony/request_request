@@ -16,6 +16,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use cache_core::CacheManager;
+use netstack_rs::info::DownloadInfoMgr;
 use request_utils::info;
 use request_utils::task_id::TaskId;
 
@@ -48,6 +49,7 @@ impl DownloadTask {
     pub(crate) fn new(
         task_id: TaskId,
         cache_manager: &'static CacheManager,
+        info_mgr: Arc<DownloadInfoMgr>,
         request: DownloadRequest,
         callback: Box<dyn PreloadCallback>,
         downloader: Downloader,
@@ -62,6 +64,7 @@ impl DownloadTask {
                     handle = Some(download_inner(
                         task_id,
                         cache_manager,
+                        info_mgr,
                         request,
                         Some(callback),
                         netstack::DownloadTask::run,
@@ -210,13 +213,14 @@ impl TaskHandle {
 fn download_inner<F>(
     task_id: TaskId,
     cache_manager: &'static CacheManager,
+    info_mgr: Arc<DownloadInfoMgr>,
     request: DownloadRequest,
     callback: Option<Box<dyn PreloadCallback>>,
     downloader: F,
     seq: usize,
 ) -> TaskHandle
 where
-    F: Fn(DownloadRequest, PrimeCallback) -> Arc<dyn CommonHandle>,
+    F: Fn(DownloadRequest, PrimeCallback, Arc<DownloadInfoMgr>) -> Arc<dyn CommonHandle>,
 {
     let mut handle = TaskHandle::new(task_id.clone());
     if let Some(callback) = callback {
@@ -232,7 +236,7 @@ where
         seq,
     );
 
-    let task = downloader(request, callback);
+    let task = downloader(request, callback, info_mgr);
     handle.set_handle(task);
     handle
 }
@@ -248,6 +252,7 @@ mod test {
     use std::time::Duration;
 
     use cache_core::{CacheManager, RamCache};
+    use netstack_rs::info::DownloadInfoMgr;
     use request_utils::test::log::init;
     use request_utils::test::server::test_server;
 
@@ -272,6 +277,7 @@ mod test {
     const DOWNLOADER: for<'a> fn(
         DownloadRequest<'a>,
         PrimeCallback,
+        Arc<DownloadInfoMgr>,
     ) -> Arc<(dyn CommonHandle + 'static)> = netstack::DownloadTask::run;
 
     #[cfg(not(feature = "ohos"))]
@@ -286,9 +292,11 @@ mod test {
         static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
         let success_flag = Arc::new(AtomicBool::new(false));
         let request = DownloadRequest::new(TEST_URL);
+        let info_mgr = Arc::new(DownloadInfoMgr::new());
         let handle = download_inner(
             TaskId::from_url(TEST_URL),
             &CACHE_MANAGER,
+            info_mgr,
             request,
             Some(Box::new(TestCallback {
                 flag: success_flag.clone(),
@@ -336,9 +344,11 @@ mod test {
         let server = test_server(test_f);
         let mut request = DownloadRequest::new(&server);
         request.headers(headers);
+        let info_mgr = Arc::new(DownloadInfoMgr::new());
         let handle = download_inner(
             TaskId::from_url(&server),
             &CACHE_MANAGER,
+            info_mgr,
             request,
             None,
             DOWNLOADER,

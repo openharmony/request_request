@@ -76,4 +76,9 @@ std::unique_ptr<Data> UniqueData(rust::Box<RustData> data)
     return std::make_unique<Data>(std::move(data));
 }
 
+std::unique_ptr<CppDownloadInfo> UniqueInfo(rust::Box<RustDownloadInfo> info)
+{
+    return std::make_unique<CppDownloadInfo>(std::move(info));
+}
+
 } // namespace OHOS::Request

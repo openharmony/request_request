@@ -126,4 +126,133 @@ std::string GetPropertyValue(napi_env env, napi_value object, const std::string 
     return GetValueString(env, value, length);
 }
 
+inline napi_status setPerformanceField(napi_env env, napi_value performance, double field_value, const char *js_name)
+{
+    napi_value value;
+    napi_status status = napi_create_double(env, field_value, &value);
+    if (status != napi_ok) {
+        return status;
+    }
+
+    return napi_set_named_property(env, performance, js_name, value);
+}
+
+bool buildInfoResource(napi_env env, const CppDownloadInfo &result, napi_value &jsInfo)
+{
+    napi_status status;
+    napi_value resource;
+    status = napi_create_object(env, &resource);
+    if (status != napi_ok) {
+        return false;
+    }
+
+    napi_value sizeValue;
+    status = napi_create_int64(env, result.resource_size(), &sizeValue);
+    if (status != napi_ok) {
+        return false;
+    }
+
+    status = napi_set_named_property(env, resource, "size", sizeValue);
+    if (status != napi_ok) {
+        return false;
+    }
+
+    status = napi_set_named_property(env, jsInfo, "resource", resource);
+    if (status != napi_ok) {
+        return false;
+    }
+
+    return true;
+}
+
+bool buildInfoNetwork(napi_env env, const CppDownloadInfo &result, napi_value &jsInfo)
+{
+    napi_status status;
+    napi_value network;
+    status = napi_create_object(env, &network);
+    if (status != napi_ok) {
+        return false;
+    }
+
+    napi_value ipValue;
+    status = napi_create_string_utf8(env, result.network_ip().c_str(), NAPI_AUTO_LENGTH, &ipValue);
+    if (status != napi_ok) {
+        return false;
+    }
+
+    status = napi_set_named_property(env, network, "ip", ipValue);
+    if (status != napi_ok) {
+        return false;
+    }
+
+    std::vector<std::string> dnsServers = result.dns_servers();
+
+    napi_value dnsArray;
+    status = napi_create_array_with_length(env, dnsServers.size(), &dnsArray);
+    if (status != napi_ok) {
+        return false;
+    }
+    for (size_t i = 0; i < dnsServers.size(); i++) {
+        const std::string &server = dnsServers[i];
+        napi_value dnsItem;
+        status = napi_create_string_utf8(env, server.c_str(), NAPI_AUTO_LENGTH, &dnsItem);
+        if (status != napi_ok) {
+            return false;
+        }
+
+        status = napi_set_element(env, dnsArray, i, dnsItem);
+        if (status != napi_ok) {
+            return false;
+        }
+    }
+    status = napi_set_named_property(env, network, "dnsServers", dnsArray);
+    if (status != napi_ok) {
+        return false;
+    }
+    status = napi_set_named_property(env, jsInfo, "network", network);
+    if (status != napi_ok) {
+        return false;
+    }
+    return true;
+}
+
+bool buildInfoPerformance(napi_env env, const CppDownloadInfo &result, napi_value &jsInfo)
+{
+    napi_status status;
+    napi_value performance;
+    status = napi_create_object(env, &performance);
+    if (status != napi_ok) {
+        return false;
+    }
+
+    if ((status = setPerformanceField(env, performance, result.dns_time(), "dnsTime")) != napi_ok) {
+        return false;
+    }
+    if ((status = setPerformanceField(env, performance, result.connect_time(), "connectTime")) != napi_ok) {
+        return false;
+    }
+    if ((status = setPerformanceField(env, performance, result.tls_time(), "tlsTime")) != napi_ok) {
+        return false;
+    }
+    if ((status = setPerformanceField(env, performance, result.first_send_time(), "firstSendTime")) != napi_ok) {
+        return false;
+    }
+    if ((status = setPerformanceField(env, performance, result.first_recv_time(), "firstReceiveTime")) != napi_ok) {
+        return false;
+    }
+    if ((status = setPerformanceField(env, performance, result.total_time(), "totalTime")) != napi_ok) {
+        return false;
+    }
+    if ((status = setPerformanceField(env, performance, result.redirect_time(), "redirectTime")) != napi_ok) {
+        return false;
+    }
+
+    status = napi_set_named_property(env, jsInfo, "performance", performance);
+    if (status != napi_ok) {
+        return false;
+    }
+
+    return true;
+}
+
 } // namespace OHOS::Request
