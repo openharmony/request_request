@@ -21,9 +21,11 @@
 mod macros;
 
 pub mod fastrand;
+pub mod file_control;
 pub mod hash;
 pub mod lru;
 pub mod task_id;
+
 cfg_not_ohos! {
     pub use log::{debug, error, info};
 }
