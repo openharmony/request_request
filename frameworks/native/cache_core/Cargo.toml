@@ -29,5 +29,4 @@ cxx = { version = "1.0.115", optional = true }
 
 ffrt_rs = { path = "../../../common/ffrt_rs", optional = true }
 request_utils = { path = "../../../common/utils" }
-
 ylong_runtime = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime", features = ["full"] }

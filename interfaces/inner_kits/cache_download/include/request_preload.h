@@ -35,6 +35,7 @@ struct RustData;
 struct TaskHandle;
 struct CacheDownloadService;
 struct CacheDownloadError;
+struct RustDownloadInfo;
 
 enum class PreloadState {
     INIT,
@@ -63,7 +64,7 @@ public:
     Data(rust::Box<RustData> &&data);
     Data(Data &&) noexcept;
     ~Data();
-    Data &operator=(Data &&) &noexcept;
+    Data &operator=(Data &&) & noexcept;
 
     Slice<const uint8_t> bytes() const;
     rust::Slice<const uint8_t> rustSlice() const;
@@ -82,7 +83,7 @@ class PreloadError {
 public:
     PreloadError(rust::Box<CacheDownloadError> &&error);
     PreloadError(PreloadError &&) noexcept;
-    PreloadError &operator=(PreloadError &&) &noexcept;
+    PreloadError &operator=(PreloadError &&) & noexcept;
     ~PreloadError();
 
     int32_t GetCode() const;
@@ -104,7 +105,7 @@ class PreloadHandle {
 public:
     PreloadHandle(PreloadHandle &&) noexcept;
     PreloadHandle(rust::Box<TaskHandle>);
-    PreloadHandle &operator=(PreloadHandle &&) &noexcept;
+    PreloadHandle &operator=(PreloadHandle &&) & noexcept;
 
     ~PreloadHandle();
     void Cancel();
@@ -120,6 +121,32 @@ struct PreloadOptions {
     std::vector<std::tuple<std::string, std::string>> headers;
 };
 
+class CppDownloadInfo {
+public:
+    CppDownloadInfo(rust::Box<RustDownloadInfo> rust_info);
+    CppDownloadInfo(CppDownloadInfo &&other) noexcept;
+    CppDownloadInfo &operator=(CppDownloadInfo &&other) noexcept;
+
+    CppDownloadInfo(const CppDownloadInfo &) = delete;
+    CppDownloadInfo &operator=(const CppDownloadInfo &) = delete;
+
+    ~CppDownloadInfo();
+
+    double dns_time() const;
+    double connect_time() const;
+    double tls_time() const;
+    double first_send_time() const;
+    double first_recv_time() const;
+    double redirect_time() const;
+    double total_time() const;
+    int64_t resource_size() const;
+    std::string network_ip() const;
+    std::vector<std::string> dns_servers() const;
+
+private:
+    RustDownloadInfo *rust_info_;
+};
+
 class Preload {
 public:
     Preload();
@@ -131,11 +158,13 @@ public:
 
     void SetRamCacheSize(uint64_t size);
     void SetFileCacheSize(uint64_t size);
+    void SetDownloadInfoListSize(uint16_t size);
 
     std::shared_ptr<PreloadHandle> load(std::string const &url, std::unique_ptr<PreloadCallback>,
         std::unique_ptr<PreloadOptions> options = nullptr, bool update = false);
 
     std::optional<Data> fetch(std::string const &url);
+    std::optional<CppDownloadInfo> GetDownloadInfo(std::string const &url);
 
 private:
     const CacheDownloadService *agent_;

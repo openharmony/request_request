@@ -19,6 +19,7 @@ use ffi::{FfiPredownloadOptions, PreloadCallbackWrapper, PreloadProgressCallback
 
 use crate::download::task::{Downloader, TaskHandle};
 use crate::download::CacheDownloadError;
+use crate::info::RustDownloadInfo;
 use crate::services::{CacheDownloadService, DownloadRequest, PreloadCallback};
 
 pub(super) struct FfiCallback {
@@ -148,6 +149,13 @@ impl CacheDownloadService {
             _ => UniquePtr::null(),
         }
     }
+
+    fn ffi_get_download_info(&'static self, url: &str) -> UniquePtr<ffi::CppDownloadInfo> {
+        match self.get_download_info(url) {
+            Some(info) => ffi::UniqueInfo(Box::new(RustDownloadInfo::from_download_info(info))),
+            None => UniquePtr::null(),
+        }
+    }
 }
 
 fn cache_download_service() -> *const CacheDownloadService {
@@ -165,6 +173,7 @@ pub(crate) mod ffi {
         type RustData;
         type TaskHandle;
         type CacheDownloadError;
+        type RustDownloadInfo;
 
         fn bytes(self: &RustData) -> &[u8];
         fn ffi_preload(
@@ -179,6 +188,23 @@ pub(crate) mod ffi {
 
         fn set_file_cache_size(self: &CacheDownloadService, size: u64);
         fn set_ram_cache_size(self: &CacheDownloadService, size: u64);
+        fn set_info_list_size(self: &CacheDownloadService, size: u16);
+
+        fn dns_time(self: &RustDownloadInfo) -> f64;
+        fn connect_time(self: &RustDownloadInfo) -> f64;
+        fn tls_time(self: &RustDownloadInfo) -> f64;
+        fn first_send_time(self: &RustDownloadInfo) -> f64;
+        fn first_recv_time(self: &RustDownloadInfo) -> f64;
+        fn redirect_time(self: &RustDownloadInfo) -> f64;
+        fn total_time(self: &RustDownloadInfo) -> f64;
+        fn resource_size(self: &RustDownloadInfo) -> i64;
+        fn ip(self: &RustDownloadInfo) -> String;
+        fn dns_servers(self: &RustDownloadInfo) -> Vec<String>;
+
+        fn ffi_get_download_info(
+            self: &'static CacheDownloadService,
+            url: &str,
+        ) -> UniquePtr<CppDownloadInfo>;
 
         fn cache_download_service() -> *const CacheDownloadService;
         fn cancel(self: &CacheDownloadService, url: &str);
@@ -203,9 +229,11 @@ pub(crate) mod ffi {
         type PreloadCallbackWrapper;
         type PreloadProgressCallbackWrapper;
         type Data;
+        type CppDownloadInfo;
 
         fn SharedData(data: Box<RustData>) -> SharedPtr<Data>;
         fn UniqueData(data: Box<RustData>) -> UniquePtr<Data>;
+        fn UniqueInfo(data: Box<RustDownloadInfo>) -> UniquePtr<CppDownloadInfo>;
         fn OnSuccess(self: &PreloadCallbackWrapper, data: SharedPtr<Data>, task_id: &str);
         fn OnFail(self: &PreloadCallbackWrapper, error: Box<CacheDownloadError>, task_id: &str);
         fn OnCancel(self: &PreloadCallbackWrapper);

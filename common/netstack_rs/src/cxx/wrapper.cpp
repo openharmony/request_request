@@ -15,12 +15,28 @@
 
 #include "wrapper.h"
 
+#include <cstring>
 #include <memory>
 
+#include "dns_config_client.h"
 #include "http_client_error.h"
+#include "http_client_response.h"
+#include "log.h"
+#include "net_conn_client.h"
+#include "net_handle.h"
 #include "wrapper.rs.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+int32_t NetSysGetResolvConf(uint16_t netId, struct ResolvConfig *config);
+#ifdef __cplusplus
+}
+#endif
+
 namespace OHOS::Request {
 using namespace OHOS::NetStack::HttpClient;
+using namespace OHOS::NetManagerStandard;
 
 void OnCallback(const std::shared_ptr<HttpClientTask> &task, rust::Box<CallbackWrapper> callback)
 {
@@ -61,5 +77,43 @@ rust::vec<rust::string> GetHeaders(HttpClientResponse &response)
     }
     return ret;
 };
+
+rust::vec<rust::string> GetResolvConf()
+{
+    rust::vec<rust::string> dns;
+    NetHandle handle;
+    auto code = NetConnClient::GetInstance().GetDefaultNet(handle);
+    if (code != 0) {
+        REQUEST_HILOGE("Cache Download GetDefaultNet failed, code : %{public}d", code);
+        return dns;
+    }
+    ResolvConfig config = {};
+    int ret = NetSysGetResolvConf(code, &config);
+    if (ret != 0) {
+        REQUEST_HILOGE("Cache Download NetSysGetResolvConf failed, ret : %{public}d", ret);
+        return dns;
+    }
+
+    for (size_t i = 0; i < sizeof(config.nameservers) / sizeof(config.nameservers[0]); i++) {
+        if (config.nameservers[i][0] == '\0') {
+            continue;
+        }
+        std::string server(config.nameservers[i], strnlen(config.nameservers[0], sizeof(config.nameservers[0])));
+        dns.emplace_back(server);
+    }
+    return dns;
+}
+
+void GetPerformanceInfo(const HttpClientResponse &response, RustPerformanceInfo &performance)
+{
+    OHOS::NetStack::HttpClient::PerformanceInfo cpp_perf = response.GetPerformanceTiming();
+    performance.set_dns_timing(cpp_perf.dnsTiming);
+    performance.set_connect_timing(cpp_perf.connectTiming);
+    performance.set_tls_timing(cpp_perf.tlsTiming);
+    performance.set_first_send_timing(cpp_perf.firstSendTiming);
+    performance.set_first_receive_timing(cpp_perf.firstReceiveTiming);
+    performance.set_total_timing(cpp_perf.totalTiming);
+    performance.set_redirect_timing(cpp_perf.redirectTiming);
+}
 
 } // namespace OHOS::Request

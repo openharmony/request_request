@@ -37,7 +37,7 @@ Data::Data(Data &&other) noexcept : data_(other.data_)
     other.data_ = nullptr;
 }
 
-Data &Data::operator=(Data &&other) &noexcept
+Data &Data::operator=(Data &&other) & noexcept
 {
     if (data_) {
         rust::Box<RustData>::from_raw(data_);
@@ -45,6 +45,97 @@ Data &Data::operator=(Data &&other) &noexcept
     data_ = other.data_;
     other.data_ = nullptr;
     return *this;
+}
+
+// 构造函数
+CppDownloadInfo::CppDownloadInfo(rust::Box<RustDownloadInfo> rust_info)
+{
+    rust_info_ = rust_info.into_raw();
+}
+
+CppDownloadInfo::~CppDownloadInfo()
+{
+    rust::Box<RustDownloadInfo>::from_raw(rust_info_);
+}
+
+// 移动构造函数
+CppDownloadInfo::CppDownloadInfo(CppDownloadInfo &&other) noexcept : rust_info_(other.rust_info_)
+{
+    other.rust_info_ = nullptr;
+}
+
+// 移动赋值运算符
+CppDownloadInfo &CppDownloadInfo::operator=(CppDownloadInfo &&other) noexcept
+{
+    if (rust_info_) {
+        rust::Box<RustDownloadInfo>::from_raw(rust_info_);
+    }
+    rust_info_ = other.rust_info_;
+    other.rust_info_ = nullptr;
+    return *this;
+}
+
+// 直接调用 Rust 实现的 dns_time 方法
+double CppDownloadInfo::dns_time() const
+{
+    return rust_info_->dns_time();
+}
+
+// 调用其他 Rust 方法
+double CppDownloadInfo::connect_time() const
+{
+    return rust_info_->connect_time();
+}
+
+double CppDownloadInfo::total_time() const
+{
+    return rust_info_->total_time();
+}
+
+double CppDownloadInfo::tls_time() const
+{
+    return rust_info_->tls_time();
+}
+
+double CppDownloadInfo::first_send_time() const
+{
+    return rust_info_->first_send_time();
+}
+
+double CppDownloadInfo::first_recv_time() const
+{
+    return rust_info_->first_recv_time();
+}
+
+double CppDownloadInfo::redirect_time() const
+{
+    return rust_info_->redirect_time();
+}
+
+int64_t CppDownloadInfo::resource_size() const
+{
+    return rust_info_->resource_size();
+}
+
+// 处理字符串转换
+std::string CppDownloadInfo::network_ip() const
+{
+    return std::string(rust_info_->ip());
+}
+
+// 处理 vector 转换
+std::vector<std::string> CppDownloadInfo::dns_servers() const
+{
+    std::vector<std::string> result;
+
+    const auto &servers = rust_info_->dns_servers();
+
+    // 转换每个元素
+    for (const auto &server : servers) {
+        result.push_back(std::string(server));
+    }
+
+    return result;
 }
 
 template<typename T> Slice<T>::Slice(std::unique_ptr<rust::Slice<T>> &&slice) : slice_(std::move(slice))
@@ -101,7 +192,7 @@ PreloadError::PreloadError(PreloadError &&other) noexcept : error_(other.error_)
     other.error_ = nullptr;
 }
 
-PreloadError &PreloadError::operator=(PreloadError &&other) &noexcept
+PreloadError &PreloadError::operator=(PreloadError &&other) & noexcept
 {
     if (error_) {
         rust::Box<CacheDownloadError>::from_raw(error_);
@@ -141,7 +232,7 @@ PreloadHandle::PreloadHandle(PreloadHandle &&other) noexcept : handle_(other.han
     other.handle_ = nullptr;
 }
 
-PreloadHandle &PreloadHandle::operator=(PreloadHandle &&other) &noexcept
+PreloadHandle &PreloadHandle::operator=(PreloadHandle &&other) & noexcept
 {
     if (handle_) {
         rust::Box<TaskHandle>::from_raw(handle_);
@@ -182,6 +273,15 @@ std::optional<Data> Preload::fetch(std::string const &url)
     return std::move(*data);
 }
 
+std::optional<CppDownloadInfo> Preload::GetDownloadInfo(std::string const &url)
+{
+    std::unique_ptr<CppDownloadInfo> info = agent_->ffi_get_download_info(rust::str(url));
+    if (info == nullptr) {
+        return std::nullopt;
+    }
+    return std::move(*info);
+}
+
 void Preload::SetRamCacheSize(uint64_t size)
 {
     agent_->set_ram_cache_size(size);
@@ -189,6 +289,11 @@ void Preload::SetRamCacheSize(uint64_t size)
 void Preload::SetFileCacheSize(uint64_t size)
 {
     agent_->set_file_cache_size(size);
+}
+
+void Preload::SetDownloadInfoListSize(uint16_t size)
+{
+    agent_->set_info_list_size(size);
 }
 
 void Preload::Cancel(std::string const &url)

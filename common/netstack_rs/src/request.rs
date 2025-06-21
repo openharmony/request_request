@@ -11,9 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::sync::Arc;
+
 use cxx::{let_cxx_string, UniquePtr};
+use request_utils::task_id::TaskId;
 
 use crate::error::HttpClientError;
+use crate::info::DownloadInfoMgr;
 use crate::response::Response;
 use crate::task::RequestTask;
 use crate::wrapper::ffi::{HttpClientRequest, NewHttpClientRequest, SetBody};
@@ -21,6 +25,8 @@ use crate::wrapper::ffi::{HttpClientRequest, NewHttpClientRequest, SetBody};
 pub struct Request<C: RequestCallback + 'static> {
     inner: UniquePtr<HttpClientRequest>,
     callback: Option<C>,
+    info_mgr: Option<Arc<DownloadInfoMgr>>,
+    task_id: Option<TaskId>,
 }
 
 impl<C: RequestCallback> Request<C> {
@@ -29,6 +35,8 @@ impl<C: RequestCallback> Request<C> {
         Self {
             inner: NewHttpClientRequest(),
             callback: None,
+            info_mgr: None,
+            task_id: None,
         }
     }
 
@@ -78,11 +86,25 @@ impl<C: RequestCallback> Request<C> {
         self
     }
 
+    pub fn info_mgr(&mut self, mgr: Arc<DownloadInfoMgr>) -> &mut Self {
+        self.info_mgr = Some(mgr);
+        self
+    }
+
+    pub fn task_id(&mut self, task_id: TaskId) -> &mut Self {
+        self.task_id = Some(task_id);
+        self
+    }
+
     /// Build the RequestTask.
     pub fn build(mut self) -> RequestTask {
         let mut task = RequestTask::from_http_request(&self.inner);
-        if let Some(callback) = self.callback.take() {
-            task.set_callback(Box::new(callback));
+        if let (Some(callback), Some(mgr), Some(task_id)) = (
+            self.callback.take(),
+            self.info_mgr.take(),
+            self.task_id.take(),
+        ) {
+            task.set_callback(Box::new(callback), mgr, task_id);
         }
         task
     }

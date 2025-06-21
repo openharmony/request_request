@@ -16,10 +16,15 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 
 use cxx::{let_cxx_string, SharedPtr};
-use ffi::{HttpClientRequest, HttpClientTask, NewHttpClientTask, OnCallback};
+use ffi::{
+    GetPerformanceInfo, GetResolvConf, HttpClientRequest, HttpClientTask, NewHttpClientTask,
+    OnCallback,
+};
 use ffrt_rs::{ffrt_sleep, ffrt_spawn};
+use request_utils::task_id::TaskId;
 
 use crate::error::{HttpClientError, HttpErrorCode};
+use crate::info::{DownloadInfo, DownloadInfoMgr, RustPerformanceInfo};
 use crate::request::RequestCallback;
 use crate::response::{Response, ResponseCode};
 use crate::task::{RequestTask, TaskStatus};
@@ -28,6 +33,9 @@ pub struct CallbackWrapper {
     inner: Option<Box<dyn RequestCallback>>,
     reset: Arc<AtomicBool>,
     task: Weak<Mutex<SharedPtr<HttpClientTask>>>,
+    task_id: TaskId,
+    info: DownloadInfo,
+    info_mgr: Arc<DownloadInfoMgr>,
     tries: usize,
     current: u64,
 }
@@ -37,12 +45,20 @@ impl CallbackWrapper {
         inner: Box<dyn RequestCallback + 'static>,
         reset: Arc<AtomicBool>,
         task: Weak<Mutex<SharedPtr<HttpClientTask>>>,
+        task_id: TaskId,
+        info_mgr: Arc<DownloadInfoMgr>,
         current: u64,
     ) -> Self {
+        let mut info = DownloadInfo::new();
+        let dns = GetResolvConf();
+        info.set_network_dns(dns);
         Self {
             inner: Some(inner),
             reset,
             task,
+            task_id,
+            info,
+            info_mgr,
             tries: 0,
             current,
         }
@@ -51,6 +67,13 @@ impl CallbackWrapper {
 
 impl CallbackWrapper {
     fn on_success(&mut self, _request: &HttpClientRequest, response: &ffi::HttpClientResponse) {
+        let mut performance = RustPerformanceInfo::default();
+        GetPerformanceInfo(response, Pin::new(&mut performance));
+        self.info.set_performance(performance);
+        self.info.set_size(self.current as i64);
+        self.info_mgr
+            .insert_download_info(self.task_id.clone(), self.info.clone());
+
         let Some(mut callback) = self.inner.take() else {
             return;
         };
@@ -72,6 +95,12 @@ impl CallbackWrapper {
         response: &ffi::HttpClientResponse,
         error: &ffi::HttpClientError,
     ) {
+        let mut performance = RustPerformanceInfo::default();
+        GetPerformanceInfo(response, Pin::new(&mut performance));
+        self.info.set_performance(performance);
+        self.info.set_size(self.current as i64);
+        self.info_mgr
+            .insert_download_info(self.task_id.clone(), self.info.clone());
         let error = HttpClientError::from_ffi(error);
         if *error.code() == HttpErrorCode::HttpWriteError {
             self.on_cancel(request, response);
@@ -155,6 +184,8 @@ impl CallbackWrapper {
             callback,
             self.reset.clone(),
             self.task.clone(),
+            self.task_id.clone(),
+            self.info_mgr.clone(),
             self.current,
         ));
         (new_task, new_callback)
@@ -245,6 +276,15 @@ pub(crate) mod ffi {
             ul_total: u64,
             ul_now: u64,
         );
+
+        type RustPerformanceInfo;
+        fn set_dns_timing(self: &mut RustPerformanceInfo, time: f64);
+        fn set_connect_timing(self: &mut RustPerformanceInfo, time: f64);
+        fn set_tls_timing(self: &mut RustPerformanceInfo, time: f64);
+        fn set_first_send_timing(self: &mut RustPerformanceInfo, time: f64);
+        fn set_first_receive_timing(self: &mut RustPerformanceInfo, time: f64);
+        fn set_total_timing(self: &mut RustPerformanceInfo, time: f64);
+        fn set_redirect_timing(self: &mut RustPerformanceInfo, time: f64);
     }
 
     unsafe extern "C++" {
@@ -287,12 +327,18 @@ pub(crate) mod ffi {
 
         fn GetResponseCode(self: &HttpClientResponse) -> ResponseCode;
         fn GetHeaders(response: Pin<&mut HttpClientResponse>) -> Vec<String>;
+        fn GetResolvConf() -> Vec<String>;
 
         #[namespace = "OHOS::NetStack::HttpClient"]
         type HttpClientError;
 
         fn GetErrorCode(self: &HttpClientError) -> HttpErrorCode;
         fn GetErrorMessage(self: &HttpClientError) -> &CxxString;
+
+        fn GetPerformanceInfo(
+            response: &HttpClientResponse,
+            performance: Pin<&mut RustPerformanceInfo>,
+        );
     }
 
     #[repr(i32)]

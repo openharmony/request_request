@@ -30,6 +30,7 @@ ohos_shared_library("cachedownload") {
     "src/preload_module.cpp",
   ]
   deps = [
+    "../../../../common/netstack_rs:netstack_rs",
     "../../../native/cache_download:preload_native",
   ]
 
