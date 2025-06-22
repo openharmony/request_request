@@ -34,7 +34,6 @@
 #include "napi/native_node_api.h"
 #include "napi_utils.h"
 #include "request_preload.h"
-#include "wrapper.rs.h"
 
 namespace OHOS::Request {
 using namespace Security::AccessToken;
@@ -188,8 +187,8 @@ napi_value setDownloadInfoListSize(napi_env env, napi_callback_info info)
 napi_value getDownloadInfo(napi_env env, napi_callback_info info)
 {
     if (!CheckNetworkInfoPermission()) {
-        ThrowError(env, E_PERMISSION, "internet permission denied");
-        REQUEST_HILOGI("internet permission denied");
+        ThrowError(env, E_PERMISSION, "GET_NETWORK_INFO permission denied");
+        REQUEST_HILOGI("GET_NETWORK_INFO permission denied");
         return nullptr;
     }
     size_t argc = 1;
