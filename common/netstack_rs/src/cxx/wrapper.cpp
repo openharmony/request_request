@@ -98,8 +98,8 @@ rust::vec<rust::string> GetResolvConf()
         if (config.nameservers[i][0] == '\0') {
             continue;
         }
-        std::string server(config.nameservers[i], strnlen(config.nameservers[0], sizeof(config.nameservers[0])));
-        dns.emplace_back(server);
+        std::string server(config.nameservers[i], strnlen(config.nameservers[i], sizeof(config.nameservers[0])));
+        dns.emplace_back(std::move(server));
     }
     return dns;
 }
