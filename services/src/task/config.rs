@@ -591,7 +591,9 @@ impl Deserialize for TaskConfig {
             let is_user_file: bool = parcel.read()?;
             let mut fd: Option<RawFd> = None;
             if is_user_file {
-                let ipc_fd: File = parcel.read_file()?;
+                let raw_fd = parcel.read_file_unsafe();
+                let owned_fd = unsafe { std::os::fd::OwnedFd::from_raw_fd(raw_fd) };
+                let ipc_fd = File::from(owned_fd);
                 fd = Some(ipc_fd.into_raw_fd());
             }
             file_specs.push(FileSpec {

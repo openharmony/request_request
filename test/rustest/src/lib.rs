@@ -73,7 +73,9 @@ impl RequestAgent {
                 .unwrap();
             let ret: i32 = reply.read().unwrap();
             assert_eq!(0, ret);
-            let file = reply.read_file().unwrap();
+            let raw_fd = reply.read_file_unsafe();
+            let owned_fd = unsafe { std::os::fd::OwnedFd::from_raw_fd(raw_fd) };
+            let file = File::from(owned_fd);
             let channel = unsafe { UnixDatagram::from_raw_fd(file.into_raw_fd()) };
             thread::spawn(move || loop {
                 let mut buf = [0u8; 4096];
@@ -295,7 +297,9 @@ impl RequestAgent {
             .unwrap();
         let ret: i32 = reply.read().unwrap();
         assert_eq!(0, ret);
-        reply.read_file().unwrap()
+        let raw_fd = reply.read_file_unsafe();
+        let owned_fd = unsafe { std::os::fd::OwnedFd::from_raw_fd(raw_fd) };
+        File::from(owned_fd)
     }
 
     pub fn subscribe(&self, task_id: u32) {
