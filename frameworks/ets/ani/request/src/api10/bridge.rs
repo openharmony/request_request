@@ -223,6 +223,22 @@ impl From<request_core::info::State> for State {
     }
 }
 
+impl From<State> for request_core::info::State {
+    fn from(value: State) -> Self {
+        match value {
+            State::Initialized => request_core::info::State::Initialized,
+            State::Waiting => request_core::info::State::Waiting,
+            State::Running => request_core::info::State::Running,
+            State::Retrying => request_core::info::State::Retrying,
+            State::Paused => request_core::info::State::Paused,
+            State::Stopped => request_core::info::State::Stopped,
+            State::Completed => request_core::info::State::Completed,
+            State::Failed => request_core::info::State::Failed,
+            State::Removed => request_core::info::State::Removed,
+        }
+    }
+}
+
 impl From<u8> for State {
     fn from(value: u8) -> Self {
         match value {
@@ -289,12 +305,25 @@ pub enum Faults {
 
 #[ani_rs::ani]
 pub struct Filter {
-    bundle: Option<String>,
-    before: Option<i64>,
-    after: Option<i64>,
-    state: Option<State>,
-    action: Option<Action>,
-    mode: Option<Mode>,
+    pub bundle: Option<String>,
+    pub before: Option<i64>,
+    pub after: Option<i64>,
+    pub state: Option<State>,
+    pub action: Option<Action>,
+    pub mode: Option<Mode>,
+}
+
+impl From<Filter> for request_core::filter::SearchFilter {
+    fn from(value: Filter) -> Self {
+        request_core::filter::SearchFilter {
+            bundle_name: value.bundle,
+            before: value.before,
+            after: value.after,
+            state: value.state.map(|s| s.into()),
+            action: value.action.map(|a| a.into()),
+            mode: value.mode.map(|m| m.into()),
+        }
+    }
 }
 
 #[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInfoInner")]
