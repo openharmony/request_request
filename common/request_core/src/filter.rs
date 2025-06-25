@@ -15,9 +15,23 @@ use crate::config::{Action, Mode};
 use crate::info::State;
 
 pub struct SearchFilter {
+    pub bundle_name: Option<String>,
     pub before: Option<i64>,
     pub after: Option<i64>,
     pub state: Option<State>,
     pub action: Option<Action>,
     pub mode: Option<Mode>,
+}
+
+impl SearchFilter {
+    pub fn new() -> Self {
+        SearchFilter {
+            bundle_name: None,
+            before: None,
+            after: None,
+            state: None,
+            action: None,
+            mode: None,
+        }
+    }
 }

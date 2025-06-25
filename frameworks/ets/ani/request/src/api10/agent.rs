@@ -12,14 +12,15 @@
 // limitations under the License.
 
 use std::path::PathBuf;
-use std::task;
 
 use ani_rs::business_error::BusinessError;
 use ani_rs::objects::{AniObject, AniRef};
 use ani_rs::AniEnv;
+use request_client::client::error::CreateTaskError;
 use request_client::RequestClient;
 use request_core::config::Version;
-use request_utils::context::{is_stage_context, Context};
+use request_core::filter::SearchFilter;
+use request_utils::context::Context;
 
 use crate::api10::bridge::{Config, Filter, Task, TaskInfo};
 use crate::seq::TaskSeq;
@@ -56,7 +57,15 @@ pub fn create(env: &AniEnv, context: AniRef, config: Config) -> Result<Task, Bus
         }),
         Err(e) => {
             error!("Create task failed: {:?}", e);
-            Err(BusinessError::new(-1, format!("Create task failed")))
+            match e {
+                CreateTaskError::DownloadPath(_) => Err(BusinessError::new_static(
+                    13400001,
+                    "Invalid file or file system error.",
+                )),
+                CreateTaskError::Code(code) => {
+                    Err(BusinessError::new_static(code, "Create Task Failed"))
+                }
+            }
         }
     }
 }
@@ -75,8 +84,9 @@ pub fn remove(id: String) -> Result<(), BusinessError> {
     let task_id = id
         .parse::<i64>()
         .map_err(|_| BusinessError::new(-1, "Invalid task ID format".to_string()))?;
-    let _ = RequestClient::get_instance().remove(task_id);
-    Ok(())
+    RequestClient::get_instance()
+        .remove(task_id)
+        .map_err(|e| BusinessError::new_static(e, "Failed to remove task"))
 }
 
 #[ani_rs::native]
@@ -98,8 +108,17 @@ pub fn touch(id: String, token: String) -> Result<(), BusinessError> {
 
 #[ani_rs::native]
 pub fn search(filter: Option<Filter>) -> Result<Vec<String>, BusinessError> {
-    info!("Searching tasks");
-    Ok(vec!["hello".to_string()])
+    let filter = match filter {
+        Some(f) => f.into(),
+        None => SearchFilter::new(),
+    };
+    RequestClient::get_instance()
+        .search(filter)
+        .map(|tasks| {
+            info!("Api10 search tasks: {:?}", tasks);
+            tasks
+        })
+        .map_err(|e| BusinessError::new(e, "Failed to search tasks".to_string()))
 }
 
 #[ani_rs::native]

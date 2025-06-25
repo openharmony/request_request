@@ -17,7 +17,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ani_rs = { git = "https://gitee.com/openharmony/communication_netmanager_base", branch = "OpenHarmony_feature_20250328" }
+ani_rs = { git = "https://gitee.com/openharmony/communication_netmanager_base", branch = "OpenHarmony_feature_20250702" }
 serde = { version = "1.0", features = ["derive"] }
 
 request_utils = { path = "../../../../common/utils" }

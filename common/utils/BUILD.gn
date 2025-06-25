@@ -44,6 +44,9 @@ ohos_static_library("request_utils_cxx") {
   sources += get_target_outputs(":request_utils_cxx_gen")
 
   external_deps = [
+    "ability_runtime:ability_context_native",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
     "ability_runtime:ani_base_context",
     "ability_runtime:app_context",
     "bundle_framework:appexecfwk_core_headers",
@@ -105,12 +108,9 @@ ohos_rust_unittest("rust_utils_ut_test") {
   external_deps = [
     "hilog:libhilog",
     "rust_cxx:lib",
-  ]
-
-  external_deps = [
-    "hilog:libhilog",
     "netmanager_base:ani_rs",
   ]
+
   subsystem_name = "request"
   part_name = "request"
 }

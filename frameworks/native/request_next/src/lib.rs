@@ -13,7 +13,7 @@
 
 #![feature(lazy_cell)]
 mod check;
-mod client;
+pub mod client;
 mod proxy;
 pub use client::RequestClient;
 mod listen;
