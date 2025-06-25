@@ -87,8 +87,12 @@ rust::vec<rust::string> GetResolvConf()
         REQUEST_HILOGE("Cache Download GetDefaultNet failed, code : %{public}d", code);
         return dns;
     }
+    int32_t netId = handle.GetNetId();
+    if (netId < 0 || netId > UINT16_MAX) {
+        REQUEST_HILOGE("Cache Download GetNetId Illegal, id : %{public}d", netId);
+    }
     ResolvConfig config = {};
-    int ret = NetSysGetResolvConf(code, &config);
+    int ret = NetSysGetResolvConf(netId, &config);
     if (ret != 0) {
         REQUEST_HILOGE("Cache Download NetSysGetResolvConf failed, ret : %{public}d", ret);
         return dns;

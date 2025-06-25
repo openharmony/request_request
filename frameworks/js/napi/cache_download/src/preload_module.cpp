@@ -180,6 +180,10 @@ napi_value setDownloadInfoListSize(napi_env env, napi_callback_info info)
         ThrowError(env, E_PARAMETER_CHECK, "info list size exceeds the maximum value");
         return nullptr;
     }
+    if (size < 0) {
+        ThrowError(env, E_PARAMETER_CHECK, "info list size is negative");
+        return nullptr;
+    }
     Preload::GetInstance()->SetDownloadInfoListSize(size);
     return nullptr;
 }
