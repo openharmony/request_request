@@ -51,8 +51,8 @@ void UdsListener::OnNotifyDataReceive(const std::shared_ptr<Request::NotifyData>
 void OpenChannel(int32_t fd)
 {
     static UdsListener listener;
-    auto uds = std::make_shared<Request::ResponseMessageReceiver>(&listener, fd);
-    uds->BeginReceive();
+    //Todo: auto uds = std::make_shared<Request::ResponseMessageReceiver>(&listener, fd)
+    //Todo: uds->BeginReceive()
 };
 
 } // namespace RequestAni
