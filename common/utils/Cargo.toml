@@ -24,7 +24,7 @@ ohos = [
 ]
 
 [dependencies]
-ani_rs = { git = "https://gitee.com/openharmony/communication_netmanager_base", branch = "OpenHarmony_feature_20250328" }
+ani_rs = { git = "https://gitee.com/openharmony/communication_netmanager_base", branch = "OpenHarmony_feature_20250702" }
 cxx = { version = "1.0.115", optional = true }
 log = "0.4.22"
 env_logger = "0.11.3"

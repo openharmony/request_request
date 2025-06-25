@@ -18,6 +18,7 @@ use std::sync::{Arc, OnceLock};
 use request_core::config::{TaskConfig, Version};
 use request_core::error_code::CHANNEL_NOT_OPEN;
 use request_core::file::FileSpec;
+use request_core::filter::SearchFilter;
 use request_core::info::TaskInfo;
 use request_utils::context::Context;
 
@@ -129,5 +130,9 @@ impl<'a> RequestClient<'a> {
 
     pub fn show_task(&self, task_id: i64) -> Result<TaskInfo, i32> {
         self.proxy.show(task_id)
+    }
+
+    pub fn search(&self, keyword: SearchFilter) -> Result<Vec<String>, i32> {
+        self.proxy.search(keyword)
     }
 }

@@ -19,34 +19,39 @@ use crate::api10::bridge::Task;
 #[ani_rs::native]
 pub fn start(this: Task) -> Result<(), BusinessError> {
     let task_id = this.tid.parse().unwrap();
-    RequestClient::get_instance().start(task_id);
-    Ok(())
+    RequestClient::get_instance()
+        .start(task_id)
+        .map_err(|e| BusinessError::new_static(e, "Failed to start task"))
 }
 
 #[ani_rs::native]
 pub fn pause(this: Task) -> Result<(), BusinessError> {
     let task_id = this.tid.parse().unwrap();
-    RequestClient::get_instance().pause(task_id);
-    Ok(())
+    RequestClient::get_instance()
+        .pause(task_id)
+        .map_err(|e| BusinessError::new_static(e, "Failed to pause task"))
 }
 
 #[ani_rs::native]
 pub fn resume(this: Task) -> Result<(), BusinessError> {
     let task_id = this.tid.parse().unwrap();
-    RequestClient::get_instance().resume(task_id);
-    Ok(())
+    RequestClient::get_instance()
+        .resume(task_id)
+        .map_err(|e| BusinessError::new_static(e, "Failed to resume task"))
 }
 
 #[ani_rs::native]
 pub fn stop(this: Task) -> Result<(), BusinessError> {
     let task_id = this.tid.parse().unwrap();
-    RequestClient::get_instance().stop(task_id);
-    Ok(())
+    RequestClient::get_instance()
+        .stop(task_id)
+        .map_err(|e| BusinessError::new_static(e, "Failed to stop task"))
 }
 
 #[ani_rs::native]
 pub fn set_max_speed(this: Task, speed: i64) -> Result<(), BusinessError> {
     let task_id = this.tid.parse().unwrap();
-    RequestClient::get_instance().set_max_speed(task_id, speed);
-    Ok(())
+    RequestClient::get_instance()
+        .set_max_speed(task_id, speed)
+        .map_err(|e| BusinessError::new_static(e, "Failed to set task max speed"))
 }
