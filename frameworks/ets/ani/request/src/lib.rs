@@ -24,12 +24,12 @@ const TAG: &str = "RequestAni\0";
 const DOMAIN: u32 = 0xD001C50;
 
 ani_constructor!(
-    namespace "L@ohos/request/request"
+    namespace "@ohos.request.request"
     [
         "downloadFileSync": api9::download::download_file,
         "uploadFileSync": api9::upload::upload_file,
     ]
-    class "L@ohos/request/request/DownloadTaskInner"
+    class "@ohos.request.request.DownloadTaskInner"
     [
         "onProgress": api9::callback::on_progress,
         "onEvent": api9::callback::on_event,
@@ -40,11 +40,11 @@ ani_constructor!(
         "getTaskInfoSync": api9::download::get_task_info,
         "getTaskMimeTypeSync": api9::download::get_task_mime_type,
     ]
-    class "L@ohos/request/request/UploadTaskInner"
+    class "@ohos.request.request.UploadTaskInner"
     [
         "deleteSync": api9::upload::delete,
     ]
-    namespace "L@ohos/request/request/agent"
+    namespace "@ohos.request.request.agent"
     [
         "createSync": api10::agent::create,
         "getTaskSync": api10::agent::get_task,
@@ -57,7 +57,7 @@ ani_constructor!(
         "attachGroupSync": api10::notification::attach_group,
         "deleteGroupSync": api10::notification::delete_group,
     ]
-    class "L@ohos/request/request/agent/TaskInner"
+    class "@ohos.request.request.agent.TaskInner"
     [
         "startSync": api10::task::start,
         "pauseSync": api10::task::pause,

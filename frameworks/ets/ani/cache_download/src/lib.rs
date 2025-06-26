@@ -14,7 +14,7 @@
 mod bridge;
 mod cache_download;
 ani_rs::ani_constructor! {
-    namespace "L@ohos/request/cacheDownload/cacheDownload"
+    namespace "@ohos.request.cacheDownload.cacheDownload"
     [
         "download" : cache_download::download,
         "cancel" : cache_download::cancel,
