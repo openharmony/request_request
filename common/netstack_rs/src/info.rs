@@ -238,8 +238,9 @@ impl InfoCollection {
                 self.info_list.pop();
             }
         }
-        self.info_list.insert(task_id, info);
-        self.list_size.increment();
+        if self.info_list.insert(task_id, info).is_none() {
+            self.list_size.increment();
+        };
     }
 
     pub fn update_total_size(&mut self, total: u16) {
