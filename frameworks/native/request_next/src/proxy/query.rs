@@ -13,8 +13,9 @@
 
 use ipc::parcel::MsgParcel;
 use ipc::remote;
+use request_core::config::Action;
 use request_core::filter::SearchFilter;
-use request_core::info::TaskInfo;
+use request_core::info::{State, TaskInfo};
 use request_core::interface;
 
 use crate::proxy::{RequestProxy, SERVICE_TOKEN};
@@ -100,11 +101,16 @@ impl RequestProxy {
         todo!()
     }
 
-    pub(crate) fn search(&self, filter: SearchFilter) -> Result<(), i32> {
+    pub(crate) fn search(&self, filter: SearchFilter) -> Result<Vec<String>, i32> {
         let remote = self.remote()?;
 
         let mut data = MsgParcel::new();
         data.write_interface_token(SERVICE_TOKEN).unwrap();
+
+        match filter.bundle_name {
+            Some(ref bundle) => data.write(bundle).unwrap(),
+            None => data.write(&"*".to_string()).unwrap(),
+        }
 
         // Serialize the filter into the parcel
         match filter.before {
@@ -119,28 +125,28 @@ impl RequestProxy {
 
         match filter.state {
             Some(state) => data.write(&(state as u32)).unwrap(),
-            None => data.write(&0x61u32).unwrap(),
+            None => data.write(&(State::Any as u32)).unwrap(),
         }
 
         match filter.action {
             Some(action) => data.write(&(action as u32)).unwrap(),
-            None => data.write(&2u32).unwrap(),
+            None => data.write(&(2u32)).unwrap(),
         }
 
         match filter.mode {
             Some(mode) => data.write(&(mode as u32)).unwrap(),
-            None => data.write(&0232).unwrap(),
+            None => data.write(&02u32).unwrap(),
         }
 
         let mut reply = remote.send_request(interface::SEARCH, &mut data).unwrap();
 
-        let code = reply.read::<i32>().unwrap(); // error code
-        if code != 0 {
-            return Err(code);
+        let len = reply.read::<u32>().unwrap(); // error code
+        let mut ids = Vec::with_capacity(len as usize);
+        for _ in 0..len {
+            let id = reply.read::<String>().unwrap();
+            ids.push(id);
         }
-
-        // Handle the search results if needed
-        todo!()
+        Ok(ids)
     }
 
     pub(crate) fn get_task(&self, task_id: i64, token: String) -> Result<(), i32> {
