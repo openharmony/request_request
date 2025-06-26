@@ -931,7 +931,7 @@ HWTEST_F(RequestActionTest, CreateInnerTest0021, TestSize.Level1)
 
 class ContextTestMock : public ApplicationContext {
 public:
-    ~ContextTestMock(){};
+    ~ContextTestMock() {};
     std::string GetBaseDir(void) const override
     {
         return "/data/app/base";
@@ -944,7 +944,7 @@ public:
 
 class ContextTestErrMock : public ApplicationContext {
 public:
-    ~ContextTestErrMock(){};
+    ~ContextTestErrMock() {};
     std::string GetBaseDir(void) const override
     {
         return "";
@@ -1497,7 +1497,7 @@ HWTEST_F(RequestActionTest, CreateInnerTest0181, TestSize.Level1)
 
 class ContextCacheTestMock : public ApplicationContext {
 public:
-    ~ContextCacheTestMock(){};
+    ~ContextCacheTestMock() {};
     std::string GetCacheDir(void) override
     {
         return "/data";
@@ -1670,7 +1670,9 @@ HWTEST_F(RequestActionTest, CreateInnerTest0215, TestSize.Level1)
 {
     std::shared_ptr<ApplicationContext> context = std::make_shared<ContextCacheTestMock>();
     FileSpec file = { .uri = "file://media/Photo/1/test.img" };
-    Config config = { .version = Version::API10, .mode = Mode::BACKGROUND, .overwrite = true,
+    Config config = { .version = Version::API10,
+        .mode = Mode::BACKGROUND,
+        .overwrite = true,
         .saveas = "file://media/Photo/1/test.img" };
     auto res = RequestAction::CheckDownloadFile(context, config);
     EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
@@ -1723,9 +1725,10 @@ HWTEST_F(RequestActionTest, CreateInnerTest0222, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest023, TestSize.Level1)
 {
+    std::shared_ptr<ApplicationContext> context = std::make_shared<ContextTestMock>();
     Config config;
     FileSpec file;
-    auto res = RequestAction::CheckUserFileSpec(config, file, true);
+    auto res = RequestAction::CheckUserFileSpec(context, config, file, true);
     EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
 }
 
@@ -1737,9 +1740,10 @@ HWTEST_F(RequestActionTest, CreateInnerTest023, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0231, TestSize.Level1)
 {
+    std::shared_ptr<ApplicationContext> context;
     Config config = { .mode = Mode::BACKGROUND };
     FileSpec file;
-    auto res = RequestAction::CheckUserFileSpec(config, file, true);
+    auto res = RequestAction::CheckUserFileSpec(context, config, file, true);
     EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
 }
 
@@ -1751,10 +1755,11 @@ HWTEST_F(RequestActionTest, CreateInnerTest0231, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0232, TestSize.Level1)
 {
+    std::shared_ptr<ApplicationContext> context;
     Config config = { .mode = Mode::FOREGROUND };
     FileSpec file;
-    auto res = RequestAction::CheckUserFileSpec(config, file, true);
-    EXPECT_EQ(res, ExceptionErrorCode::E_FILE_IO);
+    auto res = RequestAction::CheckUserFileSpec(context, config, file, true);
+    EXPECT_EQ(res, ExceptionErrorCode::E_PARAMETER_CHECK);
 }
 
 /**
@@ -1765,9 +1770,10 @@ HWTEST_F(RequestActionTest, CreateInnerTest0232, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0233, TestSize.Level1)
 {
+    std::shared_ptr<ApplicationContext> context;
     Config config = { .mode = Mode::FOREGROUND, .firstInit = true };
     FileSpec file = { .uri = "", .isUserFile = true };
-    auto res = RequestAction::CheckUserFileSpec(config, file, false);
+    auto res = RequestAction::CheckUserFileSpec(context, config, file, false);
     EXPECT_EQ(res, ExceptionErrorCode::E_FILE_IO);
 }
 
@@ -1779,9 +1785,10 @@ HWTEST_F(RequestActionTest, CreateInnerTest0233, TestSize.Level1)
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0234, TestSize.Level1)
 {
+    std::shared_ptr<ApplicationContext> context;
     Config config = { .mode = Mode::FOREGROUND, .firstInit = false };
     FileSpec file = { .uri = "", .isUserFile = true };
-    auto res = RequestAction::CheckUserFileSpec(config, file, false);
+    auto res = RequestAction::CheckUserFileSpec(context, config, file, false);
     EXPECT_EQ(res, ExceptionErrorCode::E_FILE_IO);
 }
 

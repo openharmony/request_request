@@ -603,7 +603,7 @@ ExceptionErrorCode RequestAction::CheckDownloadFile(
             return E_PARAMETER_CHECK;
         }
         FileSpec file = { .uri = config.saveas, .isUserFile = true };
-        ret = CheckUserFileSpec(config, file, false);
+        ret = CheckUserFileSpec(context, config, file, false);
         if (ret == ExceptionErrorCode::E_OK) {
             config.files.push_back(file);
         }
@@ -641,17 +641,24 @@ bool RequestAction::IsUserFile(const std::string &path)
 }
 
 ExceptionErrorCode RequestAction::CheckUserFileSpec(
-    const Config &config, FileSpec &file, bool isUpload)
+    const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, FileSpec &file, bool isUpload)
 {
     if (config.mode != Mode::FOREGROUND) {
         return E_PARAMETER_CHECK;
     }
-    std::shared_ptr<AppFileService::ModuleFileUri::FileUri> fileUri =
-    std::make_shared<AppFileService::ModuleFileUri::FileUri>(file.uri);
-    std::string realPath = fileUri->GetRealPath();
     if (isUpload) {
-        file.fd = open(realPath.c_str(), O_RDONLY);
+        std::shared_ptr<Uri> uri = std::make_shared<Uri>(file.uri);
+        std::shared_ptr<AppExecFwk::DataAbilityHelper> dataAbilityHelper =
+            AppExecFwk::DataAbilityHelper::Creator(context, uri);
+        if (dataAbilityHelper == nullptr) {
+            REQUEST_HILOGE("dataAbilityHelper null");
+            return E_PARAMETER_CHECK;
+        }
+        file.fd = dataAbilityHelper->OpenFile(*uri, "r");
     } else {
+        std::shared_ptr<AppFileService::ModuleFileUri::FileUri> fileUri =
+            std::make_shared<AppFileService::ModuleFileUri::FileUri>(file.uri);
+        std::string realPath = fileUri->GetRealPath();
         if (config.firstInit) {
             file.fd = open(realPath.c_str(), O_RDWR | O_TRUNC);
         } else {
@@ -740,7 +747,7 @@ ExceptionErrorCode RequestAction::CheckUploadFiles(
             if (config.version == Version::API9) {
                 return E_PARAMETER_CHECK;
             }
-            ret = CheckUserFileSpec(config, file, true);
+            ret = CheckUserFileSpec(context, config, file, true);
             if (ret != ExceptionErrorCode::E_OK) {
                 return ret;
             }
