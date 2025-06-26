@@ -476,7 +476,8 @@ bool JsInitialize::ParseNotification(napi_env env, napi_value jsConfig, Config &
                 return false;
             }
         }
-        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, notification, "disable")) != napi_undefined) {
+        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, notification, "disable"))
+            != napi_undefined) {
             config.notification.disable = NapiUtils::Convert2Boolean(env, notification, "disable");
         }
     }
@@ -523,8 +524,8 @@ bool JsInitialize::ParseTimeout(napi_env env, napi_value jsConfig, Config &confi
 {
     napi_value timeout = NapiUtils::GetNamedProperty(env, jsConfig, "timeout");
     if (NapiUtils::GetValueType(env, timeout) != napi_undefined) {
-        if (NapiUtils::GetValueType(env,
-            NapiUtils::GetNamedProperty(env, timeout, "connectionTimeout")) != napi_undefined) {
+        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, timeout, "connectionTimeout"))
+            != napi_undefined) {
             config.timeout.connectionTimeout =
                 static_cast<uint64_t>(NapiUtils::Convert2Int64(env, timeout, "connectionTimeout"));
             if (config.timeout.connectionTimeout < MIN_TIMEOUT) {
@@ -532,8 +533,8 @@ bool JsInitialize::ParseTimeout(napi_env env, napi_value jsConfig, Config &confi
                 return false;
             }
         }
-        if (NapiUtils::GetValueType(env,
-            NapiUtils::GetNamedProperty(env, timeout, "totalTimeout")) != napi_undefined) {
+        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, timeout, "totalTimeout"))
+            != napi_undefined) {
             config.timeout.totalTimeout =
                 static_cast<uint64_t>(NapiUtils::Convert2Int64(env, timeout, "totalTimeout"));
             if (config.timeout.totalTimeout < MIN_TIMEOUT || config.timeout.totalTimeout > MAX_TIMEOUT) {
@@ -831,7 +832,8 @@ std::string GetHostnameFromURL(const std::string &url)
     if (notSlash != std::string::npos) {
         posStart = notSlash;
     }
-    size_t posEnd = std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
+    size_t posEnd =
+        std::min({ tempUrl.find(':', posStart), tempUrl.find('/', posStart), tempUrl.find('?', posStart) });
     if (posEnd != std::string::npos) {
         return tempUrl.substr(posStart, posEnd - posStart);
     }
@@ -845,8 +847,8 @@ void JsInitialize::ParseCertificatePins(napi_env env, std::string &url, std::str
         REQUEST_HILOGI("Pins is openMode");
         return;
     }
-    auto ret = OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance().
-        GetPinSetForHostName(hostname, certificatePins);
+    auto ret =
+        OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance().GetPinSetForHostName(hostname, certificatePins);
     if (ret != 0 || certificatePins.empty()) {
         REQUEST_HILOGD("Get No pin set by hostname");
     }
@@ -1162,7 +1164,7 @@ void JsInitialize::StandardizeFileSpec(FileSpec &file)
     return;
 }
 
-bool JsInitialize::CheckUserFileSpec(
+bool JsInitialize::CheckUserFileSpec(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context,
     const Config &config, FileSpec &file, ExceptionError &error, bool isUpload)
 {
     if (config.mode != Mode::FOREGROUND) {
@@ -1170,12 +1172,22 @@ bool JsInitialize::CheckUserFileSpec(
         error.errInfo = "Parameter verification failed, user file can only for Mode::FOREGROUND";
         return false;
     }
-    std::shared_ptr<AppFileService::ModuleFileUri::FileUri> fileUri =
-    std::make_shared<AppFileService::ModuleFileUri::FileUri>(file.uri);
-    std::string realPath = fileUri->GetRealPath();
     if (isUpload) {
-        file.fd = open(realPath.c_str(), O_RDONLY);
+        std::shared_ptr<Uri> uri = std::make_shared<Uri>(file.uri);
+        std::shared_ptr<AppExecFwk::DataAbilityHelper> dataAbilityHelper =
+            AppExecFwk::DataAbilityHelper::Creator(context, uri);
+        if (dataAbilityHelper == nullptr) {
+            REQUEST_HILOGE("dataAbilityHelper null");
+            error.code = E_PARAMETER_CHECK;
+            error.errInfo = "Parameter verification failed, dataAbilityHelper null";
+            SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_07, config.bundleName, "", error.errInfo);
+            return false;
+        }
+        file.fd = dataAbilityHelper->OpenFile(*uri, "r");
     } else {
+        std::shared_ptr<AppFileService::ModuleFileUri::FileUri> fileUri =
+            std::make_shared<AppFileService::ModuleFileUri::FileUri>(file.uri);
+        std::string realPath = fileUri->GetRealPath();
         if (config.firstInit) {
             file.fd = open(realPath.c_str(), O_RDWR | O_TRUNC);
         } else {
@@ -1214,7 +1226,7 @@ bool JsInitialize::CheckUploadFiles(
                 error.errInfo = "Parameter verification failed, user file can only for request.agent.";
                 return false;
             }
-            if (!CheckUserFileSpec(config, file, error, true)) {
+            if (!CheckUserFileSpec(context, config, file, error, true)) {
                 return false;
             }
             StandardizeFileSpec(file);
@@ -1274,7 +1286,7 @@ bool JsInitialize::CheckDownloadFile(
             return false;
         }
         FileSpec file = { .uri = config.saveas, .isUserFile = true };
-        if (!CheckUserFileSpec(config, file, error, false)) {
+        if (!CheckUserFileSpec(context, config, file, error, false)) {
             return false;
         }
         config.files.push_back(file);

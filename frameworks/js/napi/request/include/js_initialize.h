@@ -118,7 +118,8 @@ private:
     static void StandardizeFileSpec(FileSpec &file);
     static bool GetSandboxPath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
         std::string &path, std::vector<std::string> &pathVec, std::string &errInfo);
-    static bool CheckUserFileSpec(const Config &config, FileSpec &file, ExceptionError &error, bool isUpload);
+    static bool CheckUserFileSpec(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config,
+        FileSpec &file, ExceptionError &error, bool isUpload);
     static bool CheckUploadFileSpec(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config,
         FileSpec &file, ExceptionError &error);
     static bool CheckDownloadFile(
