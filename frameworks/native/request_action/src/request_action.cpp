@@ -1031,6 +1031,7 @@ bool RequestAction::ClearTaskTemp(const std::string &tid)
         RemovePathMap(filePath);
         RemoveFile(filePath);
     }
+
     // Reset Acl permission
     for (auto &file : config.files) {
         RemovePathMap(file.uri);
