@@ -90,6 +90,7 @@ rust::vec<rust::string> GetResolvConf()
     int32_t netId = handle.GetNetId();
     if (netId < 0 || netId > UINT16_MAX) {
         REQUEST_HILOGE("Cache Download GetNetId Illegal, id : %{public}d", netId);
+        return dns;
     }
     ResolvConfig config = {};
     int ret = NetSysGetResolvConf(netId, &config);
