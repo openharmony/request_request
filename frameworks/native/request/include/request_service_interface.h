@@ -35,12 +35,10 @@ public:
         const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets) = 0;
     virtual ExceptionErrorCode ResumeTasks(
         const std::vector<std::string> &tids, std::vector<ExceptionErrorCode> &rets) = 0;
-
     virtual ExceptionErrorCode RemoveTasks(
         const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets) = 0;
     virtual ExceptionErrorCode PauseTasks(
         const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets) = 0;
-
     virtual ExceptionErrorCode QueryTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets) = 0;
     virtual ExceptionErrorCode ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets) = 0;
     virtual ExceptionErrorCode ShowBatchProgress(
