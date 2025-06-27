@@ -208,6 +208,7 @@ impl InfoListSize {
         self.total = total;
         if self.used > total {
             let overflow = self.used - total;
+            self.used = total;
             return Some(overflow);
         }
         None
