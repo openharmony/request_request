@@ -80,6 +80,7 @@ napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Versi
         NapiUtils::ThrowError(env, err.code, err.errInfo, withErrCode);
         return nullptr;
     }
+
     auto *task = new (std::nothrow) JsTask();
     if (task == nullptr) {
         REQUEST_HILOGE("Create task object failed");
