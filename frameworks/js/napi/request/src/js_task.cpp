@@ -904,7 +904,6 @@ void JsTask::SetTid(std::string &tid)
 void JsTask::AddTaskMap(const std::string &key, JsTask *task)
 {
     JsTask::taskMap_[key] = task;
-
     if (!JsTask::taskMap_.empty()) {
         JsTask::SubscribeSA();
     }
