@@ -78,54 +78,7 @@ pub(crate) fn clear_database_part(pre_count: usize) -> Result<bool, ()> {
     Ok(remain)
 }
 
-#[test]
-fn clear_database_test() {
-    use request_utils::fastrand::fast_random;
-
-    let current_time = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_millis() as u64;
-    let a_week_ago = current_time - MILLIS_IN_A_WEEK;
-
-    REQUEST_DB
-        .execute(
-            "CREATE TABLE IF NOT EXISTS request_task (task_id INTEGER PRIMARY KEY, mtime INTEGER)",
-            (),
-        )
-        .unwrap();
-    let mut task_ids = [
-        fast_random() as u32,
-        fast_random() as u32,
-        fast_random() as u32,
-    ];
-
-    task_ids.sort();
-    let sql = "INSERT INTO request_task (task_id, mtime) VALUES (?, ?)";
-    for task_id in task_ids.iter().take(2) {
-        REQUEST_DB.execute(sql, (*task_id, a_week_ago)).unwrap();
-    }
-    REQUEST_DB
-        .execute(sql, (task_ids[2], a_week_ago + 20000))
-        .unwrap();
-    let query: Vec<_> = REQUEST_DB
-        .query::<u32>("SELECT task_id from request_task", ())
-        .unwrap()
-        .collect();
-    for task_id in task_ids.iter() {
-        assert!(query.contains(task_id));
-    }
-
-    if let Ok(remain) = clear_database_part(query.len() + 1) {
-        assert!(!remain);
-    }
-
-    let query: Vec<_> = REQUEST_DB
-        .query::<u32>("SELECT task_id from request_task", ())
-        .unwrap()
-        .collect();
-    for task_id in task_ids.iter().take(2) {
-        assert!(!query.contains(task_id));
-    }
-    assert!(query.contains(&task_ids[2]));
+#[cfg(test)]
+mod ut_database {
+    include!("../tests/ut/ut_database.rs");
 }
