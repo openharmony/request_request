@@ -230,7 +230,7 @@ impl InfoCollection {
 
     pub fn insert_info(&mut self, task_id: TaskId, info: DownloadInfo) {
         if self.list_size.total_size() == 0 {
-            debug!("DownloadInfoMgr insert info failed, total sizi is 0");
+            debug!("DownloadInfoMgr insert info failed, total size is 0");
             return;
         }
         if self.list_size.is_full_capacity() {
@@ -279,4 +279,101 @@ impl DownloadInfoMgr {
         let mut info_guard = self.info.lock().unwrap();
         info_guard.info_list.get(&task_id).cloned()
     }
+}
+
+#[cfg(test)]
+mod ut_info {
+    use request_utils::task_id::TaskId;
+    use crate::info::{DownloadInfo, DownloadInfoMgr, InfoListSize, RustPerformanceInfo};
+
+    #[test]
+    fn ut_download_performance() {
+        let mut performance = RustPerformanceInfo::default();
+        performance.set_dns_timing(1.0f64);
+        performance.set_connect_timing(2.0f64);
+        performance.set_tls_timing(3.0f64);
+        performance.set_first_send_timing(4.0f64);
+        performance.set_first_receive_timing(5.0f64);
+        performance.set_total_timing(6.0f64);
+        performance.set_redirect_timing(10.0f64);
+        let mut download_info = DownloadInfo::new();
+        download_info.set_performance(performance);
+        assert!(download_info.dns_time() - 1.0f64 < 0.01f64);
+        assert!(download_info.connect_time() - 2.0f64 < 0.01f64);
+        assert!(download_info.tls_time() - 3.0f64 < 0.01f64);
+        assert!(download_info.first_send_time() - 4.0f64 < 0.01f64);
+        assert!(download_info.first_recv_time() - 5.0f64 < 0.01f64);
+        assert!(download_info.total_time() - 6.0f64 < 0.01f64);
+        assert!(download_info.redirect_time() - 10.0f64 < 0.01f64);
+    }
+
+    #[test]
+    fn ut_download_resource() {
+        let mut download_info = DownloadInfo::new();
+        assert_eq!(download_info.resource_size(), -1);
+        download_info.set_size(0);
+        assert_eq!(download_info.resource_size(), 0);
+    }
+
+    #[test]
+    fn ut_download_net_dns() {
+        let mut download_info = DownloadInfo::new();
+        assert!(download_info.dns_servers().is_empty());
+        download_info.set_network_dns(vec!["4.4.4.4".to_string()]);
+        assert!(download_info.ip().is_empty());
+        let dns = download_info.dns_servers().pop();
+        assert_eq!(dns, Some("4.4.4.4".to_string()));
+    }
+
+    #[test]
+    fn info_list_size_increment() {
+        let mut info_size = InfoListSize::new();
+        assert!(info_size.is_full_capacity());
+        assert_eq!(info_size.total, 0);
+        assert_eq!(info_size.used, 0);
+        assert_eq!(info_size.total_size(), 0);
+        assert!(!info_size.increment());
+        assert!(info_size.update_total_size(1).is_none());
+        assert!(info_size.increment());
+    }
+
+    #[test]
+    fn info_list_size_release() {
+        let mut info_size = InfoListSize::new();
+        assert!(!info_size.release());
+        info_size.update_total_size(1);
+        assert_eq!(info_size.total, 1);
+        info_size.increment();
+        assert!(info_size.release());
+    }
+
+    #[test]
+    fn info_list_size_update() {
+        let mut info_size = InfoListSize::new();
+        info_size.update_total_size(2);
+        info_size.increment();
+        assert_eq!(info_size.update_total_size(1), None);
+        assert_eq!(info_size.update_total_size(0), Some(1));
+    }
+
+    #[test]
+    fn info_collection_update() {
+        let info_mgr = DownloadInfoMgr::new();
+        let task_id = TaskId::from_url("https://www.example.coom/data/test1");
+        let info = DownloadInfo::new();
+        info_mgr.insert_download_info(task_id.clone(), info.clone());
+        assert!(info_mgr.get_download_info(task_id.clone()).is_none());
+        info_mgr.update_info_list_size(1);
+        info_mgr.insert_download_info(task_id.clone(), info.clone());
+        assert!(info_mgr.get_download_info(task_id.clone()).is_some());
+        // Update the same task_id.
+        info_mgr.insert_download_info(task_id.clone(), info);
+        assert!(info_mgr.get_download_info(task_id.clone()).is_some());
+        let task_id_2 = TaskId::from_url("https://www.example.coom/data/test2");
+        let info_2 = DownloadInfo::new();
+        info_mgr.insert_download_info(task_id_2.clone(), info_2);
+        assert!(info_mgr.get_download_info(task_id).is_none());
+        assert!(info_mgr.get_download_info(task_id_2).is_some());
+    }
+
 }

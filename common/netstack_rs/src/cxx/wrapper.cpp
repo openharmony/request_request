@@ -99,7 +99,7 @@ rust::vec<rust::string> GetResolvConf()
         return dns;
     }
 
-    for (size_t i = 0; i < sizeof(config.nameservers) / sizeof(config.nameservers[0]); i++) {
+    for (size_t i = 0; i < MAX_SERVER_NUM; i++) {
         if (config.nameservers[i][0] == '\0') {
             continue;
         }
