@@ -218,12 +218,12 @@ export default namespace request {
       };
 
       start(): Promise<void> {
-        let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: Object) => void) : void => {
+        let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: Error) => void) : void => {
             let p1 = taskpool.execute((): void => {
               this.startSync();
             });
             p1.then((e: NullishType) : void => {
-              hilog.info(0x0000, 'request', "in start Promise then. e is ", e)
+              hilog.info(0x0000, 'request', "in start Promise then. e is ", e as (Object | undefined | null))
               resolve(undefined);
             });
         });
@@ -251,10 +251,10 @@ export default namespace request {
 
     export function create(context: BaseContext, config: Config): Promise<Task> {
       let p = new Promise<Task>((resolve: (v: Task) => void,
-        reject: (error: Object) => void): void => {
+        reject: (error: Error) => void): void => {
           let p1 = taskpool.execute(createSync, context, config);
           p1.then((e: NullishType): void => {
-            hilog.info(0x0000, 'request', "in create Promise then. e is ", e)
+            hilog.info(0x0000, 'request', "in create Promise then. e is ", e as (Object | undefined | null))
             resolve(e as Task);
           }).catch((err: Error) : void => {
             reject(err);
