@@ -88,7 +88,7 @@ impl DownloadTask {
         input: DownloadRequest,
         callback: PrimeCallback,
         info_mgr: Arc<DownloadInfoMgr>,
-    ) -> Arc<dyn CommonHandle> {
+    ) -> Option<Arc<dyn CommonHandle>> {
         let mut request = Request::new();
         request.url(input.url);
         if let Some(headers) = input.headers {
@@ -101,8 +101,12 @@ impl DownloadTask {
         request.callback(callback);
         request.info_mgr(info_mgr);
         let mut task = request.build();
-        task.start();
-        Arc::new(CancelHandle::new(task))
+        if task.start() {
+            Some(Arc::new(CancelHandle::new(task)))
+        } else {
+            error!("Netstack HttpClientTask start failed.");
+            None
+        } 
     }
 }
 

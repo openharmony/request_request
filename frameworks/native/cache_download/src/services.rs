@@ -118,7 +118,7 @@ impl CacheDownloadService {
         mut callback: Box<dyn PreloadCallback>,
         update: bool,
         downloader: Downloader,
-    ) -> TaskHandle {
+    ) -> Option<TaskHandle> {
         let url = request.url;
         let task_id = TaskId::from_url(url);
         info!("preload task {}", task_id.brief());
@@ -130,7 +130,7 @@ impl CacheDownloadService {
                 info!("{} fetch success", task_id.brief());
                 let handle = TaskHandle::new(task_id);
                 handle.set_completed();
-                return handle;
+                return Some(handle);
             }
         }
 
@@ -138,7 +138,7 @@ impl CacheDownloadService {
             let updater = match self.running_tasks.lock().unwrap().entry(task_id.clone()) {
                 Entry::Occupied(entry) => entry.get().clone(),
                 Entry::Vacant(entry) => {
-                    let updater = Arc::new(Mutex::new(DownloadTask::new(
+                    let download_task = DownloadTask::new(
                         task_id.clone(),
                         &self.cache_manager,
                         self.info_mgr.clone(),
@@ -146,16 +146,22 @@ impl CacheDownloadService {
                         callback,
                         downloader,
                         0,
-                    )));
-                    let handle = updater.lock().unwrap().task_handle();
-                    entry.insert(updater);
-                    return handle;
+                    );
+                    match download_task {
+                        Some(task) => {
+                            let updater = Arc::new(Mutex::new(task));
+                            let handle = updater.lock().unwrap().task_handle();
+                            entry.insert(updater);
+                            return Some(handle);
+                        }
+                        None => return None,
+                    }
                 }
             };
 
             let mut updater = updater.lock().unwrap();
             match updater.try_add_callback(callback) {
-                Ok(()) => return updater.task_handle(),
+                Ok(()) => return Some(updater.task_handle()),
                 Err(mut cb) => {
                     if update {
                         info!("add callback failed, update task {}", task_id.brief());
@@ -166,12 +172,12 @@ impl CacheDownloadService {
                         info!("{} fetch success", task_id.brief());
                         let handle = TaskHandle::new(task_id);
                         handle.set_completed();
-                        return handle;
+                        return Some(handle);
                     }
 
                     if !updater.remove_flag {
                         let seq = updater.seq + 1;
-                        *updater = DownloadTask::new(
+                        let download_task = DownloadTask::new(
                             task_id.clone(),
                             &self.cache_manager,
                             self.info_mgr.clone(),
@@ -180,7 +186,13 @@ impl CacheDownloadService {
                             downloader,
                             seq,
                         );
-                        return updater.task_handle();
+                        match download_task {
+                            Some(task) => {
+                                *updater = task;
+                                return Some(updater.task_handle());
+                            }
+                            None => return None,
+                        }
                     } else {
                         callback = cb;
                     }
@@ -311,6 +323,8 @@ mod test {
             flag: success_flag.clone(),
         });
         let handle = SERVICE.preload(DownloadRequest::new(TEST_URL), callback, true, DOWNLOADER);
+        assert!(handle.is_some());
+        let handle = handle.unwrap();
         while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }
@@ -333,6 +347,8 @@ mod test {
 
         let handle = SERVICE.preload(DownloadRequest::new(TEST_URL), callback_0, true, DOWNLOADER);
         SERVICE.preload(DownloadRequest::new(TEST_URL), callback_1, true, DOWNLOADER);
+        assert!(handle.is_some());
+        let handle = handle.unwrap();
         while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }
@@ -349,6 +365,8 @@ mod test {
             flag: error.clone(),
         });
         let handle = SERVICE.preload(DownloadRequest::new(ERROR_IP), callback, true, DOWNLOADER);
+        assert!(handle.is_some());
+        let handle = handle.unwrap();
         while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }
@@ -369,6 +387,8 @@ mod test {
         });
 
         let handle = SERVICE.preload(DownloadRequest::new(ERROR_IP), callback_0, true, DOWNLOADER);
+        assert!(handle.is_some());
+        let handle = handle.unwrap();
         SERVICE.preload(DownloadRequest::new(ERROR_IP), callback_1, true, DOWNLOADER);
         while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
@@ -386,8 +406,10 @@ mod test {
         let callback = Box::new(TestCallbackC {
             flag: cancel_flag.clone(),
         });
-        let mut handle =
+        let handle =
             SERVICE.preload(DownloadRequest::new(TEST_URL), callback, true, DOWNLOADER);
+        assert!(handle.is_some());
+        let mut handle = handle.unwrap();
         handle.cancel();
         while handle.state() != CANCEL {
             std::thread::sleep(Duration::from_millis(500));
@@ -406,7 +428,8 @@ mod test {
         });
         let handle = SERVICE.preload(DownloadRequest::new(TEST_URL), callback, true, DOWNLOADER);
         SERVICE.cancel(TEST_URL);
-
+        assert!(handle.is_some());
+        let handle = handle.unwrap();
         while handle.state() != CANCEL {
             std::thread::sleep(Duration::from_millis(500));
         }
@@ -428,11 +451,14 @@ mod test {
             flag: cancel_flag_1.clone(),
         });
 
-        let mut handle_0 =
+        let handle_0 =
             SERVICE.preload(DownloadRequest::new(test_url), callback_0, true, DOWNLOADER);
-        let mut handle_1 =
+        let handle_1 =
             SERVICE.preload(DownloadRequest::new(test_url), callback_1, true, DOWNLOADER);
-        handle_0.cancel();
+        assert!(handle_0.is_some());
+        assert!(handle_1.is_some());
+        let mut handle_0 = handle_0.unwrap();
+        let mut handle_1 = handle_1.unwrap();
         handle_0.cancel();
         assert_eq!(cancel_flag_0.load(Ordering::SeqCst), 0);
         assert_eq!(cancel_flag_1.load(Ordering::SeqCst), 0);
@@ -457,6 +483,8 @@ mod test {
             true,
             DOWNLOADER,
         );
+        assert!(handle.is_some());
+        let handle = handle.unwrap();
         while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }
@@ -509,6 +537,8 @@ mod test {
             flag: success_flag.clone(),
         });
         let handle = SERVICE.preload(request, callback, true, DOWNLOADER);
+        assert!(handle.is_some());
+        let handle = handle.unwrap();
         while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }
@@ -525,6 +555,8 @@ mod test {
             flag: success_flag.clone(),
         });
         let handle = SERVICE.preload(DownloadRequest::new(TEST_URL), callback, true, DOWNLOADER);
+        assert!(handle.is_some());
+        let handle = handle.unwrap();
         while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }

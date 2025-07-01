@@ -81,4 +81,9 @@ std::unique_ptr<CppDownloadInfo> UniqueInfo(rust::Box<RustDownloadInfo> info)
     return std::make_unique<CppDownloadInfo>(std::move(info));
 }
 
+std::shared_ptr<PreloadHandle> ShareTaskHandle(rust::Box<TaskHandle> handle)
+{
+    return std::make_shared<PreloadHandle>(std::move(handle));
+}
+
 } // namespace OHOS::Request
