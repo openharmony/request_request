@@ -230,19 +230,19 @@ static bool SetConfigInfo(ani_env *env, Config &aniConfig, ani_object config)
     aniConfig.overwrite = true;
     
     ani_ref aniMethod;
-    if (env->Object_GetPropertyByName_Ref(config, "method", &aniMethod) == ANI_OK) {
+    if (env->Object_GetPropertyByName_Ref(config, "method", &aniMethod) == ANI_OK && aniMethod != nullptr) {
         auto method = AniStringUtils::ToStd(env, static_cast<ani_string>(aniMethod));
         aniConfig.method = method;
     }
 
     ani_ref aniSaveas;
-    if (env->Object_GetPropertyByName_Ref(config, "saveas", &aniSaveas) == ANI_OK) {
+    if (env->Object_GetPropertyByName_Ref(config, "saveas", &aniSaveas) == ANI_OK && aniSaveas != nullptr) {
         auto saveas = AniStringUtils::ToStd(env, static_cast<ani_string>(aniSaveas));
         aniConfig.saveas = saveas;
     }
 
     ani_ref aniData;
-    if (env->Object_GetPropertyByName_Ref(config, "data", &aniData) == ANI_OK) {
+    if (env->Object_GetPropertyByName_Ref(config, "data", &aniData) == ANI_OK && aniData != nullptr) {
         bool ret = ProcessDatas(env, aniConfig, static_cast<ani_object>(aniData));
         if (!ret) {
             REQUEST_HILOGE("ProcessDatas data error.");
