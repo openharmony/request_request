@@ -31,6 +31,7 @@ use crate::manage::events::{TaskEvent, TaskManagerEvent};
 use crate::manage::scheduler::qos::{QosChanges, QosDirection};
 use crate::manage::scheduler::queue::running_task::RunningTask;
 use crate::manage::task_manager::TaskManagerTx;
+use crate::service::active_counter::ActiveCounter;
 use crate::service::client::ClientManagerEntry;
 use crate::service::run_count::RunCountManagerEntry;
 use crate::task::config::Action;
@@ -56,11 +57,12 @@ impl RunningQueue {
         tx: TaskManagerTx,
         run_count_manager: RunCountManagerEntry,
         client_manager: ClientManagerEntry,
+        active_counter: ActiveCounter,
     ) -> Self {
         Self {
             download_queue: HashMap::new(),
             upload_queue: HashMap::new(),
-            keeper: SAKeeper::new(tx.clone()),
+            keeper: SAKeeper::new(tx.clone(), active_counter),
             tx,
             running_tasks: HashMap::new(),
             run_count_manager,

@@ -19,6 +19,7 @@ use ylong_runtime::task::JoinHandle;
 
 use crate::manage::events::{ScheduleEvent, TaskManagerEvent};
 use crate::manage::task_manager::TaskManagerTx;
+use crate::service::active_counter::ActiveCounter;
 use crate::utils::runtime_spawn;
 
 const UNLOAD_WAITING: u64 = 60;
@@ -26,6 +27,7 @@ const UNLOAD_WAITING: u64 = 60;
 pub(crate) struct SAKeeper {
     tx: UnboundedSender<TaskManagerEvent>,
     inner: Arc<Mutex<Inner>>,
+    active_counter: ActiveCounter,
 }
 
 struct Inner {
@@ -34,7 +36,7 @@ struct Inner {
 }
 
 impl SAKeeper {
-    pub(crate) fn new(tx: TaskManagerTx) -> Self {
+    pub(crate) fn new(tx: TaskManagerTx, active_counter: ActiveCounter) -> Self {
         info!("Countdown 60s future started");
         let tx = &tx.tx;
         let handle = count_down(tx.clone());
@@ -44,6 +46,7 @@ impl SAKeeper {
                 cnt: 0,
                 handle: Some(handle),
             })),
+            active_counter,
         }
     }
 }
@@ -58,6 +61,7 @@ impl Clone for SAKeeper {
             if inner.cnt != 0 {
                 if let Some(handle) = inner.handle.take() {
                     handle.cancel();
+                    self.active_counter.increment();
                     info!("Countdown 60s future canceled");
                 }
             }
@@ -65,6 +69,7 @@ impl Clone for SAKeeper {
         Self {
             tx: self.tx.clone(),
             inner: self.inner.clone(),
+            active_counter: self.active_counter.clone(),
         }
     }
 }
@@ -78,6 +83,7 @@ impl Drop for SAKeeper {
         if inner.cnt == 0 {
             info!("Countdown 60s future restarted");
             inner.handle = Some(count_down(self.tx.clone()));
+            self.active_counter.decrement();
         }
     }
 }

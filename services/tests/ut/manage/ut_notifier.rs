@@ -27,6 +27,7 @@ use crate::manage::network::{Network, NetworkInfo, NetworkInner, NetworkState, N
 use crate::manage::network_manager::NetworkManager;
 use crate::manage::task_manager::{TaskManagerRx, TaskManagerTx};
 use crate::manage::TaskManager;
+use crate::service::active_counter::ActiveCounter;
 use crate::service::client::{ClientEvent, ClientManager, ClientManagerEntry};
 use crate::service::run_count::RunCountManagerEntry;
 use crate::task::notify::SubscribeType;
@@ -53,7 +54,7 @@ fn init_manager() -> (TaskManager, UnboundedReceiver<ClientEvent>) {
     let (tx, client_rx) = unbounded_channel();
     let client = ClientManagerEntry::new(tx);
     (
-        TaskManager::new(task_manager_tx, rx, run_count, client),
+        TaskManager::new(task_manager_tx, rx, run_count, client, ActiveCounter::new()),
         client_rx,
     )
 }

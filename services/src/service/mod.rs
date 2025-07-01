@@ -13,6 +13,7 @@
 
 //! This crate implement the request server service.
 
+pub(crate) mod active_counter;
 pub(crate) mod client;
 
 /// The interface of the request server service.

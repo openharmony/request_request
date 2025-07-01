@@ -22,6 +22,7 @@ use crate::config::{Action, ConfigBuilder, Mode};
 use crate::error::ErrorCode;
 use crate::info::{State, TaskInfo};
 use crate::manage::task_manager::{TaskManagerRx, TaskManagerTx};
+use crate::service::active_counter::ActiveCounter;
 use crate::service::client::ClientManagerEntry;
 use crate::service::run_count::RunCountManagerEntry;
 use crate::tests::{lock_database, test_init};
@@ -40,7 +41,7 @@ fn task_manager() -> TaskManager {
     let run_count = RunCountManagerEntry::new(tx);
     let (tx, _rx) = unbounded_channel();
     let client = ClientManagerEntry::new(tx);
-    TaskManager::new(task_manager_tx, rx, run_count, client)
+    TaskManager::new(task_manager_tx, rx, run_count, client, ActiveCounter::new())
 }
 
 fn task_into(task_id: u32) -> TaskInfo {

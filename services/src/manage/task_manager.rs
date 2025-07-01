@@ -40,6 +40,7 @@ use crate::manage::network_manager::NetworkManager;
 use crate::manage::query::TaskFilter;
 use crate::manage::scheduler::state::Handler;
 use crate::manage::scheduler::Scheduler;
+use crate::service::active_counter::ActiveCounter;
 use crate::service::client::ClientManagerEntry;
 use crate::service::notification_bar::{subscribe_notification_bar, NotificationDispatcher};
 use crate::service::run_count::RunCountManagerEntry;
@@ -73,6 +74,7 @@ impl TaskManager {
     pub(crate) fn init(
         runcount_manager: RunCountManagerEntry,
         client_manager: ClientManagerEntry,
+        active_counter: ActiveCounter,
         #[cfg(not(feature = "oh"))] network: Network,
     ) -> TaskManagerTx {
         debug!("TaskManager init");
@@ -118,7 +120,13 @@ impl TaskManager {
             );
         }
 
-        let task_manager = Self::new(tx.clone(), rx, runcount_manager, client_manager);
+        let task_manager = Self::new(
+            tx.clone(),
+            rx,
+            runcount_manager,
+            client_manager,
+            active_counter,
+        );
 
         // Performance optimization tips for task restoring:
         //
@@ -145,9 +153,15 @@ impl TaskManager {
         rx: TaskManagerRx,
         run_count_manager: RunCountManagerEntry,
         client_manager: ClientManagerEntry,
+        active_counter: ActiveCounter,
     ) -> Self {
         Self {
-            scheduler: Scheduler::init(tx.clone(), run_count_manager, client_manager.clone()),
+            scheduler: Scheduler::init(
+                tx.clone(),
+                run_count_manager,
+                client_manager.clone(),
+                active_counter,
+            ),
             rx,
             client_manager,
             task_count: HashMap::new(),
