@@ -55,6 +55,7 @@ private:
 std::shared_ptr<Data> SharedData(rust::Box<RustData> data);
 std::unique_ptr<Data> UniqueData(rust::Box<RustData> data);
 std::unique_ptr<CppDownloadInfo> UniqueInfo(rust::Box<RustDownloadInfo> info);
+std::shared_ptr<PreloadHandle> ShareTaskHandle(rust::Box<TaskHandle> handle);
 } // namespace OHOS::Request
 
 #endif // REQUEST_PRE_DOWNLOAD_CALLBACK_H

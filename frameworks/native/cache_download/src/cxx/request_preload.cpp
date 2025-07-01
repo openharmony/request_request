@@ -261,7 +261,7 @@ std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique
     }
     auto taskHandle = agent_->ffi_preload(
         rust::str(url), std::move(callback_wrapper), std::move(progress_callback_wrapper), update, ffiOptions);
-    return std::make_shared<PreloadHandle>(std::move(taskHandle));
+    return taskHandle;
 }
 
 std::optional<Data> Preload::fetch(std::string const &url)

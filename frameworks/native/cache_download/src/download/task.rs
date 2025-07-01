@@ -54,14 +54,14 @@ impl DownloadTask {
         callback: Box<dyn PreloadCallback>,
         downloader: Downloader,
         seq: usize,
-    ) -> Self {
+    ) -> Option<DownloadTask> {
         info!("new preload task {} seq {}", task_id.brief(), seq);
         let mut handle = None;
         match downloader {
             Downloader::Netstack => {
                 #[cfg(feature = "netstack")]
                 {
-                    handle = Some(download_inner(
+                    handle = download_inner(
                         task_id,
                         cache_manager,
                         info_mgr,
@@ -69,7 +69,7 @@ impl DownloadTask {
                         Some(callback),
                         netstack::DownloadTask::run,
                         seq,
-                    ));
+                    );
                 }
             }
             Downloader::Ylong => {
@@ -86,11 +86,11 @@ impl DownloadTask {
                 }
             }
         };
-        Self {
+        handle.map(|handle| DownloadTask {
             remove_flag: false,
             seq,
-            handle: handle.unwrap(),
-        }
+            handle,
+        })
     }
 
     pub(crate) fn cancel(&mut self) {
@@ -218,9 +218,9 @@ fn download_inner<F>(
     callback: Option<Box<dyn PreloadCallback>>,
     downloader: F,
     seq: usize,
-) -> TaskHandle
+) -> Option<TaskHandle>
 where
-    F: Fn(DownloadRequest, PrimeCallback, Arc<DownloadInfoMgr>) -> Arc<dyn CommonHandle>,
+    F: Fn(DownloadRequest, PrimeCallback, Arc<DownloadInfoMgr>) -> Option<Arc<dyn CommonHandle>>,
 {
     let mut handle = TaskHandle::new(task_id.clone());
     if let Some(callback) = callback {
@@ -235,10 +235,10 @@ where
         handle.callbacks(),
         seq,
     );
-
-    let task = downloader(request, callback, info_mgr);
-    handle.set_handle(task);
-    handle
+    downloader(request, callback, info_mgr).map(move |command| {
+        handle.set_handle(command);
+        handle
+    })
 }
 
 #[cfg(test)]
@@ -278,7 +278,7 @@ mod test {
         DownloadRequest<'a>,
         PrimeCallback,
         Arc<DownloadInfoMgr>,
-    ) -> Arc<(dyn CommonHandle + 'static)> = netstack::DownloadTask::run;
+    ) -> Option<Arc<(dyn CommonHandle + 'static)>> = netstack::DownloadTask::run;
 
     #[cfg(not(feature = "ohos"))]
     const DOWNLOADER: for<'a> fn(
@@ -304,6 +304,8 @@ mod test {
             DOWNLOADER,
             0,
         );
+        assert!(handle.is_some());
+        let handle = handle.unwrap();
         while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }
@@ -354,6 +356,8 @@ mod test {
             DOWNLOADER,
             0,
         );
+        assert!(handle.is_some());
+        let handle = handle.unwrap();
         while !handle.is_finish() {
             thread::sleep(Duration::from_millis(500));
         }

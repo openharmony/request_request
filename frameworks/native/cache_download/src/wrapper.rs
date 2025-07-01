@@ -129,7 +129,7 @@ impl CacheDownloadService {
         progress_callback: cxx::SharedPtr<PreloadProgressCallbackWrapper>,
         update: bool,
         options: &FfiPredownloadOptions,
-    ) -> Box<TaskHandle> {
+    ) -> SharedPtr<ffi::PreloadHandle> {
         let callback = FfiCallback::from_ffi(callback, progress_callback);
         let mut request = DownloadRequest::new(url);
         if !options.headers.is_empty() {
@@ -140,7 +140,10 @@ impl CacheDownloadService {
                 .collect::<Vec<(&str, &str)>>();
             request.headers(headers);
         }
-        Box::new(self.preload(request, Box::new(callback), update, Downloader::Netstack))
+        match self.preload(request, Box::new(callback), update, Downloader::Netstack) {
+            Some(handle) => ffi::ShareTaskHandle(Box::new(handle)),
+            None => SharedPtr::null(),
+        }
     }
 
     fn ffi_fetch(&'static self, url: &str) -> UniquePtr<ffi::Data> {
@@ -183,7 +186,7 @@ pub(crate) mod ffi {
             progress_callback: SharedPtr<PreloadProgressCallbackWrapper>,
             update: bool,
             options: &FfiPredownloadOptions,
-        ) -> Box<TaskHandle>;
+        ) -> SharedPtr<PreloadHandle>;
         fn ffi_fetch(self: &'static CacheDownloadService, url: &str) -> UniquePtr<Data>;
 
         fn set_file_cache_size(self: &CacheDownloadService, size: u64);
@@ -230,8 +233,10 @@ pub(crate) mod ffi {
         type PreloadProgressCallbackWrapper;
         type Data;
         type CppDownloadInfo;
+        type PreloadHandle;
 
         fn SharedData(data: Box<RustData>) -> SharedPtr<Data>;
+        fn ShareTaskHandle(handle: Box<TaskHandle>) -> SharedPtr<PreloadHandle>;
         fn UniqueData(data: Box<RustData>) -> UniquePtr<Data>;
         fn UniqueInfo(data: Box<RustDownloadInfo>) -> UniquePtr<CppDownloadInfo>;
         fn OnSuccess(self: &PreloadCallbackWrapper, data: SharedPtr<Data>, task_id: &str);
