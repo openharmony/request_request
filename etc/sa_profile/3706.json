@@ -15,6 +15,14 @@
                         "name": "usual.event.USER_REMOVED"
                     }
                 ]
+            },
+            "stop-on-demand": {
+                "param": [
+                    {
+                        "name": "resourceschedule.memmgr.low.memory.prepare",
+                        "value": "true"
+                    }
+                ]
             }
         }
     ]

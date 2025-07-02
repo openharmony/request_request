@@ -30,6 +30,7 @@ use crate::info::TaskInfo;
 use crate::manage::database::{RequestDb, TaskQosInfo};
 use crate::manage::notifier::Notifier;
 use crate::manage::task_manager::TaskManagerTx;
+use crate::service::active_counter::ActiveCounter;
 use crate::service::client::ClientManagerEntry;
 use crate::service::notification_bar::NotificationDispatcher;
 use crate::service::run_count::RunCountManagerEntry;
@@ -71,6 +72,7 @@ impl Scheduler {
         tx: TaskManagerTx,
         runcount_manager: RunCountManagerEntry,
         client_manager: ClientManagerEntry,
+        active_counter: ActiveCounter,
     ) -> Scheduler {
         let mut state_handler = state::Handler::new(tx.clone());
         let sql_list = state_handler.init();
@@ -83,7 +85,12 @@ impl Scheduler {
 
         Self {
             qos: Qos::new(),
-            running_queue: RunningQueue::new(tx.clone(), runcount_manager, client_manager.clone()),
+            running_queue: RunningQueue::new(
+                tx.clone(),
+                runcount_manager,
+                client_manager.clone(),
+                active_counter,
+            ),
             client_manager,
             state_handler,
             resort_scheduled: false,

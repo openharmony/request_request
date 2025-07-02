@@ -104,7 +104,12 @@ impl RequestTask {
         self.response().headers()
     }
 
-    pub(crate) fn set_callback(&mut self, callback: Box<dyn RequestCallback + 'static>, info_mgr: Arc<DownloadInfoMgr>, task_id: TaskId) {
+    pub(crate) fn set_callback(
+        &mut self,
+        callback: Box<dyn RequestCallback + 'static>,
+        info_mgr: Arc<DownloadInfoMgr>,
+        task_id: TaskId,
+    ) {
         let task = self.inner.lock().unwrap();
         OnCallback(
             &task,
@@ -477,7 +482,11 @@ mod test {
             total: total.clone(),
         });
         let info_mgr = Arc::new(DownloadInfoMgr::new());
-        task.set_callback(callback, info_mgr, TaskId::from_url(NOT_SUPPORT_RANGE_TEST_URL));
+        task.set_callback(
+            callback,
+            info_mgr,
+            TaskId::from_url(NOT_SUPPORT_RANGE_TEST_URL),
+        );
         task.start();
 
         while !data_receive.load(Ordering::SeqCst) {

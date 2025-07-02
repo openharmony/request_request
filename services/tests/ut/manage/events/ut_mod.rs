@@ -21,6 +21,7 @@ use crate::config::{Action, ConfigBuilder, Mode};
 use crate::error::ErrorCode;
 use crate::manage::network::Network;
 use crate::manage::task_manager::TaskManagerTx;
+use crate::service::active_counter::ActiveCounter;
 use crate::manage::TaskManager;
 use crate::service::client::{ClientManager, ClientManagerEntry};
 use crate::service::run_count::{RunCountManager, RunCountManagerEntry};
@@ -30,7 +31,7 @@ static RUN_COUNT_MANAGER: Lazy<RunCountManagerEntry> = Lazy::new(|| RunCountMana
 static NETWORK: Lazy<Network> = Lazy::new(|| Network::new());
 
 static TASK_MANGER: Lazy<TaskManagerTx> =
-    Lazy::new(|| TaskManager::init(RUN_COUNT_MANAGER.clone(), CLIENT.clone(), NETWORK.clone()));
+    Lazy::new(|| TaskManager::init(RUN_COUNT_MANAGER.clone(), CLIENT.clone(), ActiveCounter::new(), NETWORK.clone()));
 fn build_task() {}
 
 fn init() {

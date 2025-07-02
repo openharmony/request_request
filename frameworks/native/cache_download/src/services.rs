@@ -16,9 +16,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex, Once, OnceLock};
 
 use cache_core::{CacheManager, RamCache};
-
 use netstack_rs::info::{DownloadInfo, DownloadInfoMgr};
-
 use request_utils::observe::network::NetRegistrar;
 use request_utils::task_id::TaskId;
 
@@ -406,8 +404,7 @@ mod test {
         let callback = Box::new(TestCallbackC {
             flag: cancel_flag.clone(),
         });
-        let handle =
-            SERVICE.preload(DownloadRequest::new(TEST_URL), callback, true, DOWNLOADER);
+        let handle = SERVICE.preload(DownloadRequest::new(TEST_URL), callback, true, DOWNLOADER);
         assert!(handle.is_some());
         let mut handle = handle.unwrap();
         handle.cancel();

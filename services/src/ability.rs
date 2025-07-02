@@ -14,8 +14,7 @@
 //! This module is responsible for registering and publishing system services.
 
 use std::mem::MaybeUninit;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 use hisysevent::{build_number_param, write, EventType};
 use samgr::definition::APP_MGR_SERVICE_ID;
@@ -26,6 +25,7 @@ use crate::manage::app_state::AppStateListener;
 use crate::manage::events::TaskManagerEvent;
 use crate::manage::task_manager::TaskManagerTx;
 use crate::manage::{account, SystemConfigManager, TaskManager};
+use crate::service::active_counter::ActiveCounter;
 use crate::service::client::ClientManager;
 use crate::service::run_count::RunCountManager;
 use crate::service::RequestServiceStub;
@@ -41,14 +41,14 @@ pub(crate) static mut SYSTEM_CONFIG_MANAGER: MaybeUninit<SystemConfigManager> =
 /// This structure is responsible for interacting with `System Ability Manager`.
 pub struct RequestAbility {
     task_manager: Mutex<Option<TaskManagerTx>>,
-    remote_busy: Arc<AtomicBool>,
+    active_counter: ActiveCounter,
 }
 
 impl RequestAbility {
     /// Creates a new `RequestAbility`.
     pub fn new() -> Self {
         Self {
-            remote_busy: Arc::new(AtomicBool::new(false)),
+            active_counter: ActiveCounter::new(),
             task_manager: Mutex::new(None),
         }
     }
@@ -79,7 +79,7 @@ impl RequestAbility {
         unsafe { SYSTEM_CONFIG_MANAGER.write(SystemConfigManager::init()) };
         info!("system_config_manager init ok");
 
-        let task_manager = TaskManager::init(runcount_manager.clone(), client_manger.clone());
+        let task_manager = TaskManager::init(runcount_manager.clone(), client_manger.clone(), self.active_counter.clone());
         *self.task_manager.lock().unwrap() = Some(task_manager.clone());
         info!("task_manager init ok");
 
@@ -101,7 +101,7 @@ impl RequestAbility {
             task_manager,
             client_manger,
             runcount_manager,
-            self.remote_busy.clone(),
+            self.active_counter.clone(),
         );
 
         info!("ability init succeed");
@@ -133,12 +133,12 @@ impl Ability for RequestAbility {
         info!("on_active: {:?}", reason);
     }
 
-    fn on_idle(&self, _reason: system_ability_fwk::cxx_share::SystemAbilityOnDemandReason) -> i32 {
-        if self.remote_busy.load(Ordering::Acquire) {
-            info!("remote is busy reject idle");
+    fn on_idle(&self, reason: system_ability_fwk::cxx_share::SystemAbilityOnDemandReason) -> i32 {
+        if self.active_counter.is_active() {
+            info!("remote is busy reject idle, reason: {:?}", reason);
             -1
         } else {
-            info!("remote not busy accept idle");
+            info!("remote not busy accept idle, reason: {:?}", reason);
             0
         }
     }

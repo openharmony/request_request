@@ -12,8 +12,7 @@
 // limitations under the License.
 
 use std::fs::File;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 use ipc::parcel::MsgParcel;
 use ipc::remote::RemoteStub;
@@ -26,6 +25,7 @@ use super::permission::PermissionChecker;
 use super::run_count::RunCountManagerEntry;
 use crate::manage::database::RequestDb;
 use crate::manage::task_manager::TaskManagerTx;
+use crate::service::active_counter::ActiveCounter;
 use crate::task::config::TaskConfig;
 use crate::task::info::TaskInfo;
 
@@ -34,7 +34,7 @@ pub(crate) struct RequestServiceStub {
     pub(crate) sa_handler: Handler,
     pub(crate) client_manager: ClientManagerEntry,
     pub(crate) run_count_manager: RunCountManagerEntry,
-    pub(crate) remote_busy: Arc<AtomicBool>,
+    pub(crate) active_counter: ActiveCounter,
 }
 
 impl RequestServiceStub {
@@ -43,14 +43,14 @@ impl RequestServiceStub {
         task_manager: TaskManagerTx,
         client_manager: ClientManagerEntry,
         run_count_manager: RunCountManagerEntry,
-        remote_busy: Arc<AtomicBool>,
+        active_counter: ActiveCounter,
     ) -> Self {
         Self {
             task_manager: Mutex::new(task_manager),
             sa_handler,
             client_manager,
             run_count_manager,
-            remote_busy,
+            active_counter,
         }
     }
 
@@ -73,7 +73,7 @@ impl RequestServiceStub {
 impl RemoteStub for RequestServiceStub {
     fn on_remote_request(&self, code: u32, data: &mut MsgParcel, reply: &mut MsgParcel) -> i32 {
         self.sa_handler.cancel_idle();
-        self.remote_busy.store(true, Ordering::Release);
+        self.active_counter.increment();
         const SERVICE_TOKEN: &str = "OHOS.Download.RequestServiceInterface";
         debug!("Processes on_remote_request, code: {}", code);
         match data.read_interface_token() {
@@ -81,6 +81,7 @@ impl RemoteStub for RequestServiceStub {
             _ => {
                 error!("Gets invalid token");
                 sys_event!(ExecError, DfxCode::INVALID_IPC_MESSAGE_A00, "Gets invalid token");
+                self.active_counter.decrement();
                 return IpcStatusCode::Failed as i32;
             }
         };
@@ -110,10 +111,10 @@ impl RemoteStub for RequestServiceStub {
             interface::SHOW_PROGRESS => self.show_progress(data, reply),
             interface::SET_MODE => self.set_mode(data, reply),
             interface::DISABLE_TASK_NOTIFICATION => self.disable_task_notifications(data, reply),
-            _ => return IpcStatusCode::Failed as i32,
+            _ => Err(IpcStatusCode::Failed),
         };
 
-        self.remote_busy.store(false, Ordering::Release);
+        self.active_counter.decrement();
         match res {
             Ok(_) => 0,
             Err(e) => e as i32,
