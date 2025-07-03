@@ -67,11 +67,13 @@ CppDownloadInfo::CppDownloadInfo(CppDownloadInfo &&other) noexcept : rust_info_(
 // 移动赋值运算符
 CppDownloadInfo &CppDownloadInfo::operator=(CppDownloadInfo &&other) noexcept
 {
-    if (rust_info_) {
-        rust::Box<RustDownloadInfo>::from_raw(rust_info_);
+    if (this != &other) {
+        if (rust_info_) {
+            rust::Box<RustDownloadInfo>::from_raw(rust_info_);
+        }
+        rust_info_ = other.rust_info_;
+        other.rust_info_ = nullptr;
     }
-    rust_info_ = other.rust_info_;
-    other.rust_info_ = nullptr;
     return *this;
 }
 
