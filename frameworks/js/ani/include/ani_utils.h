@@ -34,15 +34,10 @@ class AniObjectUtils {
 public:
     static ani_object Create(ani_env *env, const char* nsName, const char* clsName, ...)
     {
-        ani_namespace ns;
-        if (ANI_OK != env->FindNamespace(nsName, &ns)) {
-            REQUEST_HILOGE("[ANI] Not found namespace %{public}s", nsName);
-            return nullptr;
-        }
-
         ani_class cls;
-        if (ANI_OK != env->Namespace_FindClass(ns, clsName, &cls)) {
-            REQUEST_HILOGE("[ANI] Not found namespace %{public}s", clsName);
+        const std::string fullClassName = std::string(nsName).append(".").append(clsName);
+        if (ANI_OK != env->FindClass(fullClassName.c_str(), &cls)) {
+            REQUEST_HILOGE("[ANI] Not found namespace %{public}s", fullClassName);
             return nullptr;
         }
 
@@ -56,21 +51,11 @@ public:
 
     static ani_object Create(ani_env *env, const char* nsName, const char* subNsName, const char* clsName, ...)
     {
-        ani_namespace ns;
-        if (ANI_OK != env->FindNamespace(nsName, &ns)) {
-            REQUEST_HILOGE("[ANI] Not found namespace %{public}s", nsName);
-            return nullptr;
-        }
-
-        ani_namespace subNs;
-        if (ANI_OK != env->Namespace_FindNamespace(ns, subNsName, &subNs)) {
-            REQUEST_HILOGE("[ANI] Not found namespace %{public}s", subNsName);
-            return nullptr;
-        }
-
         ani_class cls;
-        if (ANI_OK != env->Namespace_FindClass(subNs, clsName, &cls)) {
-            REQUEST_HILOGE("[ANI] Not found class %{public}s", clsName);
+        const std::string fullClassName =
+            std::string(nsName).append(".").append(subNsName).append(".").append(className);
+        if (ANI_OK != env->FindClass(fullClassName.c_str(), &cls)) {
+            REQUEST_HILOGE("[ANI] Not found class %{public}s", fullClassName);
             return nullptr;
         }
 
@@ -116,7 +101,7 @@ public:
 
     static ani_object From(ani_env *env, bool value)
     {
-        return Create(env, "Lstd/core/Boolean;", static_cast<ani_boolean>(value));
+        return Create(env, "std.core.Boolean", static_cast<ani_boolean>(value));
     }
 
     template<typename T>

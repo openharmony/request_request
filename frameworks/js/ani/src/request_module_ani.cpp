@@ -285,7 +285,7 @@ static ani_object Create([[maybe_unused]] ani_env *env, ani_object object, ani_o
         return nullobj;
     }
 
-    auto taskImpl = AniObjectUtils::Create(env, "L@ohos/request/request;", "Lagent;", "LTaskImpl;");
+    auto taskImpl = AniObjectUtils::Create(env, "@ohos.request.request", "agent", "TaskImpl");
 
     NativePtrWrapper wrapper(env, taskImpl);
     wrapper.Wrap<AniTask>(task);
@@ -330,16 +330,9 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return ANI_ERROR;
     }
 
-    static const char *namespaceName = "L@ohos/request/request;";
-    ani_namespace request;
-    if (ANI_OK != env->FindNamespace(namespaceName, &request)) {
-        REQUEST_HILOGI("Not found '%{public}s'", namespaceName);
-        return ANI_ERROR;
-    }
-
-    static const char *agentNamespaceName = "Lagent;";
+    static const char *agentNamespaceName = "@ohos.request.request.agent";
     ani_namespace agent;
-    if (ANI_OK != env->Namespace_FindNamespace(request, agentNamespaceName, &agent)) {
+    if (ANI_OK != env->FindNamespace(agentNamespaceName, &agent)) {
         REQUEST_HILOGI("Not found '%{public}s'", agentNamespaceName);
         return ANI_ERROR;
     }
@@ -352,9 +345,9 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return ANI_ERROR;
     };
 
-    static const char *requestclsName = "LTaskImpl;";
+    static const char *requestclsName = "@ohos.request.request.agent.TaskImpl";
     ani_class requestClass;
-    if (ANI_OK != env->Namespace_FindClass(agent, requestclsName, &requestClass)) {
+    if (ANI_OK != env->FindClass(requestclsName, &requestClass)) {
         REQUEST_HILOGI("Not found class %{public}s", requestclsName);
         return ANI_NOT_FOUND;
     }
@@ -369,7 +362,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return ANI_ERROR;
     }
 
-    auto cleanerCls = TypeFinder(env).FindClass(agent, "LCleaner;");
+    auto cleanerCls = TypeFinder(env).FindClass("ohos.request.request.agent.Cleaner");
     NativePtrCleaner(env).Bind(cleanerCls.value());
 
     *result = ANI_VERSION_1;
