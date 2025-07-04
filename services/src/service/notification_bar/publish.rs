@@ -139,7 +139,12 @@ impl NotificationDispatcher {
             action: task.action(),
             task_id: task.task_id(),
             uid: task.uid(),
-            file_name: task.conf.file_specs[0].file_name.clone(),
+            file_name: task
+                .conf
+                .file_specs
+                .get(0)
+                .map(|x| x.file_name.clone())
+                .unwrap_or("".to_string()),
             processed: progress.common_data.total_processed as u64,
             total,
             multi_upload,
@@ -160,7 +165,11 @@ impl NotificationDispatcher {
             task_id: info.common_data.task_id,
             processed: info.progress.common_data.total_processed as u64,
             uid: info.uid(),
-            file_name: info.file_specs[0].file_name.clone(),
+            file_name: info
+                .file_specs
+                .get(0)
+                .map(|x| x.file_name.clone())
+                .unwrap_or("".to_string()),
             is_successful: true,
         };
         let _ = self.flow.send(NotifyInfo::Eventual(notify));
@@ -179,7 +188,11 @@ impl NotificationDispatcher {
             task_id: info.common_data.task_id,
             processed: info.progress.common_data.total_processed as u64,
             uid: info.uid(),
-            file_name: info.file_specs[0].file_name.clone(),
+            file_name: info
+                .file_specs
+                .get(0)
+                .map(|x| x.file_name.clone())
+                .unwrap_or("".to_string()),
             is_successful: false,
         };
         let _ = self.flow.send(NotifyInfo::Eventual(notify));
