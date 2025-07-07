@@ -1493,7 +1493,7 @@ bool JsInitialize::PathVecToNormal(const std::vector<std::string> &in, std::vect
             } else {
                 return false;
             }
-        } else {
+        } else if (elem != ".") {
             out.push_back(elem);
         }
     }
