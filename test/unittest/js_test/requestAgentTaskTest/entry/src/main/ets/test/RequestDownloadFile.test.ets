@@ -402,6 +402,177 @@ export default function requestDownloadFileTest() {
     })
 
     /**
+     * @tc.number: testDownloadFilePath0001
+     * @tc.name: testDownloadFilePath0001
+     * @tc.desc: Test create for downloadfile correctly for callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadFilePath0001', 0, async function (done) {
+      let standardizePath = cacheDir + '/test.txt';
+      if (fs.accessSync(standardizePath)) {
+        fs.unlinkSync(standardizePath);
+      }
+      let filePath = cacheDir + '//test.txt';
+      let conf = {
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: filePath,
+      }
+      try {
+        request.downloadFile(context, conf, async (err, data) => {
+          expect(true).assertTrue();
+          let task = data;
+          task.on('complete', function () {
+            if (fs.accessSync(standardizePath)) {
+              expect(true).assertTrue();
+              fs.unlinkSync(standardizePath);
+            } else {
+              expect(false).assertTrue();
+            }
+            task.off('complete');
+            done();
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testDownloadFilePath0002
+     * @tc.name: testDownloadFilePath0002
+     * @tc.desc: Test create for downloadfile correctly for callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadFilePath0002', 0, async function (done) {
+      if (!fs.accessSync(cacheDir + '/A')) {
+        fs.mkdirSync(cacheDir + '/A');
+      }
+      if (!fs.accessSync(cacheDir + '/A/B')) {
+        fs.mkdirSync(cacheDir + '/A/B');
+      }
+      let standardizePath = cacheDir + '/A/B/test.txt';
+      if (fs.accessSync(standardizePath)) {
+        fs.unlinkSync(standardizePath);
+      }
+      let filePath = cacheDir + '/A//B/test.txt';
+      let conf = {
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: filePath,
+      }
+      try {
+        request.downloadFile(context, conf, async (err, data) => {
+          expect(true).assertTrue();
+          let task = data;
+          task.on('complete', function () {
+            if (fs.accessSync(standardizePath)) {
+              expect(true).assertTrue();
+              fs.unlinkSync(standardizePath);
+            } else {
+              expect(false).assertTrue();
+            }
+            done();
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testDownloadFilePath0003
+     * @tc.name: testDownloadFilePath0003
+     * @tc.desc: Test create for downloadfile correctly for callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadFilePath0003', 0, async function (done) {
+      if (!fs.accessSync(cacheDir + '/A')) {
+        fs.mkdirSync(cacheDir + '/A');
+      }
+      if (!fs.accessSync(cacheDir + '/A/B')) {
+        fs.mkdirSync(cacheDir + '/A/B');
+      }
+      let standardizePath = cacheDir + '/A/B/test.txt';
+      if (fs.accessSync(standardizePath)) {
+        fs.unlinkSync(standardizePath);
+      }
+      let filePath = cacheDir + '/A///////B/test.txt';
+      let conf = {
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: filePath,
+      }
+      try {
+        request.downloadFile(context, conf, async (err, data) => {
+          expect(true).assertTrue();
+          let task = data;
+          task.on('complete', function () {
+            if (fs.accessSync(standardizePath)) {
+              expect(true).assertTrue();
+              fs.unlinkSync(standardizePath);
+            } else {
+              expect(false).assertTrue();
+            }
+            done();
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testDownloadFilePath0004
+     * @tc.name: testDownloadFilePath0004
+     * @tc.desc: Test create for downloadfile correctly for callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadFilePath0004', 0, async function (done) {
+      if (!fs.accessSync(cacheDir + '/A')) {
+        fs.mkdirSync(cacheDir + '/A');
+      }
+      if (!fs.accessSync(cacheDir + '/A/B')) {
+        fs.mkdirSync(cacheDir + '/A/B');
+      }
+      let standardizePath = cacheDir + '/A/B/test.txt';
+      if (fs.accessSync(standardizePath)) {
+        fs.unlinkSync(standardizePath);
+      }
+      let filePath = cacheDir + '/A//////./B/.//test.txt';
+      let conf = {
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: filePath,
+      }
+      try {
+        request.downloadFile(context, conf, async (err, data) => {
+          expect(true).assertTrue();
+          let task = data;
+          task.on('complete', function () {
+            if (fs.accessSync(standardizePath)) {
+              expect(true).assertTrue();
+              fs.unlinkSync(standardizePath);
+            } else {
+              expect(false).assertTrue();
+            }
+            done();
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
      * @tc.number: testDownloadFileOn001
      * @tc.name: testDownloadFileOn001
      * @tc.desc: Test downloadFile task on for error type like 'test'

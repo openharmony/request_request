@@ -27,19 +27,23 @@ ohos_unittest("preload_test") {
     "src/cancel.cpp",
     "src/common.cpp",
     "src/fail.cpp",
+    "src/get_info.cpp",
     "src/progress.cpp",
     "src/success.cpp",
   ]
 
-  deps = [
-    "../../../../frameworks/native/cache_download:preload_native",
-  ]
+  deps = [ "../../../../frameworks/native/cache_download:preload_native" ]
   external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
+    "c_utils:utils",
     "googletest:gmock",
     "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "rust_cxx:cxx_cppdeps",
+    "selinux_adapter:librestorecon",
   ]
 }
 
