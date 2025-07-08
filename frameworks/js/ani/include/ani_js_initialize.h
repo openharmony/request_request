@@ -23,6 +23,17 @@
 #include "request_common.h"
 
 namespace OHOS::Request {
+static const std::map<ExceptionErrorCode, std::string> ErrorCodeToMsg{
+    { E_OK, E_OK_INFO },
+    { E_PERMISSION, E_PERMISSION_INFO },
+    { E_PARAMETER_CHECK, E_PARAMETER_CHECK_INFO },
+    { E_UNSUPPORTED, E_UNSUPPORTED_INFO },
+    { E_FILE_IO, E_FILE_IO_INFO },
+    { E_FILE_PATH, E_FILE_PATH_INFO },
+    { E_SERVICE_ERROR, E_SERVICE_ERROR_INFO },
+    { E_OTHER, E_OTHER_INFO },
+};
+
 class JsInitialize {
 public:
     JsInitialize() = default;

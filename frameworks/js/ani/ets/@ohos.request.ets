@@ -174,7 +174,7 @@ export default namespace request {
           this.startSync();
         });
         p1.then((data: NullishType): void => {
-          let e: BusinessError<void>;
+          let e = new BusinessError<void>;
           callback(e, undefined);
         });
       };
@@ -201,7 +201,7 @@ export default namespace request {
       let p1 = taskpool.execute(createSync, context, config);
       p1.then((data: NullishType) => {
         let r =  data as Task;
-        let err: BusinessError<void>;
+        let err = new BusinessError<void>;
         callback(err, r);
       }).catch((error: NullishType) => {
         let err =  error as BusinessError<void>;
