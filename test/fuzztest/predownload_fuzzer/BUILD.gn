@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -18,17 +18,15 @@ import("//build/ohos.gni")
 import("//build/test.gni")
 
 ##############################fuzztest##########################################
-ohos_fuzztest("DownloadUploadManagerFuzzTest") {
+ohos_fuzztest("PredownloadFuzzTest") {
   module_out_path = "request/request/request"
-
-  fuzz_config_file = "../../../test/fuzztest/downloaduploadmanager_fuzzer"
+  fuzz_config_file = "../../../test/fuzztest/predownload_fuzzer"
 
   include_dirs = [
-    "../../../frameworks/js/napi/request/include",
-    "../../../frameworks/native/request/include",
+    "../../../frameworks/native/cache_download/include",
     "../../../common/include",
-    "../../../interfaces/inner_kits/running_count/include",
-    "../../../common/sys_event/include",
+    "../../../interfaces/inner_kits/cache_download/include",
+    "${target_gen_dir}/../../../frameworks/native/cache_download/src",
   ]
 
   cflags = [
@@ -39,41 +37,28 @@ ohos_fuzztest("DownloadUploadManagerFuzzTest") {
   ]
 
   sources = [
-    "../../../frameworks/native/request/src/request.cpp",
-    "../../../frameworks/native/request/src/request_common_utils.cpp",
-    "../../../frameworks/native/request/src/request_manager.cpp",
-    "../../../frameworks/native/request/src/request_manager_impl.cpp",
-    "../../../frameworks/native/request/src/request_running_task_count.cpp",
-    "../../../frameworks/native/request/src/response_message_receiver.cpp",
-    "../../../frameworks/native/request/src/runcount_notify_stub.cpp",
-    "downloaduploadmanager_fuzzer.cpp",
+    "../../../frameworks/native/cache_download/src/cxx/preload_callback.cpp",
+    "../../../frameworks/native/cache_download/src/cxx/request_preload.cpp",
+    "predownload_fuzzer.cpp",
   ]
+  sources += [ "${target_gen_dir}/../../../frameworks/native/cache_download/src/wrapper.rs.cc" ]
 
   deps = [
-    "../../../common/sys_event:request_sysevent",
-    "../../../frameworks/js/napi/request:request_static",
-    "../../../frameworks/native/request:request_native",
+    "../../../frameworks/native/cache_download:preload_native_rust",
+    "../../../frameworks/native/cache_download:preload_native_rust_gen",
   ]
 
   external_deps = [
-    "ability_runtime:abilitykit_native",
-    "ability_runtime:data_ability_helper",
-    "ability_runtime:napi_base_context",
+    "ability_runtime:app_context",
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken_shared",
     "access_token:libtoken_setproc",
     "c_utils:utils",
-    "eventhandler:libeventhandler",
     "hilog:libhilog",
-    "hisysevent:libhisysevent",
-    "init:libbegetutil",
-    "input:libmmi-client",
     "ipc:ipc_single",
-    "napi:ace_napi",
-    "relational_store:native_dataability",
-    "relational_store:native_rdb",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
+    "netstack:http_client",
+    "rust_cxx:cxx_cppdeps",
+    "rust_cxx:lib",
   ]
 }
 
@@ -83,7 +68,7 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
-    ":DownloadUploadManagerFuzzTest",
+    ":PredownloadFuzzTest",
   ]
 }
 ###############################################################################
