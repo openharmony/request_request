@@ -132,7 +132,6 @@
         "//base/request/request/test/unittest/js_test/requestAgentTaskTest:unittest",
         "//base/request/request/test/unittest/js_test/requestQueryTaskTest:unittest",
         "//base/request/request/test/unittest/js_test/requestSystemQueryTest:unittest",
-        "//base/request/request/test/unittest/js_test/cacheDownloadInfoTest:unittest",
         "//base/request/request/test/unittest/cpp_test/saTest:unittest",
         "//base/request/request/test/unittest/cpp_test/preload:unittest",
         "//base/request/request/test/unittest/cpp_test/fwkTest:unittest",

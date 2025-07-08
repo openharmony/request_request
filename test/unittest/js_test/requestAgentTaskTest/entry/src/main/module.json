@@ -80,6 +80,13 @@
               ],
               "when":"always"
             }
+          },
+          {
+            "name": "ohos.permission.GET_NETWORK_INFO",
+            "reason": "need ohos.permission.GET_NETWORK_INFO.",
+            "usedScene": {
+              "when": "always"
+            }
           }
         ],
         "metadata": [
