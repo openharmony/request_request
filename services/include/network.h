@@ -41,6 +41,7 @@ public:
     int32_t NetCapabilitiesChange(sptr<NetHandle> &netHandle, const sptr<NetAllCapabilities> &netAllCap) override;
 
 private:
+    void SetNet();
     void HandleNetCap(const sptr<NetAllCapabilities> &netAllCap);
     bool IsRoaming();
     NetworkInner *networkNotifier_;
