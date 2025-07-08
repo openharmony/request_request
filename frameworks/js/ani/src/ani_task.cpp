@@ -50,6 +50,46 @@ std::map<std::string, SubscribeType> AniTask::supportEventsAni_ = {
     { EVENT_RESPONSE, SubscribeType::RESPONSE },
 };
 
+static void ThrowBusinessError(ani_env *env, int errCode, std::string&& errMsg)
+{
+    REQUEST_HILOGI("into ThrowBusinessError.");
+    if (env == nullptr) {
+        return;
+    }
+    static const char *errorClsName = "L@ohos/base/BusinessError;";
+    ani_class cls {};
+    if (env->FindClass(errorClsName, &cls) != ANI_OK) {
+        REQUEST_HILOGE("find class BusinessError %{public}s failed", errorClsName);
+        return;
+    }
+    ani_method ctor;
+    if (env->Class_FindMethod(cls, "<ctor>", ":V", &ctor) != ANI_OK) {
+        REQUEST_HILOGE("find method BusinessError.constructor failed");
+        return;
+    }
+    ani_object errorObject;
+    if (env->Object_New(cls, ctor, &errorObject) != ANI_OK) {
+        REQUEST_HILOGE("create BusinessError object failed");
+        return;
+    }
+    ani_double aniErrCode = static_cast<ani_double>(errCode);
+    ani_string errMsgStr;
+    if (env->String_NewUTF8(errMsg.c_str(), errMsg.size(), &errMsgStr) != ANI_OK) {
+        REQUEST_HILOGE("convert errMsg to ani_string failed");
+        return;
+    }
+    if (env->Object_SetFieldByName_Double(errorObject, "code", aniErrCode) != ANI_OK) {
+        REQUEST_HILOGE("set error code failed");
+        return;
+    }
+    if (env->Object_SetPropertyByName_Ref(errorObject, "message", errMsgStr) != ANI_OK) {
+        REQUEST_HILOGE("set error message failed");
+        return;
+    }
+    env->ThrowError(static_cast<ani_error>(errorObject));
+    return;
+}
+
 AniTask* AniTask::Create([[maybe_unused]] ani_env* env, Config config)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
@@ -61,7 +101,10 @@ AniTask* AniTask::Create([[maybe_unused]] ani_env* env, Config config)
     REQUEST_HILOGI("Create return: tid: [%{public}s]", tid.c_str());
     if (ret != E_OK) {
         REQUEST_HILOGE("End create task in Create, seq: %{public}d, failed: %{public}d", seq, ret);
-        return new AniTask(tid);
+        auto iter = ErrorCodeToMsg.find(static_cast<ExceptionErrorCode>(ret));
+        std::string strMsg = iter != ErrorCodeToMsg.end() ? iter->second : "";
+        ThrowBusinessError(env, ret, std::move(strMsg));
+        return nullptr;
     }
 
     ani_vm *vm = nullptr;
