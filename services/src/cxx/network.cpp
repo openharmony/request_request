@@ -61,8 +61,52 @@ RequestNetCallbackStub::~RequestNetCallbackStub()
     rust::Box<NetworkTaskManagerTx>::from_raw(task_manager_);
 }
 
+void RequestNetCallbackStub::SetNet()
+{
+    bool wifiFlag = false;
+    bool btFlag = false;
+    int32_t wifiID = -1;
+    std::list<sptr<NetHandle>> netList;
+    int32_t ret = NetConnClient::GetInstance().GetAllNets(netList);
+    if (ret != 0) {
+        REQUEST_HILOGE("GetAllNets failed: %{public}d", ret);
+        return;
+    }
+    for (auto netHandle : netList) {
+        NetAllCapabilities netAllCap;
+        ret = NetConnClient::GetInstance().GetNetCapabilities(*netHandle, netAllCap);
+        if (ret != 0) {
+            REQUEST_HILOGE("GetNetCapabilities failed: %{public}d", ret);
+            continue;
+        }
+        for (auto bearerType : netAllCap.bearerTypes_) {
+            REQUEST_HILOGD("SetNet netHandle: %{public}d, bearerType = %{public}d", netHandle->GetNetId(), bearerType);
+            if (bearerType == NetManagerStandard::NetBearType::BEARER_WIFI) {
+                wifiFlag = true;
+                wifiID = netHandle->GetNetId();
+            } else if (bearerType == NetManagerStandard::NetBearType::BEARER_BLUETOOTH) {
+                btFlag = true;
+            }
+        }
+    }
+    if (wifiFlag && btFlag) {
+        ret = NetConnClient::GetInstance().SetAppNet(wifiID);
+        REQUEST_HILOGI("SetAppNet %{public}d, ret %{public}d", wifiID, ret);
+    } else {
+        NetHandle defaultHandle = NetHandle();
+        ret = NetConnClient::GetInstance().GetDefaultNet(defaultHandle);
+        if (ret != 0) {
+            REQUEST_HILOGE("GetDefaultNet failed: %{public}d", ret);
+            return;
+        }
+        ret = NetConnClient::GetInstance().SetAppNet(defaultHandle.GetNetId());
+        REQUEST_HILOGI("SetDefaultNet %{public}d, ret: %{public}d", defaultHandle.GetNetId(), ret);
+    }
+}
+
 void RequestNetCallbackStub::HandleNetCap(const sptr<NetAllCapabilities> &netAllCap)
 {
+    this->SetNet();
     for (auto bearerType : netAllCap->bearerTypes_) {
         auto networkInfo = NetworkInfo();
         if (bearerType == NetManagerStandard::NetBearType::BEARER_WIFI) {
