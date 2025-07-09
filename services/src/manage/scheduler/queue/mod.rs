@@ -240,8 +240,8 @@ impl RunningQueue {
     }
 
     pub(crate) fn retry_all_tasks(&mut self) {
-        for task in self.running_tasks.drain() {
-            if let Some(handle) = task.1 {
+        for task in self.running_tasks.iter_mut() {
+            if let Some(handle) = task.1.take() {
                 handle.cancel();
             }
         }
