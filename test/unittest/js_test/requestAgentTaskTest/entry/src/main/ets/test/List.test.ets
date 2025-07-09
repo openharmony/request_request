@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import cacheDownloadInfo from './CacheDownloadInfo.test.ets';
 import requestCreateTaskTest from './RequestCreateTask.test.ets';
 import requestOperateTaskTest from './RequestOperateTask.test.ets';
 import requestDownloadFileTest from './RequestDownloadFile.test.ets';
@@ -21,6 +22,7 @@ import requestTaskGroupTest from './RequestTaskGroup.test.ets';
 import requestNewUploadTest from './RequestNewUpload.test.ets';
 
 export default function testsuite() {
+  cacheDownloadInfo();
   requestCreateTaskTest();
   requestOperateTaskTest();
   requestDownloadFileTest();
