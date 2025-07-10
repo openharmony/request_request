@@ -295,13 +295,16 @@ static ani_object Create([[maybe_unused]] ani_env *env, ani_object object, ani_o
 static void StartSync([[maybe_unused]] ani_env *env, ani_object object)
 {
     REQUEST_HILOGI("Enter Start");
+    if (env == nullptr) {
+        return;
+    }
     NativePtrWrapper wrapper(env, object);
     auto task = wrapper.Unwrap<AniTask>();
     if (task == nullptr) {
         REQUEST_HILOGE("task is nullptr");
         return;
     }
-    task->Start();
+    task->Start(env);
 }
 
 static void OnSync([[maybe_unused]] ani_env *env, [[maybe_unused]] ani_object object,
@@ -368,9 +371,6 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         REQUEST_HILOGI("Cannot bind native methods to %{public}s", requestclsName);
         return ANI_ERROR;
     }
-
-    auto cleanerCls = TypeFinder(env).FindClass(agent, "LCleaner;");
-    NativePtrCleaner(env).Bind(cleanerCls.value());
 
     *result = ANI_VERSION_1;
     return ANI_OK;
