@@ -72,7 +72,7 @@ public:
 
     static AniTask* Create([[maybe_unused]] ani_env* env, Config config);
 
-    void Start();
+    void Start(ani_env *env);
     void On([[maybe_unused]] ani_env *env, std::string, ani_ref callback);
 
     std::string GetTid()
@@ -91,11 +91,15 @@ public:
     static void AddPathMap(const std::string &filepath, const std::string &baseDir);
     static void ResetDirAccess(const std::string &filepath);
     static void RemovePathMap(const std::string &filepath);
+    static void AddTaskMap(const std::string &key, AniTask *task);
+    static void ClearTaskMap(const std::string &key);
 
     Config config_ = {.action = Action::DOWNLOAD, .version = Version::API8};
     bool isGetPermission = false;
 
     static std::mutex pathMutex_;
+    static std::mutex taskMutex_;
+    static std::map<std::string, AniTask *> taskMap_;
     static std::map<std::string, int32_t> pathMap_;
     static std::map<std::string, int32_t> fileMap_;
 

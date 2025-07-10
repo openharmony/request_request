@@ -214,6 +214,9 @@ export default namespace request {
         p1.then((data: NullishType): void => {
           let e = new BusinessError<void>;
           callback(e, undefined);
+        }).catch((error: NullishType) => {
+          let err =  error as BusinessError<void>;
+          callback(err, undefined);
         });
       };
 
@@ -225,6 +228,8 @@ export default namespace request {
             p1.then((e: NullishType) : void => {
               hilog.info(0x0000, 'request', "in start Promise then. e is ", e as (Object | undefined | null))
               resolve(undefined);
+            }).catch((err: Error) : void => {
+              reject(err);
             });
         });
         return p;
