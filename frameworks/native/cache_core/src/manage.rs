@@ -31,8 +31,8 @@ pub struct CacheManager {
 
     pub(crate) update_from_file_once:
         Mutex<HashMap<TaskId, Arc<OnceLock<io::Result<Weak<RamCache>>>>>>,
-    pub(crate) ram_handle: Mutex<data::Handle>,
-    pub(crate) file_handle: Mutex<data::Handle>,
+    pub(crate) ram_handle: Mutex<data::ResourceManager>,
+    pub(crate) file_handle: Mutex<data::ResourceManager>,
 }
 
 impl CacheManager {
@@ -43,8 +43,8 @@ impl CacheManager {
             backup_rams: Mutex::new(HashMap::new()),
             update_from_file_once: Mutex::new(HashMap::new()),
 
-            ram_handle: Mutex::new(data::Handle::new(DEFAULT_RAM_CACHE_SIZE)),
-            file_handle: Mutex::new(data::Handle::new(DEFAULT_FILE_CACHE_SIZE)),
+            ram_handle: Mutex::new(data::ResourceManager::new(DEFAULT_RAM_CACHE_SIZE)),
+            file_handle: Mutex::new(data::ResourceManager::new(DEFAULT_FILE_CACHE_SIZE)),
         }
     }
 
@@ -91,7 +91,7 @@ impl CacheManager {
     }
 
     pub(super) fn apply_cache<T>(
-        handle: &Mutex<data::Handle>,
+        handle: &Mutex<data::ResourceManager>,
         caches: &Mutex<LRUCache<TaskId, T>>,
         task_id: fn(&T) -> &TaskId,
         size: usize,

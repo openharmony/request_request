@@ -11,49 +11,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub(crate) struct Handle {
-    pub(super) total_ram: u64,
-    pub(super) used_ram: u64,
+pub(crate) struct ResourceManager {
+    pub(super) total_capacity: u64,
+    pub(super) used_capacity: u64,
 }
 
-impl Handle {
-    pub(crate) fn new(ram_cache_size: u64) -> Self {
+impl ResourceManager {
+    pub(crate) fn new(capacity: u64) -> Self {
         Self {
-            total_ram: ram_cache_size,
-            used_ram: 0,
+            total_capacity: capacity,
+            used_capacity: 0,
         }
     }
 
     pub(crate) fn apply_cache_size(&mut self, apply_size: u64) -> bool {
-        if apply_size + self.used_ram > self.total_ram {
+        if apply_size + self.used_capacity > self.total_capacity {
             return false;
         }
-        self.used_ram += apply_size;
+        self.used_capacity += apply_size;
         true
     }
 
     pub(super) fn release(&mut self, size: u64) {
-        self.used_ram -= size;
+        self.used_capacity -= size;
     }
 
     pub(crate) fn change_total_size(&mut self, size: u64) {
-        self.total_ram = size;
+        self.total_capacity = size;
     }
 }
 
 #[cfg(test)]
 mod test {
-    use super::Handle;
+    use super::ResourceManager;
     const TEST_TOTAL_SIZE: u64 = 1024;
 
     #[test]
     fn ut_cache_space() {
-        let mut handle = Handle::new(TEST_TOTAL_SIZE);
+        let mut handle = ResourceManager::new(TEST_TOTAL_SIZE);
         handle.apply_cache_size(TEST_TOTAL_SIZE / 2);
-        assert_eq!(handle.used_ram, TEST_TOTAL_SIZE / 2);
+        assert_eq!(handle.used_capacity, TEST_TOTAL_SIZE / 2);
         handle.release(TEST_TOTAL_SIZE / 4);
-        assert_eq!(handle.used_ram, TEST_TOTAL_SIZE / 4);
+        assert_eq!(handle.used_capacity, TEST_TOTAL_SIZE / 4);
         handle.change_total_size(TEST_TOTAL_SIZE * 2);
-        assert_eq!(handle.total_ram, TEST_TOTAL_SIZE * 2);
+        assert_eq!(handle.total_capacity, TEST_TOTAL_SIZE * 2);
     }
 }
