@@ -180,7 +180,7 @@ export default namespace request {
       };
 
       start(): Promise<void> {
-        let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: Object) => void) : void => {
+        let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: Error) => void) : void => {
             let p1 = taskpool.execute((): void => {
               this.startSync();
             });
@@ -191,8 +191,8 @@ export default namespace request {
         return p;
       }
 
-      native function onSync(event: string, callback: Callback<HttpResponse | Progress>): void;
-      native function startSync(): void;
+      native onSync(event: string, callback: Callback<HttpResponse | Progress>): void;
+      native startSync(): void;
     };
 
     export native function createSync(context: BaseContext, config: Config): Task;
@@ -212,7 +212,7 @@ export default namespace request {
 
     export function create(context: BaseContext, config: Config): Promise<Task> {
       let p = new Promise<Task>((resolve: (v: Task) => void,
-        reject: (error: Object) => void): void => {
+        reject: (error: Error) => void): void => {
           let p1 = taskpool.execute(createSync, context, config);
           p1.then((e: NullishType): void => {
             resolve(e as Task);
