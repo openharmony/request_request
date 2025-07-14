@@ -215,25 +215,25 @@ private:
 template<>
 inline bool UnionAccessor::IsInstanceOfType<bool>()
 {
-    return IsInstanceOf("Lstd/core/Boolean;");
+    return IsInstanceOf("std.core.Boolean");
 }
 
 template<>
 inline bool UnionAccessor::IsInstanceOfType<int>()
 {
-    return IsInstanceOf("Lstd/core/Int;");
+    return IsInstanceOf("std.core.Int");
 }
 
 template<>
 inline bool UnionAccessor::IsInstanceOfType<double>()
 {
-    return IsInstanceOf("Lstd/core/Double;");
+    return IsInstanceOf("std.core.Double");
 }
 
 template<>
 inline bool UnionAccessor::IsInstanceOfType<std::string>()
 {
-    return IsInstanceOf("Lstd/core/String;");
+    return IsInstanceOf("std.core.String");
 }
 
 template<>
@@ -509,7 +509,7 @@ public:
         }
         for (std::size_t i = 0; i < length; i++) {
             ani_ref itemRef;
-            status = env_->Object_CallMethodByName_Ref(obj_, "$_get", "I:Lstd/core/Object;", &itemRef, (ani_int)i);
+            status = env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:C{std.core.Object}", &itemRef, (ani_int)i);
             if (ANI_OK != status) {
                 return status;
             }

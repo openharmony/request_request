@@ -102,7 +102,7 @@ void NotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &
         static_cast<ani_double>(notifyData->progress.state), static_cast<ani_double>(notifyData->progress.index),
         static_cast<ani_double>(notifyData->progress.processed));
     std::vector<ani_ref> args = {Progress};
-    
+
     OnMessageReceive(workerEnv, args);
     status = vm_->DetachCurrentThread();
     REQUEST_HILOGI("OnNotifyDataReceive end");
@@ -111,7 +111,7 @@ void NotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &
 void NotifyDataListener::AddListener(ani_ref &callback)
 {
     AddListenerInner(callback);
-    
+
     if (this->validCbNum == 1) {
         RequestManager::GetInstance()->AddListener(this->tid_, this->type_, shared_from_this());
     }
@@ -133,7 +133,7 @@ void ResponseListener::OnResponseReceive(const std::shared_ptr<Response> &respon
         return;
     }
     ani_object httpResponse = AniObjectUtils::Create(workerEnv, "@ohos.request.request", "agent",
-        "LHttpResponseImpl;", AniStringUtils::ToAni(workerEnv, response->version),
+        "HttpResponseImpl", AniStringUtils::ToAni(workerEnv, response->version),
         static_cast<ani_double>(response->statusCode), AniStringUtils::ToAni(workerEnv, response->reason));
     std::vector<ani_ref> args = {httpResponse};
     OnMessageReceive(workerEnv, args);

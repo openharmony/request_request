@@ -41,18 +41,18 @@ pub struct UploadConfig {
     pub data: Vec<RequestData>,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/DownloadTaskInner")]
+#[ani_rs::ani(path = "@ohos.request.request.DownloadTaskInner")]
 pub struct DownloadTask {
     pub task_id: i64,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/UploadTaskInner")]
+#[ani_rs::ani(path = "@ohos.request.request.UploadTaskInner")]
 pub struct UploadTask {
     pub task_id: i64,
 }
 
 #[allow(non_snake_case)]
-#[ani_rs::ani(path = "L@ohos/request/request/DownloadInfoInner")]
+#[ani_rs::ani(path = "@ohos.request.request.DownloadInfoInner")]
 pub struct DownloadInfo {
     pub description: String,
     pub downloaded_bytes: i64,
@@ -67,7 +67,7 @@ pub struct DownloadInfo {
     pub download_total_bytes: i64,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/FileInner")]
+#[ani_rs::ani(path = "@ohos.request.request.FileInner")]
 pub struct File {
     filename: String,
     name: String,
