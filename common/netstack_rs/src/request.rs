@@ -97,16 +97,17 @@ impl<C: RequestCallback> Request<C> {
     }
 
     /// Build the RequestTask.
-    pub fn build(mut self) -> RequestTask {
-        let mut task = RequestTask::from_http_request(&self.inner);
-        if let (Some(callback), Some(mgr), Some(task_id)) = (
-            self.callback.take(),
-            self.info_mgr.take(),
-            self.task_id.take(),
-        ) {
-            task.set_callback(Box::new(callback), mgr, task_id);
-        }
-        task
+    pub fn build(mut self) -> Option<RequestTask> {
+        RequestTask::from_http_request(&self.inner).map(|mut task| {
+            if let (Some(callback), Some(mgr), Some(task_id)) = (
+                self.callback.take(),
+                self.info_mgr.take(),
+                self.task_id.take(),
+            ) {
+                task.set_callback(Box::new(callback), mgr, task_id);
+            }
+            task
+        })
     }
 }
 

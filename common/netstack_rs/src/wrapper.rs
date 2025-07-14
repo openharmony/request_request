@@ -21,6 +21,7 @@ use ffi::{
     OnCallback,
 };
 use ffrt_rs::{ffrt_sleep, ffrt_spawn};
+use request_utils::error;
 use request_utils::task_id::TaskId;
 
 use crate::error::{HttpClientError, HttpErrorCode};
@@ -29,8 +30,14 @@ use crate::request::RequestCallback;
 use crate::response::{Response, ResponseCode};
 use crate::task::{RequestTask, TaskStatus};
 
+enum NewTaskResult {
+    Success(SharedPtr<HttpClientTask>, Box<CallbackWrapper>),
+    Failed(Box<dyn RequestCallback>),
+}
+
 pub struct CallbackWrapper {
     inner: Option<Box<dyn RequestCallback>>,
+    // TODO This reset flag has never been assigned to true. Does it look useless?
     reset: Arc<AtomicBool>,
     task: Weak<Mutex<SharedPtr<HttpClientTask>>>,
     task_id: TaskId,
@@ -109,7 +116,15 @@ impl CallbackWrapper {
         let Some(callback) = self.inner.take() else {
             return;
         };
-        let (new_task, mut new_callback) = self.create_new_task(callback, request, response);
+
+        let (new_task, mut new_callback) = match self.create_new_task(callback, request, response) {
+            NewTaskResult::Success(new_task, new_callback) => (new_task, new_callback),
+            NewTaskResult::Failed(mut callback) => {
+                callback.on_fail(error);
+                return;
+            }
+        };
+
         if self.tries < 3 {
             self.tries += 1;
             new_callback.tries = self.tries;
@@ -139,7 +154,13 @@ impl CallbackWrapper {
         };
 
         if self.reset.load(Ordering::SeqCst) {
-            let (new_task, new_callback) = self.create_new_task(callback, request, response);
+            let (new_task, new_callback) = match self.create_new_task(callback, request, response) {
+                NewTaskResult::Success(new_task, new_callback) => (new_task, new_callback),
+                NewTaskResult::Failed(mut callback) => {
+                    callback.on_cancel();
+                    return;
+                }
+            };
             Self::start_new_task(new_task, new_callback);
             self.reset.store(false, Ordering::SeqCst);
         } else {
@@ -174,12 +195,16 @@ impl CallbackWrapper {
         mut callback: Box<dyn RequestCallback>,
         request: &HttpClientRequest,
         response: &ffi::HttpClientResponse,
-    ) -> (SharedPtr<HttpClientTask>, Box<CallbackWrapper>) {
+    ) -> NewTaskResult {
         if self.current > 0 && !set_range(request, response, &mut self.current) {
             callback.on_restart();
         }
 
         let new_task = NewHttpClientTask(request);
+        if new_task.is_null() {
+            error!("create_new_task NewHttpClientTask return null.");
+            return NewTaskResult::Failed(callback);
+        }
         let new_callback = Box::new(CallbackWrapper::from_callback(
             callback,
             self.reset.clone(),
@@ -188,7 +213,7 @@ impl CallbackWrapper {
             self.info_mgr.clone(),
             self.current,
         ));
-        (new_task, new_callback)
+        NewTaskResult::Success(new_task, new_callback)
     }
 
     fn start_new_task(task: SharedPtr<HttpClientTask>, callback: Box<CallbackWrapper>) {
@@ -196,6 +221,7 @@ impl CallbackWrapper {
             *r.lock().unwrap() = task.clone();
         }
         OnCallback(&task, callback);
+        // TODO start may return false. Not handling it may result in no callback, which the caller cannot perceive
         RequestTask::pin_mut(&task).Start();
     }
 }

@@ -284,8 +284,8 @@ impl DownloadInfoMgr {
 
 #[cfg(test)]
 mod ut_info {
-    use request_utils::task_id::TaskId;
     use crate::info::{DownloadInfo, DownloadInfoMgr, InfoListSize, RustPerformanceInfo};
+    use request_utils::task_id::TaskId;
 
     #[test]
     fn ut_download_performance() {
@@ -376,5 +376,4 @@ mod ut_info {
         assert!(info_mgr.get_download_info(task_id).is_none());
         assert!(info_mgr.get_download_info(task_id_2).is_some());
     }
-
 }

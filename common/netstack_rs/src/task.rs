@@ -17,6 +17,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use cxx::SharedPtr;
+use request_utils::error;
 use request_utils::task_id::TaskId;
 
 use crate::info::DownloadInfoMgr;
@@ -46,11 +47,16 @@ pub enum TaskStatus {
 }
 
 impl RequestTask {
-    pub(crate) fn from_http_request(request: &HttpClientRequest) -> Self {
-        Self {
-            inner: Arc::new(Mutex::new(NewHttpClientTask(request))),
-            reset: Arc::new(AtomicBool::new(false)),
+    pub(crate) fn from_http_request(request: &HttpClientRequest) -> Option<Self> {
+        let http_task = NewHttpClientTask(request);
+        if http_task.is_null() {
+            error!("from_http_request NewHttpClientTask return null.");
+            return None;
         }
+        Some(Self {
+            inner: Arc::new(Mutex::new(http_task)),
+            reset: Arc::new(AtomicBool::new(false)),
+        })
     }
 
     pub(crate) fn from_ffi(inner: SharedPtr<HttpClientTask>) -> Self {
@@ -149,7 +155,9 @@ mod test {
         request.pin_mut().SetURL(&url);
         cxx::let_cxx_string!(method = "GET");
         request.pin_mut().SetMethod(&method);
-        let mut task = RequestTask::from_http_request(&request);
+        let opt_task = RequestTask::from_http_request(&request);
+        assert!(opt_task.is_some());
+        let mut task = opt_task.unwrap();
         assert!(matches!(task.status(), TaskStatus::Idle));
     }
 
@@ -207,7 +215,9 @@ mod test {
         request.pin_mut().SetURL(&url);
         cxx::let_cxx_string!(method = "GET");
         request.pin_mut().SetMethod(&method);
-        let mut task = RequestTask::from_http_request(&request);
+        let opt_task = RequestTask::from_http_request(&request);
+        assert!(opt_task.is_some());
+        let mut task = opt_task.unwrap();
         let finished = Arc::new(AtomicBool::new(false));
         let response_code = Arc::new(AtomicU32::new(0));
         let error = Arc::new(AtomicU32::new(0));
@@ -244,7 +254,9 @@ mod test {
         request.pin_mut().SetURL(&url);
         cxx::let_cxx_string!(method = "GET");
         request.pin_mut().SetMethod(&method);
-        let mut task = RequestTask::from_http_request(&request);
+        let opt_task = RequestTask::from_http_request(&request);
+        assert!(opt_task.is_some());
+        let mut task = opt_task.unwrap();
         let finished = Arc::new(AtomicBool::new(false));
         let response_code = Arc::new(AtomicU32::new(0));
         let error = Arc::new(AtomicU32::new(0));
@@ -274,7 +286,9 @@ mod test {
         request.pin_mut().SetURL(&url);
         cxx::let_cxx_string!(method = "GET");
         request.pin_mut().SetMethod(&method);
-        let mut task = RequestTask::from_http_request(&request);
+        let opt_task = RequestTask::from_http_request(&request);
+        assert!(opt_task.is_some());
+        let mut task = opt_task.unwrap();
         let finished = Arc::new(AtomicBool::new(false));
         let response_code = Arc::new(AtomicU32::new(0));
         let error = Arc::new(AtomicU32::new(0));
@@ -306,7 +320,9 @@ mod test {
         cxx::let_cxx_string!(method = "GET");
         request.pin_mut().SetMethod(&method);
         request.pin_mut().SetConnectTimeout(1);
-        let mut task = RequestTask::from_http_request(&request);
+        let opt_task = RequestTask::from_http_request(&request);
+        assert!(opt_task.is_some());
+        let mut task = opt_task.unwrap();
         let finished = Arc::new(AtomicBool::new(false));
         let response_code = Arc::new(AtomicU32::new(0));
         let error = Arc::new(AtomicU32::new(0));
@@ -338,7 +354,9 @@ mod test {
         cxx::let_cxx_string!(method = "GET");
         request.pin_mut().SetMethod(&method);
         request.pin_mut().SetTimeout(1);
-        let mut task = RequestTask::from_http_request(&request);
+        let opt_task = RequestTask::from_http_request(&request);
+        assert!(opt_task.is_some());
+        let mut task = opt_task.unwrap();
         let finished = Arc::new(AtomicBool::new(false));
         let response_code = Arc::new(AtomicU32::new(0));
         let error = Arc::new(AtomicU32::new(0));
@@ -399,7 +417,9 @@ mod test {
         cxx::let_cxx_string!(method = "GET");
         request.pin_mut().SetMethod(&method);
 
-        let mut task = RequestTask::from_http_request(&request);
+        let opt_task = RequestTask::from_http_request(&request);
+        assert!(opt_task.is_some());
+        let mut task = opt_task.unwrap();
         let finished = Arc::new(AtomicBool::new(false));
         let total = Arc::new(AtomicUsize::new(0));
         let failed = Arc::new(AtomicBool::new(false));
@@ -469,7 +489,9 @@ mod test {
         cxx::let_cxx_string!(method = "GET");
         request.pin_mut().SetMethod(&method);
 
-        let mut task = RequestTask::from_http_request(&request);
+        let opt_task = RequestTask::from_http_request(&request);
+        assert!(opt_task.is_some());
+        let mut task = opt_task.unwrap();
         let finished = Arc::new(AtomicBool::new(false));
         let total = Arc::new(AtomicUsize::new(0));
         let failed = Arc::new(AtomicBool::new(false));
