@@ -14,13 +14,17 @@
 [workspace]
 resolver = "2"
 members = [
-    "common/ffrt_rs",
     "frameworks/native/cache_core",
     "frameworks/native/cache_download",
     "frameworks/native/request_action/tests/",
+    "frameworks/ets/ani/request",
+    "frameworks/native/request_next",
+    "frameworks/ets/ani/cache_download",
+    "common/ffrt_rs",
     "common/netstack_rs",
     "common/utils",
-    "test/rustest",
+    "common/request_core",
     "common/database",
+    "test/rustest",
     "services",
 ]

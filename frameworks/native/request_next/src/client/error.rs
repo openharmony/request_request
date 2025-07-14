@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Huawei Device Co., Ltd.
+// Copyright (C) 2025 Huawei Device Co., Ltd.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,33 +11,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Request utils
+use crate::check::file::DownloadPathError;
 
-#![warn(missing_docs)]
-#![allow(clippy::crate_in_macro_def)]
-#![allow(missing_docs, clippy::new_without_default)]
-
-#[macro_use]
-mod macros;
-
-pub mod fastrand;
-pub mod file_control;
-pub mod hash;
-pub mod lru;
-pub mod task_id;
-
-cfg_not_ohos! {
-    pub use log::{debug, error, info};
+#[derive(Debug)]
+pub enum CreateTaskError {
+    DownloadPath(DownloadPathError),
+    Code(i32),
 }
 
-cfg_ohos! {
-    #[macro_use]
-    mod hilog;
-    pub mod observe;
-    pub mod context;
-    mod wrapper;
-    pub use wrapper::{hilog_print, LogLevel, LogType};
-    pub mod storage;
+impl From<DownloadPathError> for CreateTaskError {
+    fn from(error: DownloadPathError) -> Self {
+        CreateTaskError::DownloadPath(error)
+    }
 }
 
-pub mod test;
+impl From<i32> for CreateTaskError {
+    fn from(code: i32) -> Self {
+        CreateTaskError::Code(code)
+    }
+}
