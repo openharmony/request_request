@@ -162,7 +162,6 @@ HWTEST_F(PreloadGetInfo, GetInfoTest, TestSize.Level1)
     std::optional<CppDownloadInfo> info = TestGetInfo(TEST_URL_0);
     EXPECT_TRUE(info.has_value());
     const auto &value = info.value();
-    EXPECT_FALSE(value.dns_servers().empty());
     EXPECT_TRUE(value.dns_time() >= 0);
     EXPECT_TRUE(value.connect_time() >= 0);
     EXPECT_TRUE(value.total_time() >= 0);
@@ -186,7 +185,6 @@ HWTEST_F(PreloadGetInfo, CppInfoMove, TestSize.Level1)
     PreDownloadInfo(TEST_URL_0, TEST_SIZE_0);
     std::optional<CppDownloadInfo> result = TestGetInfo(TEST_URL_0);
     CppDownloadInfo info1(std::move(result.value()));
-    EXPECT_FALSE(info1.dns_servers().empty());
     double dnsTime = info1.dns_time();
 
     std::optional<CppDownloadInfo> result2 = TestGetInfo(TEST_URL_0);

@@ -47,7 +47,6 @@ Data &Data::operator=(Data &&other) & noexcept
     return *this;
 }
 
-// 构造函数
 CppDownloadInfo::CppDownloadInfo(rust::Box<RustDownloadInfo> rust_info)
 {
     rust_info_ = rust_info.into_raw();
@@ -58,13 +57,11 @@ CppDownloadInfo::~CppDownloadInfo()
     rust::Box<RustDownloadInfo>::from_raw(rust_info_);
 }
 
-// 移动构造函数
 CppDownloadInfo::CppDownloadInfo(CppDownloadInfo &&other) noexcept : rust_info_(other.rust_info_)
 {
     other.rust_info_ = nullptr;
 }
 
-// 移动赋值运算符
 CppDownloadInfo &CppDownloadInfo::operator=(CppDownloadInfo &&other) noexcept
 {
     if (this != &other) {
@@ -77,13 +74,11 @@ CppDownloadInfo &CppDownloadInfo::operator=(CppDownloadInfo &&other) noexcept
     return *this;
 }
 
-// 直接调用 Rust 实现的 dns_time 方法
 double CppDownloadInfo::dns_time() const
 {
     return rust_info_->dns_time();
 }
 
-// 调用其他 Rust 方法
 double CppDownloadInfo::connect_time() const
 {
     return rust_info_->connect_time();
@@ -119,20 +114,17 @@ int64_t CppDownloadInfo::resource_size() const
     return rust_info_->resource_size();
 }
 
-// 处理字符串转换
 std::string CppDownloadInfo::network_ip() const
 {
     return std::string(rust_info_->ip());
 }
 
-// 处理 vector 转换
 std::vector<std::string> CppDownloadInfo::dns_servers() const
 {
     std::vector<std::string> result;
 
     const auto &servers = rust_info_->dns_servers();
-
-    // 转换每个元素
+    
     for (const auto &server : servers) {
         result.push_back(std::string(server));
     }
