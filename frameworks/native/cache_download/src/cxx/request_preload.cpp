@@ -248,9 +248,9 @@ std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique
 
     FfiPredownloadOptions ffiOptions = { .headers = rust::Vec<rust::str>() };
     if (options != nullptr) {
-        for (auto header : options->headers) {
-            ffiOptions.headers.push_back(std::get<0>(header));
-            ffiOptions.headers.push_back(std::get<1>(header));
+        for (const auto& [key, value] : options->headers) {
+            ffiOptions.headers.push_back(rust::str(key));
+            ffiOptions.headers.push_back(rust::str(value));
         }
     }
     auto taskHandle = agent_->ffi_preload(
