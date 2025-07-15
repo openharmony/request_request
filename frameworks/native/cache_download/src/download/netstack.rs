@@ -100,13 +100,17 @@ impl DownloadTask {
         request.task_id(callback.task_id());
         request.callback(callback);
         request.info_mgr(info_mgr);
-        let mut task = request.build();
-        if task.start() {
-            Some(Arc::new(CancelHandle::new(task)))
-        } else {
-            error!("Netstack HttpClientTask start failed.");
-            None
-        } 
+        match request.build() {
+            Some(mut task) => {
+                if task.start() {
+                    Some(Arc::new(CancelHandle::new(task)))
+                } else {
+                    error!("Netstack HttpClientTask start failed.");
+                    None
+                }
+            },
+            None => None,
+        }
     }
 }
 
