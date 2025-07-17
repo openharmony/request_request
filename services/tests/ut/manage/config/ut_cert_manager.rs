@@ -14,6 +14,17 @@
 use super::*;
 use crate::tests::test_init;
 
+// @tc.name: test_cert_manager
+// @tc.desc: Test certificate manager initialization and certificate retrieval
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment
+//           2. Create CertManager instance
+//           3. Check certificate existence
+//           4. Force update if certificate is none
+//           5. Verify certificate exists after update
+// @tc.expect: Certificate manager initializes successfully and certificate is available
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn test_cert_manager() {
     test_init();

@@ -22,6 +22,18 @@ fn init() {
     let _ = env_logger::builder().is_test(true).try_init();
 }
 
+// @tc.name: ut_start_pause_start
+// @tc.desc: Test task start-pause-start sequence
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment
+//           2. Create in-memory database
+//           3. Insert test task
+//           4. Start task and verify state
+//           5. Pause task and verify state
+//           6. Attempt to start again and verify state
+// @tc.expect: Task transitions through start-pause states correctly
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_start_pause_start() {
     init();
@@ -84,6 +96,16 @@ fn ut_start_pause_start() {
     assert_eq!(state, State::Paused.repr);
 }
 
+// @tc.name: ut_pause
+// @tc.desc: Test task pause functionality across different states
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment
+//           2. Create in-memory database
+//           3. Insert tasks in various states
+//           4. Pause tasks and verify state transitions
+// @tc.expect: Tasks in running, retrying, or waiting state transition to paused state
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_pause() {
     init();
@@ -125,6 +147,16 @@ fn ut_pause() {
     assert_eq!(tasks, res);
 }
 
+// @tc.name: ut_stop
+// @tc.desc: Test task stop functionality across different states
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment
+//           2. Create in-memory database
+//           3. Insert tasks in various states
+//           4. Stop tasks and verify state transitions
+// @tc.expect: Tasks in running, retrying, or waiting state transition to stopped state
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_stop() {
     init();

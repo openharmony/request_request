@@ -165,6 +165,16 @@ fn network(sql: &str, change_reason: u8) {
     assert_eq!(reason, change_reason);
 }
 
+// @tc.name: ut_network_offline
+// @tc.desc: Test task state handling when network is offline
+// @tc.precon: NA
+// @tc.step: 1. Initialize test database
+//           2. Lock database
+//           3. Execute network offline test cases
+//           4. Verify task state transitions and reasons
+// @tc.expect: Tasks transition to correct states with appropriate reasons when network is offline
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_network_offline() {
     test_init();
@@ -172,6 +182,17 @@ fn ut_network_offline() {
     network(&network_offline(), NETWORK_OFFLINE);
 }
 
+// @tc.name: ut_network_unsupported
+// @tc.desc: Test task state handling with unsupported network types
+// @tc.precon: NA
+// @tc.step: 1. Initialize test database
+//           2. Lock database
+//           3. Create network info with unsupported type
+//           4. Execute network unavailable test cases
+//           5. Verify task state transitions and reasons
+// @tc.expect: Tasks transition to correct states with appropriate reasons for unsupported networks
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_network_unsupported() {
     test_init();
@@ -200,6 +221,17 @@ fn ut_network_unsupported() {
     assert_eq!(reason, RUNNING_TASK_MEET_LIMITS);
 }
 
+// @tc.name: ut_network_online
+// @tc.desc: Test task state handling when network is online
+// @tc.precon: NA
+// @tc.step: 1. Initialize test database
+//           2. Lock database
+//           3. Create network info with cellular type
+//           4. Execute network available test cases
+//           5. Verify task state transitions and reasons
+// @tc.expect: Tasks transition to correct states with appropriate reasons when network is online
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_network_online() {
     test_init();
@@ -248,6 +280,16 @@ fn ut_network_online() {
     assert_eq!(reason, RUNNING_TASK_MEET_LIMITS);
 }
 
+// @tc.name: ut_app_state_unavailable
+// @tc.desc: Test task state handling when application state is unavailable
+// @tc.precon: NA
+// @tc.step: 1. Initialize test database
+//           2. Lock database
+//           3. Execute application unavailable test cases
+//           4. Verify task state transitions and reasons
+// @tc.expect: Tasks transition to correct states with appropriate reasons when application is unavailable
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_app_state_unavailable() {
     test_init();
@@ -339,6 +381,16 @@ fn ut_app_state_unavailable() {
     assert_eq!(state, RUNNING);
 }
 
+// @tc.name: ut_app_state_available
+// @tc.desc: Test task state handling when application state is available
+// @tc.precon: NA
+// @tc.step: 1. Initialize test database
+//           2. Lock database
+//           3. Execute application available test cases
+//           4. Verify task state transitions and reasons
+// @tc.expect: Tasks transition to correct states with appropriate reasons when application is available
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_app_state_available() {
     test_init();
@@ -357,6 +409,16 @@ fn ut_app_state_available() {
     assert_eq!(reason, RUNNING_TASK_MEET_LIMITS);
 }
 
+// @tc.name: ut_account_unavailable
+// @tc.desc: Test task state handling when account is unavailable
+// @tc.precon: NA
+// @tc.step: 1. Initialize test database
+//           2. Lock database
+//           3. Execute account unavailable test cases
+//           4. Verify task state transitions and reasons
+// @tc.expect: Tasks transition to correct states with appropriate reasons when account is unavailable
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_account_unavailable() {
     test_init();
@@ -401,6 +463,16 @@ fn ut_account_unavailable() {
     }
 }
 
+// @tc.name: ut_account_available
+// @tc.desc: Test task state handling when account is available
+// @tc.precon: NA
+// @tc.step: 1. Initialize test database
+//           2. Lock database
+//           3. Execute account available test cases
+//           4. Verify task state transitions and reasons
+// @tc.expect: Tasks transition to correct states with appropriate reasons when account is available
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_account_available() {
     test_init();
@@ -426,6 +498,16 @@ fn ut_account_available() {
     assert_eq!(reason, RUNNING_TASK_MEET_LIMITS);
 }
 
+// @tc.name: ut_multi_reason_available
+// @tc.desc: Test task state handling with multiple available reasons
+// @tc.precon: NA
+// @tc.step: 1. Initialize test database
+//           2. Lock database
+//           3. Execute multiple available reason combinations test cases
+//           4. Verify task state transitions and reasons
+// @tc.expect: Tasks transition to correct states with appropriate reasons for multiple available combinations
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_multi_reason_available() {
     test_init();
@@ -517,6 +599,16 @@ fn ut_multi_reason_available() {
     assert_eq!(reason, NETWORK_OFFLINE);
 }
 
+// @tc.name: ut_multi_reason_unailable
+// @tc.desc: Test task state handling with multiple unavailable reasons
+// @tc.precon: NA
+// @tc.step: 1. Initialize test database
+//           2. Lock database
+//           3. Execute multiple unavailable reason combinations test cases
+//           4. Verify task state transitions and reasons
+// @tc.expect: Tasks transition to correct states with appropriate reasons for multiple unavailable combinations
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_multi_reason_unailable() {
     test_init();

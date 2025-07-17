@@ -16,6 +16,15 @@ use ylong_runtime::sync::mpsc;
 use super::*;
 use crate::tests::test_init;
 
+// @tc.name: ut_account_check_oh
+// @tc.desc: Test account subscription and status change functionality
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment
+//           2. Subscribe to account changes
+//           3. Verify account status updates correctly
+// @tc.expect: Account status changes are detected and processed
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_account_check_oh() {
     test_init();
@@ -37,6 +46,15 @@ fn ut_account_check_oh() {
     })
 }
 
+// @tc.name: ut_account_update
+// @tc.desc: Test account update mechanism
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment and create account updater
+//           2. Trigger account update event
+//           3. Verify account change notification is received
+// @tc.expect: Account change event is properly propagated
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_account_update() {
     test_init();
@@ -58,6 +76,14 @@ fn ut_account_update() {
     })
 }
 
+// @tc.name: ut_account_update_branch
+// @tc.desc: Test account update branch conditions
+// @tc.precon: NA
+// @tc.step: 1. Compare different background account configurations
+//           2. Verify branch conditions for account updates
+// @tc.expect: Branch conditions correctly identify account changes
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_account_update_branch() {
     let old_background = Option::<Vec<i32>>::None;

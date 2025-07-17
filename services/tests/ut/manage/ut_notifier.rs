@@ -59,6 +59,15 @@ fn init_manager() -> (TaskManager, UnboundedReceiver<ClientEvent>) {
     )
 }
 
+// @tc.name: ut_network
+// @tc.desc: Test network online/offline status detection
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment
+//           2. Notify network online with different configurations
+//           3. Verify network status updates correctly
+// @tc.expect: Network status is accurately reported
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[cfg(feature = "oh")]
 #[test]
 fn ut_network() {
@@ -101,6 +110,15 @@ fn ut_network() {
     );
 }
 
+// @tc.name: ut_network_notify
+// @tc.desc: Test network notification mechanism
+// @tc.precon: NA
+// @tc.step: 1. Initialize network notifier
+//           2. Send multiple online/offline notifications
+//           3. Verify notification status changes
+// @tc.expect: Network notifications are processed correctly
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[cfg(feature = "oh")]
 #[test]
 fn ut_network_notify() {
@@ -129,6 +147,15 @@ fn ut_network_notify() {
     }));
 }
 
+// @tc.name: ut_notify_progress
+// @tc.desc: Test download progress notification functionality
+// @tc.precon: NA
+// @tc.step: 1. Initialize task manager and create download task
+//           2. Monitor progress notifications during download
+//           3. Verify progress updates and completion status
+// @tc.expect: Progress notifications are accurate and complete with correct file size
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_notify_progress() {
     test_init();
@@ -185,6 +212,15 @@ fn ut_notify_progress() {
     })
 }
 
+// @tc.name: ut_notify_pause_resume
+// @tc.desc: Test pause and resume notification functionality
+// @tc.precon: NA
+// @tc.step: 1. Initialize task manager and create download task
+//           2. Pause the download task and verify notification
+//           3. Resume the download task and verify notification
+// @tc.expect: Pause and resume events trigger correct notifications
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_notify_pause_resume() {
     test_init();
@@ -237,6 +273,16 @@ fn ut_notify_pause_resume() {
     })
 }
 
+// @tc.name: ut_notify_remove
+// @tc.desc: Test notification when task is removed
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment and database
+//           2. Create download task with background mode
+//           3. Call remove method to delete the task
+//           4. Verify notification data and type
+// @tc.expect: Receive Remove type notification with correct task state and progress
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_notify_remove() {
     test_init();
@@ -274,6 +320,16 @@ fn ut_notify_remove() {
     })
 }
 
+// @tc.name: ut_notify_completed
+// @tc.desc: Test notification when task is completed
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment and database
+//           2. Create and start download task
+//           3. Trigger task completion
+//           4. Verify notification data and type
+// @tc.expect: Receive Complete type notification with correct task state and progress
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_notify_completed() {
     test_init();
@@ -312,6 +368,16 @@ fn ut_notify_completed() {
     })
 }
 
+// @tc.name: ut_notify_failed
+// @tc.desc: Test notification when task fails
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment and database
+//           2. Create and start download task
+//           3. Trigger task failure with IoError reason
+//           4. Verify notification data and type
+// @tc.expect: Receive Fail type notification with correct task state and progress
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_notify_failed() {
     test_init();
@@ -388,6 +454,16 @@ fn ut_notify_pause_resume_completed() {
     })
 }
 
+// @tc.name: ut_notify_pause_resume_failed
+// @tc.desc: Test pause and resume notifications when task fails
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment and database
+//           2. Create, start and pause download task
+//           3. Trigger task failure and resume task
+//           4. Verify pause and resume notifications
+// @tc.expect: Receive both Pause and Resume type notifications
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_notify_pause_resume_failed() {
     test_init();

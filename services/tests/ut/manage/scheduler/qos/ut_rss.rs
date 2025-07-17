@@ -22,6 +22,15 @@ fn is_rss_equal(rss1: RssCapacity, rss2: RssCapacity) -> bool {
         && rss1.m2_speed() == rss2.m2_speed()
 }
 
+// @tc.name: ut_rss_capacity
+// @tc.desc: Test RSS capacity initialization with different parameters
+// @tc.precon: NA
+// @tc.step: 1. Verify QosLevel enum values
+//           2. Check RssCapacity initialization for different parameters
+//           3. Compare initialized RSS values with expected results
+// @tc.expect: RssCapacity is initialized with correct values for each parameter
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_rss_capacity() {
     assert_eq!(QosLevel::High as u64, 0u64);

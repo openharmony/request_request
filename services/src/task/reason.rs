@@ -120,6 +120,13 @@ impl Reason {
 #[cfg(test)]
 mod test {
     use super::*;
+    // @tc.name: ut_enum_reason
+    // @tc.desc: Test the repr values of Reason enum
+    // @tc.precon: NA
+    // @tc.step: 1. Check the repr value of each Reason enum variant
+    // @tc.expect: Each Reason variant has the correct repr value
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_enum_reason() {
         assert_eq!(Reason::Default.repr, 0);

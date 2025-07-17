@@ -49,6 +49,16 @@ fn task_into(task_id: u32) -> TaskInfo {
     db.get_task_info(task_id).unwrap()
 }
 
+// @tc.name: ut_manager_state_change_error
+// @tc.desc: Test error handling of task state transitions
+// @tc.precon: NA
+// @tc.step: 1. Initialize task manager and create download task
+//           2. Attempt invalid state transitions (pause/resume/stop on initialized task)
+//           3. Verify error codes for invalid transitions
+//           4. Test valid state transitions and verify state changes
+// @tc.expect: Invalid transitions return TaskStateErr, valid transitions succeed
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_manager_state_change_error() {
     test_init();

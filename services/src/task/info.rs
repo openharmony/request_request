@@ -237,6 +237,13 @@ pub(crate) struct DumpOneInfo {
 mod test {
     use super::*;
 
+    // @tc.name: ut_enum_state
+    // @tc.desc: Test the repr values of State enum
+    // @tc.precon: NA
+    // @tc.step: 1. Check the repr value of each State enum variant
+    // @tc.expect: Each State variant has the correct repr value
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_enum_state() {
         assert_eq!(State::Initialized.repr, 0);

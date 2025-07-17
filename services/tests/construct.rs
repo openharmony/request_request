@@ -14,6 +14,7 @@
 #![cfg(feature = "oh")]
 use download_server::config::ConfigBuilder;
 use test_common::test_init;
+
 #[test]
 fn sdv_construct_basic() {
     let agent = test_init();
