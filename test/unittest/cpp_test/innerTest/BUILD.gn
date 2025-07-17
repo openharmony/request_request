@@ -37,8 +37,10 @@ ohos_unittest("innerTest") {
     "../../../../frameworks/native/request/src/request_service_proxy.cpp",
     "../../../../frameworks/native/request/src/response_message_receiver.cpp",
     "../../../../frameworks/native/request/src/runcount_notify_stub.cpp",
+    "../../../../frameworks/native/request_action/src/path_control.cpp",
     "../../../../frameworks/native/request_action/src/request_action.cpp",
     "../../../../frameworks/native/request_action/src/task_builder.cpp",
+    "src/path_control_test.cpp",
     "src/request_action_test.cpp",
     "src/task_builder_test.cpp",
   ]
@@ -60,6 +62,7 @@ ohos_unittest("innerTest") {
     "access_token:libtoken_setproc",
     "access_token:libtokenid_sdk",
     "app_file_service:fileuri_native",
+    "cJSON:cjson_static",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "curl:curl_shared",
@@ -79,9 +82,8 @@ ohos_unittest("innerTest") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_acl",
     "selinux_adapter:librestorecon",
-    "cJSON:cjson_static",
+    "storage_service:storage_manager_acl",
   ]
 }
 
