@@ -284,9 +284,22 @@ impl DownloadInfoMgr {
 
 #[cfg(test)]
 mod ut_info {
-    use crate::info::{DownloadInfo, DownloadInfoMgr, InfoListSize, RustPerformanceInfo};
     use request_utils::task_id::TaskId;
 
+    use crate::info::{DownloadInfo, DownloadInfoMgr, InfoListSize, RustPerformanceInfo};
+
+    // @tc.name: ut_download_performance
+    // @tc.desc: Test the setting and getting of performance timing values
+    // @tc.precon: NA
+    // @tc.step: 1. Create a new RustPerformanceInfo instance
+    //           2. Set various timing values (dns, connect, tls, first_send,
+    //              first_receive, total, redirect)
+    //           3. Assign the performance instance to DownloadInfo
+    //           4. Verify all timing values via get methods with precision check
+    // @tc.expect: All get methods return the set values with error margin < 0.01
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn ut_download_performance() {
         let mut performance = RustPerformanceInfo::default();
@@ -308,6 +321,17 @@ mod ut_info {
         assert!(download_info.redirect_time() - 10.0f64 < 0.01f64);
     }
 
+    // @tc.name: ut_download_resource
+    // @tc.desc: Test the resource size setting and retrieval functionality
+    // @tc.precon: NA
+    // @tc.step: 1. Create a new DownloadInfo instance
+    //           2. Check initial resource size is -1
+    //           3. Set resource size to 0 using set_size method
+    //           4. Verify the updated resource size
+    // @tc.expect: Initial size is -1, after setting, size is 0
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn ut_download_resource() {
         let mut download_info = DownloadInfo::new();
@@ -316,6 +340,17 @@ mod ut_info {
         assert_eq!(download_info.resource_size(), 0);
     }
 
+    // @tc.name: ut_download_net_dns
+    // @tc.desc: Test network DNS setting and retrieval functionality
+    // @tc.precon: NA
+    // @tc.step: 1. Create a new DownloadInfo instance
+    //           2. Verify initial DNS servers list is empty
+    //           3. Set DNS servers to ["4.4.4.4"]
+    //           4. Verify the DNS servers list contains the set value
+    // @tc.expect: DNS servers list after setting contains "4.4.4.4"
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn ut_download_net_dns() {
         let mut download_info = DownloadInfo::new();
@@ -326,6 +361,17 @@ mod ut_info {
         assert_eq!(dns, Some("4.4.4.4".to_string()));
     }
 
+    // @tc.name: info_list_size_increment
+    // @tc.desc: Test InfoListSize increment functionality
+    // @tc.precon: NA
+    // @tc.step: 1. Create a new InfoListSize instance
+    //           2. Verify initial state (total=0, used=0)
+    //           3. Update total size to 1
+    //           4. Attempt to increment used count
+    // @tc.expect: Increment succeeds after total size is set to 1
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn info_list_size_increment() {
         let mut info_size = InfoListSize::new();
@@ -338,6 +384,17 @@ mod ut_info {
         assert!(info_size.increment());
     }
 
+    // @tc.name: info_list_size_release
+    // @tc.desc: Test InfoListSize release functionality
+    // @tc.precon: NA
+    // @tc.step: 1. Create a new InfoListSize instance
+    //           2. Update total size to 1
+    //           3. Increment used count
+    //           4. Attempt to release used count
+    // @tc.expect: Release succeeds and used count decreases by 1
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn info_list_size_release() {
         let mut info_size = InfoListSize::new();
@@ -348,6 +405,17 @@ mod ut_info {
         assert!(info_size.release());
     }
 
+    // @tc.name: info_list_size_update
+    // @tc.desc: Test InfoListSize total size update functionality
+    // @tc.precon: NA
+    // @tc.step: 1. Create a new InfoListSize instance
+    //           2. Update total size to 2 and increment used count
+    //           3. Update total size to 1 and check overflow
+    //           4. Update total size to 0 and verify overflow handling
+    // @tc.expect: Overflow of 1 when total size is updated from 1 to 0
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn info_list_size_update() {
         let mut info_size = InfoListSize::new();
@@ -357,6 +425,17 @@ mod ut_info {
         assert_eq!(info_size.update_total_size(0), Some(1));
     }
 
+    // @tc.name: info_collection_update
+    // @tc.desc: Test InfoCollection insertion and update functionality with LRU
+    // eviction @tc.precon: NA
+    // @tc.step: 1. Create DownloadInfoMgr instance and two TaskIds
+    //           2. Set info list size to 1
+    //           3. Insert first task info and verify it exists
+    //           4. Insert second task info and verify first is evicted
+    // @tc.expect: Second task info is stored, first task info is evicted
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level3
     #[test]
     fn info_collection_update() {
         let info_mgr = DownloadInfoMgr::new();

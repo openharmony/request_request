@@ -13,6 +13,15 @@
 
 use super::*;
 
+// @tc.name: ut_clear_database_test
+// @tc.desc: Test the functionality of clearing expired tasks from database
+// @tc.precon: NA
+// @tc.step: 1. Create test table and insert sample tasks with different timestamps
+//           2. Call clear_database_part function with threshold
+//           3. Verify old tasks are removed and recent task remains
+// @tc.expect: Only tasks newer than one week remain in database
+// @tc.type: FUNC
+// @tc.require: issues#ICN31I
 #[test]
 fn clear_database_test() {
     use request_utils::fastrand::fast_random;

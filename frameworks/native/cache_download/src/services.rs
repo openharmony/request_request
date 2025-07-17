@@ -312,6 +312,17 @@ mod test {
         }
     }
 
+    // @tc.name: ut_preload_success
+    // @tc.desc: Test successful preload operation
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheDownloadService
+    //           2. Create success callback with flag
+    //           3. Call preload with valid URL
+    //           4. Wait for task completion
+    // @tc.expect: Callback flag is set to 1 indicating success
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn ut_preload_success() {
         init();
@@ -329,6 +340,17 @@ mod test {
         assert_eq!(success_flag.load(Ordering::SeqCst), 1);
     }
 
+    // @tc.name: ut_preload_success_add_callback
+    // @tc.desc: Test adding multiple callbacks to successful preload
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheDownloadService
+    //           2. Create two success callbacks
+    //           3. Call preload twice with same URL
+    //           4. Wait for task completion
+    // @tc.expect: Both callback flags are set to 1
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn ut_preload_success_add_callback() {
         init();
@@ -354,6 +376,17 @@ mod test {
         assert_eq!(success_flag_1.load(Ordering::SeqCst), 1);
     }
 
+    // @tc.name: ut_preload_fail
+    // @tc.desc: Test preload failure with invalid URL
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheDownloadService
+    //           2. Create failure callback
+    //           3. Call preload with invalid URL
+    //           4. Wait for task completion
+    // @tc.expect: Error message is captured in callback
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level2
     #[test]
     fn ut_preload_fail() {
         init();
@@ -371,6 +404,17 @@ mod test {
         assert!(!error.lock().unwrap().as_str().is_empty());
     }
 
+    // @tc.name: ut_preload_fail_add_callback
+    // @tc.desc: Test adding multiple callbacks to failed preload
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheDownloadService
+    //           2. Create two failure callbacks
+    //           3. Call preload twice with invalid URL
+    //           4. Wait for task completion
+    // @tc.expect: Both callbacks capture error messages
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level2
     #[test]
     fn ut_preload_fail_add_callback() {
         init();
@@ -396,6 +440,17 @@ mod test {
         assert!(!error_1.lock().unwrap().as_str().is_empty());
     }
 
+    // @tc.name: ut_preload_cancel_0
+    // @tc.desc: Test preload cancellation through TaskHandle
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheDownloadService
+    //           2. Create cancellation callback
+    //           3. Call preload and get handle
+    //           4. Cancel task through handle
+    // @tc.expect: Cancellation flag is set to 1
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level2
     #[test]
     fn ut_preload_cancel_0() {
         init();
@@ -415,6 +470,16 @@ mod test {
         assert_eq!(cancel_flag.load(Ordering::SeqCst), 1);
     }
 
+    // @tc.name: ut_preload_cancel_1
+    // @tc.desc: Test preload cancellation through service method
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheDownloadService
+    //           2. Create cancellation callback
+    //           3. Call preload and then cancel through service
+    // @tc.expect: Cancellation flag is set to 1
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level2
     #[test]
     fn ut_preload_cancel_1() {
         init();
@@ -433,6 +498,17 @@ mod test {
         assert_eq!(cancel_flag.load(Ordering::SeqCst), 1);
     }
 
+    // @tc.name: ut_preload_cancel_add_callback
+    // @tc.desc: Test cancellation with multiple callbacks
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheDownloadService
+    //           2. Create two cancellation callbacks
+    //           3. Call preload twice with same URL
+    //           4. Cancel both tasks
+    // @tc.expect: Both cancellation flags are set to 1
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level3
     #[test]
     fn ut_preload_cancel_add_callback() {
         init();
@@ -470,6 +546,16 @@ mod test {
         assert_eq!(cancel_flag_1.load(Ordering::SeqCst), 1);
     }
 
+    // @tc.name: ut_preload_already_success
+    // @tc.desc: Test preload with existing cache
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheDownloadService
+    //           2. Complete preload once to populate cache
+    //           3. Call preload again with update=false
+    // @tc.expect: Success callback triggers immediately
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn ut_preload_already_success() {
         init();
@@ -494,6 +580,17 @@ mod test {
         assert_eq!(success_flag.load(Ordering::SeqCst), 1);
     }
 
+    // @tc.name: ut_preload_local_headers
+    // @tc.desc: Test preload with custom headers
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheDownloadService
+    //           2. Create test server with header validation
+    //           3. Call preload with custom headers
+    //           4. Verify headers received by server
+    // @tc.expect: All headers are correctly transmitted
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn ut_preload_local_headers() {
         init();
@@ -543,6 +640,16 @@ mod test {
         assert_eq!(success_flag.load(Ordering::SeqCst), NO_DATA);
     }
 
+    // @tc.name: ut_preload_fetch
+    // @tc.desc: Test fetching cached data after preload
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheDownloadService
+    //           2. Complete preload to populate cache
+    //           3. Call fetch method with same URL
+    // @tc.expect: Cached data is returned successfully
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn ut_preload_fetch() {
         init();

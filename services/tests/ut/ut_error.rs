@@ -13,6 +13,13 @@
 
 use super::*;
 
+// @tc.name: ut_enum_error_code
+// @tc.desc: Test the values of ErrorCode enumeration
+// @tc.precon: NA
+// @tc.step: 1. Assert each ErrorCode variant's i32 value matches expected constants
+// @tc.expect: All ErrorCode variants have correct i32 values as defined
+// @tc.type: FUNC
+// @tc.require: issues#ICN31I
 #[test]
 fn ut_enum_error_code() {
     assert_eq!(ErrorCode::ErrOk as i32, 0);

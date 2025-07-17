@@ -324,6 +324,15 @@ mod test {
     const TEST_STRING_SIZE: usize = TEST_STRING.len();
     const TEST_SIZE: u64 = 128;
 
+    // @tc.name: ut_cache_file_create
+    // @tc.desc: Test the creation of file cache
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheManager with test size
+    //           2. Create RamCache with test data
+    //           3. Call FileCache::try_create method
+    // @tc.expect: File cache is created successfully
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
     #[test]
     fn ut_cache_file_create() {
         init();
@@ -356,6 +365,15 @@ mod test {
         }
     }
 
+    // @tc.name: ut_cache_file_try_new_fail
+    // @tc.desc: Test failure to create file cache when size exceeds limit
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheManager with limited size
+    //           2. Fill cache until full
+    //           3. Attempt to create another file cache
+    // @tc.expect: File cache creation returns None
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
     #[test]
     fn ut_cache_file_try_new_fail() {
         init();
@@ -388,6 +406,15 @@ mod test {
         FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap();
     }
 
+    // @tc.name: ut_cache_file_drop
+    // @tc.desc: Test file cache drop and resource release
+    // @tc.precon: NA
+    // @tc.step: 1. Create FileCache instance
+    //           2. Drop the FileCache
+    //           3. Check used_ram is released
+    // @tc.expect: used_ram is reset to 0 after drop
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
     #[test]
     fn ut_cache_file_drop() {
         init();
@@ -407,6 +434,15 @@ mod test {
         assert_eq!(CACHE_MANAGER.file_handle.lock().unwrap().used_ram, 0);
     }
 
+    // @tc.name: ut_cache_file_content
+    // @tc.desc: Test file cache content integrity
+    // @tc.precon: NA
+    // @tc.step: 1. Create FileCache with test data
+    //           2. Open the cache file
+    //           3. Read and verify content
+    // @tc.expect: Read content matches original test string
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
     #[test]
     fn ut_cache_file_content() {
         init();
@@ -424,6 +460,15 @@ mod test {
         assert_eq!(buf, TEST_STRING);
     }
 
+    // @tc.name: ut_cache_file_restore_files
+    // @tc.desc: Test file cache restoration functionality
+    // @tc.precon: NA
+    // @tc.step: 1. Create test directory with sample files
+    //           2. Call restore_files_inner function
+    //           3. Verify restored task IDs and cleanup
+    // @tc.expect: Only finished files are restored in correct order
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
     #[test]
     fn ut_cache_file_restore_files() {
         init();
@@ -457,6 +502,15 @@ mod test {
         fs::remove_dir_all(&path).unwrap();
     }
 
+    // @tc.name: ut_cache_file_update_ram_from_file
+    // @tc.desc: Test updating RAM cache from file
+    // @tc.precon: NA
+    // @tc.step: 1. Create and store FileCache
+    //           2. Spawn multiple threads to update RAM from file
+    //           3. Verify all threads successfully retrieve cache
+    // @tc.expect: All threads return valid cache data
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
     #[test]
     fn ut_cache_file_update_ram_from_file() {
         init();

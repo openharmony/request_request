@@ -438,7 +438,6 @@ mod test {
         });
     }
 
-
     // @tc.name: ut_download_resume
     // @tc.desc: Test download resumption from partial file
     // @tc.precon: NA
@@ -448,7 +447,7 @@ mod test {
     //           4. Verify final file length matches expected value
     // @tc.expect: Download resumes successfully and file length is correct
     // @tc.type: FUNC
-    // @tc.require: issues#ICN16H
+    // @tc.require: issues#ICN31I
     #[test]
     fn ut_download_resume() {
         init();
