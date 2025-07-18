@@ -153,12 +153,26 @@ mod ffi {
 mod test {
     use super::*;
     use crate::tests::test_init;
+    // @tc.name: ut_utils_oh
+    // @tc.desc: Test utility functions under OH feature
+    // @tc.precon: NA
+    // @tc.step: 1. Call is_system_api and query_calling_bundle functions
+    // @tc.expect: is_system_api returns false, query_calling_bundle returns empty
+    // string @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_utils_oh() {
         assert!(!is_system_api());
         assert_eq!(query_calling_bundle(), "");
     }
 
+    // @tc.name: ut_utils_check_permission
+    // @tc.desc: Test permission checking utility function
+    // @tc.precon: NA
+    // @tc.step: 1. Call check_permission with various permissions
+    // @tc.expect: All permission checks return false
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_utils_check_permission() {
         assert!(!check_permission("ohos.permission.INTERNET"));
@@ -178,6 +192,14 @@ mod test {
         assert!(!check_permission("ohos.permission.MANAGE_LOCAL_ACCOUNTS"));
     }
 
+    // @tc.name: ut_utils_check_permission_oh
+    // @tc.desc: Test permission checking under OH feature
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize test environment
+    //           2. Call check_permission with various permissions
+    // @tc.expect: Most permission checks return true, specific permission returns
+    // false @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_utils_check_permission_oh() {
         test_init();

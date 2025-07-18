@@ -723,6 +723,17 @@ mod test {
         builder.build()
     }
 
+    // @tc.name: ut_upload_basic
+    // @tc.desc: Test basic upload functionality
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize test environment
+    //           2. Create test file with content
+    //           3. Configure upload task with POST method
+    //           4. Execute upload asynchronously
+    //           5. Verify upload result
+    // @tc.expect: Upload succeeds and returns Ok
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_upload_basic() {
         test_init();
@@ -747,6 +758,17 @@ mod test {
         assert!(task.running_result.lock().unwrap().unwrap().is_ok());
     }
 
+    // @tc.name: ut_upload_begins
+    // @tc.desc: Test upload with specified begins offset
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize test environment
+    //           2. Create test file with content
+    //           3. Configure upload task with begins offset
+    //           4. Execute upload asynchronously
+    //           5. Verify upload result
+    // @tc.expect: Upload succeeds with correct partial content and returns Ok
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_upload_begins() {
         test_init();
@@ -768,6 +790,17 @@ mod test {
         assert!(task.running_result.lock().unwrap().unwrap().is_ok());
     }
 
+    // @tc.name: ut_upload_ends
+    // @tc.desc: Test upload with specified ends offset
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize test environment
+    //           2. Create test file with content
+    //           3. Configure upload task with ends offset
+    //           4. Execute upload asynchronously
+    //           5. Verify upload result
+    // @tc.expect: Upload succeeds with correct partial content and returns Ok
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_upload_ends() {
         test_init();
@@ -788,6 +821,17 @@ mod test {
         assert!(task.running_result.lock().unwrap().unwrap().is_ok());
     }
 
+    // @tc.name: ut_upload_range
+    // @tc.desc: Test upload with specified begins and ends offset range
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize test environment
+    //           2. Create test file with content
+    //           3. Configure upload task with begins and ends offset
+    //           4. Execute upload asynchronously
+    //           5. Verify upload result
+    // @tc.expect: Upload succeeds with correct range content and returns Ok
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_upload_range() {
         test_init();
@@ -810,6 +854,17 @@ mod test {
         assert!(task.running_result.lock().unwrap().unwrap().is_ok());
     }
 
+    // @tc.name: ut_upload_index_range
+    // @tc.desc: Test upload with specified file index and offset range
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize test environment
+    //           2. Create multiple test files with content
+    //           3. Configure upload task with file index and offset range
+    //           4. Execute upload asynchronously
+    //           5. Verify upload result
+    // @tc.expect: Upload succeeds with correct file index and range content and
+    // returns Ok @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_upload_index_range() {
         test_init();

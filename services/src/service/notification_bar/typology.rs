@@ -270,6 +270,15 @@ mod test {
     const TASK_ID: u32 = 2024;
     const UID: u32 = 12;
     const GROUP_ID: u32 = 20;
+
+    // @tc.name: ut_notify_typology_default_task_eventual
+    // @tc.desc: Test default task completion notification formatting
+    // @tc.precon: NA
+    // @tc.step: 1. Create task eventual notifications for download/upload success/failure scenarios
+    //           2. Verify title, text, and notification properties match expected defaults
+    // @tc.expect: Notification title reflects action result, text shows filename, and properties are correctly set
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_notify_typology_default_task_eventual() {
         let content = NotifyContent::task_eventual_notify(
@@ -323,6 +332,15 @@ mod test {
         assert_eq!(content.text, EXAMPLE_FILE);
     }
 
+    // @tc.name: ut_notify_typology_default_progress
+    // @tc.desc: Test default task progress notification formatting
+    // @tc.precon: NA
+    // @tc.step: 1. Create ProgressNotify instances with various processed/total values and multi-upload scenarios
+    //           2. Generate task progress notifications for download and upload actions
+    //           3. Verify title, text, and progress circle properties match expected formatting
+    // @tc.expect: Notification title shows correct percentage/size, progress circle is properly configured
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_notify_typology_default_progress() {
         let mut progress_info = ProgressNotify {
@@ -380,6 +398,16 @@ mod test {
         assert_eq!(content.title, "上传文件 1/10");
     }
 
+    // @tc.name: ut_notify_typology_default_group_progress
+    // @tc.desc: Test default group progress notification formatting
+    // @tc.precon: NA
+    // @tc.step: 1. Create GroupProgress instance and update task states/progress
+    //           2. Generate group progress notifications for download action
+    //           3. Verify title shows correct size and text displays task counts
+    //           4. Update task states and verify notification text updates accordingly
+    // @tc.expect: Notification title shows total processed size, text shows correct successful/failed task counts
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_notify_typology_default_group_progress() {
         let mut group_info = GroupProgress::new();
@@ -392,7 +420,7 @@ mod test {
             UID,
             &group_info,
         );
-        
+
         assert_eq!(content.title, "下载文件 100B");
 
         let text_task_count = GetSystemResourceString(TASK_COUNT);
@@ -420,7 +448,7 @@ mod test {
             UID,
             &group_info,
         );
-        
+
         assert_eq!(content.title, "下载文件 100B");
         let text_task_count = GetSystemResourceString(TASK_COUNT);
         let text_count = if text_task_count.contains("%d") {

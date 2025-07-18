@@ -29,6 +29,15 @@ impl Task {
     }
 }
 
+// @tc.name: ut_app_insert
+// @tc.desc: Test inserting tasks into App with priority ordering
+// @tc.precon: NA
+// @tc.step: 1. Create new App instance
+//           2. Insert tasks with different priorities and modes
+//           3. Verify task order after each insertion
+// @tc.expect: Tasks are inserted and ordered correctly by priority and mode
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_app_insert() {
     let mut app = App::new(1);
@@ -71,6 +80,15 @@ fn ut_app_insert() {
     assert_eq!(app.tasks[5].task_id, 5);
 }
 
+// @tc.name: ut_app_remove
+// @tc.desc: Test removing tasks from App
+// @tc.precon: NA
+// @tc.step: 1. Create App instance with multiple tasks
+//           2. Remove specific tasks by ID
+//           3. Verify remaining tasks' order
+// @tc.expect: Specified tasks are removed and remaining tasks maintain correct order
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_app_remove() {
     let mut app = App::new(1);
@@ -102,6 +120,14 @@ fn ut_app_remove() {
     assert_eq!(app.tasks[0].task_id, 2);
 }
 
+// @tc.name: ut_task_partial_ord
+// @tc.desc: Test task ordering based on priority and mode
+// @tc.precon: NA
+// @tc.step: 1. Create tasks with different modes and priorities
+//           2. Compare task order using partial ordering
+// @tc.expect: Tasks are ordered correctly according to priority and mode rules
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_task_partial_ord() {
     let task1 = Task::new(1, Mode::FrontEnd, 0);
@@ -116,6 +142,16 @@ fn ut_task_partial_ord() {
     assert!(task3 < task4);
 }
 
+// @tc.name: ut_database_app_info
+// @tc.desc: Test retrieving app information from database
+// @tc.precon: NA
+// @tc.step: 1. Initialize test database
+//           2. Insert test tasks with different UIDs
+//           3. Query app information
+//           4. Verify correct UIDs are returned
+// @tc.expect: Database returns correct app information for inserted tasks
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_database_app_info() {
     test_init();

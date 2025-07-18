@@ -393,6 +393,18 @@ mod test {
     use super::*;
     const TEST_TITLE: &str = "田文镜";
     const TEST_TEXT: &str = "我XXX";
+
+    // @tc.name: ut_notify_database_query_tasks
+    // @tc.desc: Test querying tasks in a notification group
+    // @tc.precon: NA
+    // @tc.step: 1. Create a NotificationDb instance
+    //           2. Generate a random group ID and multiple task IDs
+    //           3. Associate tasks with the group using update_task_group
+    //           4. Call query_group_tasks to retrieve tasks
+    //           5. Compare retrieved tasks with expected list
+    // @tc.expect: Retrieved task IDs match the expected sorted list
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_notify_database_query_tasks() {
         let db = NotificationDb::new();
@@ -409,6 +421,16 @@ mod test {
         assert_eq!(v, ans);
     }
 
+    // @tc.name: ut_notify_database_query_task_gid
+    // @tc.desc: Test querying task's group ID
+    // @tc.precon: NA
+    // @tc.step: 1. Create a NotificationDb instance
+    //           2. Generate a random group ID
+    //           3. For multiple tasks, update their group using update_task_group
+    //           4. Call query_task_gid for each task and verify the group ID
+    // @tc.expect: Each task's queried group ID matches the generated group ID
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_notify_database_query_task_gid() {
         let db = NotificationDb::new();
@@ -421,6 +443,17 @@ mod test {
         }
     }
 
+    // @tc.name: ut_notify_database_query_task_customized
+    // @tc.desc: Test querying task's customized notification content
+    // @tc.precon: NA
+    // @tc.step: 1. Create a NotificationDb instance
+    //           2. Generate a random task ID
+    //           3. Update task's customized notification with test title and text
+    //           4. Query the customized notification using query_task_customized_notification
+    //           5. Verify the retrieved title and text match test values
+    // @tc.expect: Customized notification title and text match the test values
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_notify_database_query_task_customized() {
         let db = NotificationDb::new();
@@ -436,6 +469,17 @@ mod test {
         assert_eq!(customized.text.unwrap(), TEST_TEXT);
     }
 
+    // @tc.name: ut_notify_database_query_group_customized
+    // @tc.desc: Test querying group's customized notification content
+    // @tc.precon: NA
+    // @tc.step: 1. Create a NotificationDb instance
+    //           2. Generate a random group ID
+    //           3. Update group's customized notification with test title and text
+    //           4. Query the customized notification using query_group_customized_notification
+    //           5. Verify the retrieved title and text match test values
+    // @tc.expect: Customized notification title and text match the test values
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_notify_database_query_group_customized() {
         let db = NotificationDb::new();
@@ -451,6 +495,19 @@ mod test {
         assert_eq!(customized.text.unwrap(), TEST_TEXT);
     }
 
+    // @tc.name: ut_notify_database_group_config
+    // @tc.desc: Test group notification configuration operations
+    // @tc.precon: NA
+    // @tc.step: 1. Create a NotificationDb instance
+    //           2. Generate a random group ID
+    //           3. Verify group does not exist initially
+    //           4. Update group config with gauge=true, display=false
+    //           5. Verify group exists, is_gauge returns true, attach_able returns true
+    //           6. Update group config with gauge=false and disable attach_able
+    //           7. Verify is_gauge returns false and attach_able returns false
+    // @tc.expect: Group configuration updates and queries return correct values
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_notify_database_group_config() {
         let db = NotificationDb::new();
@@ -467,6 +524,19 @@ mod test {
         assert!(!db.is_gauge(group_id));
     }
 
+    // @tc.name: ut_clear_task_info
+    // @tc.desc: Test clearing task notification information
+    // @tc.precon: NA
+    // @tc.step: 1. Create a NotificationDb instance
+    //           2. Generate random group and task IDs
+    //           3. Disable task notification and update customized content
+    //           4. Verify task notification is disabled and content exists
+    //           5. Call clear_task_info for the task
+    //           6. Verify task notification is enabled and content is removed
+    //           7. Associate task with group, clear task info, and verify group association is removed
+    // @tc.expect: All task-related information is successfully cleared
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_clear_task_info() {
         let db = NotificationDb::new();
@@ -481,13 +551,25 @@ mod test {
         db.clear_task_info(task_id);
         assert!(db.check_task_notification_available(&task_id));
         assert!(db.query_task_customized_notification(task_id).is_none());
-        
+
         db.update_task_group(task_id, group_id);
         assert_eq!(db.query_task_gid(task_id).unwrap(), group_id);
         db.clear_task_info(task_id);
         assert!(db.query_task_gid(task_id).is_none());
     }
 
+    // @tc.name: ut_clear_group_info
+    // @tc.desc: Test clearing group notification information
+    // @tc.precon: NA
+    // @tc.step: 1. Create a NotificationDb instance
+    //           2. Generate random group and task IDs
+    //           3. Update group customized notification, config, and associate task with group
+    //           4. Verify group content, existence, and task association exist
+    //           5. Call clear_group_info for the group
+    //           6. Verify group content, existence, and task association are removed
+    // @tc.expect: All group-related information is successfully cleared
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_clear_group_info() {
         let db = NotificationDb::new();
@@ -508,6 +590,18 @@ mod test {
         assert!(db.query_task_gid(task_id).is_none());
     }
 
+    // @tc.name: ut_clear_group_info_a_week_ago
+    // @tc.desc: Test clearing group info older than a week
+    // @tc.precon: NA
+    // @tc.step: 1. Create a NotificationDb instance
+    //           2. Generate current time and one week ago timestamp
+    //           3. Create group with current time and verify it's not cleared
+    //           4. Update group with one week ago timestamp and associate task
+    //           5. Verify group is not cleared when task exists
+    //           6. Clear task info and verify group is cleared
+    // @tc.expect: Only groups older than a week with no tasks are cleared
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_clear_group_info_a_week_ago() {
         let current_time = SystemTime::now()

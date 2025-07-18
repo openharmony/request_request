@@ -39,6 +39,17 @@ fn init() {
     let _ = std::fs::create_dir("test_files/");
 }
 
+// @tc.name: ut_task_manager_construct
+// @tc.desc: Test task manager event construction
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment
+//           2. Create test file
+//           3. Build configuration
+//           4. Construct TaskManagerEvent
+//           5. Send event and verify response
+// @tc.expect: Event is constructed successfully and response is received
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_task_manager_construct() {
     init();
@@ -57,6 +68,17 @@ fn ut_task_manager_construct() {
     rx.get().unwrap().unwrap();
 }
 
+// @tc.name: ut_task_manager_start
+// @tc.desc: Test starting a task via task manager
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment
+//           2. Create test file and configuration
+//           3. Construct and send event to create task
+//           4. Send start event and check result
+//           5. Wait for task to start
+// @tc.expect: Task starts successfully with no error
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_task_manager_start() {
     init();
@@ -82,6 +104,18 @@ fn ut_task_manager_start() {
     std::thread::sleep(time::Duration::from_secs(10));
 }
 
+// @tc.name: ut_task_manager_pause_resume
+// @tc.desc: Test pausing and resuming a task
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment
+//           2. Create test file and configuration
+//           3. Create task and send start event
+//           4. Send pause event
+//           5. Send resume event
+//           6. Wait for task to resume
+// @tc.expect: Task pauses and resumes successfully
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_task_manager_pause_resume() {
     init();
@@ -109,6 +143,18 @@ fn ut_task_manager_pause_resume() {
     std::thread::sleep(time::Duration::from_secs(20));
 }
 
+// @tc.name: ut_task_manager_stop_resume
+// @tc.desc: Test stopping and attempting to resume a task
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment
+//           2. Create test file and configuration
+//           3. Create task and send start event
+//           4. Send stop event
+//           5. Send resume event
+//           6. Wait for task to handle events
+// @tc.expect: Task stops and cannot resume after stop
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
 #[test]
 fn ut_task_manager_stop_resume() {
     init();

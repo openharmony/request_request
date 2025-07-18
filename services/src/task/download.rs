@@ -407,6 +407,15 @@ mod test {
         let _ = std::fs::create_dir("test_files/");
     }
 
+    // @tc.name: ut_download_basic
+    // @tc.desc: Test basic file download functionality
+    // @tc.precon: NA
+    // @tc.step: 1. Create test file and build download configuration
+    //           2. Execute download_inner function
+    //           3. Verify downloaded file length matches expected value
+    // @tc.expect: File is downloaded successfully with correct length
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_download_basic() {
         init();
@@ -429,6 +438,17 @@ mod test {
         });
     }
 
+
+    // @tc.name: ut_download_resume
+    // @tc.desc: Test download resumption from partial file
+    // @tc.precon: NA
+    // @tc.step: 1. Create partial test file with initial content
+    //           2. Build download configuration with resume capability
+    //           3. Execute download_inner function
+    //           4. Verify final file length matches expected value
+    // @tc.expect: Download resumes successfully and file length is correct
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_download_resume() {
         init();
@@ -452,6 +472,18 @@ mod test {
         });
     }
 
+    // @tc.name: ut_download_not_support_range
+    // @tc.desc: Test download with range request on server that doesn't support
+    // range
+    // @tc.precon: NA
+    // @tc.step: 1. Create test file and build download configuration with begins
+    // parameter
+    //           2. Execute download_inner function
+    //           3. Verify error type and file length
+    // @tc.expect: Download fails with UnsupportedRangeRequest error and file
+    // remains empty
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_download_not_support_range() {
         init();
@@ -476,6 +508,16 @@ mod test {
         });
     }
 
+    // @tc.name: ut_download_resume_not_support_range
+    // @tc.desc: Test download resumption when server doesn't support range requests
+    // @tc.precon: NA
+    // @tc.step: 1. Create test file and build download configuration
+    //           2. Interrupt download and modify task state
+    //           3. Resume download with partial file
+    //           4. Verify final file length matches expected value
+    // @tc.expect: Download resumes successfully despite server not supporting range
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_download_resume_not_support_range() {
         init();
@@ -510,6 +552,17 @@ mod test {
         });
     }
 
+    // @tc.name: ut_download_not_support_range_resume
+    // @tc.desc: Test resuming range download on server that doesn't support range
+    // @tc.precon: NA
+    // @tc.step: 1. Create partial test file with initial content
+    //           2. Build download configuration with begins parameter
+    //           3. Execute download_inner function
+    //           4. Verify error type and file length
+    // @tc.expect: Download fails with UnsupportedRangeRequest error and file length
+    // remains 1000
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_download_not_support_range_resume() {
         init();
@@ -535,6 +588,16 @@ mod test {
         });
     }
 
+    // @tc.name: ut_download_range_0
+    // @tc.desc: Test download with specified range (begins and ends parameters)
+    // @tc.precon: NA
+    // @tc.step: 1. Create test file and build download configuration with
+    // begins=5000 and ends=10000
+    //           2. Execute download_inner function
+    //           3. Verify downloaded file length is 5001 bytes
+    // @tc.expect: Range download succeeds with correct file length
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_download_range_0() {
         init();
@@ -557,6 +620,16 @@ mod test {
         });
     }
 
+    // @tc.name: ut_download_range_1
+    // @tc.desc: Test download with specified begins parameter only
+    // @tc.precon: NA
+    // @tc.step: 1. Create test file and build download configuration with
+    // begins=273619168
+    //           2. Execute download_inner function
+    //           3. Verify downloaded file length matches expected remaining bytes
+    // @tc.expect: Range download succeeds with correct remaining file length
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_download_range_1() {
         init();
@@ -579,6 +652,16 @@ mod test {
         });
     }
 
+    // @tc.name: ut_download_range_resume_0
+    // @tc.desc: Test resuming range download with partial file
+    // @tc.precon: NA
+    // @tc.step: 1. Create partial test file with initial content
+    //           2. Build download configuration
+    //           3. Execute download_inner function
+    //           4. Verify final file length matches expected value
+    // @tc.expect: Range download resumes successfully with correct total length
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_download_range_resume_0() {
         init();
@@ -601,6 +684,16 @@ mod test {
         });
     }
 
+    // @tc.name: ut_download_range_resume_1
+    // @tc.desc: Test download resumption after range request interruption
+    // @tc.precon: NA
+    // @tc.step: 1. Create test file with partial length
+    //           2. Configure download task with range request
+    //           3. Simulate download interruption
+    //           4. Resume download and verify completion
+    // @tc.expect: File length matches expected size after resumption
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_download_range_resume_1() {
         init();
@@ -631,6 +724,15 @@ mod test {
         });
     }
 
+    // @tc.name: ut_download_invalid_task
+    // @tc.desc: Test handling of invalid task configuration
+    // @tc.precon: NA
+    // @tc.step: 1. Create test file
+    //           2. Configure download task with invalid progress data
+    //           3. Execute download and verify correction
+    // @tc.expect: Task corrects invalid data and completes successfully
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_download_invalid_task() {
         init();
@@ -678,6 +780,15 @@ mod test {
 
     /// For xts SUB_REQUEST_CROSSPLATFORM_DOWNDLOAD_API_TASKINFO_0002,
     /// downloadTotalBytes to be -1
+    // @tc.name: ut_download_sizes
+    // @tc.desc: Test error handling for invalid download sizes
+    // @tc.precon: NA
+    // @tc.step: 1. Create test file
+    //           2. Configure task with invalid size array
+    //           3. Execute download with non-existent URL
+    // @tc.expect: Returns ProtocolError and sets size to -1
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN16H
     #[test]
     fn ut_download_sizes() {
         init();
