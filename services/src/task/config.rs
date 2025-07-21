@@ -783,9 +783,10 @@ mod test {
     // @tc.step: 1. Verify the u32 value of NetworkConfig::Any
     //           2. Verify the u32 value of NetworkConfig::Wifi
     //           3. Verify the u32 value of NetworkConfig::Cellular
-    // @tc.expect: NetworkConfig::Any as u32 is 0, NetworkConfig::Wifi as u32 is 1, NetworkConfig::Cellular as u32 is 2
+    // @tc.expect: NetworkConfig::Any as u32 is 0, NetworkConfig::Wifi as u32 is 1,
+    // NetworkConfig::Cellular as u32 is 2
     // @tc.type: FUNC
-    // @tc.require: issues#ICN16H
+    // @tc.require: issues#ICN31I
     #[test]
     fn ut_enum_network_config() {
         assert_eq!(NetworkConfig::Any as u32, 0);

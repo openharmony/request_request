@@ -46,6 +46,18 @@ mod test {
     use super::Handle;
     const TEST_TOTAL_SIZE: u64 = 1024;
 
+    // @tc.name: ut_cache_space_handle_operations
+    // @tc.desc: Test Handle struct cache space operations
+    // @tc.precon: NA
+    // @tc.step: 1. Create Handle instance with TEST_TOTAL_SIZE
+    //           2. Apply half of total size
+    //           3. Release quarter of total size
+    //           4. Change total size to double
+    // @tc.expect: used_ram updates correctly after each operation, total_ram is
+    // doubled
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn ut_cache_space() {
         let mut handle = Handle::new(TEST_TOTAL_SIZE);

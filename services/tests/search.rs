@@ -24,6 +24,17 @@ fn get_current_timestamp() -> u64 {
     }
 }
 
+// @tc.name: sdv_search_user
+// @tc.desc: Test task search functionality with different parameters
+// @tc.precon: NA
+// @tc.step: 1. Initialize test agent and create download task
+//           2. Search tasks with valid time range and parameters
+//           3. Search tasks with invalid time range and parameters
+//           4. Verify search results match expected task IDs
+// @tc.expect: Valid searches return created task ID, invalid searches return
+// empty
+// @tc.type: FUNC
+// @tc.require: issues#ICN31I
 #[test]
 fn sdv_search_user() {
     let agent = test_init();

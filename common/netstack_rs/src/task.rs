@@ -147,6 +147,17 @@ mod test {
     const TEST_URL: &str = "https://www.w3cschool.cn/statics/demosource/movie.mp4";
     const LOCAL_URL: &str = "https://127.0.0.1";
 
+    // @tc.name: ut_task_from_http_request
+    // @tc.desc: Test creating RequestTask from HttpClientRequest
+    // @tc.precon: NA
+    // @tc.step: 1. Create a new HttpClientRequest instance
+    //           2. Set URL and method for the request
+    //           3. Call RequestTask::from_http_request
+    //           4. Verify task is created successfully and status is Idle
+    // @tc.expect: Task is not None and status is Idle
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn ut_task_from_http_request() {
         let mut request: cxx::UniquePtr<crate::wrapper::ffi::HttpClientRequest> =
@@ -207,6 +218,17 @@ mod test {
         }
     }
 
+    // @tc.name: ut_request_task_start_success
+    // @tc.desc: Test successful start and completion of request task
+    // @tc.precon: NA
+    // @tc.step: 1. Create request with valid URL
+    //           2. Create task and set callback
+    //           3. Start task and wait for completion
+    //           4. Verify response code, error code and received data length
+    // @tc.expect: Response code is 200, error code is 0, data length matches
+    // content-length header @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn ut_request_task_start_success() {
         let mut request: cxx::UniquePtr<crate::wrapper::ffi::HttpClientRequest> =
@@ -246,6 +268,17 @@ mod test {
         );
     }
 
+    // @tc.name: ut_request_task_cancel
+    // @tc.desc: Test cancellation functionality of request task
+    // @tc.precon: NA
+    // @tc.step: 1. Create request with valid URL
+    //           2. Create task and set callback
+    //           3. Start task and immediately cancel
+    //           4. Verify cancellation is handled correctly
+    // @tc.expect: on_cancel is called with error code 123456
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level2
     #[test]
     fn ut_request_task_cancel() {
         let mut request: cxx::UniquePtr<crate::wrapper::ffi::HttpClientRequest> =
@@ -278,6 +311,17 @@ mod test {
         assert_eq!(error.load(Ordering::SeqCst), 123456);
     }
 
+    // @tc.name: ut_request_task_fail
+    // @tc.desc: Test request task failure handling with invalid local URL
+    // @tc.precon: NA
+    // @tc.step: 1. Create request with invalid local URL
+    //           2. Create task and set callback
+    //           3. Start task and wait for failure
+    //           4. Verify failure error code
+    // @tc.expect: on_fail is called with HttpCouldntConnect error code
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level2
     #[test]
     fn ut_request_task_fail() {
         let mut request: cxx::UniquePtr<crate::wrapper::ffi::HttpClientRequest> =
@@ -311,6 +355,17 @@ mod test {
         );
     }
 
+    // @tc.name: ut_request_task_connect_timeout
+    // @tc.desc: Test connection timeout handling
+    // @tc.precon: NA
+    // @tc.step: 1. Create request with unreachable IP and short connect timeout
+    //           2. Create task and set callback
+    //           3. Start task and wait for timeout
+    //           4. Verify timeout error code
+    // @tc.expect: on_fail is called with HttpOperationTimedout error code
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level2
     #[test]
     fn ut_request_task_connect_timeout() {
         let mut request: cxx::UniquePtr<crate::wrapper::ffi::HttpClientRequest> =
@@ -345,6 +400,17 @@ mod test {
         );
     }
 
+    // @tc.name: ut_request_task_timeout
+    // @tc.desc: Test request timeout handling
+    // @tc.precon: NA
+    // @tc.step: 1. Create request with valid URL and short timeout
+    //           2. Create task and set callback
+    //           3. Start task and wait for timeout
+    //           4. Verify timeout error code
+    // @tc.expect: on_fail is called with HttpOperationTimedout error code
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level2
     #[test]
     fn ut_request_task_timeout() {
         let mut request: cxx::UniquePtr<crate::wrapper::ffi::HttpClientRequest> =
@@ -379,6 +445,17 @@ mod test {
         );
     }
 
+    // @tc.name: ut_request_task_reset_range
+    // @tc.desc: Test task reset functionality with range support
+    // @tc.precon: NA
+    // @tc.step: 1. Create request with range-supported URL
+    //           2. Create task with custom callback
+    //           3. Start task, wait for data receive, then reset
+    //           4. Verify total received data matches expected length
+    // @tc.expect: Total received data length equals expected file size, no failure
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level3
     #[test]
     fn ut_request_task_reset_range() {
         const RANGE_TEST_URL:&str = "https://vd4.bdstatic.com/mda-pm7bte3t6fs50rsh/sc/cae_h264/1702057792414494257/mda-pm7bte3t6fs50rsh.mp4?v_from_s=bdapp-author-nanjing";
@@ -446,6 +523,17 @@ mod test {
         assert!(!failed.load(Ordering::SeqCst));
     }
 
+    // @tc.name: ut_request_task_reset_not_range
+    // @tc.desc: Test task reset functionality without range support
+    // @tc.precon: NA
+    // @tc.step: 1. Create request with non-range-supported URL
+    //           2. Create task with custom callback
+    //           3. Start task, wait for data receive, then reset
+    //           4. Verify total received data matches expected length
+    // @tc.expect: Total received data length equals expected file size, no failure
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level3
     #[test]
     fn ut_request_task_reset_not_range() {
         const NOT_SUPPORT_RANGE_TEST_URL: &str =

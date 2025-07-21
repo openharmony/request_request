@@ -416,6 +416,16 @@ fn ut_notify_failed() {
     })
 }
 
+// @tc.name: ut_notify_pause_resume_completed
+// @tc.desc: Test pause and resume notifications when task is completed
+// @tc.precon: NA
+// @tc.step: 1. Initialize test environment and database
+//           2. Create, start and pause download task
+//           3. Trigger task completion and resume task
+//           4. Verify pause and resume notifications
+// @tc.expect: Receive both Pause and Resume type notifications
+// @tc.type: FUNC
+// @tc.require: issues#ICN31I
 #[test]
 fn ut_notify_pause_resume_completed() {
     test_init();
