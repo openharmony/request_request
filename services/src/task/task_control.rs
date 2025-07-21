@@ -100,7 +100,11 @@ pub(crate) async fn clear_downloaded_file(task: Arc<RequestTask>) -> Result<(), 
         {
             let mut progress_guard = task.progress.lock().unwrap();
             progress_guard.common_data.total_processed = 0;
-            progress_guard.processed[0] = 0;
+            if let Some(elem) = progress_guard.processed.get_mut(0) {
+                *elem = 0;
+            } else {
+                info!("Failed to get a process size from an empty vector in Progress");
+            }
         }
         Ok(())
     })

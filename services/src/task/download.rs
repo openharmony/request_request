@@ -17,7 +17,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::task::{Context, Poll};
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
-
 use ylong_http_client::async_impl::{DownloadOperator, Downloader, Response};
 use ylong_http_client::{ErrorKind, HttpClientError, SpeedLimit, Timeout};
 
@@ -286,7 +285,15 @@ pub(crate) async fn download_inner(
     let _trace = Trace::new(&format!(
         "download file tid:{} size:{}",
         task.task_id(),
-        task.progress.lock().unwrap().sizes[0]
+        task.progress
+            .lock()
+            .unwrap()
+            .sizes
+            .first()
+            .unwrap_or_else(|| {
+                error!("Failed to get a progress lock size from an empty vector in Progress");
+                &0
+            })
     ));
     let mut downloader = build_downloader(task.clone(), response, abort_flag);
 
@@ -301,7 +308,13 @@ pub(crate) async fn download_inner(
     check_file_exist(&task)?;
     {
         let mut guard = task.progress.lock().unwrap();
-        guard.sizes = vec![guard.processed[0] as i64];
+        guard.sizes = vec![guard.processed.first().map_or_else(
+            || {
+                error!("Failed to get a process size from an empty vector in RequestTask");
+                Default::default()
+            },
+            |x| *x as i64,
+        )];
     }
 
     info!("task {} download ok", task.task_id());
@@ -314,8 +327,12 @@ fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
 
     let config = task.config();
     // download_server is unable to access the file path of user file.
-    if config.file_specs[0].is_user_file {
-        return Ok(());
+    if let Some(first_file_spec) = config.file_specs.first() {
+        if first_file_spec.is_user_file {
+            return Ok(());
+        }
+    } else {
+        info!("Failed to get the first FileSpec from an empty vector in TaskConfig");
     }
     let mut bundle_cache = BundleCache::new(config);
     let bundle_name = bundle_cache
@@ -324,7 +341,13 @@ fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
     let real_path = convert_path(
         config.common_data.uid,
         &bundle_name,
-        &config.file_specs[0].path,
+        match &config.file_specs.first() {
+            Some(spec) => &spec.path,
+            None => {
+                error!("Failed to get the first file_spec from an empty vector in TaskConfig");
+                Default::default()
+            }
+        },
     );
     // Cannot compare because file_total_size will be changed when resume task.
     match std::fs::metadata(real_path) {
@@ -437,7 +460,6 @@ mod test {
             assert_eq!(GITEE_FILE_LEN, file.metadata().unwrap().len());
         });
     }
-
 
     // @tc.name: ut_download_resume
     // @tc.desc: Test download resumption from partial file
