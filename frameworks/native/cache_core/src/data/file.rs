@@ -44,7 +44,7 @@ static CACHE_DIR_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
 
     path.push("preload_caches");
     if let Err(e) = fs::create_dir_all(path.as_path()) {
-        error!("create cache dir error {} path {:?}", e, path);
+        error!("create cache dir error {}", e);
     }
     path
 });

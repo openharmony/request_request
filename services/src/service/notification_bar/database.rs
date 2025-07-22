@@ -82,10 +82,7 @@ impl NotificationDb {
         ];
         for sql in sqls.iter() {
             if let Err(e) = self.inner.execute(sql, task_id) {
-                error!(
-                    "Failed to clear task {} notification info: {}, sql: {}",
-                    task_id, e, sql
-                );
+                error!("Failed to clear task {} notification info: {}", task_id, e);
             }
         }
     }
@@ -99,8 +96,8 @@ impl NotificationDb {
         for sql in sqls.iter() {
             if let Err(e) = self.inner.execute(sql, group_id) {
                 error!(
-                    "Failed to clear group {} notification info: {}, sql: {}",
-                    group_id, e, sql
+                    "Failed to clear group {} notification info: {}",
+                    group_id, e
                 );
             }
         }
