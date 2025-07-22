@@ -34,6 +34,7 @@
 #include "ffrt.h"
 #include "file_uri.h"
 #include "log.h"
+#include "path_control.h"
 #include "request_common.h"
 #include "request_manager.h"
 #include "storage_acl.h"
@@ -45,16 +46,6 @@ namespace fs = std::filesystem;
 
 static std::mutex taskMutex_;
 static std::map<std::string, Config> taskMap_;
-static std::mutex pathMutex_;
-static std::map<std::string, int32_t> pathMap_;
-static std::map<std::string, int32_t> fileMap_;
-static constexpr int ACL_SUCC = 0;
-static const std::string SA_PERMISSION_RWX = "g:3815:rwx";
-static const std::string SA_PERMISSION_X = "g:3815:x";
-static const std::string SA_PERMISSION_CLEAN = "g:3815:---";
-static const std::string AREA1 = "/data/storage/el1/base";
-static const std::string AREA2 = "/data/storage/el2/base";
-static const std::string AREA5 = "/data/storage/el5/base";
 
 const std::unique_ptr<RequestAction> &RequestAction::GetInstance()
 {
@@ -393,7 +384,7 @@ bool RequestAction::CheckBelongAppBaseDir(const std::string &filepath, std::stri
 
 bool RequestAction::FindAreaPath(const std::string &filepath)
 {
-    if ((filepath.find(AREA1) == 0) || filepath.find(AREA2) == 0 || filepath.find(AREA5) == 0) {
+    if (PathControl::CheckBelongAppBaseDir(filepath)) {
         return true;
     } else {
         REQUEST_HILOGE("File dir not include base dir");
@@ -463,60 +454,6 @@ void RequestAction::StandardizeFileSpec(FileSpec &file)
     return;
 }
 
-void RequestAction::AddPathMap(const std::string &filepath, const std::string &baseDir)
-{
-    {
-        std::lock_guard<std::mutex> lockGuard(pathMutex_);
-        auto it = fileMap_.find(filepath);
-        if (it == fileMap_.end()) {
-            fileMap_[filepath] = 1;
-        } else {
-            fileMap_[filepath] += 1;
-        }
-    }
-
-    std::string childDir(filepath);
-    std::string parentDir;
-    while (childDir.length() > baseDir.length()) {
-        parentDir = childDir.substr(0, childDir.rfind("/"));
-        std::lock_guard<std::mutex> lockGuard(pathMutex_);
-        auto it = pathMap_.find(parentDir);
-        if (it == pathMap_.end()) {
-            pathMap_[parentDir] = 1;
-        } else {
-            pathMap_[parentDir] += 1;
-        }
-        childDir = parentDir;
-    }
-}
-
-bool RequestAction::SetPathPermission(const std::string &filepath)
-{
-    std::string baseDir;
-    if (!CheckBelongAppBaseDir(filepath, baseDir)) {
-        return false;
-    }
-
-    AddPathMap(filepath, baseDir);
-    {
-        std::lock_guard<std::mutex> lockGuard(pathMutex_);
-        for (auto it : pathMap_) {
-            if (it.second <= 0) {
-                continue;
-            }
-            if (AclSetAccess(it.first, SA_PERMISSION_X) != ACL_SUCC) {
-                REQUEST_HILOGE("AclSetAccess Parent Dir Failed");
-            }
-        }
-    }
-
-    if (AclSetAccess(filepath, SA_PERMISSION_RWX) != ACL_SUCC) {
-        REQUEST_HILOGE("AclSetAccess Child Dir Failed");
-        return false;
-    }
-    return true;
-}
-
 bool RequestAction::IsPathValid(const std::string &filePath)
 {
     auto path = filePath.substr(0, filePath.rfind('/'));
@@ -582,7 +519,7 @@ ExceptionErrorCode RequestAction::GetFdDownload(const std::string &path, const C
         return E_FILE_IO;
     }
 
-    int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+    int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP);
     if (ret != 0) {
         REQUEST_HILOGE("download file chmod fail: %{public}d", ret);
     };
@@ -629,7 +566,7 @@ ExceptionErrorCode RequestAction::CheckDownloadFile(
     if (ret != ExceptionErrorCode::E_OK) {
         return ret;
     }
-    if (!SetPathPermission(config.saveas)) {
+    if (!PathControl::AddPathsToMap(config.saveas)) {
         return ExceptionErrorCode::E_FILE_IO;
     }
     return ExceptionErrorCode::E_OK;
@@ -696,7 +633,7 @@ ExceptionErrorCode RequestAction::GetFdUpload(const std::string &path, const Con
         return config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
     }
     REQUEST_HILOGD("upload file fopen ok");
-    int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP);
     if (ret != 0) {
         REQUEST_HILOGE("upload file chmod fail: %{public}d", ret);
     }
@@ -729,7 +666,7 @@ ExceptionErrorCode RequestAction::CheckUploadFileSpec(
     if (ret != E_OK) {
         return ret;
     }
-    if (!SetPathPermission(file.uri)) {
+    if (!PathControl::AddPathsToMap(file.uri)) {
         return E_FILE_IO;
     }
     StandardizeFileSpec(file);
@@ -786,12 +723,12 @@ ExceptionErrorCode RequestAction::CheckUploadBodyFiles(const std::string &filePa
         if (bodyFile == nullptr) {
             return E_FILE_IO;
         }
-        int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+        int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP);
         if (ret != 0) {
             REQUEST_HILOGE("body chmod fail: %{public}d", ret);
         };
 
-        bool setRes = SetPathPermission(path);
+        bool setRes = PathControl::AddPathsToMap(path);
         int32_t retClose = fclose(bodyFile);
         if (retClose != 0) {
             REQUEST_HILOGE("upload body fclose fail: %{public}d", ret);
@@ -829,10 +766,10 @@ bool RequestAction::SetDirsPermission(std::vector<std::string> &dirs)
             if (!fs::exists(newfilePath)) {
                 fs::copy(existfilePath, newfilePath);
             }
-            if (chmod(newfilePath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0) {
+            if (chmod(newfilePath.c_str(), S_IRUSR | S_IWUSR | S_IRGRP) != 0) {
                 REQUEST_HILOGD("File add OTH access Failed.");
             }
-            if (!SetPathPermission(newfilePath)) {
+            if (!PathControl::AddPathsToMap(newfilePath)) {
                 REQUEST_HILOGE("Set path permission fail.");
                 return false;
             }
@@ -950,51 +887,6 @@ void RequestAction::RemoveFile(const std::string &filePath)
     ffrt::submit(removeFile, {}, {}, ffrt::task_attr().name("Os_Request_Rm").qos(ffrt::qos_default));
 }
 
-void RequestAction::RemovePathMap(const std::string &filepath)
-{
-    std::string baseDir;
-    if (!CheckBelongAppBaseDir(filepath, baseDir)) {
-        return;
-    }
-
-    {
-        std::lock_guard<std::mutex> lockGuard(pathMutex_);
-        auto it = fileMap_.find(filepath);
-        if (it == fileMap_.end()) {
-            return;
-        }
-        if (fileMap_[filepath] <= 1) {
-            fileMap_.erase(filepath);
-            if (chmod(filepath.c_str(), S_IRUSR | S_IWUSR | S_IRGRP) != 0) {
-                REQUEST_HILOGE("File remove OTH access Failed");
-            }
-        } else {
-            fileMap_[filepath] -= 1;
-        }
-    }
-
-    std::string childDir(filepath);
-    std::string parentDir;
-    while (childDir.length() > baseDir.length()) {
-        parentDir = childDir.substr(0, childDir.rfind("/"));
-        std::lock_guard<std::mutex> lockGuard(pathMutex_);
-        auto it = pathMap_.find(parentDir);
-        if (it == pathMap_.end()) {
-            childDir = parentDir;
-            continue;
-        }
-        if (pathMap_[parentDir] <= 1) {
-            pathMap_.erase(parentDir);
-            int ret = AclSetAccess(parentDir, SA_PERMISSION_CLEAN);
-            if (ret != ACL_SUCC) {
-                REQUEST_HILOGD("AclSetAccess Reset Dir Failed");
-            }
-        } else {
-            pathMap_[parentDir] -= 1;
-        }
-    }
-}
-
 void RequestAction::RemoveDirsPermission(const std::vector<std::string> &dirs)
 {
     for (const auto &folderPath : dirs) {
@@ -1002,7 +894,7 @@ void RequestAction::RemoveDirsPermission(const std::vector<std::string> &dirs)
         for (const auto &entry : fs::directory_iterator(folder)) {
             fs::path path = entry.path();
             std::string filePath = folder.string() + "/" + path.filename().string();
-            RemovePathMap(filePath);
+            PathControl::SubPathsToMap(filePath);
         }
     }
 }
@@ -1028,13 +920,13 @@ bool RequestAction::ClearTaskTemp(const std::string &tid)
             continue;
         }
         err.clear();
-        RemovePathMap(filePath);
+        PathControl::SubPathsToMap(filePath);
         RemoveFile(filePath);
     }
 
     // Reset Acl permission
     for (auto &file : config.files) {
-        RemovePathMap(file.uri);
+        PathControl::SubPathsToMap(file.uri);
     }
 
     RemoveDirsPermission(config.certsPath);

@@ -53,6 +53,7 @@ ohos_shared_library("request_action") {
   ]
 
   sources = [
+    "src/path_control.cpp",
     "src/request_action.cpp",
     "src/task_builder.cpp",
   ]

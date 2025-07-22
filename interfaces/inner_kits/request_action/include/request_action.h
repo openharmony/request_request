@@ -83,8 +83,6 @@ private:
     static bool CheckDownloadFilePath(const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config);
     static bool InterceptData(const std::string &str, const std::string &in, std::string &out);
     static void StandardizeFileSpec(FileSpec &file);
-    static void AddPathMap(const std::string &filepath, const std::string &baseDir);
-    static bool SetPathPermission(const std::string &filepath);
     static bool IsPathValid(const std::string &filePath);
     static bool GetInternalPath(
         const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, const Config &config, std::string &path);
@@ -105,7 +103,6 @@ private:
     static bool SetDirsPermission(std::vector<std::string> &dirs);
     static ExceptionErrorCode CheckFilePath(Config &config);
     static void RemoveFile(const std::string &filePath);
-    static void RemovePathMap(const std::string &filepath);
     static void RemoveDirsPermission(const std::vector<std::string> &dirs);
     static bool ClearTaskTemp(const std::string &tid);
 };
