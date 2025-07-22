@@ -762,30 +762,6 @@ pub enum TaskError {
 }
 
 #[cfg(test)]
-mod test {
-    use crate::task::request_task::change_upload_size;
-
-    // @tc.name: ut_upload_size
-    // @tc.desc: Test the change_upload_size function with various parameters
-    // @tc.precon: NA
-    // @tc.step: 1. Call change_upload_size(0, -1, 30) and check result
-    //           2. Call change_upload_size(10, -1, 30) and check result
-    //           3. Call change_upload_size(0, 10, 30) and check result
-    //           4. Call change_upload_size(10, 10, 100) and check result
-    //           5. Call change_upload_size(0, 30, 30) and check result
-    //           6. Call change_upload_size(0, 0, 0) and check result
-    //           7. Call change_upload_size(10, 9, 100) and check result
-    // @tc.expect: All calls return expected values as per assertions
-    // @tc.type: FUNC
-    // @tc.require: issues#ICN16H
-    #[test]
-    fn ut_upload_size() {
-        assert_eq!(change_upload_size(0, -1, 30), 30);
-        assert_eq!(change_upload_size(10, -1, 30), 20);
-        assert_eq!(change_upload_size(0, 10, 30), 11);
-        assert_eq!(change_upload_size(10, 10, 100), 1);
-        assert_eq!(change_upload_size(0, 30, 30), 30);
-        assert_eq!(change_upload_size(0, 0, 0), 0);
-        assert_eq!(change_upload_size(10, 9, 100), 100);
-    }
+mod ut_request_task {
+    include!("../../tests/ut/task/ut_request_task.rs");
 }
