@@ -297,11 +297,11 @@ mod test {
         let task_id = TaskId::new(fast_random().to_string());
         let cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
         assert_eq!(
-            CACHE_MANAGER.ram_handle.lock().unwrap().used_ram,
+            CACHE_MANAGER.ram_handle.lock().unwrap().used_capacity,
             TEST_STRING_SIZE as u64
         );
         drop(cache);
-        assert_eq!(CACHE_MANAGER.ram_handle.lock().unwrap().used_ram, 0);
+        assert_eq!(CACHE_MANAGER.ram_handle.lock().unwrap().used_capacity, 0);
     }
 
     // @tc.name: ut_cache_ram_temp

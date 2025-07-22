@@ -17,6 +17,6 @@ mod space;
 
 pub(crate) use file::{restore_files, FileCache};
 pub use ram::RamCache;
-pub(crate) use space::Handle;
+pub(crate) use space::ResourceManager;
 
 pub(crate) const MAX_CACHE_SIZE: u64 = 20971520;

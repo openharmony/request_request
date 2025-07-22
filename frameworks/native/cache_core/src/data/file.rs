@@ -427,11 +427,11 @@ mod test {
         let file_cache =
             FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap();
         assert_eq!(
-            CACHE_MANAGER.file_handle.lock().unwrap().used_ram,
+            CACHE_MANAGER.file_handle.lock().unwrap().used_capacity,
             TEST_STRING_SIZE as u64
         );
         drop(file_cache);
-        assert_eq!(CACHE_MANAGER.file_handle.lock().unwrap().used_ram, 0);
+        assert_eq!(CACHE_MANAGER.file_handle.lock().unwrap().used_capacity, 0);
     }
 
     // @tc.name: ut_cache_file_content
