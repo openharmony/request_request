@@ -31,8 +31,8 @@ pub struct CacheManager {
 
     pub(crate) update_from_file_once:
         Mutex<HashMap<TaskId, Arc<OnceLock<io::Result<Weak<RamCache>>>>>>,
-    pub(crate) ram_handle: Mutex<data::Handle>,
-    pub(crate) file_handle: Mutex<data::Handle>,
+    pub(crate) ram_handle: Mutex<data::ResourceManager>,
+    pub(crate) file_handle: Mutex<data::ResourceManager>,
 }
 
 impl CacheManager {
@@ -43,8 +43,8 @@ impl CacheManager {
             backup_rams: Mutex::new(HashMap::new()),
             update_from_file_once: Mutex::new(HashMap::new()),
 
-            ram_handle: Mutex::new(data::Handle::new(DEFAULT_RAM_CACHE_SIZE)),
-            file_handle: Mutex::new(data::Handle::new(DEFAULT_FILE_CACHE_SIZE)),
+            ram_handle: Mutex::new(data::ResourceManager::new(DEFAULT_RAM_CACHE_SIZE)),
+            file_handle: Mutex::new(data::ResourceManager::new(DEFAULT_FILE_CACHE_SIZE)),
         }
     }
 
@@ -91,7 +91,7 @@ impl CacheManager {
     }
 
     pub(super) fn apply_cache<T>(
-        handle: &Mutex<data::Handle>,
+        handle: &Mutex<data::ResourceManager>,
         caches: &Mutex<LRUCache<TaskId, T>>,
         task_id: fn(&T) -> &TaskId,
         size: usize,
@@ -131,6 +131,15 @@ mod test {
     const TEST_STRING: &str = "你这猴子真让我欢喜";
     const TEST_STRING_SIZE: usize = TEST_STRING.len();
 
+    // @tc.name: ut_cache_manager_update_file
+    // @tc.desc: Test cache manager updates file cache from RAM
+    // @tc.precon: NA
+    // @tc.step: 1. Create RamCache with test data
+    //           2. Call finish_write method
+    //           3. Verify file cache content
+    // @tc.expect: File cache contains the same data as RAM cache
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
     #[test]
     fn ut_cache_manager_update_file() {
         init();
@@ -164,6 +173,15 @@ mod test {
             .contains_key(&task_id));
     }
 
+    // @tc.name: ut_cache_manager_get
+    // @tc.desc: Test cache manager retrieves cache data
+    // @tc.precon: NA
+    // @tc.step: 1. Create and populate RamCache
+    //           2. Call get_cache method
+    //           3. Verify retrieved data matches original
+    // @tc.expect: Cache data is successfully retrieved and matches
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
     #[test]
     fn ut_cache_manager_get() {
         init();
@@ -181,6 +199,15 @@ mod test {
         assert_eq!(buf, TEST_STRING);
     }
 
+    // @tc.name: ut_cache_manager_cache_from_file
+    // @tc.desc: Test cache manager retrieves cache from file
+    // @tc.precon: NA
+    // @tc.step: 1. Create file cache with test data
+    //           2. Remove RAM cache
+    //           3. Call get_cache and verify data
+    // @tc.expect: Cache data is successfully retrieved from file
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
     #[test]
     fn ut_cache_manager_cache_from_file() {
         init();
@@ -209,6 +236,15 @@ mod test {
         }
     }
 
+    // @tc.name: ut_cache_manager_cache_from_file_clean
+    // @tc.desc: Test cache manager cleans up temporary data after file retrieval
+    // @tc.precon: NA
+    // @tc.step: 1. Create and store file cache
+    //           2. Retrieve cache from file
+    //           3. Verify temporary caches are removed
+    // @tc.expect: backup_rams and update_from_file_once are empty
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
     #[test]
     fn ut_cache_manager_cache_from_file_clean() {
         init();
@@ -235,6 +271,15 @@ mod test {
             .contains_key(&task_id));
     }
 
+    // @tc.name: ut_cache_manager_update_same
+    // @tc.desc: Test cache manager updates existing cache with new data
+    // @tc.precon: NA
+    // @tc.step: 1. Create initial cache with test data
+    //           2. Update cache with new data
+    //           3. Verify retrieved data matches updated content
+    // @tc.expect: Updated cache data is successfully stored and retrieved
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
     #[test]
     fn ut_cache_manager_update_same() {
         init();

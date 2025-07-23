@@ -18,6 +18,16 @@ use download_server::config::{Action, ConfigBuilder, Mode};
 use test_common::test_init;
 const FILE_SIZE: u64 = 1042003;
 
+// @tc.name: sdv_start_resume
+// @tc.desc: Test starting and resuming a download task
+// @tc.precon: NA
+// @tc.step: 1. Initialize test agent and create test file
+//           2. Build download configuration with background mode
+//           3. Construct task, start, pause, then resume
+//           4. Wait for task completion and verify file size
+// @tc.expect: Download completes successfully with correct file size
+// @tc.type: FUNC
+// @tc.require: issues#ICN31I
 #[test]
 fn sdv_start_resume() {
     let file_path = "sdv_start_resume.txt";

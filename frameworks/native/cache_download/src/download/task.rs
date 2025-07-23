@@ -286,6 +286,16 @@ mod test {
         PrimeCallback,
     ) -> Arc<(dyn CommonHandle + 'static)> = ylong::DownloadTask::run;
 
+    // @tc.name: ut_preload
+    // @tc.desc: Test preload functionality
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheManager
+    //           2. Create download request with test URL
+    //           3. Call download_inner function
+    //           4. Wait for task completion
+    // @tc.expect: success_flag is set to true
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
     #[test]
     fn ut_preload() {
         init();
@@ -312,6 +322,17 @@ mod test {
         assert!(success_flag.load(Ordering::Acquire));
     }
 
+    // @tc.name: ut_download_headers
+    // @tc.desc: Test download headers are correctly sent
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheManager
+    //           2. Create test server to verify headers
+    //           3. Create download request with custom headers
+    //           4. Call download_inner function
+    //           5. Wait for task completion
+    // @tc.expect: All custom headers are received by server
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
     #[test]
     fn ut_download_headers() {
         init();

@@ -125,6 +125,17 @@ mod test {
         }
     }
 
+    // @tc.name: ut_net_observer_callback
+    // @tc.desc: Test network observer callback functions
+    // @tc.precon: NA
+    // @tc.step: 1. Create NetRegistrar instance
+    //           2. Add multiple TestObserver instances
+    //           3. Call register method
+    //           4. Verify callback assertions
+    // @tc.expect: All observer callbacks receive correct network events
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn ut_net_observer_callback() {
         let registrar = NetRegistrar::new();

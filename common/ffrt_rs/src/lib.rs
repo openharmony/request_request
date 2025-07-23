@@ -35,6 +35,16 @@ mod tests {
 
     use super::*;
 
+    // @tc.name: ut_ffrt_spawn
+    // @tc.desc: Test ffrt_spawn function with atomic counter
+    // @tc.precon: NA
+    // @tc.step: 1. Create atomic counter
+    //           2. Spawn task to increment counter
+    //           3. Wait for task completion
+    //           4. Verify counter value
+    // @tc.expect: Counter should be incremented to 1
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN31I
     #[test]
     fn ut_ffrt_spawn() {
         let flag = Arc::new(AtomicUsize::new(0));
@@ -46,6 +56,16 @@ mod tests {
         assert_eq!(flag.load(Ordering::SeqCst), 1);
     }
 
+    // @tc.name: ut_ffrt_sleep
+    // @tc.desc: Test ffrt_sleep function with delayed counter increment
+    // @tc.precon: NA
+    // @tc.step: 1. Create atomic counter
+    //           2. Spawn task with sleep and counter increment
+    //           3. Wait for sleep duration
+    //           4. Verify counter value
+    // @tc.expect: Counter should be incremented to 1 after sleep
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN31I
     #[test]
     fn ut_ffrt_sleep() {
         let flag = Arc::new(AtomicUsize::new(0));

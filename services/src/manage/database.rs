@@ -94,11 +94,11 @@ impl RequestDb {
         if ret == 0 {
             Ok(())
         } else {
-            error!("execute {} failed: {}", sql, ret);
+            error!("execute sql failed: {}", ret);
             sys_event!(
                 ExecFault,
                 DfxCode::RDB_FAULT_04,
-                &format!("execute {} failed: {}", sql, ret)
+                &format!("execute sql failed: {}", ret)
             );
             Err(ret)
         }

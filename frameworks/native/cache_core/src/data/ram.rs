@@ -189,6 +189,17 @@ mod test {
     const TEST_STRING_SIZE: usize = TEST_STRING.len();
     const TEST_SIZE: u64 = 128;
 
+    // @tc.name: ut_cache_ram_try_new
+    // @tc.desc: Test RamCache creation and update functionality
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheManager with specified RAM size
+    //           2. Create multiple RamCache instances
+    //           3. Write test data to cache
+    //           4. Verify cache updates correctly
+    // @tc.expect: Cache is created and updated successfully
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn ut_cache_ram_try_new() {
         init();
@@ -222,6 +233,16 @@ mod test {
         }
     }
 
+    // @tc.name: ut_cache_ram_try_new_fail
+    // @tc.desc: Test RamCache creation failure when exceeding capacity
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheManager with limited RAM size
+    //           2. Fill cache to maximum capacity
+    //           3. Attempt to create additional RamCache instance
+    // @tc.expect: New cache creation fails when exceeding capacity
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level2
     #[test]
     fn ut_cache_ram_try_new_fail() {
         init();
@@ -255,6 +276,18 @@ mod test {
             Some(TEST_STRING_SIZE),
         );
     }
+
+    // @tc.name: ut_cache_ram_drop
+    // @tc.desc: Test RamCache memory release on drop
+    // @tc.precon: NA
+    // @tc.step: 1. Create RamCache instance
+    //           2. Verify initial used RAM
+    //           3. Drop the cache instance
+    //           4. Verify RAM is released
+    // @tc.expect: Used RAM returns to zero after drop
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn ut_cache_ram_drop() {
         init();
@@ -264,13 +297,21 @@ mod test {
         let task_id = TaskId::new(fast_random().to_string());
         let cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
         assert_eq!(
-            CACHE_MANAGER.ram_handle.lock().unwrap().used_ram,
+            CACHE_MANAGER.ram_handle.lock().unwrap().used_capacity,
             TEST_STRING_SIZE as u64
         );
         drop(cache);
-        assert_eq!(CACHE_MANAGER.ram_handle.lock().unwrap().used_ram, 0);
+        assert_eq!(CACHE_MANAGER.ram_handle.lock().unwrap().used_capacity, 0);
     }
 
+    // @tc.name: ut_cache_ram_temp
+    // @tc.desc: Test temporary RamCache functionality
+    // @tc.precon: NA
+    // @tc.step: 1. Initialize CacheManager with specified RAM size
+    // @tc.expect: Cache manager initializes without errors
+    // @tc.type: FUNC
+    // @tc.require: issue#ICN31I
+    // @tc.level: level1
     #[test]
     fn ut_cache_ram_temp() {
         init();

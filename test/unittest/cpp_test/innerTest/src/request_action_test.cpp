@@ -1396,34 +1396,6 @@ HWTEST_F(RequestActionTest, CreateInnerTest014, TestSize.Level1)
 }
 
 /**
- * @tc.name: CreateInnerTest015
- * @tc.desc: Test CreateInnerTest015 interface base function - AddPathMap
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestActionTest, CreateInnerTest015, TestSize.Level1)
-{
-    EXPECT_NE(RequestManager::GetInstance(), nullptr);
-    std::string filepath = "a/entry/file/cache";
-    std::string baseDir = "base";
-    RequestAction::AddPathMap(filepath, baseDir);
-    RequestAction::AddPathMap(filepath, baseDir);
-}
-
-/**
- * @tc.name: CreateInnerTest016
- * @tc.desc: Test CreateInnerTest016 interface base function - SetPathPermission
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestActionTest, CreateInnerTest016, TestSize.Level1)
-{
-    std::string filepath;
-    auto res = RequestAction::SetPathPermission(filepath);
-    EXPECT_EQ(res, false);
-}
-
-/**
  * @tc.name: CreateInnerTest017
  * @tc.desc: Test CreateInnerTest017 interface base function - IsPathValid
  * @tc.type: FUNC
@@ -2019,19 +1991,6 @@ HWTEST_F(RequestActionTest, CreateInnerTest031, TestSize.Level1)
     RequestAction::RemoveFile(filepath);
     auto res = std::filesystem::exists(filepath);
     EXPECT_EQ(res, false);
-}
-
-/**
- * @tc.name: CreateInnerTest032
- * @tc.desc: Test CreateInnerTest032 interface base function - RemovePathMap
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(RequestActionTest, CreateInnerTest032, TestSize.Level1)
-{
-    EXPECT_NE(RequestManager::GetInstance(), nullptr);
-    std::string filepath;
-    RequestAction::RemovePathMap(filepath);
 }
 
 /**

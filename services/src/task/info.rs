@@ -234,27 +234,6 @@ pub(crate) struct DumpOneInfo {
 }
 
 #[cfg(test)]
-mod test {
-    use super::*;
-
-    // @tc.name: ut_enum_state
-    // @tc.desc: Test the repr values of State enum
-    // @tc.precon: NA
-    // @tc.step: 1. Check the repr value of each State enum variant
-    // @tc.expect: Each State variant has the correct repr value
-    // @tc.type: FUNC
-    // @tc.require: issues#ICN16H
-    #[test]
-    fn ut_enum_state() {
-        assert_eq!(State::Initialized.repr, 0);
-        assert_eq!(State::Waiting.repr, 16);
-        assert_eq!(State::Running.repr, 32);
-        assert_eq!(State::Retrying.repr, 33);
-        assert_eq!(State::Paused.repr, 48);
-        assert_eq!(State::Stopped.repr, 49);
-        assert_eq!(State::Completed.repr, 64);
-        assert_eq!(State::Failed.repr, 65);
-        assert_eq!(State::Removed.repr, 80);
-        assert_eq!(State::Any.repr, 97);
-    }
+mod ut_info {
+    include!("../../tests/ut/task/ut_info.rs");
 }

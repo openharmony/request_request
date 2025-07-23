@@ -221,7 +221,8 @@ impl CallbackWrapper {
             *r.lock().unwrap() = task.clone();
         }
         OnCallback(&task, callback);
-        // TODO start may return false. Not handling it may result in no callback, which the caller cannot perceive
+        // TODO start may return false. Not handling it may result in no callback, which
+        // the caller cannot perceive
         RequestTask::pin_mut(&task).Start();
     }
 }

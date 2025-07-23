@@ -198,6 +198,16 @@ mod test {
         RdbStore::open(config).unwrap()
     }
 
+    // @tc.name: ut_database_query
+    // @tc.desc: Test database query function with insert and select operations
+    // @tc.precon: NA
+    // @tc.step: 1. Create test database and table
+    //           2. Insert multiple test records
+    //           3. Query all records and verify count
+    //           4. Check each record's id and name
+    // @tc.expect: Query returns 10 records with correct id and name
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN31I
     #[test]
     fn ut_database_query() {
         let rdb = get_rdb();
@@ -227,6 +237,17 @@ mod test {
         }
     }
 
+    // @tc.name: ut_database_option
+    // @tc.desc: Test database operations with optional values
+    // @tc.precon: NA
+    // @tc.step: 1. Create test database and table
+    //           2. Insert record with None value
+    //           3. Verify None value retrieval
+    //           4. Update record with Some value
+    //           5. Verify Some value retrieval
+    // @tc.expect: None and Some values are correctly stored and retrieved
+    // @tc.type: FUNC
+    // @tc.require: issues#ICN31I
     #[test]
     fn ut_database_option() {
         const TEST_STRING: &str = "TEST";
