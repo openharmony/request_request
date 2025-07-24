@@ -789,6 +789,162 @@ export default function RequestUploadFileTest() {
     })
 
     /**
+     * @tc.number: testUploadFiles006
+     * @tc.name: testUploadFiles006
+     * @tc.desc: Test upload when file name is empty
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadFiles006', 0, function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        url: 'http://127.0.0.1',
+        header: {
+          'Accept': '*/*'
+        },
+        method: 'POST',
+        data: [RequestData],
+        files: [
+          {
+            filename: '',
+            name: 'test',
+            uri: 'internal://cache/test.txt',
+            type: 'txt'
+          }
+        ]
+      };
+      try {
+        request.uploadFile(context, conf, (data) => {
+          expect(true).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadFiles007
+     * @tc.name: testUploadFiles007
+     * @tc.desc: Test upload when file is lack of name
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadFiles007', 0, function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        url: 'http://127.0.0.1',
+        header: {
+          'Accept': '*/*'
+        },
+        method: 'POST',
+        data: [RequestData],
+        files: [
+          {
+            filename: 'test',
+            name: '',
+            uri: 'internal://cache/test.txt',
+            type: 'txt'
+          }
+        ]
+      };
+      try {
+        request.uploadFile(context, conf, (data) => {
+          expect(true).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadFiles008
+     * @tc.name: testUploadFiles008
+     * @tc.desc: Test upload when name is empty
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadFiles008', 0, function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        url: 'http://127.0.0.1',
+        header: {
+          'Accept': '*/*'
+        },
+        method: 'POST',
+        data: [RequestData],
+        files: [
+          {
+            filename: 'test',
+            name: '',
+            uri: 'internal://cache/test.txt',
+            type: 'txt'
+          }
+        ]
+      };
+      try {
+        request.uploadFile(context, conf, (data) => {
+          expect(true).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testUploadFiles009
+     * @tc.name: testUploadFiles009
+     * @tc.desc: Test upload when uri is not in internal://cache/
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testUploadFiles009', 0, function (done) {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf = {
+        url: 'http://127.0.0.1',
+        header: {
+          'Accept': '*/*'
+        },
+        method: 'POST',
+        data: [RequestData],
+        files: [
+          {
+            filename: 'test',
+            name: 'test',
+            uri: 'internal://test/test.txt',
+            type: 'txt'
+          }
+        ]
+      };
+      try {
+        request.uploadFile(context, conf, (data) => {
+          expect(false).assertTrue();
+          done();
+        })
+      } catch (err) {
+        expect(true).assertTrue();
+        done();
+      }
+    })
+
+    /**
      * @tc.number: testUploadData001
      * @tc.name: testUploadData001
      * @tc.desc: Test upload when lack data

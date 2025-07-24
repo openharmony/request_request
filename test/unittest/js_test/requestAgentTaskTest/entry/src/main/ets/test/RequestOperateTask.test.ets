@@ -17,6 +17,7 @@
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from "@ohos/hypium";
 import request from '@ohos.request';
 import fs from '@ohos.file.fs';
+import commonEvent from '@ohos.commonEventManager';
 
 export default function requestOperateTaskTest() {
   describe('requestOperateTaskTest', function () {
@@ -3897,6 +3898,98 @@ export default function requestOperateTaskTest() {
         expect(false).assertTrue();
         done();
       }
+    })
+
+    /**
+     * @tc.number: testTaskBroadcastEvent001
+     * @tc.name: testTaskBroadcastEvent001
+     * @tc.desc: Test downloadtTask for broadcast event when success
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskBroadcastEvent001', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskBroadcastEvent001.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      try {
+        await task.start();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+      let subscriberCallback = (err: BusinessError, data: commonEvent.CommonEventData) => {
+        try {
+          commonEvent.unsubscribe(subscriber, unSubscriberCallback);
+          expect(data.code).assertEqual(64);
+          done();
+        } catch (err) {
+          expect(false).assertTrue();
+          done();
+        }
+      }
+      let unSubscriberCallback = (err: BusinessError) => {
+        if (err) {
+          expect(false).assertTrue();
+          done();
+        }
+      }
+      let commonEventSubscribeInfo: commonEvent.CommonEventSubscribeInfo = {
+        events: [request.agent.BroadcastEvent.COMPLETE]
+      }
+      let subscriber: commonEvent.CommonEventSubscriber = await commonEvent.createSubscriber(commonEventSubscribeInfo);
+      await commonEvent.subscribe(subscriber, subscriberCallback);
+    })
+
+    /**
+     * @tc.number: testTaskBroadcastEvent002
+     * @tc.name: testTaskBroadcastEvent002
+     * @tc.desc: Test downloadtTask for broadcast event when failed
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskBroadcastEvent002', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.mp3',
+        saveas: 'testTaskBroadcastEvent002.txt',
+        mode: request.agent.Mode.BACKGROUND
+      }
+      let task = await request.agent.create(context, conf);
+      try {
+        await task.start();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+      let subscriberCallback = (err: BusinessError, data: commonEvent.CommonEventData) => {
+        try {
+          commonEvent.unsubscribe(subscriber, unSubscriberCallback);
+          expect(data.code).assertEqual(65);
+          done();
+        } catch (err) {
+          expect(false).assertTrue();
+          done();
+        }
+      }
+      let unSubscriberCallback = (err: BusinessError) => {
+        if (err) {
+          expect(false).assertTrue();
+          done();
+        }
+      }
+      let commonEventSubscribeInfo: commonEvent.CommonEventSubscribeInfo = {
+        events: [request.agent.BroadcastEvent.COMPLETE]
+      }
+      let subscriber: commonEvent.CommonEventSubscriber = await commonEvent.createSubscriber(commonEventSubscribeInfo);
+      await commonEvent.subscribe(subscriber, subscriberCallback);
     })
   })
 }

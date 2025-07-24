@@ -350,6 +350,58 @@ export default function requestDownloadFileTest() {
     })
 
     /**
+     * @tc.number: testDownloadFile004
+     * @tc.name: testDownloadFile004
+     * @tc.desc: Test create for downloadfile when networkType is NETWORK_WIFI
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadFile004', 0, async function (done) {
+      let conf = {
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFile004.txt',
+        networkType: request.NETWORK_WIFI
+      }
+      try {
+        let task = await request.downloadFile(context, conf);
+        expect(true).assertTrue();
+        await task.delete();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.number: testDownloadFile005
+     * @tc.name: testDownloadFile005
+     * @tc.desc: Test create for downloadfile when networkType is NETWORK_MOBILE
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testDownloadFile005', 0, async function (done) {
+      let conf = {
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFile005.txt',
+        networkType: request.NETWORK_MOBILE
+      }
+      try {
+        let task = await request.downloadFile(context, conf);
+        expect(true).assertTrue();
+        await task.delete();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    })
+
+    /**
      * @tc.number: testDownloadFilePath0001
      * @tc.name: testDownloadFilePath0001
      * @tc.desc: Test create for downloadfile correctly for callback

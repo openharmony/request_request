@@ -2225,6 +2225,31 @@ export default function requestCreateTaskTest() {
       })
     })
 
+     /**
+     * @tc.number: testTaskNetwork010
+     * @tc.name: testTaskNetwork010
+     * @tc.desc: Test create task when network is empty
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskNetwork010', 0, async function (done) {
+      let conf = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskNetwork010.txt'
+      }
+      request.agent.create(context, conf).then(async (data) => {
+        expect(true).assertTrue();
+        await request.agent.remove(data.tid);
+        done();
+      }).catch((err) => {
+        expect(false).assertTrue();
+        done();
+      })
+    })
+
     
 
     /**
