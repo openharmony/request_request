@@ -144,7 +144,13 @@ impl NotificationDispatcher {
             action: task.action(),
             task_id: task.task_id(),
             uid: task.uid(),
-            file_name: task.conf.file_specs[0].file_name.clone(),
+            file_name: match task.conf.file_specs.first() {
+                Some(spec) => spec.file_name.clone(),
+                None => {
+                    error!("Failed to get the first file_spec from an empty vector in TaskConfig");
+                    String::new()
+                }
+            },
             processed: progress.common_data.total_processed as u64,
             total,
             multi_upload,
@@ -165,7 +171,13 @@ impl NotificationDispatcher {
             task_id: info.common_data.task_id,
             processed: info.progress.common_data.total_processed as u64,
             uid: info.uid(),
-            file_name: info.file_specs[0].file_name.clone(),
+            file_name: match info.file_specs.first() {
+                Some(spec) => spec.file_name.clone(),
+                None => {
+                    error!("Failed to get the first file_spec from an empty vector in TaskInfo");
+                    String::new()
+                }
+            },
             is_successful: true,
         };
         let _ = self.flow.send(NotifyInfo::Eventual(notify));
@@ -184,7 +196,13 @@ impl NotificationDispatcher {
             task_id: info.common_data.task_id,
             processed: info.progress.common_data.total_processed as u64,
             uid: info.uid(),
-            file_name: info.file_specs[0].file_name.clone(),
+            file_name: match info.file_specs.first() {
+                Some(spec) => spec.file_name.clone(),
+                None => {
+                    error!("Failed to get the first file_spec from an empty vector in TaskInfo");
+                    String::new()
+                }
+            },
             is_successful: false,
         };
         let _ = self.flow.send(NotifyInfo::Eventual(notify));

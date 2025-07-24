@@ -433,7 +433,14 @@ impl RequestTask {
             match len.parse::<i64>() {
                 Ok(v) => {
                     let mut progress = self.progress.lock().unwrap();
-                    progress.sizes = vec![v + progress.processed[0] as i64];
+                    progress.sizes =
+                        vec![v + progress.processed.first().map_or_else(
+                        || {
+                            error!("Failed to get a process size from an empty vector in Progress");
+                            Default::default()
+                        },
+                        |x| *x as i64,
+                    )];
                     self.file_total_size.store(v, Ordering::SeqCst);
                     debug!("the download task content-length is {}", v);
                 }
