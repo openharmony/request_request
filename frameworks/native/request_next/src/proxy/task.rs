@@ -29,6 +29,7 @@ impl RequestProxy {
 
         data.write(&false).unwrap();
         data.write(&false).unwrap();
+        data.write(&false).unwrap();
 
         let mut reply = remote
             .send_request(interface::CONSTRUCT, &mut data)
