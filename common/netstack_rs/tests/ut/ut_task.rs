@@ -389,10 +389,11 @@ fn ut_request_task_reset_range() {
         std::thread::sleep(std::time::Duration::from_millis(100));
     }
     task.reset();
+    let part_size = total.load(Ordering::SeqCst);
     while !finished.load(Ordering::SeqCst) {
         std::thread::sleep(std::time::Duration::from_millis(100));
     }
-    assert_eq!(total.load(Ordering::SeqCst), LENGTH);
+    assert_eq!(total.load(Ordering::SeqCst), LENGTH + part_size);
     assert!(!failed.load(Ordering::SeqCst));
 }
 
