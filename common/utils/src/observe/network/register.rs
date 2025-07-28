@@ -15,7 +15,7 @@ use std::sync::{Arc, Mutex};
 
 use cxx::UniquePtr;
 #[cfg(test)]
-use test::RegisterNetObserver;
+use ut_register::RegisterNetObserver;
 
 use super::wrapper::ffi::NetUnregistration;
 #[cfg(not(test))]
@@ -86,72 +86,6 @@ pub enum NetUnregisterError {
 }
 
 #[cfg(test)]
-mod test {
-    use super::*;
-    use crate::observe::network::{NetBearType, NetCap, NetInfo};
-    const TEST_NET_ID: i32 = 100;
-
-    #[allow(non_snake_case, clippy::boxed_local)]
-    pub fn RegisterNetObserver(
-        wrapper: Box<NetObserverWrapper>,
-        error: &mut i32,
-    ) -> UniquePtr<NetUnregistration> {
-        wrapper.net_available(TEST_NET_ID);
-        wrapper.net_lost(TEST_NET_ID);
-        wrapper.net_capability_changed(
-            TEST_NET_ID,
-            NetInfo {
-                caps: vec![NetCap::NET_CAPABILITY_INTERNET],
-                bear_types: vec![NetBearType::BEARER_WIFI],
-            },
-        );
-        *error = 0;
-        UniquePtr::null()
-    }
-
-    struct TestObserver;
-
-    impl Observer for TestObserver {
-        fn net_available(&self, net_id: i32) {
-            assert_eq!(net_id, TEST_NET_ID);
-        }
-        fn net_lost(&self, net_id: i32) {
-            assert_eq!(net_id, TEST_NET_ID);
-        }
-        fn net_capability_changed(&self, net_id: i32, net_info: &NetInfo) {
-            assert_eq!(net_id, TEST_NET_ID);
-            assert_eq!(net_info.caps, vec![NetCap::NET_CAPABILITY_INTERNET]);
-            assert_eq!(net_info.bear_types, vec![NetBearType::BEARER_WIFI]);
-        }
-    }
-
-    // @tc.name: ut_net_observer_callback
-    // @tc.desc: Test network observer callback functions
-    // @tc.precon: NA
-    // @tc.step: 1. Create NetRegistrar instance
-    //           2. Add multiple TestObserver instances
-    //           3. Call register method
-    //           4. Verify callback assertions
-    // @tc.expect: All observer callbacks receive correct network events
-    // @tc.type: FUNC
-    // @tc.require: issue#ICN31I
-    // @tc.level: level1
-    #[test]
-    fn ut_net_observer_callback() {
-        let registrar = NetRegistrar::new();
-        for _ in 0..10 {
-            let observer = TestObserver;
-            registrar.add_observer(observer);
-        }
-        assert_eq!(
-            registrar.register(),
-            Err(NetRegisterError::RegisterFailed(0))
-        );
-        let observer = TestObserver;
-        registrar.add_observer(observer);
-        assert_eq!(
-            registrar.register(),
-            Err(NetRegisterError::RegisterFailed(0))
-        );
-    }
+mod ut_register {
+    include!("../../../tests/ut/observe/network/ut_register.rs");
 }
