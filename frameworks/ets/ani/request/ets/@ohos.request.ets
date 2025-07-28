@@ -663,7 +663,7 @@ export default namespace request {
     }
 
     readonly tid: string;
-    
+
     config: Config;
 
     native startSync(): void;
@@ -687,8 +687,8 @@ export default namespace request {
 
     start(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            taskpool.execute((): undefined => {
-              return this.startSync();
+            taskpool.execute(() => {
+                this.startSync();
             }).then((content: NullishType) => {
                 resolve(undefined);
             }, (err: Error): void => {
@@ -711,8 +711,8 @@ export default namespace request {
     }
     pause(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            taskpool.execute((): undefined => {
-              return this.pauseSync();
+            taskpool.execute(() => {
+                this.pauseSync();
             }).then((content: NullishType) => {
                 resolve(undefined);
             }, (err: Error): void => {
@@ -735,8 +735,8 @@ export default namespace request {
     }
     resume(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            taskpool.execute((): undefined => {
-              return this.resumeSync();
+            taskpool.execute(() => {
+                this.resumeSync();
             }).then((content: NullishType) => {
                 resolve(undefined);
             }, (err: Error): void => {
@@ -759,8 +759,8 @@ export default namespace request {
     }
     stop(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            taskpool.execute((): undefined => {
-              return this.stopSync();
+            taskpool.execute(() => {
+                this.stopSync();
             }).then((content: NullishType) => {
                 resolve(undefined);
             }, (err: Error): void => {
@@ -773,8 +773,8 @@ export default namespace request {
 
     setMaxSpeed(speed: long): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            taskpool.execute((): undefined => {
-              return this.setMaxSpeedSync(speed);
+            taskpool.execute(() => {
+                this.setMaxSpeedSync(speed);
             }).then((content: NullishType) => {
                 resolve(undefined);
             }, (err: Error): void => {
