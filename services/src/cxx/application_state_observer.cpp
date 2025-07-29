@@ -88,7 +88,7 @@ void AppProcessState::RegisterProcessDied(ProcessCallBack &&callback)
 
 void AppProcessState::OnAppStateChanged(const AppExecFwk::AppStateData &appStateData)
 {
-    REQUEST_HILOGD("OnAppStateChanged uid=%{public}d, bundleName=%{public}s,state=%{public}d", appStateData.uid,
+    REQUEST_HILOGI("OnAppStateChanged uid=%{public}d, bundleName=%{public}s,state=%{public}d", appStateData.uid,
         appStateData.bundleName.c_str(), appStateData.state);
     RunAppStateCallback(appStateData.uid, appStateData.state, appStateData.pid);
 }

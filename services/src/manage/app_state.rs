@@ -48,6 +48,8 @@ impl AppStateListener {
                 RegisterAPPStateCallback(app_state_change_callback);
                 RegisterProcessDiedCallback(process_died_callback);
             }
+        } else {
+            error!("ONCE not completed");
         }
     }
 }

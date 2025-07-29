@@ -60,9 +60,12 @@ impl Handler {
                 if res != 0 {
                     error!("Get top uid failed, res: {}", res);
                     std::thread::sleep(Duration::from_millis(500));
+                } else {
+                    break;
                 }
             }
         }
+        info!("foreground_abilities: {:?}", foreground_abilities);
         let foreground_abilities = if foreground_abilities.is_empty() {
             None
         } else {
