@@ -15,7 +15,7 @@ use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 
-use cxx::{let_cxx_string, SharedPtr};
+use cxx::SharedPtr;
 use ffi::{
     GetPerformanceInfo, GetResolvConf, HttpClientRequest, HttpClientTask, NewHttpClientTask,
     OnCallback,
@@ -117,7 +117,7 @@ impl CallbackWrapper {
             return;
         };
 
-        let (new_task, mut new_callback) = match self.create_new_task(callback, request, response) {
+        let (new_task, mut new_callback) = match self.create_new_task(callback, request) {
             NewTaskResult::Success(new_task, new_callback) => (new_task, new_callback),
             NewTaskResult::Failed(mut callback) => {
                 callback.on_fail(error);
@@ -148,13 +148,13 @@ impl CallbackWrapper {
         });
     }
 
-    fn on_cancel(&mut self, request: &HttpClientRequest, response: &ffi::HttpClientResponse) {
+    fn on_cancel(&mut self, request: &HttpClientRequest, _response: &ffi::HttpClientResponse) {
         let Some(mut callback) = self.inner.take() else {
             return;
         };
 
         if self.reset.load(Ordering::SeqCst) {
-            let (new_task, new_callback) = match self.create_new_task(callback, request, response) {
+            let (new_task, new_callback) = match self.create_new_task(callback, request) {
                 NewTaskResult::Success(new_task, new_callback) => (new_task, new_callback),
                 NewTaskResult::Failed(mut callback) => {
                     callback.on_cancel();
@@ -194,9 +194,8 @@ impl CallbackWrapper {
         &mut self,
         mut callback: Box<dyn RequestCallback>,
         request: &HttpClientRequest,
-        response: &ffi::HttpClientResponse,
     ) -> NewTaskResult {
-        if self.current > 0 && !set_range(request, response, &mut self.current) {
+        if self.current > 0 {
             callback.on_restart();
         }
 
@@ -211,7 +210,7 @@ impl CallbackWrapper {
             self.task.clone(),
             self.task_id.clone(),
             self.info_mgr.clone(),
-            self.current,
+            0,
         ));
         NewTaskResult::Success(new_task, new_callback)
     }
@@ -225,45 +224,6 @@ impl CallbackWrapper {
         // the caller cannot perceive
         RequestTask::pin_mut(&task).Start();
     }
-}
-
-fn set_range(
-    request: &HttpClientRequest,
-    response: &ffi::HttpClientResponse,
-    current: &mut u64,
-) -> bool {
-    let response = Response::from_ffi(response);
-    let headers = response.headers();
-    let ptr = request as *const HttpClientRequest as *mut HttpClientRequest;
-    let mut support_range = false;
-
-    if let Some(etag) = headers.get("etag") {
-        let_cxx_string!(key = "If-Range");
-        let_cxx_string!(val = etag);
-        unsafe {
-            Pin::new_unchecked(ptr.as_mut().unwrap()).SetHeader(&key, &val);
-        }
-        support_range = true;
-    } else if let Some(last_modified) = headers.get("last-modified") {
-        let_cxx_string!(key = "If-Range");
-        let_cxx_string!(val = last_modified);
-        unsafe {
-            Pin::new_unchecked(ptr.as_mut().unwrap()).SetHeader(&key, &val);
-        }
-        support_range = true;
-    }
-
-    if support_range {
-        let_cxx_string!(key = "Range");
-        let bytes = format!("bytes={}-", current);
-        let_cxx_string!(val = bytes);
-        unsafe {
-            Pin::new_unchecked(ptr.as_mut().unwrap()).SetHeader(&key, &val);
-        }
-    } else {
-        *current = 0;
-    }
-    support_range
 }
 
 unsafe impl Send for HttpClientTask {}
