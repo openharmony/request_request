@@ -18,7 +18,7 @@ use crate::config::Mode;
 use crate::error::ErrorCode;
 use crate::manage::events::TaskManagerEvent;
 use crate::service::command::{set_code_with_index_other, CONSTRUCT_MAX};
-use crate::service::notification_bar::NotificationDispatcher;
+use crate::service::notification_bar::{NotificationConfig, NotificationDispatcher};
 use crate::service::permission::PermissionChecker;
 use crate::service::RequestServiceStub;
 use crate::task::config::TaskConfig;
@@ -27,8 +27,8 @@ use crate::utils::{check_permission, is_system_api};
 impl RequestServiceStub {
     pub(crate) fn construct(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
         info!("Service construct");
-        let permission = PermissionChecker::check_down_permission();
-        if !PermissionChecker::check_internet() && !permission {
+        let download_permission = PermissionChecker::check_down_permission();
+        if !PermissionChecker::check_internet() && !download_permission {
             error!("Service start: no INTERNET permission.");
             sys_event!(
                 ExecError,
@@ -52,14 +52,33 @@ impl RequestServiceStub {
         let pid = ipc::Skeleton::calling_pid();
         let mut vec = vec![(ErrorCode::Other, 0u32); len];
 
+        let is_system_api = is_system_api();
+        let notification_permission =
+            check_permission("ohos.permission.REQUEST_DISABLE_NOTIFICATION");
+
         for i in 0..len {
-            let task_config: TaskConfig = match data.read() {
+            // You can continue only after reading everything.
+            let task_config = data.read::<TaskConfig>();
+            let notification_config = data.read::<NotificationConfig>();
+
+            let task_config = match task_config {
                 Ok(config) => config,
-                Err(_e) => {
-                    set_code_with_index_other(&mut vec, i, ErrorCode::IpcSizeTooLarge);
+                Err(e) => {
+                    set_code_with_index_other(&mut vec, i, ErrorCode::ParameterCheck);
+                    error!("task_config read err, {}, {}", i, e);
                     continue;
                 }
             };
+
+            let mut notification_config = match notification_config {
+                Ok(config) => config,
+                Err(e) => {
+                    set_code_with_index_other(&mut vec, i, ErrorCode::ParameterCheck);
+                    error!("notification_config read err, {}, {}", i, e);
+                    continue;
+                }
+            };
+
             debug!("Service construct: task_config constructed");
             let mode = task_config.common_data.mode;
             let (event, rx) = TaskManagerEvent::construct(task_config);
@@ -95,24 +114,15 @@ impl RequestServiceStub {
                 }
             };
 
-            let title = if data.read::<bool>()? {
-                Some(data.read::<String>()?)
-            } else {
-                None
-            };
-
-            let text = if data.read::<bool>()? {
-                Some(data.read::<String>()?)
-            } else {
-                None
-            };
-            if title.is_some() || text.is_some() {
+            notification_config.task_id = task_id;
+            if notification_config.title.is_some() || notification_config.text.is_some() {
                 NotificationDispatcher::get_instance()
-                    .update_task_customized_notification(task_id, title, text);
+                    .update_task_customized_notification(&notification_config);
             }
-            let notification_disable = data.read::<bool>()? && is_system_api();
-            if notification_disable {
-                if !check_permission("ohos.permission.REQUEST_DISABLE_NOTIFICATION") {
+
+            if notification_config.disable && is_system_api {
+                if !notification_permission {
+                    error!("End Service construct, notify permission: {}", task_id);
                     if let Some((c, tid)) = vec.get_mut(i) {
                         *c = ErrorCode::Permission;
                         *tid = task_id;

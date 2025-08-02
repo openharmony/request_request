@@ -867,9 +867,9 @@ ExceptionErrorCode RequestAction::CreateTasks(std::vector<TaskBuilder> &builders
                 ++ret_index;
                 continue;
             }
-            rets[ret_index] = temp_rets[ret_index];
+            rets[ret_index] = temp_rets[temp_index];
             if (rets[ret_index].code == ExceptionErrorCode::E_OK) {
-                taskMap_[rets[ret_index].tid] = configs[ret_index];
+                taskMap_[rets[ret_index].tid] = configs[temp_index];
             }
             ++ret_index;
             ++temp_index;

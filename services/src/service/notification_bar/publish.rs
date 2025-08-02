@@ -22,7 +22,9 @@ use super::database::NotificationDb;
 use super::notify_flow::{EventualNotify, NotifyFlow, NotifyInfo, ProgressNotify};
 use super::task_handle::{cancel_notification, NotificationCheck};
 use crate::info::TaskInfo;
+use crate::service::notification_bar::NotificationConfig;
 use crate::task::request_task::RequestTask;
+use crate::utils::get_current_duration;
 
 pub(crate) const NOTIFY_PROGRESS_INTERVAL: u64 = 500;
 
@@ -69,14 +71,8 @@ impl NotificationDispatcher {
         }
     }
 
-    pub(crate) fn update_task_customized_notification(
-        &self,
-        task_id: u32,
-        title: Option<String>,
-        text: Option<String>,
-    ) {
-        self.database
-            .update_task_customized_notification(task_id, title, text);
+    pub(crate) fn update_task_customized_notification(&self, config: &NotificationConfig) {
+        self.database.update_task_customized_notification(config);
     }
 
     pub(crate) fn check_task_notification_available(&self, task_id: u32) -> bool {
@@ -262,10 +258,7 @@ impl NotificationDispatcher {
             new_group_id, gauge, title, text, disable
         );
 
-        let current_time = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as u64;
+        let current_time = get_current_duration().as_millis() as u64;
         self.database
             .update_group_config(new_group_id, gauge, current_time, !disable);
         if title.is_some() || text.is_some() {

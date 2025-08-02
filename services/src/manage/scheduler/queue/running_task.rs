@@ -14,7 +14,6 @@
 use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::config::Mode;
 use crate::manage::database::RequestDb;
@@ -28,6 +27,7 @@ use crate::task::download::download;
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::task::upload::upload;
+use crate::utils::get_current_duration;
 
 pub(crate) struct RunningTask {
     task: Arc<RequestTask>,
@@ -68,11 +68,7 @@ impl Deref for RunningTask {
 
 impl Drop for RunningTask {
     fn drop(&mut self) {
-        let task_end_time = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs() as u64;
-
+        let task_end_time = get_current_duration().as_secs();
         let start_time = self.task.start_time.load(Ordering::SeqCst);
         self.task.start_time.store(task_end_time, Ordering::SeqCst);
         let total_task_time = self.task.task_time.load(Ordering::SeqCst);

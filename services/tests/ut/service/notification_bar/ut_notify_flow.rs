@@ -14,6 +14,7 @@
 use ylong_runtime::fastrand::fast_random;
 
 use super::*;
+use crate::service::notification_bar::NotificationConfig;
 
 const TEST_TITLE: &str = "test_title";
 const TEST_TEXT: &str = "test_text";
@@ -163,11 +164,13 @@ fn ut_customized_task_eventual() {
         file_name: "test".to_string(),
         is_successful: false,
     };
-    db.update_task_customized_notification(
+    let config = NotificationConfig::new(
         task_id,
         Some(TEST_TITLE.to_string()),
         Some(TEST_TEXT.to_string()),
+        false,
     );
+    db.update_task_customized_notification(&config);
 
     let customized = db.query_task_customized_notification(task_id);
     let content_default = NotifyContent::task_eventual_notify(
