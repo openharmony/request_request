@@ -105,7 +105,7 @@ pub fn on_event(
         }
     } else {
         return Err(BusinessError::new(
-            -1,
+            401,
             format!("Unsupported event type: {}", event),
         ));
     };
