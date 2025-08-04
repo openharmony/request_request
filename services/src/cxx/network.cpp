@@ -221,7 +221,7 @@ bool RequestNetCallbackStub::IsRoaming()
         REQUEST_HILOGE("networkState is nullptr");
         return false;
     }
-    REQUEST_HILOGI("Roaming = %{public}d", networkClient->IsRoaming());
+    REQUEST_HILOGD("Roaming = %{public}d", networkClient->IsRoaming());
     return networkClient->IsRoaming();
 #else
     REQUEST_HILOGE("Telephony SA not found");
