@@ -59,7 +59,7 @@ impl Drop for FileCache {
         fn drop_inner(me: &mut FileCache) -> Result<(), io::Error> {
             let path = FileCache::path(&me.task_id);
             let metadata = fs::metadata(&path)?;
-            info!(
+            debug!(
                 "try drop file cache {} for task {}",
                 metadata.len(),
                 me.task_id.brief()
@@ -122,7 +122,6 @@ impl FileCache {
             handle.file_handle.lock().unwrap().release(size as u64);
             return None;
         }
-        info!("apply file cache for task {} success", task_id.brief());
         Some(Self { task_id, handle })
     }
 
@@ -265,7 +264,7 @@ impl CacheManager {
 
         let mut ret = None;
         let res = once.get_or_init(|| {
-            info!("{} ram updated from file", task_id.brief());
+            debug!("{} ram updated from file", task_id.brief());
             let mut file = self
                 .files
                 .lock()

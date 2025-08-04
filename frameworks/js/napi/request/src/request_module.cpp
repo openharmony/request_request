@@ -142,7 +142,11 @@ static napi_value InitAgent(napi_env env, napi_value exports)
         DECLARE_NAPI_METHOD("deleteGroup", deleteGroup),
     };
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
-    REQUEST_HILOGI("InitV10 end %{public}d", status);
+    if (status != napi_ok) {
+        REQUEST_HILOGE("InitV10 end %{public}d", status);
+    } else {
+        REQUEST_HILOGD("InitV10 end %{public}d", status);
+    }
     return exports;
 }
 

@@ -137,7 +137,7 @@ impl NotificationDb {
                 continue;
             }
 
-            info!(
+            debug!(
                 "clear group {} info for have been overdue for more than a week.",
                 group_id
             );

@@ -66,7 +66,7 @@ pub(crate) fn clear_database_part(pre_count: usize) -> Result<bool, ()> {
     }
 
     for task_id in task_ids {
-        info!(
+        debug!(
             "clear {} info for have been overdue for more than a week.",
             task_id
         );
