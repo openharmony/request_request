@@ -19,6 +19,7 @@ use ani_rs::business_error::BusinessError;
 use ani_rs::objects::{AniObject, AniRef};
 use ani_rs::AniEnv;
 use request_client::RequestClient;
+use request_client::client::error::CreateTaskError;
 use request_core::config::Version;
 use request_core::info::TaskInfo;
 use request_utils::context::{is_stage_context, Context};
@@ -50,7 +51,7 @@ pub fn download_file(
         }
     };
 
-    let task = match RequestClient::get_instance().crate_task(
+    let task = match RequestClient::get_instance().create_task(
         context,
         Version::API9,
         config.into(),
@@ -58,8 +59,17 @@ pub fn download_file(
         false,
     ) {
         Ok(task_id) => DownloadTask { task_id },
-        Err(e) => {
-            return Err(BusinessError::new(-1, format!("Download failed")));
+        Err(CreateTaskError::DownloadPath(_)) => {
+            return Err(BusinessError::new(
+                13400001,
+                "Invalid file or file system error.".to_string(),
+            ))
+        }
+        Err(CreateTaskError::Code(code)) => {
+            return Err(BusinessError::new(
+                code,
+                "Download failed.".to_string(),
+            ))
         }
     };
 

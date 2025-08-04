@@ -47,7 +47,7 @@ impl<'a> RequestClient<'a> {
         })
     }
 
-    pub fn crate_task(
+    pub fn create_task(
         &self,
         context: Context,
         version: Version,

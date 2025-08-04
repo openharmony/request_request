@@ -45,7 +45,7 @@ pub fn create(env: &AniEnv, context: AniRef, config: Config) -> Result<Task, Bus
 
     info!("Creating task with config: {:?}", overwrite);
 
-    match RequestClient::get_instance().crate_task(
+    match RequestClient::get_instance().create_task(
         context,
         Version::API10,
         config.into(),
@@ -83,7 +83,7 @@ pub fn get_task(
 pub fn remove(id: String) -> Result<(), BusinessError> {
     let task_id = id
         .parse::<i64>()
-        .map_err(|_| BusinessError::new(-1, "Invalid task ID format".to_string()))?;
+        .map_err(|_| BusinessError::new(401, "Invalid task ID format".to_string()))?;
     RequestClient::get_instance()
         .remove(task_id)
         .map_err(|e| BusinessError::new_static(e, "Failed to remove task"))
