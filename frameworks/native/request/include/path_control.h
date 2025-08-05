@@ -27,6 +27,8 @@ public:
     static bool AddPathsToMap(const std::string &path);
     static bool SubPathsToMap(const std::string &path);
     static bool CheckBelongAppBaseDir(const std::string &filepath);
+    static void InsureMapAcl();
+    static std::string ShieldPath(const std::string &path);
 
 private:
 };

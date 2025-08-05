@@ -15,6 +15,7 @@
 
 #include "path_control.h"
 
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -99,7 +100,7 @@ bool AddAcl(const std::string &path, const bool isFile)
         entry = SA_PERMISSION_G_X;
     }
     if (StorageDaemon::AclSetAccess(path, entry) != ACL_SUCC) {
-        REQUEST_HILOGE("Add Acl Failed");
+        REQUEST_HILOGE("Add Acl Failed, %{public}s", PathControl::ShieldPath(path).c_str());
         return false;
     };
     return true;
@@ -114,7 +115,7 @@ bool SubAcl(const std::string &path, const bool isFile)
         entry = SA_PERMISSION_G_CLEAN;
     }
     if (StorageDaemon::AclSetAccess(path, entry) != ACL_SUCC) {
-        REQUEST_HILOGE("Sub Acl Failed");
+        REQUEST_HILOGE("Sub Acl Failed, %{public}s", PathControl::ShieldPath(path).c_str());
         return false;
     };
     return true;
@@ -142,7 +143,7 @@ bool SubOnePathToMap(const std::string &path, const bool isFile)
     std::lock_guard<std::mutex> lockGuard(pathMutex_);
     auto it = pathMap_.find(path);
     if (it == pathMap_.end()) {
-        REQUEST_HILOGE("SubOnePathToMap no path");
+        REQUEST_HILOGE("SubOnePathToMap no path, %{puiblic}s", PathControl::ShieldPath(path).c_str());
         return false;
     }
     auto &[iFile, count] = it->second;
@@ -152,7 +153,7 @@ bool SubOnePathToMap(const std::string &path, const bool isFile)
     }
 
     if (iFile != isFile) {
-        REQUEST_HILOGE("SubOnePathToMap path changed");
+        REQUEST_HILOGE("SubOnePathToMap path changed, %{puiblic}s", PathControl::ShieldPath(path).c_str());
     }
     if (!SubAcl(path, isFile)) {
         return false;
@@ -195,5 +196,45 @@ bool PathControl::SubPathsToMap(const std::string &path)
         return false;
     }
     return SubPathsVec(paths);
+}
+
+void PathControl::InsureMapAcl()
+{
+    std::lock_guard<std::mutex> lockGuard(pathMutex_);
+    for (const auto &[key, value] : pathMap_) {
+        auto [isFile, count] = value;
+        if (count > 0) {
+            AddAcl(key, isFile);
+        }
+    }
+}
+
+// "abcde" -> "**cde"
+std::string ShieldStr(const std::string &s)
+{
+    if (s.empty()) {
+        return "";
+    }
+    size_t n = s.length();
+    size_t halfLen = n / 2;
+    return std::string(halfLen, '*') + s.substr(halfLen);
+}
+
+// "/ab/abcde" -> "/*b/**cde"
+std::string PathControl::ShieldPath(const std::string &path)
+{
+    std::istringstream iss(path);
+    std::string token;
+    std::string result;
+
+    while (std::getline(iss, token, '/')) {
+        if (token.empty()) {
+            continue;
+        }
+        result += '/';
+        result += ShieldStr(token);
+    }
+
+    return result;
 }
 } // namespace OHOS::Request

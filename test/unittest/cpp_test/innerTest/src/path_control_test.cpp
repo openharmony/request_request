@@ -104,3 +104,16 @@ HWTEST_F(PathControlTest, PathControlTest003, TestSize.Level1)
     bool res = PathControl::CheckBelongAppBaseDir(filepath);
     EXPECT_EQ(res, false);
 }
+
+/**
+ * @tc.name: PathControlTest004
+ * @tc.desc: Test PathControlTest004 interface base function - ShieldPath
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(PathControlTest, PathControlTest004, TestSize.Level1)
+{
+    std::string path = "/ab/abcde";
+    std::string res = PathControl::ShieldPath(path);
+    EXPECT_EQ(res, "/*b/**cde");
+}
