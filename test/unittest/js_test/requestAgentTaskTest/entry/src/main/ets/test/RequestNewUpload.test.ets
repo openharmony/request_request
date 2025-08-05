@@ -13,52 +13,48 @@
  * limitations under the License.
  */
 
-// @ts-nocheck
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from "@ohos/hypium"
 import request from '@ohos.request';
 import fs from '@ohos.file.fs';
 import Server from '../common/iTcpServer'
+import common from '@ohos.app.ability.common';
 
 export default function requestNewUploadTest() {
-  describe('requestNewUploadTest', function () {
-    beforeAll(function () {
+  describe('requestNewUploadTest', () => {
+    beforeAll(() => {
       console.info('beforeAll called');
-    })
-
-    afterAll(function () {
+    });
+    afterAll(() => {
       console.info('afterAll called');
-    })
-
-    beforeEach(function () {
+    });
+    beforeEach(() => {
       console.info('beforeEach called');
-    })
-
-    afterEach(async function () {
+    });
+    afterEach(async () => {
       console.info('afterEach called');
       if (fs.accessSync(cacheDir + '/test.txt')) {
         fs.unlinkSync(cacheDir + '/test.txt');
       }
-    })
+    });
 
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
+    let sleep: (ms: number) => Promise<void> = async (ms: number): Promise<void> => {
+      return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+      });
+    };
 
-    let context = globalThis.abilityContext;
-    let cacheDir = globalThis.cacheDir;
-
-    let RequestData = {
+    let context: common.UIAbilityContext = globalThis.abilityContext;
+    let cacheDir: String = globalThis.cacheDir;
+    let RequestData: request.RequestData = {
       name: 'name',
       value: '123'
-    }
-
-    let File = {
+    };
+    let File: request.File = {
       filename: 'test',
       name: 'test',
       uri: 'internal://cache/test.txt',
       type: 'txt'
-    }
-
+    };
     /**
      * @tc.number: testUploadUrl001
      * @tc.name: testUploadUrl001
@@ -68,12 +64,12 @@ export default function requestNewUploadTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testUploadUrl001', 0, function (done) {
+    it('testUploadUrl001', 0, (done: Function) => {
       console.log('===>test 1');
       new Server().serverStart();
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
-      let conf = {
+      let conf: request.UploadConfig = {
         url: 'http://127.0.0.1:8078',
         header: {
           'Accept': '*/*'
@@ -87,12 +83,11 @@ export default function requestNewUploadTest() {
           console.info("test success");
           expect(true).assertTrue();
           done();
-        })
+        });
       } catch (err) {
         expect(false).assertTrue();
         done();
       }
-    })
-
+    });
   })
 }

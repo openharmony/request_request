@@ -23,25 +23,26 @@ let iServer: socket.TCPSocketServer = socket.constructTCPSocketServerInstance();
 
 let connectCallback = (client: socket.TCPSocketConnection)=> {
   console.log('===>client on message');
+  let socketInfo = async (value: socket.SocketMessageInfo) => {
+    let messageRecv = '';
+    for (let i: number = 0; i < value.message.byteLength; i++) {
+      let uint8Array = new Uint8Array(value.message)
+      let messages = uint8Array[i]
+      let message = String.fromCharCode(messages);
+      messageRecv += message;
+    }
+    console.log('===>on message message: ' + JSON.stringify(messageRecv));
+    console.log('===>remoteInfo: ' + JSON.stringify(value.remoteInfo));
+
+    let resp = 'HTTP/1.1 200 OK\r\ncontent-length:10\r\n\r\nupload ok!'
+    let option: socket.TCPSendOptions = {
+      data: resp
+    }
+    await client.send(option)
+  };
   client.on('message', socketInfo);
 }
-let socketInfo = async (value: socket.SocketMessageInfo) => {
-  let messageRecv = '';
-  for (let i: number = 0; i < value.message.byteLength; i++) {
-    let uint8Array = new Uint8Array(value.message)
-    let messages = uint8Array[i]
-    let message = String.fromCharCode(messages);
-    messageRecv += message;
-  }
-  console.log('===>on message message: ' + JSON.stringify(messageRecv));
-  console.log('===>remoteInfo: ' + JSON.stringify(value.remoteInfo));
 
-  let resp = 'HTTP/1.1 200 OK\r\ncontent-length:10\r\n\r\nupload ok!'
-  let option: socket.TCPSendOptions = {
-    data: resp
-  }
-  await client.send(option)
-};
 
 export default class Server {
   async serverStart() {
