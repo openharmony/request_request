@@ -12,11 +12,13 @@
 // limitations under the License.
 
 mod database;
+mod notification_config;
 mod notify_flow;
 mod publish;
 mod task_handle;
 mod typology;
 
+pub(crate) use notification_config::NotificationConfig;
 pub use publish::NotificationDispatcher;
 pub(crate) use publish::NOTIFY_PROGRESS_INTERVAL;
 pub(crate) use task_handle::subscribe_notification_bar;

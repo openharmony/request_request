@@ -12,6 +12,7 @@
 // limitations under the License.
 
 use crate::database::REQUEST_DB;
+use crate::service::notification_bar::NotificationConfig;
 
 const CREATE_TASK_CONFIG_TABLE: &str =
     "CREATE TABLE IF NOT EXISTS task_config (task_id INTEGER PRIMARY KEY, display BOOLEAN)";
@@ -258,18 +259,13 @@ impl NotificationDb {
             .map(|(title, text)| CustomizedNotification { title, text })
     }
 
-    pub(crate) fn update_task_customized_notification(
-        &self,
-        task_id: u32,
-        title: Option<String>,
-        text: Option<String>,
-    ) {
+    pub(crate) fn update_task_customized_notification(&self, config: &NotificationConfig) {
         if let Err(e) = self.inner.execute(
             "INSERT INTO task_notification_content (task_id, title, text) VALUES (?, ?, ?) ON CONFLICT(task_id) DO UPDATE SET title = excluded.title, text = excluded.text",
-            (task_id, title, text),
+            (config.task_id, config.title.clone(), config.text.clone()),
         ) {
-            error!("Failed to insert {} notification: {}", task_id, e);
-            sys_event!(ExecFault, DfxCode::RDB_FAULT_04, &format!("Failed to insert {} notification: {}", task_id, e));
+            error!("Failed to insert {} notification: {}", config.task_id, e);
+            sys_event!(ExecFault, DfxCode::RDB_FAULT_04, &format!("Failed to insert {} notification: {}", config.task_id, e));
         }
     }
 

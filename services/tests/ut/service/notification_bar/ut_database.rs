@@ -81,12 +81,14 @@ fn ut_notify_database_query_task_gid() {
 fn ut_notify_database_query_task_customized() {
     let db = NotificationDb::new();
     let task_id = fast_random() as u32;
-
-    db.update_task_customized_notification(
+    let config = NotificationConfig::new(
         task_id,
         Some(TEST_TITLE.to_string()),
         Some(TEST_TEXT.to_string()),
+        false,
     );
+
+    db.update_task_customized_notification(&config);
     let customized = db.query_task_customized_notification(task_id).unwrap();
     assert_eq!(customized.title.unwrap(), TEST_TITLE);
     assert_eq!(customized.text.unwrap(), TEST_TEXT);
@@ -166,9 +168,10 @@ fn ut_clear_task_info() {
 
     let group_id = fast_random() as u32;
     let task_id = fast_random() as u32;
+    let config = NotificationConfig::new(task_id, None, None, true);
 
     db.disable_task_notification(task_id);
-    db.update_task_customized_notification(task_id, None, None);
+    db.update_task_customized_notification(&config);
     assert!(!db.check_task_notification_available(&task_id));
     assert!(db.query_task_customized_notification(task_id).is_some());
     db.clear_task_info(task_id);

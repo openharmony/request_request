@@ -17,7 +17,7 @@ use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::task::{Context, Poll};
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::time::Instant;
 
 use ylong_http_client::async_impl::{Body, MultiPart, Part, Request, UploadOperator, Uploader};
 use ylong_http_client::{ErrorKind, HttpClientError, ReusableReader, Timeout};
@@ -32,6 +32,7 @@ use crate::manage::database::RequestDb;
 use crate::task::request_task::RequestTask;
 #[cfg(feature = "oh")]
 use crate::trace::Trace;
+use crate::utils::get_current_duration;
 
 struct TaskReader {
     pub(crate) task: Arc<RequestTask>,
@@ -436,10 +437,7 @@ async fn upload_inner(
     let size = task.conf.file_specs.len();
     let start = task.progress.lock().unwrap().common_data.index;
 
-    let start_time = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs() as u64;
+    let start_time = get_current_duration().as_secs() as u64;
     task.start_time.store(start_time as u64, Ordering::SeqCst);
 
     if task.conf.common_data.multipart {

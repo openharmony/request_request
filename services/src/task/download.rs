@@ -16,7 +16,8 @@ use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::task::{Context, Poll};
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::time::Instant;
+
 use ylong_http_client::async_impl::{DownloadOperator, Downloader, Response};
 use ylong_http_client::{ErrorKind, HttpClientError, SpeedLimit, Timeout};
 
@@ -29,6 +30,7 @@ use crate::task::request_task::RequestTask;
 use crate::task::task_control;
 #[cfg(feature = "oh")]
 use crate::trace::Trace;
+use crate::utils::get_current_duration;
 
 const SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
 
@@ -129,10 +131,7 @@ pub(crate) async fn download_inner(
     info!("download task {} running", task.task_id());
 
     let request = RequestTask::build_download_request(task.clone()).await?;
-    let start_time = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs() as u64;
+    let start_time = get_current_duration().as_secs() as u64;
 
     task.start_time.store(start_time as u64, Ordering::SeqCst);
     let client = task.client.lock().await;

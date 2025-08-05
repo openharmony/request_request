@@ -18,7 +18,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::io::Write;
 use std::sync::Once;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 pub(crate) use common_event::{
     subscribe_common_event, CommonEventSubscriber, Want as CommonEventWant,
@@ -65,6 +65,13 @@ where
 pub(crate) fn get_current_timestamp() -> u64 {
     match SystemTime::now().duration_since(UNIX_EPOCH) {
         Ok(n) => n.as_millis() as u64,
+        Err(_) => panic!("SystemTime before UNIX EPOCH!"),
+    }
+}
+
+pub(crate) fn get_current_duration() -> Duration {
+    match SystemTime::now().duration_since(UNIX_EPOCH) {
+        Ok(dur) => dur,
         Err(_) => panic!("SystemTime before UNIX EPOCH!"),
     }
 }

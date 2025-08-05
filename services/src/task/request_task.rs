@@ -41,7 +41,7 @@ use crate::task::config::{Action, TaskConfig};
 use crate::task::files::{AttachedFiles, Files};
 use crate::task::task_control;
 use crate::utils::form_item::FileSpec;
-use crate::utils::get_current_timestamp;
+use crate::utils::{get_current_duration, get_current_timestamp};
 
 const RETRY_TIMES: u32 = 4;
 const RETRY_INTERVAL: u64 = 400;
@@ -190,7 +190,7 @@ impl RequestTask {
             upload_resume: AtomicBool::new(upload_resume),
             mode,
             status_code: AtomicI32::new(0),
-            start_time: AtomicU64::new(0),
+            start_time: AtomicU64::new(get_current_duration().as_secs()),
             task_time: AtomicU64::new(0),
             rest_time: AtomicU64::new(rest_time),
         }
@@ -261,7 +261,7 @@ impl RequestTask {
             upload_resume: AtomicBool::new(upload_resume),
             mode,
             status_code: AtomicI32::new(info.status_code),
-            start_time: AtomicU64::new(0),
+            start_time: AtomicU64::new(get_current_duration().as_secs()),
             task_time: AtomicU64::new(info.task_time),
             rest_time: AtomicU64::new(rest_time),
         };
