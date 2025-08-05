@@ -37,7 +37,6 @@ SysNetProxyManager &SysNetProxyManager::GetInstance()
 
 CStringWrapper SysNetProxyManager::GetHost()
 {
-    REQUEST_HILOGD("SysNetProxyManager::GetHost() is %{public}s", host_.c_str());
     return WrapperCString(host_);
 }
 CStringWrapper SysNetProxyManager::GetPort()
