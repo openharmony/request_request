@@ -72,9 +72,16 @@ void RequestManagerTest::TearDown(void)
 
 /**
  * @tc.name: CreateTest001
- * @tc.desc: Test CreateTest001 interface base function - Create
+ * @tc.desc: Test the basic functionality of the Create interface to create a new task
+ * @tc.precon: RequestManager instance is available and initialized
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare valid Config parameters
+ *           3. Set sequence number and task ID
+ *           4. Call Create method with parameters
+ * @tc.expect: Create method executes successfully without throwing exceptions
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, CreateTest001, TestSize.Level1)
 {
@@ -87,9 +94,16 @@ HWTEST_F(RequestManagerTest, CreateTest001, TestSize.Level1)
 
 /**
  * @tc.name: GetTaskTest001
- * @tc.desc: Test GetTaskTest001 interface base function - GetTask
+ * @tc.desc: Test the GetTask interface to retrieve task information by task ID and token
+ * @tc.precon: RequestManager instance is available and a task has been created
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Create a task with valid parameters
+ *           3. Prepare task ID and token strings
+ *           4. Call GetTask method with task ID and token
+ * @tc.expect: GetTask method returns successfully and populates the Config object
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, GetTaskTest001, TestSize.Level1)
 {
@@ -105,9 +119,15 @@ HWTEST_F(RequestManagerTest, GetTaskTest001, TestSize.Level1)
 
 /**
  * @tc.name: StartTest001
- * @tc.desc: Test StartTest001 interface base function - Start
+ * @tc.desc: Test the Start interface to begin task execution
+ * @tc.precon: RequestManager instance is available and a task exists
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a valid task ID string
+ *           3. Call Start method with the task ID
+ * @tc.expect: Start method executes successfully without throwing exceptions
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, StartTest001, TestSize.Level1)
 {
@@ -118,9 +138,15 @@ HWTEST_F(RequestManagerTest, StartTest001, TestSize.Level1)
 
 /**
  * @tc.name: StopTest001
- * @tc.desc: Test StopTest001 interface base function - Stop
+ * @tc.desc: Test the Stop interface to halt task execution
+ * @tc.precon: RequestManager instance is available and a task is running
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a valid task ID string
+ *           3. Call Stop method with the task ID
+ * @tc.expect: Stop method executes successfully without throwing exceptions
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, StopTest001, TestSize.Level1)
 {
@@ -131,9 +157,16 @@ HWTEST_F(RequestManagerTest, StopTest001, TestSize.Level1)
 
 /**
  * @tc.name: QueryTest001
- * @tc.desc: Test QueryTest001 interface base function - Query
+ * @tc.desc: Test the Query interface to retrieve task information
+ * @tc.precon: RequestManager instance is available and a task exists
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a valid task ID string
+ *           3. Create a TaskInfo object
+ *           4. Call Query method with task ID and TaskInfo reference
+ * @tc.expect: Query method populates the TaskInfo object successfully
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, QueryTest001, TestSize.Level1)
 {
@@ -145,9 +178,16 @@ HWTEST_F(RequestManagerTest, QueryTest001, TestSize.Level1)
 
 /**
  * @tc.name: TouchTest001
- * @tc.desc: Test TouchTest001 interface base function - Touch
+ * @tc.desc: Test the Touch interface to update task access timestamp
+ * @tc.precon: RequestManager instance is available and a task exists
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare valid task ID and token strings
+ *           3. Create a TaskInfo object
+ *           4. Call Touch method with task ID, token, and TaskInfo reference
+ * @tc.expect: Touch method updates task timestamp and populates TaskInfo successfully
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, Touch001, TestSize.Level1)
 {
@@ -160,9 +200,16 @@ HWTEST_F(RequestManagerTest, Touch001, TestSize.Level1)
 
 /**
  * @tc.name: SearchTest001
- * @tc.desc: Test SearchTest001 interface base function - Search
+ * @tc.desc: Test the Search interface to find tasks matching filter criteria
+ * @tc.precon: RequestManager instance is available and tasks may exist
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Create a Filter object with search criteria
+ *           3. Create a vector to store matching task IDs
+ *           4. Call Search method with filter and task ID vector
+ * @tc.expect: Search method populates the task ID vector with matching results
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, SearchTest001, TestSize.Level1)
 {
@@ -174,9 +221,16 @@ HWTEST_F(RequestManagerTest, SearchTest001, TestSize.Level1)
 
 /**
  * @tc.name: ShowTest001
- * @tc.desc: Test ShowTest001 interface base function - Show
+ * @tc.desc: Test the Show interface to display task details
+ * @tc.precon: RequestManager instance is available and a task exists
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a valid task ID string
+ *           3. Create a TaskInfo object
+ *           4. Call Show method with task ID and TaskInfo reference
+ * @tc.expect: Show method populates TaskInfo with detailed task information
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, ShowTest001, TestSize.Level1)
 {
@@ -188,9 +242,16 @@ HWTEST_F(RequestManagerTest, ShowTest001, TestSize.Level1)
 
 /**
  * @tc.name: PauseTest001
- * @tc.desc: Test PauseTest001 interface base function - Pause
+ * @tc.desc: Test the Pause interface to temporarily halt task execution for both API versions
+ * @tc.precon: RequestManager instance is available and a running task exists
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a valid task ID string
+ *           3. Call Pause method with task ID and Version::API9
+ *           4. Call Pause method with task ID and Version::API10
+ * @tc.expect: Both Pause calls execute successfully without throwing exceptions
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, PauseTest001, TestSize.Level1)
 {
@@ -202,9 +263,16 @@ HWTEST_F(RequestManagerTest, PauseTest001, TestSize.Level1)
 
 /**
  * @tc.name: QueryMimeTypeTest001
- * @tc.desc: Test QueryMimeTypeTest001 interface base function - QueryMimeType
+ * @tc.desc: Test the QueryMimeType interface to retrieve MIME type of task content
+ * @tc.precon: RequestManager instance is available and a task with content exists
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a valid task ID string
+ *           3. Prepare a string to store MIME type
+ *           4. Call QueryMimeType method with task ID and MIME type reference
+ * @tc.expect: QueryMimeType method populates MIME type string successfully
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, QueryMimeTypeTest001, TestSize.Level1)
 {
@@ -216,9 +284,16 @@ HWTEST_F(RequestManagerTest, QueryMimeTypeTest001, TestSize.Level1)
 
 /**
  * @tc.name: RemoveTest001
- * @tc.desc: Test RemoveTest001 interface base function - Remove
+ * @tc.desc: Test the Remove interface to delete tasks for both API versions
+ * @tc.precon: RequestManager instance is available and a task exists
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a valid task ID string
+ *           3. Call Remove method with task ID and Version::API9
+ *           4. Call Remove method with task ID and Version::API10
+ * @tc.expect: Both Remove calls execute successfully without throwing exceptions
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, RemoveTest001, TestSize.Level1)
 {
@@ -230,9 +305,15 @@ HWTEST_F(RequestManagerTest, RemoveTest001, TestSize.Level1)
 
 /**
  * @tc.name: ResumeTest001
- * @tc.desc: Test ResumeTest001 interface base function - Resume
+ * @tc.desc: Test the Resume interface to continue paused task execution
+ * @tc.precon: RequestManager instance is available and a paused task exists
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a valid task ID string
+ *           3. Call Resume method with the task ID
+ * @tc.expect: Resume method executes successfully without throwing exceptions
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, ResumeTest001, TestSize.Level1)
 {
@@ -243,9 +324,15 @@ HWTEST_F(RequestManagerTest, ResumeTest001, TestSize.Level1)
 
 /**
  * @tc.name: SubscribeTest001
- * @tc.desc: Test SubscribeTest001 interface base function - Subscribe
+ * @tc.desc: Test the Subscribe interface to register for task notifications
+ * @tc.precon: RequestManager instance is available and a task exists
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a valid task ID string
+ *           3. Call Subscribe method with the task ID
+ * @tc.expect: Subscribe method executes successfully without throwing exceptions
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, SubscribeTest001, TestSize.Level1)
 {
@@ -256,9 +343,15 @@ HWTEST_F(RequestManagerTest, SubscribeTest001, TestSize.Level1)
 
 /**
  * @tc.name: UnsubscribeTest001
- * @tc.desc: Test UnsubscribeTest001 interface base function - Unsubscribe
+ * @tc.desc: Test the Unsubscribe interface to unregister from task notifications
+ * @tc.precon: RequestManager instance is available and a task is subscribed
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a valid task ID string
+ *           3. Call Unsubscribe method with the task ID
+ * @tc.expect: Unsubscribe method executes successfully without throwing exceptions
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, Unsubscribe001, TestSize.Level1)
 {
@@ -296,9 +389,19 @@ public:
 
 /**
  * @tc.name: AddAndRemoveListenerTest001
- * @tc.desc: Test AddAndRemoveListenerTest001 interface base function - AddListener/RemoveListener
+ * @tc.desc: Test the AddListener and RemoveListener interfaces for both response and notification listeners
+ * @tc.precon: RequestManager instance is available and listener implementations exist
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Create response listener implementation
+ *           3. Add response listener for RESPONSE type
+ *           4. Remove response listener for RESPONSE type
+ *           5. Create notification listener implementation
+ *           6. Add notification listener for COMPLETED type
+ *           7. Remove notification listener for COMPLETED type
+ * @tc.expect: All AddListener and RemoveListener calls execute successfully
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, AddAndRemoveListenerTest001, TestSize.Level1)
 {
@@ -320,9 +423,21 @@ void TestRestoreCallback()
 
 /**
  * @tc.name: RemoveAllListenersTest001
- * @tc.desc: Test RemoveAllListenersTest001 interface base function - RemoveAllListeners
+ * @tc.desc: Test the RemoveAllListeners and RestoreListener interfaces
+ * @tc.precon: RequestManager instance is available and listeners have been added
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Create response listener implementation
+ *           3. Add response listener for RESPONSE type
+ *           4. Create notification listener implementation
+ *           5. Add notification listener for COMPLETED type
+ *           6. Call RemoveAllListeners to remove all listeners
+ *           7. Call RestoreListener with callback function
+ *           8. Verify callback is set correctly
+ *           9. Call RestoreListener with nullptr
+ * @tc.expect: All operations execute successfully and callback is properly set
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, RemoveAllListenersTest001, TestSize.Level1)
 {
@@ -341,9 +456,14 @@ HWTEST_F(RequestManagerTest, RemoveAllListenersTest001, TestSize.Level1)
 
 /**
  * @tc.name: LoadRequestServerTest001
- * @tc.desc: Test LoadRequestServerTest001 interface base function - LoadRequestServer
+ * @tc.desc: Test the LoadRequestServer interface to initialize the request server
+ * @tc.precon: RequestManager instance is available and server is not loaded
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Call LoadRequestServer method
+ * @tc.expect: LoadRequestServer method executes successfully without throwing exceptions
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, LoadRequestServerTest001, TestSize.Level1)
 {
@@ -353,9 +473,14 @@ HWTEST_F(RequestManagerTest, LoadRequestServerTest001, TestSize.Level1)
 
 /**
  * @tc.name: IsSaReadyTest001
- * @tc.desc: Test IsSaReadyTest001 interface base function - IsSaReady
+ * @tc.desc: Test the IsSaReady interface to check system ability readiness
+ * @tc.precon: RequestManager instance is available and initialized
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Call IsSaReady method
+ * @tc.expect: IsSaReady method returns a valid boolean value indicating readiness
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, IsSaReadyTest001, TestSize.Level1)
 {
@@ -365,9 +490,14 @@ HWTEST_F(RequestManagerTest, IsSaReadyTest001, TestSize.Level1)
 
 /**
  * @tc.name: ReopenChannelTest001
- * @tc.desc: Test ReopenChannelTest001 interface base function - ReopenChannel
+ * @tc.desc: Test the ReopenChannel interface to re-establish communication channel
+ * @tc.precon: RequestManager instance is available and channel may need reopening
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Call ReopenChannel method
+ * @tc.expect: ReopenChannel method executes successfully without throwing exceptions
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, ReopenChannelTest001, TestSize.Level1)
 {
@@ -377,9 +507,14 @@ HWTEST_F(RequestManagerTest, ReopenChannelTest001, TestSize.Level1)
 
 /**
  * @tc.name: SubscribeSATest001
- * @tc.desc: Test SubscribeSATest001 interface base function - SubscribeSA
+ * @tc.desc: Test the SubscribeSA interface to register for system ability notifications
+ * @tc.precon: RequestManager instance is available and SA subscription is needed
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Call SubscribeSA method
+ * @tc.expect: SubscribeSA method executes successfully without throwing exceptions
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, SubscribeSATest001, TestSize.Level1)
 {
@@ -389,9 +524,14 @@ HWTEST_F(RequestManagerTest, SubscribeSATest001, TestSize.Level1)
 
 /**
  * @tc.name: UnsubscribeSATest001
- * @tc.desc: Test UnsubscribeSATest001 interface base function - UnsubscribeSA
+ * @tc.desc: Test the UnsubscribeSA interface to unregister from system ability notifications
+ * @tc.precon: RequestManager instance is available and SA subscription exists
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Call UnsubscribeSA method
+ * @tc.expect: UnsubscribeSA method executes successfully without throwing exceptions
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, UnsubscribeSATest001, TestSize.Level1)
 {
@@ -401,9 +541,16 @@ HWTEST_F(RequestManagerTest, UnsubscribeSATest001, TestSize.Level1)
 
 /**
  * @tc.name: GetNextSeqTest001
- * @tc.desc: Test GetNextSeqTest001 interface base function - GetNextSeq
+ * @tc.desc: Test the GetNextSeq interface to generate sequential task identifiers
+ * @tc.precon: RequestManager instance is available and initialized
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Call GetNextSeq method to get current sequence
+ *           3. Call GetNextSeq method again
+ *           4. Verify the second call returns incremented value
+ * @tc.expect: Second GetNextSeq call returns value one greater than first call
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, GetNextSeqTest001, TestSize.Level1)
 {
@@ -413,9 +560,17 @@ HWTEST_F(RequestManagerTest, GetNextSeqTest001, TestSize.Level1)
 
 /**
  * @tc.name: CreateGroupTest001
- * @tc.desc: Test CreateGroupTest001 interface base function - CreateGroup
+ * @tc.desc: Test the CreateGroup interface to create a new task group with notification settings
+ * @tc.precon: RequestManager instance is available and group ID is unique
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a unique group ID string
+ *           3. Set gauge parameter to true
+ *           4. Create Notification object with title, text, and disable=false
+ *           5. Call CreateGroup method with parameters
+ * @tc.expect: CreateGroup returns 0 indicating successful group creation
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, CreateGroupTest001, TestSize.Level1)
 {
@@ -432,10 +587,17 @@ HWTEST_F(RequestManagerTest, CreateGroupTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: CreateGroupTest001
- * @tc.desc: Test CreateGroupTest001 interface base function - CreateGroup
+ * @tc.name: AttachGroupTest001
+ * @tc.desc: Test the AttachGroup interface to associate tasks with an existing group
+ * @tc.precon: RequestManager instance is available and group exists
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a valid group ID string
+ *           3. Create empty vector of task IDs
+ *           4. Call AttachGroup method with group ID and task IDs
+ * @tc.expect: AttachGroup returns 21900008 indicating no tasks to attach
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, AttachGroupTest001, TestSize.Level1)
 {
@@ -447,9 +609,15 @@ HWTEST_F(RequestManagerTest, AttachGroupTest001, TestSize.Level1)
 
 /**
  * @tc.name: DeleteGroupTest001
- * @tc.desc: Test DeleteGroupTest001 interface base function - DeleteGroup
+ * @tc.desc: Test the DeleteGroup interface to remove an existing task group
+ * @tc.precon: RequestManager instance is available and group exists
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a valid group ID string
+ *           3. Call DeleteGroup method with the group ID
+ * @tc.expect: DeleteGroup returns 21900008 indicating group deletion initiated
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, DeleteGroupTest001, TestSize.Level1)
 {

@@ -75,10 +75,18 @@ void RunningTaskCountTest::TearDown(void)
 }
 
 /**
- * @tc.name: SubscribeRunningTaskCountTest_001
- * @tc.desc: Test SubscribeRunningTaskCountTest_001 interface base function - subscribe failed
+ * @tc.name: SubscribeRunningTaskCount001
+ * @tc.desc: Test SubscribeRunningTaskCount with null proxy - should succeed
+ * @tc.precon: Request service proxy is null
+ * @tc.step: 1. Get request service proxy and verify it's null
+ *           2. Create a valid observer instance
+ *           3. Call SubscribeRunningTaskCount with the observer
+ *           4. Verify the return value is E_OK
+ *           5. Clean up by unsubscribing the observer
+ * @tc.expect: Subscription succeeds with E_OK return value
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level1
  */
 HWTEST_F(RunningTaskCountTest, SubscribeRunningTaskCountTest_001, TestSize.Level1)
 {
@@ -95,10 +103,18 @@ HWTEST_F(RunningTaskCountTest, SubscribeRunningTaskCountTest_001, TestSize.Level
 }
 
 /**
- * @tc.name: SubscribeRunningTaskCountTest_002
- * @tc.desc: Test SubscribeRunningTaskCountTest_002 interface base function - subscribe success
+ * @tc.name: SubscribeRunningTaskCount002
+ * @tc.desc: Test SubscribeRunningTaskCount with multiple observers - should succeed
+ * @tc.precon: No observers are initially attached
+ * @tc.step: 1. Create first observer and subscribe it
+ *           2. Create second observer and attach it manually
+ *           3. Call SubscribeRunningTaskCount with second observer
+ *           4. Verify the return value is E_OK
+ *           5. Clean up by detaching both observers
+ * @tc.expect: Subscription succeeds with E_OK return value for both observers
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level1
  */
 HWTEST_F(RunningTaskCountTest, SubscribeRunningTaskCountTest_002, TestSize.Level1)
 {
@@ -117,10 +133,16 @@ HWTEST_F(RunningTaskCountTest, SubscribeRunningTaskCountTest_002, TestSize.Level
 }
 
 /**
- * @tc.name: SubscribeRunningTaskCountTest_003
- * @tc.desc: Test SubscribeRunningTaskCountTest_003 interface base function - subscribe failede by nptr
+ * @tc.name: SubscribeRunningTaskCount003
+ * @tc.desc: Test SubscribeRunningTaskCount with null observer - should fail
+ * @tc.precon: Observer parameter is null
+ * @tc.step: 1. Set observer to nullptr
+ *           2. Call SubscribeRunningTaskCount with null observer
+ *           3. Verify the return value is E_OTHER
+ * @tc.expect: Subscription fails with E_OTHER return value due to null observer
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level1
  */
 HWTEST_F(RunningTaskCountTest, SubscribeRunningTaskCountTest_003, TestSize.Level1)
 {
@@ -133,10 +155,18 @@ HWTEST_F(RunningTaskCountTest, SubscribeRunningTaskCountTest_003, TestSize.Level
 }
 
 /**
- * @tc.name: UnubscribeRunningTaskCountTest_001
- * @tc.desc: Test UnubscribeRunningTaskCountTest_001 interface base function - unsubscribe
+ * @tc.name: UnsubscribeRunningTaskCount001
+ * @tc.desc: Test UnsubscribeRunningTaskCount with valid and invalid observers
+ * @tc.precon: One observer is already attached
+ * @tc.step: 1. Create and attach first observer
+ *           2. Verify observer is attached
+ *           3. Create second observer (not attached)
+ *           4. Call UnsubscribeRunningTaskCount with unattached observer
+ *           5. Call UnsubscribeRunningTaskCount with attached observer
+ * @tc.expect: Unsubscription handles both valid and invalid observers gracefully
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level1
  */
 HWTEST_F(RunningTaskCountTest, UnubscribeRunningTaskCountTest_001, TestSize.Level1)
 {
@@ -153,9 +183,17 @@ HWTEST_F(RunningTaskCountTest, UnubscribeRunningTaskCountTest_001, TestSize.Leve
 
 /**
  * @tc.name: GetAndSetCount001
- * @tc.desc: Test GetAndSetCount001 interface base function - GetCount/SetCount
+ * @tc.desc: Test GetCount and SetCount functionality of running task count manager
+ * @tc.precon: Running task count manager is initialized
+ * @tc.step: 1. Store the current count value
+ *           2. Set count to a new value (10)
+ *           3. Verify GetCount returns the new value
+ *           4. Restore the original count value
+ *           5. Verify GetCount returns the original value
+ * @tc.expect: SetCount correctly updates the count and GetCount returns accurate values
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level1
  */
 HWTEST_F(RunningTaskCountTest, GetAndSetCount001, TestSize.Level1)
 {
@@ -170,10 +208,18 @@ HWTEST_F(RunningTaskCountTest, GetAndSetCount001, TestSize.Level1)
 }
 
 /**
- * @tc.name: NotifyAllObserversTest001
- * @tc.desc: Test NotifyAllObserversTest001 interface base function - NotifyAllObservers
+ * @tc.name: NotifyAllObservers001
+ * @tc.desc: Test NotifyAllObservers functionality with observer updates
+ * @tc.precon: Observer infrastructure is set up
+ * @tc.step: 1. Create and attach a test observer
+ *           2. Verify observer is attached
+ *           3. Call NotifyAllObservers to trigger updates
+ *           4. Verify observer receives update notification
+ *           5. Clean up by detaching the observer
+ * @tc.expect: All attached observers receive count update notifications
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level1
  */
 HWTEST_F(RunningTaskCountTest, NotifyAllObserversTest001, TestSize.Level1)
 {

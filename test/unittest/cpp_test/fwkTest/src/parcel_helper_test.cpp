@@ -69,9 +69,18 @@ void ParcelHelperTest::TearDown(void)
 
 /**
  * @tc.name: UnMarshalFormItem001
- * @tc.desc: Test UnMarshalFormItem001 interface base function - UnMarshalFormItem
+ * @tc.desc: Test UnMarshalFormItem interface base function
+ * @tc.precon: NA
+ * @tc.step: 1. Create MessageParcel and TaskInfo instances
+ *           2. Write zero size to parcel
+ *           3. Call UnMarshalFormItem and verify returns true
+ *           4. Write size 1 without data to test failure case
+ *           5. Write valid form data (name and value) to parcel
+ *           6. Call UnMarshalFormItem and verify successful unmarshalling
+ * @tc.expect: Returns true for valid data, false for invalid data, and correctly unmarshals form items
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ParcelHelperTest, UnMarshalFormItem001, TestSize.Level1)
 {
@@ -93,9 +102,18 @@ HWTEST_F(ParcelHelperTest, UnMarshalFormItem001, TestSize.Level1)
 
 /**
  * @tc.name: UnMarshalFileSpec001
- * @tc.desc: Test UnMarshalFileSpec001 interface base function - UnMarshalFileSpec
+ * @tc.desc: Test UnMarshalFileSpec interface base function
+ * @tc.precon: NA
+ * @tc.step: 1. Create MessageParcel and TaskInfo instances
+ *           2. Write zero size to parcel
+ *           3. Call UnMarshalFileSpec and verify returns true
+ *           4. Write size 1 without data to test failure case
+ *           5. Write valid file specification data to parcel
+ *           6. Call UnMarshalFileSpec and verify successful unmarshalling
+ * @tc.expect: Returns true for valid data, false for invalid data, and correctly unmarshals file specifications
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ParcelHelperTest, UnMarshalFileSpec001, TestSize.Level1)
 {
@@ -121,9 +139,18 @@ HWTEST_F(ParcelHelperTest, UnMarshalFileSpec001, TestSize.Level1)
 
 /**
  * @tc.name: UnMarshalMapProgressExtras001
- * @tc.desc: Test UnMarshalMapProgressExtras001 interface base function - UnMarshalMapProgressExtras
+ * @tc.desc: Test UnMarshalMapProgressExtras interface base function
+ * @tc.precon: NA
+ * @tc.step: 1. Create MessageParcel and TaskInfo instances
+ *           2. Write zero size to parcel
+ *           3. Call UnMarshalMapProgressExtras and verify returns true
+ *           4. Write size 1 without data to test failure case
+ *           5. Write valid key-value pair to parcel
+ *           6. Call UnMarshalMapProgressExtras and verify successful unmarshalling
+ * @tc.expect: Returns true for valid data, false for invalid data, and correctly unmarshals progress extras
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ParcelHelperTest, UnMarshalMapProgressExtras001, TestSize.Level1)
 {
@@ -144,9 +171,18 @@ HWTEST_F(ParcelHelperTest, UnMarshalMapProgressExtras001, TestSize.Level1)
 
 /**
  * @tc.name: UnMarshalMapExtras001
- * @tc.desc: Test UnMarshalMapExtras001 interface base function - UnMarshalMapExtras
+ * @tc.desc: Test UnMarshalMapExtras interface base function
+ * @tc.precon: NA
+ * @tc.step: 1. Create MessageParcel and TaskInfo instances
+ *           2. Write zero size to parcel
+ *           3. Call UnMarshalMapExtras and verify returns true
+ *           4. Write size 1 without data to test failure case
+ *           5. Write valid key-value pair to parcel
+ *           6. Call UnMarshalMapExtras and verify successful unmarshalling
+ * @tc.expect: Returns true for valid data, false for invalid data, and correctly unmarshals extras mapping
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ParcelHelperTest, UnMarshalMapExtras001, TestSize.Level1)
 {
@@ -167,9 +203,18 @@ HWTEST_F(ParcelHelperTest, UnMarshalMapExtras001, TestSize.Level1)
 
 /**
  * @tc.name: UnMarshalTaskState001
- * @tc.desc: Test UnMarshalTaskState001 interface base function - UnMarshalTaskState
+ * @tc.desc: Test UnMarshalTaskState interface base function
+ * @tc.precon: NA
+ * @tc.step: 1. Create MessageParcel and TaskInfo instances
+ *           2. Write zero size to parcel
+ *           3. Call UnMarshalTaskState and verify returns true
+ *           4. Write size 1 with incomplete data to test failure case
+ *           5. Write complete task state data (path, responseCode, message) to parcel
+ *           6. Call UnMarshalTaskState and verify successful unmarshalling
+ * @tc.expect: Returns true for valid data, false for invalid data, and correctly unmarshals task states
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ParcelHelperTest, UnMarshalTaskState001, TestSize.Level1)
 {
@@ -194,9 +239,18 @@ HWTEST_F(ParcelHelperTest, UnMarshalTaskState001, TestSize.Level1)
 
 /**
  * @tc.name: UnMarshalConfigHeaders001
- * @tc.desc: Test UnMarshalConfigHeaders001 interface base function - UnMarshalConfigHeaders
+ * @tc.desc: Test UnMarshalConfigHeaders interface base function
+ * @tc.precon: NA
+ * @tc.step: 1. Create MessageParcel and Config instances
+ *           2. Write zero size to parcel
+ *           3. Call UnMarshalConfigHeaders and verify returns true
+ *           4. Write size 1 without data to test failure case
+ *           5. Write valid header key-value pair to parcel
+ *           6. Call UnMarshalConfigHeaders and verify successful unmarshalling
+ * @tc.expect: Returns true for valid data, false for invalid data, and correctly unmarshals config headers
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ParcelHelperTest, UnMarshalConfigHeaders001, TestSize.Level1)
 {
@@ -217,9 +271,18 @@ HWTEST_F(ParcelHelperTest, UnMarshalConfigHeaders001, TestSize.Level1)
 
 /**
  * @tc.name: UnMarshalConfigExtras001
- * @tc.desc: Test UnMarshalConfigExtras001 interface base function - UnMarshalConfigExtras
+ * @tc.desc: Test UnMarshalConfigExtras interface base function
+ * @tc.precon: NA
+ * @tc.step: 1. Create MessageParcel and Config instances
+ *           2. Write zero size to parcel
+ *           3. Call UnMarshalConfigExtras and verify returns true
+ *           4. Write size 1 without data to test failure case
+ *           5. Write valid key-value pair to parcel
+ *           6. Call UnMarshalConfigExtras and verify successful unmarshalling
+ * @tc.expect: Returns true for valid data, false for invalid data, and correctly unmarshals config extras
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ParcelHelperTest, UnMarshalConfigExtras001, TestSize.Level1)
 {
@@ -240,9 +303,18 @@ HWTEST_F(ParcelHelperTest, UnMarshalConfigExtras001, TestSize.Level1)
 
 /**
  * @tc.name: UnMarshalConfigFormItem001
- * @tc.desc: Test UnMarshalConfigFormItem001 interface base function - UnMarshalConfigFormItem
+ * @tc.desc: Test UnMarshalConfigFormItem interface base function
+ * @tc.precon: NA
+ * @tc.step: 1. Create MessageParcel and Config instances
+ *           2. Write zero size to parcel
+ *           3. Call UnMarshalConfigFormItem and verify returns true
+ *           4. Write size 1 without data to test failure case
+ *           5. Write valid form item data (name and value) to parcel
+ *           6. Call UnMarshalConfigFormItem and verify successful unmarshalling
+ * @tc.expect: Returns true for valid data, false for invalid data, and correctly unmarshals config form items
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ParcelHelperTest, UnMarshalConfigFormItem001, TestSize.Level1)
 {
@@ -264,9 +336,18 @@ HWTEST_F(ParcelHelperTest, UnMarshalConfigFormItem001, TestSize.Level1)
 
 /**
  * @tc.name: UnMarshalConfigFileSpec001
- * @tc.desc: Test UnMarshalConfigFileSpec001 interface base function - UnMarshalConfigFileSpec
+ * @tc.desc: Test UnMarshalConfigFileSpec interface base function
+ * @tc.precon: NA
+ * @tc.step: 1. Create MessageParcel and Config instances
+ *           2. Write zero size to parcel
+ *           3. Call UnMarshalConfigFileSpec and verify returns true
+ *           4. Write size 1 without data to test failure case
+ *           5. Write valid file specification data to parcel
+ *           6. Call UnMarshalConfigFileSpec and verify successful unmarshalling
+ * @tc.expect: Returns true for valid data, false for invalid data, and correctly unmarshals config file specifications
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ParcelHelperTest, UnMarshalConfigFileSpec001, TestSize.Level1)
 {
@@ -292,9 +373,18 @@ HWTEST_F(ParcelHelperTest, UnMarshalConfigFileSpec001, TestSize.Level1)
 
 /**
  * @tc.name: UnMarshalConfigBodyFileName001
- * @tc.desc: Test UnMarshalConfigBodyFileName001 interface base function - UnMarshalConfigBodyFileName
+ * @tc.desc: Test UnMarshalConfigBodyFileName interface base function
+ * @tc.precon: NA
+ * @tc.step: 1. Create MessageParcel and Config instances
+ *           2. Write zero size to parcel
+ *           3. Call UnMarshalConfigBodyFileName and verify returns true
+ *           4. Write size 1 without data to test failure case
+ *           5. Write valid filename string to parcel
+ *           6. Call UnMarshalConfigBodyFileName and verify successful unmarshalling
+ * @tc.expect: Returns true for valid data, false for invalid data, and correctly unmarshals config body filenames
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ParcelHelperTest, UnMarshalConfigBodyFileName001, TestSize.Level1)
 {
@@ -351,9 +441,17 @@ void MarshalProgress(OHOS::MessageParcel &data)
 
 /**
  * @tc.name: UnMarshal001
- * @tc.desc: Test UnMarshal001 interface base function - UnMarshal
+ * @tc.desc: Test UnMarshal interface base function
+ * @tc.precon: NA
+ * @tc.step: 1. Create MessageParcel and TaskInfo instances
+ *           2. Marshal base task info data to parcel
+ *           3. Test with form items, file specs, progress extras, map extras, and task states
+ *           4. Test different combinations of empty and non-empty collections
+ *           5. Verify all data is correctly unmarshalled
+ * @tc.expect: All task info fields are correctly unmarshalled including version, uid, bundle, tid, and progress data
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ParcelHelperTest, UnMarshal001, TestSize.Level1)
 {
@@ -426,9 +524,17 @@ HWTEST_F(ParcelHelperTest, UnMarshal001, TestSize.Level1)
 
 /**
  * @tc.name: UnMarshalTaskProgress001
- * @tc.desc: Test UnMarshalTaskProgress001 interface base function - UnMarshalTaskProgress001
+ * @tc.desc: Test UnMarshalTaskProgress interface base function
+ * @tc.precon: NA
+ * @tc.step: 1. Create MessageParcel and TaskProgress instances
+ *           2. Write valid task progress data including tid, state, progress, and extras
+ *           3. Test with REASON_OK status
+ *           4. Test with IO_ERROR status to verify fault mapping
+ *           5. Verify all progress fields are correctly unmarshalled
+ * @tc.expect: TaskProgress fields are correctly unmarshalled including tid, progress data, code, statusCode, faults, and reason
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ParcelHelperTest, UnMarshalTaskProgress001, TestSize.Level1)
 {
@@ -491,9 +597,17 @@ void MarshalConfigBase(OHOS::MessageParcel &data)
 
 /**
  * @tc.name: UnMarshalConfig001
- * @tc.desc: Test UnMarshalConfig001 interface base function - UnMarshalConfig
+ * @tc.desc: Test UnMarshalConfig interface base function
+ * @tc.precon: NA
+ * @tc.step: 1. Create MessageParcel and Config instances
+ *           2. Marshal base config data to parcel
+ *           3. Test with headers, extras, form items, file specs, and body filenames
+ *           4. Test different combinations of empty and non-empty collections
+ *           5. Verify all config data is correctly unmarshalled
+ * @tc.expect: All config fields are correctly unmarshalled including version, bundleName, url, title, description, method, data, and token
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ParcelHelperTest, UnMarshalConfig001, TestSize.Level1)
 {
@@ -574,10 +688,16 @@ HWTEST_F(ParcelHelperTest, UnMarshalConfig001, TestSize.Level1)
 }
 
 /**
- * @tc.name: GetFaultByReason001
- * @tc.desc: Test GetFaultByReason001 interface base function - GetFaultByReason
+ * @tc.name: CommonUtilsGetFaultByReason001
+ * @tc.desc: Test CommonUtils GetFaultByReason interface
+ * @tc.precon: NA
+ * @tc.step: 1. Call GetFaultByReason with various reason codes
+ *           2. Verify correct fault mapping for each reason
+ *           3. Test edge cases and boundary values
+ * @tc.expect: Each reason code maps to the expected fault type according to the mapping rules
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ParcelHelperTest, CommonUtilsGetFaultByReason001, TestSize.Level1)
 {
@@ -618,9 +738,13 @@ HWTEST_F(ParcelHelperTest, CommonUtilsGetFaultByReason001, TestSize.Level1)
 
 /**
  * @tc.name: GetMsgByReason001
- * @tc.desc: Test GetMsgByReason001 interface base function - GetMsgByReason
+ * @tc.desc: Test GetMsgByReason with all valid reason codes and verify correct message mapping
+ * @tc.precon: CommonUtils class is properly initialized and available
+ * @tc.step: 1. Call GetMsgByReason with enum Reason
+ * @tc.expect: Each valid reason code returns corresponding predefined message, invalid code returns "unknown"
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ParcelHelperTest, CommonUtilsGetMsgByReason001, TestSize.Level1)
 {
