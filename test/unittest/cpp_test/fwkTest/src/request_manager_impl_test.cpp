@@ -145,9 +145,18 @@ void RequestManagerImplTest::TearDown(void)
 
 /**
  * @tc.name: CreateTest001
- * @tc.desc: Test CreateTest001 interface base function - Create
+ * @tc.desc: Test Create interface with channel recovery and task creation scenarios
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Simulate channel broken state
+ *           2. Expect OpenChannel to return E_TASK_STATE first, then E_OK
+ *           3. Create config with API9 version
+ *           4. Expect Create to return E_CHANNEL_NOT_OPEN first, then E_OK
+ *           5. Expect Subscribe to return E_OK
+ *           6. Expect Start to return E_OK first, then E_CHANNEL_NOT_OPEN
+ * @tc.expect: First Create call succeeds (E_OK), second returns E_CHANNEL_NOT_OPEN
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, CreateTest001, TestSize.Level1)
 {
@@ -172,9 +181,17 @@ HWTEST_F(RequestManagerImplTest, CreateTest001, TestSize.Level1)
 
 /**
  * @tc.name: GetTaskTest001
- * @tc.desc: Test GetTaskTest001 interface base function - GetTask
+ * @tc.desc: Test GetTask interface with channel broken and error handling
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create config, token and tid
+ *           2. Simulate channel broken state
+ *           3. Expect OpenChannel to return E_CHANNEL_NOT_OPEN repeatedly
+ *           4. Expect Subscribe to return E_OK
+ *           5. Expect GetTask to return E_CHANNEL_NOT_OPEN first, then E_OTHER
+ * @tc.expect: First GetTask call returns E_OK (channel recovery), second returns E_OTHER
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, GetTaskTest001, TestSize.Level1)
 {
@@ -193,9 +210,15 @@ HWTEST_F(RequestManagerImplTest, GetTaskTest001, TestSize.Level1)
 
 /**
  * @tc.name: StartTest001
- * @tc.desc: Test StartTest001 interface base function - Start
+ * @tc.desc: Test Start interface with channel not open scenario
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test task ID
+ *           2. Expect Start to return E_CHANNEL_NOT_OPEN
+ *           3. Call Start with the test task ID
+ * @tc.expect: Start returns E_CHANNEL_NOT_OPEN as expected
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, StartTest001, TestSize.Level1)
 {
@@ -206,9 +229,15 @@ HWTEST_F(RequestManagerImplTest, StartTest001, TestSize.Level1)
 
 /**
  * @tc.name: StopTest001
- * @tc.desc: Test StopTest001 interface base function - Stop
+ * @tc.desc: Test Stop interface with channel not open scenario
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test task ID
+ *           2. Expect Stop to return E_CHANNEL_NOT_OPEN
+ *           3. Call Stop with the test task ID
+ * @tc.expect: Stop returns E_CHANNEL_NOT_OPEN as expected
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, StopTest001, TestSize.Level1)
 {
@@ -219,9 +248,15 @@ HWTEST_F(RequestManagerImplTest, StopTest001, TestSize.Level1)
 
 /**
  * @tc.name: QueryTest001
- * @tc.desc: Test QueryTest001 interface base function - Query
+ * @tc.desc: Test Query interface with channel not open scenario
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test task info and task ID
+ *           2. Expect Query to return E_CHANNEL_NOT_OPEN
+ *           3. Call Query with the test task ID and info
+ * @tc.expect: Query returns E_CHANNEL_NOT_OPEN as expected
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, QueryTest001, TestSize.Level1)
 {
@@ -233,9 +268,15 @@ HWTEST_F(RequestManagerImplTest, QueryTest001, TestSize.Level1)
 
 /**
  * @tc.name: TouchTest001
- * @tc.desc: Test TouchTest001 interface base function - Touch
+ * @tc.desc: Test Touch interface with channel not open scenario
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test task info, task ID, and token
+ *           2. Expect Touch to return E_CHANNEL_NOT_OPEN
+ *           3. Call Touch with the test parameters
+ * @tc.expect: Touch returns E_CHANNEL_NOT_OPEN as expected
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, TouchTest001, TestSize.Level1)
 {
@@ -248,9 +289,15 @@ HWTEST_F(RequestManagerImplTest, TouchTest001, TestSize.Level1)
 
 /**
  * @tc.name: SearchTest001
- * @tc.desc: Test SearchTest001 interface base function - Search
+ * @tc.desc: Test Search interface with channel not open scenario
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test filter and task ID vector
+ *           2. Expect Search to return E_CHANNEL_NOT_OPEN
+ *           3. Call Search with the test parameters
+ * @tc.expect: Search returns E_CHANNEL_NOT_OPEN as expected
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, SearchTest001, TestSize.Level1)
 {
@@ -262,9 +309,15 @@ HWTEST_F(RequestManagerImplTest, SearchTest001, TestSize.Level1)
 
 /**
  * @tc.name: ShowTest001
- * @tc.desc: Test ShowTest001 interface base function - Show
+ * @tc.desc: Test Show interface with channel not open scenario
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test task info and task ID
+ *           2. Expect Show to return E_CHANNEL_NOT_OPEN
+ *           3. Call Show with the test parameters
+ * @tc.expect: Show returns E_CHANNEL_NOT_OPEN as expected
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, ShowTest001, TestSize.Level1)
 {
@@ -276,9 +329,15 @@ HWTEST_F(RequestManagerImplTest, ShowTest001, TestSize.Level1)
 
 /**
  * @tc.name: PauseTest001
- * @tc.desc: Test PauseTest001 interface base function - Pause
+ * @tc.desc: Test Pause interface with channel not open scenario
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test task ID
+ *           2. Expect Pause with API10 version to return E_CHANNEL_NOT_OPEN
+ *           3. Call Pause with the test task ID and version
+ * @tc.expect: Pause returns E_CHANNEL_NOT_OPEN as expected
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, PauseTest001, TestSize.Level1)
 {
@@ -289,9 +348,15 @@ HWTEST_F(RequestManagerImplTest, PauseTest001, TestSize.Level1)
 
 /**
  * @tc.name: QueryMimeTypeTest001
- * @tc.desc: Test QueryMimeTypeTest001 interface base function - QueryMimeType
+ * @tc.desc: Test QueryMimeType interface with channel not open scenario
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test task ID and mime type
+ *           2. Expect QueryMimeType to return E_CHANNEL_NOT_OPEN
+ *           3. Call QueryMimeType with the test parameters
+ * @tc.expect: QueryMimeType returns E_CHANNEL_NOT_OPEN as expected
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, QueryMimeTypeTest001, TestSize.Level1)
 {
@@ -303,9 +368,14 @@ HWTEST_F(RequestManagerImplTest, QueryMimeTypeTest001, TestSize.Level1)
 
 /**
  * @tc.name: RemoveTest001
- * @tc.desc: Test RemoveTest001 interface base function - Remove
+ * @tc.desc: Test Remove interface with task not found scenario
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test task ID
+ *           2. Call Remove with the test task ID and API10 version
+ * @tc.expect: Remove returns E_TASK_NOT_FOUND as expected for non-existent task
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, RemoveTest001, TestSize.Level1)
 {
@@ -315,9 +385,15 @@ HWTEST_F(RequestManagerImplTest, RemoveTest001, TestSize.Level1)
 
 /**
  * @tc.name: ResumeTest001
- * @tc.desc: Test ResumeTest001 interface base function - Resume
+ * @tc.desc: Test Resume interface with channel not open scenario
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test task ID
+ *           2. Expect Resume to return E_CHANNEL_NOT_OPEN
+ *           3. Call Resume with the test task ID
+ * @tc.expect: Resume returns E_CHANNEL_NOT_OPEN as expected
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, ResumeTest001, TestSize.Level1)
 {
@@ -328,9 +404,17 @@ HWTEST_F(RequestManagerImplTest, ResumeTest001, TestSize.Level1)
 
 /**
  * @tc.name: SubscribeTest001
- * @tc.desc: Test SubscribeTest001 interface base function - Subscribe
+ * @tc.desc: Test Subscribe interface with channel broken and recovery scenarios
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test task ID
+ *           2. Simulate channel broken state
+ *           3. Expect OpenChannel to return E_CHANNEL_NOT_OPEN
+ *           4. Expect Subscribe to return E_CHANNEL_NOT_OPEN first, then E_OK
+ *           5. Call Subscribe with the test task ID
+ * @tc.expect: Subscribe returns E_OK after channel recovery
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, SubscribeTest001, TestSize.Level1)
 {
@@ -345,9 +429,15 @@ HWTEST_F(RequestManagerImplTest, SubscribeTest001, TestSize.Level1)
 
 /**
  * @tc.name: UnsubscribeTest001
- * @tc.desc: Test UnsubscribeTest001 interface base function - Unsubscribe
+ * @tc.desc: Test Unsubscribe interface with channel not open scenario
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test task ID
+ *           2. Expect Unsubscribe to return E_CHANNEL_NOT_OPEN
+ *           3. Call Unsubscribe with the test task ID
+ * @tc.expect: Unsubscribe returns E_CHANNEL_NOT_OPEN as expected
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, UnsubscribeTest001, TestSize.Level1)
 {
@@ -358,9 +448,17 @@ HWTEST_F(RequestManagerImplTest, UnsubscribeTest001, TestSize.Level1)
 
 /**
  * @tc.name: SubRunCountTest001
- * @tc.desc: Test SubRunCountTest001 interface base function - SubRunCount&UnsubRunCount
+ * @tc.desc: Test SubRunCount and UnsubRunCount interfaces for run count subscription
+ * @tc.precon: RequestManagerImpl instance is initialized, RunCountNotifyStub is available
+ * @tc.step: 1. Get RunCountNotifyStub instance
+ *           2. Call SubRunCount with the listener
+ *           3. Verify SubRunCount returns E_OK
+ *           4. Call UnsubRunCount
+ *           5. Verify UnsubRunCount returns E_OK
+ * @tc.expect: Both SubRunCount and UnsubRunCount return E_OK successfully
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, SubRunCountTest001, TestSize.Level1)
 {
@@ -371,9 +469,15 @@ HWTEST_F(RequestManagerImplTest, SubRunCountTest001, TestSize.Level1)
 
 /**
  * @tc.name: EnsureChannelOpenTest001
- * @tc.desc: Test EnsureChannelOpenTest001 interface base function - EnsureChannelOpen
+ * @tc.desc: Test EnsureChannelOpen interface with channel broken and recovery scenarios
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Simulate channel broken state
+ *           2. Expect OpenChannel to return E_CHANNEL_NOT_OPEN first, then E_OK
+ *           3. Call EnsureChannelOpen twice
+ * @tc.expect: First call returns E_CHANNEL_NOT_OPEN, second returns E_OK after recovery
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, EnsureChannelOpenTest001, TestSize.Level1)
 {
@@ -387,9 +491,15 @@ HWTEST_F(RequestManagerImplTest, EnsureChannelOpenTest001, TestSize.Level1)
 
 /**
  * @tc.name: OnResponseReceiveTest001
- * @tc.desc: Test OnResponseReceiveTest001 interface base function - OnResponseReceive
+ * @tc.desc: Test OnResponseReceive interface with valid response handling
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Verify mock proxy is not null
+ *           2. Create a Response instance
+ *           3. Call OnResponseReceive with the response
+ * @tc.expect: OnResponseReceive processes the response without errors
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, OnResponseReceiveTest001, TestSize.Level1)
 {
@@ -400,9 +510,15 @@ HWTEST_F(RequestManagerImplTest, OnResponseReceiveTest001, TestSize.Level1)
 
 /**
  * @tc.name: OnNotifyDataReceiveTest001
- * @tc.desc: Test OnNotifyDataReceiveTest001 interface base function - OnNotifyDataReceive
+ * @tc.desc: Test OnNotifyDataReceive interface with valid notify data
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Verify mock proxy is not null
+ *           2. Create a NotifyData instance
+ *           3. Call OnNotifyDataReceive with the notify data
+ * @tc.expect: OnNotifyDataReceive processes the data without errors
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, OnNotifyDataReceiveTest001, TestSize.Level1)
 {
@@ -413,9 +529,14 @@ HWTEST_F(RequestManagerImplTest, OnNotifyDataReceiveTest001, TestSize.Level1)
 
 /**
  * @tc.name: UnsubscribeSA001
- * @tc.desc: Test UnsubscribeSA001 interface base function - UnsubscribeSA
+ * @tc.desc: Test UnsubscribeSA interface for system ability unsubscription
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Verify mock proxy is not null
+ *           2. Call UnsubscribeSA
+ * @tc.expect: UnsubscribeSA executes without errors
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, UnsubscribeSA001, TestSize.Level1)
 {
@@ -429,9 +550,18 @@ void RMITestCallback()
 
 /**
  * @tc.name: OnAddSystemAbility001
- * @tc.desc: Test OnAddSystemAbility001 interface base function - OnAddSystemAbility
+ * @tc.desc: Test OnAddSystemAbility interface with system ability addition handling
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test device ID
+ *           2. Create SystemAbilityStatusChangeListener
+ *           3. Set up test callback
+ *           4. Test with DOWNLOAD_SERVICE_ID
+ *           5. Restore null listener
+ *           6. Test with PRINT_SERVICE_ID
+ * @tc.expect: Listener handles both service IDs appropriately
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, OnAddSystemAbility001, TestSize.Level1)
 {
@@ -447,9 +577,16 @@ HWTEST_F(RequestManagerImplTest, OnAddSystemAbility001, TestSize.Level1)
 
 /**
  * @tc.name: OnRemoveSystemAbility001
- * @tc.desc: Test OnRemoveSystemAbility001 interface base function - OnRemoveSystemAbility
+ * @tc.desc: Test OnRemoveSystemAbility interface with system ability removal handling
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test device ID
+ *           2. Create SystemAbilityStatusChangeListener
+ *           3. Test with DOWNLOAD_SERVICE_ID
+ *           4. Test with PRINT_SERVICE_ID
+ * @tc.expect: Listener handles both service ID removals appropriately
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, OnRemoveSystemAbility001, TestSize.Level1)
 {
@@ -463,9 +600,17 @@ HWTEST_F(RequestManagerImplTest, OnRemoveSystemAbility001, TestSize.Level1)
 
 /**
  * @tc.name: CreateTest002
- * @tc.desc: Test CreateTest002 interface base function - Create
+ * @tc.desc: Test Create interface with multiple error scenarios and channel states
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Simulate channel broken state
+ *           2. Expect OpenChannel to return E_TASK_STATE repeatedly
+ *           3. Create config with API10 version
+ *           4. Expect Create to return E_FILE_PATH, then E_OK twice
+ *           5. Verify proxy equality after operations
+ * @tc.expect: Create returns appropriate error codes, proxy remains consistent
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, CreateTest002, TestSize.Level1)
 {
@@ -488,9 +633,17 @@ HWTEST_F(RequestManagerImplTest, CreateTest002, TestSize.Level1)
 
 /**
  * @tc.name: SubscribeTest002
- * @tc.desc: Test SubscribeTest002 interface base function - Subscribe
+ * @tc.desc: Test Subscribe interface with channel recovery scenario
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test task ID
+ *           2. Simulate channel broken state
+ *           3. Expect OpenChannel to return E_CHANNEL_NOT_OPEN
+ *           4. Expect Subscribe to return E_OK
+ *           5. Call Subscribe with the test task ID
+ * @tc.expect: Subscribe succeeds with E_OK despite initial channel issues
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, SubscribeTest002, TestSize.Level1)
 {
@@ -503,9 +656,16 @@ HWTEST_F(RequestManagerImplTest, SubscribeTest002, TestSize.Level1)
 
 /**
  * @tc.name: EnsureChannelOpenTest002
- * @tc.desc: Test EnsureChannelOpenTest002 interface base function - EnsureChannelOpen
+ * @tc.desc: Test EnsureChannelOpen interface with existing message receiver
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create ResponseMessageReceiver instance
+ *           2. Set msgReceiver_ to the new instance
+ *           3. Call EnsureChannelOpen
+ *           4. Simulate channel broken state
+ * @tc.expect: EnsureChannelOpen returns E_OK with existing receiver
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, EnsureChannelOpenTest002, TestSize.Level1)
 {
@@ -517,9 +677,18 @@ HWTEST_F(RequestManagerImplTest, EnsureChannelOpenTest002, TestSize.Level1)
 
 /**
  * @tc.name: GetTaskTest002
- * @tc.desc: Test GetTaskTest002 interface base function - GetTask
+ * @tc.desc: Test GetTask interface with task cache management
+ * @tc.precon: RequestManagerImpl instance is initialized, task map is accessible
+ * @tc.step: 1. Create test task ID
+ *           2. Access tasks map and clear the test task ID
+ *           3. Call GetTask with the test task ID
+ *           4. Verify task is not null
+ *           5. Call GetTask again
+ *           6. Clear task from map again
+ * @tc.expect: GetTask returns non-null task instances consistently
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, GetTaskTest002, TestSize.Level1)
 {
@@ -535,9 +704,16 @@ HWTEST_F(RequestManagerImplTest, GetTaskTest002, TestSize.Level1)
 
 /**
  * @tc.name: SubscribeSATest001
- * @tc.desc: Test SubscribeSATest001 interface base function - SubscribeSA
+ * @tc.desc: Test SubscribeSA interface with listener initialization
+ * @tc.precon: RequestManagerImpl instance is initialized, saChangeListener_ is initially null
+ * @tc.step: 1. Verify saChangeListener_ is initially null
+ *           2. Call SubscribeSA
+ *           3. Verify saChangeListener_ is no longer null
+ *           4. Call SubscribeSA again
+ * @tc.expect: SubscribeSA creates listener on first call, handles duplicate calls gracefully
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, SubscribeSATest001, TestSize.Level1)
 {
@@ -549,9 +725,16 @@ HWTEST_F(RequestManagerImplTest, SubscribeSATest001, TestSize.Level1)
 
 /**
  * @tc.name: RestoreSubRunCountTest001
- * @tc.desc: Test RestoreSubRunCountTest001 interface base function - RestoreSubRunCount
+ * @tc.desc: Test RestoreSubRunCount interface with null listener handling
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Verify mock proxy is not null
+ *           2. Create null NotifyInterface listener
+ *           3. Set requestServiceProxy_ to mock
+ *           4. Call RestoreSubRunCount
+ * @tc.expect: RestoreSubRunCount handles null listener gracefully
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, RestoreSubRunCountTest001, TestSize.Level1)
 {
@@ -572,9 +755,20 @@ public:
 
 /**
  * @tc.name: OnAddSystemAbility002
- * @tc.desc: Test OnAddSystemAbility002 interface base function - OnAddSystemAbility
+ * @tc.desc: Test OnAddSystemAbility interface with observer management
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test device ID
+ *           2. Restore null listener
+ *           3. Verify no observers initially
+ *           4. Create test observer
+ *           5. Add observer to manager
+ *           6. Verify observer exists
+ *           7. Test with PRINT_SERVICE_ID
+ *           8. Clear observers
+ * @tc.expect: Listener manages observers correctly for non-download services
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, OnAddSystemAbility002, TestSize.Level1)
 {
@@ -594,9 +788,17 @@ HWTEST_F(RequestManagerImplTest, OnAddSystemAbility002, TestSize.Level1)
 
 /**
  * @tc.name: ReopenChannel001
- * @tc.desc: Test ReopenChannel001 interface base function - ReopenChannel
+ * @tc.desc: Test ReopenChannel interface with channel reopening scenario
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Verify mock proxy is not null
+ *           2. Create ResponseMessageReceiver instance
+ *           3. Set msgReceiver_ to new instance
+ *           4. Expect OpenChannel to return E_CHANNEL_NOT_OPEN
+ *           5. Call ReopenChannel
+ * @tc.expect: ReopenChannel handles channel reopening appropriately
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, ReopenChannel001, TestSize.Level1)
 {
@@ -609,9 +811,18 @@ HWTEST_F(RequestManagerImplTest, ReopenChannel001, TestSize.Level1)
 
 /**
  * @tc.name: CreateGroup001
- * @tc.desc: Test CreateGroup001 interface base function - CreateGroup
+ * @tc.desc: Test CreateGroup interface with successful group creation
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Verify mock proxy is not null
+ *           2. Create test group ID
+ *           3. Set gauge to true
+ *           4. Create notification info with text and title
+ *           5. Expect CreateGroup to return E_OK
+ *           6. Call CreateGroup with test parameters
+ * @tc.expect: CreateGroup returns E_OK successfully
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, CreateGroup001, TestSize.Level1)
 {
@@ -630,9 +841,17 @@ HWTEST_F(RequestManagerImplTest, CreateGroup001, TestSize.Level1)
 
 /**
  * @tc.name: AttachGroup001
- * @tc.desc: Test AttachGroup001 interface base function - AttachGroup
+ * @tc.desc: Test AttachGroup interface with task attachment to group
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test group ID
+ *           2. Create test task ID vector with multiple tasks
+ *           3. Expect AttachGroup to return E_OK
+ *           4. Call AttachGroup with test parameters
+ *           5. Verify result equals E_OK
+ * @tc.expect: AttachGroup returns E_OK successfully
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, AttachGroup001, TestSize.Level1)
 {
@@ -645,9 +864,16 @@ HWTEST_F(RequestManagerImplTest, AttachGroup001, TestSize.Level1)
 
 /**
  * @tc.name: DeleteGroup001
- * @tc.desc: Test DeleteGroup001 interface base function - DeleteGroup
+ * @tc.desc: Test DeleteGroup interface with successful group deletion
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create test group ID
+ *           2. Expect DeleteGroup to return E_OK
+ *           3. Call DeleteGroup with test group ID
+ *           4. Verify result equals E_OK
+ * @tc.expect: DeleteGroup returns E_OK successfully
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, DeleteGroup001, TestSize.Level1)
 {
@@ -658,10 +884,18 @@ HWTEST_F(RequestManagerImplTest, DeleteGroup001, TestSize.Level1)
 }
 
 /**
- * @tc.name: QueryTasks003
- * @tc.desc: Test QueryTasks003 interface base function - QueryTasks
+ * @tc.name: QueryTasks001
+ * @tc.desc: Test QueryTasks interface with multiple task query
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Verify mock proxy is not null
+ *           2. Create test task ID vector with multiple tasks
+ *           3. Create result vector for TaskInfoRet
+ *           4. Expect QueryTasks to return E_OK
+ *           5. Call QueryTasks with test parameters
+ * @tc.expect: QueryTasks returns E_OK successfully
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, QueryTasks001, TestSize.Level1)
 {

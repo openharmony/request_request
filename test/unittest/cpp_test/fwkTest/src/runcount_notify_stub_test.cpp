@@ -73,9 +73,19 @@ void RuncountNotifyStubTest::TearDown(void)
 
 /**
  * @tc.name: OnCallBackTest001
- * @tc.desc: Test OnCallBackTest001 interface base function - OnCallBack
+ * @tc.desc: Test the OnCallBack function of RunCountNotifyStub
+ * @tc.precon: NA
+ * @tc.step: 1. Create a Notify object
+ *           2. Call CallBack method with the Notify object
+ *           3. Create a TaskInfo object
+ *           4. Call Done method with the TaskInfo object
+ *           5. Write an int64_t value to MessageParcel
+ *           6. Call OnCallBack method with the MessageParcel
+ *           7. Check if the count is updated correctly
+ * @tc.expect: The count should be updated to the expected value
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RuncountNotifyStubTest, OnCallBackTest001, TestSize.Level1)
 {
@@ -97,9 +107,17 @@ HWTEST_F(RuncountNotifyStubTest, OnCallBackTest001, TestSize.Level1)
 
 /**
  * @tc.name: OnRemoteRequestTest001
- * @tc.desc: Test OnRemoteRequestTest001 interface base function - OnRemoteRequest
+ * @tc.desc: Test the OnRemoteRequest function of RunCountNotifyStub
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare MessageParcel data with interface token
+ *           2. Call OnRemoteRequest with REQUEST_NOTIFY_RUNCOUNT code
+ *           3. Prepare another MessageParcel with correct descriptor
+ *           4. Call OnRemoteRequest with REQUEST_DONE_NOTIFY code
+ *           5. Verify the return value is not zero
+ * @tc.expect: OnRemoteRequest should handle different request codes correctly
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RuncountNotifyStubTest, OnRemoteRequestTest001, TestSize.Level1)
 {
