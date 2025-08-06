@@ -41,8 +41,6 @@ public:
         const std::vector<std::string> &tids, const Version version, std::vector<ExceptionErrorCode> &rets) = 0;
     virtual ExceptionErrorCode QueryTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets) = 0;
     virtual ExceptionErrorCode ShowTasks(const std::vector<std::string> &tids, std::vector<TaskInfoRet> &rets) = 0;
-    virtual ExceptionErrorCode ShowBatchProgress(
-        const std::vector<std::string> &tids, std::vector<TaskProgressRet> &rets) = 0;
     virtual ExceptionErrorCode TouchTasks(
         const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets) = 0;
     virtual ExceptionErrorCode SetMaxSpeeds(
@@ -66,7 +64,6 @@ public:
     virtual int32_t Touch(const std::string &tid, const std::string &token, TaskInfo &info) = 0;
     virtual int32_t Search(const Filter &filter, std::vector<std::string> &tids) = 0;
     virtual int32_t Show(const std::string &tid, TaskInfo &info) = 0;
-    virtual int32_t ShowProgress(const std::string &tid, TaskProgress &taskProgress) = 0;
 
     virtual int32_t OpenChannel(int32_t &sockFd) = 0;
     virtual int32_t Subscribe(const std::string &taskId) = 0;

@@ -29,19 +29,6 @@ pub(super) fn start_task(task_id: u32) -> String {
     )
 }
 
-pub(super) fn start_tasks(task_ids: &[u32]) -> String {
-    format!(
-        "UPDATE request_task SET state = {}, reason = {} where task_id IN ({})",
-        State::Waiting.repr,
-        Reason::RunningTaskMeetLimits.repr,
-        task_ids
-            .iter()
-            .map(|&id| id.to_string())
-            .collect::<Vec<_>>()
-            .join(", "),
-    )
-}
-
 pub(super) fn pause_task(task_id: u32) -> String {
     format!(
         "UPDATE request_task SET state = {}, reason = {} where task_id = {} AND (state = {} OR state = {} OR state = {})",
@@ -51,19 +38,6 @@ pub(super) fn pause_task(task_id: u32) -> String {
         State::Running.repr,
         State::Retrying.repr,
         State::Waiting.repr,
-    )
-}
-
-pub(super) fn pause_tasks(task_ids: &[u32]) -> String {
-    format!(
-        "UPDATE request_task SET state = {}, reason = {} where task_id IN ({})",
-        State::Paused.repr,
-        Reason::UserOperation.repr,
-        task_ids
-            .iter()
-            .map(|&id| id.to_string())
-            .collect::<Vec<_>>()
-            .join(", "),
     )
 }
 
@@ -79,38 +53,12 @@ pub(super) fn stop_task(task_id: u32) -> String {
     )
 }
 
-pub(super) fn stop_tasks(task_ids: &[u32]) -> String {
-    format!(
-        "UPDATE request_task SET state = {}, reason = {} where task_id IN ({})",
-        State::Stopped.repr,
-        Reason::UserOperation.repr,
-        task_ids
-            .iter()
-            .map(|&id| id.to_string())
-            .collect::<Vec<_>>()
-            .join(", "),
-    )
-}
-
 pub(super) fn remove_task(task_id: u32) -> String {
     format!(
         "UPDATE request_task SET state = {}, reason = {} where task_id = {}",
         State::Removed.repr,
         Reason::UserOperation.repr,
         task_id,
-    )
-}
-
-pub(super) fn remove_tasks(task_ids: &[u32]) -> String {
-    format!(
-        "UPDATE request_task SET state = {}, reason = {} where task_id IN ({})",
-        State::Removed.repr,
-        Reason::UserOperation.repr,
-        task_ids
-            .iter()
-            .map(|&id| id.to_string())
-            .collect::<Vec<_>>()
-            .join(", "),
     )
 }
 

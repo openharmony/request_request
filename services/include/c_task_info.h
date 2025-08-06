@@ -54,7 +54,6 @@ struct CTaskInfo {
     CProgress progress;
     CommonTaskInfo commonData;
     int64_t maxSpeed;
-    int32_t statusCode;
     uint64_t taskTime;
 };
 
@@ -71,7 +70,6 @@ struct TaskInfo {
     Progress progress;
     CommonTaskInfo commonData;
     int64_t maxSpeed;
-    int32_t statusCode;
     uint64_t taskTime;
 };
 
@@ -81,7 +79,6 @@ struct CUpdateInfo {
     uint32_t tries;
     CStringWrapper mimeType;
     CProgress progress;
-    int32_t statusCode;
 };
 
 struct CUpdateStateInfo {
@@ -107,7 +104,6 @@ void DeleteCFormItem(CFormItem *ptr);
 void DeleteCFileSpec(CFileSpec *ptr);
 void DeleteCStringPtr(CStringWrapper *ptr);
 void DeleteCTaskInfo(CTaskInfo *ptr);
-void DeleteCTaskInfos(CTaskInfo *ptr);
 void DeleteTaskQosInfo(TaskQosInfo *ptr);
 
 #ifdef __cplusplus

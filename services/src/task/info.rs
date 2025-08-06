@@ -37,7 +37,6 @@ pub(crate) struct TaskInfo {
     pub(crate) extras: HashMap<String, String>,
     pub(crate) common_data: CommonTaskInfo,
     pub(crate) max_speed: i64,
-    pub(crate) status_code: i32,
     pub(crate) task_time: u64,
 }
 
@@ -58,7 +57,6 @@ impl TaskInfo {
             extras: HashMap::new(),
             common_data: CommonTaskInfo::new(),
             max_speed: 0,
-            status_code: 0,
             task_time: 0,
         }
     }
@@ -160,7 +158,6 @@ pub(crate) struct UpdateInfo {
     pub(crate) tries: u32,
     pub(crate) mime_type: String,
     pub(crate) progress: Progress,
-    pub(crate) status_code: i32,
 }
 
 impl From<u8> for State {

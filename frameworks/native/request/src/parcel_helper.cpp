@@ -28,8 +28,8 @@ void ParcelHelper::UnMarshal(MessageParcel &data, TaskInfo &info)
     if (!UnMarshalFileSpec(data, info)) {
         return;
     }
-    UnMarshalProgress(data, info.progress);
-    if (!UnMarshalMapProgressExtras(data, info.progress)) {
+    UnMarshalProgress(data, info);
+    if (!UnMarshalMapProgressExtras(data, info)) {
         return;
     }
     if (!UnMarshalMapExtras(data, info)) {
@@ -39,21 +39,6 @@ void ParcelHelper::UnMarshal(MessageParcel &data, TaskInfo &info)
     if (!UnMarshalTaskState(data, info)) {
         return;
     }
-}
-
-void ParcelHelper::UnMarshalTaskProgress(MessageParcel &data, TaskProgress &taskProgress)
-{
-    taskProgress.tid = data.ReadString();
-    UnMarshalProgress(data, taskProgress.progress);
-    if (!UnMarshalMapProgressExtras(data, taskProgress.progress)) {
-        return;
-    }
-    taskProgress.code = static_cast<Reason>(data.ReadUint32());
-    if (taskProgress.code != Reason::REASON_OK) {
-        taskProgress.faults = CommonUtils::GetFaultByReason(taskProgress.code);
-        taskProgress.reason = CommonUtils::GetMsgByReason(taskProgress.code);
-    }
-    taskProgress.statusCode = data.ReadUint32();
 }
 
 void ParcelHelper::UnMarshalBase(MessageParcel &data, TaskInfo &info)
@@ -115,16 +100,16 @@ bool ParcelHelper::UnMarshalFileSpec(MessageParcel &data, TaskInfo &info)
     return true;
 }
 
-void ParcelHelper::UnMarshalProgress(MessageParcel &data, Progress &progress)
+void ParcelHelper::UnMarshalProgress(MessageParcel &data, TaskInfo &info)
 {
-    progress.state = static_cast<State>(data.ReadUint32());
-    progress.index = data.ReadUint32();
-    progress.processed = data.ReadUint64();
-    progress.totalProcessed = data.ReadUint64();
-    data.ReadInt64Vector(&progress.sizes);
+    info.progress.state = static_cast<State>(data.ReadUint32());
+    info.progress.index = data.ReadUint32();
+    info.progress.processed = data.ReadUint64();
+    info.progress.totalProcessed = data.ReadUint64();
+    data.ReadInt64Vector(&info.progress.sizes);
 }
 
-bool ParcelHelper::UnMarshalMapProgressExtras(MessageParcel &data, Progress &progress)
+bool ParcelHelper::UnMarshalMapProgressExtras(MessageParcel &data, TaskInfo &info)
 {
     uint32_t size = data.ReadUint32();
     if (size > data.GetReadableBytes()) {
@@ -133,7 +118,7 @@ bool ParcelHelper::UnMarshalMapProgressExtras(MessageParcel &data, Progress &pro
     }
     for (uint32_t i = 0; i < size; i++) {
         std::string key = data.ReadString();
-        progress.extras[key] = data.ReadString();
+        info.progress.extras[key] = data.ReadString();
     }
     return true;
 }

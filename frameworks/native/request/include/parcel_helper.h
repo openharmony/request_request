@@ -27,14 +27,13 @@ class ParcelHelper {
 public:
     REQUEST_API static void UnMarshal(MessageParcel &data, TaskInfo &info);
     REQUEST_API static void UnMarshalConfig(MessageParcel &data, Config &config);
-    REQUEST_API static void UnMarshalTaskProgress(MessageParcel &data, TaskProgress &taskProgress);
 
 private:
     static void UnMarshalBase(MessageParcel &data, TaskInfo &info);
     static bool UnMarshalFormItem(MessageParcel &data, TaskInfo &info);
     static bool UnMarshalFileSpec(MessageParcel &data, TaskInfo &info);
-    static void UnMarshalProgress(MessageParcel &data, Progress &progress);
-    static bool UnMarshalMapProgressExtras(MessageParcel &data, Progress &progress);
+    static void UnMarshalProgress(MessageParcel &data, TaskInfo &info);
+    static bool UnMarshalMapProgressExtras(MessageParcel &data, TaskInfo &info);
     static bool UnMarshalMapExtras(MessageParcel &data, TaskInfo &info);
     static bool UnMarshalTaskState(MessageParcel &data, TaskInfo &info);
     static bool UnMarshalConfigHeaders(MessageParcel &data, Config &config);

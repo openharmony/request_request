@@ -69,12 +69,6 @@ ExceptionErrorCode RequestManager::ShowTasks(const std::vector<std::string> &tid
     return RequestManagerImpl::GetInstance()->ShowTasks(tids, rets);
 }
 
-ExceptionErrorCode RequestManager::ShowBatchProgress(
-    const std::vector<std::string> &tids, std::vector<TaskProgressRet> &rets)
-{
-    return RequestManagerImpl::GetInstance()->ShowBatchProgress(tids, rets);
-}
-
 ExceptionErrorCode RequestManager::TouchTasks(
     const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets)
 {
@@ -133,11 +127,6 @@ int32_t RequestManager::Search(const Filter &filter, std::vector<std::string> &t
 int32_t RequestManager::Show(const std::string &tid, TaskInfo &info)
 {
     return RequestManagerImpl::GetInstance()->Show(tid, info);
-}
-
-int32_t RequestManager::ShowProgress(const std::string &tid, TaskProgress &taskProgress)
-{
-    return RequestManagerImpl::GetInstance()->ShowProgress(tid, taskProgress);
 }
 
 int32_t RequestManager::Pause(const std::string &tid, const Version version)
