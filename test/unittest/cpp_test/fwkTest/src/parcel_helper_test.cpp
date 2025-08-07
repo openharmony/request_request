@@ -158,14 +158,14 @@ HWTEST_F(ParcelHelperTest, UnMarshalMapProgressExtras001, TestSize.Level1)
     TaskInfo info;
     uint32_t size = 0;
     data.WriteUint32(size);
-    EXPECT_TRUE(ParcelHelper::UnMarshalMapProgressExtras(data, info.progress));
+    EXPECT_TRUE(ParcelHelper::UnMarshalMapProgressExtras(data, info));
     size = 1;
     data.WriteUint32(size);
-    EXPECT_FALSE(ParcelHelper::UnMarshalMapProgressExtras(data, info.progress));
+    EXPECT_FALSE(ParcelHelper::UnMarshalMapProgressExtras(data, info));
     data.WriteUint32(size);
     data.WriteString("key");
     data.WriteString("value");
-    EXPECT_TRUE(ParcelHelper::UnMarshalMapProgressExtras(data, info.progress));
+    EXPECT_TRUE(ParcelHelper::UnMarshalMapProgressExtras(data, info));
     EXPECT_EQ(info.progress.extras["key"], "value");
 }
 
@@ -522,52 +522,6 @@ HWTEST_F(ParcelHelperTest, UnMarshal001, TestSize.Level1)
     EXPECT_EQ(info.progress.sizes[0], 1);
 }
 
-/**
- * @tc.name: UnMarshalTaskProgress001
- * @tc.desc: Test UnMarshalTaskProgress interface base function
- * @tc.precon: NA
- * @tc.step: 1. Create MessageParcel and TaskProgress instances
- *           2. Write valid task progress data including tid, state, progress, and extras
- *           3. Test with REASON_OK status
- *           4. Test with IO_ERROR status to verify fault mapping
- *           5. Verify all progress fields are correctly unmarshalled
- * @tc.expect: TaskProgress fields are correctly unmarshalled including tid, progress data, code, statusCode, faults, and reason
- * @tc.type: FUNC
- * @tc.require: issueNumber
- * @tc.level: Level 1
- */
-HWTEST_F(ParcelHelperTest, UnMarshalTaskProgress001, TestSize.Level1)
-{
-    OHOS::MessageParcel data;
-    data.WriteString("tid");
-    MarshalProgress(data);
-    uint32_t progressExtrasSize = 0;
-    data.WriteUint32(progressExtrasSize);
-    data.WriteUint32(static_cast<uint32_t>(Reason::REASON_OK));
-    data.WriteUint32(200);
-    TaskProgress taskProgress;
-    ParcelHelper::UnMarshalTaskProgress(data, taskProgress);
-    EXPECT_EQ(taskProgress.tid, "tid");
-    EXPECT_EQ(taskProgress.progress.sizes.size(), 1);
-    EXPECT_EQ(taskProgress.code, Reason::REASON_OK);
-    EXPECT_EQ(taskProgress.statusCode, 200);
-    EXPECT_EQ(static_cast<uint32_t>(taskProgress.faults), 0);
-    EXPECT_EQ(taskProgress.reason, "");
-
-    data.WriteString("tid");
-    MarshalProgress(data);
-    data.WriteUint32(progressExtrasSize);
-    data.WriteUint32(static_cast<uint32_t>(Reason::IO_ERROR));
-    data.WriteUint32(200);
-    ParcelHelper::UnMarshalTaskProgress(data, taskProgress);
-    EXPECT_EQ(taskProgress.tid, "tid");
-    EXPECT_EQ(taskProgress.progress.sizes.size(), 1);
-    EXPECT_EQ(taskProgress.code, Reason::IO_ERROR);
-    EXPECT_EQ(taskProgress.statusCode, 200);
-    EXPECT_EQ(taskProgress.faults, Faults::FSIO);
-    EXPECT_EQ(taskProgress.reason, "Io Error");
-}
-
 void MarshalConfigBase(OHOS::MessageParcel &data)
 {
     Config config;
@@ -604,7 +558,8 @@ void MarshalConfigBase(OHOS::MessageParcel &data)
  *           3. Test with headers, extras, form items, file specs, and body filenames
  *           4. Test different combinations of empty and non-empty collections
  *           5. Verify all config data is correctly unmarshalled
- * @tc.expect: All config fields are correctly unmarshalled including version, bundleName, url, title, description, method, data, and token
+ * @tc.expect: All config fields are correctly unmarshalled including version, bundleName, url, title,
+               description, method, data, and token
  * @tc.type: FUNC
  * @tc.require: issueNumber
  * @tc.level: Level 1

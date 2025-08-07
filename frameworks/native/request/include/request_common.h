@@ -284,20 +284,6 @@ struct TaskInfo {
     std::vector<TaskState> taskStates;
 };
 
-struct TaskProgress {
-    std::string tid;
-    Progress progress;
-    Reason code;
-    int32_t statusCode;
-    Faults faults;
-    std::string reason;
-};
-
-struct TaskProgressRet {
-    ExceptionErrorCode code;
-    TaskProgress taskProgress;
-};
-
 struct TaskInfoRet {
     ExceptionErrorCode code;
     TaskInfo info;

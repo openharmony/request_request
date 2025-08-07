@@ -123,12 +123,6 @@ ExceptionErrorCode RequestManagerImpl::ShowTasks(const std::vector<std::string> 
     return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::ShowTasks, tids, rets));
 }
 
-ExceptionErrorCode RequestManagerImpl::ShowBatchProgress(
-    const std::vector<std::string> &tids, std::vector<TaskProgressRet> &rets)
-{
-    return static_cast<ExceptionErrorCode>(CallProxyMethod(&RequestServiceInterface::ShowBatchProgress, tids, rets));
-}
-
 ExceptionErrorCode RequestManagerImpl::TouchTasks(
     const std::vector<TaskIdAndToken> &tidTokens, std::vector<TaskInfoRet> &rets)
 {
@@ -210,11 +204,6 @@ int32_t RequestManagerImpl::Search(const Filter &filter, std::vector<std::string
 int32_t RequestManagerImpl::Show(const std::string &tid, TaskInfo &info)
 {
     return CallProxyMethod(&RequestServiceInterface::Show, tid, info);
-}
-
-int32_t RequestManagerImpl::ShowProgress(const std::string &tid, TaskProgress &taskProgress)
-{
-    return CallProxyMethod(&RequestServiceInterface::ShowProgress, tid, taskProgress);
 }
 
 int32_t RequestManagerImpl::Pause(const std::string &tid, const Version version)

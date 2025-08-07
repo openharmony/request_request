@@ -115,8 +115,6 @@ constexpr const char *REQUEST_TASK_TABLE_ADD_UID_INDEX = "CREATE INDEX uid_index
 
 constexpr const char *REQUEST_TASK_TABLE_ADD_MAX_SPEED = "ALTER TABLE request_task ADD COLUMN max_speed INTEGER";
 constexpr const char *REQUEST_TASK_TABLE_ADD_MULTIPART = "ALTER TABLE request_task ADD COLUMN multipart INTEGER";
-constexpr const char *REQUEST_TASK_TABLE_ADD_STATUS_CODE = "ALTER TABLE request_task ADD COLUMN status_code INTEGER";
-
 constexpr const char *REQUEST_TASK_TABLE_ADD_MIN_SPEED = "ALTER TABLE request_task ADD COLUMN min_speed INTEGER";
 constexpr const char *REQUEST_TASK_TABLE_ADD_MIN_SPEED_DURATION = "ALTER TABLE request_task ADD COLUMN "
                                                                   "min_speed_duration INTEGER";
@@ -184,10 +182,7 @@ bool UpdateRequestTaskTime(uint32_t taskId, uint64_t taskTime);
 bool UpdateRequestTaskState(uint32_t taskId, CUpdateStateInfo *updateStateInfo);
 void RequestDBRemoveRecordsFromTime(uint64_t time);
 CTaskInfo *GetTaskInfo(uint32_t taskId);
-
-CTaskInfo *GetTaskInfos(uint32_t *taskIds, int32_t inLen, int32_t *outLen);
 CTaskConfig *QueryTaskConfig(uint32_t taskId);
-CTaskConfig *QueryTaskConfigs(uint32_t *taskIds, int32_t inLen, int32_t *outLen);
 
 #ifdef __cplusplus
 }

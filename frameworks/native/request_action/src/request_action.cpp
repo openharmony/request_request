@@ -72,11 +72,6 @@ int32_t RequestAction::Show(const std::string &tid, TaskInfo &info)
     return RequestManager::GetInstance()->Show(tid, info);
 }
 
-int32_t RequestAction::ShowProgress(const std::string &tid, TaskProgress &taskProgress)
-{
-    return RequestManager::GetInstance()->ShowProgress(tid, taskProgress);
-}
-
 int32_t RequestAction::Pause(const std::string &tid)
 {
     return RequestManager::GetInstance()->Pause(tid, Version::API10);
@@ -162,22 +157,6 @@ ExceptionErrorCode RequestAction::ShowTasks(
     rets.clear();
     std::vector<TaskInfoRet> vec;
     ExceptionErrorCode code = RequestManager::GetInstance()->ShowTasks(tids, vec);
-    if (code != ExceptionErrorCode::E_OK) {
-        return code;
-    }
-    uint32_t len = static_cast<uint32_t>(tids.size());
-    for (uint32_t i = 0; i < len; i++) {
-        rets.insert_or_assign(tids[i], vec[i]);
-    }
-    return ExceptionErrorCode::E_OK;
-}
-
-ExceptionErrorCode RequestAction::ShowBatchProgress(
-    const std::vector<std::string> &tids, std::unordered_map<std::string, TaskProgressRet> &rets)
-{
-    rets.clear();
-    std::vector<TaskProgressRet> vec;
-    ExceptionErrorCode code = RequestManager::GetInstance()->ShowBatchProgress(tids, vec);
     if (code != ExceptionErrorCode::E_OK) {
         return code;
     }

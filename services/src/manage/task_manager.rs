@@ -219,9 +219,6 @@ impl TaskManager {
             ServiceEvent::Start(uid, task_id, tx) => {
                 let _ = tx.send(self.start(uid, task_id));
             }
-            ServiceEvent::StartBatch(tasks, tx) => {
-                let _ = tx.send(self.start_batch(tasks));
-            }
             ServiceEvent::Stop(uid, task_id, tx) => {
                 let _ = tx.send(self.stop(uid, task_id));
             }
@@ -230,9 +227,6 @@ impl TaskManager {
             }
             ServiceEvent::Resume(uid, task_id, tx) => {
                 let _ = tx.send(self.resume(uid, task_id));
-            }
-            ServiceEvent::ResumeBatch(tasks, tx) => {
-                let _ = tx.send(self.resume_batch(tasks));
             }
             ServiceEvent::Remove(uid, task_id, tx) => {
                 let _ = tx.send(self.remove(uid, task_id));
