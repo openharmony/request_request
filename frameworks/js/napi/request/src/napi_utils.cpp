@@ -677,6 +677,13 @@ napi_value CallFunction(napi_env env, napi_value recv, napi_value func, size_t a
     return res;
 }
 
+std::string ToLower(const std::string &s)
+{
+    std::string res = s;
+    std::transform(res.begin(), res.end(), res.begin(), tolower);
+    return res;
+}
+
 Action GetRequestAction(napi_env env, napi_value configValue)
 {
     if (HasNamedProperty(env, configValue, PARAM_KEY_METHOD) || HasNamedProperty(env, configValue, PARAM_KEY_FILES)

@@ -314,6 +314,7 @@ impl Scheduler {
             State::Stopped | State::Removed => {
                 info!("task {} cancel with state Stopped or Removed", task_id);
                 NotificationDispatcher::get_instance().unregister_task(uid, task_id, true);
+                self.running_queue.try_restart(uid, task_id);
             }
             State::Waiting => {
                 info!("task {} cancel with state Waiting", task_id);

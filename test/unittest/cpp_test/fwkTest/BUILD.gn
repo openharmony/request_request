@@ -60,6 +60,7 @@ ohos_unittest("fwkTest") {
     "curl:curl_shared",
     "distributed_notification_service:ans_innerkits",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
@@ -72,7 +73,6 @@ ohos_unittest("fwkTest") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "googletest:gmock_main",
   ]
 }
 

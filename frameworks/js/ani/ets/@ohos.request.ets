@@ -176,6 +176,9 @@ export default namespace request {
         p1.then((data: NullishType): void => {
           let e = new BusinessError<void>;
           callback(e, undefined);
+        }).catch((error: NullishType) => {
+          let err =  error as BusinessError<void>;
+          callback(err, undefined);
         });
       };
 
@@ -186,6 +189,8 @@ export default namespace request {
             });
             p1.then((e: NullishType) : void => {
               resolve(undefined);
+            }).catch((err: Error) : void => {
+              reject(err);
             });
         });
         return p;

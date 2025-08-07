@@ -32,11 +32,11 @@ ohos_rust_unittest("rust_request_ut_test") {
     "hitrace:hitrace_meter_rust",
     "ipc:ipc_rust",
     "netstack:ylong_http_client",
+    "rust_cxx:lib",
     "safwk:system_ability_fwk_rust",
     "samgr:samgr_rust",
-    "ylong_runtime:ylong_runtime",
-    "rust_cxx:lib",
     "selinux_adapter:librestorecon",
+    "ylong_runtime:ylong_runtime",
   ]
 
   subsystem_name = "request"

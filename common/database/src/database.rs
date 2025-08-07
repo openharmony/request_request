@@ -11,9 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::pin::Pin;
-
 use cxx::SharedPtr;
+use std::pin::Pin;
 
 use crate::config::OpenConfig;
 use crate::params::{FromSql, Params};

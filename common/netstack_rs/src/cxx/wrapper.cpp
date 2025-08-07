@@ -21,7 +21,6 @@
 #include "dns_config_client.h"
 #include "http_client_error.h"
 #include "http_client_response.h"
-#include "log.h"
 #include "net_conn_client.h"
 #include "net_handle.h"
 #include "wrapper.rs.h"
@@ -84,18 +83,15 @@ rust::vec<rust::string> GetResolvConf()
     NetHandle handle;
     auto code = NetConnClient::GetInstance().GetDefaultNet(handle);
     if (code != 0) {
-        REQUEST_HILOGE("Cache Download GetDefaultNet failed, code : %{public}d", code);
         return dns;
     }
     int32_t netId = handle.GetNetId();
     if (netId < 0 || netId > UINT16_MAX) {
-        REQUEST_HILOGE("Cache Download GetNetId Illegal, id : %{public}d", netId);
         return dns;
     }
     ResolvConfig config = {};
     int ret = NetSysGetResolvConf(netId, &config);
     if (ret != 0) {
-        REQUEST_HILOGE("Cache Download NetSysGetResolvConf failed, ret : %{public}d", ret);
         return dns;
     }
 

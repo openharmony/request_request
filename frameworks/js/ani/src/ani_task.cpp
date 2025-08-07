@@ -30,6 +30,8 @@ using OHOS::StorageDaemon::AclSetAccess;
 
 namespace fs = std::filesystem;
 std::mutex AniTask::pathMutex_;
+std::mutex AniTask::taskMutex_;
+std::map<std::string, AniTask *> AniTask::taskMap_;
 std::map<std::string, int32_t> AniTask::pathMap_;
 std::map<std::string, int32_t> AniTask::fileMap_;
 
@@ -90,6 +92,23 @@ static void ThrowBusinessError(ani_env *env, int errCode, std::string&& errMsg)
     return;
 }
 
+void AniTask::AddTaskMap(const std::string &key, AniTask *task)
+{
+    REQUEST_HILOGI("Enter AniTask::AddTaskMap");
+    std::lock_guard<std::mutex> lockGuard(AniTask::taskMutex_);
+    taskMap_[key] = task;
+}
+ 
+void AniTask::ClearTaskMap(const std::string &key)
+{
+    REQUEST_HILOGI("Enter AniTask::ClearTaskMap");
+    std::lock_guard<std::mutex> lockGuard(AniTask::taskMutex_);
+    auto it = taskMap_.find(key);
+    if (it != taskMap_.end()) {
+        taskMap_.erase(it);
+    }
+}
+
 AniTask* AniTask::Create([[maybe_unused]] ani_env* env, Config config)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
@@ -112,18 +131,52 @@ AniTask* AniTask::Create([[maybe_unused]] ani_env* env, Config config)
     auto notifyDataListener = std::make_shared<NotifyDataListener>(vm, tid, SubscribeType::REMOVE);
     RequestManager::GetInstance()->AddListener(tid, SubscribeType::REMOVE, notifyDataListener);
 
-    return new AniTask(tid);
+    AniTask* aniTask = new AniTask(tid);
+    if (aniTask == nullptr) {
+        return nullptr;
+    }
+    AddTaskMap(tid, aniTask);
+    return aniTask;
 }
 
-void AniTask::Start()
+void AniTask::Start(ani_env *env)
 {
     REQUEST_HILOGI("Enter AniTask::Start");
+    if (env == nullptr) {
+        return;
+    }
+    std::string tid = tid_;
+    {
+        std::lock_guard<std::mutex> lockGuard(AniTask::taskMutex_);
+        const auto it = AniTask::taskMap_.find(tid);
+        if (it == AniTask::taskMap_.end()) {
+            REQUEST_HILOGE("Operation with wrong task state.");
+            ThrowBusinessError(env, E_TASK_STATE, std::move("Operation with wrong task state."));
+            return;
+        }
+    }
 
     int32_t ret = RequestManager::GetInstance()->Start(tid_);
     if (ret == E_OK) {
         REQUEST_HILOGI("AniTask::Start success");
     }
     REQUEST_HILOGI("AniTask::Start end");
+}
+
+static RemoveTaskChecker CheckRemoveJSTask(const std::shared_ptr<NotifyData> &notifyData, const std::string &tid)
+{
+    if (notifyData->version == Version::API9
+        && (notifyData->type == SubscribeType::COMPLETED || notifyData->type == SubscribeType::FAILED
+            || notifyData->type == SubscribeType::REMOVE)) {
+        return RemoveTaskChecker::ClearFileAndRemoveTask;
+    } else if (notifyData->version == Version::API10) {
+        if (notifyData->type == SubscribeType::REMOVE || notifyData->type == SubscribeType::COMPLETED) {
+            return RemoveTaskChecker::ClearFileAndRemoveTask;
+        } else if (notifyData->type == SubscribeType::FAILED) {
+            return RemoveTaskChecker::ClearFile;
+        }
+    }
+    return RemoveTaskChecker::DoNothing;
 }
 
 void NotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &notifyData)
@@ -141,6 +194,13 @@ void NotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &
         REQUEST_HILOGE("%{public}s: env_ == nullptr.", __func__);
         return;
     }
+
+    std::string tid = std::to_string(notifyData->taskId);
+    RemoveTaskChecker checkDo = CheckRemoveJSTask(notifyData, tid);
+    if (checkDo == RemoveTaskChecker::ClearFileAndRemoveTask) {
+        AniTask::ClearTaskMap(tid);
+    }
+
     ani_object Progress = AniObjectUtils::Create(workerEnv, "L@ohos/request/request;", "Lagent;", "LProgressImpl;",
         static_cast<ani_double>(notifyData->progress.state), static_cast<ani_double>(notifyData->progress.index),
         static_cast<ani_double>(notifyData->progress.processed));

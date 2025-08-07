@@ -295,13 +295,16 @@ static ani_object Create([[maybe_unused]] ani_env *env, ani_object object, ani_o
 static void StartSync([[maybe_unused]] ani_env *env, ani_object object)
 {
     REQUEST_HILOGI("Enter Start");
+    if (env == nullptr) {
+        return;
+    }
     NativePtrWrapper wrapper(env, object);
     auto task = wrapper.Unwrap<AniTask>();
     if (task == nullptr) {
         REQUEST_HILOGE("task is nullptr");
         return;
     }
-    task->Start();
+    task->Start(env);
 }
 
 static void OnSync([[maybe_unused]] ani_env *env, [[maybe_unused]] ani_object object,
