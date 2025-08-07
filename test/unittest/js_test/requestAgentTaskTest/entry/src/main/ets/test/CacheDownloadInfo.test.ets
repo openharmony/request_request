@@ -13,32 +13,30 @@
  * limitations under the License.
  */
 
-// @ts-nocheck
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from "@ohos/hypium";
 import cacheDownload from '@ohos.request.cacheDownload';
 
 export default function cacheDownloadInfo() {
-  describe('cacheDownloadInfo', function () {
-    beforeAll(function () {
+  describe('cacheDownloadInfo', () => {
+    beforeAll(() => {
       console.info('beforeAll called');
-    })
-
-    afterAll(function () {
+    });
+    afterAll(() => {
       console.info('afterAll called');
-    })
-
-    beforeEach(function () {
+    });
+    beforeEach(() => {
       console.info('beforeEach called');
-    })
-
-    afterEach(async function () {
+    });
+    afterEach(async () => {
       console.info('afterEach called');
       cacheDownload.setDownloadInfoListSize(0);
-    })
+    });
 
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
+    let sleep: (ms: number) => Promise<void> = async (ms: number): Promise<void> => {
+      return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+      });
+    };
 
     /**
      * @tc.name: testSetInfoListSize001
@@ -46,7 +44,7 @@ export default function cacheDownloadInfo() {
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSetInfoListSize001', 0, async function (done) {
+    it('testSetInfoListSize001', 0, async (done: Function) => {
       try {
         cacheDownload.setDownloadInfoListSize(-1);
         expect(false).assertTrue();
@@ -55,15 +53,14 @@ export default function cacheDownloadInfo() {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.name: testSetInfoListSize002
      * @tc.desc: setDownloadInfoListSize sets the size to be greater than 8192
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSetInfoListSize002', 0, async function (done) {
+    it('testSetInfoListSize002', 0, async (done: Function) => {
       try {
         cacheDownload.setDownloadInfoListSize(8193);
         expect(false).assertTrue();
@@ -72,15 +69,14 @@ export default function cacheDownloadInfo() {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.name: testSetInfoListSize003
      * @tc.desc: setDownloadInfoListSize sets the size to be greater than 8192
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSetInfoListSize003', 0, async function (done) {
+    it('testSetInfoListSize003', 0, async (done: Function) => {
       try {
         cacheDownload.setDownloadInfoListSize(8192);
         done();
@@ -88,38 +84,39 @@ export default function cacheDownloadInfo() {
         expect(false).assertTrue();
         done();
       }
-    })
-
+    });
     /**
      * @tc.name: testGetDownloadInfo001
      * @tc.desc: getDownloadInfoList updates the same url info
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testGetDownloadInfo001', 0, async function (done) {
+    it('testGetDownloadInfo001', 0, async (done: Function) => {
       try {
         let options: cacheDownload.CacheDownloadOptions = {};
         cacheDownload.setDownloadInfoListSize(1);
         cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
-                  options);
+          options);
         await sleep(5000);
-        let downloadInfo = cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        let downloadInfo =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
         let total_time = 0;
         if (downloadInfo == undefined) {
-            console.error('testGetDownloadInfo001 downloadInfo undefined.');
-            expect(false).assertTrue();
-            done();
+          console.error('testGetDownloadInfo001 downloadInfo undefined.');
+          expect(false).assertTrue();
+          done();
         } else {
-            total_time = downloadInfo.performance.totalTime;
+          total_time = downloadInfo.performance.totalTime;
         }
         cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
-                  options);
+          options);
         await sleep(5000);
-        let downloadInfo2 = cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        let downloadInfo2 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
         if (downloadInfo2 == undefined) {
-            console.error('testGetDownloadInfo001 downloadInfo2 undefined.');
-            expect(false).assertTrue();
-            done();
+          console.error('testGetDownloadInfo001 downloadInfo2 undefined.');
+          expect(false).assertTrue();
+          done();
         } else {
           expect(total_time != downloadInfo2.performance.totalTime).assertTrue();
           done();
@@ -129,37 +126,39 @@ export default function cacheDownloadInfo() {
         expect(false).assertTrue();
         done();
       }
-    })
-
+    });
     /**
      * @tc.name: testGetDownloadInfo002
      * @tc.desc: The set size is valid and can save the info of the number of sizes.
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testGetDownloadInfo002', 0, async function (done) {
+    it('testGetDownloadInfo002', 0, async (done: Function) => {
       try {
         let options: cacheDownload.CacheDownloadOptions = {};
         cacheDownload.setDownloadInfoListSize(1);
         cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
-                  options);
+          options);
         await sleep(5000);
-        let downloadInfo = cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        let downloadInfo =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
         if (downloadInfo == undefined) {
           console.error('testGetDownloadInfo002 downloadInfo undefined.');
           expect(false).assertTrue();
           done();
         }
         cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/edge_picture.jpg",
-                  options);
+          options);
         await sleep(5000);
-        let downloadInfo2 = cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/edge_picture.jpg");
+        let downloadInfo2 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/edge_picture.jpg");
         if (downloadInfo2 == undefined) {
           console.error('testGetDownloadInfo002 downloadInfo2 undefined.');
           expect(false).assertTrue();
           done();
         }
-        let downloadInfo_1 = cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        let downloadInfo_1 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
         if (downloadInfo_1 == undefined) {
           done();
         } else {
@@ -172,46 +171,49 @@ export default function cacheDownloadInfo() {
         expect(false).assertTrue();
         done();
       }
-    })
-
+    });
     /**
      * @tc.name: testGetDownloadInfo003
      * @tc.desc: remove the oldest information and save the latest one
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testGetDownloadInfo003', 0, async function (done) {
+    it('testGetDownloadInfo003', 0, async (done: Function) => {
       try {
         let options: cacheDownload.CacheDownloadOptions = {};
         cacheDownload.setDownloadInfoListSize(2);
         cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
-                  options);
+          options);
         await sleep(5000);
-        let downloadInfo = cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        let downloadInfo =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
         if (downloadInfo == undefined) {
           console.error('testGetDownloadInfo003 downloadInfo undefined.');
           expect(false).assertTrue();
           done();
         }
         cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/edge_picture.jpg",
-                  options);
+          options);
         await sleep(5000);
-        let downloadInfo2 = cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/edge_picture.jpg");
+        let downloadInfo2 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/edge_picture.jpg");
         if (downloadInfo2 == undefined) {
           console.error('testGetDownloadInfo003 downloadInfo2 undefined.');
           expect(false).assertTrue();
           done();
         }
         cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/audio_test.mp3",
-                  options);
+          options);
         await sleep(5000);
-        let downloadInfo3 = cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/audio_test.mp3");
+        let downloadInfo3 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/audio_test.mp3");
         if (downloadInfo3 == undefined) {
           console.error('testGetDownloadInfo003 downloadInfo3 undefined.');
           expect(false).assertTrue();
           done();
         }
-        let downloadInfo_1 = cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        let downloadInfo_1 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
         if (downloadInfo_1 == undefined) {
           done();
         } else {
@@ -224,53 +226,56 @@ export default function cacheDownloadInfo() {
         expect(false).assertTrue();
         done();
       }
-    })
-
+    });
     /**
      * @tc.name: testGetDownloadInfo004
      * @tc.desc: getDownloadInfo can update the corresponding url information to the latest
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testGetDownloadInfo004', 0, async function (done) {
+    it('testGetDownloadInfo004', 0, async (done: Function) => {
       try {
         let options: cacheDownload.CacheDownloadOptions = {};
         cacheDownload.setDownloadInfoListSize(2);
         cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
-                  options);
+          options);
         await sleep(5000);
-        let downloadInfo = cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        let downloadInfo =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
         if (downloadInfo == undefined) {
           console.error('testGetDownloadInfo004 downloadInfo undefined.');
           expect(false).assertTrue();
           done();
         }
         cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/edge_picture.jpg",
-                  options);
+          options);
         await sleep(5000);
-        let downloadInfo2 = cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/edge_picture.jpg");
+        let downloadInfo2 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/edge_picture.jpg");
         if (downloadInfo2 == undefined) {
           console.error('testGetDownloadInfo004 downloadInfo2 undefined.');
           expect(false).assertTrue();
           done();
         }
-
-        let downloadInfo_1 = cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        let downloadInfo_1 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
         if (downloadInfo_1 == undefined) {
           console.error('testGetDownloadInfo004 downloadInfo2 undefined.');
           expect(false).assertTrue();
           done();
         }
         cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/audio_test.mp3",
-                  options);
+          options);
         await sleep(5000);
-        let downloadInfo3 = cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/audio_test.mp3");
+        let downloadInfo3 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/audio_test.mp3");
         if (downloadInfo3 == undefined) {
           console.error('testGetDownloadInfo004 downloadInfo3 undefined.');
           expect(false).assertTrue();
           done();
         }
-        let downloadInfo_2 = cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/edge_picture.jpg");
+        let downloadInfo_2 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/edge_picture.jpg");
         if (downloadInfo_2 == undefined) {
           done();
         } else {
@@ -283,7 +288,6 @@ export default function cacheDownloadInfo() {
         expect(false).assertTrue();
         done();
       }
-    })
-    
+    });
   })
 }

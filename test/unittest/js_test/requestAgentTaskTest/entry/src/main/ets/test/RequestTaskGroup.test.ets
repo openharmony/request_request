@@ -13,40 +13,37 @@
  * limitations under the License.
  */
 
-// @ts-nocheck
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from "@ohos/hypium"
 import request from '@ohos.request';
 import fs from '@ohos.file.fs';
+import common from '@ohos.app.ability.common';
 
 export default function requestTaskGroupTest() {
-  describe('requestTaskGroupTest', function () {
-    beforeAll(function () {
+  describe('requestTaskGroupTest', () => {
+    beforeAll(() => {
       console.info('beforeAll called');
-    })
-
-    afterAll(function () {
+    });
+    afterAll(() => {
       console.info('afterAll called');
-    })
-
-    beforeEach(function () {
+    });
+    beforeEach(() => {
       console.info('beforeEach called');
-    })
-
-    afterEach(async function () {
+    });
+    afterEach(async () => {
       console.info('afterEach called');
       if (fs.accessSync(cacheDir + '/test.txt')) {
         fs.unlinkSync(cacheDir + '/test.txt');
       }
-    })
+    });
 
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
+    let sleep: (ms: number) => Promise<void> = async (ms: number): Promise<void> => {
+      return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+      });
+    };
 
-    let context = globalThis.abilityContext;
-    let cacheDir = globalThis.cacheDir;
-
-
+    let context: common.UIAbilityContext = globalThis.abilityContext;
+    let cacheDir: String = globalThis.cacheDir;
     /**
      * @tc.number: testcreateGroup001
      * @tc.name: testcreateGroup001
@@ -56,8 +53,8 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testcreateGroup001', 0, async function (done) {
-      let config = {
+    it('testcreateGroup001', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {},
       };
@@ -69,8 +66,7 @@ export default function requestTaskGroupTest() {
         expect(false).assertTrue();
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testcreateGroup002
      * @tc.name: testcreateGroup002
@@ -80,17 +76,16 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testcreateGroup002', 0, async function (done) {
+    it('testcreateGroup002', 0, async (done: Function) => {
       try {
-        let gid = await request.agent.createGroup(123);
+        let gid = await request.agent.createGroup(123 as Object as request.agent.GroupConfig);
         expect(false).assertTrue();
         done();
       } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testcreateGroup003
      * @tc.name: testcreateGroup003
@@ -100,8 +95,8 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testcreateGroup003', 0, async function (done) {
-      let config = {
+    it('testcreateGroup003', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {
           title: 'a'.repeat(1024),
@@ -115,8 +110,7 @@ export default function requestTaskGroupTest() {
         expect(false).assertTrue();
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testcreateGroup004
      * @tc.name: testcreateGroup004
@@ -126,8 +120,8 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testcreateGroup004', 0, async function (done) {
-      let config = {
+    it('testcreateGroup004', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {
           title: '1' + 'a'.repeat(1024),
@@ -141,8 +135,7 @@ export default function requestTaskGroupTest() {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testcreateGroup005
      * @tc.name: testcreateGroup005
@@ -152,8 +145,8 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testcreateGroup005', 0, async function (done) {
-      let config = {
+    it('testcreateGroup005', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {
           text: 'a'.repeat(3072),
@@ -167,8 +160,7 @@ export default function requestTaskGroupTest() {
         expect(false).assertTrue();
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testcreateGroup006
      * @tc.name: testcreateGroup006
@@ -178,8 +170,8 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testcreateGroup006', 0, async function (done) {
-      let config = {
+    it('testcreateGroup006', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {
           text: '1' + 'a'.repeat(3072),
@@ -193,8 +185,7 @@ export default function requestTaskGroupTest() {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testattachGroup001
      * @tc.name: testattachGroup001
@@ -204,8 +195,8 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testattachGroup001', 0, async function (done) {
-      let config = {
+    it('testattachGroup001', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {},
       };
@@ -219,8 +210,7 @@ export default function requestTaskGroupTest() {
         expect(false).assertTrue();
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testattachGroup002
      * @tc.name: testattachGroup002
@@ -230,17 +220,16 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testattachGroup002', 0, async function (done) {
+    it('testattachGroup002', 0, async (done: Function) => {
       try {
-        await request.agent.attachGroup("gid", "tids");
+        await request.agent.attachGroup("gid", "tids" as Object as Array<string>);
         expect(false).assertTrue();
         done();
       } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testattachGroup003
      * @tc.name: testattachGroup003
@@ -250,8 +239,8 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testattachGroup003', 0, async function (done) {
-      let config = {
+    it('testattachGroup003', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {},
       };
@@ -265,8 +254,7 @@ export default function requestTaskGroupTest() {
         expect(err.code).assertEqual(21900006);
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testattachGroup004
      * @tc.name: testattachGroup004
@@ -276,22 +264,21 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testattachGroup004', 0, async function (done) {
-      let config = {
+    it('testattachGroup004', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {},
       };
       try {
         let gid = await request.agent.createGroup(config);
-        await request.agent.attachGroup(gid);
+        await request.agent.attachGroup(gid,undefined);
         expect(false).assertTrue();
         done();
       } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testattachGroup005
      * @tc.name: testattachGroup005
@@ -301,18 +288,17 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testattachGroup005', 0, async function (done) {
-      let config = {
+    it('testattachGroup005', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {},
       };
-
-      let conf = {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: 'testGroupa05.txt',
         overwrite: true,
-      }
+      };
       let task = await request.agent.create(context, conf);
       try {
         let gid = await request.agent.createGroup(config);
@@ -323,8 +309,7 @@ export default function requestTaskGroupTest() {
         expect(false).assertTrue();
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testattachGroup006
      * @tc.name: testattachGroup006
@@ -334,26 +319,25 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testattachGroup006', 0, async function (done) {
-      let config = {
+    it('testattachGroup006', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {},
       };
-
-      let conf1 = {
+      let conf1: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: 'testGroupa061.txt',
         overwrite: true,
         mode: request.agent.Mode.FOREGROUND
-      }
-      let conf2 = {
+      };
+      let conf2: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: 'testGroupa061.txt',
         overwrite: true,
         mode: request.agent.Mode.BACKGROUND
-      }
+      };
       let task1 = await request.agent.create(context, conf1);
       let tid1 = task1.tid;
       let task2 = await request.agent.create(context, conf2);
@@ -367,8 +351,7 @@ export default function requestTaskGroupTest() {
         expect(err.code).assertEqual(21900005);
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testattachGroup007
      * @tc.name: testattachGroup007
@@ -378,26 +361,25 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testattachGroup007', 0, async function (done) {
-      let config = {
+    it('testattachGroup007', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {},
       };
-
-      let conf1 = {
+      let conf1: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: 'testGroupa071.txt',
         overwrite: true,
         mode: request.agent.Mode.BACKGROUND
-      }
-      let conf2 = {
+      };
+      let conf2: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: 'testGroupa071.txt',
         overwrite: true,
         mode: request.agent.Mode.BACKGROUND
-      }
+      };
       let task1 = await request.agent.create(context, conf1);
       task1.start();
       let tid1 = task1.tid;
@@ -413,8 +395,7 @@ export default function requestTaskGroupTest() {
         await request.agent.remove(task1.tid);
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testattachGroup008
      * @tc.name: testattachGroup008
@@ -424,12 +405,11 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testattachGroup008', 0, async function (done) {
-      let config = {
+    it('testattachGroup008', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {},
       };
-
       try {
         let gid = await request.agent.createGroup(config);
         await request.agent.attachGroup(gid, []);
@@ -441,8 +421,7 @@ export default function requestTaskGroupTest() {
         expect(err.code).assertEqual(21900008);
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testattachGroup009
      * @tc.name: testattachGroup009
@@ -452,7 +431,7 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testattachGroup009', 0, async function (done) {
+    it('testattachGroup009', 0, async (done: Function) => {
       let gid = "123";
       try {
         await request.agent.attachGroup(gid, []);
@@ -462,8 +441,7 @@ export default function requestTaskGroupTest() {
         expect(err.code).assertEqual(21900008);
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testattachGroup010
      * @tc.name: testattachGroup010
@@ -473,12 +451,11 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testattachGroup010', 0, async function (done) {
-      let config = {
+    it('testattachGroup010', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {},
       };
-
       try {
         let gid = await request.agent.createGroup(config);
         await request.agent.attachGroup(gid, ["123"]);
@@ -488,8 +465,7 @@ export default function requestTaskGroupTest() {
         expect(err.code).assertEqual(21900006);
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testdeleteGroup001
      * @tc.name: testdeleteGroup001
@@ -499,17 +475,17 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testdeleteGroup001', 0, async function (done) {
-      let config = {
+    it('testdeleteGroup001', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {},
       };
-      let conf = {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: 'testGroupd01.txt',
         overwrite: true,
-      }
+      };
       let task = await request.agent.create(context, conf);
       let tid = task.tid;
       try {
@@ -523,8 +499,7 @@ export default function requestTaskGroupTest() {
         expect(false).assertTrue();
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testdeleteGroup002
      * @tc.name: testdeleteGroup002
@@ -534,17 +509,17 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testdeleteGroup002', 0, async function (done) {
-      let config = {
+    it('testdeleteGroup002', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {},
       };
-      let conf = {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         saveas: 'testGroupd02.txt',
         overwrite: true,
-      }
+      };
       let task = await request.agent.create(context, conf);
       let tid = task.tid;
       try {
@@ -559,8 +534,7 @@ export default function requestTaskGroupTest() {
         expect(err.code).assertEqual(21900008);
         done();
       }
-    })
-
+    });
     /**
      * @tc.number: testdeleteGroup003
      * @tc.name: testdeleteGroup003
@@ -570,13 +544,13 @@ export default function requestTaskGroupTest() {
      * @tc.level: Level 1
      * @tc.require:
      */
-    it('testdeleteGroup003', 0, async function (done) {
-      let config = {
+    it('testdeleteGroup003', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
         gauge: true,
         notification: {},
       };
       try {
-        let gid = "123"
+        let gid = "123";
         await request.agent.deleteGroup(gid);
         expect(false).assertTrue();
         done();
@@ -584,7 +558,6 @@ export default function requestTaskGroupTest() {
         expect(err.code).assertEqual(21900008);
         done();
       }
-    })
-
+    });
   })
 }
