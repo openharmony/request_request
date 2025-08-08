@@ -833,9 +833,9 @@ ExceptionErrorCode RequestAction::CreateTasks(std::vector<TaskBuilder> &builders
         // If config is invalid, do not add it to configs.
         configs.push_back(ret.first);
     }
+    PathControl::InsureMapAcl();
 
     std::vector<TaskRet> temp_rets;
-
     ExceptionErrorCode ret = RequestManager::GetInstance()->CreateTasks(configs, temp_rets);
     if (ret == ExceptionErrorCode::E_OK) {
         size_t ret_index = 0;
