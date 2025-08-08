@@ -95,9 +95,9 @@ ohos_static_library("download_server_cxx") {
     "relational_store:native_dataability",
     "relational_store:native_rdb",
     "resource_management:global_resmgr",
+    "rust_cxx:cxx_cppdeps",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "rust_cxx:cxx_cppdeps",
     "ylong_runtime:ylong_runtime",
   ]
 
@@ -146,10 +146,10 @@ ohos_rust_shared_library("download_server") {
     "hitrace:hitrace_meter_rust",
     "ipc:ipc_rust",
     "netstack:ylong_http_client",
+    "rust_cxx:lib",
     "safwk:system_ability_fwk_rust",
     "samgr:samgr_rust",
     "ylong_runtime:ylong_runtime",
-    "rust_cxx:lib",
   ]
 
   crate_name = "download_server"

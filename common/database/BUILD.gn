@@ -43,9 +43,7 @@ ohos_static_library("database_rs_cxx") {
     "c_utils:utils",
   ]
 
-  deps = [
-    ":database_rs_cxx_gen",
-  ]
+  deps = [ ":database_rs_cxx_gen" ]
 
   subsystem_name = "request"
   part_name = "request"
@@ -63,12 +61,8 @@ ohos_rust_static_library("database_rs") {
   }
 
   sources = [ "src/lib.rs" ]
-  deps = [
-    ":database_rs_cxx",
-  ]
-  external_deps = [
-    "rust_cxx:lib",
-  ]
+  deps = [ ":database_rs_cxx" ]
+  external_deps = [ "rust_cxx:lib" ]
 
   subsystem_name = "request"
   part_name = "request"
@@ -79,12 +73,8 @@ ohos_rust_unittest("rust_database_rs_ut_test") {
 
   sources = [ "src/lib.rs" ]
 
-  deps = [
-    ":database_rs_cxx",
-  ]
-  external_deps = [
-    "rust_cxx:lib",
-  ]
+  deps = [ ":database_rs_cxx" ]
+  external_deps = [ "rust_cxx:lib" ]
 
   subsystem_name = "request"
   part_name = "request"

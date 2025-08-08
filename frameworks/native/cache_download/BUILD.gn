@@ -39,9 +39,7 @@ ohos_rust_shared_ffi("preload_native_rust") {
     "../../../common/utils:request_utils",
     "../cache_core:cache_core",
   ]
-  external_deps = [
-    "rust_cxx:lib",
-  ]
+  external_deps = [ "rust_cxx:lib" ]
 
   subsystem_name = "request"
   part_name = "request"
@@ -107,9 +105,7 @@ ohos_static_library("preload_native_static") {
     "src/cxx/request_preload.cpp",
   ]
   sources += get_target_outputs(":preload_native_rust_gen")
-  deps = [
-    ":preload_native_rust_gen",
-  ]
+  deps = [ ":preload_native_rust_gen" ]
 
   external_deps = [
     "ability_runtime:app_context",
@@ -139,9 +135,7 @@ ohos_rust_unittest("rust_cache_download_ut_test") {
     "../../../common/utils:request_utils",
     "../cache_core:cache_core",
   ]
-  external_deps = [
-    "rust_cxx:lib",
-  ]
+  external_deps = [ "rust_cxx:lib" ]
 
   subsystem_name = "request"
   part_name = "request"

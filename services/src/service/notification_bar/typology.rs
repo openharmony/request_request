@@ -154,11 +154,13 @@ impl NotifyContent {
         successful_count: i32,
         failed_count: i32,
     ) -> Self {
+        let text_download_complete = GetSystemResourceString(DOWNLOAD_COMPLETE);
+        let text_download = text_download_complete.replace("%s", &progress_size(current_size).to_string());
         let title = customized
             .as_mut()
             .and_then(|c| c.title.take())
             .unwrap_or_else(|| match action {
-                Action::Download => format!("{} {}", GetSystemResourceString(DOWNLOAD_COMPLETE), progress_size(current_size)),
+                Action::Download => text_download,
                 Action::Upload => format!("上传完成 {}", progress_size(current_size)),
                 _ => unreachable!(),
             });

@@ -77,9 +77,7 @@ ohos_rust_executable("request_action_test") {
     ":request_action",
     ":request_action_cxx",
   ]
-  external_deps = [
-    "rust_cxx:lib",
-  ]
+  external_deps = [ "rust_cxx:lib" ]
   sources = [ "request_action_test.rs" ]
 
   subsystem_name = "request"
