@@ -79,9 +79,17 @@ static constexpr int32_t INT16_SIZE = 2;  // 2 is int16 and uint16 num length
 
 /**
  * @tc.name: Int64FromParcel001
- * @tc.desc: Test Int64FromParcel001 interface base function - Int64FromParcel
+ * @tc.desc: Test Int64FromParcel interface base function - Int64FromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test data with expected int64 value 123456
+ *           2. Test with insufficient buffer size (INT32_SIZE)
+ *           3. Test with correct buffer size (INT64_SIZE)
+ *           4. Verify parsed value matches expected
+ *           5. Verify size parameter updated correctly
+ * @tc.expect: Returns -1 for insufficient size, 0 for correct size with expected value parsed
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, Int64FromParcel001, TestSize.Level1)
 {
@@ -98,9 +106,17 @@ HWTEST_F(ResponseMessageReceiverTest, Int64FromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: Uint64FromParcel001
- * @tc.desc: Test Uint64FromParcel001 interface base function - Uint64FromParcel
+ * @tc.desc: Test Uint64FromParcel interface base function - Uint64FromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test data with expected uint64 value 123456
+ *           2. Test with insufficient buffer size (INT32_SIZE)
+ *           3. Test with correct buffer size (INT64_SIZE)
+ *           4. Verify parsed value matches expected
+ *           5. Verify size parameter updated correctly
+ * @tc.expect: Returns -1 for insufficient size, 0 for correct size with expected value parsed
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, Uint64FromParcel001, TestSize.Level1)
 {
@@ -117,9 +133,17 @@ HWTEST_F(ResponseMessageReceiverTest, Uint64FromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: Int32FromParcel001
- * @tc.desc: Test Int32FromParcel001 interface base function - Int32FromParcel
+ * @tc.desc: Test Int32FromParcel interface base function - Int32FromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test data with expected int32 value 123456
+ *           2. Test with insufficient buffer size (INT16_SIZE)
+ *           3. Test with correct buffer size (INT32_SIZE)
+ *           4. Verify parsed value matches expected
+ *           5. Verify size parameter updated correctly
+ * @tc.expect: Returns -1 for insufficient size, 0 for correct size with expected value parsed
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, Int32FromParcel001, TestSize.Level1)
 {
@@ -136,9 +160,17 @@ HWTEST_F(ResponseMessageReceiverTest, Int32FromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: Uint32FromParcel001
- * @tc.desc: Test Uint32FromParcel001 interface base function - Uint32FromParcel
+ * @tc.desc: Test Uint32FromParcel interface base function - Uint32FromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test data with expected uint32 value 123456
+ *           2. Test with insufficient buffer size (INT16_SIZE)
+ *           3. Test with correct buffer size (INT32_SIZE)
+ *           4. Verify parsed value matches expected
+ *           5. Verify size parameter updated correctly
+ * @tc.expect: Returns -1 for insufficient size, 0 for correct size with expected value parsed
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, Uint32FromParcel001, TestSize.Level1)
 {
@@ -155,9 +187,17 @@ HWTEST_F(ResponseMessageReceiverTest, Uint32FromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: Int16FromParcel001
- * @tc.desc: Test Int16FromParcel001 interface base function - Int16FromParcel
+ * @tc.desc: Test Int16FromParcel interface base function - Int16FromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test data with expected int16 value 123
+ *           2. Test with insufficient buffer size (0)
+ *           3. Test with correct buffer size (INT16_SIZE)
+ *           4. Verify parsed value matches expected
+ *           5. Verify size parameter updated correctly
+ * @tc.expect: Returns -1 for insufficient size, 0 for correct size with expected value parsed
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, Int16FromParcel001, TestSize.Level1)
 {
@@ -174,9 +214,17 @@ HWTEST_F(ResponseMessageReceiverTest, Int16FromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: StateFromParcel001
- * @tc.desc: Test StateFromParcel001 interface base function - StateFromParcel
+ * @tc.desc: Test StateFromParcel interface base function - StateFromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test data with invalid state value (ANY+1)
+ *           2. Test with invalid state value
+ *           3. Prepare test data with valid state value (ANY)
+ *           4. Test with valid state value
+ *           5. Verify parsed state matches expected
+ * @tc.expect: Returns -1 for invalid state, 0 for valid state with correct value parsed
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, StateFromParcel001, TestSize.Level1)
 {
@@ -195,9 +243,17 @@ HWTEST_F(ResponseMessageReceiverTest, StateFromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: ActionFromParcel001
- * @tc.desc: Test ActionFromParcel001 interface base function - ActionFromParcel
+ * @tc.desc: Test ActionFromParcel interface base function - ActionFromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test data with invalid action value (ANY+1)
+ *           2. Test with invalid action value
+ *           3. Prepare test data with valid action value (ANY)
+ *           4. Test with valid action value
+ *           5. Verify parsed action matches expected
+ * @tc.expect: Returns -1 for invalid action, 0 for valid action with correct value parsed
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, ActionFromParcel001, TestSize.Level1)
 {
@@ -216,9 +272,17 @@ HWTEST_F(ResponseMessageReceiverTest, ActionFromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: VersionFromParcel001
- * @tc.desc: Test VersionFromParcel001 interface base function - VersionFromParcel
+ * @tc.desc: Test VersionFromParcel interface base function - VersionFromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test data with invalid version value (API10+1)
+ *           2. Test with invalid version value
+ *           3. Prepare test data with valid version value (API10)
+ *           4. Test with valid version value
+ *           5. Verify parsed version matches expected
+ * @tc.expect: Returns -1 for invalid version, 0 for valid version with correct value parsed
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, VersionFromParcel001, TestSize.Level1)
 {
@@ -237,9 +301,17 @@ HWTEST_F(ResponseMessageReceiverTest, VersionFromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: SubscribeTypeFromParcel001
- * @tc.desc: Test SubscribeTypeFromParcel001 interface base function - SubscribeTypeFromParcel
+ * @tc.desc: Test SubscribeTypeFromParcel interface base function - SubscribeTypeFromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test data with invalid subscribe type value (BUTT+1)
+ *           2. Test with invalid subscribe type value
+ *           3. Prepare test data with valid subscribe type value (BUTT)
+ *           4. Test with valid subscribe type value
+ *           5. Verify parsed subscribe type matches expected
+ * @tc.expect: Returns -1 for invalid type, 0 for valid type with correct value parsed
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, SubscribeTypeFromParcel001, TestSize.Level1)
 {
@@ -258,9 +330,17 @@ HWTEST_F(ResponseMessageReceiverTest, SubscribeTypeFromParcel001, TestSize.Level
 
 /**
  * @tc.name: StringFromParcel001
- * @tc.desc: Test StringFromParcel001 interface base function - StringFromParcel
+ * @tc.desc: Test StringFromParcel interface base function - StringFromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test string "except string"
+ *           2. Test with insufficient buffer size (size-1)
+ *           3. Test with correct buffer size (size+1)
+ *           4. Verify parsed string matches expected
+ *           5. Verify size parameter updated correctly
+ * @tc.expect: Returns -1 for insufficient size, 0 for correct size with expected string parsed
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, StringFromParcel001, TestSize.Level1)
 {
@@ -277,9 +357,17 @@ HWTEST_F(ResponseMessageReceiverTest, StringFromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: ResponseHeaderFromParcel001
- * @tc.desc: Test ResponseHeaderFromParcel001 interface base function - ResponseHeaderFromParcel
+ * @tc.desc: Test ResponseHeaderFromParcel interface base function - ResponseHeaderFromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test header string "header:aaa,bbb,ccc\n"
+ *           2. Create empty headers map
+ *           3. Parse header string into map
+ *           4. Verify parsing returns success (0)
+ *           5. Verify header values are correctly parsed
+ * @tc.expect: Header parsed successfully with values ["aaa", "bbb", "ccc"] for key "header"
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, ResponseHeaderFromParcel001, TestSize.Level1)
 {
@@ -297,9 +385,17 @@ HWTEST_F(ResponseMessageReceiverTest, ResponseHeaderFromParcel001, TestSize.Leve
 
 /**
  * @tc.name: ProgressExtrasFromParcel001
- * @tc.desc: Test ProgressExtrasFromParcel001 interface base function - ProgressExtrasFromParcel
+ * @tc.desc: Test ProgressExtrasFromParcel interface base function - ProgressExtrasFromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test data with length and key-value pairs
+ *           2. Test with insufficient buffer sizes (INT16_SIZE, INT32_SIZE+1, INT32_SIZE+6)
+ *           3. Test with correct buffer size (full array)
+ *           4. Verify parsing returns success (0)
+ *           5. Verify key-value pairs are correctly parsed
+ * @tc.expect: Returns -1 for insufficient sizes, 0 for correct size with key-value pairs parsed
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, ProgressExtrasFromParcel001, TestSize.Level1)
 {
@@ -328,9 +424,17 @@ HWTEST_F(ResponseMessageReceiverTest, ProgressExtrasFromParcel001, TestSize.Leve
 
 /**
  * @tc.name: VecInt64FromParcel001
- * @tc.desc: Test VecInt64FromParcel001 interface base function - VecInt64FromParcel
+ * @tc.desc: Test VecInt64FromParcel interface base function - VecInt64FromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test data with length and int64 vector values
+ *           2. Test with insufficient buffer sizes (INT16_SIZE, INT64_SIZE)
+ *           3. Test with correct buffer size (full array)
+ *           4. Verify parsing returns success (0)
+ *           5. Verify vector values are correctly parsed
+ * @tc.expect: Returns -1 for insufficient sizes, 0 for correct size with vector values parsed
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, VecInt64FromParcel001, TestSize.Level1)
 {
@@ -380,9 +484,16 @@ public:
 
 /**
  * @tc.name: ResponseMessageReceiver001
- * @tc.desc: Test ResponseMessageReceiver001 interface base function - ResponseMessageReceiver
+ * @tc.desc: Test ResponseMessageReceiver constructor with valid parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create test response listener handler
+ *           2. Set socket file descriptor to -1
+ *           3. Create ResponseMessageReceiver instance with handler and socket
+ *           4. Verify handler pointer is correctly stored
+ * @tc.expect: ResponseMessageReceiver created successfully with handler pointer stored correctly
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, ResponseMessageReceiver001, TestSize.Level1)
 {
@@ -394,9 +505,17 @@ HWTEST_F(ResponseMessageReceiverTest, ResponseMessageReceiver001, TestSize.Level
 
 /**
  * @tc.name: MsgHeaderParcel001
- * @tc.desc: Test MsgHeaderParcel001 interface base function - MsgHeaderParcel
+ * @tc.desc: Test MsgHeaderParcel interface base function - MsgHeaderParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test data with magic number, message ID, type, and body size
+ *           2. Test with insufficient buffer sizes (INT16_SIZE, INT32_SIZE, INT64_SIZE)
+ *           3. Test with correct buffer size (full array)
+ *           4. Verify parsing returns success (0)
+ *           5. Verify all header fields are correctly parsed
+ * @tc.expect: Returns -1 for insufficient sizes, 0 for correct size with all fields parsed correctly
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, MsgHeaderParcel001, TestSize.Level1)
 {
@@ -456,9 +575,17 @@ HWTEST_F(ResponseMessageReceiverTest, MsgHeaderParcel001, TestSize.Level1)
 
 /**
  * @tc.name: ResponseFromParcel001
- * @tc.desc: Test ResponseFromParcel001 interface base function - ResponseFromParcel
+ * @tc.desc: Test ResponseFromParcel interface base function - ResponseFromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test response data with task ID, version, status code, reason, and headers
+ *           2. Test with insufficient buffer sizes (INT16_SIZE, INT32_SIZE, INT64_SIZE)
+ *           3. Test with correct buffer size (full array)
+ *           4. Verify parsing returns success (0)
+ *           5. Verify all response fields are correctly parsed
+ * @tc.expect: Returns -1 for insufficient sizes, 0 for correct size with all response fields parsed correctly
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, ResponseFromParcel001, TestSize.Level1)
 {
@@ -509,9 +636,17 @@ HWTEST_F(ResponseMessageReceiverTest, ResponseFromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: TaskStatesFromParcel001
- * @tc.desc: Test TaskStatesFromParcel001 interface base function - TaskStatesFromParcel
+ * @tc.desc: Test TaskStatesFromParcel interface base function - TaskStatesFromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare test task states data with length, path, response code, and message
+ *           2. Test with insufficient buffer sizes (INT16_SIZE, INT32_SIZE, INT64_SIZE)
+ *           3. Test with correct buffer size (full array)
+ *           4. Verify parsing returns success (0)
+ *           5. Verify all task state fields are correctly parsed
+ * @tc.expect: Returns -1 for insufficient sizes, 0 for correct size with all task state fields parsed correctly
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, TaskStatesFromParcel001, TestSize.Level1)
 {
@@ -554,9 +689,17 @@ HWTEST_F(ResponseMessageReceiverTest, TaskStatesFromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: NotifyDataFromParcel001
- * @tc.desc: Test NotifyDataFromParcel001 interface base function - NotifyDataFromParcel
+ * @tc.desc: Test NotifyDataFromParcel interface base function - NotifyDataFromParcel
+ * @tc.precon: NA
+ * @tc.step: 1. Prepare comprehensive notify data with all fields including progress, extras, and task states
+ *           2. Test with various insufficient buffer sizes incrementally
+ *           3. Test with correct buffer size (full array)
+ *           4. Verify parsing returns success (0)
+ *           5. Verify all notify data fields including nested structures are correctly parsed
+ * @tc.expect: Returns -1 for insufficient sizes, 0 for correct size with all notify data fields parsed correctly
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, NotifyDataFromParcel001, TestSize.Level1)
 {
@@ -696,9 +839,16 @@ HWTEST_F(ResponseMessageReceiverTest, NotifyDataFromParcel001, TestSize.Level1)
 
 /**
  * @tc.name: OnReadable001
- * @tc.desc: Test OnReadable001 interface base function - OnReadable
+ * @tc.desc: Test OnReadable interface base function - OnReadable
+ * @tc.precon: NA
+ * @tc.step: 1. Create test response listener handler
+ *           2. Set socket file descriptor to -1
+ *           3. Create ResponseMessageReceiver instance
+ *           4. Call OnReadable method
+ * @tc.expect: OnReadable method executes without crashing
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(ResponseMessageReceiverTest, OnReadable001, TestSize.Level1)
 {

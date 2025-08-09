@@ -59,8 +59,16 @@ void StringWrapperTest::TearDown(void)
 /**
  * @tc.name: WrapperCStringTest_001
  * @tc.desc: Test WrapperCString interface base function
+ * @tc.precon: NA
+ * @tc.step: 1. Create test string with content "c_string_wrapper_for_test"
+ *           2. Call WrapperCString with test string
+ *           3. Verify returned CStringWrapper length matches string length
+ *           4. Verify CStringWrapper content matches original string
+ *           5. Clean up allocated memory
+ * @tc.expect: CStringWrapper correctly wraps string with proper length and content
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(StringWrapperTest, WrapperCStringTest_001, TestSize.Level1)
 {

@@ -68,9 +68,14 @@ void PathControlTest::TearDown(void)
 
 /**
  * @tc.name: PathControlTest001
- * @tc.desc: Test PathControlTest001 interface base function - AddPathsToMap
+ * @tc.desc: Verify AddPathsToMap returns false for non-existent path
+ * @tc.precon: NA
+ * @tc.step: 1. Create filepath string "/A/B/C/test1"
+ *           2. Call AddPathsToMap with filepath
+ * @tc.expect: Should return false indicating failure
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PathControlTest, PathControlTest001, TestSize.Level1)
 {
@@ -81,9 +86,14 @@ HWTEST_F(PathControlTest, PathControlTest001, TestSize.Level1)
 
 /**
  * @tc.name: PathControlTest002
- * @tc.desc: Test PathControlTest002 interface base function - SubPathsToMap
+ * @tc.desc: Verify SubPathsToMap returns false for non-existent path
+ * @tc.precon: NA
+ * @tc.step: 1. Create filepath string "/A/B/C/test1"
+ *           2. Call SubPathsToMap with filepath
+ * @tc.expect: Should return false indicating failure
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PathControlTest, PathControlTest002, TestSize.Level1)
 {
@@ -94,9 +104,14 @@ HWTEST_F(PathControlTest, PathControlTest002, TestSize.Level1)
 
 /**
  * @tc.name: PathControlTest003
- * @tc.desc: Test PathControlTest003 interface base function - CheckBelongAppBaseDir
+ * @tc.desc: Verify CheckBelongAppBaseDir returns false for non-app path
+ * @tc.precon: NA
+ * @tc.step: 1. Create filepath string "/A/B/C/test1"
+ *           2. Call CheckBelongAppBaseDir with filepath
+ * @tc.expect: Should return false indicating path is not in app base directory
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PathControlTest, PathControlTest003, TestSize.Level1)
 {
@@ -107,9 +122,14 @@ HWTEST_F(PathControlTest, PathControlTest003, TestSize.Level1)
 
 /**
  * @tc.name: PathControlTest004
- * @tc.desc: Test PathControlTest004 interface base function - ShieldPath
+ * @tc.desc: Verify ShieldPath correctly masks sensitive path segments
+ * @tc.precon: NA
+ * @tc.step: 1. Create path string "/ab/abcde"
+ *           2. Call ShieldPath with path
+ * @tc.expect: Should return masked path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PathControlTest, PathControlTest004, TestSize.Level1)
 {

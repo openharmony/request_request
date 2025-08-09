@@ -151,10 +151,18 @@ std::optional<CppDownloadInfo> TestGetInfo(std::string url)
 }
 
 /**
- * @tc.name:  GetInfoTest
- * @tc.desc: Test  GetInfoTest interface base function - GetDownloadInfo
+ * @tc.name: GetInfoTest
+ * @tc.desc: Test GetInfoTest interface base function - GetDownloadInfo
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create test callback and load valid URL
+ *           3. Verify handle is running
+ *           4. Wait for download completion
+ *           5. Verify download info retrieved successfully
+ * @tc.expect: Download info contains valid URL, size, and SUCCESS state
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PreloadGetInfo, GetInfoTest, TestSize.Level1)
 {
@@ -175,10 +183,18 @@ HWTEST_F(PreloadGetInfo, GetInfoTest, TestSize.Level1)
 }
 
 /**
- * @tc.name:  CppInfoMove
- * @tc.desc: Test  CppInfoMove interface base function - GetDownloadInfo
+ * @tc.name: CppInfoMove
+ * @tc.desc: Test CppInfoMove interface base function - GetDownloadInfo
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create test callback and load valid URL
+ *           3. Verify handle is running
+ *           4. Wait for download completion
+ *           5. Verify download info retrieved and moved successfully
+ * @tc.expect: Download info contains valid URL, size, and SUCCESS state after move
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PreloadGetInfo, CppInfoMove, TestSize.Level1)
 {
