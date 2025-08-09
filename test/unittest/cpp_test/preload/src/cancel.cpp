@@ -13,12 +13,6 @@
  * limitations under the License.
  */
 
-/**
- * @tc.name: WrapperCStringTest_001
- * @tc.desc: Test WrapperCString interface base function
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
 #include <gtest/gtest.h>
 
 #include <atomic>
@@ -91,8 +85,16 @@ void DownloadCancelTest(std::string url)
 /**
  * @tc.name: OnCancelTest
  * @tc.desc: Test PreloadCancel interface base function - OnCancel
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create test callback and load URL
+ *           3. Verify handle is running
+ *           4. Cancel the download and wait for completion
+ *           5. Verify cancel callback triggered and URL removed
+ * @tc.expect: Cancel operation succeeds and callbacks triggered correctly
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PreloadCancel, OnCancelTest, TestSize.Level1)
 {
@@ -107,8 +109,16 @@ HWTEST_F(PreloadCancel, OnCancelTest, TestSize.Level1)
 /**
  * @tc.name: OnCancelAddCallback_0
  * @tc.desc: Test Add callback for same url on cancel
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create first test callback and load URL
+ *           3. Create second test callback and load same URL
+ *           4. Cancel first handle and wait for completion
+ *           5. Verify callbacks triggered correctly for both handles
+ * @tc.expect: Second handle continues normally despite first handle cancellation
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PreloadCancel, OnCancelAddCallback_0, TestSize.Level1)
 {
@@ -142,10 +152,18 @@ HWTEST_F(PreloadCancel, OnCancelAddCallback_0, TestSize.Level1)
 }
 
 /**
- * @tc.name: PreloadCancel
- * @tc.desc: Test Add callback for same url on cancel
+ * @tc.name: OnCancelAddCallback_1
+ * @tc.desc: Test Add callback for same url on cancel - dual cancellation
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create first test callback and load URL
+ *           3. Create second test callback and load same URL
+ *           4. Cancel both handles and wait for completion
+ *           5. Verify both handles trigger cancel callbacks
+ * @tc.expect: Both handles complete with CANCEL state
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PreloadCancel, OnCancelAddCallback_1, TestSize.Level1)
 {
@@ -182,10 +200,18 @@ HWTEST_F(PreloadCancel, OnCancelAddCallback_1, TestSize.Level1)
 }
 
 /**
- * @tc.name: PreloadCancel
- * @tc.desc: Test Add callback for same url on cancel
+ * @tc.name: OnCancelAddCallback_2
+ * @tc.desc: Test Add callback for same url after cancellation
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create first test callback and load URL
+ *           3. Cancel first handle immediately
+ *           4. Create second test callback and load same URL after cancellation
+ *           5. Wait for completion and verify callbacks triggered correctly
+ * @tc.expect: Second handle runs normally after first handle cancellation
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PreloadCancel, OnCancelAddCallback_2, TestSize.Level1)
 {

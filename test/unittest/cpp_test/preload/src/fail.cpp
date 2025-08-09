@@ -13,12 +13,6 @@
  * limitations under the License.
  */
 
-/**
- * @tc.name: WrapperCStringTest_001
- * @tc.desc: Test WrapperCString interface base function
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
 #include <gtest/gtest.h>
 
 #include <atomic>
@@ -86,9 +80,17 @@ void DownloadFailTest(std::string url)
 
 /**
  * @tc.name: OnFailTest
- * @tc.desc: Test PreloadCancel interface base function - OnCancel
+ * @tc.desc: Test PreloadFail interface base function - OnFail
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create test callback and load invalid URL
+ *           3. Verify handle is running
+ *           4. Wait for download failure
+ *           5. Verify fail callback triggered and URL removed
+ * @tc.expect: Download fails with FAIL state and OnFail callback triggered
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PreloadFail, OnFailTest, TestSize.Level1)
 {
@@ -98,8 +100,16 @@ HWTEST_F(PreloadFail, OnFailTest, TestSize.Level1)
 /**
  * @tc.name: PreloadFailTest
  * @tc.desc: Test Add callback for same url on fail
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create first test callback and load invalid URL
+ *           3. Create second test callback and load same invalid URL
+ *           4. Wait for both downloads to fail
+ *           5. Verify both fail callbacks triggered correctly
+ * @tc.expect: Both handles fail with FAIL state and OnFail callbacks triggered
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PreloadFail, OnFailAddCallback, TestSize.Level1)
 {

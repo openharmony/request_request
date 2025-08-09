@@ -13,12 +13,6 @@
  * limitations under the License.
  */
 
-/**
- * @tc.name: WrapperCStringTest_001
- * @tc.desc: Test WrapperCString interface base function
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
 #include <gtest/gtest.h>
 
 #include <atomic>
@@ -95,10 +89,18 @@ void DownloadSuccessTest(std::string url, uint64_t size)
 }
 
 /**
- * @tc.name:  OnSuccessTest
- * @tc.desc: Test  OnSuccessTest interface base function - OnSuccess
+ * @tc.name: OnSuccessTest
+ * @tc.desc: Test OnSuccessTest interface base function - OnSuccess
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create test callback and load valid URL
+ *           3. Verify handle is running
+ *           4. Wait for download completion
+ *           5. Verify success callback triggered and data cached
+ * @tc.expect: Download succeeds with SUCCESS state and OnSuccess callback triggered
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PreloadSuccess, OnSuccessTest, TestSize.Level1)
 {
@@ -110,9 +112,17 @@ HWTEST_F(PreloadSuccess, OnSuccessTest, TestSize.Level1)
 
 /**
  * @tc.name: OnSuccessAddCallback
- * @tc.desc: Test Add callback for same url on cancel
+ * @tc.desc: Test Add callback for same url after success - post-success loading
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create first callback and load URL
+ *           3. Wait for download completion
+ *           4. Create second callback and load same URL
+ *           5. Verify second callback uses cached data
+ * @tc.expect: Second callback completes immediately using cached data
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 
 HWTEST_F(PreloadSuccess, OnSuccessAddCallback, TestSize.Level1)

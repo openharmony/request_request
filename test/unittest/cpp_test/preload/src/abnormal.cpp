@@ -13,12 +13,6 @@
  * limitations under the License.
  */
 
-/**
- * @tc.name: WrapperCStringTest_001
- * @tc.desc: Test WrapperCString interface base function
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
 #include <gtest/gtest.h>
 
 #include <atomic>
@@ -64,9 +58,16 @@ void PreloadAbnormal::SetUp(void)
 
 /**
  * @tc.name: NullptrTest
- * @tc.desc: Test nullptr callback
+ * @tc.desc: Test nullptr callback handling in PreloadCallback
+ * @tc.precon: NA
+ * @tc.step: 1. Create PreloadCallback with all callbacks set to nullptr
+ *           2. Call Preload::load with nullptr callback
+ *           3. Verify handle is not nullptr
+ *           4. Call Cancel on the handle
+ * @tc.expect: Handle is valid and Cancel operation completes without crash
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PreloadAbnormal, NullptrTest, TestSize.Level1)
 {
@@ -83,9 +84,16 @@ HWTEST_F(PreloadAbnormal, NullptrTest, TestSize.Level1)
 
 /**
  * @tc.name: SuccessBlockCallbackTest
- * @tc.desc: Test block callback not affect other callback
+ * @tc.desc: Test blocked OnSuccess callback does not affect other concurrent callbacks
+ * @tc.precon: NA
+ * @tc.step: 1. Create PreloadCallback with blocking OnSuccess callback
+ *           2. Load URL with blocking callback
+ *           3. Load same URL with normal test callback
+ *           4. Wait for completion and verify all callbacks triggered correctly
+ * @tc.expect: Normal callbacks complete successfully despite blocked callback
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PreloadAbnormal, SuccessBlockCallbackTest, TestSize.Level1)
 {
@@ -117,9 +125,16 @@ HWTEST_F(PreloadAbnormal, SuccessBlockCallbackTest, TestSize.Level1)
 
 /**
  * @tc.name: FailBlockCallbackTest
- * @tc.desc: Test block callback not affect other callback
+ * @tc.desc: Test blocked OnFail callback does not affect other concurrent callbacks
+ * @tc.precon: NA
+ * @tc.step: 1. Create PreloadCallback with blocking OnFail callback
+ *           2. Load invalid URL with blocking callback
+ *           3. Load same URL with normal test callback
+ *           4. Wait for completion and verify all callbacks triggered correctly
+ * @tc.expect: Normal callbacks complete successfully despite blocked callback
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PreloadAbnormal, FailBlockCallbackTest, TestSize.Level1)
 {
@@ -151,9 +166,16 @@ HWTEST_F(PreloadAbnormal, FailBlockCallbackTest, TestSize.Level1)
 
 /**
  * @tc.name: CancelBlockCallbackTest
- * @tc.desc: Test block callback not affect other callback
+ * @tc.desc: Test blocked OnCancel callback does not affect other concurrent callbacks
+ * @tc.precon: NA
+ * @tc.step: 1. Create PreloadCallback with blocking OnCancel callback
+ *           2. Load URL with blocking callback
+ *           3. Load same URL with normal test callback
+ *           4. Cancel both handles and verify callbacks triggered correctly
+ * @tc.expect: Normal callbacks complete successfully despite blocked callback
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PreloadAbnormal, CancelBlockCallbackTest, TestSize.Level1)
 {
@@ -185,9 +207,16 @@ HWTEST_F(PreloadAbnormal, CancelBlockCallbackTest, TestSize.Level1)
 
 /**
  * @tc.name: ProgressBlockCallbackTest
- * @tc.desc: Test block callback not affect other callback
+ * @tc.desc: Test blocked OnProgress callback does not affect other concurrent callbacks
+ * @tc.precon: NA
+ * @tc.step: 1. Create PreloadCallback with blocking OnProgress callback
+ *           2. Load URL with blocking callback
+ *           3. Load same URL with normal test callback
+ *           4. Wait for completion and verify all callbacks triggered correctly
+ * @tc.expect: Normal callbacks complete successfully despite blocked callback
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(PreloadAbnormal, ProgressBlockCallbackTest, TestSize.Level1)
 {

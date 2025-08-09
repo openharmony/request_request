@@ -13,12 +13,6 @@
  * limitations under the License.
  */
 
-/**
- * @tc.name: WrapperCStringTest_001
- * @tc.desc: Test WrapperCString interface base function
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
 #include <gtest/gtest.h>
 
 #include <atomic>
@@ -106,10 +100,18 @@ void DownloadProgressTest(std::string url)
 }
 
 /**
- * @tc.name: OnProgressTest
- * @tc.desc: Test PreloadSuccessCache interface base function - OnSuccess
+ * @tc.name: OnProgressAddCallback_2
+ * @tc.desc: Test Add callback for same url after progress - post-progress loading
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create first callback and load URL
+ *           3. Wait for download completion with progress tracking
+ *           4. Create second callback and load same URL
+ *           5. Verify second callback uses cached data
+ * @tc.expect: Second callback completes immediately using cached data
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 
 HWTEST_F(PreloadProgress, OnProgressTest, TestSize.Level1)
