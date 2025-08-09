@@ -9,6 +9,18 @@
             "value": "the testModule entry ability"
         },
         {
+            "name": "EntryAbility_label",
+            "value": "demo for test"
+        },
+        {
+            "name": "EntryAbility_desc",
+            "value": "demo for test"
+        },
+        {
+            "name": "module_desc",
+            "value": "demo for test"
+        },
+        {
             "name": "entry_label",
             "value": "ActsContextTest"
         },
@@ -39,6 +51,22 @@
         {
             "name": "permission_reason",
             "value": "Need permission"
+        },
+        {
+            "name": "INTERNET_permission_reason",
+            "value": "need use ohos.permission.INTERNET."
+        },
+        {
+            "name": "WRITE_MEDIA_permission_reason",
+            "value": "need use ohos.permission.WRITE_MEDIA"
+        },
+        {
+            "name": "READ_MEDIA_permission_reason",
+            "value": "need use ohos.permission.WRITE_MEDIA"
+        },
+        {
+            "name": "GET_NETWORK_INFO_permission_reason",
+            "value": "need ohos.permission.GET_NETWORK_INFO."
         }
     ]
 }
