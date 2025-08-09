@@ -13,26 +13,24 @@
  * limitations under the License.
  */
 
-// @ts-nocheck
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from "@ohos/hypium";
 import request from '@ohos.request';
 import fs from '@ohos.file.fs';
+import common from '@ohos.app.ability.common';
+import { BusinessError } from "@ohos.base";
 
 export default function requestQueryTest() {
-  describe('requestQueryTest', function () {
-    beforeAll(function () {
+  describe('requestQueryTest', () => {
+    beforeAll(() => {
       console.info('beforeAll called');
-    })
-
-    afterAll(function () {
+    });
+    afterAll(() => {
       console.info('afterAll called');
-    })
-
-    beforeEach(function () {
+    });
+    beforeEach(() => {
       console.info('beforeEach called');
-    })
-
-    afterEach(async function () {
+    });
+    afterEach(async () => {
       console.info('afterEach called');
       if (fs.accessSync(cacheDir + '/test.txt')) {
         fs.unlinkSync(cacheDir + '/test.txt');
@@ -40,111 +38,107 @@ export default function requestQueryTest() {
       if (fs.accessSync(cacheDir + '/test.apk')) {
         fs.unlinkSync(cacheDir + '/test.apk');
       }
-    })
+    });
 
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
+    let sleep: (ms: number) => Promise<void> = async (ms: number): Promise<void> => {
+      return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+      });
+    };
 
-    let context = globalThis.abilityContext;
-    let cacheDir = globalThis.cacheDir;
-    let fileSpec = {
+    let context: common.UIAbilityContext = globalThis.abilityContext;
+    let cacheDir: String = globalThis.cacheDir;
+    let fileSpec: request.agent.FileSpec = {
       path: `./test.txt`
-    }
-    let formItem = [{
+    };
+    let formItem: Array<request.agent.FormItem> = [{
       name: 'file',
-      value: [ fileSpec ]
-    }]
-
+      value: [fileSpec]
+    }];
     /**
      * @tc.name: testShowTask001
      * @tc.desc: Test show task for tid is empty
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testShowTask001', 0, async function (done) {
+    it('testShowTask001', 0, async (done: Function) => {
       try {
         await request.agent.show("");
       } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.name: testShowTask002
      * @tc.desc: Test show task for tid is number
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testShowTask002', 0, async function (done) {
+    it('testShowTask002', 0, async (done: Function) => {
       try {
-        await request.agent.show(123);
+        await request.agent.show(123 as Object as string);
       } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.name: testShowTask003
      * @tc.desc: Test show task for callback when tid is "123"
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testShowTask003', 0, async function (done) {
+    it('testShowTask003', 0, async (done: Function) => {
       request.agent.show("123", (err, info) => {
         expect(err.code).assertEqual(21900006);
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testShowTask004
      * @tc.desc: Test show task for promise when tid is "123"
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testShowTask004', 0, async function (done) {
+    it('testShowTask004', 0, async (done: Function) => {
       await request.agent.show("123").then((info) => {
         expect(false).assertTrue();
         done();
-      }).catch((err) => {
+      }).catch((err: BusinessError) => {
         expect(err.code).assertEqual(21900006);
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testShowTask005
      * @tc.desc: Test show task when lack tid
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testShowTask005', 0, async function (done) {
+    it('testShowTask005', 0, async (done: Function) => {
       try {
-        await request.agent.show();
+        await request.agent.show("");
       } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.name: testShowTask006
      * @tc.desc: Test show task for promise when correct param
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testShowTask006', 0, async function (done) {
-      let conf = {
+    it('testShowTask006', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         mode: request.agent.Mode.BACKGROUND,
         description: 'download task',
         saveas: `testShowTask006.txt`,
         data: 'download task'
-      }
+      };
       let task = await request.agent.create(context, conf);
       request.agent.show(task.tid).then(async (info) => {
         expect(info.uid).assertEqual(undefined);
@@ -170,25 +164,24 @@ export default function requestQueryTest() {
         expect(typeof info.reason).assertEqual("string");
         await request.agent.remove(task.tid);
         done();
-      }).catch((err) => {
+      }).catch((err: Error) => {
         expect(false).assertTrue();
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testShowTask007
      * @tc.desc: Test show task for callback when correct param
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testShowTask007', 0, async function (done) {
-      let conf = {
+    it('testShowTask007', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testShowTask007.txt`,
         mode: request.agent.Mode.BACKGROUND
-      }
+      };
       let task = await request.agent.create(context, conf);
       request.agent.show(task.tid, async (err, info) => {
         expect(info.uid).assertEqual(undefined);
@@ -214,101 +207,95 @@ export default function requestQueryTest() {
         expect(typeof info.reason).assertEqual("string");
         await request.agent.remove(task.tid);
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testShowTask008
      * @tc.desc: Test show task for promise when token exist
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testShowTask008', 0, async function (done) {
-      let conf = {
+    it('testShowTask008', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         mode: request.agent.Mode.BACKGROUND,
         saveas: `testShowTask008.txt`,
         token: "12345678"
-      }
+      };
       let task = await request.agent.create(context, conf);
       request.agent.show(task.tid).then((info) => {
         expect(false).assertTrue();
         done();
-      }).catch(async (err) => {
+      }).catch(async (err: BusinessError) => {
         expect(err.code).assertEqual(21900006);
         await request.agent.remove(task.tid);
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testTouchTask001
      * @tc.desc: Test touch task for tid is empty
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testTouchTask001', 0, async function (done) {
+    it('testTouchTask001', 0, async (done: Function) => {
       try {
-        await request.agent.touch("");
+        await request.agent.touch("","");
       } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.name: testTouchTask002
      * @tc.desc: Test touch task for tid is number
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testTouchTask002', 0, async function (done) {
+    it('testTouchTask002', 0, async (done: Function) => {
       try {
-        await request.agent.touch(123, "12345678");
+        await request.agent.touch(123 as Object as string, "12345678");
       } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.name: testTouchTask003
      * @tc.desc: Test touch task for token is number
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testTouchTask003', 0, async function (done) {
+    it('testTouchTask003', 0, async (done: Function) => {
       try {
-        await request.agent.touch("123", 123);
+        await request.agent.touch("123", 123 as Object as string);
       } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.name: testTouchTask004
      * @tc.desc: Test touch task for token length less than 8
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testTouchTask004', 0, async function (done) {
+    it('testTouchTask004', 0, async (done: Function) => {
       try {
         await request.agent.touch("123", "1234567");
       } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.name: testTouchTask005
      * @tc.desc: Test touch task for token length greater than 2048
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testTouchTask005', 0, async function (done) {
+    it('testTouchTask005', 0, async (done: Function) => {
       let token = 'a'.padStart(2049, 'a');
       try {
         await request.agent.touch("123", token);
@@ -316,74 +303,71 @@ export default function requestQueryTest() {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.name: testTouchTask006
      * @tc.desc: Test touch task for tid is "123"
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testTouchTask006', 0, async function (done) {
+    it('testTouchTask006', 0, async (done: Function) => {
       request.agent.touch("123", "12345678", (err, info) => {
         expect(err.code).assertEqual(21900006);
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testTouchTask007
      * @tc.desc: Test touch task for token is "123456789"
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testTouchTask007', 0, async function (done) {
-      let conf = {
+    it('testTouchTask007', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         mode: request.agent.Mode.BACKGROUND,
         saveas: `testTouchTask007.txt`,
         token: "12345678"
-      }
+      };
       let task = await request.agent.create(context, conf);
       request.agent.touch(task.tid, "123456789").then((info) => {
         expect(false).assertTrue();
         done();
-      }).catch(async (err) => {
+      }).catch(async (err: BusinessError) => {
         expect(err.code).assertEqual(21900006);
         await request.agent.remove(task.tid);
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testTouchTask008
      * @tc.desc: Test touch task
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testTouchTask008', 0, async function (done) {
+    it('testTouchTask008', 0, async (done: Function) => {
       let file1 = fs.openSync(cacheDir + '/test1.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       let file2 = fs.openSync(cacheDir + '/test2.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file1);
       fs.closeSync(file2);
-      let conf = {
+      let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
         data: [
-                {name: 'file1', value: {path: `./test1.txt`, filename: 'test1.txt'}},
-                {name: 'file2', value: {path: `./test2.txt`, filename: 'test2.txt'}},
-                {name : 'key1', value: 'value1'}, {name : 'key2', value: 'value2'}
+          { name: 'file1', value: { path: `./test1.txt`, filename: 'test1.txt' } },
+          { name: 'file2', value: { path: `./test2.txt`, filename: 'test2.txt' } },
+          { name: 'key1', value: 'value1' }, { name: 'key2', value: 'value2' }
         ],
         mode: request.agent.Mode.FOREGROUND,
         token: "12345678"
-      }
+      };
       let task = await request.agent.create(context, conf);
-      request.agent.touch(task.tid, "12345678").then(async (info) => {
+      request.agent.touch(task.tid, "12345678").then(async (info: request.agent.TaskInfo) => {
         expect(info.uid).assertEqual(undefined);
         expect(info.bundle).assertEqual(undefined);
         expect(info.url).assertEqual('http://127.0.0.1');
-        expect(info.data.length).assertEqual(4);
+        expect(info.data?.length).assertEqual(4);
         expect(info.saveas).assertEqual("");
         expect(info.tid).assertEqual(task.tid);
         expect(info.title).assertEqual("upload");
@@ -403,34 +387,32 @@ export default function requestQueryTest() {
         expect(typeof info.reason).assertEqual("string");
         await request.agent.remove(task.tid);
         done();
-      }).catch((err) => {
+      }).catch((err: Error) => {
         expect(false).assertTrue();
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testTouchTask009
      * @tc.desc: Test touch task
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testTouchTask009', 0, async function (done) {
+    it('testTouchTask009', 0, async (done: Function) => {
       let file1 = fs.openSync(cacheDir + '/test1.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file1);
-      let conf = {
+      let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
         url: 'http://127.0.0.1',
-        data: [{name: 'file1', value: {path: `./test1.txt`, filename: 'test1.txt'}}],
+        data: [{ name: 'file1', value: { path: `./test1.txt`, filename: 'test1.txt' } }],
         token: "12345678"
-      }
-
+      };
       let task = await request.agent.create(context, conf);
       request.agent.touch(task.tid, "12345678", async (err, info) => {
         expect(info.uid).assertEqual(undefined);
         expect(info.bundle).assertEqual(undefined);
         expect(info.url).assertEqual('http://127.0.0.1');
-        expect(info.data.length).assertEqual(1);
+        expect(info.data?.length).assertEqual(1);
         expect(info.saveas).assertEqual("");
         expect(info.tid).assertEqual(task.tid);
         expect(info.title).assertEqual("upload");
@@ -450,445 +432,426 @@ export default function requestQueryTest() {
         expect(typeof info.reason).assertEqual("string");
         await request.agent.remove(task.tid);
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask001
      * @tc.desc: Test search task for tid is empty
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask001', 0, async function (done) {
-      let conf = {
+    it('testSearchTask001', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testSearchTask001.txt`,
-      }
+      };
       let task = await request.agent.create(context, conf);
       request.agent.search(async (err, tids) => {
         expect(tids.length > 0).assertTrue();
         await request.agent.remove(task.tid);
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask002
      * @tc.desc: Test search task for tid is number
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask002', 0, async function (done) {
+    it('testSearchTask002', 0, async (done: Function) => {
       try {
-        await request.agent.search(123);
+        await request.agent.search(123 as Object as request.agent.Filter);
       } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
-
+    });
     /**
      * @tc.name: testSearchTask003
      * @tc.desc: Test search task for bundle is "123"
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask003', 0, async function (done) {
-      let conf = {
+    it('testSearchTask003', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testSearchTask003.txt`,
-      }
+      };
       let task = await request.agent.create(context, conf);
-      let filter = {
+      let filter: request.agent.Filter = {
         bundle: "123",
-      }
+      };
       request.agent.search(filter).then(async (tids) => {
         expect(tids.length > 0).assertTrue();
         await request.agent.remove(task.tid);
         done();
-      }).catch((err) => {
+      }).catch((err: Error) => {
         expect(false).assertTrue();
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask004
      * @tc.desc: Test search task for filter is {}
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask004', 0, async function (done) {
-      let conf = {
+    it('testSearchTask004', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testSearchTask004.txt`,
-      }
+      };
       let task = await request.agent.create(context, conf);
       request.agent.search({}, async (err, tids) => {
         expect(tids.length > 0).assertTrue();
         await request.agent.remove(task.tid);
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask005
      * @tc.desc: Test search task for filter is 123
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask005', 0, async function (done) {
-      let conf = {
+    it('testSearchTask005', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testSearchTask005.txt`,
-      }
+      };
       let task = await request.agent.create(context, conf);
-      let filter = {
-        bundle: 123,
-      }
+      let filter: request.agent.Filter = {
+        bundle: 123 as Object as string,
+      };
       request.agent.search(filter).then(async (tids) => {
         expect(tids.length > 0).assertTrue();
         await request.agent.remove(task.tid);
         done();
-      }).catch((err) => {
+      }).catch((err: Error) => {
         expect(false).assertTrue();
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask006
      * @tc.desc: Test search task
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask006', 0, async function (done) {
-      let filter = {
+    it('testSearchTask006', 0, async (done: Function) => {
+      let filter: request.agent.Filter  = {
         before: Date.parse("2023-7-9 00:00:00"),
         after: Date.parse("2023-7-9 23:00:00"),
-      }
+      };
       try {
         await request.agent.search(filter);
       } catch (err) {
         expect(err.code).assertEqual(401);
         done();
       }
-    })
-
+    });
     /**
      * @tc.name: testSearchTask007
      * @tc.desc: Test search task
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask007', 0, async function (done) {
-      let filter = {
+    it('testSearchTask007', 0, async (done: Function) => {
+      let filter: request.agent.Filter = {
         before: Date.parse("2023-7-9 23:00:00"),
         after: Date.parse("2023-7-9 00:00:00"),
-      }
+      };
       request.agent.search(filter).then((tids) => {
         expect(tids.length).assertEqual(0);
         done();
-      }).catch((err) => {
+      }).catch((err: Error) => {
         expect(false).assertTrue();
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask008
      * @tc.desc: Test search task
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask008', 0, async function (done) {
-      let conf = {
+    it('testSearchTask008', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testSearchTask008.txt`,
-      }
+      };
       let task = await request.agent.create(context, conf);
       await sleep(1000);
-      let filter = {
-        before: Date.parse(new Date()),
-      }
+      let filter: request.agent.Filter = {
+        before: Date.parse(new Date() as Object as string),
+      };
       request.agent.search(filter).then(async (tids) => {
         expect(tids.length > 0).assertTrue();
         await request.agent.remove(task.tid);
         done();
-      }).catch((err) => {
+      }).catch((err: Error) => {
         expect(false).assertTrue();
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask009
      * @tc.desc: Test search task for filter is 123
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask009', 0, async function (done) {
-      let conf = {
+    it('testSearchTask009', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testSearchTask009.txt`,
-      }
+      };
       let task = await request.agent.create(context, conf);
-      let filter = {
+      let filter: request.agent.Filter  = {
         after: Date.parse("2023-7-9 00:00:00"),
-      }
+      };
       request.agent.search(filter).then(async (tids) => {
         expect(tids.length > 0).assertTrue();
         await request.agent.remove(task.tid);
         done();
-      }).catch((err) => {
+      }).catch((err: Error) => {
         expect(false).assertTrue();
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask010
      * @tc.desc: Test search task for before and after type is string
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask010', 0, async function (done) {
-      let conf = {
+    it('testSearchTask010', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testSearchTask010.txt`,
-      }
+      };
       let task = await request.agent.create(context, conf);
-      let filter = {
-        before:"2023-7-9 23:00:00",
-        after: "2023-7-9 00:00:00",
-      }
+      let filter: request.agent.Filter = {
+        before: "2023-7-9 23:00:00" as Object as number,
+        after: "2023-7-9 00:00:00" as Object as number,
+      };
       request.agent.search(filter).then(async (tids) => {
         expect(tids.length > 0).assertTrue();
         await request.agent.remove(task.tid);
         done();
-      }).catch((err) => {
+      }).catch((err: Error) => {
         expect(false).assertTrue();
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask011
      * @tc.desc: Test search task for state is "0"
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask011', 0, async function (done) {
-      let conf = {
+    it('testSearchTask011', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testSearchTask011.txt`,
-      }
+      };
       let task = await request.agent.create(context, conf);
-      let filter = {
-        state: "0",
-        action: "1",
-        mode: "2"
-      }
+      let filter: request.agent.Filter = {
+        state: "0" as Object as request.agent.State,
+        action: "1" as Object as request.agent.Action,
+        mode: "2" as Object as request.agent.Mode
+      };
       request.agent.search(filter).then(async (tids) => {
         expect(tids.length > 0).assertTrue();
         await request.agent.remove(task.tid);
         done();
-      }).catch((err) => {
+      }).catch((err: Error) => {
         expect(false).assertTrue();
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask012
      * @tc.desc: Test search task for state is INITIALIZED
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask012', 0, async function (done) {
-      let conf = {
+    it('testSearchTask012', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testSearchTask012.txt`,
-      }
+      };
       let task = await request.agent.create(context, conf);
-      let filter = {
+      let filter: request.agent.Filter = {
         state: request.agent.State.INITIALIZED
-      }
+      };
       request.agent.search(filter).then(async (tids) => {
         expect(tids.length > 0).assertTrue();
         await request.agent.remove(task.tid);
         done();
-      }).catch((err) => {
+      }).catch((err: Error) => {
         expect(false).assertTrue();
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask013
      * @tc.desc: Test search task for Action is DOWNLOAD
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask013', 0, async function (done) {
-      let conf = {
+    it('testSearchTask013', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testSearchTask013.txt`,
-      }
+      };
       let task = await request.agent.create(context, conf);
-      let filter = {
+      let filter: request.agent.Filter = {
         action: request.agent.Action.DOWNLOAD
-      }
+      };
       request.agent.search(filter).then(async (tids) => {
         expect(tids.length > 0).assertTrue();
         await request.agent.remove(task.tid);
         done();
-      }).catch((err) => {
+      }).catch((err: Error) => {
         expect(false).assertTrue();
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask014
      * @tc.desc: Test search task for mode is BACKGROUND
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask014', 0, async function (done) {
-      let conf = {
+    it('testSearchTask014', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testSearchTask014.txt`,
-      }
+      };
       let task = await request.agent.create(context, conf);
-      let filter = {
+      let filter: request.agent.Filter = {
         mode: request.agent.Mode.BACKGROUND
-      }
+      };
       request.agent.search(filter).then(async (tids) => {
         expect(tids.length > 0).assertTrue();
         await request.agent.remove(task.tid);
         done();
-      }).catch((err) => {
+      }).catch((err: Error) => {
         expect(false).assertTrue();
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask015
      * @tc.desc: Test search task for bundle is "*"
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask015', 0, async function (done) {
-      let conf = {
+    it('testSearchTask015', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testSearchTask015.txt`,
-      }
+      };
       let task = await request.agent.create(context, conf);
-      let filter = {
+      let filter: request.agent.Filter = {
         bundle: "*"
-      }
+      };
       request.agent.search(filter).then(async (tids) => {
         expect(tids.length > 0).assertTrue();
         await request.agent.remove(task.tid);
         done();
-      }).catch((err) => {
+      }).catch((err: Error) => {
         expect(false).assertTrue();
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask016
      * @tc.desc: Test search task for filter is empty
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask016', 0, async function (done) {
-      let conf = {
+    it('testSearchTask016', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testSearchTask016.txt`,
-      }
+      };
       let task = await request.agent.create(context, conf);
       request.agent.search().then(async (tids) => {
         expect(tids.length > 0).assertTrue();
         await request.agent.remove(task.tid);
         done();
-      }).catch((err) => {
+      }).catch((err: Error) => {
         expect(false).assertTrue();
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask017
      * @tc.desc: Test search task for filter is undefined
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask017', 0, async function (done) {
-      let conf = {
+    it('testSearchTask017', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testSearchTask017.txt`,
-      }
+      };
       let task = await request.agent.create(context, conf);
-      request.agent.search(undefined).then(async (tids) => {
+      const filter: request.agent.Filter | null | undefined = undefined;
+      request.agent.search(filter).then(async (tids) => {
         expect(tids.length > 0).assertTrue();
         await request.agent.remove(task.tid);
         done();
-      }).catch((err) => {
+      }).catch((err: Error) => {
         expect(false).assertTrue();
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testSearchTask018
      * @tc.desc: Test search task for filter is null
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testSearchTask018', 0, async function (done) {
-      let conf = {
+    it('testSearchTask018', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
         saveas: `testSearchTask018.txt`,
-      }
+      };
       let task = await request.agent.create(context, conf);
       request.agent.search(null, async (err, tids) => {
         expect(tids.length > 0).assertTrue();
         await request.agent.remove(task.tid);
         done();
-      })
-    })
-
+      });
+    });
     /**
      * @tc.name: testQueryTask001
      * @tc.desc: Test query task for tid is "123"
      * @tc.type: FUNC
      * @tc.require:
      */
-    it('testQueryTask001', 0, async function (done) {
+    it('testQueryTask001', 0, async (done: Function) => {
       request.agent.query("123", (err, info) => {
         expect(err.code).assertEqual(202);
         done();
-      })
-    })
+      });
+    });
   })
 }
