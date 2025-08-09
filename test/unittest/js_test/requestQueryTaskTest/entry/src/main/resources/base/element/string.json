@@ -9,6 +9,18 @@
             "value": "the testModule entry ability"
         },
         {
+            "name": "module_desc",
+            "value": "the module is for testing"
+        },
+        {
+            "name": "EntryAbility_label",
+            "value": "ActsContextTest"
+        },
+        {
+            "name": "EntryAbility_desc",
+            "value": "i am an entry for testModule"
+        },
+        {
             "name": "entry_label",
             "value": "ActsContextTest"
         },
