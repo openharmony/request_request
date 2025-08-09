@@ -149,9 +149,15 @@ std::string g_tidUser = "550015967"; //test correct tid which will be replaced a
 
 /**
  * @tc.name: StartTest001
- * @tc.desc: Test StartTest001 interface base function - Start
+ * @tc.desc: Test the Start interface with valid parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant internet permission
+ *           3. Call Start with valid tid
+ * @tc.expect: Start operation completes successfully
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, StartTest001, TestSize.Level1)
 {
@@ -164,9 +170,14 @@ HWTEST_F(RequestActionTest, StartTest001, TestSize.Level1)
 
 /**
  * @tc.name: StopTest001
- * @tc.desc: Test StopTest001 interface base function - Stop
+ * @tc.desc: Test the Stop interface with valid parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Call Stop with valid tid
+ * @tc.expect: Stop operation completes without error
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, StopTest001, TestSize.Level1)
 {
@@ -177,9 +188,14 @@ HWTEST_F(RequestActionTest, StopTest001, TestSize.Level1)
 
 /**
  * @tc.name: TouchTest001
- * @tc.desc: Test TouchTest001 interface base function - Touch
+ * @tc.desc: Test the Touch interface with valid parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Call Touch with valid tid, token and info
+ * @tc.expect: Touch operation completes without error
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, TouchTest001, TestSize.Level1)
 {
@@ -192,9 +208,14 @@ HWTEST_F(RequestActionTest, TouchTest001, TestSize.Level1)
 
 /**
  * @tc.name: ShowTest001
- * @tc.desc: Test ShowTest001 interface base function - Show
+ * @tc.desc: Test the Show interface with valid parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Call Show with valid tid and info
+ * @tc.expect: Show operation completes without error
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, ShowTest001, TestSize.Level1)
 {
@@ -206,9 +227,14 @@ HWTEST_F(RequestActionTest, ShowTest001, TestSize.Level1)
 
 /**
  * @tc.name: PauseTest001
- * @tc.desc: Test PauseTest001 interface base function - Pause
+ * @tc.desc: Test the Pause interface with valid parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Call Pause with valid tid
+ * @tc.expect: Pause operation completes without error
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, PauseTest001, TestSize.Level1)
 {
@@ -219,9 +245,15 @@ HWTEST_F(RequestActionTest, PauseTest001, TestSize.Level1)
 
 /**
  * @tc.name: ResumeTest001
- * @tc.desc: Test ResumeTest001 interface base function - Resume
+ * @tc.desc: Test the Resume interface with valid parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant internet permission
+ *           3. Call Resume with valid tid
+ * @tc.expect: Resume operation completes successfully
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, ResumeTest001, TestSize.Level1)
 {
@@ -234,9 +266,14 @@ HWTEST_F(RequestActionTest, ResumeTest001, TestSize.Level1)
 
 /**
  * @tc.name: RemoveTest001
- * @tc.desc: Test RemoveTest001 interface base function - Remove
+ * @tc.desc: Test the Remove interface with valid parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Call Remove with valid tid
+ * @tc.expect: Remove operation completes successfully
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, RemoveTest001, TestSize.Level1)
 {
@@ -248,9 +285,15 @@ HWTEST_F(RequestActionTest, RemoveTest001, TestSize.Level1)
 
 /**
  * @tc.name: StartTest002
- * @tc.desc: Test StartTest002 interface base function - Start
+ * @tc.desc: Test the Start interface with invalid task ID returns non-zero
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant internet permission
+ *           3. Call Start with invalid tid
+ * @tc.expect: Start operation returns non-zero error code
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, StartTest002, TestSize.Level1)
 {
@@ -263,9 +306,14 @@ HWTEST_F(RequestActionTest, StartTest002, TestSize.Level1)
 
 /**
  * @tc.name: StopTest002
- * @tc.desc: Test StopTest002 interface base function - Stop
+ * @tc.desc: Test the Stop interface with invalid task ID returns TASK_NOT_FOUND
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Call Stop with invalid tid
+ * @tc.expect: Stop operation returns 21900006 (TASK_NOT_FOUND)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, StopTest002, TestSize.Level1)
 {
@@ -277,9 +325,14 @@ HWTEST_F(RequestActionTest, StopTest002, TestSize.Level1)
 
 /**
  * @tc.name: TouchTest002
- * @tc.desc: Test TouchTest002 interface base function - Touch
+ * @tc.desc: Test the Touch interface with invalid task ID returns TASK_NOT_FOUND
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Call Touch with invalid tid, token and info
+ * @tc.expect: Touch operation returns 21900006 (TASK_NOT_FOUND)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, TouchTest002, TestSize.Level1)
 {
@@ -293,9 +346,14 @@ HWTEST_F(RequestActionTest, TouchTest002, TestSize.Level1)
 
 /**
  * @tc.name: ShowTest002
- * @tc.desc: Test ShowTest002 interface base function - Show
+ * @tc.desc: Test the Show interface with invalid task ID returns TASK_NOT_FOUND
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Call Show with invalid tid and info
+ * @tc.expect: Show operation returns 21900006 (TASK_NOT_FOUND)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, ShowTest002, TestSize.Level1)
 {
@@ -308,9 +366,14 @@ HWTEST_F(RequestActionTest, ShowTest002, TestSize.Level1)
 
 /**
  * @tc.name: PauseTest002
- * @tc.desc: Test PauseTest002 interface base function - Pause
+ * @tc.desc: Test the Pause interface with invalid task ID returns TASK_NOT_FOUND
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Call Pause with invalid tid
+ * @tc.expect: Pause operation returns 21900006 (TASK_NOT_FOUND)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, PauseTest002, TestSize.Level1)
 {
@@ -322,9 +385,15 @@ HWTEST_F(RequestActionTest, PauseTest002, TestSize.Level1)
 
 /**
  * @tc.name: ResumeTest002
- * @tc.desc: Test ResumeTest002 interface base function - Resume
+ * @tc.desc: Test the Resume interface with invalid task ID returns non-zero
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant internet permission
+ *           3. Call Resume with invalid tid
+ * @tc.expect: Resume operation returns non-zero error code
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, ResumeTest002, TestSize.Level1)
 {
@@ -337,9 +406,14 @@ HWTEST_F(RequestActionTest, ResumeTest002, TestSize.Level1)
 
 /**
  * @tc.name: RemoveTest002
- * @tc.desc: Test RemoveTest002 interface base function - Remove
+ * @tc.desc: Test the Remove interface with invalid task ID returns TASK_NOT_FOUND
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Call Remove with invalid tid
+ * @tc.expect: Remove operation returns 21900006 (TASK_NOT_FOUND)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, RemoveTest002, TestSize.Level1)
 {
@@ -351,9 +425,15 @@ HWTEST_F(RequestActionTest, RemoveTest002, TestSize.Level1)
 
 /**
  * @tc.name: StartTest003
- * @tc.desc: Test StartTest003 interface base function - Start
+ * @tc.desc: Test the Start interface with DOWNLOAD_SESSION_MANAGER permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant DOWNLOAD_SESSION_MANAGER permission
+ *           3. Call Start with valid tid
+ * @tc.expect: Start operation does not return 13499999 (PERMISSION_DENIED)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, StartTest003, TestSize.Level1)
 {
@@ -367,9 +447,15 @@ HWTEST_F(RequestActionTest, StartTest003, TestSize.Level1)
 
 /**
  * @tc.name: StopTest003
- * @tc.desc: Test StopTest003 interface base function - Stop
+ * @tc.desc: Test the Stop interface with DOWNLOAD_SESSION_MANAGER permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant DOWNLOAD_SESSION_MANAGER permission
+ *           3. Call Stop with valid tid
+ * @tc.expect: Stop operation returns 21900006 (TASK_NOT_FOUND)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, StopTest003, TestSize.Level1)
 {
@@ -383,9 +469,15 @@ HWTEST_F(RequestActionTest, StopTest003, TestSize.Level1)
 
 /**
  * @tc.name: TouchTest003
- * @tc.desc: Test TouchTest003 interface base function - Touch
+ * @tc.desc: Test the Touch interface with DOWNLOAD_SESSION_MANAGER permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant DOWNLOAD_SESSION_MANAGER permission
+ *           3. Call Touch with valid tid, token and info
+ * @tc.expect: Touch operation returns 21900006 (TASK_NOT_FOUND)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, TouchTest003, TestSize.Level1)
 {
@@ -401,9 +493,15 @@ HWTEST_F(RequestActionTest, TouchTest003, TestSize.Level1)
 
 /**
  * @tc.name: ShowTest003
- * @tc.desc: Test ShowTest003 interface base function - Show
+ * @tc.desc: Test the Show interface with DOWNLOAD_SESSION_MANAGER permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant DOWNLOAD_SESSION_MANAGER permission
+ *           3. Call Show with valid tid and info
+ * @tc.expect: Show operation returns 21900006 (TASK_NOT_FOUND)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, ShowTest003, TestSize.Level1)
 {
@@ -418,9 +516,15 @@ HWTEST_F(RequestActionTest, ShowTest003, TestSize.Level1)
 
 /**
  * @tc.name: PauseTest003
- * @tc.desc: Test PauseTest003 interface base function - Pause
+ * @tc.desc: Test the Pause interface with DOWNLOAD_SESSION_MANAGER permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant DOWNLOAD_SESSION_MANAGER permission
+ *           3. Call Pause with valid tid
+ * @tc.expect: Pause operation returns 21900006 (TASK_NOT_FOUND)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, PauseTest003, TestSize.Level1)
 {
@@ -434,9 +538,15 @@ HWTEST_F(RequestActionTest, PauseTest003, TestSize.Level1)
 
 /**
  * @tc.name: ResumeTest003
- * @tc.desc: Test ResumeTest003 interface base function - Resume
+ * @tc.desc: Test the Resume interface with DOWNLOAD_SESSION_MANAGER permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant DOWNLOAD_SESSION_MANAGER permission
+ *           3. Call Resume with valid tid
+ * @tc.expect: Resume operation does not return 13499999 (PERMISSION_DENIED)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, ResumeTest003, TestSize.Level1)
 {
@@ -450,9 +560,15 @@ HWTEST_F(RequestActionTest, ResumeTest003, TestSize.Level1)
 
 /**
  * @tc.name: RemoveTest003
- * @tc.desc: Test RemoveTest003 interface base function - Remove
+ * @tc.desc: Test the Remove interface with DOWNLOAD_SESSION_MANAGER permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant DOWNLOAD_SESSION_MANAGER permission
+ *           3. Call Remove with valid tid
+ * @tc.expect: Remove operation does not return 201 (PERMISSION_DENIED)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, RemoveTest003, TestSize.Level1)
 {
@@ -466,9 +582,15 @@ HWTEST_F(RequestActionTest, RemoveTest003, TestSize.Level1)
 
 /**
  * @tc.name: StartTest004
- * @tc.desc: Test StartTest004 interface base function - Start
+ * @tc.desc: Test the Start interface without any permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant no permission
+ *           3. Call Start with valid tid
+ * @tc.expect: Start operation does not return 13499999 (PERMISSION_DENIED)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, StartTest004, TestSize.Level1)
 {
@@ -480,9 +602,15 @@ HWTEST_F(RequestActionTest, StartTest004, TestSize.Level1)
 
 /**
  * @tc.name: StopTest004
- * @tc.desc: Test StopTest004 interface base function - Stop
+ * @tc.desc: Test the Stop interface without any permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant no permission
+ *           3. Call Stop with valid tid
+ * @tc.expect: Stop operation returns 21900006 (TASK_NOT_FOUND)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, StopTest004, TestSize.Level1)
 {
@@ -494,9 +622,15 @@ HWTEST_F(RequestActionTest, StopTest004, TestSize.Level1)
 
 /**
  * @tc.name: TouchTest004
- * @tc.desc: Test TouchTest004 interface base function - Touch
+ * @tc.desc: Test the Touch interface without any permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant no permission
+ *           3. Call Touch with invalid tid, token and info
+ * @tc.expect: Touch operation returns 21900006 (TASK_NOT_FOUND)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, TouchTest004, TestSize.Level1)
 {
@@ -510,9 +644,15 @@ HWTEST_F(RequestActionTest, TouchTest004, TestSize.Level1)
 
 /**
  * @tc.name: ShowTest004
- * @tc.desc: Test ShowTest004 interface base function - Show
+ * @tc.desc: Test the Show interface without any permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant no permission
+ *           3. Call Show with invalid tid and info
+ * @tc.expect: Show operation returns 21900006 (TASK_NOT_FOUND)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, ShowTest004, TestSize.Level1)
 {
@@ -525,9 +665,15 @@ HWTEST_F(RequestActionTest, ShowTest004, TestSize.Level1)
 
 /**
  * @tc.name: PauseTest004
- * @tc.desc: Test PauseTest004 interface base function - Pause
+ * @tc.desc: Test the Pause interface without any permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant no permission
+ *           3. Call Pause with invalid tid and info
+ * @tc.expect: Pause operation returns 21900006 (TASK_NOT_FOUND)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, PauseTest004, TestSize.Level1)
 {
@@ -539,9 +685,15 @@ HWTEST_F(RequestActionTest, PauseTest004, TestSize.Level1)
 
 /**
  * @tc.name: ResumeTest004
- * @tc.desc: Test ResumeTest004 interface base function - Resume
+ * @tc.desc: Test the Resume interface without any permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant no permission
+ *           3. Call Resume with invalid tid and info
+ * @tc.expect: Resume operation returns non-zero value
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, ResumeTest004, TestSize.Level1)
 {
@@ -553,9 +705,15 @@ HWTEST_F(RequestActionTest, ResumeTest004, TestSize.Level1)
 
 /**
  * @tc.name: RemoveTest004
- * @tc.desc: Test RemoveTest004 interface base function - Remove
+ * @tc.desc: Test the Remove interface without any permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant no permission
+ *           3. Call Remove with invalid tid and info
+ * @tc.expect: Remove operation does not return 201 error code
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, RemoveTest004, TestSize.Level1)
 {
@@ -567,9 +725,16 @@ HWTEST_F(RequestActionTest, RemoveTest004, TestSize.Level1)
 
 /**
  * @tc.name: StartTasksTest001
- * @tc.desc: Test StartTasksTest001 interface base function - StartTasks
+ * @tc.desc: Test the StartTasks interface with batch operations
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant DOWNLOAD_SESSION_MANAGER permission
+ *           3. Prepare vector of invalid tids
+ *           4. Call StartTasks with batch tids
+ * @tc.expect: StartTasks operation completes without E_OTHER error
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, StartTasksTest001, TestSize.Level1)
 {
@@ -587,9 +752,16 @@ HWTEST_F(RequestActionTest, StartTasksTest001, TestSize.Level1)
 
 /**
  * @tc.name: StopTasksTest001
- * @tc.desc: Test StopTasksTest001 interface base function - StopTasks
+ * @tc.desc: Test the StopTasks interface with batch operations
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant DOWNLOAD_SESSION_MANAGER permission
+ *           3. Prepare vector of invalid tids
+ *           4. Call StopTasks with batch tids
+ * @tc.expect: StopTasks returns E_OK and individual tasks return TASK_NOT_FOUND
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, StopTasksTest001, TestSize.Level1)
 {
@@ -607,9 +779,16 @@ HWTEST_F(RequestActionTest, StopTasksTest001, TestSize.Level1)
 
 /**
  * @tc.name: ResumeTasksTest001
- * @tc.desc: Test ResumeTasksTest001 interface base function - ResumeTasks
+ * @tc.desc: Test the ResumeTasks interface with batch operations
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant DOWNLOAD_SESSION_MANAGER permission
+ *           3. Prepare vector of invalid tids
+ *           4. Call ResumeTasks with batch tids
+ * @tc.expect: ResumeTasks operation completes without E_OTHER error
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, ResumeTasksTest001, TestSize.Level1)
 {
@@ -627,9 +806,16 @@ HWTEST_F(RequestActionTest, ResumeTasksTest001, TestSize.Level1)
 
 /**
  * @tc.name: PauseTasksTest001
- * @tc.desc: Test PauseTasksTest001 interface base function - PauseTasks
+ * @tc.desc: Test the PauseTasks interface with batch operations
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant DOWNLOAD_SESSION_MANAGER permission
+ *           3. Prepare vector of invalid tids
+ *           4. Call PauseTasks with batch tids
+ * @tc.expect: PauseTasks returns E_OK and individual tasks return TASK_NOT_FOUND
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, PauseTasksTest001, TestSize.Level1)
 {
@@ -647,9 +833,16 @@ HWTEST_F(RequestActionTest, PauseTasksTest001, TestSize.Level1)
 
 /**
  * @tc.name: ShowTasksTest001
- * @tc.desc: Test ShowTasksTest001 interface base function - ShowTasks
+ * @tc.desc: Test the ShowTasks interface with batch operations
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant DOWNLOAD_SESSION_MANAGER permission
+ *           3. Prepare vector of invalid tids
+ *           4. Call ShowTasks with batch tids
+ * @tc.expect: ShowTasks returns E_OK and individual tasks return TASK_NOT_FOUND
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, ShowTasksTest001, TestSize.Level1)
 {
@@ -666,9 +859,16 @@ HWTEST_F(RequestActionTest, ShowTasksTest001, TestSize.Level1)
 
 /**
  * @tc.name: TouchTasksTest001
- * @tc.desc: Test TouchTasksTest001 interface base function - TouchTasks
+ * @tc.desc: Test the TouchTasks interface with batch operations
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant DOWNLOAD_SESSION_MANAGER permission
+ *           3. Prepare vector of invalid tid-token pairs
+ *           4. Call TouchTasks with batch tid-token pairs
+ * @tc.expect: TouchTasks returns E_OK and individual tasks return TASK_NOT_FOUND
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, TouchTasksTest001, TestSize.Level1)
 {
@@ -687,9 +887,15 @@ HWTEST_F(RequestActionTest, TouchTasksTest001, TestSize.Level1)
 
 /**
  * @tc.name: SetMaxSpeedTest001
- * @tc.desc: Test SetMaxSpeedTest001 interface base function - SetMaxSpeed
+ * @tc.desc: Test the SetMaxSpeed interface without permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant no permission
+ *           3. Call SetMaxSpeed with invalid tid and max speed
+ * @tc.expect: SetMaxSpeed returns E_PARAMETER_CHECK error
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, SetMaxSpeedTest001, TestSize.Level1)
 {
@@ -703,9 +909,16 @@ HWTEST_F(RequestActionTest, SetMaxSpeedTest001, TestSize.Level1)
 
 /**
  * @tc.name: SetMaxSpeedsTest001
- * @tc.desc: Test SetMaxSpeedsTest001 interface base function - SetMaxSpeeds
+ * @tc.desc: Test the SetMaxSpeeds interface with batch operations
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant no permission
+ *           3. Prepare vector of speed configurations
+ *           4. Call SetMaxSpeeds with batch configs
+ * @tc.expect: SetMaxSpeeds returns E_OK and individual configs return E_PARAMETER_CHECK
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, SetMaxSpeedsTest001, TestSize.Level1)
 {
@@ -723,9 +936,15 @@ HWTEST_F(RequestActionTest, SetMaxSpeedsTest001, TestSize.Level1)
 
 /**
  * @tc.name: SetModeTest001
- * @tc.desc: Test SetModeTest001 interface base function - SetMode
+ * @tc.desc: Test the SetMode interface without permission
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant no permission
+ *           3. Call SetMode with invalid tid and mode
+ * @tc.expect: SetMode returns E_PERMISSION error
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, SetModeTest001, TestSize.Level1)
 {
@@ -739,9 +958,15 @@ HWTEST_F(RequestActionTest, SetModeTest001, TestSize.Level1)
 
 /**
  * @tc.name: DisableTaskNotificationTest001
- * @tc.desc: Test DisableTaskNotificationTest001 interface base function - DisableTaskNotification
+ * @tc.desc: Test the DisableTaskNotification interface with batch operations
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Prepare vector of invalid tids
+ *           3. Call DisableTaskNotification with batch tids
+ * @tc.expect: DisableTaskNotification returns E_OK and individual tasks return TASK_NOT_FOUND
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, DisableTaskNotificationTest001, TestSize.Level1)
 {
@@ -755,9 +980,15 @@ HWTEST_F(RequestActionTest, DisableTaskNotificationTest001, TestSize.Level1)
 
 /**
  * @tc.name: CreateTest001
- * @tc.desc: Test CreateTest001 interface base function - Create
+ * @tc.desc: Test the Create interface with valid TaskBuilder parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create TaskBuilder instance with valid parameters
+ *           2. Set all required fields including URL, title, description
+ *           3. Call Create with the TaskBuilder
+ * @tc.expect: Create operation returns E_PARAMETER_CHECK due to invalid parameters
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateTest001, TestSize.Level1)
 {
@@ -798,9 +1029,15 @@ HWTEST_F(RequestActionTest, CreateTest001, TestSize.Level1)
 
 /**
  * @tc.name: CreateTasksTest001
- * @tc.desc: Test CreateTasksTest001 interface base function - CreateTasks
+ * @tc.desc: Test the CreateTasks interface with empty TaskBuilder vector
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty vector of TaskBuilder instances
+ *           2. Prepare empty vector for TaskRet results
+ *           3. Call CreateTasks with empty builders vector
+ * @tc.expect: CreateTasks returns E_OK with empty results
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateTasksTest001, TestSize.Level1)
 {
@@ -812,9 +1049,16 @@ HWTEST_F(RequestActionTest, CreateTasksTest001, TestSize.Level1)
 
 /**
  * @tc.name: RemoveTasksTest001
- * @tc.desc: Test RemoveTasksTest001 interface base function - RemoveTasks
+ * @tc.desc: Test the RemoveTasks interface with batch operations
+ * @tc.precon: NA
+ * @tc.step: 1. Create RequestAction instance
+ *           2. Grant DOWNLOAD_SESSION_MANAGER permission
+ *           3. Prepare vector of invalid tids
+ *           4. Call RemoveTasks with batch tids
+ * @tc.expect: RemoveTasks returns E_OK and individual tasks return TASK_NOT_FOUND
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, RemoveTasksTest001, TestSize.Level1)
 {
@@ -832,9 +1076,14 @@ HWTEST_F(RequestActionTest, RemoveTasksTest001, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest001
- * @tc.desc: Test CreateInnerTest001 interface base function - CreateDirs
+ * @tc.desc: Test the CreateDirs interface with empty path vector
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty vector of directory paths
+ *           2. Call CreateDirs with empty path vector
+ * @tc.expect: CreateDirs returns true for empty input
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest001, TestSize.Level1)
 {
@@ -845,9 +1094,14 @@ HWTEST_F(RequestActionTest, CreateInnerTest001, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0011
- * @tc.desc: Test CreateInnerTest0011 interface base function - CreateDirs
+ * @tc.desc: Test the CreateDirs interface with empty path vector duplicate
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty vector of directory paths
+ *           2. Call CreateDirs with empty path vector
+ * @tc.expect: CreateDirs returns true for empty input
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0011, TestSize.Level1)
 {
@@ -858,9 +1112,14 @@ HWTEST_F(RequestActionTest, CreateInnerTest0011, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0012
- * @tc.desc: Test CreateInnerTest0012 interface base function - CreateDirs
+ * @tc.desc: Test the CreateDirs interface with valid directory paths
+ * @tc.precon: NA
+ * @tc.step: 1. Create vector of valid directory paths
+ *           2. Call CreateDirs with the path vector
+ * @tc.expect: CreateDirs returns true for valid paths
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0012, TestSize.Level1)
 {
@@ -871,9 +1130,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0012, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest002
- * @tc.desc: Test CreateInnerTest002 interface base function - FileToWhole
+ * @tc.desc: Test the FileToWhole interface with null context
+ * @tc.precon: NA
+ * @tc.step: 1. Create null context pointer
+ *           2. Create empty config and path
+ *           3. Call FileToWhole with null context
+ * @tc.expect: FileToWhole returns true for null context handling
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest002, TestSize.Level1)
 {
@@ -887,9 +1152,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest002, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0021
- * @tc.desc: Test CreateInnerTest0021 interface base function - FileToWhole
+ * @tc.desc: Test the FileToWhole interface with null context
+ * @tc.precon: NA
+ * @tc.step: 1. Create null context pointer
+ *           2. Create empty config and path
+ *           3. Call FileToWhole with null context
+ * @tc.expect: FileToWhole returns false for null context
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0021, TestSize.Level1)
 {
@@ -929,9 +1200,15 @@ public:
 
 /**
  * @tc.name: CreateInnerTest003
- * @tc.desc: Test CreateInnerTest003 interface base function - BaseToWhole
+ * @tc.desc: Test the BaseToWhole interface with mock context
+ * @tc.precon: NA
+ * @tc.step: 1. Create mock ApplicationContext instance
+ *           2. Prepare empty path string
+ *           3. Call BaseToWhole with mock context
+ * @tc.expect: BaseToWhole returns true for valid mock context
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest003, TestSize.Level1)
 {
@@ -944,9 +1221,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest003, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0031
- * @tc.desc: Test CreateInnerTest0031 interface base function - BaseToWhole
+ * @tc.desc: Test the BaseToWhole interface with error mock context
+ * @tc.precon: NA
+ * @tc.step: 1. Create error mock ApplicationContext instance
+ *           2. Prepare empty path string
+ *           3. Call BaseToWhole with error mock context
+ * @tc.expect: BaseToWhole returns false for error mock context
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0031, TestSize.Level1)
 {
@@ -959,9 +1242,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0031, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest004
- * @tc.desc: Test CreateInnerTest004 interface base function - CacheToWhole
+ * @tc.desc: Test the CacheToWhole interface with valid mock context
+ * @tc.precon: NA
+ * @tc.step: 1. Create valid mock ApplicationContext instance
+ *           2. Prepare empty path string
+ *           3. Call CacheToWhole with valid mock context
+ * @tc.expect: CacheToWhole returns true for valid mock context
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest004, TestSize.Level1)
 {
@@ -974,9 +1263,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest004, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0041
- * @tc.desc: Test CreateInnerTest0041 interface base function - CacheToWhole
+ * @tc.desc: Test the CacheToWhole interface with error mock context
+ * @tc.precon: NA
+ * @tc.step: 1. Create error mock ApplicationContext instance
+ *           2. Prepare empty path string
+ *           3. Call CacheToWhole with error mock context
+ * @tc.expect: CacheToWhole returns false for error mock context
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0041, TestSize.Level1)
 {
@@ -989,9 +1284,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0041, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest005
- * @tc.desc: Test CreateInnerTest005 interface base function - StandardizePath
+ * @tc.desc: Test the StandardizePath interface with mock context
+ * @tc.precon: NA
+ * @tc.step: 1. Create mock ApplicationContext instance
+ *           2. Create empty config and path
+ *           3. Call StandardizePath with mock context
+ * @tc.expect: StandardizePath returns true for valid mock context
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest005, TestSize.Level1)
 {
@@ -1004,9 +1305,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest005, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0051
- * @tc.desc: Test CreateInnerTest0051 interface base function - StandardizePath
+ * @tc.desc: Test the StandardizePath interface with root path
+ * @tc.precon: NA
+ * @tc.step: 1. Create valid mock ApplicationContext instance
+ *           2. Create empty config and root path "/"
+ *           3. Call StandardizePath with root path
+ * @tc.expect: StandardizePath returns true for root path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0051, TestSize.Level1)
 {
@@ -1019,9 +1326,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0051, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0052
- * @tc.desc: Test CreateInnerTest0052 interface base function - StandardizePath
+ * @tc.desc: Test the StandardizePath interface with file protocol and error context
+ * @tc.precon: NA
+ * @tc.step: 1. Create error mock ApplicationContext instance
+ *           2. Create empty config and file protocol path
+ *           3. Call StandardizePath with file protocol
+ * @tc.expect: StandardizePath returns false for error context
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0052, TestSize.Level1)
 {
@@ -1034,9 +1347,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0052, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0053
- * @tc.desc: Test CreateInnerTest0053 interface base function - StandardizePath
+ * @tc.desc: Test the StandardizePath interface with internal protocol and error context
+ * @tc.precon: NA
+ * @tc.step: 1. Create error mock ApplicationContext instance
+ *           2. Create empty config and internal protocol path
+ *           3. Call StandardizePath with internal protocol
+ * @tc.expect: StandardizePath returns false for error context
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0053, TestSize.Level1)
 {
@@ -1049,9 +1368,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0053, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0054
- * @tc.desc: Test CreateInnerTest0054 interface base function - StandardizePath
+ * @tc.desc: Test the StandardizePath interface with relative path and error context
+ * @tc.precon: NA
+ * @tc.step: 1. Create error mock ApplicationContext instance
+ *           2. Create empty config and relative path
+ *           3. Call StandardizePath with relative path
+ * @tc.expect: StandardizePath returns false for error context
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0054, TestSize.Level1)
 {
@@ -1064,9 +1389,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0054, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest006
- * @tc.desc: Test CreateInnerTest006 interface base function - StringSplit
+ * @tc.desc: Test the StringSplit interface with basic string splitting
+ * @tc.precon: NA
+ * @tc.step: 1. Create test string with delimiter
+ *           2. Set delimiter character
+ *           3. Call StringSplit with test string and delimiter
+ * @tc.expect: StringSplit successfully splits string into 2 elements
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest006, TestSize.Level1)
 {
@@ -1079,9 +1410,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest006, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest007
- * @tc.desc: Test CreateInnerTest007 interface base function - PathVecToNormal
+ * @tc.desc: Test the PathVecToNormal interface with empty input vectors
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty input vector
+ *           2. Create empty output vector
+ *           3. Call PathVecToNormal with empty vectors
+ * @tc.expect: PathVecToNormal returns true for empty input
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest007, TestSize.Level1)
 {
@@ -1093,9 +1430,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest007, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0071
- * @tc.desc: Test CreateInnerTest0071 interface base function - PathVecToNormal
+ * @tc.desc: Test the PathVecToNormal interface with parent directory navigation
+ * @tc.precon: NA
+ * @tc.step: 1. Create input vector with parent directory ".." and subdirectory
+ *           2. Create output vector with pre-allocated size
+ *           3. Call PathVecToNormal with valid vectors
+ * @tc.expect: PathVecToNormal returns true for valid parent directory navigation
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0071, TestSize.Level1)
 {
@@ -1108,9 +1451,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0071, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0072
- * @tc.desc: Test CreateInnerTest0072 interface base function - PathVecToNormal
+ * @tc.desc: Test the PathVecToNormal interface with invalid parent directory path
+ * @tc.precon: NA
+ * @tc.step: 1. Create input vector with only parent directory ".."
+ *           2. Create empty output vector
+ *           3. Call PathVecToNormal with invalid path
+ * @tc.expect: PathVecToNormal returns false for invalid parent directory path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0072, TestSize.Level1)
 {
@@ -1123,9 +1472,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0072, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest008
- * @tc.desc: Test CreateInnerTest008 interface base function - WholeToNormal
+ * @tc.desc: Test the WholeToNormal interface with empty path
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty path string
+ *           2. Create output vector
+ *           3. Call WholeToNormal with empty path
+ * @tc.expect: WholeToNormal returns true for empty path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest008, TestSize.Level1)
 {
@@ -1137,9 +1492,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest008, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0081
- * @tc.desc: Test CreateInnerTest0081 interface base function - WholeToNormal
+ * @tc.desc: Test the WholeToNormal interface with invalid parent directory path
+ * @tc.precon: NA
+ * @tc.step: 1. Create path string with parent directory navigation
+ *           2. Create empty output vector
+ *           3. Call WholeToNormal with invalid path
+ * @tc.expect: WholeToNormal returns false for invalid parent directory path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0081, TestSize.Level1)
 {
@@ -1152,9 +1513,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0081, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0082
- * @tc.desc: Test CreateInnerTest0082 interface base function - WholeToNormal
+ * @tc.desc: Test the WholeToNormal interface with valid complex path
+ * @tc.precon: NA
+ * @tc.step: 1. Create path string with complex navigation
+ *           2. Create output vector with pre-allocated size
+ *           3. Call WholeToNormal with valid complex path
+ * @tc.expect: WholeToNormal returns true for valid complex path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0082, TestSize.Level1)
 {
@@ -1167,9 +1534,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0082, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest009
- * @tc.desc: Test CreateInnerTest009 interface base function - GetAppBaseDir
+ * @tc.desc: Test the GetAppBaseDir interface with empty base directory
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty base directory string
+ *           2. Call GetAppBaseDir with empty string
+ *           3. Verify the result
+ * @tc.expect: GetAppBaseDir returns false for empty base directory
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest009, TestSize.Level1)
 {
@@ -1180,9 +1553,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest009, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest010
- * @tc.desc: Test CreateInnerTest010 interface base function - CheckBelongAppBaseDir
+ * @tc.desc: Test the CheckBelongAppBaseDir interface with empty parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty filepath string
+ *           2. Create empty baseDir string
+ *           3. Call CheckBelongAppBaseDir with empty parameters
+ * @tc.expect: CheckBelongAppBaseDir returns false for empty parameters
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest010, TestSize.Level1)
 {
@@ -1194,9 +1573,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest010, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0101
- * @tc.desc: Test CreateInnerTest0101 interface base function - FindAreaPath
+ * @tc.desc: Test the FindAreaPath interface with various storage area paths
+ * @tc.precon: NA
+ * @tc.step: 1. Test with empty filepath
+ *           2. Test with valid EL1 storage path
+ *           3. Test with valid EL2 storage path
+ *           4. Test with valid EL5 storage path
+ * @tc.expect: Returns false for empty path, true for valid storage area paths
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0101, TestSize.Level1)
 {
@@ -1216,9 +1602,17 @@ HWTEST_F(RequestActionTest, CreateInnerTest0101, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest011
- * @tc.desc: Test CreateInnerTest011 interface base function - GetSandboxPath
+ * @tc.desc: Test the GetSandboxPath interface with invalid empty parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create mock ApplicationContext instance
+ *           2. Create empty Config instance
+ *           3. Create empty path string
+ *           4. Create empty path vector
+ *           5. Call GetSandboxPath with empty parameters
+ * @tc.expect: Returns false for invalid empty parameters
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest011, TestSize.Level1)
 {
@@ -1232,9 +1626,17 @@ HWTEST_F(RequestActionTest, CreateInnerTest011, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0111
- * @tc.desc: Test CreateInnerTest0111 interface base function - GetSandboxPath
+ * @tc.desc: Test the GetSandboxPath interface with StandardizePath failure
+ * @tc.precon: NA
+ * @tc.step: 1. Create error mock ApplicationContext instance
+ *           2. Create empty Config instance
+ *           3. Create root path "/"
+ *           4. Create empty path vector
+ *           5. Call GetSandboxPath with error context
+ * @tc.expect: Returns false when StandardizePath fails
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0111, TestSize.Level1)
 {
@@ -1249,9 +1651,17 @@ HWTEST_F(RequestActionTest, CreateInnerTest0111, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0112
- * @tc.desc: Test CreateInnerTest0112 interface base function - GetSandboxPath
+ * @tc.desc: Test the GetSandboxPath interface with WholeToNormal failure
+ * @tc.precon: NA
+ * @tc.step: 1. Create mock ApplicationContext instance
+ *           2. Create empty Config instance
+ *           3. Create root path "/"
+ *           4. Create empty path vector
+ *           5. Call GetSandboxPath with root path
+ * @tc.expect: Returns false when WholeToNormal fails
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0112, TestSize.Level1)
 {
@@ -1266,9 +1676,17 @@ HWTEST_F(RequestActionTest, CreateInnerTest0112, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0113
- * @tc.desc: Test CreateInnerTest0113 interface base function - GetSandboxPath
+ * @tc.desc: Test the GetSandboxPath interface with empty path vector
+ * @tc.precon: NA
+ * @tc.step: 1. Create mock ApplicationContext instance
+ *           2. Create empty Config instance
+ *           3. Create parent directory path "../aa"
+ *           4. Create empty path vector (resize to 0)
+ *           5. Call GetSandboxPath with empty vector
+ * @tc.expect: Returns false for empty path vector
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0113, TestSize.Level1)
 {
@@ -1284,9 +1702,17 @@ HWTEST_F(RequestActionTest, CreateInnerTest0113, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0114
- * @tc.desc: Test CreateInnerTest0114 interface base function - GetSandboxPath
+ * @tc.desc: Test the GetSandboxPath interface with CheckBelongAppBaseDir failure
+ * @tc.precon: NA
+ * @tc.step: 1. Create mock ApplicationContext instance
+ *           2. Create empty Config instance
+ *           3. Create root path "/"
+ *           4. Create path vector with size 10
+ *           5. Call GetSandboxPath with invalid base directory
+ * @tc.expect: Returns false when CheckBelongAppBaseDir fails
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0114, TestSize.Level1)
 {
@@ -1302,9 +1728,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0114, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest012
- * @tc.desc: Test CreateInnerTest012 interface base function - CheckDownloadFilePath
+ * @tc.desc: Test the CheckDownloadFilePath interface with invalid parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create mock ApplicationContext instance
+ *           2. Create empty Config instance
+ *           3. Call CheckDownloadFilePath with invalid parameters
+ * @tc.expect: Returns false for invalid download file path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest012, TestSize.Level1)
 {
@@ -1316,9 +1748,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest012, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest013
- * @tc.desc: Test CreateInnerTest013 interface base function - InterceptData
+ * @tc.desc: Test the InterceptData interface with empty parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty input string
+ *           2. Create empty intercept string
+ *           3. Create empty output string
+ *           4. Call InterceptData with empty parameters
+ * @tc.expect: Returns false for empty input parameters
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest013, TestSize.Level1)
 {
@@ -1331,9 +1770,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest013, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0131
- * @tc.desc: Test CreateInnerTest0131 interface base function - InterceptData
+ * @tc.desc: Test the InterceptData interface with non-matching path patterns
+ * @tc.precon: NA
+ * @tc.step: 1. Create root path "/"
+ *           2. Create intercept pattern "a/"
+ *           3. Create empty output string
+ *           4. Call InterceptData with non-matching patterns
+ * @tc.expect: Returns false for non-matching path intercept
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0131, TestSize.Level1)
 {
@@ -1346,9 +1792,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest0131, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest014
- * @tc.desc: Test CreateInnerTest014 interface base function - StandardizeFileSpec
+ * @tc.desc: Test the StandardizeFileSpec interface with various file specifications
+ * @tc.precon: NA
+ * @tc.step: 1. Test with basic file spec containing only URI
+ *           2. Test with complete file spec having all fields
+ *           3. Test with file spec having empty type but hasContentType=true
+ *           4. Verify all field standardizations
+ * @tc.expect: Correctly standardizes filename, name, and type fields
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest014, TestSize.Level1)
 {
@@ -1369,9 +1822,14 @@ HWTEST_F(RequestActionTest, CreateInnerTest014, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest017
- * @tc.desc: Test CreateInnerTest017 interface base function - IsPathValid
+ * @tc.desc: Test the IsPathValid interface with empty path
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty filepath string
+ *           2. Call IsPathValid with empty path
+ * @tc.expect: Returns false for empty path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest017, TestSize.Level1)
 {
@@ -1382,9 +1840,14 @@ HWTEST_F(RequestActionTest, CreateInnerTest017, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0171
- * @tc.desc: Test CreateInnerTest0171 interface base function - IsPathValid
+ * @tc.desc: Test the IsPathValid interface with invalid storage path
+ * @tc.precon: NA
+ * @tc.step: 1. Create invalid storage path "/data/storage/el1/base/test_createinner_0171/"
+ *           2. Call IsPathValid with invalid path
+ * @tc.expect: Returns false for invalid storage path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0171, TestSize.Level1)
 {
@@ -1395,9 +1858,14 @@ HWTEST_F(RequestActionTest, CreateInnerTest0171, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0172
- * @tc.desc: Test CreateInnerTest0172 interface base function - IsPathValid
+ * @tc.desc: Test the IsPathValid interface with valid storage path
+ * @tc.precon: NA
+ * @tc.step: 1. Create valid storage path "/data/storage/el1/base/"
+ *           2. Call IsPathValid with valid path
+ * @tc.expect: Returns true for valid storage path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0172, TestSize.Level1)
 {
@@ -1408,9 +1876,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest0172, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest018
- * @tc.desc: Test CreateInnerTest018 interface base function - GetInternalPath
+ * @tc.desc: Test the GetInternalPath interface with empty parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create mock ApplicationContext instance
+ *           2. Create empty Config instance
+ *           3. Create empty path string
+ *           4. Call GetInternalPath with empty parameters
+ * @tc.expect: Returns false for empty path parameter
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest018, TestSize.Level1)
 {
@@ -1426,9 +1901,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest018, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0181
- * @tc.desc: Test CreateInnerTest0181 interface base function - GetInternalPath
+ * @tc.desc: Test the GetInternalPath interface with error mock context
+ * @tc.precon: NA
+ * @tc.step: 1. Create error mock ApplicationContext instance
+ *           2. Create empty Config instance
+ *           3. Create internal path "internal://cache/test1.txt"
+ *           4. Call GetInternalPath with error context
+ * @tc.expect: Returns false for error mock context
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0181, TestSize.Level1)
 {
@@ -1450,9 +1932,16 @@ public:
 
 /**
  * @tc.name: CreateInnerTest0182
- * @tc.desc: Test CreateInnerTest0182 interface base function - GetInternalPath
+ * @tc.desc: Test the GetInternalPath interface with valid cache directory
+ * @tc.precon: NA
+ * @tc.step: 1. Create cache test mock ApplicationContext instance
+ *           2. Create empty Config instance
+ *           3. Create relative path "test"
+ *           4. Call GetInternalPath with valid cache directory
+ * @tc.expect: Returns true for valid cache directory path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0182, TestSize.Level1)
 {
@@ -1465,9 +1954,14 @@ HWTEST_F(RequestActionTest, CreateInnerTest0182, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest019
- * @tc.desc: Test CreateInnerTest019 interface base function - FindDir
+ * @tc.desc: Test the FindDir interface with empty directory path
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty directory path string
+ *           2. Call FindDir with empty path
+ * @tc.expect: Returns false for empty directory path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest019, TestSize.Level1)
 {
@@ -1478,9 +1972,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest019, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest020
- * @tc.desc: Test CreateInnerTest020 interface base function - GetFdDownload
+ * @tc.desc: Test the GetFdDownload interface with empty parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty path string
+ *           2. Create empty Config instance
+ *           3. Call GetFdDownload with empty parameters
+ * @tc.expect: Returns E_FILE_IO for empty parameters
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest020, TestSize.Level1)
 {
@@ -1492,9 +1992,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest020, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0201
- * @tc.desc: Test CreateInnerTest0201 interface base function - GetFdDownload
+ * @tc.desc: Test the GetFdDownload interface with various config combinations
+ * @tc.precon: NA
+ * @tc.step: 1. Test with API10 version, firstInit=true, overwrite=false
+ *           2. Test with API9 version, firstInit=true, overwrite=false
+ *           3. Test with API10 version, firstInit=false, overwrite=true
+ *           4. Test with API10 version, firstInit=false, overwrite=false
+ * @tc.expect: Returns appropriate error codes for each config combination
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0201, TestSize.Level1)
 {
@@ -1517,9 +2024,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0201, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0202
- * @tc.desc: Test CreateInnerTest0202 interface base function - GetFdDownload
+ * @tc.desc: Test the GetFdDownload interface with valid storage path
+ * @tc.precon: NA
+ * @tc.step: 1. Create valid storage path "/data/storage/el1/base/test"
+ *           2. Create Config with API10 version, firstInit=true, overwrite=true
+ *           3. Call GetFdDownload with valid parameters
+ * @tc.expect: Returns E_FILE_IO due to file system limitations
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0202, TestSize.Level1)
 {
@@ -1531,9 +2044,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0202, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest021
- * @tc.desc: Test CreateInnerTest021 interface base function - CheckDownloadFile
+ * @tc.desc: Test the CheckDownloadFile interface with empty parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create mock ApplicationContext instance
+ *           2. Create empty Config instance
+ *           3. Call CheckDownloadFile with empty parameters
+ * @tc.expect: Returns E_PARAMETER_CHECK for empty parameters
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest021, TestSize.Level1)
 {
@@ -1545,9 +2064,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest021, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0211
- * @tc.desc: Test CreateInnerTest0211 interface base function - CheckDownloadFile
+ * @tc.desc: Test the CheckDownloadFile interface with API9 version and URI file
+ * @tc.precon: NA
+ * @tc.step: 1. Create mock ApplicationContext instance
+ *           2. Create FileSpec with URI "/test.txt"
+ *           3. Create Config with API9 version
+ *           4. Call CheckDownloadFile with URI file
+ * @tc.expect: Returns E_PARAMETER_CHECK for URI file in API9
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0211, TestSize.Level1)
 {
@@ -1560,9 +2086,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest0211, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0212
- * @tc.desc: Test CreateInnerTest0212 interface base function - CheckDownloadFile
+ * @tc.desc: Test the CheckDownloadFile interface with API9 version and relative path
+ * @tc.precon: NA
+ * @tc.step: 1. Create cache test mock ApplicationContext instance
+ *           2. Create FileSpec with relative path "test"
+ *           3. Create Config with API9 version
+ *           4. Call CheckDownloadFile with relative path
+ * @tc.expect: Returns E_PARAMETER_CHECK for relative path in API9
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0212, TestSize.Level1)
 {
@@ -1576,9 +2109,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest0212, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0213
- * @tc.desc: Test CreateInnerTest0213 interface base function - CheckDownloadFile
+ * @tc.desc: Test the CheckDownloadFile interface with saveas path validation
+ * @tc.precon: NA
+ * @tc.step: 1. Create cache test mock ApplicationContext instance
+ *           2. Create FileSpec with relative path "test"
+ *           3. Create Config with API9 version and saveas URI
+ *           4. Call CheckDownloadFile with saveas parameter
+ * @tc.expect: Returns E_PARAMETER_CHECK for invalid saveas in API9
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0213, TestSize.Level1)
 {
@@ -1591,9 +2131,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest0213, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0214
- * @tc.desc: Test CreateInnerTest0214 interface base function - CheckDownloadFile
+ * @tc.desc: Test the CheckDownloadFile interface with API10 version and saveas path
+ * @tc.precon: NA
+ * @tc.step: 1. Create cache test mock ApplicationContext instance
+ *           2. Create FileSpec with relative path "test"
+ *           3. Create Config with API10 version, overwrite=false, and saveas URI
+ *           4. Call CheckDownloadFile with saveas parameter
+ * @tc.expect: Returns E_PARAMETER_CHECK for invalid saveas path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0214, TestSize.Level1)
 {
@@ -1605,10 +2152,17 @@ HWTEST_F(RequestActionTest, CreateInnerTest0214, TestSize.Level1)
 }
 
 /**
- * @tc.name: CreateInnerTest0214
- * @tc.desc: Test CreateInnerTest0214 interface base function - CheckDownloadFile
+ * @tc.name: CreateInnerTest0215
+ * @tc.desc: Test the CheckDownloadFile interface with API10 background mode
+ * @tc.precon: NA
+ * @tc.step: 1. Create cache test mock ApplicationContext instance
+ *           2. Create FileSpec with file URI
+ *           3. Create Config with API10, BACKGROUND mode, overwrite=true
+ *           4. Call CheckDownloadFile with saveas parameter
+ * @tc.expect: Returns E_PARAMETER_CHECK for invalid file path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0215, TestSize.Level1)
 {
@@ -1624,9 +2178,14 @@ HWTEST_F(RequestActionTest, CreateInnerTest0215, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest022
- * @tc.desc: Test CreateInnerTest022 interface base function - IsUserFile
+ * @tc.desc: Test the IsUserFile interface with empty path
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty path string
+ *           2. Call IsUserFile with empty path
+ * @tc.expect: Returns false for empty path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest022, TestSize.Level1)
 {
@@ -1637,9 +2196,14 @@ HWTEST_F(RequestActionTest, CreateInnerTest022, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0221
- * @tc.desc: Test CreateInnerTest0221 interface base function - IsUserFile
+ * @tc.desc: Test the IsUserFile interface with docs directory path
+ * @tc.precon: NA
+ * @tc.step: 1. Create docs directory path "file://docs/"
+ *           2. Call IsUserFile with docs path
+ * @tc.expect: Returns true for docs directory path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0221, TestSize.Level1)
 {
@@ -1650,9 +2214,14 @@ HWTEST_F(RequestActionTest, CreateInnerTest0221, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0222
- * @tc.desc: Test CreateInnerTest0222 interface base function - IsUserFile
+ * @tc.desc: Test the IsUserFile interface with media directory path
+ * @tc.precon: NA
+ * @tc.step: 1. Create media directory path "file://media/"
+ *           2. Call IsUserFile with media path
+ * @tc.expect: Returns true for media directory path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0222, TestSize.Level1)
 {
@@ -1663,9 +2232,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest0222, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest023
- * @tc.desc: Test CreateInnerTest023 interface base function - CheckUserFileSpec
+ * @tc.desc: Test the CheckUserFileSpec interface with empty parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create mock ApplicationContext instance
+ *           2. Create empty Config instance
+ *           3. Create empty FileSpec instance
+ *           4. Call CheckUserFileSpec with empty parameters
+ * @tc.expect: Returns E_PARAMETER_CHECK for empty parameters
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest023, TestSize.Level1)
 {
@@ -1678,9 +2254,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest023, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0231
- * @tc.desc: Test CreateInnerTest0231 interface base function - CheckUserFileSpec
+ * @tc.desc: Test the CheckUserFileSpec interface with null context and background mode
+ * @tc.precon: NA
+ * @tc.step: 1. Create null ApplicationContext instance
+ *           2. Create Config with BACKGROUND mode
+ *           3. Create empty FileSpec instance
+ *           4. Call CheckUserFileSpec with null context
+ * @tc.expect: Returns E_PARAMETER_CHECK for null context
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0231, TestSize.Level1)
 {
@@ -1693,9 +2276,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest0231, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0232
- * @tc.desc: Test CreateInnerTest0232 interface base function - CheckUserFileSpec
+ * @tc.desc: Test the CheckUserFileSpec interface with null context and foreground mode
+ * @tc.precon: NA
+ * @tc.step: 1. Create null ApplicationContext instance
+ *           2. Create Config with FOREGROUND mode
+ *           3. Create empty FileSpec instance
+ *           4. Call CheckUserFileSpec with null context
+ * @tc.expect: Returns E_PARAMETER_CHECK for null context
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0232, TestSize.Level1)
 {
@@ -1708,9 +2298,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest0232, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0233
- * @tc.desc: Test CreateInnerTest0233 interface base function - CheckUserFileSpec
+ * @tc.desc: Test the CheckUserFileSpec interface with foreground mode and firstInit=true
+ * @tc.precon: NA
+ * @tc.step: 1. Create null ApplicationContext instance
+ *           2. Create Config with FOREGROUND mode and firstInit=true
+ *           3. Create FileSpec with empty URI and isUserFile=true
+ *           4. Call CheckUserFileSpec with false parameter
+ * @tc.expect: Returns E_FILE_IO for empty URI file specification
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0233, TestSize.Level1)
 {
@@ -1723,9 +2320,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest0233, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0234
- * @tc.desc: Test CreateInnerTest0234 interface base function - CheckUserFileSpec
+ * @tc.desc: Test the CheckUserFileSpec interface with foreground mode and firstInit=false
+ * @tc.precon: NA
+ * @tc.step: 1. Create null ApplicationContext instance
+ *           2. Create Config with FOREGROUND mode and firstInit=false
+ *           3. Create FileSpec with empty URI and isUserFile=true
+ *           4. Call CheckUserFileSpec with false parameter
+ * @tc.expect: Returns E_FILE_IO for empty URI file specification
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0234, TestSize.Level1)
 {
@@ -1738,9 +2342,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest0234, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest024
- * @tc.desc: Test CreateInnerTest024 interface base function - CheckPathIsFile
+ * @tc.desc: Test the CheckPathIsFile interface with various path scenarios
+ * @tc.precon: NA
+ * @tc.step: 1. Test with empty path
+ *           2. Test with directory path "/data/test"
+ *           3. Test with existing file path "/data/test/CreateInnerFile"
+ *           4. Verify file existence and type checking
+ * @tc.expect: Returns correct boolean for each path type
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest024, TestSize.Level1)
 {
@@ -1762,9 +2373,17 @@ HWTEST_F(RequestActionTest, CreateInnerTest024, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest025
- * @tc.desc: Test CreateInnerTest025 interface base function - GetFdUpload
+ * @tc.desc: Test the GetFdUpload interface with empty path and different API versions
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty path string
+ *           2. Create Config with API10 version
+ *           3. Call GetFdUpload with API10 config
+ *           4. Create Config with API9 version
+ *           5. Call GetFdUpload with API9 config
+ * @tc.expect: Returns E_FILE_IO for API10, E_FILE_PATH for API9
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest025, TestSize.Level1)
 {
@@ -1781,9 +2400,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest025, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0251
- * @tc.desc: Test CreateInnerTest0251 interface base function - GetFdUpload
+ * @tc.desc: Test the GetFdUpload interface with valid existing file
+ * @tc.precon: NA
+ * @tc.step: 1. Create test file "/data/test/CreateInnerFile"
+ *           2. Create Config with API10 version
+ *           3. Call GetFdUpload with valid file path
+ * @tc.expect: Returns E_OK for valid existing file
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0251, TestSize.Level1)
 {
@@ -1797,9 +2422,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0251, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0252
- * @tc.desc: Test CreateInnerTest0252 interface base function - GetFdUpload
+ * @tc.desc: Test the GetFdUpload interface with system file path and API version variations
+ * @tc.precon: NA
+ * @tc.step: 1. Create system file path with leading space
+ *           2. Test with API10 version configuration
+ *           3. Test with API9 version configuration
+ * @tc.expect: Returns E_FILE_IO for API10, E_FILE_PATH for API9 due to file access issues
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0252, TestSize.Level1)
 {
@@ -1816,9 +2447,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest0252, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest026
- * @tc.desc: Test CreateInnerTest026 interface base function - CheckUploadFileSpec
+ * @tc.desc: Test the CheckUploadFileSpec interface with invalid parameters
+ * @tc.precon: NA
+ * @tc.step: 1. Create mock ApplicationContext instance
+ *           2. Create empty Config instance
+ *           3. Create empty FileSpec instance
+ *           4. Call CheckUploadFileSpec with invalid parameters
+ * @tc.expect: Returns E_PARAMETER_CHECK for invalid input parameters
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest026, TestSize.Level1)
 {
@@ -1831,9 +2469,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest026, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0261
- * @tc.desc: Test CreateInnerTest0261 interface base function - CheckUploadFileSpec
+ * @tc.desc: Test the CheckUploadFileSpec interface with API version variations
+ * @tc.precon: NA
+ * @tc.step: 1. Create mock ApplicationContext instance
+ *           2. Create FileSpec with empty uri
+ *           3. Test with API9 configuration
+ *           4. Test with API10 configuration
+ * @tc.expect: Returns E_PARAMETER_CHECK for both API versions with invalid file spec
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0261, TestSize.Level1)
 {
@@ -1848,9 +2493,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0261, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0271
- * @tc.desc: Test CreateInnerTest0271 interface base function - CheckUploadFiles
+ * @tc.desc: Test the CheckUploadFiles interface with valid empty configuration
+ * @tc.precon: NA
+ * @tc.step: 1. Create mock ApplicationContext instance
+ *           2. Create API10 configuration with empty files
+ *           3. Call CheckUploadFiles with valid parameters
+ * @tc.expect: Returns E_OK for valid empty file configuration
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0271, TestSize.Level1)
 {
@@ -1862,9 +2513,16 @@ HWTEST_F(RequestActionTest, CreateInnerTest0271, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0272
- * @tc.desc: Test CreateInnerTest0272 interface base function - CheckUploadFiles
+ * @tc.desc: Test the CheckUploadFiles interface with invalid user file path
+ * @tc.precon: NA
+ * @tc.step: 1. Create mock ApplicationContext instance
+ *           2. Create FileSpec with invalid user file path
+ *           3. Create API10 configuration with invalid file
+ *           4. Call CheckUploadFiles with invalid file path
+ * @tc.expect: Returns E_PARAMETER_CHECK for invalid user file path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0272, TestSize.Level1)
 {
@@ -1877,9 +2535,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest0272, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest028
- * @tc.desc: Test CreateInnerTest028 interface base function - CheckUploadBodyFiles
+ * @tc.desc: Test the CheckUploadBodyFiles interface with empty and invalid configurations
+ * @tc.precon: NA
+ * @tc.step: 1. Test with empty filepath and empty configuration
+ *           2. Create multipart configuration with invalid file path
+ *           3. Call CheckUploadBodyFiles with invalid parameters
+ * @tc.expect: Returns E_OK for empty config, E_PARAMETER_CHECK for invalid file path
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest028, TestSize.Level1)
 {
@@ -1897,9 +2561,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest028, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0281
- * @tc.desc: Test CreateInnerTest0281 interface base function - CheckUploadBodyFiles
+ * @tc.desc: Test the CheckUploadBodyFiles interface with valid filepath and invalid file
+ * @tc.precon: NA
+ * @tc.step: 1. Create valid filepath string
+ *           2. Create multipart configuration with invalid file
+ *           3. Call CheckUploadBodyFiles with valid filepath and invalid file
+ * @tc.expect: Returns E_FILE_IO for file I/O error
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0281, TestSize.Level1)
 {
@@ -1914,9 +2584,14 @@ HWTEST_F(RequestActionTest, CreateInnerTest0281, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest029
- * @tc.desc: Test CreateInnerTest029 interface base function - SetDirsPermission
+ * @tc.desc: Test the SetDirsPermission interface with invalid directory paths
+ * @tc.precon: NA
+ * @tc.step: 1. Create vector with invalid directory path "test"
+ *           2. Call SetDirsPermission with invalid directory
+ * @tc.expect: Returns false for invalid directory permission setting
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest029, TestSize.Level1)
 {
@@ -1927,9 +2602,14 @@ HWTEST_F(RequestActionTest, CreateInnerTest029, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest0291
- * @tc.desc: Test CreateInnerTest0291 interface base function - SetDirsPermission
+ * @tc.desc: Test the SetDirsPermission interface with empty directory vector
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty directory vector
+ *           2. Call SetDirsPermission with empty vector
+ * @tc.expect: Returns true for empty directory list (no operation needed)
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest0291, TestSize.Level1)
 {
@@ -1940,9 +2620,14 @@ HWTEST_F(RequestActionTest, CreateInnerTest0291, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest030
- * @tc.desc: Test CreateInnerTest030 interface base function - CheckFilePath
+ * @tc.desc: Test the CheckFilePath interface with empty configuration
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty Config instance
+ *           2. Call CheckFilePath with empty configuration
+ * @tc.expect: Returns E_FILE_IO for invalid file path check
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest030, TestSize.Level1)
 {
@@ -1953,9 +2638,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest030, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest031
- * @tc.desc: Test CreateInnerTest031 interface base function - RemoveFile
+ * @tc.desc: Test the RemoveFile interface with non-existent file
+ * @tc.precon: NA
+ * @tc.step: 1. Create filepath string for non-existent file
+ *           2. Call RemoveFile with non-existent file path
+ *           3. Verify file does not exist after removal attempt
+ * @tc.expect: File does not exist after RemoveFile operation
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest031, TestSize.Level1)
 {
@@ -1967,9 +2658,15 @@ HWTEST_F(RequestActionTest, CreateInnerTest031, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest033
- * @tc.desc: Test CreateInnerTest033 interface base function - RemoveDirsPermission
+ * @tc.desc: Test the RemoveDirsPermission interface with valid directory path
+ * @tc.precon: NA
+ * @tc.step: 1. Verify RequestManager instance exists
+ *           2. Create vector with valid test directory path
+ *           3. Call RemoveDirsPermission with test directory
+ * @tc.expect: Successfully processes directory permission removal
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest033, TestSize.Level1)
 {
@@ -1980,9 +2677,14 @@ HWTEST_F(RequestActionTest, CreateInnerTest033, TestSize.Level1)
 
 /**
  * @tc.name: CreateInnerTest034
- * @tc.desc: Test CreateInnerTest034 interface base function - ClearTaskTemp
+ * @tc.desc: Test the ClearTaskTemp interface with empty task ID
+ * @tc.precon: NA
+ * @tc.step: 1. Create empty task ID string
+ *           2. Call ClearTaskTemp with empty task ID
+ * @tc.expect: Returns false for empty task ID
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
  */
 HWTEST_F(RequestActionTest, CreateInnerTest034, TestSize.Level1)
 {
