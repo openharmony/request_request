@@ -67,13 +67,24 @@ void GrantNativePermission()
 
 void GetDownloadInfoFuzzTest(const uint8_t *data, size_t size)
 {
-    if (size < 0) {
+    if (size <= 0 || data == nullptr) {
         return;
     }
     if (size > PRELOAD_UTF8_SIZE_LIMIT) {
         return;
     }
-    std::string url(size, 'a');
+
+    uint8_t firstByte = data[0];
+    char safeChar;
+    
+    if (firstByte <= 0x7F) {
+        safeChar = static_cast<char>(firstByte);
+    } else {
+        safeChar = 'a';
+    }
+    
+    // 4. 创建安全字符串
+    std::string url(size, safeChar);
     GrantNativePermission();
     Preload::GetInstance()->GetDownloadInfo(url);
 }
