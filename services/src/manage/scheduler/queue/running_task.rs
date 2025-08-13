@@ -56,6 +56,30 @@ impl RunningTask {
             _ => {}
         }
     }
+
+    fn check_download_complete(&self) -> bool {
+        if self.action() != Action::Download {
+            return false;
+        }
+        let mutex_guard = self.task.progress.lock().unwrap();
+        if let Some(total) = mutex_guard.sizes.first() {
+            if *total == -1 {
+                return false;
+            }
+            return mutex_guard.common_data.total_processed == (*total as usize);
+        }
+        false
+    }
+
+    fn send_complete(&self, task_id: u32, uid: u64, mode: Mode) {
+        if self.task.background_notify.load(Ordering::Acquire) {
+            NotificationDispatcher::get_instance().publish_progress_notification(self);
+        }
+        self.tx
+            .send_event(TaskManagerEvent::Task(TaskEvent::Completed(
+                task_id, uid, mode,
+            )));
+    }
 }
 
 impl Deref for RunningTask {
@@ -86,13 +110,7 @@ impl Drop for RunningTask {
         match *self.task.running_result.lock().unwrap() {
             Some(res) => match res {
                 Ok(()) => {
-                    if self.task.background_notify.load(Ordering::Acquire) {
-                        NotificationDispatcher::get_instance().publish_progress_notification(self);
-                    }
-                    self.tx
-                        .send_event(TaskManagerEvent::Task(TaskEvent::Completed(
-                            task_id, uid, mode,
-                        )));
+                    self.send_complete(task_id, uid, mode);
                 }
                 Err(e) if e == Reason::NetworkOffline => {
                     self.tx
@@ -107,10 +125,14 @@ impl Drop for RunningTask {
                 }
             },
             None => {
-                self.tx
-                    .send_event(TaskManagerEvent::Task(TaskEvent::Running(
-                        task_id, uid, mode,
-                    )));
+                if self.check_download_complete() {
+                    self.send_complete(task_id, uid, mode);
+                } else {
+                    self.tx
+                        .send_event(TaskManagerEvent::Task(TaskEvent::Running(
+                            task_id, uid, mode,
+                        )));
+                }
             }
         }
     }
