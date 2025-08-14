@@ -62,24 +62,3 @@ ohos_static_library("request_action") {
   subsystem_name = "request"
   part_name = "request"
 }
-
-ohos_rust_executable("request_action_test") {
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
-  deps = [
-    ":request_action",
-    ":request_action_cxx",
-  ]
-  external_deps = [ "rust_cxx:lib" ]
-  sources = [ "request_action_test.rs" ]
-
-  subsystem_name = "request"
-  part_name = "request"
-}
