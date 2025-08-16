@@ -45,6 +45,15 @@ uint16_t ConvertToUint16(const uint8_t *ptr, size_t size)
     return value;
 }
 
+void ConvertToUTF8(std::string &url)
+{
+    for (size_t i = 0; i < url.size(); i++) {
+        if (url[i] > 0x7F) {
+            url[i] = '?';
+        }
+    }
+}
+
 void GrantNativePermission()
 {
     const char **perms = new const char *[1];
@@ -74,17 +83,8 @@ void GetDownloadInfoFuzzTest(const uint8_t *data, size_t size)
         return;
     }
 
-    uint8_t firstByte = data[0];
-    char safeChar;
-    
-    if (firstByte <= 0x7F) {
-        safeChar = static_cast<char>(firstByte);
-    } else {
-        safeChar = 'a';
-    }
-    
-    // 4. 创建安全字符串
-    std::string url(size, safeChar);
+    std::string url(reinterpret_cast<const char *>(data), size);
+    ConvertToUTF8(url);
     GrantNativePermission();
     Preload::GetInstance()->GetDownloadInfo(url);
 }
