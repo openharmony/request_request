@@ -12,7 +12,9 @@
 // limitations under the License.
 
 use std::io::{self};
-use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicU8, Ordering};
+use std::sync::atomic::{
+    AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicU8, Ordering,
+};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -380,12 +382,8 @@ impl RequestTask {
             (false, false) => {}
         };
 
-        let body = if task.conf.data.is_empty() {
-            Body::empty()
-        } else {
-            Body::slice(task.conf.data.clone())
-        };
-        request_builder.body(body).map_err(Into::into)
+        let request = request_builder.body(Body::slice(task.conf.data.clone()))?;
+        Ok(request)
     }
 
     fn range_request(
