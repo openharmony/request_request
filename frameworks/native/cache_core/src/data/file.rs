@@ -276,7 +276,10 @@ impl CacheManager {
             let size = file.metadata()?.size();
 
             let mut cache = RamCache::new(task_id.clone(), self, Some(size as usize));
-            io::copy(&mut file, &mut cache).unwrap();
+            io::copy(&mut file, &mut cache).map_err(|e| {
+                error!("copy file to cache failed {:?}", e);
+                e
+            })?;
 
             let is_cache = cache.check_size();
             let cache = Arc::new(cache);
