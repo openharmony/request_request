@@ -20,7 +20,7 @@ use crate::utils::is_system_api;
 
 impl RequestServiceStub {
     pub(crate) fn search(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service search");
+        debug!("Service search");
         let bundle: String = data.read()?;
 
         let method = if is_system_api() {

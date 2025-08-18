@@ -26,7 +26,7 @@ use crate::utils::{check_permission, is_system_api};
 
 impl RequestServiceStub {
     pub(crate) fn construct(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service construct");
+        debug!("Service construct");
         let download_permission = PermissionChecker::check_down_permission();
         if !PermissionChecker::check_internet() && !download_permission {
             error!("Service start: no INTERNET permission.");

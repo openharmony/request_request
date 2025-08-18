@@ -62,7 +62,7 @@ impl Clone for SAKeeper {
                 if let Some(handle) = inner.handle.take() {
                     handle.cancel();
                     self.active_counter.increment();
-                    info!("Countdown 60s future canceled");
+                    debug!("Countdown 60s future canceled");
                 }
             }
         }
@@ -81,7 +81,7 @@ impl Drop for SAKeeper {
         let mut inner = self.inner.lock().unwrap();
         inner.cnt -= 1;
         if inner.cnt == 0 {
-            info!("Countdown 60s future restarted");
+            debug!("Countdown 60s future restarted");
             inner.handle = Some(count_down(self.tx.clone()));
             self.active_counter.decrement();
         }
