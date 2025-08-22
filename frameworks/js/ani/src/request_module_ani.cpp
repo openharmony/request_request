@@ -45,7 +45,7 @@ bool UnionAccessor::TryConvertArray<ani_ref>(std::vector<ani_ref> &value)
 
     for (int i = 0; i < int(length); i++) {
         ani_ref ref;
-        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "I:Lstd/core/Object;", &ref, (ani_int)i)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:C{std.core.Object}", &ref, (ani_int)i)) {
             return false;
         }
         value.push_back(ref);
@@ -56,14 +56,14 @@ bool UnionAccessor::TryConvertArray<ani_ref>(std::vector<ani_ref> &value)
 static void ThrowBusinessError(ani_env *env, int errCode, std::string&& errMsg)
 {
     REQUEST_HILOGI("into ThrowBusinessError.");
-    static const char *errorClsName = "L@ohos/base/BusinessError;";
+    static const char *errorClsName = "C{@ohos.base.BusinessError}";
     ani_class cls {};
     if (env->FindClass(errorClsName, &cls) != ANI_OK) {
         REQUEST_HILOGE("find class BusinessError %{public}s failed", errorClsName);
         return;
     }
     ani_method ctor;
-    if (env->Class_FindMethod(cls, "<ctor>", ":V", &ctor) != ANI_OK) {
+    if (env->Class_FindMethod(cls, "<ctor>", ":", &ctor) != ANI_OK) {
         REQUEST_HILOGE("find method BusinessError.constructor failed");
         return;
     }
@@ -142,7 +142,7 @@ ani_boolean OHOS::AniUtil::IsInstanceOf(ani_env *env, const std::string &cls_nam
 static bool GetDownloadData(ani_env *env, Config &aniConfig, ani_object aniData)
 {
     UnionAccessor unionAccessor(env, aniData);
-    if (unionAccessor.IsInstanceOf("Lstd/core/String;")) {
+    if (unionAccessor.IsInstanceOf("std.core.String")) {
         aniConfig.data = AniStringUtils::ToStd(env, static_cast<ani_string>(aniData));
     }
     return true;
@@ -177,14 +177,14 @@ static bool ProcessDatas(ani_env *env, Config &aniConfig, ani_object aniData)
             REQUEST_HILOGE("Object_GetFieldByName_Ref value from data Faild");
             return false;
         }
-        if (IsInstanceOf(env, "Lstd/core/String;", static_cast<ani_object>(valueRef))) {
+        if (IsInstanceOf(env, "std.core.String", static_cast<ani_object>(valueRef))) {
             FormItem form;
             form.name = name;
             form.value = AniStringUtils::ToStd(env, static_cast<ani_string>(valueRef));
             aniConfig.forms.push_back(form);
             continue;
         }
-        if (IsInstanceOf(env, "L@ohos/request/request/agent/FileSpec;", static_cast<ani_object>(valueRef))) {
+        if (IsInstanceOf(env, "@ohos.request.request.agent.FileSpec", static_cast<ani_object>(valueRef))) {
             FileSpec file;
             if (!JsInitialize::Convert2FileSpec(env, static_cast<ani_object>(valueRef), name, file)) {
                 REQUEST_HILOGE("Convert2FileSpec failed");
