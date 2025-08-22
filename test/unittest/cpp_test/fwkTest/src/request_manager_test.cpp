@@ -587,6 +587,35 @@ HWTEST_F(RequestManagerTest, CreateGroupTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CreateGroupTest002
+ * @tc.desc: Test the CreateGroup interface to create a new task group with notification settings includes visibility
+ * @tc.precon: RequestManager instance is available and group ID is unique
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a unique group ID string
+ *           3. Set gauge parameter to true
+ *           4. Create Notification object with title, text, disable=false and visibility=VISIBILITY_COMPLETION
+ *           5. Call CreateGroup method with parameters
+ * @tc.expect: CreateGroup returns 0 indicating successful group creation
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(RequestManagerTest, CreateGroupTest002, TestSize.Level1)
+{
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
+    std::string gid = "gid";
+    bool gauge = true;
+    Notification info{
+        .text = "text",
+        .title = "title",
+        .disable = false,
+        .visibility = VISIBILITY_COMPLETION,
+    };
+
+    EXPECT_EQ(RequestManager::GetInstance()->CreateGroup(gid, gauge, info), 0);
+}
+
+/**
  * @tc.name: AttachGroupTest001
  * @tc.desc: Test the AttachGroup interface to associate tasks with an existing group
  * @tc.precon: RequestManager instance is available and group exists
@@ -624,4 +653,30 @@ HWTEST_F(RequestManagerTest, DeleteGroupTest001, TestSize.Level1)
     EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string gid = "gid";
     EXPECT_EQ(RequestManager::GetInstance()->DeleteGroup(gid), 21900008);
+}
+
+/**
+ * @tc.name: VisibilityValuesTest001
+ * @tc.desc: Test the visibility related values to ensure they match the expected binary values
+ * @tc.precon: RequestCommon header file is included
+ * @tc.step: 1. Verify Visibility enum values
+ *           2. Verify static visibility constants
+ *           3. Verify Notification struct default visibility value
+ * @tc.expect: All visibility values match their expected binary representations
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(RequestManagerTest, VisibilityValuesTest001, TestSize.Level1)
+{
+    EXPECT_EQ(static_cast<uint32_t>(Visibility::NONE), 0b00);
+    EXPECT_EQ(static_cast<uint32_t>(Visibility::COMPLETION), 0b01);
+    EXPECT_EQ(static_cast<uint32_t>(Visibility::PROGRESS), 0b10);
+    EXPECT_EQ(static_cast<uint32_t>(Visibility::ANY), 0b11);
+    
+    EXPECT_EQ(VISIBILITY_COMPLETION, 0b00000001);
+    EXPECT_EQ(VISIBILITY_PROGRESS, 0b00000010);
+    
+    Notification defaultNotification;
+    EXPECT_EQ(defaultNotification.visibility, 0b01);
 }

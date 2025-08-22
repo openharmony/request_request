@@ -115,10 +115,8 @@ impl RequestServiceStub {
             };
 
             notification_config.task_id = task_id;
-            if notification_config.title.is_some() || notification_config.text.is_some() {
-                NotificationDispatcher::get_instance()
-                    .update_task_customized_notification(&notification_config);
-            }
+            NotificationDispatcher::get_instance()
+                .update_task_customized_notification(&notification_config);
 
             if notification_config.disable && is_system_api {
                 if !notification_permission {

@@ -77,6 +77,7 @@ private:
     static void ParseRedirect(napi_env env, napi_value jsConfig, bool &redirect);
     static void ParseRoaming(napi_env env, napi_value jsConfig, Config &config);
     static void ParseRetry(napi_env env, napi_value jsConfig, bool &retry);
+    static void ParseGauge(napi_env env, napi_value jsConfig, Config &config);
     static bool ParseSaveas(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static bool ParseToken(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);
     static bool ParseTimeout(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo);

@@ -79,9 +79,13 @@ fn ut_notify_flow_group() {
 fn ut_notify_flow_task_progress() {
     let (_, rx) = mpsc::unbounded_channel();
     let db = Arc::new(NotificationDb::new());
-    let mut flow = NotifyFlow::new(rx, db);
+    let mut flow = NotifyFlow::new(rx, db.clone());
     let task_id = fast_random() as u32;
     let uid = fast_random();
+
+    let config = NotificationConfig::new(task_id, None, None, false, 0b10);
+    db.update_task_customized_notification(&config);
+
     let progress = ProgressNotify {
         action: Action::Download,
         task_id,
@@ -113,9 +117,13 @@ fn ut_notify_flow_task_progress() {
 fn ut_notify_flow_task_eventual() {
     let (_, rx) = mpsc::unbounded_channel();
     let db = Arc::new(NotificationDb::new());
-    let mut flow = NotifyFlow::new(rx, db);
+    let mut flow = NotifyFlow::new(rx, db.clone());
     let task_id = fast_random() as u32;
     let uid = fast_random();
+
+    let config = NotificationConfig::new(task_id, None, None, false, 0b01);
+    db.update_task_customized_notification(&config);
+
     let info = EventualNotify {
         action: Action::Download,
         task_id,
@@ -169,6 +177,7 @@ fn ut_customized_task_eventual() {
         Some(TEST_TITLE.to_string()),
         Some(TEST_TEXT.to_string()),
         false,
+        0b01,
     );
     db.update_task_customized_notification(&config);
 

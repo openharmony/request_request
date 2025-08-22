@@ -187,6 +187,200 @@ export default function requestTaskGroupTest() {
       }
     });
     /**
+     * @tc.number: testcreateGroup007
+     * @tc.name: testcreateGroup007
+     * @tc.desc: Test for createGroup with valid visibility COMPLETION using enum
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testcreateGroup007', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION,
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(config);
+        expect(true).assertTrue();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testcreateGroup008
+     * @tc.name: testcreateGroup008
+     * @tc.desc: Test for createGroup with valid visibility PROGRESS using enum
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testcreateGroup008', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
+        notification: {
+          visibility: request.agent.VISIBILITY_PROGRESS,
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(config);
+        expect(true).assertTrue();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testcreateGroup009
+     * @tc.name: testcreateGroup009
+     * @tc.desc: Test for createGroup with valid visibility ANY (COMPLETION | PROGRESS)
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testcreateGroup009', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION | request.agent.VISIBILITY_PROGRESS,
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(config);
+        expect(true).assertTrue();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testcreateGroup010
+     * @tc.name: testcreateGroup010
+     * @tc.desc: Test for createGroup when fail by invalid visibility value 0b00
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testcreateGroup010', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
+        notification: {
+          visibility: 0b00, // Invalid value
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(config);
+        expect(false).assertTrue();
+        done();
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    });
+    /**
+     * @tc.number: testcreateGroup011
+     * @tc.name: testcreateGroup011
+     * @tc.desc: Test for createGroup when fail by invalid visibility value
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testcreateGroup011', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
+        notification: {
+          visibility: 0b100, // Invalid value
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(config);
+        expect(false).assertTrue();
+        done();
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    });
+    /**
+     * @tc.number: testcreateGroup012
+     * @tc.name: testcreateGroup012
+     * @tc.desc: Test for createGroup when fail by invalid visibility type
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testcreateGroup012', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
+        notification: {
+          visibility: 'invalid' as Object as number, // Invalid type
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(config);
+        expect(false).assertTrue();
+        done();
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    });
+    /**
+     * @tc.number: testcreateGroup013
+     * @tc.name: testcreateGroup013
+     * @tc.desc: Test for createGroup with valid visibility COMPLETION using enum and gauge recover larger
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testcreateGroup013', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
+        gauge: true,
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION,
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(config);
+        expect(true).assertTrue();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testcreateGroup014
+     * @tc.name: testcreateGroup014
+     * @tc.desc: Test for createGroup with valid visibility COMPLETION using enum and gauge recover smaller
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testcreateGroup014', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
+        gauge: false,
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION | request.agent.VISIBILITY_PROGRESS,
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(config);
+        expect(true).assertTrue();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
      * @tc.number: testattachGroup001
      * @tc.name: testattachGroup001
      * @tc.desc: Test for attachGroup when succeed with tid is empty
@@ -463,6 +657,141 @@ export default function requestTaskGroupTest() {
         done();
       } catch (err) {
         expect(err.code).assertEqual(21900006);
+        done();
+      }
+    });
+    /**
+     * @tc.number: testattachGroup011
+     * @tc.name: testattachGroup011
+     * @tc.desc: Test for attachGroup with valid visibility in GroupConfig and different valid visibility in Config
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testattachGroup011', 0, async (done: Function) => {
+      let groupConfig: request.agent.GroupConfig = {
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION,
+        },
+      };
+      let taskConfig: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testGroupAttach004.txt',
+        overwrite: true,
+        notification: {
+          visibility: request.agent.VISIBILITY_PROGRESS,
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(groupConfig);
+        let task = await request.agent.create(context, taskConfig);
+        await request.agent.attachGroup(gid, [task.tid]);
+        expect(true).assertTrue();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testattachGroup012
+     * @tc.name: testattachGroup012
+     * @tc.desc: Test for attachGroup with valid visibility in GroupConfig and invalid visibility in Config
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testattachGroup012', 0, async (done: Function) => {
+      let groupConfig: request.agent.GroupConfig = {
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION,
+        },
+      };
+      let taskConfig: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testGroupAttach005.txt',
+        overwrite: true,
+        notification: {
+          visibility: 0b100, // Invalid value
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(groupConfig);
+        let task = await request.agent.create(context, taskConfig);
+        expect(false).assertTrue();
+        done();
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    });
+    /**
+     * @tc.number: testattachGroup013
+     * @tc.name: testattachGroup013
+     * @tc.desc: Test for attachGroup with invalid visibility in GroupConfig and valid visibility in Config
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testattachGroup013', 0, async (done: Function) => {
+      let groupConfig: request.agent.GroupConfig = {
+        notification: {
+          visibility: 0b100, // Invalid value
+        },
+      };
+      let taskConfig: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testGroupAttach006.txt',
+        overwrite: true,
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION,
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(groupConfig);
+        expect(false).assertTrue();
+        done();
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    });
+    /**
+     * @tc.number: testattachGroup014
+     * @tc.name: testattachGroup014
+     * @tc.desc: Test for attachGroup with invalid visibility in both GroupConfig and Config
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testattachGroup014', 0, async (done: Function) => {
+      let groupConfig: request.agent.GroupConfig = {
+        notification: {
+          visibility: 0b100, // Invalid value
+        },
+      };
+      let taskConfig: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testGroupAttach007.txt',
+        overwrite: true,
+        notification: {
+          visibility: 'invalid' as Object as number, // Invalid type
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(groupConfig);
+        expect(false).assertTrue();
+        done();
+      } catch (err) {
+        expect(err.code).assertEqual(401);
         done();
       }
     });

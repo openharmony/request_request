@@ -38,6 +38,13 @@ enum class Mode : uint32_t {
     ANY,
 };
 
+enum class Visibility : uint32_t {
+    NONE = 0b00,
+    COMPLETION = 0b01,
+    PROGRESS = 0b10,
+    ANY = 0b11,
+};
+
 enum class Network : uint32_t {
     ANY = 0,
     WIFI,
@@ -131,6 +138,7 @@ struct Notification {
     std::optional<std::string> title = std::nullopt;
     std::optional<std::string> text = std::nullopt;
     bool disable = false;
+    int32_t visibility = 0b01;
 };
 
 struct MinSpeed {
@@ -365,6 +373,9 @@ struct TaskRet {
 };
 
 static uint64_t REQUEST_FDSAN_TAG = 0xC01C50;
+
+static uint32_t VISIBILITY_COMPLETION = 0b00000001;
+static uint32_t VISIBILITY_PROGRESS = 0b00000010;
 
 } // namespace OHOS::Request
 #endif //REQUEST_COMMON_H
