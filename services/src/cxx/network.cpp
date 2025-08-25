@@ -99,8 +99,16 @@ void RequestNetCallbackStub::SetNet()
             REQUEST_HILOGE("GetDefaultNet failed: %{public}d", ret);
             return;
         }
-        ret = NetConnClient::GetInstance().SetAppNet(defaultHandle.GetNetId());
-        REQUEST_HILOGI("SetDefaultNet %{public}d, ret: %{public}d", defaultHandle.GetNetId(), ret);
+        int32_t appNetId = 0;
+        ret = NetConnClient::GetInstance().GetAppNet(appNetId);
+        if (ret != 0) {
+            REQUEST_HILOGE("GetAppNet failed: %{public}d", ret);
+        }
+        int32_t defaultId = defaultHandle.GetNetId();
+        if (appNetId != defaultId) {
+            ret = NetConnClient::GetInstance().SetAppNet(defaultId);
+            REQUEST_HILOGI("SetDefaultNet %{public}d, ret: %{public}d", defaultId, ret);
+        }
     }
 }
 
@@ -168,7 +176,7 @@ int32_t RequestNetCallbackStub::NetUnavailable()
 int32_t RequestNetCallbackStub::NetCapabilitiesChange(
     sptr<NetHandle> &netHandle, const sptr<NetAllCapabilities> &netAllCap)
 {
-    REQUEST_HILOGI("NetCapabilitiesChange");
+    REQUEST_HILOGD("NetCapabilitiesChange");
     this->HandleNetCap(netAllCap);
     return 0;
 }

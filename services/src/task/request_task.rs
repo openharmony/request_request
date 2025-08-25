@@ -450,7 +450,7 @@ impl RequestTask {
                 }
             }
         } else {
-            error!("cannot get content-length of the task");
+            error!("cannot get content-length of the task {}", self.task_id());
             sys_event!(
                 ExecFault,
                 DfxCode::TASK_FAULT_09,

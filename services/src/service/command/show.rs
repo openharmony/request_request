@@ -24,7 +24,7 @@ use crate::task::files::check_current_account;
 
 impl RequestServiceStub {
     pub(crate) fn show(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
-        info!("Service show");
+        debug!("Service show");
         let permission = PermissionChecker::check_down_permission();
         let len: u32 = data.read()?;
         let len = len as usize;
