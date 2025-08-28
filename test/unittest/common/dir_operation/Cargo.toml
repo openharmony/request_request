@@ -11,17 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[workspace]
-resolver = "2"
-members = [
-    "common/ffrt_rs",
-    "frameworks/native/cache_core",
-    "frameworks/native/cache_download",
-    "frameworks/native/request_action/tests/",
-    "common/netstack_rs",
-    "common/utils",
-    "test/rustest",
-    "test/unittest/common/dir_operation",
-    "common/database",
-    "services",
-]
+[package]
+name = "file_operation"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cxx = { version = "1.0.115", optional = true }
+

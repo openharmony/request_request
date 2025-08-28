@@ -108,6 +108,11 @@ ohos_static_library("download_server_cxx") {
   ]
 
   defines = []
+
+  if (target_platform == "watch") {
+    defines += [ "REQUEST_DEVICE_WATCH" ]
+  }
+
   if (request_telephony_core_service && request_telephony_cellular_data) {
     external_deps += [
       "cellular_data:tel_cellular_data_api",
