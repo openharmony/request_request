@@ -58,11 +58,10 @@ ohos_unittest("innerTest") {
     "ability_runtime:data_ability_helper",
     "ability_runtime:extensionkit_native",
     "access_token:libaccesstoken_sdk",
-    "access_token:libnativetoken",
+    "access_token:libnativetoken_shared",
     "access_token:libtoken_setproc",
     "access_token:libtokenid_sdk",
     "app_file_service:fileuri_native",
-    "cJSON:cjson_static",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "curl:curl_shared",
@@ -82,7 +81,6 @@ ohos_unittest("innerTest") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "selinux_adapter:librestorecon",
     "storage_service:storage_manager_acl",
   ]
 }

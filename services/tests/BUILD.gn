@@ -35,7 +35,6 @@ ohos_rust_unittest("rust_request_ut_test") {
     "rust_cxx:lib",
     "safwk:system_ability_fwk_rust",
     "samgr:samgr_rust",
-    "selinux_adapter:librestorecon",
     "ylong_runtime:ylong_runtime",
   ]
 

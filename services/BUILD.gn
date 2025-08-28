@@ -156,26 +156,3 @@ ohos_rust_shared_library("download_server") {
   subsystem_name = "request"
   part_name = "request"
 }
-
-ohos_rust_executable("run_count_example") {
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
-  sources = [ "examples/run_count.rs" ]
-  features = [ "std" ]
-  external_deps = [
-    "ipc:ipc_rust",
-    "safwk:system_ability_fwk_rust",
-    "samgr:samgr_rust",
-    "ylong_runtime:ylong_runtime",
-  ]
-
-  subsystem_name = "request"
-  part_name = "request"
-}

@@ -35,7 +35,7 @@ ohos_unittest("preload_test") {
   deps = [ "../../../../frameworks/native/cache_download:preload_native" ]
   external_deps = [
     "access_token:libaccesstoken_sdk",
-    "access_token:libnativetoken",
+    "access_token:libnativetoken_shared",
     "access_token:libtoken_setproc",
     "c_utils:utils",
     "googletest:gmock",
@@ -43,7 +43,6 @@ ohos_unittest("preload_test") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "rust_cxx:cxx_cppdeps",
-    "selinux_adapter:librestorecon",
   ]
 }
 
