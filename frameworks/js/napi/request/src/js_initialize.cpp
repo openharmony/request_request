@@ -400,6 +400,28 @@ void JsInitialize::ParseConfigInner(napi_env env, napi_value jsConfig, Config &c
     ParseNetwork(env, jsConfig, config.network);
     ParseRetry(env, jsConfig, config.retry);
     SetParseConfig(env, jsConfig, config);
+    ParseGauge(env, jsConfig, config);
+}
+
+void JsInitialize::ParseGauge(napi_env env, napi_value jsConfig, Config &config)
+{
+    napi_value notificationValue = NapiUtils::GetNamedProperty(env, jsConfig, "notification");
+    if (NapiUtils::GetValueType(env, notificationValue) != napi_undefined) {
+        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, notificationValue, "visibility"))
+            != napi_undefined) {
+            return;
+        }
+    }
+    
+    if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, jsConfig, "gauge")) != napi_undefined) {
+        if (config.gauge) {
+            config.notification.visibility = VISIBILITY_COMPLETION | VISIBILITY_PROGRESS;
+        } else {
+            config.notification.visibility = VISIBILITY_COMPLETION;
+        }
+    } else {
+        config.notification.visibility = VISIBILITY_COMPLETION;
+    }
 }
 
 bool JsInitialize::ParseConfig(napi_env env, napi_value jsConfig, Config &config, std::string &errInfo)
@@ -480,6 +502,16 @@ bool JsInitialize::ParseNotification(napi_env env, napi_value jsConfig, Config &
         if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, notification, "disable"))
             != napi_undefined) {
             config.notification.disable = NapiUtils::Convert2Boolean(env, notification, "disable");
+        }
+        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, notification, "visibility"))
+            != napi_undefined) {
+            config.notification.visibility = NapiUtils::Convert2Uint32(env, notification, "visibility");
+            if (config.notification.visibility == static_cast<uint32_t>(Visibility::NONE) ||
+            (config.notification.visibility & static_cast<uint32_t>(Visibility::ANY)) !=
+                config.notification.visibility) {
+                errInfo = "Parameter verification failed, invalid visibility value";
+                return false;
+            }
         }
     }
     return true;

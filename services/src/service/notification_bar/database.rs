@@ -29,8 +29,14 @@ const CREATE_TASK_CONTENT_TABLE: &str =
 const CREATE_GROUP_CONTENT_TABLE: &str =
     "CREATE TABLE IF NOT EXISTS group_notification_content (group_id INTEGER PRIMARY KEY, title TEXT, text TEXT)";
 
-const ALERT_GROUP_CONFIG_TABLE: &str =
+const GROUP_CONFIG_TABLE_ADD_DISPLAY: &str =
     "ALTER TABLE group_notification_config ADD COLUMN display BOOLEAN DEFAULT TRUE";
+
+const GROUP_CONFIG_TABLE_ADD_VISIBILITY: &str =
+    "ALTER TABLE group_notification_config ADD COLUMN visibility INTEGER";
+
+const TASK_CONTENT_TABLE_ADD_VISIBILITY: &str =
+    "ALTER TABLE task_notification_content ADD COLUMN visibility INTEGER";
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -72,7 +78,38 @@ impl NotificationDb {
     }
 
     fn update(&self) {
-        let _ = self.inner.execute(ALERT_GROUP_CONFIG_TABLE, ());
+        if let Err(e) = self.inner.execute(GROUP_CONFIG_TABLE_ADD_DISPLAY, ()) {
+            error!("Failed to add display column to group_notification_config table: {}", e);
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_04,
+                &format!("Failed to add display column to group_notification_config table: {}", e)
+            );
+        } else {
+            debug!("Successfully added display column to group_notification_config table");
+        }
+        
+        if let Err(e) = self.inner.execute(TASK_CONTENT_TABLE_ADD_VISIBILITY, ()) {
+            error!("Failed to add visibility column to task_notification_content table: {}", e);
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_04,
+                &format!("Failed to add visibility column to task_notification_content table: {}", e)
+            );
+        } else {
+            debug!("Successfully added visibility column to task_notification_content table");
+        }
+        
+        if let Err(e) = self.inner.execute(GROUP_CONFIG_TABLE_ADD_VISIBILITY, ()) {
+            error!("Failed to add visibility column to group_notification_config table: {}", e);
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_04,
+                &format!("Failed to add visibility column to group_notification_config table: {}", e)
+            );
+        } else {
+            debug!("Successfully added visibility column to group_notification_config table");
+        }
     }
 
     pub(crate) fn clear_task_info(&self, task_id: u32) {
@@ -261,8 +298,8 @@ impl NotificationDb {
 
     pub(crate) fn update_task_customized_notification(&self, config: &NotificationConfig) {
         if let Err(e) = self.inner.execute(
-            "INSERT INTO task_notification_content (task_id, title, text) VALUES (?, ?, ?) ON CONFLICT(task_id) DO UPDATE SET title = excluded.title, text = excluded.text",
-            (config.task_id, config.title.clone(), config.text.clone()),
+            "INSERT INTO task_notification_content (task_id, title, text, visibility) VALUES (?, ?, ?, ?) ON CONFLICT(task_id) DO UPDATE SET title = excluded.title, text = excluded.text, visibility = excluded.visibility",
+            (config.task_id, config.title.clone(), config.text.clone(), config.visibility),
         ) {
             error!("Failed to insert {} notification: {}", config.task_id, e);
             sys_event!(ExecFault, DfxCode::RDB_FAULT_04, &format!("Failed to insert {} notification: {}", config.task_id, e));
@@ -313,10 +350,11 @@ impl NotificationDb {
         gauge: bool,
         ctime: u64,
         display: bool,
+        visibility: u32,
     ) {
         if let Err(e) = self.inner.execute(
-            "INSERT INTO group_notification_config (group_id, gauge, attach_able, ctime, display) VALUES (?, ?, ?, ?, ?) ON CONFLICT(group_id) DO UPDATE SET gauge = excluded.gauge , ctime = excluded.ctime, display = excluded.display",
-            (group_id, gauge, true, ctime, display),
+            "INSERT INTO group_notification_config (group_id, gauge, attach_able, ctime, display, visibility) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(group_id) DO UPDATE SET gauge = excluded.gauge , ctime = excluded.ctime, display = excluded.display, visibility = excluded.visibility",
+            (group_id, gauge, true, ctime, display, visibility),
         ) {
             error!("Failed to update {} notification: {}", group_id, e);
             sys_event!(ExecFault, DfxCode::RDB_FAULT_04, &format!("Failed to update {} notification: {}", group_id, e));
@@ -377,6 +415,62 @@ impl NotificationDb {
             }
         };
         set.next().unwrap_or(false)
+    }
+
+    pub(crate) fn is_completion_visible(&self, task_id: u32) -> bool {
+        let mut set = match self.inner.query::<i32>(
+            "SELECT visibility FROM task_notification_content where task_id = ?",
+            task_id,
+        ) {
+            Ok(set) => set,
+            Err(e) => {
+                error!("Failed to query task {} notification: {}", task_id, e);
+                return false;
+            }
+        };
+        set.next().is_some_and(|visibility| (visibility & 0b01) != 0)
+    }
+
+    pub(crate) fn is_progress_visible(&self, task_id: u32) -> bool {
+        let mut set = match self.inner.query::<i32>(
+            "SELECT visibility FROM task_notification_content where task_id = ?",
+            task_id,
+        ) {
+            Ok(set) => set,
+            Err(e) => {
+                error!("Failed to query task {} notification: {}", task_id, e);
+                return false;
+            }
+        };
+        set.next().is_some_and(|visibility| (visibility & 0b10) != 0)
+    }
+
+    pub(crate) fn is_completion_visible_from_group(&self, group_id: u32) -> bool {
+        let mut set = match self.inner.query::<i32>(
+            "SELECT visibility FROM group_notification_config where group_id = ?",
+            group_id,
+        ) {
+            Ok(set) => set,
+            Err(e) => {
+                error!("Failed to query group {} notification: {}", group_id, e);
+                return false;
+            }
+        };
+        set.next().is_some_and(|visibility| (visibility & 0b01) != 0)
+    }
+
+    pub(crate) fn is_progress_visible_from_group(&self, group_id: u32) -> bool {
+        let mut set = match self.inner.query::<i32>(
+            "SELECT visibility FROM group_notification_config where group_id = ?",
+            group_id,
+        ) {
+            Ok(set) => set,
+            Err(e) => {
+                error!("Failed to query group {} notification: {}", group_id, e);
+                return false;
+            }
+        };
+        set.next().is_some_and(|visibility| (visibility & 0b10) != 0)
     }
 }
 

@@ -106,6 +106,10 @@ static void NapiCreateBroadcastEvent(napi_env env, napi_value &broadcastEvent)
 
 static napi_value InitAgent(napi_env env, napi_value exports)
 {
+    napi_value visibility_completion = nullptr;
+    napi_create_int32(env, static_cast<int32_t>(VISIBILITY_COMPLETION), &visibility_completion);
+    napi_value visibility_progress = nullptr;
+    napi_create_int32(env, static_cast<int32_t>(VISIBILITY_PROGRESS), &visibility_progress);
     napi_value action = nullptr;
     NapiCreateAction(env, action);
     napi_value mode = nullptr;
@@ -129,6 +133,8 @@ static napi_value InitAgent(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("Faults", faults),
         DECLARE_NAPI_PROPERTY("BroadcastEvent", broadcastEvent),
         DECLARE_NAPI_PROPERTY("WaitingReason", waitingReason),
+        DECLARE_NAPI_STATIC_PROPERTY("VISIBILITY_COMPLETION", visibility_completion),
+        DECLARE_NAPI_STATIC_PROPERTY("VISIBILITY_PROGRESS", visibility_progress),
 
         DECLARE_NAPI_METHOD("create", JsTask::JsCreate),
         DECLARE_NAPI_METHOD("getTask", JsTask::GetTask),

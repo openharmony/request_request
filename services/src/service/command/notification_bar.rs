@@ -48,7 +48,9 @@ impl RequestServiceStub {
             disable = false;
         }
 
-        let new_group_id = NotificationDispatcher::get_instance().create_group(gauge, title, text, disable);
+        let visibility = data.read()?;
+
+        let new_group_id = NotificationDispatcher::get_instance().create_group(gauge, title, text, disable, visibility);
         reply.write(&new_group_id.to_string())?;
         Ok(())
     }

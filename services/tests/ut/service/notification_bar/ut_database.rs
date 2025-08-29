@@ -14,6 +14,7 @@
 use ylong_runtime::fastrand::fast_random;
 
 use super::*;
+use crate::service::notification_bar::NotificationConfig;
 const TEST_TITLE: &str = "田文镜";
 const TEST_TEXT: &str = "我XXX";
 
@@ -86,6 +87,7 @@ fn ut_notify_database_query_task_customized() {
         Some(TEST_TITLE.to_string()),
         Some(TEST_TEXT.to_string()),
         false,
+        0b01,
     );
 
     db.update_task_customized_notification(&config);
@@ -139,11 +141,11 @@ fn ut_notify_database_group_config() {
     let group_id = fast_random() as u32;
 
     assert!(!db.contains_group(group_id));
-    db.update_group_config(group_id, true, 0, false);
+    db.update_group_config(group_id, true, 0, false, 0b01);
     assert!(db.contains_group(group_id));
     assert!(db.is_gauge(group_id));
     assert!(db.attach_able(group_id));
-    db.update_group_config(group_id, false, 0, false);
+    db.update_group_config(group_id, false, 0, false, 0b01);
     db.disable_attach_group(group_id);
     assert!(!db.attach_able(group_id));
     assert!(!db.is_gauge(group_id));
@@ -168,7 +170,7 @@ fn ut_clear_task_info() {
 
     let group_id = fast_random() as u32;
     let task_id = fast_random() as u32;
-    let config = NotificationConfig::new(task_id, None, None, true);
+    let config = NotificationConfig::new(task_id, None, None, true, 0b01);
 
     db.disable_task_notification(task_id);
     db.update_task_customized_notification(&config);
@@ -203,7 +205,7 @@ fn ut_clear_group_info() {
     let group_id = fast_random() as u32;
     let task_id = fast_random() as u32;
     db.update_group_customized_notification(group_id, None, None);
-    db.update_group_config(group_id, true, 0, false);
+    db.update_group_config(group_id, true, 0, false, 0b01);
     db.update_task_group(task_id, group_id);
 
     assert!(db.query_group_customized_notification(group_id).is_some());
@@ -241,13 +243,13 @@ fn ut_clear_group_info_a_week_ago() {
     let task_id = fast_random() as u32;
 
     db.update_group_customized_notification(group_id, None, None);
-    db.update_group_config(group_id, true, current_time, false);
+    db.update_group_config(group_id, true, current_time, false, 0b01);
 
     db.clear_group_info_a_week_ago();
     assert!(db.query_group_customized_notification(group_id).is_some());
     assert!(db.contains_group(group_id));
 
-    db.update_group_config(group_id, true, a_week_ago, false);
+    db.update_group_config(group_id, true, a_week_ago, false, 0b01);
     db.update_task_group(task_id, group_id);
     db.clear_group_info_a_week_ago();
     assert!(db.query_group_customized_notification(group_id).is_some());

@@ -81,8 +81,7 @@ impl NotificationDispatcher {
 
     pub(crate) fn register_task(&self, task: &RequestTask) -> Arc<AtomicBool> {
         let gauge = if let Some(gid) = self.database.query_task_gid(task.task_id()) {
-            if self.database.check_group_notification_available(&gid) && self.database.is_gauge(gid)
-            {
+            if self.database.check_group_notification_available(&gid) {
                 Arc::new(AtomicBool::new(true))
             } else {
                 Arc::new(AtomicBool::new(false))
@@ -246,6 +245,7 @@ impl NotificationDispatcher {
         title: Option<String>,
         text: Option<String>,
         disable: bool,
+        visibility: u32,
     ) -> u32 {
         let new_group_id = loop {
             let candidate = fast_random() as u32;
@@ -254,13 +254,13 @@ impl NotificationDispatcher {
             }
         };
         info!(
-            "Create group {} gauge {} customized_title {:?} customized_text {:?} disable {}",
-            new_group_id, gauge, title, text, disable
+            "Create group {} gauge {} customized_title {:?} customized_text {:?} disable {} visibility {}",
+            new_group_id, gauge, title, text, disable, visibility
         );
 
         let current_time = get_current_duration().as_millis() as u64;
         self.database
-            .update_group_config(new_group_id, gauge, current_time, !disable);
+            .update_group_config(new_group_id, gauge, current_time, !disable, visibility);
         if title.is_some() || text.is_some() {
             self.database
                 .update_group_customized_notification(new_group_id, title, text);

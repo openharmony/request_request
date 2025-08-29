@@ -3077,5 +3077,231 @@ export default function requestCreateTaskTest() {
         done();
       }
     });
+    /**
+     * @tc.number: testTaskVisibility001
+     * @tc.name: testTaskVisibility001
+     * @tc.desc: Test create task with valid visibility COMPLETION using enum
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskVisibility001', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskVisibility001.txt',
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION,
+        },
+      };
+      try {
+        let task = await request.agent.create(context, conf);
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskVisibility002
+     * @tc.name: testTaskVisibility002
+     * @tc.desc: Test create task with valid visibility PROGRESS using enum
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskVisibility002', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskVisibility002.txt',
+        notification: {
+          visibility: request.agent.VISIBILITY_PROGRESS,
+        },
+      };
+      try {
+        let task = await request.agent.create(context, conf);
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskVisibility003
+     * @tc.name: testTaskVisibility003
+     * @tc.desc: Test create task with valid visibility ANY (COMPLETION | PROGRESS)
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskVisibility003', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskVisibility003.txt',
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION | request.agent.VISIBILITY_PROGRESS,
+        },
+      };
+      try {
+        let task = await request.agent.create(context, conf);
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskVisibility004
+     * @tc.name: testTaskVisibility004
+     * @tc.desc: Test create task when fail by invalid visibility value 0b00
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskVisibility004', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskVisibility004.txt',
+        notification: {
+          visibility: 0b00, // Invalid value
+        },
+      };
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        });
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskVisibility005
+     * @tc.name: testTaskVisibility005
+     * @tc.desc: Test create task when fail by invalid visibility value
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskVisibility005', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskVisibility005.txt',
+        notification: {
+          visibility: 0b100, // Invalid value
+        },
+      };
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        });
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskVisibility006
+     * @tc.name: testTaskVisibility006
+     * @tc.desc: Test create task when fail by invalid visibility type
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskVisibility006', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskVisibility006.txt',
+        notification: {
+          visibility: 'invalid' as Object as number, // Invalid type
+        },
+      };
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        });
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskVisibility007
+     * @tc.name: testTaskVisibility007
+     * @tc.desc: Test create task with valid visibility PROGRESS using enum and gauge recover larger
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskVisibility007', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskVisibility007.txt',
+        gauge: true,
+        notification: {
+          visibility: request.agent.VISIBILITY_PROGRESS,
+        },
+      };
+      try {
+        let task = await request.agent.create(context, conf);
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskVisibility008
+     * @tc.name: testTaskVisibility008
+     * @tc.desc: Test create task with valid visibility PROGRESS using enum and gauge recover smaller
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskVisibility008', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskVisibility008.txt',
+        gauge: false,
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION | request.agent.VISIBILITY_PROGRESS,
+        },
+      };
+      try {
+        let task = await request.agent.create(context, conf);
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
   })
 }

@@ -66,7 +66,7 @@ impl NotificationCheck for RequestTask {
         let mode = self.mode.load(Ordering::Acquire);
         notification_check_common(
             self.conf.version,
-            self.conf.common_data.gauge,
+            true,
             Mode::from(mode),
             self.conf.common_data.background,
             false,

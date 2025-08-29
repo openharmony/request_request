@@ -902,3 +902,43 @@ HWTEST_F(RequestManagerImplTest, QueryTasks001, TestSize.Level1)
     EXPECT_CALL(*exceptProxy, QueryTasks(tids, testing::_)).WillOnce(testing::Return(E_OK));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->QueryTasks(tids, rets), E_OK);
 }
+
+/**
+ * @tc.name: CreateWithNotificationTest001
+ * @tc.desc: Test Create interface with notification configuration
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create config with API9 version and notification settings
+ *           2. Set notification properties: text, title, disable, visibility
+ *           3. Expect Create to return E_OK
+ *           4. Call Create method with the configured parameters
+ * @tc.expect: Create returns E_OK successfully
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(RequestManagerImplTest, CreateWithNotificationTest001, TestSize.Level1)
+{
+    RequestManagerImpl::GetInstance()->OnChannelBroken();
+    EXPECT_CALL(*exceptProxy, OpenChannel(testing::_))
+        .WillOnce(testing::Return(E_TASK_STATE))
+        .WillOnce(testing::Return(E_OK));
+    Config config;
+    config.version = Version::API9;
+
+    config.notification.text = "text";
+    config.notification.title = "title";
+    config.notification.disable = false;
+    config.notification.visibility = VISIBILITY_COMPLETION;
+
+    int32_t seq = 1;
+    std::string tid = "1";
+    EXPECT_CALL(*exceptProxy, Create(testing::_, tid))
+        .WillOnce(testing::Return(E_CHANNEL_NOT_OPEN))
+        .WillOnce(testing::Return(E_OK));
+    EXPECT_CALL(*exceptProxy, Subscribe(testing::_)).WillOnce(testing::Return(E_OK));
+    EXPECT_CALL(*exceptProxy, Start(testing::_))
+        .WillOnce(testing::Return(E_OK))
+        .WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->Create(config, seq, tid), E_OK);
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->Create(config, seq, tid), E_CHANNEL_NOT_OPEN);
+}

@@ -40,6 +40,10 @@ pub(crate) struct NotifyFlow {
     group_customized_notify: HashMap<u32, Option<CustomizedNotification>>,
     group_gauge: HashMap<u32, bool>,
     task_customized_notify: HashMap<u32, Option<CustomizedNotification>>,
+    group_progress_visibility: HashMap<u32, bool>,
+    group_completion_visibility: HashMap<u32, bool>,
+    progress_visibility: HashMap<u32, bool>,
+    completion_visibility: HashMap<u32, bool>,
     rx: mpsc::UnboundedReceiver<NotifyInfo>,
 }
 
@@ -169,6 +173,10 @@ impl NotifyFlow {
             group_gauge: HashMap::new(),
             task_customized_notify: HashMap::new(),
             group_customized_notify: HashMap::new(),
+            completion_visibility: HashMap::new(),
+            progress_visibility: HashMap::new(),
+            group_completion_visibility: HashMap::new(),
+            group_progress_visibility: HashMap::new(),
             rx,
         }
     }
@@ -299,6 +307,30 @@ impl NotifyFlow {
         ))
     }
 
+    fn check_completion_visibility_from_group(&mut self, group_id: u32) -> bool {
+        *self.group_completion_visibility
+            .entry(group_id)
+            .or_insert_with(|| self.database.is_completion_visible_from_group(group_id))
+    }
+
+    fn check_progress_visibility_from_group(&mut self, group_id: u32) -> bool {
+        *self.group_progress_visibility
+            .entry(group_id)
+            .or_insert_with(|| self.database.is_progress_visible_from_group(group_id))
+    }
+
+    fn check_completion_visibility(&mut self, task_id: u32) -> bool {
+        *self.completion_visibility
+            .entry(task_id)
+            .or_insert_with(|| self.database.is_completion_visible(task_id))
+    }
+
+    fn check_progress_visibility(&mut self, task_id: u32) -> bool {
+        *self.progress_visibility
+            .entry(task_id)
+            .or_insert_with(|| self.database.is_progress_visible(task_id))
+    }
+
     fn check_gauge(&mut self, group_id: u32) -> bool {
         match self.group_gauge.get(&group_id) {
             Some(gauge) => *gauge,
@@ -333,7 +365,7 @@ impl NotifyFlow {
     fn publish_progress_notification(&mut self, info: ProgressNotify) -> Option<NotifyContent> {
         let content = match self.get_request_id(info.task_id) {
             NotifyType::Group(group_id) => {
-                if !self.check_gauge(group_id) {
+                if !self.check_progress_visibility_from_group(group_id) {
                     return None;
                 }
                 let progress_interval_check = self.progress_interval_check(group_id);
@@ -359,10 +391,15 @@ impl NotifyFlow {
                     progress,
                 )
             }
-            NotifyType::Task => NotifyContent::task_progress_notify(
-                self.task_customized_notify(info.task_id),
-                &info,
-            ),
+            NotifyType::Task => {
+                if !self.check_progress_visibility(info.task_id) {
+                    return None;
+                }
+                NotifyContent::task_progress_notify(
+                    self.task_customized_notify(info.task_id),
+                    &info,
+                )
+            }
         };
         Some(content)
     }
@@ -389,7 +426,10 @@ impl NotifyFlow {
     fn publish_completed_notify(&mut self, info: &EventualNotify) -> Option<NotifyContent> {
         let content = match self.get_request_id(info.task_id) {
             NotifyType::Group(group_id) => {
-                let is_gauge = self.check_gauge(group_id);
+                if !self.check_completion_visibility_from_group(group_id) {
+                    return None;
+                }
+                let is_progress_visible = self.check_progress_visibility_from_group(group_id);                
 
                 let customized = self.group_customized_notify(group_id);
                 let group_progress = match self.group_notify_progress.entry(group_id) {
@@ -412,32 +452,33 @@ impl NotifyFlow {
                 let group_eventual =
                     Self::group_eventual_check(&self.database, group_progress, group_id);
 
-                if !group_eventual {
-                    if is_gauge {
-                        NotifyContent::group_progress_notify(
-                            customized,
-                            info.action,
-                            group_id,
-                            info.uid as u32,
-                            group_progress,
-                        )
-                    } else {
-                        return None;
-                    }
-                } else {
-                    self.database.clear_group_info(group_id);
-                    NotifyContent::group_eventual_notify(
+                match (group_eventual, is_progress_visible) {
+                    (false, true) => NotifyContent::group_progress_notify(
                         customized,
                         info.action,
                         group_id,
                         info.uid as u32,
-                        group_progress.processed(),
-                        group_progress.successful() as i32,
-                        group_progress.failed() as i32,
-                    )
+                        group_progress,
+                    ),
+                    (false, false) => return None,
+                    (true, _) => {
+                        self.database.clear_group_info(group_id);
+                        NotifyContent::group_eventual_notify(
+                            customized,
+                            info.action,
+                            group_id,
+                            info.uid as u32,
+                            group_progress.processed(),
+                            group_progress.successful() as i32,
+                            group_progress.failed() as i32,
+                        )
+                    }
                 }
             }
             NotifyType::Task => {
+                if !self.check_completion_visibility(info.task_id) {
+                    return None;
+                }
                 let content = NotifyContent::task_eventual_notify(
                     self.task_customized_notify(info.task_id),
                     info.action,

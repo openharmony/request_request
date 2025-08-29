@@ -72,6 +72,21 @@ napi_status createNotificationParse(CreateContext *context, napi_value customize
             context->notification.disable = value;
         }
     }
+    if (NapiUtils::HasNamedProperty(context->env_, customized_notification, "visibility")) {
+        napi_value visibility = NapiUtils::GetNamedProperty(context->env_, customized_notification, "visibility");
+        if (NapiUtils::GetValueType(context->env_, visibility) == napi_number) {
+            context->notification.visibility = NapiUtils::Convert2Uint32(context->env_, visibility);
+            if (context->notification.visibility == static_cast<uint32_t>(Visibility::NONE) ||
+                (context->notification.visibility & static_cast<uint32_t>(Visibility::ANY)) !=
+                context->notification.visibility) {
+                NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
+                return napi_invalid_arg;
+            }
+        } else {
+            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
+            return napi_invalid_arg;
+        }
+    }
     return napi_ok;
 }
 
@@ -91,6 +106,11 @@ napi_status createInput(CreateContext *context, size_t argc, napi_value *argv, n
             bool value = false;
             napi_get_value_bool(context->env_, gauge, &value);
             context->gauge = value;
+            if (context->gauge) {
+                context->notification.visibility = VISIBILITY_COMPLETION | VISIBILITY_PROGRESS;
+            } else {
+                context->notification.visibility = VISIBILITY_COMPLETION;
+            }
         } else {
             NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
             return napi_invalid_arg;
