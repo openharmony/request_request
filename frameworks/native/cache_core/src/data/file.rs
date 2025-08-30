@@ -19,7 +19,7 @@ use std::io::{self, Seek, Write};
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use std::sync::{Arc, LazyLock, OnceLock, Weak};
+use std::sync::{Arc, Mutex, Once, OnceLock, Weak};
 use std::time::SystemTime;
 
 use request_utils::task_id::TaskId;
@@ -30,7 +30,25 @@ use crate::spawn;
 
 const FINISH_SUFFIX: &str = "_F";
 
-static CACHE_DIR_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
+pub(crate) static mut FILE_STORE_DIR: FileStoreDir = FileStoreDir::new();
+
+static INIT_HISTORY: Once = Once::new();
+
+static INIT_CURR: Once = Once::new();
+
+pub fn init_history_store_dir(history: Arc<HistoryDir>, spawner: fn(PathBuf, Arc<HistoryDir>)) {
+    INIT_HISTORY.call_once(|| unsafe {
+        FILE_STORE_DIR.set_history_dir(history, spawner);
+    });
+}
+
+pub fn init_curr_store_dir(curr: PathBuf) {
+    INIT_CURR.call_once(|| unsafe {
+        FILE_STORE_DIR.set_curr_dir(curr);
+    });
+}
+
+pub fn get_curr_store_dir() -> PathBuf {
     #[cfg(feature = "ohos")]
     let mut path = match request_utils::context::get_cache_dir() {
         Some(dir) => PathBuf::from_str(&dir).unwrap(),
@@ -47,7 +65,132 @@ static CACHE_DIR_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
         error!("create cache dir error {}", e);
     }
     path
-});
+}
+
+pub struct FileStoreDir {
+    history: Option<DirObservSpawner>,
+    curr: Option<PathBuf>,
+}
+
+impl FileStoreDir {
+    pub const fn new() -> Self {
+        Self {
+            history: None,
+            curr: None,
+        }
+    }
+
+    pub fn set_history_dir(
+        &mut self,
+        history: Arc<HistoryDir>,
+        spawner: fn(PathBuf, Arc<HistoryDir>),
+    ) {
+        self.history = Some(DirObservSpawner::new(history, spawner));
+    }
+
+    pub fn set_curr_dir(&mut self, curr: PathBuf) {
+        self.curr = Some(curr);
+    }
+
+    // SAFETY: curr is guaranteed to be Some.
+    fn curr(&self) -> &PathBuf {
+        self.curr.as_ref().unwrap()
+    }
+
+    pub(crate) fn exist(&self) -> bool {
+        if let Some(ref history) = self.history {
+            if !history.exist() && history.create() {
+                history.spawn_observe(self.curr().clone());
+            }
+        }
+        if !self.curr().is_dir() {
+            if let Err(e) = fs::create_dir_all(self.curr().as_path()) {
+                error!("try create current cache dir error {}", e);
+                return false;
+            }
+        }
+        true
+    }
+
+    pub(crate) fn join(&self, path: String) -> Option<PathBuf> {
+        if self.exist() {
+            Some(self.curr().join(path))
+        } else {
+            None
+        }
+    }
+
+    pub(crate) fn as_path(&self) -> Option<&Path> {
+        if self.exist() {
+            Some(self.curr().as_path())
+        } else {
+            None
+        }
+    }
+}
+
+pub(crate) struct DirObservSpawner {
+    history: Arc<HistoryDir>,
+    spawner: fn(PathBuf, Arc<HistoryDir>),
+}
+
+impl DirObservSpawner {
+    pub(crate) fn new(history: Arc<HistoryDir>, spawner: fn(PathBuf, Arc<HistoryDir>)) -> Self {
+        Self { history, spawner }
+    }
+
+    pub(crate) fn exist(&self) -> bool {
+        self.history.exist()
+    }
+
+    pub fn create(&self) -> bool {
+        self.history.create()
+    }
+
+    pub fn spawn_observe(&self, curr: PathBuf) {
+        let mut is_observe = self.history.is_observe.lock().unwrap();
+        if !*is_observe {
+            (self.spawner)(curr, self.history.clone());
+            *is_observe = true;
+        }
+    }
+}
+
+pub struct HistoryDir {
+    dir: PathBuf,
+    pub is_observe: Mutex<bool>,
+}
+
+impl HistoryDir {
+    pub fn new(dir: PathBuf) -> Self {
+        Self {
+            dir,
+            is_observe: Mutex::new(false),
+        }
+    }
+
+    pub fn exist(&self) -> bool {
+        self.dir.is_dir()
+    }
+
+    pub fn create(&self) -> bool {
+        if let Err(e) = fs::create_dir_all(self.dir.as_path()) {
+            error!("try create history dir error {}", e);
+            false
+        } else {
+            true
+        }
+    }
+
+    pub fn stop_observe(&self) {
+        let mut is_observe = self.is_observe.lock().unwrap();
+        *is_observe = false;
+    }
+
+    pub fn dir_path(&self) -> Option<&str> {
+        self.dir.to_str()
+    }
+}
 
 pub(crate) struct FileCache {
     task_id: TaskId,
@@ -57,19 +200,20 @@ pub(crate) struct FileCache {
 impl Drop for FileCache {
     fn drop(&mut self) {
         fn drop_inner(me: &mut FileCache) -> Result<(), io::Error> {
-            let path = FileCache::path(&me.task_id);
-            let metadata = fs::metadata(&path)?;
-            debug!(
-                "try drop file cache {} for task {}",
-                metadata.len(),
-                me.task_id.brief()
-            );
-            fs::remove_file(path)?;
-            me.handle
-                .file_handle
-                .lock()
-                .unwrap()
-                .release(metadata.len());
+            if let Some(path) = FileCache::path(&me.task_id) {
+                let metadata = fs::metadata(&path)?;
+                debug!(
+                    "try drop file cache {} for task {}",
+                    metadata.len(),
+                    me.task_id.brief()
+                );
+                fs::remove_file(path)?;
+                me.handle
+                    .file_handle
+                    .lock()
+                    .unwrap()
+                    .release(metadata.len());
+            }
             Ok(())
         }
 
@@ -83,20 +227,23 @@ impl Drop for FileCache {
 
 impl FileCache {
     pub(crate) fn try_restore(task_id: TaskId, handle: &'static CacheManager) -> Option<Self> {
-        let metadata = fs::metadata(Self::path(&task_id)).ok()?;
-        if !CacheManager::apply_cache(
-            &handle.file_handle,
-            &handle.files,
-            FileCache::task_id,
-            metadata.len() as usize,
-        ) {
-            info!("apply file cache for task {} failed", task_id.brief());
-            let path = FileCache::path(&task_id);
-            let _ = fs::remove_file(path);
-            return None;
-        }
+        if let Some(path) = Self::path(&task_id) {
+            let metadata = fs::metadata(&path).ok()?;
+            if !CacheManager::apply_cache(
+                &handle.file_handle,
+                &handle.files,
+                FileCache::task_id,
+                metadata.len() as usize,
+            ) {
+                info!("apply file cache for task {} failed", task_id.brief());
+                let _ = fs::remove_file(&path);
+                return None;
+            }
 
-        Some(Self { task_id, handle })
+            Some(Self { task_id, handle })
+        } else {
+            None
+        }
     }
 
     pub(crate) fn try_create(
@@ -126,38 +273,49 @@ impl FileCache {
     }
 
     fn create_file(task_id: &TaskId, cache: Arc<RamCache>) -> Result<(), io::Error> {
-        let path = Self::path(task_id);
-        let mut file = OpenOptions::new()
-            .write(true)
-            .create(true)
-            .truncate(true)
-            .open(path.as_path())?;
-        io::copy(&mut cache.cursor(), &mut file)?;
-        file.flush()?;
-        file.rewind()?;
-        let file_name = format!("{}{}", task_id, FINISH_SUFFIX);
-        let new_path = CACHE_DIR_PATH.join(file_name);
-        fs::rename(path, new_path)?;
-        Ok(())
+        if let Some(path) = Self::path(task_id) {
+            let mut file = OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(path.as_path())?;
+            io::copy(&mut cache.cursor(), &mut file)?;
+            file.flush()?;
+            file.rewind()?;
+            let file_name = format!("{}{}", task_id, FINISH_SUFFIX);
+            if let Some(new_path) = unsafe { FILE_STORE_DIR.join(file_name) } {
+                fs::rename(path, new_path)?;
+                return Ok(());
+            }
+        }
+        Err(io::Error::new(
+            io::ErrorKind::NotFound,
+            "cache store dir not created.",
+        ))
     }
 
     pub(crate) fn open(&self) -> Result<File, io::Error> {
-        OpenOptions::new()
-            .read(true)
-            .open(Self::path(&self.task_id))
+        if let Some(path) = Self::path(&self.task_id) {
+            OpenOptions::new().read(true).open(path)
+        } else {
+            Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "cache store dir not created.",
+            ))
+        }
     }
 
     pub(crate) fn task_id(&self) -> &TaskId {
         &self.task_id
     }
 
-    fn path(task_id: &TaskId) -> PathBuf {
-        CACHE_DIR_PATH.join(task_id.to_string() + FINISH_SUFFIX)
+    fn path(task_id: &TaskId) -> Option<PathBuf> {
+        unsafe { FILE_STORE_DIR.join(task_id.to_string() + FINISH_SUFFIX) }
     }
 }
 
-pub(crate) fn restore_files() -> impl Iterator<Item = TaskId> {
-    restore_files_inner(CACHE_DIR_PATH.as_path())
+pub(crate) fn restore_files() -> Option<impl Iterator<Item = TaskId>> {
+    unsafe { FILE_STORE_DIR.as_path() }.map(restore_files_inner)
 }
 
 pub(crate) fn restore_files_inner(path: &Path) -> impl Iterator<Item = TaskId> {

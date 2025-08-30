@@ -30,11 +30,16 @@ mod data;
 mod manage;
 mod update;
 
-pub use data::RamCache;
+pub mod observe;
+
+pub use data::{get_curr_store_dir, init_history_store_dir, FileStoreDir, HistoryDir, RamCache};
+
+pub use data::observer::DirRebuilder;
 pub use manage::CacheManager;
 pub use update::Updater;
 
 cfg_ohos! {
+    mod wrapper;
     const TAG: &str = "PreloadNative\0";
     const DOMAIN: u32 = 0xD001C50;
     use ffrt_rs::ffrt_spawn as spawn;
