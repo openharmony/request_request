@@ -312,6 +312,7 @@ impl TaskManager {
             ScheduleEvent::ClearTimeoutTasks => self.clear_timeout_tasks(),
             ScheduleEvent::RestoreAllTasks => self.restore_all_tasks(),
             ScheduleEvent::Unload => return self.unload_sa(),
+            ScheduleEvent::Shutdown => self.shutdown(),
         }
         false
     }
@@ -322,6 +323,10 @@ impl TaskManager {
             Ok(_) => ErrorCode::Permission,
             Err(_) => ErrorCode::TaskNotFound,
         }
+    }
+
+    fn shutdown(&mut self) {
+        self.scheduler.shutdown();
     }
 
     fn clear_timeout_tasks(&mut self) {
