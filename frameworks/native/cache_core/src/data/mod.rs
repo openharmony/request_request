@@ -15,11 +15,6 @@ mod file;
 mod ram;
 mod space;
 
-pub mod observer;
-
-pub use file::{
-    get_curr_store_dir, init_curr_store_dir, init_history_store_dir, FileStoreDir, HistoryDir,
-};
 pub(crate) use file::{restore_files, FileCache};
 pub use ram::RamCache;
 pub(crate) use space::ResourceManager;

@@ -159,7 +159,6 @@ public:
     void SetRamCacheSize(uint64_t size);
     void SetFileCacheSize(uint64_t size);
     void SetDownloadInfoListSize(uint16_t size);
-    static void SetFileCachePath(const std::string &path);
 
     std::shared_ptr<PreloadHandle> load(std::string const &url, std::unique_ptr<PreloadCallback>,
         std::unique_ptr<PreloadOptions> options = nullptr, bool update = false);

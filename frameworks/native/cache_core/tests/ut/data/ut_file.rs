@@ -20,7 +20,7 @@ use request_utils::fastrand::fast_random;
 use request_utils::task_id::TaskId;
 use request_utils::test::log::init;
 
-use super::{FILE_STORE_DIR, *};
+use super::{CACHE_DIR_PATH, *};
 const TEST_STRING: &str = "你这猴子真让我欢喜";
 const TEST_STRING_SIZE: usize = TEST_STRING.len();
 const TEST_SIZE: u64 = 128;
@@ -40,12 +40,11 @@ fn ut_cache_file_create() {
     static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
     CACHE_MANAGER.set_file_cache_size(TEST_SIZE);
 
-    let curr_dir = get_curr_store_dir();
-    init_curr_store_dir(curr_dir);
     // cache not update
     for _ in 0..1000 {
         let task_id = TaskId::new(fast_random().to_string());
-        let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
+        let mut ram_cache =
+            RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
         ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
         FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap();
     }
@@ -53,10 +52,12 @@ fn ut_cache_file_create() {
     // cache update
     for _ in 0..1000 {
         let task_id = TaskId::new(fast_random().to_string());
-        let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
+        let mut ram_cache =
+            RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
         ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
         let file_cache =
-            FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap();
+            FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache))
+                .unwrap();
         CACHE_MANAGER
             .files
             .lock()
@@ -80,23 +81,25 @@ fn ut_cache_file_try_new_fail() {
     static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
     CACHE_MANAGER.set_file_cache_size(TEST_SIZE);
 
-    let curr_dir = get_curr_store_dir();
-    init_curr_store_dir(curr_dir);
     let mut total = TEST_STRING_SIZE as u64;
     let mut v = vec![];
     while total < TEST_SIZE {
         let task_id = TaskId::new(fast_random().to_string());
-        let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
+        let mut ram_cache =
+            RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
         ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
         v.push(
-            FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap(),
+            FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache))
+                .unwrap(),
         );
         total += TEST_STRING_SIZE as u64;
     }
     let task_id = TaskId::new(fast_random().to_string());
     let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
     ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
-    assert!(FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).is_none());
+    assert!(
+        FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).is_none()
+    );
     v.pop();
     let task_id = TaskId::new(fast_random().to_string());
     let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
@@ -119,8 +122,6 @@ fn ut_cache_file_drop() {
     static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
     CACHE_MANAGER.set_file_cache_size(TEST_SIZE);
 
-    let curr_dir = get_curr_store_dir();
-    init_curr_store_dir(curr_dir);
     let task_id = TaskId::new(fast_random().to_string());
     let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
     ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
@@ -149,8 +150,6 @@ fn ut_cache_file_content() {
     static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
     CACHE_MANAGER.set_file_cache_size(TEST_SIZE);
 
-    let curr_dir = get_curr_store_dir();
-    init_curr_store_dir(curr_dir);
     let task_id = TaskId::new(fast_random().to_string());
     let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
     ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
@@ -177,10 +176,7 @@ fn ut_cache_file_restore_files() {
     const TEST_DIR: &str = "restore_test";
 
     // The first to create are the first to come out
-    let curr_dir = get_curr_store_dir();
-    init_curr_store_dir(curr_dir);
-    let path = unsafe { FILE_STORE_DIR.join(String::from(TEST_DIR)).unwrap() };
-
+    let path = CACHE_DIR_PATH.join(TEST_DIR);
     fs::create_dir_all(&path).unwrap();
     for i in 0..10 {
         // not finished will not come out and will be deleted
@@ -222,8 +218,6 @@ fn ut_cache_file_update_ram_from_file() {
     static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
     CACHE_MANAGER.set_file_cache_size(TEST_SIZE);
 
-    let curr_dir = get_curr_store_dir();
-    init_curr_store_dir(curr_dir);
     let task_id = TaskId::new(fast_random().to_string());
     let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
     ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();

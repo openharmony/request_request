@@ -13,7 +13,6 @@
 
 use std::sync::{mpsc, Arc, Mutex};
 
-use cache_core::observe::observe_image_file_delete;
 use cache_core::RamCache;
 use cxx::{SharedPtr, UniquePtr};
 use ffi::{FfiPredownloadOptions, PreloadCallbackWrapper, PreloadProgressCallbackWrapper};
@@ -166,10 +165,6 @@ fn cache_download_service() -> *const CacheDownloadService {
     CacheDownloadService::get_instance() as *const CacheDownloadService
 }
 
-fn set_file_cache_path(path: String) {
-    observe_image_file_delete(path);
-}
-
 #[cxx::bridge(namespace = "OHOS::Request")]
 pub(crate) mod ffi {
     struct FfiPredownloadOptions<'a> {
@@ -215,7 +210,6 @@ pub(crate) mod ffi {
         ) -> UniquePtr<CppDownloadInfo>;
 
         fn cache_download_service() -> *const CacheDownloadService;
-        fn set_file_cache_path(path: String);
         fn cancel(self: &CacheDownloadService, url: &str);
         fn remove(self: &CacheDownloadService, url: &str);
         fn contains(self: &CacheDownloadService, url: &str) -> bool;
