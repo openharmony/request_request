@@ -19,8 +19,7 @@ use request_utils::lru::LRUCache;
 use request_utils::task_id::TaskId;
 
 use super::data::{self, restore_files, FileCache, RamCache};
-use crate::data::{init_curr_store_dir, MAX_CACHE_SIZE};
-use crate::get_curr_store_dir;
+use crate::data::MAX_CACHE_SIZE;
 
 const DEFAULT_RAM_CACHE_SIZE: u64 = 1024 * 1024 * 20;
 const DEFAULT_FILE_CACHE_SIZE: u64 = 1024 * 1024 * 100;
@@ -60,15 +59,11 @@ impl CacheManager {
     }
 
     pub fn restore_files(&'static self) {
-        let curr_dir = get_curr_store_dir();
-        init_curr_store_dir(curr_dir);
-        if let Some(task_ids) = restore_files() {
-            for task_id in task_ids {
-                let Some(file_cache) = FileCache::try_restore(task_id.clone(), self) else {
-                    continue;
-                };
-                self.files.lock().unwrap().insert(task_id, file_cache);
-            }
+        for task_id in restore_files() {
+            let Some(file_cache) = FileCache::try_restore(task_id.clone(), self) else {
+                continue;
+            };
+            self.files.lock().unwrap().insert(task_id, file_cache);
         }
     }
 

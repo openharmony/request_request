@@ -39,10 +39,7 @@ ohos_rust_shared_ffi("preload_native_rust") {
     "../../../common/utils:request_utils",
     "../cache_core:cache_core",
   ]
-  external_deps = [
-    "rust_cxx:lib",
-    "hilog:libhilog"
-  ]
+  external_deps = [ "rust_cxx:lib" ]
 
   subsystem_name = "request"
   part_name = "request"
@@ -51,7 +48,6 @@ ohos_rust_shared_ffi("preload_native_rust") {
 config("preload_native_config") {
   include_dirs = [
     "include",
-    "../../../common/include",
     "${target_gen_dir}/src",
     "../../../interfaces/inner_kits/cache_download/include",
   ]
@@ -83,7 +79,6 @@ ohos_shared_library("preload_native") {
     "ability_runtime:app_context",
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
-    "hilog:libhilog",
     "ipc:ipc_single",
     "netstack:http_client",
     "rust_cxx:cxx_cppdeps",
@@ -114,7 +109,6 @@ ohos_static_library("preload_native_static") {
 
   external_deps = [
     "ability_runtime:app_context",
-    "hilog:libhilog",
     "ipc:ipc_single",
     "netstack:http_client",
     "rust_cxx:cxx_cppdeps",
@@ -141,10 +135,7 @@ ohos_rust_unittest("rust_cache_download_ut_test") {
     "../../../common/utils:request_utils",
     "../cache_core:cache_core",
   ]
-  external_deps = [
-    "rust_cxx:lib",
-    "hilog:libhilog"
-  ]
+  external_deps = [ "rust_cxx:lib" ]
 
   subsystem_name = "request"
   part_name = "request"

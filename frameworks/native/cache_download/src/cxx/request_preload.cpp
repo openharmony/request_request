@@ -300,11 +300,6 @@ void Preload::Remove(std::string const &url)
     agent_->remove(rust::str(url));
 }
 
-void Preload::SetFileCachePath(const std::string &path)
-{
-    set_file_cache_path(rust::String(path));
-}
-
 bool Preload::Contains(const std::string &url)
 {
     return agent_->contains(rust::str(url));
