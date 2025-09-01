@@ -284,10 +284,8 @@ fn ut_preload_cancel_add_callback() {
         flag: cancel_flag_1.clone(),
     });
 
-    let handle_0 =
-        SERVICE.preload(DownloadRequest::new(test_url), callback_0, true, DOWNLOADER);
-    let handle_1 =
-        SERVICE.preload(DownloadRequest::new(test_url), callback_1, true, DOWNLOADER);
+    let handle_0 = SERVICE.preload(DownloadRequest::new(test_url), callback_0, true, DOWNLOADER);
+    let handle_1 = SERVICE.preload(DownloadRequest::new(test_url), callback_1, true, DOWNLOADER);
     assert!(handle_0.is_some());
     assert!(handle_1.is_some());
     let mut handle_0 = handle_0.unwrap();
@@ -427,4 +425,21 @@ fn ut_preload_fetch() {
     let cache = SERVICE.fetch(TEST_URL);
     assert!(cache.is_some());
     assert_eq!(success_flag.load(Ordering::SeqCst), 1);
+}
+
+// @tc.name: ut_download_request_ssl_type
+// @tc.desc: Test DownloadRequest set ssl_type
+// @tc.precon: NA
+// @tc.step: 1. Create a DownloadRequest object.
+//           2. Call the ssl_type function to set the ssl_type
+//           3. Check whether ssl_type is set
+// @tc.expect: The ssl_type is set successfully
+// @tc.type: FUNC
+// @tc.require: issue#ICN31I
+// @tc.level: level1
+#[test]
+fn ut_download_request_ssl_type() {
+    let mut request = DownloadRequest::new(TEST_URL);
+    request.ssl_type("TLS");
+    assert_eq!(request.ssl_type, Some("TLS"));
 }

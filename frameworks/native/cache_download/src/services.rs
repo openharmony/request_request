@@ -42,15 +42,32 @@ pub struct CacheDownloadService {
 pub struct DownloadRequest<'a> {
     pub url: &'a str,
     pub headers: Option<Vec<(&'a str, &'a str)>>,
+    pub ssl_type: Option<&'a str>,
+    pub ca_path: Option<&'a str>,
 }
 
 impl<'a> DownloadRequest<'a> {
     pub fn new(url: &'a str) -> Self {
-        Self { url, headers: None }
+        Self {
+            url,
+            headers: None,
+            ssl_type: None,
+            ca_path: None,
+        }
     }
 
     pub fn headers(&mut self, headers: Vec<(&'a str, &'a str)>) -> &mut Self {
         self.headers = Some(headers);
+        self
+    }
+
+    pub fn ssl_type(&mut self, ssl_type: &'a str) -> &mut Self {
+        self.ssl_type = Some(ssl_type);
+        self
+    }
+
+    pub fn ca_path(&mut self, ca_path: &'a str) -> &mut Self {
+        self.ca_path = Some(ca_path);
         self
     }
 }
