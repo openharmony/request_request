@@ -47,7 +47,6 @@ public:
     static void ClearTaskMap(const std::string &key);
     static void AddTaskMap(const std::string &key, JsTask *task);
     static bool SetDirsPermission(std::vector<std::string> &dirs);
-    static bool SetPathPermission(const std::string &filepath);
     static void ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls);
     static void RemoveDirsPermission(const std::vector<std::string> &dirs);
     static void RemoveTaskContext(const std::string &tid);
@@ -57,9 +56,6 @@ public:
     static bool register_;
     static std::mutex taskMutex_;
     static std::map<std::string, JsTask *> taskMap_;
-    static std::mutex pathMutex_;
-    static std::map<std::string, int32_t> pathMap_;
-    static std::map<std::string, int32_t> fileMap_;
 
     std::mutex listenerMutex_;
     std::shared_ptr<JSResponseListener> responseListener_;
@@ -116,9 +112,6 @@ private:
         napi_env env, size_t argc, napi_value *argv, std::shared_ptr<TouchContext> context);
     static int64_t ParseBefore(napi_env env, napi_value value);
     static int64_t ParseAfter(napi_env env, napi_value value, int64_t before);
-    static void AddPathMap(const std::string &filepath, const std::string &baseDir);
-    static void ResetDirAccess(const std::string &filepath);
-    static void RemovePathMap(const std::string &filepath);
     static void AddTaskContextMap(const std::string &key, std::shared_ptr<ContextInfo> context);
     static void UnrefTaskContextMap(std::shared_ptr<ContextInfo> context);
     static void RegisterForegroundResume();
@@ -126,6 +119,7 @@ private:
     static void AddRemoveListener(const std::shared_ptr<ContextInfo> &context);
     static bool ParseTouchCheck(const napi_env env, const size_t argc, const napi_value *argv,
         const std::shared_ptr<TouchContext> context, ExceptionError &err);
+    static int32_t AuthorizePath(const Config &config);
     bool Equals(napi_env env, napi_value value, napi_ref copy);
 
     static std::mutex createMutex_;

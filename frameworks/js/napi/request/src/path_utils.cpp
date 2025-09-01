@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "path_control.h"
+#include "path_utils.h"
 
 #include <sstream>
 #include <string>
@@ -26,6 +26,9 @@
 namespace OHOS::Request {
 
 static constexpr int ACL_SUCC = 0;
+
+// SA side reading and writing are aware of the `Other` permission of `UGO`;
+// otherwise, it will cause concurrency with the Set ACL and generate `Permission denied`.
 static const std::string SA_PERMISSION_U_RW = "u:3815:rw";
 static const std::string SA_PERMISSION_G_X = "g:3815:x";
 static const std::string SA_PERMISSION_U_CLEAN = "u:3815:---";
@@ -37,7 +40,7 @@ static const std::string AREA5 = "/data/storage/el5/base";
 static std::mutex pathMutex_;
 static std::map<std::string, std::tuple<bool, uint32_t>> pathMap_;
 
-bool PathControl::CheckBelongAppBaseDir(const std::string &filepath)
+bool PathUtils::CheckBelongAppBaseDir(const std::string &filepath)
 {
     return (filepath.find(AREA1) == 0) || filepath.find(AREA2) == 0 || filepath.find(AREA5) == 0;
 }
@@ -75,7 +78,7 @@ std::vector<std::pair<std::string, bool>> SelectPath(const std::vector<std::stri
         return result;
 
     for (const auto &elem : paths) {
-        if (!PathControl::CheckBelongAppBaseDir(elem)) {
+        if (!PathUtils::CheckBelongAppBaseDir(elem)) {
             continue;
         }
         result.emplace_back(elem, false);
@@ -96,7 +99,7 @@ bool AddAcl(const std::string &path, const bool isFile)
         entry = SA_PERMISSION_G_X;
     }
     if (StorageDaemon::AclSetAccess(path, entry) != ACL_SUCC) {
-        REQUEST_HILOGE("Add Acl Failed, %{public}s", PathControl::ShieldPath(path).c_str());
+        REQUEST_HILOGE("Add Acl Failed, %{public}s", PathUtils::ShieldPath(path).c_str());
         return false;
     };
     return true;
@@ -111,7 +114,7 @@ bool SubAcl(const std::string &path, const bool isFile)
         entry = SA_PERMISSION_G_CLEAN;
     }
     if (StorageDaemon::AclSetAccess(path, entry) != ACL_SUCC) {
-        REQUEST_HILOGE("Sub Acl Failed, %{public}s", PathControl::ShieldPath(path).c_str());
+        REQUEST_HILOGE("Sub Acl Failed, %{public}s", PathUtils::ShieldPath(path).c_str());
         return false;
     };
     return true;
@@ -127,6 +130,10 @@ bool AddOnePathToMap(const std::string &path, const bool isFile)
         }
         pathMap_.emplace(path, std::tuple(isFile, 1));
     } else {
+        // It is necessary to ensure that the permissions are set.
+        if (!AddAcl(path, isFile)) {
+            return false;
+        }
         auto &[iFile, count] = it->second;
         iFile = isFile;
         count++;
@@ -139,7 +146,7 @@ bool SubOnePathToMap(const std::string &path, const bool isFile)
     std::lock_guard<std::mutex> lockGuard(pathMutex_);
     auto it = pathMap_.find(path);
     if (it == pathMap_.end()) {
-        REQUEST_HILOGE("SubOnePathToMap no path, %{public}s", PathControl::ShieldPath(path).c_str());
+        REQUEST_HILOGE("SubOnePathToMap no path, %{public}s", PathUtils::ShieldPath(path).c_str());
         return false;
     }
     auto &[iFile, count] = it->second;
@@ -149,7 +156,7 @@ bool SubOnePathToMap(const std::string &path, const bool isFile)
     }
 
     if (iFile != isFile) {
-        REQUEST_HILOGE("SubOnePathToMap path changed, %{public}s", PathControl::ShieldPath(path).c_str());
+        REQUEST_HILOGE("SubOnePathToMap path changed, %{public}s", PathUtils::ShieldPath(path).c_str());
     }
     if (!SubAcl(path, isFile)) {
         return false;
@@ -167,7 +174,7 @@ bool SubPathsVec(const std::vector<std::pair<std::string, bool>> &paths)
     return true;
 }
 
-bool PathControl::AddPathsToMap(const std::string &path)
+bool PathUtils::AddPathsToMap(const std::string &path)
 {
     std::vector<std::pair<std::string, bool>> paths = SelectPath(SplitPath(path));
     if (paths.empty()) {
@@ -185,24 +192,13 @@ bool PathControl::AddPathsToMap(const std::string &path)
     return true;
 }
 
-bool PathControl::SubPathsToMap(const std::string &path)
+bool PathUtils::SubPathsToMap(const std::string &path)
 {
     std::vector<std::pair<std::string, bool>> paths = SelectPath(SplitPath(path));
     if (paths.empty()) {
         return false;
     }
     return SubPathsVec(paths);
-}
-
-void PathControl::InsureMapAcl()
-{
-    std::lock_guard<std::mutex> lockGuard(pathMutex_);
-    for (const auto &[key, value] : pathMap_) {
-        auto [isFile, count] = value;
-        if (count > 0) {
-            AddAcl(key, isFile);
-        }
-    }
 }
 
 // "abcde" -> "**cde"
@@ -217,7 +213,7 @@ std::string ShieldStr(const std::string &s)
 }
 
 // "/ab/abcde" -> "/*b/**cde"
-std::string PathControl::ShieldPath(const std::string &path)
+std::string PathUtils::ShieldPath(const std::string &path)
 {
     std::istringstream iss(path);
     std::string token;
