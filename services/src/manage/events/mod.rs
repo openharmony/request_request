@@ -214,6 +214,7 @@ pub(crate) enum ScheduleEvent {
     ClearTimeoutTasks,
     RestoreAllTasks,
     Unload,
+    Shutdown,
 }
 
 #[cfg(not(feature = "oh"))]
