@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "cxx.h"
+#include "log.h"
 #include "wrapper.rs.h"
 
 namespace OHOS::Request {
@@ -298,6 +299,15 @@ void Preload::Cancel(std::string const &url)
 void Preload::Remove(std::string const &url)
 {
     agent_->remove(rust::str(url));
+}
+
+void Preload::SetFileCachePath(const std::string &path)
+{
+    if (path.empty()) {
+        REQUEST_HILOGE("SetFileCachePath fail.");
+        return;
+    }
+    set_file_cache_path(rust::String(path));
 }
 
 bool Preload::Contains(const std::string &url)

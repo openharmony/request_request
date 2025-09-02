@@ -13,8 +13,41 @@
 
 import("//build/ohos.gni")
 import("//build/test.gni")
-rust_cxx("preload_native_rust_gen") {
+rust_cxx("cache_core_cxx_gen") {
   sources = [ "src/wrapper.rs" ]
+}
+
+ohos_static_library("cache_core_cxx") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  include_dirs = [
+    "include",
+    "../../../common/include",
+    "${target_gen_dir}/src",
+  ]
+  sources = [
+    "src/cxx/inotify_event_listener.cpp",
+    "src/cxx/native_ffi.cpp",
+  ]
+
+  sources += get_target_outputs(":cache_core_cxx_gen")
+
+  external_deps = [
+    "hilog:libhilog",
+    "ffrt:libffrt",
+    "rust_cxx:cxx_cppdeps",
+  ]
+  deps = [ ":cache_core_cxx_gen" ]
+
+  subsystem_name = "request"
+  part_name = "request"
 }
 
 ohos_rust_static_library("cache_core") {
@@ -31,8 +64,14 @@ ohos_rust_static_library("cache_core") {
   sources = [ "src/lib.rs" ]
 
   deps = [
+    ":cache_core_cxx",
     "../../../common/ffrt_rs:ffrt_rs",
     "../../../common/utils:request_utils",
+  ]
+
+  external_deps = [
+    "hilog:libhilog",
+    "rust_cxx:lib",
   ]
 
   subsystem_name = "request"
@@ -46,8 +85,14 @@ ohos_rust_unittest("rust_cache_core_ut_test") {
 
   sources = [ "src/lib.rs" ]
   deps = [
+    ":cache_core_cxx",
     "../../../common/ffrt_rs:ffrt_rs",
     "../../../common/utils:request_utils",
+  ]
+
+  external_deps = [
+    "hilog:libhilog",
+    "rust_cxx:lib",
   ]
 
   subsystem_name = "request"
