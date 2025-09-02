@@ -32,6 +32,8 @@
 #include "log.h"
 #include "napi_base_context.h"
 #include "napi_utils.h"
+#include "path_utils.h"
+#include "request_common.h"
 #include "request_event.h"
 #include "request_manager.h"
 #include "storage_acl.h"
@@ -53,9 +55,6 @@ thread_local napi_ref JsTask::getTaskCreateCtor = nullptr;
 std::mutex JsTask::taskMutex_;
 std::map<std::string, JsTask *> JsTask::taskMap_;
 bool JsTask::register_ = false;
-std::mutex JsTask::pathMutex_;
-std::map<std::string, int32_t> JsTask::pathMap_;
-std::map<std::string, int32_t> JsTask::fileMap_;
 std::mutex JsTask::taskContextMutex_;
 std::map<std::string, std::shared_ptr<JsTask::ContextInfo>> JsTask::taskContextMap_;
 
@@ -199,6 +198,12 @@ int32_t JsTask::CreateExec(const std::shared_ptr<ContextInfo> &context, int32_t 
     if (context->task->config_.mode == Mode::FOREGROUND) {
         RegisterForegroundResume();
     }
+    // Authorize the path
+    int32_t err = JsTask::AuthorizePath(context->task->config_);
+    if (err != E_OK) {
+        return err;
+    }
+
     int32_t ret = RequestManager::GetInstance()->Create(context->task->config_, seq, context->tid);
     if (ret != E_OK) {
         REQUEST_HILOGE("End create task in JsTask CreateExec, seq: %{public}d, failed: %{public}d", seq, ret);
@@ -206,6 +211,36 @@ int32_t JsTask::CreateExec(const std::shared_ptr<ContextInfo> &context, int32_t 
     }
     JsTask::AddRemoveListener(context);
     return ret;
+}
+
+int32_t JsTask::AuthorizePath(const Config &config)
+{
+    if (config.action == Action::DOWNLOAD) {
+        FileSpec fileSpec = config.files[0];
+        if (fileSpec.isUserFile) {
+            return E_OK;
+        }
+        if (!PathUtils::AddPathsToMap(fileSpec.uri)) {
+            REQUEST_HILOGE("Add Path acl failed, %{public}s", PathUtils::ShieldPath(fileSpec.uri).c_str());
+            return E_FILE_IO;
+        }
+    } else {
+        for (auto &fileSpec : config.files) {
+            if (fileSpec.isUserFile) {
+                continue;
+            }
+            if (!PathUtils::AddPathsToMap(fileSpec.uri)) {
+                return E_FILE_IO;
+            }
+        }
+
+        for (auto &path : config.bodyFileNames) {
+            if (!PathUtils::AddPathsToMap(path)) {
+                return E_FILE_IO;
+            }
+        }
+    }
+    return E_OK;
 }
 
 void JsTask::AddRemoveListener(const std::shared_ptr<ContextInfo> &context)
@@ -396,6 +431,11 @@ void JsTask::GetTaskExecution(std::shared_ptr<ContextInfo> context)
         if (config.action == Action::DOWNLOAD && config.files.size() != 0) {
             config.saveas = config.files[0].uri;
             REQUEST_HILOGD("GetTaskExecution saveas");
+        }
+        if (context->innerCode_ == E_OK) {
+            // Authorize the path
+            int32_t err = JsTask::AuthorizePath(config);
+            context->innerCode_ = err;
         }
     }
     if (context->config.version != Version::API10) {
@@ -984,10 +1024,10 @@ bool JsTask::SetDirsPermission(std::vector<std::string> &dirs)
             if (!fs::exists(newfilePath)) {
                 fs::copy(existfilePath, newfilePath);
             }
-            if (chmod(newfilePath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0) {
+            if (chmod(newfilePath.c_str(), PathUtils::READ_MODE) != 0) {
                 REQUEST_HILOGD("File add OTH access Failed.");
             }
-            if (!JsTask::SetPathPermission(newfilePath)) {
+            if (!PathUtils::AddPathsToMap(newfilePath)) {
                 REQUEST_HILOGE("Set path permission fail.");
                 return false;
             }
@@ -1000,112 +1040,6 @@ bool JsTask::SetDirsPermission(std::vector<std::string> &dirs)
     return true;
 }
 
-bool JsTask::SetPathPermission(const std::string &filepath)
-{
-    std::string baseDir;
-    if (!JsInitialize::CheckBelongAppBaseDir(filepath, baseDir)) {
-        return false;
-    }
-
-    AddPathMap(filepath, baseDir);
-    {
-        std::lock_guard<std::mutex> lockGuard(JsTask::pathMutex_);
-        for (auto it : pathMap_) {
-            if (it.second <= 0) {
-                continue;
-            }
-            if (AclSetAccess(it.first, SA_PERMISSION_X) != ACL_SUCC) {
-                REQUEST_HILOGE("AclSetAccess Parent Dir Failed");
-                SysEventLog::SendSysEventLog(FAULT_EVENT, ACL_FAULT_00, "AclSetAccess Parent Dir Failed");
-            }
-        }
-    }
-
-    if (AclSetAccess(filepath, SA_PERMISSION_RWX) != ACL_SUCC) {
-        REQUEST_HILOGE("AclSetAccess Child Dir Failed");
-        SysEventLog::SendSysEventLog(FAULT_EVENT, ACL_FAULT_00, "AclSetAccess Child Dir Failed");
-        return false;
-    }
-    return true;
-}
-
-void JsTask::AddPathMap(const std::string &filepath, const std::string &baseDir)
-{
-    {
-        std::lock_guard<std::mutex> lockGuard(JsTask::pathMutex_);
-        auto it = fileMap_.find(filepath);
-        if (it == fileMap_.end()) {
-            fileMap_[filepath] = 1;
-        } else {
-            fileMap_[filepath] += 1;
-        }
-    }
-
-    std::string childDir(filepath);
-    std::string parentDir;
-    while (childDir.length() > baseDir.length()) {
-        parentDir = childDir.substr(0, childDir.rfind("/"));
-        std::lock_guard<std::mutex> lockGuard(JsTask::pathMutex_);
-        auto it = pathMap_.find(parentDir);
-        if (it == pathMap_.end()) {
-            pathMap_[parentDir] = 1;
-        } else {
-            pathMap_[parentDir] += 1;
-        }
-        childDir = parentDir;
-    }
-}
-
-void JsTask::ResetDirAccess(const std::string &filepath)
-{
-    int ret = AclSetAccess(filepath, SA_PERMISSION_CLEAN);
-    if (ret != ACL_SUCC) {
-        REQUEST_HILOGD("AclSetAccess Reset Dir Failed");
-    }
-}
-
-void JsTask::RemovePathMap(const std::string &filepath)
-{
-    std::string baseDir;
-    if (!JsInitialize::CheckBelongAppBaseDir(filepath, baseDir)) {
-        return;
-    }
-
-    {
-        std::lock_guard<std::mutex> lockGuard(JsTask::pathMutex_);
-        auto it = fileMap_.find(filepath);
-        if (it != fileMap_.end()) {
-            if (fileMap_[filepath] <= 1) {
-                fileMap_.erase(filepath);
-                if (chmod(filepath.c_str(), S_IRUSR | S_IWUSR | S_IRGRP) != 0) {
-                    REQUEST_HILOGE("File remove OTH access Failed");
-                }
-            } else {
-                fileMap_[filepath] -= 1;
-            }
-        } else {
-            return;
-        }
-    }
-
-    std::string childDir(filepath);
-    std::string parentDir;
-    while (childDir.length() > baseDir.length()) {
-        parentDir = childDir.substr(0, childDir.rfind("/"));
-        std::lock_guard<std::mutex> lockGuard(JsTask::pathMutex_);
-        auto it = pathMap_.find(parentDir);
-        if (it != pathMap_.end()) {
-            if (pathMap_[parentDir] <= 1) {
-                pathMap_.erase(parentDir);
-                ResetDirAccess(parentDir);
-            } else {
-                pathMap_[parentDir] -= 1;
-            }
-        }
-        childDir = parentDir;
-    }
-}
-
 void JsTask::RemoveDirsPermission(const std::vector<std::string> &dirs)
 {
     for (const auto &folderPath : dirs) {
@@ -1113,7 +1047,7 @@ void JsTask::RemoveDirsPermission(const std::vector<std::string> &dirs)
         for (const auto &entry : fs::directory_iterator(folder)) {
             fs::path path = entry.path();
             std::string filePath = folder.string() + "/" + path.filename().string();
-            RemovePathMap(filePath);
+            PathUtils::SubPathsToMap(filePath);
         }
     }
 }
@@ -1136,14 +1070,14 @@ void JsTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls
                 continue;
             }
             err.clear();
-            RemovePathMap(filePath);
+            PathUtils::SubPathsToMap(filePath);
             NapiUtils::RemoveFile(filePath);
         }
     }
     if (isRmAcls) {
         // Reset Acl permission
         for (auto &file : context->task->config_.files) {
-            RemovePathMap(file.uri);
+            PathUtils::SubPathsToMap(file.uri);
         }
         context->task->isGetPermission = false;
     }

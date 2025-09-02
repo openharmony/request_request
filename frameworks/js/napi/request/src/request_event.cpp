@@ -18,6 +18,7 @@
 #include "constant.h"
 #include "js_initialize.h"
 #include "log.h"
+#include "path_utils.h"
 #include "request_manager.h"
 
 namespace OHOS::Request {
@@ -470,10 +471,10 @@ int32_t RequestEvent::StartExec(const std::shared_ptr<ExecContext> &context)
     FileSpec file = config.files[0];
     if (JsInitialize::FindDir(file.uri) && config.action == Action::DOWNLOAD && !task->isGetPermission) {
         REQUEST_HILOGD("Found the downloaded file");
-        if (chmod(file.uri.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) != 0) {
+        if (chmod(file.uri.c_str(), PathUtils::WRITE_MODE) != 0) {
             REQUEST_HILOGD("File add OTH access Failed.");
         }
-        if (!JsTask::SetPathPermission(file.uri)) {
+        if (!PathUtils::AddPathsToMap(file.uri)) {
             REQUEST_HILOGE("Set path permission fail.");
             return E_FILE_IO;
         }
