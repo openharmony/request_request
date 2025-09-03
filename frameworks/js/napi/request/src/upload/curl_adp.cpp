@@ -411,7 +411,7 @@ void CUrlAdp::SplitHttpMessage(const std::string &stmp, FileData *&fData)
         const int codeLen = 3;
         std::string::size_type position = stmp.find_first_of(" ");
         std::string scode(stmp, position + 1, codeLen);
-        fData->httpCode = std::stol(scode);
+        fData->httpCode = atol(scode.c_str());
     } else if (stmp == headEndFlag) {
         fData->headSendFlag = COLLECT_END_FLAG;
     }
