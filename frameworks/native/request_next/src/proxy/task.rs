@@ -60,7 +60,12 @@ impl RequestProxy {
         let mut reply = remote.send_request(interface::START, &mut data).unwrap();
         let code = reply.read::<i32>().unwrap(); // error code
         if code == 0 {
-            Ok(())
+            let code = reply.read::<i32>().unwrap(); // error code
+            if code == 0 {
+                Ok(())
+            } else {
+                Err(code)
+            }
         } else {
             Err(code)
         }
