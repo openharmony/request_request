@@ -29,6 +29,7 @@ struct NotifyContent;
 struct ProgressCircle;
 
 rust::string GetSystemResourceString(const rust::str);
+rust::string GetSystemLanguage();
 int PublishNotification(const NotifyContent &content);
 
 class NotificationSubscriber : public Notification::NotificationLocalLiveViewSubscriber {

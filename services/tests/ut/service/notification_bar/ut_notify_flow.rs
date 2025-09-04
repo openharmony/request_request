@@ -23,12 +23,14 @@ const TEST_TEXT: &str = "test_text";
 // @tc.precon: NA
 // @tc.step: 1. Create a GroupProgress instance
 //           2. Update 100 tasks with Running state
-//           3. Update each task's progress to 100 and set alternating states to Completed/Failed
+//           3. Update each task's progress to 100 and set alternating states to
+//              Completed/Failed
 //           4. Verify processed progress, successful and failed counts
-//           5. Update all tasks' progress to 150 and set all states to Completed
+//           5. Update all tasks' progress to 150 and set all states to
+//              Completed
 //           6. Verify final progress and state counts
-// @tc.expect: Group progress and state counts update correctly through all operations
-// @tc.type: FUNC
+// @tc.expect: Group progress and state counts update correctly through all
+// operations @tc.type: FUNC
 // @tc.require: issues#ICN16H
 #[test]
 fn ut_notify_flow_group() {
@@ -102,7 +104,8 @@ fn ut_notify_flow_task_progress() {
 // @tc.precon: NA
 // @tc.step: 1. Create a NotifyFlow instance with test channel
 //           2. Generate random task ID and UID
-//           3. Create EventualNotify with test parameters and is_successful=true
+//           3. Create EventualNotify with test parameters and
+//              is_successful=true
 //           4. Call publish_completed_notify
 //           5. Verify returned notification content matches expected default
 // @tc.expect: Task completion notification content is correctly generated
@@ -141,12 +144,16 @@ fn ut_notify_flow_task_eventual() {
 // @tc.step: 1. Create a NotifyFlow instance with test channel
 //           2. Generate random task ID and UID
 //           3. Update task's customized notification with test title and text
-//           4. Create EventualNotify with is_successful=false and call publish_completed_notify
-//           5. Verify notification contains customized content and task info still exists
-//           6. Update EventualNotify to is_successful=true and call publish_completed_notify
-//           7. Verify notification contains customized content and task info is cleared
-// @tc.expect: Customized content is included in notifications and task info is cleared only when successful
-// @tc.type: FUNC
+//           4. Create EventualNotify with is_successful=false and call
+//              publish_completed_notify
+//           5. Verify notification contains customized content and task info
+//              still exists
+//           6. Update EventualNotify to is_successful=true and call
+//              publish_completed_notify
+//           7. Verify notification contains customized content and task info is
+//              cleared
+// @tc.expect: Customized content is included in notifications and task info is
+// cleared only when successful @tc.type: FUNC
 // @tc.require: issues#ICN16H
 #[test]
 fn ut_customized_task_eventual() {

@@ -70,6 +70,11 @@ rust::string GetSystemResourceString(const rust::str name)
     return rust::string(outValue);
 }
 
+rust::string GetSystemLanguage()
+{
+    return rust::string(I18n::LocaleConfig::GetSystemLanguage().c_str());
+}
+
 std::shared_ptr<Media::PixelMap> CreatePixelMap()
 {
     static std::shared_ptr<Media::PixelMap> pixelMap = nullptr;

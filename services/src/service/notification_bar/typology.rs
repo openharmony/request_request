@@ -25,6 +25,7 @@ const DOWNLOAD_COMPLETE: &str = "request_agent_download_complete\0";
 use super::database::CustomizedNotification;
 use super::ffi::{GetSystemResourceString, NotifyContent, ProgressCircle};
 use super::notify_flow::{GroupProgress, ProgressNotify};
+use super::progress_size;
 use crate::config::Action;
 
 fn progress_percentage(current: u64, total: u64) -> String {
@@ -39,15 +40,7 @@ fn progress_percentage(current: u64, total: u64) -> String {
 }
 
 fn progress_size(current: u64) -> String {
-    if current < 1024 {
-        format!("{}B", current)
-    } else if current < 1024 * 1024 {
-        format!("{:.2}KB", current as f64 / 1024.0)
-    } else if current < 1024 * 1024 * 1024 {
-        format!("{:.2}MB", current as f64 / 1024.0 / 1024.0)
-    } else {
-        format!("{:.2}GB", current as f64 / 1024.0 / 1024.0 / 1024.0)
-    }
+    progress_size::progress_size(current)
 }
 
 impl NotifyContent {
@@ -154,11 +147,13 @@ impl NotifyContent {
         successful_count: i32,
         failed_count: i32,
     ) -> Self {
+        let text_download_complete = GetSystemResourceString(DOWNLOAD_COMPLETE);
+        let text_download = text_download_complete.replace("%s", &progress_size(current_size).to_string());
         let title = customized
             .as_mut()
             .and_then(|c| c.title.take())
             .unwrap_or_else(|| match action {
-                Action::Download => format!("{} {}", GetSystemResourceString(DOWNLOAD_COMPLETE), progress_size(current_size)),
+                Action::Download => text_download,
                 Action::Upload => format!("上传完成 {}", progress_size(current_size)),
                 _ => unreachable!(),
             });
@@ -174,9 +169,7 @@ impl NotifyContent {
                 .replace("%2$d", &failed_count.to_string())
         };
 
-        let text = customized
-            .and_then(|c| c.text)
-            .unwrap_or(text_count);
+        let text = customized.and_then(|c| c.text).unwrap_or(text_count);
 
         Self {
             title,
@@ -223,9 +216,7 @@ impl NotifyContent {
                 .replace("%2$d", &failed.to_string())
         };
 
-        let text = customized
-            .and_then(|c| c.text)
-            .unwrap_or(text_count);
+        let text = customized.and_then(|c| c.text).unwrap_or(text_count);
 
         let progress_circle =
             ProgressCircle::open((successful + failed) as u64, group_progress.total() as u64);
