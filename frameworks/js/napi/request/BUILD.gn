@@ -41,6 +41,7 @@ ohos_shared_library("request") {
     "include",
     "../../native/request/include",
     "../../../../common/include",
+    "../../../../common/utf8_utils/include",
     "../../../../common/sys_event/include",
   ]
 
@@ -68,10 +69,10 @@ ohos_shared_library("request") {
     "src/upload/obtain_file.cpp",
     "src/upload/upload_task.cpp",
     "src/upload/upload_task_napiV5.cpp",
-    "src/utf8_utils.cpp",
   ]
 
   deps = [
+    "../../../../common/utf8_utils:request_utf8_utils",
     "../../../../common/sys_event:request_sysevent",
     "../../../native/request:request_native",
   ]
@@ -108,6 +109,7 @@ ohos_static_library("request_static") {
     "include",
     "../../native/request/include",
     "../../../../common/include",
+    "../../../../common/utf8_utils/include",
     "../../../../common/sys_event/include",
   ]
 
@@ -134,10 +136,10 @@ ohos_static_library("request_static") {
     "src/upload/obtain_file.cpp",
     "src/upload/upload_task.cpp",
     "src/upload/upload_task_napiV5.cpp",
-    "src/utf8_utils.cpp",
   ]
 
   deps = [
+    "../../../../common/utf8_utils:request_utf8_utils",
     "../../../../common/sys_event:request_sysevent",
     "../../../native/request:request_native",
   ]
