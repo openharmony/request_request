@@ -450,7 +450,11 @@ impl CacheManager {
 
             let mut cache = RamCache::new(task_id.clone(), self, Some(size as usize));
             io::copy(&mut file, &mut cache).map_err(|e| {
-                error!("copy file to cache failed {:?}", e);
+                error!(
+                    "task {:?} copy file to cache failed {:?}",
+                    task_id.brief(),
+                    e
+                );
                 e
             })?;
 

@@ -141,6 +141,12 @@ impl CacheDownloadService {
                 .collect::<Vec<(&str, &str)>>();
             request.headers(headers);
         }
+        if !options.ssl_type.is_empty() {
+            request.ssl_type(options.ssl_type);
+        }
+        if !options.ca_path.is_empty() {
+            request.ca_path(options.ca_path);
+        }
         match self.preload(request, Box::new(callback), update, Downloader::Netstack) {
             Some(handle) => ffi::ShareTaskHandle(Box::new(handle)),
             None => SharedPtr::null(),
@@ -174,6 +180,8 @@ fn set_file_cache_path(path: String) {
 pub(crate) mod ffi {
     struct FfiPredownloadOptions<'a> {
         headers: Vec<&'a str>,
+        ssl_type: &'a str,
+        ca_path: &'a str,
     }
 
     extern "Rust" {

@@ -288,6 +288,9 @@ pub(crate) mod ffi {
         #[namespace = "OHOS::NetStack::HttpClient"]
         type HttpClientRequest;
 
+        fn SetRequestSslType(request: Pin<&mut HttpClientRequest>, ssl_type: &CxxString);
+        fn SetCaPath(self: Pin<&mut HttpClientRequest>, path: &CxxString);
+
         #[namespace = "OHOS::NetStack::HttpClient"]
         type HttpErrorCode;
 

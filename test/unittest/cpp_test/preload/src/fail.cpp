@@ -23,6 +23,7 @@
 #include <thread>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "common.h"
@@ -52,6 +53,8 @@ void PreloadFail::SetUp(void)
 
 static std::string TEST_URL_0 = "https://127.3.1.123";
 static std::string TEST_URL_1 = "https://www.gitee.com/fqwert/aaaaa";
+static std::string TEST_URL_2 = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/"
+                                "test.txt";
 constexpr size_t SLEEP_INTERVAL = 100;
 
 void DownloadFailTest(std::string url)
@@ -139,5 +142,40 @@ HWTEST_F(PreloadFail, OnFailAddCallback, TestSize.Level1)
     EXPECT_TRUE(flagP_1->load());
     EXPECT_FALSE(flagS->load());
     EXPECT_FALSE(flagS_1->load());
+    Preload::GetInstance()->Remove(url);
+}
+
+/**
+ * @tc.name: OnFailTlcpNoCaPath
+ * @tc.desc: Test Test TCLP without setting ca_path.
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create first test callback and set TLCP
+ *           4. Wait for downloads to fail
+ *           5. Verify fail callbacks triggered correctly
+ * @tc.expect: Handle fail with FAIL state and OnFail callback triggered
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadFail, OnFailTlcpNoCaPath, TestSize.Level1)
+{
+    auto url = TEST_URL_2;
+    Preload::GetInstance()->Remove(url);
+
+    std::unique_ptr<PreloadOptions> options = std::make_unique<PreloadOptions>();
+    options->sslType = SslType::TLCP;
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+
+    auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback), std::move(options));
+    while (!handle->IsFinish()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+    }
+
+    EXPECT_TRUE(flagF->load());
+    EXPECT_FALSE(flagC->load());
+    EXPECT_FALSE(flagP->load());
+    EXPECT_FALSE(flagS->load());
     Preload::GetInstance()->Remove(url);
 }

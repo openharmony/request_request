@@ -24,6 +24,8 @@
 #include "request_preload.h"
 namespace OHOS::Request {
 napi_valuetype GetValueType(napi_env env, napi_value value);
+napi_value GetNamedProperty(napi_env env, napi_value object, const std::string &propertyName);
+std::string GetStringFromUncheckedValue(napi_env env, napi_value value);
 
 size_t GetStringLength(napi_env env, napi_value value);
 std::string GetValueString(napi_env env, napi_value value, size_t length);
@@ -35,5 +37,8 @@ inline napi_status setPerformanceField(napi_env env, napi_value performance, dou
 bool buildInfoPerformance(napi_env env, const CppDownloadInfo &result, napi_value &jsInfo);
 bool buildInfoNetwork(napi_env env, const CppDownloadInfo &result, napi_value &jsInfo);
 bool buildInfoResource(napi_env env, const CppDownloadInfo &result, napi_value &jsInfo);
+void SetOptionsHeaders(napi_env env, napi_value arg, std::unique_ptr<PreloadOptions> &options);
+void SetStringPropertyUtf8(napi_env env, napi_value object, const std::string &name, const std::string &value);
+napi_value Convert2JSValue(napi_env env, const std::string &str);
 } // namespace OHOS::Request
 #endif
