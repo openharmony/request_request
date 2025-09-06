@@ -18,6 +18,7 @@ use ani_rs::objects::{AniObject, AniRef};
 use ani_rs::AniEnv;
 use request_client::client::error::CreateTaskError;
 use request_client::RequestClient;
+use request_client::check::file::DownloadPathError;
 use request_core::config::Version;
 use request_core::filter::SearchFilter;
 use request_utils::context::Context;
@@ -58,10 +59,13 @@ pub fn create(env: &AniEnv, context: AniRef, config: Config) -> Result<Task, Bus
         Err(e) => {
             error!("Create task failed: {:?}", e);
             match e {
-                CreateTaskError::DownloadPath(_) => Err(BusinessError::new_static(
-                    13400001,
-                    "Invalid file or file system error.",
-                )),
+                CreateTaskError::DownloadPath(err) => {
+                    let (code, message) = match err {
+                        DownloadPathError::InvalidPath => (401, "Invalid Path"),
+                        _ => (13400001, "Invalid file or file system error.")
+                    };
+                    Err(BusinessError::new_static(code, message))
+                },
                 CreateTaskError::Code(code) => {
                     Err(BusinessError::new_static(code, "Create Task Failed"))
                 }
