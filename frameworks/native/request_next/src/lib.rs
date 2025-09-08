@@ -12,7 +12,7 @@
 // limitations under the License.
 
 #![feature(lazy_cell)]
-mod check;
+pub mod check;
 pub mod client;
 mod proxy;
 pub use client::RequestClient;
