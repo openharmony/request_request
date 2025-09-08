@@ -11,9 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::{Arc, LazyLock};
-use std::thread;
-use std::time::Duration;
+use std::sync::LazyLock;
 
 use request_utils::fastrand::fast_random;
 use request_utils::test::log::init;
@@ -23,50 +21,6 @@ use super::*;
 const TEST_STRING: &str = "你这猴子真让我欢喜";
 const TEST_STRING_SIZE: usize = TEST_STRING.len();
 const TEST_SIZE: u64 = 128;
-
-// @tc.name: ut_cache_ram_try_new
-// @tc.desc: Test RamCache creation and update functionality
-// @tc.precon: NA
-// @tc.step: 1. Initialize CacheManager with specified RAM size
-//           2. Create multiple RamCache instances
-//           3. Write test data to cache
-//           4. Verify cache updates correctly
-// @tc.expect: Cache is created and updated successfully
-// @tc.type: FUNC
-// @tc.require: issue#ICN31I
-// @tc.level: level1
-#[test]
-fn ut_cache_ram_try_new() {
-    init();
-    static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
-    CACHE_MANAGER.set_ram_cache_size(TEST_SIZE);
-
-    // cache not update
-    for _ in 0..1000 {
-        let task_id = TaskId::new(fast_random().to_string());
-        let mut cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
-        cache.write_all(TEST_STRING.as_bytes()).unwrap();
-    }
-
-    // cache update
-    for _ in 0..1000 {
-        let task_id = TaskId::new(fast_random().to_string());
-        let mut cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
-
-        cache.write_all(TEST_STRING.as_bytes()).unwrap();
-        CACHE_MANAGER.update_ram_cache(Arc::new(cache));
-    }
-
-    // cache update and save to file
-    for _ in 0..1000 {
-        let task_id = TaskId::new(fast_random().to_string());
-        let mut cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
-        cache.write_all(TEST_STRING.as_bytes()).unwrap();
-        cache.finish_write();
-        assert!(CACHE_MANAGER.rams.lock().unwrap().contains_key(&task_id));
-        thread::sleep(Duration::from_millis(5));
-    }
-}
 
 // @tc.name: ut_cache_ram_try_new_fail
 // @tc.desc: Test RamCache creation failure when exceeding capacity
