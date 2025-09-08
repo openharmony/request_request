@@ -55,7 +55,7 @@ impl DownloadTask {
         downloader: Downloader,
         seq: usize,
     ) -> Option<DownloadTask> {
-        info!("new preload task {} seq {}", task_id.brief(), seq);
+        info!("new task {} seq {}", task_id.brief(), seq);
         let mut handle = None;
         match downloader {
             Downloader::Netstack => {
