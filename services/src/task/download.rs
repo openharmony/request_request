@@ -128,7 +128,7 @@ pub(crate) async fn download_inner(
 
     task.prepare_download().await?;
 
-    info!("download task {} running", task.task_id());
+    info!("{} downloading", task.task_id());
 
     let request = RequestTask::build_download_request(task.clone()).await?;
     let start_time = get_current_duration().as_secs() as u64;
@@ -142,7 +142,7 @@ pub(crate) async fn download_inner(
             #[cfg(feature = "oh")]
             task.notify_response(response);
             info!(
-                "task {} get response {}",
+                "{} response {}",
                 task.conf.common_data.task_id, status_code
             );
             if status_code.is_server_error()
@@ -314,7 +314,7 @@ pub(crate) async fn download_inner(
         )];
     }
 
-    info!("task {} download ok", task.task_id());
+    info!("{} downloaded", task.task_id());
     Ok(())
 }
 
