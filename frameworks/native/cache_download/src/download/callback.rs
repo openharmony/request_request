@@ -86,7 +86,7 @@ impl PrimeCallback {
         R: CommonResponse,
     {
         let code = response.code();
-        info!("{} status code {}", self.task_id.brief(), code);
+        info!("{} status {}", self.task_id.brief(), code);
 
         let cache = self.cache_handle.cache_finish();
         self.state.store(SUCCESS, Ordering::Release);
