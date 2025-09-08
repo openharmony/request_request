@@ -17,7 +17,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 use ani_rs::objects::{AniFnObject, GlobalRefCallback};
 use ani_rs::AniEnv;
 use request_client::RequestClient;
-use request_core::info::Progress;
+use request_core::info::{Progress, Response};
 
 use crate::api10::bridge::{self, Task};
 
@@ -45,6 +45,7 @@ pub fn on_event(
                     on_resume: Mutex::new(vec![]),
                     on_remove: Mutex::new(vec![]),
                     on_fail: Mutex::new(vec![]),
+                    on_response: Mutex::new(vec![]),
                 })
             }
         }
@@ -60,6 +61,7 @@ pub fn on_event(
                     on_resume: Mutex::new(vec![]),
                     on_remove: Mutex::new(vec![]),
                     on_fail: Mutex::new(vec![]),
+                    on_response: Mutex::new(vec![]),
                 })
             }
         }
@@ -75,6 +77,7 @@ pub fn on_event(
                     on_resume: Mutex::new(vec![]),
                     on_remove: Mutex::new(vec![]),
                     on_fail: Mutex::new(vec![callback]),
+                    on_response: Mutex::new(vec![]),
                 })
             }
         }
@@ -90,6 +93,7 @@ pub fn on_event(
                     on_resume: Mutex::new(vec![]),
                     on_remove: Mutex::new(vec![callback]),
                     on_fail: Mutex::new(vec![]),
+                    on_response: Mutex::new(vec![]),
                 })
             }
         }
@@ -105,6 +109,7 @@ pub fn on_event(
                     on_resume: Mutex::new(vec![]),
                     on_remove: Mutex::new(vec![]),
                     on_fail: Mutex::new(vec![]),
+                    on_response: Mutex::new(vec![]),
                 })
             }
         }
@@ -120,6 +125,42 @@ pub fn on_event(
                     on_resume: Mutex::new(vec![callback]),
                     on_remove: Mutex::new(vec![]),
                     on_fail: Mutex::new(vec![]),
+                    on_response: Mutex::new(vec![]),
+                })
+            }
+        }
+        _ => unimplemented!(),
+    };
+    RequestClient::get_instance().register_callback(task_id, coll.clone());
+    callback_mgr.tasks.lock().unwrap().insert(task_id, coll);
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn on_response_event(
+    env: &AniEnv,
+    this: Task,
+    event: String,
+    callback: AniFnObject,
+) -> Result<(), ani_rs::business_error::BusinessError> {
+    let task_id = this.tid.parse().unwrap();
+    info!("on_event called with event: {}", event);
+    let callback_mgr = CallbackManager::get_instance();
+    let callback = callback.into_global_callback(env).unwrap();
+    let coll = match event.as_str() {
+        "response" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_response.lock().unwrap().push(callback);
+                return Ok(());
+            } else {
+                Arc::new(CallbackColl {
+                    on_progress: Mutex::new(vec![]),
+                    on_complete: Mutex::new(vec![]),
+                    on_pause: Mutex::new(vec![]),
+                    on_resume: Mutex::new(vec![]),
+                    on_remove: Mutex::new(vec![]),
+                    on_fail: Mutex::new(vec![]),
+                    on_response: Mutex::new(vec![callback]),
                 })
             }
         }
@@ -137,6 +178,7 @@ pub struct CallbackColl {
     on_resume: Mutex<Vec<GlobalRefCallback<(bridge::Progress,)>>>,
     on_remove: Mutex<Vec<GlobalRefCallback<(bridge::Progress,)>>>,
     on_fail: Mutex<Vec<GlobalRefCallback<(bridge::Progress,)>>>,
+    on_response: Mutex<Vec<GlobalRefCallback<(bridge::HttpResponse,)>>>,
 }
 
 impl request_client::Callback for CallbackColl {
@@ -175,7 +217,14 @@ impl request_client::Callback for CallbackColl {
         }
     }
 
-    fn on_failed(&self, progress: &Progress, _error_code: i32)  {
+    fn on_response(&self, response: &Response) {
+        let callbacks = self.on_response.lock().unwrap();
+        for callback in callbacks.iter() {
+            callback.execute((response.into(),));
+        }
+    }
+
+    fn on_failed(&self, progress: &Progress, _error_code: i32) {
         let callbacks = self.on_fail.lock().unwrap();
         for callback in callbacks.iter() {
             callback.execute((progress.into(),));

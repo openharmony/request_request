@@ -379,12 +379,23 @@ impl From<request_core::info::TaskInfo> for TaskInfo {
     }
 }
 
-#[ani_rs::ani]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/HttpResponseInner")]
 pub struct HttpResponse {
     version: String,
     status_code: i32,
     reason: String,
     headers: HashMap<String, Vec<String>>,
+}
+
+impl From<&request_core::info::Response> for HttpResponse {
+    fn from(value: &request_core::info::Response) -> Self {
+        HttpResponse {
+            version: value.version.clone(),
+            status_code: value.status_code as i32,
+            reason: value.reason.clone(),
+            headers: value.headers.clone(),
+        }
+    }
 }
 
 #[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInner")]
