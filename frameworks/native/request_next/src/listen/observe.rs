@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
 
-use request_core::info::{Progress, SubscribeType};
+use request_core::info::{Progress, SubscribeType, Response};
 use ylong_runtime::task::JoinHandle;
 
 use crate::listen::uds::{Message, UdsListener};
@@ -32,7 +32,7 @@ pub trait Callback {
     fn on_pause(&self, progress: &Progress) {}
     fn on_resume(&self, progress: &Progress) {}
     fn on_remove(&self, progress: &Progress) {}
-    fn on_response(&self) {}
+    fn on_response(&self, response: &Response) {}
     fn on_header_receive(&self) {}
 }
 
@@ -52,7 +52,10 @@ impl Observer {
                 match listener.recv().await {
                     Ok(message) => match message {
                         Message::HttpResponse(response) => {
-                            let task_id = response.task_id;
+                            let task_id = response.task_id.parse().unwrap();
+                            if let Some(callback) = callbacks.lock().unwrap().get(&task_id) {
+                                callback.on_response(&response);
+                            }
                         }
                         Message::NotifyData(data) => {
                             let task_id = data.task_id as i64;

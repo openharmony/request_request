@@ -624,19 +624,24 @@ export default namespace request {
     }
 
     interface HttpResponse {
-      readonly version: string,
-      readonly statusCode: int,
-      readonly reason: string,
-      readonly headers: Map<string, Array<string>>,
+      readonly version: string;
+      readonly statusCode: int;
+      readonly reason: string;
+      readonly headers: Map<string, Array<string>>;
+    }
+
+    class HttpResponseInner implements HttpResponse {
+      readonly version: string;
+      readonly statusCode: int;
+      readonly reason: string;
+      readonly headers: Map<string, Array<string>>;
     }
 
     interface Task {
       readonly tid: string;
       config: Config;
 
-      on(event: string, callback: (progress: Progress) => void): void;
-
-      // on(event: 'response', callback: Callback<HttpResponse>): void;
+      on(event: string, callback: Callback<Any>): void;
 
       // off(event: 'progress', callback?: (progress: Progress) => void): void;
       // off(event: 'completed', callback?: (progress: Progress) => void): void;
@@ -670,8 +675,14 @@ export default namespace request {
 
     native onEvent(event: string, callback: (progress: Progress) => void): void;
 
-    on(event: string , callback: (progress: Progress) => void): void {
-      this.onEvent(event, callback);
+    native onResponseEvent(event: string, callback: Callback<HttpResponse>): void;
+
+    on(event: string, callback: Callback<Any>): void {
+      if (event == "response") {
+        this.onResponseEvent(event, callback as Callback<HttpResponse>);
+      } else {
+        this.onEvent(event, callback as Callback<Progress>);
+      }
     }
 
     start(callback: AsyncCallback<void>): void {
