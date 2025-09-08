@@ -50,7 +50,7 @@ impl RequestServiceStub {
 
         for i in 0..len {
             let task_id: String = data.read()?;
-            info!("Service start tid {}", task_id);
+            info!("Service start {}", task_id);
             let Ok(task_id) = task_id.parse::<u32>() else {
                 error!("Service start, failed: tid not valid: {}", task_id);
                 sys_event!(

@@ -84,12 +84,7 @@ impl Drop for FileCache {
 impl FileCache {
     pub(crate) fn try_restore(task_id: TaskId, handle: &'static CacheManager) -> Option<Self> {
         let metadata = fs::metadata(Self::path(&task_id)).ok()?;
-        if !CacheManager::apply_cache(
-            &handle.file_handle,
-            &handle.files,
-            FileCache::task_id,
-            metadata.len() as usize,
-        ) {
+        if !CacheManager::apply_cache(&handle.file_handle, &handle.files, metadata.len() as usize) {
             info!("apply file cache for task {} failed", task_id.brief());
             let path = FileCache::path(&task_id);
             let _ = fs::remove_file(path);
@@ -111,8 +106,7 @@ impl FileCache {
             task_id.brief()
         );
 
-        if !CacheManager::apply_cache(&handle.file_handle, &handle.files, FileCache::task_id, size)
-        {
+        if !CacheManager::apply_cache(&handle.file_handle, &handle.files, size) {
             info!("apply file cache for task {} failed", task_id.brief());
             return None;
         }
@@ -145,10 +139,6 @@ impl FileCache {
         OpenOptions::new()
             .read(true)
             .open(Self::path(&self.task_id))
-    }
-
-    pub(crate) fn task_id(&self) -> &TaskId {
-        &self.task_id
     }
 
     fn path(task_id: &TaskId) -> PathBuf {
@@ -271,7 +261,15 @@ impl CacheManager {
                 .unwrap()
                 .get(task_id)
                 .ok_or(io::Error::new(io::ErrorKind::NotFound, "not found"))?
-                .open()?;
+                .open()
+                .map_err(|e| {
+                    error!(
+                        "task {:?} update ram open file fail {:?}",
+                        task_id.brief(),
+                        e
+                    );
+                    e
+                })?;
 
             let size = file.metadata()?.size();
 
@@ -293,17 +291,10 @@ impl CacheManager {
         if ret.is_some() {
             return ret;
         }
-        let res = match res {
-            Err(e) => {
-                info!("{} ram update from file failed {}", task_id.brief(), e);
-                None
-            }
-            Ok(weak) => {
-                *retry = true;
-                Weak::upgrade(weak)
-            }
-        };
-        res
+        res.as_ref().ok().and_then(|weak| {
+            *retry = true;
+            Weak::upgrade(weak)
+        })
     }
 }
 

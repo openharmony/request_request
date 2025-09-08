@@ -46,24 +46,11 @@ impl RamCache {
     pub(crate) fn new(task_id: TaskId, handle: &'static CacheManager, size: Option<usize>) -> Self {
         let applied = match size {
             Some(size) => {
-                if CacheManager::apply_cache(
-                    &handle.ram_handle,
-                    &handle.rams,
-                    |a| RamCache::task_id(a),
-                    size,
-                ) {
-                    info!(
-                        "apply ram cache {} for task {} success",
-                        size,
-                        task_id.brief()
-                    );
+                if CacheManager::apply_cache(&handle.ram_handle, &handle.rams, size) {
+                    info!("apply ram {} for task {}", size, task_id.brief());
                     size as u64
                 } else {
-                    error!(
-                        "apply ram cache {} for task {} failed",
-                        size,
-                        task_id.brief()
-                    );
+                    error!("apply ram {} for task {} failed", size, task_id.brief());
                     0
                 }
             }
@@ -95,12 +82,7 @@ impl RamCache {
             Ordering::Greater => {
                 let diff = self.data.len() - self.applied as usize;
                 if self.data.len() > MAX_CACHE_SIZE as usize
-                    || !CacheManager::apply_cache(
-                        &self.handle.ram_handle,
-                        &self.handle.rams,
-                        |a| RamCache::task_id(a),
-                        diff,
-                    )
+                    || !CacheManager::apply_cache(&self.handle.ram_handle, &self.handle.rams, diff)
                 {
                     info!(
                         "apply extra ram {} cache for task {} failed",
