@@ -139,6 +139,12 @@ pub(crate) fn update_policy(any_tasks: bool) -> i32 {
     ffi::UpdatePolicy(any_tasks)
 }
 
+#[cfg(feature = "oh")]
+pub(crate) fn is_called_by_hap() -> bool {
+    let token_id = ipc::Skeleton::calling_token_id();
+    ffi::IsCalledByHAP(token_id)
+}
+
 #[allow(unused)]
 #[cxx::bridge(namespace = "OHOS::Request")]
 mod ffi {
@@ -152,6 +158,7 @@ mod ffi {
         fn IsSystemAPI(token_id: u64) -> bool;
         fn CheckPermission(token_id: u64, permission: &str) -> bool;
         fn UpdatePolicy(any_tasks: bool) -> i32;
+        fn IsCalledByHAP(token_id: u32) -> bool;
     }
 }
 

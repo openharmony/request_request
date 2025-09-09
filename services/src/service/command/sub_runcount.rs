@@ -17,6 +17,7 @@ use ipc::{IpcResult, IpcStatusCode};
 
 use crate::error::ErrorCode;
 use crate::service::RequestServiceStub;
+use crate::utils::is_called_by_hap;
 
 impl RequestServiceStub {
     pub(crate) fn subscribe_run_count(
@@ -24,6 +25,16 @@ impl RequestServiceStub {
         data: &mut MsgParcel,
         reply: &mut MsgParcel,
     ) -> IpcResult<()> {
+        if is_called_by_hap() {
+            error!("Service run_count subscribe called by hap");
+            sys_event!(
+                ExecError,
+                DfxCode::INVALID_IPC_MESSAGE_A32,
+                "Service run_count subscribe called by hap"
+            );
+            return Err(IpcStatusCode::Failed);
+        }
+
         let pid = ipc::Skeleton::calling_pid();
         info!("Service run_count subscribe pid {}", pid);
 
