@@ -26,6 +26,5 @@ using namespace OHOS::AbilityRuntime;
 rust::string GetCacheDir();
 
 rust::string SHA256(rust::str input);
-
 } // namespace OHOS::Request
 #endif

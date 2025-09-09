@@ -25,6 +25,7 @@ ohos_fuzztest("PredownloadFuzzTest") {
   include_dirs = [
     "../../../frameworks/native/cache_download/include",
     "../../../common/include",
+    "../../../common/utf8_utils/include",
     "../../../interfaces/inner_kits/cache_download/include",
     "${target_gen_dir}/../../../frameworks/native/cache_download/src",
   ]
@@ -46,6 +47,7 @@ ohos_fuzztest("PredownloadFuzzTest") {
   deps = [
     "../../../frameworks/native/cache_download:preload_native_rust",
     "../../../frameworks/native/cache_download:preload_native_rust_gen",
+    "../../../common/utf8_utils:request_utf8_utils",
   ]
 
   external_deps = [

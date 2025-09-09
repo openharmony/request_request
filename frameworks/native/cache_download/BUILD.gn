@@ -52,6 +52,7 @@ config("preload_native_config") {
   include_dirs = [
     "include",
     "../../../common/include",
+    "../../../common/utf8_utils/include",
     "${target_gen_dir}/src",
     "../../../interfaces/inner_kits/cache_download/include",
   ]
@@ -75,6 +76,7 @@ ohos_shared_library("preload_native") {
   deps = [
     ":preload_native_rust",
     ":preload_native_rust_gen",
+    "../../../common/utf8_utils:request_utf8_utils",
   ]
 
   public_configs = [ ":preload_native_config" ]
@@ -110,7 +112,10 @@ ohos_static_library("preload_native_static") {
     "src/cxx/request_preload.cpp",
   ]
   sources += get_target_outputs(":preload_native_rust_gen")
-  deps = [ ":preload_native_rust_gen" ]
+  deps = [
+    ":preload_native_rust_gen",
+    "../../../common/utf8_utils:request_utf8_utils",
+  ]
 
   external_deps = [
     "ability_runtime:app_context",

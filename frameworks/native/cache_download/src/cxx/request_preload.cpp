@@ -21,6 +21,7 @@
 #include "cxx.h"
 #include "log.h"
 #include "wrapper.rs.h"
+#include "utf8_utils.h"
 
 namespace OHOS::Request {
 Data::Data(rust::Box<RustData> &&data)
@@ -40,11 +41,13 @@ Data::Data(Data &&other) noexcept : data_(other.data_)
 
 Data &Data::operator=(Data &&other) &noexcept
 {
-    if (data_) {
-        rust::Box<RustData>::from_raw(data_);
+    if (this != &other) {
+        if (data_) {
+            rust::Box<RustData>::from_raw(data_);
+        }
+        data_ = other.data_;
+        other.data_ = nullptr;
     }
-    data_ = other.data_;
-    other.data_ = nullptr;
     return *this;
 }
 
@@ -189,11 +192,13 @@ PreloadError::PreloadError(PreloadError &&other) noexcept : error_(other.error_)
 
 PreloadError &PreloadError::operator=(PreloadError &&other) &noexcept
 {
-    if (error_) {
-        rust::Box<CacheDownloadError>::from_raw(error_);
+    if (this != &other) {
+        if (error_) {
+            rust::Box<CacheDownloadError>::from_raw(error_);
+        }
+        error_ = other.error_;
+        other.error_ = nullptr;
     }
-    error_ = other.error_;
-    other.error_ = nullptr;
     return *this;
 }
 
@@ -229,11 +234,13 @@ PreloadHandle::PreloadHandle(PreloadHandle &&other) noexcept : handle_(other.han
 
 PreloadHandle &PreloadHandle::operator=(PreloadHandle &&other) &noexcept
 {
-    if (handle_) {
-        rust::Box<TaskHandle>::from_raw(handle_);
+    if (this != &other) {
+        if (handle_) {
+            rust::Box<TaskHandle>::from_raw(handle_);
+        }
+        handle_ = other.handle_;
+        other.handle_ = nullptr;
     }
-    handle_ = other.handle_;
-    other.handle_ = nullptr;
     return *this;
 }
 
@@ -257,13 +264,20 @@ std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique
         .headers = rust::Vec<rust::str>(),
     };
     if (options != nullptr) {
-        for (const auto &[key, value] : options->headers) {
+        for (const auto& [key, value] : options->headers) {
+            if (!Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(key.begin(), key.end())) ||
+                !Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(value.begin(), value.end()))) {
+                return nullptr;
+            }
             ffiOptions.headers.push_back(rust::str(key));
             ffiOptions.headers.push_back(rust::str(value));
         }
 
         ffiOptions.ssl_type = rust::str(SslTypeName.at(options->sslType));
         ffiOptions.ca_path = rust::str(options->caPath);
+    }
+    if (!Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(url.begin(), url.end()))) {
+        return nullptr;
     }
     auto taskHandle = agent_->ffi_preload(
         rust::str(url), std::move(callback_wrapper), std::move(progress_callback_wrapper), update, ffiOptions);
@@ -272,6 +286,9 @@ std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique
 
 std::optional<Data> Preload::fetch(std::string const &url)
 {
+    if (!Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(url.begin(), url.end()))) {
+        return std::nullopt;
+    }
     std::unique_ptr<Data> data = agent_->ffi_fetch(rust::str(url));
     if (data == nullptr) {
         return std::nullopt;
@@ -281,6 +298,9 @@ std::optional<Data> Preload::fetch(std::string const &url)
 
 std::optional<CppDownloadInfo> Preload::GetDownloadInfo(std::string const &url)
 {
+    if (!Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(url.begin(), url.end()))) {
+        return std::nullopt;
+    }
     std::unique_ptr<CppDownloadInfo> info = agent_->ffi_get_download_info(rust::str(url));
     if (info == nullptr) {
         return std::nullopt;
@@ -304,11 +324,17 @@ void Preload::SetDownloadInfoListSize(uint16_t size)
 
 void Preload::Cancel(std::string const &url)
 {
+    if (!Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(url.begin(), url.end()))) {
+        return;
+    }
     agent_->cancel(rust::str(url));
 }
 
 void Preload::Remove(std::string const &url)
 {
+    if (!Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(url.begin(), url.end()))) {
+        return;
+    }
     agent_->remove(rust::str(url));
 }
 
@@ -323,6 +349,9 @@ void Preload::SetFileCachePath(const std::string &path)
 
 bool Preload::Contains(const std::string &url)
 {
+    if (!Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(url.begin(), url.end()))) {
+        return false;
+    }
     return agent_->contains(rust::str(url));
 }
 
