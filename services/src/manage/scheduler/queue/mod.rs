@@ -203,7 +203,7 @@ impl RunningQueue {
                 continue;
             }
 
-            info!("{} create running", task_id);
+            info!("{} begin", task_id);
             let running_task = RunningTask::new(task.clone(), self.tx.clone(), self.keeper.clone());
             RequestDb::get_instance().update_task_state(
                 running_task.task_id(),

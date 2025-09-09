@@ -24,6 +24,7 @@
 #include <thread>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "common.h"
@@ -217,4 +218,116 @@ HWTEST_F(PreloadSuccess, PreloadSuccessCache, TestSize.Level1)
     EXPECT_FALSE(id.empty());
     preload->Cancel(url);
     handle->Cancel();
+}
+
+/**
+ * @tc.name: PreloadSslTypeTls
+ * @tc.desc: Test SslType::TLS for download
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create test callback and load valid URL with SslType::TLS
+ *           3. Verify handle is running
+ *           4. Wait for download completion
+ *           5. Verify success callback triggered
+ * @tc.expect: Download succeeds with SUCCESS state and OnSuccess callback triggered
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadSuccess, PreloadSslTypeTls, TestSize.Level1)
+{
+    std::string url = TEST_URL_0;
+
+    Preload::GetInstance()->Remove(url);
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+    std::unique_ptr<PreloadOptions> options = std::make_unique<PreloadOptions>();
+    options->sslType = SslType::TLS;
+
+    auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback), std::move(options));
+
+    while (!handle->IsFinish()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+    }
+    EXPECT_FALSE(flagF->load());
+    EXPECT_FALSE(flagC->load());
+
+    EXPECT_TRUE(flagP->load());
+    EXPECT_TRUE(flagS->load());
+    Preload::GetInstance()->Remove(url);
+}
+
+/**
+ * @tc.name: PreloadSuccessTls
+ * @tc.desc: Test SslType::TLS for download
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create test callback and load valid URL with SslType::DEFAULT
+ *           3. Verify handle is running
+ *           4. Wait for download completion
+ *           5. Verify success callback triggered
+ * @tc.expect: Download succeeds with SUCCESS state and OnSuccess callback triggered
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadSuccess, PreloadSslTypeDefault, TestSize.Level1)
+{
+    std::string url = TEST_URL_0;
+
+    Preload::GetInstance()->Remove(url);
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+    std::unique_ptr<PreloadOptions> options = std::make_unique<PreloadOptions>();
+    options->sslType = SslType::DEFAULT;
+
+    auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback), std::move(options));
+
+    while (!handle->IsFinish()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+    }
+    EXPECT_FALSE(flagF->load());
+    EXPECT_FALSE(flagC->load());
+
+    EXPECT_TRUE(flagP->load());
+    EXPECT_TRUE(flagS->load());
+    Preload::GetInstance()->Remove(url);
+}
+
+/**
+ * @tc.name: PreloadSuccessTls
+ * @tc.desc: Test SslType::TLS for download.
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create test callback and load valid URL with SslType::TLS.
+ *           3. Verify handle is running
+ *           4. Wait for download completion
+ *           5. Verify success callback triggered
+ * @tc.expect: Download succeeds with SUCCESS state and OnSuccess callback triggered
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadSuccess, PreloadSslTypeBadCa, TestSize.Level1)
+{
+    std::string url = TEST_URL_0;
+
+    Preload::GetInstance()->Remove(url);
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+    std::unique_ptr<PreloadOptions> options = std::make_unique<PreloadOptions>();
+    options->sslType = SslType::TLS;
+    options->caPath = "/data/notExist.cert";
+
+    auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback), std::move(options));
+
+    while (!handle->IsFinish()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+    }
+    EXPECT_FALSE(flagF->load());
+    EXPECT_FALSE(flagC->load());
+
+    EXPECT_TRUE(flagP->load());
+    EXPECT_TRUE(flagS->load());
+    Preload::GetInstance()->Remove(url);
 }

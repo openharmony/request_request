@@ -15,10 +15,6 @@ use crate::data::observer::DirRebuilder;
 
 #[cxx::bridge(namespace = "OHOS::Request")]
 pub(crate) mod ffi {
-    struct FfiPredownloadOptions<'a> {
-        headers: Vec<&'a str>,
-    }
-
     extern "Rust" {
         type DirRebuilder;
 

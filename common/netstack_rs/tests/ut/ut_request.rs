@@ -14,10 +14,10 @@
 #[cfg(test)]
 mod ut_request {
     use super::*;
-    use std::sync::{Arc, Mutex};
     use crate::error::HttpClientError;
     use crate::response::Response;
     use request_utils::task_id::TaskId;
+    use std::sync::{Arc, Mutex};
 
     // Mock callback implementation for testing
     #[derive(Debug, Default, PartialEq)]
@@ -234,7 +234,7 @@ mod ut_request {
         request.timeout(5000);
         request.callback(MockCallback::default());
         request.task_id(TaskId::new(1));
-        
+
         let task = request.build();
         assert!(task.is_some());
     }
@@ -254,7 +254,7 @@ mod ut_request {
         let mut request = Request::new();
         request.url("https://example.com");
         request.method("GET");
-        
+
         let task = request.build();
         assert!(task.is_none());
     }
@@ -274,7 +274,7 @@ mod ut_request {
         let mut callback = MockCallback::default();
         let response = Response::default();
         callback.on_success(response.clone());
-        
+
         assert!(callback.on_success_called);
         assert_eq!(callback.last_response, Some(response));
     }
@@ -294,7 +294,7 @@ mod ut_request {
         let mut callback = MockCallback::default();
         let error = HttpClientError::new(1, "Test error");
         callback.on_fail(error.clone());
-        
+
         assert!(callback.on_fail_called);
         assert_eq!(callback.last_error, Some(error));
     }
@@ -312,7 +312,7 @@ mod ut_request {
     fn ut_request_callback_on_progress() {
         let mut callback = MockCallback::default();
         callback.on_progress(100, 50, 200, 100);
-        
+
         assert!(callback.on_progress_called);
         assert_eq!(callback.last_progress, Some((100, 50, 200, 100)));
     }

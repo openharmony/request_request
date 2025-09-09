@@ -1,17 +1,17 @@
 /*
-* Copyright (C) 2024 Huawei Device Co., Ltd.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "preload_module.h"
 
@@ -45,6 +45,9 @@ constexpr int64_t MAX_FILE_SIZE = 4294967296;
 constexpr int64_t MAX_INFO_LIST_SIZE = 8192;
 const std::string INTERNET_PERMISSION = "ohos.permission.INTERNET";
 const std::string GET_NETWORK_INFO_PERMISSION = "ohos.permission.GET_NETWORK_INFO";
+
+static const std::string SSL_TYPE_TLS = "TLS";
+static const std::string SSL_TYPE_TLCP = "TLCP";
 
 bool CheckInternetPermission()
 {
@@ -90,14 +93,26 @@ napi_value download(napi_env env, napi_callback_info info)
     }
     std::string url = GetValueString(env, args[0], urlLength);
     std::unique_ptr<PreloadOptions> options = std::make_unique<PreloadOptions>();
-    napi_value headers = nullptr;
-    if (napi_get_named_property(env, args[1], "headers", &headers) == napi_ok
-        && GetValueType(env, headers) == napi_valuetype::napi_object) {
-        auto names = GetPropertyNames(env, headers);
-        for (auto name : names) {
-            auto value = GetPropertyValue(env, headers, name);
-            options->headers.emplace_back(std::make_pair(name, value));
+    SetOptionsHeaders(env, args[1], options);
+    napi_value napiSslType = GetNamedProperty(env, args[1], "sslType");
+    if (napiSslType != nullptr) {
+        std::string sslType = GetStringFromUncheckedValue(env, napiSslType);
+        if (sslType == SSL_TYPE_TLS) {
+            options->sslType = SslType::TLS;
+        } else if (sslType == SSL_TYPE_TLCP) {
+            options->sslType = SslType::TLCP;
+        } else {
+            ThrowError(env, E_PARAMETER_CHECK, "sslType parameter error");
+            return nullptr;
         }
+    } else {
+        options->sslType = SslType::DEFAULT;
+    }
+
+    napi_value napiCaPath = GetNamedProperty(env, args[1], "caPath");
+    if (napiCaPath != nullptr) {
+        std::string caPath = GetStringFromUncheckedValue(env, napiCaPath);
+        options->caPath = caPath;
     }
     if (!CheckInternetPermission()) {
         ThrowError(env, E_PERMISSION, "internet permission denied");
@@ -233,9 +248,19 @@ napi_value getDownloadInfo(napi_env env, napi_callback_info info)
     return jsInfo;
 }
 
+static void NapiCreateEnumSslType(napi_env env, napi_value &sslType)
+{
+    napi_create_object(env, &sslType);
+    SetStringPropertyUtf8(env, sslType, "TLS", "TLS");
+    SetStringPropertyUtf8(env, sslType, "TLCP", "TLCP");
+}
+
 static napi_value registerFunc(napi_env env, napi_value exports)
 {
+    napi_value sslType = nullptr;
+    NapiCreateEnumSslType(env, sslType);
     napi_property_descriptor desc[]{
+        DECLARE_NAPI_PROPERTY("SslType", sslType),
         DECLARE_NAPI_FUNCTION("download", download),
         DECLARE_NAPI_FUNCTION("cancel", cancel),
         DECLARE_NAPI_FUNCTION("setMemoryCacheSize", setMemoryCacheSize),

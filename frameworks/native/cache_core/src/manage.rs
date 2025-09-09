@@ -50,12 +50,12 @@ impl CacheManager {
 
     pub fn set_ram_cache_size(&self, size: u64) {
         self.ram_handle.lock().unwrap().change_total_size(size);
-        CacheManager::apply_cache(&self.ram_handle, &self.rams, |a| RamCache::task_id(a), 0);
+        CacheManager::apply_cache(&self.ram_handle, &self.rams, 0);
     }
 
     pub fn set_file_cache_size(&self, size: u64) {
         self.file_handle.lock().unwrap().change_total_size(size);
-        CacheManager::apply_cache(&self.file_handle, &self.files, FileCache::task_id, 0);
+        CacheManager::apply_cache(&self.file_handle, &self.files, 0);
     }
 
     pub fn restore_files(&'static self) {
@@ -96,7 +96,6 @@ impl CacheManager {
     pub(super) fn apply_cache<T>(
         handle: &Mutex<data::ResourceManager>,
         caches: &Mutex<LRUCache<TaskId, T>>,
-        task_id: fn(&T) -> &TaskId,
         size: usize,
     ) -> bool {
         loop {
@@ -106,15 +105,10 @@ impl CacheManager {
             if handle.lock().unwrap().apply_cache_size(size as u64) {
                 return true;
             };
-
-            match caches.lock().unwrap().pop() {
-                Some(cache) => {
-                    info!("CacheManager release cache {}", task_id(&cache).brief());
-                }
-                None => {
-                    info!("CacheManager release cache failed");
-                    return false;
-                }
+            // No cache in caches.
+            if caches.lock().unwrap().pop().is_none() {
+                info!("CacheManager release cache failed");
+                return false;
             }
         }
     }

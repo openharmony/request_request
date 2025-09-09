@@ -477,7 +477,7 @@ async fn upload_inner(
         }
     }
 
-    info!("task {} upload ok", task.task_id());
+    info!("{} uploaded", task.task_id());
     Ok(())
 }
 
@@ -533,7 +533,7 @@ where
             #[cfg(feature = "oh")]
             task.notify_response(response);
             info!(
-                "task {} get response {}",
+                "{} response {}",
                 task.conf.common_data.task_id, status_code,
             );
             if status_code.is_server_error()

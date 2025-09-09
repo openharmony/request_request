@@ -1,17 +1,17 @@
 /*
-* Copyright (C) 2024 Huawei Device Co., Ltd.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "napi_utils.h"
 
@@ -21,6 +21,7 @@
 
 #include "base/request/request/common/include/constant.h"
 #include "js_native_api.h"
+#include "js_native_api_types.h"
 #include "napi/native_common.h"
 
 namespace OHOS::Request {
@@ -126,6 +127,15 @@ std::string GetPropertyValue(napi_env env, napi_value object, const std::string 
     return GetValueString(env, value, length);
 }
 
+std::string GetStringFromUncheckedValue(napi_env env, napi_value value)
+{
+    if (GetValueType(env, value) != napi_string) {
+        return "";
+    }
+    size_t propertyLength = GetStringLength(env, value);
+    return GetValueString(env, value, propertyLength);
+}
+
 inline napi_status setPerformanceField(napi_env env, napi_value performance, double field_value, const char *js_name)
 {
     napi_value value;
@@ -135,6 +145,19 @@ inline napi_status setPerformanceField(napi_env env, napi_value performance, dou
     }
 
     return napi_set_named_property(env, performance, js_name, value);
+}
+
+void SetOptionsHeaders(napi_env env, napi_value arg, std::unique_ptr<PreloadOptions> &options)
+{
+    napi_value headers = nullptr;
+    if (napi_get_named_property(env, arg, "headers", &headers) == napi_ok
+        && GetValueType(env, headers) == napi_valuetype::napi_object) {
+        auto names = GetPropertyNames(env, headers);
+        for (auto name : names) {
+            auto value = GetPropertyValue(env, headers, name);
+            options->headers.emplace_back(std::make_pair(name, value));
+        }
+    }
 }
 
 bool buildInfoResource(napi_env env, const CppDownloadInfo &result, napi_value &jsInfo)
@@ -253,6 +276,27 @@ bool buildInfoPerformance(napi_env env, const CppDownloadInfo &result, napi_valu
     }
 
     return true;
+}
+
+napi_value Convert2JSValue(napi_env env, const std::string &str)
+{
+    napi_value value = nullptr;
+    if (napi_create_string_utf8(env, str.c_str(), strlen(str.c_str()), &value) != napi_ok) {
+        return nullptr;
+    }
+    return value;
+}
+
+void SetStringPropertyUtf8(napi_env env, napi_value object, const std::string &name, const std::string &value)
+{
+    napi_value jsValue = Convert2JSValue(env, value);
+    if (GetValueType(env, jsValue) != napi_string) {
+        return;
+    }
+    napi_status status = napi_set_named_property(env, object, name.c_str(), jsValue);
+    if (status != napi_ok) {
+        napi_throw_error(env, nullptr, "preload failed to set named property");
+    }
 }
 
 } // namespace OHOS::Request

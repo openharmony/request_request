@@ -96,8 +96,15 @@ impl DownloadTask {
                 request.header(key, value);
             }
         }
+        if let Some(ssl_type) = input.ssl_type {
+            request.ssl_type(ssl_type);
+        }
+        if let Some(ca_path) = input.ca_path {
+            request.ca_path(ca_path);
+        }
         callback.set_running();
         request.task_id(callback.task_id());
+        let task_id = callback.task_id();
         request.callback(callback);
         request.info_mgr(info_mgr);
         match request.build() {
@@ -105,10 +112,13 @@ impl DownloadTask {
                 if task.start() {
                     Some(Arc::new(CancelHandle::new(task)))
                 } else {
-                    error!("Netstack HttpClientTask start failed.");
+                    error!(
+                        "Netstack HttpClientTask start task {:?} failed.",
+                        task_id.brief()
+                    );
                     None
                 }
-            },
+            }
             None => None,
         }
     }

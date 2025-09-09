@@ -20,7 +20,7 @@ use crate::error::HttpClientError;
 use crate::info::DownloadInfoMgr;
 use crate::response::Response;
 use crate::task::RequestTask;
-use crate::wrapper::ffi::{HttpClientRequest, NewHttpClientRequest, SetBody};
+use crate::wrapper::ffi::{HttpClientRequest, NewHttpClientRequest, SetBody, SetRequestSslType};
 /// Builder for creating a Request.
 pub struct Request<C: RequestCallback + 'static> {
     inner: UniquePtr<HttpClientRequest>,
@@ -59,6 +59,18 @@ impl<C: RequestCallback> Request<C> {
         let_cxx_string!(key = key);
         let_cxx_string!(value = value);
         self.inner.pin_mut().SetHeader(&key, &value);
+        self
+    }
+
+    pub fn ssl_type(&mut self, ssl_type: &str) -> &mut Self {
+        let_cxx_string!(ssl_type = ssl_type);
+        SetRequestSslType(self.inner.pin_mut(), &ssl_type);
+        self
+    }
+
+    pub fn ca_path(&mut self, ca_path: &str) -> &mut Self {
+        let_cxx_string!(ca_path = ca_path);
+        self.inner.pin_mut().SetCaPath(&ca_path);
         self
     }
 
@@ -132,4 +144,9 @@ impl<C: RequestCallback> Default for Request<C> {
     fn default() -> Self {
         Self::new()
     }
+}
+
+#[cfg(test)]
+mod ut_request_set {
+    include!("../tests/ut/ut_request_set.rs");
 }

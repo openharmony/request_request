@@ -247,7 +247,7 @@ impl Scheduler {
     }
 
     pub(crate) fn task_completed(&mut self, uid: u64, task_id: u32) {
-        info!("scheduler task {} completed", task_id);
+        info!("task {} completed", task_id);
         self.running_queue.task_finish(uid, task_id);
 
         let database = RequestDb::get_instance();
@@ -283,7 +283,7 @@ impl Scheduler {
         mode: Mode,
         task_count: &mut HashMap<u64, (usize, usize)>,
     ) {
-        info!("scheduler task {} canceled", task_id);
+        info!("task {} canceled", task_id);
         self.running_queue.task_finish(uid, task_id);
         if self.running_queue.try_restart(uid, task_id) {
             return;
@@ -351,7 +351,7 @@ impl Scheduler {
     }
 
     pub(crate) fn task_failed(&mut self, uid: u64, task_id: u32, reason: Reason) {
-        info!("scheduler task {} failed", task_id);
+        info!("task {} failed", task_id);
         self.running_queue.task_finish(uid, task_id);
 
         let database = RequestDb::get_instance();

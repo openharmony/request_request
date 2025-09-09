@@ -61,6 +61,7 @@ RequestNetCallbackStub::~RequestNetCallbackStub()
     rust::Box<NetworkTaskManagerTx>::from_raw(task_manager_);
 }
 
+#ifdef REQUEST_DEVICE_WATCH
 void RequestNetCallbackStub::SetNet()
 {
     bool wifiFlag = false;
@@ -111,10 +112,13 @@ void RequestNetCallbackStub::SetNet()
         }
     }
 }
+#endif
 
 void RequestNetCallbackStub::HandleNetCap(const sptr<NetAllCapabilities> &netAllCap)
 {
+#ifdef REQUEST_DEVICE_WATCH
     this->SetNet();
+#endif
     for (auto bearerType : netAllCap->bearerTypes_) {
         auto networkInfo = NetworkInfo();
         if (bearerType == NetManagerStandard::NetBearType::BEARER_WIFI) {

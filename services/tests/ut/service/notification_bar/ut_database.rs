@@ -73,7 +73,8 @@ fn ut_notify_database_query_task_gid() {
 // @tc.step: 1. Create a NotificationDb instance
 //           2. Generate a random task ID
 //           3. Update task's customized notification with test title and text
-//           4. Query the customized notification using query_task_customized_notification
+//           4. Query the customized notification using
+//              query_task_customized_notification
 //           5. Verify the retrieved title and text match test values
 // @tc.expect: Customized notification title and text match the test values
 // @tc.type: FUNC
@@ -102,7 +103,8 @@ fn ut_notify_database_query_task_customized() {
 // @tc.step: 1. Create a NotificationDb instance
 //           2. Generate a random group ID
 //           3. Update group's customized notification with test title and text
-//           4. Query the customized notification using query_group_customized_notification
+//           4. Query the customized notification using
+//              query_group_customized_notification
 //           5. Verify the retrieved title and text match test values
 // @tc.expect: Customized notification title and text match the test values
 // @tc.type: FUNC
@@ -129,7 +131,8 @@ fn ut_notify_database_query_group_customized() {
 //           2. Generate a random group ID
 //           3. Verify group does not exist initially
 //           4. Update group config with gauge=true, display=false
-//           5. Verify group exists, is_gauge returns true, attach_able returns true
+//           5. Verify group exists, is_gauge returns true, attach_able returns
+//              true
 //           6. Update group config with gauge=false and disable attach_able
 //           7. Verify is_gauge returns false and attach_able returns false
 // @tc.expect: Group configuration updates and queries return correct values
@@ -160,7 +163,8 @@ fn ut_notify_database_group_config() {
 //           4. Verify task notification is disabled and content exists
 //           5. Call clear_task_info for the task
 //           6. Verify task notification is enabled and content is removed
-//           7. Associate task with group, clear task info, and verify group association is removed
+//           7. Associate task with group, clear task info, and verify group
+//              association is removed
 // @tc.expect: All task-related information is successfully cleared
 // @tc.type: FUNC
 // @tc.require: issues#ICN16H
@@ -191,10 +195,12 @@ fn ut_clear_task_info() {
 // @tc.precon: NA
 // @tc.step: 1. Create a NotificationDb instance
 //           2. Generate random group and task IDs
-//           3. Update group customized notification, config, and associate task with group
+//           3. Update group customized notification, config, and associate task
+//              with group
 //           4. Verify group content, existence, and task association exist
 //           5. Call clear_group_info for the group
-//           6. Verify group content, existence, and task association are removed
+//           6. Verify group content, existence, and task association are
+//              removed
 // @tc.expect: All group-related information is successfully cleared
 // @tc.type: FUNC
 // @tc.require: issues#ICN16H

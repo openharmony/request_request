@@ -1,17 +1,17 @@
 /*
-* Copyright (C) 2024 Huawei Device Co., Ltd.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "request_preload.h"
 
@@ -39,7 +39,7 @@ Data::Data(Data &&other) noexcept : data_(other.data_)
     other.data_ = nullptr;
 }
 
-Data &Data::operator=(Data &&other) & noexcept
+Data &Data::operator=(Data &&other) &noexcept
 {
     if (this != &other) {
         if (data_) {
@@ -190,7 +190,7 @@ PreloadError::PreloadError(PreloadError &&other) noexcept : error_(other.error_)
     other.error_ = nullptr;
 }
 
-PreloadError &PreloadError::operator=(PreloadError &&other) & noexcept
+PreloadError &PreloadError::operator=(PreloadError &&other) &noexcept
 {
     if (this != &other) {
         if (error_) {
@@ -232,7 +232,7 @@ PreloadHandle::PreloadHandle(PreloadHandle &&other) noexcept : handle_(other.han
     other.handle_ = nullptr;
 }
 
-PreloadHandle &PreloadHandle::operator=(PreloadHandle &&other) & noexcept
+PreloadHandle &PreloadHandle::operator=(PreloadHandle &&other) &noexcept
 {
     if (this != &other) {
         if (handle_) {
@@ -244,6 +244,12 @@ PreloadHandle &PreloadHandle::operator=(PreloadHandle &&other) & noexcept
     return *this;
 }
 
+const std::unordered_map<SslType, std::string> SslTypeName = {
+    { SslType::DEFAULT, "" },
+    { SslType::TLS, "TLS" },
+    { SslType::TLCP, "TLCP" },
+};
+
 std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique_ptr<PreloadCallback> callback,
     std::unique_ptr<PreloadOptions> options, bool update)
 {
@@ -254,7 +260,9 @@ std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique
         progress_callback_wrapper = std::make_shared<PreloadProgressCallbackWrapper>(callback);
     }
 
-    FfiPredownloadOptions ffiOptions = { .headers = rust::Vec<rust::str>() };
+    FfiPredownloadOptions ffiOptions = {
+        .headers = rust::Vec<rust::str>(),
+    };
     if (options != nullptr) {
         for (const auto& [key, value] : options->headers) {
             if (!Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(key.begin(), key.end())) ||
@@ -264,6 +272,9 @@ std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique
             ffiOptions.headers.push_back(rust::str(key));
             ffiOptions.headers.push_back(rust::str(value));
         }
+
+        ffiOptions.ssl_type = rust::str(SslTypeName.at(options->sslType));
+        ffiOptions.ca_path = rust::str(options->caPath);
     }
     if (!Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(url.begin(), url.end()))) {
         return nullptr;

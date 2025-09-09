@@ -171,7 +171,7 @@ napi_value RequestEvent::SetMaxSpeed(napi_env env, napi_callback_info info)
             REQUEST_HILOGE("End task %{public}s in AsyncCall output, seq: %{public}d, failed: %{public}d",
                 execType.c_str(), seq, status);
         } else {
-            REQUEST_HILOGI("End task %{public}s ok seq %{public}d", execType.c_str(), seq);
+            REQUEST_HILOGI("%{public}s ok seq %{public}d", execType.c_str(), seq);
         }
         return status;
     };
@@ -227,7 +227,7 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
     }
 
     REQUEST_HILOGI(
-        "End task %{public}s on %{public}s seq %{public}d", jsParam.task->GetTid().c_str(), jsParam.type.c_str(), seq);
+        "%{public}s on %{public}s", jsParam.task->GetTid().c_str(), jsParam.type.c_str());
     return nullptr;
 }
 

@@ -478,8 +478,8 @@ impl Client {
             );
         } else {
             info!(
-                "send tid {} {:?} size {}",
-                notify_data.task_id, subscribe_type, size
+                "send {} {:?}",
+                notify_data.task_id, subscribe_type
             );
         }
 
