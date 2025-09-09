@@ -98,7 +98,7 @@ impl RequestTask {
     pub(crate) fn speed_limit(&self, limit: u64) {
         let old = self.rate_limiting.swap(limit, Ordering::SeqCst);
         if old != limit {
-            info!("task {} speed_limit {}", self.task_id(), limit);
+            info!("{} speed_limit {}", self.task_id(), limit);
         }
     }
 
