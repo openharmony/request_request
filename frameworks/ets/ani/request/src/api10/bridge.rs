@@ -441,7 +441,7 @@ impl From<Config> for TaskConfig {
                 metered: false,
                 roaming: false,
                 retry: false,
-                redirect: false,
+                redirect: true,
                 index: 0,
                 begins: 0,
                 ends: -1,
