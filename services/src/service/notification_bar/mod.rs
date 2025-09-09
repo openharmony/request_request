@@ -14,6 +14,7 @@
 mod database;
 mod notification_config;
 mod notify_flow;
+mod progress_size;
 mod publish;
 mod task_handle;
 mod typology;
@@ -56,6 +57,7 @@ mod ffi {
 
         fn CancelNotification(notificationId: u32) -> i32;
         fn GetSystemResourceString(name: &str) -> String;
+        fn GetSystemLanguage() -> String;
         fn PublishNotification(content: &NotifyContent) -> i32;
         fn SubscribeNotification(task_manager: Box<TaskManagerWrapper>);
     }

@@ -21,10 +21,12 @@ const GROUP_ID: u32 = 20;
 // @tc.name: ut_notify_typology_default_task_eventual
 // @tc.desc: Test default task completion notification formatting
 // @tc.precon: NA
-// @tc.step: 1. Create task eventual notifications for download/upload success/failure scenarios
-//           2. Verify title, text, and notification properties match expected defaults
-// @tc.expect: Notification title reflects action result, text shows filename, and properties are correctly set
-// @tc.type: FUNC
+// @tc.step: 1. Create task eventual notifications for download/upload
+// success/failure scenarios
+//           2. Verify title, text, and notification properties match expected
+//              defaults
+// @tc.expect: Notification title reflects action result, text shows filename,
+// and properties are correctly set @tc.type: FUNC
 // @tc.require: issues#ICN16H
 #[test]
 fn ut_notify_typology_default_task_eventual() {
@@ -82,11 +84,14 @@ fn ut_notify_typology_default_task_eventual() {
 // @tc.name: ut_notify_typology_default_progress
 // @tc.desc: Test default task progress notification formatting
 // @tc.precon: NA
-// @tc.step: 1. Create ProgressNotify instances with various processed/total values and multi-upload scenarios
-//           2. Generate task progress notifications for download and upload actions
-//           3. Verify title, text, and progress circle properties match expected formatting
-// @tc.expect: Notification title shows correct percentage/size, progress circle is properly configured
-// @tc.type: FUNC
+// @tc.step: 1. Create ProgressNotify instances with various processed/total
+// values and multi-upload scenarios
+//           2. Generate task progress notifications for download and upload
+//              actions
+//           3. Verify title, text, and progress circle properties match
+//              expected formatting
+// @tc.expect: Notification title shows correct percentage/size, progress circle
+// is properly configured @tc.type: FUNC
 // @tc.require: issues#ICN16H
 #[test]
 fn ut_notify_typology_default_progress() {
@@ -151,34 +156,28 @@ fn ut_notify_typology_default_progress() {
 // @tc.step: 1. Create GroupProgress instance and update task states/progress
 //           2. Generate group progress notifications for download action
 //           3. Verify title shows correct size and text displays task counts
-//           4. Update task states and verify notification text updates accordingly
-// @tc.expect: Notification title shows total processed size, text shows correct successful/failed task counts
-// @tc.type: FUNC
+//           4. Update task states and verify notification text updates
+//              accordingly
+// @tc.expect: Notification title shows total processed size, text shows correct
+// successful/failed task counts @tc.type: FUNC
 // @tc.require: issues#ICN16H
 #[test]
 fn ut_notify_typology_default_group_progress() {
     let mut group_info = GroupProgress::new();
     group_info.update_task_state(1, State::Completed);
     group_info.update_task_progress(1, 100);
-    let content = NotifyContent::group_progress_notify(
-        None,
-        Action::Download,
-        GROUP_ID,
-        UID,
-        &group_info,
-    );
+    let content =
+        NotifyContent::group_progress_notify(None, Action::Download, GROUP_ID, UID, &group_info);
 
     assert_eq!(content.title, "下载文件 100B");
 
     let text_task_count = GetSystemResourceString(TASK_COUNT);
     let text_count = if text_task_count.contains("%d") {
         text_task_count
-            .replacen("%d","1", 1)
+            .replacen("%d", "1", 1)
             .replacen("%d", "0", 1)
     } else {
-        text_task_count
-            .replace("%1$d", "1")
-            .replace("%2$d", "0")
+        text_task_count.replace("%1$d", "1").replace("%2$d", "0")
     };
     assert_eq!(content.text, text_count);
 
@@ -188,24 +187,17 @@ fn ut_notify_typology_default_group_progress() {
     for i in 2..5 {
         group_info.update_task_state(i, State::Completed);
     }
-    let content = NotifyContent::group_progress_notify(
-        None,
-        Action::Download,
-        GROUP_ID,
-        UID,
-        &group_info,
-    );
+    let content =
+        NotifyContent::group_progress_notify(None, Action::Download, GROUP_ID, UID, &group_info);
 
     assert_eq!(content.title, "下载文件 100B");
     let text_task_count = GetSystemResourceString(TASK_COUNT);
     let text_count = if text_task_count.contains("%d") {
         text_task_count
-            .replacen("%d","3", 1)
+            .replacen("%d", "3", 1)
             .replacen("%d", "1", 1)
     } else {
-        text_task_count
-            .replace("%1$d", "3")
-            .replace("%2$d", "1")
+        text_task_count.replace("%1$d", "3").replace("%2$d", "1")
     };
     assert_eq!(content.text, text_count);
 }
