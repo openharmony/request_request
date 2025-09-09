@@ -170,4 +170,9 @@ int32_t UpdatePolicy(bool result)
     return ret;
 }
 
+bool IsCalledByHAP(uint32_t tokenId)
+{
+    return AccessTokenKit::GetTokenTypeFlag(tokenId) == ATokenTypeEnum::TOKEN_HAP;
+}
+
 } // namespace OHOS::Request
