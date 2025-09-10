@@ -39,13 +39,10 @@ struct CreateContext : public AsyncCall::Context {
     Notification notification;
 };
 
-napi_status createNotificationParse(CreateContext *context, napi_value customized_notification)
+napi_status ValidateAndSetTitle(CreateContext *context, napi_value customized)
 {
-    if (NapiUtils::GetValueType(context->env_, customized_notification) != napi_object) {
-        return napi_ok;
-    }
-    if (NapiUtils::HasNamedProperty(context->env_, customized_notification, "title")) {
-        napi_value title = NapiUtils::GetNamedProperty(context->env_, customized_notification, "title");
+    if (NapiUtils::HasNamedProperty(context->env_, customized, "title")) {
+        napi_value title = NapiUtils::GetNamedProperty(context->env_, customized, "title");
         if (NapiUtils::GetValueType(context->env_, title) == napi_string) {
             context->notification.title = NapiUtils::Convert2String(context->env_, title);
             if (context->notification.title->size() > MAX_TITLE_LENGTH) {
@@ -54,8 +51,13 @@ napi_status createNotificationParse(CreateContext *context, napi_value customize
             }
         }
     }
-    if (NapiUtils::HasNamedProperty(context->env_, customized_notification, "text")) {
-        napi_value text = NapiUtils::GetNamedProperty(context->env_, customized_notification, "text");
+    return napi_ok;
+}
+
+napi_status ValidateAndSetText(CreateContext *context, napi_value customized)
+{
+    if (NapiUtils::HasNamedProperty(context->env_, customized, "text")) {
+        napi_value text = NapiUtils::GetNamedProperty(context->env_, customized, "text");
         if (NapiUtils::GetValueType(context->env_, text) == napi_string) {
             context->notification.text = NapiUtils::Convert2String(context->env_, text);
             if (context->notification.text->size() > MAX_TEXT_LENGTH) {
@@ -64,16 +66,26 @@ napi_status createNotificationParse(CreateContext *context, napi_value customize
             }
         }
     }
-    if (NapiUtils::HasNamedProperty(context->env_, customized_notification, "disable")) {
-        napi_value disable = NapiUtils::GetNamedProperty(context->env_, customized_notification, "disable");
+    return napi_ok;
+}
+
+napi_status ValidateAndSetDisable(CreateContext *context, napi_value customized)
+{
+    if (NapiUtils::HasNamedProperty(context->env_, customized, "disable")) {
+        napi_value disable = NapiUtils::GetNamedProperty(context->env_, customized, "disable");
         if (NapiUtils::GetValueType(context->env_, disable) == napi_boolean) {
             bool value = false;
             napi_get_value_bool(context->env_, disable, &value);
             context->notification.disable = value;
         }
     }
-    if (NapiUtils::HasNamedProperty(context->env_, customized_notification, "visibility")) {
-        napi_value visibility = NapiUtils::GetNamedProperty(context->env_, customized_notification, "visibility");
+    return napi_ok;
+}
+
+napi_status ValidateAndSetVisibility(CreateContext *context, napi_value customized)
+{
+    if (NapiUtils::HasNamedProperty(context->env_, customized, "visibility")) {
+        napi_value visibility = NapiUtils::GetNamedProperty(context->env_, customized, "visibility");
         if (NapiUtils::GetValueType(context->env_, visibility) == napi_number) {
             context->notification.visibility = NapiUtils::Convert2Uint32(context->env_, visibility);
             if (context->notification.visibility == static_cast<uint32_t>(Visibility::NONE) ||
@@ -82,11 +94,48 @@ napi_status createNotificationParse(CreateContext *context, napi_value customize
                 NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
                 return napi_invalid_arg;
             }
+        } else if (NapiUtils::GetValueType(context->env_, visibility) == napi_undefined) {
+            if (!context->gauge) {
+                context->notification.visibility = VISIBILITY_COMPLETION;
+            }
         } else {
             NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
             return napi_invalid_arg;
         }
     }
+    return napi_ok;
+}
+
+napi_status createNotificationParse(CreateContext *context, napi_value customized)
+{
+    if (context == nullptr || context->env_ == nullptr) {
+        return napi_invalid_arg;
+    }
+    
+    if (NapiUtils::GetValueType(context->env_, customized) != napi_object) {
+        return napi_ok;
+    }
+    
+    napi_status status = ValidateAndSetTitle(context, customized);
+    if (status != napi_ok) {
+        return status;
+    }
+    
+    status = ValidateAndSetText(context, customized);
+    if (status != napi_ok) {
+        return status;
+    }
+    
+    status = ValidateAndSetDisable(context, customized);
+    if (status != napi_ok) {
+        return status;
+    }
+    
+    status = ValidateAndSetVisibility(context, customized);
+    if (status != napi_ok) {
+        return status;
+    }
+    
     return napi_ok;
 }
 
@@ -111,6 +160,8 @@ napi_status createInput(CreateContext *context, size_t argc, napi_value *argv, n
             } else {
                 context->notification.visibility = VISIBILITY_COMPLETION;
             }
+        } else if (NapiUtils::GetValueType(context->env_, gauge) == napi_undefined) {
+            context->notification.visibility = VISIBILITY_COMPLETION;
         } else {
             NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
             return napi_invalid_arg;

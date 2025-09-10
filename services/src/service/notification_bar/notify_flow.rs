@@ -38,7 +38,6 @@ pub(crate) struct NotifyFlow {
     group_notify_progress: HashMap<u32, GroupProgress>,
     // value 1 for title, 2 for text.
     group_customized_notify: HashMap<u32, Option<CustomizedNotification>>,
-    group_gauge: HashMap<u32, bool>,
     task_customized_notify: HashMap<u32, Option<CustomizedNotification>>,
     group_progress_visibility: HashMap<u32, bool>,
     group_completion_visibility: HashMap<u32, bool>,
@@ -170,7 +169,6 @@ impl NotifyFlow {
             notify_type_map: HashMap::new(),
             last_notify_map: HashMap::new(),
             group_notify_progress: HashMap::new(),
-            group_gauge: HashMap::new(),
             task_customized_notify: HashMap::new(),
             group_customized_notify: HashMap::new(),
             completion_visibility: HashMap::new(),
@@ -220,6 +218,7 @@ impl NotifyFlow {
             uid, task_id, group_id
         );
         let customized = self.group_customized_notify(group_id);
+        let is_completion_visible = self.check_completion_visibility_from_group(group_id);
         let progress = match self.group_notify_progress.entry(group_id) {
             Entry::Occupied(entry) => entry.into_mut(),
             Entry::Vacant(entry) => {
@@ -239,6 +238,10 @@ impl NotifyFlow {
             return None;
         }
         if !Self::group_eventual_check(&self.database, progress, group_id) {
+            return None;
+        }
+        if !is_completion_visible {
+            cancel_notification(group_id);
             return None;
         }
         Some(NotifyContent::group_eventual_notify(
@@ -280,7 +283,7 @@ impl NotifyFlow {
         task_ids: Vec<u32>,
         uid: u64,
     ) -> Option<NotifyContent> {
-        let is_gauge = self.check_gauge(group_id);
+        let is_progress_visibility_from_group = self.check_progress_visibility_from_group(group_id);
         let customized = self.group_customized_notify(group_id);
         let progress = match self.group_notify_progress.entry(group_id) {
             Entry::Occupied(entry) => {
@@ -295,7 +298,7 @@ impl NotifyFlow {
                 entry.insert(progress)
             }
         };
-        if !is_gauge {
+        if !is_progress_visibility_from_group {
             return None;
         }
         Some(NotifyContent::group_progress_notify(
@@ -329,17 +332,6 @@ impl NotifyFlow {
         *self.progress_visibility
             .entry(task_id)
             .or_insert_with(|| self.database.is_progress_visible(task_id))
-    }
-
-    fn check_gauge(&mut self, group_id: u32) -> bool {
-        match self.group_gauge.get(&group_id) {
-            Some(gauge) => *gauge,
-            None => {
-                let gauge = self.database.is_gauge(group_id);
-                self.group_gauge.insert(group_id, gauge);
-                gauge
-            }
-        }
     }
 
     fn group_customized_notify(&mut self, group_id: u32) -> Option<CustomizedNotification> {
@@ -426,10 +418,8 @@ impl NotifyFlow {
     fn publish_completed_notify(&mut self, info: &EventualNotify) -> Option<NotifyContent> {
         let content = match self.get_request_id(info.task_id) {
             NotifyType::Group(group_id) => {
-                if !self.check_completion_visibility_from_group(group_id) {
-                    return None;
-                }
-                let is_progress_visible = self.check_progress_visibility_from_group(group_id);                
+                let is_progress_visible = self.check_progress_visibility_from_group(group_id);
+                let is_completion_visible = self.check_completion_visibility_from_group(group_id);
 
                 let customized = self.group_customized_notify(group_id);
                 let group_progress = match self.group_notify_progress.entry(group_id) {
@@ -463,6 +453,10 @@ impl NotifyFlow {
                     (false, false) => return None,
                     (true, _) => {
                         self.database.clear_group_info(group_id);
+                        if !is_completion_visible {
+                            cancel_notification(group_id);
+                            return None;
+                        }
                         NotifyContent::group_eventual_notify(
                             customized,
                             info.action,
@@ -477,6 +471,7 @@ impl NotifyFlow {
             }
             NotifyType::Task => {
                 if !self.check_completion_visibility(info.task_id) {
+                    cancel_notification(info.task_id);
                     return None;
                 }
                 let content = NotifyContent::task_eventual_notify(
@@ -498,6 +493,7 @@ impl NotifyFlow {
 
     fn group_eventual(&mut self, group_id: u32, uid: u64) -> Option<NotifyContent> {
         let customized = self.group_customized_notify(group_id);
+        let is_completion_visible = self.check_completion_visibility_from_group(group_id);
         let group_progress = match self.group_notify_progress.entry(group_id) {
             Entry::Occupied(entry) => entry.into_mut(),
             Entry::Vacant(entry) => {
@@ -509,6 +505,10 @@ impl NotifyFlow {
         let group_eventual = Self::group_eventual_check(&self.database, group_progress, group_id);
 
         if !group_eventual {
+            return None;
+        }
+        if !is_completion_visible {
+            cancel_notification(group_id);
             return None;
         }
         Some(NotifyContent::group_eventual_notify(
