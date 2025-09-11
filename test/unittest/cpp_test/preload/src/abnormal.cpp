@@ -57,7 +57,7 @@ void PreloadAbnormal::SetUp(void)
 }
 
 /**
- * @tc.name: NullptrTest
+ * @tc.name: NullptrTest_1
  * @tc.desc: Test nullptr callback handling in PreloadCallback
  * @tc.precon: NA
  * @tc.step: 1. Create PreloadCallback with all callbacks set to nullptr
@@ -69,7 +69,7 @@ void PreloadAbnormal::SetUp(void)
  * @tc.require: issueNumber
  * @tc.level: Level 1
  */
-HWTEST_F(PreloadAbnormal, NullptrTest, TestSize.Level1)
+HWTEST_F(PreloadAbnormal, NullptrTest_1, TestSize.Level1)
 {
     auto callback = PreloadCallback{
         .OnSuccess = nullptr,
@@ -80,6 +80,40 @@ HWTEST_F(PreloadAbnormal, NullptrTest, TestSize.Level1)
     auto handle = Preload::GetInstance()->load(TEST_URL_0, std::make_unique<PreloadCallback>(callback));
     EXPECT_NE(handle, nullptr);
     handle->Cancel();
+}
+
+/**
+ * @tc.name: NullptrTest
+ * @tc.desc: Test nullptr callback handling in PreloadCallback with invalid UTF-8 URL
+ * @tc.precon: NA
+ * @tc.step: 1. Create PreloadCallback with all callbacks set to nullptr
+ *           2. Call Preload::load with invalid UTF-8 URL and nullptr callback
+ *           3. Verify handle is nullptr due to invalid input
+ *           4. Skip Cancel operation when handle is nullptr
+ * @tc.expect: Handle is nullptr due to invalid UTF-8 URL input
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadAbnormal, NullptrTest_2, TestSize.Level1)
+{
+    auto callback = PreloadCallback{
+        .OnSuccess = nullptr,
+        .OnCancel = nullptr,
+        .OnFail = nullptr,
+        .OnProgress = nullptr,
+    };
+
+    std::string invalidUtf8Url = "Test String Invalid \xFF\xFE";
+    auto handle = Preload::GetInstance()->load(invalidUtf8Url, std::make_unique<PreloadCallback>(callback));
+    EXPECT_EQ(handle, nullptr);
+
+    std::unique_ptr<PreloadOptions> options = std::make_unique<PreloadOptions>();
+    options->headers.push_back(std::make_tuple("Test String Invalid \xFF\xFE", "Test String Invalid \xFF\xFE"));
+    auto handle_1 = Preload::GetInstance()->load(invalidUtf8Url,
+                                             std::make_unique<PreloadCallback>(callback),
+                                             std::move(options));
+    EXPECT_EQ(handle_1, nullptr);
 }
 
 /**

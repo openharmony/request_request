@@ -76,6 +76,8 @@ void DownloadFailTest(std::string url)
     EXPECT_FALSE(flagC->load());
     EXPECT_FALSE(Preload::GetInstance()->Contains(url));
     EXPECT_EQ(Preload::GetInstance()->fetch(url), std::nullopt);
+    std::string invalidUtf8Url = "Test String Invalid \xFF\xFE";
+    EXPECT_EQ(Preload::GetInstance()->fetch(invalidUtf8Url), std::nullopt);
     EXPECT_EQ(flagP->load(), 0);
     EXPECT_EQ(handle->GetState(), PreloadState::FAIL);
     Preload::GetInstance()->Remove(url);
