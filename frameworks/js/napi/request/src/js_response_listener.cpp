@@ -58,9 +58,9 @@ void JSResponseListener::OnResponseReceive(const std::shared_ptr<Response> &resp
         [listener]() {
             std::lock_guard<std::mutex> lock(listener->responseMutex_);
             napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(listener->env_, &scope);
-            if (scope == nullptr) {
-                REQUEST_HILOGE("napi_open_handle_scope null");
+            napi_status status = napi_open_handle_scope(listener->env_, &scope);
+            if (status != napi_ok || scope == nullptr) {
+                REQUEST_HILOGE("OnResponseReceive napi_scope failed");
                 return;
             }
             napi_value value = NapiUtils::Convert2JSValue(listener->env_, listener->response_);

@@ -952,8 +952,9 @@ bool JsInitialize::Convert2FormItems(
     for (uint32_t i = 0; i < length; ++i) {
         napi_value jsVal = nullptr;
         napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(env, &scope);
-        if (scope == nullptr) {
+        napi_status status = napi_open_handle_scope(env, &scope);
+        if (status != napi_ok || scope == nullptr) {
+            REQUEST_HILOGE("Convert2FormItems napi_scope failed");
             return false;
         }
         napi_get_element(env, jsValue, i, &jsVal);
@@ -987,8 +988,9 @@ bool JsInitialize::Convert2FileSpecs(
     for (uint32_t i = 0; i < length; ++i) {
         napi_value jsVal = nullptr;
         napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(env, &scope);
-        if (scope == nullptr) {
+        napi_status status = napi_open_handle_scope(env, &scope);
+        if (status != napi_ok || scope == nullptr) {
+            REQUEST_HILOGE("Convert2FileSpecs napi_scope failed");
             return false;
         }
         napi_get_element(env, jsValue, i, &jsVal);

@@ -115,7 +115,11 @@ void UploadTaskNapiV5::OnSystemSuccess(napi_env env, napi_ref ref, Upload::Uploa
     }
     auto afterCallback = [successCallback]() {
         napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(successCallback->env, &scope);
+        napi_status status = napi_open_handle_scope(successCallback->env, &scope);
+        if (status != napi_ok || scope == nullptr) {
+            UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "OnSystemSuccess napi_scope failed");
+            delete successCallback;
+        }
         napi_value callback = nullptr;
         napi_value global = nullptr;
         napi_value result = nullptr;
@@ -145,7 +149,11 @@ void UploadTaskNapiV5::OnSystemFail(napi_env env, napi_ref ref, std::string &dat
     }
     auto afterCallback = [failCallback]() {
         napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(failCallback->env, &scope);
+        napi_status status = napi_open_handle_scope(failCallback->env, &scope);
+        if (status != napi_ok || scope == nullptr) {
+            UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "OnSystemFail napi_scope failed");
+            delete failCallback;
+        }
         napi_value callback = nullptr;
         napi_value global = nullptr;
         napi_value result = nullptr;
@@ -177,7 +185,11 @@ void UploadTaskNapiV5::OnSystemComplete(std::shared_ptr<Upload::UploadTaskNapiV5
     }
     auto afterCallback = [completeCallback]() {
         napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(completeCallback->proxy->env_, &scope);
+        napi_status status = napi_open_handle_scope(completeCallback->proxy->env_, &scope);
+        if (status != napi_ok || scope == nullptr) {
+            UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "OnSystemComplete napi_scope failed");
+            delete completeCallback;
+        }
         napi_value callback = nullptr;
         napi_value global = nullptr;
         napi_value result = nullptr;

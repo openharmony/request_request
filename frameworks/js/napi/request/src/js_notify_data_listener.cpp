@@ -228,9 +228,9 @@ void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
         [ptr]() {
             uint32_t paramNumber = NapiUtils::ONE_ARG;
             napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(ptr->listener->env_, &scope);
-            if (scope == nullptr) {
-                REQUEST_HILOGE("napi_open_handle_scope null");
+            napi_status status = napi_open_handle_scope(ptr->listener->env_, &scope);
+            if (status != napi_ok || scope == nullptr) {
+                REQUEST_HILOGE("OnNotifyDataReceive napi_scope failed");
                 delete ptr;
                 return;
             }
@@ -265,9 +265,9 @@ void JSNotifyDataListener::OnFaultsReceive(const std::shared_ptr<int32_t> &tid,
         [ptr, this]() {
             uint32_t paramNumber = NapiUtils::ONE_ARG;
             napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(ptr->listener->env_, &scope);
-            if (scope == nullptr) {
-                REQUEST_HILOGE("napi_open_handle_scope null");
+            napi_status status = napi_open_handle_scope(ptr->listener->env_, &scope);
+            if (status != napi_ok || scope == nullptr) {
+                REQUEST_HILOGE("OnFaultsReceive napi_scope failed");
                 delete ptr;
                 return;
             }
@@ -293,9 +293,9 @@ void JSNotifyDataListener::OnWaitReceive(std::int32_t taskId, WaitingReason reas
         [me = shared_from_this(), taskId, reason]() {
             uint32_t paramNumber = NapiUtils::ONE_ARG;
             napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(me->env_, &scope);
-            if (scope == nullptr) {
-                REQUEST_HILOGE("napi_open_handle_scope null");
+            napi_status status = napi_open_handle_scope(me->env_, &scope);
+            if (status != napi_ok || scope == nullptr) {
+                REQUEST_HILOGE("OnWaitReceive napi_scope failed");
                 return;
             }
             napi_value value = NapiUtils::Convert2JSValue(me->env_, reason);
