@@ -133,6 +133,7 @@
         "//base/request/request/test/unittest/cpp_test/fwkTest:unittest",
         "//base/request/request/test/unittest/cpp_test/innerTest:unittest",
         "//base/request/request/test/unittest/cpp_test/netstack:unittest",
+        "//base/request/request/test/unittest/cpp_test/inotifyImage:unittest",
         "//base/request/request/services/tests:unittest",
         "//base/request/request/frameworks/native/cache_download:unittest",
         "//base/request/request/frameworks/native/cache_core:unittest",
