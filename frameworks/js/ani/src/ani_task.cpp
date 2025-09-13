@@ -133,7 +133,7 @@ void ResponseListener::OnResponseReceive(const std::shared_ptr<Response> &respon
         return;
     }
     ani_object httpResponse = AniObjectUtils::Create(workerEnv, "@ohos.request.request", "agent",
-        "LHttpResponseImpl;", AniStringUtils::ToAni(workerEnv, response->version),
+        "HttpResponseImpl", AniStringUtils::ToAni(workerEnv, response->version),
         static_cast<ani_double>(response->statusCode), AniStringUtils::ToAni(workerEnv, response->reason));
     std::vector<ani_ref> args = {httpResponse};
     OnMessageReceive(workerEnv, args);
