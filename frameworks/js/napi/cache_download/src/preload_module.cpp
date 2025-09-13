@@ -102,8 +102,7 @@ napi_value download(napi_env env, napi_callback_info info)
         } else if (sslType == SSL_TYPE_TLCP) {
             options->sslType = SslType::TLCP;
         } else {
-            ThrowError(env, E_PARAMETER_CHECK, "sslType parameter error");
-            return nullptr;
+            options->sslType = SslType::TLS;
         }
     } else {
         options->sslType = SslType::DEFAULT;
