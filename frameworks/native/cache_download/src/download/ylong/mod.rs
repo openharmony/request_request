@@ -59,7 +59,7 @@ impl<'a> DownloadOperator for Operator<'a> {
     ) -> Poll<Result<usize, HttpClientError>> {
         let me = self.get_mut();
         me.callback.common_data_receive(data, || {
-            me.headers.get("content-length").map(|v| v.parse().unwrap())
+            me.headers.get("content-length").and_then(|v| v.parse().ok())
         });
         Poll::Ready(Ok(data.len()))
     }
@@ -132,7 +132,7 @@ pub async fn download(
             request = request.append_header(k.as_str(), v.as_str());
         }
     }
-    let request = request.body(Body::empty()).unwrap();
+    let request = request.body(Body::empty())?;
 
     let response = client().request(request).await?;
     let status = response.status();

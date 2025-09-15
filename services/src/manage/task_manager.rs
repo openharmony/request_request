@@ -467,21 +467,39 @@ impl TaskManagerTx {
         let (tx, rx) = oneshot::channel();
         let event = QueryEvent::Show(task_id, uid, tx);
         let _ = self.send_event(TaskManagerEvent::Query(event));
-        ylong_runtime::block_on(rx).unwrap()
+        match ylong_runtime::block_on(rx) {
+            Ok(task_info) => task_info,
+            Err(error) => {
+                error!("In `show`, block on failed, err {}", error);
+                None
+            }
+        }
     }
 
     pub(crate) fn query(&self, task_id: u32, action: Action) -> Option<TaskInfo> {
         let (tx, rx) = oneshot::channel();
         let event = QueryEvent::Query(task_id, action, tx);
         let _ = self.send_event(TaskManagerEvent::Query(event));
-        ylong_runtime::block_on(rx).unwrap()
+        match ylong_runtime::block_on(rx) {
+            Ok(task_info) => task_info,
+            Err(error) => {
+                error!("In `query`, block on failed, err {}", error);
+                None
+            }
+        }
     }
 
     pub(crate) fn touch(&self, uid: u64, task_id: u32, token: String) -> Option<TaskInfo> {
         let (tx, rx) = oneshot::channel();
         let event = QueryEvent::Touch(task_id, uid, token, tx);
         let _ = self.send_event(TaskManagerEvent::Query(event));
-        ylong_runtime::block_on(rx).unwrap()
+        match ylong_runtime::block_on(rx) {
+            Ok(task_info) => task_info,
+            Err(error) => {
+                error!("In `touch`, block on failed, err {}", error);
+                None
+            }
+        }
     }
 }
 
