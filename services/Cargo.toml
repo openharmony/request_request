@@ -31,8 +31,8 @@ oh = [
 
 [dependencies]
 rdb = { path = "../common/database" }
-ylong_runtime = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime", features = ["full"] }
-ylong_http_client = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_http", features = [
+ylong_runtime = { git = "https://gitcode.com/openharmony/commonlibrary_rust_ylong_runtime", features = ["full"] }
+ylong_http_client = { git = "https://gitcode.com/openharmony/commonlibrary_rust_ylong_http", features = [
     "async",
     "c_openssl_3_0",
     "http1_1",
@@ -40,12 +40,12 @@ ylong_http_client = { git = "https://gitee.com/openharmony/commonlibrary_rust_yl
 ] }
 
 request_utils = { path = "../common/utils" }
-hilog_rust = { git = "https://gitee.com/openharmony/hiviewdfx_hilog", optional = true }
-hisysevent = { git = "https://gitee.com/openharmony/hiviewdfx_hisysevent", optional = true }
-hitrace_meter_rust = { git = "https://gitee.com/openharmony/hiviewdfx_hitrace", optional = true }
-ipc = { git = "https://gitee.com/openharmony/communication_ipc", optional = true }
-samgr = { git = "https://gitee.com/openharmony/systemabilitymgr_samgr", optional = true }
-system_ability_fwk = { git = "https://gitee.com/openharmony/systemabilitymgr_safwk", optional = true }
+hilog_rust = { git = "https://gitcode.com/openharmony/hiviewdfx_hilog", optional = true }
+hisysevent = { git = "https://gitcode.com/openharmony/hiviewdfx_hisysevent", optional = true }
+hitrace_meter_rust = { git = "https://gitcode.com/openharmony/hiviewdfx_hitrace", optional = true }
+ipc = { git = "https://gitcode.com/openharmony/communication_ipc", optional = true }
+samgr = { git = "https://gitcode.com/openharmony/systemabilitymgr_samgr", optional = true }
+system_ability_fwk = { git = "https://gitcode.com/openharmony/systemabilitymgr_safwk", optional = true }
 
 cxx = "1.0.115"
 log = "0.4.22"

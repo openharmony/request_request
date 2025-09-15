@@ -46,13 +46,13 @@ ffrt_rs = { path = "../../../common/ffrt_rs", optional = true }
 request_utils = { path = "../../../common/utils" }
 netstack_rs = { path = "../../../common/netstack_rs", optional = true }
 
-ylong_http_client = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_http", features = [
+ylong_http_client = { git = "https://gitcode.com/openharmony/commonlibrary_rust_ylong_http", features = [
     "async",
     "c_openssl_3_0",
     "http1_1",
     "ylong_base",
 ], optional = true }
-ylong_runtime = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime", features = ["full"], optional = true }
+ylong_runtime = { git = "https://gitcode.com/openharmony/commonlibrary_rust_ylong_runtime", features = ["full"], optional = true }
 
 [dev-dependencies]
 env_logger = "0.11.3"
