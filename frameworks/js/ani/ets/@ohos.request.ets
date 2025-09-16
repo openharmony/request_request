@@ -20,7 +20,7 @@ import hilog from '@ohos.hilog';
 
 export default namespace request {
   namespace agent {
-    loadLibrary("requestmodule_ani");
+    loadLibraryWithPermissionCheck("requestmodule_ani", "@ohos.request");
 
     interface FileSpec {
       path: string;
