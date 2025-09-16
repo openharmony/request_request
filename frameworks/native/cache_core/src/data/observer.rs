@@ -25,23 +25,13 @@ impl DirRebuilder {
         Self { curr, history }
     }
 
-    pub fn recreate_store_dir(&self) {
+    pub fn remove_store_dir(&self) {
         if self.curr.is_dir() {
             // Don't care about the failed deletion.
             if let Err(e) = fs::remove_dir_all(self.curr.as_path()) {
                 error!("remove local store directory fail, err: {:?}", e);
             };
         }
-        if let Err(e) = fs::create_dir_all(self.curr.as_path()) {
-            error!("recreate local store directory fail, err: {:?}", e);
-        };
-    }
-
-    pub fn history_exist_or_create(&self) -> bool {
-        if !self.history.exist() {
-            return self.history.create();
-        }
-        true
     }
 
     pub fn stop_history_observe(&self) {

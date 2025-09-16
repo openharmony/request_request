@@ -52,7 +52,6 @@ private:
     int SetupEpoll();
     int AddToEpoll(int fd, uint32_t events);
     void HandleInotify();
-    int RewatchDirectory();
     void OperateTargetDir();
     void Cleanup();
 
