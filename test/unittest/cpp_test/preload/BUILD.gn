@@ -20,6 +20,7 @@ ohos_unittest("preload_test") {
     "include",
     "../../../../interfaces/inner_kits/predownload/include",
     "../../../../common/include",
+    "../../../common/utf8_utils/include",
   ]
 
   sources = [
@@ -32,7 +33,9 @@ ohos_unittest("preload_test") {
     "src/success.cpp",
   ]
 
-  deps = [ "../../../../frameworks/native/cache_download:preload_native" ]
+  deps = [
+    "../../../../frameworks/native/cache_download:preload_native",
+  ]
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken_shared",

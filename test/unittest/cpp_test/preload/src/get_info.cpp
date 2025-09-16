@@ -34,6 +34,7 @@
 #include "nativetoken_kit.h"
 #include "request_preload.h"
 #include "token_setproc.h"
+#include "utf8_utils.h"
 
 using namespace testing::ext;
 using namespace OHOS::Request;
@@ -130,6 +131,8 @@ void PreDownloadInfo(std::string url, uint64_t size)
 {
     Preload::GetInstance()->Remove(url);
     EXPECT_FALSE(Preload::GetInstance()->Contains(url));
+    std::string invalidUtf8Url = "Test String Invalid \xFF\xFE";
+    EXPECT_FALSE(Preload::GetInstance()->Contains(invalidUtf8Url));
 
     TestCallback test(size);
     auto &[flagS, flagF, flagC, flagP, callback] = test;
@@ -207,4 +210,131 @@ HWTEST_F(PreloadGetInfo, CppInfoMove, TestSize.Level1)
     CppDownloadInfo info2(std::move(result2.value()));
     info2 = std::move(info1);
     EXPECT_EQ(info2.dns_time(), dnsTime);
+}
+
+/**
+ * @tc.name: InfoIsInvalidUtf8
+ * @tc.desc: Test GetDownloadInfo interface behavior with invalid UTF-8 URL input
+ * @tc.precon: Preload module should validate UTF-8 encoding before processing URLs
+ * @tc.step: 1. Verify UTF-8 validity
+ *           2. Create invalid UTF-8 URL byte sequence
+ *           3. Verify UTF-8 validation correctly identifies invalid input
+ *           4. Call GetDownloadInfo with invalid UTF-8 URL
+ *           5. Check return value for expected behavior
+ * @tc.expect: 1. UTF-8 validation should return false for invalid input
+ *             2. GetDownloadInfo should return std::nullopt for invalid UTF-8 URLs
+ *             3. No crash or undefined behavior should occur
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadGetInfo, InfoIsInvalidUtf8, TestSize.Level1)
+{
+    std::string invalidUtf8Url = "Test String Invalid \xFF\xFE";
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(invalidUtf8Url.begin(), invalidUtf8Url.end())));
+
+    auto result = Preload::GetInstance()->GetDownloadInfo(invalidUtf8Url);
+
+    EXPECT_FALSE(result.has_value());
+}
+
+/**
+ * @tc.name: InvalidUtf8_1
+ * @tc.desc: Test RunUtf8Validation interface behavior with invalid/valid UTF-8 input
+ * @tc.precon: NA
+ * @tc.step: 1. Verify UTF-8 validity
+ * @tc.expect: 1. Verify the validity is correct.
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadGetInfo, InvalidUtf8_1, TestSize.Level1)
+{
+    std::vector<uint8_t> test_ee_valid = {0xEE, 0x80, 0x80};
+    EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_ee_valid));
+    std::vector<uint8_t> test_ef_valid = {0xEF, 0xBF, 0xBD};
+    EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_ef_valid));
+    std::vector<uint8_t> test_ee_max = {0xEE, 0xBF, 0xBF};
+    EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_ee_max));
+    std::vector<uint8_t> test_ef_min = {0xEF, 0x80, 0x80};
+    EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_ef_min));
+
+    std::vector<uint8_t> test_f1_valid = {0xF1, 0x80, 0x80, 0x80};
+    EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_f1_valid));
+    std::vector<uint8_t> test_f2_valid = {0xF2, 0x80, 0x80, 0x80};
+    EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_f2_valid));
+    std::vector<uint8_t> test_f3_valid = {0xF3, 0x80, 0x80, 0x80};
+    EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_f3_valid));
+    std::vector<uint8_t> test_f1_max = {0xF1, 0xBF, 0xBF, 0xBF};
+    EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_f1_max));
+    std::vector<uint8_t> test_f3_max = {0xF3, 0xBF, 0xBF, 0xBF};
+    EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_f3_max));
+
+    std::vector<uint8_t> valid2 = {0xC3, 0x87};
+    EXPECT_TRUE(Utf8Utils::RunUtf8Validation(valid2));
+    std::vector<uint8_t> valid3 = {0xE0, 0xA4, 0x85};
+    EXPECT_TRUE(Utf8Utils::RunUtf8Validation(valid3));
+    std::vector<uint8_t> valid4 = {0xF0, 0x90, 0x8C, 0x82};
+    EXPECT_TRUE(Utf8Utils::RunUtf8Validation(valid4));
+    std::vector<uint8_t> valid5 = {0xF4, 0x80, 0x80, 0x80};
+    EXPECT_TRUE(Utf8Utils::RunUtf8Validation(valid5));
+    std::vector<uint8_t> valid6 = {0xF4, 0x8F, 0xBF, 0xBF};
+    EXPECT_TRUE(Utf8Utils::RunUtf8Validation(valid6));
+    std::vector<uint8_t> mixed = {
+            'H', 'e', 'l', 'l', 'o',
+            0xC3, 0xA4,
+            ' ',
+            0xE2, 0x82, 0xAC,
+            '!'
+    };
+    EXPECT_TRUE(Utf8Utils::RunUtf8Validation(mixed));
+}
+
+/**
+ * @tc.name: InvalidUtf8_2
+ * @tc.desc: Test RunUtf8Validation interface behavior with invalid/valid UTF-8 input
+ * @tc.precon: NA
+ * @tc.step: 1. Verify UTF-8 validity
+ * @tc.expect: 1. Verify the validity is correct.
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadGetInfo, InvalidUtf8_2, TestSize.Level1)
+{
+    std::vector<uint8_t> invalid = {0xC2};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid));
+    std::vector<uint8_t> invalid_1 = {0xE0, 0x9F, 0x80};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_1));
+    std::vector<uint8_t> invalid_2 = {0xED, 0xA0, 0x80};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_2));
+    std::vector<uint8_t> invalid_3 = {0xF0, 0x8F, 0x80, 0x80};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_3));
+    std::vector<uint8_t> invalid_4 = {0xF4, 0x90, 0x80, 0x80};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_4));
+    std::vector<uint8_t> invalid_5 = {0xE0, 0xA0};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_5));
+    std::vector<uint8_t> invalid_6 = {0x80};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_6));
+    std::vector<uint8_t> invalid_7 = {0xFF};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_7));
+    std::vector<uint8_t> invalid_8 = {0xC0};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_8));
+    std::vector<uint8_t> invalid_9 = {0xF0, 0x90, 0x80};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_9));
+
+    std::vector<uint8_t> v2_invalid = {0xC2, 0x7F};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v2_invalid));
+    std::vector<uint8_t> v3_invalid = {0xE2, 0x82, 0x7F};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v3_invalid));
+    std::vector<uint8_t> v3_invalid2 = {0xE0, 0xA0, 0x7F};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v3_invalid2));
+    std::vector<uint8_t> v4_invalid = {0xF0, 0x9F, 0x98, 0x7F};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v4_invalid));
+    std::vector<uint8_t> v4_invalid2 = {0xF0, 0x90, 0x7F, 0x80};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v4_invalid2));
+    std::vector<uint8_t> v4_invalid3 = {0xF4, 0x7F, 0x80, 0x80};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v4_invalid3));
+    std::vector<uint8_t> v4_invalid4 = {0xF4, 0x90, 0x80, 0x80};
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v4_invalid4));
 }

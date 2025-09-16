@@ -27,6 +27,7 @@
 #include "gmock/gmock.h"
 #include "log.h"
 #include "request_preload.h"
+#include "utf8_utils.h"
 using namespace testing::ext;
 using namespace OHOS::Request;
 using namespace std;
@@ -245,5 +246,83 @@ HWTEST_F(PreloadCancel, OnCancelAddCallback_2, TestSize.Level1)
 
     EXPECT_TRUE(flagC->load());
     EXPECT_FALSE(flagC_1->load());
+    Preload::GetInstance()->Remove(url);
+}
+
+/**
+ * @tc.name: Cancel_WhenUrlIsInvalidUtf8
+ * @tc.desc: Test Add callback for same url after cancellation
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create first test callback and load URL
+ *           3. Cancel first handle immediately
+ *           4. Wait for completion and verify callbacks triggered correctly
+ * @tc.expect: Handle runs normally after handle cancellation
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadCancel, Cancel_WhenUrlIsInvalidUtf8, TestSize.Level1)
+{
+    auto url = TEST_URL_0;
+    Preload::GetInstance()->Remove(url);
+
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+
+    auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
+
+    std::string invalidUtf8Url = "Test String Invalid \xFF\xFE";
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(invalidUtf8Url.begin(), invalidUtf8Url.end())));
+
+    Preload::GetInstance()->Cancel(invalidUtf8Url);
+
+    while (!handle->IsFinish()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+    }
+
+    EXPECT_FALSE(flagF->load());
+    EXPECT_TRUE(flagP->load());
+    EXPECT_TRUE(flagS->load());
+    EXPECT_FALSE(flagC->load());
+    Preload::GetInstance()->Remove(url);
+}
+
+/**
+ * @tc.name: Remove_WhenUrlIsInvalidUtf8
+ * @tc.desc: Test Add callback for same url after cancellation
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create first test callback and load URL
+ *           3. Remove first handle immediately
+ *           4. Wait for completion and verify callbacks triggered correctly
+ * @tc.expect: Handle runs normally after handle remove
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadCancel, Remove_WhenUrlIsInvalidUtf8, TestSize.Level1)
+{
+    auto url = TEST_URL_0;
+    Preload::GetInstance()->Remove(url);
+
+    TestCallback test;
+    auto &[flagS, flagF, flagC, flagP, callback] = test;
+
+    auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
+
+    std::string invalidUtf8Url = "Test String Invalid \xFF\xFE";
+    EXPECT_FALSE(Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(invalidUtf8Url.begin(), invalidUtf8Url.end())));
+
+    Preload::GetInstance()->Remove(invalidUtf8Url);
+
+    while (!handle->IsFinish()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+    }
+
+    EXPECT_FALSE(flagF->load());
+    EXPECT_TRUE(flagP->load());
+    EXPECT_TRUE(flagS->load());
+    EXPECT_FALSE(flagC->load());
     Preload::GetInstance()->Remove(url);
 }
