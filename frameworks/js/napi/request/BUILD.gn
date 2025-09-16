@@ -97,6 +97,7 @@ ohos_shared_library("request") {
     "netmanager_base:net_security_config_if",
     "openssl:libssl_shared",
     "storage_service:storage_manager_acl",
+    "ability_runtime:wantagent_innerkits",
   ]
 
   relative_install_dir = "module"

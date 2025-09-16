@@ -31,6 +31,8 @@
 #include "service/notification_bar/mod.rs.h"
 #include "task/config.rs.h"
 
+#include "want_agent_helper.h"
+
 namespace OHOS::Request {
 using namespace Global;
 
@@ -161,7 +163,10 @@ int PublishNotification(const NotifyContent &content)
     } else {
         request.SetContent(NormalContent(content));
     }
-
+    if (!content.want_agent.empty()) {
+        request.SetWantAgent(
+            OHOS::AbilityRuntime::WantAgent::WantAgentHelper::FromString(std::string(content.want_agent)));
+    }
     return Notification::NotificationHelper::PublishNotification(request);
 }
 

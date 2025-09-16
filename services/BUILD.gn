@@ -99,6 +99,7 @@ ohos_static_library("download_server_cxx") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "ylong_runtime:ylong_runtime",
+    "ability_runtime:wantagent_innerkits",
   ]
 
   deps = [

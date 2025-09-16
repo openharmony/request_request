@@ -31,6 +31,7 @@ mod ffi {
     pub(crate) struct NotifyContent {
         title: String,
         text: String,
+        want_agent: String,
         request_id: u32,
         uid: u32,
         live_view: bool,

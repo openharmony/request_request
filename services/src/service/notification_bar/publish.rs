@@ -244,6 +244,7 @@ impl NotificationDispatcher {
         gauge: bool,
         title: Option<String>,
         text: Option<String>,
+        want_agent: Option<String>,
         disable: bool,
         visibility: u32,
     ) -> u32 {
@@ -254,16 +255,16 @@ impl NotificationDispatcher {
             }
         };
         info!(
-            "Create group {} gauge {} customized_title {:?} customized_text {:?} disable {} visibility {}",
-            new_group_id, gauge, title, text, disable, visibility
+            "Create group {} gauge {} customized_title {:?} customized_text {:?} want_agent {:?} disable {} visibility {}",
+            new_group_id, gauge, title, text, want_agent, disable, visibility
         );
 
         let current_time = get_current_duration().as_millis() as u64;
         self.database
             .update_group_config(new_group_id, gauge, current_time, !disable, visibility);
-        if title.is_some() || text.is_some() {
+        if title.is_some() || text.is_some() || want_agent.is_some() {
             self.database
-                .update_group_customized_notification(new_group_id, title, text);
+                .update_group_customized_notification(new_group_id, title, text, want_agent);
         }
         new_group_id
     }
