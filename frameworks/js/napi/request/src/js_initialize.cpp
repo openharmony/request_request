@@ -34,6 +34,7 @@
 #include "napi_utils.h"
 #include "network_security_config.h"
 #include "parameter.h"
+#include "path_utils.h"
 #include "request_common.h"
 #include "request_manager.h"
 #include "sys_event.h"
@@ -234,23 +235,17 @@ bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &con
             SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_00, config.bundleName, "", error.errInfo);
             return false;
         }
-        int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+        int32_t ret = chmod(path.c_str(), PathUtils::WRITE_MODE);
         if (ret != 0) {
             REQUEST_HILOGE("body chmod fail: %{public}d", ret);
             SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_01, config.bundleName, "", std::to_string(ret));
         };
 
-        bool setRes = JsTask::SetPathPermission(path);
         int32_t retClose = fclose(bodyFile);
         if (retClose != 0) {
             REQUEST_HILOGE("upload body fclose fail: %{public}d", ret);
             SysEventLog::SendSysEventLog(
                 FAULT_EVENT, STANDARD_FAULT_02, config.bundleName, "", std::to_string(retClose));
-        }
-        if (!setRes) {
-            error.code = E_FILE_IO;
-            error.errInfo = "UploadBodyFiles set body path permission fail";
-            return false;
         }
         config.bodyFileNames.push_back(path);
     }
@@ -301,7 +296,7 @@ bool JsInitialize::GetFdDownload(const std::string &path, const Config &config, 
         return false;
     }
 
-    int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+    int32_t ret = chmod(path.c_str(), PathUtils::WRITE_MODE);
     if (ret != 0) {
         REQUEST_HILOGE("download file chmod fail: %{public}d", ret);
         SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_01, config.bundleName, "", std::to_string(ret));
@@ -330,7 +325,7 @@ bool JsInitialize::GetFdUpload(const std::string &path, const Config &config, Ex
         return false;
     }
     REQUEST_HILOGD("upload file fopen ok");
-    int32_t ret = chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    int32_t ret = chmod(path.c_str(), PathUtils::READ_MODE);
     if (ret != 0) {
         REQUEST_HILOGE("upload file chmod fail: %{public}d", ret);
         SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_01, config.bundleName, "", std::to_string(ret));
@@ -1264,11 +1259,6 @@ bool JsInitialize::CheckUploadFileSpec(const std::shared_ptr<OHOS::AbilityRuntim
     if (!GetFdUpload(path, config, error)) {
         return false;
     }
-    if (!JsTask::SetPathPermission(file.uri)) {
-        error.code = E_FILE_IO;
-        error.errInfo = "set path permission fail";
-        return false;
-    }
     StandardizeFileSpec(file);
     return true;
 }
@@ -1321,11 +1311,6 @@ bool JsInitialize::CheckDownloadFile(
     StandardizeFileSpec(file);
     config.files.push_back(file);
     if (!GetFdDownload(file.uri, config, error)) {
-        return false;
-    }
-    if (!JsTask::SetPathPermission(config.saveas)) {
-        error.code = E_FILE_IO;
-        error.errInfo = "set path permission fail, download";
         return false;
     }
     return true;
