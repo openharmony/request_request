@@ -168,47 +168,10 @@ void DirectoryMonitor::HandleInotify()
                 running_ = false;
                 return;
             }
-            callback_->recreate_store_dir();
-            if (!callback_->history_exist_or_create()) {
-                REQUEST_HILOGE("recreate history dir fail.");
-                running_ = false;
-                return;
-            };
-            if (RewatchDirectory() == -1) {
-                running_ = false;
-            };
+            callback_->remove_store_dir();
+            running_ = false;
         }
     }
-}
-
-int DirectoryMonitor::RewatchDirectory()
-{
-    int ret = -1;
-    if (watch_descriptor_ != -1) {
-        ret = inotify_rm_watch(inotify_fd_, watch_descriptor_);
-        if (ret == -1) {
-            REQUEST_HILOGE("inotify_rm_watch fail while rewatch, err : %{public}s", strerror(errno));
-        }
-        watch_descriptor_ = -1;
-    }
-
-    int attempts = 0;
-    const int max_attempts = 3;
-    const int retry_delay = 1000;
-
-    while (attempts < max_attempts && running_) {
-        ret = inotify_add_watch(inotify_fd_, directory_.c_str(), IN_DELETE_SELF | IN_MOVE_SELF);
-        if (ret != -1) {
-            watch_descriptor_ = ret;
-            return 0;
-        }
-        if (running_) {
-            REQUEST_HILOGE("RewatchDirectory fail, errno : %{public}s", strerror(errno));
-        }
-        ffrt::this_task::sleep_for(std::chrono::milliseconds(retry_delay));
-        attempts++;
-    }
-    return -1;
 }
 
 void DirectoryMonitor::Cleanup()

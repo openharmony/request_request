@@ -21,7 +21,7 @@ members = [
     "common/netstack_rs",
     "common/utils",
     "test/rustest",
-    "test/unittest/common/file_operation",
+    "test/unittest/common/dir_operation",
     "common/database",
     "services",
 ]

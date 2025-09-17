@@ -18,8 +18,7 @@ pub(crate) mod ffi {
     extern "Rust" {
         type DirRebuilder;
 
-        fn recreate_store_dir(self: &DirRebuilder);
-        fn history_exist_or_create(self: &DirRebuilder) -> bool;
+        fn remove_store_dir(self: &DirRebuilder);
     }
 
     unsafe extern "C++" {
