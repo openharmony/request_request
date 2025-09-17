@@ -16,7 +16,7 @@ use std::collections::HashMap;
 use request_core::config::{self, CommonTaskConfig, NetworkConfig, TaskConfig, Version};
 use serde::{Deserialize, Serialize};
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Action")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.Action")]
 pub enum Action {
     Download,
     Upload,
@@ -50,7 +50,7 @@ impl From<u8> for Action {
     }
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Mode")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.Mode")]
 pub enum Mode {
     Background,
     Foreground,
@@ -84,7 +84,7 @@ impl From<u8> for Mode {
     }
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Network")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.Network")]
 pub enum Network {
     Any,
     Wifi,
@@ -111,12 +111,12 @@ impl From<NetworkConfig> for Network {
     }
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/BroadcastEvent")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.BroadcastEvent")]
 pub enum BroadcastEvent {
     Complete,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/FileSpecInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.FileSpecInner")]
 pub struct FileSpec {
     path: String,
     content_type: Option<String>,
@@ -140,12 +140,12 @@ impl From<FileSpec> for request_core::file::FileSpec {
 #[derive(Serialize, Deserialize)]
 pub enum Value {
     S(String),
-    #[serde(rename = "L@ohos/request/request/agent/FileSpecInner;")]
+    #[serde(rename = "@ohos.request.request.agent.FileSpecInner")]
     FileSpec(FileSpec),
     Array(Vec<FileSpec>),
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/FormItemInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.FormItemInner")]
 pub struct FormItem {
     name: String,
     value: Value,
@@ -193,7 +193,7 @@ pub struct Config {
     pub notification: Option<Notification>,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/State")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.State")]
 pub enum State {
     Initialized = 0x00,
     Waiting = 0x10,
@@ -256,7 +256,7 @@ impl From<u8> for State {
     }
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/ProgressInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.ProgressInner")]
 pub struct Progress {
     state: State,
     index: i32,
@@ -289,7 +289,7 @@ impl From<&request_core::info::InfoProgress> for Progress {
     }
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Faults")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.Faults")]
 pub enum Faults {
     Others = 0xFF,
     Disconnected = 0x00,
@@ -326,7 +326,7 @@ impl From<Filter> for request_core::filter::SearchFilter {
     }
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInfoInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.TaskInfoInner")]
 pub struct TaskInfo {
     pub uid: Option<String>,
     pub bundle: Option<String>,
@@ -379,7 +379,7 @@ impl From<request_core::info::TaskInfo> for TaskInfo {
     }
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/HttpResponseInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.HttpResponseInner")]
 pub struct HttpResponse {
     version: String,
     status_code: i32,
@@ -398,7 +398,7 @@ impl From<&request_core::info::Response> for HttpResponse {
     }
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.TaskInner")]
 pub struct Task {
     pub tid: String,
 }
