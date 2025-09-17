@@ -38,9 +38,6 @@ namespace OHOS::Request {
 using namespace OHOS::NetStack::HttpClient;
 using namespace OHOS::NetManagerStandard;
 
-static const std::string SSL_TYPE_TLS = "TLS";
-static const std::string SSL_TYPE_TLCP = "TLCP";
-
 void OnCallback(const std::shared_ptr<HttpClientTask> &task, rust::Box<CallbackWrapper> callback)
 {
     CallbackWrapper *raw_ptr = callback.into_raw();
@@ -119,16 +116,6 @@ void GetPerformanceInfo(const HttpClientResponse &response, RustPerformanceInfo 
     performance.set_first_receive_timing(cpp_perf.firstReceiveTiming);
     performance.set_total_timing(cpp_perf.totalTiming);
     performance.set_redirect_timing(cpp_perf.redirectTiming);
-}
-
-void SetRequestSslType(HttpClientRequest &request, const std::string &sslType)
-{
-    if (sslType == SSL_TYPE_TLS) {
-        request.SetSslType(SslType::TLS);
-    } else if (sslType == SSL_TYPE_TLCP) {
-        request.SetSslType(SslType::TLCP);
-    }
-    return;
 }
 
 } // namespace OHOS::Request

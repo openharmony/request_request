@@ -31,11 +31,6 @@ struct RustPerformanceInfo;
 
 void OnCallback(const std::shared_ptr<HttpClientTask> &task, rust::Box<CallbackWrapper> callback);
 
-inline std::unique_ptr<HttpClientRequest> NewHttpClientRequest()
-{
-    return std::make_unique<HttpClientRequest>();
-}
-
 inline void SetBody(HttpClientRequest &request, const uint8_t *data, size_t size)
 {
     request.SetBody(data, size);
@@ -52,8 +47,6 @@ rust::vec<rust::string> GetHeaders(HttpClientResponse &response);
 rust::vec<rust::string> GetResolvConf();
 
 void GetPerformanceInfo(const HttpClientResponse &response, RustPerformanceInfo &performance);
-
-void SetRequestSslType(HttpClientRequest &request, const std::string &sslType);
 
 } // namespace OHOS::Request
 
