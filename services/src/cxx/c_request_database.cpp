@@ -443,31 +443,61 @@ int RequestDBCreateTables(OHOS::NativeRdb::RdbStore &store)
     return ret;
 }
 
+bool ColumnExists(OHOS::NativeRdb::RdbStore &store, const std::string& columnName)
+{
+    std::string query = "SELECT COUNT(*) FROM pragma_table_info('request_task') WHERE name = ?";
+
+    auto resultSet = store.QuerySql(query, std::vector<std::string>{columnName});
+    if (resultSet == nullptr) {
+        REQUEST_HILOGE("Search failed: result set is nullptr");
+        return false;
+    }
+
+    int count = 0;
+    if (resultSet->GoToNextRow() == NativeRdb::E_OK) {
+        NativeRdb::ValueObject valObject;
+        if (resultSet->Get(0, valObject) == NativeRdb::E_OK) {
+            valObject.GetInt(count);
+        }
+    }
+
+    return count == 1;
+}
+
 // Keeps this function for possible extensions later
 int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store)
 {
-    int ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_PROXY);
-    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
-        REQUEST_HILOGE("add column proxy failed, ret: %{public}d", ret);
-        return ret;
+    int ret = OHOS::NativeRdb::E_OK;
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_PROXY)) {
+        ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_PROXY);
+        if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+            REQUEST_HILOGE("add column proxy failed, ret: %{public}d", ret);
+            return ret;
+        }
     }
 
-    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CERTIFICATE_PINS);
-    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
-        REQUEST_HILOGE("add column certificate_pins failed, ret: %{public}d", ret);
-        return ret;
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_CERTIFICATE_PINS)) {
+        ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CERTIFICATE_PINS);
+        if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+            REQUEST_HILOGE("add column certificate_pins failed, ret: %{public}d", ret);
+            return ret;
+        }
     }
 
-    ret = store.ExecuteSql(OHOS::Request::REQUEST_TASK_TABLE_ADD_BUNDLE_TYPE);
-    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
-        REQUEST_HILOGE("add column bundle_type failed, ret: %{public}d", ret);
-        return ret;
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_BUNDLE_TYPE)) {
+        ret = store.ExecuteSql(OHOS::Request::REQUEST_TASK_TABLE_ADD_BUNDLE_TYPE);
+        if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+            REQUEST_HILOGE("add column bundle_type failed, ret: %{public}d", ret);
+            return ret;
+        }
     }
 
-    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_ATOMIC_ACCOUNT);
-    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
-        REQUEST_HILOGE("add column atomic_account failed, ret: %{public}d", ret);
-        return ret;
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_ATOMIC_ACCOUNT)) {
+        ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_ATOMIC_ACCOUNT);
+        if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+            REQUEST_HILOGE("add column atomic_account failed, ret: %{public}d", ret);
+            return ret;
+        }
     }
 
     ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_UID_INDEX);
@@ -475,67 +505,91 @@ int RequestDBUpgradeFrom41(OHOS::NativeRdb::RdbStore &store)
         REQUEST_HILOGE("add uid index failed, ret: %{public}d", ret);
         return ret;
     }
-    return OHOS::NativeRdb::E_OK;
+    return ret;
 }
 
 int RequestDBUpgradeFrom50(OHOS::NativeRdb::RdbStore &store)
 {
-    int ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MAX_SPEED);
-    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
-        REQUEST_HILOGE("add max_speed failed, ret: %{public}d", ret);
-        return ret;
+    int ret = OHOS::NativeRdb::E_OK;
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_MAX_SPEED)) {
+        ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MAX_SPEED);
+        if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+            REQUEST_HILOGE("add max_speed failed, ret: %{public}d", ret);
+            return ret;
+        }
     }
 
-    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MULTIPART);
-    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
-        REQUEST_HILOGE("add multipart failed, ret: %{public}d", ret);
-        return ret;
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_MULTIPART)) {
+        ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MULTIPART);
+        if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+            REQUEST_HILOGE("add multipart failed, ret: %{public}d", ret);
+            return ret;
+        }
     }
 
-    return OHOS::NativeRdb::E_OK;
+    return ret;
 }
 
 int RequestDBUpgradeFrom51(OHOS::NativeRdb::RdbStore &store)
 {
-    int ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MIN_SPEED);
-    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
-        REQUEST_HILOGE("add max_speed failed, ret: %{public}d", ret);
-        return ret;
+    int ret = OHOS::NativeRdb::E_OK;
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_MIN_SPEED)) {
+        ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MIN_SPEED);
+        if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+            REQUEST_HILOGE("add min speed failed, ret: %{public}d", ret);
+            return ret;
+        }
     }
 
-    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MIN_SPEED_DURATION);
-    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
-        REQUEST_HILOGE("add multipart failed, ret: %{public}d", ret);
-        return ret;
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_MIN_SPEED_DURATION)) {
+        ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MIN_SPEED_DURATION);
+        if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+            REQUEST_HILOGE("add min speed duration failed, ret: %{public}d", ret);
+            return ret;
+        }
     }
 
-    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CONNECTION_TIMEOUT);
-    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
-        REQUEST_HILOGE("add connection timeout failed, ret: %{public}d", ret);
-        return ret;
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_CONNECTION_TIMEOUT)) {
+        ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CONNECTION_TIMEOUT);
+        if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+            REQUEST_HILOGE("add connection timeout failed, ret: %{public}d", ret);
+            return ret;
+        }
     }
-    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_TOTAL_TIMEOUT);
-    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
-        REQUEST_HILOGE("add total timeout failed, ret: %{public}d", ret);
-        return ret;
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_TOTAL_TIMEOUT)) {
+        ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_TOTAL_TIMEOUT);
+        if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+            REQUEST_HILOGE("add total timeout failed, ret: %{public}d", ret);
+            return ret;
+        }
     }
-    ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_TASK_TIME);
-    if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
-        REQUEST_HILOGE("add task_time failed, ret: %{public}d", ret);
-        return ret;
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_TASK_TIME)) {
+        ret = store.ExecuteSql(REQUEST_TASK_TABLE_ADD_TASK_TIME);
+        if (ret != OHOS::NativeRdb::E_OK && ret != OHOS::NativeRdb::E_SQLITE_ERROR) {
+            REQUEST_HILOGE("add task_time failed, ret: %{public}d", ret);
+            return ret;
+        }
     }
     return OHOS::NativeRdb::E_OK;
 }
-
 // This function is used to adapt beta version, remove it later.
 void RequestDBUpgradeFrom60(OHOS::NativeRdb::RdbStore &store)
 {
-    // Ignores these error if these columns already exists.
-    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MIN_SPEED);
-    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MIN_SPEED_DURATION);
-    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CONNECTION_TIMEOUT);
-    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_TOTAL_TIMEOUT);
-    store.ExecuteSql(REQUEST_TASK_TABLE_ADD_TASK_TIME);
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_MIN_SPEED)) {
+        store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MIN_SPEED);
+    }
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_MIN_SPEED_DURATION)) {
+        store.ExecuteSql(REQUEST_TASK_TABLE_ADD_MIN_SPEED_DURATION);
+    }
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_CONNECTION_TIMEOUT)) {
+        store.ExecuteSql(REQUEST_TASK_TABLE_ADD_CONNECTION_TIMEOUT);
+    }
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_TOTAL_TIMEOUT)) {
+        store.ExecuteSql(REQUEST_TASK_TABLE_ADD_TOTAL_TIMEOUT);
+    }
+    if (!ColumnExists(store, REQUEST_TASK_TABLE_COL_TASK_TIME)) {
+        store.ExecuteSql(REQUEST_TASK_TABLE_ADD_TASK_TIME);
+    }
 }
 
 int RequestDBUpgrade(OHOS::NativeRdb::RdbStore &store)
