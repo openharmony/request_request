@@ -33,7 +33,10 @@ ohos_static_library("netstack_rs_cxx") {
     "../include",
     "${target_gen_dir}/src",
   ]
-  sources = [ "src/cxx/wrapper.cpp" ]
+  sources = [
+    "src/cxx/wrapper.cpp",
+    "src/cxx/netstack.cpp",
+  ]
 
   sources += get_target_outputs(":netstack_rs_cxx_gen")
 

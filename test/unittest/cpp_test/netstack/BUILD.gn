@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 
-ohos_unittest("netstack_rs_test") {
+ohos_unittest("common_netstack_test") {
   module_out_path = "request/request/request"
 
   include_dirs = [
@@ -23,19 +23,18 @@ ohos_unittest("netstack_rs_test") {
 
   sources = [
     "src/netstack_request.cpp",
+    "../../../../common/netstack_rs/src/cxx/netstack.cpp",
   ]
 
-  deps = [ "../../../../common/netstack_rs:netstack_rs_cxx" ]
   external_deps = [
     "c_utils:utils",
     "googletest:gtest_main",
     "hilog:libhilog",
     "netstack:http_client",
-    "rust_cxx:cxx_cppdeps",
   ]
 }
 
 group("unittest") {
   testonly = true
-  deps = [ ":netstack_rs_test" ]
+  deps = [ ":common_netstack_test" ]
 }

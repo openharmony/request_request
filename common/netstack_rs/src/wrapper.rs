@@ -278,6 +278,7 @@ pub(crate) mod ffi {
         include!("http_client_request.h");
         include!("wrapper.h");
         include!("http_client_task.h");
+        include!("netstack.h");
 
         #[namespace = "OHOS::NetStack::HttpClient"]
         type TaskStatus;

@@ -23,7 +23,7 @@
 
 #include "http_client_request.h"
 #include "log.h"
-#include "wrapper.h"
+#include "netstack.h"
 
 using namespace testing::ext;
 using namespace OHOS::Request;
