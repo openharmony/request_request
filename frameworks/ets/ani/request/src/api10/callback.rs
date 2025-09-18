@@ -223,6 +223,13 @@ impl request_client::Callback for CallbackColl {
             callback.execute((response.into(),));
         }
     }
+
+    fn on_failed(&self, progress: &Progress, _error_code: i32)  {
+        let callbacks = self.on_fail.lock().unwrap();
+        for callback in callbacks.iter() {
+            callback.execute((progress.into(),));
+        }
+    }
 }
 
 pub struct CallbackManager {
