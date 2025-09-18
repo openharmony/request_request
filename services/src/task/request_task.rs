@@ -340,7 +340,12 @@ impl RequestTask {
     ) -> Result<Request, TaskError> {
         let mut request_builder = task.build_request_builder()?;
 
-        let file = task.files.get(0).unwrap();
+        let file = if let Some(mutex) = task.files.get(0) {
+            mutex
+        } else {
+            error!("build_download_request err, no file in the `task`");
+            return Err(TaskError::Failed(Reason::OthersError));
+        };
 
         let has_downloaded = task_control::file_metadata(file).await?.len();
         let resume_download = has_downloaded > 0;

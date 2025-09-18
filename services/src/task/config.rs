@@ -474,6 +474,7 @@ impl Serialize for TaskConfig {
             parcel.write(&file_spec.mime_type)?;
             parcel.write(&file_spec.is_user_file)?;
             if file_spec.is_user_file {
+                // Safety: If is user file, the `fd` must be some.
                 let file = unsafe { File::from_raw_fd(file_spec.fd.unwrap()) };
                 parcel.write_file(file)?;
             }

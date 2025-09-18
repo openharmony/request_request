@@ -83,9 +83,9 @@ mod tests {
             match DB_LOCK.lock() {
                 Ok(inner) => inner,
                 Err(_) => {
-                    RequestDb::get_instance()
-                        .execute("DELETE FROM request_task")
-                        .unwrap();
+                    if let Err(e) = RequestDb::get_instance().execute("DELETE FROM request_task") {
+                        error!("lock delete failed: {}", e);
+                    }
                     DB_LOCK = std::sync::Mutex::new(());
                     DB_LOCK.lock().unwrap()
                 }
@@ -100,9 +100,9 @@ mod tests {
 
     impl<'a> Drop for DatabaseLock<'a> {
         fn drop(&mut self) {
-            RequestDb::get_instance()
-                .execute("DELETE FROM request_task")
-                .unwrap();
+            if let Err(e) = RequestDb::get_instance().execute("DELETE FROM request_task") {
+                error!("drop delete failed: {}", e);
+            }
         }
     }
 
