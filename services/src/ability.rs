@@ -22,7 +22,7 @@ use samgr::manage::SystemAbilityManager;
 use system_ability_fwk::ability::{Ability, Handler};
 
 use crate::manage::app_state::AppStateListener;
-use crate::manage::events::TaskManagerEvent;
+use crate::manage::events::{ScheduleEvent, TaskManagerEvent};
 use crate::manage::task_manager::TaskManagerTx;
 use crate::manage::{account, SystemConfigManager, TaskManager};
 use crate::service::active_counter::ActiveCounter;
@@ -139,6 +139,9 @@ impl Ability for RequestAbility {
             -1
         } else {
             info!("remote not busy accept idle, reason: {:?}", reason);
+            if let Some(task_manager) = self.task_manager.lock().unwrap().as_ref() {
+                task_manager.send_event(TaskManagerEvent::Schedule(ScheduleEvent::Shutdown));
+            }
             0
         }
     }

@@ -530,6 +530,10 @@ impl Scheduler {
     pub(crate) fn retry_all_tasks(&mut self) {
         self.running_queue.retry_all_tasks();
     }
+
+    pub(crate) fn shutdown(&mut self) {
+        self.running_queue.shutdown();
+    }
 }
 
 impl RequestDb {

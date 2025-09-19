@@ -274,6 +274,10 @@ impl RunningQueue {
         task.update_progress_in_database();
         true
     }
+
+    pub(crate) fn shutdown(&self) {
+        self.keeper.shutdown();
+    }
 }
 
 struct AbortHandle {

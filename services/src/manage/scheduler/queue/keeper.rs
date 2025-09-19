@@ -49,6 +49,14 @@ impl SAKeeper {
             active_counter,
         }
     }
+
+    /// Stops repeatedly executing unload_sa.
+    pub(crate) fn shutdown(&self) {
+        let mut inner = self.inner.lock().unwrap();
+        if let Some(handle) = inner.handle.take() {
+            handle.cancel();
+        }
+    }
 }
 
 impl Clone for SAKeeper {
@@ -58,11 +66,11 @@ impl Clone for SAKeeper {
         {
             let mut inner = self.inner.lock().unwrap();
             inner.cnt += 1;
-            if inner.cnt != 0 {
+            if inner.cnt == 1 {
+                self.active_counter.increment();
                 if let Some(handle) = inner.handle.take() {
                     handle.cancel();
-                    self.active_counter.increment();
-                    info!("Countdown 60s future canceled");
+                    debug!("Countdown 60s future canceled");
                 }
             }
         }
