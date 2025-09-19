@@ -414,20 +414,21 @@ ExceptionError CJRequestTask::Off(std::string event, CFunc callback)
         return err;
     }
 
-    listenerMutex_.lock();
     if (subscribeType == SubscribeType::RESPONSE) {
+        listenerMutex_.lock();
         if (responseListener_ == nullptr) {
             responseListener_ = std::make_shared<CJResponseListener>(GetTidStr());
         }
+        listenerMutex_.unlock();
+        responseListener_->RemoveListener((CFunc)callback);
     } else {
-        auto listener = notifyDataListenerMap_.find(subscribeType);
-        if (listener == notifyDataListenerMap_.end()) {
+        listenerMutex_.lock();
+        if (notifyDataListenerMap_.find(subscribeType) == notifyDataListenerMap_.end()) {
             notifyDataListenerMap_[subscribeType] = std::make_shared<CJNotifyDataListener>(GetTidStr(), subscribeType);
         }
+        listenerMutex_.unlock();
+        notifyDataListenerMap_[subscribeType]->RemoveListener((CFunc)callback);
     }
-    listenerMutex_.unlock();
-    notifyDataListenerMap_[subscribeType]->RemoveListener((CFunc)callback);
-
     return err;
 }
 
