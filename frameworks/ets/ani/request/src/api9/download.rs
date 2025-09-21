@@ -58,7 +58,7 @@ pub fn download_file(
         &save_as,
         false,
     ) {
-        Ok(task_id) => DownloadTask { task_id },
+        Ok(task_id) => DownloadTask { task_id: task_id.to_string() },
         Err(CreateTaskError::DownloadPath(_)) => {
             return Err(BusinessError::new(
                 13400001,
@@ -73,7 +73,8 @@ pub fn download_file(
         }
     };
 
-    match RequestClient::get_instance().start(task.task_id) {
+    let tid = task.task_id.parse().unwrap();
+    match RequestClient::get_instance().start(tid) {
         Ok(_) => {
             info!("Api9 download started successfully, seq: {}", seq.0);
             Ok(task)
@@ -91,28 +92,28 @@ pub fn download_file(
 #[ani_rs::native]
 pub fn delete(this: DownloadTask) -> Result<(), BusinessError> {
     RequestClient::get_instance()
-        .remove(this.task_id)
+        .remove(this.task_id.parse().unwrap())
         .map_err(|e| BusinessError::new(e, "Failed to delete download task".to_string()))
 }
 
 #[ani_rs::native]
 pub fn suspend(this: DownloadTask) -> Result<(), BusinessError> {
     RequestClient::get_instance()
-        .pause(this.task_id)
+        .pause(this.task_id.parse().unwrap())
         .map_err(|e| BusinessError::new(e, "Failed to suspend download task".to_string()))
 }
 
 #[ani_rs::native]
 pub fn restore(this: DownloadTask) -> Result<(), BusinessError> {
     RequestClient::get_instance()
-        .resume(this.task_id)
+        .resume(this.task_id.parse().unwrap())
         .map_err(|e| BusinessError::new(e, "Failed to restore download task".to_string()))
 }
 
 #[ani_rs::native]
 pub fn get_task_info(this: DownloadTask) -> Result<DownloadInfo, BusinessError> {
     RequestClient::get_instance()
-        .show_task(this.task_id)
+        .show_task(this.task_id.parse().unwrap())
         .map(|info| DownloadInfo::from(info))
         .map_err(|e| BusinessError::new(e, "Failed to get download task info".to_string()))
 }

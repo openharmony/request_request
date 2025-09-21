@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use std::io::Read;
 
 use request_core::config::{Action, Version};
-use request_core::info::{NotifyData, Progress, Response, State, SubscribeType, TaskState};
+use request_core::info::{NotifyData, Progress, Response, State, SubscribeType, TaskState, Faults, Reason, FaultOccur};
 
 pub struct UdsSer<'a> {
     inner: &'a [u8],
@@ -105,6 +105,27 @@ impl Serialize for SubscribeType {
     fn read(ser: &mut UdsSer) -> Self {
         let subscribe_type: u32 = ser.read();
         SubscribeType::from(subscribe_type)
+    }
+}
+
+impl Serialize for FaultOccur {
+    fn read(ser: &mut UdsSer) -> Self {
+        // let task_id = ser.read::<i32>() as i64;
+        let task_id = ser.read::<i32>();
+        let subscribe_type = ser.read::<SubscribeType>();
+        let faults: Faults = ser.read::<Reason>().into();
+        FaultOccur {
+            task_id,
+            subscribe_type,
+            faults,
+        }
+    }
+}
+
+impl Serialize for Reason {
+    fn read(ser: &mut UdsSer) -> Self {
+        let reason: u32 = ser.read();
+        Reason::from(reason)
     }
 }
 
@@ -215,6 +236,7 @@ impl Serialize for Progress {
         let total_processed: u64 = ser.read();
         let sizes: Vec<i64> = ser.read();
         let extras: HashMap<String, String> = ser.read();
+        // let body_bytes: Vec<u8> = ser.read();
 
         Progress {
             state,
@@ -223,6 +245,7 @@ impl Serialize for Progress {
             total_processed,
             sizes,
             extras,
+            // body_bytes,
         }
     }
 }

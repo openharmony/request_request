@@ -15,7 +15,7 @@ pub mod error;
 
 use std::sync::{Arc, OnceLock};
 
-use request_core::config::{TaskConfig, Version};
+use request_core::config::{TaskConfig, Version, Action};
 use request_core::error_code::CHANNEL_NOT_OPEN;
 use request_core::file::FileSpec;
 use request_core::filter::SearchFilter;
@@ -57,21 +57,27 @@ impl<'a> RequestClient<'a> {
     ) -> Result<i64, CreateTaskError> {
         info!("Creating task with config: {:?}", config);
 
-        let path = check::file::get_download_path(version, &context, &save_as, overwrite)?;
-        info!("Download file path: {:?}", path);
+        if config.common_data.action == Action::Upload && version == Version::API9 {
+            let path = check::file::convert_path(Version::API9, &context, &config.file_specs.get(0).unwrap().path).unwrap();
+            config.file_specs.get_mut(0).unwrap().path = path
+                .to_string_lossy().to_string();
+        } else {
+            let path = check::file::get_download_path(version, &context, &save_as, overwrite)?;
 
-        let file_specs = FileSpec {
-            name: "".to_string(),
-            path: path.to_string_lossy().to_string(),
-            file_name: path
-                .file_name()
-                .map(|s| s.to_string_lossy().to_string())
-                .unwrap_or_else(|| path.to_string_lossy().to_string()),
-            mime_type: "".to_string(),
-            is_user_file: false,
-            fd: None,
-        };
-        config.file_specs.push(file_specs);
+            let file_specs = FileSpec {
+                name: "".to_string(),
+                path: path.to_string_lossy().to_string(),
+                file_name: path
+                    .file_name()
+                    .map(|s| s.to_string_lossy().to_string())
+                    .unwrap_or_else(|| path.to_string_lossy().to_string()),
+                mime_type: "".to_string(),
+                is_user_file: false,
+                fd: None,
+            };
+            config.file_specs.push(file_specs);
+        }
+
         loop {
             let res = match self.proxy.create(&config) {
                 Err(e) => {

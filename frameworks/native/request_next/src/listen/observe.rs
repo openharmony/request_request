@@ -15,7 +15,8 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
 
-use request_core::info::{Progress, SubscribeType, Response};
+use request_core::config::{Action, Version};
+use request_core::info::{Progress, SubscribeType, Response, Faults, TaskState};
 use ylong_runtime::task::JoinHandle;
 
 use crate::listen::uds::{Message, UdsListener};
@@ -33,7 +34,10 @@ pub trait Callback {
     fn on_resume(&self, progress: &Progress) {}
     fn on_remove(&self, progress: &Progress) {}
     fn on_response(&self, response: &Response) {}
-    fn on_header_receive(&self) {}
+    fn on_header_receive(&self, progress: &Progress) {}
+    fn on_fault(&self, faults: Faults) {}
+    fn on_complete_upload(&self, task_states: Vec<TaskState>) {}
+    fn on_fail_upload(&self, task_states: Vec<TaskState>) {}
 }
 
 impl Observer {
@@ -61,37 +65,89 @@ impl Observer {
                             let task_id = data.task_id as i64;
                             let progress = data.progress;
                             if let Some(callback) = callbacks.lock().unwrap().get(&task_id) {
-                                match data.subscribe_type {
-                                    SubscribeType::Progress => {
-                                        callback.on_progress(&progress);
+                                match data.version {
+                                    Version::API10 => {
+                                        match data.subscribe_type {
+                                            SubscribeType::Progress => {
+                                                callback.on_progress(&progress);
+                                            }
+                                            SubscribeType::Completed => {
+                                                callback.on_completed(&progress);  
+                                            }
+                                            SubscribeType::Failed => {
+                                                callback.on_failed(
+                                                    &progress,
+                                                    data.task_states[0].response_code as i32,
+                                                );
+                                            }
+                                            SubscribeType::Pause => {
+                                                callback.on_pause(&progress);
+                                            }
+                                            SubscribeType::Resume => {
+                                                callback.on_resume(&progress);
+                                            }
+                                            SubscribeType::Remove => {
+                                                callback.on_remove(&progress);
+                                            }
+                                            _ => {}
+                                        }
                                     }
-                                    SubscribeType::Completed => {
-                                        callback.on_completed(&progress);
+                                    Version::API9 => {
+                                        match data.action {
+                                            Action::Download => {
+                                                match data.subscribe_type {
+                                                    SubscribeType::Completed => {
+                                                        callback.on_completed(&progress);  
+                                                    }
+                                                    SubscribeType::Pause => {
+                                                        callback.on_pause(&progress);
+                                                    }
+                                                    SubscribeType::Remove => {
+                                                        callback.on_remove(&progress);
+                                                    }
+                                                    SubscribeType::Failed => {
+                                                        callback.on_failed(
+                                                            &progress,
+                                                            data.task_states[0].response_code as i32,
+                                                        );
+                                                    }
+                                                    SubscribeType::Progress => {
+                                                        callback.on_progress(&progress);
+                                                    }
+                                                    _ => {error!("bad subscribeType ");}
+                                                }
+                                            }
+                                            Action::Upload => {
+                                                match data.subscribe_type {
+                                                    SubscribeType::Progress => {
+                                                        callback.on_progress(&progress);
+                                                    },
+                                                    SubscribeType::Completed => {
+                                                        callback.on_complete_upload(data.task_states);
+                                                    },
+                                                    SubscribeType::Failed => {
+                                                        callback.on_fail_upload(data.task_states);
+                                                    },
+                                                    SubscribeType::HeaderReceive => {
+                                                        callback.on_header_receive(&progress);
+                                                    },
+                                                    _ => {error!("bad subscribeType ");}
+                                                }
+                                            }
+                                        }
                                     }
-                                    SubscribeType::Failed => {
-                                        callback.on_failed(
-                                            &progress,
-                                            data.task_states[0].response_code as i32,
-                                        );
-                                    }
-                                    SubscribeType::Pause => {
-                                        callback.on_pause(&progress);
-                                    }
-                                    SubscribeType::Resume => {
-                                        callback.on_resume(&progress);
-                                    }
-                                    SubscribeType::Remove => {
-                                        callback.on_remove(&progress);
-                                    }
-                                    SubscribeType::HeaderReceive => {
-                                        callback.on_header_receive();
-                                    }
-                                    _ => {}
                                 }
+                                
+                            }
+                        }
+                        Message::Faults(faultOccur) => {
+                            let task_id = faultOccur.task_id as i64;
+                            if let Some(callback) = callbacks.lock().unwrap().get(&task_id) {
+                                callback.on_fault(faultOccur.faults);
                             }
                         }
                     },
-                    Err(e) => eprintln!("Error receiving message: {}", e),
+                    Err(e) => error!("Error receiving message: {}", e),
                 }
             }
         });
