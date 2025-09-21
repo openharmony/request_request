@@ -34,6 +34,9 @@ ani_constructor!(
         "onProgress": api9::callback::on_progress,
         "onEvent": api9::callback::on_event,
         "onFail": api9::callback::on_fail,
+        "offProgress": api9::callback::off_progress,
+        "offEvent": api9::callback::off_event,
+        "offFail": api9::callback::off_fail,
         "deleteSync": api9::download::delete,
         "suspendSync": api9::download::suspend,
         "restoreSync": api9::download::restore,
@@ -43,6 +46,12 @@ ani_constructor!(
     class "@ohos.request.request.UploadTaskInner"
     [
         "deleteSync": api9::upload::delete,
+        "onProgressInner": api9::callback::on_progress_uploadtask,
+        "onEventInner": api9::callback::on_event_uploadtask,
+        "onHeaderReceiveInner": api9::callback::on_header_receive,
+        "offProgressInner": api9::callback::off_progress_uploadtask,
+        "offEventInner": api9::callback::off_event_uploadtask,
+        "offHeaderReceiveInner": api9::callback::off_header_receive,
     ]
     namespace "@ohos.request.request.agent"
     [
@@ -65,7 +74,12 @@ ani_constructor!(
         "stopSync": api10::task::stop,
         "onEvent": api10::callback::on_event,
         "onResponseEvent": api10::callback::on_response_event,
+        "onFaultEvent": api10::callback::on_fault_event,
         "setMaxSpeedSync": api10::task::set_max_speed,
+        "offEvent": api10::callback::off_event,
+        "offResponseEvent": api10::callback::off_response_event,
+        "offFaultEvent": api10::callback::off_fault_event,
+
     ]
 );
 

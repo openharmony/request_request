@@ -116,6 +116,7 @@ impl RequestProxy {
         let mut data = MsgParcel::new();
         data.write_interface_token(SERVICE_TOKEN).unwrap();
 
+        data.write(&2u32).unwrap(); // version
         data.write(&1u32).unwrap(); // task count
         data.write(&task_id.to_string()).unwrap();
 

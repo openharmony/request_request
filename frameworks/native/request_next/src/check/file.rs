@@ -52,7 +52,7 @@ pub fn get_download_path(
     Ok(path)
 }
 
-fn convert_path(
+pub fn convert_path(
     version: Version,
     context: &Context,
     save_as: &str,
@@ -78,7 +78,6 @@ fn convert_path(
                 if cache_dir.len() + file_name.len() + 1 > MAX_FILE_PATH_LENGTH {
                     return Err(DownloadPathError::TooLongPath);
                 }
-
                 Ok(PathBuf::from(cache_dir).join(file_name))
             }
         }

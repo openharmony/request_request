@@ -13,8 +13,9 @@
 
 use std::collections::HashMap;
 
-use request_core::config::{NetworkConfig, TaskConfig, TaskConfigBuilder, Version};
-use request_core::info::TaskInfo;
+use request_core::config::{NetworkConfig, TaskConfig, TaskConfigBuilder, Version, FormItem};
+use request_core::info::{self, TaskInfo};
+use request_core::file::FileSpec;
 
 #[ani_rs::ani]
 pub struct DownloadConfig {
@@ -32,7 +33,7 @@ pub struct DownloadConfig {
 #[ani_rs::ani]
 pub struct UploadConfig {
     pub url: String,
-    pub header: HashMap<String, String>,
+    pub header: Option<HashMap<String, String>>,
     pub method: String,
     pub index: Option<i64>,
     pub begins: Option<i64>,
@@ -43,12 +44,12 @@ pub struct UploadConfig {
 
 #[ani_rs::ani(path = "@ohos.request.request.DownloadTaskInner")]
 pub struct DownloadTask {
-    pub task_id: i64,
+    pub task_id: String,
 }
 
 #[ani_rs::ani(path = "@ohos.request.request.UploadTaskInner")]
 pub struct UploadTask {
-    pub task_id: i64,
+    pub task_id: String,
 }
 
 #[allow(non_snake_case)]
@@ -75,17 +76,50 @@ pub struct File {
     type_: String,
 }
 
+impl From<File> for FileSpec {
+    fn from(value: File) -> Self {
+        FileSpec {
+            file_name: value.filename,
+            name: value.name,
+            path: value.uri,
+            mime_type: value.type_,
+            is_user_file: false,
+            fd: None,
+        }
+    }
+}
+
 #[ani_rs::ani]
 pub struct RequestData {
     name: String,
     value: String,
 }
 
-#[ani_rs::ani]
+impl From<RequestData> for FormItem {
+    fn from(value: RequestData) -> Self {
+        FormItem {
+            name: value.name,
+            value: value.value, 
+        }
+    }
+}
+
+#[ani_rs::ani(path = "L@ohos/request/request/TaskStateInner")]
+#[derive(Clone)]
 pub struct TaskState {
     path: String,
-    response_code: f64,
+    response_code: i32,
     message: String,
+}
+
+impl From<request_core::info::TaskState> for TaskState {
+    fn from(value: request_core::info::TaskState) -> Self {
+        TaskState {
+            path: value.path,
+            response_code: value.response_code as i32,
+            message: value.message,
+        }
+    }
 }
 
 impl From<DownloadConfig> for TaskConfig {
@@ -133,5 +167,29 @@ impl From<TaskInfo> for DownloadInfo {
             download_title: info.title,
             download_total_bytes: info.progress.sizes[0] as i64,
         }
+    }
+}
+
+impl From<UploadConfig> for TaskConfig {
+    fn from(config: UploadConfig) -> Self {
+        let mut config_builder = TaskConfigBuilder::new(Version::API9);
+        config_builder.url(config.url);
+        if let Some(headers) = config.header {
+            config_builder.headers(headers);
+        }
+        config_builder.method(config.method);
+        if let Some(index) = config.index {
+            config_builder.index(index);
+        }
+        if let Some(begins) = config.begins {
+            config_builder.begins(begins);
+        }
+        if let Some(ends) = config.ends {
+            config_builder.ends(ends);
+        }
+        config_builder.files(config.files.into_iter().map(Into::into).collect());
+        config_builder.data(config.data.into_iter().map(Into::into).collect());
+        config_builder.action(request_core::config::Action::Upload);
+        config_builder.build()
     }
 }

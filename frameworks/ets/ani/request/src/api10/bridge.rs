@@ -303,6 +303,24 @@ pub enum Faults {
     Redirect = 0x80,
 }
 
+impl From<request_core::info::Faults> for Faults {
+    fn from(value: request_core::info::Faults) -> Self {
+        match value {
+            request_core::info::Faults::Others => Faults::Others,
+            request_core::info::Faults::Disconnected => Faults::Disconnected,
+            request_core::info::Faults::Timeout => Faults::Timeout,
+            request_core::info::Faults::Protocol => Faults::Protocol,
+            request_core::info::Faults::Param => Faults::Param,
+            request_core::info::Faults::Fsio => Faults::Fsio,
+            request_core::info::Faults::Dns => Faults::Dns,
+            request_core::info::Faults::Tcp => Faults::Tcp,
+            request_core::info::Faults::Ssl => Faults::Ssl,
+            request_core::info::Faults::Redirect => Faults::Redirect,
+            _ => unimplemented!(),
+        }
+    }
+}
+
 #[ani_rs::ani]
 pub struct Filter {
     pub bundle: Option<String>,
@@ -353,12 +371,18 @@ pub struct TaskInfo {
 
 impl From<request_core::info::TaskInfo> for TaskInfo {
     fn from(value: request_core::info::TaskInfo) -> Self {
+        let saveas = if value.common_data.action == Action::Upload as u8 {
+            "".to_string()
+        } else {
+            value.file_specs.get(0).map(|x| x.path.clone()).unwrap_or("".to_string())
+        };
         TaskInfo {
             uid: Some(value.common_data.uid.to_string()),
             bundle: Some(value.bundle),
-            saveas: None,
+            saveas: Some(saveas),
             url: Some(value.url),
-            data: None,
+            // todo
+            data: Some(Data::S(value.data)),
             tid: value.common_data.task_id.to_string(),
             title: value.title,
             description: value.description,

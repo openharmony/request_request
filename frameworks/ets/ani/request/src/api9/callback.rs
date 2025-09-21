@@ -18,9 +18,10 @@ use ani_rs::business_error::BusinessError;
 use ani_rs::objects::{AniFnObject, GlobalRefCallback};
 use ani_rs::AniEnv;
 use request_client::RequestClient;
-use request_core::info::Progress;
+use request_core::info::{Progress, TaskState};
 
-use crate::api9::bridge::DownloadTask;
+use crate::api10::task;
+use crate::api9::bridge::{self, DownloadTask, UploadTask};
 
 #[ani_rs::native]
 pub fn on_progress(
@@ -28,26 +29,32 @@ pub fn on_progress(
     this: DownloadTask,
     callback: AniFnObject,
 ) -> Result<(), BusinessError> {
-    info!("on_progress called for task_id: {}", this.task_id);
+    let task_id = this.task_id.parse().unwrap();
+    info!("on_progress called for task_id: {}", task_id);
     let callback_mgr = CallbackManager::get_instance();
     let callback = callback.into_global_callback(env).unwrap();
-    if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&this.task_id) {
+    let coll = if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
         coll.on_progress.lock().unwrap().push(callback);
+        return Ok(());
     } else {
-        let coll = Arc::new(CallbackColl {
+        Arc::new(CallbackColl {
             on_progress: Mutex::new(vec![callback]),
             on_complete: Mutex::new(vec![]),
             on_pause: Mutex::new(vec![]),
+            on_remove: Mutex::new(vec![]),
             on_resume: Mutex::new(vec![]),
             on_fail: Mutex::new(vec![]),
-        });
-        RequestClient::get_instance().register_callback(this.task_id, coll.clone());
-        callback_mgr
-            .tasks
-            .lock()
-            .unwrap()
-            .insert(this.task_id, coll);
-    }
+            on_complete_upload: Mutex::new(vec![]),
+            on_fail_upload: Mutex::new(vec![]),
+            on_header_receive: Mutex::new(vec![]),
+        })
+    };
+    RequestClient::get_instance().register_callback(task_id, coll.clone());
+    callback_mgr
+        .tasks
+        .lock()
+        .unwrap()
+        .insert(task_id, coll);
     Ok(())
 }
 
@@ -58,63 +65,94 @@ pub fn on_event(
     event: String,
     callback: AniFnObject,
 ) -> Result<(), BusinessError> {
+    let task_id = this.task_id.parse().unwrap();
     let callback_mgr = CallbackManager::get_instance();
     let callback = callback.into_global_callback(env).unwrap();
     info!(
         "on_event called for task_id: {}, event: {}",
-        this.task_id, event
+        task_id, event
     );
-    let coll = if event == "complete" {
-        if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&this.task_id) {
-            coll.on_complete.lock().unwrap().push(callback);
-            return Ok(());
-        } else {
-            Arc::new(CallbackColl {
-                on_progress: Mutex::new(vec![]),
-                on_complete: Mutex::new(vec![callback]),
-                on_pause: Mutex::new(vec![]),
-                on_resume: Mutex::new(vec![]),
-                on_fail: Mutex::new(vec![]),
-            })
+    let coll = match event.as_str() {
+        "complete" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_complete.lock().unwrap().push(callback);
+                return Ok(());
+            } else {
+                Arc::new(CallbackColl {
+                    on_progress: Mutex::new(vec![]),
+                    on_complete: Mutex::new(vec![callback]),
+                    on_pause: Mutex::new(vec![]),
+                    on_remove: Mutex::new(vec![]),
+                    on_resume: Mutex::new(vec![]),
+                    on_fail: Mutex::new(vec![]),
+                    on_complete_upload: Mutex::new(vec![]),
+                    on_fail_upload: Mutex::new(vec![]),
+                    on_header_receive: Mutex::new(vec![]),
+                })
+            }
         }
-    } else if event == "pause" {
-        if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&this.task_id) {
-            coll.on_pause.lock().unwrap().push(callback);
-            return Ok(());
-        } else {
-            Arc::new(CallbackColl {
-                on_progress: Mutex::new(vec![]),
-                on_complete: Mutex::new(vec![]),
-                on_pause: Mutex::new(vec![callback]),
-                on_resume: Mutex::new(vec![]),
-                on_fail: Mutex::new(vec![]),
-            })
+        "pause" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_pause.lock().unwrap().push(callback);
+                return Ok(());
+            } else {
+                Arc::new(CallbackColl {
+                    on_progress: Mutex::new(vec![]),
+                    on_complete: Mutex::new(vec![]),
+                    on_pause: Mutex::new(vec![callback]),
+                    on_remove: Mutex::new(vec![]),
+                    on_resume: Mutex::new(vec![]),
+                    on_fail: Mutex::new(vec![]),
+                    on_complete_upload: Mutex::new(vec![]),
+                    on_fail_upload: Mutex::new(vec![]),
+                    on_header_receive: Mutex::new(vec![]),
+                })
+            }
         }
-    } else if event == "resume" {
-        if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&this.task_id) {
-            coll.on_resume.lock().unwrap().push(callback);
-            return Ok(());
-        } else {
-            Arc::new(CallbackColl {
-                on_progress: Mutex::new(vec![]),
-                on_complete: Mutex::new(vec![]),
-                on_pause: Mutex::new(vec![]),
-                on_resume: Mutex::new(vec![callback]),
-                on_fail: Mutex::new(vec![]),
-            })
+        "remove" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_remove.lock().unwrap().push(callback);
+                return Ok(());
+            } else {
+                Arc::new(CallbackColl {
+                    on_progress: Mutex::new(vec![]),
+                    on_complete: Mutex::new(vec![]),
+                    on_pause: Mutex::new(vec![]),
+                    on_remove: Mutex::new(vec![callback]),
+                    on_resume: Mutex::new(vec![]),
+                    on_fail: Mutex::new(vec![]),
+                    on_complete_upload: Mutex::new(vec![]),
+                    on_fail_upload: Mutex::new(vec![]),
+                    on_header_receive: Mutex::new(vec![]),
+                })
+            }
         }
-    } else {
-        return Err(BusinessError::new(
-            401,
-            format!("Unsupported event type: {}", event),
-        ));
+        "resume" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_resume.lock().unwrap().push(callback);
+                return Ok(());
+            } else {
+                Arc::new(CallbackColl {
+                    on_progress: Mutex::new(vec![]),
+                    on_complete: Mutex::new(vec![]),
+                    on_pause: Mutex::new(vec![]),
+                    on_remove: Mutex::new(vec![]),
+                    on_resume: Mutex::new(vec![callback]),
+                    on_fail: Mutex::new(vec![]),
+                    on_complete_upload: Mutex::new(vec![]),
+                    on_fail_upload: Mutex::new(vec![]),
+                    on_header_receive: Mutex::new(vec![]),
+                })
+            }
+        }
+        _ => unimplemented!()
     };
-    RequestClient::get_instance().register_callback(this.task_id, coll.clone());
+    RequestClient::get_instance().register_callback(task_id, coll.clone());
     callback_mgr
         .tasks
         .lock()
         .unwrap()
-        .insert(this.task_id, coll);
+        .insert(task_id, coll);
     Ok(())
 }
 
@@ -124,35 +162,297 @@ pub fn on_fail(
     this: DownloadTask,
     callback: AniFnObject,
 ) -> Result<(), BusinessError> {
+    let task_id = this.task_id.parse().unwrap();
+    info!("on_fail called for task_id: {}", task_id);
     let callback_mgr = CallbackManager::get_instance();
     let callback = callback.into_global_callback(env).unwrap();
-    if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&this.task_id) {
+    let coll = if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
         coll.on_fail.lock().unwrap().push(callback);
+        return Ok(());
     } else {
-        let coll = Arc::new(CallbackColl {
+        Arc::new(CallbackColl {
             on_progress: Mutex::new(vec![]),
             on_complete: Mutex::new(vec![]),
             on_pause: Mutex::new(vec![]),
+            on_remove: Mutex::new(vec![]),
             on_resume: Mutex::new(vec![]),
             on_fail: Mutex::new(vec![callback]),
-        });
-        RequestClient::get_instance().register_callback(this.task_id, coll.clone());
+            on_complete_upload: Mutex::new(vec![]),
+            on_fail_upload: Mutex::new(vec![]),
+            on_header_receive: Mutex::new(vec![]),
+        })
+    };
+    RequestClient::get_instance().register_callback(task_id, coll.clone());
+    callback_mgr
+        .tasks
+        .lock()
+        .unwrap()
+        .insert(task_id, coll);
+    Ok(())
+}
 
-        callback_mgr
-            .tasks
-            .lock()
-            .unwrap()
-            .insert(this.task_id, coll);
+#[ani_rs::native]
+pub fn off_progress(
+    env: &AniEnv,
+    this: DownloadTask,
+    callback: AniFnObject,
+) -> Result<(), BusinessError> {
+    let task_id = this.task_id.parse().unwrap();
+    info!("off_progress called for task_id: {}", task_id);
+    let callback_mgr = CallbackManager::get_instance();
+    let callback = callback.into_global_callback(env).unwrap();
+    if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+        coll.on_progress.lock().unwrap().retain(|x| *x != callback);
     }
     Ok(())
 }
 
+#[ani_rs::native]
+pub fn off_event(
+    env: &AniEnv,
+    this: DownloadTask,
+    event: String,
+    callback: AniFnObject,
+) -> Result<(), BusinessError> {
+    let task_id = this.task_id.parse().unwrap();
+    info!("off_event called for task_id: {}, event: {}", task_id, event);
+    let callback_mgr = CallbackManager::get_instance();
+    let callback = callback.into_global_callback(env).unwrap();
+    match event.as_str() {
+        "complete" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_complete.lock().unwrap().retain(|x| *x != callback);
+            }
+        }
+        "pause" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_pause.lock().unwrap().retain(|x| *x != callback);
+            }
+        }
+        "remove" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_remove.lock().unwrap().retain(|x| *x != callback);
+            }
+        }
+        _ => unimplemented!()
+    };
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn off_fail(
+    env: &AniEnv,
+    this: DownloadTask,
+    callback: AniFnObject,
+) -> Result<(), BusinessError> {
+    let task_id = this.task_id.parse().unwrap();
+    info!("off_fail called for task_id: {}", task_id);
+    let callback_mgr = CallbackManager::get_instance();
+    let callback = callback.into_global_callback(env).unwrap();
+    if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+        coll.on_fail.lock().unwrap().retain(|x| *x != callback);
+    }
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn on_progress_uploadtask(
+    env: &AniEnv,
+    this: UploadTask,
+    callback: AniFnObject,
+) -> Result<(), BusinessError> {
+    let task_id = this.task_id.parse().unwrap();
+    info!("on_progress called for task_id: {}", task_id);
+    let callback_mgr = CallbackManager::get_instance();
+    let callback = callback.into_global_callback(env).unwrap();
+    let coll = if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+        coll.on_progress.lock().unwrap().push(callback);
+        return Ok(());
+    } else {
+        Arc::new(CallbackColl {
+            on_progress: Mutex::new(vec![callback]),
+            on_complete: Mutex::new(vec![]),
+            on_pause: Mutex::new(vec![]),
+            on_remove: Mutex::new(vec![]),
+            on_resume: Mutex::new(vec![]),
+            on_fail: Mutex::new(vec![]),
+            on_complete_upload: Mutex::new(vec![]),
+            on_fail_upload: Mutex::new(vec![]),
+            on_header_receive: Mutex::new(vec![]),
+        })
+    };
+    RequestClient::get_instance().register_callback(task_id, coll.clone());
+    callback_mgr
+        .tasks
+        .lock()
+        .unwrap()
+        .insert(task_id, coll);
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn on_event_uploadtask(
+    env: &AniEnv,
+    this: UploadTask,
+    event: String,
+    callback: AniFnObject,
+) -> Result<(), BusinessError> {
+    let task_id = this.task_id.parse().unwrap();
+    let callback_mgr = CallbackManager::get_instance();
+    let callback = callback.into_global_callback(env).unwrap();
+    info!(
+        "on_event_uploadtask called for task_id: {}, event: {}",
+        task_id, event
+    );
+    let coll = match event.as_str() {
+        "complete" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_complete_upload.lock().unwrap().push(callback);
+                return Ok(());
+            } else {
+                Arc::new(CallbackColl {
+                    on_progress: Mutex::new(vec![]),
+                    on_complete: Mutex::new(vec![]),
+                    on_pause: Mutex::new(vec![]),
+                    on_remove: Mutex::new(vec![]),
+                    on_resume: Mutex::new(vec![]),
+                    on_fail: Mutex::new(vec![]),
+                    on_complete_upload: Mutex::new(vec![callback]),
+                    on_fail_upload: Mutex::new(vec![]),
+                    on_header_receive: Mutex::new(vec![]),
+                })
+            }
+        },
+        "fail" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_fail_upload.lock().unwrap().push(callback);
+                return Ok(());
+            } else {
+                Arc::new(CallbackColl {
+                    on_progress: Mutex::new(vec![]),
+                    on_complete: Mutex::new(vec![]),
+                    on_pause: Mutex::new(vec![]),
+                    on_remove: Mutex::new(vec![]),
+                    on_resume: Mutex::new(vec![]),
+                    on_fail: Mutex::new(vec![]),
+                    on_complete_upload: Mutex::new(vec![]),
+                    on_fail_upload: Mutex::new(vec![callback]),
+                    on_header_receive: Mutex::new(vec![]),
+                })
+            }
+        }
+        _ => unimplemented!()
+    };
+    RequestClient::get_instance().register_callback(task_id, coll.clone());
+    callback_mgr
+        .tasks
+        .lock()
+        .unwrap()
+        .insert(task_id, coll);
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn off_progress_uploadtask(
+    env: &AniEnv,
+    this: UploadTask,
+    callback: AniFnObject,
+) -> Result<(), BusinessError> {
+    let task_id = this.task_id.parse().unwrap();
+    info!("off_progress_uploadtask called for task_id: {}", task_id);
+    let callback_mgr = CallbackManager::get_instance();
+    let callback = callback.into_global_callback(env).unwrap();
+    if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+        coll.on_progress.lock().unwrap().retain(|x| *x != callback);
+    }
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn off_event_uploadtask(
+    env: &AniEnv,
+    this: UploadTask,
+    event: String,
+    callback: AniFnObject,
+) -> Result<(), BusinessError> {
+    let task_id = this.task_id.parse().unwrap();
+    info!("off_event_uploadtask called for task_id: {}", task_id);
+    let callback_mgr = CallbackManager::get_instance();
+    let callback = callback.into_global_callback(env).unwrap();
+    if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+        match event.as_str() {
+            "complete" => {
+                coll.on_complete_upload.lock().unwrap().retain(|x| *x != callback);
+            },
+            "fail" => {
+                coll.on_fail_upload.lock().unwrap().retain(|x| *x != callback);
+            },
+            _ => unimplemented!()
+        }
+    }
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn on_header_receive(
+    env: &AniEnv,
+    this: UploadTask,
+    callback: AniFnObject,
+) -> Result<(), BusinessError> {
+    let task_id = this.task_id.parse().unwrap();
+    info!("on_header_receive called for task_id: {}", task_id);
+    let callback_mgr = CallbackManager::get_instance();
+    let callback = callback.into_global_callback(env).unwrap();
+    let coll = if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+        coll.on_header_receive.lock().unwrap().push(callback);
+        return Ok(());
+    } else {
+        Arc::new(CallbackColl {
+            on_progress: Mutex::new(vec![]),
+            on_complete: Mutex::new(vec![]),
+            on_pause: Mutex::new(vec![]),
+            on_remove: Mutex::new(vec![]),
+            on_resume: Mutex::new(vec![]),
+            on_fail: Mutex::new(vec![]),
+            on_complete_upload: Mutex::new(vec![]),
+            on_fail_upload: Mutex::new(vec![]),
+            on_header_receive: Mutex::new(vec![callback]),
+        })
+    };
+    RequestClient::get_instance().register_callback(task_id, coll.clone());
+    callback_mgr
+        .tasks
+        .lock()
+        .unwrap()
+        .insert(task_id, coll);
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn off_header_receive(
+    env: &AniEnv,
+    this: UploadTask,
+    callback: AniFnObject,
+) -> Result<(), BusinessError> {
+    let task_id = this.task_id.parse().unwrap();
+    info!("off_progress_uploadtask called for task_id: {}", task_id);
+    let callback_mgr = CallbackManager::get_instance();
+    let callback = callback.into_global_callback(env).unwrap();
+    if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+        coll.on_header_receive.lock().unwrap().retain(|x| *x != callback);
+    }
+    Ok(())
+}
 pub struct CallbackColl {
     on_progress: Mutex<Vec<GlobalRefCallback<(i64, i64)>>>,
     on_complete: Mutex<Vec<GlobalRefCallback<()>>>,
     on_pause: Mutex<Vec<GlobalRefCallback<()>>>,
+    on_remove: Mutex<Vec<GlobalRefCallback<()>>>,
     on_resume: Mutex<Vec<GlobalRefCallback<()>>>,
     on_fail: Mutex<Vec<GlobalRefCallback<(i32,)>>>,
+    on_complete_upload: Mutex<Vec<GlobalRefCallback<(Vec<bridge::TaskState>,)>>>,
+    on_fail_upload: Mutex<Vec<GlobalRefCallback<(Vec<bridge::TaskState>,)>>>,
+    on_header_receive: Mutex<Vec<GlobalRefCallback<(HashMap<String, String>,)>>>,
 }
 
 impl request_client::Callback for CallbackColl {
@@ -190,6 +490,46 @@ impl request_client::Callback for CallbackColl {
             callback.execute(());
         }
     }
+
+    fn on_remove(&self, _progress: &Progress) {
+        let callbacks = self.on_remove.lock().unwrap();
+        for callback in callbacks.iter() {
+            callback.execute(());
+        }
+    }
+
+    fn on_complete_upload(&self, task_states: Vec<TaskState>) {
+        let callbacks = self.on_complete_upload.lock().unwrap();
+        let mut states = Vec::new();
+        for task_state in task_states {
+            states.push(task_state.into());
+        }
+        for callback in callbacks.iter() {
+            callback.execute((states.to_vec(),));
+        }
+    }
+
+    fn on_fail_upload(&self, task_states: Vec<TaskState>) {
+        let callbacks = self.on_fail_upload.lock().unwrap();
+        let mut states = Vec::new();
+        for task_state in task_states {
+            states.push(task_state.into());
+        }
+        for callback in callbacks.iter() {
+            callback.execute((states.to_vec(),));
+        }
+    }
+
+    fn on_header_receive(&self, progress: &Progress) {
+        info!("header_receive 1");
+        let callbacks = self.on_header_receive.lock().unwrap();
+        let mut headers = progress.extras.clone();
+        headers.insert("body".to_string(), "body".to_string());
+        for callback in callbacks.iter() {
+            callback.execute((headers.clone(),));
+        }
+    }
+
 }
 
 pub struct CallbackManager {

@@ -16,7 +16,7 @@ use std::io;
 use std::os::fd::{FromRawFd, IntoRawFd};
 use std::os::unix;
 
-use request_core::info::{NotifyData, Response};
+use request_core::info::{NotifyData, Response, Faults, FaultOccur};
 use ylong_runtime::net::UnixDatagram;
 
 use crate::listen::ser::UdsSer;
@@ -24,6 +24,7 @@ use crate::listen::ser::UdsSer;
 const MAGIC_NUM: i32 = 0x43434646;
 const HTTP_RESPONSE: i16 = 0;
 const NOTIFY_DATA: i16 = 1;
+const FAULTS: i16 = 2;
 
 pub struct UdsListener {
     socket: UnixDatagram,
@@ -70,6 +71,9 @@ impl UdsListener {
         } else if msg_type == NOTIFY_DATA {
             let notify_data: NotifyData = uds.read();
             Ok(Message::NotifyData(notify_data))
+        } else if msg_type == FAULTS {
+            let fault_occur: FaultOccur = uds.read();
+            Ok(Message::Faults(fault_occur))
         } else {
             Err(io::Error::new(
                 io::ErrorKind::InvalidData,
@@ -82,6 +86,7 @@ impl UdsListener {
 pub enum Message {
     HttpResponse(Response),
     NotifyData(NotifyData),
+    Faults(FaultOccur),
 }
 
 fn message_check(uds: &mut UdsSer, size: i16, message_id: i32, msg_type: &mut i16) -> bool {
