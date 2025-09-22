@@ -44,7 +44,7 @@ public:
     static ExceptionError Touch(const std::string &tid, TaskInfo &task, const std::string &token = "null");
     static ExceptionError Search(const Filter &filter, std::vector<std::string> &tids);
 
-    std::mutex listenerMutex_;
+    std::recursive_mutex listenerMutex_;
     std::map<SubscribeType, std::shared_ptr<CJNotifyDataListener>> notifyDataListenerMap_;
     std::shared_ptr<CJResponseListener> responseListener_;
 
