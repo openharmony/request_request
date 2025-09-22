@@ -19,8 +19,7 @@ use std::{path::PathBuf, sync::Arc};
 
 pub fn observe_image_file_delete(path: String) {
     if !is_history_init() {
-        let mut image_path = PathBuf::from(path);
-        image_path.push("image_file_cache");
+        let image_path = PathBuf::from(path);
         let history = Arc::new(HistoryDir::new(image_path));
         init_history_store_dir(history.clone(), start_history_dir_observe);
     }
