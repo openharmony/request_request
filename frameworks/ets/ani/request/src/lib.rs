@@ -31,12 +31,12 @@ ani_constructor!(
     ]
     class "@ohos.request.request.DownloadTaskInner"
     [
-        "onProgress": api9::callback::on_progress,
+        "onProgressInner": api9::callback::on_progress,
         "onEvent": api9::callback::on_event,
-        "onFail": api9::callback::on_fail,
-        "offProgress": api9::callback::off_progress,
+        "onFailInner": api9::callback::on_fail,
+        "offProgressInner": api9::callback::off_progress,
         "offEvent": api9::callback::off_event,
-        "offFail": api9::callback::off_fail,
+        "offFailInner": api9::callback::off_fail,
         "deleteSync": api9::download::delete,
         "suspendSync": api9::download::suspend,
         "restoreSync": api9::download::restore,
