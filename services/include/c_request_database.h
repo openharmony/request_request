@@ -125,6 +125,18 @@ constexpr const char *REQUEST_TASK_TABLE_ADD_TOTAL_TIMEOUT = "ALTER TABLE reques
 constexpr const char *REQUEST_TASK_TABLE_ADD_TASK_TIME = "ALTER TABLE request_task ADD COLUMN task_time "
                                                          "INTEGER";
 
+constexpr const char *REQUEST_TASK_TABLE_COL_PROXY = "proxy";
+constexpr const char *REQUEST_TASK_TABLE_COL_CERTIFICATE_PINS = "certificate_pins";
+constexpr const char *REQUEST_TASK_TABLE_COL_BUNDLE_TYPE = "bundle_type";
+constexpr const char *REQUEST_TASK_TABLE_COL_ATOMIC_ACCOUNT = "atomic_account";
+constexpr const char *REQUEST_TASK_TABLE_COL_MAX_SPEED = "max_speed";
+constexpr const char *REQUEST_TASK_TABLE_COL_MULTIPART = "multipart";
+constexpr const char *REQUEST_TASK_TABLE_COL_MIN_SPEED = "min_speed";
+constexpr const char *REQUEST_TASK_TABLE_COL_MIN_SPEED_DURATION = "min_speed_duration";
+constexpr const char *REQUEST_TASK_TABLE_COL_CONNECTION_TIMEOUT = "connection_timeout";
+constexpr const char *REQUEST_TASK_TABLE_COL_TOTAL_TIMEOUT = "total_timeout";
+constexpr const char *REQUEST_TASK_TABLE_COL_TASK_TIME = "task_time";
+
 struct TaskFilter;
 struct NetworkInfo;
 struct TaskQosInfo;
