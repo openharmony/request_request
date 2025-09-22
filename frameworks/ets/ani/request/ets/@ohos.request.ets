@@ -165,18 +165,35 @@ export default namespace request {
     downloadTotalBytes: long;
   }
 
+  export type DownloadProgressCallback = (receivedSize: long, totalSize: long) => void;
+  export type DownloadCompleteCallback = () => void;
+  export type DownloadPauseCallback = () => void;
+  export type DownloadRemoveCallback = () => void;
+  export type DownloadFailCallback = (err: int) => void;
+
   interface DownloadTask {
     readonly taskId: string;
 
-    onEvents(type: 'complete' | 'pause' | 'remove', callback: () => void): void;
-    onFails(type: 'fail', callback: (err: int) => void): void;
-    onProgresss(type: 'progress', callback: (receivedSize: long, totalSize: long) => void): void;
-    overload on { onEvents, onFails, onProgresss }
+    onProgress(callback: DownloadProgressCallback): void;
+    offProgress(callback?: DownloadProgressCallback): void;
+    onComplete(callback: DownloadCompleteCallback): void;
+    onPause(callback: DownloadPauseCallback): void;
+    onRemove(callback: DownloadRemoveCallback): void;
+    offComplete(callback?: DownloadCompleteCallback): void;
+    offPause(callback?: DownloadPauseCallback): void;
+    offRemove(callback?: DownloadRemoveCallback): void;
+    onFail(callback: DownloadFailCallback): void;
+    offFail(callback?: DownloadFailCallback): void;
 
-    offEvents(type: 'complete' | 'pause' | 'remove', callback?: () => void): void;
-    offProgresss(type: 'progress', callback?: (receivedSize: long, totalSize: long) => void): void;
-    offFails(type: 'fail', callback?: (err: int) => void): void;
-    overload off { offEvents, offFails, offProgresss }
+    // onEvents(type: 'complete' | 'pause' | 'remove', callback: () => void): void;
+    // onFails(type: 'fail', callback: (err: int) => void): void;
+    // onProgresss(type: 'progress', callback: (receivedSize: long, totalSize: long) => void): void;
+    // overload on { onEvents, onFails, onProgresss }
+
+    // offEvents(type: 'complete' | 'pause' | 'remove', callback?: () => void): void;
+    // offProgresss(type: 'progress', callback?: (receivedSize: long, totalSize: long) => void): void;
+    // offFails(type: 'fail', callback?: (err: int) => void): void;
+    // overload off { offEvents, offFails, offProgresss }
 
     delete(callback: AsyncCallback<boolean>): void;
 
@@ -206,37 +223,77 @@ export default namespace request {
 
     readonly taskId: string;
 
-    native onProgress(callback: (receivedSize: long, totalSize: long) => void): void;
+    native onProgressInner(callback: (receivedSize: long, totalSize: long) => void): void;
     native onEvent(type: string, callback: () => void): void;
-    native onFail(callback: (err: int) => void): void;
+    native onFailInner(callback: (err: int) => void): void;
 
-    native offProgress(callback?: (receivedSize: long, totalSize: long) => void): void;
+    native offProgressInner(callback?: (receivedSize: long, totalSize: long) => void): void;
     native offEvent(type: string, callback?: () => void): void;
-    native offFail(callback?: (err: int) => void): void;
+    native offFailInner(callback?: (err: int) => void): void;
 
-    onEvents(type: 'complete' | 'pause' | 'remove', callback: () => void): void {
-      this.onEvent(type, callback);
+    onProgress(callback: DownloadProgressCallback): void {
+      this.onProgressInner(callback);
     }
 
-    onFails(type: 'fail', callback: (err: int) => void): void {
-      this.onFail(callback);
+    offProgress(callback?: DownloadProgressCallback): void {
+      this.offProgressInner(callback);
     }
 
-    onProgresss(type: 'progress', callback: (receivedSize: long, totalSize: long) => void): void {
-      this.onProgress(callback);
+    onComplete(callback: DownloadCompleteCallback): void {
+      this.onEvent('complete', callback);
     }
 
-    offEvents(type: 'complete' | 'pause' | 'remove', callback?: () => void): void {
-      this.offEvent(type, callback);
+    onPause(callback: DownloadPauseCallback): void {
+      this.onEvent('pause', callback);
     }
 
-    offProgresss(type: 'progress', callback?: (receivedSize: long, totalSize: long) => void): void {
-      this.offProgress(callback);
+    onRemove(callback: DownloadRemoveCallback): void {
+      this.onEvent('remove', callback);
     }
 
-    offFails(type: 'fail', callback?: (err: int) => void): void {
-      this.offFail(callback);
+    offComplete(callback?: DownloadCompleteCallback): void {
+      this.offEvent('complete', callback);
     }
+
+    offPause(callback?: DownloadPauseCallback): void {
+      this.offEvent('pause', callback);
+    }
+
+    offRemove(callback?: DownloadRemoveCallback): void {
+      this.offEvent('remove', callback);
+    }
+
+    onFail(callback: DownloadFailCallback): void {
+      this.onFailInner(callback);
+    }
+
+    offFail(callback?: DownloadFailCallback): void {
+      this.offFailInner(callback);
+    }
+
+    // onEvents(type: 'complete' | 'pause' | 'remove', callback: () => void): void {
+    //   this.onEvent(type, callback);
+    // }
+
+    // onFails(type: 'fail', callback: (err: int) => void): void {
+    //   this.onFail(callback);
+    // }
+
+    // onProgresss(type: 'progress', callback: (receivedSize: long, totalSize: long) => void): void {
+    //   this.onProgress(callback);
+    // }
+
+    // offEvents(type: 'complete' | 'pause' | 'remove', callback?: () => void): void {
+    //   this.offEvent(type, callback);
+    // }
+
+    // offProgresss(type: 'progress', callback?: (receivedSize: long, totalSize: long) => void): void {
+    //   this.offProgress(callback);
+    // }
+
+    // offFails(type: 'fail', callback?: (err: int) => void): void {
+    //   this.offFail(callback);
+    // }
 
     native deleteSync(): boolean;
 
@@ -399,18 +456,30 @@ export default namespace request {
     message: string;
   }
 
+  export type UploadProgressCallback = (uploadedSize: long, totalSize: long) => void;
+  export type UploadHeaderReceiveCallback = (header: Record<string, string>) => void;
+
   interface UploadTask {
     readonly taskId: string;
 
-    onEvent(type: 'complete' | 'fail', callback: (states: Array<TaskState>) => void): void;
-    onProgress(type: 'progress', callback: (uploadedSize: long, totalSize: long) => void): void;
-    onHeaderReceive(type: 'header_receive', callback: (header: Record<string, string>) => void): void;
-    overload on { onEvent, onProgress, onHeaderReceive }
+    onProgress(callback: UploadProgressCallback): void;
+    offProgress(callback?: UploadProgressCallback): void;
+    onHeaderReceive(callback: UploadHeaderReceiveCallback): void;
+    offHeaderReceive(callback?: UploadHeaderReceiveCallback): void;
+    onComplete(callback: Callback<Array<TaskState>>): void;
+    onFail(callback: Callback<Array<TaskState>>): void;
+    offComplete(callback?: Callback<Array<TaskState>>): void;
+    offFail(callback?: Callback<Array<TaskState>>): void;
 
-    offEvent(type: 'complete' | 'fail', callback?: (states: Array<TaskState>) => void): void;
-    offProgress(type: 'progress', callback?: (uploadedSize: long, totalSize: long) => void): void;
-    offHeaderReceive(type: 'header_receive', callback?: (header: Record<string, string>) => void): void;
-    overload off { offEvent, offProgress, offHeaderReceive }
+    // onEvent(type: 'complete' | 'fail', callback: (states: Array<TaskState>) => void): void;
+    // onProgress(type: 'progress', callback: (uploadedSize: long, totalSize: long) => void): void;
+    // onHeaderReceive(type: 'header_receive', callback: (header: Record<string, string>) => void): void;
+    // overload on { onEvent, onProgress, onHeaderReceive }
+
+    // offEvent(type: 'complete' | 'fail', callback?: (states: Array<TaskState>) => void): void;
+    // offProgress(type: 'progress', callback?: (uploadedSize: long, totalSize: long) => void): void;
+    // offHeaderReceive(type: 'header_receive', callback?: (header: Record<string, string>) => void): void;
+    // overload off { offEvent, offProgress, offHeaderReceive }
 
     delete(callback: AsyncCallback<boolean>): void;
     
@@ -445,29 +514,61 @@ export default namespace request {
       });
     }
 
-    onEvent(type: 'complete' | 'fail', callback: (states: Array<TaskState>) => void): void {
-      this.onEventInner(type, callback);
-    }
-
-    onProgress(type: 'progress', callback: (uploadedSize: long, totalSize: long) => void): void {
+    onProgress(callback: UploadProgressCallback): void {
       this.onProgressInner(callback);
     }
 
-    onHeaderReceive(type: 'header_receive', callback: (header: Record<string, string>) => void): void {
-      this.onHeaderReceiveInner(callback);
-    }
-
-    offEvent(type: 'complete' | 'fail', callback?: (states: Array<TaskState>) => void): void {
-      this.offEventInner(type, callback);
-    }
-
-    offProgress(type: 'progress', callback?: (uploadedSize: long, totalSize: long) => void): void {
+    offProgress(callback?: UploadProgressCallback): void {
       this.offProgressInner(callback);
     }
 
-    offHeaderReceive(type: 'header_receive', callback?: (header: Record<string, string>) => void): void {
+    onHeaderReceive(callback: UploadHeaderReceiveCallback): void {
+      this.onHeaderReceiveInner(callback);
+    }
+
+    offHeaderReceive(callback?: UploadHeaderReceiveCallback): void {
       this.offHeaderReceiveInner(callback);
     }
+
+    onComplete(callback: Callback<Array<TaskState>>): void {
+      this.onEventInner('complete', callback);
+    }
+
+    onFail(callback: Callback<Array<TaskState>>): void {
+      this.onEventInner('fail', callback);
+    }
+
+    offComplete(callback?: Callback<Array<TaskState>>): void {
+      this.offEventInner('complete', callback);
+    }
+
+    offFail(callback?: Callback<Array<TaskState>>): void {
+      this.offEventInner('fail', callback);
+    }
+
+    // onEvent(type: 'complete' | 'fail', callback: (states: Array<TaskState>) => void): void {
+    //   this.onEventInner(type, callback);
+    // }
+
+    // onProgress(type: 'progress', callback: (uploadedSize: long, totalSize: long) => void): void {
+    //   this.onProgressInner(callback);
+    // }
+
+    // onHeaderReceive(type: 'header_receive', callback: (header: Record<string, string>) => void): void {
+    //   this.onHeaderReceiveInner(callback);
+    // }
+
+    // offEvent(type: 'complete' | 'fail', callback?: (states: Array<TaskState>) => void): void {
+    //   this.offEventInner(type, callback);
+    // }
+
+    // offProgress(type: 'progress', callback?: (uploadedSize: long, totalSize: long) => void): void {
+    //   this.offProgressInner(callback);
+    // }
+
+    // offHeaderReceive(type: 'header_receive', callback?: (header: Record<string, string>) => void): void {
+    //   this.offHeaderReceiveInner(callback);
+    // }
 
     native onProgressInner(callback: (uploadedSize: long, totalSize: long) => void): void;
     native onEventInner(type: string, callback: Callback<Array<TaskState>>):void;
