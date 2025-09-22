@@ -286,13 +286,13 @@ ExceptionError CJRequestTask::Create(Context *context, Config &config)
     }
 
     SetTid();
-    listenerMutex_.lock();
-    notifyDataListenerMap_[SubscribeType::REMOVE] =
-        std::make_shared<CJNotifyDataListener>(GetTidStr(), SubscribeType::REMOVE);
-    listenerMutex_.unlock();
-    RequestManager::GetInstance()->AddListener(GetTidStr(), SubscribeType::REMOVE,
-                                               notifyDataListenerMap_[SubscribeType::REMOVE]);
-
+    {
+        std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
+        notifyDataListenerMap_[SubscribeType::REMOVE] =
+            std::make_shared<CJNotifyDataListener>(GetTidStr(), SubscribeType::REMOVE);
+        RequestManager::GetInstance()->AddListener(GetTidStr(), SubscribeType::REMOVE,
+            notifyDataListenerMap_[SubscribeType::REMOVE]);
+    }
     AddTaskMap(GetTidStr(), this);
 
     return err;
@@ -378,21 +378,21 @@ ExceptionError CJRequestTask::On(std::string type, std::string &taskId, void *ca
     }
 
     if (subscribeType == SubscribeType::RESPONSE) {
-        listenerMutex_.lock();
-        if (responseListener_ == nullptr) {
-            responseListener_ = std::make_shared<CJResponseListener>(GetTidStr());
+        {
+            std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
+            if (responseListener_ == nullptr) {
+                responseListener_ = std::make_shared<CJResponseListener>(GetTidStr());
+            }
         }
-        listenerMutex_.unlock();
         responseListener_->AddListener(CJLambda::Create((void (*)(CResponse progress))callback), callback);
     } else {
-        listenerMutex_.lock();
+        std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
         auto listener = notifyDataListenerMap_.find(subscribeType);
         if (listener == notifyDataListenerMap_.end()) {
             notifyDataListenerMap_[subscribeType] = std::make_shared<CJNotifyDataListener>(GetTidStr(), subscribeType);
         }
-        listenerMutex_.unlock();
         notifyDataListenerMap_[subscribeType]->AddListener(CJLambda::Create((void (*)(CProgress progress))callback),
-                                                           (CFunc)callback);
+            (CFunc)callback);
     }
 
     REQUEST_HILOGI("End task on event %{public}s successfully, seq: %{public}d, tid: %{public}s", type.c_str(), seq,
@@ -415,18 +415,18 @@ ExceptionError CJRequestTask::Off(std::string event, CFunc callback)
     }
 
     if (subscribeType == SubscribeType::RESPONSE) {
-        listenerMutex_.lock();
-        if (responseListener_ == nullptr) {
-            responseListener_ = std::make_shared<CJResponseListener>(GetTidStr());
+        {
+            std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
+            if (responseListener_ == nullptr) {
+                responseListener_ = std::make_shared<CJResponseListener>(GetTidStr());
+            }
         }
-        listenerMutex_.unlock();
         responseListener_->RemoveListener((CFunc)callback);
     } else {
-        listenerMutex_.lock();
+        std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
         if (notifyDataListenerMap_.find(subscribeType) == notifyDataListenerMap_.end()) {
             notifyDataListenerMap_[subscribeType] = std::make_shared<CJNotifyDataListener>(GetTidStr(), subscribeType);
         }
-        listenerMutex_.unlock();
         notifyDataListenerMap_[subscribeType]->RemoveListener((CFunc)callback);
     }
     return err;
