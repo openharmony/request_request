@@ -67,7 +67,7 @@ void NetstackRequest::TearDown(void)
  * @tc.precon: NA
  * @tc.step: 1. Create test HttpClientRequest
  *           2. Call SetRequestSslType
- *           5. Verify request is not nullptr
+ *           3. Verify request is not nullptr
  * @tc.expect: No crash happen
  * @tc.type: FUNC
  * @tc.require: issueNumber
@@ -88,7 +88,7 @@ HWTEST_F(NetstackRequest, SetRequestSslType, TestSize.Level1)
  * @tc.precon: NA
  * @tc.step: 1. Create test HttpClientResponse
  *           2. Call GetHeaders
- *           5. Verify Headers is not empty
+ *           3. Verify Headers is not empty
  * @tc.expect: Headers is not empty
  * @tc.type: FUNC
  * @tc.require: issueNumber
@@ -126,7 +126,7 @@ HWTEST_F(NetstackRequest, GetResponseHeaders, TestSize.Level1)
  * @tc.precon: NA
  * @tc.step: 1. Create test HttpClientResponse
  *           2. Call GetResolvConf
- *           5. Verify config is not empty
+ *           3. Verify config is not empty
  * @tc.expect: config is not empty
  * @tc.type: FUNC
  * @tc.require: issueNumber
@@ -150,4 +150,50 @@ HWTEST_F(NetstackRequest, GetRespResolvConf, TestSize.Level1)
     }
     rust::vec<rust::string> config = GetResolvConf();
     EXPECT_TRUE(config.size() >= 0);
+}
+
+/**
+ * @tc.name: GetHttpAddress
+ * @tc.desc: Test GetHttpAddress function
+ * @tc.precon: NA
+ * @tc.step: 1. Create test HttpClientResponse
+ *           2. Call GetHttpAddress
+ *           3. Verify address is not empty
+ * @tc.expect: address is not empty
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(NetstackRequest, GetHttpAddress, TestSize.Level1)
+{
+    std::unique_ptr<HttpClientResponse> response = std::make_unique<HttpClientResponse>();
+    EXPECT_TRUE(GetHeaders(*response).empty());
+    std::unique_ptr<HttpClientRequest> request = NewHttpClientRequest();
+    request->SetURL(TEST_URL_0);
+    request->SetMethod("GET");
+    std::shared_ptr<HttpClientTask> task = NewHttpClientTask(*request);
+    task->OnSuccess([task](const HttpClientRequest &request, const HttpClientResponse &response) {});
+    task->Start();
+    std::chrono::milliseconds timeout(10000);
+    auto start = std::chrono::steady_clock::now();
+    while (task->GetCurlHandle() == nullptr) {
+        auto now = std::chrono::steady_clock::now();
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - start) >= timeout) {
+            REQUEST_HILOGE("GetHttpAddress GetCurlHandle timeout.");
+            EXPECT_FALSE(true);
+            return;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    while (task->GetStatus() != TaskStatus::IDLE) {
+        auto now = std::chrono::steady_clock::now();
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - start) >= timeout) {
+            REQUEST_HILOGE("GetHttpAddress GetStatus timeout.");
+            EXPECT_FALSE(true);
+            return;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    rust::string address = GetHttpAddress(task->GetResponse());
+    EXPECT_FALSE(address.empty());
 }

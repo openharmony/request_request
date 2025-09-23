@@ -72,7 +72,7 @@ export default function requestNewUploadTest() {
      */
     it('testUploadUrl001', 0, (done: Function) => {
       console.log('===>test 1');
-      new Server().serverStart();
+      let server = new Server();
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf: request.UploadConfig = {
@@ -85,13 +85,16 @@ export default function requestNewUploadTest() {
         data: [RequestData]
       };
       try {
+        server.serverStart();
         request.uploadFile(context, conf, (err) => {
           console.info("test success");
           expect(true).assertTrue();
+          server.serverClose();
           done();
         });
       } catch (err) {
         expect(false).assertTrue();
+        server.serverClose();
         done();
       }
     });

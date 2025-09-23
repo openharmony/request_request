@@ -91,4 +91,10 @@ rust::vec<rust::string> GetResolvConf()
     return dns;
 }
 
+rust::string GetHttpAddress(const HttpClientResponse &response)
+{
+    auto statistics = response.GetHttpStatistics();
+    return rust::string::lossy(statistics.serverIpAddress.address_);
+}
+
 } // namespace OHOS::Request

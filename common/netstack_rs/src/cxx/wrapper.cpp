@@ -62,5 +62,4 @@ void GetPerformanceInfo(const HttpClientResponse &response, RustPerformanceInfo 
     performance.set_total_timing(cpp_perf.totalTiming);
     performance.set_redirect_timing(cpp_perf.redirectTiming);
 }
-
 } // namespace OHOS::Request

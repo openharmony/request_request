@@ -22,8 +22,8 @@ use std::sync::{Arc, Mutex, Weak};
 
 use cxx::SharedPtr;
 use ffi::{
-    GetPerformanceInfo, GetResolvConf, HttpClientRequest, HttpClientTask, NewHttpClientTask,
-    OnCallback,
+    GetHttpAddress, GetPerformanceInfo, GetResolvConf, HttpClientRequest, HttpClientTask,
+    NewHttpClientTask, OnCallback,
 };
 use ffrt_rs::{ffrt_sleep, ffrt_spawn};
 use request_utils::error;
@@ -123,7 +123,9 @@ impl CallbackWrapper {
         // Collect performance metrics from the response
         let mut performance = RustPerformanceInfo::default();
         GetPerformanceInfo(response, Pin::new(&mut performance));
+        let addr = GetHttpAddress(response);
         self.info.set_performance(performance);
+        self.info.set_ip_address(addr);
         self.info.set_size(self.current as i64);
         // Store download information for future reference
         self.info_mgr
@@ -167,7 +169,9 @@ impl CallbackWrapper {
         // Collect performance metrics from the response
         let mut performance = RustPerformanceInfo::default();
         GetPerformanceInfo(response, Pin::new(&mut performance));
+        let addr = GetHttpAddress(response);
         self.info.set_performance(performance);
+        self.info.set_ip_address(addr);
         self.info.set_size(self.current as i64);
         // Store download information for future reference
         self.info_mgr
@@ -451,17 +455,17 @@ pub(crate) mod ffi {
         fn GetResponseCode(self: &HttpClientResponse) -> ResponseCode;
         fn GetHeaders(response: Pin<&mut HttpClientResponse>) -> Vec<String>;
         fn GetResolvConf() -> Vec<String>;
+        fn GetPerformanceInfo(
+            response: &HttpClientResponse,
+            performance: Pin<&mut RustPerformanceInfo>,
+        );
+        fn GetHttpAddress(response: &HttpClientResponse) -> String;
 
         #[namespace = "OHOS::NetStack::HttpClient"]
         type HttpClientError;
 
         fn GetErrorCode(self: &HttpClientError) -> HttpErrorCode;
         fn GetErrorMessage(self: &HttpClientError) -> &CxxString;
-
-        fn GetPerformanceInfo(
-            response: &HttpClientResponse,
-            performance: Pin<&mut RustPerformanceInfo>,
-        );
     }
 
     #[repr(i32)]

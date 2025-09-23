@@ -105,20 +105,18 @@ bool BuildInfoNetwork(napi_env env, const CppDownloadInfo &result, napi_value &j
     if (status != napi_ok) {
         return false;
     }
-
-    napi_value ipValue;
-    status = napi_create_string_utf8(env, result.server_addr().c_str(), NAPI_AUTO_LENGTH, &ipValue);
-    if (status != napi_ok) {
-        return false;
+    if (!result.server_addr().empty()) {
+        napi_value ipValue;
+        status = napi_create_string_utf8(env, result.server_addr().c_str(), NAPI_AUTO_LENGTH, &ipValue);
+        if (status != napi_ok) {
+            return false;
+        }
+        status = napi_set_named_property(env, network, "ip", ipValue);
+        if (status != napi_ok) {
+            return false;
+        }
     }
-
-    status = napi_set_named_property(env, network, "ip", ipValue);
-    if (status != napi_ok) {
-        return false;
-    }
-
     std::vector<std::string> dnsServers = result.dns_servers();
-
     napi_value dnsArray;
     status = napi_create_array_with_length(env, dnsServers.size(), &dnsArray);
     if (status != napi_ok) {

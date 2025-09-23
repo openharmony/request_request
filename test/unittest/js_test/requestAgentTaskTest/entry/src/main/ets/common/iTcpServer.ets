@@ -51,4 +51,9 @@ export default class Server {
     console.log('===>client server on connect');
     iServer.on('connect',connectCallback)
   }
+
+  async serverClose() {
+    console.log('===>close server');
+    await iServer.close();
+  }
 }

@@ -52,7 +52,6 @@ private:
     int SetupEpoll();
     int AddToEpoll(int fd, uint32_t events);
     void HandleInotify();
-    void OperateTargetDir();
     void Cleanup();
 
     fs::path directory_;
