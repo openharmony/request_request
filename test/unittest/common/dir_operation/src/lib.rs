@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Huawei Device Co., Ltd.
+// Copyright (C) 2025 Huawei Device Co., Ltd.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,9 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! # Pre-download native
-
-#![deny(unused_must_use)]
 #![allow(
     unknown_lints,
     static_mut_refs,
@@ -21,28 +18,9 @@
     missing_docs,
     clippy::new_without_default
 )]
-#![feature(lazy_cell)]
 
-#[macro_use]
-extern crate request_utils;
+/// Directory oprations.
+pub(crate) mod directory;
 
-mod data;
-mod manage;
-mod update;
-
-pub mod observe;
-
-pub use data::RamCache;
-pub use manage::CacheManager;
-pub use update::Updater;
-
-cfg_ohos! {
-    mod wrapper;
-    const TAG: &str = "PreloadNative\0";
-    const DOMAIN: u32 = 0xD001C50;
-    use ffrt_rs::ffrt_spawn as spawn;
-}
-
-cfg_not_ohos! {
-    use ylong_runtime::spawn_blocking as spawn;
-}
+/// cxx ffi.
+mod wrapper;

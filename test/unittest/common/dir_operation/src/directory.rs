@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Huawei Device Co., Ltd.
+// Copyright (C) 2025 Huawei Device Co., Ltd.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,18 +11,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod file;
-mod ram;
-mod space;
+use std::fs;
+use std::path::Path;
+use std::path::PathBuf;
 
-pub mod observer;
+pub(crate) fn is_dir_exist(path: &str) -> bool {
+    let path = PathBuf::from(path);
+    path.is_dir()
+}
 
-pub use file::{
-    get_curr_store_dir, init_curr_store_dir, init_history_store_dir, is_history_init, FileStoreDir,
-    HistoryDir,
-};
-pub(crate) use file::{restore_files, FileCache};
-pub use ram::RamCache;
-pub(crate) use space::ResourceManager;
+pub(crate) fn create_dir(path: &str) -> bool {
+    fs::create_dir_all(path).is_ok()
+}
 
-pub(crate) const MAX_CACHE_SIZE: u64 = 20971520;
+pub(crate) fn remove_dir(path: &str) -> bool {
+    fs::remove_dir_all(path).is_ok()
+}
+
+pub(crate) fn is_file_exist(path: &str) -> bool {
+    Path::new(path).exists()
+}

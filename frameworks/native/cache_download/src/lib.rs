@@ -25,16 +25,14 @@ extern crate request_utils;
 #[macro_use]
 mod macros;
 
-pub mod info;
-// pub use netstack_rs::info;
-
 mod download;
+pub mod info;
+pub mod observe;
 pub mod services;
 pub use download::task::Downloader;
 
 cfg_ohos! {
     mod wrapper;
-    mod observe;
     const TAG: &str = "PreloadNative\0";
     const DOMAIN: u32 = 0xD001C50;
     use ffrt_rs::ffrt_spawn as spawn;
