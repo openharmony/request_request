@@ -137,6 +137,7 @@ struct FileSpec {
 struct Notification {
     std::optional<std::string> title = std::nullopt;
     std::optional<std::string> text = std::nullopt;
+    std::optional<std::string> wantAgent = std::nullopt;
     bool disable = false;
     int32_t visibility = 0b01;
 };

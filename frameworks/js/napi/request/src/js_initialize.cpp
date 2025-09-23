@@ -39,6 +39,9 @@
 #include "request_manager.h"
 #include "sys_event.h"
 
+#include "want_agent_helper.h"
+#include "want_agent.h"
+
 static constexpr const char *PARAM_KEY_DESCRIPTION = "description";
 static constexpr const char *PARAM_KEY_NETWORKTYPE = "networkType";
 static constexpr const char *PARAM_KEY_FILE_PATH = "filePath";
@@ -491,6 +494,20 @@ bool JsInitialize::ParseNotification(napi_env env, napi_value jsConfig, Config &
             config.notification.text = NapiUtils::Convert2String(env, notification, "text");
             if (config.notification.text->size() > NOTIFICATION_TEXT_MAXIMUM) {
                 errInfo = "Parameter verification failed, notification.text length exceeds the maximum limit";
+                return false;
+            }
+        }
+        OHOS::AbilityRuntime::WantAgent::WantAgent *wantAgent = nullptr;
+        napi_value wantValue = nullptr;
+        if (NapiUtils::GetValueType(env, NapiUtils::GetNamedProperty(env, notification, "wantAgent"))
+            != napi_undefined) {
+            napi_get_named_property(env, notification, "wantAgent", &wantValue);
+            napi_status status = napi_unwrap(env, wantValue, (void **)&wantAgent);
+            if (status == napi_ok && wantAgent != nullptr) {
+                std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> sWantAgent =
+                    std::make_shared<OHOS::AbilityRuntime::WantAgent::WantAgent>(*wantAgent);
+                config.notification.wantAgent = OHOS::AbilityRuntime::WantAgent::WantAgentHelper::ToString(sWantAgent);
+            } else {
                 return false;
             }
         }

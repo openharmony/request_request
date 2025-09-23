@@ -37,6 +37,9 @@
 #include "request_service_proxy.h"
 #include "system_ability_definition.h"
 
+#include "want_agent_helper.h"
+#include "want_agent.h"
+
 using namespace testing::ext;
 using namespace OHOS::Request;
 
@@ -813,7 +816,7 @@ HWTEST_F(RequestManagerImplTest, ReopenChannel001, TestSize.Level1)
  * @tc.step: 1. Verify mock proxy is not null
  *           2. Create test group ID
  *           3. Set gauge to true
- *           4. Create notification info with text and title
+ *           4. Create notification info with text, title, and wantAgent
  *           5. Expect CreateGroup to return E_OK
  *           6. Call CreateGroup with test parameters
  * @tc.expect: CreateGroup returns E_OK successfully
@@ -826,11 +829,44 @@ HWTEST_F(RequestManagerImplTest, CreateGroup001, TestSize.Level1)
     EXPECT_NE(exceptProxy, nullptr);
     std::string gid = "gid";
     bool gauge = true;
+    OHOS::AbilityRuntime::WantAgent::WantAgentInfo paramsInfo;
+    std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> wantAgent =
+        OHOS::AbilityRuntime::WantAgent::WantAgentHelper::GetWantAgent(paramsInfo);
+    Notification info{
+        .text = "text",
+        .title = "title",
+        .wantAgent = OHOS::AbilityRuntime::WantAgent::WantAgentHelper::ToString(wantAgent),
+        .disable = false,
+
+    };
+    EXPECT_CALL(*exceptProxy, CreateGroup(gid, testing::_, testing::_)).WillOnce(testing::Return(E_OK));
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->CreateGroup(gid, gauge, info), E_OK);
+}
+
+/**
+ * @tc.name: CreateGroup002
+ * @tc.desc: Test CreateGroup interface with successful group creation
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Verify mock proxy is not null
+ *           2. Create test group ID
+ *           3. Set gauge to true
+ *           4. Create notification info with text, title
+ *           5. Expect CreateGroup to return E_OK
+ *           6. Call CreateGroup with test parameters
+ * @tc.expect: CreateGroup returns E_OK successfully
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(RequestManagerImplTest, CreateGroup002, TestSize.Level1)
+{
+    EXPECT_NE(exceptProxy, nullptr);
+    std::string gid = "gid";
+    bool gauge = true;
     Notification info{
         .text = "text",
         .title = "title",
         .disable = false,
-
     };
     EXPECT_CALL(*exceptProxy, CreateGroup(gid, testing::_, testing::_)).WillOnce(testing::Return(E_OK));
     EXPECT_EQ(RequestManagerImpl::GetInstance()->CreateGroup(gid, gauge, info), E_OK);
@@ -908,7 +944,7 @@ HWTEST_F(RequestManagerImplTest, QueryTasks001, TestSize.Level1)
  * @tc.desc: Test Create interface with notification configuration
  * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
  * @tc.step: 1. Create config with API9 version and notification settings
- *           2. Set notification properties: text, title, disable, visibility
+ *           2. Set notification properties: text, title, wantAgent, disable, visibility
  *           3. Expect Create to return E_OK
  *           4. Call Create method with the configured parameters
  * @tc.expect: Create returns E_OK successfully
@@ -917,6 +953,50 @@ HWTEST_F(RequestManagerImplTest, QueryTasks001, TestSize.Level1)
  * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerImplTest, CreateWithNotificationTest001, TestSize.Level1)
+{
+    RequestManagerImpl::GetInstance()->OnChannelBroken();
+    OHOS::AbilityRuntime::WantAgent::WantAgentInfo paramsInfo;
+    std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> wantAgent =
+        OHOS::AbilityRuntime::WantAgent::WantAgentHelper::GetWantAgent(paramsInfo);
+    EXPECT_CALL(*exceptProxy, OpenChannel(testing::_))
+        .WillOnce(testing::Return(E_TASK_STATE))
+        .WillOnce(testing::Return(E_OK));
+    Config config;
+    config.version = Version::API9;
+
+    config.notification.text = "text";
+    config.notification.title = "title";
+    config.notification.wantAgent = OHOS::AbilityRuntime::WantAgent::WantAgentHelper::ToString(wantAgent);
+    config.notification.disable = false;
+    config.notification.visibility = VISIBILITY_COMPLETION;
+
+    int32_t seq = 1;
+    std::string tid = "1";
+    EXPECT_CALL(*exceptProxy, Create(testing::_, tid))
+        .WillOnce(testing::Return(E_CHANNEL_NOT_OPEN))
+        .WillOnce(testing::Return(E_OK));
+    EXPECT_CALL(*exceptProxy, Subscribe(testing::_)).WillOnce(testing::Return(E_OK));
+    EXPECT_CALL(*exceptProxy, Start(testing::_))
+        .WillOnce(testing::Return(E_OK))
+        .WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->Create(config, seq, tid), E_OK);
+    EXPECT_EQ(RequestManagerImpl::GetInstance()->Create(config, seq, tid), E_CHANNEL_NOT_OPEN);
+}
+
+/**
+ * @tc.name: CreateWithNotificationTest002
+ * @tc.desc: Test Create interface with notification configuration
+ * @tc.precon: RequestManagerImpl instance is initialized, mock proxy is set up
+ * @tc.step: 1. Create config with API9 version and notification settings
+ *           2. Set notification properties: text, title, disable, visibility
+ *           3. Expect Create to return E_OK
+ *           4. Call Create method with the configured parameters
+ * @tc.expect: Create returns E_OK successfully
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(RequestManagerImplTest, CreateWithNotificationTest002, TestSize.Level1)
 {
     RequestManagerImpl::GetInstance()->OnChannelBroken();
     EXPECT_CALL(*exceptProxy, OpenChannel(testing::_))

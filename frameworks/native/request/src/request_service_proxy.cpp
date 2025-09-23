@@ -453,6 +453,12 @@ void SerializeNotification(MessageParcel &data, const Notification &notification
     } else {
         data.WriteBool(false);
     }
+    if (notification.wantAgent != std::nullopt) {
+        data.WriteBool(true);
+        data.WriteString(*notification.wantAgent);
+    } else {
+        data.WriteBool(false);
+    }
     data.WriteBool(notification.disable);
     data.WriteUint32(static_cast<uint32_t>(notification.visibility));
 }
@@ -930,6 +936,12 @@ int32_t RequestServiceProxy::CreateGroup(std::string &gid, const bool gauge, Not
     if (notification.text != std::nullopt) {
         data.WriteBool(true);
         data.WriteString(*notification.text);
+    } else {
+        data.WriteBool(false);
+    }
+    if (notification.wantAgent != std::nullopt) {
+        data.WriteBool(true);
+        data.WriteString(*notification.wantAgent);
     } else {
         data.WriteBool(false);
     }

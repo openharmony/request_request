@@ -29,6 +29,9 @@
 #include "request_common.h"
 #include "request_manager_impl.h"
 
+#include "want_agent_helper.h"
+#include "want_agent.h"
+
 using namespace testing::ext;
 using namespace OHOS::Request;
 
@@ -565,7 +568,7 @@ HWTEST_F(RequestManagerTest, GetNextSeqTest001, TestSize.Level1)
  * @tc.step: 1. Get RequestManager singleton instance
  *           2. Prepare a unique group ID string
  *           3. Set gauge parameter to true
- *           4. Create Notification object with title, text, and disable=false
+ *           4. Create Notification object with title, text, wantAgent, and disable=false
  *           5. Call CreateGroup method with parameters
  * @tc.expect: CreateGroup returns 0 indicating successful group creation
  * @tc.type: FUNC
@@ -573,6 +576,72 @@ HWTEST_F(RequestManagerTest, GetNextSeqTest001, TestSize.Level1)
  * @tc.level: Level 1
  */
 HWTEST_F(RequestManagerTest, CreateGroupTest001, TestSize.Level1)
+{
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
+    std::string gid = "gid";
+    bool gauge = true;
+    OHOS::AbilityRuntime::WantAgent::WantAgentInfo paramsInfo;
+    std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> wantAgent =
+        OHOS::AbilityRuntime::WantAgent::WantAgentHelper::GetWantAgent(paramsInfo);
+    Notification info{
+        .text = "text",
+        .title = "title",
+        .wantAgent = OHOS::AbilityRuntime::WantAgent::WantAgentHelper::ToString(wantAgent),
+        .disable = false,
+    };
+
+    EXPECT_EQ(RequestManager::GetInstance()->CreateGroup(gid, gauge, info), 0);
+}
+
+/**
+ * @tc.name: CreateGroupTest002
+ * @tc.desc: Test the CreateGroup interface to create a new task group with notification settings includes visibility
+ * @tc.precon: RequestManager instance is available and group ID is unique
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a unique group ID string
+ *           3. Set gauge parameter to true
+ *           4. Create Notification object with title, text, wantAgent, disable=false
+ *           and visibility=VISIBILITY_COMPLETION
+ *           5. Call CreateGroup method with parameters
+ * @tc.expect: CreateGroup returns 0 indicating successful group creation
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(RequestManagerTest, CreateGroupTest002, TestSize.Level1)
+{
+    EXPECT_NE(RequestManager::GetInstance(), nullptr);
+    std::string gid = "gid";
+    bool gauge = true;
+    OHOS::AbilityRuntime::WantAgent::WantAgentInfo paramsInfo;
+    std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> wantAgent =
+        OHOS::AbilityRuntime::WantAgent::WantAgentHelper::GetWantAgent(paramsInfo);
+    Notification info{
+        .text = "text",
+        .title = "title",
+        .wantAgent = OHOS::AbilityRuntime::WantAgent::WantAgentHelper::ToString(wantAgent),
+        .disable = false,
+        .visibility = VISIBILITY_COMPLETION,
+    };
+
+    EXPECT_EQ(RequestManager::GetInstance()->CreateGroup(gid, gauge, info), 0);
+}
+
+/**
+ * @tc.name: CreateGroupTest003
+ * @tc.desc: Test the CreateGroup interface to create a new task group with notification settings
+ * @tc.precon: RequestManager instance is available and group ID is unique
+ * @tc.step: 1. Get RequestManager singleton instance
+ *           2. Prepare a unique group ID string
+ *           3. Set gauge parameter to true
+ *           4. Create Notification object with title, text, and disable=false
+ *           5. Call CreateGroup method with parameters
+ * @tc.expect: CreateGroup returns 0 indicating successful group creation
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(RequestManagerTest, CreateGroupTest003, TestSize.Level1)
 {
     EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string gid = "gid";
@@ -587,20 +656,21 @@ HWTEST_F(RequestManagerTest, CreateGroupTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: CreateGroupTest002
+ * @tc.name: CreateGroupTest004
  * @tc.desc: Test the CreateGroup interface to create a new task group with notification settings includes visibility
  * @tc.precon: RequestManager instance is available and group ID is unique
  * @tc.step: 1. Get RequestManager singleton instance
  *           2. Prepare a unique group ID string
  *           3. Set gauge parameter to true
- *           4. Create Notification object with title, text, disable=false and visibility=VISIBILITY_COMPLETION
+ *           4. Create Notification object with title, text, disable=false
+ *           and visibility=VISIBILITY_COMPLETION
  *           5. Call CreateGroup method with parameters
  * @tc.expect: CreateGroup returns 0 indicating successful group creation
  * @tc.type: FUNC
  * @tc.require: issueNumber
  * @tc.level: Level 1
  */
-HWTEST_F(RequestManagerTest, CreateGroupTest002, TestSize.Level1)
+HWTEST_F(RequestManagerTest, CreateGroupTest004, TestSize.Level1)
 {
     EXPECT_NE(RequestManager::GetInstance(), nullptr);
     std::string gid = "gid";

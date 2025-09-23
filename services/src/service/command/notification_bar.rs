@@ -43,6 +43,12 @@ impl RequestServiceStub {
             None
         };
 
+        let want_agent = if data.read::<bool>()? {
+            Some(data.read()?)
+        } else {
+            None
+        };
+
         let mut disable:bool = data.read()?;
         if disable && (!is_system_api() || !check_permission("ohos.permission.REQUEST_DISABLE_NOTIFICATION")){
             disable = false;
@@ -50,7 +56,8 @@ impl RequestServiceStub {
 
         let visibility = data.read()?;
 
-        let new_group_id = NotificationDispatcher::get_instance().create_group(gauge, title, text, disable, visibility);
+        let new_group_id = NotificationDispatcher::get_instance().create_group(
+            gauge, title, text, want_agent, disable, visibility);
         reply.write(&new_group_id.to_string())?;
         Ok(())
     }

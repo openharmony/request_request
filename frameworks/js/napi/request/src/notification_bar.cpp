@@ -27,6 +27,9 @@
 #include "napi_utils.h"
 #include "request_manager.h"
 
+#include "want_agent_helper.h"
+#include "want_agent.h"
+
 namespace OHOS::Request {
 
 const std::string PARAMETER_ERROR_INFO = "wrong parameters";
@@ -106,6 +109,26 @@ napi_status ValidateAndSetVisibility(CreateContext *context, napi_value customiz
     return napi_ok;
 }
 
+napi_status ValidateAndSetWantAgent(CreateContext *context, napi_value customized)
+{
+    OHOS::AbilityRuntime::WantAgent::WantAgent *wantAgent = nullptr;
+    napi_value wantValue = nullptr;
+    if (NapiUtils::GetValueType(context->env_, NapiUtils::GetNamedProperty(context->env_, customized, "wantAgent"))
+            != napi_undefined) {
+        napi_get_named_property(context->env_, customized, "wantAgent", &wantValue);
+        napi_status status = napi_unwrap(context->env_, wantValue, (void **)&wantAgent);
+        if (status == napi_ok && wantAgent != nullptr) {
+            std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> sWantAgent =
+                std::make_shared<OHOS::AbilityRuntime::WantAgent::WantAgent>(*wantAgent);
+            context->notification.wantAgent = OHOS::AbilityRuntime::WantAgent::WantAgentHelper::ToString(sWantAgent);
+        } else {
+            NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
+            return napi_invalid_arg;
+        }
+    }
+    return napi_ok;
+}
+
 napi_status createNotificationParse(CreateContext *context, napi_value customized)
 {
     if (context == nullptr || context->env_ == nullptr) {
@@ -122,6 +145,11 @@ napi_status createNotificationParse(CreateContext *context, napi_value customize
     }
     
     status = ValidateAndSetText(context, customized);
+    if (status != napi_ok) {
+        return status;
+    }
+    
+    status = ValidateAndSetWantAgent(context, customized);
     if (status != napi_ok) {
         return status;
     }
@@ -149,6 +177,7 @@ napi_status createInput(CreateContext *context, size_t argc, napi_value *argv, n
         NapiUtils::ThrowError(context->env_, E_PARAMETER_CHECK, PARAMETER_ERROR_INFO, true);
         return napi_invalid_arg;
     }
+    context->gauge = false;
     if (NapiUtils::HasNamedProperty(context->env_, argv[0], "gauge")) {
         napi_value gauge = NapiUtils::GetNamedProperty(context->env_, argv[0], "gauge");
         if (NapiUtils::GetValueType(context->env_, gauge) == napi_boolean) {

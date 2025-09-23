@@ -18,6 +18,7 @@ use crate::service::notification_bar::NotificationConfig;
 
 const TEST_TITLE: &str = "test_title";
 const TEST_TEXT: &str = "test_text";
+const TEST_WANT_AGENT: &str = "test_want_agent";
 
 // @tc.name: ut_notify_flow_group
 // @tc.desc: Test group progress calculation and state updates
@@ -85,7 +86,7 @@ fn ut_notify_flow_task_progress() {
     let task_id = fast_random() as u32;
     let uid = fast_random();
 
-    let config = NotificationConfig::new(task_id, None, None, false, 0b10);
+    let config = NotificationConfig::new(task_id, None, None, None, false, 0b10);
     db.update_task_customized_notification(&config);
 
     let progress = ProgressNotify {
@@ -124,7 +125,7 @@ fn ut_notify_flow_task_eventual() {
     let task_id = fast_random() as u32;
     let uid = fast_random();
 
-    let config = NotificationConfig::new(task_id, None, None, false, 0b01);
+    let config = NotificationConfig::new(task_id, None, None, None, false, 0b01);
     db.update_task_customized_notification(&config);
 
     let info = EventualNotify {
@@ -183,6 +184,7 @@ fn ut_customized_task_eventual() {
         task_id,
         Some(TEST_TITLE.to_string()),
         Some(TEST_TEXT.to_string()),
+        Some(TEST_WANT_AGENT.to_string()),
         false,
         0b01,
     );

@@ -73,6 +73,7 @@ ohos_unittest("fwkTest") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "ability_runtime:wantagent_innerkits",
   ]
 }
 

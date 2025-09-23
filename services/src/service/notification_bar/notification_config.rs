@@ -18,6 +18,7 @@ pub(crate) struct NotificationConfig {
     pub(crate) task_id: u32,
     pub(crate) title: Option<String>,
     pub(crate) text: Option<String>,
+    pub(crate) want_agent: Option<String>,
     pub(crate) disable: bool,
     pub(crate) visibility: u32,
 }
@@ -28,6 +29,7 @@ impl NotificationConfig {
         task_id: u32,
         title: Option<String>,
         text: Option<String>,
+        want_agent: Option<String>,
         disable: bool,
         visibility: u32,
     ) -> Self {
@@ -35,6 +37,7 @@ impl NotificationConfig {
             task_id,
             title,
             text,
+            want_agent,
             disable,
             visibility,
         }
@@ -55,13 +58,22 @@ impl Deserialize for NotificationConfig {
         } else {
             None
         };
+
+        let want_agent = if parcel.read::<bool>()? {
+            Some(parcel.read::<String>()?)
+        } else {
+            None
+        };
+        
         let disable = parcel.read::<bool>()?;
+
         let visibility = parcel.read::<u32>()?;
 
         let config = NotificationConfig {
             task_id: 0,
             title,
             text,
+            want_agent,
             disable,
             visibility,
         };

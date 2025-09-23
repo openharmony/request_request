@@ -16,6 +16,7 @@ import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from
 import request from '@ohos.request';
 import fs from '@ohos.file.fs';
 import common from '@ohos.app.ability.common';
+import wantAgent, { WantAgent } from '@ohos.app.ability.wantAgent';
 
 export default function requestCreateTaskTest() {
   describe('requestCreateTaskTest', () => {
@@ -65,6 +66,23 @@ export default function requestCreateTaskTest() {
     let formItem1: request.agent.FormItem = {
       name: 'file',
       value: [fileSpec1, fileSpec2, fileSpec3]
+    };
+
+    let wantAgentInfo: wantAgent.WantAgentInfo = {
+      wants: [
+        {
+          deviceId: '',
+          bundleName: 'com.example.request',
+          abilityName: 'EntryAbility',
+          action: '',
+          entities: [],
+          uri: '',
+          parameters: {}
+        }
+      ],
+      actionType: wantAgent.OperationType.START_ABILITY,
+      requestCode: 0,
+      wantAgentFlags:[wantAgent.WantAgentFlags.CONSTANT_FLAG]
     };
     /**
      * @tc.number: testTaskAction001
@@ -3292,6 +3310,125 @@ export default function requestCreateTaskTest() {
         notification: {
           visibility: request.agent.VISIBILITY_COMPLETION | request.agent.VISIBILITY_PROGRESS,
         },
+      };
+      try {
+        let task = await request.agent.create(context, conf);
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskWantAgent001
+     * @tc.name: testTaskWantAgent001
+     * @tc.desc: Test create task with valid wantAgent
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskWantAgent001', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskWantAgent001.txt',
+        gauge: false,
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION | request.agent.VISIBILITY_PROGRESS,
+          wantAgent: await wantAgent.getWantAgent(wantAgentInfo),
+        }
+      };
+      try {
+        let task = await request.agent.create(context, conf);
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskWantAgent002
+     * @tc.name: testTaskWantAgent002
+     * @tc.desc: Test create task with invalid wantAgent
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskWantAgent002', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskWantAgent002.txt',
+        gauge: false,
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION | request.agent.VISIBILITY_PROGRESS,
+          wantAgent: {},
+        }
+      };
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        });
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskWantAgent003
+     * @tc.name: testTaskWantAgent003
+     * @tc.desc: Test create task with undefined wantAgent
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskWantAgent003', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskWantAgent003.txt',
+        gauge: false,
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION | request.agent.VISIBILITY_PROGRESS,
+          wantAgent: undefined,
+        }
+      };
+      try {
+        let task = await request.agent.create(context, conf);
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskWantAgent004
+     * @tc.name: testTaskWantAgent004
+     * @tc.desc: Test create task with no wantAgent
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskWantAgent004', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskWantAgent004.txt',
+        gauge: false,
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION | request.agent.VISIBILITY_PROGRESS,
+        }
       };
       try {
         let task = await request.agent.create(context, conf);

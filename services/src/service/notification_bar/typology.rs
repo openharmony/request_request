@@ -72,11 +72,13 @@ impl NotifyContent {
                 }
                 _ => unreachable!(),
             });
-        let text = customized.and_then(|c| c.text).unwrap_or(file_name);
+        let text = customized.as_mut().and_then(|c| c.text.take()).unwrap_or(file_name);
+        let want_agent = customized.and_then(|c| c.want_agent).unwrap_or_default();
 
         Self {
             title,
             text,
+            want_agent,
             request_id: task_id,
             uid,
             live_view: false,
@@ -118,10 +120,10 @@ impl NotifyContent {
                 _ => unreachable!(),
             });
 
-        let text = customized
+        let text = customized.as_mut()
             .and_then(|c| c.text.clone())
             .unwrap_or_else(|| info.file_name.clone());
-
+        let want_agent = customized.and_then(|c| c.want_agent).unwrap_or_default();
         let progress_circle = match info.total {
             Some(total) => ProgressCircle::open(info.processed, total),
             None => ProgressCircle::close(),
@@ -130,6 +132,7 @@ impl NotifyContent {
         Self {
             title,
             text,
+            want_agent,
             request_id: info.task_id,
             uid: info.uid as u32,
             live_view: true,
@@ -169,11 +172,13 @@ impl NotifyContent {
                 .replace("%2$d", &failed_count.to_string())
         };
 
-        let text = customized.and_then(|c| c.text).unwrap_or(text_count);
+        let text = customized.as_mut().and_then(|c| c.text.take()).unwrap_or(text_count);
+        let want_agent = customized.and_then(|c| c.want_agent).unwrap_or_default();
 
         Self {
             title,
             text,
+            want_agent,
             request_id: group_id,
             uid,
             live_view: false,
@@ -216,13 +221,15 @@ impl NotifyContent {
                 .replace("%2$d", &failed.to_string())
         };
 
-        let text = customized.and_then(|c| c.text).unwrap_or(text_count);
+        let text = customized.as_mut().and_then(|c| c.text.take()).unwrap_or(text_count);
+        let want_agent = customized.and_then(|c| c.want_agent).unwrap_or_default();
 
         let progress_circle =
             ProgressCircle::open((successful + failed) as u64, group_progress.total() as u64);
         Self {
             title,
             text,
+            want_agent,
             request_id: group_id,
             uid,
             live_view: true,

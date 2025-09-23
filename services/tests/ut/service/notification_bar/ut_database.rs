@@ -17,6 +17,7 @@ use super::*;
 use crate::service::notification_bar::NotificationConfig;
 const TEST_TITLE: &str = "田文镜";
 const TEST_TEXT: &str = "我XXX";
+const TEST_WANT_AGENT: &str = "wantAgent";
 
 // @tc.name: ut_notify_database_query_tasks
 // @tc.desc: Test querying tasks in a notification group
@@ -87,6 +88,7 @@ fn ut_notify_database_query_task_customized() {
         task_id,
         Some(TEST_TITLE.to_string()),
         Some(TEST_TEXT.to_string()),
+        Some(TEST_WANT_AGENT.to_string()),
         false,
         0b01,
     );
@@ -95,6 +97,7 @@ fn ut_notify_database_query_task_customized() {
     let customized = db.query_task_customized_notification(task_id).unwrap();
     assert_eq!(customized.title.unwrap(), TEST_TITLE);
     assert_eq!(customized.text.unwrap(), TEST_TEXT);
+    assert_eq!(customized.want_agent.unwrap(), TEST_WANT_AGENT);
 }
 
 // @tc.name: ut_notify_database_query_group_customized
@@ -118,10 +121,12 @@ fn ut_notify_database_query_group_customized() {
         group_id,
         Some(TEST_TITLE.to_string()),
         Some(TEST_TEXT.to_string()),
+        Some(TEST_WANT_AGENT.to_string()),
     );
     let customized = db.query_group_customized_notification(group_id).unwrap();
     assert_eq!(customized.title.unwrap(), TEST_TITLE);
     assert_eq!(customized.text.unwrap(), TEST_TEXT);
+    assert_eq!(customized.want_agent.unwrap(), TEST_WANT_AGENT);
 }
 
 // @tc.name: ut_notify_database_group_config
@@ -174,7 +179,7 @@ fn ut_clear_task_info() {
 
     let group_id = fast_random() as u32;
     let task_id = fast_random() as u32;
-    let config = NotificationConfig::new(task_id, None, None, true, 0b01);
+    let config = NotificationConfig::new(task_id, None, None, None, true, 0b01);
 
     db.disable_task_notification(task_id);
     db.update_task_customized_notification(&config);
@@ -210,7 +215,7 @@ fn ut_clear_group_info() {
 
     let group_id = fast_random() as u32;
     let task_id = fast_random() as u32;
-    db.update_group_customized_notification(group_id, None, None);
+    db.update_group_customized_notification(group_id, None, None, None);
     db.update_group_config(group_id, true, 0, false, 0b01);
     db.update_task_group(task_id, group_id);
 
@@ -248,7 +253,7 @@ fn ut_clear_group_info_a_week_ago() {
     let group_id = fast_random() as u32;
     let task_id = fast_random() as u32;
 
-    db.update_group_customized_notification(group_id, None, None);
+    db.update_group_customized_notification(group_id, None, None, None);
     db.update_group_config(group_id, true, current_time, false, 0b01);
 
     db.clear_group_info_a_week_ago();

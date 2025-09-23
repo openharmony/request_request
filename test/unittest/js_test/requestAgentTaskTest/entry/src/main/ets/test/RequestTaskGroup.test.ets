@@ -17,6 +17,7 @@ import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from
 import request from '@ohos.request';
 import fs from '@ohos.file.fs';
 import common from '@ohos.app.ability.common';
+import wantAgent, { WantAgent } from '@ohos.app.ability.wantAgent';
 
 export default function requestTaskGroupTest() {
   describe('requestTaskGroupTest', () => {
@@ -44,6 +45,23 @@ export default function requestTaskGroupTest() {
 
     let context: common.UIAbilityContext = globalThis.abilityContext;
     let cacheDir: String = globalThis.cacheDir;
+
+    let wantAgentInfo: wantAgent.WantAgentInfo = {
+      wants: [
+        {
+          deviceId: '',
+          bundleName: 'com.example.request',
+          abilityName: 'EntryAbility',
+          action: '',
+          entities: [],
+          uri: '',
+          parameters: {}
+        }
+      ],
+      actionType: wantAgent.OperationType.START_ABILITY,
+      requestCode: 0,
+      wantAgentFlags:[wantAgent.WantAgentFlags.CONSTANT_FLAG]
+    };
     /**
      * @tc.number: testcreateGroup001
      * @tc.name: testcreateGroup001
@@ -365,6 +383,109 @@ export default function requestTaskGroupTest() {
      * @tc.require:
      */
     it('testcreateGroup014', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
+        gauge: false,
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION | request.agent.VISIBILITY_PROGRESS,
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(config);
+        expect(true).assertTrue();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testcreateGroup015
+     * @tc.name: testcreateGroup015
+     * @tc.desc: Test create group with valid wantAgent
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testcreateGroup015', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
+        gauge: false,
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION | request.agent.VISIBILITY_PROGRESS,
+          wantAgent: await wantAgent.getWantAgent(wantAgentInfo),
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(config);
+        expect(true).assertTrue();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testcreateGroup016
+     * @tc.name: testcreateGroup016
+     * @tc.desc: Test create group with invalid wantAgent
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testcreateGroup016', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
+        gauge: false,
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION | request.agent.VISIBILITY_PROGRESS,
+          wantAgent: {},
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(config);
+        expect(false).assertTrue();
+        done();
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    });
+    /**
+     * @tc.number: testcreateGroup017
+     * @tc.name: testcreateGroup017
+     * @tc.desc: Test create group with undefined wantAgent
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testcreateGroup017', 0, async (done: Function) => {
+      let config: request.agent.GroupConfig = {
+        gauge: false,
+        notification: {
+          visibility: request.agent.VISIBILITY_COMPLETION | request.agent.VISIBILITY_PROGRESS,
+          wantAgent: undefined,
+        },
+      };
+      try {
+        let gid = await request.agent.createGroup(config);
+        expect(true).assertTrue();
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testcreateGroup018
+     * @tc.name: testcreateGroup018
+     * @tc.desc: Test create group with no wantAgent
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testcreateGroup018', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
         gauge: false,
         notification: {
