@@ -15,6 +15,7 @@ use ylong_runtime::fastrand::fast_random;
 
 use super::*;
 use crate::service::notification_bar::NotificationConfig;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 const TEST_TITLE: &str = "test_title";
 const TEST_TEXT: &str = "test_text";
@@ -216,4 +217,111 @@ fn ut_customized_task_eventual() {
     );
     assert!(db.query_task_customized_notification(task_id).is_none());
     assert_eq!(content, content_default);
+}
+
+// @tc.name: ut_group_visibility_progress
+// @tc.desc: Test group progress notification with different visibility values
+// @tc.precon: NA
+// @tc.step: 1. Create a NotifyFlow instance with test channel
+//           2. Create a group and set progress visibility
+//           3. Attach a task to the group
+//           4. Call publish_progress_notification and verify results
+// @tc.expect: Group progress notification is generated when visibility is true
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
+#[test]
+fn ut_group_visibility_progress() {
+    let (_, rx) = mpsc::unbounded_channel();
+    let db = Arc::new(NotificationDb::new());
+    let mut flow = NotifyFlow::new(rx, db.clone());
+    let group_id = fast_random() as u32;
+    let task_id = fast_random() as u32;
+    let uid = fast_random();
+    let _current_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64;
+
+    // Setup group with progress visibility true
+    db.update_group_config(group_id, true, _current_time, true, 0b10); // PROGRESS bit set
+    db.update_task_group(task_id, group_id);
+
+    // Test with progress visibility true
+    let progress = ProgressNotify {
+        action: Action::Download,
+        task_id,
+        uid,
+        processed: 50,
+        total: Some(100),
+        multi_upload: None,
+        file_name: "test".to_string(),
+    };
+    let content = flow.publish_progress_notification(progress.clone());
+    assert!(content.is_some());
+
+    // Update group progress visibility to false
+    db.update_group_config(group_id, true, _current_time, true, 0b00); // No bits set
+    // Verify visibility is updated in database
+    assert!(!db.is_progress_visible_from_group(group_id));
+
+    // Clear visibility cache to force recheck
+    flow.group_progress_visibility.clear();
+
+    // Test with progress visibility false
+    let content = flow.publish_progress_notification(progress);
+    assert!(content.is_none());
+}
+
+// @tc.name: ut_group_visibility_completion
+// @tc.desc: Test group completion notification with different visibility values
+// @tc.precon: NA
+// @tc.step: 1. Create a NotifyFlow instance with test channel
+//           2. Create a group and set completion visibility
+//           3. Attach a task to the group
+//           4. Call publish_completed_notify and verify results
+// @tc.expect: Group completion notification is generated when visibility is true
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
+#[test]
+fn ut_group_visibility_completion() {
+    let (_, rx) = mpsc::unbounded_channel();
+    let db = Arc::new(NotificationDb::new());
+    let mut flow = NotifyFlow::new(rx, db.clone());
+    let group_id = fast_random() as u32;
+    let task_id = fast_random() as u32;
+    let uid = fast_random();
+    let _current_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64;
+
+    // Setup group with completion visibility true and not attachable
+    db.update_group_config(group_id, true, _current_time, true, 0b01); // COMPLETION bit set
+    db.disable_attach_group(group_id);
+    db.update_task_group(task_id, group_id);
+
+    // Test with completion visibility true
+    // Simulate task completion (assuming this is handled elsewhere in the actual code)
+    // Since there's no update_task_state method, we'll proceed with the existing setup
+
+    // Trigger group progress update in NotifyFlow
+    let info = EventualNotify {
+        action: Action::Download,
+        task_id,
+        processed: 100,
+        uid,
+        file_name: "test".to_string(),
+        is_successful: true,
+    };
+    // First call to update group_progress cache
+    flow.publish_completed_notify(&info);
+    // Second call to get the actual content
+    let content = flow.publish_completed_notify(&info);
+    assert!(content.is_some());
+
+    // Update group completion visibility to false
+    db.update_group_config(group_id, true, _current_time, true, 0b00); // No bits set
+
+    let content = flow.publish_completed_notify(&info);
+    assert!(content.is_none());
 }
