@@ -25,4 +25,3 @@ ylong_runtime = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_
 
 request_utils = { path = "../../../common/utils" }
 request_core = { path = "../../../common/request_core" }
-libc = "0.2.153"

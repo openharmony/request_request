@@ -26,5 +26,6 @@ members = [
     "common/request_core",
     "common/database",
     "test/rustest",
+    "test/unittest/common/dir_operation",
     "services",
 ]

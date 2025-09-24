@@ -95,10 +95,6 @@ ohos_rust_unittest("rust_utils_ut_test") {
   module_out_path = "request/request/common"
 
   sources = [ "src/lib.rs" ]
-  external_deps = [
-    "hilog:libhilog",
-    "rust_cxx:lib",
-  ]
 
   rustflags = [ "--cfg=feature=\"ohos\"" ]
 
