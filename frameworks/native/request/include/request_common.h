@@ -139,7 +139,7 @@ struct Notification {
     std::optional<std::string> text = std::nullopt;
     std::optional<std::string> wantAgent = std::nullopt;
     bool disable = false;
-    int32_t visibility = 0b01;
+    uint32_t visibility = 0b01;
 };
 
 struct MinSpeed {
