@@ -15,6 +15,7 @@ use ylong_runtime::fastrand::fast_random;
 
 use super::*;
 use crate::service::notification_bar::NotificationConfig;
+use std::time::{SystemTime, UNIX_EPOCH};
 const TEST_TITLE: &str = "田文镜";
 const TEST_TEXT: &str = "我XXX";
 const TEST_WANT_AGENT: &str = "wantAgent";
@@ -270,4 +271,201 @@ fn ut_clear_group_info_a_week_ago() {
     db.clear_group_info_a_week_ago();
     assert!(db.query_group_customized_notification(group_id).is_none());
     assert!(!db.contains_group(group_id));
+}
+
+// @tc.name: ut_notify_database_visibility
+// @tc.desc: Test notification visibility functions
+// @tc.precon: NA
+// @tc.step: 1. Create a NotificationDb instance
+//           2. Update task notification with different visibility values
+//           3. Test is_completion_visible and is_progress_visible functions
+//           4. Update group notification with different visibility values
+//           5. Test is_completion_visible_from_group and is_progress_visible_from_group functions
+// @tc.expect: Visibility functions return correct values based on bitmask
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
+#[test]
+fn ut_notify_database_visibility() {
+    let db = NotificationDb::new();
+    let task_id = 1;
+    let group_id = 1;
+    let _current_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64;
+
+    let config = NotificationConfig::new(
+        task_id,
+        Some("title".to_string()),
+        Some("text".to_string()),
+        None,
+        false,
+        0b00,
+    );
+    db.update_task_customized_notification(&config);
+    assert!(!db.is_completion_visible(task_id));
+    assert!(!db.is_progress_visible(task_id));
+
+    let config = NotificationConfig::new(
+        task_id,
+        Some("title".to_string()),
+        Some("text".to_string()),
+        None,
+        false,
+        0b01,
+    );
+    db.update_task_customized_notification(&config);
+    assert!(db.is_completion_visible(task_id));
+    assert!(!db.is_progress_visible(task_id));
+
+    let config = NotificationConfig::new(
+        task_id,
+        Some("title".to_string()),
+        Some("text".to_string()),
+        None,
+        false,
+        0b10,
+    );
+    db.update_task_customized_notification(&config);
+    assert!(!db.is_completion_visible(task_id));
+    assert!(db.is_progress_visible(task_id));
+
+    let config = NotificationConfig::new(
+        task_id,
+        Some("title".to_string()),
+        Some("text".to_string()),
+        None,
+        false,
+        0b11,
+    );
+    db.update_task_customized_notification(&config);
+    assert!(db.is_completion_visible(task_id));
+    assert!(db.is_progress_visible(task_id));
+
+    db.update_group_config(group_id, true, _current_time, true, 0b00);
+    assert!(!db.is_completion_visible_from_group(group_id));
+    assert!(!db.is_progress_visible_from_group(group_id));
+
+    db.update_group_config(group_id, true, _current_time, true, 0b01);
+    assert!(db.is_completion_visible_from_group(group_id));
+    assert!(!db.is_progress_visible_from_group(group_id));
+
+    db.update_group_config(group_id, true, _current_time, true, 0b10);
+    assert!(!db.is_completion_visible_from_group(group_id));
+    assert!(db.is_progress_visible_from_group(group_id));
+
+    db.update_group_config(group_id, true, _current_time, true, 0b11);
+    assert!(db.is_completion_visible_from_group(group_id));
+    assert!(db.is_progress_visible_from_group(group_id));
+}
+
+// @tc.name: ut_notify_database_want_agent
+// @tc.desc: Test want_agent field operations for task and group notifications
+// @tc.precon: NA
+// @tc.step: 1. Create a NotificationDb instance
+//           2. Test setting and retrieving valid want_agent for task
+//           3. Test updating existing want_agent for task
+//           4. Test clearing want_agent for task
+//           5. Test setting and retrieving valid want_agent for group
+//           6. Test updating existing want_agent for group
+//           7. Test clearing want_agent for group
+// @tc.expect: want_agent field can be correctly set, updated, retrieved and cleared
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
+#[test]
+fn ut_notify_database_want_agent() {
+    let db = NotificationDb::new();
+    let task_id = fast_random() as u32;
+    let group_id = fast_random() as u32;
+    let updated_want_agent = "updatedWantAgent";
+
+    // Test task want_agent operations
+    // 1. Set and retrieve valid want_agent
+    let config = NotificationConfig::new(
+        task_id,
+        None,
+        None,
+        Some(TEST_WANT_AGENT.to_string()),
+        false,
+        0b00,
+    );
+    db.update_task_customized_notification(&config);
+    let customized = db.query_task_customized_notification(task_id).unwrap();
+    assert_eq!(customized.want_agent.unwrap(), TEST_WANT_AGENT);
+
+    // 2. Update existing want_agent
+    let config = NotificationConfig::new(
+        task_id,
+        None,
+        None,
+        Some(updated_want_agent.to_string()),
+        false,
+        0b00,
+    );
+    db.update_task_customized_notification(&config);
+    let customized = db.query_task_customized_notification(task_id).unwrap();
+    assert_eq!(customized.want_agent.unwrap(), updated_want_agent);
+
+    // 3. Clear want_agent
+    let config = NotificationConfig::new(
+        task_id,
+        None,
+        None,
+        None,
+        false,
+        0b00,
+    );
+    db.update_task_customized_notification(&config);
+    let customized = db.query_task_customized_notification(task_id).unwrap();
+    assert!(customized.want_agent.is_none());
+
+    // Test group want_agent operations
+    // 4. Set and retrieve valid want_agent
+    db.update_group_customized_notification(
+        group_id,
+        None,
+        None,
+        Some(TEST_WANT_AGENT.to_string()),
+    );
+    let customized = db.query_group_customized_notification(group_id).unwrap();
+    assert_eq!(customized.want_agent.unwrap(), TEST_WANT_AGENT);
+
+    // 5. Update existing want_agent
+    db.update_group_customized_notification(
+        group_id,
+        None,
+        None,
+        Some(updated_want_agent.to_string()),
+    );
+    let customized = db.query_group_customized_notification(group_id).unwrap();
+    assert_eq!(customized.want_agent.unwrap(), updated_want_agent);
+
+    // 6. Clear want_agent
+    db.update_group_customized_notification(
+        group_id,
+        None,
+        None,
+        None,
+    );
+    let customized = db.query_group_customized_notification(group_id).unwrap();
+    assert!(customized.want_agent.is_none());
+
+    // 7. Test want_agent persistence after clearing other fields
+    db.update_group_customized_notification(
+        group_id,
+        Some("title".to_string()),
+        Some("text".to_string()),
+        Some(TEST_WANT_AGENT.to_string()),
+    );
+    // Update only title and text, want_agent should remain
+    db.update_group_customized_notification(
+        group_id,
+        Some("new_title".to_string()),
+        Some("new_text".to_string()),
+        None,
+    );
+    let customized = db.query_group_customized_notification(group_id).unwrap();
+    assert_eq!(customized.title.unwrap(), "new_title");
+    assert_eq!(customized.text.unwrap(), "new_text");
+    assert!(customized.want_agent.is_none());
 }

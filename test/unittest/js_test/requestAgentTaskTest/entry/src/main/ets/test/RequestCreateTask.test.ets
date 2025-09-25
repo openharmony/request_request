@@ -1985,6 +1985,187 @@ export default function requestCreateTaskTest() {
       }
     });
     /**
+     * @tc.number: testTaskData020
+     * @tc.name: testTaskData020
+     * @tc.desc: Test create task when data path is internal pattern
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+
+    it('testTaskData020', 0, async (done: Function) => {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf: request.agent.Config = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+          name: 'file',
+          value: {
+            path: `internal://cache/test.txt`
+          }
+        }]
+      };
+      try {
+        request.agent.create(context, conf, (err) => {
+          expect(true).assertTrue();
+          done();
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskData021
+     * @tc.name: testTaskData021
+     * @tc.desc: Test create task when data path is application pattern
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+
+    it('testTaskData021', 0, async (done: Function) => {
+      let context: common.UIAbilityContext = globalThis.abilityContext.getApplicationContext();
+      let dir: String = context.cacheDir;
+      let file = fs.openSync(dir + '/data_021', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf: request.agent.Config = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+          name: 'file',
+          value: {
+            path: '/data/storage/../../data/storage/el1/../el2/base/cache/data_021'
+          }
+        }]
+      };
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          if (fs.accessSync(dir + '/data_021')) {
+            fs.unlinkSync(dir + '/data_021');
+          }
+          expect(true).assertTrue();
+          done();
+        }).catch((err: Error) => {
+          expect(false).assertTrue();
+          done();
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskData022
+     * @tc.name: testTaskData022
+     * @tc.desc: Test create task when data path is file pattern
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+
+    it('testTaskData022', 0, async (done: Function) => {
+      let context: common.UIAbilityContext = globalThis.abilityContext.getApplicationContext();
+      let dir: String = context.cacheDir;
+      let file = fs.openSync(dir + '/data_022', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf: request.agent.Config = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+          name: 'file',
+          value: {
+            path: 'file://com.acts.request/data/storage/el2/base/cache/data_022'
+          }
+        }]
+      };
+      try {
+        await request.agent.create(context, conf).then(async () => {
+          if (fs.accessSync(dir + '/data_022')) {
+            fs.unlinkSync(dir + '/data_022');
+          }
+          expect(true).assertTrue();
+          done();
+        }).catch((err: Error) => {
+          expect(false).assertTrue();
+          done();
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskData023
+     * @tc.name: testTaskData023
+     * @tc.desc: Test create task when data path is from public directory
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+
+    it('testTaskData023', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        mode: request.agent.Mode.FOREGROUND,
+        data: [{
+          name: 'file',
+          value: {
+            path: 'file://media/Photo/1/test.txt'
+          }
+        }]
+      };
+      try {
+        request.agent.create(context, conf, (err) => {
+          expect(false).assertTrue();
+          done();
+        });
+      } catch (err) {
+        expect(err.code).assertEqual(13400001);
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskData024
+     * @tc.name: testTaskData024
+     * @tc.desc: Test create task when data contentType is string
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+
+    it('testTaskData024', 0, async (done: Function) => {
+      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file);
+      let conf: request.agent.Config = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+          name: 'file',
+          value: {
+            path: `${cacheDir}/test.txt`,
+            contentType: 'test'
+          }
+        }]
+      };
+      try {
+        request.agent.create(context, conf, (err) => {
+          expect(true).assertTrue();
+          done();
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
      * @tc.number: testTaskNetwork001
      * @tc.name: testTaskNetwork001
      * @tc.desc: Test create task when network is 3
@@ -3437,6 +3618,234 @@ export default function requestCreateTaskTest() {
         done();
       } catch (err) {
         expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskNotiTitle001
+     * @tc.name: testTaskNotiTitle001
+     * @tc.desc: Test create task with no notification title 
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskNotiTitle001', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskNotiTitle001.txt',
+        gauge: false,
+        notification: {}
+      };
+      try {
+        let task = await request.agent.create(context, conf);
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskNotiTitle002
+     * @tc.name: testTaskNotiTitle002
+     * @tc.desc: Test create task with notification title is string
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskNotiTitle002', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskNotiTitle002.txt',
+        gauge: false,
+        notification: {
+          title: 'testTaskNotiTitle002',
+        }
+      };
+      try {
+        let task = await request.agent.create(context, conf);
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskNotiTitle003
+     * @tc.name: testTaskNotiTitle003
+     * @tc.desc: Test create task with notification title length is 1024
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskNotiTitle003', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskNotiTitle003.txt',
+        gauge: false,
+        notification: {
+          title: 'a'.repeat(1024),
+        }
+      };
+      try {
+        let task = await request.agent.create(context, conf);
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskNotiTitle004
+     * @tc.name: testTaskNotiTitle004
+     * @tc.desc: Test create task with notification title length exceeds 1024
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskNotiTitle004', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskNotiTitle004.txt',
+        gauge: false,
+        notification: {
+          title: 'a'.repeat(1025),
+        }
+      };
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        });
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskNotiText001
+     * @tc.name: testTaskNotiText001
+     * @tc.desc: Test create task with no notification text
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskNotiText001', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskNotiText001.txt',
+        gauge: false,
+        notification: {}
+      };
+      try {
+        let task = await request.agent.create(context, conf);
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskNotiText002
+     * @tc.name: testTaskNotiText002
+     * @tc.desc: Test create task with notification text is string
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskNotiText002', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskNotiText002.txt',
+        gauge: false,
+        notification: {
+          text: 'testTaskNotiText002',
+        }
+      };
+      try {
+        let task = await request.agent.create(context, conf);
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskNotiText003
+     * @tc.name: testTaskNotiText003
+     * @tc.desc: Test create task with notification title length is 3072
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskNotiText003', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskNotiText003.txt',
+        gauge: false,
+        notification: {
+          text: 'a'.repeat(3072),
+        }
+      };
+      try {
+        let task = await request.agent.create(context, conf);
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    /**
+     * @tc.number: testTaskNotiText004
+     * @tc.name: testTaskNotiText004
+     * @tc.desc: Test create task with notification title length exceeds 3072
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.require:
+     */
+    it('testTaskNotiText004', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskNotiText004.txt',
+        gauge: false,
+        notification: {
+          text: 'a'.repeat(3073),
+        }
+      };
+      try {
+        request.agent.create(context, conf, (err, data) => {
+          expect(false).assertTrue();
+          done();
+        });
+      } catch (err) {
+        expect(err.code).assertEqual(401);
         done();
       }
     });
