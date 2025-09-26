@@ -65,7 +65,7 @@ libcurl: 封装libcurl接口完成上传。
     -   ohos.permission.WRITE_MEDIA
     -   ohos.permission.READ_MEDIA
 -   request数据单元为文件形式，其余数据形式需要调用者自行封装为文件路径。
--   request服务不提供完整的HTTP/HTTPS SDK接口，只是HTTP/HTTPS SDK 的用户，如需此接口推荐使用[NetStack](https://gitee.com/openharmony/communication_netstack)。
+-   request服务不提供完整的HTTP/HTTPS SDK接口，只是HTTP/HTTPS SDK 的用户，如需此接口推荐使用[NetStack](https://gitcode.com/openharmony/communication_netstack)。
 -   下载服务器需要支持HTTP协议的head方法，能够通过Content-length获取下载数据大小，否则下载任务失败。
 -   下载时用户指定文件已存在，会在创建任务时校验并抛出异常，创建任务失败。
 -   允许用户指定多文件上传成功策略：多文件在同一个任务中上传，以任务维度为判断标准，必须所有文件上传成功判定为成功。
@@ -74,11 +74,11 @@ libcurl: 封装libcurl接口完成上传。
 ##  说明
 ###  接口说明
 -   Request接口文档
-    -   [js-apis-request.md](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-request.md) 提供从API version 6开始接口定义和示例代码。
-    -   [js-apis-system-request.md](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-system-request.md) 提供从API version 3开始接口定义和示例代码，此文档接口从API version 9开始已全部废弃，不推荐使用。
+    -   [js-apis-request.md](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-request.md) 提供从API version 6开始接口定义和示例代码。
+    -   [js-apis-system-request.md](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-system-request.md) 提供从API version 3开始接口定义和示例代码，此文档接口从API version 9开始已全部废弃，不推荐使用。
 
 
 
 ##  相关仓
 
-[request_request](https://gitee.com/openharmony/request_request)
+[request_request](https://gitcode.com/openharmony/request_request)

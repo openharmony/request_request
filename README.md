@@ -618,4 +618,4 @@ uploadTask.remove((err, result) => {
 
 ##  Repositories Involved
 
-[request_request](https://gitee.com/openharmony/request_request)
+[request_request](https://gitcode.com/openharmony/request_request)
