@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Huawei Device Co., Ltd.
+// Copyright (C) 2025 Huawei Device Co., Ltd.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,33 +11,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Request utils
+use ani_rs::business_error::BusinessError;
+use ani_rs::objects::AniRef;
 
-#![warn(missing_docs)]
-#![allow(clippy::crate_in_macro_def)]
-#![allow(missing_docs, clippy::new_without_default)]
+use crate::api9::bridge::{UploadConfig, UploadTask};
 
-#[macro_use]
-mod macros;
-
-pub mod fastrand;
-pub mod file_control;
-pub mod hash;
-pub mod lru;
-pub mod task_id;
-
-cfg_not_ohos! {
-    pub use log::{debug, error, info};
+#[ani_rs::native]
+pub fn upload_file(context: AniRef, config: UploadConfig) -> Result<UploadTask, BusinessError> {
+    Ok(UploadTask { task_id: 0 })
 }
 
-cfg_ohos! {
-    #[macro_use]
-    mod hilog;
-    pub mod observe;
-    pub mod context;
-    mod wrapper;
-    pub use wrapper::{hilog_print, LogLevel, LogType};
-    pub mod storage;
+#[ani_rs::native]
+pub fn delete(this: UploadTask) -> Result<(), BusinessError> {
+    Ok(())
 }
-
-pub mod test;

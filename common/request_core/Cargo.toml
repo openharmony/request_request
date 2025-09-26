@@ -11,21 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[workspace]
-resolver = "2"
-members = [
-    "frameworks/native/cache_core",
-    "frameworks/native/cache_download",
-    "frameworks/native/request_action/tests/",
-    "frameworks/ets/ani/request",
-    "frameworks/native/request_next",
-    "frameworks/ets/ani/cache_download",
-    "common/ffrt_rs",
-    "common/netstack_rs",
-    "common/utils",
-    "common/request_core",
-    "common/database",
-    "test/rustest",
-    "test/unittest/common/dir_operation",
-    "services",
-]
+[package]
+name = "request_core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ipc = { git = "https://gitee.com/openharmony/communication_ipc" }

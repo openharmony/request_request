@@ -1,0 +1,42 @@
+# Copyright (C) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/ohos.gni")
+
+ohos_rust_static_library("request_client") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    boundary_sanitize = true
+    all_ubsan = true
+    debug = false
+  }
+  sources = [ "src/lib.rs" ]
+
+  external_deps = [
+    "ipc:ipc_rust",
+    "samgr:samgr_rust",
+    "ylong_runtime:ylong_runtime",
+    "rust_cxx:lib",
+  ]
+
+  deps = [
+    "../../../common/request_core:request_core",
+    "../../../common/utils:request_utils",
+    "//third_party/rust/crates/serde/serde:lib",
+  ]
+
+  clippy_lints = "none"
+
+  subsystem_name = "request"
+  part_name = "request"
+}

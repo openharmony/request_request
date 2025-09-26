@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Huawei Device Co., Ltd.
+// Copyright (C) 2025 Huawei Device Co., Ltd.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,33 +11,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Request utils
-
-#![warn(missing_docs)]
-#![allow(clippy::crate_in_macro_def)]
-#![allow(missing_docs, clippy::new_without_default)]
+#![feature(lazy_cell)]
+pub mod check;
+pub mod client;
+mod proxy;
+pub use client::RequestClient;
+mod listen;
+pub use listen::Callback;
 
 #[macro_use]
-mod macros;
+extern crate request_utils;
 
-pub mod fastrand;
-pub mod file_control;
-pub mod hash;
-pub mod lru;
-pub mod task_id;
-
-cfg_not_ohos! {
-    pub use log::{debug, error, info};
-}
-
-cfg_ohos! {
-    #[macro_use]
-    mod hilog;
-    pub mod observe;
-    pub mod context;
-    mod wrapper;
-    pub use wrapper::{hilog_print, LogLevel, LogType};
-    pub mod storage;
-}
-
-pub mod test;
+const TAG: &str = "RequestNative\0";
+const DOMAIN: u32 = 0xD001C50;

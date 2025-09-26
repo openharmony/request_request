@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Huawei Device Co., Ltd.
+// Copyright (C) 2025 Huawei Device Co., Ltd.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,33 +11,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Request utils
+use crate::proxy::RequestProxy;
 
-#![warn(missing_docs)]
-#![allow(clippy::crate_in_macro_def)]
-#![allow(missing_docs, clippy::new_without_default)]
+impl RequestProxy {
+    pub(crate) fn create_group(&self) -> Result<(), i32> {
+        todo!()
+    }
 
-#[macro_use]
-mod macros;
+    pub(crate) fn delete_group(&self, group_id: i64) -> Result<(), i32> {
+        todo!()
+    }
 
-pub mod fastrand;
-pub mod file_control;
-pub mod hash;
-pub mod lru;
-pub mod task_id;
-
-cfg_not_ohos! {
-    pub use log::{debug, error, info};
+    pub(crate) fn attach_group(&self, group_id: i64, task_ids: Vec<i64>) -> Result<(), i32> {
+        todo!()
+    }
 }
-
-cfg_ohos! {
-    #[macro_use]
-    mod hilog;
-    pub mod observe;
-    pub mod context;
-    mod wrapper;
-    pub use wrapper::{hilog_print, LogLevel, LogType};
-    pub mod storage;
-}
-
-pub mod test;
