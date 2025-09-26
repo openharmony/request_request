@@ -107,11 +107,11 @@ impl PreloadCallback for FfiCallback {
         }
         let (tx, rx) = mpsc::channel();
         match tx.send((progress, total)) {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => {
                 error!("Failed to send progress message: {}", e);
                 return;
-            },
+            }
         }
 
         self.tx = Some(tx);
@@ -221,7 +221,7 @@ pub(crate) mod ffi {
         fn redirect_time(self: &RustDownloadInfo) -> f64;
         fn total_time(self: &RustDownloadInfo) -> f64;
         fn resource_size(self: &RustDownloadInfo) -> i64;
-        fn ip(self: &RustDownloadInfo) -> String;
+        fn server_addr(self: &RustDownloadInfo) -> String;
         fn dns_servers(self: &RustDownloadInfo) -> Vec<String>;
 
         fn ffi_get_download_info(

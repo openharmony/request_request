@@ -26,27 +26,41 @@ use crate::response::Response;
 use crate::wrapper::ffi::{HttpClientRequest, HttpClientTask, NewHttpClientTask, OnCallback};
 use crate::wrapper::CallbackWrapper;
 
-/// RequestTask
+/// A handle to an asynchronous HTTP request task.
+///
+/// This struct provides control over an ongoing HTTP request, allowing
+/// operations like starting, canceling, and resetting the request,
+/// as well as accessing response data.
 #[derive(Clone)]
 pub struct RequestTask {
+    /// Shared reference to the underlying FFI task object
     inner: Arc<Mutex<SharedPtr<HttpClientTask>>>,
+    /// Flag indicating if the task should be reset
     reset: Arc<AtomicBool>,
 }
 
+// SAFETY: The inner HttpClientTask is thread-safe through Mutex and Arc
 unsafe impl Send for RequestTask {}
 unsafe impl Sync for RequestTask {}
 
-/// RequestTask status
+/// The current status of a request task.
 #[derive(Debug, Default)]
 pub enum TaskStatus {
-    /// idle
+    /// The task is idle and not currently running
     Idle,
-    /// running
+    /// The task is actively running (default state)
     #[default]
     Running,
 }
 
 impl RequestTask {
+    /// Creates a new RequestTask from an HTTP request.
+    ///
+    /// # Arguments
+    /// * `request` - The prepared HTTP request to execute
+    ///
+    /// # Returns
+    /// `Some(RequestTask)` if creation succeeded, `None` if creation failed
     pub(crate) fn from_http_request(request: &HttpClientRequest) -> Option<Self> {
         let http_task = NewHttpClientTask(request);
         if http_task.is_null() {
@@ -59,6 +73,10 @@ impl RequestTask {
         })
     }
 
+    /// Creates a RequestTask from a raw FFI task pointer.
+    ///
+    /// # Arguments
+    /// * `inner` - The raw FFI task pointer
     pub(crate) fn from_ffi(inner: SharedPtr<HttpClientTask>) -> Self {
         Self {
             inner: Arc::new(Mutex::new(inner)),
@@ -66,7 +84,10 @@ impl RequestTask {
         }
     }
 
-    /// start the request task
+    /// Starts execution of the request task.
+    ///
+    /// # Returns
+    /// `true` if the task started successfully, `false` otherwise
     pub fn start(&mut self) -> bool {
         unsafe {
             let ptr = self.inner.lock().unwrap().as_ref().unwrap() as *const HttpClientTask
@@ -75,13 +96,18 @@ impl RequestTask {
         }
     }
 
-    /// cancel the request task
+    /// Cancels the ongoing request task.
+    ///
+    /// This will terminate the request if it is in progress.
     pub fn cancel(&self) {
         let task = self.inner.lock().unwrap().clone();
         Self::pin_mut(&task).Cancel();
     }
 
-    /// reset the task
+    /// Resets the task for potential reuse.
+    ///
+    /// This will cancel any ongoing operation and prepare the task
+    /// for restarting with new parameters.
     pub fn reset(&self) {
         if self
             .reset
@@ -92,7 +118,7 @@ impl RequestTask {
         }
     }
 
-    /// get the request task status
+    /// Gets the current status of the task.
     pub fn status(&mut self) -> TaskStatus {
         let task = self.inner.lock().unwrap().clone();
         Self::pin_mut(&task)
@@ -101,15 +127,28 @@ impl RequestTask {
             .unwrap_or_default()
     }
 
+    /// Gets the response from the completed task.
+    ///
+    /// # Returns
+    /// A `Response` object containing the HTTP response data
     pub fn response(&mut self) -> Response {
         let task = self.inner.lock().unwrap().clone();
         Response::from_shared(task)
     }
 
+    /// Gets all response headers as a case-insensitive HashMap.
+    ///
+    /// Header names are converted to lowercase for consistent access.
     pub fn headers(&mut self) -> HashMap<String, String> {
         self.response().headers()
     }
 
+    /// Sets the callback handler for this task.
+    ///
+    /// # Arguments
+    /// * `callback` - The callback implementation
+    /// * `info_mgr` - Download info manager for performance tracking
+    /// * `task_id` - Unique identifier for this task
     pub(crate) fn set_callback(
         &mut self,
         callback: Box<dyn RequestCallback + 'static>,
@@ -130,6 +169,13 @@ impl RequestTask {
         );
     }
 
+    /// Helper method to get a pinned mutable reference to the underlying task.
+    ///
+    /// # Arguments
+    /// * `ptr` - Shared pointer to the FFI task object
+    ///
+    /// # Returns
+    /// Pinned mutable reference to the task
     pub(crate) fn pin_mut(ptr: &SharedPtr<HttpClientTask>) -> Pin<&mut HttpClientTask> {
         let ptr = ptr.as_ref().unwrap() as *const HttpClientTask as *mut HttpClientTask;
         unsafe { Pin::new_unchecked(ptr.as_mut().unwrap()) }

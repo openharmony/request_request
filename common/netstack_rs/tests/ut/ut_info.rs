@@ -83,7 +83,7 @@ fn ut_download_net_dns() {
     let mut download_info = DownloadInfo::new();
     assert!(download_info.dns_servers().is_empty());
     download_info.set_network_dns(vec!["4.4.4.4".to_string()]);
-    assert!(download_info.ip().is_empty());
+    assert!(download_info.server_addr().is_empty());
     let dns = download_info.dns_servers().pop();
     assert_eq!(dns, Some("4.4.4.4".to_string()));
 }

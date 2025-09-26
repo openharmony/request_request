@@ -31,6 +31,9 @@ ohos_unittest("common_netstack_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "netstack:http_client",
+    "netmanager_base:net_conn_manager_if",
+    "netmanager_base:netsys_client",
+    "rust_cxx:cxx_cppdeps",
   ]
 }
 

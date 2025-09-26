@@ -33,6 +33,7 @@
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
 #include "napi_utils.h"
+#include "preload_common.h"
 #include "request_preload.h"
 
 namespace OHOS::Request {
@@ -45,9 +46,6 @@ constexpr int64_t MAX_FILE_SIZE = 4294967296;
 constexpr int64_t MAX_INFO_LIST_SIZE = 8192;
 const std::string INTERNET_PERMISSION = "ohos.permission.INTERNET";
 const std::string GET_NETWORK_INFO_PERMISSION = "ohos.permission.GET_NETWORK_INFO";
-
-static const std::string SSL_TYPE_TLS = "TLS";
-static const std::string SSL_TYPE_TLCP = "TLCP";
 
 bool CheckInternetPermission()
 {
@@ -79,6 +77,11 @@ bool CheckNetworkInfoPermission()
 
 napi_value download(napi_env env, napi_callback_info info)
 {
+    if (!CheckInternetPermission()) {
+        ThrowError(env, E_PERMISSION, "internet permission denied");
+        REQUEST_HILOGI("internet permission denied");
+        return nullptr;
+    }
     size_t argc = 2;
     napi_value args[2] = { nullptr };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
@@ -94,29 +97,11 @@ napi_value download(napi_env env, napi_callback_info info)
     std::string url = GetValueString(env, args[0], urlLength);
     std::unique_ptr<PreloadOptions> options = std::make_unique<PreloadOptions>();
     SetOptionsHeaders(env, args[1], options);
-    napi_value napiSslType = GetNamedProperty(env, args[1], "sslType");
-    if (napiSslType != nullptr) {
-        std::string sslType = GetStringFromUncheckedValue(env, napiSslType);
-        if (sslType == SSL_TYPE_TLS) {
-            options->sslType = SslType::TLS;
-        } else if (sslType == SSL_TYPE_TLCP) {
-            options->sslType = SslType::TLCP;
-        } else {
-            options->sslType = SslType::TLS;
-        }
-    } else {
-        options->sslType = SslType::DEFAULT;
-    }
-
+    SetOptionsSslType(env, args[1], options);
     napi_value napiCaPath = GetNamedProperty(env, args[1], "caPath");
     if (napiCaPath != nullptr) {
-        std::string caPath = GetStringFromUncheckedValue(env, napiCaPath);
+        std::string caPath = GetStringValueWithDefault(env, napiCaPath);
         options->caPath = caPath;
-    }
-    if (!CheckInternetPermission()) {
-        ThrowError(env, E_PERMISSION, "internet permission denied");
-        REQUEST_HILOGI("internet permission denied");
-        return nullptr;
     }
     Preload::GetInstance()->load(url, nullptr, std::move(options), true);
     return nullptr;
@@ -229,19 +214,18 @@ napi_value getDownloadInfo(napi_env env, napi_callback_info info)
         return undefined;
     }
     napi_status status;
-    // 6. 创建 JavaScript 对象
     napi_value jsInfo;
     status = napi_create_object(env, &jsInfo);
     if (status != napi_ok) {
         return nullptr;
     }
-    if (!buildInfoResource(env, result.value(), jsInfo)) {
+    if (!BuildInfoResource(env, result.value(), jsInfo)) {
         return nullptr;
     }
-    if (!buildInfoNetwork(env, result.value(), jsInfo)) {
+    if (!BuildInfoNetwork(env, result.value(), jsInfo)) {
         return nullptr;
     }
-    if (!buildInfoPerformance(env, result.value(), jsInfo)) {
+    if (!BuildInfoPerformance(env, result.value(), jsInfo)) {
         return nullptr;
     }
     return jsInfo;

@@ -27,6 +27,7 @@ ohos_shared_library("cachedownload") {
 
   sources = [
     "src/napi_utils.cpp",
+    "src/preload_common.cpp",
     "src/preload_module.cpp",
   ]
   deps = [

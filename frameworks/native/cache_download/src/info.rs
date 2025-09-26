@@ -50,8 +50,8 @@ impl RustDownloadInfo {
         self.info.resource_size()
     }
 
-    pub fn ip(&self) -> String {
-        self.info.ip()
+    pub fn server_addr(&self) -> String {
+        self.info.server_addr()
     }
 
     pub fn dns_servers(&self) -> Vec<String> {
