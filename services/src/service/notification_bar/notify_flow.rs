@@ -20,10 +20,12 @@ use ylong_runtime::sync::mpsc::{self, UnboundedReceiver};
 use super::database::{CustomizedNotification, NotificationDb};
 use super::ffi::{NotifyContent, PublishNotification};
 use super::task_handle::cancel_notification;
+use super::NotificationDispatcher;
 use crate::config::Action;
 use crate::info::State;
 use crate::manage::database::RequestDb;
 use crate::utils::{get_current_timestamp, runtime_spawn};
+use crate::task::config::Version;
 
 const NOTIFY_PROGRESS_INTERVAL: u64 = if cfg!(test) { 1 } else { 500 };
 
@@ -135,6 +137,7 @@ pub struct ProgressNotify {
     pub(crate) total: Option<u64>,
     pub(crate) multi_upload: Option<(usize, usize)>,
     pub(crate) file_name: String,
+    pub(crate) version: Version,
 }
 
 #[derive(Clone, Debug)]
@@ -384,6 +387,16 @@ impl NotifyFlow {
                 )
             }
             NotifyType::Task => {
+                if info.version == Version::API9 {
+                    // Get gauge value and return notification content only when gauge is true
+                    return NotificationDispatcher::get_instance()
+                        .get_task_gauge(info.task_id)
+                        .filter(|&gauge| gauge)
+                        .map(|_| NotifyContent::task_progress_notify(
+                            self.task_customized_notify(info.task_id),
+                            &info,
+                        ));
+                }
                 if !self.check_progress_visibility(info.task_id) {
                     return None;
                 }

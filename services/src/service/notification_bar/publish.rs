@@ -79,6 +79,12 @@ impl NotificationDispatcher {
         self.database.check_task_notification_available(&task_id)
     }
 
+    /// Get the gauge value for a specific task
+    /// Returns None if the task doesn't exist
+    pub(crate) fn get_task_gauge(&self, task_id: u32) -> Option<bool> {
+        self.task_gauge.lock().ok()?.get(&task_id).map(|gauge| gauge.load(Ordering::Acquire))
+    }
+
     pub(crate) fn register_task(&self, task: &RequestTask) -> Arc<AtomicBool> {
         let gauge = if let Some(gid) = self.database.query_task_gid(task.task_id()) {
             if self.database.check_group_notification_available(&gid) {
@@ -149,6 +155,7 @@ impl NotificationDispatcher {
             processed: progress.common_data.total_processed as u64,
             total,
             multi_upload,
+            version: task.conf.version,
         };
         let _ = self.flow.send(NotifyInfo::Progress(notify));
     }
