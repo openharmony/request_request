@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Request {
-void AppStateCallback::OnAbilityForeground(const std::shared_ptr<NativeReference> &ability)
+void AppStateCallback::OnAbilityForeground(const AbilityRuntime::AbilityLifecycleCallbackArgs &ability)
 {
     if (RequestManager::GetInstance()->IsSaReady()) {
         return;

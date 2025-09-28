@@ -23,39 +23,43 @@ namespace Request {
 class AppStateCallback
     : public OHOS::AbilityRuntime::AbilityLifecycleCallback, public std::enable_shared_from_this<AppStateCallback> {
 public:
-    void OnAbilityCreate(const std::shared_ptr<NativeReference> &ability) override{};
+    void OnAbilityCreate(const AbilityRuntime::AbilityLifecycleCallbackArgs &ability) override{};
 
     void OnWindowStageCreate(
-        const std::shared_ptr<NativeReference> &ability, const std::shared_ptr<NativeReference> &windowStage) override
+        const AbilityRuntime::AbilityLifecycleCallbackArgs &ability,
+        const AbilityRuntime::AbilityLifecycleCallbackArgs &windowStage) override
     {
     }
 
     void OnWindowStageDestroy(
-        const std::shared_ptr<NativeReference> &ability, const std::shared_ptr<NativeReference> &windowStage) override
+        const AbilityRuntime::AbilityLifecycleCallbackArgs &ability,
+        const AbilityRuntime::AbilityLifecycleCallbackArgs &windowStage) override
     {
     }
 
     void OnWindowStageActive(
-        const std::shared_ptr<NativeReference> &ability, const std::shared_ptr<NativeReference> &windowStage) override
+        const AbilityRuntime::AbilityLifecycleCallbackArgs &ability,
+        const AbilityRuntime::AbilityLifecycleCallbackArgs &windowStage) override
     {
     }
 
     void OnWindowStageInactive(
-        const std::shared_ptr<NativeReference> &ability, const std::shared_ptr<NativeReference> &windowStage) override
+        const AbilityRuntime::AbilityLifecycleCallbackArgs &ability,
+        const AbilityRuntime::AbilityLifecycleCallbackArgs &windowStage) override
     {
     }
 
-    void OnAbilityDestroy(const std::shared_ptr<NativeReference> &ability) override
+    void OnAbilityDestroy(const AbilityRuntime::AbilityLifecycleCallbackArgs &ability) override
     {
     }
 
-    void OnAbilityForeground(const std::shared_ptr<NativeReference> &ability) override;
+    void OnAbilityForeground(const AbilityRuntime::AbilityLifecycleCallbackArgs &ability) override;
 
-    void OnAbilityBackground(const std::shared_ptr<NativeReference> &ability) override
+    void OnAbilityBackground(const AbilityRuntime::AbilityLifecycleCallbackArgs &ability) override
     {
     }
 
-    void OnAbilityContinue(const std::shared_ptr<NativeReference> &ability) override
+    void OnAbilityContinue(const AbilityRuntime::AbilityLifecycleCallbackArgs &ability) override
     {
     }
 };
