@@ -149,7 +149,7 @@ public:
     double redirect_time() const;
     double total_time() const;
     int64_t resource_size() const;
-    std::string network_ip() const;
+    std::string server_addr() const;
     std::vector<std::string> dns_servers() const;
 
 private:

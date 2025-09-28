@@ -31,21 +31,6 @@ struct RustPerformanceInfo;
 
 void OnCallback(const std::shared_ptr<HttpClientTask> &task, rust::Box<CallbackWrapper> callback);
 
-inline void SetBody(HttpClientRequest &request, const uint8_t *data, size_t size)
-{
-    request.SetBody(data, size);
-}
-
-inline std::shared_ptr<HttpClientTask> NewHttpClientTask(const HttpClientRequest &request)
-{
-    auto &session = NetStack::HttpClient::HttpSession::GetInstance();
-    return session.CreateTask(request);
-}
-
-rust::vec<rust::string> GetHeaders(HttpClientResponse &response);
-
-rust::vec<rust::string> GetResolvConf();
-
 void GetPerformanceInfo(const HttpClientResponse &response, RustPerformanceInfo &performance);
 
 } // namespace OHOS::Request

@@ -25,7 +25,7 @@
 namespace OHOS::Request {
 napi_valuetype GetValueType(napi_env env, napi_value value);
 napi_value GetNamedProperty(napi_env env, napi_value object, const std::string &propertyName);
-std::string GetStringFromUncheckedValue(napi_env env, napi_value value);
+std::string GetStringValueWithDefault(napi_env env, napi_value value);
 
 size_t GetStringLength(napi_env env, napi_value value);
 std::string GetValueString(napi_env env, napi_value value, size_t length);
@@ -33,11 +33,6 @@ std::vector<std::string> GetPropertyNames(napi_env env, napi_value object);
 std::string GetPropertyValue(napi_env env, napi_value object, const std::string &propertyName);
 int64_t GetValueNum(napi_env env, napi_value value);
 void ThrowError(napi_env env, int32_t code, const std::string &msg);
-inline napi_status setPerformanceField(napi_env env, napi_value performance, double field_value, const char *js_name);
-bool buildInfoPerformance(napi_env env, const CppDownloadInfo &result, napi_value &jsInfo);
-bool buildInfoNetwork(napi_env env, const CppDownloadInfo &result, napi_value &jsInfo);
-bool buildInfoResource(napi_env env, const CppDownloadInfo &result, napi_value &jsInfo);
-void SetOptionsHeaders(napi_env env, napi_value arg, std::unique_ptr<PreloadOptions> &options);
 void SetStringPropertyUtf8(napi_env env, napi_value object, const std::string &name, const std::string &value);
 napi_value Convert2JSValue(napi_env env, const std::string &str);
 } // namespace OHOS::Request

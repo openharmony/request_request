@@ -21,11 +21,18 @@ use crate::info::DownloadInfoMgr;
 use crate::response::Response;
 use crate::task::RequestTask;
 use crate::wrapper::ffi::{HttpClientRequest, NewHttpClientRequest, SetBody, SetRequestSslType};
-/// Builder for creating a Request.
+/// Builder for creating HTTP requests with configurable options.
+///
+/// This builder pattern allows for fluent configuration of HTTP requests
+/// with various options like URL, method, headers, timeouts, and callbacks.
 pub struct Request<C: RequestCallback + 'static> {
+    /// Underlying HTTP request object (FFI wrapper)
     inner: UniquePtr<HttpClientRequest>,
+    /// Optional callback to handle request events
     callback: Option<C>,
+    /// Optional download information manager for tracking performance metrics
     info_mgr: Option<Arc<DownloadInfoMgr>>,
+    /// Optional task identifier for request tracking
     task_id: Option<TaskId>,
 }
 
@@ -62,12 +69,20 @@ impl<C: RequestCallback> Request<C> {
         self
     }
 
+    /// Sets the SSL/TLS type for the request.
+    ///
+    /// # Arguments
+    /// * `ssl_type` - The type of SSL/TLS configuration to use (e.g., "tlsv1.2")
     pub fn ssl_type(&mut self, ssl_type: &str) -> &mut Self {
         let_cxx_string!(ssl_type = ssl_type);
         SetRequestSslType(self.inner.pin_mut(), &ssl_type);
         self
     }
 
+    /// Sets the CA certificate path for SSL/TLS verification.
+    ///
+    /// # Arguments
+    /// * `ca_path` - Path to the CA certificate file
     pub fn ca_path(&mut self, ca_path: &str) -> &mut Self {
         let_cxx_string!(ca_path = ca_path);
         self.inner.pin_mut().SetCaPath(&ca_path);
@@ -98,17 +113,28 @@ impl<C: RequestCallback> Request<C> {
         self
     }
 
+    /// Sets the download information manager for tracking request metrics.
+    ///
+    /// # Arguments
+    /// * `mgr` - Arc reference to the DownloadInfoMgr
     pub fn info_mgr(&mut self, mgr: Arc<DownloadInfoMgr>) -> &mut Self {
         self.info_mgr = Some(mgr);
         self
     }
 
+    /// Sets the task identifier for this request.
+    ///
+    /// # Arguments
+    /// * `task_id` - Unique identifier for the request task
     pub fn task_id(&mut self, task_id: TaskId) -> &mut Self {
         self.task_id = Some(task_id);
         self
     }
 
-    /// Build the RequestTask.
+    /// Consumes the builder and creates a RequestTask.
+    ///
+    /// Returns `None` if the request could not be created.
+    /// Transfers all configured callbacks and trackers to the new task.
     pub fn build(mut self) -> Option<RequestTask> {
         RequestTask::from_http_request(&self.inner).map(|mut task| {
             if let (Some(callback), Some(mgr), Some(task_id)) = (
@@ -123,24 +149,49 @@ impl<C: RequestCallback> Request<C> {
     }
 }
 
-/// RequestCallback
+/// Trait defining callbacks for HTTP request events.
+///
+/// Implement this trait to handle various stages and outcomes of HTTP requests.
+/// All methods have default no-op implementations.
 #[allow(unused_variables)]
 pub trait RequestCallback {
-    /// Called when the request is successful.
+    /// Called when the request completes successfully.
+    ///
+    /// # Arguments
+    /// * `response` - The successful HTTP response
     fn on_success(&mut self, response: Response) {}
+
     /// Called when the request fails.
+    ///
+    /// # Arguments
+    /// * `error` - The error that occurred
     fn on_fail(&mut self, error: HttpClientError) {}
-    /// Called when the request is canceled.
+
+    /// Called when the request is canceled by the user.
     fn on_cancel(&mut self) {}
-    /// Called when data is received.
+
+    /// Called when new data is received in the response.
+    ///
+    /// # Arguments
+    /// * `data` - The received data chunk
+    /// * `task` - Reference to the ongoing request task
     fn on_data_receive(&mut self, data: &[u8], task: RequestTask) {}
-    /// Called when progress is made.
+
+    /// Called to report upload/download progress.
+    ///
+    /// # Arguments
+    /// * `dl_total` - Total bytes to download (0 if unknown)
+    /// * `dl_now` - Bytes downloaded so far
+    /// * `ul_total` - Total bytes to upload (0 if unknown)
+    /// * `ul_now` - Bytes uploaded so far
     fn on_progress(&mut self, dl_total: u64, dl_now: u64, ul_total: u64, ul_now: u64) {}
-    /// Called when the task is restarted.
+
+    /// Called when the task is being restarted (e.g., after a redirect).
     fn on_restart(&mut self) {}
 }
 
 impl<C: RequestCallback> Default for Request<C> {
+    /// Creates a new Request with default settings.
     fn default() -> Self {
         Self::new()
     }

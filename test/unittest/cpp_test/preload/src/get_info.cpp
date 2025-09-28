@@ -181,7 +181,7 @@ HWTEST_F(PreloadGetInfo, GetInfoTest, TestSize.Level1)
     EXPECT_TRUE(value.first_recv_time() >= 0);
     EXPECT_TRUE(value.redirect_time() >= 0);
     EXPECT_TRUE(value.resource_size() >= 0);
-    EXPECT_TRUE(value.network_ip().empty());
+    EXPECT_TRUE(value.server_addr().empty());
     Preload::GetInstance()->Remove(TEST_URL_0);
 }
 
