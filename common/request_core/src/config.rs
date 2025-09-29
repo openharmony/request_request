@@ -189,6 +189,10 @@ impl ipc::parcel::Serialize for TaskConfig {
         parcel.write(&self.common_data.gauge)?;
         parcel.write(&self.common_data.precise)?;
         parcel.write(&self.common_data.priority)?;
+        parcel.write(&0i64)?;
+        parcel.write(&0i64)?;
+        parcel.write(&0u64)?;
+        parcel.write(&0u64)?;
         parcel.write(&self.url)?;
         parcel.write(&self.title)?;
         parcel.write(&self.method)?;

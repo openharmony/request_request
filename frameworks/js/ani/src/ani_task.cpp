@@ -201,7 +201,7 @@ void NotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData> &
         AniTask::ClearTaskMap(tid);
     }
 
-    ani_object Progress = AniObjectUtils::Create(workerEnv, "L@ohos/request/request;", "Lagent;", "LProgressImpl;",
+    ani_object Progress = AniObjectUtils::Create(workerEnv, "@ohos.request.request", "agent", "ProgressImpl",
         static_cast<ani_double>(notifyData->progress.state), static_cast<ani_double>(notifyData->progress.index),
         static_cast<ani_double>(notifyData->progress.processed));
     std::vector<ani_ref> args = {Progress};
@@ -235,7 +235,7 @@ void ResponseListener::OnResponseReceive(const std::shared_ptr<Response> &respon
         REQUEST_HILOGE("%{public}s: env_ == nullptr.", __func__);
         return;
     }
-    ani_object httpResponse = AniObjectUtils::Create(workerEnv, "L@ohos/request/request;", "Lagent;",
+    ani_object httpResponse = AniObjectUtils::Create(workerEnv, "@ohos.request.request", "agent",
         "LHttpResponseImpl;", AniStringUtils::ToAni(workerEnv, response->version),
         static_cast<ani_double>(response->statusCode), AniStringUtils::ToAni(workerEnv, response->reason));
     std::vector<ani_ref> args = {httpResponse};

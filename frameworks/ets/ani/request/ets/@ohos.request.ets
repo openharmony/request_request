@@ -83,7 +83,7 @@ export default namespace request {
         return downloadFileSync(context, config);
     })
     p1.then((content: NullishType) => {
-        callback(new BusinessError(), content as DownloadTask);
+        callback(null, content as DownloadTask);
     }, (err: Error): void => {
         callback(err as BusinessError, new DownloadTaskInner);
     });
@@ -108,7 +108,7 @@ export default namespace request {
         return uploadFileSync(context,config);
     })
     p1.then((content: NullishType) => {
-        callback(new BusinessError(), content as UploadTask);
+        callback(null, content as UploadTask);
     }, (err: Error): void => {
         callback(err as BusinessError, new UploadTaskInner);
     });
@@ -247,7 +247,7 @@ export default namespace request {
             return this.deleteSync();
         })
         p1.then((content: NullishType) => {
-            callback(new BusinessError(), content as boolean);
+            callback(null, content as boolean);
         }, (err: Error): void => {
             callback(err as BusinessError, false);
         });
@@ -272,7 +272,7 @@ export default namespace request {
             return this.suspendSync();
         })
         p1.then((content: NullishType) => {
-            callback(new BusinessError(), content as boolean);
+            callback(null, content as boolean);
         }, (err: Error): void => {
             callback(err as BusinessError, false);
         });
@@ -297,7 +297,7 @@ export default namespace request {
             return this.restoreSync();
         })
         p1.then((content: NullishType) => {
-            callback(new BusinessError(), content as boolean);
+            callback(null, content as boolean);
         }, (err: Error): void => {
             callback(err as BusinessError, false);
         });
@@ -322,7 +322,7 @@ export default namespace request {
             return this.getTaskInfoSync();
         })
         p1.then((content: NullishType) => {
-            callback(new BusinessError(), content as DownloadInfo);
+            callback(null, content as DownloadInfo);
         }, (err: Error): void => {
             callback(err as BusinessError, new DownloadInfoInner);
         });
@@ -347,7 +347,7 @@ export default namespace request {
             return this.getTaskMimeTypeSync();
         })
         p1.then((content: NullishType) => {
-            callback(new BusinessError(), content as string);
+            callback(null, content as string);
         }, (err: Error): void => {
             callback(err as BusinessError, "");
         });
@@ -423,7 +423,7 @@ export default namespace request {
           return this.deleteSync();
       })
       p1.then((content: NullishType) => {
-          callback(new BusinessError(), content as boolean);
+          callback(null, content as boolean);
       }, (err: Error): void => {
           callback(err as BusinessError, false);
       });
@@ -690,7 +690,7 @@ export default namespace request {
          return this.startSync();
         });
         p1.then(() => {
-         callback(new BusinessError(), undefined);
+         callback(null, undefined);
         }, (err: Error): void => {
           callback(err as BusinessError, undefined);
         });
@@ -715,7 +715,7 @@ export default namespace request {
             return this.pauseSync();
         });
         p1.then(() => {
-            callback(new BusinessError(), undefined);
+            callback(null, undefined);
         }, (err: Error): void => {
             callback(err as BusinessError, undefined);
         });
@@ -739,7 +739,7 @@ export default namespace request {
             return this.resumeSync();
         });
         p1.then(() => {
-            callback(new BusinessError(), undefined);
+            callback(null, undefined);
         }, (err: Error): void => {
             callback(err as BusinessError, undefined);
         });
@@ -763,7 +763,7 @@ export default namespace request {
             return this.stopSync();
         });
         p1.then(() => {
-            callback(new BusinessError(), undefined);
+            callback(null, undefined);
         }, (err: Error): void => {
             callback(err as BusinessError, undefined);
         });
@@ -802,7 +802,7 @@ export default namespace request {
         return createSync(context, config);
       });
       p1.then((content: NullishType) => {
-        callback(new BusinessError(), content as Task);
+        callback(null, content as Task);
       }, (err: Error): void => {
         callback(err as BusinessError,new TaskInner);
       });
@@ -841,7 +841,7 @@ export default namespace request {
         return removeSync(id);
       });
       p1.then(() => {
-        callback(new BusinessError(), undefined);
+        callback(null, undefined);
       }, (err: Error): void => {
         callback(err as BusinessError, undefined);
       });
@@ -866,7 +866,7 @@ export default namespace request {
         return showSync(id);
       });
       p1.then((content: NullishType) => {
-        callback(new BusinessError(), content as TaskInfo);
+        callback(null, content as TaskInfo);
       }, (err: Error): void => {
         callback(err as BusinessError, new TaskInfoInner);
       });
@@ -891,7 +891,7 @@ export default namespace request {
         return touchSync(id, token);
       });
       p1.then((content: NullishType) => {
-        callback(new BusinessError(), content as TaskInfo);
+        callback(null, content as TaskInfo);
       }, (err: Error): void => {
         callback(err as BusinessError, new TaskInfoInner);
       });
@@ -916,7 +916,7 @@ export default namespace request {
         return searchSync();
       });
       p1.then((content: NullishType) => {
-        callback(new BusinessError(), content as Array<string>);
+        callback(null, content as Array<string>);
       }, (err: Error): void => {
         callback(err as BusinessError, undefined);
       });
@@ -927,7 +927,7 @@ export default namespace request {
         return searchSync(filter);
       });
       p1.then((content: NullishType) => {
-        callback(new BusinessError(), content as Array<string>);
+        callback(null, content as Array<string>);
       }, (err: Error): void => {
         callback(err as BusinessError, undefined);
       });
@@ -952,7 +952,7 @@ export default namespace request {
         return querySync(id);
       });
       p1.then((content: NullishType) => {
-        callback(new BusinessError(), content as TaskInfo);
+        callback(null, content as TaskInfo);
       }, (err: Error): void => {
         callback(err as BusinessError, new TaskInfoInner);
       });
