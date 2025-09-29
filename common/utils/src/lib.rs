@@ -19,10 +19,10 @@
 
 #[macro_use]
 mod macros;
-
 pub mod fastrand;
 pub mod file_control;
 pub mod hash;
+mod hilog;
 pub mod lru;
 pub mod task_id;
 
@@ -32,7 +32,7 @@ cfg_not_ohos! {
 
 cfg_ohos! {
     #[macro_use]
-    mod hilog;
+    pub mod request_hilog;
     pub mod observe;
     pub mod context;
     mod wrapper;

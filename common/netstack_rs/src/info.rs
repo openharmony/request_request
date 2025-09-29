@@ -348,7 +348,7 @@ impl InfoCollection {
                 self.info_list.pop();
             }
         }
-        info!("DownloadInfoMgr insert task {} info", task_id.brief());
+        info!("Insert {} info", task_id.brief());
         if self.info_list.insert(task_id, info).is_none() {
             self.list_size.increment();
         };

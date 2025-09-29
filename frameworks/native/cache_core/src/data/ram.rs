@@ -32,11 +32,7 @@ pub struct RamCache {
 impl Drop for RamCache {
     fn drop(&mut self) {
         if self.applied != 0 {
-            info!(
-                "ram cache {} released {}",
-                self.task_id.brief(),
-                self.applied
-            );
+            info!("ram {} released {}", self.task_id.brief(), self.applied);
             self.handle.ram_handle.lock().unwrap().release(self.applied);
         }
     }
@@ -47,10 +43,10 @@ impl RamCache {
         let applied = match size {
             Some(size) => {
                 if CacheManager::apply_cache(&handle.ram_handle, &handle.rams, size) {
-                    info!("apply ram {} for task {}", size, task_id.brief());
+                    info!("apply ram {} for {}", size, task_id.brief());
                     size as u64
                 } else {
-                    error!("apply ram {} for task {} failed", size, task_id.brief());
+                    error!("apply ram {} for {} failed", size, task_id.brief());
                     0
                 }
             }
@@ -85,7 +81,7 @@ impl RamCache {
                     || !CacheManager::apply_cache(&self.handle.ram_handle, &self.handle.rams, diff)
                 {
                     info!(
-                        "apply extra ram {} cache for task {} failed",
+                        "apply extra ram {} cache for {} failed",
                         diff,
                         self.task_id.brief()
                     );
@@ -94,7 +90,7 @@ impl RamCache {
                     false
                 } else {
                     info!(
-                        "apply extra ram {} cache for task {} success",
+                        "apply extra ram {} cache for {} success",
                         diff,
                         self.task_id.brief()
                     );

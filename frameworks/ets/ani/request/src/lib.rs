@@ -20,8 +20,13 @@ mod seq;
 #[macro_use]
 extern crate request_utils;
 
-const TAG: &str = "RequestAni\0";
-const DOMAIN: u32 = 0xD001C50;
+use hilog_rust::{HiLogLabel, LogType};
+
+pub(crate) const LOG_LABEL: HiLogLabel = HiLogLabel {
+    log_type: LogType::LogCore,
+    domain: 0xD001C50,
+    tag: "RequestAni",
+};
 
 ani_constructor!(
     namespace "L@ohos/request/request"

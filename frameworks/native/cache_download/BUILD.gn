@@ -41,7 +41,8 @@ ohos_rust_shared_ffi("preload_native_rust") {
   ]
   external_deps = [
     "rust_cxx:lib",
-    "hilog:libhilog"
+    "hilog:libhilog",
+    "hilog:hilog_rust",
   ]
 
   subsystem_name = "request"
@@ -148,7 +149,8 @@ ohos_rust_unittest("rust_cache_download_ut_test") {
   ]
   external_deps = [
     "rust_cxx:lib",
-    "hilog:libhilog"
+    "hilog:libhilog",
+    "hilog:hilog_rust",
   ]
 
   subsystem_name = "request"

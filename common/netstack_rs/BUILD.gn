@@ -70,7 +70,10 @@ ohos_rust_static_library("netstack_rs") {
     "../ffrt_rs:ffrt_rs",
     "../utils:request_utils",
   ]
-  external_deps = [ "rust_cxx:lib" ]
+  external_deps = [
+    "rust_cxx:lib",
+    "hilog:hilog_rust",
+  ]
 
   subsystem_name = "request"
   part_name = "request"
@@ -86,7 +89,10 @@ ohos_rust_unittest("rust_netstack_rs_ut_test") {
     "../ffrt_rs:ffrt_rs",
     "../utils:request_utils",
   ]
-  external_deps = [ "rust_cxx:lib" ]
+  external_deps = [
+    "rust_cxx:lib",
+    "hilog:hilog_rust",
+  ]
 
   subsystem_name = "request"
   part_name = "request"

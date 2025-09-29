@@ -136,7 +136,7 @@ impl CacheDownloadService {
     ) -> Option<TaskHandle> {
         let url = request.url;
         let task_id = TaskId::from_url(url);
-        info!("preload task {}", task_id.brief());
+        info!("preload {}", task_id.brief());
 
         if !update {
             if let Err(ret) = self.fetch_with_callback(&task_id, callback) {

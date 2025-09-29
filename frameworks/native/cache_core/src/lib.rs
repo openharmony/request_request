@@ -38,11 +38,17 @@ pub use update::Updater;
 
 cfg_ohos! {
     mod wrapper;
-    const TAG: &str = "PreloadNative\0";
-    const DOMAIN: u32 = 0xD001C50;
     use ffrt_rs::ffrt_spawn as spawn;
 }
 
 cfg_not_ohos! {
     use ylong_runtime::spawn_blocking as spawn;
 }
+
+use hilog_rust::{HiLogLabel, LogType};
+
+pub(crate) const LOG_LABEL: HiLogLabel = HiLogLabel {
+    log_type: LogType::LogCore,
+    domain: 0xD001C50,
+    tag: "PreloadNative",
+};

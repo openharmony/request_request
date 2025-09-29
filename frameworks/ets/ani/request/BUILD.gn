@@ -32,6 +32,7 @@ ohos_rust_shared_library("request_ani") {
   external_deps = [
     "netmanager_base:ani_rs",
     "runtime_core:ani",
+    "hilog:hilog_rust",
   ]
 
   deps = [
