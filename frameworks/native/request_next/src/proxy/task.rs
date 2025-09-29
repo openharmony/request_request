@@ -30,6 +30,13 @@ impl RequestProxy {
         data.write(&false).unwrap();
         data.write(&false).unwrap();
         data.write(&false).unwrap();
+        data.write(&false).unwrap();
+
+        if config.common_data.gauge {
+            data.write(&3u32).unwrap();
+        } else {
+            data.write(&1u32).unwrap();
+        }
 
         let mut reply = remote
             .send_request(interface::CONSTRUCT, &mut data)
