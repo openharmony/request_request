@@ -58,7 +58,14 @@ impl RunCountManagerEntry {
         let (tx, rx) = oneshot::channel::<ErrorCode>();
         let event = RunCountEvent::Subscribe(pid, obj, tx);
         self.send_event(event);
-        ylong_runtime::block_on(rx).unwrap()
+        match ylong_runtime::block_on(rx) {
+            Ok(error_code) => error_code,
+            Err(error) => {
+                error!("In `subscribe_run_count`, block on failed, err {}", error);
+                // todo: may be another error code
+                ErrorCode::Other
+            }
+        }
     }
 
     pub(crate) fn unsubscribe_run_count(&self, pid: u64) -> ErrorCode {

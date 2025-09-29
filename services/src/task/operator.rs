@@ -97,7 +97,12 @@ impl TaskOperator {
         data: &[u8],
         skip_size: usize,
     ) -> Poll<Result<usize, HttpClientError>> {
-        let file_mutex = self.task.files.get(0).unwrap();
+        let file_mutex = if let Some(mutex) = self.task.files.get(0) {
+            mutex
+        } else {
+            error!("poll_write_file err, no file in the `task`");
+            return Poll::Ready(Err(HttpClientError::other("error msg")));
+        };
         let mut file = file_mutex.lock().unwrap();
 
         if self.abort_flag.load(Ordering::Acquire) {
