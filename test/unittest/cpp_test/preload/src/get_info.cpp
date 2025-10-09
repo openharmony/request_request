@@ -27,13 +27,11 @@
 #include <unordered_map>
 #include <vector>
 
-#include "accesstoken_kit.h"
 #include "common.h"
 #include "gmock/gmock.h"
 #include "log.h"
-#include "nativetoken_kit.h"
 #include "request_preload.h"
-#include "token_setproc.h"
+#include "set_permission.h"
 #include "utf8_utils.h"
 
 using namespace testing::ext;
@@ -43,64 +41,6 @@ constexpr size_t SLEEP_INTERVAL = 100;
 static std::string TEST_URL_0 = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
 constexpr uint64_t TEST_SIZE_0 = 1042003;
 constexpr uint64_t INFO_SIZE_0 = 2;
-
-void SetAccessTokenPermission()
-{
-    auto permissions = std::vector<std::string>();
-    permissions.push_back("ohos.permission.INTERNET");
-    permissions.push_back("ohos.permission.GET_NETWORK_INFO");
-
-    auto processName = std::string("preload_info");
-    auto perms = std::make_unique<const char *[]>(permissions.size());
-    for (size_t i = 0; i < permissions.size(); i++) {
-        perms[i] = permissions[i].c_str();
-    }
-
-    NativeTokenInfoParams infoInstance = {
-        .dcapsNum = 0,
-        .permsNum = permissions.size(),
-        .aclsNum = 0,
-        .dcaps = nullptr,
-        .perms = perms.get(),
-        .acls = nullptr,
-        .processName = processName.c_str(),
-        .aplStr = "system_core",
-    };
-    auto tokenId = GetAccessTokenId(&infoInstance);
-    if (tokenId == 0) {
-        REQUEST_HILOGI("GetAccessTokenId failed.");
-        return;
-    }
-    int ret = SetSelfTokenID(tokenId);
-    if (ret != 0) {
-        REQUEST_HILOGI("SetSelfTokenID failed, code is %{public}d.", ret);
-        return;
-    }
-    ret = OHOS::Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
-    if (ret < 0) {
-        REQUEST_HILOGI("ReloadNativeTokenInfo failed, code is %{public}d.", ret);
-        return;
-    }
-}
-
-void SetAccesslNoPermission()
-{
-    const char **perms = new const char *[0];
-    NativeTokenInfoParams infoInstance = {
-        .dcapsNum = 0,
-        .permsNum = 0,
-        .aclsNum = 0,
-        .dcaps = nullptr,
-        .perms = perms,
-        .acls = nullptr,
-        .processName = "preload_info",
-        .aplStr = "system_core",
-    };
-    uint64_t tokenId = GetAccessTokenId(&infoInstance);
-    SetSelfTokenID(tokenId);
-    OHOS::Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
-    delete[] perms;
-}
 
 class PreloadGetInfo : public testing::Test {
 public:
@@ -118,13 +58,14 @@ void PreloadGetInfo::SetUp(void)
     string testCaseName = string(testInfo->name());
     REQUEST_HILOGI("[SetUp] %{public}s start", testCaseName.c_str());
     GTEST_LOG_(INFO) << testCaseName.append(" start");
-    SetAccessTokenPermission();
+    std::vector<std::string> permissions = { "ohos.permission.INTERNET", "ohos.permission.GET_NETWORK_INFO" };
+    SetPermission::SetAccessTokenPermission(permissions, "preload_test");
 }
 
 void PreloadGetInfo::TearDown(void)
 {
     // input testCase teardown step，teardown invoked after each testCase
-    SetAccesslNoPermission();
+    SetPermission::SetAccesslNoPermission("preload_test");
 }
 
 void PreDownloadInfo(std::string url, uint64_t size)
@@ -250,43 +191,37 @@ HWTEST_F(PreloadGetInfo, InfoIsInvalidUtf8, TestSize.Level1)
  */
 HWTEST_F(PreloadGetInfo, InvalidUtf8_1, TestSize.Level1)
 {
-    std::vector<uint8_t> test_ee_valid = {0xEE, 0x80, 0x80};
+    std::vector<uint8_t> test_ee_valid = { 0xEE, 0x80, 0x80 };
     EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_ee_valid));
-    std::vector<uint8_t> test_ef_valid = {0xEF, 0xBF, 0xBD};
+    std::vector<uint8_t> test_ef_valid = { 0xEF, 0xBF, 0xBD };
     EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_ef_valid));
-    std::vector<uint8_t> test_ee_max = {0xEE, 0xBF, 0xBF};
+    std::vector<uint8_t> test_ee_max = { 0xEE, 0xBF, 0xBF };
     EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_ee_max));
-    std::vector<uint8_t> test_ef_min = {0xEF, 0x80, 0x80};
+    std::vector<uint8_t> test_ef_min = { 0xEF, 0x80, 0x80 };
     EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_ef_min));
 
-    std::vector<uint8_t> test_f1_valid = {0xF1, 0x80, 0x80, 0x80};
+    std::vector<uint8_t> test_f1_valid = { 0xF1, 0x80, 0x80, 0x80 };
     EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_f1_valid));
-    std::vector<uint8_t> test_f2_valid = {0xF2, 0x80, 0x80, 0x80};
+    std::vector<uint8_t> test_f2_valid = { 0xF2, 0x80, 0x80, 0x80 };
     EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_f2_valid));
-    std::vector<uint8_t> test_f3_valid = {0xF3, 0x80, 0x80, 0x80};
+    std::vector<uint8_t> test_f3_valid = { 0xF3, 0x80, 0x80, 0x80 };
     EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_f3_valid));
-    std::vector<uint8_t> test_f1_max = {0xF1, 0xBF, 0xBF, 0xBF};
+    std::vector<uint8_t> test_f1_max = { 0xF1, 0xBF, 0xBF, 0xBF };
     EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_f1_max));
-    std::vector<uint8_t> test_f3_max = {0xF3, 0xBF, 0xBF, 0xBF};
+    std::vector<uint8_t> test_f3_max = { 0xF3, 0xBF, 0xBF, 0xBF };
     EXPECT_TRUE(Utf8Utils::RunUtf8Validation(test_f3_max));
 
-    std::vector<uint8_t> valid2 = {0xC3, 0x87};
+    std::vector<uint8_t> valid2 = { 0xC3, 0x87 };
     EXPECT_TRUE(Utf8Utils::RunUtf8Validation(valid2));
-    std::vector<uint8_t> valid3 = {0xE0, 0xA4, 0x85};
+    std::vector<uint8_t> valid3 = { 0xE0, 0xA4, 0x85 };
     EXPECT_TRUE(Utf8Utils::RunUtf8Validation(valid3));
-    std::vector<uint8_t> valid4 = {0xF0, 0x90, 0x8C, 0x82};
+    std::vector<uint8_t> valid4 = { 0xF0, 0x90, 0x8C, 0x82 };
     EXPECT_TRUE(Utf8Utils::RunUtf8Validation(valid4));
-    std::vector<uint8_t> valid5 = {0xF4, 0x80, 0x80, 0x80};
+    std::vector<uint8_t> valid5 = { 0xF4, 0x80, 0x80, 0x80 };
     EXPECT_TRUE(Utf8Utils::RunUtf8Validation(valid5));
-    std::vector<uint8_t> valid6 = {0xF4, 0x8F, 0xBF, 0xBF};
+    std::vector<uint8_t> valid6 = { 0xF4, 0x8F, 0xBF, 0xBF };
     EXPECT_TRUE(Utf8Utils::RunUtf8Validation(valid6));
-    std::vector<uint8_t> mixed = {
-            'H', 'e', 'l', 'l', 'o',
-            0xC3, 0xA4,
-            ' ',
-            0xE2, 0x82, 0xAC,
-            '!'
-    };
+    std::vector<uint8_t> mixed = { 'H', 'e', 'l', 'l', 'o', 0xC3, 0xA4, ' ', 0xE2, 0x82, 0xAC, '!' };
     EXPECT_TRUE(Utf8Utils::RunUtf8Validation(mixed));
 }
 
@@ -302,39 +237,39 @@ HWTEST_F(PreloadGetInfo, InvalidUtf8_1, TestSize.Level1)
  */
 HWTEST_F(PreloadGetInfo, InvalidUtf8_2, TestSize.Level1)
 {
-    std::vector<uint8_t> invalid = {0xC2};
+    std::vector<uint8_t> invalid = { 0xC2 };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid));
-    std::vector<uint8_t> invalid_1 = {0xE0, 0x9F, 0x80};
+    std::vector<uint8_t> invalid_1 = { 0xE0, 0x9F, 0x80 };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_1));
-    std::vector<uint8_t> invalid_2 = {0xED, 0xA0, 0x80};
+    std::vector<uint8_t> invalid_2 = { 0xED, 0xA0, 0x80 };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_2));
-    std::vector<uint8_t> invalid_3 = {0xF0, 0x8F, 0x80, 0x80};
+    std::vector<uint8_t> invalid_3 = { 0xF0, 0x8F, 0x80, 0x80 };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_3));
-    std::vector<uint8_t> invalid_4 = {0xF4, 0x90, 0x80, 0x80};
+    std::vector<uint8_t> invalid_4 = { 0xF4, 0x90, 0x80, 0x80 };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_4));
-    std::vector<uint8_t> invalid_5 = {0xE0, 0xA0};
+    std::vector<uint8_t> invalid_5 = { 0xE0, 0xA0 };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_5));
-    std::vector<uint8_t> invalid_6 = {0x80};
+    std::vector<uint8_t> invalid_6 = { 0x80 };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_6));
-    std::vector<uint8_t> invalid_7 = {0xFF};
+    std::vector<uint8_t> invalid_7 = { 0xFF };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_7));
-    std::vector<uint8_t> invalid_8 = {0xC0};
+    std::vector<uint8_t> invalid_8 = { 0xC0 };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_8));
-    std::vector<uint8_t> invalid_9 = {0xF0, 0x90, 0x80};
+    std::vector<uint8_t> invalid_9 = { 0xF0, 0x90, 0x80 };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(invalid_9));
 
-    std::vector<uint8_t> v2_invalid = {0xC2, 0x7F};
+    std::vector<uint8_t> v2_invalid = { 0xC2, 0x7F };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v2_invalid));
-    std::vector<uint8_t> v3_invalid = {0xE2, 0x82, 0x7F};
+    std::vector<uint8_t> v3_invalid = { 0xE2, 0x82, 0x7F };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v3_invalid));
-    std::vector<uint8_t> v3_invalid2 = {0xE0, 0xA0, 0x7F};
+    std::vector<uint8_t> v3_invalid2 = { 0xE0, 0xA0, 0x7F };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v3_invalid2));
-    std::vector<uint8_t> v4_invalid = {0xF0, 0x9F, 0x98, 0x7F};
+    std::vector<uint8_t> v4_invalid = { 0xF0, 0x9F, 0x98, 0x7F };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v4_invalid));
-    std::vector<uint8_t> v4_invalid2 = {0xF0, 0x90, 0x7F, 0x80};
+    std::vector<uint8_t> v4_invalid2 = { 0xF0, 0x90, 0x7F, 0x80 };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v4_invalid2));
-    std::vector<uint8_t> v4_invalid3 = {0xF4, 0x7F, 0x80, 0x80};
+    std::vector<uint8_t> v4_invalid3 = { 0xF4, 0x7F, 0x80, 0x80 };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v4_invalid3));
-    std::vector<uint8_t> v4_invalid4 = {0xF4, 0x90, 0x80, 0x80};
+    std::vector<uint8_t> v4_invalid4 = { 0xF4, 0x90, 0x80, 0x80 };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v4_invalid4));
 }

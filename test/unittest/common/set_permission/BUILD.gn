@@ -11,43 +11,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//build/ohos.gni")
 import("//build/test.gni")
 
-ohos_unittest("preload_test") {
-  module_out_path = "request/request/request"
-
+config("common_perm_config") {
   include_dirs = [
     "include",
-    "../../../../interfaces/inner_kits/predownload/include",
     "../../../../common/include",
-    "../../../common/utf8_utils/include",
-  ]
-
-  sources = [
-    "src/abnormal.cpp",
-    "src/cancel.cpp",
-    "src/common.cpp",
-    "src/fail.cpp",
-    "src/get_info.cpp",
-    "src/progress.cpp",
-    "src/success.cpp",
-  ]
-
-  deps = [
-    "../../../../frameworks/native/cache_download:preload_native",
-    "../../common/set_permission:common_permission",
-  ]
-  external_deps = [
-    "c_utils:utils",
-    "googletest:gmock",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "hisysevent:libhisysevent",
-    "rust_cxx:cxx_cppdeps",
   ]
 }
 
-group("unittest") {
-  testonly = true
-  deps = [ ":preload_test" ]
+ohos_static_library("common_permission") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  sources = [
+    "src/set_permission.cpp",
+  ]
+
+  public_configs = [ ":common_perm_config" ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken_shared",
+    "access_token:libtoken_setproc",
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
+  subsystem_name = "request"
+  part_name = "request"
 }
