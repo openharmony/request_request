@@ -13,27 +13,36 @@
 
 /// hilog debug
 #[macro_export]
-macro_rules! debug_deprecated {
+macro_rules! debug {
     ($fmt: literal $(, $args:expr)* $(,)?) => {{
-        let fmt = format!($fmt $(, $args)*);
-        $crate::hilog_print($crate::LogLevel::LOG_DEBUG, crate::DOMAIN, crate::TAG,  fmt);
+        use std::ffi::{CString, c_char};
+        use hilog_rust::{debug, hilog};
+        use crate::LOG_LABEL;
+
+        hilog_rust::debug!(LOG_LABEL, $fmt $(, @public($args))*);
     }}
 }
 
 /// hilog info
 #[macro_export]
-macro_rules! info_deprecated {
+macro_rules! info {
     ($fmt: literal $(, $args:expr)* $(,)?) => {{
-        let fmt = format!($fmt $(, $args)*);
-        $crate::hilog_print($crate::LogLevel::LOG_INFO, crate::DOMAIN, crate::TAG,  fmt);
+        use std::ffi::{CString, c_char};
+        use hilog_rust::{info, hilog};
+        use crate::LOG_LABEL;
+
+        hilog_rust::info!(LOG_LABEL, $fmt $(, @public($args))*);
     }}
 }
 
 /// hilog error
 #[macro_export]
-macro_rules! error_deprecated {
+macro_rules! error {
     ($fmt: literal $(, $args:expr)* $(,)?) => {{
-        let fmt = format!($fmt $(, $args)*);
-        $crate::hilog_print($crate::LogLevel::LOG_ERROR, crate::DOMAIN, crate::TAG,  fmt);
+        use std::ffi::{CString, c_char};
+        use hilog_rust::{error, hilog};
+        use crate::LOG_LABEL;
+
+        hilog_rust::error!(LOG_LABEL, $fmt $(, @public($args))*);
     }}
 }

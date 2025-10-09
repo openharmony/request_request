@@ -27,6 +27,7 @@ ohos_rust_static_library("request_client") {
     "samgr:samgr_rust",
     "ylong_runtime:ylong_runtime",
     "rust_cxx:lib",
+    "hilog:hilog_rust",
   ]
 
   deps = [

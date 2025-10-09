@@ -233,9 +233,13 @@ impl Drop for FileCache {
         }
 
         if let Err(e) = drop_inner(self) {
-            error!("{} drop file cache error: {}", self.task_id, e);
+            if let Some(2) = e.raw_os_error() {
+                debug!("{} drop file error: {}", self.task_id.brief(), e);
+            } else {
+                error!("{} drop file error: {}", self.task_id.brief(), e);
+            }
         } else {
-            info!("{} file cache drop", self.task_id.brief());
+            info!("{} file drop", self.task_id.brief());
         }
     }
 }

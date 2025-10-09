@@ -27,6 +27,7 @@ ohos_rust_unittest("rust_request_ut_test") {
   rustflags = [ "--cfg=feature=\"oh\"" ]
 
   external_deps = [
+    "hilog:hilog_rust",
     "hilog:libhilog",
     "hisysevent:hisysevent_rust",
     "hitrace:hitrace_meter_rust",

@@ -83,6 +83,7 @@ ohos_rust_static_library("request_utils") {
 
   external_deps = [
     "hilog:libhilog",
+    "hilog:hilog_rust",
     "rust_cxx:lib",
     "netmanager_base:ani_rs",
   ]

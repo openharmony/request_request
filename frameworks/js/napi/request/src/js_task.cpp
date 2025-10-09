@@ -113,7 +113,7 @@ napi_value JsTask::JsDownload(napi_env env, napi_callback_info info)
 napi_value JsTask::JsRequestFile(napi_env env, napi_callback_info info)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
-    REQUEST_HILOGI("JsRequestFile seq %{public}d", seq);
+    REQUEST_HILOGI("Js seq %{public}d", seq);
     return JsMain(env, info, Version::API9, seq);
 }
 

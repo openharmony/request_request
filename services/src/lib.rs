@@ -55,10 +55,13 @@ mod task;
 mod utils;
 pub use task::{config, info};
 
-cfg_oh! {
-    const TAG: &str = "RequestService\0";
-    const DOMAIN: u32 = 0xD001C50;
-}
+use hilog_rust::{HiLogLabel, LogType};
+
+pub(crate) const LOG_LABEL: HiLogLabel = HiLogLabel {
+    log_type: LogType::LogCore,
+    domain: 0xD001C50,
+    tag: "RequestService",
+};
 
 #[cfg(feature = "oh")]
 #[cfg(test)]
