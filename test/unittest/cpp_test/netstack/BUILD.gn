@@ -35,6 +35,11 @@ ohos_unittest("common_netstack_test") {
     "netmanager_base:netsys_client",
     "rust_cxx:cxx_cppdeps",
   ]
+
+  deps = [
+    "../../common/dir_operation:common_dir_op",
+    "../../common/set_permission:common_permission",
+  ]
 }
 
 group("unittest") {
