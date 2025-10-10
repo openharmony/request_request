@@ -16,6 +16,7 @@
 import cacheDownloadInfo from './CacheDownloadInfo.test.ets';
 import requestCreateTaskTest from './RequestCreateTask.test.ets';
 import requestOperateTaskTest from './RequestOperateTask.test.ets';
+import requestCallbackTaskTest from './RequestCallbackTask.test.ets';
 import requestDownloadFileTest from './RequestDownloadFile.test.ets';
 import requestUploadFileTest from './RequestUploadFile.test.ets';
 import requestTaskGroupTest from './RequestTaskGroup.test.ets';
@@ -25,6 +26,7 @@ export default function testsuite() {
   cacheDownloadInfo();
   requestCreateTaskTest();
   requestOperateTaskTest();
+  requestCallbackTaskTest();
   requestDownloadFileTest();
   requestUploadFileTest();
   requestTaskGroupTest();
