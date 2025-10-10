@@ -13,6 +13,7 @@
 
 use super::*;
 use crate::info::State;
+use crate::task::config::Version;
 const EXAMPLE_FILE: &str = "2024_12_10_15_56";
 const TASK_ID: u32 = 2024;
 const UID: u32 = 12;
@@ -103,6 +104,7 @@ fn ut_notify_typology_default_progress() {
         processed: 1,
         total: Some(10),
         multi_upload: None,
+        version: Version::API10,
     };
     let content = NotifyContent::task_progress_notify(None, &progress_info);
     assert_eq!(content.title, "下载文件 10.00%");

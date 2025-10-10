@@ -15,6 +15,7 @@ use ylong_runtime::fastrand::fast_random;
 
 use super::*;
 use crate::service::notification_bar::NotificationConfig;
+use crate::task::config::Version;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 const TEST_TITLE: &str = "test_title";
@@ -98,6 +99,7 @@ fn ut_notify_flow_task_progress() {
         total: Some(100),
         multi_upload: None,
         file_name: "test".to_string(),
+        version: Version::API10,
     };
     let content_default = NotifyContent::task_progress_notify(None, &progress);
     let content = flow
@@ -255,6 +257,7 @@ fn ut_group_visibility_progress() {
         total: Some(100),
         multi_upload: None,
         file_name: "test".to_string(),
+        version: Version::API10,
     };
     let content = flow.publish_progress_notification(progress.clone());
     assert!(content.is_some());
