@@ -24,6 +24,7 @@ import requestTaskGroupTest from './RequestTaskGroup.test.ets';
 import requestCreateFileConfTest from './RequestCreateFileConf.test.ets';
 import requestNewUploadTest from './RequestNewUpload.test.ets';
 import requestDataConfigCreateTest from './RequestDataConfigCreate.ets';
+import requestFileLocTaskTest from './RequestTaskFileLocation.test.ets';
 
 export default function testsuite() {
   cacheDownloadInfo();
@@ -36,5 +37,9 @@ export default function testsuite() {
   requestTaskGroupTest();
   requestCreateFileConfTest();
   requestNewUploadTest();
+<<<<<<< HEAD
   requestDataConfigCreateTest();
+=======
+  requestFileLocTaskTest();
+>>>>>>> 2d79044f (request文件位置相关config测试)
 }
