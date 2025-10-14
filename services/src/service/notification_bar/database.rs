@@ -459,15 +459,14 @@ impl NotificationDb {
                 return false;
             }
         };
-        if let Some(visibility) = set.next() {
-            if visibility == 0 {
-                // If visibility is 0, completion_visible is true whatever gauge is
-                return true;
-            }
-            return (visibility & 0b01) != 0;
+
+        match set.next() {
+            // If visibility is 0, completion_visible is true whatever gauge is
+            Some(0) => true, 
+            Some(visibility) => (visibility & 0b01) != 0,
+            // If visibility is null, completion_visible is true whatever gauge is
+            None => true, 
         }
-        // If visibility is null, completion_visible is true whatever gauge is
-        true
     }
 
     pub(crate) fn is_progress_visible(&self, task_id: u32) -> bool {
@@ -481,22 +480,18 @@ impl NotificationDb {
                 return false;
             }
         };
-        
-        if let Some(visibility) = set.next() {
-            if visibility == 0 {
-                // If visibility is 0, get gauge from NotificationDispatcher
-                if let Some(gauge) = NotificationDispatcher::get_instance().get_task_gauge(task_id) {
-                    return gauge;
-                }
-                return false;
-            }
-            return (visibility & 0b10) != 0;
+
+        match set.next() {
+            // If visibility is 0, get gauge from NotificationDispatcher
+            Some(0) => NotificationDispatcher::get_instance()
+                .get_task_gauge(task_id)
+                .unwrap_or(false),
+            Some(visibility) => (visibility & 0b10) != 0,
+            // If visibility is null, get gauge from NotificationDispatcher
+            None => NotificationDispatcher::get_instance()
+                .get_task_gauge(task_id)
+                .unwrap_or(false),
         }
-        // If visibility is null, get gauge from NotificationDispatcher
-        if let Some(gauge) = NotificationDispatcher::get_instance().get_task_gauge(task_id) {
-            return gauge;
-        }
-        false
     }
 
     pub(crate) fn is_completion_visible_from_group(&self, group_id: u32) -> bool {
@@ -510,15 +505,14 @@ impl NotificationDb {
                 return false;
             }
         };
-        if let Some(visibility) = set.next() {
-            if visibility == 0 {
-                // If visibility is 0, completion_visible_from_group is true whatever gauge is
-                return true;
-            }
-            return (visibility & 0b01) != 0;
+
+        match set.next() {
+            // If visibility is 0, completion_visible_from_group is true whatever gauge is
+            Some(0) => true, 
+            Some(visibility) => (visibility & 0b01) != 0,
+            // If visibility is null, completion_visible_from_group is true whatever gauge is
+            None => true, 
         }
-        // If visibility is null, completion_visible_from_group is true whatever gauge is
-        true
     }
 
     pub(crate) fn is_progress_visible_from_group(&self, group_id: u32) -> bool {
@@ -532,15 +526,13 @@ impl NotificationDb {
                 return false;
             }
         };
-        
-        if let Some(visibility) = set.next() {
-            if visibility == 0 {
-                // If visibility is 0, get gauge value
-                return self.is_gauge(group_id);
-            }
-            return (visibility & 0b10) != 0;
+
+        match set.next() {
+            // If visibility is 0, get gauge value
+            Some(0) => self.is_gauge(group_id),
+            Some(visibility) => (visibility & 0b10) != 0,
+            None => self.is_gauge(group_id),
         }
-        self.is_gauge(group_id)
     }
 }
 
