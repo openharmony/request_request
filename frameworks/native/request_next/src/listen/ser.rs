@@ -24,7 +24,9 @@ use std::io::Read;
 
 // External dependencies
 use request_core::config::{Action, Version};
-use request_core::info::{NotifyData, Progress, Response, State, SubscribeType, TaskState, Faults, Reason, FaultOccur};
+use request_core::info::{
+    FaultOccur, Faults, NotifyData, Progress, Reason, Response, State, SubscribeType, TaskState,
+};
 
 /// Binary deserializer for Unix Domain Socket communications.
 ///

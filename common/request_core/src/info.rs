@@ -276,8 +276,7 @@ pub struct Response {
 }
 
 /// Status information for a specific task file.
-#[derive(Clone)]
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct TaskState {
     /// Path to the file being processed.
     pub path: String,

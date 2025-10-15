@@ -63,6 +63,7 @@ ani_constructor!(
         "restoreSync": api9::download::restore,
         "getTaskInfoSync": api9::download::get_task_info,
         "getTaskMimeTypeSync": api9::download::get_task_mime_type,
+        "offEvents": api9::callback::off_events,
     ]
     // API 9 UploadTaskInner class method bindings
     class "L@ohos/request/request/UploadTaskInner"
@@ -74,6 +75,7 @@ ani_constructor!(
         "offProgressInner": api9::callback::off_progress_uploadtask,
         "offEventInner": api9::callback::off_event_uploadtask,
         "offHeaderReceiveInner": api9::callback::off_header_receive,
+        "offEvents": api9::callback::off_events,
     ]
     // API 10 namespace bindings for agent operations
     namespace "L@ohos/request/request/agent"
@@ -103,7 +105,7 @@ ani_constructor!(
         "offEvent": api10::callback::off_event,
         "offResponseEvent": api10::callback::off_response_event,
         "offFaultEvent": api10::callback::off_fault_event,
-
+        "offEvents": api10::callback::off_events,
     ]
 );
 

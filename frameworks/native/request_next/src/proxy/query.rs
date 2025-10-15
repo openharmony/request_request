@@ -242,21 +242,19 @@ impl RequestProxy {
         // Serialize the filter parameters into the parcel
         match filter.before {
             Some(before) => data.write(&before).unwrap(),
-            None => {
-                match SystemTime::now().duration_since(UNIX_EPOCH) {
-                    Ok(n) => data.write(&(n.as_millis() as i64)).unwrap(),
-                    Err(_) => data.write(&(0i64)).unwrap(),
-                }
+            None => match SystemTime::now().duration_since(UNIX_EPOCH) {
+                Ok(n) => data.write(&(n.as_millis() as i64)).unwrap(),
+                Err(_) => data.write(&(0i64)).unwrap(),
             },
         }
 
         match filter.after {
             Some(after) => data.write(&after).unwrap(),
-            None => {
-                match SystemTime::now().duration_since(UNIX_EPOCH) {
-                    Ok(n) => data.write(&(n.as_millis() as i64 - 24 * 60 * 60 * 1000)).unwrap(),
-                    Err(_) => data.write(&(0i64)).unwrap(),
-                }
+            None => match SystemTime::now().duration_since(UNIX_EPOCH) {
+                Ok(n) => data
+                    .write(&(n.as_millis() as i64 - 24 * 60 * 60 * 1000))
+                    .unwrap(),
+                Err(_) => data.write(&(0i64)).unwrap(),
             },
         }
 

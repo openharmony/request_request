@@ -74,11 +74,11 @@ const SA_PERMISSION_CLEAN: &str = "g:3815:---"; // No permissions
 pub fn get_download_path(
     version: Version,
     context: &Context,
-    save_as: &str,
+    saveas: &str,
     overwrite: bool,
 ) -> Result<PathBuf, DownloadPathError> {
     // Convert path according to API version rules
-    let path = convert_path(version, context, save_as)?;
+    let path = convert_path(version, context, saveas)?;
 
     // Check for existing file if overwrite is disabled
     if !overwrite && path.exists() {
@@ -106,22 +106,22 @@ pub fn get_download_path(
 pub fn convert_path(
     version: Version,
     context: &Context,
-    save_as: &str,
+    saveas: &str,
 ) -> Result<PathBuf, DownloadPathError> {
     match version {
         Version::API9 => {
             // Handle absolute paths directly for API 9
-            if let Some(0) = save_as.find(ABSOLUTE_PREFIX) {
-                if save_as.len() == ABSOLUTE_PREFIX.len() {
+            if let Some(0) = saveas.find(ABSOLUTE_PREFIX) {
+                if saveas.len() == ABSOLUTE_PREFIX.len() {
                     return Err(DownloadPathError::EmptyPath);
                 }
-                return Ok(PathBuf::from(save_as));
+                return Ok(PathBuf::from(saveas));
             } else {
                 // Handle internal cache paths for API 9
                 const INTERNAL_PATTERN: &str = "internal://cache/";
-                let file_name = match save_as.find(INTERNAL_PATTERN) {
-                    Some(0) => save_as.split_at(INTERNAL_PATTERN.len()).1,
-                    _ => save_as,
+                let file_name = match saveas.find(INTERNAL_PATTERN) {
+                    Some(0) => saveas.split_at(INTERNAL_PATTERN.len()).1,
+                    _ => saveas,
                 };
                 if file_name.is_empty() {
                     return Err(DownloadPathError::EmptyPath);
@@ -138,7 +138,7 @@ pub fn convert_path(
 
         Version::API10 => {
             // Convert to absolute path using API 10 rules
-            let absolute_path = convert_to_absolute_path(&context, save_as)?;
+            let absolute_path = convert_to_absolute_path(&context, saveas)?;
 
             // Validate path is within allowed storage areas for API 10
             if !absolute_path.starts_with(AREA1)

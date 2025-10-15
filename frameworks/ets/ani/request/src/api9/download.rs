@@ -29,6 +29,7 @@ use request_client::client::error::CreateTaskError;
 use request_core::config::Version;
 use request_core::info::TaskInfo;
 use request_utils::context::{is_stage_context, Context};
+use request_core::config::TaskConfig;
 
 use super::bridge::{DownloadConfig, DownloadTask};
 use crate::api9::bridge::DownloadInfo;
@@ -87,26 +88,14 @@ pub fn download_file(
     info!("Api9 task, seq: {}", seq.0);
     let context = Context::new(env, &context);
 
-    // Determine the save path based on config or URL
-    let save_as = match &config.file_path {
-        // Use specified path if it exists and is not just a directory marker
-        Some(path) if path != "./" => path.to_string(),
-        _ => {
-            // Extract filename from URL if no path specified
-            let name = PathBuf::from(&config.url);
-            name.file_name()
-                .map(|s| s.to_string_lossy().to_string())
-                .unwrap_or(config.url.clone())
-        }
-    };
+    let mut config: TaskConfig = config.into();
+    config.bundle_type = context.get_bundle_type() as u32;
+    config.bundle = context.get_bundle_name();
 
     // Create the download task
     let task = match RequestClient::get_instance().create_task(
         context,
-        Version::API9,
-        config.into(),
-        &save_as,
-        false,
+        config
     ) {
         Ok(task_id) => DownloadTask { task_id: task_id.to_string() },
         Err(CreateTaskError::DownloadPath(_)) => {

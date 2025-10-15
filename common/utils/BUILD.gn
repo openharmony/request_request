@@ -55,12 +55,15 @@ ohos_static_library("request_utils_cxx") {
     "hilog:libhilog",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",
+    "netmanager_base:net_security_config_if",
     "openssl:libcrypto_shared",
     "openssl:libssl_shared",
     "rust_cxx:cxx_cppdeps",
     "samgr:samgr_proxy",
     "runtime_core:ani",
     "storage_service:storage_manager_acl",
+    "app_file_service:fileuri_native",
+    "ability_runtime:data_ability_helper",
   ]
   deps = [ ":request_utils_cxx_gen" ]
   subsystem_name = "request"

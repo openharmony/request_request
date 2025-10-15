@@ -25,7 +25,7 @@ use std::sync::{Arc, Mutex};
 
 // External dependencies
 use request_core::config::{Action, Version};
-use request_core::info::{Progress, SubscribeType, Response, Faults, TaskState};
+use request_core::info::{Faults, Progress, Response, SubscribeType, TaskState};
 use ylong_runtime::task::JoinHandle;
 
 // Internal dependencies
@@ -198,13 +198,40 @@ impl Observer {
                             if let Some(callback) = callbacks.lock().unwrap().get(&task_id) {
                                 // Dispatch to the appropriate callback method based on event type
                                 match data.version {
-                                    Version::API10 => {
-                                        match data.subscribe_type {
-                                            SubscribeType::Progress => {
-                                                callback.on_progress(&progress);
-                                            }
+                                    Version::API10 => match data.subscribe_type {
+                                        SubscribeType::Progress => {
+                                            callback.on_progress(&progress);
+                                        }
+                                        SubscribeType::Completed => {
+                                            callback.on_completed(&progress);
+                                        }
+                                        SubscribeType::Failed => {
+                                            callback.on_failed(
+                                                &progress,
+                                                data.task_states[0].response_code as i32,
+                                            );
+                                        }
+                                        SubscribeType::Pause => {
+                                            callback.on_pause(&progress);
+                                        }
+                                        SubscribeType::Resume => {
+                                            callback.on_resume(&progress);
+                                        }
+                                        SubscribeType::Remove => {
+                                            callback.on_remove(&progress);
+                                        }
+                                        _ => {}
+                                    },
+                                    Version::API9 => match data.action {
+                                        Action::Download => match data.subscribe_type {
                                             SubscribeType::Completed => {
                                                 callback.on_completed(&progress);
+                                            }
+                                            SubscribeType::Pause => {
+                                                callback.on_pause(&progress);
+                                            }
+                                            SubscribeType::Remove => {
+                                                callback.on_remove(&progress);
                                             }
                                             SubscribeType::Failed => {
                                                 callback.on_failed(
@@ -212,62 +239,31 @@ impl Observer {
                                                     data.task_states[0].response_code as i32,
                                                 );
                                             }
-                                            SubscribeType::Pause => {
-                                                callback.on_pause(&progress);
+                                            SubscribeType::Progress => {
+                                                callback.on_progress(&progress);
                                             }
-                                            SubscribeType::Resume => {
-                                                callback.on_resume(&progress);
+                                            _ => {
+                                                error!("bad subscribeType ");
                                             }
-                                            SubscribeType::Remove => {
-                                                callback.on_remove(&progress);
+                                        },
+                                        Action::Upload => match data.subscribe_type {
+                                            SubscribeType::Progress => {
+                                                callback.on_progress(&progress);
                                             }
-                                            _ => {}
-                                        }
-                                    }
-                                    Version::API9 => {
-                                        match data.action {
-                                            Action::Download => {
-                                                match data.subscribe_type {
-                                                    SubscribeType::Completed => {
-                                                        callback.on_completed(&progress);
-                                                    }
-                                                    SubscribeType::Pause => {
-                                                        callback.on_pause(&progress);
-                                                    }
-                                                    SubscribeType::Remove => {
-                                                        callback.on_remove(&progress);
-                                                    }
-                                                    SubscribeType::Failed => {
-                                                        callback.on_failed(
-                                                            &progress,
-                                                            data.task_states[0].response_code as i32,
-                                                        );
-                                                    }
-                                                    SubscribeType::Progress => {
-                                                        callback.on_progress(&progress);
-                                                    }
-                                                    _ => {error!("bad subscribeType ");}
-                                                }
+                                            SubscribeType::Completed => {
+                                                callback.on_complete_upload(data.task_states);
                                             }
-                                            Action::Upload => {
-                                                match data.subscribe_type {
-                                                    SubscribeType::Progress => {
-                                                        callback.on_progress(&progress);
-                                                    },
-                                                    SubscribeType::Completed => {
-                                                        callback.on_complete_upload(data.task_states);
-                                                    },
-                                                    SubscribeType::Failed => {
-                                                        callback.on_fail_upload(data.task_states);
-                                                    },
-                                                    SubscribeType::HeaderReceive => {
-                                                        callback.on_header_receive(&progress);
-                                                    },
-                                                    _ => {error!("bad subscribeType ");}
-                                                }
+                                            SubscribeType::Failed => {
+                                                callback.on_fail_upload(data.task_states);
                                             }
-                                        }
-                                    }
+                                            SubscribeType::HeaderReceive => {
+                                                callback.on_header_receive(&progress);
+                                            }
+                                            _ => {
+                                                error!("bad subscribeType ");
+                                            }
+                                        },
+                                    },
                                 }
 
                             }

@@ -22,6 +22,7 @@
 #include "application_context.h"
 #include "application_info.h"
 #include "context.h"
+#include "file_uri.h"
 #include "cxx.h"
 
 namespace OHOS::Request {
@@ -31,6 +32,8 @@ struct AniEnv;
 struct AniObject;
 
 rust::string GetCacheDir();
+
+rust::string GetBaseDir();
 
 rust::string SHA256(rust::str input);
 
@@ -58,5 +61,19 @@ inline AppExecFwk::BundleType BundleType(std::shared_ptr<AppExecFwk::Application
     return info->bundleType;
 }
 
+inline rust::string FileUriGetRealPath(std::string const &uri)
+{
+    std::shared_ptr<OHOS::AppFileService::ModuleFileUri::FileUri> fileUri =
+            std::make_shared<OHOS::AppFileService::ModuleFileUri::FileUri>(uri);
+    return fileUri->GetRealPath();
+}
+
+int32_t DataAbilityOpenFile(std::shared_ptr<Context> const &context, const std::string &path);
+
+bool IsCleartextPermitted(std::string const &hostname);
+
+rust::vec<rust::string> GetTrustAnchorsForHostName(std::string const &hostname);
+
+rust::string GetCertificatePinsForHostName(std::string const &hostname);
 } // namespace OHOS::Request
 #endif

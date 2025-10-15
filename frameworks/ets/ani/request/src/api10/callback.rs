@@ -383,6 +383,61 @@ pub fn off_fault_event(
     Ok(())
 }
 
+#[ani_rs::native]
+pub fn off_events(
+    env: &AniEnv,
+    this: Task,
+    event: String,
+) -> Result<(), ani_rs::business_error::BusinessError> {
+    let task_id = this.tid.parse().unwrap();
+    info!("off_fault_event called with event: {}", event);
+    let callback_mgr = CallbackManager::get_instance();
+    match event.as_str() {
+        "completed" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_complete.lock().unwrap().clear();
+            }
+        }
+        "pause" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_pause.lock().unwrap().clear();
+            }
+        }
+        "failed" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_fail.lock().unwrap().clear();
+            }
+        }
+        "remove" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_remove.lock().unwrap().clear();
+            }
+        }
+        "progress" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_progress.lock().unwrap().clear();
+            }
+        }
+        "resume" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_resume.lock().unwrap().clear();
+            }
+        }
+        "faultOccur" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_fault.lock().unwrap().clear();
+            }
+        }
+        "response" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_response.lock().unwrap().clear();
+            }
+        }
+        _ => unimplemented!()
+    };
+    Ok(())
+}
+
 pub struct CallbackColl {
     /// Callbacks to be executed on progress updates.
     on_progress: Mutex<Vec<GlobalRefCallback<(bridge::Progress,)>>>,

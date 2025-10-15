@@ -67,6 +67,10 @@ pub struct TaskConfig {
     pub certs_path: Vec<String>,
     /// Common task configuration parameters.
     pub common_data: CommonTaskConfig,
+    pub saveas: String,
+    pub overwrite: bool,
+    pub notification: Notification,
+    pub body_file_names: Vec<String>,
 }
 
 /// Builder for creating a `TaskConfig` with a fluent interface.
@@ -111,6 +115,7 @@ pub struct TaskConfigBuilder {
     files: Option<Vec<FileSpec>>,
     data: Option<Vec<FormItem>>,
     action: Action,
+    // notification: Option<Notification>,
 }
 
 impl TaskConfigBuilder {
@@ -134,6 +139,7 @@ impl TaskConfigBuilder {
             files: None,
             data: None,
             action: Action::Download,
+            // notification: None,
         }
     }
 
@@ -226,6 +232,11 @@ impl TaskConfigBuilder {
         self
     }
 
+    // pub fn notification(&mut self, notification: Notification) -> &mut Self {
+    //     self.notification = Some(notification);
+    //     self
+    // }
+
     /// Constructs a `TaskConfig` with the current builder configuration.
     ///
     /// # Notes
@@ -258,7 +269,7 @@ impl TaskConfigBuilder {
                 action: self.action,
                 mode: Mode::FrontEnd,
                 cover: false,
-                network_config: NetworkConfig::Any,
+                network_config: self.network_type.unwrap_or(NetworkConfig::Any),
                 metered: self.enable_metered.unwrap_or(false),
                 roaming: self.enable_roaming.unwrap_or(false),
                 retry: false,
@@ -272,6 +283,17 @@ impl TaskConfigBuilder {
                 background: self.background.unwrap_or(false),
                 multipart: false,
             },
+            saveas: self.file_path.unwrap_or_default(),
+            overwrite: false,
+            notification: Notification {
+                title: "".to_string(),
+                text: "".to_string(),
+            },
+            body_file_names: vec![],
+            // notification: self.notification.unwrap_or(Notification {
+            //     title: "".to_string(),
+            //     text: "".to_string(),
+            // }),
         }
     }
 }
@@ -308,10 +330,10 @@ impl ipc::parcel::Serialize for TaskConfig {
         parcel.write(&self.common_data.priority)?;
 
         // Write placeholders for future fields
-        parcel.write(&0i64)?;
-        parcel.write(&0i64)?;
-        parcel.write(&0u64)?;
-        parcel.write(&0u64)?;
+        parcel.write(&0i64)?; // todo: minSpeed.speed
+        parcel.write(&0i64)?; // todo: minSpeed.duration
+        parcel.write(&0u64)?; // todo: timeout.connectionTimeout
+        parcel.write(&0u64)?; // todo: timeout.totalTimeout
 
         // Serialize basic string fields
         parcel.write(&self.url)?;
@@ -516,4 +538,10 @@ pub struct CommonTaskConfig {
     pub background: bool,
     /// Whether to use multi-part form encoding.
     pub multipart: bool,
+}
+
+#[derive(Clone, Debug)]
+pub struct Notification {
+    pub title: String,
+    pub text: String,
 }

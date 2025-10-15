@@ -230,13 +230,18 @@ export default namespace request {
     native offProgressInner(callback?: (receivedSize: long, totalSize: long) => void): void;
     native offEvent(type: string, callback?: () => void): void;
     native offFailInner(callback?: (err: int) => void): void;
+    native offEvents(type: string):void;
 
     onProgress(callback: DownloadProgressCallback): void {
       this.onProgressInner(callback);
     }
 
     offProgress(callback?: DownloadProgressCallback): void {
-      this.offProgressInner(callback);
+      if(callback == undefined) {
+        this.offEvents('progress');
+      } else {
+        this.offProgressInner(callback);
+      }
     }
 
     onComplete(callback: DownloadCompleteCallback): void {
@@ -252,15 +257,27 @@ export default namespace request {
     }
 
     offComplete(callback?: DownloadCompleteCallback): void {
-      this.offEvent('complete', callback);
+      if(callback == undefined) {
+        this.offEvents('complete_download');
+      } else {
+        this.offEvent('complete', callback);
+      }
     }
 
     offPause(callback?: DownloadPauseCallback): void {
-      this.offEvent('pause', callback);
+      if(callback == undefined) {
+        this.offEvents('pause');
+      } else {
+        this.offEvent('pause', callback);
+      }
     }
 
     offRemove(callback?: DownloadRemoveCallback): void {
-      this.offEvent('remove', callback);
+      if(callback == undefined) {
+        this.offEvents('remove');
+      } else {
+        this.offEvent('remove', callback);
+      }
     }
 
     onFail(callback: DownloadFailCallback): void {
@@ -268,7 +285,11 @@ export default namespace request {
     }
 
     offFail(callback?: DownloadFailCallback): void {
-      this.offFailInner(callback);
+      if(callback == undefined) {
+        this.offEvents('fail_download');
+      } else {
+        this.offFailInner(callback);
+      }
     }
 
     // onEvents(type: 'complete' | 'pause' | 'remove', callback: () => void): void {
@@ -519,7 +540,11 @@ export default namespace request {
     }
 
     offProgress(callback?: UploadProgressCallback): void {
-      this.offProgressInner(callback);
+      if(callback == undefined) {
+        this.offEvents('progress');
+      } else {
+        this.offProgressInner(callback);
+      }
     }
 
     onHeaderReceive(callback: UploadHeaderReceiveCallback): void {
@@ -527,7 +552,11 @@ export default namespace request {
     }
 
     offHeaderReceive(callback?: UploadHeaderReceiveCallback): void {
-      this.offHeaderReceiveInner(callback);
+      if(callback == undefined) {
+        this.offEvents('header_receive');
+      } else {
+        this.offHeaderReceiveInner(callback);
+      }
     }
 
     onComplete(callback: Callback<Array<TaskState>>): void {
@@ -539,11 +568,19 @@ export default namespace request {
     }
 
     offComplete(callback?: Callback<Array<TaskState>>): void {
-      this.offEventInner('complete', callback);
+      if(callback == undefined) {
+        this.offEvents('complete_upload');
+      } else {
+        this.offEventInner('complete', callback);
+      }
     }
 
     offFail(callback?: Callback<Array<TaskState>>): void {
-      this.offEventInner('fail', callback);
+      if(callback == undefined) {
+        this.offEvents('fail_upload');
+      } else {
+        this.offEventInner('fail', callback);
+      }
     }
 
     // onEvent(type: 'complete' | 'fail', callback: (states: Array<TaskState>) => void): void {
@@ -576,6 +613,7 @@ export default namespace request {
     native offProgressInner(callback?: (uploadedSize: long, totalSize: long) => void): void;
     native offEventInner(type: string, callback?: Callback<Array<TaskState>>):void;
     native offHeaderReceiveInner(callback?: (header: Record<string, string>) => void): void;
+    native offEvents(type: string):void;
   }
 
   export namespace agent {
@@ -610,7 +648,6 @@ export default namespace request {
 
     class FileSpecInner implements FileSpec {
       path: string;
-      mimeType?: string;
       contentType?: string;
       filename?: string;
       extras?: Record<string, string>;
@@ -632,6 +669,36 @@ export default namespace request {
     }
 
     interface Config {
+      action: Action;
+      url: string;
+      title?: string;
+      description?: string;
+
+      mode?: Mode;
+      overwrite?: boolean;
+      method?: string;
+      headers?: Record<string, string>;
+      data?: string | Array<FormItem>;
+      saveas?: string;
+      network?: Network;
+      metered?: boolean;
+      roaming?: boolean;
+      retry?: boolean;
+      redirect?: boolean;
+      proxy?: string;
+      index?: int;
+      begins?: long;
+      ends?: long;
+      gauge?: boolean;
+      precise?: boolean;
+      token?: string;
+      priority?: int;
+      extras?: Record<string, string>;
+      multipart?: boolean;
+      notification?: Notification;
+    }
+
+    class ConfigInner implements Config {
       action: Action;
       url: string;
       title?: string;
@@ -814,6 +881,8 @@ export default namespace request {
 
     native offFaultEvent(event: string, callback: Callback<Faults>): void;
 
+    native offEvents(event: string): void;
+
     on(event: string, callback: Callback<Any>): void {
       if (event == "response") {
         this.onResponseEvent(event, callback as Callback<HttpResponse>);
@@ -825,7 +894,9 @@ export default namespace request {
     }
 
     off(event: string, callback?: Callback<Any>): void {
-      if (event == "response") {
+      if (callback == undefined) {
+        this.offEvents(event);
+      } else if (event == "response") {
         this.offResponseEvent(event, callback as Callback<HttpResponse>);
       } else if (event == "faultOccur") {
         this.offFaultEvent(event, callback as Callback<Faults>);

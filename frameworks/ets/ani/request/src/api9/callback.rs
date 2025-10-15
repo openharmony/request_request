@@ -378,6 +378,67 @@ pub fn off_fail(
 }
 
 #[ani_rs::native]
+pub fn off_events(
+    env: &AniEnv,
+    this: DownloadTask,
+    event: String,
+) -> Result<(), BusinessError> {
+    let task_id = this.task_id.parse().unwrap();
+    info!("off_events_uploadtask called for task_id: {}", task_id);
+    let callback_mgr = CallbackManager::get_instance();
+
+    match event.as_str() {
+        "progress" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_progress.lock().unwrap().clear();
+            }
+        }
+        "complete_download" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_complete.lock().unwrap().clear();
+            }
+        }
+        "pause" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_pause.lock().unwrap().clear();
+            }
+        }
+        "remove" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_remove.lock().unwrap().clear();
+            }
+        }
+        "resume" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_resume.lock().unwrap().clear();
+            }
+        }
+        "fail_download" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_fail.lock().unwrap().clear();
+            }
+        }
+        "fail_upload" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_fail_upload.lock().unwrap().clear();
+            }
+        }
+        "complete_upload" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_complete_upload.lock().unwrap().clear();
+            }
+        }
+        "header_receive" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_header_receive.lock().unwrap().clear();
+            }
+        }
+        _ => unimplemented!()
+    };
+    Ok(())
+}
+
+#[ani_rs::native]
 pub fn on_progress_uploadtask(
     env: &AniEnv,
     this: UploadTask,

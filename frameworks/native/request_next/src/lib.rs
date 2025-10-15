@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Native Rust interface for the Request framework.
-//! 
+//!
 //! The `request_next` crate provides a native Rust interface for interacting with the
 //! download/upload service, enabling efficient task management, state observation,
 //! and proxy communication.
@@ -24,6 +24,9 @@ pub mod check;
 
 /// Client interface for managing download/upload requests.
 pub mod client;
+pub mod file;
+pub mod verify;
+// pub mod wrapper;
 
 /// Internal proxy implementation for service communication.
 mod proxy;
@@ -45,7 +48,7 @@ extern crate request_utils;
 use hilog_rust::{HiLogLabel, LogType};
 
 /// Log label for the RequestNative component.
-/// 
+///
 /// Used for consistent logging across the request_next crate, with the domain
 /// 0xD001C50 (hexadecimal) and the tag "RequestNative".
 pub(crate) const LOG_LABEL: HiLogLabel = HiLogLabel {

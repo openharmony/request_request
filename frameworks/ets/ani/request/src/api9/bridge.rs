@@ -19,7 +19,7 @@
 
 use std::collections::HashMap;
 
-use request_core::config::{NetworkConfig, TaskConfig, TaskConfigBuilder, Version, FormItem};
+use request_core::config::{NetworkConfig, TaskConfig, TaskConfigBuilder, Version, FormItem, Action};
 use request_core::info::{self, TaskInfo};
 use request_core::file::FileSpec;
 
@@ -212,12 +212,14 @@ impl From<DownloadConfig> for TaskConfig {
         if let Some(description) = config.description {
             config_builder.description(description);
         }
-        if let Some(title) = config.title {
-            config_builder.title(title);
-        }
+        config_builder.title(config.title.clone().unwrap_or("download".to_string()));
         if let Some(background) = config.background {
             config_builder.background(background);
         }
+        if let Some(file_path) = config.file_path {
+            config_builder.file_path(file_path);
+        }
+        config_builder.action(Action::Download);
 
         // Build the final task configuration
         config_builder.build()
@@ -270,7 +272,8 @@ impl From<UploadConfig> for TaskConfig {
         }
         config_builder.files(config.files.into_iter().map(Into::into).collect());
         config_builder.data(config.data.into_iter().map(Into::into).collect());
-        config_builder.action(request_core::config::Action::Upload);
+        config_builder.action(Action::Upload);
+        config_builder.title("upload".to_string());
         config_builder.build()
     }
 }

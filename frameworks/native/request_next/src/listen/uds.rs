@@ -23,7 +23,7 @@ use std::io;
 use std::os::fd::{FromRawFd, IntoRawFd};
 use std::os::unix;
 
-use request_core::info::{NotifyData, Response, Faults, FaultOccur};
+use request_core::info::{FaultOccur, Faults, NotifyData, Response};
 use ylong_runtime::net::UnixDatagram;
 
 // Local dependencies

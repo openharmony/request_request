@@ -104,12 +104,14 @@
 
 // Public module exports
 pub mod error;
+mod native_task;
+use std::path::PathBuf;
 
 // Standard library imports
 use std::sync::{Arc, OnceLock};
 
 // External dependencies
-use request_core::config::{TaskConfig, Version, Action};
+use request_core::config::{Action, TaskConfig, Version};
 use request_core::error_code::CHANNEL_NOT_OPEN;
 use request_core::file::FileSpec;
 use request_core::filter::SearchFilter;
@@ -118,8 +120,11 @@ use request_utils::context::Context;
 
 // Internal dependencies
 use crate::client::error::CreateTaskError;
+use crate::client::native_task::{NativeTask, NativeTaskManager};
+use crate::file::FileManager;
 use crate::listen::Observer;
 use crate::proxy::RequestProxy;
+use crate::verify::TaskConfigVerifier;
 use crate::{check, Callback};
 
 /// Client for interacting with the download service.
@@ -129,6 +134,7 @@ use crate::{check, Callback};
 pub struct RequestClient<'a> {
     /// Listener for task status updates and events
     listener: Observer,
+    task_manager: NativeTaskManager,
     /// Proxy for communicating with the download service
     proxy: &'a RequestProxy,
 }
@@ -164,6 +170,7 @@ impl<'a> RequestClient<'a> {
             let listener = Observer::new();
             let res = RequestClient {
                 listener,
+                task_manager: NativeTaskManager::default(),
                 proxy: RequestProxy::get_instance(),
             };
             // Initialize communication channel on first creation
@@ -257,35 +264,12 @@ impl<'a> RequestClient<'a> {
     pub fn create_task(
         &self,
         context: Context,
-        version: Version,
         mut config: TaskConfig,
-        save_as: &str,
-        overwrite: bool,
     ) -> Result<i64, CreateTaskError> {
         info!("Creating task with config: {:?}", config);
-
-        if config.common_data.action == Action::Upload && version == Version::API9 {
-            let path = check::file::convert_path(Version::API9, &context, &config.file_specs.get(0).unwrap().path).unwrap();
-            config.file_specs.get_mut(0).unwrap().path = path
-                .to_string_lossy().to_string();
-        } else {
-            // Validate and get the download path based on API version
-            let path = check::file::get_download_path(version, &context, &save_as, overwrite)?;
-
-            // Create file specification for the download
-            let file_specs = FileSpec {
-                name: "".to_string(),
-                path: path.to_string_lossy().to_string(),
-                file_name: path
-                    .file_name()
-                    .map(|s| s.to_string_lossy().to_string())
-                    .unwrap_or_else(|| path.to_string_lossy().to_string()),
-                mime_type: "".to_string(),
-                is_user_file: false,
-                fd: None,
-            };
-            config.file_specs.push(file_specs);
-        }
+        // todo: errcode and errmsg
+        TaskConfigVerifier::get_instance().verify(&config)?;
+        let token = FileManager::get_instance().apply(context, &mut config)?;
 
         // Retry loop for channel reconnection
         loop {
@@ -301,6 +285,15 @@ impl<'a> RequestClient<'a> {
                 }
                 Ok(task_id) => {
                     info!("Task created successfully with ID: {}", task_id);
+                    let task = NativeTask {
+                        config,
+                        token: token,
+                    };
+                    self.task_manager
+                        .tasks
+                        .lock()
+                        .unwrap()
+                        .insert(task_id, task);
                     Ok(task_id)
                 }
             };
@@ -349,6 +342,7 @@ impl<'a> RequestClient<'a> {
     /// # Returns
     /// `Ok(())` on success, or an error code on failure
     pub fn remove(&self, task_id: i64) -> Result<(), i32> {
+        self.task_manager.tasks.lock().unwrap().remove(&task_id);
         self.proxy.remove(task_id)
     }
 
