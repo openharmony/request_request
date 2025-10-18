@@ -127,7 +127,7 @@ export default namespace request {
 
   interface DownloadConfig {
     url: string;
-    header?: Object;
+    header?: Record<string, string>;
     enableMetered?: boolean;
     enableRoaming?: boolean;
     description?: string;
@@ -482,7 +482,7 @@ export default namespace request {
     // overload off { offEvent, offProgress, offHeaderReceive }
 
     delete(callback: AsyncCallback<boolean>): void;
-    
+
 
     delete(): Promise<boolean>;
   }
@@ -605,7 +605,7 @@ export default namespace request {
       path: string;
       contentType?: string;
       filename?: string;
-      extras?: object;
+      extras?: Record<string, string>;
     }
 
     class FileSpecInner implements FileSpec {
@@ -613,7 +613,7 @@ export default namespace request {
       mimeType?: string;
       contentType?: string;
       filename?: string;
-      extras?: object;
+      extras?: Record<string, string>;
     }
 
     interface FormItem {
@@ -640,7 +640,7 @@ export default namespace request {
       mode?: Mode;
       overwrite?: boolean;
       method?: string;
-      headers?: object;
+      headers?: Record<string, string>;
       data?: string | Array<FormItem>;
       saveas?: string;
       network?: Network;
@@ -656,7 +656,7 @@ export default namespace request {
       precise?: boolean;
       token?: string;
       priority?: int;
-      extras?: object;
+      extras?: Record<string, string>;
       multipart?: boolean;
       notification?: Notification;
     }
@@ -678,7 +678,7 @@ export default namespace request {
       readonly index: int;
       readonly processed: long;
       readonly sizes: Array<long>;
-      readonly extras?: object;
+      readonly extras?: Record<string, string>;
     }
 
     class ProgressInner implements Progress {
@@ -686,7 +686,7 @@ export default namespace request {
       readonly index: int;
       readonly processed: long;
       readonly sizes: Array<long>;
-      readonly extras?: object;
+      readonly extras?: Record<string, string>;
     }
 
     enum Faults {
@@ -732,7 +732,7 @@ export default namespace request {
       readonly tries: int;
       readonly faults: Faults;
       readonly reason: string;
-      readonly extras?: object;
+      readonly extras?: Record<string, string>;
     }
 
     class TaskInfoInner implements TaskInfo{
@@ -756,7 +756,7 @@ export default namespace request {
       readonly tries: int;
       readonly faults: Faults;
       readonly reason: string;
-      readonly extras?: object;
+      readonly extras?: Record<string, string>;
     }
 
     interface HttpResponse {
