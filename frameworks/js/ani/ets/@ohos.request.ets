@@ -173,7 +173,7 @@ export default namespace request {
         let p1 = taskpool.execute((): void => {
           this.startSync();
         });
-        p1.then((data: NullishType): void => {
+        p1.then((data: Any): void => {
           let e: BusinessError<void>;
           callback(e, undefined);
         });
@@ -184,7 +184,7 @@ export default namespace request {
             let p1 = taskpool.execute((): void => {
               this.startSync();
             });
-            p1.then((e: NullishType) : void => {
+            p1.then((e: Any) : void => {
               resolve(undefined);
             });
         });
@@ -199,11 +199,11 @@ export default namespace request {
 
     export function create(context: BaseContext, config: Config, callback: AsyncCallback<Task>): void {
       let p1 = taskpool.execute(createSync, context, config);
-      p1.then((data: NullishType) => {
+      p1.then((data: Any) => {
         let r =  data as Task;
         let err: BusinessError<void>;
         callback(err, r);
-      }).catch((error: NullishType) => {
+      }).catch((error: Any) => {
         let err =  error as BusinessError<void>;
         let data: Task;
         callback(err, data);
@@ -214,7 +214,7 @@ export default namespace request {
       let p = new Promise<Task>((resolve: (v: Task) => void,
         reject: (error: Error) => void): void => {
           let p1 = taskpool.execute(createSync, context, config);
-          p1.then((e: NullishType): void => {
+          p1.then((e: Any): void => {
             resolve(e as Task);
           }).catch((err: Error) : void => {
             reject(err);
