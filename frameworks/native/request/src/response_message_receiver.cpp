@@ -429,6 +429,7 @@ void ResponseMessageReceiver::OnReadable(int32_t fd)
     char buffer[readSize];
     int32_t length = 0;
     if (!ReadUdsData(buffer, readSize, length)) {
+        std::lock_guard<std::mutex> lock(sockFdMutex_);
         REQUEST_HILOGE("ReadUdsData err: %{public}d,%{public}d, %{public}d", sockFd_, fd, length);
         return;
     };
@@ -510,19 +511,16 @@ void ResponseMessageReceiver::HandWaitData(char *&leftBuf, int32_t &leftLen)
 
 void ResponseMessageReceiver::OnShutdown(int32_t fd)
 {
-    REQUEST_HILOGI("uds OnShutdown, %{public}d, %{public}d", sockFd_, fd);
     ShutdownChannel();
 }
 
 void ResponseMessageReceiver::OnException(int32_t fd)
 {
-    REQUEST_HILOGI("uds OnException, %{public}d, %{public}d", sockFd_, fd);
     ShutdownChannel();
 }
 
 void ResponseMessageReceiver::Shutdown()
 {
-    REQUEST_HILOGI("uds shutdown, %{public}d", sockFd_);
     ShutdownChannel();
 }
 
@@ -530,6 +528,7 @@ void ResponseMessageReceiver::ShutdownChannel()
 {
     {
         std::lock_guard<std::mutex> lock(sockFdMutex_);
+        REQUEST_HILOGI("uds ShutdownChannel, %{public}d", sockFd_);
         if (sockFd_ > 0) {
             serviceHandler_->RemoveFileDescriptorListener(sockFd_);
             fdsan_close_with_tag(sockFd_, REQUEST_FDSAN_TAG);

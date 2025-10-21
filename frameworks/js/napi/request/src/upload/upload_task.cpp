@@ -135,9 +135,12 @@ uint32_t UploadTask::InitFileArray()
 
 uint32_t UploadTask::StartUploadFile()
 {
-    if (isRemoved_) {
-        UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload task removed");
-        return UPLOAD_TASK_REMOVED;
+    {
+        std::lock_guard<std::mutex> guard(removeMutex_);
+        if (isRemoved_) {
+            UPLOAD_HILOGD(UPLOAD_MODULE_FRAMEWORK, "upload task removed");
+            return UPLOAD_TASK_REMOVED;
+        }
     }
     uint32_t ret = InitFileArray();
     if (ret != UPLOAD_OK) {

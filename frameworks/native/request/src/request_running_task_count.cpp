@@ -56,6 +56,7 @@ std::unique_ptr<FwkRunningTaskCountManager> &FwkRunningTaskCountManager::GetInst
 
 int FwkRunningTaskCountManager::GetCount()
 {
+    std::lock_guard<std::mutex> lock(countLock_);
     return count_;
 }
 
@@ -97,6 +98,7 @@ void FwkRunningTaskCountManager::DetachObserver(std::shared_ptr<IRunningTaskObse
 
 bool FwkRunningTaskCountManager::HasObserver()
 {
+    std::lock_guard<std::mutex> lock(observersLock_);
     return !observers_.empty();
 }
 
@@ -112,8 +114,8 @@ void FwkRunningTaskCountManager::SetSaStatus(bool isOnline)
 
 void FwkRunningTaskCountManager::NotifyAllObservers()
 {
+    std::lock_guard<std::mutex> lock(observersLock_);
     REQUEST_HILOGD("Notify runcount to %{public}d observers.", static_cast<int32_t>(observers_.size()));
-    std::lock_guard<std::mutex> observer_lock(observersLock_);
     auto it = observers_.begin();
     while (it != observers_.end()) {
         (*it)->UpdateRunningTaskCount();

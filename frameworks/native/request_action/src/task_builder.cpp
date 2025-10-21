@@ -432,13 +432,11 @@ void TaskBuilder::checkMethod()
         transform(this->config.method.begin(), this->config.method.end(), this->config.method.begin(), ::toupper);
         if (this->config.action == Action::UPLOAD) {
             if ((this->config.method == "POST" || this->config.method == "PUT")) {
-                this->config.method = this->config.method;
                 return;
             }
         }
         if (this->config.action == Action::DOWNLOAD) {
             if (this->config.method == "POST" || this->config.method == "GET") {
-                this->config.method = this->config.method;
                 return;
             }
         }
