@@ -21,6 +21,7 @@ import requestDownloadFileTest from './RequestDownloadFile.test.ets';
 import requestUploadFileTest from './RequestUploadFile.test.ets';
 import requestTaskGroupTest from './RequestTaskGroup.test.ets';
 import requestNewUploadTest from './RequestNewUpload.test.ets';
+import requestDataConfigCreateTest from './RequestDataConfigCreate.ets';
 
 export default function testsuite() {
   cacheDownloadInfo();
@@ -31,4 +32,5 @@ export default function testsuite() {
   requestUploadFileTest();
   requestTaskGroupTest();
   requestNewUploadTest();
+  requestDataConfigCreateTest();
 }
