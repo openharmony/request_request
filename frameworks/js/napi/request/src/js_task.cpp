@@ -1118,8 +1118,9 @@ void JsTask::UnrefTaskContextMap(std::shared_ptr<ContextInfo> context)
             return;
         }
         napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(data->context->env_, &scope);
-        if (scope == nullptr) {
+        napi_status status = napi_open_handle_scope(data->context->env_, &scope);
+        if (status != napi_ok || scope == nullptr) {
+            REQUEST_HILOGE("UnrefTaskContextMap napi_scope failed");
             delete data;
             return;
         }

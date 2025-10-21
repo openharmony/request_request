@@ -64,7 +64,11 @@ void RequestManager::CallFunctionAsync(napi_env env, napi_ref func, const ArgsGe
         [data]() {
             int argc{};
             napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(data->env_, &scope);
+            napi_status status = napi_open_handle_scope(data->env_, &scope);
+            if (status != napi_ok || scope == nullptr) {
+                delete data;
+                return;
+            }
             napi_value argv[MAX_CB_ARGS]{};
             napi_ref recv{};
             data->generator_(data->env_, &recv, argc, argv);

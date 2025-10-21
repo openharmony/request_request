@@ -46,8 +46,8 @@ public:
             // Deletes reference of callback in JS main thread.
             auto afterCallback = [holder]() {
                 napi_handle_scope scope = nullptr;
-                napi_open_handle_scope(holder->env, &scope);
-                if (scope == nullptr) {
+                napi_status status = napi_open_handle_scope(holder->env, &scope);
+                if (status != napi_ok || scope == nullptr) {
                     delete holder;
                     return;
                 } else if (holder->env == nullptr || holder->work == nullptr || holder->self == nullptr) {
