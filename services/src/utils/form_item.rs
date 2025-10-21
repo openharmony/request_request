@@ -14,26 +14,60 @@
 use std::fs::File;
 use std::os::fd::{IntoRawFd, RawFd};
 
-/// File Spec
+/// Specifies details about a file for upload operations.
+///
+/// Contains metadata about a file including its name, path, MIME type, and
+/// whether it's a user-provided file with an associated file descriptor.
 #[derive(Clone, Debug)]
 pub struct FileSpec {
-    /// Name
+    /// The form field name associated with this file.
     pub name: String,
-    /// path
+    /// The full path to the file on disk.
     pub path: String,
-    /// file_name
+    /// The name of the file without directory information.
     pub file_name: String,
-    /// mime_type
+    /// The MIME type of the file (e.g., "image/jpeg").
     pub mime_type: String,
-    /// is_user_file
+    /// Flag indicating whether this is a user-provided file.
     pub is_user_file: bool,
-    /// Only for user file.
+    /// File descriptor for the opened file, only valid when `is_user_file` is true.
     pub fd: Option<RawFd>,
 }
 
 impl FileSpec {
-    /// Create a new file spec with user file.
+    /// Creates a new file specification for a user-provided file.
+    ///
+    /// # Parameters
+    /// - `file`: The user-provided `File` object to be uploaded.
+    ///
+    /// # Returns
+    /// A new `FileSpec` with `is_user_file` set to `true` and the file descriptor
+    /// extracted from the provided file.
+    ///
+    /// # Safety
+    /// This function consumes the `File` and converts it to a raw file descriptor.
+    /// It's the caller's responsibility to ensure the file descriptor is properly
+    /// managed and closed when no longer needed.
+    ///
+    /// # Examples
+    /// ```
+    /// use std::fs::File;
+    /// use request_services::utils::form_item::FileSpec;
+    /// 
+    /// // Open a file
+    /// let file = File::open("example.txt").expect("Failed to open file");
+    /// 
+    /// // Create a file specification for upload
+    /// let mut file_spec = FileSpec::user_file(file);
+    /// 
+    /// // Set additional metadata
+    /// file_spec.name = "upload_file".to_string();
+    /// file_spec.file_name = "example.txt".to_string();
+    /// file_spec.mime_type = "text/plain".to_string();
+    /// ```
     pub fn user_file(file: File) -> Self {
+        // Create a file spec with empty metadata strings but set is_user_file flag
+        // and extract the file descriptor from the provided File object
         Self {
             name: "".to_string(),
             path: "".to_string(),
@@ -45,8 +79,13 @@ impl FileSpec {
     }
 }
 
+/// Represents a key-value pair in a form submission.
+///
+/// Used for including text-based form data in requests alongside file uploads.
 #[derive(Clone, Debug)]
 pub(crate) struct FormItem {
+    /// The name of the form field.
     pub(crate) name: String,
+    /// The value associated with the form field.
     pub(crate) value: String,
 }
