@@ -20,6 +20,7 @@ import requestOperateTaskTest from './RequestOperateTask.test.ets';
 import requestCallbackTaskTest from './RequestCallbackTask.test.ets';
 import requestDownloadFileTest from './RequestDownloadFile.test.ets';
 import requestUploadFileTest from './RequestUploadFile.test.ets';
+import requestHttpConfigTest from './RequestCreateHttpConf.test.ets';
 import requestTaskGroupTest from './RequestTaskGroup.test.ets';
 import requestCreateFileConfTest from './RequestCreateFileConf.test.ets';
 import requestNewUploadTest from './RequestNewUpload.test.ets';
@@ -33,6 +34,7 @@ export default function testsuite() {
   requestCallbackTaskTest();
   requestDownloadFileTest();
   requestUploadFileTest();
+  requestHttpConfigTest();
   requestTaskGroupTest();
   requestCreateFileConfTest();
   requestNewUploadTest();
