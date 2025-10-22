@@ -37,9 +37,6 @@ export default function testsuite() {
   requestTaskGroupTest();
   requestCreateFileConfTest();
   requestNewUploadTest();
-<<<<<<< HEAD
   requestDataConfigCreateTest();
-=======
   requestFileLocTaskTest();
->>>>>>> 2d79044f (request文件位置相关config测试)
 }
