@@ -92,6 +92,7 @@ bool CUrlAdp::MultiAddHandle(CURLM *curlMulti, std::vector<CURL *> &curlArray)
     }
 
     SetCurlOpt(curl);
+    std::lock_guard<std::mutex> guard(mutex_);
     curlArray.push_back(curl);
     curl_multi_add_handle(curlMulti, curl);
     return true;

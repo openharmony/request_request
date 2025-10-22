@@ -263,15 +263,19 @@ void AniTask::On([[maybe_unused]] ani_env* env, std::string event, ani_ref callb
     this->type_ = supportEventsAni_[event];
 
     if (this->type_ == SubscribeType::RESPONSE) {
+        listenerMutex_.lock();
         if (responseListener_ == nullptr) {
             responseListener_ = std::make_shared<ResponseListener>(vm, this->tid_, this->type_);
         }
+        listenerMutex_.unlock();
         responseListener_->AddListener(callback);
     } else {
+        listenerMutex_.lock();
         if (notifyDataListenerMap_.find(this->type_) == notifyDataListenerMap_.end()) {
             notifyDataListenerMap_[this->type_] = std::make_shared<NotifyDataListener>(vm, this->tid_, this->type_);
         }
         notifyDataListenerMap_[this->type_]->AddListener(callback);
+        listenerMutex_.unlock();
     }
     REQUEST_HILOGI("End AniTask::On");
 }
