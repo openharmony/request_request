@@ -26,6 +26,7 @@ import requestCreateFileConfTest from './RequestCreateFileConf.test.ets';
 import requestNewUploadTest from './RequestNewUpload.test.ets';
 import requestDataConfigCreateTest from './RequestDataConfigCreate.ets';
 import requestFileLocTaskTest from './RequestTaskFileLocation.test.ets';
+import requestHttpLimitTest from './RequestHttpLimit.test.ets';
 
 export default function testsuite() {
   cacheDownloadInfo();
@@ -41,4 +42,5 @@ export default function testsuite() {
   requestNewUploadTest();
   requestDataConfigCreateTest();
   requestFileLocTaskTest();
+  requestHttpLimitTest();
 }
