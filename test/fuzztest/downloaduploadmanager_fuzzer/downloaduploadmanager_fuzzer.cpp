@@ -72,6 +72,17 @@ void GrantNativePermission()
     delete[] perms;
 }
 
+// @tc.name: ut_create_request_fuzzer
+// @tc.desc: Fuzz test for creating a request
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to task ID string
+// 2. Grant native permission
+// 3. Get next sequence number
+// 4. Call Create method with config and task ID
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void CreateRequestFuzzTest(const uint8_t *data, size_t size)
 {
     Config config;
@@ -82,6 +93,16 @@ void CreateRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Create(config, seq, tid);
 }
 
+// @tc.name: ut_start_request_fuzzer
+// @tc.desc: Fuzz test for starting a request
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to task ID string
+// 2. Grant native permission
+// 3. Call Start method with task ID
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void StartRequestFuzzTest(const uint8_t *data, size_t size)
 {
     std::string tid(reinterpret_cast<const char *>(data), size);
@@ -89,6 +110,16 @@ void StartRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Start(tid);
 }
 
+// @tc.name: ut_stop_request_fuzzer
+// @tc.desc: Fuzz test for stopping a request
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to task ID string
+// 2. Grant native permission
+// 3. Call Stop method with task ID
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void StopRequestFuzzTest(const uint8_t *data, size_t size)
 {
     std::string tid(reinterpret_cast<const char *>(data), size);
@@ -96,6 +127,17 @@ void StopRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Stop(tid);
 }
 
+// @tc.name: ut_show_request_fuzzer
+// @tc.desc: Fuzz test for showing request information
+// @tc.precon: NA
+// @tc.step: 1. Create TaskInfo object
+// 2. Convert input data to task ID string
+// 3. Grant native permission
+// 4. Call Show method with task ID and TaskInfo
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ShowRequestFuzzTest(const uint8_t *data, size_t size)
 {
     TaskInfo info;
@@ -104,6 +146,18 @@ void ShowRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Show(tid, info);
 }
 
+// @tc.name: ut_touch_request_fuzzer
+// @tc.desc: Fuzz test for touching a request
+// @tc.precon: NA
+// @tc.step: 1. Create TaskInfo object
+// 2. Convert input data to task ID string
+// 3. Create token from input data
+// 4. Grant native permission
+// 5. Call Touch method with task ID, token and TaskInfo
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void TouchRequestFuzzTest(const uint8_t *data, size_t size)
 {
     TaskInfo info;
@@ -113,6 +167,18 @@ void TouchRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Touch(tid, token, info);
 }
 
+// @tc.name: ut_search_request_fuzzer
+// @tc.desc: Fuzz test for searching requests
+// @tc.precon: NA
+// @tc.step: 1. Create Filter object
+// 2. Create vector for task IDs
+// 3. Convert input data to string and add to vector
+// 4. Grant native permission
+// 5. Call Search method with filter and task IDs vector
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void SearchRequestFuzzTest(const uint8_t *data, size_t size)
 {
     Filter filter;
@@ -123,6 +189,17 @@ void SearchRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Search(filter, tids);
 }
 
+// @tc.name: ut_pause_request_fuzzer
+// @tc.desc: Fuzz test for pausing a request
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to Version enum
+// 2. Convert input data to task ID string
+// 3. Grant native permission
+// 4. Call Pause method with task ID and version
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void PauseRequestFuzzTest(const uint8_t *data, size_t size)
 {
     Version version = static_cast<Version>(ConvertToUint32(data, size));
@@ -131,6 +208,17 @@ void PauseRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Pause(tid, version);
 }
 
+// @tc.name: ut_query_mimetype_request_fuzzer
+// @tc.desc: Fuzz test for querying MIME type
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to task ID string
+// 2. Create MIME type string from input data
+// 3. Grant native permission
+// 4. Call QueryMimeType method with task ID and MIME type
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void QueryMimeTypeRequestFuzzTest(const uint8_t *data, size_t size)
 {
     std::string tid(reinterpret_cast<const char *>(data), size);
@@ -139,6 +227,17 @@ void QueryMimeTypeRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->QueryMimeType(tid, mimeType);
 }
 
+// @tc.name: ut_remove_request_fuzzer
+// @tc.desc: Fuzz test for removing a request
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to Version enum
+// 2. Convert input data to task ID string
+// 3. Grant native permission
+// 4. Call Remove method with task ID and version
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void RemoveRequestFuzzTest(const uint8_t *data, size_t size)
 {
     Version version = static_cast<Version>(ConvertToUint32(data, size));
@@ -147,6 +246,16 @@ void RemoveRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Remove(tid, version);
 }
 
+// @tc.name: ut_resume_request_fuzzer
+// @tc.desc: Fuzz test for resuming a request
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to task ID string
+// 2. Grant native permission
+// 3. Call Resume method with task ID
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResumeRequestFuzzTest(const uint8_t *data, size_t size)
 {
     std::string tid(reinterpret_cast<const char *>(data), size);
@@ -154,6 +263,18 @@ void ResumeRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Resume(tid);
 }
 
+// @tc.name: ut_get_task_request_fuzzer
+// @tc.desc: Fuzz test for getting task information
+// @tc.precon: NA
+// @tc.step: 1. Create Config object
+// 2. Convert input data to task ID string
+// 3. Create token from input data
+// 4. Grant native permission
+// 5. Call GetTask method with task ID, token and config
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void GetTaskRequestFuzzTest(const uint8_t *data, size_t size)
 {
     Config config;
@@ -163,6 +284,16 @@ void GetTaskRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->GetTask(tid, token, config);
 }
 
+// @tc.name: ut_subscribe_request_fuzzer
+// @tc.desc: Fuzz test for subscribing to a request
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to task ID string
+// 2. Grant native permission
+// 3. Call Subscribe method with task ID
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void SubscribeRequestFuzzTest(const uint8_t *data, size_t size)
 {
     std::string tid(reinterpret_cast<const char *>(data), size);
@@ -170,6 +301,16 @@ void SubscribeRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Subscribe(tid);
 }
 
+// @tc.name: ut_unsubscribe_request_fuzzer
+// @tc.desc: Fuzz test for unsubscribing from a request
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to task ID string
+// 2. Grant native permission
+// 3. Call Unsubscribe method with task ID
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void UnsubscribeRequestFuzzTest(const uint8_t *data, size_t size)
 {
     std::string tid(reinterpret_cast<const char *>(data), size);
@@ -177,6 +318,17 @@ void UnsubscribeRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Unsubscribe(tid);
 }
 
+// @tc.name: ut_is_sa_ready_request_fuzzer
+// @tc.desc: Fuzz test for checking SA readiness
+// @tc.precon: NA
+// @tc.step: 1. Grant native permission
+// 2. Call IsSaReady method
+// 3. Convert input data to task ID string
+// 4. Call Start method with task ID
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void IsSaReadyRequestFuzzTest(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
@@ -185,6 +337,17 @@ void IsSaReadyRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Start(tid);
 }
 
+// @tc.name: ut_reopen_channel_request_fuzzer
+// @tc.desc: Fuzz test for reopening channel
+// @tc.precon: NA
+// @tc.step: 1. Grant native permission
+// 2. Call ReopenChannel method
+// 3. Convert input data to task ID string
+// 4. Call Start method with task ID
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ReopenChannelRequestFuzzTest(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
@@ -193,6 +356,18 @@ void ReopenChannelRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Start(tid);
 }
 
+// @tc.name: ut_subscribe_sa_request_fuzzer
+// @tc.desc: Fuzz test for subscribing and unsubscribing SA
+// @tc.precon: NA
+// @tc.step: 1. Grant native permission
+// 2. Call SubscribeSA method
+// 3. Call UnsubscribeSA method
+// 4. Convert input data to task ID string
+// 5. Call Start method with task ID
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void SubscribeSARequestFuzzTest(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
@@ -229,6 +404,19 @@ public:
     }
 };
 
+// @tc.name: ut_add_remove_listener_request_fuzzer
+// @tc.desc: Fuzz test for adding and removing listeners
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to task ID string
+// 2. Grant native permission
+// 3. Create response listener and add to request
+// 4. Remove response listener
+// 5. Create notify data listener and add to request
+// 6. Remove notify data listener
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void AddAndRemoveListenerRequestFuzzTest(const uint8_t *data, size_t size)
 {
     std::string taskId(reinterpret_cast<const char *>(data), size);
@@ -243,6 +431,19 @@ void AddAndRemoveListenerRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->RemoveListener(taskId, type, listener2);
 }
 
+// @tc.name: ut_remove_all_listeners_request_fuzzer
+// @tc.desc: Fuzz test for removing all listeners
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to task ID string
+// 2. Grant native permission
+// 3. Add response listener
+// 4. Add notify data listener
+// 5. Call RemoveAllListeners method
+// 6. Call RestoreListener with nullptr
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void RemoveAllListenersRequestFuzzTest(const uint8_t *data, size_t size)
 {
     std::string taskId(reinterpret_cast<const char *>(data), size);
@@ -262,6 +463,17 @@ void TestFunc(void)
     return;
 }
 
+// @tc.name: ut_restore_listener_request_fuzzer
+// @tc.desc: Fuzz test for restoring listeners
+// @tc.precon: NA
+// @tc.step: 1. Grant native permission
+// 2. Convert input data to task ID string
+// 3. Call Start method with task ID
+// 4. Call RestoreListener with TestFunc
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void RestoreListenerRequestFuzzTest(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
@@ -270,6 +482,17 @@ void RestoreListenerRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->RestoreListener(TestFunc);
 }
 
+// @tc.name: ut_query_request_fuzzer
+// @tc.desc: Fuzz test for querying request information
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to task ID string
+// 2. Create TaskInfo object
+// 3. Grant native permission
+// 4. Call Query method with task ID and TaskInfo
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void QueryRequestFuzzTest(const uint8_t *data, size_t size)
 {
     std::string tid(reinterpret_cast<const char *>(data), size);
@@ -278,6 +501,16 @@ void QueryRequestFuzzTest(const uint8_t *data, size_t size)
     RequestManager::GetInstance()->Query(tid, taskinfo);
 }
 
+// @tc.name: ut_request_get_id_fuzzer
+// @tc.desc: Fuzz test for Request getId method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to task ID string
+// 2. Create Request object with task ID
+// 3. Call getId method
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void RequestFuzzTestGetId(const uint8_t *data, size_t size)
 {
     std::string tid(reinterpret_cast<const char *>(data), size);
@@ -286,6 +519,19 @@ void RequestFuzzTestGetId(const uint8_t *data, size_t size)
     request.getId();
 }
 
+// @tc.name: ut_request_has_listener_fuzzer
+// @tc.desc: Fuzz test for Request HasListener method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to task ID string
+// 2. Create Request object with task ID
+// 3. Create response listener
+// 4. Add listener to request
+// 5. Call HasListener method
+// 6. Remove listener
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void RequestFuzzTestHasListener(const uint8_t *data, size_t size)
 {
     std::string tid(reinterpret_cast<const char *>(data), size);
@@ -298,6 +544,19 @@ void RequestFuzzTestHasListener(const uint8_t *data, size_t size)
     request.RemoveListener(type, listenerPtr);
 }
 
+// @tc.name: ut_request_on_notify_data_receive_fuzzer
+// @tc.desc: Fuzz test for Request OnNotifyDataReceive method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to task ID string
+// 2. Create Request object with task ID
+// 3. Create and configure NotifyData object
+// 4. Call OnNotifyDataReceive without listener
+// 5. Add notify data listener
+// 6. Call OnNotifyDataReceive again with listener
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void RequestFuzzTestOnNotifyDataReceive(const uint8_t *data, size_t size)
 {
     std::string tid(reinterpret_cast<const char *>(data), size);
@@ -313,6 +572,19 @@ void RequestFuzzTestOnNotifyDataReceive(const uint8_t *data, size_t size)
     request.OnNotifyDataReceive(notifyData);
 }
 
+// @tc.name: ut_request_add_remove_listener_fuzzer
+// @tc.desc: Fuzz test for Request AddListener and RemoveListener methods
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to task ID string
+// 2. Create Request object with task ID
+// 3. Create and configure NotifyData object
+// 4. Call OnNotifyDataReceive without listener
+// 5. Add notify data listener
+// 6. Remove notify data listener
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void RequestFuzzTestAddAndRemoveListener(const uint8_t *data, size_t size)
 {
     std::string tid(reinterpret_cast<const char *>(data), size);
@@ -329,6 +601,19 @@ void RequestFuzzTestAddAndRemoveListener(const uint8_t *data, size_t size)
     request.RemoveListener(type, listenerPtr);
 }
 
+// @tc.name: ut_request_on_response_receive_fuzzer
+// @tc.desc: Fuzz test for Request OnResponseReceive method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to task ID string
+// 2. Create Request object with task ID
+// 3. Create Response object
+// 4. Call OnResponseReceive without listener
+// 5. Add response listener
+// 6. Call OnResponseReceive again with listener
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void RequestFuzzTestOnResponseReceive(const uint8_t *data, size_t size)
 {
     std::string tid(reinterpret_cast<const char *>(data), size);
@@ -353,6 +638,17 @@ void FuzzFwkTestOberver::OnRunningTaskCountUpdate(int count)
 {
 }
 
+// @tc.name: ut_running_task_count_subscribe_fuzzer
+// @tc.desc: Fuzz test for subscribing to running task count
+// @tc.precon: NA
+// @tc.step: 1. Grant native permission
+// 2. Try to get service proxy
+// 3. Create observer and test subscription functionality
+// 4. Test attaching/detaching observers
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void RunningTaskCountFuzzTestSubscribeRunningTaskCount(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
@@ -372,6 +668,17 @@ void RunningTaskCountFuzzTestSubscribeRunningTaskCount(const uint8_t *data, size
     FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob2);
 }
 
+// @tc.name: ut_running_task_count_unsubscribe_fuzzer
+// @tc.desc: Fuzz test for unsubscribing from running task count
+// @tc.precon: NA
+// @tc.step: 1. Grant native permission
+// 2. Create observer and attach it
+// 3. Test OnRunningTaskCountUpdate
+// 4. Test unsubscribe with different observers
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void RunningTaskCountFuzzTestUnubscribeRunning(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
@@ -384,6 +691,19 @@ void RunningTaskCountFuzzTestUnubscribeRunning(const uint8_t *data, size_t size)
     UnsubscribeRunningTaskCount(ob1);
 }
 
+// @tc.name: ut_running_task_count_get_set_fuzzer
+// @tc.desc: Fuzz test for getting and setting running task count
+// @tc.precon: NA
+// @tc.step: 1. Grant native permission
+// 2. Convert input data to integer value
+// 3. Set count to expected value
+// 4. Test GetCount method
+// 5. Restore original count
+// 6. Test GetCount again
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void RunningTaskCountFuzzTestGetAndSetCount(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
@@ -395,6 +715,17 @@ void RunningTaskCountFuzzTestGetAndSetCount(const uint8_t *data, size_t size)
     FwkRunningTaskCountManager::GetInstance()->GetCount();
 }
 
+// @tc.name: ut_running_task_count_update_fuzzer
+// @tc.desc: Fuzz test for updating running task count
+// @tc.precon: NA
+// @tc.step: 1. Grant native permission
+// 2. Create observer
+// 3. Test OnRunningTaskCountUpdate
+// 4. Create FwkIRunningTaskObserver and test UpdateRunningTaskCount
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void RunningTaskCountFuzzTestUpdateRunningTaskCount(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
@@ -404,6 +735,18 @@ void RunningTaskCountFuzzTestUpdateRunningTaskCount(const uint8_t *data, size_t 
     runningOb.UpdateRunningTaskCount();
 }
 
+// @tc.name: ut_running_task_count_notify_observers_fuzzer
+// @tc.desc: Fuzz test for notifying all observers
+// @tc.precon: NA
+// @tc.step: 1. Grant native permission
+// 2. Create observer and attach it
+// 3. Call NotifyAllObservers
+// 4. Detach observer
+// 5. Test OnRunningTaskCountUpdate
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void RunningTaskCountFuzzTestNotifyAllObservers(const uint8_t *data, size_t size)
 {
     GrantNativePermission();
@@ -414,6 +757,17 @@ void RunningTaskCountFuzzTestNotifyAllObservers(const uint8_t *data, size_t size
     ob1->OnRunningTaskCountUpdate(static_cast<int>(*data));
 }
 
+// @tc.name: ut_run_count_notify_stub_instance_callback_fuzzer
+// @tc.desc: Fuzz test for RunCountNotifyStub getInstance, Done and CallBack methods
+// @tc.precon: NA
+// @tc.step: 1. Create TaskInfo and configure with input data
+// 2. Create Notify object
+// 3. Grant native permission
+// 4. Test GetInstance, Done and CallBack methods
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void RunCountNotifyStubFuzzTestGetInstanceDoneCallBack(const uint8_t *data, size_t size)
 {
     TaskInfo taskInfo;
@@ -426,6 +780,19 @@ void RunCountNotifyStubFuzzTestGetInstanceDoneCallBack(const uint8_t *data, size
     RunCountNotifyStub::GetInstance()->CallBack(notify);
 }
 
+// @tc.name: ut_run_count_notify_stub_on_callback_fuzzer
+// @tc.desc: Fuzz test for RunCountNotifyStub OnCallBack method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to int64 value
+// 2. Save current count
+// 3. Create and configure MessageParcel
+// 4. Grant native permission
+// 5. Call OnCallBack method
+// 6. Test GetCount and restore original count
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void RunCountNotifyStubFuzzTestOnCallBack(const uint8_t *data, size_t size)
 {
     int64_t except = static_cast<int64_t>(*data);
@@ -444,6 +811,17 @@ static constexpr int32_t INT64_SIZE = 8;  // 8 is int64 and uint64 num length
 static constexpr int32_t INT32_SIZE = 4;  // 4 is int32 and uint32 num length
 static constexpr int32_t INT16_SIZE = 2;  // 2 is int16 and uint16 num length
 
+// @tc.name: ut_response_message_int64_from_parcel_fuzzer
+// @tc.desc: Fuzz test for ResponseMessageReceiver Int64FromParcel method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to int64 value
+// 2. Create parcel pointer
+// 3. Test Int64FromParcel with INT32_SIZE
+// 4. Test Int64FromParcel with INT64_SIZE
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestInt64FromParcel(const uint8_t *data, size_t size)
 {
     int64_t except = static_cast<int64_t>(*data);
@@ -455,6 +833,17 @@ void ResponseMessageFuzzTestInt64FromParcel(const uint8_t *data, size_t size)
     ResponseMessageReceiver::Int64FromParcel(num, parcel, testSize);
 }
 
+// @tc.name: ut_response_message_uint64_from_parcel_fuzzer
+// @tc.desc: Fuzz test for ResponseMessageReceiver Uint64FromParcel method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to uint64 value
+// 2. Create parcel pointer
+// 3. Test Uint64FromParcel with INT32_SIZE
+// 4. Test Uint64FromParcel with INT64_SIZE
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestUint64FromParcel(const uint8_t *data, size_t size)
 {
     uint64_t except = static_cast<uint64_t>(*data);
@@ -466,6 +855,17 @@ void ResponseMessageFuzzTestUint64FromParcel(const uint8_t *data, size_t size)
     ResponseMessageReceiver::Uint64FromParcel(num, parcel, testSize);
 }
 
+// @tc.name: ut_response_message_int32_from_parcel_fuzzer
+// @tc.desc: Fuzz test for ResponseMessageReceiver Int32FromParcel method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to int32 value
+// 2. Create parcel pointer
+// 3. Test Int32FromParcel with INT16_SIZE
+// 4. Test Int32FromParcel with INT32_SIZE
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestInt32FromParcel(const uint8_t *data, size_t size)
 {
     int32_t except = static_cast<int32_t>(*data);
@@ -477,6 +877,17 @@ void ResponseMessageFuzzTestInt32FromParcel(const uint8_t *data, size_t size)
     ResponseMessageReceiver::Int32FromParcel(num, parcel, testSize);
 }
 
+// @tc.name: ut_response_message_uint32_from_parcel_fuzzer
+// @tc.desc: Fuzz test for ResponseMessageReceiver Uint32FromParcel method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to uint32 value
+// 2. Create parcel pointer
+// 3. Test Uint32FromParcel with INT16_SIZE
+// 4. Test Uint32FromParcel with INT32_SIZE
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestUint32FromParcel(const uint8_t *data, size_t size)
 {
     uint32_t except = static_cast<uint32_t>(*data);
@@ -488,6 +899,17 @@ void ResponseMessageFuzzTestUint32FromParcel(const uint8_t *data, size_t size)
     ResponseMessageReceiver::Uint32FromParcel(num, parcel, testSize);
 }
 
+// @tc.name: ut_response_message_int16_from_parcel_fuzzer
+// @tc.desc: Fuzz test for ResponseMessageReceiver Int16FromParcel method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to int16 value
+// 2. Create parcel pointer
+// 3. Test Int16FromParcel with size 0
+// 4. Test Int16FromParcel with INT16_SIZE
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestInt16FromParcel(const uint8_t *data, size_t size)
 {
     int16_t except = static_cast<int16_t>(*data);
@@ -499,6 +921,16 @@ void ResponseMessageFuzzTestInt16FromParcel(const uint8_t *data, size_t size)
     ResponseMessageReceiver::Int16FromParcel(num, parcel, testSize);
 }
 
+// @tc.name: ut_response_message_state_from_parcel_fuzzer
+// @tc.desc: Fuzz test for ResponseMessageReceiver StateFromParcel method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to State enum
+// 2. Test with invalid state value
+// 3. Test with valid state value (State::ANY)
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestStateFromParcel(const uint8_t *data, size_t size)
 {
     State state = static_cast<State>(*data);
@@ -512,6 +944,16 @@ void ResponseMessageFuzzTestStateFromParcel(const uint8_t *data, size_t size)
     ResponseMessageReceiver::StateFromParcel(state, parcel, testSize);
 }
 
+// @tc.name: ut_response_message_action_from_parcel_fuzzer
+// @tc.desc: Fuzz test for ResponseMessageReceiver ActionFromParcel method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to Action enum
+// 2. Test with invalid action value
+// 3. Test with valid action value (Action::ANY)
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestActionFromParcel(const uint8_t *data, size_t size)
 {
     Action action = static_cast<Action>(*data);
@@ -525,6 +967,16 @@ void ResponseMessageFuzzTestActionFromParcel(const uint8_t *data, size_t size)
     ResponseMessageReceiver::ActionFromParcel(action, parcel, testSize);
 }
 
+// @tc.name: ut_response_message_version_from_parcel_fuzzer
+// @tc.desc: Fuzz test for ResponseMessageReceiver VersionFromParcel method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to Version enum
+// 2. Test with invalid version value
+// 3. Test with valid version value (Version::API10)
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestVersionFromParcel(const uint8_t *data, size_t size)
 {
     Version version = static_cast<Version>(*data);
@@ -538,6 +990,16 @@ void ResponseMessageFuzzTestVersionFromParcel(const uint8_t *data, size_t size)
     ResponseMessageReceiver::VersionFromParcel(version, parcel, testSize);
 }
 
+// @tc.name: ut_response_message_subscribe_type_from_parcel_fuzzer
+// @tc.desc: Fuzz test for ResponseMessageReceiver SubscribeTypeFromParcel method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to SubscribeType enum
+// 2. Test with invalid type value
+// 3. Test with valid type value (SubscribeType::BUTT)
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestSubscribeTypeFromParcel(const uint8_t *data, size_t size)
 {
     SubscribeType type = static_cast<SubscribeType>(*data);
@@ -551,6 +1013,17 @@ void ResponseMessageFuzzTestSubscribeTypeFromParcel(const uint8_t *data, size_t 
     ResponseMessageReceiver::SubscribeTypeFromParcel(type, parcel, testSize);
 }
 
+// @tc.name: ut_response_message_string_from_parcel_fuzzer
+// @tc.desc: Fuzz test for ResponseMessageReceiver StringFromParcel method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to string
+// 2. Create parcel pointer from string
+// 3. Test StringFromParcel with size-1
+// 4. Test StringFromParcel with size+1
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestStringFromParcel(const uint8_t *data, size_t size)
 {
     std::string str;
@@ -562,6 +1035,17 @@ void ResponseMessageFuzzTestStringFromParcel(const uint8_t *data, size_t size)
     ResponseMessageReceiver::StringFromParcel(str, parcel, testSize);
 }
 
+// @tc.name: ut_response_message_fuzz_test_response_header_from_parcel
+// @tc.desc: Fuzz test for ResponseMessageReceiver ResponseHeaderFromParcel method
+// @tc.precon: NA
+// @tc.step: 1. Create a new Parcel object
+// 2. Write random data to the parcel
+// 3. Create ResponseMessageReceiver instance
+// 4. Call ResponseHeaderFromParcel method with parcel
+// @tc.expect: Function should handle various parcel data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestResponseHeaderFromParcel(const uint8_t *data, size_t size)
 {
     std::map<std::string, std::vector<std::string>> headers;
@@ -605,6 +1089,19 @@ void ResponseMessageFuzzTestProgressExtrasFromParcel(const uint8_t *data, size_t
     ResponseMessageReceiver::ProgressExtrasFromParcel(extras, parcel, testSize);
 }
 
+// @tc.name: ut_response_message_fuzz_test_vec_int64_from_parcel
+// @tc.desc: Fuzz test for ResponseMessageReceiver VecInt64FromParcel method
+// @tc.precon: NA
+// @tc.step: 1. Create test array with INT32_SIZE + INT64_SIZE
+// 2. Copy input data to test array as length
+// 3. Copy test value to the array
+// 4. Test VecInt64FromParcel with INT16_SIZE
+// 5. Test VecInt64FromParcel with INT64_SIZE
+// 6. Test VecInt64FromParcel with full array size
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestVecInt64FromParcel(const uint8_t *data, size_t size)
 {
     int arraySize = INT32_SIZE + INT64_SIZE;
@@ -632,6 +1129,16 @@ void ResponseMessageFuzzTestVecInt64FromParcel(const uint8_t *data, size_t size)
     ResponseMessageReceiver::VecInt64FromParcel(vec, parcel, testSize);
 }
 
+// @tc.name: ut_response_message_fuzz_test_response_message_receiver
+// @tc.desc: Fuzz test for ResponseMessageReceiver constructor with various input data
+// @tc.precon: NA
+// @tc.step: 1. Create a null IResponseMessageHandler pointer
+// 2. Extract socket file descriptor from fuzz data
+// 3. Create ResponseMessageReceiver instance with the handler and socket descriptor
+// @tc.expect: No crash occurs during object creation
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 1
 void ResponseMessageFuzzTestResponseMessageReceiver(const uint8_t *data, size_t size)
 {
     IResponseMessageHandler *handler = nullptr;
@@ -639,6 +1146,16 @@ void ResponseMessageFuzzTestResponseMessageReceiver(const uint8_t *data, size_t 
     ResponseMessageReceiver receiver = ResponseMessageReceiver(handler, sockFd);
 }
 
+// @tc.name: ut_response_message_fuzz_test_msg_header_parcel
+// @tc.desc: Fuzz test for ResponseMessageReceiver MsgHeaderParcel method
+// @tc.precon: NA
+// @tc.step: 1. Create MessageHeader object
+// 2. Convert input data to various header fields
+// 3. Test MsgHeaderParcel with different input sizes and values
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestMsgHeaderParcel(const uint8_t *data, size_t size)
 {
     uint32_t magicNum = ResponseMessageReceiver::RESPONSE_MAGIC_NUM - 1;
@@ -701,6 +1218,17 @@ void ResponseMessageFuzzTestMsgHeaderParcel(const uint8_t *data, size_t size)
     ResponseMessageReceiver::MsgHeaderParcel(msgId, msgType, bodySize, parcel, testSize);
 }
 
+// @tc.name: ut_response_message_fuzz_test_response_from_parcel
+// @tc.desc: Fuzz test for ResponseMessageReceiver ResponseFromParcel method
+// @tc.precon: NA
+// @tc.step: 1. Create shared_ptr<Response> object
+// 2. Create test array with various data fields
+// 3. Copy task ID, version, status code, reason, headers to test array
+// 4. Test ResponseFromParcel with INT16_SIZE
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestResponseFromParcel(const uint8_t *data, size_t size)
 {
     std::shared_ptr<Response> response = std::make_shared<Response>();
@@ -754,6 +1282,17 @@ void ResponseMessageFuzzTestResponseFromParcel(const uint8_t *data, size_t size)
     ResponseMessageReceiver::ResponseFromParcel(response, parcel, testSize);
 }
 
+// @tc.name: ut_response_message_fuzz_test_task_states_from_parcel
+// @tc.desc: Fuzz test for ResponseMessageReceiver TaskStatesFromParcel method
+// @tc.precon: NA
+// @tc.step: 1. Create vector<TaskState> object
+// 2. Create test array with INT32_SIZE length and other data
+// 3. Copy length, path, response code, message to test array
+// 4. Test TaskStatesFromParcel with various test sizes
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestTaskStatesFromParcel(const uint8_t *data, size_t size)
 {
     std::vector<TaskState> taskStates;
@@ -801,6 +1340,17 @@ void ResponseMessageFuzzTestTaskStatesFromParcel(const uint8_t *data, size_t siz
     ResponseMessageReceiver::TaskStatesFromParcel(taskStates, parcel, testSize);
 }
 
+// @tc.name: ut_response_message_fuzz_test_notify_data_from_parcel
+// @tc.desc: Fuzz test for ResponseMessageReceiver NotifyDataFromParcel method
+// @tc.precon: NA
+// @tc.step: 1. Create shared_ptr<NotifyData> object
+// 2. Create test array with various data fields
+// 3. Copy subscribe type, task ID, state, index, processed, etc. to test array
+// 4. Test NotifyDataFromParcel with various parameters
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void ResponseMessageFuzzTestNotifyDataFromParcel(const uint8_t *data, size_t size)
 {
     std::shared_ptr<NotifyData> notifyData = std::make_shared<NotifyData>();
@@ -962,6 +1512,15 @@ class FuzzRemoteObjectImpl : public OHOS::IRemoteObject {};
 
 } // namespace OHOS
 
+// @tc.name: ut_llvm_fuzzer_test_one_input
+// @tc.desc: Fuzzer entry point function
+// @tc.precon: NA
+// @tc.step: 1. Call all fuzz test functions with the same input data
+// 2. Functions include request management, response handling, and notification tests
+// @tc.expect: Entry point should execute all fuzz tests without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
