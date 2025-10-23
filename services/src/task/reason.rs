@@ -11,43 +11,87 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Error and state reason codes for request tasks.
+//! 
+//! This module defines the `Reason` enumeration that represents various states and errors
+//! that can occur during task execution, including network issues, user operations, and system conditions.
+
+// Re-export the Reason enum from the FFI module
 pub(crate) use ffi::Reason;
 
+// C++ FFI bridge for the Reason enum
 #[cxx::bridge(namespace = "OHOS::Request")]
 mod ffi {
+    /// Enum representing task state and error reasons.
     #[derive(Clone, Copy, PartialEq, Debug)]
     #[repr(u8)]
     pub(crate) enum Reason {
+        /// Default reason (no specific reason).
         Default = 0,
+        /// Task has been pending for one month without completion.
         TaskSurvivalOneMonth,
+        /// Too many tasks are running simultaneously.
         RunningTaskMeetLimits = 4,
+        /// Action performed by the user.
         UserOperation,
+        /// Application is in background or has terminated.
         AppBackgroundOrTerminate,
+        /// Network connection is offline.
         NetworkOffline,
+        /// Network type is not supported for the task.
         UnsupportedNetworkType,
+        /// Failed to construct the request.
         BuildRequestFailed = 10,
+        /// Failed to retrieve file size information from server.
         GetFileSizeFailed,
+        /// Continuous task processing timed out.
         ContinuousTaskTimeout = 12,
+        /// General request error.
         RequestError = 14,
+        /// File upload failed.
         UploadFileError,
+        /// HTTP redirect processing error.
         RedirectError,
+        /// HTTP protocol violation.
         ProtocolError,
+        /// Input/output operation failed.
         IoError,
+        /// Server does not support range requests.
         UnsupportedRangeRequest,
+        /// Catch-all for other errors not explicitly defined.
         OthersError,
+        /// User account is stopped.
         AccountStopped,
+        /// DNS resolution failed.
         Dns = 23,
+        /// TCP connection error.
         Tcp,
+        /// SSL/TLS handshake or connection error.
         Ssl,
+        /// Insufficient storage space available.
         InsufficientSpace,
+        /// Combined condition: network offline and app in background/terminated.
         NetworkApp = 27,
+        /// Combined condition: network offline and account stopped.
         NetworkAccount = 28,
+        /// Combined condition: app in background/terminated and account stopped.
         AppAccount = 29,
+        /// Combined condition: network offline, app in background/terminated, and account stopped.
         NetworkAppAccount = 30,
+        /// Transfer speed below configured minimum threshold.
         LowSpeed = 31,
     }
 }
 
+/// Converts a raw byte value to a Reason enum variant.
+/// 
+/// # Arguments
+/// 
+/// * `value` - The raw byte value to convert.
+/// 
+/// # Returns
+/// 
+/// The corresponding Reason variant, or `Reason::OthersError` if the value is unrecognized.
 impl From<u8> for Reason {
     fn from(value: u8) -> Self {
         match value {
@@ -77,12 +121,17 @@ impl From<u8> for Reason {
             29 => Reason::AppAccount,
             30 => Reason::NetworkAppAccount,
             31 => Reason::LowSpeed,
-            _ => Reason::OthersError,
+            _ => Reason::OthersError, // Fallback for unrecognized values
         }
     }
 }
 
 impl Reason {
+    /// Converts the reason to a descriptive string.
+    /// 
+    /// # Returns
+    /// 
+    /// A static string describing the reason.
     pub(crate) fn to_str(self) -> &'static str {
         match self {
             Reason::Default => "",
@@ -117,6 +166,7 @@ impl Reason {
     }
 }
 
+// Test module for Reason
 #[cfg(test)]
 mod ut_reason {
     include!("../../tests/ut/task/ut_reason.rs");
