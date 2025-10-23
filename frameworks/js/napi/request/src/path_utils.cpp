@@ -201,6 +201,14 @@ bool PathUtils::SubPathsToMap(const std::string &path)
     return SubPathsVec(paths);
 }
 
+void PathUtils::InitChmod(const std::string &path)
+{
+    int32_t ret = chmod(path.c_str(), PathUtils::INITIAL_MODE);
+    if (ret != 0) {
+        REQUEST_HILOGE("init chmod: %{public}d, %{public}s", ret, PathUtils::ShieldPath(path).c_str());
+    };
+}
+
 // "abcde" -> "**cde"
 std::string ShieldStr(const std::string &s)
 {
