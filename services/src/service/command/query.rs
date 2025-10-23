@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Task information query functionality for system services.
+//! 
+//! This module provides methods to query task information in bulk,
+//! including permission verification, input validation, and account checking.
+
 use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
@@ -24,7 +29,31 @@ use crate::task::files::check_current_account;
 use crate::utils::is_system_api;
 
 impl RequestServiceStub {
+    /// Queries information for multiple tasks in bulk.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Message parcel containing the task IDs to query
+    /// * `reply` - Message parcel to write the results to
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` - If the query operation completed successfully
+    /// * `Err(IpcStatusCode::Failed)` - If there was an error in the process
+    ///
+    /// # Errors
+    ///
+    /// * `ErrorCode::SystemApi` - When not called from a system API
+    /// * `ErrorCode::Permission` - When the caller lacks required permissions
+    /// * `ErrorCode::Other` - When the input size exceeds limits
+    /// * `ErrorCode::TaskNotFound` - When a task ID is invalid or not accessible
+    ///
+    /// # Notes
+    ///
+    /// This function is restricted to system APIs and requires manager permissions.
+    /// Results are returned in the same order as the input task IDs.
     pub(crate) fn query(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+        // Restrict access to system APIs only
         if !is_system_api() {
             error!("Service query: not system api");
             sys_event!(
@@ -35,6 +64,8 @@ impl RequestServiceStub {
             reply.write(&(ErrorCode::SystemApi as i32))?;
             return Err(IpcStatusCode::Failed);
         }
+        
+        // Verify manager permissions and retrieve action type
         let permission = PermissionChecker::check_manager();
         let action = match permission.get_action() {
             Some(a) => a,
@@ -50,20 +81,26 @@ impl RequestServiceStub {
             }
         };
 
+        // Read and validate the number of tasks to query
         let len: u32 = data.read()?;
         let len = len as usize;
 
+        // Enforce size limits to prevent resource exhaustion
         if len > GET_INFO_MAX {
             info!("Service query: out of size: {}", len);
             reply.write(&(ErrorCode::Other as i32))?;
             return Err(IpcStatusCode::Failed);
         }
 
+        // Initialize results vector with default error codes and empty task info
         let mut vec = vec![(ErrorCode::Other, TaskInfo::new()); len];
+        
+        // Process each task ID individually
         for i in 0..len {
             let task_id: String = data.read()?;
             info!("Service query tid {}", task_id);
 
+            // Validate and convert task ID format
             let Ok(task_id) = task_id.parse::<u32>() else {
                 error!("Service query, failed: tid not valid: {}", task_id);
                 sys_event!(
@@ -75,6 +112,7 @@ impl RequestServiceStub {
                 continue;
             };
 
+            // Check if task exists and get its UID
             let task_uid = match RequestDb::get_instance().query_task_uid(task_id) {
                 Some(uid) => uid,
                 None => {
@@ -83,11 +121,13 @@ impl RequestServiceStub {
                 }
             };
 
+            // Verify task belongs to the current account
             if !check_current_account(task_uid) {
                 set_code_with_index_other(&mut vec, i, ErrorCode::TaskNotFound);
                 continue;
             }
 
+            // Query task manager for detailed information
             let info = self.task_manager.lock().unwrap().query(task_id, action);
             match info {
                 Some(task_info) => {
@@ -107,7 +147,11 @@ impl RequestServiceStub {
                 }
             };
         }
+        
+        // Send successful operation status
         reply.write(&(ErrorCode::ErrOk as i32))?;
+        
+        // Return individual results for each task
         for (c, info) in vec {
             reply.write(&(c as i32))?;
             // TODO: Sends info only when ErrOk.

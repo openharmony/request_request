@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Task removal functionality for download tasks.
+//! 
+//! This module provides methods to remove tasks in bulk,
+//! including permission verification, input validation,
+//! and ownership checks before sending removal events.
+
 use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
@@ -24,9 +30,33 @@ use crate::task::config::Version;
 use crate::task::files::check_current_account;
 
 impl RequestServiceStub {
+    /// Removes multiple tasks in bulk.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Message parcel containing the API version and task IDs to remove
+    /// * `reply` - Message parcel to write the results to
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` - If the remove operation completed successfully
+    /// * `Err(IpcStatusCode::Failed)` - If there was an error in the process
+    ///
+    /// # Errors
+    ///
+    /// * `ErrorCode::Permission` - When the caller lacks required permissions
+    /// * `ErrorCode::Other` - When the input size exceeds limits
+    /// * `ErrorCode::TaskNotFound` - When a task ID is invalid or not accessible
+    ///
+    /// # Notes
+    ///
+    /// Results are returned in the same order as the input task IDs.
+    /// For API9, requires either INTERNET permission or download manager permission.
     pub(crate) fn remove(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+        // Check for download manager permissions
         let permission = PermissionChecker::check_down_permission();
 
+        // Read API version and perform version-specific permission checks
         let version: u32 = data.read()?;
         if Version::from(version as u8) == Version::API9
             && !PermissionChecker::check_internet()
@@ -42,20 +72,29 @@ impl RequestServiceStub {
             return Err(IpcStatusCode::Failed);
         }
 
+        // Read and validate the number of tasks to remove
         let len: u32 = data.read()?;
         let len = len as usize;
 
+        // Enforce size limits to prevent resource exhaustion
         if len > CONTROL_MAX {
             info!("Service remove: out of size: {}", len);
             reply.write(&(ErrorCode::Other as i32))?;
             return Err(IpcStatusCode::Failed);
         }
 
+        // Get calling UID for ownership verification
         let ipc_uid = ipc::Skeleton::calling_uid();
+        
+        // Initialize results vector with default error codes
         let mut vec = vec![ErrorCode::Other; len];
+        
+        // Process each task ID individually
         for i in 0..len {
             let task_id: String = data.read()?;
             info!("Service remove tid {}", task_id);
+            
+            // Validate and convert task ID format
             let Ok(task_id) = task_id.parse::<u32>() else {
                 error!("Service remove, failed: tid not valid: {}", task_id);
                 sys_event!(
@@ -67,6 +106,7 @@ impl RequestServiceStub {
                 continue;
             };
 
+            // Check if task exists and get its UID
             let task_uid = match RequestDb::get_instance().query_task_uid(task_id) {
                 Some(uid) => uid,
                 None => {
@@ -75,11 +115,13 @@ impl RequestServiceStub {
                 }
             };
 
+            // Verify task belongs to the current account
             if !check_current_account(task_uid) {
                 set_code_with_index(&mut vec, i, ErrorCode::TaskNotFound);
                 continue;
             }
 
+            // Check task ownership or manager permissions
             if (task_uid != ipc_uid) && !permission {
                 set_code_with_index(&mut vec, i, ErrorCode::TaskNotFound);
                 error!(
@@ -97,6 +139,7 @@ impl RequestServiceStub {
                 continue;
             }
 
+            // Create and send removal event to task manager
             let (event, rx) = TaskManagerEvent::remove(task_uid, task_id);
             if !self.task_manager.lock().unwrap().send_event(event) {
                 error!("Service remove, failed: task_manager err: {}", task_id);
@@ -108,6 +151,8 @@ impl RequestServiceStub {
                 set_code_with_index(&mut vec, i, ErrorCode::Other);
                 continue;
             }
+            
+            // Get result from task manager
             let ret = match rx.get() {
                 Some(ret) => ret,
                 None => {
@@ -127,6 +172,8 @@ impl RequestServiceStub {
                     continue;
                 }
             };
+            
+            // Store the result and log any failures
             set_code_with_index(&mut vec, i, ret);
             if ret != ErrorCode::ErrOk {
                 error!("Service remove, tid: {}, failed: {}", task_id, ret as i32);
@@ -137,7 +184,11 @@ impl RequestServiceStub {
                 );
             }
         }
+        
+        // Send successful operation status
         reply.write(&(ErrorCode::ErrOk as i32))?;
+        
+        // Return individual results for each task
         for ret in vec {
             reply.write(&(ret as i32))?;
         }

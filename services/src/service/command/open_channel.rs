@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Channel opening functionality for inter-process communication.
+//! 
+//! This module implements methods to establish a communication channel between
+//! client processes and the request service, enabling efficient data transfer and
+//! task status updates through file descriptors.
+
 use std::fs::File;
 use std::os::fd::AsRawFd;
 use std::os::unix::io::FromRawFd;
@@ -22,13 +28,46 @@ use crate::error::ErrorCode;
 use crate::service::RequestServiceStub;
 
 impl RequestServiceStub {
+    /// Opens an IPC communication channel for the calling process.
+    ///
+    /// Establishes a communication channel between the service and a client process
+    /// by creating and returning a file descriptor that can be used for subsequent
+    /// data exchange and notifications.
+    ///
+    /// # Arguments
+    ///
+    /// * `reply` - Output parcel to write the operation result code and file descriptor.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` - If the channel was successfully opened and the file descriptor
+    ///   was written to the reply parcel.
+    /// * `Err(IpcStatusCode::Failed)` - If opening the channel failed.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error code in the reply parcel if:
+    /// * The channel could not be opened (`ErrorCode::ParameterCheck`).
+    ///
+    /// # Notes
+    ///
+    /// This method performs file descriptor manipulation with `unsafe` blocks to
+    /// convert between raw file descriptors and `File` objects. The ownership of
+    /// the file descriptor is transferred to the caller through the parcel.
     pub(crate) fn open_channel(&self, reply: &mut MsgParcel) -> IpcResult<()> {
+        // Get the PID of the calling process for identification
         let pid = ipc::Skeleton::calling_pid();
         info!("Service open_channel pid {}", pid);
+        // Attempt to open a communication channel for the client process
         match self.client_manager.open_channel(pid) {
             Ok(ud_fd) => {
+                // Convert the UnixDatagram fd to a raw file descriptor
                 // `as_raw_fd` does not track the ownership or life cycle of this fd.
                 let fd = ud_fd.as_raw_fd();
+                
+                // Convert raw file descriptor to a File object
+                // Safety: The fd is valid as it was obtained from open_channel and
+                // ownership is transferred to the reply parcel
                 let file = unsafe { File::from_raw_fd(fd) };
                 info!("End open_channel fd {}", fd);
                 reply.write(&(ErrorCode::ErrOk as i32))?;
