@@ -150,16 +150,19 @@ bool SubOnePathToMap(const std::string &path, const bool isFile)
         return false;
     }
     auto &[iFile, count] = it->second;
-    if (count > 1) {
-        count--;
-        return true;
-    }
-
     if (iFile != isFile) {
         REQUEST_HILOGE("SubOnePathToMap path changed, %{public}s", PathUtils::ShieldPath(path).c_str());
     }
-    if (!SubAcl(path, isFile)) {
+    if (count <= 0) {
+        REQUEST_HILOGE("SubOnePathToMap count 0, %{public}s", PathUtils::ShieldPath(path).c_str());
+        pathMap_.erase(it);
         return false;
+    }
+    count--;
+    if (count == 0) {
+        const bool ret = SubAcl(path, isFile);
+        pathMap_.erase(it);
+        return ret;
     }
     return true;
 }
@@ -199,6 +202,14 @@ bool PathUtils::SubPathsToMap(const std::string &path)
         return false;
     }
     return SubPathsVec(paths);
+}
+
+void PathUtils::InitChmod(const std::string &path)
+{
+    int32_t ret = chmod(path.c_str(), PathUtils::INITIAL_MODE);
+    if (ret != 0) {
+        REQUEST_HILOGE("init chmod: %{public}d, %{public}s", ret, PathUtils::ShieldPath(path).c_str());
+    };
 }
 
 // "abcde" -> "**cde"

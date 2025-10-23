@@ -30,11 +30,13 @@ public:
     static bool SubPathsToMap(const std::string &path);
     static bool CheckBelongAppBaseDir(const std::string &filepath);
     static std::string ShieldPath(const std::string &path);
+    static void InitChmod(const std::string &path);
 
-    static const mode_t WRITE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-    static const mode_t READ_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    static const mode_t WRITE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
+    static const mode_t READ_MODE = S_IRUSR | S_IWUSR | S_IRGRP;
 
 private:
+    static const mode_t INITIAL_MODE = S_IRUSR | S_IWUSR | S_IRGRP;
 };
 } // namespace OHOS::Request
 #endif // PATH_UTILS
