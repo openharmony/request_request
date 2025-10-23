@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Running count unsubscription functionality for request service.
+//! 
+//! This module provides methods to unsubscribe from download task running count updates,
+//! with security checks and process identification.
+
 use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
@@ -19,7 +24,29 @@ use crate::service::RequestServiceStub;
 use crate::utils::is_called_by_hap;
 
 impl RequestServiceStub {
+    /// Unsubscribes from task running count updates for the calling process.
+    ///
+    /// # Arguments
+    ///
+    /// * `reply` - Message parcel to write operation result to
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` - If unsubscription was successful
+    /// * `Err(IpcStatusCode::Failed)` - If caller is unauthorized or unsubscription failed
+    ///
+    /// # Errors
+    ///
+    /// Returns error codes in the reply parcel:
+    /// * `ErrOk` - Unsubscription successful
+    /// * Various error codes - Depending on unsubscription failure reason
+    ///
+    /// # Notes
+    ///
+    /// * Only system processes are allowed to unsubscribe (not HAPs)
+    /// * Uses calling process ID to identify the subscription to remove
     pub(crate) fn unsubscribe_run_count(&self, reply: &mut MsgParcel) -> IpcResult<()> {
+        // Verify caller is not a HAP (only system processes allowed)
         if is_called_by_hap() {
             error!("Service run_count unsubscribe called by hap");
             sys_event!(
@@ -30,11 +57,15 @@ impl RequestServiceStub {
             return Err(IpcStatusCode::Failed);
         }
 
+        // Get caller's process ID for identifying the subscription
         let pid = ipc::Skeleton::calling_pid();
         info!("Service run_count unsubscribe pid {}", pid);
 
+        // Request unsubscription from run count manager
         let ret = self.run_count_manager.unsubscribe_run_count(pid);
         reply.write(&(ret as i32))?;
+        
+        // Handle unsubscription failure
         if ret != ErrorCode::ErrOk {
             error!("End Service run_count unsubscribe, failed: {}", ret as i32);
             sys_event!(
