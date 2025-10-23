@@ -11,22 +11,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! This crate implement the request server service.
+//! Core service implementation for the request system.
+//! 
+//! This module provides the main service components for handling request operations,
+//! including task management, permission handling, and communication interfaces.
+//! It serves as the foundation for processing download and upload requests within
+//! the request server.
 
+/// Atomic counter implementation for tracking active operations.
 pub(crate) mod active_counter;
+
+/// Client communication and connection management module.
 pub(crate) mod client;
 
-/// The interface of the request server service.
+/// IPC command codes and interface definitions for the request server service.
 pub mod interface;
 
+// Platform-specific modules for OpenHarmony
 cfg_oh! {
+    /// Permission verification and management.
     pub(crate) mod permission;
+    
+    /// Command handling and execution module.
     pub(crate) mod command;
+    
+    /// Notification bar integration for user feedback.
     pub(crate) mod notification_bar;
+    
+    // Internal stub implementation for service binding
     mod stub;
+    
+    /// Main service interface implementation.
     pub(crate) use stub::RequestServiceStub;
+    
+    /// Utility for serializing task information for IPC.
     pub(crate) use stub::serialize_task_info;
+    
+    /// Utility for serializing task configuration for IPC.
     pub(crate) use stub::serialize_task_config;
 }
 
+/// Running count management for tracking active requests.
 pub(crate) mod run_count;
