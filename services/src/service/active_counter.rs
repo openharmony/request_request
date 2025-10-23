@@ -11,32 +11,64 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Active Counter
+//! Thread-safe counter for tracking active tasks or operations.
+//! 
+//! Provides a simple, atomic counter implementation for tracking whether any operations
+//! are currently active. This is useful for determining when a system can safely shut down
+//! or enter an idle state.
 
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 
+/// Thread-safe counter for tracking active operations.
+/// 
+/// Uses an atomic counter to safely track whether operations are in progress across multiple threads.
+/// Provides methods to increment, decrement, and check if any operations are currently active.
 #[derive(Clone)]
 pub(crate) struct ActiveCounter {
+    /// Atomic counter storing the number of active operations
     count: Arc<AtomicU32>,
 }
 
 impl ActiveCounter {
+    /// Creates a new active counter with an initial value of zero.
+    /// 
+    /// # Returns
+    /// 
+    /// A new `ActiveCounter` instance that is not active initially
     pub(crate) fn new() -> Self {
         Self {
             count: Arc::new(AtomicU32::new(0)),
         }
     }
 
+    /// Increments the active count by one.
+    /// 
+    /// # Note
+    /// 
+    /// Uses `Ordering::Relaxed` as the memory ordering since this counter is primarily
+    /// used for liveness checks rather than precise synchronization.
     pub(crate) fn increment(&self) {
         self.count.fetch_add(1, Ordering::Relaxed);
     }
 
+    /// Decrements the active count by one.
+    /// 
+    /// # Note
+    /// 
+    /// Uses `Ordering::Relaxed` as the memory ordering. Decrementing below zero will cause
+    /// an underflow, which will result in the counter wrapping to a large value.
     pub(crate) fn decrement(&self) {
         self.count.fetch_sub(1, Ordering::Relaxed);
     }
 
+    /// Checks if there are any active operations.
+    /// 
+    /// # Returns
+    /// 
+    /// `true` if the count is greater than zero, indicating active operations
     pub(crate) fn is_active(&self) -> bool {
+        // Load the current count with relaxed ordering
         let count = self.count.load(Ordering::Relaxed);
         info!("active count: {}", count);
         count > 0
