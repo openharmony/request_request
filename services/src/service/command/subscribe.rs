@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Task subscription functionality for request service.
+//! 
+//! This module provides methods to subscribe to download task notifications,
+//! with validation, permission checking, and event management.
+
 use ipc::parcel::MsgParcel;
 use ipc::{IpcResult, IpcStatusCode};
 
@@ -19,10 +24,37 @@ use crate::manage::events::TaskManagerEvent;
 use crate::service::RequestServiceStub;
 
 impl RequestServiceStub {
+    /// Subscribes a client to notifications for a specific download task.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Message parcel containing task ID string
+    /// * `reply` - Message parcel to write operation result to
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` - If subscription was successful
+    /// * `Err(IpcStatusCode::Failed)` - If subscription failed due to validation error
+    ///   or permission issues
+    ///
+    /// # Errors
+    ///
+    /// Returns error codes in the reply parcel:
+    /// * `ErrOk` - Subscription successful
+    /// * `TaskNotFound` - Task ID is invalid or doesn't belong to caller
+    /// * `Other` - Other subscription failure
+    ///
+    /// # Notes
+    ///
+    /// * Validates that the task ID belongs to the calling user
+    /// * Registers the client with both the task manager and client manager
+    /// * Uses full token ID for secure client identification
     pub(crate) fn subscribe(&self, data: &mut MsgParcel, reply: &mut MsgParcel) -> IpcResult<()> {
+        // Read task ID from parcel
         let task_id: String = data.read()?;
         debug!("Service subscribe tid {}", task_id);
 
+        // Validate and parse task ID format
         let Ok(task_id) = task_id.parse::<u32>() else {
             error!("End Service subscribe, failed: task_id not valid");
             sys_event!(
@@ -33,17 +65,24 @@ impl RequestServiceStub {
             reply.write(&(ErrorCode::TaskNotFound as i32))?;
             return Err(IpcStatusCode::Failed);
         };
+        
+        // Get caller's UID for permission validation
         let uid = ipc::Skeleton::calling_uid();
 
+        // Verify task ownership to prevent unauthorized access
         if !self.check_task_uid(task_id, uid) {
             reply.write(&(ErrorCode::TaskNotFound as i32))?;
             return Err(IpcStatusCode::Failed);
         }
 
+        // Get caller's process and token information for subscription tracking
         let pid = ipc::Skeleton::calling_pid();
         let token_id = ipc::Skeleton::calling_full_token_id();
 
+        // Create subscription event for the task manager
         let (event, rx) = TaskManagerEvent::subscribe(task_id, token_id);
+        
+        // Send event to task manager
         if !self.task_manager.lock().unwrap().send_event(event) {
             reply.write(&(ErrorCode::Other as i32))?;
             error!(
@@ -60,6 +99,8 @@ impl RequestServiceStub {
             );
             return Err(IpcStatusCode::Failed);
         }
+        
+        // Wait for task manager's response
         let ret = match rx.get() {
             Some(ret) => ret,
             None => {
@@ -80,6 +121,7 @@ impl RequestServiceStub {
             }
         };
 
+        // Handle task manager subscription failure
         if ret != ErrorCode::ErrOk {
             error!("End Service subscribe, tid: {}, failed: {:?}", task_id, ret);
             sys_event!(
@@ -91,6 +133,7 @@ impl RequestServiceStub {
             return Err(IpcStatusCode::Failed);
         }
 
+        // Register client with client manager for notification delivery
         let ret = self.client_manager.subscribe(task_id, pid, uid, token_id);
         if ret == ErrorCode::ErrOk {
             reply.write(&(ErrorCode::ErrOk as i32))?;
