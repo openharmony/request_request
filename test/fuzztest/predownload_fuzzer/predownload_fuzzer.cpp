@@ -74,6 +74,18 @@ void GrantNativePermission()
     delete[] perms;
 }
 
+// @tc.name: ut_get_download_info_fuzzer
+// @tc.desc: Fuzz test for Preload GetDownloadInfo method
+// @tc.precon: NA
+// @tc.step: 1. Check input data validity
+// 2. Convert input data to URL string
+// 3. Convert URL to valid UTF-8 format
+// 4. Grant native permission
+// 5. Call GetInstance()->GetDownloadInfo with URL
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void GetDownloadInfoFuzzTest(const uint8_t *data, size_t size)
 {
     if (size <= 0 || data == nullptr) {
@@ -89,6 +101,16 @@ void GetDownloadInfoFuzzTest(const uint8_t *data, size_t size)
     Preload::GetInstance()->GetDownloadInfo(url);
 }
 
+// @tc.name: ut_set_download_info_list_size_fuzzer
+// @tc.desc: Fuzz test for Preload SetDownloadInfoListSize method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to uint16_t length
+// 2. Grant native permission
+// 3. Call GetInstance()->SetDownloadInfoListSize with length
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 void SetDownloadInfoListSizeFuzzTest(const uint8_t *data, size_t size)
 {
     uint16_t len = ConvertToUint16(data, size);
@@ -98,6 +120,15 @@ void SetDownloadInfoListSizeFuzzTest(const uint8_t *data, size_t size)
 
 } // namespace OHOS
 
+// @tc.name: ut_llvm_fuzzer_test_one_input
+// @tc.desc: Fuzzer entry point function
+// @tc.precon: NA
+// @tc.step: 1. Call GetDownloadInfoFuzzTest with input data
+// 2. Call SetDownloadInfoListSizeFuzzTest with input data
+// @tc.expect: Entry point should execute all fuzz tests without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
