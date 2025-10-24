@@ -11,7 +11,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! netstack_rs is used to provide a rust interface to the netstack library.
+//! Rust interface to the netstack library.
+//! 
+//! This crate provides a safe, idiomatic Rust API for interacting with the 
+//! netstack library, handling HTTP requests, responses, and task management.
+//! 
+//! # Modules
+//! 
+//! * [`request`] - Types and functionality for creating HTTP requests
+//! * [`task`] - Types and functionality for managing HTTP request tasks
+//! * [`response`] - Types and functionality for handling HTTP responses
+//! * [`error`] - Error types and handling
+//! * [`info`] - Types for download and performance information
 
 #![warn(
     missing_docs,
@@ -23,21 +34,47 @@
 #![deny(unused_must_use)]
 #![allow(missing_docs, clippy::new_without_default)]
 
-/// Request.
+/// Types and functionality for creating HTTP requests.
+///
+/// This module provides structures and methods for constructing HTTP requests,
+/// including setting headers, method, URL, and body content.
 pub mod request;
-/// create and manage requests.
+
+/// Types and functionality for managing HTTP request tasks.
+///
+/// This module provides structures for tracking and controlling the lifecycle
+/// of HTTP requests, including starting, canceling, and checking status.
 pub mod task;
 
-/// response from the server.
+/// Types and functionality for handling HTTP responses.
+///
+/// This module provides structures for accessing response data, including
+/// status codes, headers, and response body.
 pub mod response;
 
+/// Error types and handling for HTTP operations.
+///
+/// This module defines error types that can occur during HTTP operations.
 pub mod error;
+
+/// Internal FFI wrapper module.
+///
+/// Provides bridging between Rust code and the underlying netstack C++ implementation.
 mod wrapper;
 
+/// Types for download and performance information.
+///
+/// This module provides structures for tracking download progress and collecting
+/// performance metrics during HTTP operations.
 pub mod info;
 
 use hilog_rust::{HiLogLabel, LogType};
 
+/// Log label used for logging within the netstack_rs crate.
+///
+/// # Notes
+///
+/// This label is used with the HiLog logging system for consistent log categorization.
 pub(crate) const LOG_LABEL: HiLogLabel = HiLogLabel {
     log_type: LogType::LogCore,
     domain: 0xD001C50,

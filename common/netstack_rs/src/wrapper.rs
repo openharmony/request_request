@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Module for FFI wrapper and callback handling.
+//! 
+//! This module provides a bridge between Rust code and C++ FFI components,
+//! managing HTTP request callbacks and task lifecycle.
+
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, Weak};
@@ -30,24 +35,55 @@ use crate::request::RequestCallback;
 use crate::response::{Response, ResponseCode};
 use crate::task::{RequestTask, TaskStatus};
 
+/// Result type for task creation operations.
+///
+/// Used internally to handle the result of creating a new HTTP client task.
 enum NewTaskResult {
+    /// Task creation succeeded with the new task and callback wrapper
     Success(SharedPtr<HttpClientTask>, Box<CallbackWrapper>),
+    /// Task creation failed, returning the original callback
     Failed(Box<dyn RequestCallback>),
 }
 
+/// Wrapper for handling HTTP client callbacks.
+///
+/// Manages the lifecycle of HTTP requests, including success/failure handling,
+/// progress tracking, and automatic retry logic.
 pub struct CallbackWrapper {
+    /// The user-provided callback implementation
     inner: Option<Box<dyn RequestCallback>>,
     // TODO This reset flag has never been assigned to true. Does it look useless?
+    /// Flag indicating if the task should be reset
     reset: Arc<AtomicBool>,
+    /// Weak reference to the task to avoid memory leaks
     task: Weak<Mutex<SharedPtr<HttpClientTask>>>,
+    /// Unique identifier for the task
     task_id: TaskId,
+    /// Performance and status information for the download
     info: DownloadInfo,
+    /// Manager for storing download performance information
     info_mgr: Arc<DownloadInfoMgr>,
+    /// Number of retry attempts made
     tries: usize,
+    /// Current progress in bytes
     current: u64,
 }
 
 impl CallbackWrapper {
+    /// Creates a new callback wrapper from a request callback.
+    ///
+    /// # Arguments
+    ///
+    /// * `inner` - The user-provided callback implementation
+    /// * `reset` - Flag indicating if the task should be reset
+    /// * `task` - Weak reference to the task
+    /// * `task_id` - Unique identifier for the task
+    /// * `info_mgr` - Manager for storing download information
+    /// * `current` - Current progress in bytes
+    ///
+    /// # Returns
+    ///
+    /// A new `CallbackWrapper` instance configured with the provided parameters
     pub(crate) fn from_callback(
         inner: Box<dyn RequestCallback + 'static>,
         reset: Arc<AtomicBool>,
@@ -56,6 +92,7 @@ impl CallbackWrapper {
         info_mgr: Arc<DownloadInfoMgr>,
         current: u64,
     ) -> Self {
+        // Create new download info and set network DNS configuration
         let mut info = DownloadInfo::new();
         let dns = GetResolvConf();
         info.set_network_dns(dns);
@@ -73,58 +110,94 @@ impl CallbackWrapper {
 }
 
 impl CallbackWrapper {
+    /// Handles successful HTTP request completion.
+    ///
+    /// Collects performance metrics and calls the appropriate user callback based on
+    /// the HTTP response status code.
+    ///
+    /// # Arguments
+    ///
+    /// * `_request` - The HTTP request that completed
+    /// * `response` - The HTTP response received
     fn on_success(&mut self, _request: &HttpClientRequest, response: &ffi::HttpClientResponse) {
+        // Collect performance metrics from the response
         let mut performance = RustPerformanceInfo::default();
         GetPerformanceInfo(response, Pin::new(&mut performance));
         self.info.set_performance(performance);
         self.info.set_size(self.current as i64);
+        // Store download information for future reference
         self.info_mgr
             .insert_download_info(self.task_id.clone(), self.info.clone());
 
+        // Take the user callback if available
         let Some(mut callback) = self.inner.take() else {
             return;
         };
+        // Convert FFI response to Rust response
         let response = Response::from_ffi(response);
+        // Check if the status code indicates success (200-299 range)
         if (response.status().clone() as u32 >= 300) || (response.status().clone() as u32) < 200 {
+            // For non-success codes, create an error
             let error = HttpClientError::new(
                 HttpErrorCode::HttpNoneErr,
                 (response.status() as u32).to_string(),
             );
             callback.on_fail(error);
         } else {
+            // For success codes, call the success callback
             callback.on_success(response);
         }
     }
 
+    /// Handles failed HTTP requests.
+    ///
+    /// Collects performance metrics and implements retry logic for failed requests.
+    ///
+    /// # Arguments
+    ///
+    /// * `request` - The HTTP request that failed
+    /// * `response` - The partial or error response
+    /// * `error` - The error information from the FFI layer
     fn on_fail(
         &mut self,
         request: &HttpClientRequest,
         response: &ffi::HttpClientResponse,
         error: &ffi::HttpClientError,
     ) {
+        // Collect performance metrics from the response
         let mut performance = RustPerformanceInfo::default();
         GetPerformanceInfo(response, Pin::new(&mut performance));
         self.info.set_performance(performance);
         self.info.set_size(self.current as i64);
+        // Store download information for future reference
         self.info_mgr
             .insert_download_info(self.task_id.clone(), self.info.clone());
+        
+        // Convert FFI error to Rust error
         let error = HttpClientError::from_ffi(error);
+        
+        // Handle write errors as cancellations
         if *error.code() == HttpErrorCode::HttpWriteError {
             self.on_cancel(request, response);
             return;
         }
+        
+        // Take the user callback if available
         let Some(callback) = self.inner.take() else {
             return;
         };
 
+        // Attempt to create a new task for retrying
         let (new_task, mut new_callback) = match self.create_new_task(callback, request) {
             NewTaskResult::Success(new_task, new_callback) => (new_task, new_callback),
             NewTaskResult::Failed(mut callback) => {
+                // If task creation failed, call the fail callback
                 callback.on_fail(error);
                 return;
             }
         };
 
+        // Retry immediately if we haven't exceeded the retry limit
         if self.tries < 3 {
             self.tries += 1;
             new_callback.tries = self.tries;
@@ -132,38 +205,56 @@ impl CallbackWrapper {
             return;
         }
 
+        // For final attempt, use a spawned task to wait for potential reset signal
         let reset = self.reset.clone();
         ffrt_spawn(move || {
+            // Wait up to 20 seconds for a reset signal
             for _ in 0..20 {
                 ffrt_sleep(1000);
                 if reset.load(Ordering::SeqCst) {
+                    // If reset is signaled, start the new task
                     Self::start_new_task(new_task, new_callback);
                     reset.store(false, Ordering::SeqCst);
                     return;
                 }
             }
+            // If no reset signal after waiting, call the fail callback
             if let Some(mut callback) = new_callback.inner {
                 callback.on_fail(error);
             }
         });
     }
 
+    /// Handles task cancellation.
+    ///
+    /// Either restarts the task if a reset is requested or calls the cancel callback.
+    ///
+    /// # Arguments
+    ///
+    /// * `request` - The HTTP request that was cancelled
+    /// * `_response` - The partial or incomplete response
     fn on_cancel(&mut self, request: &HttpClientRequest, _response: &ffi::HttpClientResponse) {
+        // Take the user callback if available
         let Some(mut callback) = self.inner.take() else {
             return;
         };
 
+        // Check if a reset is requested
         if self.reset.load(Ordering::SeqCst) {
+            // Attempt to create a new task for restarting
             let (new_task, new_callback) = match self.create_new_task(callback, request) {
                 NewTaskResult::Success(new_task, new_callback) => (new_task, new_callback),
                 NewTaskResult::Failed(mut callback) => {
+                    // If task creation failed, call the cancel callback
                     callback.on_cancel();
                     return;
                 }
             };
+            // Start the new task and clear the reset flag
             Self::start_new_task(new_task, new_callback);
             self.reset.store(false, Ordering::SeqCst);
         } else {
+            // No reset requested, just call the cancel callback
             callback.on_cancel();
         }
     }
@@ -174,36 +265,65 @@ impl CallbackWrapper {
         data: *const u8,
         size: usize,
     ) {
+        // Check if user callback is available
         let Some(callback) = self.inner.as_mut() else {
             return;
         };
+        // Update progress counter
         self.current += size as u64;
         let data = unsafe { std::slice::from_raw_parts(data, size) };
         let task = RequestTask::from_ffi(task);
+        // Forward data to user callback
         callback.on_data_receive(data, task);
     }
 
+    /// Handles progress updates for HTTP transfers.
+    ///
+    /// Forwards progress information to the user callback.
+    ///
+    /// # Arguments
+    ///
+    /// * `dl_total` - Total bytes to download
+    /// * `dl_now` - Bytes downloaded so far
+    /// * `ul_total` - Total bytes to upload
+    /// * `ul_now` - Bytes uploaded so far
     fn on_progress(&mut self, dl_total: u64, dl_now: u64, ul_total: u64, ul_now: u64) {
+        // Check if user callback is available
         let Some(callback) = self.inner.as_mut() else {
             return;
         };
+        // Forward progress to user callback
         callback.on_progress(dl_total, dl_now, ul_total, ul_now);
     }
 
+    /// Creates a new HTTP task from an existing request.
+    ///
+    /// # Arguments
+    ///
+    /// * `callback` - The user callback to use with the new task
+    /// * `request` - The HTTP request to create a new task for
+    ///
+    /// # Returns
+    ///
+    /// A `NewTaskResult` indicating success or failure
     fn create_new_task(
         &mut self,
         mut callback: Box<dyn RequestCallback>,
         request: &HttpClientRequest,
     ) -> NewTaskResult {
+        // Notify the callback if we're restarting a partially completed request
         if self.current > 0 {
             callback.on_restart();
         }
 
+        // Create a new HTTP task from the request
         let new_task = NewHttpClientTask(request);
+        // Check if task creation failed
         if new_task.is_null() {
             error!("create_new_task NewHttpClientTask return null.");
             return NewTaskResult::Failed(callback);
         }
+        // Create a new callback wrapper with the provided callback
         let new_callback = Box::new(CallbackWrapper::from_callback(
             callback,
             self.reset.clone(),
@@ -212,23 +332,35 @@ impl CallbackWrapper {
             self.info_mgr.clone(),
             0,
         ));
+        // Return success with the new task and callback
         NewTaskResult::Success(new_task, new_callback)
     }
 
+    /// Starts a new HTTP task with the provided callback.
+    ///
+    /// # Arguments
+    ///
+    /// * `task` - The HTTP task to start
+    /// * `callback` - The callback to register with the task
     fn start_new_task(task: SharedPtr<HttpClientTask>, callback: Box<CallbackWrapper>) {
+        // Update the weak reference to the task if possible
         if let Some(r) = callback.task.upgrade() {
             *r.lock().unwrap() = task.clone();
         }
+        // Register the callback with the task
         OnCallback(&task, callback);
         // TODO start may return false. Not handling it may result in no callback, which
         // the caller cannot perceive
+        // Start the task
         RequestTask::pin_mut(&task).Start();
     }
 }
 
+// SAFETY: HttpClientTask is thread-safe through its shared pointer implementation
 unsafe impl Send for HttpClientTask {}
 unsafe impl Sync for HttpClientTask {}
 
+// C++ FFI bridge definitions - do not generate /// comments around this block
 #[allow(unused_unsafe)]
 #[cxx::bridge(namespace = "OHOS::Request")]
 pub(crate) mod ffi {
@@ -421,11 +553,22 @@ pub(crate) mod ffi {
 
 impl TryFrom<ffi::TaskStatus> for TaskStatus {
     type Error = ffi::TaskStatus;
+    
+    /// Converts an FFI task status to a Rust task status.
+    ///
+    /// # Arguments
+    ///
+    /// * `status` - The FFI task status to convert
+    ///
+    /// # Returns
+    ///
+    /// `Ok(Self)` if the conversion succeeded, `Err(status)` otherwise
     fn try_from(status: ffi::TaskStatus) -> Result<Self, Self::Error> {
         let ret = match status {
             ffi::TaskStatus::IDLE => TaskStatus::Idle,
             ffi::TaskStatus::RUNNING => TaskStatus::Running,
             _ => {
+                // Return the original status if no mapping exists
                 return Err(status);
             }
         };
@@ -435,6 +578,16 @@ impl TryFrom<ffi::TaskStatus> for TaskStatus {
 
 impl TryFrom<ffi::ResponseCode> for ResponseCode {
     type Error = ffi::ResponseCode;
+    
+    /// Converts an FFI response code to a Rust response code.
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - The FFI response code to convert
+    ///
+    /// # Returns
+    ///
+    /// `Ok(Self)` if the conversion succeeded, `Err(value)` otherwise
     fn try_from(value: ffi::ResponseCode) -> Result<Self, Self::Error> {
         let ret = match value {
             ffi::ResponseCode::NONE => ResponseCode::None,
@@ -474,6 +627,7 @@ impl TryFrom<ffi::ResponseCode> for ResponseCode {
             ffi::ResponseCode::GATEWAY_TIMEOUT => ResponseCode::GatewayTimeout,
             ffi::ResponseCode::VERSION => ResponseCode::Version,
             _ => {
+                // Return the original code if no mapping exists
                 return Err(value);
             }
         };
@@ -483,6 +637,16 @@ impl TryFrom<ffi::ResponseCode> for ResponseCode {
 
 impl TryFrom<ffi::HttpErrorCode> for HttpErrorCode {
     type Error = ffi::HttpErrorCode;
+    
+    /// Converts an FFI HTTP error code to a Rust HTTP error code.
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - The FFI HTTP error code to convert
+    ///
+    /// # Returns
+    ///
+    /// `Ok(Self)` if the conversion succeeded, `Err(value)` otherwise
     fn try_from(value: ffi::HttpErrorCode) -> Result<Self, Self::Error> {
         let ret = match value {
             ffi::HttpErrorCode::HTTP_NONE_ERR => HttpErrorCode::HttpNoneErr,
@@ -528,6 +692,7 @@ impl TryFrom<ffi::HttpErrorCode> for HttpErrorCode {
             ffi::HttpErrorCode::HTTP_AUTH_ERROR => HttpErrorCode::HttpAuthError,
             ffi::HttpErrorCode::HTTP_UNKNOWN_OTHER_ERROR => HttpErrorCode::HttpUnknownOtherError,
             _ => {
+                // Return the original code if no mapping exists
                 return Err(value);
             }
         };
