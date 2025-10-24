@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Task information and state management.
+//! 
+//! This module defines structures and enums for representing task states, progress,
+//! notifications, and detailed task information used throughout the request system.
+
 use std::collections::HashMap;
 
 use ipc::parcel::Deserialize;
@@ -18,33 +23,41 @@ use ipc::parcel::Deserialize;
 use crate::config::{Action, FormItem, Mode, Version};
 use crate::file::FileSpec;
 
-#[derive(Clone)]
+/// Enumeration of possible task states.
+///
+/// Represents the lifecycle stages of a network task, from initialization through execution
+/// to completion or failure.
+#[derive(Clone, Debug)]
 #[repr(u32)]
-#[derive(Debug)]
 pub enum State {
-    /// Initialized
+    /// Task has been initialized but not yet scheduled.
     Initialized = 0x00,
-    /// Waiting
+    /// Task is waiting to be executed.
     Waiting = 0x10,
-    /// Running
+    /// Task is currently being executed.
     Running = 0x20,
-    /// Retrying
+    /// Task is retrying after a previous failure.
     Retrying = 0x21,
-    /// Paused
+    /// Task execution has been temporarily paused.
     Paused = 0x30,
-    /// Stopped
+    /// Task execution has been permanently stopped.
     Stopped = 0x31,
-    /// Completed
+    /// Task has completed successfully.
     Completed = 0x40,
-    /// Failed
+    /// Task has failed to complete.
     Failed = 0x41,
-    /// Removed
+    /// Task has been removed from the system.
     Removed = 0x50,
-    /// Any
+    /// Special value representing any state in filter operations.
     Any = 0x61,
 }
 
 impl From<u32> for State {
+    /// Converts a u32 value to a `State` enum variant.
+    ///
+    /// # Notes
+    ///
+    /// Any value that doesn't match a defined state will be mapped to `State::Any`.
     fn from(value: u32) -> Self {
         match value {
             0x00 => State::Initialized,
@@ -61,21 +74,36 @@ impl From<u32> for State {
     }
 }
 
+/// Types of notifications that can be subscribed to for task events.
 #[repr(u32)]
 #[derive(Debug)]
 pub enum SubscribeType {
+    /// Task has completed successfully.
     Completed = 0,
+    /// Task has failed to complete.
     Failed,
+    /// HTTP headers have been received.
     HeaderReceive,
+    /// Task execution has been paused.
     Pause,
+    /// Progress update for the task.
     Progress,
+    /// Task has been removed.
     Remove,
+    /// Task execution has been resumed.
     Resume,
+    /// HTTP response has been received.
     Response,
+    /// Marker for the end of the enum.
     Butt,
 }
 
 impl From<u32> for SubscribeType {
+    /// Converts a u32 value to a `SubscribeType` enum variant.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is not a valid `SubscribeType` variant.
     fn from(value: u32) -> Self {
         match value {
             0 => SubscribeType::Completed,
@@ -92,94 +120,183 @@ impl From<u32> for SubscribeType {
     }
 }
 
+/// HTTP response information.
+///
+/// Contains the status code, headers, and other metadata from an HTTP response.
 #[derive(Debug)]
 pub struct Response {
+    /// Unique identifier of the task associated with this response.
     pub task_id: String,
+    /// Version identifier of the response format.
     pub version: String,
+    /// HTTP status code returned by the server.
     pub status_code: i32,
+    /// Textual reason phrase associated with the status code.
     pub reason: String,
+    /// HTTP headers returned by the server.
     pub headers: HashMap<String, Vec<String>>,
 }
 
+/// Status information for a specific task file.
 #[derive(Debug)]
 pub struct TaskState {
+    /// Path to the file being processed.
     pub path: String,
+    /// HTTP response code for this file.
     pub response_code: u32,
+    /// Additional status message for this file.
     pub message: String,
 }
 
+/// Progress information for a task.
+///
+/// Contains current state, processed bytes, and other progress metrics.
 #[derive(Debug)]
 pub struct Progress {
+    /// Current state of the task.
     pub state: State,
+    /// Index of the current file being processed.
     pub index: u32,
+    /// Number of bytes processed in the current file.
     pub processed: u64,
+    /// Total number of bytes processed across all files.
     pub total_processed: u64,
+    /// Sizes of all files in the task (in bytes).
     pub sizes: Vec<i64>,
+    /// Additional progress-related metadata.
     pub extras: HashMap<String, String>,
 }
 
+/// Data structure for task notifications.
+///
+/// Combines subscription type, task identifier, progress information,
+/// and additional task details.
 #[derive(Debug)]
 pub struct NotifyData {
+    /// Type of notification being sent.
     pub subscribe_type: SubscribeType,
+    /// Unique identifier of the task.
     pub task_id: u32,
+    /// Current progress information for the task.
     pub progress: Progress,
-
+    /// Action type of the task.
     pub action: Action,
+    /// Version of the task protocol.
     pub version: Version,
+    /// Status information for each file in the task.
     pub task_states: Vec<TaskState>,
 }
 
+/// Detailed progress information for a task.
 #[derive(Clone, Debug)]
 pub struct InfoProgress {
+    /// Common progress data shared across different progress representations.
     pub common_data: CommonProgress,
-    /// Total size of the files.
+    /// Total size of the files (in bytes).
     pub sizes: Vec<i64>,
-    /// Each progress size of the files.
+    /// Processed size for each individual file (in bytes).
     pub processed: Vec<usize>,
+    /// Additional progress-related metadata.
     pub extras: HashMap<String, String>,
 }
 
+/// Common progress data shared across different progress representations.
 #[derive(Clone, Debug)]
 pub struct CommonProgress {
+    /// Current state of the task (as a numeric value).
     pub state: u8,
+    /// Index of the current file being processed.
     pub index: usize,
+    /// Total number of bytes processed across all files.
     pub total_processed: usize,
 }
 
+/// Core task information with minimal overhead.
+///
+/// Contains essential task metadata needed for quick task identification and management.
 #[derive(Copy, Clone, Debug)]
 pub struct CommonTaskInfo {
+    /// Unique identifier of the task.
     pub task_id: u32,
+    /// User ID of the task owner.
     pub uid: u64,
+    /// Action type of the task (as a numeric value).
     pub action: u8,
+    /// Operating mode of the task (as a numeric value).
     pub mode: u8,
+    /// Creation time of the task (Unix timestamp).
     pub ctime: u64,
+    /// Last modification time of the task (Unix timestamp).
     pub mtime: u64,
+    /// Reason code for the current state.
     pub reason: u8,
+    /// Whether the task progress can be accurately measured.
     pub gauge: bool,
+    /// Whether the task will automatically retry on failure.
     pub retry: bool,
+    /// Number of retry attempts made so far.
     pub tries: u32,
+    /// Protocol version of the task.
     pub version: u8,
+    /// Priority level of the task.
     pub priority: u32,
 }
 
+/// Comprehensive information about a network task.
+///
+/// Contains all details needed to represent and manage a network task,
+/// including configuration, state, and progress information.
+///
+/// # Examples
+///
+/// ```rust
+/// use request_core::{info::TaskInfo, file::FileSpec};
+/// 
+/// // Access task details
+/// fn process_task_info(task_info: &TaskInfo) {
+///     println!("Task ID: {}", task_info.common_data.task_id);
+///     println!("URL: {}", task_info.url);
+///     println!("Progress: {}/{}", 
+///              task_info.progress.common_data.total_processed,
+///              task_info.progress.sizes.iter().sum::<i64>());
+/// }
+/// ```
 #[derive(Debug, Clone)]
 pub struct TaskInfo {
+    /// Bundle name of the task owner.
     pub bundle: String,
+    /// URL of the network request.
     pub url: String,
+    /// Request body data.
     pub data: String,
+    /// Authentication token.
     pub token: String,
+    /// Form data items for the request.
     pub form_items: Vec<FormItem>,
+    /// File specifications for uploads or downloads.
     pub file_specs: Vec<FileSpec>,
+    /// User-visible title of the task.
     pub title: String,
+    /// User-visible description of the task.
     pub description: String,
+    /// MIME type of the request or response.
     pub mime_type: String,
+    /// Progress information for the task.
     pub progress: InfoProgress,
+    /// Additional task metadata.
     pub extras: HashMap<String, String>,
+    /// Common task information.
     pub common_data: CommonTaskInfo,
+    /// Maximum allowed transfer speed (bytes per second).
     pub max_speed: i64,
 }
 
 impl Deserialize for TaskInfo {
+    /// Deserializes a `TaskInfo` from an IPC parcel.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if deserialization fails for any reason.
     fn deserialize(parcel: &mut ipc::parcel::MsgParcel) -> ipc::IpcResult<Self> {
         let gauge = parcel.read::<bool>().unwrap();
         let retry = parcel.read::<bool>().unwrap();
@@ -187,10 +304,16 @@ impl Deserialize for TaskInfo {
         let mode = parcel.read::<u32>().unwrap() as u8;
         let reason = parcel.read::<u32>().unwrap() as u8;
         let tries = parcel.read::<u32>().unwrap();
+        
+        // Parse user ID from string representation
         let uid = parcel.read::<String>().unwrap().parse::<u64>().unwrap_or(0);
+        
         let bundle = parcel.read::<String>().unwrap();
         let url = parcel.read::<String>().unwrap();
+        
+        // Parse task ID from string representation
         let task_id = parcel.read::<String>().unwrap().parse::<u32>().unwrap_or(0);
+        
         let title = parcel.read::<String>().unwrap();
         let mime_type = parcel.read::<String>().unwrap();
         let ctime = parcel.read::<u64>().unwrap();
@@ -198,6 +321,8 @@ impl Deserialize for TaskInfo {
         let data = parcel.read::<String>().unwrap();
         let description = parcel.read::<String>().unwrap();
         let priority = parcel.read::<u32>().unwrap();
+        
+        // Read form items
         let form_items_len = parcel.read::<u32>().unwrap() as usize;
         let mut form_items = Vec::with_capacity(form_items_len);
         for _ in 0..form_items_len {
@@ -206,6 +331,7 @@ impl Deserialize for TaskInfo {
             form_items.push(FormItem { name, value });
         }
 
+        // Read file specifications
         let file_specs_len = parcel.read::<u32>().unwrap() as usize;
         let mut file_specs = Vec::with_capacity(file_specs_len);
         for _ in 0..file_specs_len {
@@ -223,12 +349,14 @@ impl Deserialize for TaskInfo {
             });
         }
 
+        // Read progress information
         let state = parcel.read::<u32>().unwrap() as u8;
         let index = parcel.read::<u32>().unwrap() as usize;
         let processed = parcel.read::<u64>().unwrap() as usize;
         let total_processed = parcel.read::<u64>().unwrap() as usize;
         let sizes = parcel.read::<Vec<i64>>().unwrap();
 
+        // Read progress extras
         let extras_len = parcel.read::<u32>().unwrap() as usize;
         let mut progress_extras = HashMap::with_capacity(extras_len);
         for _ in 0..extras_len {
@@ -237,6 +365,7 @@ impl Deserialize for TaskInfo {
             progress_extras.insert(key, value);
         }
 
+        // Read task extras
         let extras_len = parcel.read::<u32>().unwrap() as usize;
         let mut extras = HashMap::with_capacity(extras_len);
         for _ in 0..extras_len {
@@ -245,8 +374,10 @@ impl Deserialize for TaskInfo {
             extras.insert(key, value);
         }
 
+        // Read protocol version
         let version = parcel.read::<u32>().unwrap() as u8;
 
+        // Read task states for individual files
         let each_file_status_len = parcel.read::<u32>().unwrap() as usize;
         let mut task_states = Vec::with_capacity(each_file_status_len);
         for _ in 0..each_file_status_len {
@@ -260,6 +391,7 @@ impl Deserialize for TaskInfo {
             });
         }
 
+        // Construct common task information
         let common_data = CommonTaskInfo {
             task_id,
             uid,
@@ -274,6 +406,8 @@ impl Deserialize for TaskInfo {
             version,
             priority,
         };
+        
+        // Construct progress information
         let progress = InfoProgress {
             common_data: CommonProgress {
                 state,
@@ -284,6 +418,8 @@ impl Deserialize for TaskInfo {
             processed: vec![processed; file_specs.len()],
             extras: progress_extras,
         };
+        
+        // Return constructed TaskInfo
         Ok(TaskInfo {
             bundle,
             url,
