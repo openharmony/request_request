@@ -12,12 +12,9 @@
 // limitations under the License.
 
 //! Validation utilities for request operations.
-//! 
+//!
 //! This module provides utilities for validating various aspects of download/upload
 //! requests, including file path validation and permission checking.
 
 /// File path validation utilities.
 pub mod file;
-
-/// Permission checking utilities for request operations.
-pub mod permission;

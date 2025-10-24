@@ -23,6 +23,7 @@
 #include "openssl/sha.h"
 
 namespace OHOS::Request {
+
 rust::string GetCacheDir()
 {
     auto context = Context::GetApplicationContext();

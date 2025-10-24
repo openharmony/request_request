@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Configuration types for network tasks.
-//! 
+//!
 //! This module provides structures and enums for configuring network operations,
 //! including download and upload tasks, with various options for controlling
 //! behavior, network preferences, and file handling.
@@ -88,21 +88,29 @@ pub struct TaskConfigBuilder {
     version: Version,
     url: Option<String>,
     headers: Option<HashMap<String, String>>,
-    
+
     // network configuration
     enable_metered: Option<bool>,
     enable_roaming: Option<bool>,
     network_type: Option<NetworkConfig>,
-    
+
     // description of the task
     description: Option<String>,
     title: Option<String>,
-    
+
     // task config
     background: Option<bool>,
-    
+
     // file
     file_path: Option<String>,
+
+    method: Option<String>,
+    index: Option<i64>,
+    begins: Option<i64>,
+    ends: Option<i64>,
+    files: Option<Vec<FileSpec>>,
+    data: Option<Vec<FormItem>>,
+    action: Action,
 }
 
 impl TaskConfigBuilder {
@@ -119,6 +127,13 @@ impl TaskConfigBuilder {
             title: None,
             background: None,
             file_path: None,
+            method: None,
+            index: None,
+            begins: None,
+            ends: None,
+            files: None,
+            data: None,
+            action: Action::Download,
         }
     }
 
@@ -176,6 +191,41 @@ impl TaskConfigBuilder {
         self
     }
 
+    pub fn method(&mut self, method: String) -> &mut Self {
+        self.method = Some(method);
+        self
+    }
+
+    pub fn index(&mut self, index: i64) -> &mut Self {
+        self.index = Some(index);
+        self
+    }
+
+    pub fn begins(&mut self, begins: i64) -> &mut Self {
+        self.begins = Some(begins);
+        self
+    }
+
+    pub fn ends(&mut self, ends: i64) -> &mut Self {
+        self.ends = Some(ends);
+        self
+    }
+
+    pub fn files(&mut self, files: Vec<FileSpec>) -> &mut Self {
+        self.files = Some(files);
+        self
+    }
+
+    pub fn data(&mut self, data: Vec<FormItem>) -> &mut Self {
+        self.data = Some(data);
+        self
+    }
+
+    pub fn action(&mut self, action: Action) -> &mut Self {
+        self.action = action;
+        self
+    }
+
     /// Constructs a `TaskConfig` with the current builder configuration.
     ///
     /// # Notes
@@ -189,7 +239,7 @@ impl TaskConfigBuilder {
             url: self.url.unwrap_or_default(),
             title: self.title.unwrap_or_default(),
             description: self.description.unwrap_or_default(),
-            method: "GET".to_string(),
+            method: self.method.unwrap_or("GET".to_string()),
             headers: self.headers.unwrap_or_default(),
             data: "".to_string(),
             token: "".to_string(),
@@ -197,25 +247,25 @@ impl TaskConfigBuilder {
             certificate_pins: "".to_string(),
             extras: HashMap::new(),
             version: self.version,
-            form_items: vec![],
-            file_specs: vec![],
+            form_items: self.data.unwrap_or(vec![]),
+            file_specs: self.files.unwrap_or(vec![]),
             body_file_paths: vec![],
             certs_path: vec![],
             common_data: CommonTaskConfig {
                 task_id: 0,
                 uid: 0,
                 token_id: 0,
-                action: Action::Download,
+                action: self.action,
                 mode: Mode::FrontEnd,
                 cover: false,
                 network_config: NetworkConfig::Any,
                 metered: self.enable_metered.unwrap_or(false),
                 roaming: self.enable_roaming.unwrap_or(false),
                 retry: false,
-                redirect: false,
-                index: 0,
-                begins: 0,
-                ends: -1,
+                redirect: true,
+                index: self.index.unwrap_or(0i64) as u32,
+                begins: self.begins.unwrap_or(0i64) as u64,
+                ends: self.ends.unwrap_or(-1),
                 gauge: false,
                 precise: false,
                 priority: 0,
@@ -256,13 +306,13 @@ impl ipc::parcel::Serialize for TaskConfig {
         parcel.write(&self.common_data.gauge)?;
         parcel.write(&self.common_data.precise)?;
         parcel.write(&self.common_data.priority)?;
-        
+
         // Write placeholders for future fields
         parcel.write(&0i64)?;
         parcel.write(&0i64)?;
         parcel.write(&0u64)?;
         parcel.write(&0u64)?;
-        
+
         // Serialize basic string fields
         parcel.write(&self.url)?;
         parcel.write(&self.title)?;
@@ -285,7 +335,7 @@ impl ipc::parcel::Serialize for TaskConfig {
             parcel.write(&form_item.name)?;
             parcel.write(&form_item.value)?;
         }
-        
+
         // Serialize file specifications
         parcel.write(&(self.file_specs.len() as u32))?;
         for file_spec in &self.file_specs {
@@ -307,7 +357,7 @@ impl ipc::parcel::Serialize for TaskConfig {
         for body_file_paths in self.body_file_paths.iter() {
             parcel.write(body_file_paths)?;
         }
-        
+
         // Serialize HTTP headers
         parcel.write(&(self.headers.len() as u32))?;
         for header in self.headers.iter() {

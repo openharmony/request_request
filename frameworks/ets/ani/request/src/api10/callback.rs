@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Callback module for API 10.
-//! 
+//!
 //! This module provides callback registration and management functionality for request tasks
 //! in API 10, allowing clients to receive notifications about task events such as progress,
 //! completion, failure, and more.
@@ -23,7 +23,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 use ani_rs::objects::{AniFnObject, GlobalRefCallback};
 use ani_rs::AniEnv;
 use request_client::RequestClient;
-use request_core::info::{Progress, Response};
+use request_core::info::{Progress, Response, Faults};
 
 use crate::api10::bridge::{self, Task};
 
@@ -48,7 +48,7 @@ use crate::api10::bridge::{self, Task};
 /// use ani_rs::objects::AniFnObject;
 /// use request_api10::api10::bridge::Task;
 /// use request_api10::api10::callback::on_event;
-/// 
+///
 /// // Assuming env, task, and callback are properly initialized
 /// match on_event(&env, task, "progress".to_string(), callback) {
 ///     Ok(_) => println!("Progress callback registered successfully"),
@@ -67,7 +67,7 @@ pub fn on_event(
     info!("on_event called with event: {}", event);
     let callback_mgr = CallbackManager::get_instance();
     let callback = callback.into_global_callback(env).unwrap();
-    
+
     // Determine which callback collection to use based on event type
     let coll = match event.as_str() {
         "completed" => {
@@ -85,6 +85,7 @@ pub fn on_event(
                     on_remove: Mutex::new(vec![]),
                     on_fail: Mutex::new(vec![]),
                     on_response: Mutex::new(vec![]),
+                    on_fault: Mutex::new(vec![]),
                 })
             }
         }
@@ -101,6 +102,7 @@ pub fn on_event(
                     on_remove: Mutex::new(vec![]),
                     on_fail: Mutex::new(vec![]),
                     on_response: Mutex::new(vec![]),
+                    on_fault: Mutex::new(vec![]),
                 })
             }
         }
@@ -117,6 +119,7 @@ pub fn on_event(
                     on_remove: Mutex::new(vec![]),
                     on_fail: Mutex::new(vec![callback]),
                     on_response: Mutex::new(vec![]),
+                    on_fault: Mutex::new(vec![]),
                 })
             }
         }
@@ -133,6 +136,7 @@ pub fn on_event(
                     on_remove: Mutex::new(vec![callback]),
                     on_fail: Mutex::new(vec![]),
                     on_response: Mutex::new(vec![]),
+                    on_fault: Mutex::new(vec![]),
                 })
             }
         }
@@ -149,6 +153,7 @@ pub fn on_event(
                     on_remove: Mutex::new(vec![]),
                     on_fail: Mutex::new(vec![]),
                     on_response: Mutex::new(vec![]),
+                    on_fault: Mutex::new(vec![]),
                 })
             }
         }
@@ -165,13 +170,14 @@ pub fn on_event(
                     on_remove: Mutex::new(vec![]),
                     on_fail: Mutex::new(vec![]),
                     on_response: Mutex::new(vec![]),
+                    on_fault: Mutex::new(vec![]),
                 })
             }
         }
         // Handle unknown event types
-        _ => unimplemented!(),
+        _ => unimplemented!()
     };
-    
+
     // Register callback with request client and add to manager
     RequestClient::get_instance().register_callback(task_id, coll.clone());
     callback_mgr.tasks.lock().unwrap().insert(task_id, coll);
@@ -199,7 +205,7 @@ pub fn on_event(
 /// use ani_rs::objects::AniFnObject;
 /// use request_api10::api10::bridge::Task;
 /// use request_api10::api10::callback::on_response_event;
-/// 
+///
 /// // Assuming env, task, and callback are properly initialized
 /// match on_response_event(&env, task, "response".to_string(), callback) {
 ///     Ok(_) => println!("Response callback registered successfully"),
@@ -218,7 +224,7 @@ pub fn on_response_event(
     info!("on_event called with event: {}", event);
     let callback_mgr = CallbackManager::get_instance();
     let callback = callback.into_global_callback(env).unwrap();
-    
+
     // Handle response event type
     let coll = match event.as_str() {
         "response" => {
@@ -236,23 +242,147 @@ pub fn on_response_event(
                     on_remove: Mutex::new(vec![]),
                     on_fail: Mutex::new(vec![]),
                     on_response: Mutex::new(vec![callback]),
+                    on_fault: Mutex::new(vec![]),
                 })
             }
         }
         // Handle unknown event types
-        _ => unimplemented!(),
+        _ => unimplemented!()
     };
-    
+    RequestClient::get_instance().register_callback(task_id, coll.clone());
+    callback_mgr.tasks.lock().unwrap().insert(task_id, coll);
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn on_fault_event(
+    env: &AniEnv,
+    this: Task,
+    event: String,
+    callback: AniFnObject,
+) -> Result<(), ani_rs::business_error::BusinessError> {
+    let task_id = this.tid.parse().unwrap();
+    info!("on_fault_event called with event: {}", event);
+    let callback_mgr = CallbackManager::get_instance();
+    let callback = callback.into_global_callback(env).unwrap();
+    let coll = match event.as_str() {
+        "faultOccur" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_fault.lock().unwrap().push(callback);
+                return Ok(());
+            } else {
+                Arc::new(CallbackColl {
+                    on_progress: Mutex::new(vec![]),
+                    on_complete: Mutex::new(vec![]),
+                    on_pause: Mutex::new(vec![]),
+                    on_resume: Mutex::new(vec![]),
+                    on_remove: Mutex::new(vec![]),
+                    on_fail: Mutex::new(vec![]),
+                    on_response: Mutex::new(vec![]),
+                    on_fault: Mutex::new(vec![callback]),
+                })
+            }
+        }
+        _ => unimplemented!()
+    };
+
     // Register callback with request client and add to manager
     RequestClient::get_instance().register_callback(task_id, coll.clone());
     callback_mgr.tasks.lock().unwrap().insert(task_id, coll);
     Ok(())
 }
 
-/// Collection of callbacks for different task events.
-///
-/// Manages callbacks for various task events including progress updates,
-/// completion, pause, resume, removal, failure, and HTTP responses.
+#[ani_rs::native]
+pub fn off_event(
+    env: &AniEnv,
+    this: Task,
+    event: String,
+    callback: AniFnObject,
+) -> Result<(), ani_rs::business_error::BusinessError> {
+    let task_id = this.tid.parse().unwrap();
+    info!("off_event called with event: {}", event);
+    let callback_mgr = CallbackManager::get_instance();
+    let callback: GlobalRefCallback<(bridge::Progress,)> = callback.into_global_callback(env).unwrap();
+    match event.as_str() {
+        "completed" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_complete.lock().unwrap().retain(|x| *x != callback);
+            }
+        }
+        "pause" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_pause.lock().unwrap().retain(|x| *x != callback);
+            }
+        }
+        "failed" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_fail.lock().unwrap().retain(|x| *x != callback);
+            }
+        }
+        "remove" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_remove.lock().unwrap().retain(|x| *x != callback);
+            }
+        }
+        "progress" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_progress.lock().unwrap().retain(|x| *x != callback);
+            }
+        }
+        "resume" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_resume.lock().unwrap().retain(|x| *x != callback);
+            }
+        }
+        _ => unimplemented!()
+    };
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn off_response_event(
+    env: &AniEnv,
+    this: Task,
+    event: String,
+    callback: AniFnObject,
+) -> Result<(), ani_rs::business_error::BusinessError> {
+    let task_id = this.tid.parse().unwrap();
+    info!("off_response_event called with event: {}", event);
+    let callback_mgr = CallbackManager::get_instance();
+    let callback = callback.into_global_callback(env).unwrap();
+    match event.as_str() {
+        "response" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_response.lock().unwrap().retain(|x| *x != callback);
+            }
+        }
+        _ => unimplemented!()
+    };
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn off_fault_event(
+    env: &AniEnv,
+    this: Task,
+    event: String,
+    callback: AniFnObject,
+) -> Result<(), ani_rs::business_error::BusinessError> {
+    let task_id = this.tid.parse().unwrap();
+    info!("off_fault_event called with event: {}", event);
+    let callback_mgr = CallbackManager::get_instance();
+    let callback = callback.into_global_callback(env).unwrap();
+    match event.as_str() {
+        "faultOccur" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_fault.lock().unwrap().retain(|x| *x != callback);
+            }
+        }
+        _ => unimplemented!()
+    };
+    Ok(())
+}
+
 pub struct CallbackColl {
     /// Callbacks to be executed on progress updates.
     on_progress: Mutex<Vec<GlobalRefCallback<(bridge::Progress,)>>>,
@@ -268,6 +398,7 @@ pub struct CallbackColl {
     on_fail: Mutex<Vec<GlobalRefCallback<(bridge::Progress,)>>>,
     /// Callbacks to be executed when HTTP response is received.
     on_response: Mutex<Vec<GlobalRefCallback<(bridge::HttpResponse,)>>>,
+    on_fault: Mutex<Vec<GlobalRefCallback<(bridge::Faults,)>>>,
 }
 
 impl request_client::Callback for CallbackColl {
@@ -356,6 +487,13 @@ impl request_client::Callback for CallbackColl {
         let callbacks = self.on_fail.lock().unwrap();
         for callback in callbacks.iter() {
             callback.execute((progress.into(),));
+        }
+    }
+
+    fn on_fault(&self, faults: Faults) {
+        let callbacks = self.on_fault.lock().unwrap();
+        for callback in callbacks.iter() {
+            callback.execute((faults.into(),));
         }
     }
 }

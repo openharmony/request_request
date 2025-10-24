@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Request service ANI (Ark Native Interface) implementation.
-//! 
+//!
 //! This crate provides the native implementation of the request service API
 //! for the OpenHarmony operating system, supporting both API version 9 and API version 10.
 //! It includes functionality for download and upload tasks, task management,
@@ -52,19 +52,28 @@ ani_constructor!(
     // API 9 DownloadTaskInner class method bindings
     class "L@ohos/request/request/DownloadTaskInner"
     [
-        "onProgress": api9::callback::on_progress,                      // Progress callback registration
-        "onEvent": api9::callback::on_event,                            // Event callback registration
-        "onFail": api9::callback::on_fail,                              // Failure callback registration
-        "deleteSync": api9::download::delete,                           // Delete download task
-        "suspendSync": api9::download::suspend,                         // Suspend download task
-        "restoreSync": api9::download::restore,                         // Resume download task
-        "getTaskInfoSync": api9::download::get_task_info,               // Get task information
-        "getTaskMimeTypeSync": api9::download::get_task_mime_type,       // Get task MIME type
+        "onProgressInner": api9::callback::on_progress,
+        "onEvent": api9::callback::on_event,
+        "onFailInner": api9::callback::on_fail,
+        "offProgressInner": api9::callback::off_progress,
+        "offEvent": api9::callback::off_event,
+        "offFailInner": api9::callback::off_fail,
+        "deleteSync": api9::download::delete,
+        "suspendSync": api9::download::suspend,
+        "restoreSync": api9::download::restore,
+        "getTaskInfoSync": api9::download::get_task_info,
+        "getTaskMimeTypeSync": api9::download::get_task_mime_type,
     ]
     // API 9 UploadTaskInner class method bindings
     class "L@ohos/request/request/UploadTaskInner"
     [
-        "deleteSync": api9::upload::delete, // Delete upload task
+        "deleteSync": api9::upload::delete,
+        "onProgressInner": api9::callback::on_progress_uploadtask,
+        "onEventInner": api9::callback::on_event_uploadtask,
+        "onHeaderReceiveInner": api9::callback::on_header_receive,
+        "offProgressInner": api9::callback::off_progress_uploadtask,
+        "offEventInner": api9::callback::off_event_uploadtask,
+        "offHeaderReceiveInner": api9::callback::off_header_receive,
     ]
     // API 10 namespace bindings for agent operations
     namespace "L@ohos/request/request/agent"
@@ -83,13 +92,18 @@ ani_constructor!(
     // API 10 TaskInner class method bindings
     class "L@ohos/request/request/agent/TaskInner"
     [
-        "startSync": api10::task::start,                       // Start task
-        "pauseSync": api10::task::pause,                       // Pause task
-        "resumeSync": api10::task::resume,                     // Resume task
-        "stopSync": api10::task::stop,                         // Stop task
-        "onEvent": api10::callback::on_event,                  // Register event callback
-        "onResponseEvent": api10::callback::on_response_event, // Register response event callback
-        "setMaxSpeedSync": api10::task::set_max_speed,         // Set task speed limit
+        "startSync": api10::task::start,
+        "pauseSync": api10::task::pause,
+        "resumeSync": api10::task::resume,
+        "stopSync": api10::task::stop,
+        "onEvent": api10::callback::on_event,
+        "onResponseEvent": api10::callback::on_response_event,
+        "onFaultEvent": api10::callback::on_fault_event,
+        "setMaxSpeedSync": api10::task::set_max_speed,
+        "offEvent": api10::callback::off_event,
+        "offResponseEvent": api10::callback::off_response_event,
+        "offFaultEvent": api10::callback::off_fault_event,
+
     ]
 );
 
@@ -102,7 +116,7 @@ static A: extern "C" fn() = {
     extern "C" fn init() {
         // Log service initialization
         info!("begin request service init");
-        
+
         // Set up panic hook to log panic information
         // This ensures that panics are logged rather than silently terminating the process
         std::panic::set_hook(Box::new(|info| {

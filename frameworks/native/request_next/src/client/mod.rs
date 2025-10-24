@@ -12,13 +12,13 @@
 // limitations under the License.
 
 //! Client API for managing download tasks.
-//! 
+//!
 //! This module provides a high-level interface for creating, controlling, and monitoring
 //! download tasks. It implements a singleton pattern for access to the request service
 //! and handles communication through the request proxy.
-//! 
+//!
 //! # Examples
-//! 
+//!
 //! ```rust
 //! use std::sync::Arc;
 //! use request_utils::context::Context;
@@ -26,34 +26,34 @@
 //! use request_core::filter::SearchFilter;
 //! use request_next::client::RequestClient;
 //! use request_next::Callback;
-//! 
+//!
 //! // Define a callback to receive download notifications
 //! struct MyCallback;
-//! 
+//!
 //! impl Callback for MyCallback {
 //!     fn on_progress(&self, task_id: i64, current: i64, total: i64) {
 //!         println!("Download progress: {}/{} bytes", current, total);
 //!     }
-//!     
+//!
 //!     fn on_complete(&self, task_id: i64) {
 //!         println!("Download completed!");
 //!     }
-//!     
+//!
 //!     fn on_failed(&self, task_id: i64, error_code: i32) {
 //!         println!("Download failed with code: {}", error_code);
 //!     }
 //! }
-//! 
+//!
 //! fn manage_downloads() {
 //!     // Get the singleton client instance
 //!     let client = RequestClient::get_instance();
-//!     
+//!
 //!     // Create and configure a download task
 //!     let context = Context::new();
 //!     let mut config = TaskConfig::new();
 //!     config.url = "https://example.com/large-file.iso".to_string();
 //!     config.add_header("User-Agent", "MyApp/1.0");
-//!     
+//!
 //!     // Create the task
 //!     match client.crate_task(
 //!         context,
@@ -64,26 +64,26 @@
 //!     ) {
 //!         Ok(task_id) => {
 //!             println!("Created task with ID: {}", task_id);
-//!             
+//!
 //!             // Register for progress updates
 //!             client.register_callback(task_id, Arc::new(MyCallback));
-//!             
+//!
 //!             // Start the download
 //!             if let Err(err) = client.start(task_id) {
 //!                 println!("Failed to start task: {}", err);
 //!                 return;
 //!             }
-//!             
+//!
 //!             // ... later, if needed
 //!             // Pause the download
 //!             // client.pause(task_id).unwrap();
-//!             
+//!
 //!             // Resume the download
 //!             // client.resume(task_id).unwrap();
-//!             
+//!
 //!             // Limit download speed to 1MB/s
 //!             // client.set_max_speed(task_id, 1_048_576).unwrap();
-//!             
+//!
 //!             // Get task information
 //!             if let Ok(info) = client.show_task(task_id) {
 //!                 println!("Task info: {:?}", info);
@@ -93,7 +93,7 @@
 //!             println!("Failed to create task: {:?}", e);
 //!         }
 //!     }
-//!     
+//!
 //!     // Search for tasks
 //!     let filter = SearchFilter::new();
 //!     if let Ok(task_ids) = client.search(filter) {
@@ -109,7 +109,7 @@ pub mod error;
 use std::sync::{Arc, OnceLock};
 
 // External dependencies
-use request_core::config::{TaskConfig, Version};
+use request_core::config::{TaskConfig, Version, Action};
 use request_core::error_code::CHANNEL_NOT_OPEN;
 use request_core::file::FileSpec;
 use request_core::filter::SearchFilter;
@@ -190,7 +190,7 @@ impl<'a> RequestClient<'a> {
     /// # Errors
     /// - `CreateTaskError::DownloadPath`: If path validation fails
     /// - `CreateTaskError::Code`: If task creation fails for other reasons
-    /// 
+    ///
     /// # Notes
     /// The function name contains a typo (`crate_task` instead of `create_task`).
     ///
@@ -209,11 +209,11 @@ impl<'a> RequestClient<'a> {
     ///     fn on_progress(&self, task_id: i64, bytes_downloaded: i64, total_bytes: i64) {
     ///         println!("Task {} progress: {}/{} bytes", task_id, bytes_downloaded, total_bytes);
     ///     }
-    ///     
+    ///
     ///     fn on_complete(&self, task_id: i64) {
     ///         println!("Task {} completed successfully", task_id);
     ///     }
-    ///     
+    ///
     ///     fn on_failed(&self, task_id: i64, error_code: i32) {
     ///         println!("Task {} failed with error: {}", task_id, error_code);
     ///     }
@@ -223,12 +223,12 @@ impl<'a> RequestClient<'a> {
     /// fn create_and_start_download() {
     ///     // Get the client instance
     ///     let client = RequestClient::get_instance();
-    ///     
+    ///
     ///     // Create context and task configuration
     ///     let context = Context::new();
     ///     let mut config = TaskConfig::new();
     ///     config.url = "https://example.com/file.zip".to_string();
-    ///     
+    ///
     ///     // Create the download task
     ///     match client.crate_task(
     ///         context,
@@ -239,10 +239,10 @@ impl<'a> RequestClient<'a> {
     ///     ) {
     ///         Ok(task_id) => {
     ///             println!("Task created with ID: {}", task_id);
-    ///             
+    ///
     ///             // Register a callback for status updates
     ///             client.register_callback(task_id, Arc::new(DownloadCallback));
-    ///             
+    ///
     ///             // Start the download
     ///             if let Err(err) = client.start(task_id) {
     ///                 println!("Failed to start task: {}", err);
@@ -254,7 +254,7 @@ impl<'a> RequestClient<'a> {
     ///     }
     /// }
     /// ```
-    pub fn crate_task(
+    pub fn create_task(
         &self,
         context: Context,
         version: Version,
@@ -264,24 +264,29 @@ impl<'a> RequestClient<'a> {
     ) -> Result<i64, CreateTaskError> {
         info!("Creating task with config: {:?}", config);
 
-        // Validate and get the download path based on API version
-        let path = check::file::get_download_path(version, &context, &save_as, overwrite)?;
-        info!("Download file path: {:?}", path);
+        if config.common_data.action == Action::Upload && version == Version::API9 {
+            let path = check::file::convert_path(Version::API9, &context, &config.file_specs.get(0).unwrap().path).unwrap();
+            config.file_specs.get_mut(0).unwrap().path = path
+                .to_string_lossy().to_string();
+        } else {
+            // Validate and get the download path based on API version
+            let path = check::file::get_download_path(version, &context, &save_as, overwrite)?;
 
-        // Create file specification for the download
-        let file_specs = FileSpec {
-            name: "".to_string(),
-            path: path.to_string_lossy().to_string(),
-            file_name: path
-                .file_name()
-                .map(|s| s.to_string_lossy().to_string())
-                .unwrap_or_else(|| path.to_string_lossy().to_string()),
-            mime_type: "".to_string(),
-            is_user_file: false,
-            fd: None,
-        };
-        config.file_specs.push(file_specs);
-        
+            // Create file specification for the download
+            let file_specs = FileSpec {
+                name: "".to_string(),
+                path: path.to_string_lossy().to_string(),
+                file_name: path
+                    .file_name()
+                    .map(|s| s.to_string_lossy().to_string())
+                    .unwrap_or_else(|| path.to_string_lossy().to_string()),
+                mime_type: "".to_string(),
+                is_user_file: false,
+                fd: None,
+            };
+            config.file_specs.push(file_specs);
+        }
+
         // Retry loop for channel reconnection
         loop {
             let res = match self.proxy.create(&config) {

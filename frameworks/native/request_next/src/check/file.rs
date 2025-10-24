@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! File path validation and permission management for downloads.
-//! 
+//!
 //! This module provides functions for validating download paths, converting between
 //! different path formats, and setting appropriate file permissions for downloaded
 //! content across different API versions.
@@ -79,7 +79,7 @@ pub fn get_download_path(
 ) -> Result<PathBuf, DownloadPathError> {
     // Convert path according to API version rules
     let path = convert_path(version, context, save_as)?;
-    
+
     // Check for existing file if overwrite is disabled
     if !overwrite && path.exists() {
         return Err(DownloadPathError::AlreadyExists);
@@ -103,7 +103,7 @@ pub fn get_download_path(
 ///
 /// # Returns
 /// A `PathBuf` representing the converted path, or a `DownloadPathError` on validation failure
-fn convert_path(
+pub fn convert_path(
     version: Version,
     context: &Context,
     save_as: &str,
@@ -132,7 +132,6 @@ fn convert_path(
                 if cache_dir.len() + file_name.len() + 1 > MAX_FILE_PATH_LENGTH {
                     return Err(DownloadPathError::TooLongPath);
                 }
-
                 Ok(PathBuf::from(cache_dir).join(file_name))
             }
         }
@@ -140,7 +139,7 @@ fn convert_path(
         Version::API10 => {
             // Convert to absolute path using API 10 rules
             let absolute_path = convert_to_absolute_path(&context, save_as)?;
-            
+
             // Validate path is within allowed storage areas for API 10
             if !absolute_path.starts_with(AREA1)
                 && !absolute_path.starts_with(AREA2)
