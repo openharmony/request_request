@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Database interface for relational database operations.
+//! 
+//! This module provides high-level abstractions for working with relational databases,
+//! including opening database connections, executing queries, and handling results.
+
 use cxx::SharedPtr;
 use std::pin::Pin;
 
@@ -19,15 +24,28 @@ use crate::params::{FromSql, Params};
 use crate::wrapper::ffi::{self, Execute, NewRowEntity, Query};
 use crate::wrapper::open_rdb_store;
 
+/// Success error code constant.
 const E_OK: i32 = 0;
 
-/// `RdbStore` ffi wrapper.
+/// Database connection and operation interface.
+/// 
+/// Provides methods for executing SQL statements and queries on a relational database.
+/// Wraps the underlying FFI implementation with safe, idiomatic Rust.
 pub struct RdbStore<'a> {
+    /// Internal representation of the database store
     inner: RdbStoreInner<'a>,
 }
 
 impl<'a> RdbStore<'a> {
-    /// Creates a new `RdbStore`.
+    /// Opens a database connection using the provided configuration.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `config` - Configuration options for opening the database
+    /// 
+    /// # Returns
+    /// 
+    /// Returns `Ok` with a new `RdbStore` instance on success, or `Err` with an error code on failure
     pub fn open(config: OpenConfig) -> Result<Self, i32> {
         let rdb = open_rdb_store(config)?;
         if rdb.is_null() {
@@ -38,14 +56,31 @@ impl<'a> RdbStore<'a> {
         })
     }
 
-    /// Creates a `RdbStore` from a C structure.
+    /// Creates a `RdbStore` from an FFI reference.
+    /// 
+    /// Used internally to wrap FFI pointers with a safe Rust interface.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `ffi` - FFI pointer to an existing database store
     pub fn from_ffi(ffi: Pin<&'a mut ffi::RdbStore>) -> Self {
         Self {
             inner: RdbStoreInner::Ref(ffi),
         }
     }
 
-    /// Executes a sql statement.
+    /// Executes an SQL statement with optional parameters.
+    /// 
+    /// Use for statements that modify the database like INSERT, UPDATE, DELETE, etc.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `sql` - The SQL statement to execute
+    /// * `values` - Parameters to bind to the statement
+    /// 
+    /// # Returns
+    /// 
+    /// Returns `Ok(())` on success, or `Err` with an error code on failure
     pub fn execute<P: Params>(&self, sql: &str, values: P) -> Result<(), i32> {
         match Execute(self.inner.pin_mut(), sql, values.into_values_object()) {
             0 => Ok(()),
@@ -53,7 +88,22 @@ impl<'a> RdbStore<'a> {
         }
     }
 
-    /// Queries results with a sql statement.
+    /// Executes an SQL query and returns results as a typed iterator.
+    /// 
+    /// The return type `T` must implement the `FromSql` trait to convert from database rows.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `sql` - The SQL query statement
+    /// * `values` - Parameters to bind to the query
+    /// 
+    /// # Returns
+    /// 
+    /// Returns `Ok` with a `QuerySet` iterator on success, or `Err` with an error code on failure
+    /// 
+    /// # Safety
+    /// 
+    /// This method uses unsafe code to handle FFI pointers to the underlying result set.
     pub fn query<T>(&self, sql: &str, values: impl Params) -> Result<QuerySet<T>, i32> {
         let result = Query(self.inner.pin_mut(), sql, values.into_values_object());
         if result.is_null() {
@@ -75,12 +125,22 @@ impl<'a> RdbStore<'a> {
     }
 }
 
+/// Internal representation of a database store.
+/// 
+/// Provides a unified interface for different ownership models of the underlying FFI store.
 enum RdbStoreInner<'a> {
+    /// Shared ownership model using a reference-counted pointer
     Shared(SharedPtr<ffi::RdbStore>),
+    /// Borrowed reference model using a pinned mutable reference
     Ref(Pin<&'a mut ffi::RdbStore>),
 }
 
 impl RdbStoreInner<'_> {
+    /// Converts the inner store into a pinned mutable reference.
+    /// 
+    /// # Safety
+    /// 
+    /// This method uses unsafe code to convert between pointer types and create mutable references.
     fn pin_mut(&self) -> Pin<&mut ffi::RdbStore> {
         match self {
             Self::Shared(ffi) => {
@@ -95,15 +155,26 @@ impl RdbStoreInner<'_> {
     }
 }
 
-/// Query results.
+/// Iterator over database query results.
+/// 
+/// Provides methods to access metadata and iterate over rows, converting each row to type `T`.
+/// 
+/// # Type Parameters
+/// 
+/// * `T` - The target type that each row will be converted to
 pub struct QuerySet<T> {
+    /// Internal FFI result set pointer
     inner: SharedPtr<ffi::ResultSet>,
+    /// Number of columns in the result set
     column_count: i32,
+    /// Type marker for the target row conversion type
     phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> QuerySet<T> {
-    /// Gets the count of the rows in the query result.
+    /// Gets the number of rows in the query result.
+    /// 
+    /// Returns 0 if an error occurs while retrieving the row count.
     pub fn row_count(&mut self) -> i32 {
         let mut row_count = 0;
         match self.pin_mut().GetRowCount(&mut row_count) {
@@ -112,11 +183,16 @@ impl<T> QuerySet<T> {
         }
     }
 
-    /// Gets the counts of the columns in the query result.
+    /// Gets the number of columns in the query result.
     pub fn column_count(&self) -> i32 {
         self.column_count
     }
 
+    /// Converts the inner result set into a pinned mutable reference.
+    /// 
+    /// # Safety
+    /// 
+    /// This method uses unsafe code to convert between pointer types and create mutable references.
     fn pin_mut(&mut self) -> Pin<&mut ffi::ResultSet> {
         let ptr = self.inner.as_ref().unwrap() as *const ffi::ResultSet as *mut ffi::ResultSet;
         unsafe { Pin::new_unchecked(ptr.as_mut().unwrap()) }
@@ -129,6 +205,9 @@ where
 {
     type Item = T;
 
+    /// Advances to the next row and converts it to type `T`.
+    /// 
+    /// Returns `None` when there are no more rows or when an error occurs.
     fn next(&mut self) -> Option<Self::Item> {
         let mut row = NewRowEntity();
         if self.pin_mut().GoToNextRow() != E_OK {
@@ -178,6 +257,7 @@ single_tuple_impl!((0 A), (1 B), (2 C), (3 D), (4 E), (5 F), (6 G), (7 H), (8 I)
 single_tuple_impl!((0 A), (1 B), (2 C), (3 D), (4 E), (5 F), (6 G), (7 H), (8 I), (9 J), (10 K), (11 L), (12 M), (13 N), (14 O));
 single_tuple_impl!((0 A), (1 B), (2 C), (3 D), (4 E), (5 F), (6 G), (7 H), (8 I), (9 J), (10 K), (11 L), (12 M), (13 N), (14 O), (15 P));
 
+// Unit tests for the database module
 #[cfg(test)]
 mod ut_database {
     include!("../tests/ut/ut_database.rs");

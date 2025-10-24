@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Error handling for HTTP client operations.
+//! 
+//! This module defines error types and codes used throughout the HTTP client implementation,
+//! providing a consistent error handling mechanism across the library.
+
 use crate::wrapper::ffi;
 
 /// Represents an error that occurred during an HTTP request.
@@ -63,79 +68,139 @@ impl HttpClientError {
 #[derive(Default, Clone, PartialEq, Eq)]
 #[repr(i32)]
 pub enum HttpErrorCode {
-    /// No specific error code
+    /// No specific error occurred.
     HttpNoneErr,
-    /// Permission denied (201)
+    
+    /// Permission denied when attempting to perform an operation (201).
+    /// 
+    /// Typically indicates lack of necessary permissions for network access.
     HttpPermissionDeniedCode = 201,
-    /// Parsing error (401)
+    
+    /// Error parsing data (401).
+    /// 
+    /// Indicates failure to parse HTTP headers, JSON, or other structured data.
     HttpParseErrorCode = 401,
-    /// Base value for HTTP error codes (2300000)
+    
+    /// Base value for all HTTP error codes (2300000).
+    /// 
+    /// Used as an offset for generating specific error codes within the system.
     HttpErrorCodeBase = 2300000,
-    /// Unsupported protocol
+    
+    /// The requested protocol is not supported.
+    /// 
+    /// Occurs when attempting to use a protocol that the client doesn't support.
     HttpUnsupportedProtocol,
-    /// Failed to initialize
+    
+    /// Failed to initialize the HTTP client.
+    /// 
+    /// Indicates a problem during client creation or initialization.
     HttpFailedInit,
-    /// Malformed URL
+    
+    /// URL format is invalid or malformed.
+    /// 
+    /// The provided URL string doesn't conform to URL syntax rules.
     HttpUrlMalformat,
-    /// Could not resolve proxy (2300005)
+    
+    /// Failed to resolve the proxy server hostname (2300005).
     HttpCouldntResolveProxy = 2300005,
-    /// Could not resolve host
+    
+    /// Failed to resolve the target host hostname.
+    /// 
+    /// May indicate DNS resolution failure or network connectivity issues.
     HttpCouldntResolveHost,
-    /// Could not connect
+    
+    /// Failed to establish a connection to the target host.
+    /// 
+    /// Occurs when connection attempts time out or are rejected.
     HttpCouldntConnect,
-    /// Unexpected server reply
+    
+    /// Received an unexpected or malformed response from the server.
     HttpWeirdServerReply,
-    /// Remote access denied
+    
+    /// The server denied access to the requested resource.
     HttpRemoteAccessDenied,
-    /// HTTP/2 specific error (2300016)
+    
+    /// HTTP/2 protocol-specific error occurred (2300016).
     HttpHttp2Error = 2300016,
-    /// Partial file transfer (2300018)
+    
+    /// File transfer completed only partially (2300018).
+    /// 
+    /// The connection was closed before the full file could be transferred.
     HttpPartialFile = 2300018,
-    /// Error writing data (2300023)
+    
+    /// Error occurred while writing data to a file or buffer (2300023).
     HttpWriteError = 2300023,
-    /// Upload failed (2300025)
+    
+    /// File upload operation failed (2300025).
     HttpUploadFailed = 2300025,
-    /// Error reading data (2300026)
+    
+    /// Error occurred while reading data from a file or stream (2300026).
     HttpReadError = 2300026,
-    /// Out of memory
+    
+    /// Insufficient memory to complete the operation.
     HttpOutOfMemory,
-    /// Operation timed out
+    
+    /// Operation timed out before completion.
+    /// 
+    /// The operation took longer than the specified timeout period.
     HttpOperationTimedout,
-    /// POST error (2300034)
+    
+    /// Error during HTTP POST operation (2300034).
     HttpPostError = 2300034,
-    /// Task was canceled (2300042)
+    
+    /// The HTTP task was canceled before completion (2300042).
     HttpTaskCanceled = 2300042,
-    /// Too many redirects (2300047)
+    
+    /// Exceeded the maximum number of allowed redirects (2300047).
     HttpTooManyRedirects = 2300047,
-    /// Empty response (2300052)
+    
+    /// Received an empty response from the server (2300052).
     HttpGotNothing = 2300052,
-    /// Error sending data (2300055)
+    
+    /// Error occurred while sending data to the server (2300055).
     HttpSendError = 2300055,
-    /// Error receiving data
+    
+    /// Error occurred while receiving data from the server.
     HttpRecvError,
-    /// SSL certificate problem (2300058)
+    
+    /// Problem with the SSL certificate validation (2300058).
     HttpSslCertproblem = 2300058,
-    /// SSL cipher error
+    
+    /// SSL cipher selection or handshake failed.
     HttpSslCipher,
-    /// Peer verification failed
+    
+    /// Peer verification failed during SSL/TLS handshake.
     HttpPeerFailedVerification,
-    /// Bad content encoding
+    
+    /// The content encoding of the response is invalid or unsupported.
     HttpBadContentEncoding,
-    /// File size exceeded limit (2300063)
+    
+    /// File size exceeds the configured limit (2300063).
     HttpFilesizeExceeded = 2300063,
-    /// Remote disk full (2300070)
+    
+    /// Remote server reported that its disk is full (2300070).
     HttpRemoteDiskFull = 2300070,
-    /// Remote file exists (2300073)
+    
+    /// Operation failed because the remote file already exists (2300073).
     HttpRemoteFileExists = 2300073,
-    /// Bad CA certificate file (2300077)
+    
+    /// CA certificate file is invalid or corrupted (2300077).
     HttpSslCacertBadfile = 2300077,
-    /// Remote file not found
+    
+    /// The requested remote file was not found on the server.
     HttpRemoteFileNotFound,
-    /// SSL pinned public key mismatch (2300090)
+    
+    /// SSL public key pinning validation failed (2300090).
+    /// 
+    /// The server's public key does not match the expected pinned key.
     HttpSslPinnedpubkeynotmatch = 2300090,
-    /// Authentication error (2300094)
+    
+    /// Authentication with the server failed (2300094).
     HttpAuthError = 2300094,
-    /// Catch-all for unknown errors (2300999)
+    
+    /// Catch-all for unknown or uncategorized errors (2300999).
+    /// 
+    /// Used when an error occurs that doesn't match any specific error code.
     #[default]
     HttpUnknownOtherError = 2300999,
 }
