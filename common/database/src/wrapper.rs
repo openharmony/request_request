@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! FFI wrapper for database operations.
+//! 
+//! This module provides Rust bindings and wrappers around the underlying C++ database API,
+//! including callback handling and database store operations.
+
 use std::pin::Pin;
 
 use cxx::SharedPtr;
@@ -19,22 +24,56 @@ use ffi::{GetRdbStore, RdbStore};
 use crate::config::{OpenCallback, OpenConfig};
 use crate::database;
 
-/// OpenCallback ffi.
+/// Wrapper for database open callbacks.
+/// 
+/// Provides a bridge between Rust callback implementations and the C++ database API.
 pub struct OpenCallbackWrapper {
+    /// The underlying Rust callback implementation
     inner: Box<dyn OpenCallback>,
 }
 
 impl OpenCallbackWrapper {
+    /// Handles database creation callback.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `rdb` - The raw RdbStore pointer from the C++ API
+    /// 
+    /// # Returns
+    /// 
+    /// Returns 0 on success, otherwise an error code
     fn on_create(&mut self, rdb: Pin<&mut RdbStore>) -> i32 {
         let mut rdb = database::RdbStore::from_ffi(rdb);
         self.inner.on_create(&mut rdb)
     }
 
+    /// Handles database upgrade callback.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `rdb` - The raw RdbStore pointer from the C++ API
+    /// * `old_version` - The old database version
+    /// * `new_version` - The new database version
+    /// 
+    /// # Returns
+    /// 
+    /// Returns 0 on success, otherwise an error code
     fn on_upgrade(&mut self, rdb: Pin<&mut RdbStore>, old_version: i32, new_version: i32) -> i32 {
         let mut rdb = database::RdbStore::from_ffi(rdb);
         self.inner.on_upgrade(&mut rdb, old_version, new_version)
     }
 
+    /// Handles database downgrade callback.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `rdb` - The raw RdbStore pointer from the C++ API
+    /// * `current_version` - The current database version
+    /// * `target_version` - The target database version
+    /// 
+    /// # Returns
+    /// 
+    /// Returns 0 on success, otherwise an error code
     fn on_downgrade(
         &mut self,
         rdb: Pin<&mut RdbStore>,
@@ -46,16 +85,43 @@ impl OpenCallbackWrapper {
             .on_downgrade(&mut rdb, current_version, target_version)
     }
 
+    /// Handles database open callback.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `rdb` - The raw RdbStore pointer from the C++ API
+    /// 
+    /// # Returns
+    /// 
+    /// Returns 0 on success, otherwise an error code
     fn on_open(&mut self, rdb: Pin<&mut RdbStore>) -> i32 {
         let mut rdb = database::RdbStore::from_ffi(rdb);
         self.inner.on_open(&mut rdb)
     }
 
+    /// Handles database corruption callback.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `database_file` - Path to the corrupt database file
+    /// 
+    /// # Returns
+    /// 
+    /// Returns 0 on success, otherwise an error code
     fn on_corrupt(&mut self, database_file: &str) -> i32 {
         self.inner.on_corrupt(database_file)
     }
 }
 
+/// Opens an RDB store with the provided configuration.
+/// 
+/// # Arguments
+/// 
+/// * `config` - The database opening configuration
+/// 
+/// # Returns
+/// 
+/// Returns `Ok` with the shared RDB store pointer on success, or `Err` with an error code on failure
 pub(crate) fn open_rdb_store(config: OpenConfig) -> Result<SharedPtr<RdbStore>, i32> {
     let mut code = 0;
     let rdb = GetRdbStore(
@@ -72,12 +138,26 @@ pub(crate) fn open_rdb_store(config: OpenConfig) -> Result<SharedPtr<RdbStore>, 
     }
 }
 
+/// Marks `RdbStore` as safely transferable across thread boundaries.
+/// 
+/// # Safety
+/// 
+/// This implementation assumes that the underlying C++ implementation of `RdbStore`
+/// is thread-safe when accessed through the FFI boundary.
 unsafe impl Send for RdbStore {}
+
+/// Marks `RdbStore` as safely shareable across thread boundaries.
+/// 
+/// # Safety
+/// 
+/// This implementation assumes that the underlying C++ implementation of `RdbStore`
+/// supports concurrent read operations from multiple threads.
 unsafe impl Sync for RdbStore {}
 
 #[allow(unused, missing_docs)]
 #[cxx::bridge(namespace = "OHOS::Request")]
 pub mod ffi {
+    // Database security levels
     #[repr(i32)]
     enum SecurityLevel {
         S1 = 1,
@@ -87,6 +167,7 @@ pub mod ffi {
         LAST,
     }
 
+    // SQL column data types
     #[repr(i32)]
     enum ColumnType {
         TYPE_NULL = 0,
@@ -100,6 +181,7 @@ pub mod ffi {
         TYPE_BIGINT,
     }
 
+    // Rust interface exposed to C++
     extern "Rust" {
         type OpenCallbackWrapper;
         fn on_create(&mut self, rdb: Pin<&mut RdbStore>) -> i32;
@@ -119,11 +201,15 @@ pub mod ffi {
         fn on_corrupt(&mut self, database_file: &str) -> i32;
     }
 
+    // C++ interface imported to Rust
     unsafe extern "C++" {
+        // Include necessary C++ headers
         include!("rdb_store.h");
         include!("result_set.h");
         include!("remote_result_set.h");
         include!("wrapper.h");
+        
+        // C++ types from the NativeRdb namespace
         #[namespace = "OHOS::NativeRdb"]
         type RdbStoreConfig;
         #[namespace = "OHOS::NativeRdb"]
@@ -141,25 +227,32 @@ pub mod ffi {
         #[namespace = "OHOS::NativeRdb"]
         type ColumnType;
 
+        // ResultSet operations
         #[namespace = "OHOS::NativeRdb"]
         fn GetColumnType(
             self: Pin<&mut ResultSet>,
             column_index: i32,
             column_type: Pin<&mut ColumnType>,
         ) -> i32;
+        
         #[namespace = "OHOS::NativeRdb"]
         fn GetColumnCount(self: Pin<&mut ResultSet>, count: &mut i32) -> i32;
+        
         #[namespace = "OHOS::NativeRdb"]
         fn GetRowCount(self: Pin<&mut ResultSet>, count: &mut i32) -> i32;
+        
         #[namespace = "OHOS::NativeRdb"]
         fn GoToNextRow(self: Pin<&mut ResultSet>) -> i32;
+        
         #[namespace = "OHOS::NativeRdb"]
         fn GetRow(self: Pin<&mut ResultSet>, row: Pin<&mut RowEntity>) -> i32;
 
+        // Factory functions
         fn NewVector() -> UniquePtr<CxxVector<ValueObject>>;
         fn NewConfig(path: &str) -> UniquePtr<RdbStoreConfig>;
         fn NewRowEntity() -> UniquePtr<RowEntity>;
 
+        // SQL parameter binding functions
         fn BindI32(value: i32, values: Pin<&mut CxxVector<ValueObject>>);
         fn BindI64(value: i64, values: Pin<&mut CxxVector<ValueObject>>);
         fn BindBool(value: bool, values: Pin<&mut CxxVector<ValueObject>>);
@@ -168,6 +261,7 @@ pub mod ffi {
         fn BindBlob(value: &[u8], values: Pin<&mut CxxVector<ValueObject>>);
         fn BindNull(values: Pin<&mut CxxVector<ValueObject>>);
 
+        // SQL result extraction functions
         fn GetI32(row: Pin<&mut RowEntity>, index: i32, value: &mut i32) -> i32;
         fn GetI64(row: Pin<&mut RowEntity>, index: i32, value: &mut i64) -> i32;
         fn GetBool(row: Pin<&mut RowEntity>, index: i32, value: &mut bool) -> i32;
@@ -175,6 +269,7 @@ pub mod ffi {
         fn GetString(row: Pin<&mut RowEntity>, index: i32, value: &mut String) -> i32;
         fn GetBlob(row: Pin<&mut RowEntity>, index: i32, value: &mut Vec<u8>) -> i32;
         fn IsNull(row: Pin<&mut RowEntity>, index: i32) -> bool;
+        // SQL execution functions
         fn Execute(
             rdb: Pin<&mut RdbStore>,
             sql: &str,
@@ -187,6 +282,7 @@ pub mod ffi {
             values: UniquePtr<CxxVector<ValueObject>>,
         ) -> SharedPtr<ResultSet>;
 
+        // RDB store configuration and creation
         fn SetSecurityLevel(self: Pin<&mut RdbStoreConfig>, level: SecurityLevel);
         fn SetEncryptStatus(self: Pin<&mut RdbStoreConfig>, status: bool);
         fn SetBundleName(self: Pin<&mut RdbStoreConfig>, bundleName: &CxxString) -> i32;
