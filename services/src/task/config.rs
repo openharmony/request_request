@@ -18,6 +18,7 @@ use std::os::fd::{FromRawFd, IntoRawFd, RawFd};
 pub use ffi::{Action, Mode};
 use ipc::IpcStatusCode;
 
+// Platform-specific imports for OpenHarmony
 cfg_oh! {
     use ipc::parcel::Serialize;
     use ipc::parcel::Deserialize;
@@ -31,113 +32,170 @@ use crate::utils::c_wrapper::{CFileSpec, CFormItem, CStringWrapper};
 use crate::utils::form_item::{FileSpec, FormItem};
 use crate::utils::{hashmap_to_string, query_calling_bundle};
 
+// C++ bridge for exposing Rust types to C++
 #[cxx::bridge(namespace = "OHOS::Request")]
 mod ffi {
-    /// Action
+    /// Specifies the type of network task to perform.
     #[derive(Clone, Copy, PartialEq, Debug)]
     #[repr(u8)]
     pub enum Action {
-        /// Download
+        /// Download action for retrieving data from a server.
         Download = 0,
-        /// Upload
+        /// Upload action for sending data to a server.
         Upload,
-        /// Any
+        /// Wildcard action that matches any operation type.
         Any,
     }
 
-    /// Mode
+    /// Determines the execution context for a task.
     #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
     #[repr(u8)]
     pub enum Mode {
-        /// BackGround
+        /// Task runs in the background with lower priority.
         BackGround = 0,
-        /// ForeGround
+        /// Task runs in the foreground with higher priority.
         FrontEnd,
-        /// Any
+        /// Wildcard mode that matches any execution context.
         Any,
     }
 }
 
+/// Represents the API version used by the request system.
 #[derive(Clone, Copy, PartialEq, Debug)]
 #[repr(u8)]
 pub(crate) enum Version {
+    /// First API version.
     API9 = 1,
+    /// Second API version with additional features.
     API10,
 }
 
-/// NetworkConfig
+/// Specifies the network type required for task execution.
 #[derive(Clone, Copy, PartialEq, Debug)]
 #[repr(u8)]
 pub enum NetworkConfig {
-    /// Any
+    /// Task can run on any available network type.
     Any = 0,
-    /// Wifi
+    /// Task requires a Wi-Fi connection.
     Wifi,
-    /// Cellular
+    /// Task requires a cellular network connection.
     Cellular,
 }
 
-/// task min speed
+/// Minimum speed requirements for a network task.
+/// 
+/// If the network speed falls below the specified threshold for the given duration,
+/// the task may be paused or rescheduled.
 #[derive(Copy, Clone, Debug, Default)]
 pub struct MinSpeed {
+    /// Minimum acceptable speed in bytes per second.
     pub(crate) speed: i64,
+    /// Duration in milliseconds that the speed must be sustained below the threshold
+    /// before triggering a response.
     pub(crate) duration: i64,
 }
 
-/// task Timeout
+/// Timeout configuration for network operations.
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Timeout {
+    /// Maximum time in milliseconds to wait for a connection to be established.
     pub(crate) connection_timeout: u64,
+    /// Maximum time in milliseconds for the entire task to complete.
     pub(crate) total_timeout: u64,
 }
 
+/// Core configuration shared by all types of network tasks.
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub(crate) struct CommonTaskConfig {
+    /// Unique identifier for the task.
     pub(crate) task_id: u32,
+    /// User ID associated with the task.
     pub(crate) uid: u64,
+    /// Token ID for security verification.
     pub(crate) token_id: u64,
+    /// Type of operation (download, upload, etc.).
     pub(crate) action: Action,
+    /// Execution context (background, foreground).
     pub(crate) mode: Mode,
+    /// Whether to overwrite existing files.
     pub(crate) cover: bool,
+    /// Network type requirements.
     pub(crate) network_config: NetworkConfig,
+    /// Whether task can run on metered networks.
     pub(crate) metered: bool,
+    /// Whether task can run while roaming.
     pub(crate) roaming: bool,
+    /// Whether to retry failed operations.
     pub(crate) retry: bool,
+    /// Whether to follow HTTP redirects.
     pub(crate) redirect: bool,
+    /// Index for ordering related tasks.
     pub(crate) index: u32,
+    /// Timestamp for when the task can start.
     pub(crate) begins: u64,
+    /// Timestamp for when the task must complete (-1 for no deadline).
     pub(crate) ends: i64,
+    /// Whether to enable speed measurement.
     pub(crate) gauge: bool,
+    /// Whether to use precise progress tracking.
     pub(crate) precise: bool,
+    /// Priority level for task scheduling.
     pub(crate) priority: u32,
+    /// Whether task should continue in background.
     pub(crate) background: bool,
+    /// Whether to use multipart encoding for uploads.
     pub(crate) multipart: bool,
+    /// Minimum speed requirements.
     pub(crate) min_speed: MinSpeed,
+    /// Timeout settings for the task.
     pub(crate) timeout: Timeout,
 }
 
-/// task config
+/// Complete configuration for a network task.
+/// 
+/// Contains all necessary parameters to execute a download or upload operation,
+/// including network preferences, file specifications, authentication details,
+/// and execution constraints.
 #[derive(Clone, Debug)]
 pub struct TaskConfig {
+    /// Bundle name of the requesting application.
     pub(crate) bundle: String,
+    /// Type identifier for the bundle.
     pub(crate) bundle_type: u32,
+    /// Atomic account associated with the task.
     pub(crate) atomic_account: String,
+    /// Target URL for the network operation.
     pub(crate) url: String,
+    /// Human-readable title for the task.
     pub(crate) title: String,
+    /// Detailed description of the task.
     pub(crate) description: String,
+    /// HTTP method to use (GET, POST, etc.).
     pub(crate) method: String,
+    /// HTTP headers to include in the request.
     pub(crate) headers: HashMap<String, String>,
+    /// Request body data.
     pub(crate) data: String,
+    /// Authentication token.
     pub(crate) token: String,
+    /// Proxy server configuration.
     pub(crate) proxy: String,
+    /// Certificate pins for secure connections.
     pub(crate) certificate_pins: String,
+    /// Additional custom parameters.
     pub(crate) extras: HashMap<String, String>,
+    /// API version compatibility indicator.
     pub(crate) version: Version,
+    /// Form data items for upload requests.
     pub(crate) form_items: Vec<FormItem>,
+    /// File specifications for upload/download operations.
     pub(crate) file_specs: Vec<FileSpec>,
+    /// Paths to body files for complex requests.
     pub(crate) body_file_paths: Vec<String>,
+    /// Paths to custom certificates.
     pub(crate) certs_path: Vec<String>,
+    /// Core configuration shared across task types.
     pub(crate) common_data: CommonTaskConfig,
 }
 
@@ -152,6 +210,7 @@ impl TaskConfig {
                     Err(Reason::UnsupportedNetworkType)
                 }
                 _ => {
+                    // Check roaming and metered status constraints
                     if (self.common_data.roaming || !info.is_roaming)
                         && (self.common_data.metered || !info.is_metered)
                     {
@@ -164,84 +223,124 @@ impl TaskConfig {
         }
     }
 
+    /// Determines if a task satisfies foreground execution requirements.
+    /// 
+    /// A task can run in the foreground if it's configured for background execution
+    /// or if its associated UID is in the set of active foreground abilities.
     pub(crate) fn satisfy_foreground(&self, foreground_abilities: &HashSet<u64>) -> bool {
         self.common_data.mode == Mode::BackGround
             || foreground_abilities.contains(&self.common_data.uid)
     }
 }
 
+/// Internal representation of a task configuration optimized for C FFI.
+/// 
+/// Converts high-level Rust types into C-compatible representations
+/// for interoperability with native code.
 pub(crate) struct ConfigSet {
+    /// HTTP headers serialized as a string.
     pub(crate) headers: String,
+    /// Extra parameters serialized as a string.
     pub(crate) extras: String,
+    /// Form items in C-compatible format.
     pub(crate) form_items: Vec<CFormItem>,
+    /// File specifications in C-compatible format.
     pub(crate) file_specs: Vec<CFileSpec>,
+    /// Body file names wrapped for C compatibility.
     pub(crate) body_file_names: Vec<CStringWrapper>,
+    /// Certificate paths wrapped for C compatibility.
     pub(crate) certs_path: Vec<CStringWrapper>,
 }
 
 impl PartialOrd for Mode {
+    /// Compares two execution modes to determine their relative priority.
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
 impl Ord for Mode {
+    /// Compares two execution modes to determine their relative priority.
+    /// 
+    /// Ordering is based on execution priority: FrontEnd > Any > BackGround
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.to_usize().cmp(&other.to_usize())
     }
 }
 
 impl Mode {
+    /// Converts a Mode enum to a numeric priority value.
     fn to_usize(self) -> usize {
         match self {
-            Mode::FrontEnd => 0,
+            Mode::FrontEnd => 0,  // Highest priority
             Mode::Any => 1,
-            Mode::BackGround => 2,
+            Mode::BackGround => 2, // Lowest priority
             _ => unreachable!(),
         }
     }
 }
 
 impl From<u8> for Mode {
+    /// Converts a raw u8 value to a Mode enum.
+    /// 
+    /// Maps numeric identifiers to their corresponding execution modes.
+    /// Values outside the defined range default to Mode::Any.
     fn from(value: u8) -> Self {
         match value {
             0 => Mode::BackGround,
             1 => Mode::FrontEnd,
-            _ => Mode::Any,
+            _ => Mode::Any, // Default for unknown values
         }
     }
 }
 
 impl From<u8> for Action {
+    /// Converts a raw u8 value to an Action enum.
+    /// 
+    /// Maps numeric identifiers to their corresponding action types.
+    /// Values outside the defined range default to Action::Any.
     fn from(value: u8) -> Self {
         match value {
             0 => Action::Download,
             1 => Action::Upload,
-            _ => Action::Any,
+            _ => Action::Any, // Default for unknown values
         }
     }
 }
 
 impl From<u8> for Version {
+    /// Converts a raw u8 value to a Version enum.
+    /// 
+    /// Maps numeric identifiers to their corresponding API versions.
+    /// Defaults to API9 for unsupported values.
     fn from(value: u8) -> Self {
         match value {
             2 => Version::API10,
-            _ => Version::API9,
+            _ => Version::API9, // Default to earliest version for compatibility
         }
     }
 }
 
 impl From<u8> for NetworkConfig {
+    /// Converts a raw u8 value to a NetworkConfig enum.
+    /// 
+    /// Maps numeric identifiers to their corresponding network configurations.
+    /// Defaults to Wifi for unsupported values.
     fn from(value: u8) -> Self {
         match value {
             0 => NetworkConfig::Any,
             2 => NetworkConfig::Cellular,
-            _ => NetworkConfig::Wifi,
+            _ => NetworkConfig::Wifi, // Default for unknown values
         }
     }
 }
 
 impl TaskConfig {
+    /// Creates a C-compatible configuration set from the current task config.
+    /// 
+    /// Transforms Rust-native types into formats suitable for FFI interactions
+    /// with C/C++ code, including stringifying hash maps and converting vectors
+    /// to C-compatible representations.
     pub(crate) fn build_config_set(&self) -> ConfigSet {
         ConfigSet {
             headers: hashmap_to_string(&self.headers),
@@ -257,6 +356,10 @@ impl TaskConfig {
         }
     }
 
+    /// Checks if the task configuration includes any user files.
+    /// 
+    /// Returns true if any file specification in the configuration
+    /// is marked as a user file, false otherwise.
     pub(crate) fn contains_user_file(&self) -> bool {
         for specs in self.file_specs.iter() {
             if specs.is_user_file {
@@ -268,6 +371,10 @@ impl TaskConfig {
 }
 
 impl Default for TaskConfig {
+    /// Creates a default task configuration with sensible initial values.
+    /// 
+    /// Sets up a basic download task with common defaults that can be
+    /// customized through the ConfigBuilder.
     fn default() -> Self {
         Self {
             bundle_type: 0,
@@ -315,107 +422,112 @@ impl Default for TaskConfig {
     }
 }
 
-/// ConfigBuilder
+/// Builder pattern for constructing TaskConfig instances.
+/// 
+/// Provides a fluent interface for incrementally configuring network tasks
+/// with method chaining for improved readability and usability.
 pub struct ConfigBuilder {
     inner: TaskConfig,
 }
 
 impl ConfigBuilder {
-    /// Create a new ConfigBuilder
+    /// Creates a new builder with default task configuration.
     pub fn new() -> Self {
         Self {
             inner: TaskConfig::default(),
         }
     }
-    /// Set url
+
+    /// Sets the target URL for the network operation.
     pub fn url(&mut self, url: &str) -> &mut Self {
         self.inner.url = url.to_string();
         self
     }
 
-    /// set version
+    /// Sets the API version compatibility level.
     pub fn version(&mut self, version: u8) -> &mut Self {
         self.inner.version = version.into();
         self
     }
 
-    /// Set title
+    /// Adds a user file to the task configuration.
     pub fn file_spec(&mut self, file: File) -> &mut Self {
         self.inner.file_specs.push(FileSpec::user_file(file));
         self
     }
-    /// Set action
+
+    /// Sets the operation type (download or upload).
     pub fn action(&mut self, action: Action) -> &mut Self {
         self.inner.common_data.action = action;
         self
     }
 
-    /// Set mode
+    /// Sets the execution context (background or foreground).
     pub fn mode(&mut self, mode: Mode) -> &mut Self {
         self.inner.common_data.mode = mode;
         self
     }
 
-    /// Set bundle name
+    /// Sets the name of the bundle requesting the task.
     pub fn bundle_name(&mut self, bundle_name: &str) -> &mut Self {
         self.inner.bundle = bundle_name.to_string();
         self
     }
 
-    /// Set uid
+    /// Sets the user ID associated with the task.
     pub fn uid(&mut self, uid: u64) -> &mut Self {
         self.inner.common_data.uid = uid;
         self
     }
 
-    /// set network
+    /// Sets the network type requirements for the task.
     pub fn network(&mut self, network: NetworkConfig) -> &mut Self {
         self.inner.common_data.network_config = network;
         self
     }
 
-    /// Set metered
+    /// Sets whether the task can run while roaming.
     pub fn roaming(&mut self, roaming: bool) -> &mut Self {
         self.inner.common_data.roaming = roaming;
         self
     }
 
-    /// set metered
+    /// Sets whether the task can run on metered networks.
     pub fn metered(&mut self, metered: bool) -> &mut Self {
         self.inner.common_data.metered = metered;
         self
     }
 
-    /// build
+    /// Constructs the final TaskConfig from the builder's current state.
     pub fn build(&mut self) -> TaskConfig {
         self.inner.clone()
     }
 
-    /// redirect
+    /// Sets whether to follow HTTP redirects.
     pub fn redirect(&mut self, redirect: bool) -> &mut Self {
         self.inner.common_data.redirect = redirect;
         self
     }
 
-    /// begins
+    /// Sets the earliest time the task can start (timestamp in milliseconds).
     pub fn begins(&mut self, begins: u64) -> &mut Self {
         self.inner.common_data.begins = begins;
         self
     }
 
-    /// ends
+    /// Sets the latest time the task must complete (timestamp in milliseconds).
     pub fn ends(&mut self, ends: u64) -> &mut Self {
         self.inner.common_data.ends = ends as i64;
         self
     }
 
-    /// method
-    pub fn method(&mut self, metered: &str) -> &mut Self {
-        self.inner.method = metered.to_string();
+    /// Sets the HTTP method to use for the request.
+    pub fn method(&mut self, method: &str) -> &mut Self {
+        self.inner.method = method.to_string();
         self
     }
 
-    /// retry
+    /// Sets whether failed operations should be retried.
     pub fn retry(&mut self, retry: bool) -> &mut Self {
         self.inner.common_data.retry = retry;
         self
@@ -425,6 +537,7 @@ impl ConfigBuilder {
 #[cfg(feature = "oh")]
 impl Serialize for TaskConfig {
     fn serialize(&self, parcel: &mut ipc::parcel::MsgParcel) -> ipc::IpcResult<()> {
+        // Write primitive configuration values
         parcel.write(&(self.common_data.action.repr as u32))?;
         parcel.write(&(self.version as u32))?;
         parcel.write(&(self.common_data.mode.repr as u32))?;
@@ -443,10 +556,14 @@ impl Serialize for TaskConfig {
         parcel.write(&self.common_data.gauge)?;
         parcel.write(&self.common_data.precise)?;
         parcel.write(&self.common_data.priority)?;
+
+        // Write speed and timeout configurations
         parcel.write(&self.common_data.min_speed.speed)?;
         parcel.write(&self.common_data.min_speed.duration)?;
         parcel.write(&self.common_data.timeout.connection_timeout)?;
         parcel.write(&self.common_data.timeout.total_timeout)?;
+
+        // Write string fields
         parcel.write(&self.url)?;
         parcel.write(&self.title)?;
         parcel.write(&self.method)?;
@@ -456,16 +573,20 @@ impl Serialize for TaskConfig {
         parcel.write(&self.proxy)?;
         parcel.write(&self.certificate_pins)?;
 
+        // Write certificate paths
         parcel.write(&(self.certs_path.len() as u32))?;
         for cert_path in &self.certs_path {
             parcel.write(cert_path)?;
         }
 
+        // Write form items
         parcel.write(&(self.form_items.len() as u32))?;
         for form_item in &self.form_items {
             parcel.write(&form_item.name)?;
             parcel.write(&form_item.value)?;
         }
+        
+        // Write file specifications with special handling for user files
         parcel.write(&(self.file_specs.len() as u32))?;
         for file_spec in &self.file_specs {
             parcel.write(&file_spec.name)?;
@@ -474,22 +595,26 @@ impl Serialize for TaskConfig {
             parcel.write(&file_spec.mime_type)?;
             parcel.write(&file_spec.is_user_file)?;
             if file_spec.is_user_file {
-                // Safety: If is user file, the `fd` must be some.
+                // Safety: If is_user_file is true, the `fd` must be valid
                 let file = unsafe { File::from_raw_fd(file_spec.fd.unwrap()) };
                 parcel.write_file(file)?;
             }
         }
 
+        // Write body file paths
         parcel.write(&(self.body_file_paths.len() as u32))?;
-        for body_file_paths in self.body_file_paths.iter() {
-            parcel.write(body_file_paths)?;
+        for body_file_path in self.body_file_paths.iter() {
+            parcel.write(body_file_path)?;
         }
+        
+        // Write headers map
         parcel.write(&(self.headers.len() as u32))?;
         for header in self.headers.iter() {
             parcel.write(header.0)?;
             parcel.write(header.1)?;
         }
 
+        // Write extras map
         parcel.write(&(self.extras.len() as u32))?;
         for extra in self.extras.iter() {
             parcel.write(extra.0)?;
@@ -503,6 +628,7 @@ impl Serialize for TaskConfig {
 #[cfg(feature = "oh")]
 impl Deserialize for TaskConfig {
     fn deserialize(parcel: &mut ipc::parcel::MsgParcel) -> ipc::IpcResult<Self> {
+        // Read primitive configuration values
         let action: u32 = parcel.read()?;
         let action: Action = Action::from(action as u8);
         let version: u32 = parcel.read()?;
@@ -525,10 +651,14 @@ impl Deserialize for TaskConfig {
         let gauge: bool = parcel.read()?;
         let precise: bool = parcel.read()?;
         let priority: u32 = parcel.read()?;
+
+        // Read speed and timeout configurations
         let min_speed: i64 = parcel.read()?;
         let min_duration: i64 = parcel.read()?;
         let connection_timeout: u64 = parcel.read()?;
         let total_timeout: u64 = parcel.read()?;
+
+        // Read string fields
         let url: String = parcel.read()?;
         let title: String = parcel.read()?;
         let method: String = parcel.read()?;
@@ -537,9 +667,13 @@ impl Deserialize for TaskConfig {
         let data_base: String = parcel.read()?;
         let proxy: String = parcel.read()?;
         let certificate_pins: String = parcel.read()?;
+
+        // Get caller information from IPC context
         let bundle = query_calling_bundle();
         let uid = ipc::Skeleton::calling_uid();
         let token_id = ipc::Skeleton::calling_full_token_id();
+
+        // Read certificate paths with size validation
         let certs_path_size: u32 = parcel.read()?;
         if certs_path_size > parcel.readable() as u32 {
             error!("deserialize failed: certs_path_size too large");
@@ -556,6 +690,7 @@ impl Deserialize for TaskConfig {
             certs_path.push(cert_path);
         }
 
+        // Read form items with size validation
         let form_size: u32 = parcel.read()?;
         if form_size > parcel.readable() as u32 {
             error!("deserialize failed: form_size too large");
@@ -573,6 +708,7 @@ impl Deserialize for TaskConfig {
             form_items.push(FormItem { name, value });
         }
 
+        // Read file specifications with size validation and special handling for user files
         let file_size: u32 = parcel.read()?;
         if file_size > parcel.readable() as u32 {
             error!("deserialize failed: file_specs size too large");
@@ -592,6 +728,7 @@ impl Deserialize for TaskConfig {
             let is_user_file: bool = parcel.read()?;
             let mut fd: Option<RawFd> = None;
             if is_user_file {
+                // Safety: Assumes the IPC system provides a valid file descriptor
                 let raw_fd = unsafe { parcel.read_raw_fd() };
                 if raw_fd < 0 {
                     error!("Failed to open user file, fd: {}", raw_fd);
@@ -602,6 +739,7 @@ impl Deserialize for TaskConfig {
                     );
                     return Err(IpcStatusCode::Failed);
                 }
+                // Safety: Transfers ownership of the raw file descriptor
                 let ipc_fd = unsafe { File::from_raw_fd(raw_fd) };
                 fd = Some(ipc_fd.into_raw_fd());
             }
@@ -615,7 +753,7 @@ impl Deserialize for TaskConfig {
             });
         }
 
-        // Response bodies fd.
+        // Read body file paths with size validation
         let body_file_size: u32 = parcel.read()?;
         if body_file_size > parcel.readable() as u32 {
             error!("deserialize failed: body_file size too large");
@@ -633,6 +771,7 @@ impl Deserialize for TaskConfig {
             body_file_paths.push(file_name);
         }
 
+        // Read headers map with size validation
         let header_size: u32 = parcel.read()?;
         if header_size > parcel.readable() as u32 {
             error!("deserialize failed: header size too large");
@@ -650,6 +789,7 @@ impl Deserialize for TaskConfig {
             headers.insert(key, value);
         }
 
+        // Read extras map with size validation
         let extras_size: u32 = parcel.read()?;
         if extras_size > parcel.readable() as u32 {
             error!("deserialize failed: extras size too large");
@@ -667,12 +807,14 @@ impl Deserialize for TaskConfig {
             extras.insert(key, value);
         }
 
+        // Determine atomic account based on bundle type
         let atomic_account = if bundle_type == ATOMIC_SERVICE {
             GetOhosAccountUid()
         } else {
             "".to_string()
         };
 
+        // Construct the final TaskConfig
         let task_config = TaskConfig {
             bundle,
             bundle_type,
