@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Task management for cache download operations.
+//! 
+//! This module defines the core task structures and management functionality for download
+//! operations, supporting different download backends and callback handling.
+
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
@@ -34,18 +39,42 @@ cfg_netstack! {
 
 use crate::services::{DownloadRequest, PreloadCallback};
 
+/// Enum representing available download backends.
+///
+/// Used to select between different HTTP client implementations for download operations.
 pub enum Downloader {
+    /// Netstack-based HTTP client implementation.
     Netstack,
+    /// Ylong-based HTTP client implementation.
     Ylong,
 }
 
+/// Main download task structure for managing download operations.
+///
+/// Represents a single download operation with its state and handle.
 pub(crate) struct DownloadTask {
+    /// Flag indicating whether the task should be removed from tracking.
     pub(crate) remove_flag: bool,
+    /// Sequence number for task ordering.
     pub(crate) seq: usize,
+    /// Handle for controlling the download operation.
     pub(crate) handle: TaskHandle,
 }
 
 impl DownloadTask {
+    /// Creates a new download task with the specified parameters.
+    ///
+    /// # Parameters
+    /// - `task_id`: Unique identifier for the download task.
+    /// - `cache_manager`: Reference to the cache manager for storing downloaded content.
+    /// - `info_mgr`: Manager for download information.
+    /// - `request`: Download request configuration.
+    /// - `callback`: Callback for download events.
+    /// - `downloader`: Type of download backend to use.
+    /// - `seq`: Sequence number for task ordering.
+    ///
+    /// # Returns
+    /// A new `DownloadTask` if creation was successful, otherwise `None`.
     pub(crate) fn new(
         task_id: TaskId,
         cache_manager: &'static CacheManager,
@@ -93,14 +122,26 @@ impl DownloadTask {
         })
     }
 
+    /// Cancels the download task.
     pub(crate) fn cancel(&mut self) {
         self.handle.cancel();
     }
 
+    /// Gets a clone of the task handle.
+    ///
+    /// # Returns
+    /// A clone of the `TaskHandle` associated with this task.
     pub(crate) fn task_handle(&self) -> TaskHandle {
         self.handle.clone()
     }
 
+    /// Attempts to add a callback to the task.
+    ///
+    /// # Parameters
+    /// - `callback`: Callback to add to the task.
+    ///
+    /// # Returns
+    /// `Ok(())` if the callback was successfully added, otherwise returns the callback in `Err`.
     pub(crate) fn try_add_callback(
         &mut self,
         callback: Box<dyn PreloadCallback>,
@@ -109,16 +150,28 @@ impl DownloadTask {
     }
 }
 
+/// Handle for controlling a download task.
+///
+/// Provides methods for managing and monitoring download operations.
 #[derive(Clone)]
 pub struct TaskHandle {
+    /// Unique identifier for the task.
     task_id: TaskId,
+    /// Optional handle to the underlying download implementation.
     handle: Option<Arc<dyn CommonHandle>>,
+    /// Atomic state of the download task.
     state: Arc<AtomicUsize>,
+    /// Atomic flag indicating if the task has finished.
     finish: Arc<AtomicBool>,
+    /// Queue of callbacks to notify about download events.
     callbacks: Arc<Mutex<VecDeque<Box<dyn PreloadCallback>>>>,
 }
 
 impl TaskHandle {
+    /// Creates a new task handle with the specified task ID.
+    ///
+    /// # Parameters
+    /// - `task_id`: Unique identifier for the task.
     pub(crate) fn new(task_id: TaskId) -> Self {
         Self {
             state: Arc::new(AtomicUsize::new(INIT)),
@@ -128,6 +181,10 @@ impl TaskHandle {
             callbacks: Arc::new(Mutex::new(VecDeque::with_capacity(1))),
         }
     }
+    
+    /// Cancels the download task if it exists and hasn't already finished.
+    ///
+    /// Uses atomic operations to ensure thread safety when checking and updating task state.
     pub(crate) fn cancel(&mut self) {
         if let Some(handle) = self.handle.take() {
             info!("cancel task {}", self.task_id.brief());
@@ -135,6 +192,7 @@ impl TaskHandle {
                 return;
             }
             let _callback = self.callbacks.lock().unwrap();
+            // Double-check finish flag after acquiring lock
             if self.finish.load(Ordering::Acquire) {
                 return;
             }
@@ -146,6 +204,7 @@ impl TaskHandle {
         }
     }
 
+    /// Resets the download task if it hasn't finished.
     pub(crate) fn reset(&mut self) {
         if self.finish.load(Ordering::Acquire) {
             return;
@@ -155,23 +214,43 @@ impl TaskHandle {
         }
     }
 
+    /// Returns the task ID as a string.
+    ///
+    /// # Returns
+    /// A string representation of the task ID.
     pub fn task_id(&self) -> String {
         self.task_id.to_string()
     }
 
+    /// Checks if the task has finished.
+    ///
+    /// # Returns
+    /// `true` if the task has finished, otherwise `false`.
     pub fn is_finish(&self) -> bool {
         self.finish.load(Ordering::Acquire)
     }
 
+    /// Gets the current state of the task.
+    ///
+    /// # Returns
+    /// The current state code as a `usize`.
     pub fn state(&self) -> usize {
         self.state.load(Ordering::Acquire)
     }
 
+    /// Marks the task as completed successfully.
     pub(crate) fn set_completed(&self) {
         self.state.store(SUCCESS, Ordering::Relaxed);
         self.finish.store(true, Ordering::Relaxed);
     }
 
+    /// Attempts to add a callback to the task if it hasn't finished.
+    ///
+    /// # Parameters
+    /// - `callback`: Callback to add to the task.
+    ///
+    /// # Returns
+    /// `Ok(())` if the callback was successfully added, otherwise returns the callback in `Err`.
     pub(crate) fn try_add_callback(
         &mut self,
         callback: Box<dyn PreloadCallback>,
@@ -189,27 +268,59 @@ impl TaskHandle {
         }
     }
 
+    /// Gets a clone of the state atomic flag.
+    ///
+    /// # Returns
+    /// A clone of the atomic state flag.
     #[inline]
     fn state_flag(&self) -> Arc<AtomicUsize> {
         self.state.clone()
     }
 
+    /// Gets a clone of the finish atomic flag.
+    ///
+    /// # Returns
+    /// A clone of the atomic finish flag.
     #[inline]
     fn finish_flag(&self) -> Arc<AtomicBool> {
         self.finish.clone()
     }
 
+    /// Gets a clone of the callbacks queue.
+    ///
+    /// # Returns
+    /// A clone of the mutex-protected callbacks queue.
     #[inline]
     fn callbacks(&self) -> Arc<Mutex<VecDeque<Box<dyn PreloadCallback>>>> {
         self.callbacks.clone()
     }
 
+    /// Sets the underlying download handle.
+    ///
+    /// # Parameters
+    /// - `handle`: The download handle to set.
     #[inline]
     fn set_handle(&mut self, handle: Arc<dyn CommonHandle>) {
         self.handle = Some(handle);
     }
 }
 
+/// Internal function to create and start a download task using the specified downloader.
+///
+/// # Type Parameters
+/// - `F`: Type of the downloader function that performs the actual download operation.
+///
+/// # Parameters
+/// - `task_id`: Unique identifier for the download task.
+/// - `cache_manager`: Reference to the cache manager for storing downloaded content.
+/// - `info_mgr`: Manager for download information.
+/// - `request`: Download request configuration.
+/// - `callback`: Optional callback for download events.
+/// - `downloader`: Function that performs the actual download operation.
+/// - `seq`: Sequence number for task ordering.
+///
+/// # Returns
+/// A new `TaskHandle` if the download operation was successfully started, otherwise `None`.
 fn download_inner<F>(
     task_id: TaskId,
     cache_manager: &'static CacheManager,
