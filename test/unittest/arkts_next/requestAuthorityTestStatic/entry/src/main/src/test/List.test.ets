@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 import RequestDownloadStaticTest from "./RequestDownloadStatic.test";
+import RequestCreateTaskStaticTest from "./RequestCreateTaskStatic.test";
 export default function testsuite() {
   RequestDownloadStaticTest();
+  RequestCreateTaskStaticTest();
 }
