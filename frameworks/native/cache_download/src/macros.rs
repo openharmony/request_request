@@ -11,6 +11,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Configuration macros for feature-gated conditional compilation.
+//! 
+//! This module defines convenience macros for conditional compilation based on
+//! feature flags, making it easier to manage platform-specific and backend-specific code.
+
+/// Conditionally includes code when the "ylong" feature is enabled.
+///
+/// Applies `#[cfg(feature = "ylong")]` to all provided items, enabling them only when
+/// the "ylong" feature flag is set.
+///
+/// # Examples
+///
+/// ```rust
+/// cfg_ylong! {
+///     fn ylong_specific_function() {
+///         // Implementation specific to ylong backend
+///     }
+///     
+///     struct YlongSpecificStruct {
+///         // Fields specific to ylong implementation
+///     }
+/// }
+/// ```
 macro_rules! cfg_ylong {
     ($($item:item)*) => {
         $(
@@ -20,6 +43,24 @@ macro_rules! cfg_ylong {
     }
 }
 
+/// Conditionally includes code when the "netstack" feature is enabled.
+///
+/// Applies `#[cfg(feature = "netstack")]` to all provided items, enabling them only when
+/// the "netstack" feature flag is set.
+///
+/// # Examples
+///
+/// ```rust
+/// cfg_netstack! {
+///     fn netstack_specific_function() {
+///         // Implementation specific to netstack backend
+///     }
+///     
+///     struct NetstackSpecificStruct {
+///         // Fields specific to netstack implementation
+///     }
+/// }
+/// ```
 macro_rules! cfg_netstack {
     ($($item:item)*) => {
         $(
