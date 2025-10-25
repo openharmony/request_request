@@ -11,16 +11,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Query interface for download tasks.
+//! 
+//! This module extends the `RequestProxy` with functionality for querying and searching
+//! download tasks. It provides methods to retrieve task information, mime types, and
+//! search for tasks based on various criteria.
+
+// External dependencies
 use ipc::parcel::MsgParcel;
 use ipc::remote;
+
+// Download core dependencies
 use request_core::config::Action;
 use request_core::filter::SearchFilter;
 use request_core::info::{State, TaskInfo};
 use request_core::interface;
 
+// Local dependencies
 use crate::proxy::{RequestProxy, SERVICE_TOKEN};
 
 impl RequestProxy {
+    /// Queries basic information about a specific download task.
+    ///
+    /// # Parameters
+    /// - `task_id`: Unique identifier of the task to query
+    ///
+    /// # Returns
+    /// - `Ok(())` on success
+    /// - `Err(i32)` with an error code on failure
+    ///
+    /// # Notes
+    /// This method is currently not fully implemented and contains a `todo!()` placeholder.
     pub(crate) fn query(&self, task_id: i64) -> Result<(), i32> {
         let remote = self.remote()?;
 
@@ -37,6 +58,33 @@ impl RequestProxy {
         todo!()
     }
 
+    /// Queries the MIME type of a specific download task.
+    ///
+    /// # Parameters
+    /// - `task_id`: Unique identifier of the task to query
+    ///
+    /// # Returns
+    /// A `Result` containing either:
+    /// - `Ok(String)` with the MIME type of the download task
+    /// - `Err(i32)` with an error code if the task doesn't exist or cannot be accessed
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use request_next::proxy::RequestProxy;
+    ///
+    /// fn example() -> Result<(), i32> {
+    ///     let proxy = RequestProxy::get_instance();
+    ///     let task_id = 12345;
+    ///     
+    ///     match proxy.query_mime_type(task_id) {
+    ///         Ok(mime_type) => println!("Task MIME type: {}", mime_type),
+    ///         Err(error) => println!("Failed to get MIME type: {}", error),
+    ///     }
+    ///     
+    ///     Ok(())
+    /// }
+    /// ```
     pub(crate) fn query_mime_type(&self, task_id: i64) -> Result<String, i32> {
         let remote = self.remote()?;
 
@@ -58,6 +106,33 @@ impl RequestProxy {
         Ok(mime_type)
     }
 
+    /// Retrieves detailed information about a specific download task.
+    ///
+    /// # Parameters
+    /// - `task_id`: Unique identifier of the task to retrieve
+    ///
+    /// # Returns
+    /// A `Result` containing either:
+    /// - `Ok(TaskInfo)` with detailed information about the task
+    /// - `Err(i32)` with an error code if the task doesn't exist or cannot be accessed
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use request_next::proxy::RequestProxy;
+    ///
+    /// fn example() -> Result<(), i32> {
+    ///     let proxy = RequestProxy::get_instance();
+    ///     let task_id = 12345;
+    ///     
+    ///     match proxy.show(task_id) {
+    ///         Ok(task_info) => println!("Task URL: {}", task_info.url),
+    ///         Err(error) => println!("Failed to retrieve task info: {}", error),
+    ///     }
+    ///     
+    ///     Ok(())
+    /// }
+    /// ```
     pub(crate) fn show(&self, task_id: i64) -> Result<TaskInfo, i32> {
         let remote = self.remote()?;
 
@@ -82,6 +157,18 @@ impl RequestProxy {
         Ok(task_info)
     }
 
+    /// Updates the last access time of a download task.
+    ///
+    /// # Parameters
+    /// - `task_id`: Unique identifier of the task to update
+    /// - `token`: Authentication token for accessing the task
+    ///
+    /// # Returns
+    /// - `Ok(())` on success
+    /// - `Err(i32)` with an error code on failure
+    ///
+    /// # Notes
+    /// This method is currently not fully implemented and contains a `todo!()` placeholder.
     pub(crate) fn touch(&self, task_id: i64, token: String) -> Result<(), i32> {
         let remote = self.remote()?;
 
@@ -90,7 +177,7 @@ impl RequestProxy {
 
         data.write(&1u32).unwrap();
         data.write(&task_id.to_string()).unwrap();
-        data.write(&token).unwrap(); // token?
+        data.write(&token).unwrap(); // authentication token
 
         let mut reply = remote.send_request(interface::TOUCH, &mut data).unwrap();
 
@@ -101,18 +188,57 @@ impl RequestProxy {
         todo!()
     }
 
+    /// Searches for download tasks based on specified filter criteria.
+    ///
+    /// # Parameters
+    /// - `filter`: Search criteria to filter tasks by bundle name, time range, state, action, and mode
+    ///
+    /// # Returns
+    /// A `Result` containing either:
+    /// - `Ok(Vec<String>)` with a list of matching task IDs
+    /// - `Err(i32)` with an error code if the search fails
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use request_next::proxy::RequestProxy;
+    /// use request_core::filter::SearchFilter;
+    /// use request_core::info::State;
+    ///
+    /// fn example() -> Result<(), i32> {
+    ///     let proxy = RequestProxy::get_instance();
+    ///     
+    ///     // Search for completed tasks
+    ///     let filter = SearchFilter {
+    ///         state: Some(State::Completed),
+    ///         bundle_name: None,
+    ///         before: None,
+    ///         after: None,
+    ///         action: None,
+    ///         mode: None,
+    ///     };
+    ///     
+    ///     match proxy.search(filter) {
+    ///         Ok(task_ids) => println!("Found {} completed tasks", task_ids.len()),
+    ///         Err(error) => println!("Search failed: {}", error),
+    ///     }
+    ///     
+    ///     Ok(())
+    /// }
+    /// ```
     pub(crate) fn search(&self, filter: SearchFilter) -> Result<Vec<String>, i32> {
         let remote = self.remote()?;
 
         let mut data = MsgParcel::new();
         data.write_interface_token(SERVICE_TOKEN).unwrap();
 
+        // Serialize bundle name filter, use "*" as wildcard for None
         match filter.bundle_name {
             Some(ref bundle) => data.write(bundle).unwrap(),
             None => data.write(&"*".to_string()).unwrap(),
         }
 
-        // Serialize the filter into the parcel
+        // Serialize the filter parameters into the parcel
         match filter.before {
             Some(before) => data.write(&before).unwrap(),
             None => data.write(&-1i64).unwrap(),
@@ -135,13 +261,16 @@ impl RequestProxy {
 
         match filter.mode {
             Some(mode) => data.write(&(mode as u32)).unwrap(),
-            None => data.write(&02u32).unwrap(),
+            None => data.write(&02u32).unwrap(), // Default mode value
         }
 
         let mut reply = remote.send_request(interface::SEARCH, &mut data).unwrap();
 
-        let len = reply.read::<u32>().unwrap(); // error code
+        // First value in reply is the number of results
+        let len = reply.read::<u32>().unwrap();
         let mut ids = Vec::with_capacity(len as usize);
+        
+        // Read each task ID from the reply
         for _ in 0..len {
             let id = reply.read::<String>().unwrap();
             ids.push(id);
@@ -149,6 +278,18 @@ impl RequestProxy {
         Ok(ids)
     }
 
+    /// Retrieves a download task with authentication.
+    ///
+    /// # Parameters
+    /// - `task_id`: Unique identifier of the task to retrieve
+    /// - `token`: Authentication token for accessing the task
+    ///
+    /// # Returns
+    /// - `Ok(())` on success
+    /// - `Err(i32)` with an error code on failure
+    ///
+    /// # Notes
+    /// This method is currently not fully implemented and contains a `todo!()` placeholder.
     pub(crate) fn get_task(&self, task_id: i64, token: String) -> Result<(), i32> {
         let remote = self.remote()?;
 
@@ -156,8 +297,7 @@ impl RequestProxy {
         data.write_interface_token(SERVICE_TOKEN).unwrap();
 
         data.write(&task_id.to_string()).unwrap();
-
-        data.write(&token).unwrap(); // token
+        data.write(&token).unwrap(); // authentication token
 
         let mut reply = remote.send_request(interface::GET_TASK, &mut data).unwrap();
 
