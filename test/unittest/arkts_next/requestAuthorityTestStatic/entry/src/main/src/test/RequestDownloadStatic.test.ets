@@ -2083,5 +2083,1384 @@ export default function RequestDownloadStaticTest() {
           }
         });
       });
+
+      it('SUB_Request_UpLoadFile_Multipart_Supported_0100', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let data: request.RequestData = {
+          name: 'name',
+          value: '123'
+        }
+        // let uploadConfig1: request.UploadConfig = JSON.parse(JSON.stringify(uploadConfig));
+        let files: Array<request.File> = [{
+          filename: 'test',
+          name: 'test',
+          uri: 'internal://cache/SUB_Misc_REQUEST_On_Download_Progress_0040.txt',
+          type: 'txt'
+        }];
+        let uploadConfig: request.UploadConfig = {
+          url: 'http://127.0.0.1:8080',
+          header: {
+            'Accept': '*/*',
+          },
+          method: 'POST',
+          files: files,
+          data: [data],
+          index: undefined,
+          begins: undefined,
+          ends: undefined,
+        };
+
+        request.uploadFile(baseContext, uploadConfig, (err, uploadTask) => {
+          try {
+            if (err) {
+              console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0100 downloadFile fail: ' +
+              JSON.stringify(err));
+              // expect().assertFail();
+            }
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0100 uploadFile: ' + uploadTask);
+            uploadTask?.onComplete((taskStates: Array<request.TaskState>) => {
+              try {
+                uploadTask?.offComplete();
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0100 taskStates: ' +
+                JSON.stringify(taskStates));
+                expect(taskStates[0].responseCode).assertEqual(0);
+                // done();
+              } catch (err) {
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0100 catch err: ' + err);
+                // done();
+              }
+            })
+          } catch (err) {
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0100 except err: ' + err);
+            // await deleteTask(uploadTask);
+            // done();
+          }
+        });
+      });
+
+    it('SUB_Request_UpLoadFile_Multipart_Supported_0200', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let data: request.RequestData = {
+          name: 'name',
+          value: '123'
+        }
+        // let uploadConfig1: request.UploadConfig = JSON.parse(JSON.stringify(uploadConfig));
+        let files: Array<request.File> = [{
+          filename: 'test',
+          name: 'test',
+          uri: 'internal://cache/SUB_Misc_REQUEST_On_Download_Progress_0040.txt',
+          type: 'txt'
+        }];
+        let uploadConfig: request.UploadConfig = {
+          url: 'http://127.0.0.1:8080',
+          header: {
+            'Accept': '*/*',
+          },
+          method: 'POST',
+          files: files,
+          data: [data],
+          index: 0,
+          begins: 0,
+          ends: -1,
+        };
+
+        request.uploadFile(baseContext, uploadConfig, (err, uploadTask) => {
+          try {
+            if (err) {
+              console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0200 downloadFile fail: ' +
+              JSON.stringify(err));
+              // expect().assertFail();
+            }
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0200 uploadFile: ' + uploadTask);
+            uploadTask?.onComplete((taskStates: Array<request.TaskState>) => {
+              try {
+                uploadTask?.offComplete();
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0200 taskStates: ' +
+                JSON.stringify(taskStates));
+                //expect(taskStates[0].responseCode).assertEqual(0);
+                // done();
+              } catch (err) {
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0200 catch err: ' + err);
+                // done();
+              }
+            })
+          } catch (err) {
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0200 except err: ' + err);
+            // await deleteTask(uploadTask);
+            // done();
+          }
+        });
+      });
+
+    it('SUB_Request_UpLoadFile_Multipart_Supported_0300', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let data: request.RequestData = {
+          name: 'name',
+          value: '123'
+        }
+        // let uploadConfig1: request.UploadConfig = JSON.parse(JSON.stringify(uploadConfig));
+        let files: Array<request.File> = [{
+          filename: 'test',
+          name: 'test',
+          uri: 'internal://cache/SUB_Misc_REQUEST_On_Download_Progress_0040.txt',
+          type: 'txt'
+        }];
+        let uploadConfig: request.UploadConfig = {
+          url: 'http://127.0.0.1:8080',
+          header: {
+            'Accept': '*/*',
+          },
+          method: 'POST',
+          files: files,
+          data: [data],
+          index: 0,
+          begins: 99,
+          ends: -1,
+        };
+
+        request.uploadFile(baseContext, uploadConfig, (err, uploadTask) => {
+          try {
+            if (err) {
+              console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0300 downloadFile fail: ' +
+              JSON.stringify(err));
+              // expect().assertFail();
+            }
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0300 uploadFile: ' + uploadTask);
+            uploadTask?.onComplete((taskStates: Array<request.TaskState>) => {
+              try {
+                uploadTask?.offComplete();
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0300 taskStates: ' +
+                JSON.stringify(taskStates));
+                //expect(taskStates[0].responseCode).assertEqual(0);
+                // done();
+              } catch (err) {
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0300 catch err: ' + err);
+                // done();
+              }
+            })
+          } catch (err) {
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0300 except err: ' + err);
+            // await deleteTask(uploadTask);
+            // done();
+          }
+        });
+      });
+
+    it('SUB_Request_UpLoadFile_Multipart_Supported_0700', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let data: request.RequestData = {
+          name: 'name',
+          value: '123'
+        }
+        // let uploadConfig1: request.UploadConfig = JSON.parse(JSON.stringify(uploadConfig));
+        let files: Array<request.File> = [{
+          filename: 'test',
+          name: 'test',
+          uri: 'internal://cache/SUB_Misc_REQUEST_On_Download_Progress_0040.txt',
+          type: 'txt'
+        }];
+        let uploadConfig: request.UploadConfig = {
+          url: 'http://127.0.0.1:8080',
+          header: {
+            'Accept': '*/*',
+          },
+          method: 'POST',
+          files: files,
+          data: [data],
+          index: 0,
+          begins: 30,
+          ends: 60,
+        };
+
+        request.uploadFile(baseContext, uploadConfig, (err, uploadTask) => {
+          try {
+            if (err) {
+              console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0700 downloadFile fail: ' +
+              JSON.stringify(err));
+              // expect().assertFail();
+            }
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0700 uploadFile: ' + uploadTask);
+            uploadTask?.onComplete((taskStates: Array<request.TaskState>) => {
+              try {
+                uploadTask?.offComplete();
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0700 taskStates: ' +
+                JSON.stringify(taskStates));
+                //expect(taskStates[0].responseCode).assertEqual(0);
+                // done();
+              } catch (err) {
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0700 catch err: ' + err);
+                // done();
+              }
+            })
+          } catch (err) {
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0700 except err: ' + err);
+            // await deleteTask(uploadTask);
+            // done();
+          }
+        });
+      });
+
+    it('SUB_Request_UpLoadFile_Multipart_Supported_0900', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let data: request.RequestData = {
+          name: 'name',
+          value: '123'
+        }
+        // let uploadConfig1: request.UploadConfig = JSON.parse(JSON.stringify(uploadConfig));
+        let files: Array<request.File> = [{
+          filename: 'test',
+          name: 'test',
+          uri: 'internal://cache/SUB_Misc_REQUEST_On_Download_Progress_0040.txt',
+          type: 'txt'
+        }];
+        console.info('====> 1');
+        let uploadConfig: request.UploadConfig = {
+          url: 'http://127.0.0.1:8080',
+          header: {
+            'Accept': '*/*',
+          },
+          method: 'POST',
+          files: files,
+          data: [data],
+          index: 0,
+          begins: 60,
+          ends: 30,
+        };
+        console.info('====> 2');
+
+        try {
+          console.info('====> 3');
+          try {
+            request.uploadFile(baseContext, uploadConfig, (err, uploadTask) => {
+              console.info('====> 4');
+              try {
+                if (err) {
+                  console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0900 downloadFile fail: ' +
+                  JSON.stringify(err));
+                  // expect().assertFail();
+                }
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0900 uploadFile: ' + uploadTask);
+                uploadTask?.onComplete((taskStates: Array<request.TaskState>) => {
+                  try {
+                    uploadTask?.offComplete();
+                    console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0900 taskStates: ' +
+                    JSON.stringify(taskStates));
+                    //expect(taskStates[0].responseCode).assertEqual(0);
+                    // done();
+                  } catch (err) {
+                    console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0900 catch err: ' + err);
+                    // done();
+                  }
+                })
+              } catch (err) {
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0900 except err: ' + err);
+                // await deleteTask(uploadTask);
+                // done();
+              }
+            });
+          } catch (err) {
+            console.info('====> ERRORR');
+          }
+
+        } catch (err: BusinessError) {
+          console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0900 OUT except err: ' + err);
+
+        }
+      });
+
+    it('SUB_Request_UpLoadFile_Multipart_Supported_0800', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let data: request.RequestData = {
+          name: 'name',
+          value: '123'
+        }
+        // let uploadConfig1: request.UploadConfig = JSON.parse(JSON.stringify(uploadConfig));
+        let files: Array<request.File> = [{
+          filename: 'test',
+          name: 'test',
+          uri: 'internal://cache/SUB_Misc_REQUEST_On_Download_Progress_0040.txt',
+          type: 'txt'
+        }];
+        let uploadConfig: request.UploadConfig = {
+          url: 'http://192.168.137.1:13333',
+          header: {
+            'Accept': '*/*',
+          },
+          method: 'POST',
+          files: files,
+          data: [data],
+          // index: 0,
+          begins: 1025,
+          ends: -1,
+        };
+
+        request.uploadFile(baseContext, uploadConfig, (err, uploadTask) => {
+          try {
+            if (err) {
+              console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0800 downloadFile fail: ' +
+              JSON.stringify(err));
+              // expect().assertFail();
+            }
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0800 uploadFile: ' + uploadTask);
+            uploadTask?.onComplete((taskStates: Array<request.TaskState>) => {
+              try {
+                uploadTask?.offComplete();
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0800 taskStates: ' +
+                JSON.stringify(taskStates));
+                //expect(taskStates[0].responseCode).assertEqual(0);
+                // done();
+              } catch (err) {
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0800 catch err: ' + err);
+                // done();
+              }
+            })
+          } catch (err) {
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_0800 except err: ' + err);
+            // await deleteTask(uploadTask);
+            // done();
+          }
+        });
+      });
+
+    it('SUB_Request_UpLoadFile_Multipart_Supported_1000', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let data: request.RequestData = {
+          name: 'name',
+          value: '123'
+        }
+        // let uploadConfig1: request.UploadConfig = JSON.parse(JSON.stringify(uploadConfig));
+        let files: Array<request.File> = [{
+          filename: 'test',
+          name: 'test',
+          uri: 'internal://cache/SUB_Misc_REQUEST_On_Download_Progress_0040.txt',
+
+          type: 'txt'
+        }];
+        let uploadConfig: request.UploadConfig = {
+          url: 'http://192.168.137.1:13333',
+          header: {
+            'Accept': '*/*',
+          },
+          method: 'POST',
+          files: files,
+          data: [data],
+          // index: 0,
+          begins: 60,
+          ends: 60,
+        };
+
+        request.uploadFile(baseContext, uploadConfig, (err, uploadTask) => {
+          try {
+            if (err) {
+              console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1000 downloadFile fail: ' +
+              JSON.stringify(err));
+              // expect().assertFail();
+            }
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1000 uploadFile: ' + uploadTask);
+            uploadTask?.onComplete((taskStates: Array<request.TaskState>) => {
+              try {
+                uploadTask?.offComplete();
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1000 taskStates: ' +
+                JSON.stringify(taskStates));
+                //expect(taskStates[0].responseCode).assertEqual(0);
+                // done();
+              } catch (err) {
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1000 catch err: ' + err);
+                // done();
+              }
+            })
+          } catch (err) {
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1000 except err: ' + err);
+            // await deleteTask(uploadTask);
+            // done();
+          }
+        });
+      });
+
+    it('SUB_Request_UpLoadFile_Multipart_Supported_1100', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let data: request.RequestData = {
+          name: 'name',
+          value: '123'
+        }
+        // let uploadConfig1: request.UploadConfig = JSON.parse(JSON.stringify(uploadConfig));
+        let files: Array<request.File> = [{
+          filename: 'test',
+          name: 'test',
+          uri: 'internal://cache/SUB_Misc_REQUEST_On_Download_Progress_0040.txt',
+
+          type: 'txt'
+        }];
+        let uploadConfig: request.UploadConfig = {
+          url: 'http://192.168.137.1:13333',
+          header: {
+            'Accept': '*/*',
+          },
+          method: 'POST',
+          files: files,
+          data: [data],
+          //index: 0,
+          begins: 0,
+          ends: 1024,
+        };
+
+        request.uploadFile(baseContext, uploadConfig, (err, uploadTask) => {
+          try {
+            if (err) {
+              console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1100 downloadFile fail: ' +
+              JSON.stringify(err));
+              // expect().assertFail();
+            }
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1100 uploadFile: ' + uploadTask);
+            uploadTask?.onComplete((taskStates: Array<request.TaskState>) => {
+              try {
+                uploadTask?.offComplete();
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1100 taskStates: ' +
+                JSON.stringify(taskStates));
+                //expect(taskStates[0].responseCode).assertEqual(0);
+                // done();
+              } catch (err) {
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1100 catch err: ' + err);
+                // done();
+              }
+            })
+          } catch (err) {
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1000 except err: ' + err);
+            // await deleteTask(uploadTask);
+            // done();
+          }
+        });
+      });
+
+    it('SUB_Misc_REQUEST_Create_Download_Callback_Static_0010x', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let data: request.RequestData = {
+          name: 'name',
+          value: '123'
+        }
+        // let uploadConfig1: request.UploadConfig = JSON.parse(JSON.stringify(uploadConfig));
+        let File5: Array<request.File> = [{
+          filename: 'test',
+          name: 'test',
+          uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt',
+          type: 'txt'
+        },
+          {
+            filename: 'test1',
+            name: 'test1',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010x.txt',
+            type: 'txt'
+          },
+          {
+            filename: 'test2',
+            name: 'test2',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xx.txt',
+            type: 'txt'
+          },
+          {
+            filename: 'test3',
+            name: 'test3',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxx.txt',
+            type: 'txt'
+          },
+          {
+            filename: 'test4',
+            name: 'test4',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxxx.txt',
+            type: 'txt'
+          }];
+        let uploadConfig: request.UploadConfig = {
+          url: 'http://192.168.137.1:13333',
+          header: {
+            'Accept': '*/*',
+          },
+          method: 'POST',
+          files: File5,
+          data: [data],
+          // index: 1,
+          begins: 0,
+          ends: 1024,
+        };
+
+        request.uploadFile(baseContext, uploadConfig, (err, uploadTask) => {
+          try {
+            if (err) {
+              console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1200 downloadFile fail: ' +
+              JSON.stringify(err));
+              // expect().assertFail();
+            }
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1200 uploadFile: ' + uploadTask);
+            uploadTask?.onComplete((taskStates: Array<request.TaskState>) => {
+              try {
+                uploadTask?.offComplete();
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1200 taskStates: ' +
+                JSON.stringify(taskStates));
+                expect(taskStates[0].responseCode).assertEqual(0);
+                // done();
+              } catch (err) {
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1200 catch err: ' + err);
+                // done();
+              }
+            })
+          } catch (err) {
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1200 except err: ' + err);
+            // await deleteTask(uploadTask);
+            // done();
+          }
+        });
+      })
+
+    it('SUB_Request_UpLoadFile_Multipart_Supported_1300', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let data: request.RequestData = {
+          name: 'name',
+          value: '123'
+        }
+        // let uploadConfig1: request.UploadConfig = JSON.parse(JSON.stringify(uploadConfig));
+        let File5: Array<request.File> = [{
+          filename: 'test',
+          name: 'test',
+          uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt',
+          type: 'txt'
+        },
+          {
+            filename: 'test1',
+            name: 'test1',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010x.txt',
+            type: 'txt'
+          },
+          {
+            filename: 'test2',
+            name: 'test2',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xx.txt',
+            type: 'txt'
+          },
+          {
+            filename: 'test3',
+            name: 'test3',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxx.txt',
+            type: 'txt'
+          },
+          {
+            filename: 'test4',
+            name: 'test4',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxxx.txt',
+            type: 'txt'
+          }];
+        let uploadConfig: request.UploadConfig = {
+          url: 'http://192.168.137.1:13333',
+          header: {
+            'Accept': '*/*',
+          },
+          method: 'POST',
+          files: File5,
+          data: [data],
+          // index: 1,
+          begins: 1024,
+          ends: 30,
+        };
+
+        request.uploadFile(baseContext, uploadConfig, (err, uploadTask) => {
+          try {
+            if (err) {
+              console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1300 downloadFile fail: ' +
+              JSON.stringify(err));
+              // expect().assertFail();
+            }
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1300 uploadFile: ' + uploadTask);
+            uploadTask?.onComplete((taskStates: Array<request.TaskState>) => {
+              try {
+                uploadTask?.offComplete();
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1300 taskStates: ' +
+                JSON.stringify(taskStates));
+                expect(taskStates[0].responseCode).assertEqual(0);
+                // done();
+              } catch (err) {
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1300 catch err: ' + err);
+                // done();
+              }
+            })
+          } catch (err) {
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1300 except err: ' + err);
+            // await deleteTask(uploadTask);
+            // done();
+          }
+        });
+      })
+
+    it('SUB_Request_UpLoadFile_Multipart_Supported_1400', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let data: request.RequestData = {
+          name: 'name',
+          value: '123'
+        }
+        // let uploadConfig1: request.UploadConfig = JSON.parse(JSON.stringify(uploadConfig));
+        let File5: Array<request.File> = [{
+          filename: 'test',
+          name: 'test',
+          uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt',
+          type: 'txt'
+        },
+          {
+            filename: 'test1',
+            name: 'test1',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010x.txt',
+            type: 'txt'
+          },
+          {
+            filename: 'test2',
+            name: 'test2',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xx.txt',
+            type: 'txt'
+          },
+          {
+            filename: 'test3',
+            name: 'test3',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxx.txt',
+            type: 'txt'
+          },
+          {
+            filename: 'test4',
+            name: 'test4',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxxx.txt',
+            type: 'txt'
+          }];
+        let uploadConfig: request.UploadConfig = {
+          url: 'http://192.168.137.1:13333',
+          header: {
+            'Accept': '*/*',
+          },
+          method: 'POST',
+          files: File5,
+          data: [data],
+          // index: 0,
+          begins: 0,
+          ends: -1,
+        };
+
+        request.uploadFile(baseContext, uploadConfig, (err, uploadTask) => {
+          try {
+            if (err) {
+              console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1400 downloadFile fail: ' +
+              JSON.stringify(err));
+              // expect().assertFail();
+            }
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1400 uploadFile: ' + uploadTask);
+            uploadTask?.onComplete((taskStates: Array<request.TaskState>) => {
+              try {
+                uploadTask?.offComplete();
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1400 taskStates: ' +
+                JSON.stringify(taskStates));
+                expect(taskStates[0].responseCode).assertEqual(0);
+                // done();
+              } catch (err) {
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1400 catch err: ' + err);
+                // done();
+              }
+            })
+          } catch (err) {
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1400 except err: ' + err);
+            // await deleteTask(uploadTask);
+            // done();
+          }
+        });
+      })
+
+    it('SUB_Request_UpLoadFile_Multipart_Supported_1500', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let data: request.RequestData = {
+          name: 'name',
+          value: '123'
+        }
+        // let uploadConfig1: request.UploadConfig = JSON.parse(JSON.stringify(uploadConfig));
+        let File5: Array<request.File> = [{
+          filename: 'test',
+          name: 'test',
+          uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt',
+          type: 'txt'
+        },
+          {
+            filename: 'test1',
+            name: 'test1',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010x.txt',
+            type: 'txt'
+          },
+          {
+            filename: 'test2',
+            name: 'test2',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xx.txt',
+            type: 'txt'
+          },
+          {
+            filename: 'test3',
+            name: 'test3',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxx.txt',
+            type: 'txt'
+          },
+          {
+            filename: 'test4',
+            name: 'test4',
+            uri: 'internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxxx.txt',
+            type: 'txt'
+          }];
+        let uploadConfig: request.UploadConfig = {
+          url: 'http://192.168.137.1:13333',
+          header: {
+            'Accept': '*/*',
+          },
+          method: 'POST',
+          files: File5,
+          data: [data],
+          //index: 0,
+          begins: 30,
+          ends: 60,
+        };
+
+        request.uploadFile(baseContext, uploadConfig, (err, uploadTask) => {
+          try {
+            if (err) {
+              console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1500 downloadFile fail: ' +
+              JSON.stringify(err));
+              // expect().assertFail();
+            }
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1500 uploadFile: ' + uploadTask);
+            uploadTask?.onComplete((taskStates: Array<request.TaskState>) => {
+              try {
+                uploadTask?.offComplete();
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1500 taskStates: ' +
+                JSON.stringify(taskStates));
+                expect(taskStates[0].responseCode).assertEqual(0);
+                // done();
+              } catch (err) {
+                console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1500 catch err: ' + err);
+                // done();
+              }
+            })
+          } catch (err) {
+            console.info('====>SUB_Request_UpLoadFile_Multipart_Supported_1500 except err: ' + err);
+            // await deleteTask(uploadTask);
+            // done();
+          }
+        });
+      });
+
+    it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let data: request.RequestData = {
+          name: 'name',
+          value: '123'
+        }
+        // let uploadConfig1: request.UploadConfig = JSON.parse(JSON.stringify(uploadConfig));
+        let files: Array<request.File> = [{
+          filename: 'test',
+          name: 'test',
+          uri: 'internal://cache/SUB_Misc_REQUEST_On_Download_Progress_0040.txt',
+
+          type: 'txt'
+        }];
+        let uploadConfig: request.UploadConfig = {
+          url: 'http://127.0.0.1:8080',
+          header: {
+            'Accept': '*/*',
+          },
+          method: 'POST',
+          files: files,
+          data: [data],
+        };
+
+        try {
+          request.uploadFile(baseContext, uploadConfig, (err, uploadTask) => {
+            console.info("====>SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001 uploadFile: " + uploadTask);
+            try {
+              //expect(true).assertEqual(uploadTask != undefined);
+              uploadTask?.onFail((TaskState) => {
+                try {
+                  for (let i = 0; i < TaskState.length; i++) {
+                    console.info("====>SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001 fail TaskState = " +
+                    JSON.stringify(TaskState[i]));
+                    console.info("====>SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001 fail TaskState.path = " +
+                    TaskState[i].path);
+                    console.info("====>SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001 fail TaskState.responseCode = " +
+                    TaskState[i].responseCode);
+                    console.info("====>SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001 fail TaskState.TaskState.message = " +
+                    TaskState[i].message);
+                    // expect(typeof (TaskState[i].path) == "string").assertEqual(true);
+                    // expect(typeof (TaskState[i].responseCode) == "number").assertEqual(true);
+                    // expect(typeof (TaskState[i].message) == "string").assertEqual(true);
+                  }
+                  console.info("====>SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001 TaskState is correct");
+                } catch (err) {
+                  console.info("====>SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001 TaskState err: " +
+                  JSON.stringify(err));
+                }
+              });
+              uploadTask?.offFail();
+            } catch (e) {
+              console.info("====>SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001 except error: " + e);
+            }
+          });
+        } catch (err) {
+          console.error("====>SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001 error: " + err);
+        }
+        ;
+      });
+
+    it('SUB_REQUEST_uploadFile_STAGE_API_PROMISE_0001', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let data: request.RequestData = {
+          name: 'name',
+          value: '123'
+        }
+        // let uploadConfig1: request.UploadConfig = JSON.parse(JSON.stringify(uploadConfig));
+        let files: Array<request.File> = [{
+          filename: 'test',
+          name: 'test',
+          uri: 'internal://cache/SUB_Misc_REQUEST_On_Download_Progress_0040.txt',
+          type: 'txt'
+        }];
+        let uploadConfig: request.UploadConfig = {
+          url: 'http://192.168.137.1:13333',
+          header: {
+            'Accept': '*/*',
+          },
+          method: 'POST',
+          files: files,
+          data: [data],
+        };
+
+        console.info("-----------------------SUB_REQUEST_uploadFile_STAGE_API_PROMISE_0001 is starting-----------------------");
+        try {
+          request.uploadFile(baseContext, uploadConfig).then(uploadTask => {
+            console.info("====>SUB_REQUEST_uploadFile_STAGE_API_PROMISE_0001 uploadFile: " + uploadTask);
+            try {
+              //expect(true).assertEqual(uploadTask != undefined);
+            } catch (e) {
+              console.info("====>SUB_REQUEST_uploadFile_STAGE_API_PROMISE_0001 except error: " + e);
+            }
+          }).catch((err: Error) => {
+            console.error("====>SUB_REQUEST_uploadFile_STAGE_API_PROMISE_0001 error: " + err);
+            //expect().assertFail();
+          })
+        } catch (err) {
+          console.error("====>SUB_REQUEST_uploadFile_STAGE_API_PROMISE_0001 catch error: " + err);
+        }
+      });
+
+    it('SUB_Request_FileUpload_Default_0100', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let config: request.UploadConfig = {
+          url: 'http://192.168.137.1:13333',
+          header: { 'Accept': '*/*' } as Record<string, string>,
+          method: "POST",
+          files: [{
+            filename: "test",
+            name: "test",
+            uri: 'internal://cache/SUB_Misc_REQUEST_On_Download_Progress_0040.txt',
+            type: "txt"
+          }],
+          data: [{ name: "name123", value: "123" }],
+          index: undefined,
+          begins: undefined,
+          ends: undefined
+        }
+        console.info('====>SUB_Request_FileUpload_Default_0100 config_multi: ' + JSON.stringify(config));
+        request.uploadFile(baseContext, config, (err, uploadTask) => {
+          try {
+            if (err) {
+              console.info('====>SUB_Request_FileUpload_Default_0100 downloadFile fail: ' + JSON.stringify(err));
+              //expect().assertFail();
+            }
+            console.info('====>SUB_Request_FileUpload_Default_0100 uploadFile: ' + uploadTask);
+            uploadTask?.onComplete((taskStates: Array<request.TaskState>) => {
+              try {
+                uploadTask?.offComplete();
+                console.info('====>SUB_Request_FileUpload_Default_0100 taskStates: ' + JSON.stringify(taskStates));
+                //expect(taskStates[0].responseCode).assertEqual(0);
+              } catch (err) {
+                console.info('====>SUB_Request_FileUpload_Default_0100 catch err: ' + err);
+              }
+            })
+          } catch (err) {
+            console.info('====>SUB_Request_FileUpload_Default_0100 except err: ' + err);
+            // await deleteTask(uploadTask);
+          }
+        });
+      });
+
+    it('SUB_REQUEST_upload_headerReceive_0100', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let data: request.RequestData = {
+          name: 'name',
+          value: '123'
+        }
+        // let uploadConfig1: request.UploadConfig = JSON.parse(JSON.stringify(uploadConfig));
+        let files: Array<request.File> = [{
+          filename: 'test',
+          name: 'test',
+          uri: 'internal://cache/SUB_Misc_REQUEST_On_Download_Progress_0040.txt',
+          type: 'txt'
+        }];
+        let uploadConfig: request.UploadConfig = {
+          url: 'http://192.168.137.1:13333',
+          header: {
+            'Accept': '*/*',
+          },
+          method: 'POST',
+          files: files,
+          data: [data],
+        };
+
+        console.info('-----------------------SUB_REQUEST_upload_headerReceive_0100 is starting-----------------------');
+        request.uploadFile(baseContext, uploadConfig, (err, uploadTask) => {
+          console.info('====>SUB_REQUEST_upload_headerReceive_0100 uploadFile: ' + uploadTask);
+          console.info('====>SUB_REQUEST_upload_headerReceive_0100 uploadConfig: ' + JSON.stringify(uploadConfig));
+          try {
+            let headerCallback = (header: Record<string, string>) => {
+              try {
+                uploadTask?.offHeaderReceive();
+                console.info('====>SUB_REQUEST_upload_headerReceive_0100 headerCallback: ' + JSON.stringify(header));
+                // expect(header['headers']['headertest']).assertEqual('headerreceivetest');
+                // await deleteTask(uploadTask);
+                // done();
+              } catch (err) {
+                console.info('====>SUB_REQUEST_upload_headerReceive_0100 catch err: ' + JSON.stringify(err));
+                // await deleteTask(uploadTask);
+                // done();
+              }
+            }
+            if (err) {
+              console.info('====>SUB_REQUEST_upload_headerReceive_0100 downloadFile fail: ' + JSON.stringify(err));
+              //expect().assertFail();
+            }
+            uploadTask?.onHeaderReceive(headerCallback);
+            console.info('====>SUB_REQUEST_upload_headerReceive_0100 on headerReceive success');
+          } catch (err) {
+            console.info('====>SUB_REQUEST_upload_headerReceive_0100 except err: ' + err);
+            // await deleteTask(uploadTask);
+            // done();
+          }
+        });
+      });
+
+    it('SUB_Request_Agent_MultipleFiles_0100', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let attachments: Array<request.agent.FormItem> = [{
+          name: 'uploadTest',
+          value: [
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010x.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010x.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xx.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xx.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxx.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxx.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxxx.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxxx.txt',
+              // mimeType: 'application/octet-stream',
+            }
+          ]
+        }]
+        let config: request.agent.Config = {
+          action: request.agent.Action.UPLOAD,
+          url: 'http://192.168.137.1:13333',
+          method: "POST",
+          mode: request.agent.Mode.FOREGROUND,
+          network: request.agent.Network.ANY,
+          overwrite: true,
+          multipart: false,
+          data: attachments,
+        }
+        try {
+          let count: number = 0;
+          let task: request.agent.Task = await request.agent.create(baseContext, config);
+          console.info('====>SUB_Request_Agent_MultipleFiles_0100 create success');
+          let responseCallback = (info: request.agent.HttpResponse) => {
+            try {
+              count += 1;
+              console.info('====>SUB_Request_Agent_MultipleFiles_0100 count is: ' + count);
+              console.info('====>SUB_Request_Agent_MultipleFiles_0100 info: ' + JSON.stringify(info));
+            } catch (err) {
+              console.info('====>SUB_Request_Agent_MultipleFiles_0100 err: ' + JSON.stringify(err));
+            }
+          }
+          let completeCallback = (pro: request.agent.Progress) => {
+            try {
+              task.off('response');
+              task.off('completed');
+              console.info('====>SUB_Request_Agent_MultipleFiles_0100 completeCallback count: ' + count);
+              // expect(count).assertEqual(5);
+              // done();
+            } catch (err) {
+              console.info('====>SUB_Request_Agent_MultipleFiles_0100 err: ' + JSON.stringify(err));
+            }
+          }
+          task.on('response', responseCallback);
+          //task.on('completed', completeCallback);
+          await task.start();
+          console.info('====>SUB_Request_Agent_MultipleFiles_0100 task start');
+        } catch (err) {
+          console.info('====>SUB_Request_Agent_MultipleFiles_0100 creat err: ' + JSON.stringify(err));
+          // expect().assertFail();
+        }
+      });
+
+    it('SUB_Request_Agent_MultipleFiles_0200', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let attachments: Array<request.agent.FormItem> = [{
+          name: 'uploadTest',
+          value: [
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010x.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010x.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xx.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xx.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxx.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxx.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxxx.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxxx.txt',
+              // mimeType: 'application/octet-stream',
+            }
+          ]
+        }]
+        let config: request.agent.Config = {
+          action: request.agent.Action.UPLOAD,
+          url: 'http://192.168.137.1:13333',
+          method: "POST",
+          mode: request.agent.Mode.FOREGROUND,
+          network: request.agent.Network.ANY,
+          overwrite: true,
+          multipart: true,
+          data: attachments,
+        }
+        try {
+          let count: number = 0;
+          let task: request.agent.Task = await request.agent.create(baseContext, config);
+          console.info('====>SUB_Request_Agent_MultipleFiles_0200 create success');
+          let responseCallback = (info: request.agent.HttpResponse) => {
+            try {
+              count += 1;
+              console.info('====>SUB_Request_Agent_MultipleFiles_0200 count is: ' + count);
+              console.info('====>SUB_Request_Agent_MultipleFiles_0200 info: ' + JSON.stringify(info));
+            } catch (err) {
+              console.info('====>SUB_Request_Agent_MultipleFiles_0200 err: ' + JSON.stringify(err));
+            }
+          }
+          let completeCallback = (pro: request.agent.Progress) => {
+            try {
+              //task.off('response');
+              task.off('completed');
+              console.info('====>SUB_Request_Agent_MultipleFiles_0200 completeCallback count: ' + count);
+              // expect(count).assertEqual(1);
+              // done();
+            } catch (err) {
+              console.info('====>SUB_Request_Agent_MultipleFiles_0200 err: ' + JSON.stringify(err));
+            }
+          }
+          task.on('response', responseCallback);
+          task.on('completed', completeCallback);
+          await task.start();
+          console.info('====>SUB_Request_Agent_MultipleFiles_0200 task start');
+        } catch (err) {
+          console.info('====>SUB_Request_Agent_MultipleFiles_0200 creat err: ' + JSON.stringify(err));
+          // expect().assertFail();
+        }
+      });
+
+    it('SUB_Request_Agent_MultipleFiles_0300', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let attachments: Array<request.agent.FormItem> = [{
+          name: 'uploadTest',
+          value: [
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010x.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010x.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xx.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xx.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxx.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxx.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxxx.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxxx.txt',
+              // mimeType: 'application/octet-stream',
+            }
+          ]
+        }]
+        let config: request.agent.Config = {
+          action: request.agent.Action.UPLOAD,
+          url: 'http://192.168.137.1:13333',
+          method: "POST",
+          mode: request.agent.Mode.FOREGROUND,
+          network: request.agent.Network.ANY,
+          overwrite: true,
+          multipart: undefined,
+          data: attachments,
+        }
+        try {
+          let count: number = 0;
+          let task: request.agent.Task = await request.agent.create(baseContext, config);
+          console.info('====>SUB_Request_Agent_MultipleFiles_0300 create success');
+          let responseCallback = (info: request.agent.HttpResponse) => {
+            try {
+              count += 1;
+              console.info('====>SUB_Request_Agent_MultipleFiles_0300 count is: ' + count);
+              console.info('====>SUB_Request_Agent_MultipleFiles_0300 info: ' + JSON.stringify(info));
+            } catch (err) {
+              console.info('====>SUB_Request_Agent_MultipleFiles_0300 err: ' + JSON.stringify(err));
+            }
+          }
+          let completeCallback = (pro: request.agent.Progress) => {
+            try {
+              //task.off('response');
+              //task.off('completed');
+              console.info('====>SUB_Request_Agent_MultipleFiles_0300 completeCallback count: ' + count);
+              // expect(count).assertEqual(1);
+              // done();
+            } catch (err) {
+              console.info('====>SUB_Request_Agent_MultipleFiles_0300 err: ' + JSON.stringify(err));
+            }
+          }
+          task.on('response', responseCallback);
+          task.on('completed', completeCallback);
+          await task.start();
+          console.info('====>SUB_Request_Agent_MultipleFiles_0300 task start');
+        } catch (err) {
+          console.info('====>SUB_Request_Agent_MultipleFiles_0300 creat err: ' + JSON.stringify(err));
+          // expect().assertFail();
+        }
+      });
+
+    it('SUB_Request_Agent_MultipleFiles_0400', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        console.info('-----------------------SUB_Request_Agent_MultipleFiles_0400 is starting-----------------------');
+        let attachments: Array<request.agent.FormItem> = [{
+          name: 'uploadTest',
+          value: [
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010x.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010x.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xx.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xx.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxx.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxx.txt',
+              // mimeType: 'application/octet-stream',
+            },
+            {
+              path: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxxx.txt',
+              filename: 'SUB_Misc_REQUEST_Create_Download_Callback_Static_0010xxxx.txt',
+              // mimeType: 'application/octet-stream',
+            }
+          ]
+        }]
+        let config: request.agent.Config = {
+          action: request.agent.Action.UPLOAD,
+          url: 'http://192.168.137.1:13333',
+          method: "POST",
+          mode: request.agent.Mode.FOREGROUND,
+          network: request.agent.Network.ANY,
+          overwrite: true,
+          multipart: true,
+          data: attachments,
+        }
+        try {
+          let task: request.agent.Task = await request.agent.create(baseContext, config);
+          console.info('====>SUB_Request_Agent_MultipleFiles_0400 create success');
+          let completeCallback = (pro: request.agent.Progress) => {
+            try {
+              task.off('completed');
+              console.info('====>SUB_Request_Agent_MultipleFiles_0400 completeCallback pro: ' + JSON.stringify(pro));
+              expect(pro.state).assertEqual(64);
+              // done();
+            } catch (err) {
+              console.info('====>SUB_Request_Agent_MultipleFiles_0400 err: ' + JSON.stringify(err));
+              // done();
+            }
+          }
+          task.on('completed', completeCallback);
+          await task.start();
+          console.info('====>SUB_Request_Agent_MultipleFiles_0400 task start');
+          await task.pause();
+          console.info('====>SUB_Request_Agent_MultipleFiles_0400 task pause');
+          await task.resume();
+          console.info('====>SUB_Request_Agent_MultipleFiles_0400 task resume');
+        } catch (err) {
+          console.info('====>SUB_Request_Agent_MultipleFiles_0400 creat err: ' + JSON.stringify(err));
+          // expect().assertFail();
+        }
+
+      });
+
+    it('SUB_Request_FileUpload_ErrorCode_0100', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let config: request.UploadConfig = {
+          url: 'http://192.168.137.1:13333',
+          header: { 'Accept': '*/*' },
+          method: "POST",
+          files: [{
+            filename: "text",
+            name: "text",
+            uri: "internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt",
+            type: "txt"
+          }],
+          data: [{ name: "name123", value: "123" }],
+        }
+        console.info('====>SUB_Request_FileUpload_ErrorCode_0100 config_multi: ' + JSON.stringify(config));
+        try {
+          request.uploadFile(baseContext, config, (err, uploadTask) => {
+            try {
+              if (err) {
+                console.info('====>SUB_Request_FileUpload_ErrorCode_0100 downloadFile fail: ' + JSON.stringify(err));
+                //expect().assertFail();
+              }
+            } catch (err) {
+              console.info('====>SUB_Request_FileUpload_ErrorCode_0100 catch err: ' + JSON.stringify(err));
+            }
+          });
+        } catch (err: BusinessError) {
+          console.info('====>SUB_Request_FileUpload_ErrorCode_0100 uploadFile err: ' + JSON.stringify(err));
+          // expect(err.code).assertEqual(13400002);
+          // done();
+        }
+      });
+
+    it('SUB_Request_FileUpload_ErrorCode_0200', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let config: request.UploadConfig = {
+          url: 'http://192.168.137.1:13333',
+          header: { 'Accept': '*/*' },
+          method: "POST",
+          files: [{
+            filename: "text",
+            name: "text",
+            uri: "internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt",
+            type: "txt"
+          }],
+          data: [{ name: "name123", value: "123" }],
+        }
+        console.info('====>SUB_Request_FileUpload_ErrorCode_0200 config_multi: ' + JSON.stringify(config));
+        try {
+          await request.uploadFile(baseContext, config);
+          console.info('====>SUB_Request_FileUpload_ErrorCode_0200 uploadFile success');
+          // expect().assertFail();
+          // done();
+        } catch (err) {
+          console.info('====>SUB_Request_FileUpload_ErrorCode_0200 uploadFile err: ' + JSON.stringify(err));
+          // expect(err.code).assertEqual(13400002);
+          // done();
+        }
+
+      });
+
+    it('SUB_Request_FileUpload_ErrorCode_0300', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let config: request.UploadConfig = {
+          url: 'upload',
+          header: { 'Accept': '*/*' },
+          method: "POST",
+          files: [{
+            filename: "test",
+            name: "test",
+            uri: "internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt",
+            type: "txt"
+          }],
+          data: [{ name: "name123", value: "123" }],
+        }
+        console.info('====>SUB_Request_FileUpload_ErrorCode_0300 config_multi: ' + JSON.stringify(config));
+        try {
+          request.uploadFile(baseContext, config,
+            (err: BusinessError | null, uploadTask: request.UploadTask | undefined) => {
+              try {
+                if (err) {
+                  console.info('====>SUB_Request_FileUpload_ErrorCode_0300 downloadFile fail: ' + JSON.stringify(err));
+                  // expect().assertFail();
+                }
+              } catch (err) {
+                console.info('====>SUB_Request_FileUpload_ErrorCode_0300 catch err: ' + JSON.stringify(err));
+              }
+            });
+        } catch (err) {
+          console.info('====>SUB_Request_FileUpload_ErrorCode_0300 uploadFile err: ' + JSON.stringify(err));
+          // expect(err.code).assertEqual(401);
+          // done();
+        }
+      });
+
+    it('SUB_Request_FileUpload_ErrorCode_0400', Level.LEVEL1,
+      async (done: () => void): Promise<void> => {
+        let config: request.UploadConfig = {
+          url: 'upload',
+          header: { 'Accept': '*/*' },
+          method: "POST",
+          files: [{
+            filename: "test",
+            name: "test",
+            uri: "internal://cache/SUB_Misc_REQUEST_Create_Download_Callback_Static_0010.txt",
+            type: "txt"
+          }],
+          data: [{ name: "name123", value: "123" }],
+        }
+        console.info('====>SUB_Request_FileUpload_ErrorCode_0400 config_multi: ' + JSON.stringify(config));
+        try {
+          await request.uploadFile(baseContext, config);
+          console.info('====>SUB_Request_FileUpload_ErrorCode_0400 uploadFile success');
+          // expect().assertFail();
+          // done();
+        } catch (err) {
+          console.info('====>SUB_Request_FileUpload_ErrorCode_0400 uploadFile err: ' + JSON.stringify(err));
+          // expect(err.code).assertEqual(401);
+          // done();
+        }
+      });
   })
 }
