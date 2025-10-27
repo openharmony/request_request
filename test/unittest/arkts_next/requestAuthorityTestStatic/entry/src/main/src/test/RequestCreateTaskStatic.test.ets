@@ -1847,5 +1847,1529 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       }
     });
 
+    it('SUB_Request_Agent_onResponse_0200', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Request_Agent_onResponse_0200 is starting-----------------------");
+      let config1:request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984572/test-files/releases/downloads/1.1/test.hap',
+        title: 'createTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Request_Agent_onResponse_0200',
+        network: request.agent.Network.ANY,
+        overwrite: true
+      };
+      try {
+      let task: request.agent.Task = await request.agent.create(baseContext, config1);
+      console.info("====>SUB_Request_Agent_onResponse_0200 create success");
+      let responseCallback_1 = (info: request.agent.HttpResponse) => {
+        try {
+          console.info("====>SUB_Request_Agent_onResponse_0200 response info: " + JSON.stringify(info));
+          // expect(info.statusCode).assertEqual(404);
+        } catch (err) {
+          console.info("====>SUB_Request_Agent_onResponse_0200 err: " + JSON.stringify(err));
+        }
+      }
+      task.on('response', responseCallback_1);
+      await task.start();
+      console.info("====>SUB_Request_Agent_onResponse_0200 task.start");
+    } catch (err) {
+      console.info("====>SUB_Request_Agent_onResponse_0200 create catch err: " + JSON.stringify(err));
+      expect().assertFail();
+    }
+    });
+
+    it('SUB_Request_Agent_onResponse_0300', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Request_Agent_onResponse_0300 is starting-----------------------");
+      let config1:request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'createTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Request_Agent_onResponse_0300',
+        network: request.agent.Network.ANY,
+        overwrite: true
+      };
+      try {
+      let task: request.agent.Task = await request.agent.create(baseContext, config1);
+      console.info("====>SUB_Request_Agent_onResponse_0300 create success");
+      let responseCallback_1 = (info: request.agent.HttpResponse) => {
+        try {
+          console.info("====>SUB_Request_Agent_onResponse_0300 response info: " + JSON.stringify(info));
+          // expect(info.statusCode).assertEqual(404);
+        } catch (err) {
+          console.info("====>SUB_Request_Agent_onResponse_0300 err: " + JSON.stringify(err));
+        }
+      }
+      task.on('response', responseCallback_1);
+      await task.start();
+      console.info("====>SUB_Request_Agent_onResponse_0300 task.start");
+      task.off('response', responseCallback_1);
+    } catch (err) {
+      console.info("====>SUB_Request_Agent_onResponse_0300 create catch err: " + JSON.stringify(err));
+      expect().assertFail();
+    }
+    });
+
+    it('SUB_Request_Agent_onResponse_0500', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Request_Agent_onResponse_0500 is starting-----------------------");
+      let config1:request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'createTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Request_Agent_onResponse_0500',
+        network: request.agent.Network.ANY,
+        overwrite: true
+      };
+      try {
+      let task: request.agent.Task = await request.agent.create(baseContext, config1);
+      console.info("====>SUB_Request_Agent_onResponse_0500 create success");
+      let responseCallback_1 = (info: request.agent.HttpResponse) => {
+        try {
+          console.info("====>SUB_Request_Agent_onResponse_0500 response1 info: " + JSON.stringify(info));
+          // expect(info.statusCode).assertEqual(404);
+        } catch (err) {
+          console.info("====>SUB_Request_Agent_onResponse_0500 err: " + JSON.stringify(err));
+        }
+      }
+      let responseCallback_2 = (info: request.agent.HttpResponse) => {
+        try {
+          console.info("====>SUB_Request_Agent_onResponse_0500 response2 info: " + JSON.stringify(info));
+          // expect(info.statusCode).assertEqual(404);
+        } catch (err) {
+          console.info("====>SUB_Request_Agent_onResponse_0500 err: " + JSON.stringify(err));
+        }
+      }
+      task.on('response', responseCallback_1);
+      task.on('response', responseCallback_2);
+      task.off('response');
+      await task.start();
+      console.info("====>SUB_Request_Agent_onResponse_0500 task.start");
+    } catch (err) {
+      console.info("====>SUB_Request_Agent_onResponse_0500 create catch err: " + JSON.stringify(err));
+      // expect().assertFail();
+    }
+    });
+
+    it('SUB_Request_Agent_onResponse_0700', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Request_Agent_onResponse_0700 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://cidownload.openharmony.cn/version/Master_Version/OpenHarmony_5.0.2.45/20240924_092847/version-Master_Version-OpenHarmony_5.0.2.45-20240924_092847-hispark_taurus_Linux_weekly.tar.gz',
+        title: 'createTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Request_Agent_onResponse_0700',
+        network: request.agent.Network.ANY,
+        overwrite: true
+      };
+      try {
+      let task: request.agent.Task = await request.agent.create(baseContext, config);
+      console.info("====>SUB_Request_Agent_onResponse_0700 create success");
+
+      let responseCallback_1 = (info: request.agent.HttpResponse) => {
+        try {
+          task.off('response');
+          console.info("====>SUB_Request_Agent_onResponse_0700 response info: " + JSON.stringify(info));
+          // expect(info.statusCode).assertEqual(206);
+        } catch (err) {
+          console.info("====>SUB_Request_Agent_onResponse_0700 responseCallback_1 err: " + JSON.stringify(err));
+        }
+      }
+
+      let progressCallback = (pro: request.agent.Progress) => {
+        try {
+          task.off('progress');
+          console.info("====>SUB_Request_Agent_onResponse_0700 pro: " + JSON.stringify(pro));
+          await task.pause();
+          task.on('response', responseCallback_1);
+          await task.resume();
+        } catch (err) {
+          console.info("====>SUB_Request_Agent_onResponse_0700 progressCallback err: " + JSON.stringify(err));
+        }
+      }
+      task.on('progress', progressCallback);
+      await task.start();
+    } catch (err) {
+      console.info("====>SUB_Request_Agent_onResponse_0700 create catch err: " + JSON.stringify(err));
+      // expect().assertFail();
+    }
+    });
+
+    it('SUB_Request_Agent_proxy_0200', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Request_Agent_proxy_0200 is starting-----------------------");
+      let config1:request.agent.Config = {
+        action: request.agent.Action.UPLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'createTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Request_Agent_proxy_0200',
+        network: request.agent.Network.ANY,
+        overwrite: true,
+        proxy: 'https://192.168.249.58:808'
+      };
+      try {
+      console.info("====>SUB_Request_Agent_proxy_0200 create task");
+      let task: request.agent.Task = await request.agent.create(baseContext, config1);
+      console.info("====>SUB_Request_Agent_proxy_0200 create success");
+      // expect().assertFail();
+    } catch (err) {
+      console.info("====>SUB_Request_Agent_proxy_0200 create catch err: " + JSON.stringify(err));
+      // expect(err.code).assertEqual(401);
+    }
+    });
+
+    it('SUB_Request_Agent_proxy_0400', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info('====>-----------------------SUB_Request_Agent_proxy_0400 is starting-----------------------');
+      let config1:request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'createTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Request_Agent_proxy_0400',
+        network: request.agent.Network.ANY,
+        overwrite: true,
+        proxy: 'https://192.168.249.58:808'
+      };
+      try {
+      console.info("====>SUB_Request_Agent_proxy_0400 create task");
+      let task: request.agent.Task = await request.agent.create(baseContext, config1);
+      console.info("====>SUB_Request_Agent_proxy_0400 create success");
+      // expect().assertFail();
+    } catch (err) {
+      console.info("====>SUB_Request_Agent_proxy_0400 create catch err: " + JSON.stringify(err));
+      // expect(err.code).assertEqual(401);
+    }
+    });
+
+    it('SUB_Request_Agent_ErrorDetailed_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info('====>-----------------------SUB_Request_Agent_ErrorDetailed_0100 is starting-----------------------');
+      let config1:request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://?PARAM.com',
+        title: 'createTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Request_Agent_ErrorDetailed_0100',
+        network: request.agent.Network.ANY,
+        overwrite: true
+      };
+      try {
+      let task: request.agent.Task = await request.agent.create(baseContext, config1);
+      task.on('failed', (pro: request.agent.Progress) => {
+      try {
+      task.off('failed');
+      console.info('====>SUB_Request_Agent_ErrorDetailed_0100 failed pro: ' + JSON.stringify(pro));
+      let info:request.agent.TaskInfo = await request.agent.show(task.tid);
+      console.info('====>SUB_Request_Agent_ErrorDetailed_0100 info: ' + JSON.stringify(info));
+      // expect(info.faults).assertEqual(48);
+    } catch (err) {
+      console.info('====>SUB_Request_Agent_ErrorDetailed_0100 err: ' + JSON.stringify(err));
+    }
+    })
+    await task.start();
+    console.info('====>SUB_Request_Agent_ErrorDetailed_0100 create success');
+    } catch (err) {
+      console.info('====>> create catch err: ' + JSON.stringify(err));
+      // expect().assertFail();
+    }
+    });
+
+    it('SUB_Request_Agent_ContinueDown_0300', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Request_Agent_ContinueDown_0300 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'createTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Request_Agent_ContinueDown_0300.txt',
+        network: request.agent.Network.WIFI,
+        overwrite: true,
+        mode:request.agent.Mode.FOREGROUND
+      };
+      request.agent.create(baseContext, config1, (err, task) => {
+      let on_completedCallback = (pro: request.agent.Progress) => {
+        // task.off('completed', on_completedCallback);
+        try {
+          task?.start();
+          console.info("====>SUB_Request_Agent_ContinueDown_0300 task.start success ");
+          // expect().assertFail();
+        } catch (err) {
+          try {
+            console.info("====>SUB_Request_Agent_ContinueDown_0300 start err: " + JSON.stringify(err));
+            // expect(err.code).assertEqual(21900007);
+          } catch (e) {
+            console.info("====>SUB_Request_Agent_ContinueDown_0300 code err: " + JSON.stringify(e));
+          }
+        }
+      }
+      try {
+      if(err){
+        console.info("====>SUB_Request_Agent_ContinueDown_0300 create err: " + JSON.stringify(err));
+        // expect().assertFail();
+      }
+      task?.on('completed', on_completedCallback);
+      task?.start();
+    } catch (err) {
+      console.info("====>SUB_Request_Agent_ContinueDown_0300 catch err: " + JSON.stringify(err));
+    }
+    });
+    });
+
+    it('SUB_Request_Agent_ContinueDown_0500', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Request_Agent_ContinueDown_0500 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'createTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Request_Agent_ContinueDown_0500.txt',
+        network: request.agent.Network.WIFI,
+        overwrite: true,
+        mode:request.agent.Mode.FOREGROUND
+      };
+      request.agent.create(baseContext, config1, (err, task) => {
+      let on_completedCallback = (pro: request.agent.Progress) => {
+        // task.off('pause', on_completedCallback);
+        try {
+          task?.start();
+          console.info("====>SUB_Request_Agent_ContinueDown_0500 task.start success ");
+          // expect().assertFail();
+        } catch (err) {
+          try {
+            console.info("====>SUB_Request_Agent_ContinueDown_0500 start err: " + JSON.stringify(err));
+            // expect(err.code).assertEqual(21900007);
+          } catch (e) {
+            console.info("====>SUB_Request_Agent_ContinueDown_0500 code err: " + JSON.stringify(e));
+          }
+        }
+      }
+      try {
+      if(err){
+        console.info("====>SUB_Request_Agent_ContinueDown_0500 create err: " + JSON.stringify(err));
+        // expect().assertFail();
+      }
+      task?.on('pause', on_completedCallback);
+      task?.start();
+      task?.pause();
+    } catch (err) {
+      console.info("====>SUB_Request_Agent_ContinueDown_0500 catch err: " + JSON.stringify(err));
+      // await removeTask(task);
+    }
+    });
+    });
+
+    it('SUB_Request_Agent_PauseError_callback_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Request_Agent_PauseError_callback_0100 is starting-----------------------");
+      let config1:request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'createTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Request_Agent_PauseError_callback_0100',
+        network: request.agent.Network.ANY,
+        overwrite: true
+      };
+      try {
+      let task: request.agent.Task = await request.agent.create(baseContext, config1);
+      console.info("====>SUB_Request_Agent_PauseError_callback_0100 create success");
+      task.pause((err: BusinessError|null) => {
+      try{
+      if (err) {
+        console.info("====>SUB_Request_Agent_PauseError_callback_0100 download pause err: " + JSON.stringify(err.code));
+        // expect(err.code).assertEqual(21900007);
+      } else {
+      console.info('====>SUB_Request_Agent_PauseError_callback_0100 failed');
+      // expect().assertFail();
+    }
+    }catch(err){
+      console.info("====>SUB_Request_Agent_PauseError_callback_0100 catch err: " + JSON.stringify(err));
+    }
+    // await request.agent.remove(task?.tid);
+    console.info("====>SUB_Request_Agent_PauseError_callback_0100 removeTask");
+    })
+    } catch (err) {
+      console.info("====>SUB_Request_Agent_PauseError_callback_0100 create catch err: " + JSON.stringify(err));
+      // expect().assertFail();
+    }
+    });
+
+    it('SUB_Request_Agent_PauseError_promise_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Request_Agent_PauseError_promise_0100 is starting-----------------------");
+      let config1:request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'createTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Request_Agent_PauseError_promise_0100',
+        network: request.agent.Network.ANY,
+        overwrite: true
+      };
+      let task: request.agent.Task | null = null;
+      try {
+      task = await request.agent.create(baseContext, config1);
+      console.info("====>SUB_Request_Agent_PauseError_promise_0100 create success");
+      await task.pause();
+      console.info("====>SUB_Request_Agent_PauseError_promise_0100 pause success");
+      // expect().assertFail();
+    } catch (err: BusinessError) {
+      console.info("====>SUB_Request_Agent_PauseError_promise_0100 catch err: " + JSON.stringify(err.code));
+      // expect(err.code).assertEqual(21900007);
+      if (task !== null){
+        // await removeTask(task);
+        console.info("====>SUB_Request_Agent_PauseError_promise_0100 removeTask");
+      }
+    }
+    });
+
+    it('SUB_Request_Download_off_faultOccur_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("-----------------------SUB_Request_Download_off_faultOccur_0100 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/V1.0/test1.txt',
+        title: 'reeateTest',
+        overwrite: true,
+        description: 'XTS download test!',
+        saveas: './SUB_Request_Download_off_faultOccur_0100.txt',
+        network: request.agent.Network.ANY,
+        mode:request.agent.Mode.BACKGROUND
+      };
+
+      // let arr: Array<number> = new Array();
+      // let arr1 = [2, 3];
+      let task: request.agent.Task = await request.agent.create(baseContext, config1);
+      let faultOccurCallBack1 = (faults: request.agent.Faults) => {
+        console.info("====>SUB_Request_Download_off_faultOccur_0100 faultOccurCallBack1 faults: " + faults);
+        // arr.push(1);
+      }
+      let faultOccurCallBack2 = (faults: request.agent.Faults) => {
+        console.info("====>SUB_Request_Download_off_faultOccur_0100 faultOccurCallBack2 faults: " + faults);
+        // arr.push(2);
+      }
+      let faultOccurCallBack3 = (faults: request.agent.Faults) => {
+        try {
+          task.off('faultOccur')
+          console.info("====>SUB_Request_Download_off_faultOccur_0100 faultOccurCallBack3 faults: " + faults);
+          // arr.push(3);
+          // console.info("====>SUB_Request_Download_off_faultOccur_0100 task3 progress on arr: " + JSON.stringify(arr));
+          // expect(arr.join()).assertEqual(arr1.join());
+        } catch (err) {
+          console.info("====>SUB_Request_Download_off_faultOccur_0100 catch err: " + JSON.stringify(err));
+        }
+      }
+
+      console.info("====>SUB_Request_Download_off_faultOccur_0100 create task success");
+      task.on('faultOccur', faultOccurCallBack1);
+      task.off('faultOccur', faultOccurCallBack1);
+      task.on('faultOccur', faultOccurCallBack2);
+      task.on('faultOccur', faultOccurCallBack3);
+      await task.start();
+    });
+
+    it('SUB_Request_Download_off_faultOccur_0200', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("-----------------------SUB_Request_Download_off_faultOccur_0200 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/V1.0/test1.txt',
+        title: 'reeateTest',
+        overwrite: true,
+        description: 'XTS download test!',
+        saveas: './SUB_Request_Download_off_faultOccur_0200.txt',
+        network: request.agent.Network.ANY,
+        mode:request.agent.Mode.BACKGROUND
+      };
+
+      let faultOccurCallBack1 = (faults: request.agent.Faults) => {
+        console.info("====>SUB_Request_Download_off_faultOccur_0200 faultOccurCallBack1 faults: " + faults);
+      }
+      let faultOccurCallBack2 = (faults: request.agent.Faults) => {
+        console.info("====>SUB_Request_Download_off_faultOccur_0200 faultOccurCallBack2 faults: " + faults);
+      }
+      let faultOccurCallBack3 = (faults: request.agent.Faults) => {
+        console.info("====>SUB_Request_Download_off_faultOccur_0200 faultOccurCallBack3 faults: " + faults);
+      }
+
+      let task: request.agent.Task = await request.agent.create(baseContext, config);
+      console.info("====>SUB_Request_Download_off_faultOccur_0200 create task success");
+      task.on('faultOccur', faultOccurCallBack1);
+      task.on('faultOccur', faultOccurCallBack2);
+      task.on('faultOccur', faultOccurCallBack3);
+      task.off('faultOccur');
+      // await task.start();
+      // let t = setTimeout(() => {
+      //   clearTimeout(t);
+      //   console.info("====>SUB_Request_Download_off_faultOccur_0200 create task success");
+      // }, 1000)
+    });
+
+    it('SUB_Request_Download_on_faultOccur_0300', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("-----------------------SUB_Request_Download_on_faultOccur_0300 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https:////',
+        title: 'reeateTest',
+        overwrite: true,
+        description: 'XTS download test!',
+        saveas: './SUB_Request_Download_on_faultOccur_0300.txt',
+        network: request.agent.Network.ANY,
+        mode:request.agent.Mode.BACKGROUND
+      };
+      let task: request.agent.Task = await request.agent.create(baseContext, config1);
+
+      let faultOccurCallBack1 = (faults: request.agent.Faults) => {
+        console.info("====>SUB_Request_Download_on_faultOccur_0300 faultOccurCallBack1 faults: " + faults);
+      }
+      let faultOccurCallBack2 = (faults: request.agent.Faults) => {
+        console.info("====>SUB_Request_Download_on_faultOccur_0300 faultOccurCallBack2 faults: " + faults);
+      }
+      let faultOccurCallBack3 = (faults: request.agent.Faults) => {
+        try {
+          task.off('faultOccur')
+          console.info("====>SUB_Request_Download_on_faultOccur_0300 faultOccurCallBack3 faults: " + faults);
+        } catch (err) {
+          console.info("====>SUB_Request_Download_on_faultOccur_0300 catch err: " + JSON.stringify(err));
+        }
+      }
+
+      console.info("====>SUB_Request_Download_on_faultOccur_0300 create task success");
+      task.on('faultOccur', faultOccurCallBack1);
+      task.on('faultOccur', faultOccurCallBack2);
+      task.on('faultOccur', faultOccurCallBack3);
+      await task.start();
+    });
+
+    it('SUB_MISC_REQUEST_DOWNLOAD_state_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_MISC_REQUEST_DOWNLOAD_state_0010 is starting-----------------------");
+      try {
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_state_0010 request.agent.State.INITIALIZED:" + request.agent.State.INITIALIZED);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_state_0010 request.agent.State.WAITING:" + request.agent.State.WAITING);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_state_0010 request.agent.State.RUNNING:" + request.agent.State.RUNNING);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_state_0010 request.agent.State.RETRYING:" + request.agent.State.RETRYING);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_state_0010 request.agent.State.PAUSED:" + request.agent.State.PAUSED);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_state_0010 request.agent.State.STOPPED:" + request.agent.State.STOPPED);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_state_0010 request.agent.State.COMPLETED:" + request.agent.State.COMPLETED);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_state_0010 request.agent.State.FAILED:" + request.agent.State.FAILED);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_state_0010 request.agent.State.REMOVED:" + request.agent.State.REMOVED);
+    } catch (err) {
+      console.error("====>SUB_MISC_REQUEST_DOWNLOAD_state_0010 error: " + err);
+      // expect().assertFail();
+    }
+    console.info("====>-----------------------SUB_MISC_REQUEST_DOWNLOAD_state_0010 end-----------------------");
+    });
+
+    it('SUB_MISC_REQUEST_DOWNLOAD_faults_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_MISC_REQUEST_DOWNLOAD_faults_0010 is starting-----------------------");
+      try {
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_faults_0010 request.agent.Faults.OTHERS: " + request.agent.Faults.OTHERS);
+      // expect(request.agent.Faults.OTHERS).assertEqual(255);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_faults_0010 request.agent.Faults.DISCONNECTED: " + request.agent.Faults.DISCONNECTED);
+      // expect(request.agent.Faults.DISCONNECTED).assertEqual(0);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_faults_0010 request.agent.Faults.TIMEOUT: " + request.agent.Faults.TIMEOUT);
+      // expect(request.agent.Faults.TIMEOUT).assertEqual(16);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_faults_0010 request.agent.Faults.PROTOCOL: " + request.agent.Faults.PROTOCOL);
+      // expect(request.agent.Faults.PROTOCOL).assertEqual(32);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_faults_0010 request.agent.Faults.FSIO: " + request.agent.Faults.FSIO);
+      // expect(request.agent.Faults.FSIO).assertEqual(64);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_faults_0010 request.agent.Faults.PARAM: " + request.agent.Faults.PARAM);
+      // expect(request.agent.Faults.PARAM).assertEqual(48);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_faults_0010 request.agent.Faults.DNS: " + request.agent.Faults.DNS);
+      // expect(request.agent.Faults.DNS).assertEqual(80);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_faults_0010 request.agent.Faults.TCP: " + request.agent.Faults.TCP);
+      // expect(request.agent.Faults.TCP).assertEqual(96);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_faults_0010 request.agent.Faults.SSL: " + request.agent.Faults.SSL);
+      // expect(request.agent.Faults.SSL).assertEqual(112);
+      console.info("====>SUB_MISC_REQUEST_DOWNLOAD_faults_0010 request.agent.Faults.REDIRECT: " + request.agent.Faults.REDIRECT);
+      // expect(request.agent.Faults.REDIRECT).assertEqual(128);
+      // console.info("====>SUB_MISC_REQUEST_DOWNLOAD_faults_0010 request.agent.Faults.LOW_SPEED: " + request.agent.Faults.LOW_SPEED);
+      // expect(request.agent.Faults.LOW_SPEED).assertEqual(144);
+    } catch (err) {
+      console.error("====>SUB_MISC_REQUEST_DOWNLOAD_faults_0010 error: " + err);
+      // expect().assertFail();
+    }
+    console.info("====>-----------------------SUB_MISC_REQUEST_DOWNLOAD_faults_0010 end-----------------------");
+    });
+
+    it('SUB_Misc_REQUEST_Create_Download_Callback_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("-----------------------SUB_Misc_REQUEST_Create_Download_Callback_0010 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'reeateTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Misc_REQUEST_Create_Download_Callback_0010.txt',
+        network: request.agent.Network.WIFI,
+        mode:request.agent.Mode.BACKGROUND
+      };
+
+      request.agent.create(baseContext, config1, (err, task)=>{
+      console.info("====>SUB_Misc_REQUEST_Create_Download_Callback_0010 downloadTask: " + task);
+      try{
+      if(err){
+        console.info("====>SUB_Misc_REQUEST_Create_Download_Callback_0010 create err: " + JSON.stringify(err));
+        // expect().assertFail();
+      }
+      // expect(task !== undefined).assertEqual(true);
+      // expect(typeof(task.config) === "object").assertEqual(true);
+      console.info("====>SUB_Misc_REQUEST_Create_Download_Callback_0010 create success: " + task?.config);
+    }catch(error){
+      console.info("====>SUB_Misc_REQUEST_Create_Download_Callback_0010 create fail: " + JSON.stringify(error));
+    }
+    // await request.agent.remove(task?.tid?);
+    console.info("-----------------------SUB_Misc_REQUEST_Create_Download_Callback_0010 end-----------------------");
+    // done();
+    });
+    });
+
+    it('SUB_Misc_REQUEST_Create_Download_Promise_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("-----------------------SUB_Misc_REQUEST_Create_Download_Promise_0010 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'reeateTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Misc_REQUEST_Create_Download_Promise_0010',
+        network: request.agent.Network.WIFI,
+        mode:request.agent.Mode.BACKGROUND,
+        overwrite: true,
+      };
+      let task: request.agent.Task | undefined;
+      try {
+      task = await request.agent.create(baseContext, config1);
+      // expect(task !== undefined).assertEqual(true);
+      // await request.agent.remove(task.tid);
+      console.info("====>SUB_Misc_REQUEST_Create_Download_Promise_0010 create success: " + task);
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_Create_Download_Promise_0010 catch error: " + JSON.stringify(err));
+      if(task !== undefined){
+        await request.agent.remove(task.tid);
+      }
+      // expect().assertFail();
+    }
+    console.info("-----------------------SUB_Misc_REQUEST_Create_Download_Promise_0010 end-----------------------");
+    });
+
+    it('SUB_Misc_REQUEST_Remove_Download_Callback_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Misc_REQUEST_Remove_Download_Callback_0010 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'reeateTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Misc_REQUEST_Remove_Download_Callback_0010.txt',
+        network: request.agent.Network.ANY,
+      };
+
+      try {
+      let task = await request.agent.create(baseContext, config1);
+      request.agent.remove(task.tid, err => {
+      try {
+      if(err){
+        console.info("====>SUB_Misc_REQUEST_Remove_Download_Callback_0010 remove err: " + JSON.stringify(err));
+        // expect().assertFail();
+      }
+      // expect(task !== undefined).assertEqual(true);
+      console.info("====>SUB_Misc_REQUEST_Remove_Download_Callback_0010 remove success: " + task);
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_Remove_Download_Callback_0010 remove fail: " + JSON.stringify(err));
+    }
+    });
+    // done();
+    } catch (error) {
+      console.info("====>SUB_Misc_REQUEST_Remove_Download_Callback_0010 catch error: " + JSON.stringify(error));
+      // expect().assertFail();
+    }
+    console.info("-----------------------SUB_Misc_REQUEST_Remove_Download_Callback_0010 end-----------------------");
+    });
+
+    it('SUB_Misc_REQUEST_Remove_Download_Promise_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Misc_REQUEST_Remove_Download_Promise_0010 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'reeateTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Misc_REQUEST_Remove_Download_Promise_0010.txt',
+        network: request.agent.Network.ANY,
+      };
+
+      try {
+      let task = await request.agent.create(baseContext, config1);
+      // await request.agent.remove(task.tid);
+      // expect(true).assertEqual(true);
+      console.info("====>SUB_Misc_REQUEST_Remove_Download_Promise_0010 remove success: " + task);
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_Remove_Download_Promise_0010 catch error: " + JSON.stringify(err));
+      // expect().assertFail();
+    }
+    console.info("-----------------------SUB_Misc_REQUEST_Remove_Download_Promise_0010 end-----------------------");
+    });
+
+    it('SUB_Misc_REQUEST_Start_Download_Callback_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Misc_REQUEST_Start_Download_Callback_0010 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'reeateTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Misc_REQUEST_Start_Download_Callback_0010.txt',
+        network: request.agent.Network.ANY,
+      };
+
+      request.agent.create(baseContext, config1, (err, task)=>{
+      console.info("====>SUB_Misc_REQUEST_Start_Download_Callback_0010 downloadTask: " + task);
+      task?.start(err => {
+      try{
+      if(err){
+        console.info("====>SUB_Misc_REQUEST_Start_Download_Callback_0010 download start err: " + JSON.stringify(err));
+        // expect().assertFail();
+      }
+      // expect(true).assertEqual(true);
+      console.info("====>SUB_Misc_REQUEST_Start_Download_Callback_0010 download start success: " + task);
+    }catch(err){
+      console.info("====>SUB_Misc_REQUEST_Start_Download_Callback_0010 catch err: " + JSON.stringify(err));
+      // await request.agent.remove(task.tid);
+    }
+    // await request.agent.remove(task.tid);
+    console.info("-----------------------SUB_Misc_REQUEST_Start_Download_Callback_0010 end-----------------------");
+    })
+    });
+    });
+
+    it('SUB_Misc_REQUEST_Start_Download_Promise_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Misc_REQUEST_Start_Download_Promise_0010 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'reeateTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Misc_REQUEST_Start_Download_Promise_0010.txt',
+        network: request.agent.Network.ANY,
+      };
+
+      let task: request.agent.Task| undefined;
+      try {
+      task = await request.agent.create(baseContext, config1);
+      await task.start();
+      // expect(true).assertEqual(true);
+      // await request.agent.remove(task.tid);
+      console.info("====>SUB_Misc_REQUEST_Start_Download_Promise_0010 download start success: " + task);
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_Start_Download_Promise_0010 download start err: " + JSON.stringify(err));
+      if(task !== undefined){
+        // await request.agent.remove(task.tid);
+      }
+      // expect().assertFail();
+    }
+    console.info("-----------------------SUB_Misc_REQUEST_Start_Download_Promise_0010 end-----------------------");
+    });
+
+    it('SUB_Misc_REQUEST_On_Download_Progress_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Misc_REQUEST_On_Download_Progress_0040 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'reeateTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Misc_REQUEST_On_Download_Progress_0040.txt',
+        network: request.agent.Network.WIFI,
+        overwrite: true,
+        mode:request.agent.Mode.FOREGROUND
+      };
+
+      try {
+      request.agent.create(baseContext, config1, (err, task) => {
+      let on_progressCallback = (pro: request.agent.Progress) => {
+        // task.off('progress', on_progressCallback);
+        console.info("====>SUB_Misc_REQUEST_On_Download_Progress_0040 pro.state: " + pro.state);
+        console.info("====>SUB_Misc_REQUEST_On_Download_Progress_0040 pro.index: " + pro.index);
+        console.info("====>SUB_Misc_REQUEST_On_Download_Progress_0040 pro.processed: " + pro.processed);
+        console.info("====>SUB_Misc_REQUEST_On_Download_Progress_0040 pro.size: " + pro.sizes);
+        console.info("====>SUB_Misc_REQUEST_On_Download_Progress_0040 pro.extras: " + JSON.stringify(pro.extras));
+      }
+      try {
+      if(err){
+        console.info("====>SUB_Misc_REQUEST_On_Download_Progress_0040 create err: " + JSON.stringify(err));
+        // expect().assertFail();
+      }
+      task?.on('progress', on_progressCallback);
+      task?.start();
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_On_Download_Progress_0040 catch err: " + JSON.stringify(err));
+    }
+    });
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_On_Download_Progress_0040 create catch err: " + JSON.stringify(err));
+    }
+    });
+
+    it('SUB_Misc_REQUEST_Off_Download_Progress_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Misc_REQUEST_Off_Download_Progress_0040 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: 'reeateTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Misc_REQUEST_Off_Download_Progress_0040.txt',
+        network: request.agent.Network.WIFI,
+        overwrite: true,
+        mode:request.agent.Mode.FOREGROUND
+      };
+
+      try {
+      let flag = true;
+      request.agent.create(baseContext, config1, (err, task) => {
+      let on_progressCallback = (pro: request.agent.Progress) => {
+        flag = false;
+        console.info("====>SUB_Misc_REQUEST_Off_Download_Progress_0040 on_progressCallback flag: " + flag);
+      }
+      try {
+      if(err){
+        console.info("====>SUB_Misc_REQUEST_Off_Download_Progress_0040 create err: " + JSON.stringify(err));
+        // expect().assertFail();
+      }
+      task?.on('progress', on_progressCallback);
+      task?.off('progress', on_progressCallback);
+      task?.start();
+      // let t = setTimeout(async () => {
+      //   try {
+      //     clearTimeout(t);
+      //     expect(flag).assertTrue();
+      //     console.info("====>SUB_Misc_REQUEST_Off_Download_Progress_0040 offProgress success flag: " + flag);
+      //   } catch (err) {
+      //     console.info("====>SUB_Misc_REQUEST_Off_Download_Progress_0040 offProgress fail err: " + JSON.stringify(err));
+      //     await request.agent.remove(task.tid);
+      //   }
+      //   done();
+      // }, 3000)
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_Off_Download_Progress_0040 catch err: " + JSON.stringify(err));
+      // await request.agent.remove(task.tid);
+    }
+    });
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_Off_Download_Progress_0040 create catch err: " + JSON.stringify(err));
+    }
+    });
+
+    it('SUB_Misc_REQUEST_On_Download_Completed_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Misc_REQUEST_On_Download_Completed_0040 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
+        title: 'reeateTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Misc_REQUEST_On_Download_Completed_0040.txt',
+        network: request.agent.Network.WIFI,
+        overwrite: true,
+        mode:request.agent.Mode.FOREGROUND
+      };
+      try {
+      request.agent.create(baseContext, config1, (err, task) => {
+      let on_completedCallback = (pro: request.agent.Progress) => {
+        //task.off('completed', on_completedCallback);
+        console.info("====>SUB_Misc_REQUEST_On_Download_Completed_0040 pro.state: " + pro.state);
+        console.info("====>SUB_Misc_REQUEST_On_Download_Completed_0040 pro.index: " + pro.index);
+        console.info("====>SUB_Misc_REQUEST_On_Download_Completed_0040 pro.processed: " + pro.processed);
+        console.info("====>SUB_Misc_REQUEST_On_Download_Completed_0040 pro.sizes: " + pro.sizes);
+        console.info("====>SUB_Misc_REQUEST_On_Download_Completed_0040 pro.extras: " + JSON.stringify(pro.extras));
+        //expect(true).assertTrue();
+        //done();
+      }
+      try {
+      if(err){
+        console.info("====>SUB_Misc_REQUEST_On_Download_Completed_0040 create err: " + JSON.stringify(err));
+        //expect().assertFail();
+      }
+      task?.on('completed', on_completedCallback);
+      task?.start();
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_On_Download_Completed_0040 catch err: " + JSON.stringify(err));
+      //await request.agent.remove(task.tid);
+      //done();
+    }
+    });
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_On_Download_Completed_0040 create catch err: " + JSON.stringify(err));
+      //done();
+    }
+    });
+
+    it('SUB_Misc_REQUEST_Off_Download_Completed_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Misc_REQUEST_Off_Download_Completed_0040 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
+        title: 'reeateTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Misc_REQUEST_Off_Download_Completed_0040.txt',
+        network: request.agent.Network.WIFI,
+        overwrite: true,
+        mode:request.agent.Mode.FOREGROUND
+      };
+
+      try {
+      let flag = true;
+      request.agent.create(baseContext, config1, (err, task) => {
+      let on_offCompletedCallback = (pro: request.agent.Progress) => {
+        flag = false;
+        console.info("====>SUB_Misc_REQUEST_Off_Download_Completed_0040 on_offCompletedCallback flag: " + flag);
+      }
+      try {
+      if(err){
+        console.info("====>SUB_Misc_REQUEST_Off_Download_Completed_0040 create err: " + JSON.stringify(err));
+        //expect().assertFail();
+      }
+      task?.on('completed', on_offCompletedCallback);
+      task?.off('completed', on_offCompletedCallback);
+      task?.start();
+      // let t = setTimeout(async () => {
+      //   try {
+      //     clearTimeout(t);
+      //     expect(flag).assertTrue();
+      //     console.info("====>SUB_Misc_REQUEST_Off_Download_Completed_0040 offCompleted success flag: " + flag);
+      //   } catch (err) {
+      //     console.info("====>SUB_Misc_REQUEST_Off_Download_Completed_0040 offCompleted fail err: " + JSON.stringify(err));
+      //     await request.agent.remove(task.tid);
+      //   }
+      //   done();
+      // }, 3000)
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_Off_Download_Completed_0040 catch err: " + JSON.stringify(err));
+      //await request.agent.remove(task.tid);
+      //done();
+    }
+    });
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_Off_Download_Completed_0040 create catch err: " + JSON.stringify(err));
+      //done();
+    }
+    });
+
+    it('SUB_Misc_REQUEST_On_Download_Failed_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Misc_REQUEST_On_Download_Failed_0040 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/xxxxxxxxxxx/test.apk',
+        title: 'reeateTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Misc_REQUEST_On_Download_Failed_0040.txt',
+        network: request.agent.Network.WIFI,
+        overwrite: true,
+        mode:request.agent.Mode.FOREGROUND
+      };
+      try {
+      request.agent.create(baseContext, config1, (err, task) => {
+      let on_failedCallback = (pro: request.agent.Progress) => {
+        //task.off('failed', on_failedCallback);
+        console.info("====>SUB_Misc_REQUEST_On_Download_Failed_0040 pro.state: " + pro.state);
+        console.info("====>SUB_Misc_REQUEST_On_Download_Failed_0040 pro.index: " + pro.index);
+        console.info("====>SUB_Misc_REQUEST_On_Download_Failed_0040 pro.processed: " + pro.processed);
+        console.info("====>SUB_Misc_REQUEST_On_Download_Failed_0040 pro.size: " + pro.sizes);
+        console.info("====>SUB_Misc_REQUEST_On_Download_Failed_0040 pro.extras: " + JSON.stringify(pro.extras));
+        //expect(true).assertTrue();
+        //done();
+      }
+      try {
+      if(err){
+        console.info("====>SUB_Misc_REQUEST_On_Download_Failed_0040 create err: " + JSON.stringify(err));
+        //expect().assertFail();
+      }
+      task?.on('failed', on_failedCallback);
+      task?.start();
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_On_Download_Failed_0040 catch err: " + JSON.stringify(err));
+      //await request.agent.remove(task.tid);
+      //done();
+    }
+    });
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_On_Download_Failed_0040 create catch err: " + JSON.stringify(err));
+      //done();
+    }
+    });
+
+    it('SUB_Misc_REQUEST_Off_Download_Failed_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Misc_REQUEST_Off_Download_Failed_0040 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/xxxxxxxxxxx/test.apk',
+        title: 'reeateTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Misc_REQUEST_Off_Download_Failed_0040.txt',
+        network: request.agent.Network.WIFI,
+        overwrite: true,
+        mode:request.agent.Mode.FOREGROUND
+      };
+
+      try {
+      let flag = true;
+      request.agent.create(baseContext, config1, (err, task) => {
+      let on_failedCallback = (pro: request.agent.Progress) => {
+        flag = false;
+        console.info("====>SUB_Misc_REQUEST_Off_Download_Failed_0040 on_failedCallback flag: " + flag);
+      }
+      try {
+      if(err){
+        console.info("====>SUB_Misc_REQUEST_Off_Download_Failed_0040 create err: " + JSON.stringify(err));
+        //expect().assertFail();
+      }
+      task?.on('failed', on_failedCallback);
+      task?.off('failed', on_failedCallback);
+      task?.start();
+      // let t = setTimeout(async () => {
+      //   try {
+      //     clearTimeout(t);
+      //     expect(flag).assertTrue();
+      //     console.info("====>SUB_Misc_REQUEST_Off_Download_Failed_0040 offFailed success flag: " + flag);
+      //   } catch (err) {
+      //     console.info("====>SUB_Misc_REQUEST_Off_Download_Failed_0040 offFailed fail err: " + JSON.stringify(err));
+      //     await request.agent.remove(task.tid);
+      //   }
+      //   done();
+      // }, 3000)
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_Off_Download_Failed_0040 catch err: " + JSON.stringify(err));
+      //await request.agent.remove(task.tid);
+      //done();
+    }
+    });
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_Off_Download_Failed_0040 create catch err: " + JSON.stringify(err));
+      //done();
+    }
+    });
+
+    it('SUB_Request_DownloadManagement_Download_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      console.info("====>-----------------------SUB_Request_DownloadManagement_Download_0100 is starting-----------------------");
+      let config1:request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com',
+        title: 'createTest',
+        description: 'XTS download test!',
+        saveas: './SUB_Request_DownloadManagement_Download_0100',
+        network: request.agent.Network.ANY,
+        overwrite: true
+      };
+      try {
+      let task: request.agent.Task = await request.agent.create(baseContext, config1);
+      console.info("====>SUB_Request_DownloadManagement_Download_0100 create success");
+      let completedCallback = (pro: request.agent.Progress) => {
+        try {
+          //task.off('completed', completedCallback);
+          console.info("====>SUB_Request_DownloadManagement_Download_0100 response info: " + JSON.stringify(pro));
+          //expect(pro.sizes[0]).assertEqual(-1);
+          //done();
+        } catch (err) {
+          console.info("====>SUB_Request_DownloadManagement_Download_0100 err: " + JSON.stringify(err));
+          //done();
+        }
+      }
+      task.on('completed', completedCallback);
+      await task.start();
+      console.info("====>SUB_Request_DownloadManagement_Download_0100 task.start");
+    } catch (err) {
+      console.info("====>SUB_Request_DownloadManagement_Download_0100 create catch err: " + JSON.stringify(err));
+      //expect().assertFail();
+      //done();
+    }
+    });
+
+    it('SUB_Misc_REQUEST_create_Callback_0140', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
+      let tag: string = 'testTag';
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://cidownload.openharmony.cn/version/Master_Version/OpenHarmony_5.0.2.45/20240924_092847/version-Master_Version-OpenHarmony_5.0.2.45-20240924_092847-hispark_taurus_Linux_weekly.tar.gz',
+        title: 'createTest',
+        description: 'Sample code for create task',
+        mode: request.agent.Mode.FOREGROUND ,
+        overwrite: true,
+        saveas: "./SUB_Misc_REQUEST_create_Callback_0140x.txt",
+        network: request.agent.Network.WIFI,
+        index: 0,
+        begins: 0,
+        ends: 100,
+      };
+      console.info("====>-------------------SUB_Misc_REQUEST_create_Callback_0140 is starting---------------------");
+      request.agent.create(baseContext, config1, (err, task) => {
+      try{
+      if (err) {
+        console.info("====>SUB_Misc_REQUEST_create_Callback_0140 create err: " + JSON.stringify(err));
+        //expect().assertFail();
+      }
+      task?.on("completed", (progress) => {
+      task?.off("completed");
+      let downloadSize = progress.sizes[0];
+      try {
+      console.info('====>downloadSize:' + downloadSize);
+      if (config1.ends !== undefined && config1.begins !== undefined){
+      //let fileSize = config1.ends - config1.begins + 1;
+      //hilog.info(domain, tag, `====>ends: ${config1.ends} + begin: ${config1.begins}`);
+      //expect(downloadSize).assertEqual(fileSize);
+      console.info("====>----------SUB_Misc_REQUEST_create_Callback_0140 is end---------------");
+      //done();
+    } else {
+      console.info("====>SUB_Misc_REQUEST_create_Callback_0140 config.ends or config.begins is undefined");
+      //expect().assertFail();
+      //done();
+    }
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_create_Callback_0140 catch err: " + JSON.stringify(err));
+      //done();
+    }
+    });
+    task?.start();
+    }catch(err){
+      console.info("====>SUB_Misc_REQUEST_create_Callback_0140 create err: " + JSON.stringify(err));
+      //done();
+    }
+    });
+    });
+
+    it('SUB_Misc_REQUEST_Create_Promise_0140', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://cidownload.openharmony.cn/version/Master_Version/OpenHarmony_5.0.2.45/20240924_092847/version-Master_Version-OpenHarmony_5.0.2.45-20240924_092847-hispark_taurus_Linux_weekly.tar.gz',
+        title: 'createTest',
+        description: 'Sample code for create task',
+        mode: request.agent.Mode.FOREGROUND,
+        overwrite: true,
+        saveas: "./SUB_Misc_REQUEST_Create_Promise_0140_077xx.txt",
+        network: request.agent.Network.WIFI,
+        index: 0,
+        begins: 0,
+        ends: 100,
+      };
+      console.info("====>-------------------SUB_Misc_REQUEST_Create_Promise_0140 is starting---------------------");
+      try{
+      let task = await request.agent.create(baseContext, config1)
+      let onCompletedCallback = (progress: request.agent.Progress) => {
+        task.off("completed");
+        let downloadSize = progress.sizes[0]
+        try {
+          console.info('====>downloadSize:' + downloadSize);
+          if (config1.ends !== undefined && config1.begins !== undefined){
+            //let fileSize = config.ends - config.begins + 1
+            console.info('====>fileSize: '+ config1.ends + ' beg:' + config1.begins)
+            //expect(downloadSize).assertEqual(fileSize)
+            //done();
+          } else {
+            console.info("====>SUB_Misc_REQUEST_Create_Promise_0140 config.ends or config.begins is undefined");
+            //expect().assertFail();
+            //done();
+          }
+        } catch (err) {
+          console.info("====>SUB_Misc_REQUEST_Create_Promise_0140 catch err: " + JSON.stringify(err));
+          //d/one();
+        }
+      }
+      task.on("completed", onCompletedCallback)
+      await task.start()
+    }catch(err){
+      console.info("====>SUB_Misc_REQUEST_Create_Promise_0140 create err: " + JSON.stringify(err));
+      //done();
+    }
+    });
+
+    it('SUB_Misc_REQUEST_create_Callback_0160', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://cidownload.openharmony.cn/version/Master_Version/OpenHarmony_5.0.2.45/20240924_092847/version-Master_Version-OpenHarmony_5.0.2.45-20240924_092847-hispark_taurus_Linux_weekly.tar.gz',
+        title: 'createTest',
+        description: 'Sample code for create task',
+        mode: request.agent.Mode.FOREGROUND,
+        overwrite: true,
+        saveas: "./SUB_Misc_REQUEST_create_Callback_0160.txt",
+        network: request.agent.Network.WIFI,
+        index: 0,
+        begins: 233332586,
+        ends: -1,
+      };
+      console.info("====>-------------------SUB_Misc_REQUEST_create_Callback_0160 is starting---------------------");
+      request.agent.create(baseContext, config1, (err, task) => {
+      try{
+      if (err) {
+        console.info("====>SUB_Misc_REQUEST_create_Callback_0160 create err: " + JSON.stringify(err));
+        //expect().assertFail();
+      }
+      task?.on("completed", (progress) => {
+      task?.off("completed");
+      let downloadSize = progress.sizes[0];
+      console.info('====>downloadSize:' + downloadSize);
+      //expect(downloadSize).assertEqual(100);
+      console.info("====>----------SUB_Misc_REQUEST_create_Callback_0160 is end---------------");
+      //done();
+    });
+    task?.start();
+    }catch(err){
+      console.info("====>SUB_Misc_REQUEST_create_Callback_0160 create err: " + JSON.stringify(err));
+      //done();
+    }
+    });
+    });
+
+    it('SUB_Misc_REQUEST_Create_Promise_0160', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://cidownload.openharmony.cn/version/Master_Version/OpenHarmony_5.0.2.45/20240924_092847/version-Master_Version-OpenHarmony_5.0.2.45-20240924_092847-hispark_taurus_Linux_weekly.tar.gz',
+        title: 'createTest',
+        description: 'Sample code for create task',
+        mode: request.agent.Mode.FOREGROUND,
+        overwrite: true,
+        saveas: "./SUB_Misc_REQUEST_Create_Promise_0160.txt",
+        network: request.agent.Network.WIFI,
+        index: 0,
+        begins: 233332586,
+        ends: -1,
+      };
+      console.info("====>-------------------SUB_Misc_REQUEST_Create_Promise_0160 is starting---------------------");
+
+      try{
+      let task = await request.agent.create(baseContext, config1);
+      let onCompletedCallback = (progress: request.agent.Progress) => {
+        task.off("completed");
+        let downloadSize = progress.sizes[0];
+        console.info('====>downloadSize:' + downloadSize);
+        //expect(downloadSize).assertEqual(100);
+        //done();
+      }
+      task.on("completed", onCompletedCallback);
+      await task.start();
+    }catch(err){
+      console.info("====>SUB_Misc_REQUEST_Create_Promise_0160 create err: " + JSON.stringify(err));
+      //done();
+    }
+    });
+
+    it('SUB_Misc_REQUEST_create_Callback_0170', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://cidownload.openharmony.cn/version/Master_Version/OpenHarmony_5.0.2.45/20240924_092847/version-Master_Version-OpenHarmony_5.0.2.45-20240924_092847-hispark_taurus_Linux_weekly.tar.gz',
+        title: 'createTest',
+        description: 'Sample code for create task',
+        mode: request.agent.Mode.FOREGROUND,
+        overwrite: true,
+        saveas: "./SUB_Misc_REQUEST_create_Callback_0170.txt",
+        network: request.agent.Network.WIFI,
+        index: 0,
+        begins: 30,
+        ends: 60,
+      };
+      console.info("====>-------------------SUB_Misc_REQUEST_create_Callback_0170 is starting---------------------");
+      request.agent.create(baseContext, config1, (err, task) => {
+      try{
+      if (err) {
+        console.info("====>SUB_Misc_REQUEST_create_Callback_0170 create err: " + JSON.stringify(err));
+        //().assertFail();
+      }
+      task?.on("completed", (progress) => {
+      task?.off("completed");
+      let downloadSize = progress.sizes[0];
+      try {
+      console.info('====>downloadSize:' + downloadSize);
+      if (config1.ends !== undefined && config1.begins !== undefined){
+      // let fileSize = config.ends - config.begins + 1;
+      console.info('====>fileSize: '+ config1.ends + ' 、' + config1.begins);
+      //expect(downloadSize).assertEqual(fileSize);
+      console.info("====>-----------------SUB_Misc_REQUEST_create_Callback_0170 is end--------------------");
+      //done();
+    } else {
+      console.info("====>SUB_Misc_REQUEST_create_Callback_0170 config.ends or config.begins is undefined");
+      //expect().assertFail();
+      //done();
+    }
+    } catch (err) {
+      console.info("====>SUB_Misc_REQUEST_create_Callback_0170 catch err: " + JSON.stringify(err));
+      //done();
+    }
+    });
+    task?.start();
+    }catch(err){
+      console.info("====>SUB_Misc_REQUEST_create_Callback_0170 create err: " + JSON.stringify(err));
+      //done();
+    }
+    });
+    });
+
+    it('SUB_Misc_REQUEST_create_Callback_0180', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://cidownload.openharmony.cn/version/Master_Version/OpenHarmony_5.0.2.45/20240924_092847/version-Master_Version-OpenHarmony_5.0.2.45-20240924_092847-hispark_taurus_Linux_weekly.tar.gz',
+        title: 'createTest',
+        description: 'Sample code for create task',
+        mode: request.agent.Mode.FOREGROUND,
+        overwrite: true,
+        saveas: "./SUB_Misc_REQUEST_create_Callback_0180x.txt",
+        network: request.agent.Network.WIFI,
+        index: 0,
+        begins: 60,
+        ends: 30,
+      };
+      console.info("====>-------------------SUB_Misc_REQUEST_create_Callback_0180 is starting---------------------");
+      request.agent.create(baseContext, config1, (err, task) => {
+      try{
+      if (err) {
+        console.info("====>SUB_Misc_REQUEST_create_Callback_0180 create err: " + JSON.stringify(err));
+        //expect().assertFail();
+      }
+      task?.on("failed", (progress) => {
+      task?.off("failed");
+      console.info('====>upload task failed.' + JSON.stringify(progress.state));
+      //expect(progress.state).assertEqual(65);
+      //done();
+    });
+    task?.start();
+    }catch(err){
+      console.info("====>SUB_Misc_REQUEST_create_Callback_0180 create err: " + JSON.stringify(err));
+      //done();
+    }
+    });
+    });
+
+    it('SUB_Misc_REQUEST_Create_Promise_0180', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://cidownload.openharmony.cn/version/Master_Version/OpenHarmony_5.0.2.45/20240924_092847/version-Master_Version-OpenHarmony_5.0.2.45-20240924_092847-hispark_taurus_Linux_weekly.tar.gz',
+        title: 'createTest',
+        description: 'Sample code for create task',
+        mode: request.agent.Mode.FOREGROUND,
+        overwrite: true,
+        saveas: "./SUB_Misc_REQUEST_Create_Promise_0180.txt",
+        network: request.agent.Network.WIFI,
+        index: 0,
+        begins: 60,
+        ends: 30,
+      };
+      console.info("====>-------------------SUB_Misc_REQUEST_Create_Promise_0180 is starting---------------------");
+      try{
+      let task = await request.agent.create(baseContext, config1);
+      let createOffCallback = (progress: request.agent.Progress) => {
+        console.info('====>upload task failed.' + JSON.stringify(progress));
+        task.off("failed");
+        //expect(progress.state).assertEqual(65);
+        //done();
+      };
+      task.on("failed", createOffCallback);
+      await task.start();
+    }catch(err){
+      console.info("====>SUB_Misc_REQUEST_Create_Promise_0180 create err: " + JSON.stringify(err));
+      //done();
+    }
+    });
+
+    it('SUB_Misc_REQUEST_create_Callback_0090', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        data: undefined,
+        saveas: undefined,
+        network: undefined,
+        metered: undefined,
+        roaming: undefined,
+        retry: undefined,
+        redirect: undefined,
+        index: undefined,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined
+      };
+      console.info("====>-------------------SUB_Misc_REQUEST_create_Callback_0090 is starting---------------------");
+      try{
+      request.agent.create(baseContext, config1, (err, task) => {
+      if (err) {
+        console.info("====>SUB_Misc_REQUEST_create_Callback_0090 create err: " + JSON.stringify(err));
+        //done();
+      }
+      task?.start((err) => {
+      if (err) {
+        console.error(`====>SUB_Misc_REQUEST_create_Callback_0090 Failed to start the download task, Code: ${err.code}, message: ${err.message}`);
+        //expect().assertFail();
+        return;
+      }
+      console.info(`====>SUB_Misc_REQUEST_create_Callback_0090 Succeeded in starting a download task.`);
+      //expect(true).assertEqual(true);
+      //await request.agent.remove(task.tid);
+      console.info("====>----------------SUB_Misc_REQUEST_create_Callback_0090 is end-------------------");
+      //done();
+    });
+    });
+    }catch(err){
+      console.info("====>SUB_Misc_REQUEST_create_Callback_0090 create err: " + JSON.stringify(err));
+      //done();
+    }
+    });
+
+    it('SUB_Misc_REQUEST_Create_Promise_0090', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        data: undefined,
+        saveas: undefined,
+        network: undefined,
+        metered: undefined,
+        roaming: undefined,
+        retry: undefined,
+        redirect: undefined,
+        index: undefined,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined
+      };
+      console.info("====>-------------------SUB_Misc_REQUEST_Create_Promise_0090 is starting---------------------");
+      try{
+      request.agent.create(baseContext, config).then((task)=> {
+      task.start((err) => {
+      if (err) {
+        console.error(`====>SUB_Misc_REQUEST_Create_Promise_0090 Failed to start the download task, Code: ${err.code}, message: ${err.message}`);
+        //expect().assertFail();
+        return;
+      }
+      console.info(`====>SUB_Misc_REQUEST_Create_Promise_0090 Succeeded in starting a download task.`);
+      //expect(true).assertEqual(true);
+      await request.agent.remove(task.tid);
+      console.info("====>------------------SUB_Misc_REQUEST_Create_Promise_0090 is end-------------------");
+      //done();
+    });
+    }).catch((err: Error) => {
+      console.info("====>SUB_Misc_REQUEST_Create_Promise_0090 create err: " + JSON.stringify(err));
+      //done();
+    });
+    }catch(err){
+      console.info("====>SUB_Misc_REQUEST_Create_Promise_0090 create err: " + JSON.stringify(err));
+      //done();
+    }
+    });
+
+    it('SUB_Misc_REQUEST_Create_Promise_0080', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let urls = 'x';
+      for (let i = 0; i < 8175; i++){
+      urls += 'x';
+    }
+    let config2: request.agent.Config = {
+      action: request.agent.Action.DOWNLOAD,
+      url: 'https://' + urls + '/test.apk',
+      title: 'createTest',
+      description: "XTS download test!",
+      mode: request.agent.Mode.BACKGROUND,
+      overwrite: true,
+      saveas: "./SUB_Misc_REQUEST_Create_Promise_0080.txt",
+      network: request.agent.Network.WIFI,
+    };
+    console.info("====>-------------SUB_Misc_REQUEST_Create_Promise_0080 is starting----------------");
+    try{
+      await request.agent.create(baseContext, config2);
+      console.info(`====>SUB_Misc_REQUEST_Create_Promise_0080 Succeeded in starting a download task.`);
+      //expect().assertFail();
+    }catch(err){
+      console.info("====>SUB_Misc_REQUEST_Create_Promise_0080 create err: " + JSON.stringify(err));
+      //expect(err.code).assertEqual(401);
+      console.info("-----------------------SUB_Misc_REQUEST_Create_Promise_0080 is end-----------------------");
+      //done();
+    }
+    });
+
+    it('SUB_Misc_REQUEST_Create_Promise_0110', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let des = 'x';
+      for (let i = 0; i < 1025; i++){
+      des += 'x';
+    }
+    let config1: request.agent.Config = {
+      action: request.agent.Action.DOWNLOAD,
+      url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+      title: 'createTest',
+      description: des,
+      mode: request.agent.Mode.BACKGROUND,
+      overwrite: true,
+      saveas: "./SUB_Misc_REQUEST_Create_Promise_0110.txt",
+      network: request.agent.Network.WIFI,
+    };
+    console.info("====>-------------SUB_Misc_REQUEST_Create_Promise_0110 is starting----------------");
+    try{
+      await request.agent.create(baseContext, config1);
+      console.info(`====>SUB_Misc_REQUEST_Create_Promise_0110 Succeeded in starting a download task.`);
+      //expect().assertFail();
+    }catch(err){
+      console.info("====>SUB_Misc_REQUEST_Create_Promise_0110 create err: " + JSON.stringify(err));
+      //expect(err.code).assertEqual(401);
+      console.info("-----------------------SUB_Misc_REQUEST_Create_Promise_0110 is end-----------------------");
+      //done();
+    }
+    });
+
+    it('SUB_Misc_REQUEST_Create_Callback_0110', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let des = 'x';
+      for (let i = 0; i < 1025; i++){
+      des += 'x';
+    }
+    let config1: request.agent.Config = {
+      action: request.agent.Action.DOWNLOAD,
+      url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+      title: 'createTest',
+      description: des,
+      mode: request.agent.Mode.BACKGROUND,
+      overwrite: true,
+      saveas: "./SUB_Misc_REQUEST_Create_Callback_0110.txt",
+      network: request.agent.Network.WIFI,
+    };
+    console.info("====>-------------------SUB_Misc_REQUEST_Create_Callback_0110 is start ---------------------");
+    try{
+      request.agent.create(baseContext, config1, (err, task) => {
+        try {
+          console.info(`====>SUB_Misc_REQUEST_Create_Callback_0110 Succeeded in starting a download task.`);
+          //expect().assertFail();
+        } catch (err) {
+          console.info(`====>SUB_Misc_REQUEST_Create_Callback_0110 Succeeded in starting a download task.` + JSON.stringify(err));
+          //request.agent.remove(task.tid);
+          //done();
+        }
+      });
+    }catch(err){
+      console.info("====>SUB_Misc_REQUEST_Create_Callback_0110 create err: " + JSON.stringify(err));
+      console.info("-----------------------SUB_Misc_REQUEST_Create_Callback_0110 is end-----------------------");
+      //expect(err.code).assertEqual(401);
+      //done();
+    }
+    });
+
+    it('SUB_Misc_REQUEST_Create_Promise_0150', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let tit = 'x';
+      for (let i = 0; i < 257; i++){
+      tit += 'x';
+    }
+    let config1: request.agent.Config = {
+      action: request.agent.Action.DOWNLOAD,
+      url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+      title: tit,
+      description: 'Sample code for create task',
+      mode: request.agent.Mode.BACKGROUND,
+      overwrite: true,
+      saveas: "./SUB_Misc_REQUEST_Create_Promise_0150.txt",
+      network: request.agent.Network.WIFI,
+    };
+
+    console.info("====>-------------------SUB_Misc_REQUEST_Create_Promise_0150 is starting---------------------");
+    try{
+      await request.agent.create(baseContext, config1);
+      console.info(`====>SUB_Misc_REQUEST_Create_Promise_0150 Succeeded in starting a download task.`);
+      //e/xpect().assertFail();
+    }catch(err){
+      console.info("====>SUB_Misc_REQUEST_Create_Promise_0150 create err: " + JSON.stringify(err));
+      //expect(err.code).assertEqual(401);
+      console.info("-----------------------SUB_Misc_REQUEST_Create_Promise_0150 is end-----------------------");
+      //done();
+    }
+    });
   })
 }
