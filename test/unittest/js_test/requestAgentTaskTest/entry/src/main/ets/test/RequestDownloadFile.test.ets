@@ -113,7 +113,7 @@ export default function requestDownloadFileTest() {
     it('testDownloadUrl003', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/openharmony/request_request',
-        filePath: 'test.txt',
+        filePath: 'testDownloadUrl003.txt',
       };
       request.downloadFile(context, conf).then(async (data) => {
         expect(true).assertTrue();
@@ -137,7 +137,7 @@ export default function requestDownloadFileTest() {
     it('testDownloadUrl004', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
         url: 'admin://127.0.0.1',
-        filePath: 'test.txt',
+        filePath: 'testDownloadUrl004.txt',
       };
       try {
         request.downloadFile(context, conf, (err, data) => {
@@ -161,6 +161,7 @@ export default function requestDownloadFileTest() {
     it('testDownloadUrl005', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
         url: 'http://127.0.0.1/' + 'a'.repeat(8176),
+        filePath: 'testDownloadUrl005.txt',
       };
       try {
         request.downloadFile(context, conf, (err, data) => {
@@ -184,6 +185,7 @@ export default function requestDownloadFileTest() {
     it('testDownloadUrl006', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
         url: '',
+        filePath: 'testDownloadUrl006.txt',
       };
       try {
         request.downloadFile(context, conf, (err, data) => {
